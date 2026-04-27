@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+.DS_Store
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+
+# Generated outputs (per-figure, opt-in via examples/)
+**/build/
+**/exports/
+**/previews/
+
+# Editor
+.vscode/
+.idea/

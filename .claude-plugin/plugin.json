@@ -1,0 +1,9 @@
+{
+  "name": "figure-agent",
+  "description": "Paper figure plugin: redacted prompt generation + vector compile/export. User generates draft images externally (any tool), plugin handles prompt quality and vector reconstruction.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  }
+}

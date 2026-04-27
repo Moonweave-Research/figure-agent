@@ -1,0 +1,159 @@
+%% polymer-paper-preamble.sty
+%% 황 폴리머 논문 figure 표준 프리앰블 + Paul Tol Muted 팔레트
+%% Source: sc7_concept_tikz_v7.tex (paper-grade benchmark, 2026-04-24)
+%% Engine: lualatex (primary) — xelatex은 fontspec+Arial 렌더링 불일치로 미사용
+%% Usage:  \usepackage{polymer-paper-preamble}  % in preamble
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{polymer-paper-preamble}[2026/04/24 Polymer paper figure preamble]
+
+%% --- Fonts (requires lualatex or xelatex) ---
+\usepackage{fontspec}
+\setmainfont{Arial}
+\setsansfont{Arial}
+
+%% --- Core packages ---
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+%% --- TikZ libraries ---
+\usetikzlibrary{
+  arrows.meta,
+  calc,
+  backgrounds,
+  shapes.geometric,
+  shadings,
+  positioning
+}
+
+%% --- Paul Tol Muted palette (sc7 v6/v7 standard) ---
+\definecolor{cAmber}{HTML}{997A1E}
+\definecolor{cBlue}{HTML}{4477AA}
+\definecolor{cRed}{HTML}{CC6677}
+\definecolor{cTeal}{HTML}{44AA99}
+\definecolor{cGray}{RGB}{70,70,70}
+\definecolor{cLGray}{RGB}{200,200,200}
+\definecolor{cBrown}{HTML}{5D4820}
+\definecolor{cArmAmber}{HTML}{8B6F3E}
+\definecolor{cAmberSphere}{HTML}{DDCC77}
+
+%% --- Fixed-view isometric schematic contract ---
+%% Projection basis:
+%%   x axis = (1.00cm, 0.00cm)
+%%   y axis = (0.45cm, 0.28cm)
+%%   z axis = (0.00cm, 1.00cm)
+%% Use for schematic depth cues only. This is not a general 3D camera.
+%% Note: \IsoBlock defines named coordinates isoA-isoH inside \begingroup..\endgroup,
+%% but TikZ named coordinates are global. Sequential \IsoBlock calls overwrite them
+%% (fine). Do not nest \IsoBlock calls inside another's 5th-arg hook -- silent
+%% coordinate collisions will result.
+\tikzset{
+  iso basis/.style={
+    x={(1.00cm,0.00cm)},
+    y={(0.45cm,0.28cm)},
+    z={(0.00cm,1.00cm)}
+  },
+  iso front face/.style={draw=cGray!80!black, line width=0.45pt, fill=#1!28},
+  iso top face/.style={draw=cGray!80!black, line width=0.45pt, fill=#1!18},
+  iso side face/.style={draw=cGray!80!black, line width=0.45pt, fill=#1!38},
+  iso edge/.style={draw=cGray!85!black, line width=0.55pt},
+  iso hidden edge/.style={draw=cGray!45, line width=0.35pt, dashed},
+  iso label/.style={font=\fontsize{7}{8.4}\selectfont, text=cGray!90!black},
+  iso callout/.style={draw=cGray!70, line width=0.35pt, -{Stealth[length=3pt,width=2pt]}},
+  iso charge/.style={draw=cBlue!80!black, fill=cBlue!70, line width=0.25pt},
+  iso exposed/.style={draw=cGray!80!black, line width=0.45pt, fill=#1!12},
+}
+
+\newcommand{\IsoBlock}[5]{%
+  \begingroup
+  \def\isow{#1}%
+  \def\isod{#2}%
+  \def\isoh{#3}%
+  \def\isocolor{#4}%
+  \coordinate (isoA) at (0,0,0);
+  \coordinate (isoB) at (\isow,0,0);
+  \coordinate (isoC) at (\isow,\isod,0);
+  \coordinate (isoD) at (0,\isod,0);
+  \coordinate (isoE) at (0,0,\isoh);
+  \coordinate (isoF) at (\isow,0,\isoh);
+  \coordinate (isoG) at (\isow,\isod,\isoh);
+  \coordinate (isoH) at (0,\isod,\isoh);
+  \path[iso side face=\isocolor] (isoB) -- (isoC) -- (isoG) -- (isoF) -- cycle;
+  \path[iso front face=\isocolor] (isoA) -- (isoB) -- (isoF) -- (isoE) -- cycle;
+  \path[iso top face=\isocolor] (isoE) -- (isoF) -- (isoG) -- (isoH) -- cycle;
+  \draw[iso edge] (isoA) -- (isoB) -- (isoC) -- (isoG) -- (isoH) -- (isoE) -- cycle;
+  \draw[iso edge] (isoB) -- (isoF) -- (isoG);
+  \draw[iso edge] (isoE) -- (isoF);
+  \draw[iso hidden edge] (isoA) -- (isoD) -- (isoC);
+  \draw[iso hidden edge] (isoD) -- (isoH);
+  #5%
+  \endgroup
+}
+
+% \IsoCharge{x,y,sign}: half-buried hemisphere charge dot (★★★ v0.2 promotion)
+% Spec §8.
+\newcommand{\IsoCharge}[1]{%
+  \IsoChargeDraw#1\relax
+}
+\def\IsoChargeDraw#1,#2,#3\relax{%
+  \begin{scope}
+    \pgfmathsetmacro{\ICRADIUS}{0.12}%
+    \fill[iso charge] (#1,#2) +(-\ICRADIUS,0)
+      arc[start angle=180, end angle=360, radius=\ICRADIUS] -- cycle;
+    \node[font=\tiny\bfseries, white] at (#1,#2) {$#3$};
+  \end{scope}%
+}
+
+% \GradSlab{x,y,w,h,c1,c2,axis}: rectangular slab with x/y color gradient.
+\newcommand{\GradSlab}[1]{%
+  \GradSlabDraw#1\relax
+}
+\makeatletter
+\def\GradSlabDraw#1,#2,#3,#4,#5,#6,#7\relax{%
+  \begingroup
+  \edef\GSAxis{\zap@space#7 \@empty}%
+  \def\GSXAxis{x}%
+  \ifx\GSAxis\GSXAxis
+    \path[draw=cGray!80!black, line width=0.45pt, shade,
+      left color=#5!35, right color=#6!35] (#1,#2) rectangle ++(#3,#4);
+  \else
+    \path[draw=cGray!80!black, line width=0.45pt, shade,
+      bottom color=#5!35, top color=#6!35] (#1,#2) rectangle ++(#3,#4);
+  \fi
+  \endgroup
+}
+\makeatother
+
+% \IsoConeTip{x,y,direction}: triangular tip emphasis face.
+\newcommand{\IsoConeTip}[1]{%
+  \IsoConeTipDraw#1\relax
+}
+\makeatletter
+\def\IsoConeTipDraw#1,#2,#3\relax{%
+  \begingroup
+  \edef\ICTDir{\zap@space#3 \@empty}%
+  \def\ICTRight{right}%
+  \def\ICTLeft{left}%
+  \def\ICTUp{up}%
+  \def\ICTDown{down}%
+  \ifx\ICTDir\ICTRight
+    \path[draw=cGray!80!black, line width=0.45pt, fill=cAmberSphere!75]
+      (#1,#2) -- ++(-0.30,0.16) -- ++(0,-0.32) -- cycle;
+  \else\ifx\ICTDir\ICTLeft
+    \path[draw=cGray!80!black, line width=0.45pt, fill=cAmberSphere!75]
+      (#1,#2) -- ++(0.30,0.16) -- ++(0,-0.32) -- cycle;
+  \else\ifx\ICTDir\ICTUp
+    \path[draw=cGray!80!black, line width=0.45pt, fill=cAmberSphere!75]
+      (#1,#2) -- ++(-0.16,-0.30) -- ++(0.32,0) -- cycle;
+  \else\ifx\ICTDir\ICTDown
+    \path[draw=cGray!80!black, line width=0.45pt, fill=cAmberSphere!75]
+      (#1,#2) -- ++(-0.16,0.30) -- ++(0.32,0) -- cycle;
+  \else
+    \PackageError{polymer-paper-preamble}{Invalid IsoConeTip direction `#3'}{Use right, left, up, or down.}%
+  \fi\fi\fi\fi
+  \endgroup
+}
+\makeatother
