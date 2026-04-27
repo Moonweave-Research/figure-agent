@@ -17,4 +17,4 @@ if [[ ! -f "$1" ]]; then
   exit 1
 fi
 
-rsvg-convert -d 150 -p 150 -f png -o "$2" "$1"
+rsvg-convert -d 600 -p 600 -f png -o "$2" "$1"

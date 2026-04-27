@@ -11,9 +11,9 @@ Steps:
 2. Compile target: `examples/<name>/<name>.tex` (the human-authored TikZ source).
    - For v0.1, the .tex file is hand-written by user using selected preview as visual reference.
    - Future: auto-scaffold .tex from selected preview (out of scope for v0.1).
-3. Run `uv run python3 scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
-4. Run `uv run python3 scripts/check_collisions.py` on the compile output.
-5. Run `uv run python3 scripts/check_visual_clash.py` on rendered PNG.
+3. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
+4. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
+5. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.
 6. Report:
    - Compile success/fail
    - Collision report (count, severity)

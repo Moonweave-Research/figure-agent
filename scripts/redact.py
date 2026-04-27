@@ -33,6 +33,7 @@ _UNIT_PATTERNS: list[tuple[str, str]] = [
     (r"\d+(?:\.\d+)?\s*(?:[kMG]J|[kMG]W|J|W)\b", "energy_power"),
     (r"\d+(?:\.\d+)?\s*(?:µm|nm|Å)", "length"),
     (r"\d+(?:\.\d+)?\s*dpi\b", "resolution"),
+    (r"\d+(?:\.\d+)?\s*(?:개|회|번|종|차|점|장|개소)", "count"),
 ]
 
 _RATIO_PATTERN = re.compile(r"\b\d+\s*[:/]\s*\d+\b")
@@ -96,9 +97,7 @@ def format_audit(audit: list[RedactionEvent]) -> str:
         if ev.category == "ratio_warning":
             lines.append(f"  ⚠️ ratio_warning: {ev.original!r} (kept — review manually)")
         else:
-            lines.append(
-                f"  REDACTED [{ev.category}]: {ev.original!r} → {ev.replacement}"
-            )
+            lines.append(f"  REDACTED [{ev.category}]: {ev.original!r} → {ev.replacement}")
     return "\n".join(lines)
 
 
