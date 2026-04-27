@@ -69,8 +69,9 @@ def test_generate_for_fig3_scaffold_runs():
         return  # scaffold not present in this checkout
     prompt, audit = generate_for(example_dir)
     assert "fig3_trapping_concept" in prompt
-    assert "ISPD" in prompt
-    assert "S60" in prompt or "S70" in prompt
+    assert "CB" in prompt and "VB" in prompt
+    assert "deep trap" in prompt.lower()
+    assert "polarization" in prompt.lower()
     assert isinstance(audit, list)
 
 
@@ -94,7 +95,8 @@ def test_negative_section_with_explicit_OK_bullet_excluded():
         3: ("Composition", "- demo bullet"),
         4: (
             "Forbidden",
-            "- exact numeric values\n- setup detail: 노출 OK\n- domain abbreviations: OK\n- key claim points: 허용",
+            "- exact numeric values\n- setup detail: 노출 OK\n"
+            "- domain abbreviations: OK\n- key claim points: 허용",
         ),
     }
     out = compose_prompt(spec, briefing)

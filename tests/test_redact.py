@@ -70,3 +70,20 @@ def test_audit_records_original():
     originals = {ev.original.strip().lower() for ev in audit if ev.category != "ratio_warning"}
     assert any("v" in o for o in originals)
     assert any("h" in o for o in originals)
+
+
+def test_korean_count_unit_redacted():
+    out1, audit1 = redact("trapped electrons (4개 점)")
+    assert "[REDACTED:count]" in out1
+    assert any(ev.category == "count" for ev in audit1)
+
+    out2, audit2 = redact("두 종 dielectric")
+    assert out2 == "두 종 dielectric"
+    assert audit2 == []
+
+
+def test_domain_terms_kept():
+    for text in ("kT ≪ E_t", "CB / LUMO 비교", "PDMS 시료"):
+        out, audit = redact(text)
+        assert out == text, f"should be unchanged: {text!r}"
+        assert audit == [], f"should have no redaction events: {text!r}"

@@ -181,6 +181,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         "- experimental conditions",
         "- dimensional annotations",
         "- specific quantitative labels",
+        "- count tokens (e.g., '4 dots', '두 개')",
     ]
     if forbidden and not _is_skip(forbidden):
         cleaned = _filter_allowed_hints(forbidden)

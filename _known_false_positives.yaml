@@ -1,0 +1,72 @@
+# Known false-positive patterns for check_visual_clash.py.
+# Used with --ignore-known-fp flag. Default mode always reports all.
+#
+# Each entry needs at minimum: id + (glyph or glyph_pattern).
+# Optional: kind, dark_min, dark_max, edge_max, bbox_height_max.
+#
+# fig3_trapping_concept: light-gray panel backgrounds trigger luma_std >= 25
+# for all header/label text; charge symbols on colored fills trigger text_on_path.
+
+patterns:
+  # Panel header labels — light gray background, not a fill clash
+  - id: panel_label_a
+    glyph: "(a)"
+    kind: text_on_fill
+
+  - id: panel_label_b
+    glyph: "(b)"
+    kind: text_on_fill
+
+  - id: material_label_pdms
+    glyph: PDMS
+    kind: text_on_fill
+
+  - id: material_label_sulfur
+    glyph: Sulfur
+    kind: text_on_fill
+
+  # Schematic domain labels on light-gray panel background
+  - id: schematic_label_injection
+    glyph: injection
+    kind: text_on_fill
+
+  - id: schematic_label_homo
+    glyph_pattern: "HOMO"
+    kind: text_on_fill
+
+  - id: caption_label_fast
+    glyph: fast
+    kind: text_on_fill
+
+  # Charge symbols on colored fill (known pattern from prior dogfooding)
+  - id: charge_symbol_minus
+    glyph: "−"
+    kind: text_on_path
+    dark_max: 0.35
+    edge_max: 0.05
+
+  - id: charge_symbol_plus
+    glyph: "+"
+    kind: text_on_path
+    dark_max: 0.35
+    edge_max: 0.05
+
+  # Energy axis label on schematic path
+  - id: energy_axis_label_e
+    glyph: E
+    kind: text_on_path
+    dark_max: 0.15
+    edge_max: 0.02
+
+  # Caption subscript V(t)
+  - id: caption_subscript_v
+    glyph: V
+    kind: text_on_path
+    dark_max: 0.05
+    edge_max: 0.01
+
+  - id: caption_subscript_t
+    glyph: "(t)"
+    kind: text_on_path
+    dark_max: 0.05
+    edge_max: 0.01
