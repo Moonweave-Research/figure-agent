@@ -1,0 +1,13 @@
+{
+  "name": "figure-agent-local",
+  "owner": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "figure-agent",
+      "source": "."
+    }
+  ]
+}
