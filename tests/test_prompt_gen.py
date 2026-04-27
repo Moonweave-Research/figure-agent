@@ -69,6 +69,67 @@ def test_generate_for_fig3_scaffold_runs():
         return  # scaffold not present in this checkout
     prompt, audit = generate_for(example_dir)
     assert "fig3_trapping_concept" in prompt
-    assert "PDMS" in prompt
-    assert "Sulfur Polymer" in prompt
+    assert "ISPD" in prompt
+    assert "S60" in prompt or "S70" in prompt
     assert isinstance(audit, list)
+
+
+def test_skip_keyword_in_style_section_omits_body():
+    """§5 'skip' should NOT leak into the prompt's Style block."""
+    spec = {"name": "demo", "panels": [{"id": "a", "caption": "x"}]}
+    briefing = {
+        1: ("Topic", "demo topic"),
+        3: ("Composition", "- demo bullet"),
+        5: ("Style", "skip — Nature default applied"),
+    }
+    out = compose_prompt(spec, briefing)
+    assert "skip" not in out.lower().split("style:")[1].split("do not include:")[0]
+
+
+def test_negative_section_with_explicit_OK_bullet_excluded():
+    """Lines marked 'OK' / '노출 OK' / '허용' must not appear in negative prompt."""
+    spec = {"name": "demo", "panels": [{"id": "a", "caption": "x"}]}
+    briefing = {
+        1: ("Topic", "demo topic"),
+        3: ("Composition", "- demo bullet"),
+        4: (
+            "Forbidden",
+            "- exact numeric values\n- setup detail: 노출 OK\n- domain abbreviations: OK\n- key claim points: 허용",
+        ),
+    }
+    out = compose_prompt(spec, briefing)
+    negative = out.split("Do NOT include:")[1]
+    assert "exact numeric values" in negative
+    assert "노출 OK" not in negative
+    assert "허용" not in negative
+
+
+def test_footer_after_horizontal_rule_excluded():
+    """Content below a `---` rule (footer instructions) must not contaminate §5."""
+    text = """## 5. Style
+
+skip
+
+---
+
+When this briefing is filled, run /fig_prompt to generate the prompt.
+"""
+    sections = parse_briefing(text)
+    body = sections[5][1]
+    assert "skip" in body
+    assert "When this briefing is filled" not in body
+    assert "/fig_prompt" not in body
+
+
+def test_markdown_bold_stripped_in_bullets():
+    """Markdown `**bold**` must be flattened to plain text."""
+    spec = {"name": "demo", "panels": [{"id": "a", "caption": "x"}]}
+    briefing = {
+        1: ("Topic", "demo"),
+        3: ("Composition", "- panel **(a)** shows decay\n- panel **(b)** shows peak"),
+    }
+    out = compose_prompt(spec, briefing)
+    assert "**(a)**" not in out
+    assert "**(b)**" not in out
+    assert "panel (a) shows decay" in out
+    assert "panel (b) shows peak" in out

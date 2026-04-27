@@ -8,43 +8,46 @@
 
 ## 1. What does this figure show? (1-2 sentences)
 
-<!-- TODO: 사용자가 채움. 예: "PDMS와 sulfur polymer의 band diagram을 나란히 비교해
-     deep trap이 charge retention의 핵심임을 시각화한다." -->
+황고분자에서 발생하는 charge trapping 현상의 개념을 독자가 이해하기 좋게 설명하는
+4-panel concept figure. 트랩핑 지수가 무엇인지, 어떤 역할인지, 트랩핑 능력이 좋은
+조성과 나쁜 조성의 물리적·함수적 차이, 측정 방식까지 한 figure로 보여준다.
+
+**Narrative position**: Fig 2 (mechanism) 패널의 "Capacitive vs Power-law" 시각적 hook을
+이어받아, 본 figure에서 **실측 데이터로 확정**하는 역할.
 
 ## 2. Domain vocabulary (terms, materials, mechanisms)
 
-<!-- TODO: 사용자가 채움. 예시 항목:
-     - Materials: PDMS, sulfur polymer
-     - Band structure: LUMO, HOMO, conduction band (CB), valence band (VB), bandgap
-     - Trap physics: shallow trap, deep trap (E_t), trapped electrons, thermal escape (kT << E_t)
-     - Charge dynamics: injection, capture, recombination, retention
--->
+- 황고분자 composition sweep: S60, S65, S70, S75, S80, S85
+- Charge dynamics: charge trapping, retention, discharge
+- Power-law decay: I(t) ∝ t^(-n), trapping index n, raw signal vs RLM MM 통일
+- Composition tunability: non-monotonic peak (S70-S75)
+- Trap DOS: ISPD (Isothermal Surface Potential Decay), g(E_t), shallow trap, deep trap, 2-peak structure
+- Time scale: τ_d discharge time, trap depth로부터의 직접 정량값
+- 측정 방식: ISPD 기반 표면전위 감쇠 측정
 
 ## 3. Composition intent (panel layout, flow direction)
 
-<!-- TODO: 사용자가 채움. 예시 골격:
-     - Two-panel side-by-side: (a) PDMS / (b) Sulfur Polymer
-     - Vertical E-axis on the left of each panel
-     - Same y-coordinate scale across both panels (CB top, VB bottom, mid-gap = trap region)
-     - (a): one mobile electron + one fast recombination arrow
-     - (b): trap level lines (shallow + deep), trapped electrons at trap levels,
-            injection arrow capturing into deep trap, weak thermal escape arrow with kT<<E_t label
-     - Bottom one-line caption per panel summarizing the mechanism
--->
+4-panel storyline (논리 흐름은 left-to-right):
+
+- **(a)** I(t) ∝ t^(-n) per composition: power-law decay 시그니처. raw 측정 + RLM MM 통일 본.
+- **(b)** n vs composition: S60-S85 sweep을 한 axis에 두고, **non-monotonic peak가 S70-S75**에서
+  나타남 → composition tunability의 1차 증거.
+- **(c)** ISPD g(E_t) trap DOS: shallow + deep 2-peak 구조. composition별 대표 곡선 overlay.
+- **(d)** τ_d discharge time: trap depth가 retention 시간에 직접 어떻게 매핑되는지 정량 비교.
 
 ## 4. What MUST NOT appear (sensitive numbers, geometry, conditions)
 
-<!-- TODO: 사용자가 채움. 예시:
-     - Numerical trap depth values (E_t in eV)
-     - Specific corona discharge voltages
-     - Sample dimensions
-     - wt% sulfur composition
--->
+- 정확한 수치값 (n, τ_d, peak 위치 등) → redact.py가 단위 동반 숫자는 자동 제거
+- 셋업 디테일 (ISPD 측정 방식, corona 전압, 시료 두께 등): **노출 OK**
+- 핵심 claim 포인트 (composition tunability, non-monotonic peak at S70-S75 등): **노출 OK**
+- 도메인 약어 (S60-S85, ISPD, RLM MM, g(E_t), τ_d): **노출 OK**
+
+요약: 수치만 빼면 되고, 셋업·핵심 주장·도메인 vocabulary는 모두 prompt에 포함 가능.
 
 ## 5. Style notes (optional)
 
-<!-- TODO: optional. 예: Nature schematic, white/light-gray panel backgrounds,
-     blue=conduction/electron, red=valence, amber=deep trap, gray=axis/recombination -->
+skip — Nature-tone 4-panel data figure default 적용 (white background, sans-serif,
+balanced layout, no extra style override).
 
 ---
 

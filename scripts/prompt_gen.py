@@ -22,6 +22,28 @@ from redact import format_audit, redact
 _SECTION_HEADER = re.compile(r"^##\s+(\d+)\.\s+(.+)$", re.MULTILINE)
 _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _BLOCKQUOTE = re.compile(r"^>\s.*$", re.MULTILINE)
+_FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
+_MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
+_ALLOW_HINT = re.compile(r"\b(?:ok|allowed|허용)\b|노출\s*ok", re.IGNORECASE)
+_SKIP_TOKENS = {"skip", "(none)", "none", "(default)", "default", "n/a", "na", "-"}
+
+
+def _is_skip(body: str) -> bool:
+    """True if the body's first meaningful word is a skip-keyword."""
+    if not body:
+        return True
+    first_line = body.strip().splitlines()[0].lstrip("-* ").strip()
+    parts = first_line.split()
+    first_word = parts[0].rstrip(".,!?:") if parts else ""
+    return first_word.lower() in _SKIP_TOKENS
+
+
+def _filter_allowed_hints(body: str) -> str:
+    """Drop lines marking items as explicitly allowed (OK / 허용 / 노출 OK).
+    These are user notes about what *is* fine to expose, not negative items."""
+    if not body:
+        return body
+    return "\n".join(ln for ln in body.splitlines() if not _ALLOW_HINT.search(ln))
 
 
 def parse_spec(text: str) -> dict:
@@ -79,17 +101,25 @@ def parse_briefing(text: str) -> dict[int, tuple[str, str]]:
         title = m.group(2).strip()
         start = m.end()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        body = _HTML_COMMENT.sub("", text[start:end]).strip()
+        section_text = text[start:end]
+        # Cut at first horizontal rule — footer instructions live below the rule.
+        rule = _FOOTER_RULE.search(section_text)
+        if rule is not None:
+            section_text = section_text[: rule.start()]
+        body = _HTML_COMMENT.sub("", section_text).strip()
         sections[n] = (title, body)
     return sections
 
 
 def _bullet_block(body: str) -> str:
-    """Convert a free-form body into a bullet list. Existing `- ` lines kept;
-    other paragraphs become single bullets each."""
+    """Convert a free-form body into a bullet list.
+
+    - Strips markdown bold (`**foo**` → `foo`) so external tools see plain text.
+    - Existing `- ` / `* ` lines kept; other paragraphs become one bullet each.
+    """
     if not body:
         return "- (not specified — fill briefing.md)"
-    lines = [ln.strip() for ln in body.splitlines() if ln.strip()]
+    lines = [_MD_BOLD.sub(r"\1", ln.strip()) for ln in body.splitlines() if ln.strip()]
     out: list[str] = []
     for ln in lines:
         if ln.startswith("- "):
@@ -105,9 +135,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
     name = spec.get("name", "(unnamed)")
     panels = spec.get("panels", [])
     panel_summary = (
-        ", ".join(
-            f"({p.get('id', '?')}) {p.get('caption', '')}".strip() for p in panels
-        )
+        ", ".join(f"({p.get('id', '?')}) {p.get('caption', '')}".strip() for p in panels)
         if panels
         else "single panel"
     )
@@ -143,7 +171,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         "- no unnecessary text",
         "- white background",
     ]
-    if style_extra:
+    if style_extra and not _is_skip(style_extra):
         parts += [_bullet_block(style_extra)]
 
     parts += [
@@ -154,8 +182,10 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         "- dimensional annotations",
         "- specific quantitative labels",
     ]
-    if forbidden:
-        parts += [_bullet_block(forbidden)]
+    if forbidden and not _is_skip(forbidden):
+        cleaned = _filter_allowed_hints(forbidden)
+        if cleaned.strip():
+            parts += [_bullet_block(cleaned)]
 
     parts += [
         "",

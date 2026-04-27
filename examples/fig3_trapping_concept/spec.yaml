@@ -1,8 +1,12 @@
 name: fig3_trapping_concept
 panels:
   - id: a
-    caption: PDMS — clean bandgap
+    caption: I(t) ∝ t^(-n) power-law decay per composition
   - id: b
-    caption: Sulfur Polymer — deep trap states
+    caption: n vs composition (S60-S85, non-monotonic peak at S70-S75)
+  - id: c
+    caption: ISPD g(E_t) trap DOS (shallow + deep 2-peak)
+  - id: d
+    caption: τ_d discharge time
 style_profile: polymer-default
 selected_preview: null
