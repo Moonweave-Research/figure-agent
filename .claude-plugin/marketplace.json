@@ -1,5 +1,7 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "figure-agent-local",
+  "description": "Local marketplace for the figure-agent plugin (paper schematic prompt + vector compile).",
   "owner": {
     "name": "Moon Choe",
     "email": "choimoonyoung3631@gmail.com"
@@ -7,7 +9,16 @@
   "plugins": [
     {
       "name": "figure-agent",
-      "source": "."
+      "description": "Paper figure plugin: redacted prompt generation + vector compile/export. User generates draft images externally.",
+      "category": "research",
+      "source": {
+        "source": "directory",
+        "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]"
+      },
+      "author": {
+        "name": "Moon Choe",
+        "email": "choimoonyoung3631@gmail.com"
+      }
     }
   ]
 }
