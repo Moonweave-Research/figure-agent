@@ -15,9 +15,14 @@ __pycache__/
 *.toc
 
 # Generated outputs (per-figure, opt-in via examples/)
-**/build/
-**/exports/
-**/previews/
+# Track directories (via .gitkeep) but ignore contents by default.
+# To commit a finished export, use `git add -f examples/<name>/exports/<file>`.
+**/build/*
+**/exports/*
+**/previews/*
+!**/build/.gitkeep
+!**/exports/.gitkeep
+!**/previews/.gitkeep
 
 # Editor
 .vscode/

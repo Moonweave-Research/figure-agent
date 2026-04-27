@@ -1,0 +1,8 @@
+name: fig3_trapping_concept
+panels:
+  - id: a
+    caption: PDMS — clean bandgap
+  - id: b
+    caption: Sulfur Polymer — deep trap states
+style_profile: polymer-default
+selected_preview: null
