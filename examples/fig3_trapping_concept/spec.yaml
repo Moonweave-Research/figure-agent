@@ -1,12 +1,18 @@
 name: fig3_trapping_concept
 panels:
   - id: a
-    caption: I(t) ∝ t^(-n) power-law decay per composition
+    caption: PDMS — clean bandgap (no trap states)
   - id: b
-    caption: n vs composition (S60-S85, non-monotonic peak at S70-S75)
-  - id: c
-    caption: ISPD g(E_t) trap DOS (shallow + deep 2-peak)
-  - id: d
-    caption: τ_d discharge time
+    caption: Sulfur Polymer — deep trap states in bandgap
 style_profile: polymer-default
-selected_preview: null
+selected_preview: chatgpt_b01.png
+selection_notes: |
+  Round 2 (schematic intent, post-reset). Compared chatgpt_b01 vs nanobanana_b01.
+  ChatGPT preferred for: clean Nature-style band diagram, accurate label placement
+  (CB/LUMO + VB/HOMO unified — Nano Banana split LUMO and CB into separate
+  redundant lines), correct trapped-electron positions (Nano Banana drew "trapped
+  electrons" on CB level — physically wrong), elegant polarization-response glyph
+  (dipole + ⊖→⊕ in dashed oval), distinct shallow-vs-deep trap visualization with
+  precise capture/escape arrows. Nano Banana also had label noise ("cond band
+  (CB)" duplication, "low-based dielectric" typo for "low-trap dielectric").
+  Previous attempt (data figure) archived under previews/_previous_attempt_data_figure/.

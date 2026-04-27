@@ -1,0 +1,158 @@
+% fig3_trapping_concept.tex
+% PDMS polarization vs Sulfur Polymer trap mechanism — band diagram schematic
+% figure-agent dogfooding (round 2, schematic intent)
+% Reference preview: previews/chatgpt_b01.png
+% Briefing: briefing.md (sections 1-5)
+% Benchmark: _reference_original/fig3_trapping_concept.tex
+
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{183mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+  electron/.style={circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt,
+                   minimum size=2.6mm, line width=0.5pt},
+  posSign/.style={circle, fill=cRed!12, draw=cRed!70!black, inner sep=0pt,
+                  minimum size=3.6mm, line width=0.6pt,
+                  font=\textsf{\bfseries\fontsize{7}{8}\selectfont}, text=cRed!70!black},
+  negSign/.style={circle, fill=cBlue!12, draw=cBlue!70!black, inner sep=0pt,
+                  minimum size=3.6mm, line width=0.6pt,
+                  font=\textsf{\bfseries\fontsize{7}{8}\selectfont}, text=cBlue!70!black},
+  bandLine/.style={line width=1.4pt},
+  trapLine/.style={line width=1.1pt, dash pattern=on 2.5pt off 1.5pt},
+  injArr/.style={-{Stealth[length=4pt,width=3pt]}, line width=1.0pt, cGray!70!black},
+  capArr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.2pt, cGray!70!black},
+  recArr/.style={-{Stealth[length=4pt,width=3pt]}, cGray, line width=0.9pt},
+  escArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray!70, line width=0.5pt, dashed},
+  axisArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray, line width=0.6pt},
+]
+
+% ─── Panel backgrounds ───────────────────────────────────────────────────────
+\fill[cLGray!22, rounded corners=2.5mm] (0, 0)    rectangle (5.80, 5.60);
+\fill[cLGray!22, rounded corners=2.5mm] (6.20, 0) rectangle (12.00, 5.60);
+
+% ─── Panel headers (a) (b) — two-line: bold title + gray subtitle ──────────
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (0.30, 5.95) {(a) PDMS};
+\node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cGray, anchor=west]
+    at (0.30, 5.55) {polarization mechanism};
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (6.50, 5.95) {(b) Sulfur Polymer};
+\node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cGray, anchor=west]
+    at (6.50, 5.55) {trap mechanism};
+
+% ══════════════════════════════════════════════════════════════════════════════
+% PANEL (a): PDMS — clean bandgap + polarization glyph
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{scope}[shift={(0.30, 0)}]
+
+  % E-axis
+  \draw[axisArr] (0.50, 0.55) -- (0.50, 4.85);
+  \node[font=\textsf{\itshape\fontsize{8}{10}\selectfont}, cGray, anchor=south west]
+      at (0.45, 4.85) {$E$};
+
+  % CB / LUMO line
+  \draw[bandLine, cBlue] (0.65, 4.20) -- (4.50, 4.20);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+      at (4.55, 4.20) {CB / LUMO};
+
+  % VB / HOMO line
+  \draw[bandLine, cRed] (0.65, 0.95) -- (4.50, 0.95);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+      at (4.55, 0.95) {VB / HOMO};
+
+  % Mobile electron on CB
+  \node[electron] (eA) at (3.20, 4.20) {};
+
+  % Fast recombination arrow (CB → VB)
+  \draw[recArr] (3.20, 4.10) -- (3.20, 1.05);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west, align=left]
+      at (3.32, 2.65) {fast\\[-1pt]recombination};
+
+  % Polarization glyph (dashed oval surrounding ⊖→⊕ + label below)
+  \begin{scope}[shift={(1.70, 2.55)}]
+    \draw[draw=cGray!65, line width=0.4pt, dash pattern=on 1.5pt off 1pt]
+        (0,0) ellipse (0.95 and 0.45);
+    \node[negSign] (nc) at (-0.45, 0) {$-$};
+    \node[posSign] (pc) at (0.45, 0) {$+$};
+    \draw[-{Stealth[length=3pt,width=2pt]}, cGray!70!black, line width=0.5pt]
+        (nc.east) -- (pc.west);
+  \end{scope}
+  \node[font=\textsf{\fontsize{6.8}{8.2}\selectfont}, cGray!80!black,
+        anchor=north, align=center]
+      at (1.70, 1.95) {polarization\\[-1pt]response};
+
+\end{scope}
+
+% ══════════════════════════════════════════════════════════════════════════════
+% PANEL (b): Sulfur Polymer — deep trap mechanism
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{scope}[shift={(6.50, 0)}]
+
+  % E-axis
+  \draw[axisArr] (0.50, 0.55) -- (0.50, 4.85);
+  \node[font=\textsf{\itshape\fontsize{8}{10}\selectfont}, cGray, anchor=south west]
+      at (0.45, 4.85) {$E$};
+
+  % CB / LUMO line
+  \draw[bandLine, cBlue] (0.65, 4.20) -- (4.10, 4.20);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+      at (4.15, 4.20) {CB / LUMO};
+
+  % VB / HOMO line
+  \draw[bandLine, cRed] (0.65, 0.95) -- (4.10, 0.95);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+      at (4.15, 0.95) {VB / HOMO};
+
+  % Shallow trap (just below CB, amber dashed)
+  \draw[trapLine, cAmber] (1.10, 3.50) -- (3.85, 3.50);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber, anchor=west]
+      at (4.15, 3.50) {shallow trap};
+
+  % Deep trap level E_t (mid-gap, amber, more prominent)
+  \draw[trapLine, cAmber, line width=1.4pt] (1.10, 2.10) -- (3.85, 2.10);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber, anchor=west]
+      at (4.15, 2.10) {deep trap $E_t$};
+
+  % Trapped electrons at deep trap (4 dots)
+  \node[electron] at (1.50, 2.10) {};
+  \node[electron] at (2.05, 2.10) {};
+  \node[electron] at (2.60, 2.10) {};
+  \node[electron] at (3.15, 2.10) {};
+
+  % Trapped electrons at shallow trap (2 dots)
+  \node[electron] at (2.50, 3.50) {};
+  \node[electron] at (3.05, 3.50) {};
+
+  % Injection arrow (curved, into CB from upper-left) + label below the arc
+  \draw[injArr] (0.55, 5.00) .. controls (0.85, 4.65) and (1.10, 4.40) .. (1.45, 4.25);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+      at (0.85, 4.65) {injection};
+
+  % Mobile electron just landed in CB
+  \node[electron] at (1.50, 4.20) {};
+
+  % Capture arrow (CB → deep trap, vertical solid)
+  \draw[capArr] (1.50, 4.10) -- (1.50, 2.20);
+  \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+      at (1.62, 3.10) {capture};
+
+  % Thermal escape arrow (deep → shallow, upward dashed)
+  \draw[escArr] (3.40, 2.20) -- (3.40, 3.40);
+  \node[font=\textsf{\fontsize{6.5}{8}\selectfont}, cGray!70!black,
+        anchor=west, align=left]
+      at (3.50, 2.85) {$kT \ll E_t$\\[-1pt](escape negligible)};
+
+\end{scope}
+
+% ─── Bottom captions ────────────────────────────────────────────────────────
+\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
+    at (3.20, -0.15) {fast $V(t)$ loss};
+\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
+    at (9.10, -0.15) {long retention};
+
+\end{tikzpicture}%
+}
+\end{document}
