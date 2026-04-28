@@ -3,7 +3,8 @@
 The public API intentionally remains ``redact()`` for v0.1 compatibility, but
 the behavior is prompt normalization: preserve schematic intent while replacing
 literal counts, sample labels, dimensions, and experimental values that make
-image-gen tools overfit to the wrong detail.
+image-gen tools overfit to the wrong detail. v0.2 will rename this module to
+normalize.py.
 """
 
 from __future__ import annotations
@@ -215,13 +216,10 @@ def format_audit(audit: list[RedactionEvent]) -> str:
         if ev.category == "domain_term":
             lines.append(f"  KEPT [domain_term]: {ev.original!r}")
         elif ev.category == "physics_invariant":
-            lines.append(
-                f"  KEPT [physics_invariant]: {ev.original!r} (verbatim constraint)"
-            )
+            lines.append(f"  KEPT [physics_invariant]: {ev.original!r} (verbatim constraint)")
         elif ev.category.startswith("physics_invariant_literal_"):
             lines.append(
-                f"  WARN [{ev.category}]: {ev.original!r} "
-                "(kept verbatim inside physics invariant)"
+                f"  WARN [{ev.category}]: {ev.original!r} (kept verbatim inside physics invariant)"
             )
         elif ev.category == "data_plot_signal":
             lines.append(f"  WARN [data_plot_signal]: {ev.original!r} (review scope)")

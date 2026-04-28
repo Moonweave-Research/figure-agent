@@ -27,46 +27,16 @@ saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
 ## Workflow (6 stages, slash-separated)
 
 ```
-/fig_new <name>          step 1
-   → creates examples/<name>/{spec.yaml, briefing.md, previews/, build/, exports/}
-
-/fig_prompt <name>       step 2
-   → reads examples/<name>/spec.yaml + examples/<name>/briefing.md
-   → applies prompt normalization
-   → outputs ONE prompt block + normalization audit
-   → tells user: "Copy this prompt to your image-gen tool of choice.
-                  Generate 3-5 candidates. Save into examples/<name>/previews/
-                  as PNG/JPG/JPEG files. Then run /fig_preview_select <name>."
-   → HALTS — slash exits
-
+/fig_new <name>            step 1 — creates per-figure folder scaffold; HALTS for briefing
+/fig_prompt <name>         step 2 — outputs normalized prompt block + audit; HALTS for user image-gen
 (user works externally — no plugin involvement)
-
-/fig_preview_select <name> step 3
-   → lists examples/<name>/previews/*.png|*.jpg|*.jpeg
-   → presents to user (numbered, alphabetical sort)
-   → user picks 1
-   → records selection in examples/<name>/spec.yaml
-   → HALTS so user and/or LLM authors examples/<name>/<name>.tex from the selected preview
-
-/fig_compile <name>      step 4
-   → compiles examples/<name>/<name>.tex into examples/<name>/build/
-   → applies Style Lock (font/color/thickness from styles/polymer-paper-preamble.sty)
-   → runs check_collisions.py + check_visual_clash.py on examples/<name>/build/<name>.pdf
-   → reports WARN (does not block — human-gated)
-
-/fig_review <name>       step 5
-   → emits a self-contained Reviewer brief for external vision-capable critique
-   → asks critic to check briefing §6 physics invariants plus label placement, whitespace,
-     hierarchy, palette, and style against examples/<name>/build/<name>.png
-   → HALTS — user attaches PNG and pastes brief into critic of choice, then revises .tex if needed
-
-/fig_export <name>       step 6
-   → produces PDF + SVG + TIFF + PNG (600 dpi raster) into examples/<name>/exports/
+/fig_preview_select <name> step 3 — user selects preview; records in spec.yaml; HALTS for .tex authoring
+/fig_compile <name>        step 4 — compiles .tex, applies Style Lock, runs clash checks; warns
+/fig_review <name>         step 5 — emits Reviewer brief for external vision critique; HALTS
+/fig_export <name>         step 6 — produces PDF + SVG + TIFF + PNG (600 dpi) into exports/
 ```
 
-Run slash commands from the plugin root. `<name>` always maps to `examples/<name>/`.
-After `/fig_preview_select <name>`, the next required step is authoring the editable vector
-source at `examples/<name>/<name>.tex`; v0.1 does not create that file automatically.
+Run slash commands from the plugin root. `<name>` maps to `examples/<name>/`. After `/fig_preview_select`, authoring `examples/<name>/<name>.tex` is required; v0.1 does not create it automatically.
 
 ## Per-figure folder convention
 
@@ -80,24 +50,6 @@ examples/<name>/
 ├── build/             # compile artifacts (gitignored)
 └── exports/           # final PDF/SVG/TIFF/PNG (gitignored — checked in only on release)
 ```
-
-## What the prompt must contain
-
-- Domain vocabulary and mechanism terms that must be preserved
-- Physics invariants that must not be distorted (for example level ordering,
-  arrow direction, containment, causal direction)
-- Style block (Nature schematic, white background, minimal labels, balanced composition)
-- Composition hint (panel layout, flow direction, arrow semantics)
-- Normalization policy (generalize distracting literals; preserve schematic intent)
-- Normalization audit (what was generalized, kept, or warned)
-
-## What the compile must guarantee
-
-- Selected preview is **inspiration only**, not copied verbatim. Vector path independent.
-- Final `.tex` source remains editable and independent.
-- Compile/check/export all use `examples/<name>/build/<name>.pdf` as the canonical PDF.
-- Labels precise enough for clash checks.
-- Style Lock honored (no ad-hoc font/color unless explicitly justified).
 
 ## Boundaries
 
@@ -124,22 +76,9 @@ redirect to matplotlib?"):
 - Measurement keywords: "raw + fit", "error bar", "peak position", "RLM MM", "ISPD curves"
 - Real-data axes: any axis whose tick values would matter to a reader
 
-Lesson source: 2026-04-28 fig3_trapping_concept first attempt drifted to a 4-panel data
-figure before scope was caught. Plugin is responsible for catching this at the briefing
-stage, not after a full image-gen + vector-compile cycle.
-
 ## Asset references
 
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
 - Compile chain: `scripts/compile.sh` (lualatex)
 - Checks: `scripts/check_collisions.py`, `scripts/check_visual_clash.py`
 - Export: `scripts/export_svg.sh`, `scripts/svg_to_png.sh`
-
-## Rationale (one paragraph)
-
-The reference-image layer was removed after Y0 fig1 pilot showed strong references inflated
-visual_clash WARN by +32 vs no-reference baseline (V_curated 41 > V_brief 9, INCONCLUSIVE).
-Generative draft from prompt-only avoids the anchor-misuse mechanism entirely. Image generation
-stays external because (a) the user already pays for one image-gen tool, (b) plugin avoids API
-key management, (c) the natural "halt → user generates → resume" structure is a built-in
-manual gate that prevents automated pipeline from skipping human judgment on draft quality.

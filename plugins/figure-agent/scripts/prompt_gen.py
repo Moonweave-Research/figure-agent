@@ -1,12 +1,9 @@
-"""Generate normalized external image-gen prompt from spec.yaml + briefing.md.
+"""Compose the normalized image-gen prompt block for a named figure.
 
-Reads `examples/<name>/{spec.yaml, briefing.md}`. Composes one prompt block
-following figure-agent's house template, applies normalization, and prints
-prompt, audit, and next steps to stdout in copy-friendly order.
-
-v0.1 scope: stdlib-only YAML subset parser (top-level scalars + `panels`
-list of dicts), markdown section split by `## N. <title>` headers,
-HTML-comment placeholder stripping.
+Reads `examples/<name>/{spec.yaml, briefing.md}` via `inputs.parse_spec` and
+`inputs.parse_briefing`, applies token normalization via `redact.redact`, and
+prints the prompt block, normalization audit, and next steps to stdout in
+copy-friendly order.
 """
 
 from __future__ import annotations

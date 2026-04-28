@@ -2,6 +2,24 @@
 
 All notable changes to figure-agent are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- `prompt_gen.py` module docstring updated to reflect post-input-extraction responsibility
+  (prompt composition and normalization via `inputs` + `redact`, not parsing).
+- `SKILL.md` trimmed (145→84 lines) by removing command-level details kept in `commands/*.md`
+  ("What the prompt must contain", "What the compile must guarantee") and historical rationale
+  (design context documented in `docs/design-v0.1.md`).
+
+### Deprecated
+
+- `prompt_gen` re-exports of `parse_briefing` and `parse_spec` (backwards-compat shim for 0.1.x)
+  will be removed in v0.2. Migration: when importing from `scripts/`, use `from inputs import parse_briefing, parse_spec`.
+  (v0.2 will make `scripts/` a proper package with package-relative imports.)
+- `redact.py` module will be renamed to `normalize.py` in v0.2; the function name and
+  behavior do not change.
+
 ## [0.1.5] - 2026-04-28
 
 ### Fixed
