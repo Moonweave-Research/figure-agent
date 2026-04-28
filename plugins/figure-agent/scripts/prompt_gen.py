@@ -17,12 +17,12 @@ from pathlib import Path
 
 # sys.path[0] is the script's directory when invoked as `python3 prompt_gen.py`,
 # so a sibling-module import works without any package wiring.
+from inputs import (  # backwards-compat re-export for v0.1.x; remove in v0.2
+    parse_briefing,
+    parse_spec,
+)
 from redact import RedactionEvent, format_audit, redact
 
-_SECTION_HEADER = re.compile(r"^##\s+(\d+)\.\s+(.+)$", re.MULTILINE)
-_HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
-_BLOCKQUOTE = re.compile(r"^>\s.*$", re.MULTILINE)
-_FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 _MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
 _BARE_LABEL_HEADER = re.compile(r"^[^:]+:\s*$")
 _ALLOW_HINT = re.compile(r"\b(?:ok|allowed|허용)\b|노출\s*ok", re.IGNORECASE)
@@ -52,76 +52,6 @@ def _filter_allowed_hints(body: str) -> str:
         for ln in body.splitlines()
         if not _ALLOW_HINT.search(ln) or _NEGATED_ALLOW_HINT.search(ln)
     )
-
-
-def parse_spec(text: str) -> dict:
-    """Minimal YAML subset parser. Top-level scalars + `panels` list-of-dicts.
-
-    Not a general parser; rejects anything outside the v0.1 spec.yaml shape.
-    """
-    spec: dict = {"panels": []}
-    in_panels = False
-    cur: dict | None = None
-    for raw in text.splitlines():
-        line = raw.rstrip()
-        if not line or line.lstrip().startswith("#"):
-            continue
-        if line.startswith("panels:"):
-            in_panels = True
-            continue
-        if in_panels:
-            if line.startswith("  - "):
-                if cur is not None:
-                    spec["panels"].append(cur)
-                cur = {}
-                key, _, val = line[4:].partition(":")
-                cur[key.strip()] = val.strip()
-                continue
-            if line.startswith("    ") and cur is not None:
-                key, _, val = line.strip().partition(":")
-                cur[key.strip()] = val.strip()
-                continue
-            # Exit panels block.
-            if cur is not None:
-                spec["panels"].append(cur)
-                cur = None
-            in_panels = False
-        if not in_panels and ":" in line and not line.startswith(" "):
-            key, _, val = line.partition(":")
-            spec[key.strip()] = val.strip()
-    if cur is not None:
-        spec["panels"].append(cur)
-    return spec
-
-
-def parse_briefing(text: str) -> dict[int, tuple[str, str]]:
-    """Split briefing.md into {section_number: (title, body)}.
-
-    Strips top-of-file blockquote (dogfooding note), HTML-comment TODO hints,
-    and trims whitespace. A section whose body is empty after stripping is
-    returned with body == "" so the caller can decide how to surface it.
-    """
-    first_section = _SECTION_HEADER.search(text)
-    if first_section is not None:
-        preamble = _BLOCKQUOTE.sub("", text[: first_section.start()])
-        text = preamble + text[first_section.start() :]
-    else:
-        text = _BLOCKQUOTE.sub("", text)
-    sections: dict[int, tuple[str, str]] = {}
-    matches = list(_SECTION_HEADER.finditer(text))
-    for i, m in enumerate(matches):
-        n = int(m.group(1))
-        title = m.group(2).strip()
-        start = m.end()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        section_text = text[start:end]
-        # Cut at first horizontal rule — footer instructions live below the rule.
-        rule = _FOOTER_RULE.search(section_text)
-        if rule is not None:
-            section_text = section_text[: rule.start()]
-        body = _HTML_COMMENT.sub("", section_text).strip()
-        sections[n] = (title, body)
-    return sections
 
 
 def _bullet_block(body: str) -> str:

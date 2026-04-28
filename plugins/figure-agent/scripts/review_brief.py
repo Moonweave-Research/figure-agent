@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from prompt_gen import parse_briefing, parse_spec
+from inputs import parse_briefing, parse_spec
 
 MISSING_INVARIANTS = (
     "(none provided — reviewer should infer plausible physics constraints from §1+§2)"
@@ -43,8 +43,7 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
     if stale_sources:
         names = ", ".join(path.name for path in stale_sources)
         raise ReviewBriefError(
-            f"stale render {png_path}; newer source file(s): {names}; "
-            "run /fig_compile first"
+            f"stale render {png_path}; newer source file(s): {names}; run /fig_compile first"
         )
 
 
@@ -59,8 +58,7 @@ def _line_numbered(text: str) -> str:
     if not text.endswith("\n"):
         text += "\n"
     return "".join(
-        f"{line_number:4d}: {line}\n"
-        for line_number, line in enumerate(text.splitlines(), start=1)
+        f"{line_number:4d}: {line}\n" for line_number, line in enumerate(text.splitlines(), start=1)
     )
 
 
