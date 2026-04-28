@@ -144,6 +144,11 @@ human/LLM vector finishing
   -> run collision and visual-clash checks
   -> report warnings without auto-fixing
 
+/fig_review
+  -> emit a self-contained reviewer brief for an external vision-capable critic
+  -> ask the critic to check briefing §6 physics invariants and visual placement
+  -> HALT so the user attaches build/<name>.png and works externally
+
 /fig_export
   -> export final files into examples/<name>/exports/
 ```
@@ -177,6 +182,7 @@ uv run python3 scripts/prompt_gen.py examples/<name>
 bash scripts/compile.sh examples/<name>/<name>.tex
 uv run python3 scripts/check_collisions.py examples/<name>/build/<name>.pdf
 uv run python3 scripts/check_visual_clash.py examples/<name>/build/<name>.pdf
+uv run python3 scripts/review_brief.py examples/<name>
 bash scripts/export_svg.sh examples/<name>/build/<name>.pdf examples/<name>/exports/<name>.svg
 ```
 
@@ -221,6 +227,7 @@ v0.1 is shippable when these are true:
   conceptual constraints. Literal details in this block are reported as kept
   invariant constraints in the audit rather than silently normalized.
 - Compile/check/export all consume the same canonical artifact path.
+- `/fig_review` emits an API-free external-critic brief between compile and export.
 - Slash command docs use one cwd convention.
 - `uv run pytest -q` and `uv run ruff check .` pass.
 - At least one compile/check/export smoke path is verified against the dogfood
@@ -236,13 +243,9 @@ Possible v0.2 work:
 - Generate a first-pass TikZ scaffold from `briefing.md`, `spec.yaml`, and the
   selected preview metadata.
 - Add stronger prompt-quality scoring before external image-gen.
-- Add `/fig_review` as a Claude-assisted critique command, not a direct
-  image-generation API call:
-  - prompt mode: compare `briefing.md` against generated prompt and report
-    missing or distorted physics invariants before the user sends it externally;
-  - render mode: compare rendered output against `briefing.md` and report
-    conceptual/aesthetic fix candidates without promising exact source-line
-    mapping.
+- Extend `/fig_review` with prompt-mode critique before external image-gen and
+  optional apply helpers for critic output. Keep the shipped v0.1.3 command
+  API-free and user-gated.
 - Add visual contact-sheet/ranking helpers for previews.
 - Package Python helpers as importable modules if script-only execution becomes
   limiting.

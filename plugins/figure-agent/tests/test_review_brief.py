@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import review_brief  # noqa: E402
 from review_brief import generate_for, main  # noqa: E402
 
 
@@ -98,8 +100,69 @@ def test_review_brief_embeds_full_tex_source(tmp_path):
 
     tex = (example_dir / "review_demo.tex").read_text(encoding="utf-8")
     assert "```tex\n" in brief
-    assert tex in brief
+    for line_number, line in enumerate(tex.splitlines(), start=1):
+        assert f"{line_number:4d}: {line}" in brief
     assert "\n```\n\n## Review rubric" in brief
+
+
+def test_review_brief_uses_example_relative_png_path(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    absolute_png_path = str((example_dir / "build" / "review_demo.png").resolve())
+    assert absolute_png_path not in brief
+    assert "`examples/review_demo/build/review_demo.png`" in brief
+    assert "Attach this PNG to your critic" in brief
+
+
+def test_review_brief_errors_when_png_is_older_than_tex(tmp_path, capsys, monkeypatch):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    tex_path = example_dir / "review_demo.tex"
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (100, 100))
+    os.utime(tex_path, (200, 200))
+
+    monkeypatch.setattr(sys, "argv", ["review_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "run /fig_compile first" in captured.err
+
+
+def test_review_brief_errors_when_png_is_older_than_briefing(tmp_path, capsys, monkeypatch):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    briefing_path = example_dir / "briefing.md"
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (100, 100))
+    os.utime(briefing_path, (200, 200))
+
+    monkeypatch.setattr(sys, "argv", ["review_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "run /fig_compile first" in captured.err
+
+
+def test_review_brief_errors_when_png_is_older_than_style_lock(
+    tmp_path, capsys, monkeypatch
+):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    style_path = tmp_path / "polymer-paper-preamble.sty"
+    style_path.write_text("% style", encoding="utf-8")
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (100, 100))
+    os.utime(style_path, (200, 200))
+    monkeypatch.setattr(review_brief, "STYLE_LOCK_PATH", style_path)
+    monkeypatch.setattr(sys, "argv", ["review_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "run /fig_compile first" in captured.err
+    assert "polymer-paper-preamble.sty" in captured.err
 
 
 def test_review_brief_includes_rubric_sections_A_and_B(tmp_path):

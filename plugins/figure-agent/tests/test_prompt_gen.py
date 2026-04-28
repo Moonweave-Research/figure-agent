@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from prompt_gen import compose_prompt, generate_for, main, parse_briefing, parse_spec  # noqa: E402
+from redact import format_audit  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,6 +49,25 @@ This is real content.
     sections = parse_briefing(text)
     assert sections[1][1] == "This is real content."
     assert sections[2][1] == ""
+
+
+def test_parse_briefing_preserves_in_section_blockquotes():
+    text = """# Title
+
+> top-of-file dogfooding note.
+
+## 1. What does this figure show?
+
+Intro content.
+> quoted design requirement
+
+## 2. Vocabulary
+
+CB, VB
+"""
+    sections = parse_briefing(text)
+    assert "top-of-file dogfooding note" not in sections[1][1]
+    assert "> quoted design requirement" in sections[1][1]
 
 
 def test_compose_prompt_uses_topic_and_panels():
@@ -201,7 +221,9 @@ Use 4 dots in the composition.
     )
 
     prompt, audit = generate_for(example_dir)
-    invariant_kept = [ev for ev in audit if ev.category == "physics_invariant"]
+    invariant_kept = [
+        ev for ev in audit if ev.category.startswith("physics_invariant_literal_")
+    ]
 
     invariant_idx = prompt.index("Preserve these scientific constraints.")
     include_idx = prompt.index("Include:")
@@ -217,6 +239,8 @@ Use 4 dots in the composition.
     assert "stacked layers" in include_block
     assert "one directional arrow" in include_block
     assert {ev.original for ev in invariant_kept} == {"3 layers", "1 arrow"}
+    assert {ev.category for ev in invariant_kept} == {"physics_invariant_literal_count"}
+    assert "WARN [physics_invariant_literal_count]" in format_audit(audit)
 
 
 def test_skip_keyword_in_style_section_omits_body():
@@ -248,6 +272,73 @@ def test_negative_section_with_explicit_OK_bullet_excluded():
     assert "exact numeric values" in negative
     assert "노출 OK" not in negative
     assert "허용" not in negative
+
+
+def test_negative_section_keeps_negated_forbidden_allowed_line():
+    spec = {"name": "demo", "panels": [{"id": "a", "caption": "x"}]}
+    briefing = {
+        1: ("Topic", "demo topic"),
+        3: ("Composition", "- demo bullet"),
+        4: (
+            "Forbidden",
+            "- external legend text is not allowed\n"
+            "- setup detail: 노출 OK\n"
+            "- domain abbreviations: OK\n"
+            "- key claim points: 허용",
+        ),
+    }
+    out = compose_prompt(spec, briefing)
+    negative = out.split("Do NOT include:")[1]
+    assert "external legend text is not allowed" in negative
+    assert "노출 OK" not in negative
+    assert "domain abbreviations: OK" not in negative
+    assert "허용" not in negative
+
+
+def test_generate_for_warns_literal_details_kept_inside_physics_invariant(tmp_path):
+    example_dir = tmp_path / "example"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        """name: invariant_literal_warning_demo
+panels: []
+style_profile: polymer-default
+selected_preview: null
+""",
+        encoding="utf-8",
+    )
+    (example_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Trap retention schematic.
+
+## 3. Composition
+
+- Show a qualitative trap diagram.
+
+## 6. Physics invariants
+
+- S60 sample must stay left of S85.
+- 200 nm film stays between electrode and trap.
+- 3 layers must remain in order.
+""",
+        encoding="utf-8",
+    )
+
+    prompt, audit = generate_for(example_dir)
+    categories = [ev.category for ev in audit]
+
+    invariant_idx = prompt.index("Preserve these scientific constraints.")
+    include_idx = prompt.index("Include:")
+    invariant_block = prompt[invariant_idx:include_idx]
+    assert "- S60 sample must stay left of S85." in invariant_block
+    assert "- 200 nm film stays between electrode and trap." in invariant_block
+    assert "- 3 layers must remain in order." in invariant_block
+    assert "different material compositions" not in invariant_block
+    assert "thin film" not in invariant_block
+    assert "stacked layers" not in invariant_block
+    assert "physics_invariant_literal_sample_label" in categories
+    assert "physics_invariant_literal_length" in categories
+    assert "physics_invariant_literal_count" in categories
 
 
 def test_footer_after_horizontal_rule_excluded():

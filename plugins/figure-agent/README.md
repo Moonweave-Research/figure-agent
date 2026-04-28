@@ -38,11 +38,13 @@ Starter TikZ source: `cp styles/tex_template.tex examples/<name>/<name>.tex`.
 
 ## Status
 
-v0.1 scaffold (2026-04-27). Spec under `docs/design-v0.1.md`.
+v0.1 line is active; latest shipped plugin version is recorded in
+`.claude-plugin/plugin.json`. Spec under `docs/design-v0.1.md`.
 
 v0.1 is source-only as a Claude Code plugin. Use
 `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`,
-`uv run pytest`, and `uv run ruff check .`; `uv build` is not a release gate.
+`claude plugin validate ../../.claude-plugin/marketplace.json`, `uv run pytest`,
+and `uv run ruff check .`; `uv build` is not a release gate.
 
 ## History
 

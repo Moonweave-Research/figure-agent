@@ -26,6 +26,7 @@ _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 _MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
 _BARE_LABEL_HEADER = re.compile(r"^[^:]+:\s*$")
 _ALLOW_HINT = re.compile(r"\b(?:ok|allowed|허용)\b|노출\s*ok", re.IGNORECASE)
+_NEGATED_ALLOW_HINT = re.compile(r"\bnot\s+allowed\b", re.IGNORECASE)
 _SKIP_TOKENS = {"skip", "(none)", "none", "(default)", "default", "n/a", "na", "-"}
 _INVARIANT_PROMPT_LINE = "Preserve these scientific constraints."
 _INCLUDE_PROMPT_LINE = "Include:"
@@ -46,7 +47,11 @@ def _filter_allowed_hints(body: str) -> str:
     These are user notes about what *is* fine to expose, not negative items."""
     if not body:
         return body
-    return "\n".join(ln for ln in body.splitlines() if not _ALLOW_HINT.search(ln))
+    return "\n".join(
+        ln
+        for ln in body.splitlines()
+        if not _ALLOW_HINT.search(ln) or _NEGATED_ALLOW_HINT.search(ln)
+    )
 
 
 def parse_spec(text: str) -> dict:
@@ -96,7 +101,12 @@ def parse_briefing(text: str) -> dict[int, tuple[str, str]]:
     and trims whitespace. A section whose body is empty after stripping is
     returned with body == "" so the caller can decide how to surface it.
     """
-    text = _BLOCKQUOTE.sub("", text)
+    first_section = _SECTION_HEADER.search(text)
+    if first_section is not None:
+        preamble = _BLOCKQUOTE.sub("", text[: first_section.start()])
+        text = preamble + text[first_section.start() :]
+    else:
+        text = _BLOCKQUOTE.sub("", text)
     sections: dict[int, tuple[str, str]] = {}
     matches = list(_SECTION_HEADER.finditer(text))
     for i, m in enumerate(matches):
@@ -230,7 +240,12 @@ def normalize_prompt(prompt: str) -> tuple[str, list]:
     _normalized_invariant, invariant_audit = redact(invariant_block)
     normalized_suffix, suffix_audit = redact(suffix)
     kept_invariant_audit = [
-        RedactionEvent(ev.original, ev.original, "physics_invariant", ev.span)
+        RedactionEvent(
+            ev.original,
+            ev.original,
+            f"physics_invariant_literal_{ev.category}",
+            ev.span,
+        )
         for ev in invariant_audit
         if ev.category != "domain_term"
     ]

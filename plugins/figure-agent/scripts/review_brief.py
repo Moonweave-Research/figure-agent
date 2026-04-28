@@ -10,6 +10,11 @@ from prompt_gen import parse_briefing, parse_spec
 MISSING_INVARIANTS = (
     "(none provided — reviewer should infer plausible physics constraints from §1+§2)"
 )
+STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
+
+
+class ReviewBriefError(Exception):
+    """Expected user-facing error while preparing the review brief."""
 
 
 def _require_file(path: Path, hint: str | None = None) -> None:
@@ -26,6 +31,37 @@ def _author_intent(sections: dict[int, tuple[str, str]]) -> str:
     composition = sections.get(3, ("", ""))[1].strip()
     parts = [part for part in [topic, composition] if part]
     return "\n\n".join(parts) if parts else "(briefing.md §1 and §3 are empty)"
+
+
+def _example_relative_path(example_dir: Path, path: Path) -> str:
+    return str(Path("examples") / example_dir.name / path.relative_to(example_dir))
+
+
+def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
+    png_mtime = png_path.stat().st_mtime
+    stale_sources = [path for path in source_paths if path.stat().st_mtime > png_mtime]
+    if stale_sources:
+        names = ", ".join(path.name for path in stale_sources)
+        raise ReviewBriefError(
+            f"stale render {png_path}; newer source file(s): {names}; "
+            "run /fig_compile first"
+        )
+
+
+def _review_source_paths(tex_path: Path, briefing_path: Path) -> tuple[Path, ...]:
+    paths = [tex_path, briefing_path]
+    if STYLE_LOCK_PATH.exists():
+        paths.append(STYLE_LOCK_PATH)
+    return tuple(paths)
+
+
+def _line_numbered(text: str) -> str:
+    if not text.endswith("\n"):
+        text += "\n"
+    return "".join(
+        f"{line_number:4d}: {line}\n"
+        for line_number, line in enumerate(text.splitlines(), start=1)
+    )
 
 
 def generate_for(example_dir: Path) -> str:
@@ -46,12 +82,12 @@ def generate_for(example_dir: Path) -> str:
     png_path = example_dir / "build" / f"{name}.png"
     _require_file(tex_path)
     _require_file(png_path, "run /fig_compile first")
+    _require_fresh_png(png_path, _review_source_paths(tex_path, briefing_path))
 
     tex = tex_path.read_text(encoding="utf-8")
-    if not tex.endswith("\n"):
-        tex += "\n"
+    numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
-    render_path = png_path.resolve()
+    render_path = _example_relative_path(example_dir, png_path)
 
     return f"""# Reviewer brief — {name}
 
@@ -66,7 +102,7 @@ def generate_for(example_dir: Path) -> str:
 
 ## Source under review (TikZ)
 ```tex
-{tex}```
+{numbered_tex}```
 
 ## Review rubric
 
@@ -108,7 +144,7 @@ def main() -> int:
 
     try:
         brief = generate_for(Path(sys.argv[1]))
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, ReviewBriefError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
 

@@ -2,6 +2,17 @@
 
 All notable changes to figure-agent are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- Preserve negated forbidden prompt lines such as `not allowed`, keep in-section
+  blockquotes, and warn when literal details are kept inside physics invariants.
+- Make `/fig_review` use repo-relative render paths, reject stale renders, and
+  include line-numbered TikZ source for critic citations.
+- Align design docs, release-gate docs, and local package metadata with shipped
+  v0.1.3 behavior.
+
 ## [0.1.3] - 2026-04-28
 
 ### Added

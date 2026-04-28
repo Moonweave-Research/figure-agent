@@ -218,6 +218,11 @@ def format_audit(audit: list[RedactionEvent]) -> str:
             lines.append(
                 f"  KEPT [physics_invariant]: {ev.original!r} (verbatim constraint)"
             )
+        elif ev.category.startswith("physics_invariant_literal_"):
+            lines.append(
+                f"  WARN [{ev.category}]: {ev.original!r} "
+                "(kept verbatim inside physics invariant)"
+            )
         elif ev.category == "data_plot_signal":
             lines.append(f"  WARN [data_plot_signal]: {ev.original!r} (review scope)")
         else:
