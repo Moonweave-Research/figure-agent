@@ -11,10 +11,7 @@
       "name": "figure-agent",
       "description": "Paper figure plugin: redacted prompt generation + vector compile/export. User generates draft images externally.",
       "category": "research",
-      "source": {
-        "source": "directory",
-        "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]"
-      },
+      "source": "./plugins/figure-agent",
       "author": {
         "name": "Moon Choe",
         "email": "choimoonyoung3631@gmail.com"
