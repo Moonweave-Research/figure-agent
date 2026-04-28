@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "figure-agent",
-      "description": "Paper figure plugin: redacted prompt generation + vector compile/export. User generates draft images externally.",
+      "description": "Paper schematic plugin: prompt intent control plus human/LLM-authored TikZ compile, checks, and export.",
       "category": "research",
       "source": "./plugins/figure-agent",
       "author": {

@@ -2,8 +2,8 @@
 
 > **Reset note (2026-04-28)**: 첫 시도는 4-panel data figure로 어긋남
 > (figure-agent scope 밖). figure-agent는 schematic 전용. 사용자 4-panel
-> storyline은 `_paper_narrative_backup.md`에 보존되어 있고 paper의 다른
-> figure (data plot, Graph_making_hub 영역) 자료로 살아남음.
+> storyline은 figure-agent v0.1 범위 밖이며, data plot이 필요하면
+> Graph_making_hub 영역에서 별도로 다룸.
 
 ## 1. What does this figure show? (1-2 sentences)
 
