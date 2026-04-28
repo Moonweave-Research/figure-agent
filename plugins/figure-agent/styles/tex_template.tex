@@ -1,0 +1,62 @@
+% figure-agent single-panel TikZ starter.
+% Copy to examples/<name>/<name>.tex, then replace the TODO region below.
+% Style Lock helpers available from polymer-paper-preamble.sty:
+% \IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip.
+% Palette: cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown.
+
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{90mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+  electron/.style={circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt,
+                   minimum size=2.6mm, line width=0.5pt},
+  bandLine/.style={line width=1.4pt},
+  trapLine/.style={line width=1.1pt, dash pattern=on 2.5pt off 1.5pt},
+  injArr/.style={-{Stealth[length=4pt,width=3pt]}, line width=1.0pt, cGray!70!black},
+  capArr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.2pt, cGray!70!black},
+  axisArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray, line width=0.6pt},
+]
+
+% --- TODO: replace with figure content ---
+\fill[cLGray!18, rounded corners=2.5mm] (0, 0) rectangle (6.8, 5.1);
+
+\node[font=\textsf{\bfseries\fontsize{10}{12}\selectfont}, anchor=west]
+    at (0.35, 4.75) {single-panel mechanism};
+
+\draw[axisArr] (0.75, 0.75) -- (0.75, 4.25);
+\node[font=\textsf{\itshape\fontsize{8}{10}\selectfont}, cGray, anchor=south west]
+    at (0.68, 4.25) {$E$};
+
+\draw[bandLine, cBlue] (1.25, 3.85) -- (5.15, 3.85);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+    at (5.25, 3.85) {CB};
+
+\draw[trapLine, cAmber, line width=1.4pt] (2.1, 2.45) -- (4.2, 2.45);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber, anchor=west]
+    at (4.35, 2.45) {deep trap $E_t$};
+
+\draw[bandLine, cRed] (1.25, 1.05) -- (5.15, 1.05);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+    at (5.25, 1.05) {VB};
+
+\node[electron] at (2.55, 2.45) {};
+\node[electron] at (3.05, 2.45) {};
+\node[electron] at (3.55, 2.45) {};
+
+\draw[injArr] (1.05, 4.55) .. controls (1.35, 4.2) and (1.65, 3.95) .. (2.0, 3.85);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+    at (1.45, 4.35) {injection};
+
+\draw[capArr] (2.6, 3.75) -- (2.6, 2.58);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+    at (2.75, 3.15) {capture};
+
+\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
+    at (3.4, -0.15) {long retention via deep trap};
+
+\end{tikzpicture}%
+}
+\end{document}

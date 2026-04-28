@@ -32,6 +32,7 @@ Claude Code plugin for paper-grade scientific figures.
 ```
 
 Run commands from the plugin root. `<name>` resolves to `examples/<name>/`.
+Starter TikZ source: `cp styles/tex_template.tex examples/<name>/<name>.tex`.
 
 ## Status
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from prompt_gen import compose_prompt, generate_for, parse_briefing, parse_spec  # noqa: E402
+from prompt_gen import compose_prompt, generate_for, main, parse_briefing, parse_spec  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -209,3 +209,78 @@ def test_markdown_bold_stripped_in_bullets():
     assert "**(b)**" not in out
     assert "panel (a) shows decay" in out
     assert "panel (b) shows peak" in out
+
+
+def test_bare_label_headers_are_not_emitted_as_prompt_bullets():
+    spec = {"name": "demo", "panels": []}
+    briefing = {
+        1: ("Topic", "demo"),
+        3: (
+            "Composition",
+            "**Element 배치 (energy-ordered, top→bottom):**\n"
+            "- CB (conduction band): 수평 청색 선, 상단\n"
+            "**Arrows:**\n"
+            "- Injection arrow: 좌측 외곽 → CB level로 진입\n"
+            "**Physics constraints (보존):**\n"
+            "- E_t는 반드시 bandgap 내부",
+        ),
+        4: (
+            "Normalize",
+            "**Image-gen이 과하게 literal하게 따라가면 안 되는 항목 (정규화 audit에 포함):**\n"
+            "- Exact trap depth value: generalize as mid-gap",
+        ),
+    }
+
+    out = compose_prompt(spec, briefing)
+
+    assert "- Element 배치 (energy-ordered, top→bottom):" not in out
+    assert "- Arrows:" not in out
+    assert "- Physics constraints (보존):" not in out
+    assert (
+        "- Image-gen이 과하게 literal하게 따라가면 안 되는 항목 (정규화 audit에 포함):"
+        not in out
+    )
+    assert "- CB (conduction band): 수평 청색 선, 상단" in out
+    assert "- Injection arrow: 좌측 외곽 → CB level로 진입" in out
+    assert "- E_t는 반드시 bandgap 내부" in out
+    assert "- Exact trap depth value: generalize as mid-gap" in out
+
+
+def test_main_prints_prompt_audit_and_next_steps_to_stdout_in_spec_order(
+    tmp_path, capsys, monkeypatch
+):
+    example_dir = tmp_path / "example"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        """name: stdout_order_demo
+panels:
+  - id: a
+    caption: demo panel
+style_profile: polymer-default
+selected_preview: null
+""",
+        encoding="utf-8",
+    )
+    (example_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Use 4 dots for trapped electrons.
+
+## 3. Composition
+
+- demo composition
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(sys, "argv", ["prompt_gen.py", str(example_dir)])
+    assert main() == 0
+
+    captured = capsys.readouterr()
+    stdout = captured.out
+    assert captured.err == ""
+    prompt_idx = stdout.index("=== NORMALIZED PROMPT (copy below for external tool) ===")
+    end_idx = stdout.index("=== END PROMPT ===")
+    audit_idx = stdout.index("Normalization audit:")
+    next_idx = stdout.index("Next steps:")
+    assert prompt_idx < end_idx < audit_idx < next_idx

@@ -2,7 +2,7 @@
 
 Reads `examples/<name>/{spec.yaml, briefing.md}`. Composes one prompt block
 following figure-agent's house template, applies normalization, and prints
-prompt to stdout + audit summary to stderr.
+prompt, audit, and next steps to stdout in copy-friendly order.
 
 v0.1 scope: stdlib-only YAML subset parser (top-level scalars + `panels`
 list of dicts), markdown section split by `## N. <title>` headers,
@@ -24,6 +24,7 @@ _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _BLOCKQUOTE = re.compile(r"^>\s.*$", re.MULTILINE)
 _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 _MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
+_BARE_LABEL_HEADER = re.compile(r"^[^:]+:\s*$")
 _ALLOW_HINT = re.compile(r"\b(?:ok|allowed|허용)\b|노출\s*ok", re.IGNORECASE)
 _SKIP_TOKENS = {"skip", "(none)", "none", "(default)", "default", "n/a", "na", "-"}
 
@@ -126,6 +127,8 @@ def _bullet_block(body: str) -> str:
             out.append(ln)
         elif ln.startswith("* "):
             out.append("- " + ln[2:])
+        elif _BARE_LABEL_HEADER.match(ln):
+            continue
         else:
             out.append(f"- {ln}")
     return "\n".join(out)
@@ -227,16 +230,15 @@ def main() -> int:
     print("=== NORMALIZED PROMPT (copy below for external tool) ===")
     print(prompt)
     print("=== END PROMPT ===")
-    print("\n=== Normalization audit ===", file=sys.stderr)
-    print(format_audit(audit), file=sys.stderr)
-    print("\nReview WARN items before sending to an external service.", file=sys.stderr)
+    print("\nNormalization audit:")
+    print(format_audit(audit))
+    print("\nReview WARN items before sending to an external service.")
     print(
         "\nNext steps:\n"
         "  1. Copy prompt above into your image-gen tool of choice.\n"
         "  2. Generate 3-5 candidates.\n"
         f"  3. Save PNG/JPG/JPEG candidates into {example_dir}/previews/ (any filename).\n"
-        f"  4. Run /fig_preview_select {example_dir.name} to continue.",
-        file=sys.stderr,
+        f"  4. Run /fig_preview_select {example_dir.name} to continue."
     )
     return 0
 

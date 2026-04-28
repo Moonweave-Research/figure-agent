@@ -22,6 +22,7 @@ Steps:
 5. Update `examples/<name>/spec.yaml`: `selected_preview: <filename>`.
 6. Optionally symlink/copy chosen file to `examples/<name>/selected/`.
 7. Confirm the manual vector step: user and/or LLM authors `examples/<name>/<name>.tex`.
+   Starter: `cp styles/tex_template.tex examples/<name>/<name>.tex`.
 8. After the `.tex` file exists, continue with `/fig_compile <name>`.
 
 No automatic ranking in v0.1. User judgment only.
