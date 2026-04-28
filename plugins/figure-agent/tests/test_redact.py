@@ -35,6 +35,16 @@ def test_sample_label_range_normalized_to_material_compositions():
     assert "sample_label" in _categories(audit)
 
 
+def test_sample_labels_do_not_swallow_surrounding_spaces():
+    out, audit = redact("S60 and S70 comparison")
+    assert out == "different material compositions and different material compositions comparison"
+    assert _categories(audit).count("sample_label") == 2
+
+    out, audit = redact("Compare S60 to S85.")
+    assert out == "Compare different material compositions to different material compositions."
+    assert _categories(audit).count("sample_label") == 2
+
+
 def test_sample_like_domain_tokens_are_preserved():
     out, audit = redact("Compare C60, E11, and T90 transport states.")
     assert "C60" in out
@@ -64,6 +74,17 @@ def test_composition_ratio_normalized():
     assert "composition_ratio" in _categories(audit)
 
 
+def test_voltage_and_time_normalization_preserve_sentence_grammar():
+    out, audit = redact("Apply 5 V to the gate.")
+    assert out == "Apply a representative voltage to the gate."
+    assert "Apply applied" not in out
+    assert "voltage" in _categories(audit)
+
+    out, audit = redact("Pulse for 120 ms.")
+    assert out == "Pulse for a representative duration."
+    assert "time" in _categories(audit)
+
+
 def test_korean_count_normalized_but_domain_phrase_preserved():
     out, audit = redact("트랩 전자를 4개 점으로 표시하고 두 종 dielectric를 비교하라.")
     assert "a few dots" in out
@@ -79,6 +100,20 @@ def test_dot_count_normalization_preserves_relative_density():
     assert "4 dots" not in out
     assert "2 dots" not in out
     assert _categories(audit).count("count") == 2
+
+
+def test_panel_count_normalization_preserves_layout_intent():
+    out, audit = redact("Two panels side by side.")
+    assert out == "two-panel comparison layout side by side."
+    assert "count_word" in _categories(audit)
+
+    out, audit = redact("One panel.")
+    assert out == "single-panel layout."
+    assert "count_word" in _categories(audit)
+
+    out, audit = redact("Six panels in a grid.")
+    assert out == "multi-panel layout in a grid."
+    assert "count_word" in _categories(audit)
 
 
 def test_domain_terms_preserved_and_audited_as_kept():

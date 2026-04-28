@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Convert SVG to PNG at 150 dpi (reference quality for TikZ layout guidance)
+# Convert SVG to PNG at 600 dpi for raster export.
 set -euo pipefail
 
 if ! command -v rsvg-convert >/dev/null 2>&1; then

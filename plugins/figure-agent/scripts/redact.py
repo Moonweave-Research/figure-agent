@@ -47,18 +47,28 @@ def _quantity_from_phrase(phrase: str) -> int | None:
 
 def _count_replacement(phrase: str, noun: str) -> str:
     noun = noun.lower()
+    quantity = _quantity_from_phrase(phrase)
     if noun.startswith("dot") or "점" in noun:
-        quantity = _quantity_from_phrase(phrase)
         if quantity is not None and quantity <= 2:
             return "a small cluster of dots"
         return "a few dots"
     if noun.startswith("layer"):
+        if quantity == 1:
+            return "single layer"
         return "stacked layers"
     if noun.startswith("panel"):
-        return "comparison panels"
+        if quantity == 1:
+            return "single-panel layout"
+        if quantity == 2:
+            return "two-panel comparison layout"
+        return "multi-panel layout"
     if noun.startswith("arrow"):
+        if quantity == 1:
+            return "one directional arrow"
         return "directional arrows"
     if noun.startswith("electron"):
+        if quantity == 1:
+            return "one representative electron"
         return "several electrons"
     return f"a few {noun}"
 
@@ -74,7 +84,7 @@ _NORMALIZATION_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
         "general geometry",
     ),
     (
-        re.compile(r"\bS\d{2,3}\s*(?:[-–/]\s*S?\d{2,3})?\b"),
+        re.compile(r"\bS\d{2,3}(?:\s*[-–/]\s*S?\d{2,3})?\b"),
         "sample_label",
         "different material compositions",
     ),
@@ -104,12 +114,12 @@ _NORMALIZATION_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
     (
         re.compile(r"\b\d+(?:\.\d+)?\s*(?:[kMG]V|[mµu]V|V)\b"),
         "voltage",
-        "applied voltage",
+        "a representative voltage",
     ),
     (
         re.compile(r"\b\d+(?:\.\d+)?\s*(?:ms|µs|us|ns|min|hr?|s)\b", re.IGNORECASE),
         "time",
-        "time scale",
+        "a representative duration",
     ),
     (
         re.compile(r"\b\d+(?:\.\d+)?\s*dpi\b", re.IGNORECASE),
