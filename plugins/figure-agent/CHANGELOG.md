@@ -2,7 +2,7 @@
 
 All notable changes to figure-agent are documented here.
 
-## [Unreleased]
+## [0.1.4] - 2026-04-28
 
 ### Fixed
 
@@ -11,7 +11,7 @@ All notable changes to figure-agent are documented here.
 - Make `/fig_review` use repo-relative render paths, reject stale renders, and
   include line-numbered TikZ source for critic citations.
 - Align design docs, release-gate docs, and local package metadata with shipped
-  v0.1.3 behavior.
+  `/fig_review` behavior.
 
 ## [0.1.3] - 2026-04-28
 
