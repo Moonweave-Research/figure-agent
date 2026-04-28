@@ -214,6 +214,10 @@ def format_audit(audit: list[RedactionEvent]) -> str:
     for ev in audit:
         if ev.category == "domain_term":
             lines.append(f"  KEPT [domain_term]: {ev.original!r}")
+        elif ev.category == "physics_invariant":
+            lines.append(
+                f"  KEPT [physics_invariant]: {ev.original!r} (verbatim constraint)"
+            )
         elif ev.category == "data_plot_signal":
             lines.append(f"  WARN [data_plot_signal]: {ev.original!r} (review scope)")
         else:

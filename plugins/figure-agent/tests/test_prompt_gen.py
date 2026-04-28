@@ -63,6 +63,28 @@ def test_compose_prompt_uses_topic_and_panels():
     assert "Do NOT include:" in out
 
 
+def test_compose_prompt_surfaces_physics_invariants_before_include():
+    spec = {"name": "demo", "panels": []}
+    briefing = {
+        1: ("Topic", "Trap-assisted retention schematic."),
+        3: ("Composition", "- show CB, trap level, and VB"),
+        6: (
+            "Physics invariants",
+            "- E_t stays inside the bandgap\n"
+            "- capture arrow direction is CB to trap, not the reverse",
+        ),
+    }
+
+    out = compose_prompt(spec, briefing)
+
+    invariants_idx = out.index("Preserve these scientific constraints.")
+    include_idx = out.index("Include:")
+    assert invariants_idx < include_idx
+    assert "Physics invariants" not in out
+    assert "- E_t stays inside the bandgap" in out
+    assert "- capture arrow direction is CB to trap, not the reverse" in out
+
+
 def test_compose_prompt_strips_markdown_bold_from_topic():
     spec = {"name": "demo", "panels": []}
     briefing = {
@@ -147,6 +169,54 @@ skip
     assert "composition_ratio" in categories
     assert "domain_term" in categories
     assert any("plot" in category for category in categories)
+
+
+def test_generate_for_preserves_physics_invariants_verbatim(tmp_path):
+    example_dir = tmp_path / "example"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        """name: invariant_preservation_demo
+panels: []
+style_profile: polymer-default
+selected_preview: null
+""",
+        encoding="utf-8",
+    )
+    (example_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Use 4 dots in the composition.
+
+## 3. Composition
+
+- Show three layers with 1 arrow.
+
+## 6. Physics invariants
+
+**Physics invariants:**
+- 3 layers must remain in order.
+- 1 arrow must point from CB to trap.
+""",
+        encoding="utf-8",
+    )
+
+    prompt, audit = generate_for(example_dir)
+    invariant_kept = [ev for ev in audit if ev.category == "physics_invariant"]
+
+    invariant_idx = prompt.index("Preserve these scientific constraints.")
+    include_idx = prompt.index("Include:")
+    invariant_block = prompt[invariant_idx:include_idx]
+    include_block = prompt[include_idx:]
+
+    assert "Physics invariants:" not in invariant_block
+    assert "- 3 layers must remain in order." in invariant_block
+    assert "- 1 arrow must point from CB to trap." in invariant_block
+    assert "stacked layers must remain in order" not in invariant_block
+    assert "one directional arrow must point" not in invariant_block
+    assert invariant_idx < include_idx
+    assert "stacked layers" in include_block
+    assert "one directional arrow" in include_block
+    assert {ev.original for ev in invariant_kept} == {"3 layers", "1 arrow"}
 
 
 def test_skip_keyword_in_style_section_omits_body():

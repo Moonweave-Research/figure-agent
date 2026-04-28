@@ -2,6 +2,15 @@
 
 All notable changes to figure-agent are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Surface `briefing.md` §6 Physics invariants near the top of generated prompts
+  and preserve them verbatim so conceptual constraints remain hard constraints.
+- Report literal details inside §6 as kept physics-invariant audit items.
+- Document `/fig_review` as a v0.2 Claude-assisted critique direction.
+
 ## [0.1.1] - 2026-04-28
 
 ### Fixed

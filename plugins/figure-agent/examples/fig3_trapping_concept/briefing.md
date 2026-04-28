@@ -57,6 +57,15 @@ Nature schematic 스타일 — minimal, white/light-gray panel backgrounds,
 sans-serif, balanced composition. blue=conduction/electron, red=valence,
 amber=deep trap, gray=axis/recombination/escape (원본 sty 매크로 결).
 
+## 6. Physics invariants
+
+- Panel (a): PDMS has clean CB/VB bandgap and no trap level.
+- Panel (b): sulfur polymer has deep trap level E_t inside the bandgap, below CB and above VB.
+- Injection arrow enters CB before capture.
+- Capture direction is CB to deep trap, not the reverse.
+- Trapped electrons sit on trap levels, not floating freely in the gap.
+- Thermal escape is weak/negligible relative to deep-trap retention.
+
 ---
 
 When this briefing is filled, run `/fig_prompt fig3_trapping_concept` to generate the normalized prompt for external image generation.

@@ -20,6 +20,8 @@ Steps:
 3. Compose ONE prompt block:
    - Opening: "Create a clean white-background Nature-style scientific schematic."
    - Topic line (from briefing.md)
+   - A near-top scientific-constraints block from briefing.md §6, if present;
+     preserve those bullets verbatim and do not echo the briefing section title verbatim
    - Include: bullet list of what must appear (from briefing.md, normalized)
    - Style: minimal, elegant, no unnecessary text, consistent colors, balanced composition
    - Normalization policy: avoid distracting literals while preserving schematic intent

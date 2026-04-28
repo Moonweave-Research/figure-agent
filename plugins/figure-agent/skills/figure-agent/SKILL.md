@@ -78,6 +78,8 @@ examples/<name>/
 ## What the prompt must contain
 
 - Domain vocabulary and mechanism terms that must be preserved
+- Physics invariants that must not be distorted (for example level ordering,
+  arrow direction, containment, causal direction)
 - Style block (Nature schematic, white background, minimal labels, balanced composition)
 - Composition hint (panel layout, flow direction, arrow semantics)
 - Normalization policy (generalize distracting literals; preserve schematic intent)

@@ -17,7 +17,7 @@ from pathlib import Path
 
 # sys.path[0] is the script's directory when invoked as `python3 prompt_gen.py`,
 # so a sibling-module import works without any package wiring.
-from redact import format_audit, redact
+from redact import RedactionEvent, format_audit, redact
 
 _SECTION_HEADER = re.compile(r"^##\s+(\d+)\.\s+(.+)$", re.MULTILINE)
 _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
@@ -27,6 +27,8 @@ _MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
 _BARE_LABEL_HEADER = re.compile(r"^[^:]+:\s*$")
 _ALLOW_HINT = re.compile(r"\b(?:ok|allowed|허용)\b|노출\s*ok", re.IGNORECASE)
 _SKIP_TOKENS = {"skip", "(none)", "none", "(default)", "default", "n/a", "na", "-"}
+_INVARIANT_PROMPT_LINE = "Preserve these scientific constraints."
+_INCLUDE_PROMPT_LINE = "Include:"
 
 
 def _is_skip(body: str) -> bool:
@@ -153,6 +155,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
     composition = briefing.get(3, ("", ""))[1]
     forbidden = briefing.get(4, ("", ""))[1]
     style_extra = briefing.get(5, ("", ""))[1]
+    invariants = briefing.get(6, ("", ""))[1]
 
     header = "Create a clean white-background Nature-style scientific schematic."
 
@@ -164,6 +167,12 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         "",
         f"Layout: {panel_summary}",
         "",
+    ]
+
+    if invariants and not _is_skip(invariants):
+        parts += [_INVARIANT_PROMPT_LINE, _bullet_block(invariants), ""]
+
+    parts += [
         "Include:",
         _bullet_block(composition),
     ]
@@ -203,6 +212,36 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
     return "\n".join(parts)
 
 
+def normalize_prompt(prompt: str) -> tuple[str, list]:
+    """Normalize prompt text while preserving the hard-invariant block verbatim."""
+    block_start = prompt.find(_INVARIANT_PROMPT_LINE)
+    if block_start == -1:
+        return redact(prompt)
+
+    include_start = prompt.find(f"\n{_INCLUDE_PROMPT_LINE}", block_start)
+    if include_start == -1:
+        return redact(prompt)
+
+    prefix = prompt[:block_start]
+    invariant_block = prompt[block_start:include_start]
+    suffix = prompt[include_start + 1 :]
+
+    normalized_prefix, prefix_audit = redact(prefix)
+    _normalized_invariant, invariant_audit = redact(invariant_block)
+    normalized_suffix, suffix_audit = redact(suffix)
+    kept_invariant_audit = [
+        RedactionEvent(ev.original, ev.original, "physics_invariant", ev.span)
+        for ev in invariant_audit
+        if ev.category != "domain_term"
+    ]
+    normalized = "\n\n".join(
+        part.strip("\n")
+        for part in [normalized_prefix, invariant_block, normalized_suffix]
+        if part.strip()
+    )
+    return normalized, [*prefix_audit, *kept_invariant_audit, *suffix_audit]
+
+
 def generate_for(example_dir: Path) -> tuple[str, list]:
     """Read spec.yaml + briefing.md from `example_dir`, compose + normalize prompt."""
     spec_path = example_dir / "spec.yaml"
@@ -214,7 +253,7 @@ def generate_for(example_dir: Path) -> tuple[str, list]:
     spec = parse_spec(spec_path.read_text())
     briefing = parse_briefing(briefing_path.read_text())
     prompt = compose_prompt(spec, briefing)
-    normalized, audit = redact(prompt)
+    normalized, audit = normalize_prompt(prompt)
     return normalized, audit
 
 

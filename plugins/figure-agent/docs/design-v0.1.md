@@ -52,6 +52,8 @@ The prompt engine reads `spec.yaml` and `briefing.md`, then applies
 Normalization means:
 
 - Preserve the scientific mechanism and domain vocabulary.
+- Surface explicit physics invariants early in the prompt when the briefing
+  provides them.
 - Preserve useful visual intent: layout, hierarchy, arrows, material contrast,
   and visual metaphors.
 - Generalize literals that can pull image-gen toward clutter or data-plot
@@ -214,6 +216,10 @@ v0.1 is shippable when these are true:
   - sample labels/ranges such as `S60-S85`;
   - unitless geometry phrases such as `width 200 by 50 pixels`.
 - Prompt audit explains what was generalized and why.
+- Physics invariants from `briefing.md` are placed before general composition
+  bullets and preserved verbatim so external image-gen sees them as hard
+  conceptual constraints. Literal details in this block are reported as kept
+  invariant constraints in the audit rather than silently normalized.
 - Compile/check/export all consume the same canonical artifact path.
 - Slash command docs use one cwd convention.
 - `uv run pytest -q` and `uv run ruff check .` pass.
@@ -230,6 +236,13 @@ Possible v0.2 work:
 - Generate a first-pass TikZ scaffold from `briefing.md`, `spec.yaml`, and the
   selected preview metadata.
 - Add stronger prompt-quality scoring before external image-gen.
+- Add `/fig_review` as a Claude-assisted critique command, not a direct
+  image-generation API call:
+  - prompt mode: compare `briefing.md` against generated prompt and report
+    missing or distorted physics invariants before the user sends it externally;
+  - render mode: compare rendered output against `briefing.md` and report
+    conceptual/aesthetic fix candidates without promising exact source-line
+    mapping.
 - Add visual contact-sheet/ranking helpers for previews.
 - Package Python helpers as importable modules if script-only execution becomes
   limiting.

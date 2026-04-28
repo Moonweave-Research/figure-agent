@@ -4,7 +4,7 @@ description: Conversational interview to scaffold a new figure (schematic) and a
 
 Create a new figure project via a conversational interview. **Do not just dump a markdown
 template and ask the user to fill it in an editor** — that defeats the purpose of the plugin.
-Run a 5-question interview in chat, write each answer into `briefing.md` as it arrives.
+Run a 6-question interview in chat, write each answer into `briefing.md` as it arrives.
 
 **Usage**: `/fig_new <name>`
 
@@ -16,12 +16,13 @@ Create directory `examples/<name>/` (`<name>` maps to `examples/<name>/`) with:
 - subdirs `previews/`, `build/`, `exports/` (each containing `.gitkeep`)
 - `spec.yaml` skeleton (`name`, `panels: []`, `style_profile: polymer-default`,
   `selected_preview: null`)
-- `briefing.md` skeleton with 5 empty sections (Topic / Vocabulary / Composition /
-  Normalize / Style notes), each prefaced with `## N. <title>` and an HTML-comment TODO hint
+- `briefing.md` skeleton with 6 empty sections (Topic / Vocabulary / Composition /
+  Normalize / Style notes / Physics invariants), each prefaced with `## N. <title>`
+  and an HTML-comment TODO hint
 
 ## Step 2 — Run the interview
 
-Ask the user the following five questions, one per turn (or all at once if user asks for it).
+Ask the user the following six questions, one per turn (or all at once if user asks for it).
 After each answer, **write the answer into the corresponding section of `briefing.md`**
 (strip the HTML-comment TODO when overwriting). For §3, also propagate panel structure into
 `spec.yaml`.
@@ -32,6 +33,9 @@ After each answer, **write the answer into the corresponding section of `briefin
    흐름 / 등)"
 4. **§4 Normalize / avoid literal overfit** — "외부 imagegen이 숫자/샘플명/조건에 과하게 끌려가면 안 되는 항목은? (예: 정확 수치, sample code, dimension, count)"
 5. **§5 Style notes** — "추가 style preference 있나요? (없으면 'skip' 응답)"
+6. **§6 Physics invariants** — "그림이 반드시 지켜야 하는 물리/개념 제약은? (예:
+   trap level 위치, arrow 방향, 보존해야 할 관계. 이 섹션은 prompt normalization에서
+   일반화하지 않고 그대로 보존되므로 짧고 개념 중심으로 작성)"
 
 ## Step 3 — Scope-drift check (CRITICAL)
 
@@ -60,7 +64,7 @@ figure intent.
 
 ## Step 4 — Confirm and hand off
 
-After all 5 sections are filled (and any scope-drift conflicts resolved), tell the user:
+After all 6 sections are filled (and any scope-drift conflicts resolved), tell the user:
 
 > "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. /fig_prompt <name> 실행하시면 normalized
 > prompt 생성합니다. 또는 briefing 더 손볼 부분 있으시면 알려주세요."
