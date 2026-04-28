@@ -1,120 +1,245 @@
 # figure-agent v0.1 Design
 
-**Date**: 2026-04-27
-**Status**: scaffold complete, implementation pending
+**Date**: 2026-04-28
+**Status**: v0.1 ship spec, implementation alignment pending
+
+## One-line Identity
+
+`figure-agent` v0.1 is an **intent-controlled schematic workflow**.
+
+It turns research intent into image-gen-ready schematic prompts, lets the user
+create and select external visual drafts, then supports human/LLM-authored TikZ
+vector finishing with deterministic compile, clash checks, and export.
+
+It is **not** an automatic image-to-vector reconstruction system in v0.1.
 
 ## Origin
 
-Successor to `[tikz-paper-workflow]` plugin (archived). Architecture pivoted after Y0 fig1
-pilot (3-way: V_brief / V_weak / V_curated) showed reference-image layer hurt more than
-helped: V_curated (strong reference) produced 41 visual_clash WARN vs V_brief (no reference)
-9, a +32 inflation that triggered INCONCLUSIVE verdict despite +1.75 rubric mean uplift.
+`figure-agent` succeeds the archived `[tikz-paper-workflow]` plugin. The old
+reference-layer path was retired after the Y0 fig1 pilot showed that strong
+reference images could increase visual density and visual-clash warnings instead
+of improving schematic quality. The new workflow uses external generative drafts
+as disposable visual exploration, not as source-of-truth references.
 
-Interpretation: reference images, regardless of selection quality, induce anchor misuse and
-density inflation. Removing the reference layer entirely — and replacing it with
-generative-draft-from-prompt — eliminates the failure mechanism.
+The pivot is not "hide all information from external tools." The real goal is to
+control what image-gen models attend to, so the draft stays schematic, clean, and
+mechanism-focused.
 
-## Two Responsibilities
+## Product Bet
 
-### 1. Confident Prompt Generation
+For publication schematics, the bottleneck is usually not API access or raw image
+generation. The bottleneck is preserving the author's conceptual intent while
+preventing image-gen from overfitting to distracting literals such as exact
+counts, sample labels, dimensions, or experimental conditions.
 
-Goal: one text block that, copy-pasted into any modern image-gen tool, produces a usable
-scientific schematic on first attempt.
+v0.1 therefore optimizes for:
 
-Components:
-- Domain vocabulary (specific terms from briefing.md)
-- Style block (Nature schematic, minimal labels, balanced composition)
-- Composition hint (panel layout, flow direction, arrow semantics)
-- Negative prompt (no numerical values, no labels)
-- Automatic redaction (numbers, units, geometry, experimental conditions)
-- Redaction audit (visible to user for confirm before send)
+- Better first-pass external schematic drafts.
+- Clear separation between draft exploration and final vector source.
+- Deterministic compile/check/export once TikZ exists.
+- Honest capability boundaries.
 
-### 2. Tight Vector Compile
+## Core Responsibilities
 
-Goal: selected preview → SVG/TikZ deterministic reconstruction with publication quality.
+### 1. Prompt Intent Control
 
-Components:
-- Compile chain (lualatex via `scripts/compile.sh`)
-- Style Lock (`styles/polymer-paper-preamble.sty` macros)
-- Collision check (`scripts/check_collisions.py`)
-- Visual clash check (`scripts/check_visual_clash.py`)
-- Multi-panel alignment (TikZ subfigure pattern)
-- Revision re-render from spec.yaml + selected preview
+Goal: produce one prompt block that can be copied into any modern image-gen tool
+and is likely to yield a useful scientific schematic draft.
 
-## Out of Scope
+The prompt engine reads `spec.yaml` and `briefing.md`, then applies
+**normalization**, not security-first redaction.
 
-- Image-gen API integration (any backend)
-- Reference image retrieval (Crossref / Semantic Scholar / PaperBanana paths deprecated)
-- "Single source of truth" YAML spec (spec.yaml is lightweight; meaning in briefing.md + .tex)
-- Reference-quality pilots (Y0/Y1 retired with the reference layer)
+Normalization means:
 
-## Workflow Stages (5 slash commands)
+- Preserve the scientific mechanism and domain vocabulary.
+- Preserve useful visual intent: layout, hierarchy, arrows, material contrast,
+  and visual metaphors.
+- Generalize literals that can pull image-gen toward clutter or data-plot
+  behavior.
+- Surface an audit so the user can judge whether the prompt still reflects the
+  intended schematic.
 
+Examples:
+
+| Input from briefing | Prompt-facing form | Why |
+| --- | --- | --- |
+| `4 dots` | `a few electron dots` | Avoid brittle literal counting. |
+| `S60-S85` | `different material compositions` | Avoid sample-code/data-plot drift. |
+| `200 nm film` | `thin film` | Preserve visual role, drop exact dimension. |
+| `three layers` | `stacked layers` | Keep structure without over-constraining count. |
+| `70/30 copolymer` | `copolymer material` | Keep material class, avoid exact formulation. |
+
+The audit vocabulary distinguishes:
+
+- `NORMALIZED`: literal detail was generalized for image-gen quality.
+- `KEPT`: domain term was intentionally preserved.
+- `WARN`: the input looks like a data plot or experiment-specific request that
+  may need user confirmation.
+
+The existing `redact.py` name may remain during v0.1 implementation for
+compatibility, but the design contract is prompt normalization / intent control.
+
+### 2. Human/LLM-in-the-loop Vector Finishing
+
+Goal: once a draft direction is selected, produce a stable vector figure through
+TikZ compile, visual checks, and export.
+
+v0.1 does not automatically vectorize preview images. The selected preview is an
+inspiration/reference for the authoring step. The final `.tex` source may be
+written by the human, by an LLM, or by both iteratively.
+
+The plugin owns the deterministic finishing surface:
+
+- Compile chain via `scripts/compile.sh`.
+- Style Lock through `styles/polymer-paper-preamble.sty`.
+- Text collision checks via `scripts/check_collisions.py`.
+- Render-based visual clash checks via `scripts/check_visual_clash.py`.
+- Export to PDF/SVG/TIFF or PNG through export scripts.
+
+## Non-goals
+
+v0.1 does not:
+
+- Call image-generation APIs.
+- Manage image-generation API keys.
+- Automatically convert selected preview images into TikZ/SVG.
+- Guarantee final publication quality without human/LLM vector refinement.
+- Generate quantitative data plots.
+- Treat `spec.yaml` as a full single source of truth.
+- Retrieve external reference images or revive the old reference registry.
+- Target PyPI packaging or `uv build` as a release artifact.
+
+## Workflow
+
+```text
+/fig_new <name>
+  -> create examples/<name>/ scaffold
+  -> collect research intent into briefing.md
+  -> catch obvious data-plot drift early
+
+/fig_prompt
+  -> read spec.yaml + briefing.md
+  -> normalize prompt for external image-gen
+  -> output one prompt block + audit
+  -> HALT
+
+user works externally
+  -> choose any image-gen tool
+  -> generate 3-5 schematic draft candidates
+  -> save files into examples/<name>/previews/
+
+/fig_preview_select
+  -> list previews
+  -> user selects one visual direction
+  -> record selected_preview in spec.yaml
+
+human/LLM vector finishing
+  -> author examples/<name>/<name>.tex using selected preview as inspiration
+  -> keep final source independent and editable
+
+/fig_compile
+  -> compile the .tex source
+  -> run collision and visual-clash checks
+  -> report warnings without auto-fixing
+
+/fig_export
+  -> export final files into examples/<name>/exports/
 ```
-/fig_new <name>             scaffold
-/fig_prompt                 redacted prompt → HALT
-   ↓ user works externally (any image-gen tool)
-/fig_preview_select         user picks 1 of 3-5 candidates
-/fig_compile                vector reconstruct + checks
-/fig_export                 PDF/SVG/TIFF
-```
 
-Manual gate naturally embedded between `/fig_prompt` and `/fig_preview_select` — workflow
-exits, user does external work, returns when ready.
+## Per-figure Folder Contract
 
-## Per-figure Folder Convention
-
-```
+```text
 examples/<figure_name>/
-├── spec.yaml         # lightweight (panels + style_profile + selected_preview)
-├── briefing.md       # human's intent in prose
-├── previews/         # external image-gen output (any filename)
-├── selected/         # chosen preview (symlink or copy)
-├── <name>.tex        # human-authored TikZ source
-├── build/            # lualatex artifacts (gitignored)
-└── exports/          # PDF/SVG/TIFF (gitignored except on release)
+├── spec.yaml          # lightweight metadata: name, panels, style_profile, selected_preview
+├── briefing.md        # research intent and schematic direction
+├── previews/          # user-generated external image-gen drafts
+├── selected/          # optional copy/symlink of chosen draft
+├── <name>.tex         # human/LLM-authored TikZ source
+├── build/             # canonical compile artifacts
+└── exports/           # final PDF/SVG/TIFF/PNG outputs
 ```
 
-## Asset Inheritance from [tikz-paper-workflow]
+The canonical compile output should be `build/`. Root-level generated
+`<name>.pdf` or `<name>.png` files should not be the long-term contract because
+they make stale-artifact checks and git noise more likely.
 
-**Copied (90% of compile-side value)**:
-- `styles/polymer-paper-preamble.sty`
-- `scripts/check_collisions.py`
-- `scripts/check_visual_clash.py`
-- `scripts/compile.sh`
-- `scripts/export_svg.sh`
-- `scripts/svg_to_png.sh`
+## Execution Contract
 
-**Discarded**:
-- `retrieve_refs.py` (925 LOC — reference retrieval no longer needed)
-- `init_figure_refs.sh`
-- `promote_internal_success.sh`
-- `registry_update.sh`
-- `_check_manifest.py`
-- `build_contactsheet.sh` (preview select handles this differently)
-- `references/<fig>/{retrieved, claude_svg, imagegen}` per-figure structure
-- 5-layer source / role / license registry
-- Gate γ reference-quality decision logic
+v0.1 commands and scripts should be documented from the plugin root unless a
+specific wrapper supports figure-directory execution.
 
-## v0.1 Scope (this scaffold)
+Canonical examples:
 
-- Repo structure ✓
-- 5 slash command stubs (this doc)
-- plugin.json + SKILL.md ✓
-- Asset copy (sty + 5 scripts) ✓
-- design-v0.1.md (this file)
+```bash
+uv run python3 scripts/prompt_gen.py examples/<name>
+bash scripts/compile.sh examples/<name>/<name>.tex
+uv run python3 scripts/check_collisions.py examples/<name>/build/<name>.pdf
+uv run python3 scripts/check_visual_clash.py examples/<name>/build/<name>.pdf
+bash scripts/export_svg.sh examples/<name>/build/<name>.pdf examples/<name>/exports/<name>.svg
+```
 
-## v0.1 Implementation Pending
+Module-style Python execution with `python -m scripts.prompt_gen` is not a v0.1
+contract unless the scripts are later packaged as importable modules.
 
-- `scripts/redact.py` — regex + ontology-stub redaction
-- `scripts/prompt_gen.py` — prompt template engine
-- Wire each slash command to its script
-- First dogfooding: port `sc4_ispd_iso` from [tikz-paper-workflow] as inaugural example
-- Decision: keep `compile.sh` script invocation pattern as-is, or wrap in plugin script
+## Data Plot Boundary
 
-## Known Risks (1-line pin)
+`figure-agent` is for schematic figures. Data plots belong in matplotlib,
+Graph_making_hub, or a dedicated plotting workflow.
 
-The whole bet rides on whether selected preview → vector reconstruct actually reaches
-Nature-tone quality. Cannot answer with design alone — first dogfooding figure is the
-empirical test. If that fails, the question is not "fix the plugin" but "is generative draft
-from prompt-only sufficient anchor for a paper-grade vector reconstruction."
+When the briefing contains data-plot signals, the plugin should not silently
+continue as if it were a schematic request. It should ask whether the user wants
+to reframe the idea as a qualitative schematic or redirect to a plotting tool.
+
+Data-plot signals include:
+
+- Quantitative axes or tick values.
+- `vs composition`, `vs time`, sweep/range language.
+- Raw/fitted curves, error bars, spectra, peak positions.
+- Sample-code series such as `S60-S85` when used as data categories.
+- Real measurement values that matter to the figure's scientific claim.
+
+Not every number is forbidden. Numbers are only a problem when they distract the
+image-gen draft or indicate that the requested artifact is really a data plot.
+
+## v0.1 Ship Criteria
+
+v0.1 is shippable when these are true:
+
+- Docs describe v0.1 as intent-controlled prompt generation plus
+  human/LLM-in-the-loop vector finishing.
+- Docs do not claim automatic preview-to-vector reconstruction.
+- Prompt normalization covers at least:
+  - numeric count phrases such as `4 dots`;
+  - English count words such as `three layers`;
+  - sample labels/ranges such as `S60-S85`;
+  - unitless geometry phrases such as `width 200 by 50 pixels`.
+- Prompt audit explains what was generalized and why.
+- Compile/check/export all consume the same canonical artifact path.
+- Slash command docs use one cwd convention.
+- `uv run pytest -q` and `uv run ruff check .` pass.
+- At least one compile/check/export smoke path is verified against the dogfood
+  example or a smaller fixture.
+
+## v0.2 Direction
+
+v0.2 may add preview-assisted TikZ scaffolding, but only after v0.1's prompt
+control and deterministic finishing contracts are stable.
+
+Possible v0.2 work:
+
+- Generate a first-pass TikZ scaffold from `briefing.md`, `spec.yaml`, and the
+  selected preview metadata.
+- Add stronger prompt-quality scoring before external image-gen.
+- Add visual contact-sheet/ranking helpers for previews.
+- Package Python helpers as importable modules if script-only execution becomes
+  limiting.
+
+## Design Risk
+
+The main risk is not that a few numbers leave the local machine. The main risk is
+that image-gen models over-attend to literal numeric details, sample codes, or
+experimental conditions and produce dense, data-plot-like drafts instead of clean
+scientific schematics.
+
+The v0.1 design succeeds if it consistently keeps external drafts visually
+schematic and makes the final TikZ finishing loop predictable.
