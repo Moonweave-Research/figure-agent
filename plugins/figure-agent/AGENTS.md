@@ -5,8 +5,8 @@ This repo is a Codex plugin. Authoritative workflow: `skills/figure-agent/SKILL.
 ## Identity
 
 Plugin responsibilities (only two):
-1. Confident prompt generation (with redaction)
-2. Tight vector compile (Style Lock + clash checks)
+1. Prompt intent control (normalization, not security-first redaction)
+2. Human/LLM-authored TikZ compile/export (Style Lock + clash checks)
 
 Plugin does **not** call image-gen APIs. User generates draft images externally and saves
 them into `examples/<name>/previews/`.
@@ -14,8 +14,10 @@ them into `examples/<name>/previews/`.
 ## Workflow
 
 ```
-/fig_new <name>  →  /fig_prompt  →  [HALT, user works externally]
-                 →  /fig_preview_select  →  /fig_compile  →  /fig_export
+/fig_new <name>  →  /fig_prompt <name>  →  [HALT, user works externally]
+                 →  /fig_preview_select <name>
+                 →  [HALT, user/LLM authors examples/<name>/<name>.tex]
+                 →  /fig_compile <name>  →  /fig_export <name>
 ```
 
 ## Repo Notes

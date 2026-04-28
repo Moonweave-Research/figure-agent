@@ -1,6 +1,6 @@
 ---
 name: figure-agent
-description: Use when generating publication-grade scientific **schematics** for papers — mechanism diagrams, band structures, conceptual flows, comparison schematics. **NOT for data plots** (quantitative axes, measurement curves, error bars) — those belong in matplotlib / Graph_making_hub. Workflow halts after prompt generation so user produces draft images in any external tool (ChatGPT / Gemini / Nano Banana / Midjourney / local SD), then resumes for vector reconstruction. Plugin handles prompt confidence + vector compile only — no image-gen API calls. Trigger on "figure 만들어 / paper figure / nature figure / schematic 그려줘 / fig new".
+description: Use when generating publication-grade scientific **schematics** for papers — mechanism diagrams, band structures, conceptual flows, comparison schematics. **NOT for data plots** (quantitative axes, measurement curves, error bars) — those belong in matplotlib / Graph_making_hub. Workflow halts after prompt generation so user produces draft images in any external tool (ChatGPT / Gemini / Nano Banana / Midjourney / local SD), then resumes for human/LLM-authored TikZ compile, checks, and export. Plugin handles prompt intent control + deterministic vector finishing only — no image-gen API calls. Trigger on "figure 만들어 / paper figure / nature figure / schematic 그려줘 / fig new".
 ---
 
 # figure-agent SKILL
@@ -14,16 +14,15 @@ scope** (see Boundaries below).
 
 Two responsibilities, no more:
 
-1. **Confident schematic prompt generation** — produce one text block that, copy-pasted into
-   any modern image-gen tool, yields a usable scientific schematic on first try. Domain
-   vocabulary, style block, composition hint, automatic redaction of numerical/condition/
-   geometry leakage.
-2. **Tight vector compile** — selected preview → SVG/TikZ deterministic reconstruction.
-   Collision check, visual clash check, Style Lock, multi-panel alignment, revision-safe
-   re-render from spec.
+1. **Prompt intent control** — produce one prompt block that preserves the author's
+   scientific mechanism and visual hierarchy while normalizing distracting literals such as
+   exact counts, sample labels, dimensions, and experimental conditions.
+2. **Human/LLM-in-the-loop vector finishing** — selected preview is inspiration only. v0.1
+   does not automatically vectorize preview images; it compiles/checks/exports TikZ authored
+   by a human, an LLM, or both.
 
 Image generation itself is **not** a plugin responsibility. User picks any external tool and
-saves output to `previews/`.
+saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
 
 ## Workflow (5 stages, slash-separated)
 
@@ -31,59 +30,66 @@ saves output to `previews/`.
 /fig_new <name>          step 1
    → creates examples/<name>/{spec.yaml, briefing.md, previews/, build/, exports/}
 
-/fig_prompt              step 2
-   → reads spec.yaml + briefing.md
-   → applies redaction (numbers, units, experimental conditions, geometry)
-   → outputs ONE prompt block + redaction audit
+/fig_prompt <name>       step 2
+   → reads examples/<name>/spec.yaml + examples/<name>/briefing.md
+   → applies prompt normalization
+   → outputs ONE prompt block + normalization audit
    → tells user: "Copy this prompt to your image-gen tool of choice.
                   Generate 3-5 candidates. Save into examples/<name>/previews/
-                  with any filename. Then run /fig_preview_select."
+                  as PNG/JPG/JPEG files. Then run /fig_preview_select <name>."
    → HALTS — slash exits
 
 (user works externally — no plugin involvement)
 
-/fig_preview_select      step 3
-   → lists examples/<name>/previews/*.png|jpg
+/fig_preview_select <name> step 3
+   → lists examples/<name>/previews/*.png|*.jpg|*.jpeg
    → presents to user (numbered, alphabetical sort)
    → user picks 1
-   → records selection in spec.yaml
+   → records selection in examples/<name>/spec.yaml
+   → HALTS so user and/or LLM authors examples/<name>/<name>.tex from the selected preview
 
-/fig_compile             step 4
-   → reconstructs selected preview as SVG/TikZ
+/fig_compile <name>      step 4
+   → compiles examples/<name>/<name>.tex into examples/<name>/build/
    → applies Style Lock (font/color/thickness from styles/polymer-paper-preamble.sty)
-   → runs check_collisions.py + check_visual_clash.py
+   → runs check_collisions.py + check_visual_clash.py on examples/<name>/build/<name>.pdf
    → reports WARN (does not block — human-gated)
 
-/fig_export              step 5
-   → produces PDF + SVG + TIFF (600 dpi) into examples/<name>/exports/
+/fig_export <name>       step 5
+   → produces PDF + SVG + TIFF + PNG (600 dpi raster) into examples/<name>/exports/
 ```
+
+Run slash commands from the plugin root. `<name>` always maps to `examples/<name>/`.
+After `/fig_preview_select <name>`, the next required step is authoring the editable vector
+source at `examples/<name>/<name>.tex`; v0.1 does not create that file automatically.
 
 ## Per-figure folder convention
 
 ```
-examples/<figure_name>/
+examples/<name>/
 ├── spec.yaml          # scope/panels/style profile (lightweight, NOT single source of truth)
 ├── briefing.md        # human's intent in prose (used to seed prompt)
-├── previews/          # user-generated draft images (any filename, any format)
-├── selected/          # symlink or copy of chosen preview
+├── previews/          # user-generated draft images saved under examples/<name>/previews/
+├── selected/          # optional symlink or copy of chosen preview
+├── <name>.tex         # human/LLM-authored TikZ source
 ├── build/             # compile artifacts (gitignored)
-└── exports/           # final PDF/SVG/TIFF (gitignored — checked in only on release)
+└── exports/           # final PDF/SVG/TIFF/PNG (gitignored — checked in only on release)
 ```
 
 ## What the prompt must contain
 
-- Domain vocabulary (specific terms — e.g., "charge trapping in polymer dielectric", not "charges in plastic")
+- Domain vocabulary and mechanism terms that must be preserved
 - Style block (Nature schematic, white background, minimal labels, balanced composition)
 - Composition hint (panel layout, flow direction, arrow semantics)
-- Negative prompt (no numerical values, no labels — labels added in vector stage)
-- Redaction summary (what was stripped, for user review before sending)
+- Normalization policy (generalize distracting literals; preserve schematic intent)
+- Normalization audit (what was generalized, kept, or warned)
 
 ## What the compile must guarantee
 
 - Selected preview is **inspiration only**, not copied verbatim. Vector path independent.
-- Labels precise (clash-checked).
-- Style Lock honored (no ad-hoc font/color).
-- Re-runnable from spec.yaml + selected preview without manual intervention.
+- Final `.tex` source remains editable and independent.
+- Compile/check/export all use `examples/<name>/build/<name>.pdf` as the canonical PDF.
+- Labels precise enough for clash checks.
+- Style Lock honored (no ad-hoc font/color unless explicitly justified).
 
 ## Boundaries
 

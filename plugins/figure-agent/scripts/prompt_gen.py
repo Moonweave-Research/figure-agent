@@ -1,7 +1,7 @@
-"""Generate redacted external image-gen prompt from spec.yaml + briefing.md.
+"""Generate normalized external image-gen prompt from spec.yaml + briefing.md.
 
 Reads `examples/<name>/{spec.yaml, briefing.md}`. Composes one prompt block
-following figure-agent's house template, applies redaction, and prints
+following figure-agent's house template, applies normalization, and prints
 prompt to stdout + audit summary to stderr.
 
 v0.1 scope: stdlib-only YAML subset parser (top-level scalars + `panels`
@@ -131,6 +131,11 @@ def _bullet_block(body: str) -> str:
     return "\n".join(out)
 
 
+def _plain_text(body: str) -> str:
+    """Flatten lightweight markdown that adds noise to image-gen prompts."""
+    return _MD_BOLD.sub(r"\1", body)
+
+
 def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
     name = spec.get("name", "(unnamed)")
     panels = spec.get("panels", [])
@@ -140,7 +145,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         else "single panel"
     )
 
-    topic = briefing.get(1, ("", ""))[1] or "(topic missing — fill briefing §1)"
+    topic = _plain_text(briefing.get(1, ("", ""))[1]) or "(topic missing — fill briefing §1)"
     vocab = briefing.get(2, ("", ""))[1]
     composition = briefing.get(3, ("", ""))[1]
     forbidden = briefing.get(4, ("", ""))[1]
@@ -181,7 +186,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
         "- experimental conditions",
         "- dimensional annotations",
         "- specific quantitative labels",
-        "- count tokens (e.g., '4 dots', '두 개')",
+        "- exact count tokens",
     ]
     if forbidden and not _is_skip(forbidden):
         cleaned = _filter_allowed_hints(forbidden)
@@ -196,7 +201,7 @@ def compose_prompt(spec: dict, briefing: dict[int, tuple[str, str]]) -> str:
 
 
 def generate_for(example_dir: Path) -> tuple[str, list]:
-    """Read spec.yaml + briefing.md from `example_dir`, compose + redact prompt."""
+    """Read spec.yaml + briefing.md from `example_dir`, compose + normalize prompt."""
     spec_path = example_dir / "spec.yaml"
     briefing_path = example_dir / "briefing.md"
     if not spec_path.exists():
@@ -206,8 +211,8 @@ def generate_for(example_dir: Path) -> tuple[str, list]:
     spec = parse_spec(spec_path.read_text())
     briefing = parse_briefing(briefing_path.read_text())
     prompt = compose_prompt(spec, briefing)
-    redacted, audit = redact(prompt)
-    return redacted, audit
+    normalized, audit = redact(prompt)
+    return normalized, audit
 
 
 def main() -> int:
@@ -219,22 +224,18 @@ def main() -> int:
         print(f"not a directory: {example_dir}", file=sys.stderr)
         return 2
     prompt, audit = generate_for(example_dir)
-    print("=== REDACTED PROMPT (copy below for external tool) ===")
+    print("=== NORMALIZED PROMPT (copy below for external tool) ===")
     print(prompt)
     print("=== END PROMPT ===")
-    print("\n=== Redaction audit ===", file=sys.stderr)
+    print("\n=== Normalization audit ===", file=sys.stderr)
     print(format_audit(audit), file=sys.stderr)
-    print(
-        "\n⚠️  Review the prompt for any remaining sensitive content before "
-        "sending to an external service.",
-        file=sys.stderr,
-    )
+    print("\nReview WARN items before sending to an external service.", file=sys.stderr)
     print(
         "\nNext steps:\n"
         "  1. Copy prompt above into your image-gen tool of choice.\n"
         "  2. Generate 3-5 candidates.\n"
-        f"  3. Save into {example_dir}/previews/ (any filename).\n"
-        "  4. Run /fig_preview_select to continue.",
+        f"  3. Save PNG/JPG/JPEG candidates into {example_dir}/previews/ (any filename).\n"
+        f"  4. Run /fig_preview_select {example_dir.name} to continue.",
         file=sys.stderr,
     )
     return 0

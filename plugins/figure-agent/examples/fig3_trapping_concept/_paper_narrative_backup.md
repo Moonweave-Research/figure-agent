@@ -1,9 +1,9 @@
 # Briefing — fig3_trapping_concept
 
 > **Dogfooding note**: original `_reference_original/fig3_trapping_concept.tex` is in this
-> folder as a benchmark. The dogfooding goal is to regenerate this figure end-to-end through
-> figure-agent (briefing → prompt → external image gen → vector reconstruct) and compare
-> the new vector output against the original. Filling this briefing in your own words (rather
+> folder as historical context. The dogfooding goal is to regenerate this figure through
+> figure-agent (briefing → normalized prompt → external image gen → human/LLM-authored TikZ compile)
+> and compare the final vector output against the original. Filling this briefing in your own words (rather
 > than copying from the original) is the honest path; otherwise the workflow is just a re-render.
 
 ## 1. What does this figure show? (1-2 sentences)
@@ -35,9 +35,9 @@
 - **(c)** ISPD g(E_t) trap DOS: shallow + deep 2-peak 구조. composition별 대표 곡선 overlay.
 - **(d)** τ_d discharge time: trap depth가 retention 시간에 직접 어떻게 매핑되는지 정량 비교.
 
-## 4. What MUST NOT appear (sensitive numbers, geometry, conditions)
+## 4. Normalize / avoid literal overfit
 
-- 정확한 수치값 (n, τ_d, peak 위치 등) → redact.py가 단위 동반 숫자는 자동 제거
+- 정확한 수치값 (n, τ_d, peak 위치 등) → normalization이 과도한 literal anchoring을 완화
 - 셋업 디테일 (ISPD 측정 방식, corona 전압, 시료 두께 등): **노출 OK**
 - 핵심 claim 포인트 (composition tunability, non-monotonic peak at S70-S75 등): **노출 OK**
 - 도메인 약어 (S60-S85, ISPD, RLM MM, g(E_t), τ_d): **노출 OK**
@@ -51,4 +51,4 @@ balanced layout, no extra style override).
 
 ---
 
-When this briefing is filled, run `/fig_prompt` to generate the redacted prompt for external image generation.
+When this briefing is filled, run `/fig_prompt fig3_trapping_concept` to generate the normalized prompt for external image generation.

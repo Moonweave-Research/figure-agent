@@ -63,6 +63,17 @@ def test_compose_prompt_uses_topic_and_panels():
     assert "Do NOT include:" in out
 
 
+def test_compose_prompt_strips_markdown_bold_from_topic():
+    spec = {"name": "demo", "panels": []}
+    briefing = {
+        1: ("Topic", "Show **trap-based retention** mechanism."),
+        3: ("Composition", "- demo bullet"),
+    }
+    out = compose_prompt(spec, briefing)
+    assert "**trap-based retention**" not in out
+    assert "trap-based retention" in out
+
+
 def test_generate_for_fig3_scaffold_runs():
     example_dir = REPO_ROOT / "examples" / "fig3_trapping_concept"
     if not (example_dir / "spec.yaml").exists():
@@ -73,6 +84,69 @@ def test_generate_for_fig3_scaffold_runs():
     assert "deep trap" in prompt.lower()
     assert "polarization" in prompt.lower()
     assert isinstance(audit, list)
+
+
+def test_generate_for_tmp_path_normalizes_prompt_text(tmp_path):
+    example_dir = tmp_path / "example"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        """name: prompt_normalization_demo
+panels:
+  - id: a
+    caption: S60-S85 comparison
+style_profile: polymer-default
+selected_preview: null
+"""
+    )
+    (example_dir / "briefing.md").write_text(
+        """## 1. Topic
+
+Use 4 dots for trapped electrons.
+
+## 2. Vocabulary
+
+CB, VB, HOMO, LUMO, E_t, kT
+
+## 3. Composition
+
+- Show three layers with arrows.
+- Compare S60-S85 panels.
+- Gate width 200 by 50 pixels.
+- Use a 200 nm film.
+- Use 2 dots for shallow traps.
+- Sketch a 70/30 copolymer blend.
+- Plot n vs composition with error bars.
+
+## 4. Forbidden
+
+skip
+"""
+    )
+
+    prompt, audit = generate_for(example_dir)
+    categories = [ev.category for ev in audit]
+
+    assert "a few dots" in prompt
+    assert "a small cluster of dots" in prompt
+    assert "4 dots" not in prompt
+    assert "stacked layers" in prompt
+    assert "three layers" not in prompt
+    assert "different material compositions" in prompt
+    assert "S60-S85" not in prompt
+    assert "general geometry" in prompt
+    assert "200 by 50" not in prompt
+    assert "thin film" in prompt
+    assert "200 nm" not in prompt
+    assert "copolymer material" in prompt
+    assert "70/30" not in prompt
+    assert "CB" in prompt and "VB" in prompt
+    assert "HOMO" in prompt and "LUMO" in prompt
+    assert "count" in categories
+    assert "sample_label" in categories
+    assert "geometry" in categories
+    assert "composition_ratio" in categories
+    assert "domain_term" in categories
+    assert any("plot" in category for category in categories)
 
 
 def test_skip_keyword_in_style_section_omits_body():

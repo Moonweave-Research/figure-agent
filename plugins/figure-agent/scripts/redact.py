@@ -1,11 +1,9 @@
-"""Redact numerical + unit tokens from briefing/spec text.
+"""Normalize distracting literal tokens from briefing/spec text.
 
-v0.1 scope: pure-stdlib regex sweep over standard SI / composition / electrical units.
-Returns redacted text + audit list so the caller can show a human what was stripped
-before sending to an external image-gen tool.
-
-Out of scope (v0.2+): domain ontology lookup (e.g. "85 wt% sulfur" → "sulfur-rich"),
-context-aware ratio handling, multilingual unit detection.
+The public API intentionally remains ``redact()`` for v0.1 compatibility, but
+the behavior is prompt normalization: preserve schematic intent while replacing
+literal counts, sample labels, dimensions, and experimental values that make
+image-gen tools overfit to the wrong detail.
 """
 
 from __future__ import annotations
@@ -15,28 +13,134 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# Each entry: (regex source, category label).
-# Order matters: longer/more-specific patterns first.
-_UNIT_PATTERNS: list[tuple[str, str]] = [
-    (r"\d+(?:\.\d+)?\s*wt\s*%", "composition"),
-    (r"\d+(?:\.\d+)?\s*at\s*%", "composition"),
-    (r"\d+(?:\.\d+)?\s*mol\s*%", "composition"),
-    (r"\d+(?:\.\d+)?\s*vol\s*%", "composition"),
-    (r"\d+(?:\.\d+)?\s*(?:[kMG]V|[mµu]V|V)\b", "voltage"),
-    (r"\d+(?:\.\d+)?\s*(?:[mµu]?A)\b", "current"),
-    (r"\d+(?:\.\d+)?\s*(?:[kMG]Hz|Hz)\b", "frequency"),
-    (r"\d+(?:\.\d+)?\s*(?:[mµun]m|cm|m)\b", "length"),
-    (r"\d+(?:\.\d+)?\s*(?:°C|K)\b", "temperature"),
-    (r"\d+(?:\.\d+)?\s*(?:ms|µs|us|ns|min|hr?|s)\b", "time"),
-    (r"\d+(?:\.\d+)?\s*(?:[kMG]?Pa)\b", "pressure"),
-    (r"\d+(?:\.\d+)?\s*(?:[mkµu]?N)\b", "force"),
-    (r"\d+(?:\.\d+)?\s*(?:[kMG]J|[kMG]W|J|W)\b", "energy_power"),
-    (r"\d+(?:\.\d+)?\s*(?:µm|nm|Å)", "length"),
-    (r"\d+(?:\.\d+)?\s*dpi\b", "resolution"),
-    (r"\d+(?:\.\d+)?\s*(?:개|회|번|종|차|점|장|개소)", "count"),
-]
+_DOMAIN_TERMS = ("CB", "VB", "HOMO", "LUMO", "E_t", "kT")
+_DATA_PLOT_SIGNALS = re.compile(
+    r"\b(?:plot|error\s*bars?|raw\s*\+\s*fit|peak\s*position|sweep|"
+    r"vs\s+(?:composition|time|voltage|temperature))\b",
+    re.IGNORECASE,
+)
 
-_RATIO_PATTERN = re.compile(r"\b\d+\s*[:/]\s*\d+\b")
+
+_NUMBER_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+}
+
+
+def _quantity_from_phrase(phrase: str) -> int | None:
+    numeric = re.search(r"\d+", phrase)
+    if numeric:
+        return int(numeric.group(0))
+    word = phrase.split()[0].lower() if phrase.split() else ""
+    return _NUMBER_WORDS.get(word)
+
+
+def _count_replacement(phrase: str, noun: str) -> str:
+    noun = noun.lower()
+    if noun.startswith("dot") or "점" in noun:
+        quantity = _quantity_from_phrase(phrase)
+        if quantity is not None and quantity <= 2:
+            return "a small cluster of dots"
+        return "a few dots"
+    if noun.startswith("layer"):
+        return "stacked layers"
+    if noun.startswith("panel"):
+        return "comparison panels"
+    if noun.startswith("arrow"):
+        return "directional arrows"
+    if noun.startswith("electron"):
+        return "several electrons"
+    return f"a few {noun}"
+
+
+_NORMALIZATION_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
+    (
+        re.compile(
+            r"\b(?:width|height|depth|diameter|radius|length|spacing|thickness|aspect\s+ratio)\s+"
+            r"\d+(?:\.\d+)?\s*(?:by|x|×)\s*\d+(?:\.\d+)?\s*(?:pixels?|px)?\b",
+            re.IGNORECASE,
+        ),
+        "geometry",
+        "general geometry",
+    ),
+    (
+        re.compile(r"\bS\d{2,3}\s*(?:[-–/]\s*S?\d{2,3})?\b"),
+        "sample_label",
+        "different material compositions",
+    ),
+    (
+        re.compile(
+            r"\b\d+\s*[:/]\s*\d+\s*(?:copolymer|blend|polymer|composition|ratio|mixture)?\b",
+            re.IGNORECASE,
+        ),
+        "composition_ratio",
+        "copolymer material",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*(?:wt|at|mol|vol)\s*%\b", re.IGNORECASE),
+        "composition",
+        "composition-rich material",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*(?:nm|µm|um|mm|cm|m)\s+film\b", re.IGNORECASE),
+        "length",
+        "thin film",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*(?:nm|µm|um|mm|cm|m|Å)\b", re.IGNORECASE),
+        "length",
+        "qualitative length scale",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*(?:[kMG]V|[mµu]V|V)\b"),
+        "voltage",
+        "applied voltage",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*(?:ms|µs|us|ns|min|hr?|s)\b", re.IGNORECASE),
+        "time",
+        "time scale",
+    ),
+    (
+        re.compile(r"\b\d+(?:\.\d+)?\s*dpi\b", re.IGNORECASE),
+        "resolution",
+        "high-resolution export",
+    ),
+    (
+        re.compile(r"\bmobile\s+electron\s+\d+\s*개\b", re.IGNORECASE),
+        "count",
+        "one representative mobile electron",
+    ),
+    (
+        re.compile(r"\b\d+\s+(dots?|layers?|panels?|arrows?|electrons?)\b", re.IGNORECASE),
+        "count",
+        None,
+    ),
+    (
+        re.compile(
+            r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen)\s+"
+            r"(dots?|layers?|panels?|arrows?|electrons?)\b",
+            re.IGNORECASE,
+        ),
+        "count_word",
+        None,
+    ),
+    (
+        re.compile(r"\b\d+\s*(개\s*점|점)"),
+        "count",
+        None,
+    ),
+]
 
 
 @dataclass
@@ -47,57 +151,63 @@ class RedactionEvent:
     span: tuple[int, int]
 
 
-def _build_combined_pattern() -> re.Pattern[str]:
-    parts = [f"(?P<g{i}>{src})" for i, (src, _) in enumerate(_UNIT_PATTERNS)]
-    return re.compile("|".join(parts), re.IGNORECASE)
-
-
-_COMBINED = _build_combined_pattern()
-
-
 def redact(text: str) -> tuple[str, list[RedactionEvent]]:
-    """Replace numerical + unit tokens with [REDACTED:<category>].
-
-    Returns (redacted_text, audit). Audit also contains ratio_warning entries
-    where text like '70/30' or '3:1' is left untouched but flagged for review.
-    """
+    """Normalize literal-heavy prompt text and return (normalized_text, audit)."""
     audit: list[RedactionEvent] = []
-    out_chunks: list[str] = []
-    last = 0
-    for m in _COMBINED.finditer(text):
-        out_chunks.append(text[last : m.start()])
-        for i, (_, cat) in enumerate(_UNIT_PATTERNS):
-            if m.group(f"g{i}"):
-                rep = f"[REDACTED:{cat}]"
-                out_chunks.append(rep)
-                audit.append(RedactionEvent(m.group(0), rep, cat, m.span()))
-                break
-        last = m.end()
-    out_chunks.append(text[last:])
-    redacted = "".join(out_chunks)
+    normalized = text
 
-    for m in _RATIO_PATTERN.finditer(redacted):
+    for pattern, category, fixed_replacement in _NORMALIZATION_PATTERNS:
+        next_chunks: list[str] = []
+        last = 0
+        for match in pattern.finditer(normalized):
+            next_chunks.append(normalized[last : match.start()])
+            replacement = fixed_replacement
+            if replacement is None:
+                noun = match.group(1)
+                replacement = _count_replacement(match.group(0), noun)
+            next_chunks.append(replacement)
+            audit.append(RedactionEvent(match.group(0), replacement, category, match.span()))
+            last = match.end()
+        if last:
+            next_chunks.append(normalized[last:])
+            normalized = "".join(next_chunks)
+
+    for token in _DOMAIN_TERMS:
+        token_pattern = rf"(?<![A-Za-z0-9_]){re.escape(token)}(?![A-Za-z0-9_])"
+        for match in re.finditer(token_pattern, normalized):
+            audit.append(
+                RedactionEvent(
+                    match.group(0),
+                    match.group(0),
+                    "domain_term",
+                    match.span(),
+                )
+            )
+
+    for match in _DATA_PLOT_SIGNALS.finditer(normalized):
         audit.append(
             RedactionEvent(
-                original=m.group(0),
-                replacement=m.group(0),
-                category="ratio_warning",
-                span=m.span(),
+                original=match.group(0),
+                replacement=match.group(0),
+                category="data_plot_signal",
+                span=match.span(),
             )
         )
 
-    return redacted, audit
+    return normalized, audit
 
 
 def format_audit(audit: list[RedactionEvent]) -> str:
     if not audit:
-        return "(no redactions)"
+        return "(no normalization events)"
     lines = []
     for ev in audit:
-        if ev.category == "ratio_warning":
-            lines.append(f"  ⚠️ ratio_warning: {ev.original!r} (kept — review manually)")
+        if ev.category == "domain_term":
+            lines.append(f"  KEPT [domain_term]: {ev.original!r}")
+        elif ev.category == "data_plot_signal":
+            lines.append(f"  WARN [data_plot_signal]: {ev.original!r} (review scope)")
         else:
-            lines.append(f"  REDACTED [{ev.category}]: {ev.original!r} → {ev.replacement}")
+            lines.append(f"  NORMALIZED [{ev.category}]: {ev.original!r} -> {ev.replacement}")
     return "\n".join(lines)
 
 
@@ -107,9 +217,9 @@ def main() -> int:
         return 2
     src = sys.argv[1]
     text = sys.stdin.read() if src == "-" else Path(src).read_text()
-    redacted, audit = redact(text)
-    sys.stdout.write(redacted)
-    print("\n=== Redaction audit ===", file=sys.stderr)
+    normalized, audit = redact(text)
+    sys.stdout.write(normalized)
+    print("\n=== Normalization audit ===", file=sys.stderr)
     print(format_audit(audit), file=sys.stderr)
     return 0
 

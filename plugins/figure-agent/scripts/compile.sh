@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# compile.sh — raw TikZ .tex → PDF + PNG
+# compile.sh — raw TikZ .tex → build/<name>.pdf + build/<name>.png
 # Usage:   compile.sh <path/to/file.tex>
 # Engine:  LATEX_ENGINE env var (default: lualatex)
 #          Override: LATEX_ENGINE=xelatex ./compile.sh file.tex
@@ -27,8 +27,11 @@ ENGINE="${LATEX_ENGINE:-lualatex}"
 cd "$(dirname "$TEX_INPUT")"
 FILE="$(basename "$TEX_INPUT")"
 BASE="${FILE%.tex}"
+BUILD_DIR="build"
 
-"$ENGINE" -interaction=nonstopmode "$FILE"
-pdftocairo -png -r 600 -singlefile "${BASE}.pdf" "${BASE}"
+mkdir -p "$BUILD_DIR"
 
-echo "Generated: ${BASE}.pdf, ${BASE}.png (engine: $ENGINE)"
+"$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
+pdftocairo -png -r 600 -singlefile "${BUILD_DIR}/${BASE}.pdf" "${BUILD_DIR}/${BASE}"
+
+echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

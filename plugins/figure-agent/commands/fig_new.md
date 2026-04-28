@@ -6,17 +6,18 @@ Create a new figure project via a conversational interview. **Do not just dump a
 template and ask the user to fill it in an editor** — that defeats the purpose of the plugin.
 Run a 5-question interview in chat, write each answer into `briefing.md` as it arrives.
 
-**Usage**: `/fig_new <figure_name>`
+**Usage**: `/fig_new <name>`
+
+Run from the plugin root.
 
 ## Step 1 — Scaffold
 
-Create directory `examples/<figure_name>/` with:
+Create directory `examples/<name>/` (`<name>` maps to `examples/<name>/`) with:
 - subdirs `previews/`, `build/`, `exports/` (each containing `.gitkeep`)
 - `spec.yaml` skeleton (`name`, `panels: []`, `style_profile: polymer-default`,
   `selected_preview: null`)
-- `briefing.md` skeleton with 5 empty sections (Topic / Vocabulary / Composition / Forbidden /
-  Style notes), each prefaced with `## N. <title>` and an HTML-comment TODO hint
-- (optional) `_reference_original/` if the user provides a benchmark figure to compare against
+- `briefing.md` skeleton with 5 empty sections (Topic / Vocabulary / Composition /
+  Normalize / Style notes), each prefaced with `## N. <title>` and an HTML-comment TODO hint
 
 ## Step 2 — Run the interview
 
@@ -29,7 +30,7 @@ After each answer, **write the answer into the corresponding section of `briefin
 2. **§2 Domain vocabulary** — "어떤 도메인 용어를 써야 하나요? (재료/메커니즘/구조/물리 용어)"
 3. **§3 Composition intent** — "panel 구성과 element 배치는? (2-panel 비교 / 단일 / 좌→우
    흐름 / 등)"
-4. **§4 Forbidden** — "외부 imagegen에 절대 노출 금지 항목은? (정확 수치 / 조건 / dimension)"
+4. **§4 Normalize / avoid literal overfit** — "외부 imagegen이 숫자/샘플명/조건에 과하게 끌려가면 안 되는 항목은? (예: 정확 수치, sample code, dimension, count)"
 5. **§5 Style notes** — "추가 style preference 있나요? (없으면 'skip' 응답)"
 
 ## Step 3 — Scope-drift check (CRITICAL)
@@ -61,14 +62,17 @@ figure intent.
 
 After all 5 sections are filled (and any scope-drift conflicts resolved), tell the user:
 
-> "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. /fig_prompt 실행하시면 redacted
+> "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. /fig_prompt <name> 실행하시면 normalized
 > prompt 생성합니다. 또는 briefing 더 손볼 부분 있으시면 알려주세요."
+
+`selected/` is optional in v0.1. `/fig_new` does not need to create it; `/fig_preview_select`
+may create a copy or symlink there for convenience.
 
 ## Lesson — why this matters
 
 In 2026-04-28 fig3_trapping_concept dogfooding, the first attempt drifted to a 4-panel data
 figure (S60-S85 sweep, n vs composition, ISPD DOS, τ_d) before the user caught the scope
 mismatch six steps later. The interview did not check for data-plot signals, so the plugin
-proceeded all the way through prompt generation, image gen, and a "vector reconstruct with
-real data" recommendation before reset. Step 3 above is the gate that catches this within
-the interview itself.
+proceeded all the way through prompt generation, image gen, and a final-vector recommendation
+for real data before reset. Step 3 above is the gate that catches this within the interview
+itself.

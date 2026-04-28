@@ -42,14 +42,14 @@
 각 panel 하단에 한 줄 캡션 ("fast V(t) loss" / "long retention"),
 panel 사이 화살표/구분 없음 — 두 메커니즘 자체가 대비.
 
-## 4. What MUST NOT appear (sensitive numbers, geometry, conditions)
+## 4. Normalize / avoid literal overfit
 
 - 정확한 trap depth 수치 (E_t 값)
 - corona discharge voltage
 - 시료 dimensions (두께, 면적)
 - wt% sulfur composition 정확값
 
-(이번 schematic은 정량값을 거의 안 씀. redact.py default도 충분.)
+(이번 schematic은 정량값을 거의 안 씀. normalization default도 충분.)
 
 ## 5. Style notes (optional)
 
@@ -59,4 +59,4 @@ amber=deep trap, gray=axis/recombination/escape (원본 sty 매크로 결).
 
 ---
 
-When this briefing is filled, run `/fig_prompt` to generate the redacted prompt for external image generation.
+When this briefing is filled, run `/fig_prompt fig3_trapping_concept` to generate the normalized prompt for external image generation.

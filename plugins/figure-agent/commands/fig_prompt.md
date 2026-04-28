@@ -1,37 +1,42 @@
 ---
-description: Generate redacted external image-gen prompt from spec.yaml + briefing.md. HALTS workflow.
+description: Generate normalized external image-gen prompt from spec.yaml + briefing.md. HALTS workflow.
 ---
 
 Generate prompt for external image-gen tool.
 
-**Usage**: `/fig_prompt` (run inside a figure's examples/<name>/ directory or pass --name)
+**Usage**: `/fig_prompt <name>`
+
+Run from the plugin root:
+
+`uv run python3 scripts/prompt_gen.py examples/<name>`
+
+`<name>` maps to `examples/<name>/`.
 
 Steps:
-1. Read `spec.yaml` + `briefing.md`.
-2. Run redaction: strip numbers+units, generalize geometry, remove experimental conditions.
-   (Use `scripts/redact.py` once implemented — for v0.1 stub, list manual redactions in output.)
+1. Read `examples/<name>/spec.yaml` + `examples/<name>/briefing.md`.
+2. Apply prompt normalization: preserve mechanism and visual intent while generalizing
+   literals that make image-gen overfit to counts, sample codes, dimensions, or experimental
+   conditions.
 3. Compose ONE prompt block:
    - Opening: "Create a clean white-background Nature-style scientific schematic."
    - Topic line (from briefing.md)
-   - Include: bullet list of what must appear (from briefing.md, redacted)
+   - Include: bullet list of what must appear (from briefing.md, normalized)
    - Style: minimal, elegant, no unnecessary text, consistent colors, balanced composition
-   - Do NOT include: numerical values, experimental conditions, dimensional annotations
+   - Normalization policy: avoid distracting literals while preserving schematic intent
 4. Print:
    ```
-   === REDACTED PROMPT (copy below for external tool) ===
+   === NORMALIZED PROMPT (copy below for external tool) ===
    <prompt body>
    === END PROMPT ===
 
-   Redaction audit:
-   - <list of items removed>
-
-   ⚠️ Review for any remaining sensitive content before sending to external service.
+   Normalization audit:
+   - <list of items generalized, kept, or warned>
 
    Next steps:
    1. Copy prompt above into your image-gen tool of choice.
    2. Generate 3-5 candidates.
-   3. Save into examples/<name>/previews/ (any filename).
-   4. Run /fig_preview_select to continue.
+   3. Save PNG/JPG/JPEG candidates into examples/<name>/previews/ (any filename).
+   4. Run /fig_preview_select <name> to continue.
    ```
 5. HALT. Do not call any API. Do not generate images.
 
