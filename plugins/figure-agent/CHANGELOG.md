@@ -2,6 +2,14 @@
 
 All notable changes to figure-agent are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- Force white background in PNG raster export so figures without explicit
+  panel-background fills render correctly in PNG viewers that treat transparency
+  as black.
+
 ## [0.1.4] - 2026-04-28
 
 ### Fixed
