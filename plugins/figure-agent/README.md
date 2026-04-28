@@ -18,7 +18,7 @@ Claude Code plugin for paper-grade scientific figures.
 - Author the final editable TikZ source at `examples/<name>/<name>.tex` with a human,
   an LLM, or both after preview selection
 
-## Workflow (5 slash commands)
+## Workflow (6 slash commands)
 
 ```
 /fig_new <name>            → spec.yaml + briefing.md scaffold
@@ -28,6 +28,8 @@ Claude Code plugin for paper-grade scientific figures.
 /fig_preview_select <name> → list examples/<name>/previews/ → user picks 1
                              [HALT — user/LLM authors examples/<name>/<name>.tex]
 /fig_compile <name>        → compile human/LLM-authored TikZ + Style Lock + clash checks
+/fig_review <name>         → reviewer brief for external physics + aesthetic critique
+                             [HALT — user critiques externally, revises .tex if needed]
 /fig_export <name>         → PDF / SVG / TIFF / PNG (600 dpi raster)
 ```
 

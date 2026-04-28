@@ -30,6 +30,8 @@ Steps:
    - Compile success/fail
    - Collision report (count, severity)
    - Visual clash report (WARN list, NOT blocking)
+   After review of compile + clash reports, run `/fig_review <name>` for structured
+   physics + aesthetic critique before exporting.
 8. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 

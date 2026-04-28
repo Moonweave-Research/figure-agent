@@ -24,7 +24,7 @@ Two responsibilities, no more:
 Image generation itself is **not** a plugin responsibility. User picks any external tool and
 saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
 
-## Workflow (5 stages, slash-separated)
+## Workflow (6 stages, slash-separated)
 
 ```
 /fig_new <name>          step 1
@@ -54,7 +54,13 @@ saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
    → runs check_collisions.py + check_visual_clash.py on examples/<name>/build/<name>.pdf
    → reports WARN (does not block — human-gated)
 
-/fig_export <name>       step 5
+/fig_review <name>       step 5
+   → emits a self-contained Reviewer brief for external vision-capable critique
+   → asks critic to check briefing §6 physics invariants plus label placement, whitespace,
+     hierarchy, palette, and style against examples/<name>/build/<name>.png
+   → HALTS — user attaches PNG and pastes brief into critic of choice, then revises .tex if needed
+
+/fig_export <name>       step 6
    → produces PDF + SVG + TIFF + PNG (600 dpi raster) into examples/<name>/exports/
 ```
 

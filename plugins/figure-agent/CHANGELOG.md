@@ -2,6 +2,17 @@
 
 All notable changes to figure-agent are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Add `/fig_review`, a halt-stage slash command that emits a self-contained
+  Reviewer brief for external physics and aesthetic critique.
+
+### Changed
+
+- Update the documented workflow to include `/fig_review` between compile and export.
+
 ## [0.1.2] - 2026-04-28
 
 ### Added
