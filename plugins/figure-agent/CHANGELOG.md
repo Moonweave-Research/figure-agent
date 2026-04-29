@@ -2,7 +2,7 @@
 
 All notable changes to figure-agent are documented here.
 
-## [Unreleased]
+## [0.1.6] - 2026-04-29
 
 ### Added
 

@@ -1,7 +1,7 @@
 {
   "name": "figure-agent",
   "description": "Paper schematic plugin: prompt intent control plus human/LLM-authored TikZ compile, checks, and export. User generates draft images externally; v0.1 does not auto-vectorize previews.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": {
     "name": "Moon Choe",
     "email": "choimoonyoung3631@gmail.com"
