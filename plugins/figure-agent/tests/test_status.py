@@ -18,13 +18,21 @@ def _make_spec(
     directory: Path,
     selected_preview: str | None = None,
     reference_image: str | None = None,
+    accepted: bool | str | None = None,
 ) -> None:
     preview_val = selected_preview if selected_preview else "null"
     reference_line = f"reference_image: {reference_image}\n" if reference_image else ""
+    if accepted is None:
+        accepted_line = ""
+    elif isinstance(accepted, bool):
+        accepted_line = f"accepted: {'true' if accepted else 'false'}\n"
+    else:
+        accepted_line = f"accepted: {accepted}\n"
     content = (
         f"name: {directory.name}\npanels: []\nstyle_profile: polymer-default\n"
         f"selected_preview: {preview_val}\n"
         f"{reference_line}"
+        f"{accepted_line}"
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
@@ -305,6 +313,159 @@ def test_smoke_fixture_smoke_trap_demo() -> None:
     result = infer_stage(fixture)
     assert result["stage"] == 6
     assert "partial_export" not in result["notes"]
+    assert result["accepted"] is None
+
+
+def test_accepted_true_resolves_in_result(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "myfig.pdf").write_bytes(b"%PDF")
+    (exports / "myfig.svg").write_bytes(b"<svg/>")
+    (exports / "myfig.tif").write_bytes(b"TIFF")
+    (exports / "myfig.png").write_bytes(b"\x89PNG")
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 6
+    assert result["accepted"] is True
+
+
+def test_accepted_false_resolves_in_result(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=False)
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "myfig.pdf").write_bytes(b"%PDF")
+    (exports / "myfig.svg").write_bytes(b"<svg/>")
+    (exports / "myfig.tif").write_bytes(b"TIFF")
+    (exports / "myfig.png").write_bytes(b"\x89PNG")
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 6
+    assert result["accepted"] is False
+    assert "QUALITY_AUDIT.md" in result["next"]
+    assert "accepted: true" in result["next"]
+
+
+def test_accepted_invalid_type_coerces_to_none(tmp_path: Path) -> None:
+    # YAML 1.1 parses bare yes/no/on/off as booleans, so use a value that is
+    # genuinely a non-bool after parse (string "maybe" stays a string).
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted="maybe")
+    result = infer_stage(fig_dir)
+    assert result["accepted"] is None
+
+
+def test_stage_6_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=False)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    briefing = fig_dir / "briefing.md"
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    pdf = exports / "myfig.pdf"
+    svg = exports / "myfig.svg"
+    tif = exports / "myfig.tif"
+    png = exports / "myfig.png"
+    for path, content in (
+        (pdf, b"%PDF"),
+        (svg, b"<svg/>"),
+        (tif, b"TIFF"),
+        (png, b"\x89PNG"),
+    ):
+        path.write_bytes(content)
+    old_time = time.time() - 100
+    for path in (pdf, svg, tif, png, briefing):
+        os.utime(path, (old_time, old_time))
+    new_time = time.time() - 5
+    os.utime(tex, (new_time, new_time))
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 6
+    assert result["accepted"] is False
+    assert "stale_export" in result["notes"]
+    # stale takes priority over not-accepted in the next-hint
+    assert "/fig_compile" in result["next"]
+    assert "QUALITY_AUDIT" not in result["next"]
+
+
+def test_print_single_shows_not_accepted_marker(tmp_path: Path, capsys) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=False)
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fig_dir)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "goldenfig — stage 6/6 (not accepted)" in captured.out
+
+
+def test_print_single_shows_accepted_marker(tmp_path: Path, capsys) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fig_dir)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "goldenfig — stage 6/6 (accepted)" in captured.out
+
+
+def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkeypatch) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    fig = examples_dir / "goldenfig"
+    fig.mkdir()
+    _make_spec(fig, accepted=False)
+    exports = fig / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    monkeypatch.chdir(tmp_path)
+
+    import status as status_mod
+
+    old_argv = sys.argv
+    sys.argv = ["status.py"]
+    try:
+        status_mod.main()
+    finally:
+        sys.argv = old_argv
+
+    captured = capsys.readouterr()
+    assert "goldenfig  stage 6/6 (not accepted)" in captured.out
+
+
+def test_real_golden_fixture_is_not_accepted() -> None:
+    fixture = REPO_ROOT / "examples" / "golden_trap_depth_picture"
+    if not fixture.exists():
+        return
+    result = infer_stage(fixture)
+    assert result["stage"] == 6
+    assert result["accepted"] is False
+    assert "QUALITY_AUDIT.md" in result["next"]
 
 
 def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:

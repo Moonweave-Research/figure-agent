@@ -26,6 +26,10 @@ _NEXT_6 = (
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
 _NEXT_6_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_6_NOT_ACCEPTED = (
+    "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
+    " defects, then set accepted: true in spec.yaml."
+)
 _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
@@ -104,6 +108,22 @@ def _append_prerequisite_notes(
             notes.append("selected_preview_missing")
 
 
+def _resolve_accepted(spec: dict) -> bool | None:
+    """Return literal bool from spec['accepted']; coerce other shapes to None."""
+    value = spec.get("accepted") if spec else None
+    if value is True or value is False:
+        return value
+    return None
+
+
+def _accepted_marker(accepted: bool | None) -> str:
+    if accepted is True:
+        return " (accepted)"
+    if accepted is False:
+        return " (not accepted)"
+    return ""
+
+
 def _append_reference_image_check(
     checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
 ) -> None:
@@ -125,6 +145,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": [],
             "next": _NEXT_0.replace("<name>", example_dir.name),
             "notes": [],
+            "accepted": None,
         }
 
     name = example_dir.name
@@ -142,6 +163,7 @@ def infer_stage(example_dir: Path) -> dict:
     if spec_path.exists():
         spec = parse_spec(spec_path.read_text(encoding="utf-8"))
 
+    accepted = _resolve_accepted(spec)
     sources = _source_paths(example_dir, name)
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
@@ -155,6 +177,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 6: any export artifact present
@@ -166,13 +189,20 @@ def infer_stage(example_dir: Path) -> dict:
         is_stale = _is_stale(sources, export_paths)
         if is_stale:
             notes.append("stale_export")
-        next_template = _NEXT_6_STALE if is_stale else _NEXT_6
+        # Priority: stale_export > not_accepted > done.
+        if is_stale:
+            next_template = _NEXT_6_STALE
+        elif accepted is False:
+            next_template = _NEXT_6_NOT_ACCEPTED
+        else:
+            next_template = _NEXT_6
         return {
             "stage": 6,
             "name": name,
             "checks": checks,
             "next": next_template.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 5: build pdf exists, fresh against tex+briefing+style-lock, no exports
@@ -184,6 +214,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_5.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 4: tex exists AND (no build pdf OR pdf stale relative to source set)
@@ -200,6 +231,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_4.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 3: selected_preview is a non-empty string, no tex
@@ -212,6 +244,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_3.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
@@ -226,6 +259,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_2.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 1: spec.yaml exists AND previews/ has no image files
@@ -238,6 +272,7 @@ def infer_stage(example_dir: Path) -> dict:
             "checks": checks,
             "next": _NEXT_1.replace("<name>", name),
             "notes": notes,
+            "accepted": accepted,
         }
 
     # Stage 0 fallback (directory exists but no spec.yaml)
@@ -247,6 +282,7 @@ def infer_stage(example_dir: Path) -> dict:
         "checks": [],
         "next": _NEXT_0.replace("<name>", name),
         "notes": [],
+        "accepted": accepted,
     }
 
 
@@ -256,7 +292,8 @@ def _print_single(result: dict) -> None:
     next_hint = result["next"]
     checks = result["checks"]
     notes = result["notes"]
-    print(f"{name} — stage {stage}/6")
+    marker = _accepted_marker(result.get("accepted"))
+    print(f"{name} — stage {stage}/6{marker}")
     for key, val in checks:
         print(f"  {key}: {val}")
     print(f"  Next: {next_hint}")
@@ -272,7 +309,8 @@ def main() -> int:
             return 1
         for entry in sorted(p for p in examples_dir.iterdir() if p.is_dir()):
             result = infer_stage(entry)
-            line = f"{result['name']}  stage {result['stage']}/6"
+            marker = _accepted_marker(result.get("accepted"))
+            line = f"{result['name']}  stage {result['stage']}/6{marker}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)
