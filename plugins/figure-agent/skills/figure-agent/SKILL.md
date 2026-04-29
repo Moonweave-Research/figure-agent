@@ -1,30 +1,51 @@
 ---
 name: figure-agent
-description: Use when generating publication-grade scientific **schematics** for papers — mechanism diagrams, band structures, conceptual flows, comparison schematics. **NOT for data plots** (quantitative axes, measurement curves, error bars) — those belong in matplotlib / Graph_making_hub. Workflow halts after prompt generation so user produces draft images in any external tool (ChatGPT / Gemini / Nano Banana / Midjourney / local SD), then resumes for human/LLM-authored TikZ compile, checks, and export. Plugin handles prompt intent control + deterministic vector finishing only — no image-gen API calls. Trigger on "figure 만들어 / paper figure / nature figure / schematic 그려줘 / fig new".
+description: Use for paper-figure quality, compile, export, and reproducibility gates around scientific schematics. A human or any LLM/tool may author the figure; figure-agent enforces Style Lock, compiles/exports, runs visual QA checks, and reports stale or unreplayable figure state. Prompt/image-gen helpers exist but are frozen legacy helpers, not the main development direction. **NOT for data plots** (quantitative axes, measurement curves, error bars) — those belong in matplotlib / Graph_making_hub.
 ---
 
 # figure-agent SKILL
 
 ## Plugin Identity
 
-**Scope: schematic only.** Mechanism diagrams, band structures, conceptual flows, potential
-wells, comparison schematics, isometric device stacks — qualitative figures whose value comes
-from clarity of concept rather than precision of numerical data. **Data plots are out of
-scope** (see Boundaries below).
+**Scope: schematic quality kernel.** Mechanism diagrams, band structures,
+conceptual flows, potential wells, comparison schematics, isometric device
+stacks — qualitative figures whose value comes from clarity of concept rather
+than precision of numerical data. **Data plots are out of scope** (see
+Boundaries below).
 
-Two responsibilities, no more:
+Durable responsibilities:
 
-1. **Prompt intent control** — produce one prompt block that preserves the author's
-   scientific mechanism and visual hierarchy while normalizing distracting literals such as
-   exact counts, sample labels, dimensions, and experimental conditions.
-2. **Human/LLM-in-the-loop vector finishing** — selected preview is inspiration only. v0.1
-   does not automatically vectorize preview images; it compiles/checks/exports TikZ authored
-   by a human, an LLM, or both.
+1. **Style Lock** — keep palette, fonts, macro usage, and figure-wide style
+   consistent across a manuscript.
+2. **Compile/export reliability** — produce PDF/SVG/TIFF/PNG artifacts from
+   editable source without stale-output ambiguity.
+3. **Visual QA** — run collision and render-based clash checks before manuscript
+   use.
+4. **Reproducibility** — keep per-figure folders, source, briefing, status, and
+   exports auditable months later.
 
-Image generation itself is **not** a plugin responsibility. User picks any external tool and
-saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
+Prompt/image-gen orchestration from v0.1 remains available but frozen. Do not
+expand it unless real dogfooding proves a repeated non-transient bottleneck.
+Active direction: `docs/quality-kernel-goal.md`.
 
-## Workflow (6 stages, slash-separated)
+## Quality-kernel workflow
+
+Use this plugin first as a deterministic gate around editable figure source:
+
+```
+reference/source        → examples/<name>/briefing.md + optional reference_image
+editable vector source  → examples/<name>/<name>.tex
+/fig_compile <name>     → Style Lock + PDF/PNG build + collision/clash checks
+/fig_export <name>      → PDF / SVG / TIFF / PNG accepted exports
+/fig_status <name>      → stale/missing/replayability diagnosis
+golden artifact checks  → rendered labels + SVG element floor + white PNG background
+```
+
+For golden fixtures, `reference_image` points to the fixed visual target. Do not
+store that target in `selected_preview`; `selected_preview` means a user-chosen
+candidate from `previews/`.
+
+## Frozen legacy workflow (6 stages, slash-separated)
 
 ```
 /fig_new <name>            step 1 — creates per-figure folder scaffold; HALTS for briefing
@@ -36,7 +57,7 @@ saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
 /fig_export <name>         step 6 — produces PDF + SVG + TIFF + PNG (600 dpi) into exports/
 ```
 
-Run slash commands from the plugin root. `<name>` maps to `examples/<name>/`. After `/fig_preview_select`, authoring `examples/<name>/<name>.tex` is required; v0.1 does not create it automatically.
+Run slash commands from the plugin root. `<name>` maps to `examples/<name>/`. After `/fig_preview_select`, authoring `examples/<name>/<name>.tex` is required; v0.1 does not create it automatically. These helpers remain available for old workflows, but do not expand them unless dogfooding proves a durable non-transient need.
 
 **Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
 
@@ -55,10 +76,11 @@ examples/<name>/
 
 ## Boundaries
 
-- **No data plots.** Quantitative axes (n vs composition, I(t) curves, DOS spectra, etc.),
+- **No data plots.** Quantitative axes (n vs composition, measured I(t) curves, DOS spectra, etc.),
   measurement curves derived from real data, error bars → out of scope. Redirect user to
-  matplotlib or Graph_making_hub. *Schematic mockups* of these (qualitative shape only, no
-  numbers, no axis ticks, illustrative-only) are inside scope — but if the user names
+  matplotlib or Graph_making_hub. *Schematic mockups* of symbolic axes are inside scope
+  when the axis labels are conceptual, tick values are illustrative or absent, and no
+  measured numeric values are encoded. If the user names
   numerical sweep ranges (S60-S85), peak positions (S70-S75), or specific measurement values,
   that is the data-plot signal and belongs elsewhere.
 - **No image-gen API call** in any step. If user asks for one, decline and remind them this
@@ -73,7 +95,7 @@ When `/fig_new` is collecting the briefing, watch for these red flags in user an
 **ask the user to confirm intent before continuing** ("data figure → reframe to schematic, or
 redirect to matplotlib?"):
 
-- Quantitative variable symbols: `n`, `τ`, `V`, `I`, `T`, `t`, `E_t`, `g(E_t)`, etc.
+- Quantitative variable symbols tied to measured values or fitted datasets: `n`, `τ`, `V`, `I`, `T`, `t`, `E_t`, `g(E_t)`, etc.
 - Sweep / vs phrasing: "vs composition", "vs time", "ratio", "sweep S60..S85"
 - Measurement keywords: "raw + fit", "error bar", "peak position", "RLM MM", "ISPD curves"
 - Real-data axes: any axis whose tick values would matter to a reader

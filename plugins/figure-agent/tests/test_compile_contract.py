@@ -12,8 +12,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.skipif(
-    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
-    reason="requires lualatex and pdftocairo",
+    shutil.which("lualatex") is None
+    or shutil.which("pdftocairo") is None
+    or shutil.which("pdftotext") is None
+    or shutil.which("pdftoppm") is None,
+    reason="requires lualatex, pdftocairo, pdftotext, and pdftoppm",
 )
 def test_compile_writes_pdf_and_png_to_build_dir(tmp_path: Path) -> None:
     tex_path = tmp_path / "smoke.tex"
@@ -40,6 +43,57 @@ compile smoke
     assert (tmp_path / "build" / "smoke.png").exists()
     assert not (tmp_path / "smoke.pdf").exists()
     assert not (tmp_path / "smoke.png").exists()
+    combined = result.stdout + result.stderr
+    assert "OK: no collisions found" in combined
+    assert "visual clash" in combined
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_failed_latex_compile_removes_stale_pdf_and_png(tmp_path: Path) -> None:
+    tex_path = tmp_path / "stale_guard.tex"
+    tex_path.write_text(
+        r"""\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\begin{document}
+valid
+\end{document}
+""",
+        encoding="utf-8",
+    )
+    first = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert first.returncode == 0, first.stderr + first.stdout
+    assert (tmp_path / "build" / "stale_guard.pdf").exists()
+    assert (tmp_path / "build" / "stale_guard.png").exists()
+
+    tex_path.write_text(
+        r"""\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\begin{document}
+\undefinedcommand
+\end{document}
+""",
+        encoding="utf-8",
+    )
+    failed = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert failed.returncode != 0
+    assert not (tmp_path / "build" / "stale_guard.pdf").exists()
+    assert not (tmp_path / "build" / "stale_guard.png").exists()
 
 
 @pytest.mark.skipif(

@@ -32,6 +32,7 @@ Notes that may appear:
 - `partial_export` — not all four of pdf/svg/tif/png are present in `exports/`.
 - `stale_export` — `<name>.tex`, `briefing.md`, or the style lock is newer than the export artifacts; re-run `/fig_compile` then `/fig_export`.
 - `selected_preview_missing` — `spec.yaml` names a preview that is not in `previews/`.
+- `reference_image_missing` — `spec.yaml` names a `reference_image` path that is not present relative to the example directory.
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
 
 Freshness source set matches `/fig_review`: `<name>.tex`, `briefing.md`, and `styles/polymer-paper-preamble.sty`. Editing any of these without recompiling marks the build pdf or exports as stale.

@@ -2,23 +2,44 @@
 
 Claude Code plugin for paper-grade scientific figures.
 
-**Plugin responsibility (two only):**
-1. **Prompt intent control** — turn research intent into image-gen-ready schematic prompts. Preserve scientific mechanism and visual intent; normalize literals that make image-gen overfit to counts, sample codes, dimensions, or experimental conditions.
-2. **Human/LLM-in-the-loop vector finishing** — selected preview is visual inspiration only. The final TikZ source is authored by a human, an LLM, or both; the plugin provides deterministic compile, Style Lock, collision/visual-clash checks, and export.
+**Current product direction: quality kernel.**
+
+`figure-agent` is now treated as paper-figure quality, compile, and
+reproducibility infrastructure. A human or any LLM/tool may author the figure;
+the plugin's durable job is to enforce Style Lock, compile/export reliably,
+surface visual QA problems, and keep the figure reproducible.
+
+The earlier prompt/image-gen orchestration helpers remain available, but they
+are frozen legacy helpers rather than the main development direction. See
+`docs/quality-kernel-goal.md`.
 
 **Plugin does not:**
 - Call image generation APIs
 - Manage API keys
 - Pay per-figure inference cost
 
-**User does:**
-- Pick external image-gen tool (ChatGPT / Gemini / Nano Banana / Midjourney / local SD — free choice)
-- Save generated PNG/JPG/JPEG previews into `examples/<name>/previews/`
-- Final select among 3-5 candidates
-- Author the final editable TikZ source at `examples/<name>/<name>.tex` with a human,
-  an LLM, or both after preview selection
+**User or external tool does:**
+- Provide a reference, sketch, draft image, or direct editable source.
+- Author the final editable TikZ/SVG source with a human, an LLM, or both.
 
-## Workflow (6 slash commands)
+## Quality-kernel workflow
+
+Primary development is now centered on deterministic gates:
+
+```
+reference/source        → examples/<name>/briefing.md + optional reference_image
+editable vector source  → examples/<name>/<name>.tex
+/fig_compile <name>     → Style Lock + PDF/PNG build + collision/clash checks
+/fig_export <name>      → PDF / SVG / TIFF / PNG accepted exports
+/fig_status <name>      → stale/missing/replayability diagnosis
+golden artifact checks  → rendered labels + SVG element floor + white PNG background
+accepted artifact checks → explicit accepted flag + fresh audit + warning budgets
+```
+
+For golden fixtures, `reference_image` records the target image. `selected_preview`
+remains reserved for legacy preview selection from `previews/`.
+
+## Frozen v0.1 orchestration helpers
 
 ```
 /fig_new <name>            → spec.yaml + briefing.md scaffold
@@ -33,13 +54,16 @@ Claude Code plugin for paper-grade scientific figures.
 /fig_export <name>         → PDF / SVG / TIFF / PNG (600 dpi raster)
 ```
 
-Run commands from the plugin root. `<name>` resolves to `examples/<name>/`.
-Starter TikZ source: `cp styles/tex_template.tex examples/<name>/<name>.tex`.
+These helpers remain available for old workflows, but they are not the main
+post-v0.1.7.2 development direction. Run commands from the plugin root.
+`<name>` resolves to `examples/<name>/`. Starter TikZ source:
+`cp styles/tex_template.tex examples/<name>/<name>.tex`.
 
 ## Status
 
 v0.1 line is active; latest shipped plugin version is recorded in
 `.claude-plugin/plugin.json`. Spec under `docs/design-v0.1.md`.
+Active direction is recorded in `docs/quality-kernel-goal.md`.
 
 v0.1 is source-only as a Claude Code plugin. Use
 `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`,
@@ -48,9 +72,10 @@ and `uv run ruff check .`; `uv build` is not a release gate.
 
 ## History
 
-Successor to `[tikz-paper-workflow]` (archived 2026-04-27). Reference-layer architecture
-deprecated based on Y0 fig1 pilot finding (strong refs increased visual_clash WARN by +32 vs
-no-ref baseline). New direction: generative draft from prompt only, no external reference images.
+Successor to `[tikz-paper-workflow]` (archived 2026-04-27). The v0.1 prompt
+workflow remains available, but post-v0.1.7.2 development pivots toward a
+durable quality kernel: Style Lock, macro quality, compile/export reliability,
+visual QA, and reproducibility.
 
 ## Repo location rationale
 

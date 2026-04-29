@@ -40,6 +40,21 @@
 \definecolor{cArmAmber}{HTML}{8B6F3E}
 \definecolor{cAmberSphere}{HTML}{DDCC77}
 
+%% --- 2D trap-level schematic primitives ---
+%% \TrapLevel{x}{y}{line-style}: horizontal trap state plus electron marker.
+%% The third argument accepts a TikZ style or color expression.
+\newcommand{\TrapLevel}[3]{%
+  \draw[#3] (#1-0.18,#2) -- (#1+0.22,#2);
+  \node[
+    circle,
+    draw=cBlue!75!black,
+    fill=cBlue!45,
+    inner sep=0pt,
+    minimum size=1.35mm,
+    line width=0.34pt
+  ] at (#1,#2+0.13) {};
+}
+
 %% --- Fixed-view isometric schematic contract ---
 %% Projection basis:
 %%   x axis = (1.00cm, 0.00cm)

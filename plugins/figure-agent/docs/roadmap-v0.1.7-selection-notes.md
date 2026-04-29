@@ -1,6 +1,6 @@
-# Roadmap — v0.1.7 selection_notes integration & v0.2 decision branches
+# Roadmap — v0.1.7 selection_notes integration & superseded v0.2 branches
 
-Status: shipped 2026-04-29 (v0.1.7) → hardened 2026-04-29 (v0.1.7.1 per agent-team mid-review)
+Status: shipped 2026-04-29 (v0.1.7) → hardened 2026-04-29 (v0.1.7.1 per agent-team mid-review) → superseded by `docs/quality-kernel-goal.md`
 Drafted: 2026-04-29
 Owner: Moon-python
 Predecessor doc: `docs/design-v0.1.md`
@@ -25,6 +25,12 @@ authoring prompt with HTML-comment stripping (briefing parity) and adds
 priority-order instructions to the template so the LLM knows how to weight it
 against §6 invariants and §3 composition intent. No new slash command.
 `/fig_decompose` is rejected for v0.1 and conditionally deferred to v0.2.
+
+**2026-04-29 update:** this roadmap is historical for the v0.1.7
+`selection_notes` work. Its v0.2 orchestration branches are no longer the active
+direction. Active direction is the quality kernel described in
+`docs/quality-kernel-goal.md`: Style Lock, macro quality, compile/export
+reliability, visual QA, and reproducibility.
 
 ## Why this exists
 
@@ -236,10 +242,11 @@ For each new figure authored with v0.1.7, append `examples/<name>/REVIEW.md`:
 
 Aggregate after 2-3 figures. Decision input for v0.2 branching.
 
-## v0.2 — trigger-based decision branches
+## v0.2 — trigger-based decision branches (superseded)
 
-Three branches, mutually exclusive. Triggered by REVIEW.md aggregation, not
-by schedule.
+These branches are superseded by the quality-kernel direction. Keep them as
+historical context only; do not implement them unless future dogfooding proves a
+repeated non-transient need after the kernel is credible.
 
 ### Branch 1 — Status quo
 **Trigger:** free-form distracting ≤1 case, avg 4-headings used ≥3, LLM
@@ -267,18 +274,19 @@ insufficient.
 
 ## v0.2 candidate milestone bundle
 
-Other deferred items found in audit. Priority reset by REVIEW.md data + user.
+Other deferred items found in audit. Priority is now reset by the quality-kernel
+goal, not by selection-notes aggregation.
 
 | Item | Source | Estimate |
 |---|---|---|
 | Multi-style profile (`spec.yaml.style_profile` + multi `.sty`) | memory `project_multi_style_deferred.md` | 3-5d |
-| selection_notes Branch 2 or 3 (per above) | this doc | 3-14d |
+| selection_notes Branch 2 or 3 (per above) | superseded by quality-kernel direction | deferred indefinitely |
 | Runtime `Next:` footer in command scripts (6 affected) | `CHANGELOG.md:66` | 1-2d |
 | `prompt_gen` re-exports removal (backwards-compat shim) | `CHANGELOG.md:70-71` | 0.5d |
 | `redact.py` → `normalize.py` rename | `CHANGELOG.md:74` | 0.5d |
 | `scripts/` proper Python package | `CHANGELOG.md:72` | 1d |
-| Prompt-quality scoring before image-gen | `docs/design-v0.1.md:245` | 2-3d |
-| Visual contact-sheet/ranking helper for previews | `docs/design-v0.1.md:249` | 2-3d |
+| Prompt-quality scoring before image-gen | superseded by quality-kernel direction | deferred indefinitely |
+| Visual contact-sheet/ranking helper for previews | superseded by quality-kernel direction | deferred indefinitely |
 | `/fig_review` v0.2-deferred → shipped doc sync | audit Agent 1 §F.6 | 0.5d |
 
 ## Risk register

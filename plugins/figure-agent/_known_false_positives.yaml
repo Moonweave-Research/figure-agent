@@ -58,6 +58,21 @@ patterns:
     dark_max: 0.15
     edge_max: 0.02
 
+  # Golden trap-depth fixture: band labels intentionally sit inside light
+  # gray semiconductor boxes. These are not text/path clashes when the
+  # dark/edge signal stays in the compact label-box range.
+  - id: trap_depth_band_label_cb
+    glyph: CB
+    kind: text_on_path
+    dark_max: 0.06
+    edge_max: 0.02
+
+  - id: trap_depth_band_label_vb
+    glyph: VB
+    kind: near_miss
+    dark_max: 0.05
+    edge_max: 0.02
+
   # Caption subscript V(t)
   - id: caption_subscript_v
     glyph: V

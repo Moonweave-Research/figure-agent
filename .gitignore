@@ -24,6 +24,13 @@ __pycache__/
 !**/exports/.gitkeep
 !**/previews/.gitkeep
 
+# Golden fixtures are reproducibility baselines, not ordinary generated output.
+# Keep build/ ignored; track only accepted export artifacts for named golden fixtures.
+!plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.pdf
+!plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.svg
+!plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.tif
+!plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.png
+
 # Editor
 .vscode/
 .idea/

@@ -1,17 +1,22 @@
 # figure-agent v0.1 Design
 
 **Date**: 2026-04-28
-**Status**: v0.1 ship spec, implementation alignment pending
+**Status**: v0.1 ship spec; post-v0.1.7.2 direction pivots to quality kernel
 
 ## One-line Identity
 
-`figure-agent` v0.1 is an **intent-controlled schematic workflow**.
+`figure-agent` v0.1 shipped as an **intent-controlled schematic workflow**.
 
 It turns research intent into image-gen-ready schematic prompts, lets the user
 create and select external visual drafts, then supports human/LLM-authored TikZ
 vector finishing with deterministic compile, clash checks, and export.
 
 It is **not** an automatic image-to-vector reconstruction system in v0.1.
+
+After the v0.1.7.2 review, the active product direction is no longer expanded
+LLM/image-generation orchestration. The durable direction is a paper-figure
+quality kernel: Style Lock, macro quality, compile/export reliability, visual
+QA, and reproducibility. See `docs/quality-kernel-goal.md`.
 
 ## Origin
 
@@ -162,8 +167,9 @@ human/LLM vector finishing
 
 ```text
 examples/<figure_name>/
-├── spec.yaml          # lightweight metadata: name, panels, style_profile, selected_preview, selection_notes
+├── spec.yaml          # lightweight metadata: name, panels, style_profile, selected_preview, reference_image, selection_notes
 ├── briefing.md        # research intent and schematic direction
+├── reference/         # optional golden/reference images, addressed by reference_image
 ├── previews/          # user-generated external image-gen drafts
 ├── selected/          # optional copy/symlink of chosen draft
 ├── <name>.tex         # human/LLM-authored TikZ source
@@ -240,20 +246,17 @@ v0.1 is shippable when these are true:
 
 ## v0.2 Direction
 
-v0.2 may add preview-assisted TikZ scaffolding, but only after v0.1's prompt
-control and deterministic finishing contracts are stable.
+v0.2 should not add preview-assisted TikZ scaffolding by default. Those ideas
+remain deferred unless dogfooding proves a repeated non-transient bottleneck.
 
-Possible v0.2 work:
+v0.2 should instead be a quality-kernel release:
 
-- Generate a first-pass TikZ scaffold from `briefing.md`, `spec.yaml`, and the
-  selected preview metadata.
-- Add stronger prompt-quality scoring before external image-gen.
-- Extend `/fig_review` with prompt-mode critique before external image-gen and
-  optional apply helpers for critic output. Keep the shipped v0.1.3 command
-  API-free and user-gated.
-- Add visual contact-sheet/ranking helpers for previews.
-- Package Python helpers as importable modules if script-only execution becomes
-  limiting.
+- choose one representative golden figure and audit actual PDF/SVG/PNG output;
+- classify every quality defect as source, macro, export, or QA;
+- strengthen `lint_tex.py` BLOCKER/WARN rules from observed defects;
+- improve `polymer-paper-preamble.sty` flagship macros where source authorship
+  repeatedly needs better primitives;
+- add compile/export and visual-regression gates tied to the golden fixture.
 
 ## Design Risk
 

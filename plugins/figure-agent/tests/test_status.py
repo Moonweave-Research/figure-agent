@@ -14,13 +14,20 @@ from status import infer_stage  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _make_spec(directory: Path, selected_preview: str | None = None) -> None:
+def _make_spec(
+    directory: Path,
+    selected_preview: str | None = None,
+    reference_image: str | None = None,
+) -> None:
     preview_val = selected_preview if selected_preview else "null"
+    reference_line = f"reference_image: {reference_image}\n" if reference_image else ""
     content = (
         f"name: {directory.name}\npanels: []\nstyle_profile: polymer-default\n"
         f"selected_preview: {preview_val}\n"
+        f"{reference_line}"
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
+    (directory / "briefing.md").write_text("briefing", encoding="utf-8")
 
 
 def test_stage_0_missing_directory(tmp_path: Path) -> None:
@@ -103,6 +110,7 @@ def test_stage_5_fresh_pdf_no_exports(tmp_path: Path) -> None:
     # Make pdf newer than tex
     old_time = time.time() - 100
     os.utime(tex, (old_time, old_time))
+    os.utime(fig_dir / "briefing.md", (old_time, old_time))
     new_time = time.time() - 10
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
@@ -192,6 +200,40 @@ def test_stage_6_stale_export_when_source_newer(tmp_path: Path) -> None:
     assert "done" not in result["next"]
 
 
+def test_stage_6_preserves_selected_preview_missing_note(tmp_path: Path) -> None:
+    fig = tmp_path / "preview_missing_exported"
+    fig.mkdir()
+    _make_spec(fig, selected_preview="missing.png")
+    (fig / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig / "previews").mkdir()
+    exports = fig / "exports"
+    exports.mkdir()
+    (exports / "preview_missing_exported.pdf").write_bytes(b"%PDF")
+
+    result = infer_stage(fig)
+
+    assert result["stage"] == 6
+    assert "selected_preview_missing" in result["notes"]
+
+
+def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
+    fig = tmp_path / "missing_briefing"
+    fig.mkdir()
+    _make_spec(fig)
+    (fig / "briefing.md").unlink()
+    (fig / "missing_briefing.tex").write_text("tex", encoding="utf-8")
+    build = fig / "build"
+    build.mkdir()
+    (build / "missing_briefing.pdf").write_bytes(b"%PDF")
+
+    result = infer_stage(fig)
+
+    assert result["stage"] == 1
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "/fig_review" not in result["next"]
+
+
 def test_stage_3_selected_preview_missing_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -213,6 +255,36 @@ def test_stage_3_selected_preview_present_no_note(tmp_path: Path) -> None:
     (previews / "real.png").write_bytes(b"\x89PNG")
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+    assert "selected_preview_missing" not in result["notes"]
+
+
+def test_reference_image_existing_is_not_treated_as_selected_preview(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden_target_001.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden_target_001.png").write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 1
+    assert ("reference_image", "reference/golden_target_001.png") in result["checks"]
+    assert "selected_preview_missing" not in result["notes"]
+    assert "reference_image_missing" not in result["notes"]
+
+
+def test_reference_image_missing_surfaces_separate_note(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden_target_001.png")
+    (fig_dir / "previews").mkdir()
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 1
+    assert "reference_image_missing" in result["notes"]
     assert "selected_preview_missing" not in result["notes"]
 
 
@@ -272,6 +344,34 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     assert "stage 1" in captured.out
     assert "zeta_fig" in captured.out
     assert "stage 6" in captured.out
+    assert "notes:" not in captured.out
     lines = [ln for ln in captured.out.splitlines() if ln.strip()]
     names = [ln.split()[0] for ln in lines]
     assert names == sorted(names)
+
+
+def test_no_arg_all_figures_surfaces_notes(tmp_path: Path, capsys, monkeypatch) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    fig = examples_dir / "stale_fig"
+    fig.mkdir()
+    _make_spec(fig, selected_preview="missing.png")
+    (fig / "briefing.md").write_text("briefing", encoding="utf-8")
+    exports = fig / "exports"
+    exports.mkdir()
+    (exports / "stale_fig.pdf").write_bytes(b"%PDF")
+
+    monkeypatch.chdir(tmp_path)
+
+    import status as status_mod
+
+    old_argv = sys.argv
+    sys.argv = ["status.py"]
+    try:
+        status_mod.main()
+    finally:
+        sys.argv = old_argv
+
+    captured = capsys.readouterr()
+    assert "stale_fig  stage 6/6" in captured.out
+    assert "notes: selected_preview_missing" in captured.out

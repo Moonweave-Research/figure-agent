@@ -34,7 +34,22 @@ BUILD_DIR="build"
 
 mkdir -p "$BUILD_DIR"
 
+PDF_OUT="${BUILD_DIR}/${BASE}.pdf"
+PNG_OUT="${BUILD_DIR}/${BASE}.png"
+
+cleanup_failed_build() {
+  local status=$?
+  if [[ $status -ne 0 ]]; then
+    rm -f "$PDF_OUT" "$PNG_OUT"
+  fi
+}
+trap cleanup_failed_build ERR
+
+rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
-pdftocairo -png -r 600 -singlefile "${BUILD_DIR}/${BASE}.pdf" "${BUILD_DIR}/${BASE}"
+pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
+uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "$PDF_OUT"
+uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "$PDF_OUT"
+trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

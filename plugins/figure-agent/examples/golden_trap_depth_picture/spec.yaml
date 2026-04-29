@@ -1,0 +1,19 @@
+name: golden_trap_depth_picture
+panels:
+  - id: row1
+    caption: Experiment to discharge reference
+  - id: row2
+    caption: Mathematical interpretation to trap-depth distribution
+  - id: row3
+    caption: Molecular origin to localized traps
+  - id: right
+    caption: Converged trap-depth picture
+style_profile: polymer-default
+selected_preview: null
+reference_image: reference/golden_target_001.png
+accepted: false
+selection_notes: |
+  Golden Target 001 is a reference target, not a generative preview.
+  Reproduce the supplied PNG as an editable vector figure.
+  Preserve all labels, row hierarchy, arrows, polymer-chain motifs, trap levels,
+  and the right-side converged trap-depth energy/distribution diagram.

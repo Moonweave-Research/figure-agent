@@ -26,6 +26,7 @@ _NEXT_6 = (
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
 _NEXT_6_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 
@@ -87,6 +88,35 @@ def _existing_export_paths(exports_dir: Path, name: str) -> tuple[Path, ...]:
     return tuple(found)
 
 
+def _append_prerequisite_notes(
+    notes: list[str], spec: dict, previews_dir: Path, briefing_path: Path
+) -> None:
+    if not briefing_path.exists():
+        notes.append("missing_briefing")
+
+    previews_corrupted = previews_dir.exists() and not previews_dir.is_dir()
+    if previews_corrupted:
+        notes.append("previews_not_directory")
+
+    selected_preview = spec.get("selected_preview") if spec else None
+    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
+        if not (previews_dir.is_dir() and (previews_dir / selected_preview).is_file()):
+            notes.append("selected_preview_missing")
+
+
+def _append_reference_image_check(
+    checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
+) -> None:
+    reference_image = spec.get("reference_image") if spec else None
+    if not reference_image or not isinstance(reference_image, str) or not reference_image.strip():
+        return
+
+    reference_image = reference_image.strip()
+    checks.append(("reference_image", reference_image))
+    if not (example_dir / reference_image).is_file():
+        notes.append("reference_image_missing")
+
+
 def infer_stage(example_dir: Path) -> dict:
     if not example_dir.exists() or not example_dir.is_dir():
         return {
@@ -100,6 +130,7 @@ def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     spec_path = example_dir / "spec.yaml"
     tex_path = example_dir / f"{name}.tex"
+    briefing_path = example_dir / "briefing.md"
     build_pdf = example_dir / "build" / f"{name}.pdf"
     previews_dir = example_dir / "previews"
     exports_dir = example_dir / "exports"
@@ -112,6 +143,19 @@ def infer_stage(example_dir: Path) -> dict:
         spec = parse_spec(spec_path.read_text(encoding="utf-8"))
 
     sources = _source_paths(example_dir, name)
+    _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
+    _append_reference_image_check(checks, notes, spec, example_dir)
+
+    if spec_path.exists() and not briefing_path.exists():
+        checks.append(("spec_yaml", "present"))
+        checks.append(("briefing_md", "missing"))
+        return {
+            "stage": 1,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
+            "notes": notes,
+        }
 
     # Stage 6: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
@@ -162,8 +206,6 @@ def infer_stage(example_dir: Path) -> dict:
     selected_preview = spec.get("selected_preview") if spec else None
     if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
         checks.append(("selected_preview", selected_preview))
-        if not (previews_dir.is_dir() and (previews_dir / selected_preview).is_file()):
-            notes.append("selected_preview_missing")
         return {
             "stage": 3,
             "name": name,
@@ -172,7 +214,6 @@ def infer_stage(example_dir: Path) -> dict:
             "notes": notes,
         }
 
-    previews_corrupted = previews_dir.exists() and not previews_dir.is_dir()
     previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
 
     # Stage 2: previews/ has image files AND selected_preview unset/null/empty
@@ -191,8 +232,6 @@ def infer_stage(example_dir: Path) -> dict:
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
         checks.append(("previews", "empty"))
-        if previews_corrupted:
-            notes.append("previews_not_directory")
         return {
             "stage": 1,
             "name": name,
@@ -233,7 +272,10 @@ def main() -> int:
             return 1
         for entry in sorted(p for p in examples_dir.iterdir() if p.is_dir()):
             result = infer_stage(entry)
-            print(f"{result['name']}  stage {result['stage']}/6")
+            line = f"{result['name']}  stage {result['stage']}/6"
+            if result["notes"]:
+                line = f"{line}  notes: {', '.join(result['notes'])}"
+            print(line)
         return 0
 
     example_dir = Path(sys.argv[1])
