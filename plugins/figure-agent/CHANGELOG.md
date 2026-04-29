@@ -2,6 +2,45 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.7] - 2026-04-29
+
+### Added
+
+- `prompts/llm_author_tikz.md` `### Selection notes` section with
+  preview-grounded authoring guide. Priority order text directs the LLM
+  to honor `briefing.md` §6 invariants over selection notes when they
+  conflict (`§6 invariants > §3 composition intent > selection notes`).
+- `commands/fig_preview_select.md` step 6: recommended 4-heading
+  template for `selection_notes` (Visual motifs to preserve / Preview
+  errors to fix in TikZ / Labels to lift / Style overrides). Free-form
+  remains accepted; HTML-comment author-only notes are stripped.
+- `commands/fig_new.md` scaffolds `spec.yaml` with an empty
+  `selection_notes: ""` key so new examples have the field present.
+- `docs/design-v0.1.md` per-figure folder contract lists
+  `selection_notes` as a recognized `spec.yaml` key.
+- `docs/roadmap-v0.1.7-selection-notes.md` records the audit-driven
+  rationale for plumbing this orphan field instead of adding a
+  `/fig_decompose` slash command, and defines the v0.1.x empirical
+  validation window plus three trigger-based v0.2 branches.
+- `tests/test_llm_author_prompt.py` four new tests covering plumbing,
+  HTML-comment stripping (parity with `parse_briefing`), missing-key
+  fallback, and backslash preservation through `str.replace`.
+- `examples/fig3_trap_schematic_v97/` activated as a tracked dogfood
+  fixture demonstrating the 4-heading `selection_notes` convention end
+  to end.
+
+### Changed
+
+- `scripts/llm_author_prompt.py` reads `spec.yaml.selection_notes`,
+  strips HTML comments using `inputs._HTML_COMMENT` (parity with the
+  briefing parser), and substitutes the result into `{{selection_notes}}`
+  with a fallback string when the field is missing or whitespace-only.
+  Until v0.1.7 the field was declared in `spec.yaml`, parsed by
+  `parse_spec`, and never read by any production script — users who
+  wrote preview-grounded element-inventory content into it (see
+  `examples/fig3_trap_schematic_v97/spec.yaml`) had no way for it to
+  reach the LLM authoring prompt.
+
 ## [0.1.6] - 2026-04-29
 
 ### Added
