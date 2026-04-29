@@ -147,6 +147,46 @@ def test_selection_notes_fallback_when_absent(tmp_path: Path) -> None:
     assert "{{" not in result
 
 
+def test_selection_notes_non_string_warns_and_coerces(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Non-string scalar (int / list / dict / bare YAML date) must warn to stderr
+    naming the example dir and the encountered type, then coerce — never crash."""
+    _write_minimal_inputs(tmp_path, "selection_notes: 42\n")
+    result = build_prompt(tmp_path)
+    captured = capfd.readouterr()
+    assert "selection_notes" in captured.err
+    assert tmp_path.name in captured.err
+    assert "int" in captured.err
+    assert "42" in result
+
+
+def test_selection_notes_empty_after_html_strip_warns_and_falls_back(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """If a user wrote content but it was all <!-- ... -->, warn so they don't
+    silently lose work. Fallback to (none) afterward."""
+    notes = "selection_notes: |\n  <!-- TODO write me -->\n  <!-- another note -->\n"
+    _write_minimal_inputs(tmp_path, notes)
+    result = build_prompt(tmp_path)
+    captured = capfd.readouterr()
+    assert "reduced to empty" in captured.err
+    assert tmp_path.name in captured.err
+    assert "introduce new invariants.\n\n(none)" in result
+
+
+def test_priority_order_paragraph_present_in_output(tmp_path: Path) -> None:
+    """The priority-order paragraph is the entire correctness rationale for letting
+    selection_notes into the prompt. Lock it against silent template regressions."""
+    _write_minimal_inputs(tmp_path, "")
+    result = build_prompt(tmp_path)
+    # Phrase fragments to tolerate the template's hard line wraps.
+    assert "Priority order: §6 invariants" in result
+    assert "§3 composition intent > selection notes" in result
+    assert "honor §6 and ignore the conflicting note" in result
+    assert "cannot introduce new invariants" in result
+
+
 def test_selection_notes_preserves_backslashes(tmp_path: Path) -> None:
     """str.replace must preserve backslashes inside selection_notes (LaTeX fragments are valid)."""
     notes = "selection_notes: |\n  Use \\frac{1}{2} ratio for the trap-depth visual.\n"
