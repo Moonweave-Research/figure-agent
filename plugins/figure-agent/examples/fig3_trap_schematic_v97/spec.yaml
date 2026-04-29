@@ -1,0 +1,42 @@
+name: fig3_trap_schematic_v97
+panels:
+  - id: a
+    caption: 측정 셋업
+  - id: b
+    caption: 멱함수 (power-law) 의 이해
+  - id: c
+    caption: Trapping index n 해석
+  - id: d
+    caption: 화학적 원인
+  - id: e
+    caption: 물리적 원인
+  - id: f
+    caption: Multi-modal convergence (n / g(E_t) / τ_d → consistent trap depth)
+style_profile: polymer-default
+selected_preview: codex_v01.png
+selection_notes: |
+  Codex app (codex_v01) chosen as primary baseline (2026-04-28 2-candidate
+  compare with chatgpt_web_v01). Codex was preferred for 2D line-art
+  consistency that carries invariant #8 visually — panels (d) and (e)
+  share the same visual motif — and for a palette closer to Nature
+  schematic convention.
+
+  Visual motifs to preserve:
+    - green wavy polymer backbone shared between panels (d) and (e)
+    - yellow S-circle marking sulfur sites along the chain
+    - amber trap halo on sulfur cluster regions
+    - shared sulfur-halo motif across (d)+(e) so invariant #8 (chem ↔ phys point to same sulfur regions) reads visually
+
+  Preview errors to fix in TikZ:
+    - panel (c) no-trap Debye curve is drawn nearly straight in both previews — must be concave-down to honor invariant #5
+    - both previews under-visualize invariant #8 — TikZ must add an explicit shared sulfur-halo marker across (d)+(e)
+
+  Labels to lift (from chatgpt_web_v01, kept as enrichment reference):
+    - (a) explicit "voltage-bias" / "current-meter" labels
+    - (b) "trap-controlled hopping" inset cartoon labeling
+    - (c) "trap-rich" / "shallow or fewer traps" verbal labels
+    - (f) numbered-metric panel labeling
+
+  Style overrides:
+    - polymer-paper-preamble.sty Style Lock wins: Paul Tol Muted palette + Arial override both previews' palettes during .tex authoring
+
