@@ -6,6 +6,9 @@ All notable changes to figure-agent are documented here.
 
 ### Added
 
+- `scripts/lint_tex.py` — BLOCKER-tier Style Lock check (`\definecolor`, font override, raw hex,
+  non-palette TikZ colors). Integrated into /fig_compile as pre-compile gate: lualatex only runs
+  if lint passes; `build/` untouched on lint failure.
 - /fig_status <name> — read-only stage inference from filesystem + spec.yaml; prints stage N/6 + Next: hint. No arg = summary of all examples.
 
 ### Fixed
@@ -39,6 +42,10 @@ Runtime-output Next: footer in command scripts deferred to v0.2 (touches 6 scrip
   (v0.2 will make `scripts/` a proper package with package-relative imports.)
 - `redact.py` module will be renamed to `normalize.py` in v0.2; the function name and
   behavior do not change.
+
+WARN tier (non-flagship macro usage, sub-0.25pt strokes, near-palette hex) and
+`prompts/llm_author_tikz.md` authoring bridge deferred to PR 4b — same product story,
+different release for sizing.
 
 ## [0.1.5] - 2026-04-28
 

@@ -22,6 +22,9 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   exit 1
 fi
 
+echo 'Lint: BLOCKER-tier Style Lock check...' >&2
+uv run python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
+
 ENGINE="${LATEX_ENGINE:-lualatex}"
 
 cd "$(dirname "$TEX_INPUT")"

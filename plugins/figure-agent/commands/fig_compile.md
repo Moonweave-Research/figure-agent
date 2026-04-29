@@ -20,21 +20,26 @@ Steps:
    when the user wants preview-guided authoring.
 2. Verify `examples/<name>/<name>.tex` exists. If missing, instruct the user to author it
    with a human, an LLM, or both from the selected preview before compiling.
-3. Compile target: `examples/<name>/<name>.tex` (TikZ authored by a human, an LLM, or both).
+3. Pre-compile lint: `scripts/compile.sh` runs `scripts/lint_tex.py` first. BLOCKER-tier
+   Style Lock checks (`\definecolor`, `\setmainfont`/`\setsansfont`/`\setmonofont`, raw hex,
+   non-palette TikZ colors). On any violation, abort before lualatex; `build/` is untouched.
+4. Compile target: `examples/<name>/<name>.tex` (TikZ authored by a human, an LLM, or both).
    - For v0.1, the selected preview is visual inspiration only.
    - The final `.tex` must remain editable and independent.
-4. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
-5. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
-6. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.
-7. Report:
+5. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
+6. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
+7. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.
+8. Report:
    - Compile success/fail
    - Collision report (count, severity)
    - Visual clash report (WARN list, NOT blocking)
    After review of compile + clash reports, run `/fig_review <name>` for structured
    physics + aesthetic critique before exporting.
-8. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
+9. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
 Human-gated. Reports inform; do not block on WARN.
+
+Lint is a /fig_compile sub-routine; no persistent state, re-runs every compile. Aligned with /fig_status freshness model.
 
 Next: /fig_review <name> or /fig_export <name> (if WARN > 0, revise <name>.tex and re-run /fig_compile <name>)
