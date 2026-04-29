@@ -1,0 +1,208 @@
+\documentclass{standalone}
+\usepackage{polymer-paper-preamble}
+\begin{document}
+\begin{tikzpicture}
+\tikzset{
+  baseText/.style={font=\sffamily\fontsize{8}{10}\selectfont, text=cGray},
+  panel/.style={fill=cLGray!22, draw=cLGray!65, line width=0.35pt, rounded corners=2.5mm},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{10}{12}\selectfont, text=cGray, anchor=west},
+  panelTitle/.style={font=\sffamily\fontsize{7.3}{8.6}\selectfont, text=cGray, anchor=west},
+  captionText/.style={font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont, text=cGray, anchor=south},
+  tinyText/.style={font=\sffamily\fontsize{6.4}{7.6}\selectfont, text=cGray},
+  axisArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray, line width=0.55pt},
+  smallArr/.style={-{Stealth[length=3pt,width=2pt]}, cGray!75, line width=0.55pt},
+  callout/.style={-{Stealth[length=2.6pt,width=2pt]}, cGray!75, line width=0.45pt},
+  curveBlue/.style={cBlue, line width=1.15pt},
+  curveBlueLight/.style={cBlue!58, line width=1.05pt},
+  curveRed/.style={cRed, line width=1.15pt},
+  bandLine/.style={line width=1.25pt},
+  trapLine/.style={cAmber, line width=1.35pt},
+  chainLine/.style={cTeal!85, line width=0.9pt, line cap=round, line join=round},
+  halo/.style={fill=cAmber!18, draw=cAmber!60, line width=0.35pt, dash pattern=on 1.2pt off 0.9pt},
+  sulfur/.style={circle, fill=cAmberSphere, draw=cAmber, line width=0.35pt, inner sep=0pt, minimum size=2.6mm, font=\sffamily\bfseries\fontsize{6}{7}\selectfont, text=cBrown},
+  metricBox/.style={draw=cLGray!85, fill=cLGray!12, line width=0.3pt, rounded corners=0.6mm}
+}
+\path[use as bounding box] (0,0) rectangle (18.4,11.8);
+\fill[panel] (0.25,6.15) rectangle (5.85,11.55);
+\fill[panel] (6.40,6.15) rectangle (12.00,11.55);
+\fill[panel] (12.55,6.15) rectangle (18.15,11.55);
+\fill[panel] (0.25,0.35) rectangle (5.85,5.75);
+\fill[panel] (6.40,0.35) rectangle (12.00,5.75);
+\fill[panel] (12.55,0.35) rectangle (18.15,5.75);
+\node[panelLetter] at (0.48,11.25) {(a)};
+\node[panelTitle] at (1.02,11.25) {measurement setup};
+\node[panelLetter] at (6.63,11.25) {(b)};
+\node[panelTitle] at (7.17,11.25) {power-law signature};
+\node[panelLetter] at (12.78,11.25) {(c)};
+\node[panelTitle] at (13.32,11.25) {trapping index};
+\node[panelLetter] at (0.48,5.45) {(d)};
+\node[panelTitle] at (1.02,5.45) {chemical origin};
+\node[panelLetter] at (6.63,5.45) {(e)};
+\node[panelTitle] at (7.17,5.45) {physical origin};
+\node[panelLetter] at (12.78,5.45) {(f)};
+\node[panelTitle] at (13.32,5.45) {multi-modal convergence};
+\begin{scope}[shift={(0.25,6.15)}]
+  \GradSlab{1.55,2.18,2.85,2.35,cAmberSphere,cLGray,y}
+  \fill[cLGray!55, draw=cGray!75, line width=0.55pt] (1.38,4.53) rectangle (4.57,4.78);
+  \fill[cLGray!55, draw=cGray!75, line width=0.55pt] (1.38,1.93) rectangle (4.57,2.18);
+  \node[tinyText, anchor=west] at (4.70,4.65) {top electrode};
+  \node[tinyText, anchor=west] at (4.70,2.05) {bottom electrode};
+  \node[sulfur] at (2.05,4.00) {S};
+  \node[sulfur] at (2.82,3.38) {S};
+  \node[sulfur] at (3.72,3.85) {S};
+  \node[sulfur] at (2.35,2.68) {S};
+  \node[sulfur] at (3.42,2.48) {S};
+  \IsoCharge{2.96,4.34,-}
+  \draw[smallArr, cBlue!70, dashed] (2.96,4.18) -- (2.96,2.38);
+  \draw[cGray!78, line width=0.55pt] (0.72,4.66) -- (1.38,4.66);
+  \draw[cGray!78, line width=0.55pt] (0.72,2.05) -- (1.38,2.05);
+  \draw[cGray!78, line width=0.55pt] (0.72,4.66) -- (0.72,3.72);
+  \draw[cGray!78, line width=0.55pt] (0.72,2.05) -- (0.72,2.88);
+  \draw[cGray!78, line width=1.05pt] (0.50,3.50) -- (0.94,3.50);
+  \draw[cGray!78, line width=1.05pt] (0.57,3.17) -- (0.87,3.17);
+  \draw[cGray!78, line width=0.55pt] (0.72,3.50) -- (0.72,3.72);
+  \draw[cGray!78, line width=0.55pt] (0.72,3.17) -- (0.72,2.88);
+  \node[tinyText, text=cRed, anchor=east] at (0.45,3.50) {$+$};
+  \node[tinyText, text=cBlue, anchor=east] at (0.48,3.17) {$-$};
+  \node[tinyText, anchor=south] at (0.73,3.78) {voltage-bias};
+  \draw[cGray!78, line width=0.55pt] (4.57,4.66) -- (5.05,4.66) -- (5.05,3.77);
+  \draw[cGray!78, line width=0.55pt] (4.57,2.05) -- (5.05,2.05) -- (5.05,2.86);
+  \draw[cGray!78, fill=cLGray!8, line width=0.55pt] (5.05,3.32) circle (0.35);
+  \node[baseText, font=\sffamily\itshape\fontsize{10}{12}\selectfont] at (5.05,3.32) {$I$};
+  \node[tinyText, anchor=north] at (5.05,2.82) {current-meter};
+  \draw[axisArr] (1.08,0.82) -- (4.82,0.82);
+  \draw[axisArr] (1.08,0.82) -- (1.08,1.42);
+  \draw[cBlue, line width=0.75pt] (1.22,1.31) .. controls (2.10,1.12) and (3.42,0.92) .. (4.66,0.88);
+  \node[tinyText, anchor=north] at (4.64,0.78) {$t$};
+  \node[tinyText, anchor=south, rotate=90] at (1.00,1.35) {$I(t)$};
+  \node[captionText] at (3.05,0.48) {bias-driven transient current readout};
+\end{scope}
+\begin{scope}[shift={(6.40,6.15)}]
+  \draw[axisArr] (0.85,1.12) -- (5.08,1.12);
+  \draw[axisArr] (0.85,1.12) -- (0.85,4.63);
+  \node[tinyText, anchor=north] at (4.98,1.05) {$\log t$};
+  \node[tinyText, anchor=south, rotate=90] at (0.75,4.38) {$\log I(t)$};
+  \draw[curveBlue] (1.18,4.30) -- (4.92,1.54);
+  \node[baseText, text=cBlue, anchor=west] at (3.23,4.20) {power-law};
+  \node[tinyText, text=cBlue, anchor=west] at (3.23,3.86) {$I(t)\propto t^{-n}$};
+  \draw[curveRed] plot[smooth, samples=70, domain=0:1] ({1.18+\x*3.74},{4.18-0.14*\x-2.88*\x*\x*\x*\x*\x});
+  \node[baseText, text=cRed, anchor=west] at (1.20,2.22) {Debye};
+  \node[tinyText, text=cRed, anchor=west] at (1.20,1.88) {$\exp(-t/\tau)$};
+  \draw[halo] (2.35,3.26) ellipse (0.68 and 0.36);
+  \draw[chainLine, line width=0.55pt] (1.70,3.25) .. controls (1.98,3.48) and (2.28,3.08) .. (2.58,3.28) .. controls (2.78,3.42) and (3.00,3.16) .. (3.22,3.30);
+  \node[sulfur, minimum size=2.0mm] at (2.20,3.35) {S};
+  \node[sulfur, minimum size=2.0mm] at (2.48,3.14) {S};
+  \draw[trapLine, line width=0.75pt] (2.64,3.33) -- (3.00,3.33);
+  \IsoCharge{2.82,3.33,-}
+  \node[tinyText, text=cAmber, anchor=south] at (2.42,3.70) {trap-controlled hopping};
+  \node[captionText] at (2.80,0.48) {straight log-log decay marks trapping};
+\end{scope}
+\begin{scope}[shift={(12.55,6.15)}]
+  \draw[axisArr] (0.85,1.12) -- (5.08,1.12);
+  \draw[axisArr] (0.85,1.12) -- (0.85,4.63);
+  \node[tinyText, anchor=north] at (4.98,1.05) {$\log t$};
+  \node[tinyText, anchor=south, rotate=90] at (0.75,4.38) {$\log I(t)$};
+  \draw[curveBlue] (1.18,4.38) -- (4.94,1.36);
+  \node[tinyText, text=cBlue, anchor=west] at (3.58,4.13) {high $n$: trap-rich};
+  \draw[curveBlueLight] (1.18,3.60) -- (4.94,2.35);
+  \node[tinyText, text=cBlue!58, anchor=west] at (3.58,2.86) {low $n$: shallow or fewer traps};
+  \draw[curveRed] plot[smooth, samples=70, domain=0:1] ({1.18+\x*3.76},{3.03-0.08*\x-1.76*\x*\x*\x*\x*\x});
+  \node[tinyText, text=cRed, anchor=west] at (1.20,1.55) {no-trap Debye limit};
+  \node[captionText] at (2.80,0.48) {shape and slope separate trap regimes};
+\end{scope}
+\begin{scope}[shift={(0.25,0.35)}]
+  \draw[chainLine] (0.55,3.15) -- (0.92,3.43) -- (1.30,3.15) -- (1.68,3.43) -- (2.06,3.15) -- (2.44,3.43) -- (2.82,3.15) -- (3.20,3.43);
+  \node[sulfur] at (0.92,3.88) {S};
+  \node[sulfur] at (1.84,3.88) {S};
+  \node[sulfur] at (2.19,3.88) {S};
+  \node[sulfur] at (3.05,3.88) {S};
+  \draw[chainLine, line width=0.52pt] (0.92,3.43) -- (0.92,3.74);
+  \draw[chainLine, line width=0.52pt] (1.84,3.31) -- (1.84,3.74);
+  \draw[chainLine, line width=0.52pt] (2.19,3.32) -- (2.19,3.74);
+  \draw[chainLine, line width=0.52pt] (3.05,3.33) -- (3.05,3.74);
+  \draw[cAmber, line width=1.65pt] (1.84,3.88) -- (2.19,3.88);
+  \fill[halo] (2.02,3.88) ellipse (0.65 and 0.34);
+  \node[tinyText, text=cAmber, anchor=south] at (2.02,4.36) {shared sulfur-rich site};
+  \draw[callout] (2.02,4.25) -- (2.02,4.02);
+  \node[tinyText, text=cAmber, anchor=north, align=center] at (1.30,2.50) {electron\\affinity};
+  \draw[callout] (1.48,2.66) -- (1.86,3.62);
+  \draw[smallArr, cAmber] (3.08,3.37) .. controls (3.45,3.10) and (3.75,2.78) .. (4.45,2.67);
+  \node[tinyText, text=cAmber, anchor=south] at (3.70,2.95) {creates};
+  \draw[axisArr] (4.05,1.36) -- (4.05,4.35);
+  \node[tinyText, anchor=east] at (4.00,4.33) {$E$};
+  \draw[bandLine, cBlue] (4.30,3.92) -- (5.35,3.92);
+  \node[tinyText, text=cBlue, anchor=west] at (5.43,3.92) {CB};
+  \draw[bandLine, cRed] (4.30,1.52) -- (5.35,1.52);
+  \node[tinyText, text=cRed, anchor=west] at (5.43,1.52) {VB};
+  \draw[trapLine] (4.56,2.66) -- (5.16,2.66);
+  \node[tinyText, text=cAmber, anchor=west] at (5.24,2.66) {$E_t$};
+  \IsoCharge{4.86,2.66,-}
+  \node[captionText] at (2.80,0.50) {S--S chemistry places traps inside the gap};
+\end{scope}
+\begin{scope}[shift={(6.40,0.35)}]
+  \begin{scope}[shift={(0.76,1.10)}, iso basis]
+    \IsoBlock{3.95}{1.20}{0.34}{cLGray}{
+      \draw[chainLine, line width=0.85pt] (0.20,0.20,0.36) .. controls (0.85,0.88,0.36) and (1.32,0.08,0.36) .. (1.95,0.56,0.36) .. controls (2.60,1.05,0.36) and (3.04,0.22,0.36) .. (3.70,0.78,0.36);
+      \draw[chainLine, line width=0.85pt] (0.24,0.86,0.40) .. controls (0.88,0.20,0.40) and (1.50,1.08,0.40) .. (2.12,0.40,0.40) .. controls (2.66,-0.04,0.40) and (3.18,0.92,0.40) .. (3.80,0.30,0.40);
+    }
+  \end{scope}
+  \draw[chainLine, line width=1.0pt] plot[smooth, samples=90, domain=0:1] ({0.66+\x*4.65},{4.36+0.34*sin(\x*540)});
+  \draw[chainLine, line width=1.0pt] plot[smooth, samples=90, domain=0:1] ({0.66+\x*4.65},{3.28+0.34*sin(\x*540+150)});
+  \draw[chainLine, line width=1.0pt] plot[smooth, samples=90, domain=0:1] ({0.66+\x*4.65},{2.20+0.34*sin(\x*540+300)});
+  \fill[halo] (1.48,4.35) circle (0.55);
+  \node[sulfur] at (1.25,4.28) {S};
+  \node[sulfur] at (1.55,4.55) {S};
+  \draw[trapLine, line width=0.95pt] (1.74,4.20) -- (2.20,4.20);
+  \IsoCharge{1.97,4.20,-}
+  \fill[halo] (4.10,3.25) circle (0.58);
+  \node[sulfur] at (3.88,3.13) {S};
+  \node[sulfur] at (4.14,3.38) {S};
+  \node[sulfur] at (4.35,3.18) {S};
+  \draw[trapLine, line width=0.95pt] (4.47,3.16) -- (4.94,3.16);
+  \IsoCharge{4.70,3.16,-}
+  \fill[halo] (2.82,2.12) circle (0.55);
+  \node[sulfur] at (2.61,2.03) {S};
+  \node[sulfur] at (2.92,2.28) {S};
+  \draw[trapLine, line width=0.95pt] (3.17,2.05) -- (3.63,2.05);
+  \IsoCharge{3.40,2.05,-}
+  \node[sulfur] at (3.70,4.54) {S};
+  \node[sulfur] at (4.90,4.20) {S};
+  \node[sulfur] at (2.08,3.15) {S};
+  \node[tinyText, text=cAmber, anchor=south] at (1.48,4.97) {same sulfur-rich regions};
+  \draw[chainLine, line width=1.0pt] (0.74,1.08) -- (1.22,1.08);
+  \node[tinyText, anchor=west] at (1.30,1.08) {linear chain};
+  \draw[trapLine, line width=0.95pt] (3.30,1.08) -- (3.78,1.08);
+  \node[tinyText, anchor=west] at (3.86,1.08) {trap level};
+  \node[captionText] at (2.80,0.50) {linear chains concentrate traps at sulfur clusters};
+\end{scope}
+\begin{scope}[shift={(12.55,0.35)}]
+  \draw[metricBox] (0.52,3.72) rectangle (2.05,4.78);
+  \draw[axisArr, line width=0.32pt] (0.68,3.88) -- (1.88,3.88);
+  \draw[axisArr, line width=0.32pt] (0.68,3.88) -- (0.68,4.57);
+  \draw[curveBlue, line width=0.75pt] (0.78,4.48) -- (1.78,3.98);
+  \node[tinyText, text=cBlue, anchor=south] at (1.28,4.58) {1) $n$};
+  \draw[metricBox] (2.22,3.72) rectangle (3.75,4.78);
+  \draw[axisArr, line width=0.32pt] (2.38,3.88) -- (3.58,3.88);
+  \draw[axisArr, line width=0.32pt] (2.38,3.88) -- (2.38,4.57);
+  \draw[cAmber, line width=0.75pt] plot[smooth, samples=50, domain=0:1] ({2.47+\x*1.00},{3.90+0.48*exp(-((\x-0.28)*4.5)^2)+0.39*exp(-((\x-0.76)*5.0)^2)});
+  \node[tinyText, text=cAmber, anchor=south] at (2.98,4.58) {2) $g(E_t)$};
+  \draw[metricBox] (3.92,3.72) rectangle (5.35,4.78);
+  \draw[axisArr, line width=0.32pt] (4.08,3.88) -- (5.18,3.88);
+  \draw[axisArr, line width=0.32pt] (4.08,3.88) -- (4.08,4.57);
+  \draw[curveRed, line width=0.75pt] plot[smooth, samples=45, domain=0:1] ({4.18+\x*0.90},{3.90+0.58*exp(-((\x-0.52)*4.6)^2)});
+  \node[tinyText, text=cRed, anchor=south] at (4.64,4.58) {3) $\tau_d$};
+  \draw[smallArr, cBlue] (1.28,3.72) -- (2.12,3.16);
+  \draw[smallArr, cAmber] (2.98,3.72) -- (2.92,3.16);
+  \draw[smallArr, cRed] (4.64,3.72) -- (3.72,3.16);
+  \node[baseText, font=\sffamily\bfseries\fontsize{8}{9.5}\selectfont, text=cTeal, align=center] at (2.92,2.93) {consistent trap depth\\distribution};
+  \draw[axisArr] (1.05,1.22) -- (5.05,1.22);
+  \draw[axisArr] (1.05,1.22) -- (1.05,2.78);
+  \draw[cTeal, line width=1.35pt] plot[smooth, samples=90, domain=0:1] ({1.18+\x*3.68},{1.22+1.02*exp(-((\x-0.30)*5.1)^2)+0.88*exp(-((\x-0.75)*5.3)^2)});
+  \node[tinyText, anchor=north] at (4.92,1.15) {$E_t$};
+  \node[tinyText, anchor=south, rotate=90] at (0.94,2.48) {$g(E_t)$};
+  \node[tinyText, text=cTeal, anchor=south] at (2.28,2.38) {shallow};
+  \node[tinyText, text=cTeal, anchor=south] at (4.02,2.26) {deep};
+  \node[captionText] at (2.80,0.50) {three metrics converge on one two-lobe distribution};
+\end{scope}
+\end{tikzpicture}
+\end{document}
