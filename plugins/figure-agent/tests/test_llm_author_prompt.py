@@ -115,7 +115,8 @@ def test_selection_notes_plumbed_when_present(tmp_path: Path) -> None:
     result = build_prompt(tmp_path)
     assert "Visual motifs to preserve" in result
     assert "green polymer chain marker" in result
-    assert "(none — only preview filename selected)" not in result
+    # Fallback sentinel must not occupy the section body when content is present.
+    assert "### Selection notes (preview-grounded authoring guide)\n\n(none)" not in result
 
 
 def test_selection_notes_strips_html_comments(tmp_path: Path) -> None:
@@ -133,10 +134,14 @@ def test_selection_notes_strips_html_comments(tmp_path: Path) -> None:
 
 
 def test_selection_notes_fallback_when_absent(tmp_path: Path) -> None:
-    """Spec without selection_notes key uses the fallback string and substitutes the placeholder."""
+    """Spec without selection_notes key falls back to the short '(none)' sentinel.
+
+    Matches the parity with `selected_preview` and `_section_body` fallbacks
+    so an LLM does not parse the fallback as instruction.
+    """
     _write_minimal_inputs(tmp_path, "")
     result = build_prompt(tmp_path)
-    assert "(none — only preview filename selected)" in result
+    assert "### Selection notes (preview-grounded authoring guide)\n\n(none)" in result
     assert "{{" not in result
 
 

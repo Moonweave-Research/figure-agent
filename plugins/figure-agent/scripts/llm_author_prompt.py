@@ -51,6 +51,36 @@ def _build_flagship_bullets(sty_text: str) -> list[str]:
     return bullets
 
 
+def _coerce_selection_notes(raw: object, example_name: str) -> str:
+    # Three real-world failure modes the v0.1.7 mid-review surfaced:
+    #   1. Non-string YAML scalar (int, list, dict, bare date like 2026-04-29).
+    #      Without this guard, _HTML_COMMENT.sub raises TypeError with no
+    #      mention of selection_notes — confusing for users editing spec.yaml.
+    #   2. User wrote content but it was all <!-- ... -->. The strip silently
+    #      yields empty and the fallback fires. Warn so the user notices.
+    #   3. Fallback parity with selected_preview ("(none)") instead of prose
+    #      that an LLM might mis-read as instruction.
+    if raw is None:
+        return "(none)"
+    if not isinstance(raw, str):
+        print(
+            f"llm_author_prompt.py: WARN — selection_notes in {example_name}/spec.yaml "
+            f"is {type(raw).__name__}, not str; coercing. Use a YAML block scalar "
+            f"(`selection_notes: |`) for prose.",
+            file=sys.stderr,
+        )
+        raw = str(raw)
+    cleaned = _HTML_COMMENT.sub("", raw).strip()
+    if not cleaned and raw.strip():
+        print(
+            f"llm_author_prompt.py: WARN — selection_notes in {example_name}/spec.yaml "
+            f"reduced to empty after HTML-comment stripping; using fallback. Visible "
+            f"directives must live outside <!-- ... --> blocks.",
+            file=sys.stderr,
+        )
+    return cleaned or "(none)"
+
+
 def build_prompt(example_dir: Path) -> str:
     spec_path = example_dir / "spec.yaml"
     briefing_path = example_dir / "briefing.md"
@@ -92,10 +122,7 @@ def build_prompt(example_dir: Path) -> str:
 
     selected_preview = spec.get("selected_preview", "(none)")
 
-    selection_notes_raw = spec.get("selection_notes", "") or ""
-    selection_notes = _HTML_COMMENT.sub("", selection_notes_raw).strip() or (
-        "(none — only preview filename selected)"
-    )
+    selection_notes = _coerce_selection_notes(spec.get("selection_notes"), example_dir.name)
 
     def _section_body(num: int) -> str:
         entry = sections.get(num)
