@@ -1,0 +1,69 @@
+% smoke_trap_demo.tex
+% 1-panel band-diagram cartoon: charge trapping in a generic polymer dielectric.
+% figure-agent v0.1 dogfooding (smoke test).
+% Briefing: briefing.md
+
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{90mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\textsf{\fontsize{8}{10}\selectfont}},
+  electron/.style={circle, fill=cBlue, draw=cBlue!70!black, inner sep=0pt,
+                   minimum size=2.6mm, line width=0.5pt},
+  bandLine/.style={line width=1.4pt},
+  trapLine/.style={line width=1.4pt, dash pattern=on 2.5pt off 1.5pt},
+  injArr/.style={-{Stealth[length=4pt,width=3pt]}, line width=1.0pt, cGray!70!black},
+  capArr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.2pt, cGray!70!black},
+  axisArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray, line width=0.6pt},
+]
+
+% ─── Panel background ──────────────────────────────────────────────────────
+\fill[cLGray!22, rounded corners=2.5mm] (0, 0) rectangle (6.40, 5.60);
+
+% ─── E-axis ────────────────────────────────────────────────────────────────
+\draw[axisArr] (0.70, 0.55) -- (0.70, 4.95);
+\node[font=\textsf{\itshape\fontsize{8}{10}\selectfont}, cGray, anchor=south west]
+    at (0.65, 4.95) {$E$};
+
+% ─── CB line (top) ─────────────────────────────────────────────────────────
+\draw[bandLine, cBlue] (0.90, 4.20) -- (4.80, 4.20);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
+    at (4.85, 4.20) {CB};
+
+% ─── VB line (bottom) ──────────────────────────────────────────────────────
+\draw[bandLine, cRed] (0.90, 0.95) -- (4.80, 0.95);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cRed!80!black, anchor=west]
+    at (4.85, 0.95) {VB};
+
+% ─── Deep trap E_t (mid-gap, localized short segment) ──────────────────────
+\draw[trapLine, cAmber] (1.80, 2.55) -- (3.90, 2.55);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber, anchor=west]
+    at (4.85, 2.55) {$E_t$};
+
+% ─── Trapped electrons on E_t (3 dots, qualitative) ────────────────────────
+\node[electron] at (2.30, 2.55) {};
+\node[electron] at (2.85, 2.55) {};
+\node[electron] at (3.40, 2.55) {};
+
+% ─── Injection arrow (upper-left → CB) ─────────────────────────────────────
+\draw[injArr] (0.70, 5.10) .. controls (1.00, 4.75) and (1.30, 4.45) .. (1.55, 4.25);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+    at (0.95, 4.85) {injection};
+
+% ─── Mobile electron just landed in CB ─────────────────────────────────────
+\node[electron] at (1.60, 4.20) {};
+
+% ─── Capture arrow (CB → E_t, vertical) ────────────────────────────────────
+\draw[capArr] (1.60, 4.10) -- (1.60, 2.65);
+\node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cGray!80!black, anchor=west]
+    at (1.72, 3.40) {capture};
+
+% ─── Bottom caption ────────────────────────────────────────────────────────
+\node[font=\textsf{\bfseries\fontsize{8.5}{10.5}\selectfont}, anchor=north]
+    at (3.20, -0.15) {long retention via deep trap};
+
+\end{tikzpicture}%
+}
+\end{document}

@@ -1,0 +1,10 @@
+name: smoke_trap_demo
+panels:
+  - id: a
+    caption: long retention via deep trap
+style_profile: polymer-default
+selected_preview: dummy_v1.png
+selection_notes: |
+  Smoke test placeholder preview. Authoring TikZ from briefing intent
+  (band-diagram cartoon: CB top, E_t mid-gap, VB bottom; injection→CB; capture CB→E_t).
+
