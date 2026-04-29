@@ -16,6 +16,23 @@ def test_svg_to_png_forces_white_background_flag():
     assert "-b white" in script
 
 
+def test_svg_to_png_rejects_output_without_png_suffix(tmp_path):
+    """A no-extension stray file in exports/ used to occur when the caller
+    dropped the .png suffix. Defend at the script level so the caller sees
+    an immediate error instead of silently producing a stray file."""
+    svg = tmp_path / "in.svg"
+    svg.write_text("<svg xmlns='http://www.w3.org/2000/svg'/>", encoding="utf-8")
+    no_ext_output = tmp_path / "out_without_suffix"
+    result = subprocess.run(
+        ["bash", str(SCRIPT), str(svg), str(no_ext_output)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "must end with .png" in result.stderr
+    assert not no_ext_output.exists()
+
+
 @pytest.mark.skipif(shutil.which("rsvg-convert") is None, reason="rsvg-convert not installed")
 def test_svg_to_png_outputs_rgb_png_for_transparent_svg(tmp_path):
     svg = tmp_path / "transparent.svg"

@@ -22,6 +22,14 @@ if [[ ! -f "$PDF_INPUT" ]]; then
   exit 1
 fi
 
+# Defend against caller passing an output path that lacks the .svg suffix.
+# pdftocairo -svg writes to the exact path given; missing the suffix yields
+# a no-extension stray file in exports/ that has to be `rm`'d manually.
+if [[ "$SVG_OUTPUT" != *.svg ]]; then
+  echo "Error: output path must end with .svg, got: $SVG_OUTPUT" >&2
+  exit 1
+fi
+
 pdftocairo -svg "$PDF_INPUT" "$SVG_OUTPUT"
 
 echo "Generated: $SVG_OUTPUT"

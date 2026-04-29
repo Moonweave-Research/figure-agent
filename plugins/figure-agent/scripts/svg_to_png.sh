@@ -17,4 +17,13 @@ if [[ ! -f "$1" ]]; then
   exit 1
 fi
 
+# Defend against the caller (LLM running /fig_export, hand-typed shell) passing
+# an output path that lacks the .png suffix. Without this guard, rsvg-convert
+# silently writes to the exact path given, producing a no-extension stray file
+# in exports/ that has to be `rm`'d manually.
+if [[ "$2" != *.png ]]; then
+  echo "Error: output path must end with .png, got: $2" >&2
+  exit 1
+fi
+
 rsvg-convert -b white -d 600 -p 600 -f png -o "$2" "$1"
