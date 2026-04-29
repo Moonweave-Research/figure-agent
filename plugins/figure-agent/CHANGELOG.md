@@ -13,6 +13,19 @@ All notable changes to figure-agent are documented here.
 
 ### Fixed
 
+- `lint_tex.py` plugged three Style Lock bypasses caught by external review:
+  (1) implicit positional colors in TikZ option blocks (`\node[red] {};`,
+  `\draw[thick, blue]`) are now rejected via a hardcoded
+  `KNOWN_NON_PALETTE_COLORS` set scanned inside `\[...\]` blocks;
+  (2) brace-enclosed values (`\node[fill={red}]`) are now matched by an
+  optional `\{?...\}?` in the key-value regex; (3) `strip_tex_comment` now
+  consumes both characters on every backslash escape so `\\%` (LaTeX newline
+  followed by a real comment) correctly truncates and no longer false-flags
+  commented-out diagnostics.
+- `lint_tex.py` `parse_palette` returns an empty set when
+  `polymer-paper-preamble.sty` is missing instead of raising; the CLI now
+  exits with code 2 and a clear stderr message in that case (distinct from
+  exit 1 for actual lint violations).
 - `/fig_status` freshness source set now matches `/fig_review`: `<name>.tex`, `briefing.md`,
   and `styles/polymer-paper-preamble.sty`. Editing the briefing or style lock no longer leaves
   the build pdf or exports falsely reported as fresh.

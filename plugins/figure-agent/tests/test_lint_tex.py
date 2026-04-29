@@ -106,3 +106,68 @@ def test_parse_palette_superset_of_expected() -> None:
         "cAmberSphere",
     }
     assert required <= palette
+
+
+def test_implicit_color_in_option_block(tmp_path: Path) -> None:
+    """Bypass attempt: positional color arg without fill=/draw= prefix."""
+    tex = _write(tmp_path, r"\node[red] {};" + "\n")
+    violations = lint(tex)
+    np_violations = [v for v in violations if v.category == "non_palette_color"]
+    assert len(np_violations) == 1
+    assert "red" in np_violations[0].message
+
+
+def test_implicit_color_among_other_tikz_options(tmp_path: Path) -> None:
+    """Bypass attempt: color mixed with non-color positional options."""
+    tex = _write(tmp_path, r"\draw[thick, blue] (0,0) -- (1,1);" + "\n")
+    violations = lint(tex)
+    np_violations = [v for v in violations if v.category == "non_palette_color"]
+    assert len(np_violations) == 1
+    assert "blue" in np_violations[0].message
+
+
+def test_palette_token_as_positional_in_option_block_no_violation(tmp_path: Path) -> None:
+    """Palette names used positionally must pass."""
+    tex = _write(tmp_path, r"\draw[thick, cBlue] (0,0) -- (1,1);" + "\n")
+    assert lint(tex) == []
+
+
+def test_brace_enclosed_color_value(tmp_path: Path) -> None:
+    """Bypass attempt: fill={red} with TikZ brace-enclosed value."""
+    tex = _write(tmp_path, r"\node[fill={red}] {};" + "\n")
+    violations = lint(tex)
+    np_violations = [v for v in violations if v.category == "non_palette_color"]
+    assert len(np_violations) == 1
+    assert "red" in np_violations[0].message
+
+
+def test_double_backslash_then_comment_strips_correctly(tmp_path: Path) -> None:
+    r"""LaTeX \\ is newline; the following % opens a real comment.
+
+    Authors must be free to write `\\% \node[fill=red]` as a commented-out
+    diagnostic without lint flagging the dead code.
+    """
+    tex = _write(tmp_path, r"\\% \node[fill=red] {};" + "\n")
+    assert lint(tex) == []
+
+
+def test_escaped_percent_preserves_literal(tmp_path: Path) -> None:
+    r"""\% is a literal percent character; lint must NOT truncate the line."""
+    tex = _write(tmp_path, r"\node {50\% efficiency, fill=red comment} \draw[red];" + "\n")
+    violations = lint(tex)
+    np_violations = [v for v in violations if v.category == "non_palette_color"]
+    assert len(np_violations) >= 1
+
+
+def test_parse_palette_missing_sty_returns_empty_set(tmp_path: Path) -> None:
+    missing = tmp_path / "no_such_preamble.sty"
+    assert parse_palette(missing) == set()
+
+
+def test_parse_palette_explicit_path_works(tmp_path: Path) -> None:
+    sty = tmp_path / "fake.sty"
+    sty.write_text(
+        r"\definecolor{cTest}{HTML}{ABCDEF}" + "\n" + r"\definecolor{cOther}{RGB}{1,2,3}" + "\n",
+        encoding="utf-8",
+    )
+    assert parse_palette(sty) == {"cTest", "cOther"}

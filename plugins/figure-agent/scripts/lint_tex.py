@@ -10,10 +10,34 @@ from typing import NamedTuple
 
 TIKZ_BUILTIN_COLORS: frozenset[str] = frozenset({"black", "white", "gray", "none", "transparent"})
 
+# xcolor's standard named colors. If any of these appears as a positional
+# option or as the value of fill/draw/text/color, the lint rejects it —
+# the palette is the only sanctioned source of color.
+KNOWN_NON_PALETTE_COLORS: frozenset[str] = frozenset(
+    {
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "cyan",
+        "magenta",
+        "orange",
+        "purple",
+        "pink",
+        "lime",
+        "violet",
+        "brown",
+        "olive",
+        "teal",
+    }
+)
+
 _RE_DEFINECOLOR = re.compile(r"\\definecolor\b")
 _RE_FONT_OVERRIDE = re.compile(r"\\(setmainfont|setsansfont|setmonofont)\b")
 _RE_RAW_HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
-_RE_COLOR_OPTION = re.compile(r"\b(fill|draw|text|color)\s*=\s*([!\w]+)")
+_RE_OPTION_BLOCK = re.compile(r"\[([^\[\]]*)\]")
+_RE_KEY_VALUE = re.compile(r"^\s*(fill|draw|text|color)\s*=\s*\{?([!\w]+)\}?\s*$")
+_RE_BARE_TOKEN = re.compile(r"^\s*([A-Za-z][A-Za-z0-9]*)\s*$")
 _RE_COLOR_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 _RE_PALETTE_TOKEN = re.compile(r"\\definecolor\{([A-Za-z][A-Za-z0-9]*)\}")
 
@@ -26,24 +50,39 @@ class Violation(NamedTuple):
 
 
 def strip_tex_comment(line: str) -> str:
+    """Remove TeX comments from a line, respecting backslash escapes.
+
+    LaTeX semantics: any backslash followed by a character escapes that
+    character (literal `\\` is a newline command; `\\%` is therefore newline +
+    comment, NOT a literal `%`). Walk char-by-char and consume two chars on
+    every escape so `\\%` correctly truncates the rest of the line.
+    """
     result: list[str] = []
     idx = 0
     while idx < len(line):
         ch = line[idx]
-        if ch == "\\" and idx + 1 < len(line) and line[idx + 1] == "%":
-            result.append("\\%")
-            idx += 2
-        elif ch == "%":
-            break
-        else:
+        if ch == "\\" and idx + 1 < len(line):
             result.append(ch)
-            idx += 1
+            result.append(line[idx + 1])
+            idx += 2
+            continue
+        if ch == "%":
+            break
+        result.append(ch)
+        idx += 1
     return "".join(result)
 
 
 def parse_palette(sty_path: Path | None = None) -> set[str]:
+    """Extract palette color names from the polymer preamble.
+
+    Returns the empty set if the .sty file is missing or unreadable; main()
+    treats an empty palette as a configuration error and exits with code 2.
+    """
     if sty_path is None:
         sty_path = Path(__file__).resolve().parents[1] / "styles" / "polymer-paper-preamble.sty"
+    if not sty_path.is_file():
+        return set()
     names: set[str] = set()
     for raw_line in sty_path.read_text(encoding="utf-8").splitlines():
         for match in _RE_PALETTE_TOKEN.finditer(raw_line):
@@ -51,8 +90,29 @@ def parse_palette(sty_path: Path | None = None) -> set[str]:
     return names
 
 
-def lint(tex_path: Path) -> list[Violation]:
-    palette = parse_palette()
+def _check_color_segments(
+    value: str,
+    line_num: int,
+    snippet: str,
+    allowed_colors: set[str] | frozenset[str],
+) -> list[Violation]:
+    out: list[Violation] = []
+    for segment in value.split("!"):
+        if _RE_COLOR_NAME.fullmatch(segment) and segment not in allowed_colors:
+            out.append(
+                Violation(
+                    line=line_num,
+                    category="non_palette_color",
+                    snippet=snippet,
+                    message=f"color '{segment}' is not in the palette; use a palette macro",
+                )
+            )
+    return out
+
+
+def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
+    if palette is None:
+        palette = parse_palette()
     allowed_colors = palette | TIKZ_BUILTIN_COLORS
     violations: list[Violation] = []
 
@@ -93,19 +153,27 @@ def lint(tex_path: Path) -> list[Violation]:
                 )
             )
 
-        for match in _RE_COLOR_OPTION.finditer(stripped):
-            value = match.group(2)
-            segments = value.split("!")
-            for segment in segments:
-                if not _RE_COLOR_NAME.fullmatch(segment):
+        for option_match in _RE_OPTION_BLOCK.finditer(stripped):
+            block_content = option_match.group(1)
+            for token in block_content.split(","):
+                kv = _RE_KEY_VALUE.match(token)
+                if kv:
+                    value = kv.group(2)
+                    violations.extend(
+                        _check_color_segments(value, line_num, snippet, allowed_colors)
+                    )
                     continue
-                if segment not in allowed_colors:
+                bare = _RE_BARE_TOKEN.match(token)
+                if bare and bare.group(1) in KNOWN_NON_PALETTE_COLORS:
                     violations.append(
                         Violation(
                             line=line_num,
                             category="non_palette_color",
                             snippet=snippet,
-                            message=f"color '{segment}' is not in the palette; use a palette macro",
+                            message=(
+                                f"color '{bare.group(1)}' is not in the palette; "
+                                "use a palette macro"
+                            ),
                         )
                     )
 
@@ -117,7 +185,16 @@ def main() -> int:
     parser.add_argument("tex_path", type=Path)
     args = parser.parse_args()
 
-    violations = lint(args.tex_path)
+    palette = parse_palette()
+    if not palette:
+        print(
+            "lint_tex.py: palette source missing or empty; "
+            "expected styles/polymer-paper-preamble.sty with \\definecolor entries",
+            file=sys.stderr,
+        )
+        return 2
+
+    violations = lint(args.tex_path, palette=palette)
     violations_sorted = sorted(violations, key=lambda v: (v.line, v.category))
     for violation in violations_sorted:
         print(f"{args.tex_path}:{violation.line}: {violation.category}: {violation.message}")
