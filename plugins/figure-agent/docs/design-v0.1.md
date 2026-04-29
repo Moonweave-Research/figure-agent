@@ -134,6 +134,11 @@ user works externally
   -> list previews
   -> user selects one visual direction
   -> record selected_preview in spec.yaml
+  -> optionally record selection_notes — preview-grounded authoring guide
+     (visual motifs to preserve, preview errors to fix in TikZ, labels to
+     lift, style overrides). Free-form; 4-heading template recommended.
+     selection_notes is plumbed into the LLM authoring prompt with priority
+     §6 invariants > §3 composition intent > selection notes.
 
 human/LLM vector finishing
   -> author examples/<name>/<name>.tex using selected preview as inspiration
@@ -157,7 +162,7 @@ human/LLM vector finishing
 
 ```text
 examples/<figure_name>/
-├── spec.yaml          # lightweight metadata: name, panels, style_profile, selected_preview
+├── spec.yaml          # lightweight metadata: name, panels, style_profile, selected_preview, selection_notes
 ├── briefing.md        # research intent and schematic direction
 ├── previews/          # user-generated external image-gen drafts
 ├── selected/          # optional copy/symlink of chosen draft
