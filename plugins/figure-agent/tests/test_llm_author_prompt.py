@@ -90,3 +90,59 @@ def test_missing_spec_returns_exit_1(tmp_path: Path) -> None:
     with pytest.raises(SystemExit) as exc_info:
         build_prompt(tmp_path)
     assert exc_info.value.code == 1
+
+
+def _write_minimal_inputs(tmp_path: Path, selection_notes_yaml: str) -> None:
+    """Write a minimal spec.yaml and briefing.md so build_prompt can run.
+
+    selection_notes_yaml is the raw YAML fragment for the selection_notes
+    field (or empty string to omit it entirely).
+    """
+    spec_text = "name: tmp\npanels: []\n"
+    if selection_notes_yaml:
+        spec_text += selection_notes_yaml
+    (tmp_path / "spec.yaml").write_text(spec_text, encoding="utf-8")
+    (tmp_path / "briefing.md").write_text(
+        "## 1. What does this figure show?\n\nminimal test fixture.\n",
+        encoding="utf-8",
+    )
+
+
+def test_selection_notes_plumbed_when_present(tmp_path: Path) -> None:
+    """selection_notes body must appear in the rendered prompt."""
+    notes = "selection_notes: |\n  Visual motifs to preserve:\n    - green polymer chain marker\n"
+    _write_minimal_inputs(tmp_path, notes)
+    result = build_prompt(tmp_path)
+    assert "Visual motifs to preserve" in result
+    assert "green polymer chain marker" in result
+    assert "(none — only preview filename selected)" not in result
+
+
+def test_selection_notes_strips_html_comments(tmp_path: Path) -> None:
+    """HTML author-only comments inside selection_notes must not leak — parity with parse_briefing."""
+    notes = (
+        "selection_notes: |\n"
+        "  <!-- AUTHOR ONLY: revisit on 2026-05-15 -->\n"
+        "  Visible directive for the LLM.\n"
+    )
+    _write_minimal_inputs(tmp_path, notes)
+    result = build_prompt(tmp_path)
+    assert "AUTHOR ONLY" not in result
+    assert "2026-05-15" not in result
+    assert "Visible directive for the LLM." in result
+
+
+def test_selection_notes_fallback_when_absent(tmp_path: Path) -> None:
+    """Spec without selection_notes key uses the fallback string and substitutes the placeholder."""
+    _write_minimal_inputs(tmp_path, "")
+    result = build_prompt(tmp_path)
+    assert "(none — only preview filename selected)" in result
+    assert "{{" not in result
+
+
+def test_selection_notes_preserves_backslashes(tmp_path: Path) -> None:
+    """str.replace must preserve backslashes inside selection_notes (LaTeX fragments are valid)."""
+    notes = "selection_notes: |\n  Use \\frac{1}{2} ratio for the trap-depth visual.\n"
+    _write_minimal_inputs(tmp_path, notes)
+    result = build_prompt(tmp_path)
+    assert r"\frac{1}{2}" in result
