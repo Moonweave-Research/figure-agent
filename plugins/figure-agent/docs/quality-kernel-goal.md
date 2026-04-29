@@ -102,6 +102,37 @@ Future work should improve this kernel:
    - `spec.yaml`, `briefing.md`, `.tex`, build/export status.
    - Clear `fig_status` diagnostics for stale or unreplayable examples.
 
+## Export Tracking Policy
+
+Per-figure folders use the repo `.gitignore` default of treating `build/`,
+`exports/`, and `previews/` as untracked. Fixtures split into two classes:
+
+**Ordinary fixtures.** Exports are regenerated on demand and are not tracked.
+`examples/<name>/exports/.gitkeep` keeps the directory, the contents do not.
+A clean checkout reproduces the figure from `<name>.tex` plus the source set
+(`spec.yaml`, `briefing.md`, `styles/polymer-paper-preamble.sty`).
+
+**Golden fixtures.** PDF/SVG/TIFF/PNG exports are force-tracked via explicit
+`.gitignore` negation entries — one entry per artifact, listed in the repo-root
+`.gitignore`. TIFF additionally routes through Git LFS via `.gitattributes`.
+This applies whether the fixture is `accepted: true` or `accepted: false`,
+because a golden fixture's purpose is to act as a reproducibility baseline
+against which contract changes are validated, including mid-refit.
+
+Promoting a new fixture to golden status requires three changes in the same
+commit:
+
+1. `examples/<name>/spec.yaml` declares the figure as a golden candidate
+   with `reference_image:` and `accepted:` keys.
+2. The repo-root `.gitignore` adds a negation block for the four export
+   artifacts under `examples/<name>/exports/`.
+3. `.gitattributes` routes the TIFF through LFS if the artifact is large
+   enough to warrant LFS storage.
+
+Demoting a fixture from golden status reverses all three. The policy is
+enforced by `.gitignore` rather than by `spec.yaml`, so removing a fixture's
+negation block alone is sufficient to stop tracking new exports.
+
 ## Immediate Quality Target
 
 The first representative figure is fixed:
