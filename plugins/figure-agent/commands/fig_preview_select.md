@@ -28,4 +28,4 @@ Steps:
 No automatic ranking in v0.1. User judgment only.
 No automatic `.tex` scaffold or preview vectorization in v0.1.
 
-Next: edit examples/<name>/<name>.tex (cp styles/tex_template.tex to start), then /fig_compile <name>
+Next: run `uv run python3 scripts/llm_author_prompt.py examples/<name>` to generate the LLM authoring prompt, paste into a code-capable LLM, save the response as examples/<name>/<name>.tex, then /fig_compile <name>.

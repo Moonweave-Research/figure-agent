@@ -1,4 +1,4 @@
-"""BLOCKER-tier Style Lock linter for TikZ .tex files."""
+"""BLOCKER- and WARN-tier Style Lock linter for TikZ .tex files."""
 
 from __future__ import annotations
 
@@ -41,12 +41,24 @@ _RE_BARE_TOKEN = re.compile(r"^\s*([A-Za-z][A-Za-z0-9]*)\s*$")
 _RE_COLOR_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 _RE_PALETTE_TOKEN = re.compile(r"\\definecolor\{([A-Za-z][A-Za-z0-9]*)\}")
 
+# WARN tier constants.
+# flagship_macros_unused fires once per file iff zero calls to any flagship
+# macro; coverage-based heuristics are v0.2.
+# thin_stroke fires per-occurrence on `line width=Xpt` where X<0.25;
+# mm/cm units are v0.1 out of scope.
+FLAGSHIP_MACROS: frozenset[str] = frozenset(
+    {"\\IsoBlock", "\\IsoCharge", "\\GradSlab", "\\IsoConeTip"}
+)
+_RE_FLAGSHIP_CALL = re.compile(r"\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip)\b")
+_RE_THIN_STROKE = re.compile(r"line width\s*=\s*(\d*\.?\d+)pt\b")
+
 
 class Violation(NamedTuple):
     line: int
     category: str
     snippet: str
     message: str
+    severity: str
 
 
 def strip_tex_comment(line: str) -> str:
@@ -105,6 +117,7 @@ def _check_color_segments(
                     category="non_palette_color",
                     snippet=snippet,
                     message=f"color '{segment}' is not in the palette; use a palette macro",
+                    severity="blocker",
                 )
             )
     return out
@@ -117,8 +130,10 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
     violations: list[Violation] = []
 
     raw_lines = tex_path.read_text(encoding="utf-8").splitlines()
+    stripped_lines: list[str] = []
     for line_num, raw_line in enumerate(raw_lines, start=1):
         stripped = strip_tex_comment(raw_line)
+        stripped_lines.append(stripped)
         snippet = raw_line.rstrip()[:80]
 
         if _RE_DEFINECOLOR.search(stripped):
@@ -130,6 +145,7 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                     message=(
                         "redefining colors is forbidden in user .tex; the preamble owns the palette"
                     ),
+                    severity="blocker",
                 )
             )
 
@@ -140,6 +156,7 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                     category="font_override",
                     snippet=snippet,
                     message="overriding fonts is forbidden in user .tex; the preamble owns fonts",
+                    severity="blocker",
                 )
             )
 
@@ -150,6 +167,7 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                     category="raw_hex",
                     snippet=snippet,
                     message="raw hex color is forbidden; use a palette macro",
+                    severity="blocker",
                 )
             )
 
@@ -174,14 +192,50 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                                 f"color '{bare.group(1)}' is not in the palette; "
                                 "use a palette macro"
                             ),
+                            severity="blocker",
                         )
                     )
+
+        # thin_stroke WARN: per-occurrence on line width < 0.25pt (exclusive boundary).
+        # 0.25pt does not warn; mm/cm units are out of scope for v0.1.
+        for stroke_match in _RE_THIN_STROKE.finditer(stripped):
+            width = float(stroke_match.group(1))
+            if width < 0.25:
+                violations.append(
+                    Violation(
+                        line=line_num,
+                        category="thin_stroke",
+                        snippet=snippet,
+                        message=f"line width {width}pt is below 0.25pt minimum stroke",
+                        severity="warn",
+                    )
+                )
+
+    # flagship_macros_unused WARN: fires once per file iff zero calls to any
+    # flagship macro. Scanned over comment-stripped text so commented-out
+    # calls do not suppress the warning.
+    comment_stripped_all = "\n".join(stripped_lines)
+    if not _RE_FLAGSHIP_CALL.search(comment_stripped_all):
+        violations.append(
+            Violation(
+                line=1,
+                category="flagship_macros_unused",
+                snippet="<file>",
+                message=(
+                    "no flagship macros used; see prompts/llm_author_tikz.md "
+                    "to author flagship-compliant TikZ"
+                ),
+                severity="warn",
+            )
+        )
 
     return violations
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="BLOCKER-tier Style Lock lint for .tex files")
+    parser = argparse.ArgumentParser(
+        description="BLOCKER- and WARN-tier Style Lock lint for .tex files"
+    )
     parser.add_argument("tex_path", type=Path)
     args = parser.parse_args()
 
@@ -195,11 +249,17 @@ def main() -> int:
         return 2
 
     violations = lint(args.tex_path, palette=palette)
-    violations_sorted = sorted(violations, key=lambda v: (v.line, v.category))
+    violations_sorted = sorted(
+        violations,
+        key=lambda v: (0 if v.severity == "blocker" else 1, v.line, v.category),
+    )
     for violation in violations_sorted:
-        print(f"{args.tex_path}:{violation.line}: {violation.category}: {violation.message}")
+        print(
+            f"{args.tex_path}:{violation.line}: {violation.severity.upper()}: "
+            f"{violation.category}: {violation.message}"
+        )
 
-    return 0 if not violations else 1
+    return 1 if any(v.severity == "blocker" for v in violations) else 0
 
 
 if __name__ == "__main__":

@@ -10,6 +10,20 @@ All notable changes to figure-agent are documented here.
   non-palette TikZ colors). Integrated into /fig_compile as pre-compile gate: lualatex only runs
   if lint passes; `build/` untouched on lint failure.
 - /fig_status <name> — read-only stage inference from filesystem + spec.yaml; prints stage N/6 + Next: hint. No arg = summary of all examples.
+- `lint_tex.py` WARN tier: `flagship_macros_unused` (fires once per file when no flagship macro is called) and `thin_stroke` (fires per occurrence when `line width` < 0.25pt). WARN-only exits 0; only BLOCKERs exit 1.
+- `prompts/llm_author_tikz.md` — parameterised template for generating a
+  filled LLM TikZ authoring prompt from a figure-agent example. §3 is the
+  single source of the scaffolding contract; the LLM emits a complete
+  standalone `.tex` (`compile.sh` runs `lualatex` on the file directly with
+  no wrapper).
+- `scripts/llm_author_prompt.py` — CLI and `build_prompt()` helper that
+  fills `llm_author_tikz.md` with spec, briefing, palette, and flagship
+  macro signatures parsed from preamble comments of the form
+  `% \Name{args}: description` (single source of truth for arg semantics,
+  no hardcoded signature drift).
+- `styles/polymer-paper-preamble.sty` — `% \IsoBlock{w}{d}{h}{color}{hook}`
+  signature comment so all four flagship macros expose a structured
+  signature line for `llm_author_prompt.py` to read.
 
 ### Fixed
 
@@ -45,6 +59,9 @@ All notable changes to figure-agent are documented here.
 - `SKILL.md` trimmed (145→84 lines) by removing command-level details kept in `commands/*.md`
   ("What the prompt must contain", "What the compile must guarantee") and historical rationale
   (design context documented in `docs/design-v0.1.md`).
+- `Violation` NamedTuple gains `severity` field (`"blocker"` | `"warn"`); all existing violations set `severity="blocker"`.
+- Dogfood regression tests refactored to filter on `severity="blocker"` and positively assert `flagship_macros_unused` WARN exists.
+- `/fig_preview_select` Next: footer now points at `llm_author_prompt.py` as the authoring entry point.
 
 Runtime-output Next: footer in command scripts deferred to v0.2 (touches 6 scripts).
 
@@ -55,10 +72,6 @@ Runtime-output Next: footer in command scripts deferred to v0.2 (touches 6 scrip
   (v0.2 will make `scripts/` a proper package with package-relative imports.)
 - `redact.py` module will be renamed to `normalize.py` in v0.2; the function name and
   behavior do not change.
-
-WARN tier (non-flagship macro usage, sub-0.25pt strokes, near-palette hex) and
-`prompts/llm_author_tikz.md` authoring bridge deferred to PR 4b — same product story,
-different release for sizing.
 
 ## [0.1.5] - 2026-04-28
 

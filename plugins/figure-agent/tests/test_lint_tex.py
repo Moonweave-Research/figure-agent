@@ -1,4 +1,4 @@
-"""Tests for scripts/lint_tex.py — Style Lock BLOCKER-tier lint contract."""
+"""Tests for scripts/lint_tex.py — Style Lock BLOCKER- and WARN-tier lint contract."""
 
 from __future__ import annotations
 
@@ -18,9 +18,13 @@ def _write(tmp_path: Path, content: str) -> Path:
     return tex
 
 
+def _blockers(tex_path: Path) -> list:
+    return [v for v in lint(tex_path) if v.severity == "blocker"]
+
+
 def test_clean_palette_only_no_violations(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"\node[fill=cAmber] {};" + "\n")
-    assert lint(tex) == []
+    assert _blockers(tex) == []
 
 
 def test_definecolor_line5(tmp_path: Path) -> None:
@@ -63,12 +67,12 @@ def test_fill_red_non_palette_color(tmp_path: Path) -> None:
 
 def test_fill_camber_modifier_no_violation(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"\node[fill=cAmber!50!white] {};" + "\n")
-    assert lint(tex) == []
+    assert _blockers(tex) == []
 
 
 def test_commented_definecolor_no_violation(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"% \definecolor{x}{HTML}{000000}" + "\n")
-    assert lint(tex) == []
+    assert _blockers(tex) == []
 
 
 def test_live_definecolor_with_comment_definecolor_one_violation(tmp_path: Path) -> None:
@@ -78,18 +82,22 @@ def test_live_definecolor_with_comment_definecolor_one_violation(tmp_path: Path)
     assert len(dc_violations) == 1
 
 
-def test_regression_fig3_trapping_concept_zero_violations() -> None:
+def test_regression_fig3_trapping_concept_no_blockers_flags_warn() -> None:
     fixture = REPO_ROOT / "examples" / "fig3_trapping_concept" / "fig3_trapping_concept.tex"
     if not fixture.exists():
         return
-    assert lint(fixture) == []
+    blockers = [v for v in lint(fixture) if v.severity == "blocker"]
+    assert blockers == []
+    assert any(v.category == "flagship_macros_unused" for v in lint(fixture))
 
 
-def test_regression_smoke_trap_demo_zero_violations() -> None:
+def test_regression_smoke_trap_demo_no_blockers_flags_warn() -> None:
     fixture = REPO_ROOT / "examples" / "smoke_trap_demo" / "smoke_trap_demo.tex"
     if not fixture.exists():
         return
-    assert lint(fixture) == []
+    blockers = [v for v in lint(fixture) if v.severity == "blocker"]
+    assert blockers == []
+    assert any(v.category == "flagship_macros_unused" for v in lint(fixture))
 
 
 def test_parse_palette_superset_of_expected() -> None:
@@ -129,7 +137,7 @@ def test_implicit_color_among_other_tikz_options(tmp_path: Path) -> None:
 def test_palette_token_as_positional_in_option_block_no_violation(tmp_path: Path) -> None:
     """Palette names used positionally must pass."""
     tex = _write(tmp_path, r"\draw[thick, cBlue] (0,0) -- (1,1);" + "\n")
-    assert lint(tex) == []
+    assert _blockers(tex) == []
 
 
 def test_brace_enclosed_color_value(tmp_path: Path) -> None:
@@ -148,7 +156,7 @@ def test_double_backslash_then_comment_strips_correctly(tmp_path: Path) -> None:
     diagnostic without lint flagging the dead code.
     """
     tex = _write(tmp_path, r"\\% \node[fill=red] {};" + "\n")
-    assert lint(tex) == []
+    assert _blockers(tex) == []
 
 
 def test_escaped_percent_preserves_literal(tmp_path: Path) -> None:
@@ -171,3 +179,44 @@ def test_parse_palette_explicit_path_works(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert parse_palette(sty) == {"cTest", "cOther"}
+
+
+# WARN tier unit tests
+
+
+def test_flagship_macro_used_no_flagship_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\IsoBlock{1}{1}{1}{cAmber}{}" + "\n")
+    violations = lint(tex)
+    assert not any(v.category == "flagship_macros_unused" for v in violations)
+
+
+def test_no_flagship_macro_emits_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\node[fill=cAmber] {};" + "\n")
+    violations = lint(tex)
+    flagship_warns = [v for v in violations if v.category == "flagship_macros_unused"]
+    assert len(flagship_warns) == 1
+    assert flagship_warns[0].severity == "warn"
+
+
+def test_thin_stroke_below_threshold_emits_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[line width=0.20pt] (0,0) -- (1,1);" + "\n")
+    violations = lint(tex)
+    ts_violations = [v for v in violations if v.category == "thin_stroke"]
+    assert len(ts_violations) == 1
+    assert ts_violations[0].severity == "warn"
+
+
+def test_thick_stroke_at_threshold_no_warn(tmp_path: Path) -> None:
+    # 0.25pt is exactly at boundary; exclusive rule means no warn
+    tex = _write(tmp_path, r"\draw[line width=0.25pt] (0,0) -- (1,1);" + "\n")
+    violations = lint(tex)
+    ts_violations = [v for v in violations if v.category == "thin_stroke"]
+    assert len(ts_violations) == 0
+
+
+def test_thin_stroke_dot_decimal_form(tmp_path: Path) -> None:
+    # .10pt (no leading zero) must be caught
+    tex = _write(tmp_path, r"\draw[line width=.10pt] (0,0) -- (1,1);" + "\n")
+    violations = lint(tex)
+    ts_violations = [v for v in violations if v.category == "thin_stroke"]
+    assert len(ts_violations) == 1
