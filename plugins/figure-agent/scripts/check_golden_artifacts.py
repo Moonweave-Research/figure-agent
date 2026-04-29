@@ -1,4 +1,19 @@
-"""Minimum artifact gates for accepted golden figure fixtures."""
+"""Minimum artifact gates for accepted golden figure fixtures.
+
+Per-fixture contract lives in `spec.yaml` under the `golden_contract` key:
+
+    golden_contract:
+      required_labels:
+        - "Experiment"               # single requirement: all words must appear
+        - ["g e t", "g et"]          # alternatives: at least one must appear
+      source_inventory:
+        separator_lines: { pattern: '\\\\draw\\[sep\\]', min: 2 }
+        band_boxes:      { pattern: '\\\\BandBox\\b', min: 2 }
+
+`required_labels` strings are matched against PDF text after normalization
+(lowercase, alphanumeric tokens, symbols replaced). The contract is required
+in `--require-accepted` mode and ignored in basic mode.
+"""
 
 from __future__ import annotations
 
@@ -12,41 +27,10 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-REQUIRED_PDF_LABEL_TOKENS: dict[str, tuple[tuple[str, ...], ...]] = {
-    "Experiment": (("experiment",),),
-    "Mathematical interpretation": (("mathematical", "interpretation"),),
-    "Molecular origin": (("molecular", "origin"),),
-    "I(t)": (("i", "t"),),
-    "slope": (("slope",),),
-    "Discharge": (("discharge",),),
-    "Debye": (("debye",),),
-    "tau_d": (("tau", "d"),),
-    "n": (("n",),),
-    "g(E_t)": (("g", "e", "t"), ("g", "et")),
-    "shallow": (("shallow",),),
-    "deep": (("deep",),),
-    "localized traps": (("localized", "traps"),),
-    "S-rich segments": (("s", "rich", "segments"),),
-    "chemical origin": (("chemical", "origin"),),
-    "physical origin": (("physical", "origin"),),
-    "converged trap-depth picture": (("converged", "trap", "depth", "picture"),),
-    "Energy": (("energy",),),
-    "CB": (("cb",),),
-    "VB": (("vb",),),
-    "E_t": (("e", "t"), ("et",)),
-}
-
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
 )
 IGNORED_SVG_SUBTREES = frozenset({"defs", "desc", "metadata", "style", "title"})
-MIN_SOURCE_INVENTORY = {
-    "separator_lines": 2,
-    "band_boxes": 2,
-    "distribution_lobes": 2,
-    "trap_levels": 8,
-    "sulfur_markers": 10,
-}
 
 
 def _local_name(tag: str) -> str:
@@ -69,22 +53,48 @@ def normalize_pdf_text(text: str) -> str:
     return " ".join(re.findall(r"[a-zA-Z0-9]+", text.lower()))
 
 
-def _contains_tokens(normalized_text: str, tokens: tuple[str, ...]) -> bool:
-    haystack = f" {normalized_text} "
-    return all(f" {token.lower()} " in haystack for token in tokens)
+def _label_present(haystack_with_padding: str, label: str) -> bool:
+    """True if every normalized token of label appears as a word in haystack."""
+    normalized = normalize_pdf_text(label)
+    if not normalized:
+        return True
+    return all(f" {token} " in haystack_with_padding for token in normalized.split())
 
 
-def missing_pdf_labels(
-    text: str, required: dict[str, tuple[tuple[str, ...], ...]] | None = None
-) -> list[str]:
-    if required is None:
-        required = REQUIRED_PDF_LABEL_TOKENS
+def _canonical_label_name(entry: str | list) -> str:
+    if isinstance(entry, str):
+        return entry
+    if isinstance(entry, list) and entry:
+        return str(entry[0])
+    return repr(entry)
+
+
+def missing_pdf_labels(text: str, required: list | None) -> list[str]:
+    """Return canonical names of required labels that are not present.
+
+    `required` is a list whose entries are either:
+      - a string: that string's normalized tokens must all appear in `text`
+      - a list of strings: at least one alternative must all-appear in `text`
+    `None` or empty list returns []."""
+    if not required:
+        return []
     normalized = normalize_pdf_text(text)
-    return [
-        label
-        for label, alternatives in required.items()
-        if not any(_contains_tokens(normalized, tokens) for tokens in alternatives)
-    ]
+    haystack = f" {normalized} "
+    missing: list[str] = []
+    for entry in required:
+        if isinstance(entry, str):
+            if not _label_present(haystack, entry):
+                missing.append(entry)
+        elif isinstance(entry, list):
+            if not entry or not all(isinstance(alt, str) for alt in entry):
+                raise ValueError(
+                    f"required_labels list entry must be non-empty list of str: {entry!r}"
+                )
+            if not any(_label_present(haystack, alt) for alt in entry):
+                missing.append(_canonical_label_name(entry))
+        else:
+            raise ValueError(f"invalid required_labels entry: {entry!r}")
+    return missing
 
 
 def extract_pdf_text(pdf_path: Path) -> str:
@@ -140,28 +150,65 @@ def fixture_is_accepted(spec_path: Path) -> bool:
     return data.get("accepted") is True
 
 
-def source_inventory_counts(tex: str) -> dict[str, int]:
-    counts = {
-        "separator_lines": len(re.findall(r"\\draw\[sep\]", tex)),
-        "band_boxes": len(re.findall(r"\\BandBox\b", tex)),
-        "distribution_lobes": len(re.findall(r"\\SmallLobe\b", tex)),
-        "trap_levels": len(re.findall(r"\\TrapLevel\b", tex)),
-        "sulfur_markers": 0,
-    }
-    foreach_pattern = re.compile(r"\\foreach\s+\\x/\\y\s+in\s+\{(?P<items>[^}]*)\}")
-    for match in foreach_pattern.finditer(tex):
-        body_preview = tex[match.end() : match.end() + 300]
-        if "text=cAmber" not in body_preview or "{S}" not in body_preview:
+def load_golden_contract(spec_path: Path) -> dict | None:
+    """Return spec.yaml's golden_contract block, or None when absent.
+
+    Validates basic shape; raises ValueError on malformed input."""
+    if not spec_path.exists():
+        return None
+    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return None
+    contract = data.get("golden_contract")
+    if contract is None:
+        return None
+    if not isinstance(contract, dict):
+        raise ValueError("golden_contract must be a mapping")
+
+    required_labels = contract.get("required_labels")
+    if required_labels is not None and not isinstance(required_labels, list):
+        raise ValueError("golden_contract.required_labels must be a list")
+
+    inventory = contract.get("source_inventory")
+    if inventory is not None:
+        if not isinstance(inventory, dict):
+            raise ValueError("golden_contract.source_inventory must be a mapping")
+        for name, entry in inventory.items():
+            if not isinstance(entry, dict):
+                raise ValueError(f"golden_contract.source_inventory[{name!r}] must be a mapping")
+            if not isinstance(entry.get("pattern"), str):
+                raise ValueError(
+                    f"golden_contract.source_inventory[{name!r}].pattern must be a string"
+                )
+            if not isinstance(entry.get("min"), int):
+                raise ValueError(
+                    f"golden_contract.source_inventory[{name!r}].min must be an integer"
+                )
+    return contract
+
+
+def source_inventory_counts(tex: str, patterns: dict | None) -> dict[str, int]:
+    """Count regex hits for each named pattern in the contract."""
+    if not patterns:
+        return {}
+    counts: dict[str, int] = {}
+    for name, entry in patterns.items():
+        pattern = entry.get("pattern") if isinstance(entry, dict) else None
+        if not pattern:
             continue
-        items = [item.strip() for item in match.group("items").split(",") if item.strip()]
-        counts["sulfur_markers"] += len(items)
+        counts[name] = len(re.findall(pattern, tex))
     return counts
 
 
-def source_inventory_failures(tex_path: Path) -> list[str]:
-    counts = source_inventory_counts(tex_path.read_text(encoding="utf-8"))
-    failures = []
-    for name, minimum in MIN_SOURCE_INVENTORY.items():
+def source_inventory_failures(tex_path: Path, patterns: dict | None) -> list[str]:
+    if not patterns:
+        return []
+    counts = source_inventory_counts(tex_path.read_text(encoding="utf-8"), patterns)
+    failures: list[str] = []
+    for name, entry in patterns.items():
+        if not isinstance(entry, dict):
+            continue
+        minimum = entry.get("min", 0)
         value = counts.get(name, 0)
         if value < minimum:
             failures.append(f"source inventory too low: {name} {value} < {minimum}")
@@ -245,10 +292,7 @@ def check_example(
     if failures:
         return failures
 
-    missing = missing_pdf_labels(extract_pdf_text(pdf))
-    if missing:
-        failures.append(f"missing rendered PDF labels: {', '.join(missing)}")
-
+    # Basic artifact-shape checks (always run).
     svg_count = count_svg_visible_elements(svg)
     if svg_count < min_svg_elements:
         failures.append(f"SVG has too few visible elements: {svg_count} < {min_svg_elements}")
@@ -260,10 +304,31 @@ def check_example(
     if not png_has_white_opaque_corners(png):
         failures.append("PNG corners are not opaque white")
 
+    # Acceptance-gate checks. Driven by spec.yaml's golden_contract block, so a
+    # second golden fixture only needs to write its own contract instead of
+    # editing this script.
     if require_accepted:
+        try:
+            contract = load_golden_contract(spec)
+        except ValueError as exc:
+            failures.append(f"invalid golden_contract: {exc}")
+            return failures
+        if contract is None:
+            failures.append(
+                "golden_contract block missing in spec.yaml (required for --require-accepted)"
+            )
+            return failures
+
         if not fixture_is_accepted(spec):
             failures.append("fixture is not marked accepted: true")
-        failures.extend(source_inventory_failures(tex))
+
+        required_labels = contract.get("required_labels")
+        missing = missing_pdf_labels(extract_pdf_text(pdf), required_labels)
+        if missing:
+            failures.append(f"missing rendered PDF labels: {', '.join(missing)}")
+
+        failures.extend(source_inventory_failures(tex, contract.get("source_inventory")))
+
         if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, png)):
             failures.append("QUALITY_AUDIT.md is stale or missing")
         failures.extend(

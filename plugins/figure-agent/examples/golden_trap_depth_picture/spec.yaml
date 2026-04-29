@@ -17,3 +17,39 @@ selection_notes: |
   Reproduce the supplied PNG as an editable vector figure.
   Preserve all labels, row hierarchy, arrows, polymer-chain motifs, trap levels,
   and the right-side converged trap-depth energy/distribution diagram.
+golden_contract:
+  required_labels:
+    - "Experiment"
+    - "Mathematical interpretation"
+    - "Molecular origin"
+    - "I t"
+    - "slope"
+    - "Discharge"
+    - "Debye"
+    - "tau d"
+    - "n"
+    - ["g e t", "g et"]
+    - "shallow"
+    - "deep"
+    - "localized traps"
+    - "S rich segments"
+    - "chemical origin"
+    - "physical origin"
+    - "converged trap depth picture"
+    - "Energy"
+    - "CB"
+    - "VB"
+    - ["e t", "et"]
+  source_inventory:
+    separator_lines:
+      pattern: '\\draw\[sep\]'
+      min: 2
+    band_boxes:
+      pattern: '\\BandBox\b'
+      min: 2
+    distribution_lobes:
+      pattern: '\\SmallLobe\b'
+      min: 2
+    trap_levels:
+      pattern: '\\TrapLevel\b'
+      min: 8
