@@ -1,9 +1,21 @@
 # Roadmap — v0.1.7 selection_notes integration & v0.2 decision branches
 
-Status: planning, not yet shipped
+Status: shipped 2026-04-29 (v0.1.7) → hardened 2026-04-29 (v0.1.7.1 per agent-team mid-review)
 Drafted: 2026-04-29
 Owner: Moon-python
 Predecessor doc: `docs/design-v0.1.md`
+
+**Ship retrospective (2026-04-29)**:
+- v0.1.7 landed in 6 commits (`c1c2a01..39c6cf9`) — the planned 5 plus one
+  unplanned `chore` commit fixing a ruff E501 line-length finding caught
+  by the pre-ship gate.
+- v0.1.7.1 followed in 4 commits (`476233e..` through the v0.1.7.1 release
+  commit) addressing four findings from a 4-agent mid-review: non-string
+  type coercion with stderr warning, empty-after-HTML-strip warning,
+  fallback sentinel parity (`(none)` instead of editorial prose), priority
+  paragraph reordered before the placeholder + extension clause added.
+- All 108 tests green, ruff clean. v0.1.x empirical validation window
+  begins now per the section below.
 
 ## TL;DR
 

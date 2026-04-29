@@ -2,6 +2,52 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.7.1] - 2026-04-29
+
+Hardening release driven by the 4-agent mid-review of v0.1.7 before its
+first remote push. Findings: non-string YAML scalars crashed the strip
+with TypeError, all-HTML-comment input silently fell back without a
+warning, the fallback string was prose an LLM might mis-read, and the
+priority-order paragraph was placed after the user-supplied content.
+
+### Fixed
+
+- `scripts/llm_author_prompt.py` `_coerce_selection_notes` helper:
+  warns to stderr (naming the example dir and encountered type) and
+  coerces to str when `selection_notes` is non-string (int, list, dict,
+  bare YAML date such as `2026-04-29`). Prevents TypeError from
+  `_HTML_COMMENT.sub` reaching the user as an unhelpful traceback.
+- `scripts/llm_author_prompt.py`: warn to stderr when `selection_notes`
+  is non-empty before HTML-comment stripping but reduces to empty
+  afterward — surfaces the silent-content-loss case the original
+  v0.1.7 risk register anticipated.
+- `scripts/llm_author_prompt.py`: shorten the missing-key fallback from
+  the prose `"(none — only preview filename selected)"` to `"(none)"`
+  for parity with the existing `selected_preview` fallback and the
+  briefing `_section_body` `(empty)` sentinel.
+
+### Changed
+
+- `prompts/llm_author_tikz.md`: priority-order paragraph is now placed
+  **before** the `{{selection_notes}}` placeholder so the LLM absorbs the
+  precedence rule before reading user content.
+- `prompts/llm_author_tikz.md`: priority paragraph extended to cover the
+  extension pattern (selection notes adding visual detail consistent
+  with §6) — the dogfood `fig3_trap_schematic_v97/spec.yaml` shows this
+  is the real common pattern, not contradiction.
+
+### Tests
+
+- Three regression tests in `tests/test_llm_author_prompt.py`:
+  `test_selection_notes_non_string_warns_and_coerces`,
+  `test_selection_notes_empty_after_html_strip_warns_and_falls_back`,
+  `test_priority_order_paragraph_present_in_output`.
+- Updated existing absent-case test to lock the new structural
+  relationship (priority paragraph immediately followed by the
+  substituted placeholder).
+
+108 pytest pass (105 → 108), ruff clean.
+
 ## [0.1.7] - 2026-04-29
 
 ### Added
