@@ -116,7 +116,7 @@ def test_selection_notes_plumbed_when_present(tmp_path: Path) -> None:
     assert "Visual motifs to preserve" in result
     assert "green polymer chain marker" in result
     # Fallback sentinel must not occupy the section body when content is present.
-    assert "### Selection notes (preview-grounded authoring guide)\n\n(none)" not in result
+    assert "introduce new invariants.\n\n(none)" not in result
 
 
 def test_selection_notes_strips_html_comments(tmp_path: Path) -> None:
@@ -141,7 +141,9 @@ def test_selection_notes_fallback_when_absent(tmp_path: Path) -> None:
     """
     _write_minimal_inputs(tmp_path, "")
     result = build_prompt(tmp_path)
-    assert "### Selection notes (preview-grounded authoring guide)\n\n(none)" in result
+    assert "### Selection notes (preview-grounded authoring guide)" in result
+    # Priority paragraph precedes the placeholder, then fallback fills it.
+    assert "introduce new invariants.\n\n(none)" in result
     assert "{{" not in result
 
 
