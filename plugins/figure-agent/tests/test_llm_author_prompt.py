@@ -119,7 +119,7 @@ def test_selection_notes_plumbed_when_present(tmp_path: Path) -> None:
 
 
 def test_selection_notes_strips_html_comments(tmp_path: Path) -> None:
-    """HTML author-only comments inside selection_notes must not leak — parity with parse_briefing."""
+    """HTML author-only comments must not leak — parity with parse_briefing."""
     notes = (
         "selection_notes: |\n"
         "  <!-- AUTHOR ONLY: revisit on 2026-05-15 -->\n"
