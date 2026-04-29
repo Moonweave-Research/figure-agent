@@ -2,6 +2,24 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.7.2] - 2026-04-29
+
+Cleanup release that closes the v0.1.6-era pending bugfix for stray
+no-extension files in `exports/`.
+
+### Fixed
+
+- `scripts/svg_to_png.sh`: reject output paths that do not end with `.png`
+  with a clear stderr message instead of letting `rsvg-convert` silently
+  write a no-extension stray file the user has to `rm` manually.
+- `scripts/export_svg.sh`: same defense for `.svg` outputs — `pdftocairo
+  -svg` writes to the exact path given, so a caller dropping the suffix
+  produced a no-extension stray file with the same recovery cost.
+- Adds `tests/test_export_svg.py` and a new case in `tests/test_svg_to_png.py`
+  locking the suffix guard against regression.
+
+110 pytest pass (108 → 110), ruff clean.
+
 ## [0.1.7.1] - 2026-04-29
 
 Hardening release driven by the 4-agent mid-review of v0.1.7 before its
