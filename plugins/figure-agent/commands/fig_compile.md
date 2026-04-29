@@ -36,3 +36,5 @@ Steps:
    If missing, warn user but do not auto-inject.
 
 Human-gated. Reports inform; do not block on WARN.
+
+Next: /fig_review <name> or /fig_export <name> (if WARN > 0, revise <name>.tex and re-run /fig_compile <name>)

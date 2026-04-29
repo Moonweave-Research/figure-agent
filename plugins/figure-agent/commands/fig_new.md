@@ -80,3 +80,5 @@ mismatch six steps later. The interview did not check for data-plot signals, so 
 proceeded all the way through prompt generation, image gen, and a final-vector recommendation
 for real data before reset. Step 3 above is the gate that catches this within the interview
 itself.
+
+Next: /fig_prompt <name>

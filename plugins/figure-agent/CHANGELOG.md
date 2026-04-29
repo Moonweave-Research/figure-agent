@@ -4,13 +4,33 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- /fig_status <name> — read-only stage inference from filesystem + spec.yaml; prints stage N/6 + Next: hint. No arg = summary of all examples.
+
+### Fixed
+
+- `/fig_status` freshness source set now matches `/fig_review`: `<name>.tex`, `briefing.md`,
+  and `styles/polymer-paper-preamble.sty`. Editing the briefing or style lock no longer leaves
+  the build pdf or exports falsely reported as fresh.
+- `/fig_status` adds a `stale_export` note when any source is newer than an export artifact;
+  the `Next:` hint becomes "re-run /fig_compile then /fig_export" instead of "done" so the
+  primary action agrees with the diagnostic.
+- `/fig_status` adds a `selected_preview_missing` note when `spec.yaml` names a preview that
+  is not present in `previews/`.
+- `/fig_status` no longer crashes when `examples/<name>/previews` exists as a file rather
+  than a directory; reports stage 1 with a `previews_not_directory` note.
+
 ### Changed
 
+- All six command docs now end with a single-line Next: footer for consistent affordance.
 - `prompt_gen.py` module docstring updated to reflect post-input-extraction responsibility
   (prompt composition and normalization via `inputs` + `redact`, not parsing).
 - `SKILL.md` trimmed (145→84 lines) by removing command-level details kept in `commands/*.md`
   ("What the prompt must contain", "What the compile must guarantee") and historical rationale
   (design context documented in `docs/design-v0.1.md`).
+
+Runtime-output Next: footer in command scripts deferred to v0.2 (touches 6 scripts).
 
 ### Deprecated
 

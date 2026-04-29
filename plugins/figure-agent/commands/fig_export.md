@@ -18,3 +18,5 @@ Steps:
 6. Suggest commit if user is happy: `git add -f examples/<name>/exports/<name>.pdf examples/<name>/exports/<name>.svg examples/<name>/exports/<name>.tif examples/<name>/exports/<name>.png`.
 
 Human-gated. No automatic commit.
+
+Next: done — outputs in examples/<name>/exports/. To revise, edit <name>.tex and re-run /fig_compile then /fig_export.

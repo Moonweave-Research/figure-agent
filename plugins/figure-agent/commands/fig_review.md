@@ -28,3 +28,5 @@ Steps:
 Copy the brief into Claude Code's main loop, claude.ai, or another vision-capable critic,
 attach the PNG, then decide whether to revise the `.tex`, re-run `/fig_compile <name>`,
 or proceed to `/fig_export <name>`.
+
+Next: paste brief into a vision LLM, revise <name>.tex if needed and re-run /fig_compile <name>, otherwise /fig_export <name>

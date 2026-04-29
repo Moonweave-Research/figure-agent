@@ -38,6 +38,8 @@ saves PNG/JPG/JPEG output to `examples/<name>/previews/`.
 
 Run slash commands from the plugin root. `<name>` maps to `examples/<name>/`. After `/fig_preview_select`, authoring `examples/<name>/<name>.tex` is required; v0.1 does not create it automatically.
 
+**Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
+
 ## Per-figure folder convention
 
 ```

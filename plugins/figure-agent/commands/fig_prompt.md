@@ -43,3 +43,5 @@ Steps:
 5. HALT. Do not call any API. Do not generate images.
 
 This is a manual gate. The slash exits and user works externally.
+
+Next: copy prompt to image-gen, save PNG/JPG/JPEG into examples/<name>/previews/, then /fig_preview_select <name>

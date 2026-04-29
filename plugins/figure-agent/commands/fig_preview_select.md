@@ -27,3 +27,5 @@ Steps:
 
 No automatic ranking in v0.1. User judgment only.
 No automatic `.tex` scaffold or preview vectorization in v0.1.
+
+Next: edit examples/<name>/<name>.tex (cp styles/tex_template.tex to start), then /fig_compile <name>
