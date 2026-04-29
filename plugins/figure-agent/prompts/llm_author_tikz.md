@@ -70,6 +70,15 @@ cone tips. Use them wherever the schematic calls for corresponding elements.
 
 {{selected_preview}}
 
+### Selection notes (preview-grounded authoring guide)
+
+{{selection_notes}}
+
+These notes refine §3 composition intent with preview-specific element
+placement, palette use, and corrections. Priority order: §6 invariants >
+§3 composition intent > selection notes. When selection notes conflict
+with §6, honor §6 and ignore the conflicting note.
+
 ## 7. Output Contract
 
 - Output a single `.tex` file body. No prose, no markdown fences, no commentary.

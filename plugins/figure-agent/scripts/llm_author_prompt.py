@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from inputs import parse_briefing, parse_spec
+from inputs import _HTML_COMMENT, parse_briefing, parse_spec
 from lint_tex import parse_palette
 
 TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "prompts" / "llm_author_tikz.md"
@@ -92,6 +92,11 @@ def build_prompt(example_dir: Path) -> str:
 
     selected_preview = spec.get("selected_preview", "(none)")
 
+    selection_notes_raw = spec.get("selection_notes", "") or ""
+    selection_notes = _HTML_COMMENT.sub("", selection_notes_raw).strip() or (
+        "(none — only preview filename selected)"
+    )
+
     def _section_body(num: int) -> str:
         entry = sections.get(num)
         if entry is None:
@@ -106,6 +111,7 @@ def build_prompt(example_dir: Path) -> str:
         "{{briefing_section_6}}": _section_body(6),
         "{{spec_panels}}": spec_panels,
         "{{selected_preview}}": selected_preview,
+        "{{selection_notes}}": selection_notes,
         "{{flagship_macros_signature}}": flagship_macros_signature,
         "{{palette_names}}": palette_names,
     }
