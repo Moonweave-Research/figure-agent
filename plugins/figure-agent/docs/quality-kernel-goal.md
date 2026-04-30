@@ -133,6 +133,14 @@ Demoting a fixture from golden status reverses all three. The policy is
 enforced by `.gitignore` rather than by `spec.yaml`, so removing a fixture's
 negation block alone is sufficient to stop tracking new exports.
 
+**Layer 2.5 artifact (`coordinate_hints.yaml`).** The Reference Analysis
+output for a golden fixture is committed alongside the source set
+(`spec.yaml` / `briefing.md` / `<name>.tex`). It lives at the fixture root,
+not in `exports/`, so the default `.gitignore` rules already track it; no
+extra negation entry is needed. The file's reference-image hash plus mtime
+let `/fig_status` flag stale or missing hints without re-deriving them on
+every run.
+
 ## Immediate Quality Target
 
 The first representative figure is fixed:

@@ -23,6 +23,8 @@ Plugin does **not**:
 **Active (quality kernel):**
 ```
 /fig_new <name>       scaffold (briefing + spec)
+/fig_extract <name>   optional Layer 2.5 — OCR + palette shape clusters from reference PNG
+                      → coordinate_hints.yaml (recommended when spec.yaml.reference_image exists)
                       [user/LLM authors examples/<name>/<name>.tex]
 /fig_compile <name>   lint + lualatex + collision/clash checks
 /fig_export <name>    PDF / SVG / TIFF / PNG export

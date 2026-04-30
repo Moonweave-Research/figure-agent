@@ -120,24 +120,43 @@ optional fixture-class flags:
 Meaning lives in `briefing.md` and `<name>.tex`; `spec.yaml` is metadata
 only, never the single source of truth.
 
-### Layer 2.5 — Reference Analysis (planned)
+### Layer 2.5 — Reference Analysis
 
-**Status**: not implemented; reserved for Phase E.
+**Files**: `scripts/reference_extract.py`, `commands/fig_extract.md`,
+`tests/test_reference_extract.py`, `examples/<name>/coordinate_hints.yaml`.
 
-This layer will run between Layer 2 and Layer 3. Inputs are the user's
-LLM-generated reference PNG (Layer 0) plus `briefing.md` (Layer 2). Outputs
-are a per-fixture `coordinate_hints.yaml` containing extracted text-label
-positions and shape clusters, used at two downstream times:
+This layer runs between Layer 2 (Authoring Intent) and Layer 3 (TikZ Source
+Authoring). Inputs are the user's LLM-generated reference PNG (Layer 0) plus
+`spec.yaml.reference_image` (Layer 2). Output is a per-fixture
+`coordinate_hints.yaml` with two artifacts:
 
-- **At Layer 3 authoring time** — supplies precise (x, y, w, h) coordinates
-  to the TikZ author so first-pass coordinate accuracy is no longer limited
-  by visual estimation.
-- **At Layer 6 validation time** — drives reference-vs-build bbox drift
-  detection.
+- `text_labels[]` — Tesseract OCR results: each rendered text region with
+  its bounding box and confidence.
+- `palette_shape_clusters{}` — connected components of pixels matching each
+  `polymer-paper-preamble` palette color, after a per-color RGB-distance
+  threshold (`specific=55`, `broad=55`, `gray=35`) and a
+  `min_component_pixels=200` filter calibrated against the LLM-rendered
+  golden fixture so anti-aliasing fragments stay bounded.
 
-Planned components: `scripts/reference_extract.py` (VTracer + OCR +
-clustering), `scripts/check_layout_drift.py`, `commands/fig_extract.md`.
-Adding this layer is Phase E in the cleanup roadmap.
+The hints feed two downstream uses:
+
+- **At Layer 3 authoring time** — supplies precise (x, y, w, h) bounding
+  boxes to the TikZ author or LLM-authoring agent so first-pass coordinate
+  accuracy is no longer limited by visual estimation.
+- **At Layer 6 validation time (planned)** — once `check_layout_drift.py`
+  lands, the same hints will feed reference-vs-build bbox drift detection
+  on accepted golden fixtures.
+
+This layer is **optional**. Ordinary fixtures (no `reference_image`) skip
+cleanly. Layer 7 surfaces three notes when the layer is partially applied:
+`coordinate_hints_missing`, `coordinate_hints_stale`,
+`coordinate_hints_parse_error`. None of them block stage advance.
+
+Phase E.0 is shipped; Phase E.1 (status integration + slash command) and
+Phase E.2 (documentation alignment) follow. The earlier exploratory notion
+of using VTracer raw paths for shape extraction was empirically rejected
+in favor of palette-targeted PIL because VTracer raw output produced
+hundreds of micro-paths per anti-aliasing edge with no semantic grouping.
 
 ### Layer 3 — TikZ Source Authoring
 
@@ -287,18 +306,22 @@ historical events; do not rewrite them.
 | Add a flagship macro | `styles/polymer-paper-preamble.sty` + update `lint_tex.py` flagship list |
 | Promote a fixture to golden | three changes in one commit: `spec.yaml`, repo-root `.gitignore`, `.gitattributes` |
 | Make `/fig_compile` strict in CI | `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh ...` |
+| Generate coordinate hints from a reference PNG | `/fig_extract <name>` → `examples/<name>/coordinate_hints.yaml` |
+| Tune palette detection for a noisy reference | `--min-component-pixels` flag on `scripts/reference_extract.py` |
 | Diagnose a fixture's stage | `uv run python3 scripts/status.py examples/<name>` |
 | Replay a golden fixture from clean checkout | `bash scripts/compile.sh examples/<name>/<name>.tex && bash scripts/export_svg.sh ...` |
 
-## Phase E — planned next layer
+## Roadmap notes
 
-Layer 2.5 (Reference Analysis) is the next infrastructure layer. It adds
-VTracer-based bbox extraction plus OCR text detection on the reference
-PNG, producing a per-fixture `coordinate_hints.yaml`. The same engine is
-reused at Layer 6 to detect reference-vs-build layout drift.
+**Phase E.3 — Layout drift validation (planned).** `scripts/check_layout_drift.py`
+will compare TikZ-rendered build PNG bboxes against the
+`coordinate_hints.yaml` from Layer 2.5 to surface reference-vs-build drift
+during accepted-mode validation. This pulls Layer 2.5 data into Layer 6's
+gate without re-running OCR/PIL on every compile.
 
-Phase E is deferred until either a second golden fixture lands or visual
-refit on the existing fixture demonstrates real friction; making the layer
-ahead of evidence risks over-engineering. When implemented, this document
-should be updated to remove the "(planned)" tag from Layer 2.5 and to
-add the new files / commands to Layer 6.
+**Phase F (open).** Per-color threshold overrides exposed via a fixture's
+`spec.yaml`, so a fixture whose LLM render has unusually desaturated palette
+colors can loosen the per-call detection without editing
+`reference_extract.py`. Currently the script accepts a single
+`--min-component-pixels` flag; finer per-color tuning is a future enhancement
+gated on real dogfooding evidence.

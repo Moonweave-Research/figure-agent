@@ -33,8 +33,10 @@ maintained going forward.
 
 ```
 /fig_new <name>          scaffold (briefing + spec)
+/fig_extract <name>      OPTIONAL: OCR + palette shape clusters from reference PNG → coordinate_hints.yaml
+                         (Layer 2.5; recommended for fixtures with reference_image)
                          [user/LLM authors examples/<name>/<name>.tex from briefing intent
-                          + an optional reference_image; no preview selection step]
+                          + optional reference_image + (if available) coordinate_hints.yaml]
 /fig_compile <name>      Style Lock (incl. preamble import) + PDF/PNG build + collision/clash
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
