@@ -36,6 +36,11 @@ golden artifact checks  → rendered labels + SVG element floor + white PNG back
 accepted artifact checks → explicit accepted flag + fresh audit + warning budgets
 ```
 
+`/fig_compile` is report-only by default for collision/clash findings. For a
+hard manuscript or CI gate, run the same wrapper with
+`FIGURE_AGENT_STRICT=1`; this propagates `--strict` to the collision and visual
+clash checkers so any finding exits non-zero.
+
 For golden fixtures, `reference_image` records the target image. `selected_preview`
 remains reserved for legacy preview selection from `previews/`.
 

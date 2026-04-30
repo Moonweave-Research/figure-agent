@@ -4,7 +4,8 @@ check_visual_clash.py — render-based visual clash detector for TikZ PDFs.
 
 Usage: python3 scripts/check_visual_clash.py <file.pdf> [--dpi 600]
 Output: WARN lines for likely text-on-path/fill, near-miss, and clipping.
-Exit 0 always (report-only, no auto-fix).
+Default is report-only exit 0; --strict exits 1 when any unsuppressed clash
+candidate remains.
 """
 
 from __future__ import annotations

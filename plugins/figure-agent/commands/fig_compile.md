@@ -10,6 +10,10 @@ Run from the plugin root:
 
 `bash scripts/compile.sh examples/<name>/<name>.tex`
 
+Strict opt-in:
+
+`FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/<name>/<name>.tex`
+
 `<name>` maps to `examples/<name>/`.
 
 Check target: `examples/<name>/build/<name>.pdf`
@@ -29,6 +33,10 @@ Steps:
 5. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
 6. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
 7. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.
+   - Default mode is report-only: collision/clash findings print WARN output
+     and the checker exits 0.
+   - Strict mode is opt-in: with `FIGURE_AGENT_STRICT=1`, `compile.sh`
+     propagates `--strict` to both checkers and any finding exits non-zero.
 8. Report:
    - Compile success/fail
    - Collision report (count, severity)
@@ -38,7 +46,8 @@ Steps:
 9. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
-Human-gated. Reports inform; do not block on WARN.
+Human-gated by default. Reports inform; do not block on WARN unless strict
+mode is explicitly enabled for manuscript, CI, or accepted-fixture gating.
 
 Lint is a /fig_compile sub-routine; no persistent state, re-runs every compile. Aligned with /fig_status freshness model.
 

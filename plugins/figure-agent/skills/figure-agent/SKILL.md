@@ -41,6 +41,11 @@ editable vector source  → examples/<name>/<name>.tex
 golden artifact checks  → rendered labels + SVG element floor + white PNG background
 ```
 
+Collision/clash checks are report-only by default so dogfooding can continue
+through WARN output. Use `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh
+examples/<name>/<name>.tex` when a hard manuscript, CI, or accepted-fixture gate
+should fail on any collision or unsuppressed visual clash finding.
+
 For golden fixtures, `reference_image` points to the fixed visual target. Do not
 store that target in `selected_preview`; `selected_preview` means a user-chosen
 candidate from `previews/`.
@@ -103,6 +108,7 @@ redirect to matplotlib?"):
 ## Asset references
 
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
-- Compile chain: `scripts/compile.sh` (lualatex)
+- Compile chain: `scripts/compile.sh` (lualatex; optional `FIGURE_AGENT_STRICT=1`
+  hard gate)
 - Checks: `scripts/check_collisions.py`, `scripts/check_visual_clash.py`
 - Export: `scripts/export_svg.sh`, `scripts/svg_to_png.sh`

@@ -101,6 +101,8 @@ The plugin owns the deterministic finishing surface:
 - Style Lock through `styles/polymer-paper-preamble.sty`.
 - Text collision checks via `scripts/check_collisions.py`.
 - Render-based visual clash checks via `scripts/check_visual_clash.py`.
+- Report-only collision/clash behavior by default, with `FIGURE_AGENT_STRICT=1`
+  as the explicit hard-gate opt-in for manuscript, CI, or accepted-fixture use.
 - Export to PDF/SVG/TIFF or PNG through export scripts.
 
 ## Non-goals
@@ -153,6 +155,7 @@ human/LLM vector finishing
   -> compile the .tex source
   -> run collision and visual-clash checks
   -> report warnings without auto-fixing
+  -> optionally fail on findings when FIGURE_AGENT_STRICT=1 is set
 
 /fig_review
   -> emit a self-contained reviewer brief for an external vision-capable critic

@@ -2,7 +2,8 @@
 """
 check_collisions.py — PDF 텍스트 레이블 충돌 감지기
 Usage: python3 scripts/check_collisions.py <file.pdf> [--iou-thresh 0.05]
-Output: WARN lines for overlapping labels. Exit 0 always (report-only, no auto-fix).
+Output: WARN lines for overlapping labels. Default is report-only exit 0;
+--strict exits 1 when any collision is found.
 """
 
 import argparse
