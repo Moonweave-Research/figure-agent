@@ -88,6 +88,12 @@ GROUP_THRESHOLDS = {
 
 DEFAULT_MIN_COMPONENT_PIXELS = 200
 DEFAULT_OCR_CONFIDENCE_FLOOR = 30.0
+# 2x LANCZOS upsample lets Tesseract pick up small LLM-rendered labels
+# (axis ticks, panel headers like "Experiment", "CB") that fail at native
+# resolution. 3x or 4x degrades — anti-aliasing artifacts amplify and the
+# detection set shrinks (measured on golden_target_001.png). 2x is the
+# sweet spot empirically.
+DEFAULT_OCR_UPSAMPLE_FACTOR = 2.0
 
 
 def _hash_file(path: Path, algo: str = "sha256") -> str:
@@ -168,8 +174,14 @@ def ocr_text_labels(
     reference_path: Path,
     *,
     confidence_floor: float = DEFAULT_OCR_CONFIDENCE_FLOOR,
+    upsample_factor: float = DEFAULT_OCR_UPSAMPLE_FACTOR,
 ) -> list[dict]:
     """Run Tesseract on the reference and return text labels with bbox+conf.
+
+    When ``upsample_factor`` > 1, the image is enlarged with PIL LANCZOS
+    before OCR, then bounding boxes are scaled back to the *original*
+    image's coordinate system so downstream consumers (drift gate, status
+    overlays) all share one reference frame.
 
     Raises FileNotFoundError if Tesseract is not on PATH.
     """
@@ -185,8 +197,21 @@ def ocr_text_labels(
         # not already carry an extension or .with_suffix-style replacement
         # paths will not align.
         out_base = Path(td) / "ocr_out"
+        if upsample_factor and upsample_factor != 1.0:
+            with Image.open(reference_path) as src:
+                src_rgb = src.convert("RGB")
+                new_size = (
+                    int(round(src_rgb.width * upsample_factor)),
+                    int(round(src_rgb.height * upsample_factor)),
+                )
+                upsampled = src_rgb.resize(new_size, Image.LANCZOS)
+            scaled_path = Path(td) / "upsampled.png"
+            upsampled.save(scaled_path)
+            ocr_target = scaled_path
+        else:
+            ocr_target = reference_path
         proc = subprocess.run(
-            ["tesseract", str(reference_path), str(out_base), "tsv"],
+            ["tesseract", str(ocr_target), str(out_base), "tsv"],
             capture_output=True,
             text=True,
         )
@@ -206,6 +231,7 @@ def ocr_text_labels(
         height_idx = header.index("height")
     except ValueError as exc:
         raise RuntimeError(f"unexpected tesseract TSV header: {header}") from exc
+    scale_back = 1.0 / upsample_factor if upsample_factor and upsample_factor != 1.0 else 1.0
     out: list[dict] = []
     for raw in lines[1:]:
         cols = raw.split("\t")
@@ -224,10 +250,14 @@ def ocr_text_labels(
             continue
         if conf < confidence_floor:
             continue
+        x1 = int(round(left * scale_back))
+        y1 = int(round(top * scale_back))
+        x2 = int(round((left + w) * scale_back))
+        y2 = int(round((top + h) * scale_back))
         out.append(
             {
                 "text": text,
-                "bbox": [left, top, left + w, top + h],
+                "bbox": [x1, y1, x2, y2],
                 "conf": conf,
             }
         )
@@ -252,6 +282,7 @@ def extract_coordinate_hints(
     rebuild: bool = False,
     min_component_pixels: int = DEFAULT_MIN_COMPONENT_PIXELS,
     confidence_floor: float = DEFAULT_OCR_CONFIDENCE_FLOOR,
+    ocr_upsample_factor: float = DEFAULT_OCR_UPSAMPLE_FACTOR,
 ) -> tuple[Path | None, list[str]]:
     """Run OCR + palette clustering and write coordinate_hints.yaml.
 
@@ -284,7 +315,11 @@ def extract_coordinate_hints(
     text_labels: list[dict] = []
     ocr_status = "skipped (tesseract not available)"
     try:
-        text_labels = ocr_text_labels(reference_path, confidence_floor=confidence_floor)
+        text_labels = ocr_text_labels(
+            reference_path,
+            confidence_floor=confidence_floor,
+            upsample_factor=ocr_upsample_factor,
+        )
         ocr_status = "ok"
     except FileNotFoundError as exc:
         failures.append(str(exc))
@@ -299,6 +334,7 @@ def extract_coordinate_hints(
             "parameters": {
                 "min_component_pixels": min_component_pixels,
                 "ocr_confidence_floor": confidence_floor,
+                "ocr_upsample_factor": ocr_upsample_factor,
                 "group_thresholds": GROUP_THRESHOLDS,
             },
         },
@@ -330,6 +366,12 @@ def main() -> int:
         default=DEFAULT_OCR_CONFIDENCE_FLOOR,
         help="drop OCR words below this Tesseract confidence",
     )
+    parser.add_argument(
+        "--ocr-upsample-factor",
+        type=float,
+        default=DEFAULT_OCR_UPSAMPLE_FACTOR,
+        help="resample reference to this multiple of native size before OCR (1.0 = native)",
+    )
     args = parser.parse_args()
 
     if not args.example_dir.is_dir():
@@ -341,6 +383,7 @@ def main() -> int:
         rebuild=args.rebuild,
         min_component_pixels=args.min_component_pixels,
         confidence_floor=args.ocr_confidence_floor,
+        ocr_upsample_factor=args.ocr_upsample_factor,
     )
     if hints_path is None:
         for msg in failures:

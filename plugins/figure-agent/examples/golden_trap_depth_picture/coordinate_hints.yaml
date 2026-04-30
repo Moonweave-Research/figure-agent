@@ -1,12 +1,13 @@
 metadata:
   extraction_version: '0.1'
-  created_at: '2026-04-30T02:50:16+00:00'
+  created_at: '2026-04-30T05:57:09+00:00'
   reference_image_path: reference/golden_target_001.png
   reference_image_hash: sha256:3e9e54ca0cd4f7c9c57f4f543b574cb16b71f04f5312fb5235197fefdcaa57f2
   ocr_status: ok
   parameters:
     min_component_pixels: 200
     ocr_confidence_floor: 30.0
+    ocr_upsample_factor: 2.0
     group_thresholds:
       specific: 55
       broad: 55
@@ -19,576 +20,527 @@ text_labels:
   bbox:
   - 753
   - 59
-  - 833
+  - 834
   - 80
-  conf: 96.550201
+  conf: 96.343422
 - text: (Debye
   bbox:
-  - 841
-  - 59
+  - 840
+  - 58
   - 898
   - 80
-  conf: 96.995522
+  conf: 96.968353
 - text: reference)
   bbox:
   - 904
   - 58
   - 986
-  - 79
-  conf: 96.837013
-- text: 10!
+  - 80
+  conf: 96.633591
+- text: 10'
   bbox:
   - 684
-  - 83
+  - 84
   - 702
   - 100
-  conf: 73.085548
+  conf: 87.643967
 - text: '0'
   bbox:
   - 699
   - 116
   - 704
   - 126
-  conf: 83.047188
+  conf: 93.554085
 - text: '='
   bbox:
-  - 643
+  - 644
   - 138
   - 666
   - 165
-  conf: 83.907288
+  conf: 60.791122
+- text: se
+  bbox:
+  - 680
+  - 121
+  - 703
+  - 166
+  conf: 31.53017
 - text: converged
   bbox:
   - 1321
-  - 129
+  - 128
   - 1429
   - 155
-  conf: 93.272919
+  conf: 93.300323
 - text: trap-depth
   bbox:
   - 1438
-  - 129
+  - 128
   - 1548
   - 155
-  conf: 93.199638
+  conf: 92.118027
 - text: picture
   bbox:
   - 1557
-  - 129
+  - 128
   - 1629
   - 155
-  conf: 96.999352
-- text: '2.'
+  conf: 96.180099
+- text: '2'
   bbox:
-  - 643
+  - 644
   - 167
+  - 661
+  - 182
+  conf: 67.269737
+- text: '102'
+  bbox:
+  - 680
+  - 184
   - 705
-  - 193
-  conf: 50.0411
+  - 200
+  conf: 68.191284
 - text: Debye
   bbox:
   - 760
-  - 169
+  - 168
   - 811
   - 190
-  conf: 96.952164
-- text: exp(-t/t)
+  conf: 96.391281
+- text: Experiment
   bbox:
-  - 749
-  - 192
-  - 831
-  - 221
-  conf: 76.577545
-- text: 10°
+  - 54
+  - 200
+  - 156
+  - 234
+  conf: 96.993073
+- text: '103'
   bbox:
   - 680
   - 218
   - 705
   - 235
-  conf: 53.713192
-- text: (
+  conf: 54.371414
+- text: ma
   bbox:
-  - 1567
-  - 234
-  - 1573
-  - 262
-  conf: 93.195793
-- text: E
+  - 1268
+  - 236
+  - 1422
+  - 280
+  conf: 44.66407
+- text: 10-4
   bbox:
-  - 1576
-  - 235
-  - 1589
-  - 256
-  conf: 54.815022
-- text: )
-  bbox:
-  - 1601
-  - 234
-  - 1607
-  - 262
-  conf: 93.021149
-- text: a
-  bbox:
-  - 686
-  - 253
+  - 680
+  - 254
   - 705
   - 270
-  conf: 38.753853
-- text: 10%
+  conf: 65.702812
+- text: CB
+  bbox:
+  - 1364
+  - 248
+  - 1388
+  - 266
+  conf: 96.793045
+- text: tor
+  bbox:
+  - 310
+  - 272
+  - 337
+  - 291
+  conf: 52.357651
+- text: ‘for?’
   bbox:
   - 355
   - 273
   - 382
-  - 291
-  conf: 79.345833
-- text: 10%
+  - 292
+  conf: 57.070358
+- text: for’
   bbox:
   - 399
   - 273
   - 424
-  - 291
-  conf: 41.060387
-- text: 10°
+  - 292
+  conf: 50.34082
+- text: -10°
   bbox:
   - 446
   - 273
   - 467
-  - 291
-  conf: 88.093941
-- text: 10'
+  - 292
+  conf: 45.844196
+- text: fo"
   bbox:
   - 490
   - 273
   - 509
   - 291
-  conf: 85.542648
-- text: 10?
-  bbox:
-  - 532
-  - 273
-  - 553
-  - 291
-  conf: 80.386124
-- text: '108'
-  bbox:
-  - 577
-  - 273
-  - 599
-  - 291
-  conf: 61.536644
-- text: 10%
+  conf: 58.129116
+- text: 10"
   bbox:
   - 716
   - 274
   - 743
   - 291
-  conf: 83.911926
+  conf: 43.561661
 - text: 10%
   bbox:
-  - 759
+  - 758
   - 273
   - 785
-  - 291
-  conf: 80.017868
-- text: 10°
+  - 292
+  conf: 64.986252
+- text: to
+  bbox:
+  - 802
+  - 274
+  - 826
+  - 292
+  conf: 38.552608
+- text: 10%
   bbox:
   - 846
   - 273
   - 867
   - 291
-  conf: 91.910927
-- text: 10'
+  conf: 46.623005
+- text: to"
   bbox:
   - 888
   - 274
   - 906
-  - 291
-  conf: 87.353401
-- text: 10?
+  - 292
+  conf: 67.292786
+- text: 10°
   bbox:
-  - 927
-  - 273
-  - 948
-  - 291
-  conf: 89.29435
-- text: 10%
-  bbox:
-  - 967
+  - 968
   - 273
   - 988
-  - 291
-  conf: 71.889587
-- text: log
-  bbox:
-  - 423
-  - 304
-  - 437
-  - 322
-  conf: 93.19635
-- text: t
-  bbox:
-  - 458
-  - 306
-  - 463
-  - 322
-  conf: 92.573326
+  - 292
+  conf: 62.270515
 - text: log
   bbox:
   - 828
   - 302
   - 842
   - 320
-  conf: 93.158272
+  conf: 92.441734
 - text: t
   bbox:
   - 862
   - 304
   - 868
   - 320
-  conf: 92.305313
-- text: g
+  conf: 92.441734
+- text: log
   bbox:
-  - 438
-  - 309
+  - 423
+  - 304
   - 448
   - 327
-  conf: 54.490898
-- text: '9'
+  conf: 93.276077
+- text: t
   bbox:
-  - 843
+  - 458
+  - 306
+  - 464
+  - 322
+  conf: 93.232567
+- text: g
+  bbox:
+  - 844
   - 307
   - 852
   - 324
-  conf: 42.062908
-- text: '|'
+  conf: 90.024055
+- text: adie
   bbox:
-  - 1255
-  - 336
-  - 1265
-  - 399
-  conf: 71.967529
-- text: a
+  - 650
+  - 380
+  - 704
+  - 403
+  conf: 30.462656
+- text: '2'
   bbox:
   - 1286
-  - 361
+  - 360
   - 1320
   - 380
-  conf: 32.508564
-- text: )
+  conf: 82.502968
+- text: 9g
   bbox:
-  - 1580
-  - 382
-  - 1582
-  - 385
-  conf: 89.290573
+  - 1328
+  - 369
+  - 1364
+  - 388
+  conf: 59.737629
 - text: shallow
   bbox:
   - 1598
   - 364
   - 1663
-  - 383
-  conf: 95.250923
+  - 384
+  conf: 95.187462
 - text: t
   bbox:
   - 1484
   - 402
   - 1489
-  - 415
-  conf: 92.769386
-- text: —»
+  - 414
+  conf: 91.82518
+- text: ad
   bbox:
-  - 407
-  - 427
-  - 479
-  - 440
-  conf: 52.537235
-- text: oor)
+  - 76
+  - 397
+  - 108
+  - 430
+  conf: 37.757668
+- text: thet”
   bbox:
-  - 636
-  - 409
-  - 720
-  - 432
-  conf: 37.277584
-- text: ge)
-  bbox:
-  - 852
-  - 420
-  - 907
+  - 276
+  - 419
+  - 383
   - 448
-  conf: 68.190498
-- text: JA
+  conf: 37.714874
+- text: —>
   bbox:
-  - 1021
   - 407
-  - 1062
-  - 461
-  conf: 44.062237
-- text: ——|®
+  - 428
+  - 478
+  - 440
+  conf: 45.192825
+- text: n
   bbox:
-  - 1091
-  - 411
-  - 1268
-  - 449
-  conf: 40.336018
+  - 499
+  - 426
+  - 514
+  - 444
+  conf: 62.41634
+- text: A
+  bbox:
+  - 934
+  - 392
+  - 990
+  - 459
+  conf: 96.723953
 - text: Mathematical
   bbox:
   - 36
-  - 462
-  - 157
-  - 493
-  conf: 96.131279
+  - 460
+  - 158
+  - 490
+  conf: 96.20652
 - text: shallow
   bbox:
-  - 927
+  - 926
   - 475
   - 986
   - 494
-  conf: 87.855698
-- text: dee
+  conf: 92.805511
+- text: deep
   bbox:
-  - 1025
+  - 1024
   - 475
-  - 1052
-  - 494
-  conf: 60.407825
-- text: a
+  - 1062
+  - 498
+  conf: 54.391514
+- text: =~
   bbox:
   - 1248
-  - 451
+  - 462
   - 1264
   - 472
-  conf: 74.173943
+  conf: 45.31443
+- text: 'a:'
+  bbox:
+  - 1386
+  - 476
+  - 1396
+  - 480
+  conf: 52.155167
 - text: interpretation
   bbox:
   - 36
   - 496
   - 158
-  - 519
-  conf: 95.53186
+  - 518
+  conf: 96.928535
 - text: Tq
   bbox:
-  - 667
+  - 666
   - 489
   - 689
   - 512
-  conf: 94.890282
-- text: P
-  bbox:
-  - 1053
-  - 480
-  - 1062
-  - 499
-  conf: 77.013535
-- text: —-
+  conf: 33.586281
+- text: —
   bbox:
   - 1273
   - 517
   - 1302
   - 520
-  conf: 41.084805
-- text: _
-  bbox:
-  - 1339
-  - 523
-  - 1369
-  - 526
-  conf: 64.657951
+  conf: 62.807316
 - text: deep
   bbox:
   - 1612
   - 506
   - 1654
   - 530
-  conf: 96.874207
-- text: '5'
+  conf: 96.534409
+- text: localized
   bbox:
-  - 245
-  - 577
-  - 254
-  - 594
-  conf: 79.719116
-- text: s
+  - 823
+  - 571
+  - 891
+  - 588
+  conf: 96.932655
+- text: traps
   bbox:
-  - 365
-  - 576
-  - 374
-  - 593
-  conf: 45.282104
-- text: s
-  bbox:
-  - 473
-  - 581
-  - 483
-  - 598
-  conf: 58.200294
-- text: ee
-  bbox:
-  - 576
-  - 586
-  - 824
-  - 603
-  conf: 32.668098
-- text: VB
-  bbox:
-  - 1364
-  - 590
-  - 1387
-  - 608
-  conf: 61.556458
-- text: Z
-  bbox:
-  - 597
-  - 681
-  - 598
-  - 688
-  conf: 50.739731
-- text: '1'
-  bbox:
-  - 964
-  - 679
-  - 965
-  - 697
-  conf: 30.655113
+  - 897
+  - 572
+  - 936
+  - 588
+  conf: 96.640816
 - text: Molecular
   bbox:
   - 42
-  - 697
+  - 700
   - 128
-  - 734
-  conf: 96.972
+  - 731
+  conf: 96.883759
+- text: S
+  bbox:
+  - 242
+  - 701
+  - 250
+  - 718
+  conf: 37.185051
 - text: '}'
   bbox:
   - 594
-  - 704
+  - 716
   - 598
   - 723
-  conf: 84.608452
-- text: '2.'
+  conf: 72.501122
+- text: ee
   bbox:
-  - 817
-  - 694
+  - 870
+  - 718
   - 946
   - 723
-  conf: 35.469669
+  conf: 30.949335
 - text: origin
   bbox:
   - 59
   - 735
   - 109
   - 758
-  conf: 95.890457
-- text: LS
+  conf: 96.939644
+- text: '~'
   bbox:
-  - 467
-  - 751
-  - 484
-  - 760
-  conf: 41.882915
-- text: 2A
-  bbox:
-  - 508
-  - 743
-  - 677
+  - 504
+  - 752
+  - 518
   - 762
-  conf: 38.369331
-- text: S-rich
+  conf: 36.809517
+- text: '-'
   bbox:
-  - 314
-  - 796
-  - 363
-  - 814
-  conf: 92.890953
-- text: segments
-  bbox:
-  - 371
-  - 797
-  - 454
-  - 819
-  conf: 95.19632
+  - 948
+  - 746
+  - 958
+  - 748
+  conf: 64.297356
 - text: chemical
   bbox:
   - 572
   - 802
-  - 641
-  - 819
-  conf: 96.65168
+  - 642
+  - 818
+  conf: 96.688683
 - text: origin
   bbox:
   - 647
   - 802
   - 690
   - 823
-  conf: 94.755325
-- text: J
+  conf: 96.578598
+- text: S-rich
   bbox:
-  - 722
-  - 756
-  - 789
-  - 844
-  conf: 59.205914
+  - 314
+  - 796
+  - 364
+  - 814
+  conf: 92.902199
+- text: segments
+  bbox:
+  - 370
+  - 795
+  - 454
+  - 821
+  conf: 96.598434
 - text: physical
   bbox:
-  - 931
-  - 801
+  - 930
+  - 799
   - 993
-  - 822
-  conf: 96.879227
+  - 824
+  conf: 96.867172
 - text: origin
   bbox:
   - 999
   - 801
   - 1042
-  - 821
-  conf: 95.475609
+  - 822
+  conf: 96.97403
 - text: (electronegativity,
   bbox:
-  - 567
+  - 566
   - 830
-  - 701
+  - 700
   - 850
-  conf: 91.636604
+  conf: 91.137527
 - text: (local
   bbox:
-  - 931
+  - 930
   - 828
   - 972
   - 849
-  conf: 96.520363
+  conf: 93.83358
 - text: potential
   bbox:
   - 977
-  - 829
+  - 828
   - 1043
   - 849
-  conf: 96.716957
+  conf: 95.158669
 - text: polarizability
   bbox:
   - 567
   - 858
   - 663
-  - 879
-  conf: 96.889671
+  - 878
+  conf: 95.938171
 - text: of
   bbox:
-  - 669
+  - 668
   - 858
   - 684
   - 874
-  conf: 93.306061
+  conf: 93.2761
 - text: S)
   bbox:
   - 688
   - 858
   - 704
   - 878
-  conf: 88.663811
+  conf: 92.199799
 - text: fluctuations)
   bbox:
   - 940
   - 856
   - 1034
   - 877
-  conf: 96.32373
+  conf: 96.721413
 palette_shape_clusters:
   cBlue:
     target_rgb:
