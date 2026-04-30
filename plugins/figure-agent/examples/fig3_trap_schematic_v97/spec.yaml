@@ -13,7 +13,9 @@ panels:
   - id: f
     caption: Multi-modal convergence (n / g(E_t) / τ_d → consistent trap depth)
 style_profile: polymer-default
-selected_preview: codex_v01.png
+# Original preview (codex_v01.png) moved during v0.1.7.2 dogfood cleanup.
+# selection_notes below preserves the historical decision record.
+selected_preview: null
 selection_notes: |
   Codex app (codex_v01) chosen as primary baseline (2026-04-28 2-candidate
   compare with chatgpt_web_v01). Codex was preferred for 2D line-art

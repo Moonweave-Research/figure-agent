@@ -5,7 +5,9 @@ panels:
   - id: b
     caption: Sulfur Polymer — deep trap states in bandgap
 style_profile: polymer-default
-selected_preview: chatgpt_b01.png
+# Original preview (chatgpt_b01.png) not present in current previews/.
+# selection_notes below preserves the historical decision record.
+selected_preview: null
 selection_notes: |
   Round 2 (schematic intent, post-reset). Compared chatgpt_b01 vs nanobanana_b01.
   ChatGPT preferred for: clean Nature-style band diagram, accurate label placement
