@@ -26,6 +26,10 @@ _NEXT_6 = (
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
 _NEXT_6_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_6_PARTIAL = (
+    "exports are incomplete — re-run /fig_export <name> to generate the"
+    " missing PDF/SVG/TIFF/PNG artifacts."
+)
 _NEXT_6_NOT_ACCEPTED = (
     "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
     " defects, then set accepted: true in spec.yaml."
@@ -183,15 +187,20 @@ def infer_stage(example_dir: Path) -> dict:
     # Stage 6: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
         checks.append(("exports", "present"))
-        if not _all_four_exports_present(exports_dir, name):
+        partial = not _all_four_exports_present(exports_dir, name)
+        if partial:
             notes.append("partial_export")
         export_paths = _existing_export_paths(exports_dir, name)
         is_stale = _is_stale(sources, export_paths)
         if is_stale:
             notes.append("stale_export")
-        # Priority: stale_export > not_accepted > done.
+        # Priority: stale_export > partial_export > not_accepted > done.
+        # partial_export sits above not-accepted because incomplete artifacts
+        # block both manuscript use and the golden contract gate.
         if is_stale:
             next_template = _NEXT_6_STALE
+        elif partial:
+            next_template = _NEXT_6_PARTIAL
         elif accepted is False:
             next_template = _NEXT_6_NOT_ACCEPTED
         else:

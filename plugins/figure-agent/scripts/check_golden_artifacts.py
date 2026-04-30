@@ -27,6 +27,13 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
+# Reuse the shared TeX comment stripper so source_inventory counts ignore
+# commented-out macro calls. Running this module via the pytest harness puts
+# the scripts/ directory on sys.path; running it as a CLI does the same.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from lint_tex import strip_tex_comment  # noqa: E402
+
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
 )
@@ -221,16 +228,28 @@ def load_golden_contract(spec_path: Path) -> dict | None:
     return contract
 
 
+def _strip_tex_comments_from_source(tex: str) -> str:
+    """Strip TeX comments line-by-line so commented macro calls are not
+    mistakenly counted by the source-inventory regex. Reuses lint_tex's
+    backslash-escape-aware comment stripper for parity."""
+    return "\n".join(strip_tex_comment(line) for line in tex.splitlines())
+
+
 def source_inventory_counts(tex: str, patterns: dict | None) -> dict[str, int]:
-    """Count regex hits for each named pattern in the contract."""
+    """Count regex hits for each named pattern in the contract.
+
+    Comments are stripped before matching so a `% \\BandBox{...}` line cannot
+    silently satisfy an inventory floor.
+    """
     if not patterns:
         return {}
+    cleaned = _strip_tex_comments_from_source(tex)
     counts: dict[str, int] = {}
     for name, entry in patterns.items():
         pattern = entry.get("pattern") if isinstance(entry, dict) else None
         if not pattern:
             continue
-        counts[name] = len(re.findall(pattern, tex))
+        counts[name] = len(re.findall(pattern, cleaned))
     return counts
 
 

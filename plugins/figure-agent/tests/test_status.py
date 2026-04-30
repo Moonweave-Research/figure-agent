@@ -137,6 +137,50 @@ def test_stage_6_partial_export_svg_only(tmp_path: Path) -> None:
     assert "partial_export" in result["notes"]
 
 
+def test_stage_6_partial_export_next_redirects_to_re_export(tmp_path: Path) -> None:
+    """A partial export must steer the user back to /fig_export, not present
+    "done" so they think the figure is finished."""
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    (exports_dir / "myfig.svg").write_bytes(b"<svg/>")
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 6
+    assert "partial_export" in result["notes"]
+    assert "/fig_export" in result["next"]
+    assert "done" not in result["next"]
+
+
+def test_stage_6_stale_takes_priority_over_partial(tmp_path: Path) -> None:
+    """When sources are newer than the (partial) export, the stale signal
+    wins because regenerating exports is the unconditional next action."""
+    import os
+    import time
+
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    briefing = fig_dir / "briefing.md"
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    svg = exports_dir / "myfig.svg"
+    svg.write_bytes(b"<svg/>")
+    old = time.time() - 100
+    for path in (svg, briefing):
+        os.utime(path, (old, old))
+    new = time.time() - 5
+    os.utime(tex, (new, new))
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 6
+    assert "partial_export" in result["notes"]
+    assert "stale_export" in result["notes"]
+    assert "/fig_compile" in result["next"]
+
+
 def test_stage_6_all_four_exports_no_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()

@@ -183,6 +183,32 @@ def test_source_inventory_counts_returns_empty_when_patterns_missing() -> None:
     assert source_inventory_counts("any tex", {}) == {}
 
 
+def test_source_inventory_counts_ignores_commented_macros() -> None:
+    """A commented-out macro call must not satisfy the inventory floor;
+    otherwise an author could write `% \\BandBox{...}` lines to pass the
+    accepted-mode gate without actually drawing the primitive."""
+    tex = r"""
+    \BandBox{0}{0}{CB}
+    % \BandBox{0}{1}{VB}
+    """
+    patterns = {"band_boxes": {"pattern": r"\\BandBox\b", "min": 1}}
+
+    counts = source_inventory_counts(tex, patterns)
+
+    assert counts["band_boxes"] == 1
+
+
+def test_source_inventory_counts_respects_escaped_percent() -> None:
+    """A literal `\\%` is not a comment marker; counts past it must include
+    macros on the same line."""
+    tex = r"\BandBox{a}{b}{c} \% inline literal percent \BandBox{d}{e}{f}"
+    patterns = {"band_boxes": {"pattern": r"\\BandBox\b", "min": 1}}
+
+    counts = source_inventory_counts(tex, patterns)
+
+    assert counts["band_boxes"] == 2
+
+
 def test_load_golden_contract_returns_none_when_block_absent(tmp_path: Path) -> None:
     spec = tmp_path / "spec.yaml"
     spec.write_text("name: foo\naccepted: false\n", encoding="utf-8")
