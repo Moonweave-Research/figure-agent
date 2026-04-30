@@ -30,9 +30,12 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import numpy as np
@@ -104,6 +107,7 @@ DEFAULT_OCR_UPSAMPLE_FACTOR = 2.0
 # over-blurs at 2×; 2× recovers small axis-tick labels that native resolution
 # loses. Spatial matcher in the drift gate deduplicates by closest candidate.
 DEFAULT_OCR_PASSES: tuple[float, ...] = (1.0, 2.0)
+DEFAULT_CANVAS_WIDTH_CM = 14.0
 
 
 def _hash_file(path: Path, algo: str = "sha256") -> str:
@@ -180,13 +184,202 @@ def palette_shape_clusters(
     return out
 
 
+def _classify_color_family(r: int, g: int, b: int) -> str | None:
+    mx, mn = max(r, g, b), min(r, g, b)
+    if mx - mn < 40:
+        return None
+    # b > r + 70 (not +40) ensures indigo/purple (#6F3F9D: b=157, r=111 → diff=46) is
+    # not mis-classified as blue — it falls through to the purple branch instead.
+    if b > r + 70 and b > g + 20 and r < 130:
+        return "blue"
+    if r > 160 and g > 80 and b < 100 and r > g + 40:
+        return "orange"
+    if r > 100 and b > r - 40 and b > g + 30 and r < 170:
+        return "purple"
+    if g > 90 and b > 80 and r < 80:
+        return "teal"
+    return None
+
+
+def _get_translate(elem: ET.Element) -> tuple[float, float]:
+    tr = elem.get("transform", "")
+    m = re.search(r"translate\(([^,]+),([^)]+)\)", tr)
+    return (float(m.group(1)), float(m.group(2))) if m else (0.0, 0.0)
+
+
+def _parse_svg_path_bounds(d: str) -> tuple[float, float, float, float] | None:
+    numbers = re.findall(r"[-+]?\d*\.?\d+", d)
+    if not numbers:
+        return None
+    coords = [float(n) for n in numbers]
+    if len(coords) < 2:
+        return None
+    xs = [coords[i] for i in range(0, len(coords), 2)]
+    ys = [coords[i] for i in range(1, len(coords), 2)]
+    if not xs or not ys:
+        return None
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _path_global_bbox(d: str, tx: float, ty: float) -> tuple[float, float, float, float] | None:
+    bounds = _parse_svg_path_bounds(d)
+    if bounds is None:
+        return None
+    x1, y1, x2, y2 = bounds
+    return x1 + tx, y1 + ty, x2 + tx, y2 + ty
+
+
+def structural_regions_from_reference(
+    reference_path: Path,
+    image_size_px: tuple[int, int],
+    *,
+    canvas_width_cm: float = DEFAULT_CANVAS_WIDTH_CM,
+) -> dict:
+    """Extract panel arcs, border boxes, and chain rows via vtracer Python API.
+
+    Returns a dict with 'status' key:
+      'ok'          — extraction succeeded; panel_arcs / border_boxes / chain_rows populated.
+      'unavailable' — vtracer Python package not importable.
+      'failed'      — vtracer available but extraction raised an exception.
+    """
+    try:
+        import vtracer as _vtracer
+    except ImportError:
+        return {"status": "unavailable"}
+
+    img_w, img_h = image_size_px
+    cm_per_px = canvas_width_cm / img_w
+
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            svg_path = Path(td) / "vectorized.svg"
+            _vtracer.convert_image_to_svg_py(
+                str(reference_path),
+                str(svg_path),
+                colormode="color",
+                hierarchical="stacked",
+                mode="spline",
+                filter_speckle=4,
+                color_precision=6,
+                layer_difference=16,
+                corner_threshold=60,
+                length_threshold=4.0,
+                max_iterations=10,
+                splice_threshold=45,
+                path_precision=3,
+            )
+            tree = ET.parse(svg_path)
+    except Exception as exc:
+        return {"status": "failed", "error": str(exc)}
+
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    root = tree.getroot()
+
+    # Collect individual path bboxes per color-family (image-px space).
+    # Union-bbox-per-family is wrong: scattered noise paths inflate the bbox to
+    # canvas size. Instead keep all individual bboxes and return the largest ones.
+    family_paths: dict[str, list[tuple[float, float, float, float]]] = {}
+
+    for path_elem in root.findall(".//svg:path", ns):
+        fill = path_elem.get("fill", "")
+        if not fill or fill == "none":
+            style = path_elem.get("style", "")
+            for part in style.split(";"):
+                part = part.strip()
+                if part.startswith("fill:"):
+                    fill = part[5:].strip()
+                    break
+        if not fill or fill == "none" or not fill.startswith("#") or len(fill) != 7:
+            continue
+
+        h = fill.lstrip("#")
+        try:
+            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        except ValueError:
+            continue
+
+        family = _classify_color_family(r, g, b)
+        if family is None:
+            continue
+
+        tx, ty = _get_translate(path_elem)
+        bb = _path_global_bbox(path_elem.get("d", ""), tx, ty)
+        if bb is None:
+            continue
+
+        family_paths.setdefault(family, []).append(bb)
+
+    def _to_region(family: str, px: list[float]) -> dict:
+        x1_px, y1_px, x2_px, y2_px = px
+        # TikZ y-flip: y=0 at bottom → y_tikz = (img_h - y_img) * cm_per_px
+        x1_cm = round(x1_px * cm_per_px, 2)
+        x2_cm = round(x2_px * cm_per_px, 2)
+        y1_cm = round((img_h - y2_px) * cm_per_px, 2)
+        y2_cm = round((img_h - y1_px) * cm_per_px, 2)
+        area = round((x2_cm - x1_cm) * (y2_cm - y1_cm), 2)
+        return {
+            "color_family": family,
+            "bbox_px": [int(x1_px), int(y1_px), int(x2_px), int(y2_px)],
+            "bbox_cm": [x1_cm, y1_cm, x2_cm, y2_cm],
+            "area_cm2": area,
+        }
+
+    # Union bbox of paths above a minimum individual area.
+    # Single-dominant-path fails when vtracer tessellates a large arc into many
+    # small segments (observed for the purple panel arc). Noise micro-paths
+    # (anti-aliasing artifacts) are excluded by the MIN_PATH_AREA_PX2 floor.
+    # 50 000 px² ≈ 3.4 cm² at 121 px/cm — keeps major panel arc paths only;
+    # plot curves and text (typically 1 000–40 000 px²) are excluded.
+    MIN_PATH_AREA_PX2 = 50_000
+
+    def _union_bbox(bboxes: list[tuple[float, float, float, float]]) -> list[float] | None:
+        large = [
+            (x1, y1, x2, y2)
+            for x1, y1, x2, y2 in bboxes
+            if (x2 - x1) * (y2 - y1) >= MIN_PATH_AREA_PX2
+        ]
+        if not large:
+            return None
+        return [
+            min(bb[0] for bb in large),
+            min(bb[1] for bb in large),
+            max(bb[2] for bb in large),
+            max(bb[3] for bb in large),
+        ]
+
+    panel_arcs = sorted(
+        [
+            _to_region(f, ub)
+            for f in ("blue", "orange", "purple")
+            if (ub := _union_bbox(family_paths.get(f, []))) is not None
+        ],
+        key=lambda r: -r["area_cm2"],
+    )
+    border_boxes = sorted(
+        [
+            _to_region(f, ub)
+            for f in ("teal",)
+            if (ub := _union_bbox(family_paths.get(f, []))) is not None
+        ],
+        key=lambda r: -r["area_cm2"],
+    )
+
+    return {
+        "status": "ok",
+        "image_px": [img_w, img_h],
+        "cm_per_px": round(cm_per_px, 5),
+        "panel_arcs": panel_arcs,
+        "border_boxes": border_boxes,
+        "chain_rows": [],
+    }
+
+
 def _run_ocr_at_scale(
     reference_path: Path,
     upsample_factor: float,
     confidence_floor: float,
 ) -> list[dict]:
     """Run a single Tesseract pass at the given scale; return labels in native coords."""
-    import tempfile
 
     with tempfile.TemporaryDirectory() as td:
         # Tesseract appends ".tsv" to the output base path, so the base must
@@ -350,6 +543,8 @@ def extract_coordinate_hints(
     except FileNotFoundError as exc:
         failures.append(str(exc))
 
+    structural = structural_regions_from_reference(reference_path, (width, height))
+
     payload = {
         "metadata": {
             "extraction_version": EXTRACTION_VERSION,
@@ -367,6 +562,7 @@ def extract_coordinate_hints(
         "reference_image_size": [width, height],
         "text_labels": text_labels,
         "palette_shape_clusters": clusters,
+        "structural_regions": structural,
     }
     hints_path.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True))
     return hints_path, failures
@@ -427,9 +623,11 @@ def main() -> int:
     n_components = sum(
         len(c["components"]) for c in payload.get("palette_shape_clusters", {}).values()
     )
+    sr_status = payload.get("structural_regions", {}).get("status", "n/a")
     print(
         f"OK: extracted {n_labels} text labels, {n_clusters} palette colors"
-        f" ({n_components} shape components) → {hints_path}"
+        f" ({n_components} shape components), structural_regions: {sr_status}"
+        f" → {hints_path}"
     )
     return 0
 

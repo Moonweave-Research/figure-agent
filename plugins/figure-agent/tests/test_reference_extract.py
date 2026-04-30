@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import shutil
 import sys
 from pathlib import Path
@@ -267,3 +268,66 @@ def test_ocr_text_labels_concatenates_multi_pass_results(tmp_path: Path) -> None
     one_pass = ocr_text_labels(ref, confidence_floor=20, ocr_passes=(2.0,))
     two_pass = ocr_text_labels(ref, confidence_floor=20, ocr_passes=(1.0, 2.0))
     assert len(two_pass) >= len(one_pass)
+
+
+def test_structural_regions_unavailable_when_vtracer_missing(tmp_path, monkeypatch):
+    """structural_regions.status == 'unavailable' when vtracer cannot be imported."""
+    real_import = builtins.__import__
+
+    def _block_vtracer(name, *args, **kwargs):
+        if name == "vtracer":
+            raise ImportError("vtracer blocked for test")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.delitem(sys.modules, "vtracer", raising=False)
+    monkeypatch.setattr(builtins, "__import__", _block_vtracer)
+
+    # Minimal fixture: 10x10 white image
+    img = Image.new("RGB", (10, 10), color=(255, 255, 255))
+    ref_path = tmp_path / "ref.png"
+    img.save(ref_path)
+    spec_content = "name: test_fix\nreference_image: ref.png\naccepted: false\n"
+    (tmp_path / "spec.yaml").write_text(spec_content)
+
+    hints_path, _ = extract_coordinate_hints(tmp_path, rebuild=True)
+    assert hints_path is not None
+    payload = yaml.safe_load(hints_path.read_text())
+    assert payload["structural_regions"]["status"] == "unavailable"
+    # Core extractions still work
+    assert "text_labels" in payload
+    assert "palette_shape_clusters" in payload
+
+
+def test_structural_regions_extracts_panel_arcs_from_real_fixture(tmp_path):
+    """structural_regions extracts panel arcs from golden_target_002.png."""
+    pytest.importorskip("vtracer")
+
+    fixture_ref = (
+        Path(__file__).resolve().parents[1]
+        / "examples/fig3_n2_evidence/reference/golden_target_002.png"
+    )
+    if not fixture_ref.exists():
+        pytest.skip("golden_target_002.png not found")
+
+    import shutil
+
+    shutil.copy(fixture_ref, tmp_path / "golden_target_002.png")
+    spec_content = "name: test_n2\nreference_image: golden_target_002.png\naccepted: false\n"
+    (tmp_path / "spec.yaml").write_text(spec_content)
+
+    hints_path, _ = extract_coordinate_hints(tmp_path, rebuild=True)
+    assert hints_path is not None
+    payload = yaml.safe_load(hints_path.read_text())
+    sr = payload["structural_regions"]
+
+    assert sr["status"] == "ok"
+    assert sr["image_px"] == [1693, 929]
+    assert 0.008 < sr["cm_per_px"] < 0.009
+    assert len(sr["panel_arcs"]) >= 1
+    assert len(sr["border_boxes"]) >= 1
+    assert sr["chain_rows"] == []
+    for entry in sr["panel_arcs"] + sr["border_boxes"]:
+        assert "color_family" in entry
+        assert "bbox_px" in entry
+        assert "bbox_cm" in entry
+        assert "area_cm2" in entry
