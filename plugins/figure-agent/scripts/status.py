@@ -13,14 +13,26 @@ from inputs import parse_spec
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 
 _NEXT_0 = "run /fig_new <name> to create the figure scaffold."
-_NEXT_1 = "run /fig_prompt <name> to generate the normalized image-gen prompt."
-_NEXT_2 = "run /fig_preview_select <name> to record your chosen preview in spec.yaml."
+# Stage 1/2 next-hints reference the legacy image-gen orchestration path.
+# Mark them explicitly so users know the active alternative (author the .tex
+# directly via the briefing-driven workflow described in
+# docs/architecture-overview.md Layer 3).
+_NEXT_1 = (
+    "[legacy] run /fig_prompt <name> to generate the normalized image-gen"
+    " prompt — or skip directly to authoring examples/<name>/<name>.tex"
+    " from briefing.md (active workflow)."
+)
+_NEXT_2 = (
+    "[legacy] run /fig_preview_select <name> to record your chosen preview —"
+    " or skip directly to authoring examples/<name>/<name>.tex (active workflow)."
+)
 _NEXT_3 = (
     "author examples/<name>/<name>.tex"
     " (cp styles/tex_template.tex to start), then /fig_compile <name>."
 )
 _NEXT_4 = "run /fig_compile <name> to compile the TikZ source."
-_NEXT_5 = "run /fig_review <name> or /fig_export <name>."
+# Stage 5: prefer the active /fig_export gate; /fig_review is legacy.
+_NEXT_5 = "run /fig_export <name> (or [legacy] /fig_review <name> for an external critic brief)."
 _NEXT_6 = (
     "done — outputs in examples/<name>/exports/."
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."

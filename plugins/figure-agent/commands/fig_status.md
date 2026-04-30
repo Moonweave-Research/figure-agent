@@ -20,12 +20,21 @@ uv run python3 scripts/status.py examples/<name>   # one figure (full check list
 | Stage | Meaning | Next hint |
 |-------|---------|-----------|
 | 0 | directory missing | /fig_new <name> |
-| 1 | spec.yaml present; no preview images | /fig_prompt <name> |
-| 2 | previews/ has images; no selection recorded | /fig_preview_select <name> |
+| 1 | spec.yaml present; no preview images | [legacy] /fig_prompt — or author <name>.tex directly |
+| 2 | previews/ has images; no selection recorded | [legacy] /fig_preview_select — or author <name>.tex directly |
 | 3 | preview selected in spec.yaml; no .tex | author <name>.tex, then /fig_compile <name> |
 | 4 | .tex present; build pdf missing or stale | /fig_compile <name> |
-| 5 | build pdf fresh; no exports | /fig_review or /fig_export <name> |
+| 5 | build pdf fresh; no exports | /fig_export <name> (or [legacy] /fig_review for external critic brief) |
 | 6 | export artifact present | done (or revise + recompile + re-export) |
+
+Stage 1/2 hints carry a `[legacy]` marker because the v0.1 image-gen orchestration path (`/fig_prompt` → `/fig_preview_select` → preview-driven authoring) is no longer the active development direction. The active workflow drives `<name>.tex` authoring directly from `briefing.md` plus an optional `reference_image`; see `docs/architecture-overview.md` Layer 3 for the full picture. The legacy path remains supported for in-flight users.
+
+Stage 6 next-hint variants (priority order):
+
+- `stale_export` source set is newer than exports → re-run /fig_compile then /fig_export.
+- `partial_export` not all four export artifacts present → re-run /fig_export.
+- `accepted: false` declared in spec.yaml → resolve QUALITY_AUDIT.md defects and flip the flag.
+- otherwise → done.
 
 Notes that may appear:
 

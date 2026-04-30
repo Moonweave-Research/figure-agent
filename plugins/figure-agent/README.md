@@ -22,47 +22,49 @@ are frozen legacy helpers rather than the main development direction. See
 - Provide a reference, sketch, draft image, or direct editable source.
 - Author the final editable TikZ/SVG source with a human, an LLM, or both.
 
-## Quality-kernel workflow
+## Workflow shape
 
-Primary development is now centered on deterministic gates:
+`/fig_new` is the **shared entry point** that scaffolds `examples/<name>/spec.yaml`
++ `briefing.md` via a conversational interview. After scaffolding, the workflow
+branches into two paths; either is supported, but only the active path is
+maintained going forward.
 
-```
-reference/source        → examples/<name>/briefing.md + optional reference_image
-editable vector source  → examples/<name>/<name>.tex
-/fig_compile <name>     → Style Lock + PDF/PNG build + collision/clash checks
-/fig_export <name>      → PDF / SVG / TIFF / PNG accepted exports
-/fig_status <name>      → stale/missing/replayability diagnosis
-golden artifact checks  → rendered labels + SVG element floor + white PNG background
-accepted artifact checks → explicit accepted flag + fresh audit + warning budgets
-```
-
-`/fig_compile` is report-only by default for collision/clash findings. For a
-hard manuscript or CI gate, run the same wrapper with
-`FIGURE_AGENT_STRICT=1`; this propagates `--strict` to the collision and visual
-clash checkers so any finding exits non-zero.
-
-For golden fixtures, `reference_image` records the target image. `selected_preview`
-remains reserved for legacy preview selection from `previews/`.
-
-## Frozen v0.1 orchestration helpers
+### Active (quality kernel)
 
 ```
-/fig_new <name>            → spec.yaml + briefing.md scaffold
-/fig_prompt <name>         → normalized prompt (copy → external tool → save PNG/JPG/JPEG previews)
-                             [HALT — slash exits]
-                             (user generates images externally)
-/fig_preview_select <name> → list examples/<name>/previews/ → user picks 1
-                             [HALT — user/LLM authors examples/<name>/<name>.tex]
-/fig_compile <name>        → compile human/LLM-authored TikZ + Style Lock + clash checks
-/fig_review <name>         → reviewer brief for external physics + aesthetic critique
-                             [HALT — user critiques externally, revises .tex if needed]
-/fig_export <name>         → PDF / SVG / TIFF / PNG (600 dpi raster)
+/fig_new <name>          scaffold (briefing + spec)
+                         [user/LLM authors examples/<name>/<name>.tex from briefing intent
+                          + an optional reference_image; no preview selection step]
+/fig_compile <name>      Style Lock (incl. preamble import) + PDF/PNG build + collision/clash
+                         (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
+/fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
+/fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
 ```
 
-These helpers remain available for old workflows, but they are not the main
-post-v0.1.7.2 development direction. Run commands from the plugin root.
-`<name>` resolves to `examples/<name>/`. Starter TikZ source:
-`cp styles/tex_template.tex examples/<name>/<name>.tex`.
+Golden fixtures additionally declare `accepted` and `golden_contract` keys in
+`spec.yaml`; `check_golden_artifacts.py` then auto-escalates into accepted-mode
+contract checks (rendered-label match, source-inventory floor, audit freshness,
+checker-warning budgets). Override with `--no-require-accepted` for ad-hoc
+basic-mode inspection.
+
+### Frozen (v0.1 image-gen orchestration; preserved for in-flight users)
+
+```
+/fig_new <name>              shared with the active path; same scaffold
+/fig_prompt <name>           normalize spec + briefing into an external image-gen prompt
+                             [HALT — user runs the prompt in their image-gen tool of choice]
+/fig_preview_select <name>   record the chosen PNG in spec.yaml.selected_preview
+                             [HALT — user/LLM authors <name>.tex influenced by the preview]
+/fig_compile <name>          shared with the active path
+/fig_review <name>           emit a reviewer brief for an external vision LLM
+                             [HALT — user critiques externally, revises .tex]
+/fig_export <name>           shared with the active path
+```
+
+Frozen does not mean unsupported; it means no new features land here unless
+real dogfooding proves a durable non-transient need. See
+`docs/quality-kernel-goal.md` for the rationale and
+`docs/architecture-overview.md` for the layer model behind both paths.
 
 ## Status
 

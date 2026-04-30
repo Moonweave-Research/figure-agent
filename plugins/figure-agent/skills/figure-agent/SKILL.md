@@ -28,41 +28,49 @@ Prompt/image-gen orchestration from v0.1 remains available but frozen. Do not
 expand it unless real dogfooding proves a repeated non-transient bottleneck.
 Active direction: `docs/quality-kernel-goal.md`.
 
-## Quality-kernel workflow
+## Workflow shape
 
-Use this plugin first as a deterministic gate around editable figure source:
+`/fig_new` is the shared entry point that scaffolds per-figure folders via
+a conversational interview. After scaffolding, the workflow branches; both
+paths land at the same `/fig_compile` and `/fig_export`, but only the
+quality-kernel path is the active development direction.
 
-```
-reference/source        → examples/<name>/briefing.md + optional reference_image
-editable vector source  → examples/<name>/<name>.tex
-/fig_compile <name>     → Style Lock + PDF/PNG build + collision/clash checks
-/fig_export <name>      → PDF / SVG / TIFF / PNG accepted exports
-/fig_status <name>      → stale/missing/replayability diagnosis
-golden artifact checks  → rendered labels + SVG element floor + white PNG background
-```
-
-Collision/clash checks are report-only by default so dogfooding can continue
-through WARN output. Use `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh
-examples/<name>/<name>.tex` when a hard manuscript, CI, or accepted-fixture gate
-should fail on any collision or unsuppressed visual clash finding.
-
-For golden fixtures, `reference_image` points to the fixed visual target. Do not
-store that target in `selected_preview`; `selected_preview` means a user-chosen
-candidate from `previews/`.
-
-## Frozen legacy workflow (6 stages, slash-separated)
+### Active (quality kernel)
 
 ```
-/fig_new <name>            step 1 — creates per-figure folder scaffold; HALTS for briefing
-/fig_prompt <name>         step 2 — outputs normalized prompt block + audit; HALTS for user image-gen
-(user works externally — no plugin involvement)
-/fig_preview_select <name> step 3 — user selects preview; records in spec.yaml; HALTS for .tex authoring
-/fig_compile <name>        step 4 — compiles .tex, applies Style Lock, runs clash checks; warns
-/fig_review <name>         step 5 — emits Reviewer brief for external vision critique; HALTS
-/fig_export <name>         step 6 — produces PDF + SVG + TIFF + PNG (600 dpi) into exports/
+/fig_new <name>          scaffold (briefing + spec)
+                         [user/LLM authors examples/<name>/<name>.tex from briefing intent
+                          + optional reference_image; no preview-selection step required]
+/fig_compile <name>      Style Lock (incl. preamble import) + PDF/PNG build + collision/clash
+                         (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
+/fig_export <name>       PDF / SVG (dvisvgm-preserved text) / TIFF / PNG
+/fig_status [<name>]     stage + accepted-state inference (legacy hints carry [legacy] marker)
 ```
 
-Run slash commands from the plugin root. `<name>` maps to `examples/<name>/`. After `/fig_preview_select`, authoring `examples/<name>/<name>.tex` is required; v0.1 does not create it automatically. These helpers remain available for old workflows, but do not expand them unless dogfooding proves a durable non-transient need.
+Golden fixtures declare `accepted` + `golden_contract` in `spec.yaml`;
+`check_golden_artifacts.py` auto-escalates into accepted mode when the key is
+present. Override with `--no-require-accepted` for ad-hoc inspection.
+
+For golden fixtures, `reference_image` points to the fixed visual target. Do
+not store that target in `selected_preview`; `selected_preview` means a
+user-chosen candidate from `previews/` and belongs to the legacy path.
+
+### Frozen legacy (v0.1 image-gen orchestration)
+
+```
+/fig_new <name>              shared with the active path; same scaffold
+/fig_prompt <name>           normalize spec + briefing into external image-gen prompt
+                             [HALT — user runs the prompt in their image-gen tool]
+/fig_preview_select <name>   record chosen PNG in spec.yaml.selected_preview
+                             [HALT — user/LLM authors <name>.tex influenced by the preview]
+/fig_compile <name>          shared with the active path
+/fig_review <name>           emit reviewer brief for external vision LLM
+                             [HALT — user critiques, revises .tex]
+/fig_export <name>           shared with the active path
+```
+
+Frozen helpers are preserved for in-flight users; no new features land here
+unless dogfooding proves a durable non-transient need.
 
 **Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
 

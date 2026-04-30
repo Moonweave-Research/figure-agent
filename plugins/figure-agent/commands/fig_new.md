@@ -2,6 +2,14 @@
 description: Conversational interview to scaffold a new figure (schematic) and auto-fill briefing.md + spec.yaml.
 ---
 
+> **Shared entry point.** `/fig_new` scaffolds the per-figure folder for both
+> the active quality-kernel workflow and the frozen v0.1 image-gen orchestration
+> path. After this command the user picks their path:
+> - active: author `<name>.tex` directly from briefing intent + optional `reference_image`, then `/fig_compile`;
+> - legacy: `/fig_prompt` → external image-gen → `/fig_preview_select` → author `<name>.tex`, then `/fig_compile`.
+>
+> See `docs/architecture-overview.md` for the layer model.
+
 Create a new figure project via a conversational interview. **Do not just dump a markdown
 template and ask the user to fill it in an editor** — that defeats the purpose of the plugin.
 Run a 6-question interview in chat, write each answer into `briefing.md` as it arrives.
