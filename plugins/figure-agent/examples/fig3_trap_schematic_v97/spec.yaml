@@ -18,14 +18,11 @@ accepted: false
 golden_contract:
   required_labels:
     - "power-law"
-    - "Debye"
-    - ["no-trap (Debye)", "no-trap"]
+    - ["no-trap (Debye)", "no—trap (Debye)", "no-trap"]
     - "electron affinity"
     - ["creates", "create"]
     - ["linear chain", "Linear-chain"]
     - "consistent trap depth distribution"
-    - "shallow"
-    - "deep"
     - "electrode"
   source_inventory:
     chainLine:
