@@ -32,5 +32,17 @@ selection_notes: |
   Stage 2 (deferred): golden_contract.required_labels + .tex authoring +
   full drift gate measurement.
 golden_contract:
-  required_labels: null  # Stage 2: fill from visible labels in reference
-  source_inventory: null  # Stage 2: fill after .tex authoring
+  required_labels:
+    - "Leakage current evidence"
+    - "ISPD inference"
+    - "Discharge evidence"
+    - "S-rich segments"
+    - "localized traps"
+    - "chemical origin"
+    - "physical origin"
+    - ["(electronegativity, polarizability of S)", "electronegativity, polarizability of S"]
+    - ["(local potential fluctuations)", "local potential fluctuations"]
+    - "shallow"
+    - "deep"
+    - "Debye"
+  source_inventory: null  # Stage 2 stub: minimal text-node figure, no source-pattern audit

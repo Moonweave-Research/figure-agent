@@ -1,0 +1,48 @@
+\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+% Phase E.5 Stage 2 minimum text-only stub for drift gate measurement.
+% Anchor positions derived from coordinate_hints.yaml OCR centroids
+% (1693x929 px reference -> 121 px/cm; image y -> TikZ y via 929-py /121).
+% Graphics intentionally omitted: drift gate measures text only.
+\begin{tikzpicture}[
+  x=1cm, y=1cm,
+  every node/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cGray!95!black},
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{8.0}{9.6}\selectfont, text=cTeal, align=center},
+  motif/.style={font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cAmber!90!black, align=center},
+  origin/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cBrown, align=center},
+  originSub/.style={font=\sffamily\fontsize{5.8}{7.0}\selectfont, text=cBrown!85!black, align=center},
+  band/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cBlue, align=center},
+]
+
+% Lock PDF page to reference aspect ratio (1693 x 929 px -> 14 x 7.68 cm).
+% Without this, standalone auto-tightens to text extent, drifting normalized
+% coordinates relative to the reference image. \useasboundingbox forces a
+% fixed frame so drift gate measures intended layout, not auto-cropping noise.
+\useasboundingbox (0, 0) rectangle (14.0, 7.68);
+
+% Panel 1 — Leakage current evidence (3-line stack, matches reference layout)
+\node[panelTitle] at (0.58, 6.29) {Leakage\\current\\evidence};
+
+% Panel 2 — ISPD inference (2-line stack; shallow/deep are g(E_t) plot labels)
+\node[panelTitle] at (0.55, 3.85) {ISPD\\inference};
+\node[band] at (1.90, 3.47) {shallow};
+\node[band] at (2.83, 3.47) {deep};
+
+% Panel 3 — Discharge evidence (2-line stack)
+\node[panelTitle] at (0.54, 1.68) {Discharge\\evidence};
+\node at (2.40, 1.76) {Debye};
+
+% Middle column — localized traps motifs
+\node[motif] at (7.35, 6.02) {S-rich segments};
+\node[motif] at (7.21, 1.37) {localized traps};
+
+% Origin annotations under middle chain rows
+\node[origin] at (6.22, 2.74) {chemical origin};
+\node[originSub] at (6.24, 2.40) {(electronegativity, polarizability of S)};
+\node[origin] at (8.35, 2.74) {physical origin};
+\node[originSub] at (8.36, 2.38) {(local potential fluctuations)};
+
+\end{tikzpicture}
+\end{document}
