@@ -13,8 +13,30 @@ panels:
   - id: f
     caption: Multi-modal convergence (n / g(E_t) / τ_d → consistent trap depth)
 style_profile: polymer-default
-# Original preview (codex_v01.png) moved during v0.1.7.2 dogfood cleanup.
-# selection_notes below preserves the historical decision record.
+reference_image: reference/codex_v01.png
+accepted: false
+golden_contract:
+  required_labels:
+    - "power-law"
+    - "Debye"
+    - ["no-trap (Debye)", "no-trap"]
+    - "electron affinity"
+    - ["creates", "create"]
+    - ["linear chain", "Linear-chain"]
+    - "consistent trap depth distribution"
+    - "shallow"
+    - "deep"
+    - "electrode"
+  source_inventory:
+    chainLine:
+      pattern: "chainLine"
+      min: 5
+    haloFill:
+      pattern: "haloFill"
+      min: 3
+    trapSeg:
+      pattern: "trapSeg"
+      min: 3
 selected_preview: null
 selection_notes: |
   Codex app (codex_v01) chosen as primary baseline (2026-04-28 2-candidate
