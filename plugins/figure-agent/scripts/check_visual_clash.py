@@ -243,15 +243,8 @@ def detect_visual_clashes(
     for word in words:
         text = word["text"]
         bbox = bbox_pt_to_px(word, page_size_pt, image_size)
-        if (
-            word["xmin"] < 0
-            or word["ymin"] < 0
-            or word["xmax"] > page_w
-            or word["ymax"] > page_h
-        ):
-            issues.append(
-                VisualIssue("clipping", text, "bbox extends outside PDF page", bbox)
-            )
+        if word["xmin"] < 0 or word["ymin"] < 0 or word["xmax"] > page_w or word["ymax"] > page_h:
+            issues.append(VisualIssue("clipping", text, "bbox extends outside PDF page", bbox))
             continue
 
         padded = expand_bbox(bbox, padding_px, image_size)
@@ -262,20 +255,14 @@ def detect_visual_clashes(
                 VisualIssue(
                     "text_on_path",
                     text,
-                    (
-                        f"dark={stats['dark_ratio']:.3f}, "
-                        f"edge={stats['edge_density']:.3f}"
-                    ),
+                    (f"dark={stats['dark_ratio']:.3f}, edge={stats['edge_density']:.3f}"),
                     bbox,
                 )
             )
         elif (
             (
                 fill_stats["mean_delta"] >= 18.0
-                or (
-                    fill_stats["bbox_mean"] <= 245.0
-                    and fill_stats["outer_mean"] <= 245.0
-                )
+                or (fill_stats["bbox_mean"] <= 245.0 and fill_stats["outer_mean"] <= 245.0)
             )
             and fill_stats["bbox_std"] <= 35.0
             and fill_stats["ring_std"] <= 35.0
@@ -389,9 +376,7 @@ def suppress_known_false_positives(
     return filtered, suppressed
 
 
-def write_overlay(
-    image: Image.Image, issues: list[VisualIssue], output_path: Path
-) -> None:
+def write_overlay(image: Image.Image, issues: list[VisualIssue], output_path: Path) -> None:
     """Write an annotated PNG for quick human inspection."""
     marked = image.copy()
     draw = ImageDraw.Draw(marked)
@@ -406,7 +391,7 @@ def write_overlay(
     marked.save(output_path)
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(
         description="Render-based visual clash detector for compiled TikZ PDFs"
     )
@@ -428,6 +413,12 @@ def main() -> None:
         dest="ignore_known_fp",
         action="store_false",
         help="explicit reset",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        default=False,
+        help="exit 1 when any unsuppressed clash candidate remains (default: report-only)",
     )
     args = parser.parse_args()
 
@@ -452,14 +443,11 @@ def main() -> None:
             print(f"overlay: {args.overlay}")
         if args.ignore_known_fp:
             print(f"{suppressed_count} suppressed (use --no-ignore-known-fp to see all)")
-        return
+        return 0
 
     for issue in issues:
         x1, y1, x2, y2 = issue.bbox
-        print(
-            f"WARN {issue.kind}: \"{issue.text}\" "
-            f"[{x1},{y1},{x2},{y2}] {issue.detail}"
-        )
+        print(f'WARN {issue.kind}: "{issue.text}" [{x1},{y1},{x2},{y2}] {issue.detail}')
     print(f"\n{len(issues)} visual clash candidate(s)")
 
     if args.overlay:
@@ -468,6 +456,10 @@ def main() -> None:
     if args.ignore_known_fp:
         print(f"{suppressed_count} suppressed (use --no-ignore-known-fp to see all)")
 
+    return 1 if args.strict else 0
+
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    sys.exit(main())

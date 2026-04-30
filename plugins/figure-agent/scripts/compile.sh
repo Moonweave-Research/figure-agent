@@ -25,6 +25,15 @@ fi
 echo 'Lint: BLOCKER-tier Style Lock check...' >&2
 uv run python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
 
+# Opt-in strict mode: when FIGURE_AGENT_STRICT=1, propagate --strict to the
+# collision/clash checkers so non-zero findings fail the compile (default
+# behavior is report-only with exit 0 to preserve dogfood ergonomics).
+STRICT_ARGS=()
+if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
+  STRICT_ARGS=(--strict)
+  echo 'Strict mode: collision/clash findings will fail the compile.' >&2
+fi
+
 ENGINE="${LATEX_ENGINE:-lualatex}"
 
 cd "$(dirname "$TEX_INPUT")"
@@ -48,8 +57,8 @@ trap cleanup_failed_build ERR
 rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
-uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "$PDF_OUT"
+uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
 trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

@@ -79,7 +79,7 @@ def find_collisions(words: list[dict], iou_thresh: float) -> list[tuple]:
     return collisions
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="PDF 텍스트 레이블 충돌 감지기")
     parser.add_argument("pdf", type=Path, help="컴파일된 PDF 경로")
     parser.add_argument(
@@ -87,6 +87,12 @@ def main() -> None:
         type=float,
         default=0.05,
         help="충돌 판정 IoU 임계값 (기본 0.05)",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        default=False,
+        help="exit 1 when any collision is found (default: report-only, exit 0)",
     )
     args = parser.parse_args()
 
@@ -98,7 +104,7 @@ def main() -> None:
 
     if not collisions:
         print(f"OK: no collisions found in {args.pdf.name} ({len(words)} words)")
-        return
+        return 0
 
     for a, b, score in sorted(collisions, key=lambda x: -x[2]):
         print(
@@ -107,7 +113,10 @@ def main() -> None:
             f'× "{b["text"]}" [{b["xmin"]:.1f},{b["ymin"]:.1f}]'
         )
     print(f"\n{len(collisions)} collision(s) in {args.pdf.name}")
+    return 1 if args.strict else 0
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    sys.exit(main())
