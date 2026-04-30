@@ -1,6 +1,8 @@
 ---
-description: List examples/<name>/previews/, present to user, record selection in spec.yaml.
+description: "[frozen legacy] List examples/<name>/previews/, present to user, record selection in spec.yaml."
 ---
+
+> **Status: frozen legacy.** Preserved from v0.1 orchestration; not the active development direction. The quality-kernel workflow (`/fig_compile` / `/fig_export` / `/fig_status`) does not require this command. See `docs/quality-kernel-goal.md`.
 
 Select a preview to use as compile inspiration.
 

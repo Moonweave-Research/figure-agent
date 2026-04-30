@@ -1,6 +1,8 @@
 ---
-description: Generate normalized external image-gen prompt from spec.yaml + briefing.md. HALTS workflow.
+description: "[frozen legacy] Generate normalized external image-gen prompt from spec.yaml + briefing.md. HALTS workflow."
 ---
+
+> **Status: frozen legacy.** Preserved from v0.1 orchestration; not the active development direction. The quality-kernel workflow (`/fig_compile` / `/fig_export` / `/fig_status`) does not require this command. See `docs/quality-kernel-goal.md`.
 
 Generate prompt for external image-gen tool.
 

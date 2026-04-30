@@ -1,6 +1,8 @@
 ---
-description: Generate Reviewer brief (physics + aesthetic critique) from briefing + .tex + render. HALTS workflow.
+description: "[frozen legacy] Generate Reviewer brief (physics + aesthetic critique) from briefing + .tex + render. HALTS workflow."
 ---
+
+> **Status: frozen legacy.** Preserved from v0.1 orchestration; not the active development direction. The quality-kernel workflow (`/fig_compile` / `/fig_export` / `/fig_status`) does not require this command. See `docs/quality-kernel-goal.md`.
 
 Generate a structured reviewer brief for an external critic.
 
