@@ -13,6 +13,8 @@
   tickLabel/.style={font=\sffamily\fontsize{4.3}{5.2}\selectfont, text=cGray!90!black},
   evidenceArrow/.style={-{Stealth[length=4pt,width=2.8pt]}, cGray!70, line width=0.8pt},
   sep/.style={cGray!50, line width=0.32pt},
+  trapShallow/.style={cAmber, line width=0.72pt},
+  trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
 ]
 \useasboundingbox (0, 0) rectangle (14.0, 7.68);
 
@@ -20,13 +22,13 @@
 % PANEL ELLIPSES (from structural_regions bbox → center/radius)
 % ================================================================
 
-% Panel 1 — blue: bbox x=1.18-4.81, y=4.91-7.65 → center=(3.00,6.28), rx=1.82, ry=1.37
+% Panel 1 — blue: bbox x=1.18-4.81, y=4.91-7.65 → center=(2.99,6.28), rx=1.81, ry=1.37
 \draw[cBlue, line width=1.8pt]
-  (3.00, 6.28) ellipse [x radius=1.82cm, y radius=1.37cm];
+  (2.99, 6.28) ellipse [x radius=1.81cm, y radius=1.37cm];
 
-% Panel 2 — amber: bbox x=1.18-4.97, y=3.11-4.84 → center=(3.08,3.98), rx=1.90, ry=0.87
+% Panel 2 — orange: bbox x=1.18-4.97, y=3.11-4.84 → center=(3.07,3.97), rx=1.90, ry=0.86
 \draw[cAmber!80!black, line width=1.8pt]
-  (3.08, 3.98) ellipse [x radius=1.90cm, y radius=0.87cm];
+  (3.07, 3.97) ellipse [x radius=1.90cm, y radius=0.86cm];
 
 % Panel 3 — purple: bbox x=1.06-4.62, y=0.26-3.04 → center=(2.84,1.65), rx=1.78, ry=1.39
 \draw[cBlue!45!cRed, line width=1.8pt]
@@ -34,6 +36,7 @@
 
 % ================================================================
 % PANEL 1 — Leakage current evidence (log-log power-law plot)
+% plot_boxes bbox: x=1.92-3.99, y=5.55-7.19
 % ================================================================
 
 % Axes inside panel 1
@@ -62,42 +65,43 @@
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray]
   at (2.95, 5.28) {$\log\,t$};
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, rotate=90]
-  at (1.60, 6.32) {$\log\,I$};
+  at (1.60, 6.37) {$\log\,I$};
 
-% Power-law line (log-log)
-\draw[cBlue, line width=0.92pt] (1.92, 7.09) -- (3.98, 5.62);
+% Power-law line (log-log) — power_law_line bbox: x=2.05-3.81, y=5.74-7.10
+\draw[cBlue, line width=0.92pt] (2.05, 7.10) -- (3.81, 5.74);
 
 % Slope dashed triangle
-\draw[cBlue, dashed, line width=0.45pt] (2.60, 6.48) -- (2.60, 6.10) -- (3.00, 6.10);
+\draw[cBlue, dashed, line width=0.45pt] (2.65, 6.55) -- (2.65, 6.15) -- (3.05, 6.15);
 \node[font=\sffamily\fontsize{5.8}{7}\selectfont, text=cBlue]
-  at (2.45, 6.25) {slope $= -n$};
+  at (2.50, 6.30) {slope $= -n$};
 
 % I(t) label
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cBlue, anchor=west]
-  at (2.80, 6.88) {$I(t)\!\propto\!t^{-n}$};
+  at (2.80, 6.90) {$I(t)\!\propto\!t^{-n}$};
 
 % n arrow out of panel
 \draw[cBlue, line width=0.8pt, -{Stealth[length=3.5pt,width=2.5pt]}]
-  (3.60, 6.55) -- (4.60, 6.55);
+  (3.60, 6.60) -- (4.58, 6.60);
 \node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cBlue]
-  at (4.78, 6.55) {$n$};
+  at (4.76, 6.60) {$n$};
 
 % Panel 1 drift-gate title node (position locked)
 \node[panelTitle] at (0.58, 6.29) {Leakage\\current\\evidence};
 
 % ================================================================
 % PANEL 2 — ISPD inference (g(Et) bell curves)
+% ispd_lobes: shallow x=1.57-2.28, y=3.64-4.35; deep x=1.52-3.27, y=3.62-4.32
 % ================================================================
 
 % Et axis
 \draw[cGray, line width=0.38pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (1.65, 3.10) -- (4.60, 3.10);
+  (1.57, 3.10) -- (4.58, 3.10);
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray]
-  at (4.72, 3.10) {$E_t$};
+  at (4.70, 3.10) {$E_t$};
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray, rotate=90]
-  at (1.45, 3.85) {$g(E_t)$};
+  at (1.38, 3.97) {$g(E_t)$};
 
-% Shallow peak (amber fill) — bbox x=1.57-2.28, y=3.64-4.35 (ispd_lobes v0.3)
+% Shallow peak (amber fill) — bbox x=1.57-2.28, y=3.64-4.35
 \fill[cAmber!25]
   (1.57, 3.64)
   .. controls (1.64,3.66) and (1.72,4.05) .. (1.92, 4.35)
@@ -121,9 +125,9 @@
 
 % g(Et) arrow out
 \draw[cAmber!80!black, line width=0.8pt, -{Stealth[length=3.5pt,width=2.5pt]}]
-  (3.55, 3.75) -- (4.60, 3.75);
+  (3.52, 3.75) -- (4.55, 3.75);
 \node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cGray]
-  at (4.88, 3.75) {$g(E_t)$};
+  at (4.84, 3.75) {$g(E_t)$};
 
 % Panel 2 drift-gate title and band labels (positions locked)
 \node[panelTitle] at (0.55, 3.85) {ISPD\\inference};
@@ -132,11 +136,12 @@
 
 % ================================================================
 % PANEL 3 — Discharge evidence (Debye decay)
+% plot_boxes bbox: x=1.85-3.84, y=0.97-2.62
 % ================================================================
 
 % Axes
 \draw[cGray, line width=0.38pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (1.85, 0.97) -- (1.85, 2.55);
+  (1.85, 0.97) -- (1.85, 2.58);
 \draw[cGray, line width=0.38pt, -{Stealth[length=2.5pt,width=1.8pt]}]
   (1.85, 0.97) -- (3.83, 0.97);
 
@@ -162,14 +167,14 @@
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, rotate=90]
   at (1.52, 1.80) {$\log$ response};
 
-% Debye decay curve
+% Debye decay curve — debye_decay_curve bbox: x=1.99-3.61, y=1.24-2.48
 \draw[cGray, line width=0.75pt]
   plot[smooth] coordinates {
-    (1.85, 2.48) (2.18, 2.35) (2.51, 2.05) (2.84, 1.65) (3.17, 1.30) (3.50, 1.07) (3.83, 0.97)
+    (1.99, 2.48) (2.18, 2.38) (2.51, 2.10) (2.84, 1.68) (3.17, 1.38) (3.50, 1.15) (3.61, 1.05)
   };
 
 % tau_d dashed line
-\draw[cGray, dashed, line width=0.38pt] (2.84, 0.97) -- (2.84, 1.65);
+\draw[cGray, dashed, line width=0.38pt] (2.84, 0.97) -- (2.84, 1.68);
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, anchor=north]
   at (2.84, 0.87) {$\tau_d$};
 
@@ -191,65 +196,71 @@
 
 % Panel 1 → top chain row
 \draw[cBlue, line width=1.5pt, -{Stealth[length=5pt,width=3.5pt]}]
-  (4.81, 6.28) .. controls (5.20, 6.20) and (5.30, 5.80) .. (5.35, 5.55);
-\fill[cBlue] (4.81, 6.28) circle (0.08cm);
+  (4.80, 6.28) .. controls (5.18, 6.20) and (5.28, 5.70) .. (5.33, 5.45);
+\fill[cBlue] (4.80, 6.28) circle (0.08cm);
 
 % Panel 2 → middle chain row
 \draw[cAmber!80!black, line width=1.5pt, -{Stealth[length=5pt,width=3.5pt]}]
-  (4.97, 3.98) -- (5.40, 4.20);
-\fill[cAmber!80!black] (4.97, 3.98) circle (0.08cm);
+  (4.97, 3.97) -- (5.38, 4.20);
+\fill[cAmber!80!black] (4.97, 3.97) circle (0.08cm);
 
 % Panel 3 → bottom chain row
 \draw[cBlue!45!cRed, line width=1.5pt, -{Stealth[length=5pt,width=3.5pt]}]
-  (4.62, 1.65) .. controls (5.00, 1.70) and (5.20, 2.80) .. (5.35, 3.20);
+  (4.62, 1.65) .. controls (4.98, 1.70) and (5.18, 2.75) .. (5.33, 3.18);
 \fill[cBlue!45!cRed] (4.62, 1.65) circle (0.08cm);
 
 % ================================================================
 % MIDDLE ZONE — Polymer chain rows
+% chain_rows: row0 y=5.07, x=4.97-8.96; row1 y=4.25, x=5.16-10.22; row2 y=3.46, x=5.13-8.96
 % ================================================================
 
-% Row 1 (y~5.45, x=4.97-7.32 from chain_rows[0])
+% Row 0 (y~5.07, x=4.97-8.96)
 \draw[cGray, line width=0.85pt]
   plot[smooth] coordinates {
-    (5.30,5.45)(5.60,5.62)(5.90,5.45)(6.20,5.62)(6.50,5.45)
-    (6.80,5.62)(7.10,5.45)(7.40,5.62)(7.70,5.45)
+    (4.97,5.07)(5.27,5.24)(5.57,5.07)(5.87,5.24)(6.17,5.07)
+    (6.47,5.24)(6.77,5.07)(7.07,5.24)(7.37,5.07)(7.67,5.24)(7.97,5.07)(8.27,5.24)(8.56,5.07)(8.86,5.24)
   };
-\foreach \sx/\sy in {5.60/5.62, 6.20/5.62, 6.80/5.62, 7.40/5.62} {
-  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, \sy+0.28) {S};
-  \draw[cAmber, fill=white, line width=0.50pt] (\sx, \sy+0.12) circle (0.042cm);
+% S atoms row 0: x=5.77, 5.78, 5.78, 6.7, 8.09 (y~5.07)
+% Deduplicate near-identical x coords: use 5.77, 6.70, 8.09
+\foreach \sx in {5.77, 6.70, 8.09} {
+  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, 5.07+0.30) {S};
+  \draw[cAmber, fill=white, line width=0.50pt] (\sx, 5.07+0.15) circle (0.042cm);
 }
 
-% Row 2 (y~4.32, x=5.16-9.0 from chain_rows[1])
+% Row 1 (y~4.25, x=5.16-10.22)
 \draw[cGray, line width=0.85pt]
   plot[smooth] coordinates {
-    (5.30,4.31)(5.60,4.48)(5.90,4.31)(6.20,4.48)(6.50,4.31)
-    (6.80,4.48)(7.10,4.31)(7.40,4.48)(7.70,4.31)(8.00,4.48)(8.30,4.31)(8.60,4.48)(8.90,4.31)
+    (5.16,4.25)(5.46,4.42)(5.76,4.25)(6.06,4.42)(6.36,4.25)
+    (6.66,4.42)(6.96,4.25)(7.26,4.42)(7.56,4.25)(7.86,4.42)(8.16,4.25)(8.46,4.42)(8.76,4.25)(9.06,4.42)(9.36,4.25)(9.66,4.42)(9.96,4.25)(10.22,4.42)
   };
-\foreach \sx/\sy in {5.60/4.48, 6.80/4.48, 8.00/4.48} {
-  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, \sy+0.28) {S};
-  \draw[cAmber, fill=white, line width=0.50pt] (\sx, \sy+0.12) circle (0.042cm);
-}
-\foreach \tx/\ty in {6.20/4.48, 7.40/4.48, 8.60/4.48} {
-  \node[circle, fill=cBlue!55, draw=cBlue!80!black, inner sep=0pt, minimum size=2mm,
-        line width=0.4pt] at (\tx, \ty+0.10) {};
+% S atoms row 1: §5b lists x=4.54, 4.93, 5.47, 6.37, 6.37, 7.13 (y~4.25)
+% 4.54 and 4.93 fall outside chain_row[1].x_span (starts at 5.16) — likely extractor
+% false-positives inside ISPD orange ellipse; omitted per §5b x_span constraint.
+\foreach \sx in {5.47, 6.37, 7.13} {
+  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, 4.25+0.30) {S};
+  \draw[cAmber, fill=white, line width=0.50pt] (\sx, 4.25+0.15) circle (0.042cm);
 }
 
-% Row 3 (y~3.45, x=5.1-8.2 manual estimate)
+% Row 2 (y~3.46, x=5.13-8.96)
 \draw[cGray, line width=0.85pt]
   plot[smooth] coordinates {
-    (5.30,3.45)(5.60,3.62)(5.90,3.45)(6.20,3.62)(6.50,3.45)
-    (6.80,3.62)(7.10,3.45)(7.40,3.62)(7.70,3.45)(8.00,3.62)(8.30,3.45)(8.60,3.62)(8.90,3.45)
+    (5.13,3.46)(5.43,3.63)(5.73,3.46)(6.03,3.63)(6.33,3.46)
+    (6.63,3.63)(6.93,3.46)(7.23,3.63)(7.53,3.46)(7.83,3.63)(8.13,3.46)(8.43,3.63)(8.73,3.46)(8.96,3.63)
   };
-\foreach \sx/\sy in {5.60/3.62, 6.20/3.62, 7.70/3.62, 8.00/3.62, 8.60/3.62} {
-  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, \sy+0.28) {S};
-  \draw[cAmber, fill=white, line width=0.50pt] (\sx, \sy+0.12) circle (0.042cm);
+% S atoms row 2: x=5.52, 6.24, 7.3, 7.62, 7.94, 7.95, 7.95 (y~3.46)
+% Deduplicate: 5.52, 6.24, 7.30, 7.62, 7.94
+\foreach \sx in {5.52, 6.24, 7.30, 7.62, 7.94} {
+  \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\sx, 3.46+0.30) {S};
+  \draw[cAmber, fill=white, line width=0.50pt] (\sx, 3.46+0.15) circle (0.042cm);
 }
+
+% Dashed ellipse marking S-rich cluster region on row 2
 \draw[cGray, dashed, line width=0.42pt]
-  (7.55, 3.35) ellipse [x radius=0.70cm, y radius=0.35cm];
+  (7.62, 3.46) ellipse [x radius=0.60cm, y radius=0.30cm];
 
 % Middle zone → right band diagram
 \draw[cGray!80, line width=1.2pt, -{Stealth[length=5pt,width=3.5pt]}]
-  (9.40, 4.00) -- (9.85, 4.00);
+  (9.50, 4.25) -- (9.90, 4.25);
 
 % ================================================================
 % MIDDLE ZONE LABELS (drift-gate anchors — positions locked)
@@ -263,11 +274,11 @@
 
 \node[motif] at (7.35, 6.02) {S-rich segments};
 \draw[cGray!70, line width=0.4pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (6.50, 5.93) -- (6.22, 5.76);
+  (6.55, 5.93) -- (6.25, 5.76);
 \draw[cGray!70, line width=0.4pt, -{Stealth[length=2.5pt,width=1.8pt]}]
   (7.35, 5.93) -- (7.35, 5.76);
 \draw[cGray!70, line width=0.4pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (8.20, 5.93) -- (7.58, 5.76);
+  (8.15, 5.93) -- (7.60, 5.76);
 \node[motif] at (7.21, 1.37) {localized traps};
 \node[origin] at (6.22, 2.74) {chemical origin};
 \node[originSub] at (6.24, 2.40) {(electronegativity, polarizability of S)};
@@ -275,28 +286,28 @@
 \node[originSub] at (8.36, 2.38) {(local potential fluctuations)};
 
 % ================================================================
-% RIGHT ZONE — Band diagram (teal border from structural_regions)
+% RIGHT ZONE — Band diagram
+% Teal border: bbox x=10.92-13.78, y=1.89-6.38
 % ================================================================
 
-% Teal border: bbox x=10.92-13.78, y=1.89-6.38
 \draw[cTeal, line width=1.2pt, rounded corners=4pt]
-  (9.89, 1.89) rectangle (13.78, 6.38);
+  (10.92, 1.89) rectangle (13.78, 6.38);
 
-% CB bar: palette px(1241-1394, 216-239) → TikZ (10.26-11.52, 5.70-5.89)
-\fill[cLGray!40] (10.26, 5.69) rectangle (11.52, 5.89);
-\draw[cGray!60, line width=0.4pt] (10.26, 5.69) rectangle (11.52, 5.89);
+% CB bar: palette component px(1241-1394, 216-239) → TikZ (10.26-11.52, 5.70-5.89)
+\fill[cLGray!40] (10.26, 5.70) rectangle (11.52, 5.89);
+\draw[cGray!60, line width=0.4pt] (10.26, 5.70) rectangle (11.52, 5.89);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cGray!80, anchor=center]
-  at (10.89, 5.79) {CB};
+  at (10.89, 5.80) {CB};
 
-% VB bar: palette px(1242-1389, 636-660) → TikZ (10.27-11.47, 2.23-2.42)
+% VB bar: palette component px(1242-1389, 636-660) → TikZ (10.27-11.47, 2.23-2.42)
 \fill[cLGray!40] (10.27, 2.23) rectangle (11.47, 2.42);
 \draw[cGray!60, line width=0.4pt] (10.27, 2.23) rectangle (11.47, 2.42);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cGray!80, anchor=center]
-  at (10.87, 2.32) {VB};
+  at (10.87, 2.33) {VB};
 
 % Energy axis: cGray line px(1480-1482, 244-602) → x≈12.24, y=2.70-5.66
 \draw[cGray, line width=0.7pt, -{Stealth[length=3.2pt,width=2.4pt]}]
-  (11.20, 2.42) -- (11.20, 5.69);
+  (11.20, 2.42) -- (11.20, 5.70);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray, rotate=90, anchor=south]
   at (11.02, 4.05) {Energy};
 
@@ -306,60 +317,56 @@
 \node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cGray]
   at (12.30, 4.15) {$E_t$};
 
-% Shallow trap levels (amber, just below CB)
-\foreach \yi in {5.42, 5.22, 5.02, 4.82} {
-  \draw[cAmber, line width=0.72pt] (10.55, \yi) -- (10.88, \yi);
-  \node[circle, fill=cBlue!50, draw=cBlue!80!black, inner sep=0pt, minimum size=1.4mm,
-        line width=0.35pt] at (10.71, \yi+0.07) {};
-}
-\node[text=cAmber] at (11.08, 5.12) {$\cdots$};
-
-% Deep trap levels (purple, just above VB)
-\foreach \yi in {3.20, 2.95} {
-  \draw[cBlue!45!cRed, line width=0.72pt] (10.55, \yi) -- (10.88, \yi);
-  \node[circle, fill=cBlue!50, draw=cBlue!80!black, inner sep=0pt, minimum size=1.4mm,
-        line width=0.35pt] at (10.71, \yi+0.07) {};
-}
-\node[text=cBlue!45!cRed] at (11.08, 3.05) {$\cdots$};
+% Shallow trap levels only (coordinate_hints records only 2 orange/shallow dashes)
+% y=4.97 and y=4.59, x_center=10.94 (w~0.27)
+\draw[trapShallow] (10.80, 4.97) -- (11.08, 4.97);
+\node[circle, fill=cBlue!50, draw=cBlue!80!black, inner sep=0pt, minimum size=1.4mm,
+      line width=0.35pt] at (10.94, 5.04) {};
+\draw[trapShallow] (10.80, 4.59) -- (11.08, 4.59);
+\node[circle, fill=cBlue!50, draw=cBlue!80!black, inner sep=0pt, minimum size=1.4mm,
+      line width=0.35pt] at (10.94, 4.66) {};
+\node[text=cAmber] at (11.20, 4.78) {$\cdots$};
 
 % g(Et) axes inside right zone
 \draw[cGray, line width=0.6pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (12.25, 2.05) -- (12.25, 6.00);
+  (12.25, 2.05) -- (12.25, 6.15);
 \draw[cGray, line width=0.6pt, -{Stealth[length=2.5pt,width=1.8pt]}]
-  (12.25, 2.05) -- (13.70, 2.05);
+  (12.25, 2.05) -- (13.72, 2.05);
 \node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cGray, anchor=south]
-  at (12.98, 6.05) {$g(E_t)$};
+  at (12.98, 6.20) {$g(E_t)$};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray]
-  at (13.10, 1.75) {$g(E_t)$};
+  at (13.10, 1.78) {$g(E_t)$};
 
-% Shallow g(Et) Gaussian (cAmber fill, no text label — avoids drift-gate shallow/deep conflict)
+% Shallow g(Et) Gaussian — right_gaussians bbox: x=12.26-12.96, y=4.17-5.67
+% No text label here — avoids drift-gate shallow/deep conflict with ISPD panel
 \fill[cAmber!28]
   (12.25, 4.17)
-  .. controls (12.52, 4.25) and (12.75, 4.70) .. (12.75, 4.92)
-  .. controls (12.75, 5.15) and (12.52, 5.58) .. (12.25, 5.67)
+  .. controls (12.50, 4.25) and (12.74, 4.70) .. (12.74, 4.92)
+  .. controls (12.74, 5.15) and (12.50, 5.58) .. (12.25, 5.67)
   -- cycle;
 \draw[cAmber!80!black, line width=0.8pt]
   (12.25, 4.17)
-  .. controls (12.52, 4.25) and (12.75, 4.70) .. (12.75, 4.92)
-  .. controls (12.75, 5.15) and (12.52, 5.58) .. (12.25, 5.67);
+  .. controls (12.50, 4.25) and (12.74, 4.70) .. (12.74, 4.92)
+  .. controls (12.74, 5.15) and (12.50, 5.58) .. (12.25, 5.67);
 
-% Deep g(Et) Gaussian (cBlue!45!cRed fill, no text label — same reason)
+% Deep g(Et) Gaussian — right_gaussians bbox: x=12.26-13.04, y=2.91-3.98
+% No text label here — same reason
 \fill[cBlue!45!cRed!22]
   (12.25, 2.91)
-  .. controls (12.55, 2.99) and (12.80, 3.28) .. (12.80, 3.44)
-  .. controls (12.80, 3.62) and (12.55, 3.90) .. (12.25, 3.98)
+  .. controls (12.55, 2.99) and (12.82, 3.28) .. (12.82, 3.44)
+  .. controls (12.82, 3.62) and (12.55, 3.90) .. (12.25, 3.98)
   -- cycle;
 \draw[cBlue!45!cRed, line width=0.8pt]
   (12.25, 2.91)
-  .. controls (12.55, 2.99) and (12.80, 3.28) .. (12.80, 3.44)
-  .. controls (12.80, 3.62) and (12.55, 3.90) .. (12.25, 3.98);
+  .. controls (12.55, 2.99) and (12.82, 3.28) .. (12.82, 3.44)
+  .. controls (12.82, 3.62) and (12.55, 3.90) .. (12.25, 3.98);
 
-% Converged trap-depth picture label
+% Converged trap-depth picture label — below teal border
 \draw[cTeal, line width=0.9pt, -{Stealth[length=4pt,width=2.5pt]}]
-  (11.85, 1.89) -- (11.85, 1.40);
+  (12.35, 1.89) -- (12.35, 1.42);
 \node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cTeal,
       anchor=north, align=center]
-  at (11.85, 1.32) {converged\\trap-depth picture};
+  at (12.35, 1.34) {converged\\trap-depth picture};
 
 \end{tikzpicture}
 \end{document}
