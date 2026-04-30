@@ -409,15 +409,19 @@ def structural_regions_from_reference(
         key=lambda r: -r["area_cm2"],
     )
 
-    # Chain rows: middle-zone gray paths
-    # Criteria:
-    #   - color_family == "chain_gray"
-    #   - x_center in middle zone: 4.0 cm < x_center < 11.5 cm
-    #   - horizontal span > 1.5 cm (long chain, not a label or tick)
-    #   - vertical span < 0.8 cm (thin wavy line, not a block)
-
-    MID_X_MIN_CM = 4.0
-    MID_X_MAX_CM = 11.5
+    # Chain rows: horizontal gray paths anywhere in the figure.
+    # Bounds are canvas-relative so thresholds generalise across fixtures:
+    #   x_center: 10 %–90 % of canvas width  (excludes far-left icons / far-right axis)
+    #   y_center: 5 %–95 % of canvas height  (excludes page margins only)
+    # Previously these were hardcoded to the fig3_n2_evidence layout (4.0–11.5 cm,
+    # y > 2.8 cm) which excluded legitimate chains in other fixtures.
+    canvas_w_cm = img_w * cm_per_px
+    canvas_h_cm = img_h * cm_per_px
+    MID_X_MIN_CM = canvas_w_cm * 0.10
+    MID_X_MAX_CM = canvas_w_cm * 0.90
+    # 18 % floor keeps golden_trap_depth chains at y≈1.7 cm while excluding
+    # axis-tick and annotation-line false positives at y<1.4 cm.
+    MID_Y_MIN_CM = canvas_h_cm * 0.18
     MIN_CHAIN_WIDTH_CM = 1.5
     MAX_CHAIN_HEIGHT_CM = 0.8
 
@@ -433,7 +437,11 @@ def structural_regions_from_reference(
         y_span = y2_cm - y1_cm
         x_center = (x1_cm + x2_cm) / 2
         y_center = (y1_cm + y2_cm) / 2
-        if MID_X_MIN_CM < x_center < MID_X_MAX_CM and y_span < MAX_CHAIN_HEIGHT_CM:
+        if (
+            MID_X_MIN_CM < x_center < MID_X_MAX_CM
+            and y_center > MID_Y_MIN_CM
+            and y_span < MAX_CHAIN_HEIGHT_CM
+        ):
             chain_candidates.append((y_center, x1_cm, x2_cm, x_span))
 
     # Cluster by y-position (within 0.5 cm = same chain row)
@@ -467,14 +475,13 @@ def structural_regions_from_reference(
                 }
             )
 
-        # Filter clusters: only keep rows with total_x_span >= MIN_CHAIN_WIDTH_CM and
-        # at least 2 paths (ensures short isolated segments don't form false rows)
+        # Filter clusters: total_x_span and path_count quality gates.
+        # y_center lower bound is canvas-relative (MID_Y_MIN_CM, already applied
+        # per-candidate above) — no fixture-specific hardcoded floor here.
         chain_rows_raw = [
             r
             for r in chain_rows_raw
-            if r["total_x_span_cm"] >= MIN_CHAIN_WIDTH_CM
-            and r["path_count"] >= 2
-            and r["y_center_cm"] > 2.8
+            if r["total_x_span_cm"] >= MIN_CHAIN_WIDTH_CM and r["path_count"] >= 2
         ]
 
         # Sort by total_x_span descending (most complete chains first),
@@ -496,9 +503,24 @@ def structural_regions_from_reference(
             continue
         xc = path_info["x_center_cm"]
         yc = path_info["y_center_cm"]
-        # x > 4.5: excludes orange paths at right edge of evidence panels (x≈4.0-5.0)
-        # x < 10.5: excludes trap-dash markers inside teal border (x≈10.9 cm)
-        if not (4.5 <= xc <= 10.5 and 2.5 <= yc <= 6.5):
+        # Canvas-relative position bounds (replaces fixture-specific hardcoded range).
+        # panel_arcs exclusion further removes paths inside evidence panel ovals.
+        if not (canvas_w_cm * 0.08 <= xc <= canvas_w_cm * 0.92):
+            continue
+        if not (canvas_h_cm * 0.03 <= yc <= canvas_h_cm * 0.97):
+            continue
+        # Exclude paths whose center lies inside a detected panel arc bbox.
+        # This replaces the old x>4.5 hack that was fig3_n2_evidence-specific.
+        if any(
+            a["bbox_cm"][0] <= xc <= a["bbox_cm"][2] and a["bbox_cm"][1] <= yc <= a["bbox_cm"][3]
+            for a in panel_arcs
+        ):
+            continue
+        # Also exclude paths inside the band-diagram border (right zone).
+        if any(
+            b["bbox_cm"][0] <= xc <= b["bbox_cm"][2] and b["bbox_cm"][1] <= yc <= b["bbox_cm"][3]
+            for b in border_boxes
+        ):
             continue
         if not chain_y_centers:
             continue
