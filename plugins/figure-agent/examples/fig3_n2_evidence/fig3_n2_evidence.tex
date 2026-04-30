@@ -9,7 +9,7 @@
   motif/.style={font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cAmber!90!black, align=center},
   origin/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cBrown, align=center},
   originSub/.style={font=\sffamily\fontsize{5.8}{7.0}\selectfont, text=cBrown!85!black, align=center},
-  band/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cBlue, align=center},
+  band/.style={font=\sffamily\fontsize{7.2}{8.6}\selectfont, text=cGray, align=center},
   tickLabel/.style={font=\sffamily\fontsize{4.3}{5.2}\selectfont, text=cGray!90!black},
   evidenceArrow/.style={-{Stealth[length=4pt,width=2.8pt]}, cGray!70, line width=0.8pt},
   sep/.style={cGray!50, line width=0.32pt},
@@ -97,27 +97,28 @@
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray, rotate=90]
   at (1.45, 3.85) {$g(E_t)$};
 
-% Shallow peak (teal fill)
-\fill[cTeal!25]
-  (1.65, 3.12)
-  .. controls (1.82,3.15) and (1.95,3.60) .. (2.12, 4.20)
-  .. controls (2.29,3.60) and (2.42,3.15) .. (2.62, 3.12)
-  -- (1.65, 3.12) -- cycle;
-\draw[cTeal, line width=0.9pt]
-  (1.65, 3.12)
-  .. controls (1.82,3.15) and (1.95,3.60) .. (2.12, 4.20)
-  .. controls (2.29,3.60) and (2.42,3.15) .. (2.62, 3.12);
+% Shallow peak (amber fill) — bbox x=1.57-4.97, y=3.64-4.83
+% wide asymmetric lobe peaking near x=2.27 matching reference
+\fill[cAmber!25]
+  (1.57, 3.64)
+  .. controls (1.72,3.66) and (1.90,4.10) .. (2.27, 4.83)
+  .. controls (2.64,4.10) and (3.50,3.68) .. (4.97, 3.64)
+  -- (1.57, 3.64) -- cycle;
+\draw[cAmber!80!black, line width=0.9pt]
+  (1.57, 3.64)
+  .. controls (1.72,3.66) and (1.90,4.10) .. (2.27, 4.83)
+  .. controls (2.64,4.10) and (3.50,3.68) .. (4.97, 3.64);
 
-% Deep peak (purple fill)
+% Deep peak (purple fill) — bbox x=1.52-3.27, y=3.62-4.32
 \fill[cBlue!45!cRed!22]
-  (2.58, 3.12)
-  .. controls (2.72,3.15) and (2.85,3.50) .. (3.00, 3.88)
-  .. controls (3.15,3.50) and (3.28,3.15) .. (3.48, 3.12)
-  -- (2.58, 3.12) -- cycle;
+  (1.52, 3.62)
+  .. controls (1.78,3.66) and (2.05,3.88) .. (2.40, 4.32)
+  .. controls (2.75,3.88) and (3.02,3.66) .. (3.27, 3.62)
+  -- (1.52, 3.62) -- cycle;
 \draw[cBlue!45!cRed, line width=0.9pt]
-  (2.58, 3.12)
-  .. controls (2.72,3.15) and (2.85,3.50) .. (3.00, 3.88)
-  .. controls (3.15,3.50) and (3.28,3.15) .. (3.48, 3.12);
+  (1.52, 3.62)
+  .. controls (1.78,3.66) and (2.05,3.88) .. (2.40, 4.32)
+  .. controls (2.75,3.88) and (3.02,3.66) .. (3.27, 3.62);
 
 % g(Et) arrow out
 \draw[cAmber!80!black, line width=0.8pt, -{Stealth[length=3.5pt,width=2.5pt]}]
@@ -127,8 +128,8 @@
 
 % Panel 2 drift-gate title and band labels (positions locked)
 \node[panelTitle] at (0.55, 3.85) {ISPD\\inference};
-\node[band] at (1.90, 3.47) {shallow};
-\node[band] at (2.83, 3.47) {deep};
+\node[band, text=cAmber!80!black] at (1.90, 3.47) {shallow};
+\node[band, text=cBlue!45!cRed] at (2.83, 3.47) {deep};
 
 % ================================================================
 % PANEL 3 — Discharge evidence (Debye decay)
