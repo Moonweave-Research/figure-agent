@@ -10,7 +10,7 @@ Quality kernel responsibilities:
 
 1. **Style Lock** — palette / font / stroke / macro-usage consistency across a manuscript's figures.
 2. **Compile & Export reliability** — deterministic PDF / SVG / TIFF / PNG output with stale-artifact detection.
-3. **Visual QA** — collision and visual-clash checks; spec-driven golden-fixture artifact gates.
+3. **Visual QA** — collision, visual-clash, and (when Layer 2.5 hints exist) reference-vs-build layout drift checks; spec-driven golden-fixture artifact gates.
 4. **Reproducibility** — per-figure folder contract, transparent state inference (`/fig_status`), explicit export tracking policy for golden fixtures.
 
 Plugin does **not**:
@@ -26,7 +26,7 @@ Plugin does **not**:
 /fig_extract <name>   optional Layer 2.5 — OCR + palette shape clusters from reference PNG
                       → coordinate_hints.yaml (recommended when spec.yaml.reference_image exists)
                       [user/LLM authors examples/<name>/<name>.tex]
-/fig_compile <name>   lint + lualatex + collision/clash checks
+/fig_compile <name>   lint + lualatex + collision/clash/(optional drift) checks
 /fig_export <name>    PDF / SVG / TIFF / PNG export
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```

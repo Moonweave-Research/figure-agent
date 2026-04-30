@@ -59,6 +59,9 @@ rm -f "$PDF_OUT" "$PNG_OUT"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
 uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+if [[ -f "coordinate_hints.yaml" ]]; then
+  uv run python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
+fi
 trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

@@ -120,5 +120,6 @@ redirect to matplotlib?"):
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
 - Compile chain: `scripts/compile.sh` (lualatex; optional `FIGURE_AGENT_STRICT=1`
   hard gate)
-- Checks: `scripts/check_collisions.py`, `scripts/check_visual_clash.py`
+- Checks: `scripts/check_collisions.py`, `scripts/check_visual_clash.py`,
+  `scripts/check_layout_drift.py` (auto-fires when `coordinate_hints.yaml` exists)
 - Export: `scripts/export_svg.sh`, `scripts/svg_to_png.sh`
