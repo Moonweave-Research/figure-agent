@@ -35,6 +35,15 @@ KNOWN_NON_PALETTE_COLORS: frozenset[str] = frozenset(
 _RE_DEFINECOLOR = re.compile(r"\\definecolor\b")
 _RE_FONT_OVERRIDE = re.compile(r"\\(setmainfont|setsansfont|setmonofont)\b")
 _RE_RAW_HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
+# Match `\usepackage{polymer-paper-preamble}`, `\RequirePackage{...}`, and
+# `\input{...polymer-paper-preamble...}` with optional [option] block.
+_RE_PREAMBLE_IMPORT = re.compile(
+    r"\\(?:usepackage|RequirePackage|input)\b[^{]*\{[^}]*polymer-paper-preamble[^}]*\}"
+)
+# Document-boundary detection: only enforce preamble import when the file
+# represents a real compilable document (has \documentclass or \begin{document}).
+# Test snippets like `\node[fill=cAmber] {};` are intentionally exempt.
+_RE_DOCUMENT_BOUNDARY = re.compile(r"\\documentclass\b|\\begin\s*\{document\}")
 _RE_OPTION_BLOCK = re.compile(r"\[([^\[\]]*)\]")
 _RE_KEY_VALUE = re.compile(r"^\s*(fill|draw|text|color)\s*=\s*\{?([!\w]+)\}?\s*$")
 _RE_BARE_TOKEN = re.compile(r"^\s*([A-Za-z][A-Za-z0-9]*)\s*$")
@@ -226,6 +235,24 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                     "to author flagship-compliant TikZ"
                 ),
                 severity="warn",
+            )
+        )
+
+    joined_stripped = "\n".join(stripped_lines)
+    if _RE_DOCUMENT_BOUNDARY.search(joined_stripped) and not _RE_PREAMBLE_IMPORT.search(
+        joined_stripped
+    ):
+        violations.append(
+            Violation(
+                line=1,
+                category="missing_preamble",
+                snippet="<file>",
+                message=(
+                    "polymer-paper-preamble not imported; add "
+                    "\\usepackage{polymer-paper-preamble} to the preamble so "
+                    "Style Lock palette and macros are available"
+                ),
+                severity="blocker",
             )
         )
 

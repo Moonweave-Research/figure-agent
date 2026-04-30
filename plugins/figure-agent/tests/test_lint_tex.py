@@ -22,6 +22,86 @@ def _blockers(tex_path: Path) -> list:
     return [v for v in lint(tex_path) if v.severity == "blocker"]
 
 
+_DOC_HEADER_WITH_PREAMBLE = (
+    r"\documentclass[border=4pt]{standalone}"
+    "\n"
+    r"\usepackage{polymer-paper-preamble}"
+    "\n"
+    r"\begin{document}"
+    "\n"
+)
+_DOC_FOOTER = "\n" + r"\end{document}" + "\n"
+
+
+def test_missing_preamble_blocker_when_document_boundary_present(tmp_path: Path) -> None:
+    """A real \\documentclass-bearing file without the preamble import must
+    fail Style Lock; otherwise the palette and flagship macros it claims to
+    enforce are not actually available at compile time."""
+    tex = _write(
+        tmp_path,
+        r"\documentclass[border=4pt]{standalone}"
+        "\n"
+        r"\begin{document}"
+        "\n"
+        r"\node {x};"
+        "\n"
+        r"\end{document}"
+        "\n",
+    )
+    blockers = _blockers(tex)
+    categories = [v.category for v in blockers]
+    assert "missing_preamble" in categories
+
+
+def test_preamble_import_via_usepackage_passes(tmp_path: Path) -> None:
+    tex = _write(tmp_path, _DOC_HEADER_WITH_PREAMBLE + r"\node {x};" + _DOC_FOOTER)
+    categories = [v.category for v in _blockers(tex)]
+    assert "missing_preamble" not in categories
+
+
+def test_preamble_import_via_requirepackage_passes(tmp_path: Path) -> None:
+    tex = _write(
+        tmp_path,
+        r"\documentclass[border=4pt]{standalone}"
+        "\n"
+        r"\RequirePackage{polymer-paper-preamble}"
+        "\n"
+        r"\begin{document}"
+        "\n"
+        r"\node {x};"
+        "\n"
+        r"\end{document}"
+        "\n",
+    )
+    categories = [v.category for v in _blockers(tex)]
+    assert "missing_preamble" not in categories
+
+
+def test_commented_preamble_import_does_not_satisfy(tmp_path: Path) -> None:
+    """A commented-out preamble import must not silently pass the gate."""
+    tex = _write(
+        tmp_path,
+        r"\documentclass[border=4pt]{standalone}"
+        "\n"
+        r"% \usepackage{polymer-paper-preamble}"
+        "\n"
+        r"\begin{document}"
+        "\n"
+        r"\end{document}"
+        "\n",
+    )
+    categories = [v.category for v in _blockers(tex)]
+    assert "missing_preamble" in categories
+
+
+def test_snippet_without_document_boundary_skips_preamble_check(tmp_path: Path) -> None:
+    """Test snippets without \\documentclass or \\begin{document} are exempt
+    from the preamble check so legacy unit-test snippets do not break."""
+    tex = _write(tmp_path, r"\node[fill=cAmber] {};" + "\n")
+    categories = [v.category for v in _blockers(tex)]
+    assert "missing_preamble" not in categories
+
+
 def test_clean_palette_only_no_violations(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"\node[fill=cAmber] {};" + "\n")
     assert _blockers(tex) == []
