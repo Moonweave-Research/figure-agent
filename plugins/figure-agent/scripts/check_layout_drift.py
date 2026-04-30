@@ -67,25 +67,120 @@ def _phrase_tokens(phrase: str) -> list[str]:
     return [_normalize_token(t) for t in phrase.split() if _normalize_token(t)]
 
 
+# Spatial matching tolerance. The step distance between two phrase tokens is
+# accepted when it falls within `SPATIAL_TOL × max(any label dimension)`. A
+# single center-distance metric handles both layouts that occur in practice:
+# horizontal flow (same row, separated by a small gap) and vertical wrap
+# (line break inside a multi-word phrase, where dy ≈ 1–2 × label height).
+# OCR output ordering is not phrase-aware — noise tokens get interleaved —
+# so geometry beats list contiguity.
+SPATIAL_TOL = 2.5
+
+
+def _word_center(word: dict) -> tuple[float, float]:
+    return (
+        0.5 * (word["xmin"] + word["xmax"]),
+        0.5 * (word["ymin"] + word["ymax"]),
+    )
+
+
+def _word_max_dim(word: dict) -> float:
+    return max(
+        word["xmax"] - word["xmin"],
+        word["ymax"] - word["ymin"],
+        1.0,
+    )
+
+
+def _spatial_neighbor(
+    prev: dict,
+    candidates: list[dict],
+    *,
+    tol: float = SPATIAL_TOL,
+) -> dict | None:
+    """Pick the closest candidate within ``tol × max label dimension`` of prev.
+
+    Returns the candidate with smallest center-to-center distance, or None
+    when no candidate is close enough. Using max-dim instead of separate
+    row/col bounds collapses horizontal-flow and vertical-wrap into one
+    metric — both reflect "tokens that visually belong to one phrase".
+    """
+    prev_cx, prev_cy = _word_center(prev)
+    best: dict | None = None
+    best_dist: float | None = None
+    for cand in candidates:
+        cand_cx, cand_cy = _word_center(cand)
+        dist = math.dist((prev_cx, prev_cy), (cand_cx, cand_cy))
+        budget = tol * max(_word_max_dim(prev), _word_max_dim(cand))
+        if dist > budget:
+            continue
+        if best_dist is None or dist < best_dist:
+            best = cand
+            best_dist = dist
+    return best
+
+
 def _find_phrase_in_words(
     phrase_tokens: list[str], words: list[dict]
 ) -> tuple[float, float, float, float] | None:
-    """Find the first contiguous run of words whose normalized tokens match.
+    """Find the spatially closest chain of words matching ``phrase_tokens``.
 
-    Returns the union bbox of matched words, or None.
+    For each candidate start, walks the phrase token-by-token, picking the
+    nearest same-row neighbor for each next token. The chain with the
+    smallest total step distance wins. Returns the union bbox, or None if
+    any token has no spatially compatible neighbor.
+
+    Single-token phrases fall back to the first match (no spatial constraint
+    available with one word).
     """
     if not phrase_tokens or not words:
         return None
     norm = [_normalize_token(w["text"]) for w in words]
-    n = len(phrase_tokens)
-    for i in range(0, len(words) - n + 1):
-        if norm[i : i + n] == phrase_tokens:
-            xs0 = min(words[i + k]["xmin"] for k in range(n))
-            ys0 = min(words[i + k]["ymin"] for k in range(n))
-            xs1 = max(words[i + k]["xmax"] for k in range(n))
-            ys1 = max(words[i + k]["ymax"] for k in range(n))
-            return (xs0, ys0, xs1, ys1)
-    return None
+    starts = [words[i] for i, tok in enumerate(norm) if tok == phrase_tokens[0]]
+    if not starts:
+        return None
+
+    if len(phrase_tokens) == 1:
+        chain = [starts[0]]
+    else:
+        best_chain: list[dict] | None = None
+        best_score: float | None = None
+        for start in starts:
+            chain = [start]
+            ok = True
+            for next_tok in phrase_tokens[1:]:
+                used_ids = {id(w) for w in chain}
+                pool = [
+                    words[i]
+                    for i, tok in enumerate(norm)
+                    if tok == next_tok and id(words[i]) not in used_ids
+                ]
+                if not pool:
+                    ok = False
+                    break
+                picked = _spatial_neighbor(chain[-1], pool)
+                if picked is None:
+                    ok = False
+                    break
+                chain.append(picked)
+            if not ok:
+                continue
+            score = sum(
+                math.dist(_word_center(chain[i]), _word_center(chain[i + 1]))
+                for i in range(len(chain) - 1)
+            )
+            if best_score is None or score < best_score:
+                best_chain = chain
+                best_score = score
+        if best_chain is None:
+            return None
+        chain = best_chain
+
+    xs0 = min(w["xmin"] for w in chain)
+    ys0 = min(w["ymin"] for w in chain)
+    xs1 = max(w["xmax"] for w in chain)
+    ys1 = max(w["ymax"] for w in chain)
+    return (xs0, ys0, xs1, ys1)
 
 
 def _hints_to_word_list(hints: dict) -> list[dict]:

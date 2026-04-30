@@ -60,6 +60,85 @@ def test_phrase_matches_consecutive_words():
     assert r.drift == pytest.approx(0.0, abs=1e-6)
 
 
+def test_phrase_matches_through_ocr_noise_token():
+    """OCR slips noise tokens between phrase words; spatial matching tolerates it."""
+    hints = _hints(
+        [
+            {"text": "Mathematical", "bbox": [100, 100, 250, 130], "conf": 95.0},
+            {"text": "@@", "bbox": [10, 110, 30, 125], "conf": 40.0},  # spurious
+            {"text": "interpretation", "bbox": [255, 100, 420, 130], "conf": 95.0},
+        ]
+    )
+    pdf_words = [
+        _word("Mathematical", 100, 100, 250, 130),
+        _word("interpretation", 255, 100, 420, 130),
+    ]
+    results = check_layout_drift.evaluate_drift(
+        ["Mathematical interpretation"], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert results[0].status == "matched_ok"
+
+
+def test_phrase_matches_when_pdf_wraps_phrase_to_two_lines():
+    """PDF often line-wraps multi-word labels; spatial center-distance handles it."""
+    hints = _hints(
+        [
+            {"text": "Mathematical", "bbox": [100, 100, 250, 130], "conf": 95.0},
+            {"text": "interpretation", "bbox": [100, 132, 250, 162], "conf": 95.0},
+        ]
+    )
+    pdf_words = [
+        # Wrapped: x ranges align, dy ≈ 1.3 × line height
+        _word("Mathematical", 100, 100, 250, 130),
+        _word("interpretation", 100, 140, 250, 170),
+    ]
+    results = check_layout_drift.evaluate_drift(
+        ["Mathematical interpretation"], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert results[0].status == "matched_ok"
+
+
+def test_phrase_disambiguates_origin_per_neighbor():
+    """Same 'origin' bbox set must match the closer prefix per call."""
+    hints = _hints(
+        [
+            {"text": "chemical", "bbox": [100, 800, 220, 830], "conf": 95.0},
+            {"text": "physical", "bbox": [400, 800, 510, 830], "conf": 95.0},
+            {"text": "origin", "bbox": [225, 800, 320, 830], "conf": 95.0},
+            {"text": "origin", "bbox": [515, 800, 610, 830], "conf": 95.0},
+        ]
+    )
+    pdf_words = [
+        _word("chemical", 100, 800, 220, 830),
+        _word("physical", 400, 800, 510, 830),
+        _word("origin", 225, 800, 320, 830),
+        _word("origin", 515, 800, 610, 830),
+    ]
+    # Pass each as its own required label (not as alternates)
+    results = check_layout_drift.evaluate_drift(
+        ["chemical origin", "physical origin"], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert all(r.status == "matched_ok" for r in results)
+    # Both should resolve to drift = 0 because the same bboxes are used
+    assert results[0].drift == pytest.approx(0.0, abs=1e-6)
+    assert results[1].drift == pytest.approx(0.0, abs=1e-6)
+
+
+def test_phrase_rejected_when_tokens_too_far_apart():
+    """Tokens scattered across the canvas should not collapse into one phrase."""
+    hints = _hints(
+        [
+            {"text": "Mathematical", "bbox": [10, 10, 100, 30], "conf": 95.0},
+            {"text": "interpretation", "bbox": [800, 800, 950, 820], "conf": 95.0},
+        ]
+    )
+    pdf_words: list[dict] = []
+    results = check_layout_drift.evaluate_drift(
+        ["Mathematical interpretation"], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert results[0].status == "uncovered_both"
+
+
 def test_alternates_match_when_first_form_misses():
     hints = _hints([{"text": "et", "bbox": [600, 600, 640, 630], "conf": 88.0}])
     pdf_words = [_word("et", 600, 600, 640, 630)]
