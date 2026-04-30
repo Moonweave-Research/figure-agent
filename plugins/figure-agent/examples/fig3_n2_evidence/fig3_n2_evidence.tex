@@ -97,17 +97,16 @@
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray, rotate=90]
   at (1.45, 3.85) {$g(E_t)$};
 
-% Shallow peak (amber fill) — bbox x=1.57-4.97, y=3.64-4.83
-% wide asymmetric lobe peaking near x=2.27 matching reference
+% Shallow peak (amber fill) — bbox x=1.57-2.28, y=3.64-4.35 (ispd_lobes v0.3)
 \fill[cAmber!25]
   (1.57, 3.64)
-  .. controls (1.72,3.66) and (1.90,4.10) .. (2.27, 4.83)
-  .. controls (2.64,4.10) and (3.50,3.68) .. (4.97, 3.64)
+  .. controls (1.64,3.66) and (1.72,4.05) .. (1.92, 4.35)
+  .. controls (2.12,4.05) and (2.20,3.66) .. (2.28, 3.64)
   -- (1.57, 3.64) -- cycle;
 \draw[cAmber!80!black, line width=0.9pt]
   (1.57, 3.64)
-  .. controls (1.72,3.66) and (1.90,4.10) .. (2.27, 4.83)
-  .. controls (2.64,4.10) and (3.50,3.68) .. (4.97, 3.64);
+  .. controls (1.64,3.66) and (1.72,4.05) .. (1.92, 4.35)
+  .. controls (2.12,4.05) and (2.20,3.66) .. (2.28, 3.64);
 
 % Deep peak (purple fill) — bbox x=1.52-3.27, y=3.62-4.32
 \fill[cBlue!45!cRed!22]

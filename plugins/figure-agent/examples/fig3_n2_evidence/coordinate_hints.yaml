@@ -1,6 +1,6 @@
 metadata:
   extraction_version: '0.3'
-  created_at: '2026-04-30T14:57:27+00:00'
+  created_at: '2026-04-30T15:26:25+00:00'
   reference_image_path: reference/golden_target_002.png
   reference_image_hash: sha256:5a9f045e04ab1e753aa9c247478fce4b4be8e05fd9e7ba770036418ab8427a5e
   ocr_status: ok
@@ -1058,8 +1058,8 @@ structural_regions:
     bbox_cm:
     - 1.57
     - 3.64
-    - 4.97
-    - 4.83
+    - 2.28
+    - 4.35
   - level_role: deep
     color_family: purple
     bbox_cm:

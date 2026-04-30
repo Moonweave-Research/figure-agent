@@ -650,6 +650,7 @@ def structural_regions_from_reference(
     orange_arc = next((a for a in panel_arcs if a["color_family"] == "orange"), None)
     if orange_arc:
         oax1, oay1, oax2, oay2 = orange_arc["bbox_cm"]
+        panel_center_x = (oax1 + oax2) / 2  # ≈3.075 for fig3_n2_evidence
         for fam, role in [("orange", "shallow"), ("purple", "deep")]:
             all_inside = []
             for path_info in raw_paths.get(fam, []):
@@ -659,6 +660,11 @@ def structural_regions_from_reference(
                 xc = path_info["x_center_cm"]
                 yc = path_info["y_center_cm"]
                 if not (oax1 <= xc <= oax2 and oay1 <= yc <= oay2):
+                    continue
+                # Exclude arrow exit paths (right half of panel).
+                # Bell curves sit left of panel center; the "→ g(Et)" arrow
+                # exit region (x=2.79-4.97) inflates the union bbox otherwise.
+                if xc > panel_center_x:
                     continue
                 all_inside.append(path_info)
             if all_inside:
