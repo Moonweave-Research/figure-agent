@@ -1,6 +1,6 @@
 metadata:
-  extraction_version: '0.2'
-  created_at: '2026-04-30T14:34:48+00:00'
+  extraction_version: '0.3'
+  created_at: '2026-04-30T14:57:27+00:00'
   reference_image_path: reference/golden_target_002.png
   reference_image_hash: sha256:5a9f045e04ab1e753aa9c247478fce4b4be8e05fd9e7ba770036418ab8427a5e
   ocr_status: ok
@@ -835,6 +835,18 @@ structural_regions:
   - 929
   cm_per_px: 0.00827
   panel_arcs:
+  - color_family: purple
+    bbox_px:
+    - 128
+    - 235
+    - 1650
+    - 897
+    bbox_cm:
+    - 1.06
+    - 0.26
+    - 13.64
+    - 5.74
+    area_cm2: 68.94
   - color_family: blue
     bbox_px:
     - 142
@@ -847,18 +859,6 @@ structural_regions:
     - 4.81
     - 7.65
     area_cm2: 9.95
-  - color_family: purple
-    bbox_px:
-    - 128
-    - 561
-    - 559
-    - 897
-    bbox_cm:
-    - 1.06
-    - 0.26
-    - 4.62
-    - 3.04
-    area_cm2: 9.9
   - color_family: orange
     bbox_px:
     - 142
@@ -1022,3 +1022,63 @@ structural_regions:
     y_cm: 4.59
     w_cm: 0.26
     h_cm: 0.02
+  plot_boxes:
+  - panel_family: blue
+    bbox_cm:
+    - 1.92
+    - 5.55
+    - 3.99
+    - 7.19
+  - panel_family: purple
+    bbox_cm:
+    - 1.85
+    - 0.97
+    - 3.84
+    - 2.62
+  plot_curves:
+  - panel_family: blue
+    element: power_law_line
+    color_family: blue
+    bbox_cm:
+    - 2.05
+    - 5.74
+    - 3.81
+    - 7.1
+  - panel_family: purple
+    element: debye_decay_curve
+    color_family: gray
+    bbox_cm:
+    - 1.99
+    - 1.24
+    - 3.61
+    - 2.48
+  ispd_lobes:
+  - level_role: shallow
+    color_family: orange
+    bbox_cm:
+    - 1.57
+    - 3.64
+    - 4.97
+    - 4.83
+  - level_role: deep
+    color_family: purple
+    bbox_cm:
+    - 1.52
+    - 3.62
+    - 3.27
+    - 4.32
+  right_gaussians:
+  - level_role: shallow
+    fill_hex: '#FACAA9'
+    bbox_cm:
+    - 12.26
+    - 4.17
+    - 12.96
+    - 5.67
+  - level_role: deep
+    fill_hex: '#6B3F99'
+    bbox_cm:
+    - 12.26
+    - 2.91
+    - 13.04
+    - 3.98

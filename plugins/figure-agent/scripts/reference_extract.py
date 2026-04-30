@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from inputs import parse_spec  # noqa: E402
 
-EXTRACTION_VERSION = "0.2"
+EXTRACTION_VERSION = "0.3"
 
 # polymer-paper-preamble.sty palette. Keep in sync with the .sty file; if a new
 # palette color is added there, add it here too (no automatic discovery yet).
@@ -203,7 +203,7 @@ def _classify_color_family(r: int, g: int, b: int) -> str | None:
         return "blue"
     if r > 160 and g > 80 and b < 100 and r > g + 40:
         return "orange"
-    if r > 100 and b > r - 40 and b > g + 30 and r < 170:
+    if r > 100 and b > r - 40 and b > g + 30 and r < 225:
         return "purple"
     if g > 90 and b > 80 and r < 80:
         return "teal"
@@ -250,6 +250,11 @@ def structural_regions_from_reference(
       'ok'          — extraction succeeded; panel_arcs / border_boxes / chain_rows populated.
       'unavailable' — vtracer Python package not importable.
       'failed'      — vtracer available but extraction raised an exception.
+
+      plot_boxes[]     Large gray axis-background rectangles inside each evidence panel arc.
+      plot_curves[]    Curve bounding boxes: power-law line (panel blue) and Debye decay (panel purple).
+      ispd_lobes[]     ISPD bell curve bounding boxes: shallow (orange) and deep (purple/lavender).
+      right_gaussians[] g(Et) sideways Gaussians in band diagram: shallow (peach) and deep (purple).
     """
     try:
         import vtracer as _vtracer
@@ -536,6 +541,197 @@ def structural_regions_from_reference(
 
     trap_levels.sort(key=lambda t: -t["y_cm"])  # top to bottom (TikZ: high y = top)
 
+    # plot_boxes: axis background rectangles inside each panel arc
+    # Detected as large gray rects (chain_gray, area 25k-60k px², aspect < 4)
+    PLOT_BOX_MIN_AREA = 40000
+    PLOT_BOX_MAX_AREA = 60000
+    PLOT_BOX_MAX_ASPECT = 4.0
+
+    plot_boxes: list[dict] = []
+    for path_info in raw_paths.get("chain_gray", []):
+        area = path_info["area_px2"]
+        if not (PLOT_BOX_MIN_AREA <= area <= PLOT_BOX_MAX_AREA):
+            continue
+        w_px, h_px = path_info["w_px"], path_info["h_px"]
+        if h_px == 0:
+            continue
+        if max(w_px / h_px, h_px / w_px) > PLOT_BOX_MAX_ASPECT:
+            continue
+        xc = path_info["x_center_cm"]
+        yc = path_info["y_center_cm"]
+        for arc in panel_arcs:
+            bx1, by1, bx2, by2 = arc["bbox_cm"]
+            if bx1 <= xc <= bx2 and by1 <= yc <= by2:
+                plot_boxes.append(
+                    {
+                        "panel_family": arc["color_family"],
+                        "bbox_cm": [
+                            round(path_info["x1_cm"], 2),
+                            round(path_info["y1_cm"], 2),
+                            round(path_info["x2_cm"], 2),
+                            round(path_info["y2_cm"], 2),
+                        ],
+                    }
+                )
+                break
+
+    # plot_curves: colored/gray curve paths inside panel arc bboxes
+    # Panel ①: blue power-law line (area 15k-45k px², inside blue arc)
+    # Panel ③: gray Debye decay (area 15k-45k px², chain_gray, y < 3.5 cm, inside purple arc)
+    PLOT_CURVE_MIN_AREA = 15000
+    PLOT_CURVE_MAX_AREA = 45000
+
+    plot_curves: list[dict] = []
+
+    # Panel ① power-law line (blue family)
+    for path_info in raw_paths.get("blue", []):
+        area = path_info["area_px2"]
+        if not (PLOT_CURVE_MIN_AREA <= area <= PLOT_CURVE_MAX_AREA):
+            continue
+        xc = path_info["x_center_cm"]
+        yc = path_info["y_center_cm"]
+        if xc > 3.5:  # arc 파편(x_center≈4.13) 제외
+            continue
+        for arc in panel_arcs:
+            if arc["color_family"] != "blue":
+                continue
+            bx1, by1, bx2, by2 = arc["bbox_cm"]
+            if bx1 <= xc <= bx2 and by1 <= yc <= by2:
+                plot_curves.append(
+                    {
+                        "panel_family": "blue",
+                        "element": "power_law_line",
+                        "color_family": "blue",
+                        "bbox_cm": [
+                            round(path_info["x1_cm"], 2),
+                            round(path_info["y1_cm"], 2),
+                            round(path_info["x2_cm"], 2),
+                            round(path_info["y2_cm"], 2),
+                        ],
+                    }
+                )
+                break
+
+    # Panel ③ Debye decay curve (chain_gray, lower y region)
+    for path_info in raw_paths.get("chain_gray", []):
+        area = path_info["area_px2"]
+        if not (PLOT_CURVE_MIN_AREA <= area <= PLOT_CURVE_MAX_AREA):
+            continue
+        yc = path_info["y_center_cm"]
+        if yc > 3.5:  # Panel ③ is at y=0.26-3.04
+            continue
+        xc = path_info["x_center_cm"]
+        for arc in panel_arcs:
+            if arc["color_family"] != "purple":
+                continue
+            bx1, by1, bx2, by2 = arc["bbox_cm"]
+            if bx1 <= xc <= bx2 and by1 <= yc <= by2:
+                plot_curves.append(
+                    {
+                        "panel_family": "purple",
+                        "element": "debye_decay_curve",
+                        "color_family": "gray",
+                        "bbox_cm": [
+                            round(path_info["x1_cm"], 2),
+                            round(path_info["y1_cm"], 2),
+                            round(path_info["x2_cm"], 2),
+                            round(path_info["y2_cm"], 2),
+                        ],
+                    }
+                )
+                break
+
+    # ispd_lobes: ISPD panel (orange arc) bell curve lobes
+    # Shallow (orange, area 2k-30k px²), Deep (purple/lavender, area 2k-25k px²)
+    ISPD_MIN_AREA = 2000
+    ISPD_MAX_AREA = 30000
+
+    ispd_lobes: list[dict] = []
+    orange_arc = next((a for a in panel_arcs if a["color_family"] == "orange"), None)
+    if orange_arc:
+        oax1, oay1, oax2, oay2 = orange_arc["bbox_cm"]
+        for fam, role in [("orange", "shallow"), ("purple", "deep")]:
+            all_inside = []
+            for path_info in raw_paths.get(fam, []):
+                area = path_info["area_px2"]
+                if not (ISPD_MIN_AREA <= area <= ISPD_MAX_AREA):
+                    continue
+                xc = path_info["x_center_cm"]
+                yc = path_info["y_center_cm"]
+                if not (oax1 <= xc <= oax2 and oay1 <= yc <= oay2):
+                    continue
+                all_inside.append(path_info)
+            if all_inside:
+                x1s = [p["x1_cm"] for p in all_inside]
+                y1s = [p["y1_cm"] for p in all_inside]
+                x2s = [p["x2_cm"] for p in all_inside]
+                y2s = [p["y2_cm"] for p in all_inside]
+                ispd_lobes.append(
+                    {
+                        "level_role": role,
+                        "color_family": fam,
+                        "bbox_cm": [
+                            round(min(x1s), 2),
+                            round(min(y1s), 2),
+                            round(max(x2s), 2),
+                            round(max(y2s), 2),
+                        ],
+                    }
+                )
+
+    # right_gaussians: g(Et) Gaussian shapes in band diagram right zone
+    # Detected by position (x>12 cm, inside teal border) and shape (h > w)
+    # Covers unclassified peach (#FACAA9 shallow) and purple (#6B3F99 deep)
+    RIGHT_GAUSS_MIN_AREA = 8000
+    RIGHT_GAUSS_MAX_AREA = 22000
+    RIGHT_GAUSS_MIN_X_CM = 12.0
+
+    right_gaussians: list[dict] = []
+    if border_boxes:
+        tb_x1, tb_y1, tb_x2, tb_y2 = border_boxes[0]["bbox_cm"]
+        tb_mid_y = (tb_y1 + tb_y2) / 2
+
+        for path_elem in root.findall(".//svg:path", ns):
+            fill = path_elem.get("fill", "")
+            if not fill.startswith("#") or len(fill) != 7:
+                continue
+            tr_val = path_elem.get("transform", "")
+            m_tr = re.search(r"translate\(([^,]+),([^)]+)\)", tr_val)
+            tx_r = float(m_tr.group(1)) if m_tr else 0.0
+            ty_r = float(m_tr.group(2)) if m_tr else 0.0
+            bb_r = _path_global_bbox(path_elem.get("d", ""), tx_r, ty_r)
+            if bb_r is None:
+                continue
+            rx1, ry1, rx2, ry2 = bb_r
+            area_r = (rx2 - rx1) * (ry2 - ry1)
+            if not (RIGHT_GAUSS_MIN_AREA <= area_r <= RIGHT_GAUSS_MAX_AREA):
+                continue
+            rxc_cm = (rx1 + rx2) / 2 * cm_per_px
+            ryc_cm = (img_h - (ry1 + ry2) / 2) * cm_per_px
+            if not (RIGHT_GAUSS_MIN_X_CM <= rxc_cm <= tb_x2):
+                continue
+            if not (tb_y1 <= ryc_cm <= tb_y2):
+                continue
+            # Shape filter: taller than wide (h/w > 1.0) — excludes wide teal bars
+            w_r = (rx2 - rx1) * cm_per_px
+            h_r = (ry2 - ry1) * cm_per_px
+            if w_r == 0 or h_r / w_r < 1.0:
+                continue
+            level = "shallow" if ryc_cm > tb_mid_y else "deep"
+            right_gaussians.append(
+                {
+                    "level_role": level,
+                    "fill_hex": fill,
+                    "bbox_cm": [
+                        round(rx1 * cm_per_px, 2),
+                        round((img_h - ry2) * cm_per_px, 2),
+                        round(rx2 * cm_per_px, 2),
+                        round((img_h - ry1) * cm_per_px, 2),
+                    ],
+                }
+            )
+        right_gaussians.sort(key=lambda g: -g["bbox_cm"][3])  # top y first
+
     return {
         "status": "ok",
         "image_px": [img_w, img_h],
@@ -545,6 +741,10 @@ def structural_regions_from_reference(
         "chain_rows": chain_rows,
         "s_atoms": s_atoms,
         "trap_levels": trap_levels,
+        "plot_boxes": plot_boxes,
+        "plot_curves": plot_curves,
+        "ispd_lobes": ispd_lobes,
+        "right_gaussians": right_gaussians,
     }
 
 
