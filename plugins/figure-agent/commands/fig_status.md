@@ -42,6 +42,9 @@ Notes that may appear:
 - `stale_export` — `<name>.tex`, `briefing.md`, or the style lock is newer than the export artifacts; re-run `/fig_compile` then `/fig_export`.
 - `selected_preview_missing` — `spec.yaml` names a preview that is not in `previews/`.
 - `reference_image_missing` — `spec.yaml` names a `reference_image` path that is not present relative to the example directory.
+- `coordinate_hints_missing` — `reference_image` exists but no `coordinate_hints.yaml` has been generated; run `/fig_extract <name>` (Layer 2.5).
+- `coordinate_hints_stale` — `coordinate_hints.yaml` is older than the reference image; re-run `/fig_extract <name> --rebuild`.
+- `coordinate_hints_parse_error` — `coordinate_hints.yaml` is not valid YAML; regenerate with `/fig_extract <name> --rebuild`.
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
 
 Freshness source set matches `/fig_review`: `<name>.tex`, `briefing.md`, and `styles/polymer-paper-preamble.sty`. Editing any of these without recompiling marks the build pdf or exports as stale.

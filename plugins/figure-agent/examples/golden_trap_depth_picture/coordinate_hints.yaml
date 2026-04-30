@@ -1,0 +1,670 @@
+metadata:
+  extraction_version: '0.1'
+  created_at: '2026-04-30T02:50:16+00:00'
+  reference_image_path: reference/golden_target_001.png
+  reference_image_hash: sha256:3e9e54ca0cd4f7c9c57f4f543b574cb16b71f04f5312fb5235197fefdcaa57f2
+  ocr_status: ok
+  parameters:
+    min_component_pixels: 200
+    ocr_confidence_floor: 30.0
+    group_thresholds:
+      specific: 55
+      broad: 55
+      gray: 35
+reference_image_size:
+- 1693
+- 929
+text_labels:
+- text: Discharge
+  bbox:
+  - 753
+  - 59
+  - 833
+  - 80
+  conf: 96.550201
+- text: (Debye
+  bbox:
+  - 841
+  - 59
+  - 898
+  - 80
+  conf: 96.995522
+- text: reference)
+  bbox:
+  - 904
+  - 58
+  - 986
+  - 79
+  conf: 96.837013
+- text: 10!
+  bbox:
+  - 684
+  - 83
+  - 702
+  - 100
+  conf: 73.085548
+- text: '0'
+  bbox:
+  - 699
+  - 116
+  - 704
+  - 126
+  conf: 83.047188
+- text: '='
+  bbox:
+  - 643
+  - 138
+  - 666
+  - 165
+  conf: 83.907288
+- text: converged
+  bbox:
+  - 1321
+  - 129
+  - 1429
+  - 155
+  conf: 93.272919
+- text: trap-depth
+  bbox:
+  - 1438
+  - 129
+  - 1548
+  - 155
+  conf: 93.199638
+- text: picture
+  bbox:
+  - 1557
+  - 129
+  - 1629
+  - 155
+  conf: 96.999352
+- text: '2.'
+  bbox:
+  - 643
+  - 167
+  - 705
+  - 193
+  conf: 50.0411
+- text: Debye
+  bbox:
+  - 760
+  - 169
+  - 811
+  - 190
+  conf: 96.952164
+- text: exp(-t/t)
+  bbox:
+  - 749
+  - 192
+  - 831
+  - 221
+  conf: 76.577545
+- text: 10°
+  bbox:
+  - 680
+  - 218
+  - 705
+  - 235
+  conf: 53.713192
+- text: (
+  bbox:
+  - 1567
+  - 234
+  - 1573
+  - 262
+  conf: 93.195793
+- text: E
+  bbox:
+  - 1576
+  - 235
+  - 1589
+  - 256
+  conf: 54.815022
+- text: )
+  bbox:
+  - 1601
+  - 234
+  - 1607
+  - 262
+  conf: 93.021149
+- text: a
+  bbox:
+  - 686
+  - 253
+  - 705
+  - 270
+  conf: 38.753853
+- text: 10%
+  bbox:
+  - 355
+  - 273
+  - 382
+  - 291
+  conf: 79.345833
+- text: 10%
+  bbox:
+  - 399
+  - 273
+  - 424
+  - 291
+  conf: 41.060387
+- text: 10°
+  bbox:
+  - 446
+  - 273
+  - 467
+  - 291
+  conf: 88.093941
+- text: 10'
+  bbox:
+  - 490
+  - 273
+  - 509
+  - 291
+  conf: 85.542648
+- text: 10?
+  bbox:
+  - 532
+  - 273
+  - 553
+  - 291
+  conf: 80.386124
+- text: '108'
+  bbox:
+  - 577
+  - 273
+  - 599
+  - 291
+  conf: 61.536644
+- text: 10%
+  bbox:
+  - 716
+  - 274
+  - 743
+  - 291
+  conf: 83.911926
+- text: 10%
+  bbox:
+  - 759
+  - 273
+  - 785
+  - 291
+  conf: 80.017868
+- text: 10°
+  bbox:
+  - 846
+  - 273
+  - 867
+  - 291
+  conf: 91.910927
+- text: 10'
+  bbox:
+  - 888
+  - 274
+  - 906
+  - 291
+  conf: 87.353401
+- text: 10?
+  bbox:
+  - 927
+  - 273
+  - 948
+  - 291
+  conf: 89.29435
+- text: 10%
+  bbox:
+  - 967
+  - 273
+  - 988
+  - 291
+  conf: 71.889587
+- text: log
+  bbox:
+  - 423
+  - 304
+  - 437
+  - 322
+  conf: 93.19635
+- text: t
+  bbox:
+  - 458
+  - 306
+  - 463
+  - 322
+  conf: 92.573326
+- text: log
+  bbox:
+  - 828
+  - 302
+  - 842
+  - 320
+  conf: 93.158272
+- text: t
+  bbox:
+  - 862
+  - 304
+  - 868
+  - 320
+  conf: 92.305313
+- text: g
+  bbox:
+  - 438
+  - 309
+  - 448
+  - 327
+  conf: 54.490898
+- text: '9'
+  bbox:
+  - 843
+  - 307
+  - 852
+  - 324
+  conf: 42.062908
+- text: '|'
+  bbox:
+  - 1255
+  - 336
+  - 1265
+  - 399
+  conf: 71.967529
+- text: a
+  bbox:
+  - 1286
+  - 361
+  - 1320
+  - 380
+  conf: 32.508564
+- text: )
+  bbox:
+  - 1580
+  - 382
+  - 1582
+  - 385
+  conf: 89.290573
+- text: shallow
+  bbox:
+  - 1598
+  - 364
+  - 1663
+  - 383
+  conf: 95.250923
+- text: t
+  bbox:
+  - 1484
+  - 402
+  - 1489
+  - 415
+  conf: 92.769386
+- text: —»
+  bbox:
+  - 407
+  - 427
+  - 479
+  - 440
+  conf: 52.537235
+- text: oor)
+  bbox:
+  - 636
+  - 409
+  - 720
+  - 432
+  conf: 37.277584
+- text: ge)
+  bbox:
+  - 852
+  - 420
+  - 907
+  - 448
+  conf: 68.190498
+- text: JA
+  bbox:
+  - 1021
+  - 407
+  - 1062
+  - 461
+  conf: 44.062237
+- text: ——|®
+  bbox:
+  - 1091
+  - 411
+  - 1268
+  - 449
+  conf: 40.336018
+- text: Mathematical
+  bbox:
+  - 36
+  - 462
+  - 157
+  - 493
+  conf: 96.131279
+- text: shallow
+  bbox:
+  - 927
+  - 475
+  - 986
+  - 494
+  conf: 87.855698
+- text: dee
+  bbox:
+  - 1025
+  - 475
+  - 1052
+  - 494
+  conf: 60.407825
+- text: a
+  bbox:
+  - 1248
+  - 451
+  - 1264
+  - 472
+  conf: 74.173943
+- text: interpretation
+  bbox:
+  - 36
+  - 496
+  - 158
+  - 519
+  conf: 95.53186
+- text: Tq
+  bbox:
+  - 667
+  - 489
+  - 689
+  - 512
+  conf: 94.890282
+- text: P
+  bbox:
+  - 1053
+  - 480
+  - 1062
+  - 499
+  conf: 77.013535
+- text: —-
+  bbox:
+  - 1273
+  - 517
+  - 1302
+  - 520
+  conf: 41.084805
+- text: _
+  bbox:
+  - 1339
+  - 523
+  - 1369
+  - 526
+  conf: 64.657951
+- text: deep
+  bbox:
+  - 1612
+  - 506
+  - 1654
+  - 530
+  conf: 96.874207
+- text: '5'
+  bbox:
+  - 245
+  - 577
+  - 254
+  - 594
+  conf: 79.719116
+- text: s
+  bbox:
+  - 365
+  - 576
+  - 374
+  - 593
+  conf: 45.282104
+- text: s
+  bbox:
+  - 473
+  - 581
+  - 483
+  - 598
+  conf: 58.200294
+- text: ee
+  bbox:
+  - 576
+  - 586
+  - 824
+  - 603
+  conf: 32.668098
+- text: VB
+  bbox:
+  - 1364
+  - 590
+  - 1387
+  - 608
+  conf: 61.556458
+- text: Z
+  bbox:
+  - 597
+  - 681
+  - 598
+  - 688
+  conf: 50.739731
+- text: '1'
+  bbox:
+  - 964
+  - 679
+  - 965
+  - 697
+  conf: 30.655113
+- text: Molecular
+  bbox:
+  - 42
+  - 697
+  - 128
+  - 734
+  conf: 96.972
+- text: '}'
+  bbox:
+  - 594
+  - 704
+  - 598
+  - 723
+  conf: 84.608452
+- text: '2.'
+  bbox:
+  - 817
+  - 694
+  - 946
+  - 723
+  conf: 35.469669
+- text: origin
+  bbox:
+  - 59
+  - 735
+  - 109
+  - 758
+  conf: 95.890457
+- text: LS
+  bbox:
+  - 467
+  - 751
+  - 484
+  - 760
+  conf: 41.882915
+- text: 2A
+  bbox:
+  - 508
+  - 743
+  - 677
+  - 762
+  conf: 38.369331
+- text: S-rich
+  bbox:
+  - 314
+  - 796
+  - 363
+  - 814
+  conf: 92.890953
+- text: segments
+  bbox:
+  - 371
+  - 797
+  - 454
+  - 819
+  conf: 95.19632
+- text: chemical
+  bbox:
+  - 572
+  - 802
+  - 641
+  - 819
+  conf: 96.65168
+- text: origin
+  bbox:
+  - 647
+  - 802
+  - 690
+  - 823
+  conf: 94.755325
+- text: J
+  bbox:
+  - 722
+  - 756
+  - 789
+  - 844
+  conf: 59.205914
+- text: physical
+  bbox:
+  - 931
+  - 801
+  - 993
+  - 822
+  conf: 96.879227
+- text: origin
+  bbox:
+  - 999
+  - 801
+  - 1042
+  - 821
+  conf: 95.475609
+- text: (electronegativity,
+  bbox:
+  - 567
+  - 830
+  - 701
+  - 850
+  conf: 91.636604
+- text: (local
+  bbox:
+  - 931
+  - 828
+  - 972
+  - 849
+  conf: 96.520363
+- text: potential
+  bbox:
+  - 977
+  - 829
+  - 1043
+  - 849
+  conf: 96.716957
+- text: polarizability
+  bbox:
+  - 567
+  - 858
+  - 663
+  - 879
+  conf: 96.889671
+- text: of
+  bbox:
+  - 669
+  - 858
+  - 684
+  - 874
+  conf: 93.306061
+- text: S)
+  bbox:
+  - 688
+  - 858
+  - 704
+  - 878
+  conf: 88.663811
+- text: fluctuations)
+  bbox:
+  - 940
+  - 856
+  - 1034
+  - 877
+  conf: 96.32373
+palette_shape_clusters:
+  cBlue:
+    target_rgb:
+    - 68
+    - 119
+    - 170
+    threshold: 55
+    match_count: 2136
+    components:
+    - bbox:
+      - 1227
+      - 161
+      - 1228
+      - 687
+      pixel_count: 526
+  cTeal:
+    target_rgb:
+    - 68
+    - 170
+    - 153
+    threshold: 55
+    match_count: 1445
+    components:
+    - bbox:
+      - 1227
+      - 161
+      - 1228
+      - 687
+      pixel_count: 526
+  cLGray:
+    target_rgb:
+    - 200
+    - 200
+    - 200
+    threshold: 35
+    match_count: 22272
+    components:
+    - bbox:
+      - 1504
+      - 462
+      - 1593
+      - 559
+      pixel_count: 4748
+    - bbox:
+      - 1015
+      - 396
+      - 1068
+      - 459
+      pixel_count: 1498
+    - bbox:
+      - 21
+      - 341
+      - 1179
+      - 342
+      pixel_count: 1158
+    - bbox:
+      - 21
+      - 343
+      - 1179
+      - 344
+      pixel_count: 1158
+    - bbox:
+      - 1270
+      - 607
+      - 1420
+      - 620
+      pixel_count: 685
+    - bbox:
+      - 1007
+      - 44
+      - 1008
+      - 323
+      pixel_count: 279
+    - bbox:
+      - 1270
+      - 273
+      - 1420
+      - 279
+      pixel_count: 217

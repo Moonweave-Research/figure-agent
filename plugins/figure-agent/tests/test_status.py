@@ -327,6 +327,93 @@ def test_reference_image_existing_is_not_treated_as_selected_preview(tmp_path: P
     assert "reference_image_missing" not in result["notes"]
 
 
+def test_coordinate_hints_missing_when_reference_present(tmp_path: Path) -> None:
+    """If reference_image exists but coordinate_hints.yaml does not, surface
+    a coordinate_hints_missing note pointing at /fig_extract."""
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+
+    result = infer_stage(fig_dir)
+
+    assert "coordinate_hints_missing" in result["notes"]
+    assert "coordinate_hints_stale" not in result["notes"]
+
+
+def test_coordinate_hints_present_clears_note(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+    (fig_dir / "coordinate_hints.yaml").write_text(
+        "metadata: {extraction_version: '0.1'}\ntext_labels: []\n", encoding="utf-8"
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert "coordinate_hints_missing" not in result["notes"]
+    assert ("coordinate_hints", "present") in result["checks"]
+
+
+def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    ref_file = reference / "golden.png"
+    ref_file.write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+    hints = fig_dir / "coordinate_hints.yaml"
+    hints.write_text("metadata: {extraction_version: '0.1'}\ntext_labels: []\n", encoding="utf-8")
+
+    old = time.time() - 100
+    new = time.time() - 5
+    os.utime(hints, (old, old))
+    os.utime(ref_file, (new, new))
+
+    result = infer_stage(fig_dir)
+
+    assert "coordinate_hints_stale" in result["notes"]
+
+
+def test_coordinate_hints_parse_error_when_yaml_malformed(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+    (fig_dir / "coordinate_hints.yaml").write_text(
+        "this: is: not: valid: yaml:\n  - because\n :::: malformed\n", encoding="utf-8"
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert "coordinate_hints_parse_error" in result["notes"]
+
+
+def test_coordinate_hints_check_skips_when_reference_image_absent(tmp_path: Path) -> None:
+    """Ordinary fixtures (no reference_image key) must not emit any
+    coordinate_hints_* notes; Layer 2.5 only applies to golden-class fixtures."""
+    fig_dir = tmp_path / "ordinaryfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, selected_preview=None)
+    (fig_dir / "previews").mkdir()
+
+    result = infer_stage(fig_dir)
+
+    assert not any(n.startswith("coordinate_hints_") for n in result["notes"])
+
+
 def test_reference_image_missing_surfaces_separate_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()

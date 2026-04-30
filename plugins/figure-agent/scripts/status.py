@@ -149,8 +149,29 @@ def _append_reference_image_check(
 
     reference_image = reference_image.strip()
     checks.append(("reference_image", reference_image))
-    if not (example_dir / reference_image).is_file():
+    reference_path = example_dir / reference_image
+    if not reference_path.is_file():
         notes.append("reference_image_missing")
+        return
+
+    # Layer 2.5: coordinate_hints.yaml is auto-detected by file presence.
+    # Surface missing/stale/parse-error states as notes so the user knows
+    # to run /fig_extract; we never block the stage advance on it because
+    # Layer 2.5 is optional.
+    hints_path = example_dir / "coordinate_hints.yaml"
+    if not hints_path.exists():
+        notes.append("coordinate_hints_missing")
+        return
+    checks.append(("coordinate_hints", "present"))
+    try:
+        import yaml as _yaml
+
+        _yaml.safe_load(hints_path.read_text(encoding="utf-8"))
+    except Exception:
+        notes.append("coordinate_hints_parse_error")
+        return
+    if hints_path.stat().st_mtime < reference_path.stat().st_mtime:
+        notes.append("coordinate_hints_stale")
 
 
 def infer_stage(example_dir: Path) -> dict:
