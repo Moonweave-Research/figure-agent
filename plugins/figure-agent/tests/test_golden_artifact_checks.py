@@ -228,26 +228,97 @@ def test_load_golden_contract_rejects_malformed_inventory(tmp_path: Path) -> Non
         load_golden_contract(spec)
 
 
+_DUMMY_SVG_50_RECTS = (
+    "<svg xmlns='http://www.w3.org/2000/svg'>"
+    + "".join("<rect width='1' height='1'/>" for _ in range(50))
+    + "</svg>"
+)
+
+
+def _write_minimal_export_set(exports: Path, name: str, *, tiff_extension: str = ".tif") -> None:
+    """Write the four required export artifacts in minimal but plausible form."""
+    exports.mkdir(exist_ok=True)
+    (exports / f"{name}.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    Image.new("RGB", (1200, 800), "white").save(exports / f"{name}.png")
+    (exports / f"{name}.svg").write_text(_DUMMY_SVG_50_RECTS, encoding="utf-8")
+    (exports / f"{name}{tiff_extension}").write_bytes(b"II*\x00")  # minimal TIFF magic
+
+
 def test_check_example_basic_mode_skips_label_and_inventory_checks(tmp_path: Path) -> None:
-    """Without --require-accepted, only artifact-shape gates run."""
+    """Without --require-accepted (and without spec.accepted), only
+    artifact-shape gates run."""
     fixture = tmp_path / "tinyfig"
     fixture.mkdir()
     (fixture / "spec.yaml").write_text("name: tinyfig\n", encoding="utf-8")
     (fixture / "tinyfig.tex").write_text("% empty", encoding="utf-8")
-    exports = fixture / "exports"
-    exports.mkdir()
-    (exports / "tinyfig.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
-    Image.new("RGB", (1200, 800), "white").save(exports / "tinyfig.png")
-    (exports / "tinyfig.svg").write_text(
-        "<svg xmlns='http://www.w3.org/2000/svg'>"
-        + "".join("<rect width='1' height='1'/>" for _ in range(50))
-        + "</svg>",
-        encoding="utf-8",
-    )
+    _write_minimal_export_set(fixture / "exports", "tinyfig")
 
     failures = check_example(
         fixture, min_svg_elements=40, min_png_width=1000, require_accepted=False
     )
+
+    assert failures == []
+
+
+def test_check_example_basic_mode_requires_tiff(tmp_path: Path) -> None:
+    """The four-export contract (PDF/SVG/TIFF/PNG) must close in basic mode;
+    a missing TIFF surfaces as a missing-artifact failure."""
+    fixture = tmp_path / "noTiff"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: noTiff\n", encoding="utf-8")
+    (fixture / "noTiff.tex").write_text("% empty", encoding="utf-8")
+    exports = fixture / "exports"
+    exports.mkdir()
+    (exports / "noTiff.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    Image.new("RGB", (1200, 800), "white").save(exports / "noTiff.png")
+    (exports / "noTiff.svg").write_text(_DUMMY_SVG_50_RECTS, encoding="utf-8")
+    # TIFF intentionally absent.
+
+    failures = check_example(fixture, require_accepted=False)
+
+    assert any("missing artifact" in f and "tif" in f for f in failures)
+
+
+def test_check_example_accepts_tiff_extension(tmp_path: Path) -> None:
+    """Either .tif or .tiff satisfies the TIFF requirement."""
+    fixture = tmp_path / "longTiff"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: longTiff\n", encoding="utf-8")
+    (fixture / "longTiff.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "longTiff", tiff_extension=".tiff")
+
+    failures = check_example(fixture, require_accepted=False)
+
+    assert failures == []
+
+
+def test_check_example_auto_escalates_when_spec_has_accepted_key(tmp_path: Path) -> None:
+    """A fixture whose spec.yaml declares the `accepted` key automatically
+    runs in accepted mode without requiring an explicit --require-accepted
+    flag, so a forgotten CLI flag cannot bypass the golden contract."""
+    fixture = tmp_path / "autoGolden"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: autoGolden\naccepted: false\n", encoding="utf-8")
+    (fixture / "autoGolden.tex").write_text("% empty", encoding="utf-8")
+    (fixture / "briefing.md").write_text("brief", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "autoGolden")
+
+    # Note: no require_accepted argument; default None triggers auto-escalate.
+    failures = check_example(fixture)
+
+    assert any("golden_contract block missing" in f for f in failures)
+
+
+def test_check_example_no_require_accepted_overrides_auto_escalate(tmp_path: Path) -> None:
+    """An explicit require_accepted=False forces basic mode even when the
+    spec declares the `accepted` key — escape hatch for ad-hoc inspection."""
+    fixture = tmp_path / "explicitBasic"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: explicitBasic\naccepted: false\n", encoding="utf-8")
+    (fixture / "explicitBasic.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "explicitBasic")
+
+    failures = check_example(fixture, require_accepted=False)
 
     assert failures == []
 
@@ -258,16 +329,7 @@ def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -
     (fixture / "spec.yaml").write_text("name: noContract\n", encoding="utf-8")
     (fixture / "noContract.tex").write_text("% empty", encoding="utf-8")
     (fixture / "briefing.md").write_text("brief", encoding="utf-8")
-    exports = fixture / "exports"
-    exports.mkdir()
-    (exports / "noContract.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
-    Image.new("RGB", (1200, 800), "white").save(exports / "noContract.png")
-    (exports / "noContract.svg").write_text(
-        "<svg xmlns='http://www.w3.org/2000/svg'>"
-        + "".join("<rect width='1' height='1'/>" for _ in range(50))
-        + "</svg>",
-        encoding="utf-8",
-    )
+    _write_minimal_export_set(fixture / "exports", "noContract")
 
     failures = check_example(
         fixture,

@@ -150,6 +150,40 @@ def fixture_is_accepted(spec_path: Path) -> bool:
     return data.get("accepted") is True
 
 
+def spec_declares_accepted_key(spec_path: Path) -> bool:
+    """Return True iff spec.yaml declares the `accepted` key (any value).
+
+    Used to auto-escalate `check_example` into accepted mode for any fixture
+    whose spec class is golden, so a missing --require-accepted CLI flag
+    cannot silently bypass the contract.
+    """
+    if not spec_path.exists():
+        return False
+    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return False
+    return "accepted" in data
+
+
+def required_export_artifact_failures(exports: Path, name: str) -> list[str]:
+    """Verify the four required export artifacts exist. TIFF accepts .tif or .tiff."""
+    failures: list[str] = []
+    pdf = exports / f"{name}.pdf"
+    svg = exports / f"{name}.svg"
+    tif = exports / f"{name}.tif"
+    tiff = exports / f"{name}.tiff"
+    png = exports / f"{name}.png"
+    if not pdf.exists():
+        failures.append(f"missing artifact: {pdf}")
+    if not svg.exists():
+        failures.append(f"missing artifact: {svg}")
+    if not (tif.exists() or tiff.exists()):
+        failures.append(f"missing artifact: {tif} (or {tiff.name})")
+    if not png.exists():
+        failures.append(f"missing artifact: {png}")
+    return failures
+
+
 def load_golden_contract(spec_path: Path) -> dict | None:
     """Return spec.yaml's golden_contract block, or None when absent.
 
@@ -271,7 +305,7 @@ def check_example(
     *,
     min_svg_elements: int = 40,
     min_png_width: int = 1000,
-    require_accepted: bool = False,
+    require_accepted: bool | None = None,
     max_collisions: int = 0,
     max_visual_clashes: int = 0,
 ) -> list[str]:
@@ -286,9 +320,14 @@ def check_example(
     png = exports / f"{name}.png"
     failures: list[str] = []
 
-    for path in (pdf, svg, png):
-        if not path.exists():
-            failures.append(f"missing artifact: {path}")
+    # Auto-escalate to accepted mode whenever the fixture's spec.yaml declares
+    # the `accepted` key (regardless of true/false). The key's presence is the
+    # signal that the fixture is in the golden class; a forgotten CLI flag
+    # must not be able to silently bypass the contract.
+    if require_accepted is None:
+        require_accepted = spec_declares_accepted_key(spec)
+
+    failures.extend(required_export_artifact_failures(exports, name))
     if failures:
         return failures
 
@@ -347,7 +386,23 @@ def main() -> int:
     parser.add_argument("example_dir", type=Path)
     parser.add_argument("--min-svg-elements", type=int, default=40)
     parser.add_argument("--min-png-width", type=int, default=1000)
-    parser.add_argument("--require-accepted", action="store_true")
+    # Mutually exclusive override of the auto-escalation default. Without
+    # either flag, the fixture's spec.yaml decides whether accepted-mode
+    # contract checks run.
+    accepted_group = parser.add_mutually_exclusive_group()
+    accepted_group.add_argument(
+        "--require-accepted",
+        dest="require_accepted",
+        action="store_true",
+        default=None,
+        help="force accepted-mode contract checks regardless of spec",
+    )
+    accepted_group.add_argument(
+        "--no-require-accepted",
+        dest="require_accepted",
+        action="store_false",
+        help="force basic mode (skip contract checks) even if spec declares accepted",
+    )
     parser.add_argument("--max-collisions", type=int, default=0)
     parser.add_argument("--max-visual-clashes", type=int, default=0)
     args = parser.parse_args()
