@@ -93,7 +93,14 @@ DEFAULT_OCR_CONFIDENCE_FLOOR = 30.0
 # resolution. 3x or 4x degrades — anti-aliasing artifacts amplify and the
 # detection set shrinks (measured on golden_target_001.png). 2x is the
 # sweet spot empirically.
+#
+# Multi-pass: native + 2x recovers the small set of short symbols (e.g. VB)
+# that Tesseract reads at 1× but loses at 2× because LANCZOS over-blurs
+# tight ascender/descender pairs. The drift gate's spatial matcher picks
+# the closest candidate per phrase, so duplicate detections from the two
+# passes do not need de-duplication here.
 DEFAULT_OCR_UPSAMPLE_FACTOR = 2.0
+DEFAULT_OCR_PASSES: tuple[float, ...] = (2.0,)
 
 
 def _hash_file(path: Path, algo: str = "sha256") -> str:
@@ -170,28 +177,14 @@ def palette_shape_clusters(
     return out
 
 
-def ocr_text_labels(
+def _run_ocr_at_scale(
     reference_path: Path,
-    *,
-    confidence_floor: float = DEFAULT_OCR_CONFIDENCE_FLOOR,
-    upsample_factor: float = DEFAULT_OCR_UPSAMPLE_FACTOR,
+    upsample_factor: float,
+    confidence_floor: float,
 ) -> list[dict]:
-    """Run Tesseract on the reference and return text labels with bbox+conf.
-
-    When ``upsample_factor`` > 1, the image is enlarged with PIL LANCZOS
-    before OCR, then bounding boxes are scaled back to the *original*
-    image's coordinate system so downstream consumers (drift gate, status
-    overlays) all share one reference frame.
-
-    Raises FileNotFoundError if Tesseract is not on PATH.
-    """
+    """Run a single Tesseract pass at the given scale; return labels in native coords."""
     import tempfile
 
-    if shutil.which("tesseract") is None:
-        raise FileNotFoundError(
-            "tesseract not found on PATH. Install via 'brew install tesseract' (macOS),"
-            " 'apt install tesseract-ocr' (Debian/Ubuntu), or skip OCR with --shapes-only."
-        )
     with tempfile.TemporaryDirectory() as td:
         # Tesseract appends ".tsv" to the output base path, so the base must
         # not already carry an extension or .with_suffix-style replacement
@@ -264,6 +257,36 @@ def ocr_text_labels(
     return out
 
 
+def ocr_text_labels(
+    reference_path: Path,
+    *,
+    confidence_floor: float = DEFAULT_OCR_CONFIDENCE_FLOOR,
+    ocr_passes: tuple[float, ...] = DEFAULT_OCR_PASSES,
+) -> list[dict]:
+    """Run Tesseract one or more times at different scales and concat results.
+
+    Each pass enlarges the image with PIL LANCZOS, runs Tesseract, then scales
+    the bounding boxes back to the *original* image's coordinate system so
+    downstream consumers (drift gate, status overlays) all share one reference
+    frame. Pass list is small (typically 1–2 entries); duplicate detections
+    across passes are not de-duplicated because the drift gate's spatial
+    matcher already picks the closest candidate per phrase.
+
+    Raises FileNotFoundError if Tesseract is not on PATH.
+    """
+    if shutil.which("tesseract") is None:
+        raise FileNotFoundError(
+            "tesseract not found on PATH. Install via 'brew install tesseract' (macOS),"
+            " 'apt install tesseract-ocr' (Debian/Ubuntu), or skip OCR with --shapes-only."
+        )
+    if not ocr_passes:
+        return []
+    out: list[dict] = []
+    for factor in ocr_passes:
+        out.extend(_run_ocr_at_scale(reference_path, factor, confidence_floor))
+    return out
+
+
 def _resolve_reference_path(example_dir: Path) -> Path | None:
     """Read spec.yaml and return the absolute reference_image path, or None."""
     spec_path = example_dir / "spec.yaml"
@@ -282,7 +305,7 @@ def extract_coordinate_hints(
     rebuild: bool = False,
     min_component_pixels: int = DEFAULT_MIN_COMPONENT_PIXELS,
     confidence_floor: float = DEFAULT_OCR_CONFIDENCE_FLOOR,
-    ocr_upsample_factor: float = DEFAULT_OCR_UPSAMPLE_FACTOR,
+    ocr_passes: tuple[float, ...] = DEFAULT_OCR_PASSES,
 ) -> tuple[Path | None, list[str]]:
     """Run OCR + palette clustering and write coordinate_hints.yaml.
 
@@ -318,7 +341,7 @@ def extract_coordinate_hints(
         text_labels = ocr_text_labels(
             reference_path,
             confidence_floor=confidence_floor,
-            upsample_factor=ocr_upsample_factor,
+            ocr_passes=ocr_passes,
         )
         ocr_status = "ok"
     except FileNotFoundError as exc:
@@ -334,7 +357,7 @@ def extract_coordinate_hints(
             "parameters": {
                 "min_component_pixels": min_component_pixels,
                 "ocr_confidence_floor": confidence_floor,
-                "ocr_upsample_factor": ocr_upsample_factor,
+                "ocr_passes": list(ocr_passes),
                 "group_thresholds": GROUP_THRESHOLDS,
             },
         },
@@ -367,10 +390,14 @@ def main() -> int:
         help="drop OCR words below this Tesseract confidence",
     )
     parser.add_argument(
-        "--ocr-upsample-factor",
+        "--ocr-passes",
         type=float,
-        default=DEFAULT_OCR_UPSAMPLE_FACTOR,
-        help="resample reference to this multiple of native size before OCR (1.0 = native)",
+        nargs="+",
+        default=list(DEFAULT_OCR_PASSES),
+        help=(
+            "one or more upsample factors; OCR runs once per factor and the"
+            " results are concatenated (e.g. --ocr-passes 1.0 2.0)"
+        ),
     )
     args = parser.parse_args()
 
@@ -383,7 +410,7 @@ def main() -> int:
         rebuild=args.rebuild,
         min_component_pixels=args.min_component_pixels,
         confidence_floor=args.ocr_confidence_floor,
-        ocr_upsample_factor=args.ocr_upsample_factor,
+        ocr_passes=tuple(args.ocr_passes),
     )
     if hints_path is None:
         for msg in failures:

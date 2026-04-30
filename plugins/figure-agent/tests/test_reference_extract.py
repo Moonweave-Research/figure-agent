@@ -227,7 +227,7 @@ def test_ocr_upsample_returns_bbox_in_original_coordinate_frame(tmp_path: Path) 
     ref = tmp_path / "synth_text.png"
     img.save(ref)
 
-    labels_2x = ocr_text_labels(ref, confidence_floor=20, upsample_factor=2.0)
+    labels_2x = ocr_text_labels(ref, confidence_floor=20, ocr_passes=(2.0,))
     assert labels_2x, "2x upsample should still detect 'Experiment'"
     for label in labels_2x:
         x1, y1, x2, y2 = label["bbox"]
@@ -236,14 +236,34 @@ def test_ocr_upsample_returns_bbox_in_original_coordinate_frame(tmp_path: Path) 
 
 
 @pytest.mark.skipif(not TESSERACT_AVAILABLE, reason="tesseract not installed")
-def test_extract_coordinate_hints_records_upsample_factor(tmp_path: Path) -> None:
-    """metadata.parameters.ocr_upsample_factor must be recorded for reproducibility."""
+def test_extract_coordinate_hints_records_ocr_passes(tmp_path: Path) -> None:
+    """metadata.parameters.ocr_passes must be recorded for reproducibility."""
     example = tmp_path / "fixture"
     example.mkdir()
     (example / "spec.yaml").write_text(yaml.safe_dump({"panels": [], "reference_image": "ref.png"}))
     Image.new("RGB", (200, 100), "white").save(example / "ref.png")
 
-    hints_path, _ = extract_coordinate_hints(example, ocr_upsample_factor=2.0)
+    hints_path, _ = extract_coordinate_hints(example, ocr_passes=(1.0, 2.0))
     assert hints_path is not None
     payload = yaml.safe_load(hints_path.read_text())
-    assert payload["metadata"]["parameters"]["ocr_upsample_factor"] == 2.0
+    assert payload["metadata"]["parameters"]["ocr_passes"] == [1.0, 2.0]
+
+
+@pytest.mark.skipif(not TESSERACT_AVAILABLE, reason="tesseract not installed")
+def test_ocr_text_labels_concatenates_multi_pass_results(tmp_path: Path) -> None:
+    """Multi-pass OCR returns the union of per-pass detections (no dedup)."""
+    from PIL import ImageDraw, ImageFont
+
+    img = Image.new("RGB", (400, 100), "white")
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 32)
+    except Exception:
+        font = ImageFont.load_default()
+    draw.text((20, 30), "Experiment", fill="black", font=font)
+    ref = tmp_path / "synth.png"
+    img.save(ref)
+
+    one_pass = ocr_text_labels(ref, confidence_floor=20, ocr_passes=(2.0,))
+    two_pass = ocr_text_labels(ref, confidence_floor=20, ocr_passes=(1.0, 2.0))
+    assert len(two_pass) >= len(one_pass)
