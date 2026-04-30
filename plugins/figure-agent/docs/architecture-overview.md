@@ -241,7 +241,11 @@ alt-form list) is located in OCR `text_labels` (reference) and in
 `pdftotext` words (build PDF), and the Euclidean distance between
 normalized centers (`[0,1]^2` canvas) is compared to `--threshold`
 (default 0.05). Per-label status is one of `matched_ok`, `drifted`,
-`uncovered_ref`, `uncovered_build`, or `uncovered_both`. The aspect-ratio
+`uncovered_ref`, `uncovered_build`, `uncovered_both`, or
+`excluded_ambiguous` (every token ≤ 2 chars — short symbols like `CB`,
+`VB`, `n`, `g e t` collide with substrings of unrelated OCR/pdftotext
+output, so a name match is not a position claim and the label gets a
+dedicated reporting bucket instead of a measurement). The aspect-ratio
 delta between reference PNG and build PDF is reported in the header so a
 global canvas mismatch is distinguishable from local drift. Skips silently
 when `golden_contract.required_labels` or `coordinate_hints.yaml` is

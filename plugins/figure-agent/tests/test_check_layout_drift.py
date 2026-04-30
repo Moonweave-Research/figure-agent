@@ -140,12 +140,72 @@ def test_phrase_rejected_when_tokens_too_far_apart():
 
 
 def test_alternates_match_when_first_form_misses():
-    hints = _hints([{"text": "et", "bbox": [600, 600, 640, 630], "conf": 88.0}])
-    pdf_words = [_word("et", 600, 600, 640, 630)]
-    results = check_layout_drift.evaluate_drift([["e t", "et"]], hints, pdf_words, (1000.0, 1000.0))
+    """Alternates with at least one substantial token still go through matching."""
+    hints = _hints([{"text": "kelvin", "bbox": [600, 600, 700, 630], "conf": 88.0}])
+    pdf_words = [_word("kelvin", 600, 600, 700, 630)]
+    results = check_layout_drift.evaluate_drift(
+        [["kelvin scale", "kelvin"]], hints, pdf_words, (1000.0, 1000.0)
+    )
     r = results[0]
     assert r.status == "matched_ok"
-    assert r.matched_form is not None and "et" in r.matched_form
+    assert r.matched_form is not None and "kelvin" in r.matched_form
+
+
+def test_short_label_excluded_as_ambiguous():
+    """All-short-token labels (CB, n) are dedicated reporting bucket, not measured."""
+    hints = _hints(
+        [
+            {"text": "CB", "bbox": [800, 100, 830, 130], "conf": 95.0},
+            {"text": "VB", "bbox": [800, 200, 830, 230], "conf": 95.0},
+            {"text": "n", "bbox": [400, 400, 410, 420], "conf": 90.0},
+        ]
+    )
+    pdf_words = [
+        _word("CB", 800, 100, 830, 130),
+        _word("VB", 800, 200, 830, 230),
+        _word("n", 400, 400, 410, 420),
+    ]
+    results = check_layout_drift.evaluate_drift(
+        ["CB", "VB", "n"], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert all(r.status == "excluded_ambiguous" for r in results)
+    assert all(r.drift is None for r in results)
+
+
+def test_multi_token_short_label_also_excluded():
+    """Phrases like 'g e t' or 'I t' (every token ≤2 chars) excluded too."""
+    hints = _hints(
+        [
+            {"text": "g", "bbox": [100, 100, 110, 130], "conf": 90.0},
+            {"text": "e", "bbox": [115, 100, 125, 130], "conf": 90.0},
+            {"text": "t", "bbox": [130, 100, 140, 130], "conf": 90.0},
+        ]
+    )
+    pdf_words = [
+        _word("g", 100, 100, 110, 130),
+        _word("e", 115, 100, 125, 130),
+        _word("t", 130, 100, 140, 130),
+    ]
+    results = check_layout_drift.evaluate_drift(
+        [["g e t", "g et"]], hints, pdf_words, (1000.0, 1000.0)
+    )
+    assert results[0].status == "excluded_ambiguous"
+
+
+def test_label_with_one_substantial_token_still_measured():
+    """'tau d' has 'tau' (3 chars) so it must NOT be excluded."""
+    hints = _hints(
+        [
+            {"text": "tau", "bbox": [100, 100, 130, 130], "conf": 90.0},
+            {"text": "d", "bbox": [135, 100, 145, 130], "conf": 90.0},
+        ]
+    )
+    pdf_words = [
+        _word("tau", 100, 100, 130, 130),
+        _word("d", 135, 100, 145, 130),
+    ]
+    results = check_layout_drift.evaluate_drift(["tau d"], hints, pdf_words, (1000.0, 1000.0))
+    assert results[0].status == "matched_ok"
 
 
 def test_punctuation_normalization_strips_surrounding_punct():

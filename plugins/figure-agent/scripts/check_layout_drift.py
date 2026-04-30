@@ -38,6 +38,12 @@ from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
 DEFAULT_DRIFT_THRESHOLD = 0.05  # fraction of normalized canvas
+# Phrases consisting only of tokens ≤ this length are treated as ambiguous
+# symbols (CB, VB, n, g e t, e t, I t…) and skipped — Tesseract picks them up
+# inside other words ("converged", "interpretation"), and pdftotext fragments
+# math glyphs differently again, so a name match alone is not a position
+# claim. They get a dedicated reporting bucket rather than a measurement.
+AMBIGUOUS_TOKEN_MAX_LEN = 2
 
 LabelSpec = str | list[str]
 
@@ -46,7 +52,8 @@ LabelSpec = str | list[str]
 class DriftResult:
     label: str
     matched_form: str | None
-    status: str  # matched_ok | drifted | uncovered_ref | uncovered_build | uncovered_both
+    status: str  # matched_ok | drifted | uncovered_ref | uncovered_build
+    #            | uncovered_both | excluded_ambiguous
     ref_center: tuple[float, float] | None
     pdf_center: tuple[float, float] | None
     drift: float | None
@@ -65,6 +72,20 @@ def _label_forms(label: LabelSpec) -> list[str]:
 
 def _phrase_tokens(phrase: str) -> list[str]:
     return [_normalize_token(t) for t in phrase.split() if _normalize_token(t)]
+
+
+def _is_ambiguous_label(label: LabelSpec) -> bool:
+    """Return True when every form's tokens are all <= AMBIGUOUS_TOKEN_MAX_LEN."""
+    forms = _label_forms(label)
+    if not forms:
+        return False
+    for form in forms:
+        tokens = _phrase_tokens(form)
+        if not tokens:
+            continue
+        if any(len(t) > AMBIGUOUS_TOKEN_MAX_LEN for t in tokens):
+            return False
+    return True
 
 
 # Spatial matching tolerance. The step distance between two phrase tokens is
@@ -225,6 +246,10 @@ def evaluate_drift(
     results: list[DriftResult] = []
     for label in required_labels:
         forms = _label_forms(label)
+        label_str = forms[0] if forms else str(label)
+        if _is_ambiguous_label(label):
+            results.append(DriftResult(label_str, None, "excluded_ambiguous", None, None, None))
+            continue
         ref_hit: tuple[str, tuple[float, float, float, float]] | None = None
         pdf_hit: tuple[str, tuple[float, float, float, float]] | None = None
         for form in forms:
@@ -239,7 +264,6 @@ def evaluate_drift(
                     pdf_hit = (form, bbox)
             if ref_hit is not None and pdf_hit is not None and ref_hit[0] == pdf_hit[0]:
                 break
-        label_str = forms[0] if forms else str(label)
         if ref_hit is None and pdf_hit is None:
             results.append(DriftResult(label_str, None, "uncovered_both", None, None, None))
             continue
@@ -349,6 +373,7 @@ def main() -> int:
         "uncovered_ref": 0,
         "uncovered_build": 0,
         "uncovered_both": 0,
+        "excluded_ambiguous": 0,
     }
     drifted_results: list[DriftResult] = []
     for r in results:
@@ -365,6 +390,7 @@ def main() -> int:
         f" uncovered_ref={counts['uncovered_ref']}"
         f" uncovered_build={counts['uncovered_build']}"
         f" uncovered_both={counts['uncovered_both']}"
+        f" excluded_ambiguous={counts['excluded_ambiguous']}"
         f" (threshold={args.threshold:.3f})"
     )
     for r in results:
@@ -377,7 +403,7 @@ def main() -> int:
                 f" pdf=({r.pdf_center[0]:.3f},{r.pdf_center[1]:.3f})"
             )
         else:
-            print(f"  {r.status:<15} {r.label!r}")
+            print(f"  {r.status:<19} {r.label!r}")
 
     if args.strict and drifted_results:
         return 1
