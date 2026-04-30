@@ -57,6 +57,15 @@ Examples to inspect:
 
 Copy patterns you find there when they apply to your schematic. You are authoring in the same style, on the same palette, under the same Style Lock.
 
+## 5b. Structural Regions from Reference Image (Layer 2.5)
+
+When a reference image is provided, the coordinates below are extracted via OCR
+and vtracer vectorization. Use them as **precise placement guidelines** — draw
+every labelled element so it falls inside the stated bounding box.
+All coordinates are in centimeters in TikZ space (y=0 at bottom).
+
+{{structural_regions}}
+
 ## 6. Briefing Context
 
 ### §1 — What does this figure show?

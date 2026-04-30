@@ -366,11 +366,22 @@ def structural_regions_from_reference(
     # plot curves and text (typically 1 000–40 000 px²) are excluded.
     MIN_PATH_AREA_PX2 = 50_000
 
-    def _union_bbox(bboxes: list[tuple[float, float, float, float]]) -> list[float] | None:
+    # Panel arcs are confined to the left evidence zone (x center < canvas * 0.45).
+    # Lavender/purple paths in the right zone (band diagram background, x > 10 cm)
+    # would otherwise inflate the purple panel arc bbox after the r<225 classifier
+    # expansion introduced for ispd_lobes deep detection.
+    _PANEL_ARC_MAX_X_CENTER_PX = img_w * 0.45  # ≈761 px for 1693 px canvas
+
+    def _union_bbox(
+        bboxes: list[tuple[float, float, float, float]],
+        *,
+        left_zone_only: bool = False,
+    ) -> list[float] | None:
         large = [
             (x1, y1, x2, y2)
             for x1, y1, x2, y2 in bboxes
             if (x2 - x1) * (y2 - y1) >= MIN_PATH_AREA_PX2
+            and (not left_zone_only or (x1 + x2) / 2 < _PANEL_ARC_MAX_X_CENTER_PX)
         ]
         if not large:
             return None
@@ -385,7 +396,7 @@ def structural_regions_from_reference(
         [
             _to_region(f, ub)
             for f in ("blue", "orange", "purple")
-            if (ub := _union_bbox(family_paths.get(f, []))) is not None
+            if (ub := _union_bbox(family_paths.get(f, []), left_zone_only=True)) is not None
         ],
         key=lambda r: -r["area_cm2"],
     )
@@ -485,7 +496,9 @@ def structural_regions_from_reference(
             continue
         xc = path_info["x_center_cm"]
         yc = path_info["y_center_cm"]
-        if not (4.0 <= xc <= 11.5 and 2.0 <= yc <= 6.5):
+        # x > 4.5: excludes orange paths at right edge of evidence panels (x≈4.0-5.0)
+        # x < 10.5: excludes trap-dash markers inside teal border (x≈10.9 cm)
+        if not (4.5 <= xc <= 10.5 and 2.5 <= yc <= 6.5):
             continue
         if not chain_y_centers:
             continue

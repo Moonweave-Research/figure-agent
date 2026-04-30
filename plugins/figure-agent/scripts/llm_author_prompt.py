@@ -7,10 +7,116 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 
 from inputs import _HTML_COMMENT, parse_briefing, parse_spec
 from lint_tex import parse_palette
+
+
+def _format_structural_regions(sr: dict) -> str:
+    """Format structural_regions as an actionable coordinate block for TikZ authoring."""
+    lines: list[str] = []
+
+    img = sr.get("image_px", [])
+    cmp = sr.get("cm_per_px", 0)
+    if img and cmp:
+        w = round(img[0] * cmp, 1)
+        h = round(img[1] * cmp, 1)
+        lines += [f"Canvas: {w} × {h} cm  (y=0 at bottom; {cmp:.5f} cm/px)", ""]
+
+    arcs = sr.get("panel_arcs", [])
+    if arcs:
+        lines.append("Panel arcs — draw as ellipses:")
+        for a in arcs:
+            bb = a["bbox_cm"]
+            cx = round((bb[0] + bb[2]) / 2, 2)
+            cy = round((bb[1] + bb[3]) / 2, 2)
+            rx = round((bb[2] - bb[0]) / 2, 2)
+            ry = round((bb[3] - bb[1]) / 2, 2)
+            lines.append(
+                f"  {a['color_family']:8s}: center=({cx},{cy})  rx={rx}  ry={ry}"
+                f"  [x={bb[0]}-{bb[2]}, y={bb[1]}-{bb[3]}]"
+            )
+        lines.append("")
+
+    bbs = sr.get("border_boxes", [])
+    if bbs:
+        lines.append("Border boxes:")
+        for b in bbs:
+            bb = b["bbox_cm"]
+            lines.append(f"  {b['color_family']:8s}: x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}")
+        lines.append("")
+
+    pbs = sr.get("plot_boxes", [])
+    if pbs:
+        lines.append("Axis background boxes (inside each panel):")
+        for p in pbs:
+            bb = p["bbox_cm"]
+            lines.append(f"  panel={p['panel_family']:8s}: x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}")
+        lines.append("")
+
+    pcs = sr.get("plot_curves", [])
+    if pcs:
+        lines.append("Plot curve bounding boxes:")
+        for c in pcs:
+            bb = c["bbox_cm"]
+            lines.append(
+                f"  {c['element']:26s}(panel={c['panel_family']}): x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
+            )
+        lines.append("")
+
+    lobes = sr.get("ispd_lobes", [])
+    if lobes:
+        lines.append("ISPD g(Et) bell lobes (inside orange panel arc):")
+        for lobe in lobes:
+            bb = lobe["bbox_cm"]
+            lines.append(
+                f"  {lobe['level_role']:8s}({lobe['color_family']}): x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
+            )
+        lines.append("")
+
+    rows = sr.get("chain_rows", [])
+    if rows:
+        lines.append("Chain rows (draw as plot[smooth] wavy chains):")
+        for i, r in enumerate(rows):
+            lines.append(
+                f"  row {i}: y_center={r['y_center_cm']} cm  x={r['x_span_cm'][0]}-{r['x_span_cm'][1]}"
+            )
+        lines.append("")
+
+    atoms = sr.get("s_atoms", [])
+    if atoms and rows:
+        lines.append("S-atom x-positions per chain row (place S labels + circles at these x):")
+        for i in range(len(rows)):
+            xs = sorted(a["x_cm"] for a in atoms if a["chain_row_index"] == i)
+            if xs:
+                lines.append(
+                    f"  row {i} (y≈{rows[i]['y_center_cm']}): " + "  ".join(str(x) for x in xs)
+                )
+        lines.append("")
+
+    traps = sr.get("trap_levels", [])
+    if traps:
+        lines.append(
+            "Trap level dashes (inside band diagram, use cAmber=shallow, cBlue!45!cRed=deep):"
+        )
+        for t in traps:
+            lines.append(f"  {t['level_role']:8s}: y={t['y_cm']} cm  x_center={t['x_cm']}")
+        lines.append("")
+
+    rgs = sr.get("right_gaussians", [])
+    if rgs:
+        lines.append("Right-zone g(Et) Gaussians (sideways, inside teal border):")
+        for g in rgs:
+            bb = g["bbox_cm"]
+            lines.append(f"  {g['level_role']:8s}: x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() if lines else "(no structural regions extracted)"
+
 
 TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "prompts" / "llm_author_tikz.md"
 
@@ -170,6 +276,23 @@ def build_prompt(example_dir: Path) -> str:
             return "(empty)"
         return entry[1] if entry[1] else "(empty)"
 
+    # structural_regions from coordinate_hints.yaml (Layer 2.5 extraction)
+    hints_path = example_dir / "coordinate_hints.yaml"
+    structural_regions = "(no coordinate_hints.yaml — run /fig_extract <name> to generate)"
+    if hints_path.exists():
+        try:
+            hints = yaml.safe_load(hints_path.read_text(encoding="utf-8"))
+            sr = hints.get("structural_regions", {})
+            if sr.get("status") == "ok":
+                structural_regions = _format_structural_regions(sr)
+            else:
+                structural_regions = (
+                    f"(structural_regions status: {sr.get('status', 'missing')}"
+                    " — run /fig_extract <name> --rebuild)"
+                )
+        except Exception:
+            structural_regions = "(coordinate_hints.yaml could not be parsed)"
+
     substitutions = {
         "{{example_name}}": example_dir.name,
         "{{briefing_section_1}}": _section_body(1),
@@ -182,6 +305,7 @@ def build_prompt(example_dir: Path) -> str:
         "{{flagship_macros_signature}}": flagship_macros_signature,
         "{{palette_names}}": palette_names,
         "{{reference_fixture_paths}}": reference_fixture_paths,
+        "{{structural_regions}}": structural_regions,
     }
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
