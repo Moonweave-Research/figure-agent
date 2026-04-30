@@ -42,7 +42,22 @@ cone tips. Use them wherever the schematic calls for corresponding elements.
 
 {{flagship_macros_signature}}
 
-## 5. Briefing Context
+## 5. Reference Examples — Read First
+
+Before authoring, read the accepted `.tex` from other figures in this paper. These examples teach you the house style:
+- **smooth curves**: How chains and plots use `plot[smooth]` with carefully placed coordinate points
+- **flagship macros**: Actual usage of `\TrapLevel`, `\SmallLobe`, `\GradSlab`, and custom drawing patterns
+- **tick labels**: How axes annotate quantitative values (e.g., `$10^{-3}$`, `$10^0$`, `$10^3$`)
+- **text labels**: Placement anchors, font sizes, and multi-line formatting
+- **dashed regions**: How to denote physical zones (trap-localized areas, integration regions)
+- **element spacing**: Panel layout, horizontal separators, and visual hierarchy
+
+Examples to inspect:
+{{reference_fixture_paths}}
+
+Copy patterns you find there when they apply to your schematic. You are authoring in the same style, on the same palette, under the same Style Lock.
+
+## 6. Briefing Context
 
 ### §1 — What does this figure show?
 
