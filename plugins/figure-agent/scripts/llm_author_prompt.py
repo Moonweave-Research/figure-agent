@@ -120,7 +120,10 @@ def build_prompt(example_dir: Path) -> str:
     panel_bullets = "\n".join(f"- ({p.get('id', '?')}) {p.get('caption', '')}" for p in panels)
     spec_panels = panel_bullets if panel_bullets else "(no panels)"
 
-    selected_preview = spec.get("selected_preview", "(none)")
+    # spec.get("selected_preview") returns None when the YAML literal is `null`,
+    # not the default. Coerce both the missing-key and explicit-null cases to
+    # the "(none)" sentinel so the str.replace substitution below does not raise.
+    selected_preview = spec.get("selected_preview") or "(none)"
 
     selection_notes = _coerce_selection_notes(spec.get("selection_notes"), example_dir.name)
 

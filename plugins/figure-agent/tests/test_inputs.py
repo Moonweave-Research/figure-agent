@@ -158,6 +158,9 @@ def test_parse_spec_real_fig3_fixture_pinned():
             {"id": "b", "caption": "Sulfur Polymer — deep trap states in bandgap"},
         ],
         "style_profile": "polymer-default",
-        "selected_preview": "chatgpt_b01.png",
+        # Cleared to None after the v0.1.7.2 dogfood cleanup; the original
+        # preview file was moved out of previews/ but selection_notes still
+        # preserves the historical decision record.
+        "selected_preview": None,
         "selection_notes": expected_selection_notes,
     }
