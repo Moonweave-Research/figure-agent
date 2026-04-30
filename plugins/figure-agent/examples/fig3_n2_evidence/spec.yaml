@@ -1,0 +1,36 @@
+name: fig3_n2_evidence
+panels:
+  - id: evidence_1
+    caption: Leakage current evidence — power-law f(t) ∝ t^-n
+  - id: evidence_2
+    caption: ISPD evidence — g(E_t) shallow / deep
+  - id: evidence_3
+    caption: Discharge evidence — Debye decay exp(-t/τ)
+  - id: localized_traps
+    caption: Localized traps — chemical and physical origin on polymer chain
+  - id: band_diagram
+    caption: Energy band diagram — CB / VB with shallow / deep trap levels
+  - id: gspd_outcome
+    caption: Converged trap-depth picture — g(E_t) outcome
+style_profile: polymer-default
+selected_preview: null
+reference_image: reference/golden_target_002.png
+accepted: false
+selection_notes: |
+  Second golden fixture for N=2 drift gate generality test (Phase E.5).
+  Source: paper v9.7 Fig 3 — multi-evidence convergence variant
+  (LLM-rendered candidate from fig3_N2/ batch, sha256 5a9f045e...).
+
+  Layout: numbered evidence panels (①②③) on left → middle polymer-chain
+  rows for localized traps with chemical / physical origin → right band
+  diagram (CB/VB + shallow/deep) → terminal "converged trap-depth picture"
+  g(E_t) outcome.
+
+  Stage 1 (this commit): reference_extract baseline only. 50 OCR labels
+  + 5 palette colors / 8 shape components recorded in coordinate_hints.yaml.
+
+  Stage 2 (deferred): golden_contract.required_labels + .tex authoring +
+  full drift gate measurement.
+golden_contract:
+  required_labels: null  # Stage 2: fill from visible labels in reference
+  source_inventory: null  # Stage 2: fill after .tex authoring

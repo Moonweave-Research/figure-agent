@@ -1,0 +1,458 @@
+metadata:
+  extraction_version: '0.1'
+  created_at: '2026-04-30T07:28:49+00:00'
+  reference_image_path: reference/golden_target_002.png
+  reference_image_hash: sha256:5a9f045e04ab1e753aa9c247478fce4b4be8e05fd9e7ba770036418ab8427a5e
+  ocr_status: ok
+  parameters:
+    min_component_pixels: 200
+    ocr_confidence_floor: 30.0
+    ocr_passes:
+    - 2.0
+    group_thresholds:
+      specific: 55
+      broad: 55
+      gray: 35
+reference_image_size:
+- 1693
+- 929
+text_labels:
+- text: '@'
+  bbox:
+  - 54
+  - 96
+  - 84
+  - 134
+  conf: 89.19693
+- text: Leakage
+  bbox:
+  - 13
+  - 146
+  - 71
+  - 168
+  conf: 96.799248
+- text: current
+  bbox:
+  - 76
+  - 148
+  - 127
+  - 164
+  conf: 96.8349
+- text: evidence
+  bbox:
+  - 38
+  - 172
+  - 102
+  - 190
+  conf: 96.567436
+- text: S-rich
+  bbox:
+  - 818
+  - 188
+  - 870
+  - 208
+  conf: 88.963562
+- text: segments
+  bbox:
+  - 878
+  - 189
+  - 960
+  - 212
+  conf: 96.495216
+- text: 10°
+  bbox:
+  - 236
+  - 261
+  - 262
+  - 282
+  conf: 68.151047
+- text: 10%
+  bbox:
+  - 275
+  - 261
+  - 300
+  - 282
+  conf: 72.485626
+- text: 107°
+  bbox:
+  - 313
+  - 261
+  - 337
+  - 282
+  conf: 32.620255
+- text: 10°
+  bbox:
+  - 352
+  - 261
+  - 373
+  - 282
+  conf: 92.975121
+- text: 10'
+  bbox:
+  - 390
+  - 261
+  - 409
+  - 282
+  conf: 90.583641
+- text: 10?
+  bbox:
+  - 426
+  - 261
+  - 448
+  - 282
+  conf: 81.209152
+- text: 10°
+  bbox:
+  - 464
+  - 261
+  - 484
+  - 282
+  conf: 94.329994
+- text: log
+  bbox:
+  - 338
+  - 291
+  - 378
+  - 316
+  conf: 92.687515
+- text: t
+  bbox:
+  - 370
+  - 289
+  - 380
+  - 318
+  conf: 92.558525
+- text: '@'
+  bbox:
+  - 52
+  - 390
+  - 82
+  - 428
+  conf: 90.137421
+- text: ISPD
+  bbox:
+  - 48
+  - 440
+  - 86
+  - 458
+  conf: 96.222565
+- text: inference
+  bbox:
+  - 32
+  - 468
+  - 100
+  - 485
+  conf: 96.649117
+- text: shallow
+  bbox:
+  - 201
+  - 496
+  - 259
+  - 523
+  conf: 96.830612
+- text: deep
+  bbox:
+  - 324
+  - 498
+  - 362
+  - 520
+  conf: 96.443794
+- text: E,
+  bbox:
+  - 392
+  - 496
+  - 413
+  - 532
+  conf: 46.070042
+- text: chemical
+  bbox:
+  - 694
+  - 587
+  - 762
+  - 604
+  conf: 96.608711
+- text: origin
+  bbox:
+  - 768
+  - 587
+  - 811
+  - 608
+  conf: 96.906975
+- text: physical
+  bbox:
+  - 954
+  - 587
+  - 1017
+  - 608
+  conf: 96.906021
+- text: origin
+  bbox:
+  - 1023
+  - 587
+  - 1066
+  - 608
+  conf: 96.913712
+- text: (electronegativity,
+  bbox:
+  - 692
+  - 614
+  - 817
+  - 638
+  conf: 92.68251
+- text: (local
+  bbox:
+  - 956
+  - 616
+  - 996
+  - 637
+  conf: 95.675438
+- text: potential
+  bbox:
+  - 1000
+  - 616
+  - 1066
+  - 637
+  conf: 95.675438
+- text: polarizability
+  bbox:
+  - 692
+  - 644
+  - 782
+  - 664
+  conf: 96.607765
+- text: of
+  bbox:
+  - 787
+  - 644
+  - 802
+  - 660
+  conf: 93.278687
+- text: S)
+  bbox:
+  - 804
+  - 644
+  - 819
+  - 664
+  conf: 92.774902
+- text: fluctuations)
+  bbox:
+  - 962
+  - 644
+  - 1057
+  - 665
+  conf: 96.536026
+- text: 3)
+  bbox:
+  - 48
+  - 652
+  - 82
+  - 693
+  conf: 49.119831
+- text: '2'
+  bbox:
+  - 165
+  - 652
+  - 176
+  - 674
+  conf: 47.813076
+- text: '6'
+  bbox:
+  - 165
+  - 676
+  - 176
+  - 698
+  conf: 86.017021
+- text: 10"
+  bbox:
+  - 190
+  - 676
+  - 215
+  - 696
+  conf: 85.475975
+- text: Discharge
+  bbox:
+  - 29
+  - 704
+  - 101
+  - 725
+  conf: 96.577782
+- text: '2'
+  bbox:
+  - 165
+  - 700
+  - 180
+  - 734
+  conf: 45.833038
+- text: Debye
+  bbox:
+  - 266
+  - 705
+  - 314
+  - 728
+  conf: 96.977249
+- text: evidence
+  bbox:
+  - 32
+  - 730
+  - 97
+  - 747
+  conf: 96.344414
+- text: '~'
+  bbox:
+  - 165
+  - 734
+  - 176
+  - 741
+  conf: 60.940292
+- text: '4024'
+  bbox:
+  - 190
+  - 734
+  - 216
+  - 754
+  conf: 52.069466
+- text: exp(-t/r
+  bbox:
+  - 256
+  - 737
+  - 324
+  - 754
+  conf: 41.143803
+- text: ':'
+  bbox:
+  - 848
+  - 748
+  - 851
+  - 751
+  conf: 46.997433
+- text: '3'
+  bbox:
+  - 161
+  - 750
+  - 180
+  - 778
+  conf: 41.260647
+- text: a
+  bbox:
+  - 273
+  - 736
+  - 330
+  - 758
+  conf: 49.450668
+- text: localized
+  bbox:
+  - 799
+  - 748
+  - 886
+  - 771
+  conf: 96.828247
+- text: traps
+  bbox:
+  - 895
+  - 749
+  - 945
+  - 778
+  conf: 96.819618
+- text: log
+  bbox:
+  - 324
+  - 846
+  - 348
+  - 870
+  conf: 93.29467
+- text: t
+  bbox:
+  - 356
+  - 847
+  - 363
+  - 865
+  conf: 92.920509
+palette_shape_clusters:
+  cBlue:
+    target_rgb:
+    - 68
+    - 119
+    - 170
+    threshold: 55
+    match_count: 3455
+    components:
+    - bbox:
+      - 1419
+      - 160
+      - 1641
+      - 161
+      pixel_count: 222
+  cTeal:
+    target_rgb:
+    - 68
+    - 170
+    - 153
+    threshold: 55
+    match_count: 1538
+    components:
+    - bbox:
+      - 1421
+      - 160
+      - 1641
+      - 161
+      pixel_count: 220
+  cGray:
+    target_rgb:
+    - 70
+    - 70
+    - 70
+    threshold: 35
+    match_count: 4782
+    components:
+    - bbox:
+      - 1480
+      - 244
+      - 1482
+      - 602
+      pixel_count: 360
+  cLGray:
+    target_rgb:
+    - 200
+    - 200
+    - 200
+    threshold: 35
+    match_count: 23325
+    components:
+    - bbox:
+      - 1484
+      - 462
+      - 1573
+      - 556
+      pixel_count: 4407
+    - bbox:
+      - 314
+      - 412
+      - 379
+      - 488
+      pixel_count: 2702
+    - bbox:
+      - 1241
+      - 216
+      - 1394
+      - 239
+      pixel_count: 2225
+    - bbox:
+      - 1242
+      - 636
+      - 1389
+      - 660
+      pixel_count: 1665
+  cBrown:
+    target_rgb:
+    - 93
+    - 72
+    - 32
+    threshold: 55
+    match_count: 4597
+    components:
+    - bbox:
+      - 1480
+      - 273
+      - 1482
+      - 609
+      pixel_count: 344
