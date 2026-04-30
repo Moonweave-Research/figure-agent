@@ -127,6 +127,43 @@ def build_prompt(example_dir: Path) -> str:
 
     selection_notes = _coerce_selection_notes(spec.get("selection_notes"), example_dir.name)
 
+    # Collect style-reference .tex files from sibling examples (excluding current).
+    # Criterion: fixture has a .tex file AND an exports/ directory with at least one
+    # artifact (stage 6). accepted: true fixtures are listed first; stage-6 others
+    # follow. Both teach the same house style; acceptance status is for QA gates only.
+    accepted_tex: list[str] = []
+    stage6_tex: list[str] = []
+    examples_dir = example_dir.parent
+    for fixture_dir in sorted(examples_dir.iterdir()):
+        if not fixture_dir.is_dir() or fixture_dir.resolve() == example_dir.resolve():
+            continue
+        fixture_tex_path = fixture_dir / f"{fixture_dir.name}.tex"
+        fixture_exports = fixture_dir / "exports"
+        if not fixture_tex_path.exists():
+            continue
+        has_exports = fixture_exports.is_dir() and any(fixture_exports.iterdir())
+        if not has_exports:
+            continue
+        fixture_spec_path = fixture_dir / "spec.yaml"
+        is_accepted = False
+        if fixture_spec_path.exists():
+            try:
+                fs = parse_spec(fixture_spec_path.read_text(encoding="utf-8"))
+                is_accepted = bool(fs and fs.get("accepted") is True)
+            except Exception:
+                pass
+        if is_accepted:
+            accepted_tex.append(str(fixture_tex_path))
+        else:
+            stage6_tex.append(str(fixture_tex_path))
+    all_refs = accepted_tex + stage6_tex
+    if all_refs:
+        reference_fixture_paths = "\n".join(f"- `{p}`" for p in all_refs)
+    else:
+        reference_fixture_paths = (
+            "(no stage-6 fixtures in examples/ yet — author from briefing.md only)"
+        )
+
     def _section_body(num: int) -> str:
         entry = sections.get(num)
         if entry is None:
@@ -144,6 +181,7 @@ def build_prompt(example_dir: Path) -> str:
         "{{selection_notes}}": selection_notes,
         "{{flagship_macros_signature}}": flagship_macros_signature,
         "{{palette_names}}": palette_names,
+        "{{reference_fixture_paths}}": reference_fixture_paths,
     }
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")

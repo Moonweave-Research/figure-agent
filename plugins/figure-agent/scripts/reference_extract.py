@@ -100,7 +100,10 @@ DEFAULT_OCR_CONFIDENCE_FLOOR = 30.0
 # the closest candidate per phrase, so duplicate detections from the two
 # passes do not need de-duplication here.
 DEFAULT_OCR_UPSAMPLE_FACTOR = 2.0
-DEFAULT_OCR_PASSES: tuple[float, ...] = (2.0,)
+# Two passes: native (1.0×) recovers short symbols (CB, VB, n, τ) that LANCZOS
+# over-blurs at 2×; 2× recovers small axis-tick labels that native resolution
+# loses. Spatial matcher in the drift gate deduplicates by closest candidate.
+DEFAULT_OCR_PASSES: tuple[float, ...] = (1.0, 2.0)
 
 
 def _hash_file(path: Path, algo: str = "sha256") -> str:
