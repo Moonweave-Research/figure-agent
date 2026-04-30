@@ -118,9 +118,9 @@
 
   % Power-law line: STRAIGHT diagonal
   \draw[curveBlue] (1.30, 4.30) -- (5.05, 1.45);
-  % Labels in TOP-RIGHT empty area (well above line)
+  % Label near top-left of panel, below the 'b' header
   \node[font=\textsf{\fontsize{8}{9.5}\selectfont}, cBlue!80!black, anchor=west]
-      at (3.30, 4.20) {power-law};
+      at (1.00, 5.28) {power-law};
   \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cBlue!80!black, anchor=west]
       at (3.30, 3.90) {$I(t) \propto t^{-n}$};
 
@@ -165,8 +165,8 @@
   \draw[curveRed]
       plot[smooth, samples=60, domain=0:1]
       ({1.30+\x*3.75}, {2.95-0.05*\x-1.70*\x*\x*\x*\x*\x*\x});
-  \node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cRed!80!black, anchor=west]
-      at (1.30, 1.55) {no-trap (Debye)};
+  \node[font=\textsf{\fontsize{7.5}{9}\selectfont}, cRed!80!black, anchor=east]
+      at (5.20, 2.29) {no-trap (Debye)};
 
 \end{scope}
 
@@ -203,9 +203,9 @@
       at (2.025, 4.50) {S--S trap site};
 
   % Callout: "electron affinity" BELOW chain, points up to S-S region
-  \draw[callout] (1.40, 2.40) -- (1.85, 3.55);
+  \draw[callout] (0.64, 2.40) -- (1.85, 3.55);
   \node[font=\textsf{\fontsize{7}{8.5}\selectfont}, cAmber!50!black, anchor=north, align=center]
-      at (1.40, 2.35) {electron\\[-0.2em]affinity};
+      at (0.64, 2.32) {electron\\[-0.2em]affinity};
 
   % "creates" arrow: from S-S region → trap level E_t (visual bridge)
   \draw[smallArr, line width=0.8pt, cAmber!60!black]
