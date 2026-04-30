@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
-# export_svg.sh — PDF → SVG
+# export_svg.sh — PDF → SVG with text preserved as <text> nodes.
 # Usage: scripts/export_svg.sh <input.pdf> <output.svg>
+#
+# Uses dvisvgm in --pdf mode so labels survive as semantic <text> elements
+# instead of being outlined into glyph paths. Fonts are embedded via woff2
+# so the SVG renders correctly without external font files.
+#
+# Requirements:
+#   - dvisvgm (ships with TeX Live; standalone via `brew install dvisvgm`)
+#   - mutool (mupdf-tools) OR Ghostscript < 10.01.0 on the PATH for --pdf
+#     input parsing. dvisvgm 3.x rejects Ghostscript >= 10.01.0.
 
 set -euo pipefail
 
-if ! command -v pdftocairo >/dev/null 2>&1; then
-  echo "Error: pdftocairo not found. Install poppler-utils." >&2
+if ! command -v dvisvgm >/dev/null 2>&1; then
+  echo "Error: dvisvgm not found. Install via TeX Live or 'brew install dvisvgm'." >&2
   exit 127
 fi
 
@@ -23,13 +32,15 @@ if [[ ! -f "$PDF_INPUT" ]]; then
 fi
 
 # Defend against caller passing an output path that lacks the .svg suffix.
-# pdftocairo -svg writes to the exact path given; missing the suffix yields
-# a no-extension stray file in exports/ that has to be `rm`'d manually.
+# dvisvgm writes to the exact path given; missing the suffix yields a
+# no-extension stray file in exports/ that has to be `rm`'d manually.
 if [[ "$SVG_OUTPUT" != *.svg ]]; then
   echo "Error: output path must end with .svg, got: $SVG_OUTPUT" >&2
   exit 1
 fi
 
-pdftocairo -svg "$PDF_INPUT" "$SVG_OUTPUT"
+# --pdf: take a PDF as input (requires mutool or compatible Ghostscript)
+# --font-format=woff2: embed fonts so <text> elements render out of the box
+dvisvgm --pdf --font-format=woff2 "$PDF_INPUT" -o "$SVG_OUTPUT" >/dev/null
 
 echo "Generated: $SVG_OUTPUT"
