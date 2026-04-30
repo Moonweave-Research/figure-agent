@@ -15,7 +15,7 @@ panels:
 style_profile: polymer-default
 selected_preview: null
 reference_image: reference/golden_target_002.png
-accepted: false
+accepted: true
 selection_notes: |
   Second golden fixture for N=2 drift gate generality test (Phase E.5).
   Source: paper v9.7 Fig 3 — multi-evidence convergence variant
