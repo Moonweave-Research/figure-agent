@@ -33,7 +33,7 @@ Layer 1: Identity / Onboarding         (README, SKILL, plugin.json, CLAUDE/AGENT
 Layer 2: Authoring Intent              (briefing.md + spec.yaml + golden_contract)
    |
    v
-Layer 2.5: Reference Analysis          (planned — Phase E; see end of file)
+Layer 2.5: Reference Analysis          (reference_extract.py + /fig_extract; optional)
    |
    v
 Layer 3: TikZ Source Authoring         (<name>.tex + polymer-paper-preamble.sty)
