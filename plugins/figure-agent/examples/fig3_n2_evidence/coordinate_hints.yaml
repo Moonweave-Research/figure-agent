@@ -1,6 +1,6 @@
 metadata:
   extraction_version: '0.1'
-  created_at: '2026-04-30T13:38:27+00:00'
+  created_at: '2026-04-30T14:04:07+00:00'
   reference_image_path: reference/golden_target_002.png
   reference_image_hash: sha256:5a9f045e04ab1e753aa9c247478fce4b4be8e05fd9e7ba770036418ab8427a5e
   ocr_status: ok
@@ -884,4 +884,14 @@ structural_regions:
     - 13.78
     - 6.38
     area_cm2: 12.84
-  chain_rows: []
+  chain_rows:
+  - y_center_cm: 5.11
+    x_span_cm:
+    - 4.97
+    - 7.32
+    path_count: 1
+  - y_center_cm: 4.32
+    x_span_cm:
+    - 5.16
+    - 9.0
+    path_count: 1

@@ -325,9 +325,43 @@ def test_structural_regions_extracts_panel_arcs_from_real_fixture(tmp_path):
     assert 0.008 < sr["cm_per_px"] < 0.009
     assert len(sr["panel_arcs"]) >= 1
     assert len(sr["border_boxes"]) >= 1
-    assert sr["chain_rows"] == []
+    assert isinstance(sr["chain_rows"], list)
     for entry in sr["panel_arcs"] + sr["border_boxes"]:
         assert "color_family" in entry
         assert "bbox_px" in entry
         assert "bbox_cm" in entry
         assert "area_cm2" in entry
+
+
+def test_structural_regions_chain_rows_from_real_fixture(tmp_path):
+    """chain_rows populated for golden_target_002.png."""
+    pytest.importorskip("vtracer")
+
+    fixture_ref = (
+        Path(__file__).resolve().parents[1]
+        / "examples/fig3_n2_evidence/reference/golden_target_002.png"
+    )
+    if not fixture_ref.exists():
+        pytest.skip("golden_target_002.png not found")
+
+    import shutil
+
+    shutil.copy(fixture_ref, tmp_path / "golden_target_002.png")
+    (tmp_path / "spec.yaml").write_text(
+        "name: test_chain\nreference_image: golden_target_002.png\naccepted: false\n"
+    )
+
+    hints_path, _ = extract_coordinate_hints(tmp_path, rebuild=True)
+    payload = yaml.safe_load(hints_path.read_text())
+    sr = payload["structural_regions"]
+
+    assert sr["status"] == "ok"
+    rows = sr["chain_rows"]
+    assert len(rows) >= 2, f"expected ≥2 chain rows, got {len(rows)}"
+    for row in rows:
+        assert "y_center_cm" in row
+        assert "x_span_cm" in row
+        assert "path_count" in row
+        assert row["x_span_cm"][0] > 3.5  # middle zone
+        assert row["x_span_cm"][1] < 12.0
+        assert 2.0 < row["y_center_cm"] < 7.0

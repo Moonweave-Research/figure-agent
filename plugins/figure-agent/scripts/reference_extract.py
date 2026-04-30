@@ -185,6 +185,11 @@ def palette_shape_clusters(
 
 
 def _classify_color_family(r: int, g: int, b: int) -> str | None:
+    # Mid-gray: polymer chain color — moderate dark gray, low saturation.
+    # Must run before the mx-mn < 40 saturation guard because chain-gray pixels
+    # are near-achromatic (max-min ≈ 0) and would early-return otherwise.
+    if 45 < r < 145 and abs(r - g) < 25 and abs(g - b) < 25:
+        return "chain_gray"
     mx, mn = max(r, g, b), min(r, g, b)
     if mx - mn < 40:
         return None
@@ -364,13 +369,85 @@ def structural_regions_from_reference(
         key=lambda r: -r["area_cm2"],
     )
 
+    # Chain rows: middle-zone gray paths
+    # Criteria:
+    #   - color_family == "chain_gray"
+    #   - x_center in middle zone: 4.0 cm < x_center < 11.5 cm
+    #   - horizontal span > 1.5 cm (long chain, not a label or tick)
+    #   - vertical span < 0.8 cm (thin wavy line, not a block)
+
+    MID_X_MIN_CM = 4.0
+    MID_X_MAX_CM = 11.5
+    MIN_CHAIN_WIDTH_CM = 1.5
+    MAX_CHAIN_HEIGHT_CM = 0.8
+
+    chain_candidates: list[tuple[float, float, float, float]] = []  # (y_center, x1, x2, x_span)
+
+    for bb in family_paths.get("chain_gray", []):
+        x1, y1, x2, y2 = bb
+        x1_cm = x1 * cm_per_px
+        x2_cm = x2 * cm_per_px
+        y1_cm = (img_h - y2) * cm_per_px
+        y2_cm = (img_h - y1) * cm_per_px
+        x_span = x2_cm - x1_cm
+        y_span = y2_cm - y1_cm
+        x_center = (x1_cm + x2_cm) / 2
+        y_center = (y1_cm + y2_cm) / 2
+        if (
+            MID_X_MIN_CM < x_center < MID_X_MAX_CM
+            and x_span > MIN_CHAIN_WIDTH_CM
+            and y_span < MAX_CHAIN_HEIGHT_CM
+        ):
+            chain_candidates.append((y_center, x1_cm, x2_cm, x_span))
+
+    # Cluster by y-position (within 0.5 cm = same chain row)
+    CLUSTER_RADIUS_CM = 0.50
+    chain_rows_raw: list[dict] = []
+
+    if chain_candidates:
+        chain_candidates.sort(key=lambda c: c[0])  # sort by y_center
+        clusters: list[list[tuple]] = []
+        for cand in chain_candidates:
+            placed = False
+            for cluster in clusters:
+                if abs(cand[0] - cluster[0][0]) < CLUSTER_RADIUS_CM:
+                    cluster.append(cand)
+                    placed = True
+                    break
+            if not placed:
+                clusters.append([cand])
+
+        for cluster in clusters:
+            y_centers = [c[0] for c in cluster]
+            x1s = [c[1] for c in cluster]
+            x2s = [c[2] for c in cluster]
+            total_x_span = sum(c[3] for c in cluster)
+            chain_rows_raw.append(
+                {
+                    "y_center_cm": round(sum(y_centers) / len(y_centers), 2),
+                    "x_span_cm": [round(min(x1s), 2), round(max(x2s), 2)],
+                    "path_count": len(cluster),
+                    "total_x_span_cm": round(total_x_span, 2),
+                }
+            )
+
+        # Sort by total_x_span descending (most complete chains first),
+        # then re-sort by y_center descending (top to bottom in TikZ)
+        chain_rows_raw.sort(key=lambda r: -r["total_x_span_cm"])
+        chain_rows = sorted(chain_rows_raw[:5], key=lambda r: -r["y_center_cm"])
+        # Remove helper field
+        for row in chain_rows:
+            del row["total_x_span_cm"]
+    else:
+        chain_rows = []
+
     return {
         "status": "ok",
         "image_px": [img_w, img_h],
         "cm_per_px": round(cm_per_px, 5),
         "panel_arcs": panel_arcs,
         "border_boxes": border_boxes,
-        "chain_rows": [],
+        "chain_rows": chain_rows,
     }
 
 
