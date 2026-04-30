@@ -67,8 +67,26 @@ post-v0.1.7.2 development direction. Run commands from the plugin root.
 ## Status
 
 v0.1 line is active; latest shipped plugin version is recorded in
-`.claude-plugin/plugin.json`. Spec under `docs/design-v0.1.md`.
-Active direction is recorded in `docs/quality-kernel-goal.md`.
+`.claude-plugin/plugin.json`. Active direction is recorded in
+`docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved
+under `docs/historical/design-v0.1.md` as a frozen reference.
+
+## Documentation map
+
+Active:
+- `docs/quality-kernel-goal.md` — current product direction (durable kernel,
+  frozen-legacy boundary, export tracking policy).
+- `docs/golden-target-trap-depth-picture.md` — Golden Target 001 acceptance
+  criteria (the canonical fixture spec).
+- `docs/golden-target-001-retrospective.md` — N=1 evidence retrospective and
+  the gap list driving v0.2 cleanup.
+
+Historical (not maintained, pinned for context):
+- `docs/historical/design-v0.1.md` — v0.1 ship spec.
+- `docs/historical/roadmap-v0.1.7-selection-notes.md` — v0.1.7 selection_notes
+  rollout decisions; superseded by the quality-kernel goal.
+- `docs/historical/superpowers-plan-2026-04-29-golden-target-001.md` —
+  executed implementation plan for Golden Target 001.
 
 v0.1 is source-only as a Claude Code plugin. Use
 `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`,

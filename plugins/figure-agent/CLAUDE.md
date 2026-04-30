@@ -43,5 +43,5 @@ See `docs/quality-kernel-goal.md` for why these are frozen.
 - ResearchOS workspace sibling to `[Athena]/`, `[Graph_making_hub]/`.
 - Successor to `[tikz-paper-workflow]/` (archived 2026-04-27).
 - Reference-layer architecture deprecated (Y0 pilot evidence).
-- v0.1 spec: `docs/design-v0.1.md` (historical).
+- v0.1 spec: `docs/historical/design-v0.1.md` (frozen historical).
 - v0.2 direction: `docs/quality-kernel-goal.md` (active).
