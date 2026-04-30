@@ -74,6 +74,7 @@ under `docs/historical/design-v0.1.md` as a frozen reference.
 ## Documentation map
 
 Active:
+- `docs/architecture-overview.md` — layer-by-layer reference; start here.
 - `docs/quality-kernel-goal.md` — current product direction (durable kernel,
   frozen-legacy boundary, export tracking policy).
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001 acceptance
