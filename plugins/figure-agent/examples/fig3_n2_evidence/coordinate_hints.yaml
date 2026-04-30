@@ -1,6 +1,6 @@
 metadata:
-  extraction_version: '0.1'
-  created_at: '2026-04-30T14:04:07+00:00'
+  extraction_version: '0.2'
+  created_at: '2026-04-30T14:34:48+00:00'
   reference_image_path: reference/golden_target_002.png
   reference_image_hash: sha256:5a9f045e04ab1e753aa9c247478fce4b4be8e05fd9e7ba770036418ab8427a5e
   ocr_status: ok
@@ -885,13 +885,140 @@ structural_regions:
     - 6.38
     area_cm2: 12.84
   chain_rows:
-  - y_center_cm: 5.11
+  - y_center_cm: 5.07
     x_span_cm:
     - 4.97
-    - 7.32
-    path_count: 1
-  - y_center_cm: 4.32
+    - 8.96
+    path_count: 28
+  - y_center_cm: 4.25
     x_span_cm:
     - 5.16
-    - 9.0
-    path_count: 1
+    - 10.22
+    path_count: 30
+  - y_center_cm: 3.46
+    x_span_cm:
+    - 5.13
+    - 8.96
+    path_count: 27
+  s_atoms:
+  - x_cm: 5.77
+    y_cm: 5.08
+    chain_row_index: 0
+    area_px2: 71
+  - x_cm: 5.78
+    y_cm: 5.39
+    chain_row_index: 0
+    area_px2: 153
+  - x_cm: 5.78
+    y_cm: 5.42
+    chain_row_index: 0
+    area_px2: 57
+  - x_cm: 6.7
+    y_cm: 5.39
+    chain_row_index: 0
+    area_px2: 143
+  - x_cm: 8.09
+    y_cm: 5.39
+    chain_row_index: 0
+    area_px2: 162
+  - x_cm: 10.51
+    y_cm: 4.84
+    chain_row_index: 0
+    area_px2: 136
+  - x_cm: 10.51
+    y_cm: 5.18
+    chain_row_index: 0
+    area_px2: 99
+  - x_cm: 10.94
+    y_cm: 4.97
+    chain_row_index: 0
+    area_px2: 99
+  - x_cm: 4.03
+    y_cm: 3.98
+    chain_row_index: 1
+    area_px2: 308
+  - x_cm: 4.04
+    y_cm: 4.03
+    chain_row_index: 1
+    area_px2: 120
+  - x_cm: 4.11
+    y_cm: 3.89
+    chain_row_index: 1
+    area_px2: 75
+  - x_cm: 4.19
+    y_cm: 3.95
+    chain_row_index: 1
+    area_px2: 121
+  - x_cm: 4.39
+    y_cm: 4.16
+    chain_row_index: 1
+    area_px2: 338
+  - x_cm: 4.54
+    y_cm: 4.12
+    chain_row_index: 1
+    area_px2: 138
+  - x_cm: 4.93
+    y_cm: 4.13
+    chain_row_index: 1
+    area_px2: 72
+  - x_cm: 5.47
+    y_cm: 4.59
+    chain_row_index: 1
+    area_px2: 152
+  - x_cm: 6.37
+    y_cm: 4.59
+    chain_row_index: 1
+    area_px2: 154
+  - x_cm: 6.37
+    y_cm: 4.54
+    chain_row_index: 1
+    area_px2: 63
+  - x_cm: 7.13
+    y_cm: 4.5
+    chain_row_index: 1
+    area_px2: 162
+  - x_cm: 10.94
+    y_cm: 4.59
+    chain_row_index: 1
+    area_px2: 96
+  - x_cm: 5.52
+    y_cm: 3.77
+    chain_row_index: 2
+    area_px2: 150
+  - x_cm: 6.24
+    y_cm: 3.75
+    chain_row_index: 2
+    area_px2: 134
+  - x_cm: 7.3
+    y_cm: 3.63
+    chain_row_index: 2
+    area_px2: 106
+  - x_cm: 7.62
+    y_cm: 3.61
+    chain_row_index: 2
+    area_px2: 101
+  - x_cm: 7.94
+    y_cm: 3.45
+    chain_row_index: 2
+    area_px2: 93
+  - x_cm: 7.95
+    y_cm: 3.58
+    chain_row_index: 2
+    area_px2: 126
+  - x_cm: 7.95
+    y_cm: 3.54
+    chain_row_index: 2
+    area_px2: 56
+  trap_levels:
+  - color_family: orange
+    level_role: shallow
+    x_cm: 10.94
+    y_cm: 4.97
+    w_cm: 0.27
+    h_cm: 0.02
+  - color_family: orange
+    level_role: shallow
+    x_cm: 10.94
+    y_cm: 4.59
+    w_cm: 0.26
+    h_cm: 0.02

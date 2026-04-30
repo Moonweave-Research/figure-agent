@@ -16,6 +16,10 @@ The hints carry two structures used as authoring + validation aid in Layer 3
                            polymer-paper-preamble palette color, after a
                            per-color RGB-distance threshold and min component
                            size filter.
+  s_atoms[]        Amber S-atom dot positions on chain rows (x_cm, y_cm,
+                   chain_row_index, area_px2). Sorted by chain_row_index then x_cm.
+  trap_levels[]    Orange (shallow) + purple (deep) horizontal dashes inside the
+                   band-diagram border box. Sorted by y_cm descending.
 
 Per-color thresholds reflect empirical tuning on golden_target_001.png
 (`output/reference_extract_test/`); see Phase E pre-flight agent report.
@@ -47,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from inputs import parse_spec  # noqa: E402
 
-EXTRACTION_VERSION = "0.1"
+EXTRACTION_VERSION = "0.2"
 
 # polymer-paper-preamble.sty palette. Keep in sync with the .sty file; if a new
 # palette color is added there, add it here too (no automatic discovery yet).
@@ -284,6 +288,7 @@ def structural_regions_from_reference(
     # Union-bbox-per-family is wrong: scattered noise paths inflate the bbox to
     # canvas size. Instead keep all individual bboxes and return the largest ones.
     family_paths: dict[str, list[tuple[float, float, float, float]]] = {}
+    raw_paths: dict[str, list[dict]] = {}  # NEW: 면적 필터 없는 개별 path 정보
 
     for path_elem in root.findall(".//svg:path", ns):
         fill = path_elem.get("fill", "")
@@ -313,6 +318,25 @@ def structural_regions_from_reference(
             continue
 
         family_paths.setdefault(family, []).append(bb)
+        # Also store individual path metadata for small-feature extraction
+        x1, y1, x2, y2 = bb
+        w_px = x2 - x1
+        h_px = y2 - y1
+        area_px2 = w_px * h_px
+        raw_paths.setdefault(family, []).append(
+            {
+                "bbox_px": (x1, y1, x2, y2),
+                "area_px2": area_px2,
+                "w_px": w_px,
+                "h_px": h_px,
+                "x_center_cm": (x1 + x2) / 2 * cm_per_px,
+                "y_center_cm": (img_h - (y1 + y2) / 2) * cm_per_px,
+                "x1_cm": x1 * cm_per_px,
+                "x2_cm": x2 * cm_per_px,
+                "y1_cm": (img_h - y2) * cm_per_px,
+                "y2_cm": (img_h - y1) * cm_per_px,
+            }
+        )
 
     def _to_region(family: str, px: list[float]) -> dict:
         x1_px, y1_px, x2_px, y2_px = px
@@ -393,11 +417,7 @@ def structural_regions_from_reference(
         y_span = y2_cm - y1_cm
         x_center = (x1_cm + x2_cm) / 2
         y_center = (y1_cm + y2_cm) / 2
-        if (
-            MID_X_MIN_CM < x_center < MID_X_MAX_CM
-            and x_span > MIN_CHAIN_WIDTH_CM
-            and y_span < MAX_CHAIN_HEIGHT_CM
-        ):
+        if MID_X_MIN_CM < x_center < MID_X_MAX_CM and y_span < MAX_CHAIN_HEIGHT_CM:
             chain_candidates.append((y_center, x1_cm, x2_cm, x_span))
 
     # Cluster by y-position (within 0.5 cm = same chain row)
@@ -431,6 +451,16 @@ def structural_regions_from_reference(
                 }
             )
 
+        # Filter clusters: only keep rows with total_x_span >= MIN_CHAIN_WIDTH_CM and
+        # at least 2 paths (ensures short isolated segments don't form false rows)
+        chain_rows_raw = [
+            r
+            for r in chain_rows_raw
+            if r["total_x_span_cm"] >= MIN_CHAIN_WIDTH_CM
+            and r["path_count"] >= 2
+            and r["y_center_cm"] > 2.8
+        ]
+
         # Sort by total_x_span descending (most complete chains first),
         # then re-sort by y_center descending (top to bottom in TikZ)
         chain_rows_raw.sort(key=lambda r: -r["total_x_span_cm"])
@@ -441,6 +471,71 @@ def structural_regions_from_reference(
     else:
         chain_rows = []
 
+    # S-atom positions: small amber/orange dots on chain rows
+    s_atoms: list[dict] = []
+    chain_y_centers = [row["y_center_cm"] for row in chain_rows]
+    for path_info in raw_paths.get("orange", []):
+        area = path_info["area_px2"]
+        if not (50 <= area <= 1500):  # 크기 필터: panel arc(>80k) 제외
+            continue
+        xc = path_info["x_center_cm"]
+        yc = path_info["y_center_cm"]
+        if not (4.0 <= xc <= 11.5 and 2.0 <= yc <= 6.5):
+            continue
+        if not chain_y_centers:
+            continue
+        dists = [abs(yc - cy) for cy in chain_y_centers]
+        min_dist = min(dists)
+        if min_dist > 0.55:
+            continue
+        s_atoms.append(
+            {
+                "x_cm": round(xc, 2),
+                "y_cm": round(yc, 2),
+                "chain_row_index": dists.index(min_dist),
+                "area_px2": int(area),
+            }
+        )
+    s_atoms.sort(key=lambda a: (a["chain_row_index"], a["x_cm"]))
+
+    # Trap levels: orange (shallow) + purple (deep) horizontal dashes inside teal border
+    TRAP_MIN_AREA_PX2 = 60
+    TRAP_MAX_AREA_PX2 = 4000
+    TRAP_ASPECT_MIN = 3.0  # w >= 3*h (horizontal dash)
+
+    trap_levels: list[dict] = []
+
+    if border_boxes:
+        tb = border_boxes[0]["bbox_cm"]  # [x1, y1, x2, y2]
+        tb_x1, tb_y1, tb_x2, tb_y2 = tb
+    else:
+        tb_x1, tb_y1, tb_x2, tb_y2 = 0, 0, 14, 8
+
+    for fam, role in [("orange", "shallow"), ("purple", "deep")]:
+        for path_info in raw_paths.get(fam, []):
+            area = path_info["area_px2"]
+            if not (TRAP_MIN_AREA_PX2 <= area <= TRAP_MAX_AREA_PX2):
+                continue
+            w, h = path_info["w_px"], path_info["h_px"]
+            if h == 0 or w / h < TRAP_ASPECT_MIN:
+                continue
+            xc = path_info["x_center_cm"]
+            yc = path_info["y_center_cm"]
+            if not (tb_x1 <= xc <= tb_x2 and tb_y1 <= yc <= tb_y2):
+                continue
+            trap_levels.append(
+                {
+                    "color_family": fam,
+                    "level_role": role,
+                    "x_cm": round(xc, 2),
+                    "y_cm": round(yc, 2),
+                    "w_cm": round(path_info["x2_cm"] - path_info["x1_cm"], 2),
+                    "h_cm": round(path_info["y2_cm"] - path_info["y1_cm"], 2),
+                }
+            )
+
+    trap_levels.sort(key=lambda t: -t["y_cm"])  # top to bottom (TikZ: high y = top)
+
     return {
         "status": "ok",
         "image_px": [img_w, img_h],
@@ -448,6 +543,8 @@ def structural_regions_from_reference(
         "panel_arcs": panel_arcs,
         "border_boxes": border_boxes,
         "chain_rows": chain_rows,
+        "s_atoms": s_atoms,
+        "trap_levels": trap_levels,
     }
 
 
