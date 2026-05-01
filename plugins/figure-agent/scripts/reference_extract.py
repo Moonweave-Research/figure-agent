@@ -252,7 +252,8 @@ def structural_regions_from_reference(
       'failed'      — vtracer available but extraction raised an exception.
 
       plot_boxes[]     Large gray axis-background rectangles inside each evidence panel arc.
-      plot_curves[]    Curve bounding boxes: power-law line (panel blue) and Debye decay (panel purple).
+      plot_curves[]    Curve bounding boxes: power-law line (panel blue)
+                       and Debye decay (panel purple).
       ispd_lobes[]     ISPD bell curve bounding boxes: shallow (orange) and deep (purple/lavender).
       right_gaussians[] g(Et) sideways Gaussians in band diagram: shallow (peach) and deep (purple).
     """
@@ -413,7 +414,7 @@ def structural_regions_from_reference(
     # Bounds are canvas-relative so thresholds generalise across fixtures:
     #   x_center: 10 %–90 % of canvas width  (excludes far-left icons / far-right axis)
     #   y_center: 5 %–95 % of canvas height  (excludes page margins only)
-    # Previously these were hardcoded to the fig3_n2_evidence layout (4.0–11.5 cm,
+    # Previously these were hardcoded to one fixture layout (4.0-11.5 cm,
     # y > 2.8 cm) which excluded legitimate chains in other fixtures.
     canvas_w_cm = img_w * cm_per_px
     canvas_h_cm = img_h * cm_per_px
@@ -510,7 +511,7 @@ def structural_regions_from_reference(
         if not (canvas_h_cm * 0.03 <= yc <= canvas_h_cm * 0.97):
             continue
         # Exclude paths whose center lies inside a detected panel arc bbox.
-        # This replaces the old x>4.5 hack that was fig3_n2_evidence-specific.
+        # This replaces the old x>4.5 hack that was fixture-specific.
         if any(
             a["bbox_cm"][0] <= xc <= a["bbox_cm"][2] and a["bbox_cm"][1] <= yc <= a["bbox_cm"][3]
             for a in panel_arcs
@@ -685,7 +686,7 @@ def structural_regions_from_reference(
     orange_arc = next((a for a in panel_arcs if a["color_family"] == "orange"), None)
     if orange_arc:
         oax1, oay1, oax2, oay2 = orange_arc["bbox_cm"]
-        panel_center_x = (oax1 + oax2) / 2  # ≈3.075 for fig3_n2_evidence
+        panel_center_x = (oax1 + oax2) / 2
         for fam, role in [("orange", "shallow"), ("purple", "deep")]:
             all_inside = []
             for path_info in raw_paths.get(fam, []):

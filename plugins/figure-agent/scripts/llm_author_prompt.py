@@ -63,8 +63,9 @@ def _format_structural_regions(sr: dict) -> str:
         lines.append("Plot curve bounding boxes:")
         for c in pcs:
             bb = c["bbox_cm"]
+            element = f"{c['element']:26s}(panel={c['panel_family']})"
             lines.append(
-                f"  {c['element']:26s}(panel={c['panel_family']}): x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
+                f"  {element}: x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
             )
         lines.append("")
 
@@ -73,8 +74,9 @@ def _format_structural_regions(sr: dict) -> str:
         lines.append("ISPD g(Et) bell lobes (inside orange panel arc):")
         for lobe in lobes:
             bb = lobe["bbox_cm"]
+            label = f"{lobe['level_role']:8s}({lobe['color_family']})"
             lines.append(
-                f"  {lobe['level_role']:8s}({lobe['color_family']}): x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
+                f"  {label}: x={bb[0]}-{bb[2]}  y={bb[1]}-{bb[3]}"
             )
         lines.append("")
 
@@ -82,8 +84,9 @@ def _format_structural_regions(sr: dict) -> str:
     if rows:
         lines.append("Chain rows (draw as plot[smooth] wavy chains):")
         for i, r in enumerate(rows):
+            x_span = f"{r['x_span_cm'][0]}-{r['x_span_cm'][1]}"
             lines.append(
-                f"  row {i}: y_center={r['y_center_cm']} cm  x={r['x_span_cm'][0]}-{r['x_span_cm'][1]}"
+                f"  row {i}: y_center={r['y_center_cm']} cm  x={x_span}"
             )
         lines.append("")
 

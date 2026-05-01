@@ -596,7 +596,11 @@ def test_real_golden_fixture_is_not_accepted() -> None:
     result = infer_stage(fixture)
     assert result["stage"] == 6
     assert result["accepted"] is False
-    assert "QUALITY_AUDIT.md" in result["next"]
+    if "stale_export" in result["notes"]:
+        assert "/fig_compile" in result["next"]
+        assert "QUALITY_AUDIT" not in result["next"]
+    else:
+        assert "QUALITY_AUDIT.md" in result["next"]
 
 
 def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
