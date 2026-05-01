@@ -317,7 +317,7 @@
 }
 \makeatother
 
-% \LogLogPlot{x0,y0,x1,y1}{xticks}{xlabels}{yticks}{ylabels}{xlabel}{ylabel}: log-log axes + ticks + labels at given bbox; bbox is comma-CSV, rest brace args; tick lists are pos-only (xticks/yticks) or pos/label pairs (xlabels/ylabels).
+% \LogLogPlot{x0,y0,x1,y1}{xticks}{xlabels}{yticks}{ylabels}{xlabel}{ylabel}: log-log axes + ticks + labels at given bbox; bbox is comma-CSV, rest brace args; tick lists are pos-only (xticks/yticks) or pos/label pairs (xlabels/ylabels); xlabel/ylabel content must be wrapped in $...$ at call site if it contains math operators (e.g. {$\log\,t$}).
 \newcommand{\LogLogPlot}[7]{%
   \LLPParseBox#1\relax{#2}{#3}{#4}{#5}{#6}{#7}%
 }
