@@ -2,6 +2,27 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.12] - 2026-05-01
+
+### Fixed
+
+- `scripts/check_layout_drift.py`: repeated single-token labels now choose
+  the closest reference/PDF pair instead of blindly pairing first hits. This
+  fixes the false `deep` drift on `golden_trap_depth_picture` while preserving
+  alternate-form fallback behavior.
+
+### Changed
+
+- `examples/golden_trap_depth_picture`: refreshed the fixture render after
+  right-panel label spacing and bottom annotation readability tweaks. The
+  fixture remains `accepted: false`; accepted-mode still rejects the unresolved
+  visual clash budget.
+
+### Tests
+
+- Added regression coverage for repeated single-token drift matching and
+  alternate-form fallback.
+
 ## [0.1.7.2] - 2026-04-29
 
 Cleanup release that closes the v0.1.6-era pending bugfix for stray

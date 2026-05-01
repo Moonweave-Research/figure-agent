@@ -46,6 +46,7 @@ DEFAULT_DRIFT_THRESHOLD = 0.05  # fraction of normalized canvas
 AMBIGUOUS_TOKEN_MAX_LEN = 2
 
 LabelSpec = str | list[str]
+BBox = tuple[float, float, float, float]
 
 
 @dataclass(frozen=True)
@@ -141,9 +142,7 @@ def _spatial_neighbor(
     return best
 
 
-def _find_phrase_in_words(
-    phrase_tokens: list[str], words: list[dict]
-) -> tuple[float, float, float, float] | None:
+def _find_phrase_in_words(phrase_tokens: list[str], words: list[dict]) -> BBox | None:
     """Find the spatially closest chain of words matching ``phrase_tokens``.
 
     For each candidate start, walks the phrase token-by-token, picking the
@@ -204,6 +203,26 @@ def _find_phrase_in_words(
     return (xs0, ys0, xs1, ys1)
 
 
+def _find_phrase_candidates_in_words(phrase_tokens: list[str], words: list[dict]) -> list[BBox]:
+    """Return candidate bboxes for a phrase.
+
+    Single-token labels can appear multiple times in one figure. Returning all
+    single-token candidates lets evaluate_drift pair repeated labels by geometry
+    instead of blindly comparing the first OCR hit with the first PDF hit.
+    """
+    if not phrase_tokens or not words:
+        return []
+    if len(phrase_tokens) == 1:
+        token = phrase_tokens[0]
+        return [
+            (word["xmin"], word["ymin"], word["xmax"], word["ymax"])
+            for word in words
+            if _normalize_token(word["text"]) == token
+        ]
+    hit = _find_phrase_in_words(phrase_tokens, words)
+    return [hit] if hit is not None else []
+
+
 def _hints_to_word_list(hints: dict) -> list[dict]:
     """Convert coordinate_hints.text_labels to the same shape as pdf words."""
     out: list[dict] = []
@@ -250,20 +269,24 @@ def evaluate_drift(
         if _is_ambiguous_label(label):
             results.append(DriftResult(label_str, None, "excluded_ambiguous", None, None, None))
             continue
-        ref_hit: tuple[str, tuple[float, float, float, float]] | None = None
-        pdf_hit: tuple[str, tuple[float, float, float, float]] | None = None
+        ref_hit: tuple[str, BBox] | None = None
+        pdf_hit: tuple[str, BBox] | None = None
+        best_pair: tuple[str, BBox, BBox, float] | None = None
         for form in forms:
             tokens = _phrase_tokens(form)
-            if ref_hit is None:
-                bbox = _find_phrase_in_words(tokens, ref_words)
-                if bbox is not None:
-                    ref_hit = (form, bbox)
-            if pdf_hit is None:
-                bbox = _find_phrase_in_words(tokens, pdf_words)
-                if bbox is not None:
-                    pdf_hit = (form, bbox)
-            if ref_hit is not None and pdf_hit is not None and ref_hit[0] == pdf_hit[0]:
-                break
+            ref_candidates = _find_phrase_candidates_in_words(tokens, ref_words)
+            pdf_candidates = _find_phrase_candidates_in_words(tokens, pdf_words)
+            if ref_hit is None and ref_candidates:
+                ref_hit = (form, ref_candidates[0])
+            if pdf_hit is None and pdf_candidates:
+                pdf_hit = (form, pdf_candidates[0])
+            for ref_bbox in ref_candidates:
+                ref_center = _center_norm(ref_bbox, ref_canvas)
+                for pdf_bbox in pdf_candidates:
+                    pdf_center = _center_norm(pdf_bbox, pdf_page_size)
+                    drift = math.dist(ref_center, pdf_center)
+                    if best_pair is None or drift < best_pair[3]:
+                        best_pair = (form, ref_bbox, pdf_bbox, drift)
         if ref_hit is None and pdf_hit is None:
             results.append(DriftResult(label_str, None, "uncovered_both", None, None, None))
             continue
@@ -273,13 +296,24 @@ def evaluate_drift(
         if pdf_hit is None:
             results.append(DriftResult(label_str, ref_hit[0], "uncovered_build", None, None, None))
             continue
-        ref_center = _center_norm(ref_hit[1], ref_canvas)
-        pdf_center = _center_norm(pdf_hit[1], pdf_page_size)
-        drift = math.dist(ref_center, pdf_center)
+        if best_pair is None:
+            ref_form, ref_bbox = ref_hit
+            pdf_form, pdf_bbox = pdf_hit
+            ref_center = _center_norm(ref_bbox, ref_canvas)
+            pdf_center = _center_norm(pdf_bbox, pdf_page_size)
+            best_pair = (
+                f"{ref_form} \u2192 {pdf_form}",
+                ref_bbox,
+                pdf_bbox,
+                math.dist(ref_center, pdf_center),
+            )
+        matched_form, ref_bbox, pdf_bbox, drift = best_pair
+        ref_center = _center_norm(ref_bbox, ref_canvas)
+        pdf_center = _center_norm(pdf_bbox, pdf_page_size)
         results.append(
             DriftResult(
                 label_str,
-                ref_hit[0] if ref_hit[0] == pdf_hit[0] else f"{ref_hit[0]} → {pdf_hit[0]}",
+                matched_form,
                 "matched_ok",
                 ref_center,
                 pdf_center,

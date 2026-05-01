@@ -10,8 +10,8 @@
 - Export TIFF: `exports/golden_trap_depth_picture.tif`
 - Export PNG: `exports/golden_trap_depth_picture.png`
 - Diagnostic overlay: `build/golden_visual_clash_overlay.png`
-- Latest refresh: after `TrapLevel` promotion into
-  `styles/polymer-paper-preamble.sty`.
+- Latest refresh: after right-panel label spacing and bottom annotation
+  readability refit, followed by repeated-label drift matcher correction.
 
 ## Current Verdict
 
@@ -33,8 +33,10 @@ The fixture now proves the end-to-end quality-kernel path:
 It does **not** yet satisfy the visual standard implied by the reference image.
 Manual reference/build comparison keeps this fixture at `accepted: false`: the
 current vector is structurally complete, but the top Debye box/title, global
-typography scale, right-side trap-depth panel proportions, and molecular-origin
-row still visibly diverge from the PNG target.
+typography scale, and molecular-origin row still visibly diverge from the PNG
+target. The right-side trap-depth panel contains the expected `deep` label, and
+the repeated-label drift matcher no longer reports the old false `deep=0.373`
+drift.
 
 ## Defect Table
 
@@ -42,7 +44,7 @@ row still visibly diverge from the PNG target.
 |---|---|---|---|---|
 | BLOCKER | source | full layout | The figure is structurally complete and the export aspect ratio now closely matches the reference canvas, but local element positions and typography still need manual refit. | Refit local panels against the reference before calling the fixture accepted. |
 | MAJOR | source | row 1 plots | Log-axis tick density was reduced and geometric collisions are cleared, but visual-clash heuristics still flag several tick/math labels. | Separate genuine readability defects from checker false positives and keep the compact log-axis macro candidate. |
-| MAJOR | source | right converged picture | Right-side energy/distribution diagram is present, horizontally compressed, and vertically lowered toward the reference, but internal spacing still does not match closely enough. | Continue aligning CB/VB, trap levels, dashed divider, and distribution lobes to a shared coordinate system. |
+| MAJOR | source | right converged picture | Right-side energy/distribution diagram is present, and the distribution labels have been spaced away from the lobe fills. The old single-token `deep` drift was a checker matching limit, not a missing right-panel label. | Continue aligning CB/VB, trap levels, dashed divider, and distribution lobes by manual reference comparison. |
 | MAJOR | source | molecular origin row | Polymer chains and sulfur markers exist, but chain amplitude, sulfur placement, and dashed boxes are approximate. | Tune chain coordinates and sulfur marker positions against the reference PNG. |
 | MAJOR | QA | collision/visual clash checks | `check_collisions.py` now reports 0 collisions. `check_visual_clash.py` reports 42 total candidates; 4 are suppressible by `_known_false_positives.yaml`, 25 are documented checker noise, and 13 remain source defects. | Drive the 13 source defects to 0 before acceptance; keep total candidates visible in the audit so false-positive drift remains reviewable. |
 | MINOR | macro | repeated primitives | `TrapLevel` was promoted into `polymer-paper-preamble.sty` and is used 8 times in the fixture. `BandBox`, `SmallLobe`, and chain patterns remain local until a second fixture proves reuse. | Promote additional primitives only after repeated source edits or a second fixture proves a stable abstraction. |
@@ -75,8 +77,18 @@ via `_known_false_positives.yaml`; the rest remain visible because the global
 false-positive policy should stay conservative across future fixtures.
 13 unresolved visual clash(es): top-row equation label proximity, Debye inset
 math fragments, row-2 equation/arrow spacing, row-label proximity to separators,
-S labels near chain paths, right-side distribution labels near fills, and lower
-annotation text near paths.
+S labels near chain paths, and lower annotation text near paths. Right-side
+distribution label spacing has been improved, but the conservative checker still
+reports math fragments near the distribution labels.
+```
+
+Layout-drift triage:
+
+```text
+Discharge drift=0.051 remains a borderline title-position delta.
+deep now matches within threshold (drift=0.040) after repeated single-token
+labels started using the closest reference/PDF pair instead of first-hit
+matching.
 ```
 
 Artifact gate:

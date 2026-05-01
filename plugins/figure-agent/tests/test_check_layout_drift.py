@@ -41,6 +41,25 @@ def test_drifted_above_threshold():
     assert r.drift is not None and r.drift > 0.05
 
 
+def test_repeated_single_token_label_uses_closest_ref_pdf_pair():
+    """Repeated labels must not pair the first ref hit with the first PDF hit blindly."""
+    hints = _hints(
+        [
+            {"text": "deep", "bbox": [950, 540, 1000, 580], "conf": 95.0},
+            {"text": "deep", "bbox": [580, 470, 620, 510], "conf": 95.0},
+        ]
+    )
+    pdf_words = [
+        _word("deep", 580, 470, 620, 510),
+        _word("deep", 950, 540, 1000, 580),
+    ]
+    results = check_layout_drift.evaluate_drift(["deep"], hints, pdf_words, (1000.0, 1000.0))
+
+    r = results[0]
+    assert r.status == "matched_ok"
+    assert r.drift == pytest.approx(0.0, abs=1e-6)
+
+
 def test_phrase_matches_consecutive_words():
     hints = _hints(
         [
@@ -149,6 +168,24 @@ def test_alternates_match_when_first_form_misses():
     r = results[0]
     assert r.status == "matched_ok"
     assert r.matched_form is not None and "kelvin" in r.matched_form
+
+
+def test_alternates_fall_back_when_ref_and_pdf_match_different_forms():
+    """Equivalent alternate forms may differ between reference OCR and PDF text."""
+    hints = _hints(
+        [
+            {"text": "temperature", "bbox": [600, 600, 650, 630], "conf": 88.0},
+            {"text": "scale", "bbox": [655, 600, 700, 630], "conf": 88.0},
+        ]
+    )
+    pdf_words = [_word("kelvin", 600, 600, 700, 630)]
+    results = check_layout_drift.evaluate_drift(
+        [["temperature scale", "kelvin"]], hints, pdf_words, (1000.0, 1000.0)
+    )
+
+    r = results[0]
+    assert r.status == "matched_ok"
+    assert r.matched_form == "temperature scale \u2192 kelvin"
 
 
 def test_short_label_excluded_as_ambiguous():
