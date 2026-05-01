@@ -121,7 +121,8 @@ def _format_structural_regions(sr: dict) -> str:
 TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "prompts" / "llm_author_tikz.md"
 
 _RE_FLAGSHIP_NEWCOMMAND = re.compile(
-    r"\\newcommand\{\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip)\}\[(\d+)\]"
+    r"\\newcommand\{\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip"
+    r"|BellCurve|WavyChain|BandDiagram|LogLogPlot)\}\[(\d+)\]"
 )
 # Preamble signature comments are the single source of truth for the args
 # the LLM should fill in. Two shapes appear in the .sty:

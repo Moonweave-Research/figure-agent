@@ -173,3 +173,181 @@
   \endgroup
 }
 \makeatother
+
+%% --- Phase 1.2 bbox macros (Layer 3) ---
+%% Lifted styles + macros for log-log plots, band diagrams, bell curves, polymer chains.
+%% Sources: docs/macro-audit.md (ranked LOC-saved); call sites in
+%% golden_trap_depth_picture, fig3_n2_evidence, fig3_trap_schematic_v97.
+\tikzset{
+  tickLabel/.style={
+    font=\sffamily\fontsize{4.3}{5.2}\selectfont,
+    text=cGray!90!black
+  },
+  bandbox/.style={
+    draw=black, line width=0.45pt, fill=cLGray!30,
+    minimum width=1.55cm, minimum height=0.48cm
+  },
+  bandFrame/.style={cTeal, line width=1.2pt, rounded corners=4pt},
+  bandAxis/.style={-{Stealth[length=3.2pt,width=2.4pt]}, cGray, line width=0.42pt},
+  bandEt/.style={cGray!45, dashed, line width=0.38pt},
+  trapShallow/.style={cAmber, line width=0.72pt},
+  trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
+}
+
+% \BandBox{x}{y}{label}: filled cLGray rectangle node used as CB or VB block.
+\providecommand{\BandBox}[3]{%
+  \node[bandbox] at (#1,#2) {#3};
+}
+
+% \BellCurve{x1,y1,x2,y2,color,orientation}: symmetric bell lobe inside bbox; orientation in {up, side}; fill <color>!18, stroke <color>!80!black 0.8pt.
+\newcommand{\BellCurve}[1]{%
+  \BellCurveDraw#1\relax
+}
+\makeatletter
+\def\BellCurveDraw#1,#2,#3,#4,#5,#6\relax{%
+  \begingroup
+  \edef\BCorient{\zap@space#6 \@empty}%
+  \def\BCup{up}%
+  \def\BCside{side}%
+  \pgfmathsetmacro{\BCw}{(#3)-(#1)}%
+  \pgfmathsetmacro{\BCh}{(#4)-(#2)}%
+  \ifdim\BCw pt<0.001pt\relax\endgroup\else
+  \ifdim\BCh pt<0.001pt\relax\endgroup\else
+    \ifx\BCorient\BCup
+      \path[draw=#5!80!black, line width=0.8pt, fill=#5!18]
+        (#1,#2)
+        .. controls (#1+0.207*\BCw,#2+0.043*\BCh)
+                and (#1+0.264*\BCw,#2+0.986*\BCh)
+        .. (#1+0.494*\BCw,#4)
+        .. controls (#1+0.724*\BCw,#4)
+                and (#1+0.747*\BCw,#2+0.058*\BCh)
+        .. (#3,#2) -- cycle;
+    \else\ifx\BCorient\BCside
+      \path[draw=#5!80!black, line width=0.8pt, fill=#5!18]
+        (#1,#2)
+        .. controls (#1+0.043*\BCw,#2+0.207*\BCh)
+                and (#1+0.986*\BCw,#2+0.264*\BCh)
+        .. (#3,#2+0.494*\BCh)
+        .. controls (#3,#2+0.724*\BCh)
+                and (#1+0.058*\BCw,#2+0.747*\BCh)
+        .. (#1,#4) -- cycle;
+    \else
+      \PackageError{polymer-paper-preamble}{Invalid BellCurve orientation `#6'}{Use up or side.}%
+    \fi\fi
+    \endgroup
+  \fi\fi
+}
+\makeatother
+
+% \WavyChain{x1,x2,y,style,S_csv,trap_csv}: polymer chain row; style in zigzag or sin; zigzag amp=0.17 period~0.30; sin amp=0.40 (1.5 periods); brace-wrap S_csv and trap_csv at call site (commas inside).
+\newcommand{\WavyChain}[1]{%
+  \WavyChainDraw#1\relax
+}
+\makeatletter
+\def\WavyChainDraw#1,#2,#3,#4,#5,#6\relax{%
+  \begingroup
+  \edef\WCstyle{\zap@space#4 \@empty}%
+  \def\WCzigzag{zigzag}%
+  \def\WCsin{sin}%
+  \def\WCempty{}%
+  \ifx\WCstyle\WCzigzag
+    \def\WCamp{0.17}%
+    \pgfmathtruncatemacro{\WCnsteps}{max(2,round(((#2)-(#1))/0.30))}%
+    \xdef\WCcoords{}%
+    \foreach \WCk in {0,...,\WCnsteps} {%
+      \pgfmathsetmacro{\WCxk}{(#1)+\WCk*((#2)-(#1))/\WCnsteps}%
+      \pgfmathsetmacro{\WCyk}{(#3)+ifthenelse(mod(\WCk,2)==0,0,\WCamp)}%
+      \xdef\WCcoords{\WCcoords (\WCxk,\WCyk)}%
+    }%
+    \draw[cGray, line width=0.85pt] plot[smooth] coordinates {\WCcoords};
+  \else\ifx\WCstyle\WCsin
+    \def\WCamp{0.40}%
+    \draw[cGray!75!black, line width=0.7pt]
+      plot[smooth, samples=80, domain=0:1]
+      ({(#1)+\x*((#2)-(#1))},{(#3)+\WCamp*sin(\x*540)});
+  \else
+    \PackageError{polymer-paper-preamble}{Invalid WavyChain style `#4'}{Use zigzag or sin.}%
+  \fi\fi
+  \edef\WCSlist{\zap@space#5 \@empty}%
+  \ifx\WCSlist\WCempty\else
+    \foreach \WCsx in {#5} {%
+      \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+        at (\WCsx,#3+\WCamp+0.28) {S};
+      \draw[cAmber, fill=white, line width=0.50pt]
+        (\WCsx,#3+\WCamp+0.12) circle (0.042cm);
+    }%
+  \fi
+  \edef\WCTlist{\zap@space#6 \@empty}%
+  \ifx\WCTlist\WCempty\else
+    \foreach \WCtx in {#6} {%
+      \node[circle, fill=cBlue!55, draw=cBlue!80!black,
+            inner sep=0pt, minimum size=2mm, line width=0.4pt]
+        at (\WCtx,#3+\WCamp+0.10) {};
+    }%
+  \fi
+  \endgroup
+}
+\makeatother
+
+% \BandDiagram{x1,y1,x2,y2,cb_y,vb_y,et_x,shallow_ys,deep_ys}: rounded teal frame + CB/VB bandboxes + Energy axis + dashed Et + \TrapLevel dashes; brace-wrap shallow_ys and deep_ys at call site (commas inside).
+\newcommand{\BandDiagram}[1]{%
+  \BandDiagramDraw#1\relax
+}
+\makeatletter
+\def\BandDiagramDraw#1,#2,#3,#4,#5,#6,#7,#8,#9\relax{%
+  \begingroup
+  \pgfmathsetmacro{\BDcx}{(#1+#3)/2}%
+  \pgfmathsetmacro{\BDaxX}{#1+0.63}%
+  \pgfmathsetmacro{\BDaxYlo}{#6+0.05}%
+  \pgfmathsetmacro{\BDaxYhi}{#5-0.43}%
+  \pgfmathsetmacro{\BDaxYmid}{(\BDaxYlo+\BDaxYhi)/2}%
+  \pgfmathsetmacro{\BDetYlo}{#6-0.35}%
+  \pgfmathsetmacro{\BDetYhi}{#5+0.30}%
+  \draw[bandFrame] (#1,#2) rectangle (#3,#4);
+  \BandBox{\BDcx}{#5}{CB}
+  \BandBox{\BDcx}{#6}{VB}
+  \draw[bandAxis] (\BDaxX,\BDaxYlo) -- (\BDaxX,\BDaxYhi);
+  \node[rotate=90, text=cGray, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+    at (\BDaxX-0.18,\BDaxYmid) {Energy};
+  \draw[bandEt] (#7,\BDetYlo) -- (#7,\BDetYhi);
+  \node[text=cGray] at (#7+0.20,\BDaxYmid) {$E_t$};
+  \foreach \BDy in {#8} { \TrapLevel{\BDcx-0.41}{\BDy}{trapShallow} }%
+  \foreach \BDy in {#9} { \TrapLevel{\BDcx-0.25}{\BDy}{trapDeep} }%
+  \endgroup
+}
+\makeatother
+
+% \LogLogPlot{x0,y0,x1,y1}{xticks}{xlabels}{yticks}{ylabels}{xlabel}{ylabel}: log-log axes + ticks + labels at given bbox; bbox is comma-CSV, rest brace args; tick lists are pos-only (xticks/yticks) or pos/label pairs (xlabels/ylabels).
+\newcommand{\LogLogPlot}[7]{%
+  \LLPParseBox#1\relax{#2}{#3}{#4}{#5}{#6}{#7}%
+}
+\makeatletter
+\def\LLPParseBox#1,#2,#3,#4\relax{%
+  \def\LLPxa{#1}\def\LLPya{#2}\def\LLPxb{#3}\def\LLPyb{#4}%
+  \LLPDraw
+}
+\newcommand{\LLPDraw}[6]{%
+  \begingroup
+  \draw[cGray, line width=0.38pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+    (\LLPxa,\LLPya) -- (\LLPxb,\LLPya);
+  \draw[cGray, line width=0.38pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+    (\LLPxa,\LLPya) -- (\LLPxa,\LLPyb);
+  \foreach \LLPxi in {#1} {
+    \draw[cGray, line width=0.25pt] (\LLPxi,\LLPya) -- (\LLPxi,\LLPya-0.06);
+  }
+  \foreach \LLPxi/\LLPlab in {#2} {
+    \node[tickLabel, anchor=north] at (\LLPxi,\LLPya-0.12) {$\LLPlab$};
+  }
+  \foreach \LLPyi in {#3} {
+    \draw[cGray, line width=0.25pt] (\LLPxa,\LLPyi) -- (\LLPxa-0.06,\LLPyi);
+  }
+  \foreach \LLPyi/\LLPlab in {#4} {
+    \node[tickLabel, anchor=east] at (\LLPxa-0.12,\LLPyi) {$\LLPlab$};
+  }
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray]
+    at ({(\LLPxa+\LLPxb)/2},\LLPya-0.27) {#5};
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, rotate=90]
+    at (\LLPxa-0.32,{(\LLPya+\LLPyb)/2}) {#6};
+  \endgroup
+}
+\makeatother

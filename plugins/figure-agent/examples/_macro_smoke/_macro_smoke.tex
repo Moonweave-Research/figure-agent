@@ -1,0 +1,46 @@
+% Phase 1.2 macro smoke test — exercises each new macro at least once.
+% No drift gate setup (no coordinate_hints.yaml). Compile-only validation.
+\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm, y=1cm]
+
+  % --- BellCurve: up + side orientation ---
+  \BellCurve{0,0,1.5,1,cAmber,up}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (0.75,-0.3) {BellCurve up};
+
+  \BellCurve{2,0,3.5,1.5,cBlue!45!cRed,side}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (2.75,-0.3) {BellCurve side};
+
+  % --- WavyChain: zigzag with markers, sin without markers, empty CSVs ---
+  \WavyChain{0,5,3,zigzag,{0.5,1.5,2.5,3.5},{1.0,2.0,3.0}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (2.5,2.5) {WavyChain zigzag w/ S+trap};
+
+  \WavyChain{0,5,4.5,sin,{},{}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (2.5,4.0) {WavyChain sin (no markers)};
+
+  % --- BandDiagram: full skeleton with traps ---
+  \BandDiagram{6,0,11,5, 4, 1, 9, {3.5,3.2,2.9}, {1.8,1.5}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (8.5,-0.3) {BandDiagram};
+
+  % --- BandDiagram: empty trap lists ---
+  \BandDiagram{6,5.5,9,8.5, 7.8, 6.2, 7.5, {}, {}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (7.5,5.2) {BandDiagram (no traps)};
+
+  % --- LogLogPlot: 5 X ticks (3 labeled), 4 Y ticks (3 labeled) ---
+  \LogLogPlot{12,0,16,4}
+    {12,13,14,15,16}
+    {12/{10^{-3}}, 14/{10^{0}}, 16/{10^{3}}}
+    {0,1,2,3,4}
+    {0/{10^{-4}}, 2/{10^{0}}, 4/{10^{2}}}
+    {\log\,t}{\log\,I}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (14,-0.6) {LogLogPlot};
+
+  % --- BandBox standalone (subprimitive) ---
+  \BandBox{14}{6.5}{CB}
+  \BandBox{14}{5.5}{VB}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (14,4.9) {BandBox};
+
+\end{tikzpicture}
+\end{document}

@@ -56,9 +56,21 @@ _RE_PALETTE_TOKEN = re.compile(r"\\definecolor\{([A-Za-z][A-Za-z0-9]*)\}")
 # thin_stroke fires per-occurrence on `line width=Xpt` where X<0.25;
 # mm/cm units are v0.1 out of scope.
 FLAGSHIP_MACROS: frozenset[str] = frozenset(
-    {"\\IsoBlock", "\\IsoCharge", "\\GradSlab", "\\IsoConeTip"}
+    {
+        "\\IsoBlock",
+        "\\IsoCharge",
+        "\\GradSlab",
+        "\\IsoConeTip",
+        "\\BellCurve",
+        "\\WavyChain",
+        "\\BandDiagram",
+        "\\LogLogPlot",
+    }
 )
-_RE_FLAGSHIP_CALL = re.compile(r"\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip)\b")
+_RE_FLAGSHIP_CALL = re.compile(
+    r"\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip"
+    r"|BellCurve|WavyChain|BandDiagram|LogLogPlot)\b"
+)
 _RE_THIN_STROKE = re.compile(r"line width\s*=\s*(\d*\.?\d+)pt\b")
 
 
