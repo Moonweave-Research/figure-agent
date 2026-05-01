@@ -1,8 +1,11 @@
 ---
-description: Extract OCR text labels and palette shape clusters from a fixture's reference PNG into coordinate_hints.yaml (Layer 2.5).
+description: Extract OCR labels, palette clusters, and optional vtracer structural hints from a reference PNG into coordinate_hints.yaml.
 ---
 
-Extract coordinate hints from the fixture's reference image. Output is written to `examples/<name>/coordinate_hints.yaml` and serves as authoring data for Layer 3 (TikZ source) and (future) validation data for Layer 6.
+Extract authoring hints from the fixture's reference image. Output is written
+to `examples/<name>/coordinate_hints.yaml` and feeds semantic TikZ authoring in
+Layer 3 plus layout drift validation in Layer 6. The output is evidence for
+placement and color reconstruction; structural hints are authoring evidence, not final source.
 
 **Usage**: `/fig_extract <name>`
 
@@ -20,8 +23,14 @@ uv run python3 scripts/reference_extract.py examples/<name> --rebuild
 1. Resolves `spec.yaml.reference_image` to an absolute path; aborts if missing.
 2. Loads the reference as RGB (RGBA / palette PNGs are converted; alpha is dropped).
 3. Runs Tesseract OCR for text labels with bounding box and confidence.
-4. Runs a palette PIL connected-component pass for each `polymer-paper-preamble` palette color, with per-group RGB-distance thresholds and a `min_component_pixels` filter.
-5. Writes the joined result to `coordinate_hints.yaml` with metadata (extraction version, reference SHA-256, parameters used).
+4. Runs a palette PIL connected-component pass for each `polymer-paper-preamble`
+   palette color, with per-group RGB-distance thresholds and a
+   `min_component_pixels` filter.
+5. Runs optional vtracer structural hints when the `vtracer` Python package is
+   importable. If vtracer is unavailable or fails, OCR + palette clusters still remain useful and the command writes `structural_regions.status` as
+   `unavailable` or `failed`.
+6. Writes the joined result to `coordinate_hints.yaml` with metadata,
+   reference SHA-256, extraction parameters, and available hint groups.
 
 If `coordinate_hints.yaml` already exists and is no older than the reference, the script reports "up to date" and exits 0 without overwriting. Pass `--rebuild` to force regeneration.
 
@@ -51,6 +60,13 @@ palette_shape_clusters:
     components:
       - bbox: [1227, 162, 1228, 687]
         pixel_count: 525
+structural_regions:
+  status: ok                   # ok | unavailable | failed
+  panel_arcs: []
+  border_boxes: []
+  chain_rows: []
+  s_atoms: []
+  trap_levels: []
 ```
 
 ## Common errors
@@ -58,6 +74,13 @@ palette_shape_clusters:
 - `tesseract not found on PATH` — install via `brew install tesseract` (macOS) or `apt install tesseract-ocr` (Debian/Ubuntu). The script still produces shape clusters; only `text_labels` is empty and `metadata.ocr_status` reads "skipped".
 - `spec.yaml does not declare reference_image` — Layer 2.5 only applies to fixtures with a fixed visual target. Add `reference_image: reference/<file>.png` to `spec.yaml` first, or skip this command.
 - `reference image not found at <path>` — the path declared in `spec.yaml` does not exist on disk.
+- `structural_regions.status: unavailable` — `vtracer` is not importable in the
+  current Python environment. This does not block authoring: OCR + palette clusters still remain useful placement evidence. Install or enable vtracer
+  only when structural hints are needed for a fixture.
+- `structural_regions.status: failed` — vtracer was importable but failed while
+  vectorizing or parsing the reference image. Inspect the recorded error, rerun
+  with `--rebuild`, or continue from OCR + palette clusters when structural
+  hints are not required.
 
 ## After running
 

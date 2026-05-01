@@ -16,6 +16,9 @@ below. Follow every constraint exactly; do not explain or comment on your choice
 - Required scaffolding contract — see §3 for the exact open/close sequences.
   The output must be a complete standalone `.tex` (compile.sh runs `lualatex`
   on the file directly; nothing is wrapped around it).
+- Do not convert SVG paths into the final TikZ source. Do not emit raw traced
+  path clouds as the main figure body. Use semantic TikZ macros and named
+  drawing constructs so the source remains editable.
 
 ## 3. Required Scaffolding
 
@@ -57,12 +60,21 @@ Examples to inspect:
 
 Copy patterns you find there when they apply to your schematic. You are authoring in the same style, on the same palette, under the same Style Lock.
 
-## 5b. Structural Regions from Reference Image (Layer 2.5)
+## 5b. Coordinate Hints from Reference Image (Layer 2.5)
 
-When a reference image is provided, the coordinates below are extracted via OCR
-and vtracer vectorization. Use them as **precise placement guidelines** — draw
-every labelled element so it falls inside the stated bounding box.
-All coordinates are in centimeters in TikZ space (y=0 at bottom).
+Use coordinate_hints.yaml as placement evidence, not as source code. When a
+reference image is provided, the hints below may include OCR labels, palette
+clusters, and optional vtracer structural regions. Use them to infer layout,
+color families, panel boundaries, chain rows, trap levels, and label placement.
+
+Important:
+- OCR labels guide text content and approximate label boxes.
+- Palette clusters guide color families and coarse shape positions.
+- Optional structural regions guide major geometry when available.
+- Missing structural regions do not invalidate the reference; continue from OCR
+  and palette evidence.
+- Do not convert SVG paths into the final TikZ source.
+- Reconstruct the figure as semantic TikZ macros and named drawing constructs.
 
 {{structural_regions}}
 
@@ -111,3 +123,5 @@ add visual detail consistent with §6 but cannot introduce new invariants.
   without errors.
 - Every color reference must be from the palette list in §2.
 - Every element that corresponds to a flagship macro must use that macro.
+- Use coordinate_hints.yaml as placement evidence when available, but write
+  maintainable semantic TikZ rather than path-transcribed output.

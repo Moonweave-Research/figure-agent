@@ -33,10 +33,10 @@ Layer 1: Identity / Onboarding         (README, SKILL, plugin.json, CLAUDE/AGENT
 Layer 2: Authoring Intent              (briefing.md + spec.yaml + golden_contract)
    |
    v
-Layer 2.5: Reference Analysis          (reference_extract.py + /fig_extract; optional)
+Layer 2.5: Reference Analysis          (OCR + palette clusters + optional vtracer hints)
    |
    v
-Layer 3: TikZ Source Authoring         (<name>.tex + polymer-paper-preamble.sty)
+Layer 3: Semantic TikZ Authoring       (<name>.tex + polymer-paper-preamble.sty)
    |
    v
 Layer 4: Compile Gates                 (compile.sh: lint -> lualatex -> checks)
@@ -125,57 +125,62 @@ only, never the single source of truth.
 **Files**: `scripts/reference_extract.py`, `commands/fig_extract.md`,
 `tests/test_reference_extract.py`, `examples/<name>/coordinate_hints.yaml`.
 
-This layer runs between Layer 2 (Authoring Intent) and Layer 3 (TikZ Source
-Authoring). Inputs are the user's LLM-generated reference PNG (Layer 0) plus
-`spec.yaml.reference_image` (Layer 2). Output is a per-fixture
-`coordinate_hints.yaml` with two artifacts:
+This layer runs between Layer 2 (Authoring Intent) and Layer 3 (Semantic
+TikZ Authoring). The active workflow is:
 
-- `text_labels[]` — Tesseract OCR results: each rendered text region with
-  its bounding box and confidence.
-- `palette_shape_clusters{}` — connected components of pixels matching each
-  `polymer-paper-preamble` palette color, after a per-color RGB-distance
-  threshold (`specific=55`, `broad=55`, `gray=35`) and a
-  `min_component_pixels=200` filter calibrated against the LLM-rendered
-  golden fixture so anti-aliasing fragments stay bounded.
+```
+reference PNG -> OCR + palette clusters + optional vtracer structural hints
+-> coordinate_hints.yaml -> semantic TikZ authoring
+```
 
-The hints feed two downstream uses:
+`coordinate_hints.yaml` is an authoring-evidence file, not generated final
+source. It can contain:
 
-- **At Layer 3 authoring time** — supplies precise (x, y, w, h) bounding
-  boxes to the TikZ author or LLM-authoring agent so first-pass coordinate
-  accuracy is no longer limited by visual estimation.
-- **At Layer 6 validation time** — `check_layout_drift.py` (auto-invoked
-  by `compile.sh` when `coordinate_hints.yaml` is present) measures
-  reference-vs-build label-center drift in normalized canvas coordinates,
-  using `spec.yaml.golden_contract.required_labels` as anchors.
+- `text_labels[]` — OCR-detected labels with pixel bounding boxes and
+  confidence scores.
+- `palette_shape_clusters{}` — connected components matching the Style Lock
+  palette colors.
+- `structural_regions{}` — optional vtracer-derived regions such as panel
+  arcs, border boxes, chain rows, atom positions, trap levels, plot boxes,
+  plot curves, and lobe-like regions.
 
-This layer is **optional**. Ordinary fixtures (no `reference_image`) skip
-cleanly. Layer 7 surfaces three notes when the layer is partially applied:
-`coordinate_hints_missing`, `coordinate_hints_stale`,
-`coordinate_hints_parse_error`. None of them block stage advance.
+`structural_regions.status` may be `ok`, `unavailable`, or `failed`.
+Unavailable vtracer does not invalidate the workflow: OCR + palette clusters
+still remain useful authoring hints, and Layer 3 must continue from the
+available evidence.
 
-Phase E.0 is shipped; Phase E.1 (status integration + slash command) and
-Phase E.2 (documentation alignment) follow. The earlier exploratory notion
-of using VTracer raw paths for shape extraction was empirically rejected
-in favor of palette-targeted PIL because VTracer raw output produced
-hundreds of micro-paths per anti-aliasing edge with no semantic grouping.
+Layer 2.5 must not be treated as an SVG-to-TikZ conversion layer. VTracer and
+SVG-derived paths are allowed only as evidence for approximate placement,
+color grouping, and coarse geometry. SVG-to-TikZ path conversion is not the active workflow because it produces
+low-level path code without the semantic macro structure needed for manuscript
+editing.
 
-### Layer 3 — TikZ Source Authoring
+### Layer 3 — Semantic TikZ Authoring
 
 **Files**: `examples/<name>/<name>.tex`, `styles/polymer-paper-preamble.sty`,
-`styles/tex_template.tex`.
+`styles/tex_template.tex`, `prompts/llm_author_tikz.md`.
 
-A human or LLM authors the TikZ source. The macro library is shared:
+A human or LLM authors semantic TikZ source from `briefing.md`, `spec.yaml`,
+the reference PNG, and any available `coordinate_hints.yaml`. The output is a
+maintainable `.tex` file built from named macros, scoped styles, and readable
+TikZ constructs. Raw SVG path dumps, auto-traced path clouds, and direct
+SVG-to-TikZ conversion are not acceptable as the final source for the active
+workflow.
 
-- `\IsoBlock`, `\IsoCharge`, `\GradSlab`, `\IsoConeTip` — isometric block
-  primitives (v0.1 flagship).
-- `\TrapLevel` — promoted from `golden_trap_depth_picture` to the shared
-  preamble in v0.2.
-- `\BandBox`, `\SmallLobe` — fixture-local; promotion candidates if a
-  second fixture proves reuse.
+Use coordinate hints as placement evidence:
 
-`lint_tex.py` enforces palette / font / hex / non-palette-color discipline
-at BLOCKER tier; `flagship_macros_unused` is WARN-only because non-isometric
-fixtures legitimately do not use the iso macros.
+- OCR labels guide text content and label positions.
+- Palette clusters guide color family and coarse shape placement.
+- Optional vtracer structural hints guide panel boxes, chain rows, trap
+  levels, and major geometry.
+
+The authoring target is semantic reconstruction, not pixel-for-pixel path
+transcription.
+
+The macro library is shared and should be preferred when it matches the figure
+semantics. `lint_tex.py` enforces palette / font / hex / non-palette-color
+discipline at BLOCKER tier; `flagship_macros_unused` is WARN-only because some
+fixtures legitimately do not use the flagship macros.
 
 ### Layer 4 — Compile Gates
 

@@ -33,21 +33,33 @@ maintained going forward.
 
 ```
 /fig_new <name>          scaffold (briefing + spec)
-/fig_extract <name>      OPTIONAL: OCR + palette shape clusters from reference PNG → coordinate_hints.yaml
-                         (Layer 2.5; recommended for fixtures with reference_image)
-                         [user/LLM authors examples/<name>/<name>.tex from briefing intent
-                          + optional reference_image + (if available) coordinate_hints.yaml]
-/fig_compile <name>      Style Lock (incl. preamble import) + PDF/PNG build + collision/clash
+                         [user saves reference PNG and records it as
+                          spec.yaml.reference_image when target matching matters]
+/fig_extract <name>      reference PNG -> OCR + palette clusters + optional vtracer structural hints
+                         -> coordinate_hints.yaml
+                         [human/LLM authors semantic TikZ from briefing intent,
+                          reference PNG, and coordinate_hints.yaml;
+                          SVG-to-TikZ path conversion is not the active workflow]
+/fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
 ```
 
+The active authoring contract is semantic reconstruction. `coordinate_hints.yaml`
+provides placement evidence, but the final source should be readable TikZ using
+shared macros and named drawing constructs. The handoff is
+`coordinate_hints.yaml -> semantic TikZ authoring`; SVG-to-TikZ path conversion
+is not the active workflow, and may be used only as a diagnostic or reference
+aid when manual geometry inspection is useful.
+
 Golden fixtures additionally declare `accepted` and `golden_contract` keys in
 `spec.yaml`; `check_golden_artifacts.py` then auto-escalates into accepted-mode
 contract checks (rendered-label match, source-inventory floor, audit freshness,
 checker-warning budgets). Override with `--no-require-accepted` for ad-hoc
-basic-mode inspection.
+basic-mode inspection. When `reference_image` is present, `/fig_extract` creates
+`coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
+structural hints; compile then uses those hints for drift check when available.
 
 ### Frozen (v0.1 image-gen orchestration; preserved for in-flight users)
 
