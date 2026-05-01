@@ -21,19 +21,12 @@
   bandbox/.style={draw=black, line width=0.45pt, fill=cLGray!30, minimum width=1.55cm, minimum height=0.48cm},
 ]
 
-\newcommand{\BandBox}[3]{%
-  \node[bandbox] at (#1,#2) {#3};
-}
 \newcommand{\SmallLobe}[4]{%
   \draw[#3, line width=0.75pt, fill=#3!18]
     (#1,#2) .. controls (#1+0.18,#2+0.03) and (#1+0.23,#2+0.68) ..
     (#1+0.43,#2+0.69) .. controls (#1+0.63,#2+0.69) and (#1+0.65,#2+0.04) ..
     (#1+0.87,#2) -- cycle;
   \node[text=#3, tinyLabel] at (#1+0.43,#2-0.22) {#4};
-}
-\newcommand{\WavyChain}[3]{%
-  \draw[cGray, line width=0.95pt]
-    plot[smooth] coordinates {#3};
 }
 
 % Canvas
