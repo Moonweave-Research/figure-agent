@@ -1,4 +1,4 @@
-"""Layer 2.5 reference analysis — extract coordinate hints from a fixture's
+"""Layer 2.5 reference analysis — extract authoring hints from a fixture's
 reference PNG.
 
 Inputs:
@@ -8,21 +8,26 @@ Inputs:
 Output:
   examples/<name>/coordinate_hints.yaml
 
-The hints carry two structures used as authoring + validation aid in Layer 3
-(TikZ source authoring) and Layer 6 (validation gates):
+The output feeds semantic TikZ authoring in Layer 3 plus layout drift validation
+in Layer 6. It is authoring evidence, not final source. The active workflow is:
+
+  reference PNG -> OCR + palette clusters + optional vtracer structural hints
+  -> coordinate_hints.yaml -> semantic TikZ authoring
+
+coordinate_hints.yaml can contain:
 
   text_labels[]            OCR-detected labels with bbox + Tesseract confidence.
   palette_shape_clusters{} Connected components of pixels matching each
                            polymer-paper-preamble palette color, after a
                            per-color RGB-distance threshold and min component
                            size filter.
-  s_atoms[]        Amber S-atom dot positions on chain rows (x_cm, y_cm,
-                   chain_row_index, area_px2). Sorted by chain_row_index then x_cm.
-  trap_levels[]    Orange (shallow) + purple (deep) horizontal dashes inside the
-                   band-diagram border box. Sorted by y_cm descending.
+  structural_regions{}     Optional vtracer-derived regions such as panel arcs,
+                           border boxes, chain rows, S atom positions, trap
+                           levels, plot boxes, plot curves, and lobes.
 
-Per-color thresholds reflect empirical tuning on golden_target_001.png
-(`output/reference_extract_test/`); see Phase E pre-flight agent report.
+structural_regions.status may be ok, unavailable, or failed. If vtracer is
+unavailable or fails, OCR + palette clusters still remain useful placement
+evidence.
 
 This module is *optional* — fixtures without `reference_image` skip cleanly
 with a non-zero exit and a clear message. /fig_extract is intended for
@@ -985,7 +990,10 @@ def extract_coordinate_hints(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("example_dir", type=Path)
     parser.add_argument(
         "--rebuild",

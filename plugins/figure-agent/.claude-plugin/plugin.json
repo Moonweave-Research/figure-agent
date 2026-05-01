@@ -1,7 +1,7 @@
 {
   "name": "figure-agent",
   "description": "Quality kernel for paper schematics: Style Lock, compile/export reliability, visual QA gates, and per-figure reproducibility. A human or any LLM/tool may author the TikZ source; the plugin enforces invariants regardless of author. Tool-agnostic: does not call image-gen APIs. Prompt/preview-selection helpers from v0.1 remain available as frozen legacy.",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "author": {
     "name": "Moon Choe",
     "email": "choimoonyoung3631@gmail.com"

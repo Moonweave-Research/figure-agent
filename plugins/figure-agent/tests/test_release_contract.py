@@ -51,6 +51,7 @@ def test_authoring_prompt_forbids_path_dump_final_source() -> None:
 
 def test_fig_extract_documents_structural_hints_as_optional() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_extract.md").read_text()
+    extractor = (REPO_ROOT / "scripts" / "reference_extract.py").read_text()
 
     assert "optional vtracer structural hints" in command_doc
     assert "structural hints are authoring evidence, not final source" in command_doc
@@ -59,3 +60,7 @@ def test_fig_extract_documents_structural_hints_as_optional() -> None:
     assert "status: ok                   # ok | unavailable | failed" in command_doc
     assert "`structural_regions.status: unavailable`" in command_doc
     assert "`structural_regions.status: failed`" in command_doc
+    assert "optional vtracer structural hints" in extractor
+    assert "authoring evidence, not final source" in extractor
+    assert "OCR + palette clusters still remain useful" in extractor
+    assert "The hints carry two structures" not in extractor
