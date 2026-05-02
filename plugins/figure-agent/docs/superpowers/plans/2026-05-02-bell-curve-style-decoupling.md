@@ -431,10 +431,10 @@ Replace with:
     line width=0.5pt,
   },
 }
+\makeatletter
 \newcommand{\BellCurve}[2][]{%
   \BellCurve@parse[#1]#2\relax
 }
-\makeatletter
 \def\BellCurve@parse[#1]#2,#3,#4,#5,#6\relax{%
   \pgfmathsetmacro{\BC@w}{(#4)-(#2)}%
   \pgfmathsetmacro{\BC@h}{(#5)-(#3)}%
