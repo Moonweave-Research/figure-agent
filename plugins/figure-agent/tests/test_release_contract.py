@@ -43,12 +43,17 @@ def test_authoring_prompt_forbids_path_dump_final_source() -> None:
     assert "Do not convert SVG paths into the final TikZ source" in prompt
     assert "Do not pass through SVG path output" in prompt
     assert "Do not emit raw traced path clouds" in prompt
-    assert "Use coordinate_hints.yaml as placement evidence" in prompt
     assert "semantic TikZ macros and named drawing constructs" in prompt
     assert "{{structural_regions}}" in prompt
     assert "{{selection_notes}}" in prompt
     assert "precise placement guidelines" not in prompt
     assert "falls inside the stated bounding box" not in prompt
+
+
+def test_authoring_prompt_documents_coordinate_hints_role() -> None:
+    prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
+
+    assert "Use coordinate_hints.yaml as placement evidence" in prompt
 
 
 def test_authoring_prompt_requires_semantic_first_order() -> None:
