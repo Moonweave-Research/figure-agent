@@ -1,0 +1,16 @@
+name: dogfood_power_law_trap_pipeline
+panels:
+  - id: 1
+    title: Experimental trace
+  - id: 2
+    title: Mathematical interpretation
+  - id: 3
+    title: Chemical / physical origin
+  - id: 4
+    title: Trap-depth inference
+  - id: 5
+    title: Trap distribution (ISPD)
+style_profile: polymer-default
+selected_preview: null
+selection_notes: ""
+reference_image: reference/dogfood_concept.png

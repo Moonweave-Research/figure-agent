@@ -18,6 +18,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{etoolbox}  % \ifblank for robust empty-arg checks (\WavyChain trap_csv)
 
 %% --- TikZ libraries ---
 \usetikzlibrary{
@@ -276,14 +277,19 @@
         (\WCsx,#3+\WCamp+0.12) circle (0.042cm);
     }%
   \fi
-  \edef\WCTlist{\zap@space#6 \@empty}%
-  \ifx\WCTlist\WCempty\else
-    \foreach \WCtx in {#6} {%
+  % Per-iteration empty check: prior outer empty checks (\zap@space, \detokenize,
+  % \ifblank) all failed because the macro arg #6 = " {}" (space + empty group)
+  % is not normalizable to "empty" by any of these without leading-space trimming.
+  % \foreach happily produces one iteration with a blank \WCtx for input {} or "",
+  % so we filter inside the loop body via \edef + \ifx against \WCempty.
+  \foreach \WCtx in {#6} {%
+    \edef\WCtxcheck{\WCtx}%
+    \ifx\WCtxcheck\WCempty\else
       \node[circle, fill=cBlue!55, draw=cBlue!80!black,
             inner sep=0pt, minimum size=2mm, line width=0.4pt]
         at (\WCtx,#3+\WCamp+0.10) {};
-    }%
-  \fi
+    \fi
+  }%
   \endgroup
 }
 \makeatother
