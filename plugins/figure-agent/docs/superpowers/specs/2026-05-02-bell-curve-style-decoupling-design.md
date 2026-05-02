@@ -120,16 +120,26 @@ This matches TikZ ecosystem norms (`\node`, `\draw`, `\path` all default to neut
 
 ## Validation
 
-### No-regression criterion: byte-identical PDF content stream
+### No-regression criterion: drawing-instruction equivalence
 
-Per advisor recommendation, visual diff (PNG hash + perceptual threshold) is replaced by **content-stream byte equality**. Old `\BellCurve{x1,y1,x2,y2,cAmber,side}` and new `\BellCurve[draw=cAmber!80!black, fill=cAmber!18, line width=0.8pt]{x1,y1,x2,y2,side}` MUST produce PDFs whose drawing instructions are byte-identical (after stripping metadata such as creation timestamps).
+Per advisor recommendation, visual diff (PNG hash + perceptual threshold) is replaced by structural inspection of qpdf-expanded content streams. Strict byte equality is **not** the right criterion under the chosen `\path[bell curve, #1]` pattern: TikZ pgfkeys evaluates each style key eagerly and emits PDF graphics-state operators inline, so the `bell curve/.style` defaults emit `RG` / `w` operators that the caller's `[#1]` then immediately overrides. Those default operators are dead code (state set but never used before the next overriding operator), so visual output is unchanged — but the operator stream is not byte-equal.
+
+The criterion is therefore: **every** line-level difference between old and new qpdf expansions must fall into one of the following classes:
+
+- (a) The `bell curve` style prologue per BellCurve call: exactly two added lines `0.27452 0.27452 0.27452 RG` (cGray stroke) and `0.49814 w` (0.5 pt width). Predicted total delta: 2 × 39 bytes × N_callsites_in_fixture.
+- (b) `/CreationDate` / `/ModDate` (lualatex run timestamps).
+- (c) `/ID` array (PDF unique identifier; regenerated per compile).
+- (d) Stream length declarations and xref offsets — mechanical consequences of (a) growing each affected stream.
+- (e) Position-only shifts of operators that already existed (e.g., the caller's `0.79701 w` line moves to a different file offset because (a) inserted bytes earlier).
 
 Implementation:
 - Use `qpdf --qdf --object-streams=disable old.pdf old.qdf` to expand both PDFs.
-- Compare content streams (objects of type `/Page` and their `/Contents` streams).
-- Tolerance: zero byte difference in content streams. Metadata differences (timestamps, /ID) ignored.
+- Run `scripts/diff_pdf_content.py old.pdf new.pdf` first; expect `DIFFER` exit 1 with a length delta of `2 × 39 × N_callsites` bytes.
+- Then run a structural classifier over the qdf diff to confirm every difference falls into (a)-(e).
 
-If byte-identical fails, the migration introduced a behavior change. Investigate before merging.
+If a line-level difference appears outside classes (a)-(e) — especially inside a Bezier control-point coordinate, an `m`/`c`/`l`/`h` path operator, or a final draw/fill color value — the migration introduced a real rendering regression and must be investigated before merging.
+
+(Earlier draft of this spec called for **byte-equal** content streams. That criterion is internally inconsistent with the chosen TikZ pattern and was relaxed during Task 7 of the implementation plan.)
 
 ### Tests
 
