@@ -199,42 +199,47 @@
   \node[bandbox] at (#1,#2) {#3};
 }
 
-% \BellCurve{x1,y1,x2,y2,color,orientation}: symmetric bell lobe inside bbox; orientation in {up, side}; fill <color>!18, stroke <color>!80!black 0.8pt.
-\newcommand{\BellCurve}[1]{%
-  \BellCurveDraw#1\relax
+% \BellCurve[<style keys>]{x1,y1,x2,y2,orientation}: symmetric bell-lobe shape primitive.
+% Geometry: bbox (x1,y1)-(x2,y2); orientation in {up, side}.
+% Style: caller supplies draw/fill/line width via the optional [#1] pgfkeys list,
+% or via \tikzset{bell curve/.append style={...}} for figure-wide consistency.
+% Default `bell curve/.style` is outline-only with palette-neutral cGray; the `fill`
+% key is intentionally omitted (TikZ semantic — see design spec §"Empirically validated").
+\tikzset{
+  bell curve/.style={
+    draw=cGray,
+    line width=0.5pt,
+  },
 }
 \makeatletter
-\def\BellCurveDraw#1,#2,#3,#4,#5,#6\relax{%
-  \begingroup
-  \edef\BCorient{\zap@space#6 \@empty}%
-  \def\BCup{up}%
-  \def\BCside{side}%
-  \pgfmathsetmacro{\BCw}{(#3)-(#1)}%
-  \pgfmathsetmacro{\BCh}{(#4)-(#2)}%
-  \ifdim\BCw pt<0.001pt\relax\endgroup\else
-  \ifdim\BCh pt<0.001pt\relax\endgroup\else
-    \ifx\BCorient\BCup
-      \path[draw=#5!80!black, line width=0.8pt, fill=#5!18]
-        (#1,#2)
-        .. controls (#1+0.207*\BCw,#2+0.043*\BCh)
-                and (#1+0.264*\BCw,#2+0.986*\BCh)
-        .. (#1+0.494*\BCw,#4)
-        .. controls (#1+0.724*\BCw,#4)
-                and (#1+0.747*\BCw,#2+0.058*\BCh)
-        .. (#3,#2) -- cycle;
-    \else\ifx\BCorient\BCside
-      \path[draw=#5!80!black, line width=0.8pt, fill=#5!18]
-        (#1,#2)
-        .. controls (#1+0.043*\BCw,#2+0.207*\BCh)
-                and (#1+0.986*\BCw,#2+0.264*\BCh)
-        .. (#3,#2+0.494*\BCh)
-        .. controls (#3,#2+0.724*\BCh)
-                and (#1+0.058*\BCw,#2+0.747*\BCh)
-        .. (#1,#4) -- cycle;
-    \else
-      \PackageError{polymer-paper-preamble}{Invalid BellCurve orientation `#6'}{Use up or side.}%
-    \fi\fi
-    \endgroup
+\newcommand{\BellCurve}[2][]{%
+  \BellCurve@parse[#1]#2\relax
+}
+\def\BellCurve@parse[#1]#2,#3,#4,#5,#6\relax{%
+  \pgfmathsetmacro{\BC@w}{(#4)-(#2)}%
+  \pgfmathsetmacro{\BC@h}{(#5)-(#3)}%
+  \edef\BC@orient{\zap@space#6 \@empty}%
+  \def\BC@up{up}\def\BC@side{side}%
+  \ifx\BC@orient\BC@up
+    \path[bell curve, #1]
+      (#2,#3)
+      .. controls (#2+0.207*\BC@w,#3+0.043*\BC@h)
+              and (#2+0.264*\BC@w,#3+0.986*\BC@h)
+      .. (#2+0.494*\BC@w,#5)
+      .. controls (#2+0.724*\BC@w,#5)
+              and (#2+0.747*\BC@w,#3+0.058*\BC@h)
+      .. (#4,#3) -- cycle;
+  \else\ifx\BC@orient\BC@side
+    \path[bell curve, #1]
+      (#2,#3)
+      .. controls (#2+0.043*\BC@w,#3+0.207*\BC@h)
+              and (#2+0.986*\BC@w,#3+0.264*\BC@h)
+      .. (#4,#3+0.494*\BC@h)
+      .. controls (#4,#3+0.724*\BC@h)
+              and (#2+0.058*\BC@w,#3+0.747*\BC@h)
+      .. (#2,#5) -- cycle;
+  \else
+    \PackageError{polymer-paper-preamble}{Invalid BellCurve orientation `#6'}{Use up or side.}%
   \fi\fi
 }
 \makeatother

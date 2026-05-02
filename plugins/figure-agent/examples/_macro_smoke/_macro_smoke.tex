@@ -7,10 +7,10 @@
 \begin{tikzpicture}[x=1cm, y=1cm]
 
   % --- BellCurve: up + side orientation ---
-  \BellCurve{0,0,1.5,1,cAmber,up}
+  \BellCurve[draw=cAmber!80!black, fill=cAmber!18, line width=0.8pt]{0,0,1.5,1,up}
   \node[font=\sffamily\fontsize{6}{7}\selectfont] at (0.75,-0.3) {BellCurve up};
 
-  \BellCurve{2,0,3.5,1.5,cBlue!45!cRed,side}
+  \BellCurve[draw=cBlue!45!cRed!80!black, fill=cBlue!45!cRed!18, line width=0.8pt]{2,0,3.5,1.5,side}
   \node[font=\sffamily\fontsize{6}{7}\selectfont] at (2.75,-0.3) {BellCurve side};
 
   % --- WavyChain: zigzag with markers, sin without markers, empty CSVs ---
