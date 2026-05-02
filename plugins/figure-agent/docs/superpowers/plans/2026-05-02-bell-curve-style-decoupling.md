@@ -130,7 +130,7 @@ from pathlib import Path
 _METADATA_PATTERNS = [
     re.compile(rb"^\s*/CreationDate.*$", re.MULTILINE),
     re.compile(rb"^\s*/ModDate.*$", re.MULTILINE),
-    re.compile(rb"^\s*/ID\s*\[[^\]]*\]", re.DOTALL),
+    re.compile(rb"^\s*/ID\s*\[[^\]]*\]", re.MULTILINE),
     re.compile(rb"^\s*/Producer.*$", re.MULTILINE),
     re.compile(rb"^\s*/Trapped.*$", re.MULTILINE),
 ]
