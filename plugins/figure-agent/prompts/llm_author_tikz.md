@@ -16,9 +16,7 @@ below. Follow every constraint exactly; do not explain or comment on your choice
 - Required scaffolding contract — see §3 for the exact open/close sequences.
   The output must be a complete standalone `.tex` (compile.sh runs `lualatex`
   on the file directly; nothing is wrapped around it).
-- Do not convert SVG paths into the final TikZ source. Do not emit raw traced
-  path clouds as the main figure body. Use semantic TikZ macros and named
-  drawing constructs so the source remains editable.
+- Do not convert SVG paths into the final TikZ source. Do not emit raw traced path clouds as the main figure body. Use semantic TikZ macros and named drawing constructs so the source remains editable.
 
 ## 3. Required Scaffolding
 
@@ -62,18 +60,30 @@ Copy patterns you find there when they apply to your schematic. You are authorin
 
 ## 5b. Coordinate Hints from Reference Image (Layer 2.5)
 
-Use coordinate_hints.yaml as placement evidence, not as source code. When a
-reference image is provided, the hints below may include OCR labels, palette
-clusters, and optional vtracer structural regions. Use them to infer layout,
-color families, panel boundaries, chain rows, trap levels, and label placement.
+When a reference image is provided, follow the authoring order below. When no
+reference image is provided (briefing-only fixtures), skip steps 1 and 3 and
+author directly from §6 Physics invariants (Briefing Context) and §3 composition intent.
+
+Authoring order (semantic-first):
+
+1. Look at the reference PNG first and internally decompose the figure into N
+   semantic units: boxes, arrows, curves, labels, groups, axes of symmetry.
+   Do not start from coordinate_hints alone. Do not include the decomposition
+   in the output; emit only the .tex body per §1.
+2. Map each semantic unit to a polymer-paper-preamble macro when one fits;
+   plan custom drawing constructs for the remainder.
+3. Use coordinate_hints.yaml only to refine placement and color binding,
+   not as the source of truth for the figure body.
+4. Author semantic TikZ macros. Do not pass through SVG path output.
 
 Important:
 - OCR labels guide text content and approximate label boxes.
 - Palette clusters guide color families and coarse shape positions.
 - Optional structural regions guide major geometry when available.
-- Missing structural regions do not invalidate the reference; continue from OCR
-  and palette evidence.
-- Do not convert SVG paths into the final TikZ source.
+- Missing hints do not invalidate the reference; recover the missing detail
+  by looking at the reference PNG directly.
+- The SVG-path prohibition is the §2 Hard Constraint; this section reinforces
+  the positive authoring order rather than redefining it (see §2).
 - Reconstruct the figure as semantic TikZ macros and named drawing constructs.
 
 {{structural_regions}}

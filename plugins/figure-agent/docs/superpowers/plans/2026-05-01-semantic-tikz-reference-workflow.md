@@ -62,8 +62,20 @@ def test_authoring_prompt_forbids_path_dump_final_source() -> None:
     prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
 
     assert "Do not convert SVG paths into the final TikZ source" in prompt
-    assert "Use coordinate_hints.yaml as placement evidence" in prompt
+    assert "Do not pass through SVG path output" in prompt
+    assert "Do not emit raw traced path clouds" in prompt
     assert "semantic TikZ macros and named drawing constructs" in prompt
+
+
+def test_authoring_prompt_requires_semantic_first_order() -> None:
+    prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
+
+    assert "Authoring order (semantic-first)" in prompt
+    assert "Look at the reference PNG first" in prompt
+    assert "Do not start from coordinate_hints alone" in prompt
+    assert "Use coordinate_hints.yaml only to refine placement" in prompt
+    assert "recover the missing detail" in prompt
+    assert "Do not pass through SVG path output" in prompt  # Maps to step 4; independent from forbids test
 
 
 def test_fig_extract_documents_structural_hints_as_optional() -> None:
@@ -390,22 +402,40 @@ Replace `## 5b. Structural Regions from Reference Image (Layer 2.5)` and its bod
 ```markdown
 ## 5b. Coordinate Hints from Reference Image (Layer 2.5)
 
-Use coordinate_hints.yaml as placement evidence, not as source code. When a
-reference image is provided, the hints below may include OCR labels, palette
-clusters, and optional vtracer structural regions. Use them to infer layout,
-color families, panel boundaries, chain rows, trap levels, and label placement.
+When a reference image is provided, follow the authoring order below. When no
+reference image is provided (briefing-only fixtures), skip steps 1 and 3 and
+author directly from §6 invariants and §3 composition intent.
+
+Authoring order (semantic-first):
+
+1. Look at the reference PNG first. Internally decompose the figure into N
+   semantic units: boxes, arrows, curves, labels, groups, axes of symmetry. Do
+   not start from coordinate_hints alone. Internally decompose (do not include
+   the decomposition in the output; emit only the .tex body per §1).
+2. Map each semantic unit to a polymer-paper-preamble macro when one fits;
+   plan custom drawing constructs for the remainder.
+3. Use coordinate_hints.yaml only to refine placement and color binding,
+   not as the source of truth for the figure body.
+4. Author semantic TikZ macros. Do not pass through SVG path output.
 
 Important:
 - OCR labels guide text content and approximate label boxes.
 - Palette clusters guide color families and coarse shape positions.
 - Optional structural regions guide major geometry when available.
-- Missing structural regions do not invalidate the reference; continue from OCR
-  and palette evidence.
-- Do not convert SVG paths into the final TikZ source.
+- Missing hints do not invalidate the reference; recover the missing detail
+  by looking at the reference PNG directly.
+- The SVG-path prohibition is the §2 Hard Constraint; this section reinforces
+  the positive authoring order rather than redefining it (see §2).
 - Reconstruct the figure as semantic TikZ macros and named drawing constructs.
 
 {{structural_regions}}
 ```
+
+Rationale: Without an explicit semantic-first order, an LLM can read
+coordinate_hints alone and emit hint-by-hint coordinate dumps that are
+technically not SVG paths but are equally non-semantic. Forcing a "look at the
+PNG, decompose, then map to macros" sequence makes the reference image — not
+the hints file — the source of structural intent.
 
 - [ ] **Step 3: Add output-contract bullet**
 
@@ -481,7 +511,7 @@ Run:
 uv run pytest
 ```
 
-Expected: full suite passes. Current baseline after deleting `fig3_n2_evidence` is `207 passed, 4 skipped`.
+Expected: full suite passes. Current baseline after deleting `fig3_n2_evidence` is `207 passed, 4 skipped`. After this plan adds both defensive and constructive test cases (`test_authoring_prompt_requires_semantic_first_order` with new assertion, plus strengthened forbids test), baseline becomes `208 passed, 4 skipped`.
 
 - [ ] **Step 5: Run linter**
 
@@ -549,3 +579,4 @@ Expected: commit succeeds. Leave `output/` untracked unless the user explicitly 
 - Placeholder scan: No implementation step depends on unspecified content; every changed text block and command is included explicitly.
 - Type consistency: The plan consistently uses `coordinate_hints.yaml`, `text_labels`, `palette_shape_clusters`, `structural_regions`, `semantic TikZ authoring`, and `SVG-to-TikZ path conversion is not the active workflow`.
 - Scope check: This is one cohesive docs/prompt/test contract update. It does not add `vtracer` as a dependency and does not implement new extraction behavior.
+- Defensive vs constructive contract: Task 5 carries both a negative constraint (no SVG path dump, no raw path clouds) and a positive authoring order (semantic-first: PNG -> internal decompose -> macro map -> refine with hints). Task 1 Step 1 locks both axes with independent tests: `test_authoring_prompt_forbids_path_dump_final_source` validates negative phrasing; `test_authoring_prompt_requires_semantic_first_order` validates positive workflow order. If either wording drifts, the appropriate test fails.
