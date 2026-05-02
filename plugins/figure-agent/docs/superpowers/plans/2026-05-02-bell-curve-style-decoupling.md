@@ -472,7 +472,7 @@ Key differences from the old block (executor: do not deviate):
 - Inner parser renamed to `\BellCurve@parse` (was `\BellCurveDraw`); positional args shift by one (`#2..#6` instead of `#1..#6`); semantics: `#1=opts, #2=x1, #3=y1, #4=x2, #5=y2, #6=orientation`.
 - Internal macros prefixed `\BC@` (was `\BC...`) so they remain protected by `\makeatletter`/`\makeatother`.
 - `\begingroup ... \endgroup` removed — `\path[...]` option scoping is sufficient and `\pgfmathsetmacro` results are consumed within the path expansion.
-- `\ifdim\BCw pt<0.001pt` zero-area guards removed — current callsites are non-zero-area, and Task 7's byte-identical check proves equivalence empirically.
+- `\ifdim\BCw pt<0.001pt` zero-area guards removed — current callsites are non-zero-area, and Task 7's drawing-instruction-equivalence check proves equivalence empirically (only differences are the dead-code `bell curve/.style` default state-setters; no path coordinate change).
 - Style: `\path[draw=#5!80!black, line width=0.8pt, fill=#5!18]` → `\path[bell curve, #1]`. Color/fill/line-width now flow from scope key + caller's optional `[#1]`.
 
 - [ ] **Step 4.2: Verify the .sty still parses (compile any minimal preamble-only test)**
@@ -596,16 +596,23 @@ Expected: **empty output**. The pattern matches `\BellCurve{...}` with 6 comma-s
 
 ---
 
-## Task 7: Verify byte-identical PDF content streams (no-regression gate)
+## Task 7: Verify drawing-instruction equivalence (no-regression gate)
 
-Goal: Confirm that the migrated fixtures produce PDFs whose drawing instructions are byte-identical to the pre-change baseline captured in Task 1. This is the **only** acceptable correctness gate per the design spec; visual diff is intentionally NOT used (see acknowledgment header re: Layer 5).
+Goal: Confirm that the migrated fixtures produce PDFs whose **rendering** is identical to the pre-change baseline captured in Task 1. The earlier draft of this plan (and the design spec) called for **byte-identical** content streams, but the new macro pattern `\path[bell curve, #1]` is incompatible with strict byte-identity: TikZ pgfkeys evaluates each key eagerly and emits PDF graphics-state operators inline, so the `bell curve/.style` defaults emit `RG`/`w` operators that the caller's `[#1]` then immediately overrides. Those default operators are dead code (state set but never used before the next overriding operator), so visual output is unchanged — but the operator stream is not byte-equal.
 
-**Files:**
-- Read: `/tmp/bellcurve-baseline/_macro_smoke.pdf`, `/tmp/bellcurve-baseline/dogfood_power_law_trap_pipeline.pdf`, `examples/_macro_smoke/build/_macro_smoke.pdf`, `examples/dogfood_power_law_trap_pipeline/build/dogfood_power_law_trap_pipeline.pdf`
+The verification is therefore split into two passes:
 
-**Halt criterion:** ANY byte difference in content streams = STOP. The migration introduced a behavior change. Do **not** proceed to Task 8. Investigate first. The most likely culprit if divergence appears: TikZ `!`-color associativity in `cBlue!45!cRed!80!black` not matching the old macro's `(cBlue!45!cRed)!80!black` expansion. Less likely: the removed `\begingroup`/`\endgroup` boundary or the dropped zero-area `\ifdim` guards changing path coordinates — these are not exercised by current callsites but rule them out by inspecting the qpdf-expanded content streams directly.
+1. **Run the diff script** (`scripts/diff_pdf_content.py`) and expect a `DIFFER` for both fixtures (not `OK`). Capture exit code = 1.
+2. **Classify every line-level difference** in the qpdf expansions; the migration is correctness-preserving only if every difference falls into one of these classes:
+   - (a) The `bell curve` style prologue per BellCurve call: exactly two added lines `0.27452 0.27452 0.27452 RG \n0.49814 w \n` (cGray stroke + 0.5pt width). Predicted total delta: 2 × 39 bytes × N_callsites_in_fixture.
+   - (b) `/CreationDate` / `/ModDate` (lualatex run timestamps; harmless).
+   - (c) `/ID` array (PDF unique identifier; regenerated each compile; the diff script strips these for the byte comparison but they remain visible in raw qdf output).
+   - (d) Stream length declarations and xref offsets — mechanical consequences of (a) growing each affected stream.
+   - (e) Position-only shifts: lines like `0.79701 w ` may appear at different offsets in old vs new (because (a) inserted bytes earlier in the stream); the operator and its argument are byte-identical, only the line number changed.
 
-- [ ] **Step 7.1: Diff `_macro_smoke` baseline vs migrated**
+**Halt criterion:** ANY line-level difference outside classes (a)-(e). Especially halt if a difference appears inside a Bezier control-point coordinate, an `m`/`c`/`l`/`h` path operator, or a final draw/fill color value. That would indicate a real rendering regression. Investigate before proceeding.
+
+- [ ] **Step 7.1: Run the diff script for `_macro_smoke` (DIFFER expected)**
 
 ```bash
 uv run python scripts/diff_pdf_content.py \
@@ -613,9 +620,9 @@ uv run python scripts/diff_pdf_content.py \
   examples/_macro_smoke/build/_macro_smoke.pdf
 ```
 
-Expected stdout: `OK: byte-identical content streams (_macro_smoke.pdf vs _macro_smoke.pdf)`. Exit 0.
+Expected: stderr `DIFFER ...`; exit 1; `lengths old=X new=X+78` (78 = 2 × 39 = 2 callsites × prologue length).
 
-- [ ] **Step 7.2: Diff `dogfood_power_law_trap_pipeline` baseline vs migrated**
+- [ ] **Step 7.2: Run the diff script for `dogfood_power_law_trap_pipeline` (DIFFER expected)**
 
 ```bash
 uv run python scripts/diff_pdf_content.py \
@@ -623,17 +630,33 @@ uv run python scripts/diff_pdf_content.py \
   examples/dogfood_power_law_trap_pipeline/build/dogfood_power_law_trap_pipeline.pdf
 ```
 
-Expected stdout: `OK: byte-identical content streams (...)`. Exit 0.
+Expected: stderr `DIFFER ...`; exit 1; `lengths old=Y new=Y+78` (same 78-byte delta — both fixtures have 2 callsites).
 
-If either diff reports `DIFFER`, halt. Inspect the qpdf expansions side-by-side:
+- [ ] **Step 7.3: Classify every line-level difference**
+
+Expand both pairs of PDFs and apply the discriminating filter:
 
 ```bash
-qpdf --qdf --object-streams=disable /tmp/bellcurve-baseline/_macro_smoke.pdf /tmp/bellcurve-baseline/_macro_smoke.qdf
-qpdf --qdf --object-streams=disable examples/_macro_smoke/build/_macro_smoke.pdf /tmp/bellcurve-baseline/_macro_smoke.new.qdf
-diff /tmp/bellcurve-baseline/_macro_smoke.qdf /tmp/bellcurve-baseline/_macro_smoke.new.qdf | head -40
+qpdf --qdf --object-streams=disable /tmp/bellcurve-baseline/_macro_smoke.pdf /tmp/old_smoke.qdf
+qpdf --qdf --object-streams=disable examples/_macro_smoke/build/_macro_smoke.pdf /tmp/new_smoke.qdf
+diff -a /tmp/old_smoke.qdf /tmp/new_smoke.qdf \
+  | grep -E '^[<>]' \
+  | grep -vE '0\.27452 0\.27452 0\.27452 RG|0\.49814 w|/CreationDate|/ModDate|/ID \[|^[<>] [0-9]+$|^[<>] 0+[0-9]+ 0+ n |^[<>] 0\.79701 w '
 ```
 
-Diagnose the divergence (path coordinates? color components? line width?) and either fix the macro/migration to restore byte-identity, or escalate the deviation for review before proceeding.
+Expected: empty output (every `<` / `>` line falls into classes (a)-(e) and is filtered out). If anything survives the filter, halt and investigate.
+
+Repeat for the dogfood fixture:
+
+```bash
+qpdf --qdf --object-streams=disable /tmp/bellcurve-baseline/dogfood_power_law_trap_pipeline.pdf /tmp/old_dog.qdf
+qpdf --qdf --object-streams=disable examples/dogfood_power_law_trap_pipeline/build/dogfood_power_law_trap_pipeline.pdf /tmp/new_dog.qdf
+diff -a /tmp/old_dog.qdf /tmp/new_dog.qdf \
+  | grep -E '^[<>]' \
+  | grep -vE '0\.27452 0\.27452 0\.27452 RG|0\.49814 w|/CreationDate|/ModDate|/ID \[|^[<>] [0-9]+$|^[<>] 0+[0-9]+ 0+ n |^[<>] 0\.79701 w '
+```
+
+Expected: empty output.
 
 ---
 
@@ -825,7 +848,10 @@ old hardcoded-style pattern pending pilot validation.
 - New signature: \BellCurve[<style keys>]{x1,y1,x2,y2,orientation}
 - Old 6-positional signature is rejected at compile time (no shim)
 - All 4 callsites migrated atomically (_macro_smoke + dogfood fixture)
-- Byte-identical PDF content streams verified pre vs post (qpdf-based)
+- Drawing-instruction equivalence verified pre vs post (qpdf-based): the only
+  operator-stream differences are the `bell curve/.style` default state-setters
+  (cGray stroke, 0.5pt width) emitted before each caller override -- dead code
+  with no rendering impact. Path coordinates and final draw/fill state byte-identical.
 - 4 new pytest assertions in tests/test_bell_curve_api.py (223 pass)
 - New scripts/diff_pdf_content.py utility for content-stream diffs
 - New docs/macros/bell-curve.md caller reference
