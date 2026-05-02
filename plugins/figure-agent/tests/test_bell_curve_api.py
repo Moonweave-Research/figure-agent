@@ -63,6 +63,17 @@ def test_default_style_compiles(tmp_path: Path) -> None:
     shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
     reason="requires lualatex and pdftocairo",
 )
+def test_up_orientation_compiles(tmp_path: Path) -> None:
+    """The `up` orientation branch is a distinct \\ifx code path with its own
+    Bezier control-point formulas; assert it compiles independently of `side`."""
+    result = _compile(tmp_path, r"\BellCurve{0,0,1,1,up}")
+    assert result.returncode == 0, result.stderr + result.stdout
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
 def test_local_style_override_compiles(tmp_path: Path) -> None:
     """Caller may pass any TikZ \\path keys via the optional [#1] argument;
     this exercises the canonical translation pattern used by migrated callsites."""

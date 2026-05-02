@@ -28,6 +28,28 @@ def test_substitution_for_fig3_fixture() -> None:
     assert "deep trap" in result
 
 
+def test_flagship_comment_regex_accepts_optional_arg_macros() -> None:
+    """Macros declared as `\\newcommand{\\Name}[2][]{...}` legitimately
+    document an optional `[<keys>]` block in their preamble signature
+    comment (e.g., `% \\BellCurve[<style keys>]{x1,y1,x2,y2,orientation}`).
+    The flagship-comment regex must accept this shape so the LLM author
+    prompt does not regress to `signature missing from preamble`.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from llm_author_prompt import _build_flagship_bullets  # noqa: PLC0415
+
+    sty_text = (REPO_ROOT / "styles" / "polymer-paper-preamble.sty").read_text(encoding="utf-8")
+    bullets = _build_flagship_bullets(sty_text)
+    bell_lines = [b for b in bullets if "BellCurve" in b]
+    assert bell_lines, "BellCurve must appear in flagship bullets"
+    assert all("signature missing" not in line for line in bell_lines), (
+        f"BellCurve signature regressed to placeholder: {bell_lines}"
+    )
+    assert any(
+        "[<style keys>]" in line and "{x1,y1,x2,y2,orientation}" in line for line in bell_lines
+    ), f"BellCurve bullet missing optional [<style keys>] form: {bell_lines}"
+
+
 def test_rendered_signatures_match_preamble_arity() -> None:
     """The signature shown to the LLM for each flagship macro must have a brace
     count matching that macro's `\\newcommand[N]` declared arity. This catches

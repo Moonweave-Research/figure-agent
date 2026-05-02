@@ -63,10 +63,11 @@ def main() -> int:
                 file=sys.stderr,
             )
             break
-    print(
-        f"DIFFER: lengths old={len(old_blob)} new={len(new_blob)}",
-        file=sys.stderr,
-    )
+    if len(old_blob) != len(new_blob):
+        print(
+            f"DIFFER: lengths old={len(old_blob)} new={len(new_blob)}",
+            file=sys.stderr,
+        )
     return 1
 
 
