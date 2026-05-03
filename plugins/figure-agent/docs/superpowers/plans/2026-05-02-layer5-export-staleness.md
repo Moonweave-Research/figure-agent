@@ -348,15 +348,20 @@ from export_freshness import (  # noqa: E402
 )
 
 
-def _scaffold_minimal_fixture(root: Path, name: str) -> Path:
-    """Create a fixture dir with a minimal compiled PDF in build/."""
+def _scaffold_minimal_fixture(root: Path, name: str, *, body: str = "hello") -> Path:
+    """Create a fixture dir with a minimal compiled PDF in build/.
+
+    `body` controls the document content so STALE-test fixtures can produce
+    distinct content hashes (two PDFs of the same TeX produce identical
+    metadata-stripped hashes — the STALE test must use different bodies).
+    """
     fixture = root / "examples" / name
     (fixture / "build").mkdir(parents=True, exist_ok=True)
     (fixture / "exports").mkdir(parents=True, exist_ok=True)
     (fixture / f"{name}.tex").write_text(
         r"\documentclass[border=2pt]{standalone}"
         "\n"
-        r"\begin{document}hello\end{document}"
+        rf"\begin{{document}}{body}\end{{document}}"
         "\n",
         encoding="utf-8",
     )
@@ -383,20 +388,36 @@ def test_state_fresh_when_exports_pdf_matches_build(tmp_path: Path) -> None:
 
 def test_state_stale_when_exports_pdf_differs_from_build(tmp_path: Path) -> None:
     fixture = _scaffold_minimal_fixture(tmp_path, "fix_stale_a")
-    other = _scaffold_minimal_fixture(tmp_path, "fix_stale_b")
+    other = _scaffold_minimal_fixture(tmp_path, "fix_stale_b", body="goodbye world")
     shutil.copy(other / "build" / "fix_stale_b.pdf", fixture / "exports" / "fix_stale_a.pdf")
     assert compute_export_state(fixture, "fix_stale_a") == EXPORT_STALE
 
 
-def test_state_tracked_golden_when_exports_pdf_is_git_tracked(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The repo's golden_trap_depth_picture fixture has its exports/ artifacts
-    git-tracked via .gitignore exclusion. compute_export_state must see them
-    as TRACKED_GOLDEN regardless of build state."""
-    fixture = REPO_ROOT / "examples" / "golden_trap_depth_picture"
-    pdf = fixture / "exports" / "golden_trap_depth_picture.pdf"
-    if not pdf.is_file():
-        pytest.skip("golden fixture exports/PDF not present in checkout")
-    state = compute_export_state(fixture, "golden_trap_depth_picture")
+def test_state_tracked_golden_for_self_contained_git_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """compute_export_state must return TRACKED_GOLDEN for any git-tracked
+    exports/<name>.pdf, regardless of build state. Uses a self-contained
+    git repo so coverage does not depend on the real golden fixture being
+    present on disk.
+    """
+    repo = tmp_path / "fake_repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+
+    fixture = repo / "examples" / "fake_fixture"
+    (fixture / "exports").mkdir(parents=True)
+    pdf = fixture / "exports" / "fake_fixture.pdf"
+    pdf.write_bytes(b"%PDF-1.4 dummy\n")
+
+    subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
+
+    import export_freshness  # noqa: PLC0415
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+
+    state = compute_export_state(fixture, "fake_fixture")
     assert state == EXPORT_TRACKED_GOLDEN
 ```
 
