@@ -61,3 +61,36 @@ def test_per_call_override_compiles(tmp_path: Path) -> None:
         r"{0,0,4,3, 2.5, 0.5, 1.5, {}, {}}",
     )
     assert result.returncode == 0, result.stderr + result.stdout
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_default_invocation_compiles(tmp_path: Path) -> None:
+    """Backwards-compatibility: \\BandDiagram with no optional [#1] arg
+    must still compile. The new [2][] signature treats the missing optional
+    as empty, so \\BD@opts is the empty token list — \\begin{scope}[band
+    diagram, ] is a no-op style application."""
+    result = _compile(
+        tmp_path,
+        r"\BandDiagram{0,0,4,3, 2.5, 0.5, 1.5, {3.5,3.2,2.9}, {1.8,1.5}}",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_figure_wide_tikzset_path_still_works(tmp_path: Path) -> None:
+    """Pre-pilot caller pattern: figure-wide \\tikzset patches a sub-style
+    once, all subsequent \\BandDiagram calls inherit it. The new [#1] slot
+    is additive — it does not break this path."""
+    result = _compile(
+        tmp_path,
+        r"\tikzset{bandFrame/.append style={draw=cAmber}}"
+        "\n"
+        r"\BandDiagram{0,0,4,3, 2.5, 0.5, 1.5, {}, {}}",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
