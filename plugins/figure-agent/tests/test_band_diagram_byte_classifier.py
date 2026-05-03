@@ -106,10 +106,14 @@ def test_macro_smoke_qdf_diff_classifier(tmp_path: Path) -> None:
     # contains binary stream blobs for fonts/glyphs) trips diff into
     # "Binary files differ" mode and only one line of output, defeating
     # the classifier entirely.
+    # qpdf qdf output contains binary stream blobs. `diff -a` keeps it textual
+    # at the diff level, but Python's text-mode capture must tolerate non-utf-8
+    # bytes (font glyph subsets, ICC profiles, etc.) that cross platforms
+    # produce differently. Decode latin-1 so every byte round-trips losslessly.
     diff_result = subprocess.run(
         ["diff", "-au", str(BASELINE), str(new_qdf)],
         capture_output=True,
-        text=True,
+        encoding="latin-1",
         check=False,
     )
 

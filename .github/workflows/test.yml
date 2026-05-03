@@ -48,5 +48,10 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
+      - name: Pre-build smoke fixture (required by stage-assertion test)
+        run: |
+          bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
+          uv run python3 scripts/run_export.py smoke_trap_demo
+
       - name: Run tests
         run: uv run pytest -q
