@@ -20,7 +20,6 @@ panels:
   - id: b
     caption: Sulfur Polymer
 style_profile: polymer-default
-selected_preview: null
 """
     spec = parse_spec(text)
     assert spec["name"] == "fig3_trapping_concept"
@@ -90,14 +89,6 @@ This is real content.
     sections = parse_briefing(text)
     assert sections[1][1] == "This is real content."
     assert sections[2][1] == ""
-
-
-def test_parse_spec_selected_preview_null_becomes_none():
-    text = """name: test
-selected_preview: null
-"""
-    spec = parse_spec(text)
-    assert spec["selected_preview"] is None
 
 
 def test_parse_spec_block_scalar_preserved():
