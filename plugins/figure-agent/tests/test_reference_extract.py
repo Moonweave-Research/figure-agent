@@ -206,7 +206,7 @@ def test_ocr_text_labels_recovers_simple_words(tmp_path: Path) -> None:
 
 
 def test_ocr_text_labels_raises_when_tesseract_missing(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("reference_extract.shutil.which", lambda name: None)
+    monkeypatch.setattr("ocr.shutil.which", lambda name: None)
     ref = tmp_path / "synth.png"
     Image.new("RGB", (50, 50), "white").save(ref)
     with pytest.raises(FileNotFoundError):
@@ -296,4 +296,3 @@ def test_structural_regions_unavailable_when_vtracer_missing(tmp_path, monkeypat
     # Core extractions still work
     assert "text_labels" in payload
     assert "palette_shape_clusters" in payload
-
