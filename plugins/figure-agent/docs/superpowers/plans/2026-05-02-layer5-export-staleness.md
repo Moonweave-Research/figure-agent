@@ -187,7 +187,7 @@ uv run python scripts/diff_pdf_content.py examples/_macro_smoke/build/_macro_smo
 echo "exit=$?"
 ```
 
-Expected: stdout `OK: byte-identical content streams (_macro_smoke.pdf vs _macro_smoke.pdf)`; exit 0.
+Expected: stdout `OK: byte-identical qdf-expanded structure (_macro_smoke.pdf vs _macro_smoke.pdf)`; exit 0.
 
 ---
 
