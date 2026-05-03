@@ -104,3 +104,48 @@ def test_state_tracked_golden_for_self_contained_git_repo(
 
     state = compute_export_state(fixture, "fake_fixture")
     assert state == EXPORT_TRACKED_GOLDEN
+
+
+def test_freshness_invariant_after_run_export(tmp_path: Path) -> None:
+    """After run_export.py succeeds on a non-golden fixture, build/PDF and
+    exports/PDF must hash-equal. Lock this as the Layer A always-on contract.
+    """
+    if (
+        shutil.which("lualatex") is None
+        or shutil.which("dvisvgm") is None
+        or shutil.which("rsvg-convert") is None
+        or shutil.which("pdftocairo") is None
+    ):
+        pytest.skip("requires lualatex, dvisvgm, rsvg-convert, pdftocairo")
+
+    # Use a real fixture so all toolchain pieces are exercised.
+    fixture_name = "_macro_smoke"
+    fixture = REPO_ROOT / "examples" / fixture_name
+
+    # Prime build/.
+    subprocess.run(
+        ["bash", "scripts/compile.sh", str(fixture / f"{fixture_name}.tex")],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+    )
+
+    # Prime exports/ via the orchestrator.
+    result = subprocess.run(
+        ["uv", "run", "python", "scripts/run_export.py", fixture_name],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    # Layer A invariant.
+    from export_freshness import compute_pdf_content_hash  # noqa: PLC0415
+
+    build_pdf = fixture / "build" / f"{fixture_name}.pdf"
+    exports_pdf = fixture / "exports" / f"{fixture_name}.pdf"
+    assert compute_pdf_content_hash(build_pdf) == compute_pdf_content_hash(exports_pdf), (
+        "Layer A invariant violated: exports/PDF content hash differs from build/PDF "
+        "after run_export.py reported success."
+    )
