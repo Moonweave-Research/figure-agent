@@ -52,6 +52,129 @@ _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 
 
+def _has_image_files(directory: Path, exts: set[str] | None = None) -> bool:
+    if exts is None:
+        exts = {".png", ".jpg", ".jpeg"}
+    for entry in directory.iterdir():
+        if not entry.is_file():
+            continue
+        if entry.name.startswith("."):
+            continue
+        if entry.name == ".gitkeep":
+            continue
+        if entry.suffix.lower() in exts:
+            return True
+    return False
+
+
+def _has_export_artifact(directory: Path, name: str) -> bool:
+    for ext in _EXPORT_EXTS:
+        if (directory / f"{name}{ext}").exists():
+            return True
+    return False
+
+
+def _all_four_exports_present(exports_dir: Path, name: str) -> bool:
+    has_pdf = (exports_dir / f"{name}.pdf").exists()
+    has_svg = (exports_dir / f"{name}.svg").exists()
+    has_tif = (exports_dir / f"{name}.tif").exists() or (exports_dir / f"{name}.tiff").exists()
+    has_png = (exports_dir / f"{name}.png").exists()
+    return has_pdf and has_svg and has_tif and has_png
+
+
+def _source_paths(example_dir: Path, name: str) -> tuple[Path, ...]:
+    """Sources that should be older than any compiled artifact (matches review_brief)."""
+    candidates = [example_dir / f"{name}.tex", example_dir / "briefing.md", STYLE_LOCK_PATH]
+    return tuple(path for path in candidates if path.exists())
+
+
+def _is_stale(sources: tuple[Path, ...], targets: tuple[Path, ...]) -> bool:
+    """True if any source file is newer than the oldest target file."""
+    target_mtimes = [path.stat().st_mtime for path in targets if path.exists()]
+    if not target_mtimes:
+        return False
+    oldest_target = min(target_mtimes)
+    for source in sources:
+        if source.stat().st_mtime > oldest_target:
+            return True
+    return False
+
+
+def _existing_export_paths(exports_dir: Path, name: str) -> tuple[Path, ...]:
+    found = []
+    for ext in _EXPORT_EXTS:
+        path = exports_dir / f"{name}{ext}"
+        if path.exists():
+            found.append(path)
+    return tuple(found)
+
+
+def _append_prerequisite_notes(
+    notes: list[str], spec: dict, previews_dir: Path, briefing_path: Path
+) -> None:
+    if not briefing_path.exists():
+        notes.append("missing_briefing")
+
+    previews_corrupted = previews_dir.exists() and not previews_dir.is_dir()
+    if previews_corrupted:
+        notes.append("previews_not_directory")
+
+    selected_preview = spec.get("selected_preview") if spec else None
+    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
+        if not (previews_dir.is_dir() and (previews_dir / selected_preview).is_file()):
+            notes.append("selected_preview_missing")
+
+
+def _resolve_accepted(spec: dict) -> bool | None:
+    """Return literal bool from spec['accepted']; coerce other shapes to None."""
+    value = spec.get("accepted") if spec else None
+    if value is True or value is False:
+        return value
+    return None
+
+
+def _accepted_marker(accepted: bool | None) -> str:
+    if accepted is True:
+        return " (accepted)"
+    if accepted is False:
+        return " (not accepted)"
+    return ""
+
+
+def _append_reference_image_check(
+    checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
+) -> None:
+    reference_image = spec.get("reference_image") if spec else None
+    if not reference_image or not isinstance(reference_image, str) or not reference_image.strip():
+        return
+
+    reference_image = reference_image.strip()
+    checks.append(("reference_image", reference_image))
+    reference_path = example_dir / reference_image
+    if not reference_path.is_file():
+        notes.append("reference_image_missing")
+        return
+
+    # Layer 2.5: coordinate_hints.yaml is auto-detected by file presence.
+    # Surface missing/stale/parse-error states as notes so the user knows
+    # to run /fig_extract; we never block the stage advance on it because
+    # Layer 2.5 is optional.
+    hints_path = example_dir / "coordinate_hints.yaml"
+    if not hints_path.exists():
+        notes.append("coordinate_hints_missing")
+        return
+    checks.append(("coordinate_hints", "present"))
+    try:
+        import yaml as _yaml
+
+        _yaml.safe_load(hints_path.read_text(encoding="utf-8"))
+    except Exception:
+        notes.append("coordinate_hints_parse_error")
+        return
+    if hints_path.stat().st_mtime < reference_path.stat().st_mtime:
+        notes.append("coordinate_hints_stale")
+
+
 def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
@@ -214,129 +337,6 @@ def infer_stage(example_dir: Path) -> dict:
         "accepted": accepted,
         "exports_substate": exports_substate,
     }
-
-
-def _has_image_files(directory: Path, exts: set[str] | None = None) -> bool:
-    if exts is None:
-        exts = {".png", ".jpg", ".jpeg"}
-    for entry in directory.iterdir():
-        if not entry.is_file():
-            continue
-        if entry.name.startswith("."):
-            continue
-        if entry.name == ".gitkeep":
-            continue
-        if entry.suffix.lower() in exts:
-            return True
-    return False
-
-
-def _has_export_artifact(directory: Path, name: str) -> bool:
-    for ext in _EXPORT_EXTS:
-        if (directory / f"{name}{ext}").exists():
-            return True
-    return False
-
-
-def _all_four_exports_present(exports_dir: Path, name: str) -> bool:
-    has_pdf = (exports_dir / f"{name}.pdf").exists()
-    has_svg = (exports_dir / f"{name}.svg").exists()
-    has_tif = (exports_dir / f"{name}.tif").exists() or (exports_dir / f"{name}.tiff").exists()
-    has_png = (exports_dir / f"{name}.png").exists()
-    return has_pdf and has_svg and has_tif and has_png
-
-
-def _source_paths(example_dir: Path, name: str) -> tuple[Path, ...]:
-    """Sources that should be older than any compiled artifact (matches review_brief)."""
-    candidates = [example_dir / f"{name}.tex", example_dir / "briefing.md", STYLE_LOCK_PATH]
-    return tuple(path for path in candidates if path.exists())
-
-
-def _is_stale(sources: tuple[Path, ...], targets: tuple[Path, ...]) -> bool:
-    """True if any source file is newer than the oldest target file."""
-    target_mtimes = [path.stat().st_mtime for path in targets if path.exists()]
-    if not target_mtimes:
-        return False
-    oldest_target = min(target_mtimes)
-    for source in sources:
-        if source.stat().st_mtime > oldest_target:
-            return True
-    return False
-
-
-def _existing_export_paths(exports_dir: Path, name: str) -> tuple[Path, ...]:
-    found = []
-    for ext in _EXPORT_EXTS:
-        path = exports_dir / f"{name}{ext}"
-        if path.exists():
-            found.append(path)
-    return tuple(found)
-
-
-def _append_prerequisite_notes(
-    notes: list[str], spec: dict, previews_dir: Path, briefing_path: Path
-) -> None:
-    if not briefing_path.exists():
-        notes.append("missing_briefing")
-
-    previews_corrupted = previews_dir.exists() and not previews_dir.is_dir()
-    if previews_corrupted:
-        notes.append("previews_not_directory")
-
-    selected_preview = spec.get("selected_preview") if spec else None
-    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
-        if not (previews_dir.is_dir() and (previews_dir / selected_preview).is_file()):
-            notes.append("selected_preview_missing")
-
-
-def _resolve_accepted(spec: dict) -> bool | None:
-    """Return literal bool from spec['accepted']; coerce other shapes to None."""
-    value = spec.get("accepted") if spec else None
-    if value is True or value is False:
-        return value
-    return None
-
-
-def _accepted_marker(accepted: bool | None) -> str:
-    if accepted is True:
-        return " (accepted)"
-    if accepted is False:
-        return " (not accepted)"
-    return ""
-
-
-def _append_reference_image_check(
-    checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
-) -> None:
-    reference_image = spec.get("reference_image") if spec else None
-    if not reference_image or not isinstance(reference_image, str) or not reference_image.strip():
-        return
-
-    reference_image = reference_image.strip()
-    checks.append(("reference_image", reference_image))
-    reference_path = example_dir / reference_image
-    if not reference_path.is_file():
-        notes.append("reference_image_missing")
-        return
-
-    # Layer 2.5: coordinate_hints.yaml is auto-detected by file presence.
-    # Surface missing/stale/parse-error states as notes so the user knows
-    # to run /fig_extract; we never block the stage advance on it because
-    # Layer 2.5 is optional.
-    hints_path = example_dir / "coordinate_hints.yaml"
-    if not hints_path.exists():
-        notes.append("coordinate_hints_missing")
-        return
-    checks.append(("coordinate_hints", "present"))
-    try:
-        import yaml as _yaml
-
-        _yaml.safe_load(hints_path.read_text(encoding="utf-8"))
-    except Exception:
-        notes.append("coordinate_hints_parse_error")
-        return
-    if hints_path.stat().st_mtime < reference_path.stat().st_mtime:
-        notes.append("coordinate_hints_stale")
 
 
 def _print_single(result: dict) -> None:
