@@ -1,6 +1,6 @@
 [project]
 name = "figure-agent"
-version = "0.1.12"
+version = "0.1.13"
 description = "Claude Code plugin: schematic prompt intent control + vector compile."
 requires-python = ">=3.12"
 dependencies = [

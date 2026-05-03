@@ -2,6 +2,42 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.13] - 2026-05-03
+
+Multi-pilot release: BellCurve + BandDiagram macro style-decoupling, Layer 5
+export staleness, and BandDiagram dogfood findings. L3 progress 60→65%
+(2 of 8 flagship macros decoupled); L5/L7/L8 closed to 100%.
+
+### Added
+
+- `\BandDiagram[<style-keys>]{...}` optional first argument for caller-side
+  pgfkeys override (rounded teal frame, CB/VB bandboxes, axis, Et marker,
+  trap dashes). `\BD@opts` storage + `\expandafter\tikzset` apply pattern
+  (pgfkeys non-expansion workaround). See `docs/macros/band-diagram.md`.
+- `\BellCurve[<style-keys>]{x1,y1,x2,y2,orientation}` decoupled style
+  primitive: caller supplies draw/fill/line width via pgfkeys; default
+  `bell curve/.style` is outline-only with palette-neutral cGray.
+- Layer 5 export pipeline staleness model — 4-state machine
+  (`MISSING` / `TRACKED_GOLDEN` / `STALE` / `FRESH`) via qpdf metadata-strip
+  content-hash. `/fig_export` auto-rebuilds `STALE` / `MISSING`, skips
+  `TRACKED_GOLDEN` with warning.
+- `docs/macros/band-diagram.md` — caller reference for `\BandDiagram[#1]`.
+- `docs/macros/band-diagram-gaps.md` — dogfood findings from 2026-05-03
+  `examples/fig3_trapping_concept` partial migration: 5 macro API gaps
+  identified (visual model mismatch, TrapLevel extent, Et text persistence,
+  bandbox label customization, trap-free panel incompatibility). v0.3 spec
+  deferred until multi-fixture pressure confirms which gaps are generic.
+
+### Fixed
+
+- BellCurve PR Codex review follow-ups (F1, F2): `\BellCurve@parse`
+  expansion-order corrections for orientation handling.
+- Layer 5 metadata-strip regex covers `/CreationDate` alongside `/ID`.
+
+### Tests
+
+- 242 pytest pass (5 new BandDiagram API + byte-classifier tests).
+
 ## [0.1.12] - 2026-05-01
 
 ### Fixed
