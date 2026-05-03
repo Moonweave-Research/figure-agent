@@ -1,4 +1,14 @@
-"""Generate an external critic brief from briefing.md + TikZ + rendered PNG."""
+"""Emit the L4.5 vision-critique brief from briefing.md + TikZ + rendered PNG.
+
+Produces the prompt-context block consumed by the `/fig_critique <name>` slash
+command. The host Claude Code main loop reads the brief together with the
+build PNG (via the Read tool) and writes the structured critique to
+`examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
+v1). No external API is called; the brief itself is API-free.
+
+Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
+`docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
+"""
 
 from __future__ import annotations
 
@@ -8,13 +18,13 @@ from pathlib import Path
 from inputs import parse_briefing, parse_spec
 
 MISSING_INVARIANTS = (
-    "(none provided — reviewer should infer plausible physics constraints from §1+§2)"
+    "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 
 
-class ReviewBriefError(Exception):
-    """Expected user-facing error while preparing the review brief."""
+class CritiqueBriefError(Exception):
+    """Expected user-facing error while preparing the critique brief."""
 
 
 def _require_file(path: Path, hint: str | None = None) -> None:
@@ -42,12 +52,12 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
     stale_sources = [path for path in source_paths if path.stat().st_mtime > png_mtime]
     if stale_sources:
         names = ", ".join(path.name for path in stale_sources)
-        raise ReviewBriefError(
+        raise CritiqueBriefError(
             f"stale render {png_path}; newer source file(s): {names}; run /fig_compile first"
         )
 
 
-def _review_source_paths(tex_path: Path, briefing_path: Path) -> tuple[Path, ...]:
+def _critique_source_paths(tex_path: Path, briefing_path: Path) -> tuple[Path, ...]:
     paths = [tex_path, briefing_path]
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
@@ -80,17 +90,17 @@ def generate_for(example_dir: Path) -> str:
     png_path = example_dir / "build" / f"{name}.png"
     _require_file(tex_path)
     _require_file(png_path, "run /fig_compile first")
-    _require_fresh_png(png_path, _review_source_paths(tex_path, briefing_path))
+    _require_fresh_png(png_path, _critique_source_paths(tex_path, briefing_path))
 
     tex = tex_path.read_text(encoding="utf-8")
     numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
     render_path = _example_relative_path(example_dir, png_path)
 
-    return f"""# Reviewer brief — {name}
+    return f"""# Critique brief — {name}
 
-**Render to attach:** `{render_path}`
-(Attach this PNG to your critic before sending the brief.)
+**Render to inspect:** `{render_path}`
+(The slash command loads this PNG into the host main loop via the Read tool.)
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -102,7 +112,7 @@ def generate_for(example_dir: Path) -> str:
 ```tex
 {numbered_tex}```
 
-## Review rubric
+## Critique rubric
 
 ### A. Physics correctness
 - For each invariant in the section above, verify the rendered figure preserves it.
@@ -119,30 +129,52 @@ def generate_for(example_dir: Path) -> str:
   (e.g., blue=conduction, red=valence, amber=trap)?
 - Nature-schematic style: minimal, sans-serif, no unnecessary text?
 
-## Output format requested
-Produce a single Markdown table with columns:
-| severity | category | .tex line(s) | finding | suggested fix |
+## Output format
 
-Severity is one of: BLOCKER, MAJOR, MINOR, NIT.
-Category is one of: physics, label_placement, whitespace, hierarchy, palette, style.
+Write findings to `examples/{name}/critique.md` with this exact structure
+(YAML front-matter then human-readable Markdown body — schema v1):
 
-End with a 1-paragraph "Overall verdict" summarizing whether the figure is ready to
-export or needs revision.
+```markdown
+---
+schema: figure-agent.critique.v1
+fixture: {name}
+generated_at: <ISO-8601 timestamp>
+verdict: ready | revise | block
+findings:
+  - id: C001
+    severity: BLOCKER | MAJOR | MINOR | NIT
+    category: physics | label_placement | whitespace | hierarchy | palette | style
+    tex_lines: [<int>, ...]
+    observation: "<what is wrong, citing what you see in the PNG>"
+    suggested_fix: "<concrete edit to the .tex>"
+    status: open
+---
+
+# Vision Critique — {name}
+
+<one-paragraph overall verdict, then per-finding prose discussion>
+```
+
+`verdict: ready` if zero BLOCKER + zero MAJOR findings; `revise` for any
+MAJOR/MINOR; `block` only if a BLOCKER physics violation makes the figure
+unsuitable for manuscript use. Critique is **report-only** for v0.2 — do
+NOT auto-edit `<name>.tex`. See `docs/architecture-v0.2-proposal.md` §7.
 
 ---
-(Generated by figure-agent /fig_review for {name}. Brief is API-free. Paste this brief
-plus the attached PNG into your critic of choice.)
+(Generated by figure-agent /fig_critique for {name}. API-free; the host
+Claude Code main loop reads the PNG and produces the critique using only
+subscription tokens.)
 """
 
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("usage: review_brief.py <example_dir>", file=sys.stderr)
+        print("usage: critique_brief.py <example_dir>", file=sys.stderr)
         return 2
 
     try:
         brief = generate_for(Path(sys.argv[1]))
-    except (FileNotFoundError, ReviewBriefError) as exc:
+    except (FileNotFoundError, CritiqueBriefError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
 

@@ -14,34 +14,36 @@ Quality kernel responsibilities:
 4. **Reproducibility** — per-figure folder contract, transparent state inference (`/fig_status`), explicit export tracking policy for golden fixtures.
 
 Plugin does **not**:
-- Call image-gen or vision APIs.
+- Call image-gen or external vision APIs directly.
 - Decide which frontier LLM to use.
 - Convert PNG → SVG/TikZ automatically (see `docs/quality-kernel-goal.md`).
 
+Plugin **does** delegate vision tasks to the host Claude Code main loop
+(L4.5 vision critique). The host reads the build PNG and writes
+`critique.md` using subscription tokens — no external API call originates
+from plugin code.
+
 ## Workflow
 
-**Active (quality kernel):**
+**Active (quality kernel + L4.5 vision critique):**
 ```
 /fig_new <name>       scaffold (briefing + spec)
 /fig_extract <name>   optional Layer 2.5 — OCR + palette shape clusters from reference PNG
                       → coordinate_hints.yaml (recommended when spec.yaml.reference_image exists)
                       [user/LLM authors examples/<name>/<name>.tex]
 /fig_compile <name>   lint + lualatex + collision/clash/(optional drift) checks
+/fig_critique <name>  L4.5 — host Claude reads build/<name>.png + briefing,
+                      writes structured critique.md (report-only for v0.2)
 /fig_export <name>    PDF / SVG / TIFF / PNG export
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```
 
-**Frozen legacy (reduced to one helper after v0.2 cleanup):**
-```
-/fig_review <name>           reviewer brief for external critique
-                             (becomes /fig_critique with host-LLM orchestration in v0.2)
-```
-
 `/fig_prompt`, `/fig_preview_select`, the prompt-template / redaction /
-selection-notes pipeline, and the auxiliary scripts behind them
-(`prompt_gen.py`, `redact.py`, `llm_author_prompt.py`,
-`prompts/llm_author_tikz.md`) were removed in the v0.2 frozen-legacy
-cleanup. See `docs/architecture-v0.2-proposal.md`.
+selection-notes pipeline, the `selected_preview` stage gate, and the
+auxiliary scripts behind them were removed in the v0.2 frozen-legacy
+cleanup (PR #8a + #8b). The legacy `/fig_review` HALT-then-paste workflow
+was renamed and extended into `/fig_critique` (PR #9). See
+`docs/architecture-v0.2-proposal.md`.
 
 ## Repo Notes
 

@@ -14,13 +14,17 @@ Quality kernel responsibilities:
 4. **Reproducibility** — per-figure folder contract, transparent state inference (`/fig_status`), explicit export tracking policy for golden fixtures.
 
 Plugin does **not**:
-- Call image-gen or vision APIs.
+- Call image-gen or external vision APIs directly.
 - Decide which frontier LLM/agent to use.
 - Convert PNG → SVG/TikZ automatically (see `docs/quality-kernel-goal.md`).
 
+Plugin **does** delegate vision tasks to the host main loop (L4.5 vision
+critique). The host reads the build PNG and writes `critique.md` using
+subscription tokens — no external API call originates from plugin code.
+
 ## Workflow
 
-**Active (quality kernel):**
+**Active (quality kernel + L4.5 vision critique):**
 ```
 /fig_new <name>       scaffold (briefing + spec)
 /fig_extract <name>   optional Layer 2.5 — OCR + palette shape clusters from reference PNG
@@ -28,18 +32,18 @@ Plugin does **not**:
                       [user/LLM authors examples/<name>/<name>.tex]
 /fig_compile <name>   lint + lualatex + collision/clash checks
                       (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
+/fig_critique <name>  L4.5 — host reads build/<name>.png + briefing,
+                      writes structured critique.md (report-only for v0.2)
 /fig_export <name>    PDF / SVG / TIFF / PNG export (dvisvgm preserves text)
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```
 
-**Frozen legacy (v0.1 orchestration; preserved for backwards compatibility, not the development direction):**
-```
-/fig_prompt <name>           normalized image-gen prompt block
-/fig_preview_select <name>   record selected preview in spec.yaml
-/fig_review <name>           reviewer brief for external critique
-```
-
-See `docs/quality-kernel-goal.md` for why these are frozen.
+The v0.1 frozen helpers (`/fig_prompt`, `/fig_preview_select`,
+prompt-template / redaction / selection-notes pipeline,
+`spec.yaml.selected_preview` stage gate) were removed in the v0.2
+cleanup (PR #8a + #8b). The v0.1 `/fig_review` HALT-then-paste workflow
+was renamed and extended into `/fig_critique` (PR #9). See
+`docs/architecture-v0.2-proposal.md`.
 
 ## Repo Notes
 

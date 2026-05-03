@@ -65,21 +65,22 @@ present. Override with `--no-require-accepted` for ad-hoc inspection.
 
 For golden fixtures, `reference_image` points to the fixed visual target. Run
 `/fig_extract` to create `coordinate_hints.yaml` from that target before
-authoring or drift review. Do not store that target in `selected_preview`;
-`selected_preview` means a user-chosen candidate from `previews/` and belongs
-to the legacy path only.
+authoring or drift review.
 
-### Frozen legacy (reduced to one helper after v0.2 cleanup)
+### L4.5 Vision Critique (host-orchestrated)
 
 ```
-/fig_review <name>           emit reviewer brief for external vision LLM
-                             [HALT — user critiques, revises .tex]
-                             (becomes /fig_critique with host-LLM orchestration in v0.2)
+/fig_critique <name>         host Claude reads build/<name>.png + briefing,
+                             writes structured critique.md (YAML + Markdown).
+                             Report-only for v0.2; subscription tokens, zero external API.
 ```
 
-`/fig_prompt`, `/fig_preview_select`, the prompt-template / redaction /
-selection-notes pipeline, and their auxiliary scripts were removed in the
-v0.2 frozen-legacy cleanup. See `docs/architecture-v0.2-proposal.md`.
+Replaces the v0.1 `/fig_review` HALT-then-paste workflow via rename + extend
+(`scripts/review_brief.py` → `scripts/critique_brief.py`,
+`commands/fig_review.md` → `commands/fig_critique.md`). The remaining v0.1
+helpers (`/fig_prompt`, `/fig_preview_select`, prompt-template / redaction /
+selection-notes pipeline, `selected_preview` stage gate) were deleted in
+PR #8a + #8b. See `docs/architecture-v0.2-proposal.md`.
 
 **Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
 

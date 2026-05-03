@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from export_freshness import compute_export_state
 from inputs import parse_spec
 
-# Match review_brief's freshness source set so /fig_status and /fig_review agree.
+# Match critique_brief's freshness source set so /fig_status and /fig_critique agree.
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 
 _NEXT_0 = "run /fig_new <name> to create the figure scaffold."
@@ -19,8 +19,8 @@ _NEXT_1 = (
     " (cp styles/tex_template.tex to start), then /fig_compile <name>."
 )
 _NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
-# Stage 3: prefer the active /fig_export gate; /fig_review is legacy.
-_NEXT_3 = "run /fig_export <name> (or [legacy] /fig_review <name> for an external critic brief)."
+# Stage 3: prefer /fig_export; /fig_critique is the optional vision-review step.
+_NEXT_3 = "run /fig_critique <name> for vision review (optional), then /fig_export <name>."
 _NEXT_4 = (
     "done — outputs in examples/<name>/exports/."
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
@@ -55,7 +55,7 @@ def _all_four_exports_present(exports_dir: Path, name: str) -> bool:
 
 
 def _source_paths(example_dir: Path, name: str) -> tuple[Path, ...]:
-    """Sources that should be older than any compiled artifact (matches review_brief)."""
+    """Sources that should be older than any compiled artifact (matches critique_brief)."""
     candidates = [example_dir / f"{name}.tex", example_dir / "briefing.md", STYLE_LOCK_PATH]
     return tuple(path for path in candidates if path.exists())
 

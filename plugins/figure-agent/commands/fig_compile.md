@@ -43,8 +43,8 @@ Steps:
    - Visual clash report (WARN list, NOT blocking)
    - Layout drift report when emitted (per-label drift / uncovered counts,
      aspect-ratio header)
-   After review of compile + clash reports, run `/fig_review <name>` for structured
-   physics + aesthetic critique before exporting.
+   After review of compile + clash reports, run `/fig_critique <name>` for the
+   host-orchestrated vision critique before exporting.
 8. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
@@ -53,4 +53,4 @@ mode is explicitly enabled for manuscript, CI, or accepted-fixture gating.
 
 Lint is a /fig_compile sub-routine; no persistent state, re-runs every compile. Aligned with /fig_status freshness model.
 
-Next: /fig_review <name> or /fig_export <name> (if WARN > 0, revise <name>.tex and re-run /fig_compile <name>)
+Next: /fig_critique <name> or /fig_export <name> (if WARN > 0, revise <name>.tex and re-run /fig_compile <name>)
