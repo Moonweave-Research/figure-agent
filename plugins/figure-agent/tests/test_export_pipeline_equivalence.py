@@ -86,9 +86,23 @@ def test_layer_b_equivalence_smoke(fixture_dir: Path, spec: dict) -> None:
         text=True,
         check=False,
     )
+    # magick compare exits 0 (no diff) or 1 (diff present) on success; any other
+    # exit code (2, 64, ...) means the tool itself failed (bad args, format
+    # mismatch, etc.). Surface the raw stderr in that case so the failure is
+    # diagnosable instead of decaying into a cryptic ValueError on int(raw).
+    if result.returncode not in (0, 1):
+        raise AssertionError(
+            f"magick compare failed unexpectedly (exit {result.returncode}) "
+            f"for {name}:\n{result.stderr}"
+        )
     # AE is reported on stderr as an integer (or "<int> (<float>)" with -compose).
-    raw = result.stderr.strip().split()[0]
-    ae = int(raw)
+    raw = result.stderr.strip().split()[0] if result.stderr.strip() else ""
+    try:
+        ae = int(raw)
+    except ValueError as exc:
+        raise AssertionError(
+            f"magick compare produced non-integer AE output for {name}: stderr={result.stderr!r}"
+        ) from exc
 
     # Compare to total pixels.
     dim_result = subprocess.run(
