@@ -2,6 +2,96 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.2.0] - 2026-05-04
+
+Architecture cleanup release. Slims the v0.1 11-layer model to 7 functional
+pipeline layers + 1 cross-cutting group, deletes dead frozen-orchestration
+code, and introduces L4.5 Vision Critique as the new value-add — host
+Claude Code main loop reads the build PNG via the Read tool and writes
+structured `critique.md` (YAML front-matter + Markdown summary, schema v1).
+Subscription tokens only; no external Anthropic API call originates from
+plugin code.
+
+Reference design: `docs/architecture-v0.2-proposal.md` (Status: ACCEPTED).
+
+### Added
+
+- **L4.5 Vision Critique** — `/fig_critique <name>` slash command,
+  `scripts/critique_brief.py` (renamed + extended from `review_brief.py`),
+  `examples/<name>/critique.md` schema (YAML front-matter v1 + Markdown body,
+  verdict ∈ {ready, revise, block}, severity ∈ {BLOCKER, MAJOR, MINOR, NIT},
+  category ∈ {physics, label_placement, whitespace, hierarchy, palette, style}).
+  Report-only for v0.2; auto-apply gated on N=5+ dogfood accuracy ≥ 80%.
+- `docs/architecture-v0.2-proposal.md` — living design doc capturing the
+  layer redesign, blast-radius analysis, and PR-by-PR execution plan.
+- `docs/trials/n3_2026_05_04.md` + 3 N=3 trial fixtures
+  (`examples/n3_trial_0{1,2,3}_*`) — empirical α/γ decision data.
+- `.github/workflows/test.yml` — CI runs ruff + pytest on push/PR with
+  full apt deps (qpdf, imagemagick, tesseract, ttf-mscorefonts, texlive
+  fonts/pictures extras) and pre-builds the smoke fixture.
+- `scripts/{palette, ocr, vtrace}.py` — split out of `reference_extract.py`
+  monolith.
+
+### Changed
+
+- **Layer 2.5**: `scripts/reference_extract.py` 1060 → 263 lines (facade
+  pattern over `palette.py` / `ocr.py` / `vtrace.py`); rot CRITICAL → SAFE.
+  Public API surface unchanged (`PALETTE`, `EXTRACTION_VERSION`,
+  `palette_shape_clusters`, `ocr_text_labels`, `extract_coordinate_hints`
+  still importable from `reference_extract`).
+- **Layer 7 stage model**: 7 stages (0..6) → 5 stages (0..4). Stages 2/3
+  (preview-images-without-selection / `selected_preview`-set-without-tex)
+  removed. Print format becomes `stage X/4` (was `X/6`). Stage notes catalog
+  no longer emits `selected_preview_missing`.
+- **L4.5 rename**: `commands/fig_review.md` → `commands/fig_critique.md`,
+  `scripts/review_brief.py` → `scripts/critique_brief.py`,
+  `tests/test_review_brief.py` → `tests/test_critique_brief.py`,
+  `ReviewBriefError` → `CritiqueBriefError`, requested output format
+  changed from flat Markdown table to YAML front-matter + Markdown body.
+- Identity surfaces (CLAUDE.md / AGENTS.md / README.md / SKILL.md /
+  plugin.json) re-aligned: workflow listing now includes `/fig_critique`
+  under Active; policy clarified to "no external vision API; host
+  orchestration via the main loop is permitted".
+- `commands/fig_status.md` — Stage table fully rewritten (5 rows, 0..4).
+- `docs/architecture-overview.md` — Layer 4.5 section added; Layer 9
+  rewritten as deletion record; Layer 7 docstring renumbered to 0..4.
+- `docs/quality-kernel-goal.md` — Frozen Legacy Helpers section rewritten
+  with PR cleanup history.
+
+### Removed
+
+- `scripts/{prompt_gen, redact, llm_author_prompt}.py` (PR #8a).
+- `commands/{fig_prompt, fig_preview_select}.md` (PR #8a).
+- `prompts/llm_author_tikz.md` (PR #8a).
+- `tests/test_{prompt_gen, redact, llm_author_prompt}.py` (PR #8a) +
+  3 prompt-template assertions in `test_release_contract.py`.
+- `spec.yaml.selection_notes` consumer (PR #8a) and
+  `spec.yaml.selected_preview` stage-gate consumer (PR #8b). Existing
+  fixture spec.yaml files retain the field strings as historical record;
+  yaml ignores unknown keys for surviving consumers.
+- `scripts/status.py` `_has_image_files` helper (only consumer was the
+  removed previews stage gate).
+
+### Fixed
+
+- CI workflow installed missing system packages (`qpdf`, `imagemagick`,
+  `tesseract-ocr`, `texlive-fonts-extra`, `texlive-pictures`,
+  `ttf-mscorefonts-installer` with EULA pre-accepted) so the lualatex
+  `fontspec` Arial lookup succeeds and the qpdf/magick test families run.
+- `tests/test_band_diagram_byte_classifier.py` — diff capture switched to
+  `encoding="latin-1"` to tolerate cross-platform binary stream blobs in
+  the qpdf qdf output; test now skipped on non-darwin until a platform-
+  aware baseline pair lands.
+- `commands/fig_compile.md`, `commands/fig_status.md`, `scripts/status.py`,
+  `scripts/lint_tex.py` — `/fig_review` / `prompts/llm_author_tikz.md`
+  references re-pointed to the surviving `/fig_critique` /
+  `styles/polymer-paper-preamble.sty` targets.
+
+### Tests
+
+- 188 pytest pass (was 242; -54 from deleted frozen tests +
+  selected_preview tests + parser test). ruff clean.
+
 ## [0.1.14] - 2026-05-03
 
 Release coordination: forward-jumped from v0.1.9 tag (v0.1.10/11/12 were active
