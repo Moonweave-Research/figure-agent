@@ -50,17 +50,19 @@ durable layer remains necessary because manuscripts need consistent style,
 repeatable artifacts, and quality gates that do not depend on memory or model
 behavior.
 
-## Frozen Legacy Helpers
+## Frozen Legacy Helpers (post-v0.2 cleanup)
 
-These v0.1 helpers may remain because they already work, but they are not the
-main development direction:
+Only one helper remains:
 
-- `/fig_prompt`
-- `scripts/redact.py` prompt normalization
-- `spec.yaml.selection_notes` and the 4-heading recommendation
-- `prompts/llm_author_tikz.md`
-- preview-selection orchestration
-- `/fig_review` as an external critic brief generator
+- `/fig_review` as an external critic brief generator (scheduled for rename
+  to `/fig_critique` with host-LLM orchestration in v0.2 L4.5).
+
+Removed in the v0.2 frozen-legacy cleanup (PR #8a): `/fig_prompt`,
+`/fig_preview_select`, `scripts/redact.py`, `scripts/prompt_gen.py`,
+`scripts/llm_author_prompt.py`, `prompts/llm_author_tikz.md`, and the
+`spec.yaml.selection_notes` consumer. Existing fixture spec.yaml files
+keep `selection_notes` as a historical record only — yaml ignores unknown
+keys for surviving consumers.
 
 Do not add new orchestration features unless dogfooding proves a repeated,
 non-transient bottleneck.

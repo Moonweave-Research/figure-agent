@@ -37,38 +37,6 @@ def test_active_docs_define_semantic_tikz_reference_workflow() -> None:
             assert contract_string in doc_text, f"{doc_path} missing: {contract_string}"
 
 
-def test_authoring_prompt_forbids_path_dump_final_source() -> None:
-    prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
-
-    assert "Do not convert SVG paths into the final TikZ source" in prompt
-    assert "Do not pass through SVG path output" in prompt
-    assert "Do not emit raw traced path clouds" in prompt
-    assert "semantic TikZ macros and named drawing constructs" in prompt
-    assert "{{structural_regions}}" in prompt
-    assert "{{selection_notes}}" in prompt
-    assert "precise placement guidelines" not in prompt
-    assert "falls inside the stated bounding box" not in prompt
-
-
-def test_authoring_prompt_documents_coordinate_hints_role() -> None:
-    prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
-
-    assert "Use coordinate_hints.yaml as placement evidence" in prompt
-
-
-def test_authoring_prompt_requires_semantic_first_order() -> None:
-    prompt = (REPO_ROOT / "prompts" / "llm_author_tikz.md").read_text()
-
-    assert "Authoring order (semantic-first)" in prompt
-    assert "Look at the reference PNG first" in prompt
-    assert "Do not start from coordinate_hints alone" in prompt
-    assert "Use coordinate_hints.yaml only to refine placement" in prompt
-    assert "recover the missing detail" in prompt
-    assert (
-        "Do not pass through SVG path output" in prompt
-    )  # Maps to step 4; independent from forbids test
-
-
 def test_fig_extract_documents_structural_hints_as_optional() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_extract.md").read_text()
     extractor = (REPO_ROOT / "scripts" / "reference_extract.py").read_text()

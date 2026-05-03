@@ -31,14 +31,17 @@ Plugin does **not**:
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```
 
-**Frozen legacy (v0.1 orchestration; preserved for backwards compatibility, not the development direction):**
+**Frozen legacy (reduced to one helper after v0.2 cleanup):**
 ```
-/fig_prompt <name>           normalized image-gen prompt block
-/fig_preview_select <name>   record selected preview in spec.yaml
 /fig_review <name>           reviewer brief for external critique
+                             (becomes /fig_critique with host-LLM orchestration in v0.2)
 ```
 
-See `docs/quality-kernel-goal.md` for why these are frozen.
+`/fig_prompt`, `/fig_preview_select`, the prompt-template / redaction /
+selection-notes pipeline, and the auxiliary scripts behind them
+(`prompt_gen.py`, `redact.py`, `llm_author_prompt.py`,
+`prompts/llm_author_tikz.md`) were removed in the v0.2 frozen-legacy
+cleanup. See `docs/architecture-v0.2-proposal.md`.
 
 ## Repo Notes
 

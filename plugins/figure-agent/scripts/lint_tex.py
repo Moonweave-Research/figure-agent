@@ -243,8 +243,8 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                 category="flagship_macros_unused",
                 snippet="<file>",
                 message=(
-                    "no flagship macros used; see prompts/llm_author_tikz.md "
-                    "to author flagship-compliant TikZ"
+                    "no flagship macros used; see styles/polymer-paper-preamble.sty "
+                    "for available flagship macros (BellCurve, BandDiagram, IsoBlock, ...)"
                 ),
                 severity="warn",
             )
