@@ -66,4 +66,4 @@ Nature schematic 스타일 — 양식을 절대 벗어나지 않음.
 
 ---
 
-When this briefing is filled, run `/fig_prompt fig3_trap_schematic_v97` to generate the normalized prompt for external image generation.
+When this briefing is filled, author `examples/fig3_trap_schematic_v97/fig3_trap_schematic_v97.tex` directly (cp `styles/tex_template.tex` to start) and run `/fig_compile fig3_trap_schematic_v97`.

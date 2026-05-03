@@ -68,4 +68,4 @@ amber=deep trap, gray=axis/recombination/escape (원본 sty 매크로 결).
 
 ---
 
-When this briefing is filled, run `/fig_prompt fig3_trapping_concept` to generate the normalized prompt for external image generation.
+When this briefing is filled, author `examples/fig3_trapping_concept/fig3_trapping_concept.tex` directly (cp `styles/tex_template.tex` to start) and run `/fig_compile fig3_trapping_concept`.
