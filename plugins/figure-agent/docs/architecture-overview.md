@@ -182,6 +182,14 @@ semantics. `lint_tex.py` enforces palette / font / hex / non-palette-color
 discipline at BLOCKER tier; `flagship_macros_unused` is WARN-only because some
 fixtures legitimately do not use the flagship macros.
 
+Two flagship macros currently follow the style-decoupled pattern:
+`\BellCurve` (primitive single-key, PR #1) and `\BandDiagram` (composite
+single-key α path, this pilot). Per-sub-element fan-out (β) for composite
+macros remains an open question; see
+`docs/superpowers/specs/2026-05-03-banddiagram-caller-pgfkeys-design.md`
+§"Out of scope". Per-macro reference docs:
+`docs/macros/bell-curve.md`, `docs/macros/band-diagram.md`.
+
 ### Layer 4 — Compile Gates
 
 **Files**: `scripts/compile.sh`, `scripts/lint_tex.py`,

@@ -28,6 +28,11 @@
   \BandDiagram{6,5.5,9,8.5, 7.8, 6.2, 7.5, {}, {}}
   \node[font=\sffamily\fontsize{6}{7}\selectfont] at (7.5,5.2) {BandDiagram (no traps)};
 
+  % --- BandDiagram: per-call override demo (Layer 3 caller-pgfkeys pilot) ---
+  \BandDiagram[bandFrame/.append style={draw=cAmber, line width=0.8pt}]
+              {6,9,9,11.5, 11, 9.5, 7.5, {}, {}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (7.5,8.7) {BandDiagram (override demo)};
+
   % --- LogLogPlot: 5 X ticks (3 labeled), 4 Y ticks (3 labeled) ---
   \LogLogPlot{12,0,16,4}
     {12,13,14,15,16}
