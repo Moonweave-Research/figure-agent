@@ -117,3 +117,23 @@ def test_legacy_six_positional_signature_rejected(tmp_path: Path) -> None:
     )
     combined = result.stdout + result.stderr
     assert "Invalid BellCurve orientation" in combined, combined
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_degenerate_bbox_compiles_without_error(tmp_path: Path) -> None:
+    """The new macro removed the old `\\ifdim ... 0.001pt` zero-area guard.
+    Current callsites are all non-degenerate, but a future caller passing a
+    zero-width or zero-height bbox must still compile cleanly — a degenerate
+    path may render invisibly, but the macro must not raise \\PackageError or
+    abort lualatex. Locks the contract documented in the design spec
+    (\"current callsites are non-zero-area; equivalence proven empirically\")
+    so the guard removal does not regress to a hard failure for future callers."""
+    # Zero-width bbox.
+    result = _compile(tmp_path, r"\BellCurve{0,0,0,1,side}")
+    assert result.returncode == 0, "zero-width bbox: " + result.stderr + result.stdout
+    # Zero-height bbox.
+    result = _compile(tmp_path, r"\BellCurve{0,0,1,0,up}")
+    assert result.returncode == 0, "zero-height bbox: " + result.stderr + result.stdout

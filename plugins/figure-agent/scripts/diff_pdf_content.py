@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Compare two PDFs' content streams for byte-equality.
+"""Compare two PDFs' qdf-expanded structure for equality (metadata stripped).
 
-Expands both PDFs via `qpdf --qdf --object-streams=disable`, strips
-metadata (creation/mod dates, /ID, /Producer, /Trapped), and diffs
-the remainder. Exits 0 if equal, 1 if different. Used to verify that
-the BellCurve macro refactor preserves drawing instructions byte-for-byte.
+Expands both PDFs via `qpdf --qdf --object-streams=disable` and diffs the
+full qdf blobs after stripping per-invocation metadata (CreationDate,
+ModDate, /ID, /Producer, /Trapped). Note this covers the whole qdf —
+page Contents streams, plus object dictionaries, stream length declarations,
+xref table, and trailer — not just `/Contents` stream bodies. For PDFs that
+share fonts, MediaBox, and Resources, equality of this blob is a robust
+proxy for drawing-instruction equivalence; for PDFs that diverge in those
+auxiliary structures, expect false positives that need structural
+classification (see the BellCurve PR's plan §Task 7 for an example
+classifier). Exits 0 if equal, 1 if different.
 """
 
 from __future__ import annotations
@@ -54,7 +60,7 @@ def main() -> int:
         old_blob = _strip_metadata(_expand(old, tmp / "old"))
         new_blob = _strip_metadata(_expand(new, tmp / "new"))
     if old_blob == new_blob:
-        print(f"OK: byte-identical content streams ({old.name} vs {new.name})")
+        print(f"OK: byte-identical qdf-expanded structure ({old.name} vs {new.name})")
         return 0
     for offset, (a_byte, b_byte) in enumerate(zip(old_blob, new_blob)):
         if a_byte != b_byte:
