@@ -192,6 +192,7 @@
   bandEt/.style={cGray!45, dashed, line width=0.38pt},
   trapShallow/.style={cAmber, line width=0.72pt},
   trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
+  band diagram/.style={},
 }
 
 % \BandBox{x}{y}{label}: filled cLGray rectangle node used as CB or VB block.
@@ -299,13 +300,16 @@
 }
 \makeatother
 
-% \BandDiagram{x1,y1,x2,y2,cb_y,vb_y,et_x,shallow_ys,deep_ys}: rounded teal frame + CB/VB bandboxes + Energy axis + dashed Et + \TrapLevel dashes; brace-wrap shallow_ys and deep_ys at call site (commas inside).
-\newcommand{\BandDiagram}[1]{%
-  \BandDiagramDraw#1\relax
-}
+% \BandDiagram[<style keys>]{x1,y1,x2,y2,cb_y,vb_y,et_x,shallow_ys,deep_ys}: rounded teal frame + CB/VB bandboxes + Energy axis + dashed Et + \TrapLevel dashes. Optional [#1] passes pgfkeys to the wrapping `band diagram` style key (default empty). \BD@opts storage avoids LaTeX 9-slot \def limit; \begingroup placement isolates the option per-call.
 \makeatletter
-\def\BandDiagramDraw#1,#2,#3,#4,#5,#6,#7,#8,#9\relax{%
+\newcommand{\BandDiagram}[2][]{%
   \begingroup
+  \def\BD@opts{#1}%
+  \BandDiagramDraw#2\relax
+}
+\def\BandDiagramDraw#1,#2,#3,#4,#5,#6,#7,#8,#9\relax{%
+  \begin{scope}[band diagram]
+  \expandafter\tikzset\expandafter{\BD@opts}%
   \pgfmathsetmacro{\BDcx}{(#1+#3)/2}%
   \pgfmathsetmacro{\BDaxX}{#1+0.63}%
   \pgfmathsetmacro{\BDaxYlo}{#6+0.05}%
@@ -323,6 +327,7 @@
   \node[text=cGray] at (#7+0.20,\BDaxYmid) {$E_t$};
   \foreach \BDy in {#8} { \TrapLevel{\BDcx-0.41}{\BDy}{trapShallow} }%
   \foreach \BDy in {#9} { \TrapLevel{\BDcx-0.25}{\BDy}{trapDeep} }%
+  \end{scope}
   \endgroup
 }
 \makeatother
