@@ -1,0 +1,231 @@
+% n3_trial_02_actuation_sequence.tex
+% Three-panel polymer actuation schematic:
+%   Panel 1 — Charge Injection  (+V applied)
+%   Panel 2 — Coulomb Repulsion (-V applied)
+%   Panel 3 — Relaxation        (Open circuit)
+%
+% Macro library coverage: none of the published macros (BandDiagram, BellCurve,
+% WavyChain, LogLogPlot, IsoBlock, etc.) map to a 2D cantilever mechanism schematic.
+% Palette and font style lock are honoured; all drawing is hand-written TikZ.
+
+\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm, y=1cm,
+  %% shared node font
+  every node/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  %% filled electron dot (e-)
+  edot/.style={
+    circle, fill=cGray!90!black,
+    inner sep=0pt, minimum size=3pt
+  },
+  %% electrode block style
+  electrode/.style={
+    draw=cGray!70!black, fill=cLGray!60,
+    line width=0.5pt
+  },
+  %% force arrow styles
+  farrow/.style={
+    -{Stealth[length=5pt, width=3.5pt]},
+    line width=1.4pt
+  },
+  %% panel card background
+  pcard/.style={
+    draw=cLGray!80, fill=cLGray!18,
+    rounded corners=4pt, line width=0.5pt
+  },
+  %% clamp/clip block style
+  clamp/.style={
+    draw=cGray!80!black, fill=cGray!55,
+    line width=0.5pt
+  },
+  %% ghost dashed outline
+  ghost/.style={
+    dashed, draw=cGray!55, opacity=0.65, line width=1.0pt
+  },
+  %% callout annotation box
+  callout/.style={
+    draw=cTeal!80!black, fill=cTeal!10,
+    rounded corners=2pt, inner sep=2pt,
+    line width=0.6pt
+  },
+]
+
+%%==========================================================================
+%% Panel dimensions (absolute coordinates, panels laid left-to-right)
+%%  Panel 1: x = 0   ... 4.8
+%%  Panel 2: x = 5.1 ... 9.9
+%%  Panel 3: x = 10.2 ... 15.0
+%%  Height: y = 0 ... 7.2
+%%==========================================================================
+
+% --- helper: strip width and key dims ---
+% strip: thick path, width encoded as line width=10pt
+% clamp block top of strip at y = 6.3
+% strip anchor x (centre) and electrode x
+
+%%==========================================================================
+%% PANEL 1 — Charge Injection
+%%==========================================================================
+\def\PAx{0}       % panel 1 left x
+\def\PAw{4.8}     % panel width
+\def\PAmid{2.4}   % panel centre x
+
+% card background
+\fill[pcard] (\PAx, 0) rectangle (\PAx+\PAw, 7.2);
+
+% panel title
+\node[font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont, anchor=north]
+  at (\PAmid, 7.05) {Charge Injection};
+
+% contact clip (GND) label — below clamp block, clear of title
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, anchor=north west]
+  at (\PAx+0.18, 5.92) {Contact clip (GND)};
+
+% clamp block (fixed support at top of strip)
+\fill[clamp] (1.85, 6.00) rectangle (2.95, 6.45);
+
+% strip — slight rightward bend toward +V electrode (briefing §6: bends toward +V)
+\draw[line cap=round, line width=10pt, cAmber]
+  (2.40, 6.10) .. controls (2.42, 4.50) and (2.58, 3.00) .. (2.75, 1.20);
+
+% strip label
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, anchor=east, text=cGray]
+  at (1.92, 3.00) {S-rich polymer};
+
+% electrode block (right side, +V)
+\fill[electrode] (3.20, 1.20) rectangle (3.85, 5.80);
+% electrode label
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west]
+  at (3.90, 3.50) {+V};
+
+% force arrows (rightward, red — charge injection toward electrode)
+\draw[farrow, cRed] (2.55, 4.80) -- (3.15, 4.80);
+\draw[farrow, cRed] (2.55, 3.50) -- (3.15, 3.50);
+\draw[farrow, cRed] (2.55, 2.20) -- (3.15, 2.20);
+
+% electron dots on strip (positions approximate Bezier t=0.15,0.32,0.50,0.68,0.85)
+\node[edot] at (2.42, 5.20) {};
+\node[edot] at (2.45, 4.55) {};
+\node[edot] at (2.50, 3.85) {};
+\node[edot] at (2.57, 3.15) {};
+\node[edot] at (2.65, 2.45) {};
+% e- text label next to top electron
+\node[font=\sffamily\fontsize{6}{7}\selectfont, anchor=west]
+  at (2.55, 5.20) {e\textsuperscript{-}};
+
+% bottom caption
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=north]
+  at (\PAmid, -0.10) {+V applied};
+
+%%==========================================================================
+%% PANEL 2 — Coulomb Repulsion
+%%==========================================================================
+\def\PBx{5.1}
+\def\PBw{4.8}
+\def\PBmid{7.5}   % 5.1 + 2.4
+
+% card background
+\fill[pcard] (\PBx, 0) rectangle (\PBx+\PBw, 7.2);
+
+% panel title
+\node[font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont, anchor=north]
+  at (\PBmid, 7.05) {Coulomb Repulsion};
+
+% clamp block
+\fill[clamp] (6.95, 6.00) rectangle (8.05, 6.45);
+
+% strip — bent leftward (Bezier: top fixed at 7.50, bottom deflects to 6.50)
+\draw[line cap=round, line width=10pt, cAmber]
+  (7.50, 6.10) .. controls (7.45, 4.50) and (7.20, 3.00) .. (6.50, 1.20);
+
+% electrode block (right side, floating / -V)
+\fill[electrode] (8.35, 1.20) rectangle (9.00, 5.80);
+% electrode label
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west]
+  at (9.05, 5.40) {floating};
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west]
+  at (9.05, 3.50) {-V};
+
+% force arrows (leftward, teal — Coulomb repulsion away from electrode)
+\draw[farrow, cTeal] (7.30, 4.60) -- (6.65, 4.60);
+\draw[farrow, cTeal] (7.10, 3.30) -- (6.45, 3.30);
+\draw[farrow, cTeal] (6.90, 2.10) -- (6.25, 2.10);
+
+% electron dots on bent strip (approximate along the Bezier)
+\node[edot] at (7.47, 5.20) {};
+\node[edot] at (7.42, 4.55) {};
+\node[edot] at (7.28, 3.85) {};
+\node[edot] at (7.05, 3.15) {};
+\node[edot] at (6.80, 2.45) {};
+\node[font=\sffamily\fontsize{6}{7}\selectfont, anchor=west]
+  at (7.55, 5.20) {e\textsuperscript{-}};
+
+% Coulomb > Maxwell callout annotation — moved below title
+\node[callout, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (\PBmid, 6.35) {Coulomb > Maxwell};
+
+% bottom caption
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=north]
+  at (\PBmid, -0.10) {-V applied};
+
+%%==========================================================================
+%% PANEL 3 — Relaxation
+%%==========================================================================
+\def\PCx{10.2}
+\def\PCw{4.8}
+\def\PCmid{12.6}   % 10.2 + 2.4
+
+% card background
+\fill[pcard] (\PCx, 0) rectangle (\PCx+\PCw, 7.2);
+
+% panel title
+\node[font=\sffamily\bfseries\fontsize{8.5}{10}\selectfont, anchor=north]
+  at (\PCmid, 7.05) {Relaxation};
+
+% clamp block
+\fill[clamp] (12.05, 6.00) rectangle (13.15, 6.45);
+
+% ghost — dashed memory of previous (bent) position, same Bezier as panel 2
+% shifted into panel 3 coordinate frame (offset +10.2-5.1 = +5.1 in x)
+\draw[ghost]
+  (12.60, 6.10) .. controls (12.55, 4.50) and (12.30, 3.00) .. (11.60, 1.20);
+
+% "prev." label near bottom of ghost
+\node[font=\sffamily\fontsize{6}{7}\selectfont, cGray!70, anchor=west]
+  at (11.65, 1.50) {prev.};
+
+% strip — partially recovered (less bent than panel 2, slightly right of ghost)
+\draw[line cap=round, line width=10pt, cAmber]
+  (12.60, 6.10) .. controls (12.58, 4.50) and (12.45, 3.00) .. (11.95, 1.20);
+
+% recovery arrow (curved, from bent position toward upright)
+\draw[-{Stealth[length=4.5pt, width=3pt]}, line width=1.2pt, cTeal]
+  (11.70, 2.60) .. controls (11.90, 3.20) and (12.10, 3.60) .. (12.30, 3.90);
+
+% electrode block (floating, 0 V)
+\fill[electrode] (13.50, 1.20) rectangle (14.15, 5.80);
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west]
+  at (14.20, 5.40) {floating};
+
+% electron dots on partially-recovered strip
+\node[edot] at (12.58, 5.20) {};
+\node[edot] at (12.55, 4.55) {};
+\node[edot] at (12.47, 3.85) {};
+\node[edot] at (12.32, 3.15) {};
+\node[edot] at (12.10, 2.45) {};
+\node[font=\sffamily\fontsize{6}{7}\selectfont, anchor=west]
+  at (12.65, 5.20) {e\textsuperscript{-}};
+
+% 0 V label near electrode
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=west]
+  at (14.20, 3.50) {0 V};
+
+% bottom caption
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, anchor=north]
+  at (\PCmid, -0.10) {Open circuit};
+
+\end{tikzpicture}
+\end{document}
