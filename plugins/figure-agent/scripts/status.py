@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from export_freshness import compute_export_state
 from inputs import parse_spec
 
 # Match review_brief's freshness source set so /fig_status and /fig_review agree.
@@ -49,6 +50,170 @@ _NEXT_6_NOT_ACCEPTED = (
 _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
+
+
+def infer_stage(example_dir: Path) -> dict:
+    name = example_dir.name
+    exports_substate = compute_export_state(example_dir, name)
+    if not example_dir.exists() or not example_dir.is_dir():
+        return {
+            "stage": 0,
+            "name": name,
+            "checks": [],
+            "next": _NEXT_0.replace("<name>", name),
+            "notes": [],
+            "accepted": None,
+            "exports_substate": exports_substate,
+        }
+
+    spec_path = example_dir / "spec.yaml"
+    tex_path = example_dir / f"{name}.tex"
+    briefing_path = example_dir / "briefing.md"
+    build_pdf = example_dir / "build" / f"{name}.pdf"
+    previews_dir = example_dir / "previews"
+    exports_dir = example_dir / "exports"
+
+    checks: list[tuple[str, str]] = []
+    notes: list[str] = []
+
+    spec: dict = {}
+    if spec_path.exists():
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+
+    accepted = _resolve_accepted(spec)
+    sources = _source_paths(example_dir, name)
+    _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
+    _append_reference_image_check(checks, notes, spec, example_dir)
+
+    if spec_path.exists() and not briefing_path.exists():
+        checks.append(("spec_yaml", "present"))
+        checks.append(("briefing_md", "missing"))
+        return {
+            "stage": 1,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 6: any export artifact present
+    if exports_dir.exists() and _has_export_artifact(exports_dir, name):
+        checks.append(("exports", "present"))
+        partial = not _all_four_exports_present(exports_dir, name)
+        if partial:
+            notes.append("partial_export")
+        export_paths = _existing_export_paths(exports_dir, name)
+        is_stale = _is_stale(sources, export_paths)
+        if is_stale:
+            notes.append("stale_export")
+        # Priority: stale_export > partial_export > not_accepted > done.
+        # partial_export sits above not-accepted because incomplete artifacts
+        # block both manuscript use and the golden contract gate.
+        if is_stale:
+            next_template = _NEXT_6_STALE
+        elif partial:
+            next_template = _NEXT_6_PARTIAL
+        elif accepted is False:
+            next_template = _NEXT_6_NOT_ACCEPTED
+        else:
+            next_template = _NEXT_6
+        return {
+            "stage": 6,
+            "name": name,
+            "checks": checks,
+            "next": next_template.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 5: build pdf exists, fresh against tex+briefing+style-lock, no exports
+    if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
+        checks.append(("build_pdf", "fresh"))
+        return {
+            "stage": 5,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_5.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 4: tex exists AND (no build pdf OR pdf stale relative to source set)
+    if tex_path.exists():
+        if not build_pdf.exists():
+            checks.append(("tex", "present"))
+            checks.append(("build_pdf", "missing"))
+        else:
+            checks.append(("tex", "present"))
+            checks.append(("build_pdf", "stale"))
+        return {
+            "stage": 4,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_4.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 3: selected_preview is a non-empty string, no tex
+    selected_preview = spec.get("selected_preview") if spec else None
+    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
+        checks.append(("selected_preview", selected_preview))
+        return {
+            "stage": 3,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_3.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
+
+    # Stage 2: previews/ has image files AND selected_preview unset/null/empty
+    if previews_has_images:
+        checks.append(("previews", "has images"))
+        checks.append(("selected_preview", "unset"))
+        return {
+            "stage": 2,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_2.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 1: spec.yaml exists AND previews/ has no image files
+    if spec_path.exists():
+        checks.append(("spec_yaml", "present"))
+        checks.append(("previews", "empty"))
+        return {
+            "stage": 1,
+            "name": name,
+            "checks": checks,
+            "next": _NEXT_1.replace("<name>", name),
+            "notes": notes,
+            "accepted": accepted,
+            "exports_substate": exports_substate,
+        }
+
+    # Stage 0 fallback (directory exists but no spec.yaml)
+    return {
+        "stage": 0,
+        "name": name,
+        "checks": [],
+        "next": _NEXT_0.replace("<name>", name),
+        "notes": [],
+        "accepted": accepted,
+        "exports_substate": exports_substate,
+    }
 
 
 def _has_image_files(directory: Path, exts: set[str] | None = None) -> bool:
@@ -172,160 +337,6 @@ def _append_reference_image_check(
         return
     if hints_path.stat().st_mtime < reference_path.stat().st_mtime:
         notes.append("coordinate_hints_stale")
-
-
-def infer_stage(example_dir: Path) -> dict:
-    if not example_dir.exists() or not example_dir.is_dir():
-        return {
-            "stage": 0,
-            "name": example_dir.name,
-            "checks": [],
-            "next": _NEXT_0.replace("<name>", example_dir.name),
-            "notes": [],
-            "accepted": None,
-        }
-
-    name = example_dir.name
-    spec_path = example_dir / "spec.yaml"
-    tex_path = example_dir / f"{name}.tex"
-    briefing_path = example_dir / "briefing.md"
-    build_pdf = example_dir / "build" / f"{name}.pdf"
-    previews_dir = example_dir / "previews"
-    exports_dir = example_dir / "exports"
-
-    checks: list[tuple[str, str]] = []
-    notes: list[str] = []
-
-    spec: dict = {}
-    if spec_path.exists():
-        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-
-    accepted = _resolve_accepted(spec)
-    sources = _source_paths(example_dir, name)
-    _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
-    _append_reference_image_check(checks, notes, spec, example_dir)
-
-    if spec_path.exists() and not briefing_path.exists():
-        checks.append(("spec_yaml", "present"))
-        checks.append(("briefing_md", "missing"))
-        return {
-            "stage": 1,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 6: any export artifact present
-    if exports_dir.exists() and _has_export_artifact(exports_dir, name):
-        checks.append(("exports", "present"))
-        partial = not _all_four_exports_present(exports_dir, name)
-        if partial:
-            notes.append("partial_export")
-        export_paths = _existing_export_paths(exports_dir, name)
-        is_stale = _is_stale(sources, export_paths)
-        if is_stale:
-            notes.append("stale_export")
-        # Priority: stale_export > partial_export > not_accepted > done.
-        # partial_export sits above not-accepted because incomplete artifacts
-        # block both manuscript use and the golden contract gate.
-        if is_stale:
-            next_template = _NEXT_6_STALE
-        elif partial:
-            next_template = _NEXT_6_PARTIAL
-        elif accepted is False:
-            next_template = _NEXT_6_NOT_ACCEPTED
-        else:
-            next_template = _NEXT_6
-        return {
-            "stage": 6,
-            "name": name,
-            "checks": checks,
-            "next": next_template.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 5: build pdf exists, fresh against tex+briefing+style-lock, no exports
-    if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
-        checks.append(("build_pdf", "fresh"))
-        return {
-            "stage": 5,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_5.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 4: tex exists AND (no build pdf OR pdf stale relative to source set)
-    if tex_path.exists():
-        if not build_pdf.exists():
-            checks.append(("tex", "present"))
-            checks.append(("build_pdf", "missing"))
-        else:
-            checks.append(("tex", "present"))
-            checks.append(("build_pdf", "stale"))
-        return {
-            "stage": 4,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_4.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 3: selected_preview is a non-empty string, no tex
-    selected_preview = spec.get("selected_preview") if spec else None
-    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
-        checks.append(("selected_preview", selected_preview))
-        return {
-            "stage": 3,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_3.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
-
-    # Stage 2: previews/ has image files AND selected_preview unset/null/empty
-    if previews_has_images:
-        checks.append(("previews", "has images"))
-        checks.append(("selected_preview", "unset"))
-        return {
-            "stage": 2,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_2.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 1: spec.yaml exists AND previews/ has no image files
-    if spec_path.exists():
-        checks.append(("spec_yaml", "present"))
-        checks.append(("previews", "empty"))
-        return {
-            "stage": 1,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_1.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-        }
-
-    # Stage 0 fallback (directory exists but no spec.yaml)
-    return {
-        "stage": 0,
-        "name": name,
-        "checks": [],
-        "next": _NEXT_0.replace("<name>", name),
-        "notes": [],
-        "accepted": accepted,
-    }
 
 
 def _print_single(result: dict) -> None:
