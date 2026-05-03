@@ -635,7 +635,6 @@ def _regenerate(example_dir: Path, name: str) -> None:
     exports_png = exports_dir / f"{name}.png"
     exports_tif_stem = str(exports_dir / name)
 
-    shutil.copy(build_pdf, exports_pdf)
     subprocess.run(
         ["bash", "scripts/export_svg.sh", str(build_pdf), str(exports_svg)],
         cwd=REPO_ROOT,
@@ -651,6 +650,7 @@ def _regenerate(example_dir: Path, name: str) -> None:
         cwd=REPO_ROOT,
         check=True,
     )
+    shutil.copy(build_pdf, exports_pdf)
 
 
 def main() -> int:
