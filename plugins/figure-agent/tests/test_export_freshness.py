@@ -155,3 +155,41 @@ def test_freshness_invariant_after_run_export() -> None:
         "Layer A invariant violated: exports/PDF content hash differs from build/PDF "
         "after run_export.py reported success."
     )
+
+
+def test_run_export_skips_tracked_golden_without_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_export.py must not require build/PDF when exports/PDF is
+    TRACKED_GOLDEN — the golden artifact is the source of truth and a
+    fresh-clone user should never be forced to compile just to see it.
+    """
+    repo = tmp_path / "fake_repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+
+    fixture_name = "golden_in_tmp"
+    fixture = repo / "examples" / fixture_name
+    (fixture / "exports").mkdir(parents=True)
+    pdf = fixture / "exports" / f"{fixture_name}.pdf"
+    pdf.write_bytes(b"%PDF-1.4 dummy\n")
+    subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
+
+    # Note: build/ does NOT exist. This is the fresh-checkout scenario.
+
+    import export_freshness
+    import run_export
+
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    # compute_export_state uses export_freshness.REPO_ROOT when calling is_tracked;
+    # patch it so the fake git repo is used for the tracked-golden check.
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+    monkeypatch.setattr("sys.argv", ["run_export.py", fixture_name])
+
+    rc = run_export.main()
+
+    assert rc == 0, (
+        "TRACKED_GOLDEN without --force-golden must succeed (golden protection is the success path)"
+    )

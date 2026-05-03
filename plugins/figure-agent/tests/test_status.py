@@ -684,3 +684,20 @@ def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:
     result = infer_stage(fixture)
     assert "exports_substate" in result
     assert result["exports_substate"] == "MISSING"
+
+
+def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
+    """_print_single must surface exports_substate so users see MISSING /
+    TRACKED_GOLDEN / STALE / FRESH for each fixture.
+    """
+    fixture = tmp_path / "no_exports_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+    (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "Exports: MISSING" in captured.out

@@ -350,6 +350,8 @@ def _print_single(result: dict) -> None:
     for key, val in checks:
         print(f"  {key}: {val}")
     print(f"  Next: {next_hint}")
+    if substate := result.get("exports_substate"):
+        print(f"  Exports: {substate}")
     if notes:
         print(f"  Notes: {', '.join(notes)}")
 
@@ -363,7 +365,8 @@ def main() -> int:
         for entry in sorted(p for p in examples_dir.iterdir() if p.is_dir()):
             result = infer_stage(entry)
             marker = _accepted_marker(result.get("accepted"))
-            line = f"{result['name']}  stage {result['stage']}/6{marker}"
+            exports = result.get("exports_substate", "?")
+            line = f"{result['name']}  stage {result['stage']}/6{marker}  exports: {exports}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)

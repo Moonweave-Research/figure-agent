@@ -68,14 +68,6 @@ def main() -> int:
         print(f"run_export.py: examples/{args.name}/ not found", file=sys.stderr)
         return 1
 
-    build_pdf = example_dir / "build" / f"{args.name}.pdf"
-    if not build_pdf.is_file():
-        print(
-            f"run_export.py: build/{args.name}.pdf not found; run /fig_compile first",
-            file=sys.stderr,
-        )
-        return 1
-
     state = compute_export_state(example_dir, args.name)
 
     if state == EXPORT_FRESH:
@@ -89,6 +81,15 @@ def main() -> int:
             file=sys.stderr,
         )
         return 0  # not an error — golden protection is the success path
+
+    # Regenerate path requires build/PDF.
+    build_pdf = example_dir / "build" / f"{args.name}.pdf"
+    if not build_pdf.is_file():
+        print(
+            f"run_export.py: build/{args.name}.pdf not found; run /fig_compile first",
+            file=sys.stderr,
+        )
+        return 1
 
     _regenerate(example_dir, args.name)
     print(f"run_export.py: regenerated exports/ for {args.name} (was {state})")
