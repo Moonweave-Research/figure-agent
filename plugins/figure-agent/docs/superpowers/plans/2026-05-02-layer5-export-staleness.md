@@ -353,7 +353,7 @@ def _scaffold_minimal_fixture(root: Path, name: str) -> Path:
     fixture = root / "examples" / name
     (fixture / "build").mkdir(parents=True, exist_ok=True)
     (fixture / "exports").mkdir(parents=True, exist_ok=True)
-    (fixture / name + ".tex").write_text(
+    (fixture / f"{name}.tex").write_text(
         r"\documentclass[border=2pt]{standalone}"
         "\n"
         r"\begin{document}hello\end{document}"
