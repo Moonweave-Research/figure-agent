@@ -1,8 +1,8 @@
 """Tests for scripts/export_freshness.compute_export_state — sub-state logic.
 
-Layer A end-to-end invariant test (`test_freshness_invariant_after_export`)
-is added in Task 7 of the implementation plan; this file currently covers
-only the four sub-state branches.
+Layer A end-to-end invariant test (`test_freshness_invariant_after_run_export`)
+is part of this file; it complements the four sub-state branch tests by
+asserting build/PDF == exports/PDF after run_export.py succeeds.
 """
 
 from __future__ import annotations
@@ -106,7 +106,7 @@ def test_state_tracked_golden_for_self_contained_git_repo(
     assert state == EXPORT_TRACKED_GOLDEN
 
 
-def test_freshness_invariant_after_run_export(tmp_path: Path) -> None:
+def test_freshness_invariant_after_run_export() -> None:
     """After run_export.py succeeds on a non-golden fixture, build/PDF and
     exports/PDF must hash-equal. Lock this as the Layer A always-on contract.
     """
@@ -129,6 +129,12 @@ def test_freshness_invariant_after_run_export(tmp_path: Path) -> None:
         check=True,
         capture_output=True,
     )
+
+    # Force regeneration by removing the freshness key (the PDF). The bash scripts
+    # beneath the orchestrator are what we want to exercise; an early-exit no-op
+    # would make this test pass trivially after any prior run.
+    exports_pdf_pre = fixture / "exports" / f"{fixture_name}.pdf"
+    exports_pdf_pre.unlink(missing_ok=True)
 
     # Prime exports/ via the orchestrator.
     result = subprocess.run(
