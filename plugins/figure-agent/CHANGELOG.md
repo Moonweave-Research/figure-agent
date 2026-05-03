@@ -2,6 +2,12 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.1.14] - 2026-05-03
+
+Release coordination: forward-jumped from v0.1.9 tag (v0.1.10/11/12 were active
+in plugin.json but lacked git tags). v0.1.14 consolidates all 4 shipped PRs (#1–#4)
+under a single semver tag. No code changes beyond v0.1.13.
+
 ## [0.1.13] - 2026-05-03
 
 Multi-pilot release: BellCurve + BandDiagram macro style-decoupling, Layer 5
