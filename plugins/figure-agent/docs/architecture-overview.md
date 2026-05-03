@@ -223,6 +223,23 @@ iteration is not interrupted.
 `tests/test_export_svg.py` regresses against text-node count and canonical
 label survival on the golden fixture.
 
+#### Export staleness contract (Layer 5)
+
+`/fig_export` reads the `examples/<name>/exports/` sub-state — `MISSING`, `TRACKED_GOLDEN`, `STALE`, or `FRESH` — and dispatches:
+
+- `MISSING` / `STALE` → regenerate PDF / SVG / TIFF / PNG from the current `build/<name>.pdf`.
+- `FRESH` → no-op.
+- `TRACKED_GOLDEN` → skip with warning. Use `--force-golden` to override (rare; intended for intentionally rolling forward the reference snapshot).
+
+Sub-state is computed via content hash of the metadata-stripped qpdf-expansion (see `scripts/diff_pdf_content.py`'s `strip_metadata`). mtime is **not** used: it would be fragile to `git checkout`, `cp`, and `tar -x`.
+
+Two contract layers guard the invariants:
+
+- **Layer A (always on):** after `/fig_export` succeeds on a non-golden fixture, `build/<name>.pdf` and `exports/<name>.pdf` must hash-equal. Tested by `tests/test_export_freshness.py::test_freshness_invariant_after_run_export`.
+- **Layer B (opt-in per-fixture):** fixtures declaring `export_pipeline_equivalence: { ae_max: <float> }` in `spec.yaml` are subject to a `magick compare`-based pixel equivalence assertion between `build/<name>.png` (pdftocairo direct) and `exports/<name>.png` (dvisvgm + rsvg-convert). Defaults to `fuzz_pct: 5`. Tested by `tests/test_export_pipeline_equivalence.py`.
+
+Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a measured baseline (run the test once, observe the printed AE fraction, add ~30% margin).
+
 ### Layer 6 — Validation Gates
 
 **Files**: `scripts/check_golden_artifacts.py`,
