@@ -56,7 +56,8 @@ Decision rationale (2026-05-03 `/decide`):
   \BandDiagramDraw#2\relax
 }
 \def\BandDiagramDraw#1,#2,#3,#4,#5,#6,#7,#8,#9\relax{%
-  \begin{scope}[band diagram, \BD@opts]
+  \begin{scope}[band diagram]
+  \expandafter\tikzset\expandafter{\BD@opts}%
     %% body unchanged from current macro:
     \pgfmathsetmacro{\BDcx}{(#1+#3)/2}%
     \pgfmathsetmacro{\BDaxX}{#1+0.63}%
@@ -91,8 +92,14 @@ Key changes vs current macro:
 - 1 new outer style key `band diagram/.style={}` (empty default).
 - `\newcommand{\BandDiagram}[1]{...}` → `\newcommand{\BandDiagram}[2][]{...}` — one optional leading argument added.
 - New `\def\BD@opts{#1}` line in `\newcommand` body to capture the optional arg without consuming an inner-macro slot.
-- Body wrapped in `\begin{scope}[band diagram, \BD@opts] ... \end{scope}`. No body-level draw calls modified, all `#1`–`#9` references inside `\BandDiagramDraw` retain their original CSV-arg meaning.
+- Body wrapped in `\begin{scope}[band diagram] ... \end{scope}` with `\expandafter\tikzset\expandafter{\BD@opts}` immediately after the scope opens. No body-level draw calls modified, all `#1`–`#9` references inside `\BandDiagramDraw` retain their original CSV-arg meaning.
 - All 5 sub-style defaults (lines 186–194 of current preamble) untouched.
+
+**Why `\expandafter\tikzset\expandafter{\BD@opts}` and not `[band diagram, \BD@opts]` directly:**
+
+pgfkeys' `=`-splitter does not expand control-sequence tokens in its keyval list. Writing `\begin{scope}[band diagram, \BD@opts]` with non-empty `\BD@opts` would treat the literal token `\BD@opts` as a key-name, fail to parse it as `key=value`, and either error or silently misapply. The form works only when `\BD@opts` is empty — which is exactly the no-arg test path but not the per-call override path the pilot is meant to enable. `\expandafter\tikzset\expandafter{\BD@opts}` forces one expansion before pgfkeys reads the argument list, so the macro's contents become the keyval input. Empty `\BD@opts` produces a no-op `\tikzset{}` that emits nothing, so the §Validation class (a) byte prediction is unaffected.
+
+(Earlier draft of this spec used `[band diagram, \BD@opts]`. The implementer caught this empirically during Task 3 of the implementation plan; commit `0af7b88` documents the deviation. Spec amended in commit Task 10b to match the working pattern.)
 
 ### Three caller patterns supported simultaneously
 
@@ -220,7 +227,7 @@ Update `docs/architecture-overview.md` Layer 3 section: change "BellCurve decoup
    - Add `band diagram/.style={}` to a new `\tikzset{...}` block (or merge into existing block above line 195).
    - Wrap macro body in `\begingroup\def\BD@opts{#1}\BandDiagramDraw#2\relax`, with `\endgroup` placed inside `\BandDiagramDraw` after `\end{scope}`. `\begingroup` placement is **load-bearing** — keeping `\BD@opts` outside the group would leak the option value to subsequent `\BandDiagram` calls.
    - `\BandDiagramDraw`'s 9-slot CSV parser is **unchanged** — the optional arg is stored in `\BD@opts` to avoid LaTeX's 9-arg `\def` limit.
-   - Wrap body in `\begin{scope}[band diagram, \BD@opts] ... \end{scope}` (use `\BD@opts`, not `#1`, since `#1` inside `\BandDiagramDraw` is still the first CSV arg `x1`).
+   - Wrap body in `\begin{scope}[band diagram] \expandafter\tikzset\expandafter{\BD@opts} ... \end{scope}`. The `\expandafter` pair forces `\BD@opts` to expand once before pgfkeys reads the keyval list — pgfkeys' `=`-splitter does not auto-expand control-sequence tokens, so `[band diagram, \BD@opts]` would mis-tokenise non-empty caller options as a single literal key.
 4. Compile `_macro_smoke.tex` (existing 2 callsites, unchanged) — assert visual no-regression by qpdf qdf classifier against the Step 2 baseline.
 5. Add 3rd `\BandDiagram[bandFrame/.append style=...]{...}` callsite to `_macro_smoke.tex` per Migration §2.
 6. Add `tests/test_band_diagram_api.py` (3 assertions — default / override / figure-wide).
