@@ -25,10 +25,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             dvisvgm \
+            imagemagick \
             librsvg2-bin \
             poppler-utils \
+            qpdf \
+            tesseract-ocr \
+            texlive-fonts-extra \
             texlive-latex-extra \
-            texlive-luatex
+            texlive-luatex \
+            texlive-pictures
 
       - name: Install dependencies
         run: uv sync --group dev
