@@ -72,15 +72,35 @@ def test_state_stale_when_exports_pdf_differs_from_build(tmp_path: Path) -> None
     assert compute_export_state(fixture, "fix_stale_a") == EXPORT_STALE
 
 
-def test_state_tracked_golden_when_exports_pdf_is_git_tracked(
-    monkeypatch: pytest.MonkeyPatch,
+def test_state_tracked_golden_for_self_contained_git_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The repo's golden_trap_depth_picture fixture has its exports/ artifacts
-    git-tracked via .gitignore exclusion. compute_export_state must see them
-    as TRACKED_GOLDEN regardless of build state."""
-    fixture = REPO_ROOT / "examples" / "golden_trap_depth_picture"
-    pdf = fixture / "exports" / "golden_trap_depth_picture.pdf"
-    if not pdf.is_file():
-        pytest.skip("golden fixture exports/PDF not present in checkout")
-    state = compute_export_state(fixture, "golden_trap_depth_picture")
+    """compute_export_state must return TRACKED_GOLDEN for any git-tracked
+    exports/<name>.pdf, regardless of build state. Uses a self-contained
+    git repo so coverage does not depend on the real golden fixture being
+    present on disk.
+    """
+    repo = tmp_path / "fake_repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+
+    fixture = repo / "examples" / "fake_fixture"
+    (fixture / "exports").mkdir(parents=True)
+    pdf = fixture / "exports" / "fake_fixture.pdf"
+    pdf.write_bytes(b"%PDF-1.4 dummy\n")
+
+    subprocess.run(
+        ["git", "add", str(pdf.relative_to(repo))],
+        cwd=repo,
+        check=True,
+    )
+
+    # Redirect REPO_ROOT so is_tracked() checks our temp repo
+    import export_freshness
+
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+
+    state = compute_export_state(fixture, "fake_fixture")
     assert state == EXPORT_TRACKED_GOLDEN
