@@ -158,7 +158,7 @@ editing.
 ### Layer 3 — Semantic TikZ Authoring
 
 **Files**: `examples/<name>/<name>.tex`, `styles/polymer-paper-preamble.sty`,
-`styles/tex_template.tex`, `prompts/llm_author_tikz.md`.
+`styles/tex_template.tex`.
 
 A human or LLM authors semantic TikZ source from `briefing.md`, `spec.yaml`,
 the reference PNG, and any available `coordinate_hints.yaml`. The output is a
@@ -317,19 +317,22 @@ Per-figure folders use the .gitignore default of treating `build/`,
 Detailed rationale and the promotion checklist live in
 `docs/quality-kernel-goal.md`.
 
-### Layer 9 — Frozen Orchestration Legacy
+### Layer 9 — Frozen Orchestration Legacy (reduced after v0.2 cleanup)
 
-**Files**: `scripts/redact.py`, `scripts/prompt_gen.py`,
-`scripts/llm_author_prompt.py`, `scripts/review_brief.py`,
+**Remaining files**: `scripts/review_brief.py`, `commands/fig_review.md`
+(scheduled for rename to `critique_brief.py` / `fig_critique.md` in the
+v0.2 L4.5 vision-critique work).
+
+**Removed in v0.2 cleanup** (PR #8a): `scripts/redact.py`,
+`scripts/prompt_gen.py`, `scripts/llm_author_prompt.py`,
 `prompts/llm_author_tikz.md`, `commands/fig_prompt.md`,
-`commands/fig_preview_select.md`, `commands/fig_review.md`.
+`commands/fig_preview_select.md`. The prompt-template / redaction /
+selection-notes pipeline and the spec.yaml `selection_notes` consumer
+no longer exist; existing fixture spec.yaml files keep the
+`selection_notes` field as a historical record (yaml ignores unknown
+keys for the surviving consumers).
 
-Preserved from v0.1 because removing them would break in-flight users.
-The slash commands carry `[frozen legacy]` markers in their `description`
-metadata and a status block in their body pointing at the active workflow.
-Code remains tested (47 functions) so the frozen path does not bit-rot,
-but no new orchestration features are added unless dogfooding proves a
-durable non-transient need.
+See `docs/architecture-v0.2-proposal.md` for the full layer redesign.
 
 ### Layer 10 — Documentation
 

@@ -69,22 +69,17 @@ authoring or drift review. Do not store that target in `selected_preview`;
 `selected_preview` means a user-chosen candidate from `previews/` and belongs
 to the legacy path only.
 
-### Frozen legacy (v0.1 image-gen orchestration)
+### Frozen legacy (reduced to one helper after v0.2 cleanup)
 
 ```
-/fig_new <name>              shared with the active path; same scaffold
-/fig_prompt <name>           normalize spec + briefing into external image-gen prompt
-                             [HALT — user runs the prompt in their image-gen tool]
-/fig_preview_select <name>   record chosen PNG in spec.yaml.selected_preview
-                             [HALT — user/LLM authors <name>.tex influenced by the preview]
-/fig_compile <name>          shared with the active path
 /fig_review <name>           emit reviewer brief for external vision LLM
                              [HALT — user critiques, revises .tex]
-/fig_export <name>           shared with the active path
+                             (becomes /fig_critique with host-LLM orchestration in v0.2)
 ```
 
-Frozen helpers are preserved for in-flight users; no new features land here
-unless dogfooding proves a durable non-transient need.
+`/fig_prompt`, `/fig_preview_select`, the prompt-template / redaction /
+selection-notes pipeline, and their auxiliary scripts were removed in the
+v0.2 frozen-legacy cleanup. See `docs/architecture-v0.2-proposal.md`.
 
 **Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
 

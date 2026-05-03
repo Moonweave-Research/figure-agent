@@ -61,24 +61,18 @@ basic-mode inspection. When `reference_image` is present, `/fig_extract` creates
 `coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
 structural hints; compile then uses those hints for drift check when available.
 
-### Frozen (v0.1 image-gen orchestration; preserved for in-flight users)
+### Frozen (v0.1 image-gen orchestration; reduced to one helper after v0.2 cleanup)
 
 ```
-/fig_new <name>              shared with the active path; same scaffold
-/fig_prompt <name>           normalize spec + briefing into an external image-gen prompt
-                             [HALT — user runs the prompt in their image-gen tool of choice]
-/fig_preview_select <name>   record the chosen PNG in spec.yaml.selected_preview
-                             [HALT — user/LLM authors <name>.tex influenced by the preview]
-/fig_compile <name>          shared with the active path
 /fig_review <name>           emit a reviewer brief for an external vision LLM
                              [HALT — user critiques externally, revises .tex]
-/fig_export <name>           shared with the active path
+                             (becomes /fig_critique with host-LLM orchestration in v0.2)
 ```
 
-Frozen does not mean unsupported; it means no new features land here unless
-real dogfooding proves a durable non-transient need. See
-`docs/quality-kernel-goal.md` for the rationale and
-`docs/architecture-overview.md` for the layer model behind both paths.
+The earlier `/fig_prompt`, `/fig_preview_select`, and the prompt-template /
+redaction / selection-notes pipeline were removed. See
+`docs/architecture-v0.2-proposal.md` for the rationale and the planned
+replacement (`/fig_critique` host-orchestrated vision critique).
 
 ## Status
 

@@ -23,7 +23,7 @@ Run from the plugin root.
 Create directory `examples/<name>/` (`<name>` maps to `examples/<name>/`) with:
 - subdirs `previews/`, `build/`, `exports/` (each containing `.gitkeep`)
 - `spec.yaml` skeleton (`name`, `panels: []`, `style_profile: polymer-default`,
-  `selected_preview: null`, `selection_notes: ""`)
+  `selected_preview: null`)
 - `briefing.md` skeleton with 6 empty sections (Topic / Vocabulary / Composition /
   Normalize / Style notes / Physics invariants), each prefaced with `## N. <title>`
   and an HTML-comment TODO hint
