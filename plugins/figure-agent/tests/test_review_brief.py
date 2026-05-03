@@ -20,7 +20,6 @@ panels:
   - id: a
     caption: demo panel
 style_profile: polymer-default
-selected_preview: null
 """,
         encoding="utf-8",
     )
@@ -146,9 +145,7 @@ def test_review_brief_errors_when_png_is_older_than_briefing(tmp_path, capsys, m
     assert "run /fig_compile first" in captured.err
 
 
-def test_review_brief_errors_when_png_is_older_than_style_lock(
-    tmp_path, capsys, monkeypatch
-):
+def test_review_brief_errors_when_png_is_older_than_style_lock(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant")
     style_path = tmp_path / "polymer-paper-preamble.sty"
     style_path.write_text("% style", encoding="utf-8")

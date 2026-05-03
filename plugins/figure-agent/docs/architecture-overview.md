@@ -111,7 +111,6 @@ parsed by `scripts/inputs.parse_briefing`.
 `spec.yaml` is a lightweight metadata record of panels, style profile, and
 optional fixture-class flags:
 
-- `selected_preview` — frozen-workflow field; chosen image from `previews/`.
 - `reference_image` — golden-fixture field; the fixed visual target PNG.
 - `accepted` — golden-fixture flag; manuscript-acceptance gate.
 - `golden_contract` — golden-fixture spec for `check_golden_artifacts`
@@ -289,13 +288,12 @@ A second golden fixture only needs a `golden_contract` block in its
 **Files**: `scripts/status.py`, `commands/fig_status.md`,
 `tests/test_status.py`.
 
-`infer_stage(example_dir)` returns `{stage: 0..6, accepted: True/False/None,
+`infer_stage(example_dir)` returns `{stage: 0..4, accepted: True/False/None,
 checks, notes, next}` from filesystem + `spec.yaml` only — no side effects.
 Stage line includes `(accepted)` or `(not accepted)` marker for fixtures
 that declare the `accepted` key. Notes surface stale / missing /
-replayability hazards (`stale_export`, `selected_preview_missing`,
-`reference_image_missing`, `partial_export`, `previews_not_directory`,
-`missing_briefing`).
+replayability hazards (`stale_export`, `reference_image_missing`,
+`partial_export`, `previews_not_directory`, `missing_briefing`).
 
 `status.py` is read-only; it never modifies any file.
 

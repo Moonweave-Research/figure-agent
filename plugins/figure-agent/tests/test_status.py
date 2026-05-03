@@ -16,11 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def _make_spec(
     directory: Path,
-    selected_preview: str | None = None,
     reference_image: str | None = None,
     accepted: bool | str | None = None,
 ) -> None:
-    preview_val = selected_preview if selected_preview else "null"
     reference_line = f"reference_image: {reference_image}\n" if reference_image else ""
     if accepted is None:
         accepted_line = ""
@@ -30,7 +28,6 @@ def _make_spec(
         accepted_line = f"accepted: {accepted}\n"
     content = (
         f"name: {directory.name}\npanels: []\nstyle_profile: polymer-default\n"
-        f"selected_preview: {preview_val}\n"
         f"{reference_line}"
         f"{accepted_line}"
     )
@@ -53,33 +50,12 @@ def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     assert result["stage"] == 1
 
 
-def test_stage_2_previews_has_image_selected_preview_null(tmp_path: Path) -> None:
+
+
+def test_stage_2_tex_stale_pdf(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None)
-    previews = fig_dir / "previews"
-    previews.mkdir()
-    (previews / ".gitkeep").touch()
-    (previews / "candidate_01.png").write_bytes(b"\x89PNG")
-    result = infer_stage(fig_dir)
-    assert result["stage"] == 2
-
-
-def test_stage_3_selected_preview_set_no_tex(tmp_path: Path) -> None:
-    fig_dir = tmp_path / "myfig"
-    fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview="chosen.png")
-    previews = fig_dir / "previews"
-    previews.mkdir()
-    (previews / ".gitkeep").touch()
-    result = infer_stage(fig_dir)
-    assert result["stage"] == 3
-
-
-def test_stage_4_tex_stale_pdf(tmp_path: Path) -> None:
-    fig_dir = tmp_path / "myfig"
-    fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview="chosen.png")
+    _make_spec(fig_dir)
     tex = fig_dir / "myfig.tex"
     tex.write_text("% tikz", encoding="utf-8")
     build_dir = fig_dir / "build"
@@ -92,20 +68,20 @@ def test_stage_4_tex_stale_pdf(tmp_path: Path) -> None:
     new_time = time.time() - 10
     os.utime(tex, (new_time, new_time))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 4
+    assert result["stage"] == 2
 
 
-def test_stage_4_tex_no_build_pdf(tmp_path: Path) -> None:
+def test_stage_2_tex_no_build_pdf(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
     tex = fig_dir / "myfig.tex"
     tex.write_text("% tikz", encoding="utf-8")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 4
+    assert result["stage"] == 2
 
 
-def test_stage_5_fresh_pdf_no_exports(tmp_path: Path) -> None:
+def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
@@ -122,10 +98,10 @@ def test_stage_5_fresh_pdf_no_exports(tmp_path: Path) -> None:
     new_time = time.time() - 10
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 5
+    assert result["stage"] == 3
 
 
-def test_stage_6_partial_export_svg_only(tmp_path: Path) -> None:
+def test_stage_4_partial_export_svg_only(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
@@ -133,11 +109,11 @@ def test_stage_6_partial_export_svg_only(tmp_path: Path) -> None:
     exports_dir.mkdir()
     (exports_dir / "myfig.svg").write_bytes(b"<svg/>")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "partial_export" in result["notes"]
 
 
-def test_stage_6_partial_export_next_redirects_to_re_export(tmp_path: Path) -> None:
+def test_stage_4_partial_export_next_redirects_to_re_export(tmp_path: Path) -> None:
     """A partial export must steer the user back to /fig_export, not present
     "done" so they think the figure is finished."""
     fig_dir = tmp_path / "myfig"
@@ -147,13 +123,13 @@ def test_stage_6_partial_export_next_redirects_to_re_export(tmp_path: Path) -> N
     exports_dir.mkdir()
     (exports_dir / "myfig.svg").write_bytes(b"<svg/>")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "partial_export" in result["notes"]
     assert "/fig_export" in result["next"]
     assert "done" not in result["next"]
 
 
-def test_stage_6_stale_takes_priority_over_partial(tmp_path: Path) -> None:
+def test_stage_4_stale_takes_priority_over_partial(tmp_path: Path) -> None:
     """When sources are newer than the (partial) export, the stale signal
     wins because regenerating exports is the unconditional next action."""
     import os
@@ -175,13 +151,13 @@ def test_stage_6_stale_takes_priority_over_partial(tmp_path: Path) -> None:
     new = time.time() - 5
     os.utime(tex, (new, new))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "partial_export" in result["notes"]
     assert "stale_export" in result["notes"]
     assert "/fig_compile" in result["next"]
 
 
-def test_stage_6_all_four_exports_no_note(tmp_path: Path) -> None:
+def test_stage_4_all_four_exports_no_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
@@ -192,11 +168,11 @@ def test_stage_6_all_four_exports_no_note(tmp_path: Path) -> None:
     (exports_dir / "myfig.tif").write_bytes(b"TIFF")
     (exports_dir / "myfig.png").write_bytes(b"\x89PNG")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "partial_export" not in result["notes"]
 
 
-def test_stage_4_briefing_newer_than_pdf(tmp_path: Path) -> None:
+def test_stage_2_briefing_newer_than_pdf(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
@@ -214,11 +190,11 @@ def test_stage_4_briefing_newer_than_pdf(tmp_path: Path) -> None:
     new_time = time.time() - 5
     os.utime(briefing, (new_time, new_time))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 4
+    assert result["stage"] == 2
     assert ("build_pdf", "stale") in result["checks"]
 
 
-def test_stage_6_stale_export_when_source_newer(tmp_path: Path) -> None:
+def test_stage_4_stale_export_when_source_newer(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir)
@@ -245,27 +221,12 @@ def test_stage_6_stale_export_when_source_newer(tmp_path: Path) -> None:
     new_time = time.time() - 5
     os.utime(tex, (new_time, new_time))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "stale_export" in result["notes"]
     assert "partial_export" not in result["notes"]
     assert "/fig_compile" in result["next"]
     assert "done" not in result["next"]
 
-
-def test_stage_6_preserves_selected_preview_missing_note(tmp_path: Path) -> None:
-    fig = tmp_path / "preview_missing_exported"
-    fig.mkdir()
-    _make_spec(fig, selected_preview="missing.png")
-    (fig / "briefing.md").write_text("briefing", encoding="utf-8")
-    (fig / "previews").mkdir()
-    exports = fig / "exports"
-    exports.mkdir()
-    (exports / "preview_missing_exported.pdf").write_bytes(b"%PDF")
-
-    result = infer_stage(fig)
-
-    assert result["stage"] == 6
-    assert "selected_preview_missing" in result["notes"]
 
 
 def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
@@ -286,34 +247,12 @@ def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
     assert "/fig_review" not in result["next"]
 
 
-def test_stage_3_selected_preview_missing_note(tmp_path: Path) -> None:
-    fig_dir = tmp_path / "myfig"
-    fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview="ghost.png")
-    previews = fig_dir / "previews"
-    previews.mkdir()
-    (previews / ".gitkeep").touch()
-    result = infer_stage(fig_dir)
-    assert result["stage"] == 3
-    assert "selected_preview_missing" in result["notes"]
-
-
-def test_stage_3_selected_preview_present_no_note(tmp_path: Path) -> None:
-    fig_dir = tmp_path / "myfig"
-    fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview="real.png")
-    previews = fig_dir / "previews"
-    previews.mkdir()
-    (previews / "real.png").write_bytes(b"\x89PNG")
-    result = infer_stage(fig_dir)
-    assert result["stage"] == 3
-    assert "selected_preview_missing" not in result["notes"]
 
 
 def test_reference_image_existing_is_not_treated_as_selected_preview(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden_target_001.png")
+    _make_spec(fig_dir, reference_image="reference/golden_target_001.png")
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden_target_001.png").write_bytes(b"\x89PNG")
@@ -332,7 +271,7 @@ def test_coordinate_hints_missing_when_reference_present(tmp_path: Path) -> None
     a coordinate_hints_missing note pointing at /fig_extract."""
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    _make_spec(fig_dir, reference_image="reference/golden.png")
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden.png").write_bytes(b"\x89PNG")
@@ -347,7 +286,7 @@ def test_coordinate_hints_missing_when_reference_present(tmp_path: Path) -> None
 def test_coordinate_hints_present_clears_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    _make_spec(fig_dir, reference_image="reference/golden.png")
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden.png").write_bytes(b"\x89PNG")
@@ -365,7 +304,7 @@ def test_coordinate_hints_present_clears_note(tmp_path: Path) -> None:
 def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    _make_spec(fig_dir, reference_image="reference/golden.png")
     reference = fig_dir / "reference"
     reference.mkdir()
     ref_file = reference / "golden.png"
@@ -387,7 +326,7 @@ def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:
 def test_coordinate_hints_parse_error_when_yaml_malformed(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden.png")
+    _make_spec(fig_dir, reference_image="reference/golden.png")
     reference = fig_dir / "reference"
     reference.mkdir()
     (reference / "golden.png").write_bytes(b"\x89PNG")
@@ -406,7 +345,7 @@ def test_coordinate_hints_check_skips_when_reference_image_absent(tmp_path: Path
     coordinate_hints_* notes; Layer 2.5 only applies to golden-class fixtures."""
     fig_dir = tmp_path / "ordinaryfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None)
+    _make_spec(fig_dir)
     (fig_dir / "previews").mkdir()
 
     result = infer_stage(fig_dir)
@@ -417,7 +356,7 @@ def test_coordinate_hints_check_skips_when_reference_image_absent(tmp_path: Path
 def test_reference_image_missing_surfaces_separate_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir, selected_preview=None, reference_image="reference/golden_target_001.png")
+    _make_spec(fig_dir, reference_image="reference/golden_target_001.png")
     (fig_dir / "previews").mkdir()
 
     result = infer_stage(fig_dir)
@@ -442,7 +381,7 @@ def test_smoke_fixture_smoke_trap_demo() -> None:
     if not fixture.exists():
         return
     result = infer_stage(fixture)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert "partial_export" not in result["notes"]
     assert result["accepted"] is None
 
@@ -458,7 +397,7 @@ def test_accepted_true_resolves_in_result(tmp_path: Path) -> None:
     (exports / "myfig.tif").write_bytes(b"TIFF")
     (exports / "myfig.png").write_bytes(b"\x89PNG")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert result["accepted"] is True
 
 
@@ -473,7 +412,7 @@ def test_accepted_false_resolves_in_result(tmp_path: Path) -> None:
     (exports / "myfig.tif").write_bytes(b"TIFF")
     (exports / "myfig.png").write_bytes(b"\x89PNG")
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert result["accepted"] is False
     assert "QUALITY_AUDIT.md" in result["next"]
     assert "accepted: true" in result["next"]
@@ -489,7 +428,7 @@ def test_accepted_invalid_type_coerces_to_none(tmp_path: Path) -> None:
     assert result["accepted"] is None
 
 
-def test_stage_6_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
+def test_stage_4_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir, accepted=False)
@@ -515,7 +454,7 @@ def test_stage_6_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
     new_time = time.time() - 5
     os.utime(tex, (new_time, new_time))
     result = infer_stage(fig_dir)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert result["accepted"] is False
     assert "stale_export" in result["notes"]
     # stale takes priority over not-accepted in the next-hint
@@ -539,7 +478,7 @@ def test_print_single_shows_not_accepted_marker(tmp_path: Path, capsys) -> None:
     result = status_mod.infer_stage(fig_dir)
     status_mod._print_single(result)
     captured = capsys.readouterr()
-    assert "goldenfig — stage 6/6 (not accepted)" in captured.out
+    assert "goldenfig — stage 4/4 (not accepted)" in captured.out
 
 
 def test_print_single_shows_accepted_marker(tmp_path: Path, capsys) -> None:
@@ -558,7 +497,7 @@ def test_print_single_shows_accepted_marker(tmp_path: Path, capsys) -> None:
     result = status_mod.infer_stage(fig_dir)
     status_mod._print_single(result)
     captured = capsys.readouterr()
-    assert "goldenfig — stage 6/6 (accepted)" in captured.out
+    assert "goldenfig — stage 4/4 (accepted)" in captured.out
 
 
 def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkeypatch) -> None:
@@ -586,7 +525,7 @@ def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkey
         sys.argv = old_argv
 
     captured = capsys.readouterr()
-    assert "goldenfig  stage 6/6 (not accepted)" in captured.out
+    assert "goldenfig  stage 4/4 (not accepted)" in captured.out
 
 
 def test_real_golden_fixture_is_not_accepted() -> None:
@@ -594,7 +533,7 @@ def test_real_golden_fixture_is_not_accepted() -> None:
     if not fixture.exists():
         return
     result = infer_stage(fixture)
-    assert result["stage"] == 6
+    assert result["stage"] == 4
     assert result["accepted"] is False
     if "stale_export" in result["notes"]:
         assert "/fig_compile" in result["next"]
@@ -639,38 +578,12 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     assert "alpha_fig" in captured.out
     assert "stage 1" in captured.out
     assert "zeta_fig" in captured.out
-    assert "stage 6" in captured.out
+    assert "stage 4" in captured.out
     assert "notes:" not in captured.out
     lines = [ln for ln in captured.out.splitlines() if ln.strip()]
     names = [ln.split()[0] for ln in lines]
     assert names == sorted(names)
 
-
-def test_no_arg_all_figures_surfaces_notes(tmp_path: Path, capsys, monkeypatch) -> None:
-    examples_dir = tmp_path / "examples"
-    examples_dir.mkdir()
-    fig = examples_dir / "stale_fig"
-    fig.mkdir()
-    _make_spec(fig, selected_preview="missing.png")
-    (fig / "briefing.md").write_text("briefing", encoding="utf-8")
-    exports = fig / "exports"
-    exports.mkdir()
-    (exports / "stale_fig.pdf").write_bytes(b"%PDF")
-
-    monkeypatch.chdir(tmp_path)
-
-    import status as status_mod
-
-    old_argv = sys.argv
-    sys.argv = ["status.py"]
-    try:
-        status_mod.main()
-    finally:
-        sys.argv = old_argv
-
-    captured = capsys.readouterr()
-    assert "stale_fig  stage 6/6" in captured.out
-    assert "notes: selected_preview_missing" in captured.out
 
 
 def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:

@@ -14,57 +14,29 @@ from inputs import parse_spec
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 
 _NEXT_0 = "run /fig_new <name> to create the figure scaffold."
-# Stage 1/2 next-hints reference the legacy image-gen orchestration path.
-# Mark them explicitly so users know the active alternative (author the .tex
-# directly via the briefing-driven workflow described in
-# docs/architecture-overview.md Layer 3).
 _NEXT_1 = (
-    "[legacy] run /fig_prompt <name> to generate the normalized image-gen"
-    " prompt — or skip directly to authoring examples/<name>/<name>.tex"
-    " from briefing.md (active workflow)."
-)
-_NEXT_2 = (
-    "[legacy] run /fig_preview_select <name> to record your chosen preview —"
-    " or skip directly to authoring examples/<name>/<name>.tex (active workflow)."
-)
-_NEXT_3 = (
-    "author examples/<name>/<name>.tex"
+    "author examples/<name>/<name>.tex from briefing.md"
     " (cp styles/tex_template.tex to start), then /fig_compile <name>."
 )
-_NEXT_4 = "run /fig_compile <name> to compile the TikZ source."
-# Stage 5: prefer the active /fig_export gate; /fig_review is legacy.
-_NEXT_5 = "run /fig_export <name> (or [legacy] /fig_review <name> for an external critic brief)."
-_NEXT_6 = (
+_NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
+# Stage 3: prefer the active /fig_export gate; /fig_review is legacy.
+_NEXT_3 = "run /fig_export <name> (or [legacy] /fig_review <name> for an external critic brief)."
+_NEXT_4 = (
     "done — outputs in examples/<name>/exports/."
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
-_NEXT_6_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
-_NEXT_6_PARTIAL = (
+_NEXT_4_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_4_PARTIAL = (
     "exports are incomplete — re-run /fig_export <name> to generate the"
     " missing PDF/SVG/TIFF/PNG artifacts."
 )
-_NEXT_6_NOT_ACCEPTED = (
+_NEXT_4_NOT_ACCEPTED = (
     "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
     " defects, then set accepted: true in spec.yaml."
 )
 _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
-
-
-def _has_image_files(directory: Path, exts: set[str] | None = None) -> bool:
-    if exts is None:
-        exts = {".png", ".jpg", ".jpeg"}
-    for entry in directory.iterdir():
-        if not entry.is_file():
-            continue
-        if entry.name.startswith("."):
-            continue
-        if entry.name == ".gitkeep":
-            continue
-        if entry.suffix.lower() in exts:
-            return True
-    return False
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -118,11 +90,6 @@ def _append_prerequisite_notes(
     previews_corrupted = previews_dir.exists() and not previews_dir.is_dir()
     if previews_corrupted:
         notes.append("previews_not_directory")
-
-    selected_preview = spec.get("selected_preview") if spec else None
-    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
-        if not (previews_dir.is_dir() and (previews_dir / selected_preview).is_file()):
-            notes.append("selected_preview_missing")
 
 
 def _resolve_accepted(spec: dict) -> bool | None:
@@ -221,7 +188,7 @@ def infer_stage(example_dir: Path) -> dict:
             "exports_substate": exports_substate,
         }
 
-    # Stage 6: any export artifact present
+    # Stage 4: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
         checks.append(("exports", "present"))
         partial = not _all_four_exports_present(exports_dir, name)
@@ -235,15 +202,15 @@ def infer_stage(example_dir: Path) -> dict:
         # partial_export sits above not-accepted because incomplete artifacts
         # block both manuscript use and the golden contract gate.
         if is_stale:
-            next_template = _NEXT_6_STALE
+            next_template = _NEXT_4_STALE
         elif partial:
-            next_template = _NEXT_6_PARTIAL
+            next_template = _NEXT_4_PARTIAL
         elif accepted is False:
-            next_template = _NEXT_6_NOT_ACCEPTED
+            next_template = _NEXT_4_NOT_ACCEPTED
         else:
-            next_template = _NEXT_6
+            next_template = _NEXT_4
         return {
-            "stage": 6,
+            "stage": 4,
             "name": name,
             "checks": checks,
             "next": next_template.replace("<name>", name),
@@ -252,41 +219,9 @@ def infer_stage(example_dir: Path) -> dict:
             "exports_substate": exports_substate,
         }
 
-    # Stage 5: build pdf exists, fresh against tex+briefing+style-lock, no exports
+    # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
-        return {
-            "stage": 5,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_5.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-        }
-
-    # Stage 4: tex exists AND (no build pdf OR pdf stale relative to source set)
-    if tex_path.exists():
-        if not build_pdf.exists():
-            checks.append(("tex", "present"))
-            checks.append(("build_pdf", "missing"))
-        else:
-            checks.append(("tex", "present"))
-            checks.append(("build_pdf", "stale"))
-        return {
-            "stage": 4,
-            "name": name,
-            "checks": checks,
-            "next": _NEXT_4.replace("<name>", name),
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-        }
-
-    # Stage 3: selected_preview is a non-empty string, no tex
-    selected_preview = spec.get("selected_preview") if spec else None
-    if selected_preview and isinstance(selected_preview, str) and selected_preview.strip():
-        checks.append(("selected_preview", selected_preview))
         return {
             "stage": 3,
             "name": name,
@@ -297,12 +232,14 @@ def infer_stage(example_dir: Path) -> dict:
             "exports_substate": exports_substate,
         }
 
-    previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
-
-    # Stage 2: previews/ has image files AND selected_preview unset/null/empty
-    if previews_has_images:
-        checks.append(("previews", "has images"))
-        checks.append(("selected_preview", "unset"))
+    # Stage 2: tex exists AND (no build pdf OR pdf stale relative to source set)
+    if tex_path.exists():
+        if not build_pdf.exists():
+            checks.append(("tex", "present"))
+            checks.append(("build_pdf", "missing"))
+        else:
+            checks.append(("tex", "present"))
+            checks.append(("build_pdf", "stale"))
         return {
             "stage": 2,
             "name": name,
@@ -313,10 +250,9 @@ def infer_stage(example_dir: Path) -> dict:
             "exports_substate": exports_substate,
         }
 
-    # Stage 1: spec.yaml exists AND previews/ has no image files
+    # Stage 1: spec.yaml exists, no .tex authored yet
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
-        checks.append(("previews", "empty"))
         return {
             "stage": 1,
             "name": name,
@@ -346,7 +282,7 @@ def _print_single(result: dict) -> None:
     checks = result["checks"]
     notes = result["notes"]
     marker = _accepted_marker(result.get("accepted"))
-    print(f"{name} — stage {stage}/6{marker}")
+    print(f"{name} — stage {stage}/4{marker}")
     for key, val in checks:
         print(f"  {key}: {val}")
     print(f"  Next: {next_hint}")
@@ -366,7 +302,7 @@ def main() -> int:
             result = infer_stage(entry)
             marker = _accepted_marker(result.get("accepted"))
             exports = result.get("exports_substate", "?")
-            line = f"{result['name']}  stage {result['stage']}/6{marker}  exports: {exports}"
+            line = f"{result['name']}  stage {result['stage']}/4{marker}  exports: {exports}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)
