@@ -14,3 +14,6 @@ style_profile: polymer-default
 selected_preview: null
 selection_notes: ""
 reference_image: reference/dogfood_concept.png
+export_pipeline_equivalence:
+  ae_max: 0.02      # AE / total_pixels upper bound; 0.02 = 2% with default fuzz
+  fuzz_pct: 5       # passes through to magick compare -fuzz
