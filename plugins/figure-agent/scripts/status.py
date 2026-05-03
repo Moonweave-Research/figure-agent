@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from export_freshness import compute_export_state
 from inputs import parse_spec
 
 # Match review_brief's freshness source set so /fig_status and /fig_review agree.
@@ -175,17 +176,19 @@ def _append_reference_image_check(
 
 
 def infer_stage(example_dir: Path) -> dict:
+    name = example_dir.name
+    exports_substate = compute_export_state(example_dir, name)
     if not example_dir.exists() or not example_dir.is_dir():
         return {
             "stage": 0,
-            "name": example_dir.name,
+            "name": name,
             "checks": [],
-            "next": _NEXT_0.replace("<name>", example_dir.name),
+            "next": _NEXT_0.replace("<name>", name),
             "notes": [],
             "accepted": None,
+            "exports_substate": exports_substate,
         }
 
-    name = example_dir.name
     spec_path = example_dir / "spec.yaml"
     tex_path = example_dir / f"{name}.tex"
     briefing_path = example_dir / "briefing.md"
@@ -215,6 +218,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 6: any export artifact present
@@ -245,6 +249,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": next_template.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 5: build pdf exists, fresh against tex+briefing+style-lock, no exports
@@ -257,6 +262,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_5.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 4: tex exists AND (no build pdf OR pdf stale relative to source set)
@@ -274,6 +280,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_4.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 3: selected_preview is a non-empty string, no tex
@@ -287,6 +294,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_3.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     previews_has_images = previews_dir.is_dir() and _has_image_files(previews_dir)
@@ -302,6 +310,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_2.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 1: spec.yaml exists AND previews/ has no image files
@@ -315,6 +324,7 @@ def infer_stage(example_dir: Path) -> dict:
             "next": _NEXT_1.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
+            "exports_substate": exports_substate,
         }
 
     # Stage 0 fallback (directory exists but no spec.yaml)
@@ -325,6 +335,7 @@ def infer_stage(example_dir: Path) -> dict:
         "next": _NEXT_0.replace("<name>", name),
         "notes": [],
         "accepted": accepted,
+        "exports_substate": exports_substate,
     }
 
 
@@ -339,6 +350,8 @@ def _print_single(result: dict) -> None:
     for key, val in checks:
         print(f"  {key}: {val}")
     print(f"  Next: {next_hint}")
+    if substate := result.get("exports_substate"):
+        print(f"  Exports: {substate}")
     if notes:
         print(f"  Notes: {', '.join(notes)}")
 
@@ -352,7 +365,8 @@ def main() -> int:
         for entry in sorted(p for p in examples_dir.iterdir() if p.is_dir()):
             result = infer_stage(entry)
             marker = _accepted_marker(result.get("accepted"))
-            line = f"{result['name']}  stage {result['stage']}/6{marker}"
+            exports = result.get("exports_substate", "?")
+            line = f"{result['name']}  stage {result['stage']}/6{marker}  exports: {exports}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)

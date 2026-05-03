@@ -30,7 +30,8 @@ _METADATA_PATTERNS = [
 ]
 
 
-def _expand(pdf: Path, out_dir: Path) -> bytes:
+def expand_pdf(pdf: Path, out_dir: Path) -> bytes:
+    """Run `qpdf --qdf --object-streams=disable` and return the qdf bytes."""
     out_dir.mkdir(parents=True, exist_ok=True)
     qdf = out_dir / (pdf.stem + ".qdf")
     subprocess.run(
@@ -40,7 +41,8 @@ def _expand(pdf: Path, out_dir: Path) -> bytes:
     return qdf.read_bytes()
 
 
-def _strip_metadata(blob: bytes) -> bytes:
+def strip_metadata(blob: bytes) -> bytes:
+    """Strip per-invocation metadata (timestamps, /ID, /Producer) from a qdf blob."""
     out = blob
     for pat in _METADATA_PATTERNS:
         out = pat.sub(b"", out)
@@ -57,8 +59,8 @@ def main() -> int:
         return 2
     with tempfile.TemporaryDirectory() as tmp_root:
         tmp = Path(tmp_root)
-        old_blob = _strip_metadata(_expand(old, tmp / "old"))
-        new_blob = _strip_metadata(_expand(new, tmp / "new"))
+        old_blob = strip_metadata(expand_pdf(old, tmp / "old"))
+        new_blob = strip_metadata(expand_pdf(new, tmp / "new"))
     if old_blob == new_blob:
         print(f"OK: byte-identical qdf-expanded structure ({old.name} vs {new.name})")
         return 0

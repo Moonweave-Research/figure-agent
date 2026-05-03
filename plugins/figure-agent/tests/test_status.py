@@ -671,3 +671,33 @@ def test_no_arg_all_figures_surfaces_notes(tmp_path: Path, capsys, monkeypatch) 
     captured = capsys.readouterr()
     assert "stale_fig  stage 6/6" in captured.out
     assert "notes: selected_preview_missing" in captured.out
+
+
+def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:
+    """infer_stage must include exports_substate in its return dict so
+    /fig_status can surface MISSING / TRACKED_GOLDEN / STALE / FRESH.
+    """
+    fixture = tmp_path / "examples" / "no_files"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: no_files\npanels: []\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("# stub\n", encoding="utf-8")
+    result = infer_stage(fixture)
+    assert "exports_substate" in result
+    assert result["exports_substate"] == "MISSING"
+
+
+def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
+    """_print_single must surface exports_substate so users see MISSING /
+    TRACKED_GOLDEN / STALE / FRESH for each fixture.
+    """
+    fixture = tmp_path / "no_exports_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+    (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "Exports: MISSING" in captured.out
