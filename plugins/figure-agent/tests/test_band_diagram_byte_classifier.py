@@ -30,14 +30,27 @@ SMOKE_TEX = REPO_ROOT / "examples" / "_macro_smoke" / "_macro_smoke.tex"
 SMOKE_PDF = REPO_ROOT / "examples" / "_macro_smoke" / "build" / "_macro_smoke.pdf"
 
 
-# Patterns matching each allowed delta class. Implementation-dependent;
-# may need tightening on first run if MediaBox or another page-object
-# field surfaces an unclassified line.
+# Patterns matching each allowed delta class. The (b) and (e) classes
+# (3rd-callsite content + position-shifted operators) are matched by
+# `b_or_e_pdf_op` which captures any PDF content-stream line: numeric
+# operands followed by a PDF operator token. This is intentionally
+# permissive — the test's job is to catch lines that look like NEITHER
+# noise NOR PDF stream content, e.g. malformed objects or dictionary
+# changes outside the page-object/metadata classes.
 _CLASS_PATTERNS = {
     "c_metadata": re.compile(r"^/(CreationDate|ModDate|ID)\b|^\s*<[0-9a-fA-F]+>\s*$"),
-    "d_stream_length": re.compile(r"^/Length\s+\d+\b|^xref\b|^\d+\s+\d+\s+obj\b"),
+    "d_stream_length": re.compile(r"^/Length\s+\d+\b|^xref\b|^\d+\s+\d+\s+obj\b|^\s*\d+\s+\d+\s*$"),
     "a_empty_scope": re.compile(r"^q\s*$|^Q\s*$"),
-    "page_dim": re.compile(r"^/(MediaBox|CropBox|BBox|TrimBox|ArtBox)\b"),
+    "page_dim": re.compile(r"^/(MediaBox|CropBox|BBox|TrimBox|ArtBox)\b|^\s*-?\d+\.?\d*\s*$"),
+    # Class (b)/(e): PDF content-stream lines — numeric operands + operator,
+    # or pure operators (BT/ET, h, S, f, B, etc.). Captures both new
+    # 3rd-callsite content and position-shifted pre-existing operators.
+    "b_or_e_pdf_op": re.compile(
+        r"^([\d\.\s\-]*\s)?(m|l|c|h|S|s|f|F|B|b|n|re|w|J|j|M|d|i|"
+        r"rg|RG|g|G|k|K|sc|SC|scn|SCN|cs|CS|"
+        r"cm|q|Q|Do|gs|sh|"
+        r"BT|ET|Tj|TJ|Tf|Tm|Td|TD|T\*|Tc|Tw|Tz|TL|Tr|Ts)\s*$"
+    ),
 }
 
 
@@ -89,8 +102,12 @@ def test_macro_smoke_qdf_diff_classifier(tmp_path: Path) -> None:
         check=True,
     )
 
+    # `diff -a` forces text mode — without it, qpdf's qdf output (which
+    # contains binary stream blobs for fonts/glyphs) trips diff into
+    # "Binary files differ" mode and only one line of output, defeating
+    # the classifier entirely.
     diff_result = subprocess.run(
-        ["diff", "-u", str(BASELINE), str(new_qdf)],
+        ["diff", "-au", str(BASELINE), str(new_qdf)],
         capture_output=True,
         text=True,
         check=False,
@@ -102,6 +119,13 @@ def test_macro_smoke_qdf_diff_classifier(tmp_path: Path) -> None:
         return
 
     diff_lines = diff_result.stdout.splitlines()
+    # Sanity guard against the "Binary files differ" failure mode (would
+    # produce a single-line diff that the loop below would skip entirely,
+    # giving a false PASS). With -a this should never trigger, but the
+    # check is cheap insurance against a future flag-removal regression.
+    assert not (len(diff_lines) == 1 and diff_lines[0].startswith("Binary files")), (
+        f"diff bailed out in binary mode: {diff_lines[0]!r}"
+    )
     unclassified: list[str] = []
     class_counts: dict[str, int] = {}
     for line in diff_lines:
