@@ -61,18 +61,18 @@ basic-mode inspection. When `reference_image` is present, `/fig_extract` creates
 `coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
 structural hints; compile then uses those hints for drift check when available.
 
-### Frozen (v0.1 image-gen orchestration; reduced to one helper after v0.2 cleanup)
+### L4.5 Vision Critique (host-orchestrated, no external API)
 
 ```
-/fig_review <name>           emit a reviewer brief for an external vision LLM
-                             [HALT — user critiques externally, revises .tex]
-                             (becomes /fig_critique with host-LLM orchestration in v0.2)
+/fig_critique <name>         host Claude reads build/<name>.png + briefing,
+                             writes structured critique.md (YAML + Markdown).
+                             Report-only; subscription tokens, zero API calls.
 ```
 
+Replaces the v0.1 `/fig_review` HALT-then-paste workflow via
+rename + extend (see `docs/architecture-v0.2-proposal.md` §4.5).
 The earlier `/fig_prompt`, `/fig_preview_select`, and the prompt-template /
-redaction / selection-notes pipeline were removed. See
-`docs/architecture-v0.2-proposal.md` for the rationale and the planned
-replacement (`/fig_critique` host-orchestrated vision critique).
+redaction / selection-notes pipeline were removed in PR #8a.
 
 ## Status
 

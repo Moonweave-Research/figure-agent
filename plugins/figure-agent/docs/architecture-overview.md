@@ -53,9 +53,14 @@ Layer 7: State Inference               (status.py / fig_status)
    v
 Layer 8: Reproducibility / Asset       (.gitignore + .gitattributes + LFS policy)
 
-Layer 9: Frozen Orchestration Legacy   (prompt_gen, redact, llm_author_prompt,
-                                        review_brief, /fig_prompt,
-                                        /fig_preview_select, /fig_review)
+Layer 4.5: Vision Critique             (host Claude reads build PNG via Read tool;
+                                        critique_brief.py + /fig_critique;
+                                        report-only, no external API)
+
+Layer 9: Frozen Orchestration Legacy   (deleted in v0.2: prompt_gen, redact,
+                                        llm_author_prompt, /fig_prompt,
+                                        /fig_preview_select; review_brief →
+                                        critique_brief, fig_review → fig_critique)
 
 Layer 10: Documentation                (docs/ active + docs/historical/)
 ```
@@ -73,10 +78,11 @@ The plugin is gen-tool-agnostic by design (declared in `plugin.json`,
 - The user's intent, which is captured into `briefing.md` during the
   `/fig_new` interview (Layer 2).
 - LLM-generated reference PNGs, saved by hand to `examples/<name>/reference/`
-  (golden fixtures) or `examples/<name>/previews/` (frozen workflow).
-- External vision-model critique output, when the frozen `/fig_review`
-  brief is pasted into a vision LLM and the user revises the `.tex` based
-  on the response.
+  (golden fixtures) or `examples/<name>/previews/` (informal storage).
+- L4.5 critique findings, written by the host Claude Code main loop into
+  `examples/<name>/critique.md` after `/fig_critique <name>`. The user
+  reads the critique and decides which findings to apply manually
+  (report-only for v0.2).
 
 The plugin's contact with Layer 0 is purely positional: it requires inputs
 to land at known filesystem paths with known extensions. It never fetches
@@ -91,11 +97,12 @@ These are the surfaces that tell a new user (or a new agent session) what
 the plugin is. They must agree on:
 
 - The four quality-kernel responsibilities (Style Lock / compile-export /
-  Visual QA / reproducibility).
-- The active workflow (`/fig_compile` / `/fig_export` / `/fig_status`).
-- The frozen workflow (`/fig_prompt` / `/fig_preview_select` / `/fig_review`)
-  marked as legacy so users do not mistake them for the development path.
-- The boundary statement that the plugin does not call image-gen APIs.
+  Visual QA / reproducibility) plus L4.5 vision critique.
+- The active workflow (`/fig_compile` / `/fig_critique` / `/fig_export` /
+  `/fig_status`).
+- The boundary statement that the plugin does not call **external**
+  image-gen or vision APIs; L4.5 vision critique is delegated to the
+  host Claude Code main loop, not an external HTTP call.
 
 Drift between these surfaces is the most common identity-confusion source;
 when adjusting one, adjust all.
@@ -315,20 +322,35 @@ Per-figure folders use the .gitignore default of treating `build/`,
 Detailed rationale and the promotion checklist live in
 `docs/quality-kernel-goal.md`.
 
-### Layer 9 — Frozen Orchestration Legacy (reduced after v0.2 cleanup)
+### Layer 4.5 — Vision Critique (host-orchestrated)
 
-**Remaining files**: `scripts/review_brief.py`, `commands/fig_review.md`
-(scheduled for rename to `critique_brief.py` / `fig_critique.md` in the
-v0.2 L4.5 vision-critique work).
+**Files**: `scripts/critique_brief.py`, `commands/fig_critique.md`,
+`tests/test_critique_brief.py`, `examples/<name>/critique.md` (output).
 
-**Removed in v0.2 cleanup** (PR #8a): `scripts/redact.py`,
-`scripts/prompt_gen.py`, `scripts/llm_author_prompt.py`,
-`prompts/llm_author_tikz.md`, `commands/fig_prompt.md`,
-`commands/fig_preview_select.md`. The prompt-template / redaction /
-selection-notes pipeline and the spec.yaml `selection_notes` consumer
-no longer exist; existing fixture spec.yaml files keep the
-`selection_notes` field as a historical record (yaml ignores unknown
-keys for the surviving consumers).
+`/fig_critique <name>` runs the brief generator (severity/category rubric,
+freshness check, line-numbered TikZ source), then the host Claude Code
+main loop reads `examples/<name>/build/<name>.png` via the Read tool and
+writes structured findings to `examples/<name>/critique.md` (YAML
+front-matter + Markdown body, schema v1). No external API call originates
+from plugin code; the host operates on subscription tokens.
+
+Report-only for v0.2: the critique file is generated, but the plugin
+never auto-edits `<name>.tex`. Auto-apply is gated on N=5+ dogfood
+accuracy ≥ 80% per `docs/architecture-v0.2-proposal.md` §7.
+
+### Layer 9 — Frozen Orchestration Legacy (deleted in v0.2 cleanup)
+
+All v0.1 frozen helpers are now removed or transformed. PR #8a deleted
+`scripts/{redact,prompt_gen,llm_author_prompt}.py`, `commands/fig_prompt.md`,
+`commands/fig_preview_select.md`, `prompts/llm_author_tikz.md`, the
+prompt-template / redaction / selection-notes pipeline, and the
+`spec.yaml.selection_notes` consumer. PR #8b dropped the
+`spec.yaml.selected_preview` stage gate from `status.py`. PR #9 renamed
+the surviving `review_brief.py` / `fig_review.md` to
+`critique_brief.py` / `fig_critique.md` and rewired them as Layer 4.5
+(see above). Existing fixture spec.yaml files keep the
+`selection_notes` and `selected_preview` fields as a historical record
+(yaml ignores unknown keys for surviving consumers).
 
 See `docs/architecture-v0.2-proposal.md` for the full layer redesign.
 

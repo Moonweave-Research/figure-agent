@@ -52,16 +52,18 @@ behavior.
 
 ## Frozen Legacy Helpers (post-v0.2 cleanup)
 
-Only one helper remains:
+The v0.1 frozen orchestration helpers are gone or transformed:
 
-- `/fig_review` as an external critic brief generator (scheduled for rename
-  to `/fig_critique` with host-LLM orchestration in v0.2 L4.5).
+- PR #8a deleted `/fig_prompt`, `/fig_preview_select`, `scripts/redact.py`,
+  `scripts/prompt_gen.py`, `scripts/llm_author_prompt.py`,
+  `prompts/llm_author_tikz.md`, and the `spec.yaml.selection_notes` consumer.
+- PR #8b dropped the `spec.yaml.selected_preview` stage gate from `status.py`.
+- PR #9 renamed `/fig_review` (HALT-then-paste) into `/fig_critique`
+  (host-orchestrated L4.5 vision critique) — the only critique helper now,
+  and not "frozen" any more; it is the active vision-critique surface.
 
-Removed in the v0.2 frozen-legacy cleanup (PR #8a): `/fig_prompt`,
-`/fig_preview_select`, `scripts/redact.py`, `scripts/prompt_gen.py`,
-`scripts/llm_author_prompt.py`, `prompts/llm_author_tikz.md`, and the
-`spec.yaml.selection_notes` consumer. Existing fixture spec.yaml files
-keep `selection_notes` as a historical record only — yaml ignores unknown
+Existing fixture `spec.yaml` files retain `selection_notes` and
+`selected_preview` keys as a historical record only — yaml ignores unknown
 keys for surviving consumers.
 
 Do not add new orchestration features unless dogfooding proves a repeated,
@@ -152,9 +154,9 @@ The first representative figure is fixed:
 Before expanding features, recreate that target as vector source and audit the
 actual PDF/SVG/PNG output.
 
-Golden Target 001 uses `reference_image` for the fixed target PNG. It must not
-overload `selected_preview`, which remains the legacy field for an image-gen
-candidate chosen from `previews/`.
+Golden Target 001 uses `reference_image` for the fixed target PNG.
+(`selected_preview` was retired in PR #8b along with the legacy
+preview-selection workflow.)
 
 The audit must classify every defect into one of four layers:
 
