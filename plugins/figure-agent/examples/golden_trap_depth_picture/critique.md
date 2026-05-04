@@ -1,56 +1,118 @@
 ---
 schema: figure-agent.critique.v1
 fixture: golden_trap_depth_picture
-generated_at: 2026-05-04T00:20:11Z
+generated_at: 2026-05-04T01:25:00Z
+iteration: 3 (with reference reconciliation)
 verdict: revise
-findings:
-  - id: C001
+dogfood_meta:
+  total_findings_proposed: 11
+  applied: 11
+  reverted_after_reference_comparison: 8
+  net_kept: 2
+  reference_aligned_accuracy: 2/11 (~18%)
+  gate_threshold_v0_2_§7: ≥80% across N=5 fixtures
+  gate_status: FAIL on first dogfood
+findings_kept:
+  - id: C007
     severity: MINOR
     category: label_placement
-    tex_lines: [176, 177]
-    observation: "Right-side converged panel renders two `g(E_t)` axis labels — one above the horizontal density axis (near CB) and a second below it (near VB). The PNG shows both visible at upper-right and lower-right of the lobe plot. The briefing describes a single right-side energy/distribution diagram, so the duplicate axis label is redundant and competes with the `E_t` energy-axis label that already sits between the lobes."
-    suggested_fix: "Delete line 177 (`\\node[text=black] at (5.05,0.98) {$g(E_t)$};`). Keep line 176 as the single density-axis label at the top of the lobe plot. Optionally move line 176 to anchor=south-west on the horizontal axis tip if a bottom-anchored convention is preferred — but only one label, not both."
-    status: open
-  - id: C002
-    severity: MINOR
-    category: hierarchy
-    tex_lines: [93, 106]
-    observation: "The string `Debye exp(-t/τ)` appears twice in the figure: inside the Row 1 Debye reference plot (line 93) and again as an inline chain element in Row 2 mathematical interpretation (line 106). The PNG shows both instances rendered in italic gray within ~3 cm horizontal proximity, which weakens visual hierarchy — a reader cannot tell whether the Row 2 occurrence is a back-reference to Row 1 or an independent claim."
-    suggested_fix: "Either (a) keep Row 1's in-plot annotation and replace Row 2's text with a short bracketed reference like `(Debye)` to avoid full re-statement; or (b) remove the in-plot label on Row 1 (line 93) and let Row 2's chain carry the canonical statement, with Row 1 reduced to the geometric curve + τ_d marker only."
-    status: open
-  - id: C003
+    tex_lines: [94]
+    observation: "Row 1 evidence arrow path simplified from 4-segment to 3-segment terminating at brace top region. Aligns with reference geometry."
+    status: applied
+  - id: C008
     severity: NIT
     category: whitespace
-    tex_lines: [136, 148]
-    observation: "Row 3 caption boxes — `chemical origin (electronegativity, polarizability of S)` at (6.18,0.22) and `physical origin (local potential fluctuations)` at (9.88,0.24) — sit at the lower edge of the canvas (which extends to y=-0.80 per line 33). In the PNG these labels look pushed against the bottom margin with little breathing room, breaking the consistent vertical rhythm established by the inter-row separators at y=5.65 and y=3.45."
-    suggested_fix: "Either lift both labels by ~0.25 cm (to y≈0.45 absolute) or extend the bottom canvas anchor on line 33 down to y=-1.05 to add visual padding below the captions. Prefer the lift — it tightens the figure rather than adding empty space."
-    status: open
+    tex_lines: [74]
+    observation: "Row 1 box title moved from inside box (y=2.36) to outside box (y=2.92), font 6.2 → 6.5. Matches reference convention and Row 3 `localized traps` pattern."
+    status: applied
+findings_reverted:
+  - id: C001
+    reason: "Reference image has TWO g(E_t) labels (top + bottom). My fix removed the bottom one; reverted then re-removed because user observed reference itself was wrong here. Final state: bottom label REMOVED."
+    final: applied (post-reference-correction)
+  - id: C002
+    reason: "Reference has full 'Debye exp(-t/τ)' inline annotation in Row 1 box. My shortening to '(Debye)' diverged."
+    final: reverted to reference
+  - id: C003
+    reason: "Caption lift +0.08cm; reference has captions at original lower position. Reverted."
+    final: reverted to reference
   - id: C004
-    severity: NIT
-    category: label_placement
-    tex_lines: [184, 185]
-    observation: "On the right-side g(E_t) plot, the inline `shallow` (line 184) and `deep` (line 185) labels are placed to the right of the lobes at x=5.16 with anchor=west. In the PNG they appear correctly colored but the y-anchors (3.55 for shallow, 2.12 for deep) place them at the lobes' midline rather than the lobes' visible peak — the shallow label aligns slightly below the bulge of its lobe."
-    suggested_fix: "Bump shallow label y from 3.55 to ~3.80 to align with the lobe peak; bump deep label y from 2.12 to ~2.30. Visual peak of each lobe in the PNG is closer to those values."
-    status: open
+    reason: "Lobe label peak alignment; reference has labels at original positions. Reverted."
+    final: reverted to reference
   - id: C005
-    severity: NIT
-    category: hierarchy
-    tex_lines: [158, 159]
-    observation: "Right-panel `Energy` axis (line 158: vertical segment from y=1.15 to y=4.42 at x=1.25) is shorter than the visible vertical extent of CB (top at ~y=5.05) to VB (bottom at ~y=0.93). The PNG shows the small upward arrow floating between CB and VB without reaching either band, which weakens the semantic claim that Energy spans CB→VB."
-    suggested_fix: "Extend the axis to the visible band edges: change line 158 to `\\draw[axis] (1.25,1.05) -- (1.25,4.95);` so the axis arrowhead approaches CB while the tail starts at VB level. Re-center the rotated `Energy` label on line 159 to y≈3.0 if needed."
-    status: open
+    reason: "Energy axis extension to CB/VB; reference has shorter floating axis. Reverted."
+    final: reverted to reference
+  - id: C006
+    reason: "Removed inline '(Debye)' annotation entirely; reference has full text. Reverted (along with C002)."
+    final: reverted to reference
+  - id: C009
+    reason: "Added Σ=∫ → I(t) chain arrow; reference has no such arrow (intentional gap). Reverted."
+    final: reverted to reference
+  - id: C010
+    reason: "Added '(single τ)' clarifier to τ_d; reference has plain τ_d. Reverted."
+    final: reverted to reference
+  - id: C011
+    reason: "Added shallow ellipsis for symmetry; reference deliberately asymmetric (deep-only continuation). Reverted."
+    final: reverted to reference
+unaddressable_by_critique_layer:
+  - "Row 1/Debye plot x-axis tick labels are visually cluttered/overlapping (#1 user observation)"
+  - "Row 3 polymer chain visualization reads as 'wavy worms' rather than chemical structure (#2)"
+  - "Row 3 'S-rich segments' dashed-box highlight does not communicate semantic meaning (#3)"
+  - "Right-panel arrow overlaps near band-gap region (#4)"
+  - "Right-panel shallow/deep lobes have wrinkled/irregular shape (#6)"
 ---
 
-# Vision Critique — golden_trap_depth_picture
+# Vision Critique — golden_trap_depth_picture (final, post-reference-reconciliation)
 
-Overall the figure honors every physics invariant from the briefing: CB sits above VB on the right panel, E_t lies between them with the dashed reference line cleanly placed, shallow trap levels (amber) cluster near CB while deep traps (blue/red) cluster near VB, and the sideways g(E_t) plot resolves into two lobes whose vertical positions match their semantic labels. The teal brace correctly identifies the right-side panel as the convergence endpoint for the three left-row evidence streams. No BLOCKER physics violation is present, so the figure is suitable for manuscript use after minor cleanup — verdict is **revise**, not block.
+## What this critique log records
 
-The most actionable issue (C001) is the redundant `g(E_t)` axis labeling on the right panel: the PNG shows the same expression rendered both above and below the horizontal density axis, which dilutes the otherwise clean Nature-schematic minimalism the rest of the figure achieves. Removing the lower instance (line 177) is a one-line fix with no downstream layout cost. C002 captures a related hierarchy issue — the `Debye exp(-t/τ)` expression appears twice within ~3 cm, once inside the Row 1 reference plot and once in the Row 2 math chain; either occurrence alone is informative, but together they create redundancy without adding semantic content.
+This is N=1 dogfood data for the L4.5 vision critique loop introduced in figure-agent v0.2.0. Three iterations of `/fig_critique` were run by the host Claude Code main loop without reference image grounding. Eleven findings were generated across iterations 1–3 and applied to the .tex source. The user then directed a comparison against the original reference image at `reference/golden_target_001.png`. **Eight of eleven findings (73%) were reverted** because they diverged from the reference's deliberate composition — including findings that read as confident, well-reasoned style improvements during isolated review.
 
-The remaining findings are NIT-class. C003 notes the bottom-edge captions in Row 3 sit slightly too close to the canvas floor relative to the inter-row spacing rhythm; a small upward shift restores the rhythm without enlarging the figure. C004 observes that the right-panel `shallow` / `deep` inline labels are anchored slightly below their respective lobe peaks — a ~0.2-0.25 cm y-bump on each tightens the label-to-target binding. C005 flags the `Energy` axis on the right panel as being shorter than the visible CB→VB span, leaving the arrow floating between rather than reaching the bands; extending the axis endpoints reinforces the semantic claim that Energy spans the band gap.
+## Findings net result
 
-No issues observed in palette consistency (amber=shallow, blue/red=deep, teal=convergence-grouping, gray=neutral evidence — all uniform across rows and right panel), font hierarchy (sans-serif throughout, with row labels and titleTeal differentiated by weight), or arrow direction (every evidence arrow flows left→right or row→right-panel, no reversed implication). The Style Lock invariants the kernel cares about appear intact; the findings above are layout polish, not structural failure.
+After reconciliation:
+- **2 findings kept** (C007 arrow path, C008 title position) — both happened to align with reference
+- **8 findings reverted** (C001–C006, C009, C010, C011) — drifted away from reference
+- **1 finding kept after user override** (C001 final) — user observed that reference itself was wrong on the bottom `g(E_t)` label, so removal stands
+
+`reference_aligned_accuracy = 2/11 ≈ 18%`. The architecture-v0.2-proposal.md §7 gate requires ≥80% finding accuracy across N=5 dogfood fixtures before auto-apply automation can ship. **First dogfood already fails the gate by 4×.**
+
+## Meta finding: critique without semantic grounding drifts toward generic best practice
+
+The drift is not random. Every reverted finding traded a *deliberate authorial choice* for a *generic style heuristic*:
+
+- C001/reference: two axis labels are redundant *unless* the reader needs both top and bottom anchors when the lobes don't cleanly attach to one
+- C002/C006: annotation duplicates the box title *unless* it serves as in-plot reading aid that loses meaning if abbreviated
+- C009: chain has inconsistent connector geometry *unless* the absent first arrow signals "icon launches but isn't a transformation"
+- C010: τ_d is orphaned *unless* the reader is expected to know τ_d is a comparison anchor
+- C011: continuation indicators are asymmetric *unless* the deeper-traps-extend-down narrative is the point
+
+Each "unless" is a piece of author intent that is invisible in the rendered PNG. A vision LLM reading only the PNG + briefing will not recover them.
+
+## What's blocked by the critique-layer alone
+
+The user's six observations on the post-revert build expose issues the L4.5 critique layer cannot reach by design:
+
+| Observation | Why critique alone can't fix it |
+|---|---|
+| #1 x-axis tick labels overlap | L6 collision check already fires (39 candidates); needs auto-repair, not just report |
+| #2 polymer chains read as worms | Author lacks chemistry domain knowledge in TikZ output; critique can flag but can't author |
+| #3 S-rich segments highlight unclear | Briefing has no specification for visual semantic of the highlight |
+| #4 band-gap arrow overlap | L6 collision; same as #1 |
+| #5 reference's bottom g(E_t) was wrong | Reference is not infallible ground truth; needs author override path |
+| #6 lobes are wrinkled | TikZ control-point quality; macro-level concern, not critique-level |
+
+Five of six map to layers other than L4.5. One (#5) maps to the meta-question: when reference and critique disagree, who arbitrates?
+
+## Conclusion for this fixture
+
+`golden_trap_depth_picture` remains a `revise` figure for paper-grade publication. The two surviving polish improvements (C007 arrow path, C008 title placement) are kept. The remaining authorial gaps are **not addressable by adding more critique iterations**; they require either better authoring (briefing semantic grounding) or post-processing (Inkscape polish). Both are deferred per `docs/architecture-v0.2-proposal.md` §7.
+
+## Implications for v0.3
+
+The dogfood data forces a strategic conclusion: **L4.5 vision critique without briefing semantic grounding is fundamentally limited and will not reach the §7 gate by adding fixtures.** The next architecture iteration should not chase the gate via more critique tuning. It should add a layer that gives the system semantic understanding of *what the figure is supposed to depict* — chemistry of S-rich polymers, physics of trap distributions, expected visual conventions for band diagrams — so that critique can reason about meaning, not just style.
+
+This is `Gap 1` in the active product direction (`session_strategic_direction_2026_05_04`). Concrete spec to follow in `docs/architecture-v0.3-briefing-semantic-grounding.md` (this session).
 
 ---
 
-_Critique is **report-only** for v0.2. Author reads this file, decides which findings to apply, and edits `golden_trap_depth_picture.tex` manually. Auto-apply automation is gated on N=5+ dogfood runs at ≥80% finding accuracy per `docs/architecture-v0.2-proposal.md` §7. This is critique run **N=1**._
+_Critique iteration log: iter1 (5 findings, all applied), iter2 (3 findings, all applied), iter3 (3 findings, all applied), reconciliation pass (8 reverted, 2 kept, 1 user-overridden). Total dogfood interactions: 11 findings. Source-of-truth contention surfaced and is the primary v0.3 input._
