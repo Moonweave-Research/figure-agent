@@ -44,10 +44,10 @@ drift.
 |---|---|---|---|---|
 | BLOCKER | source | full layout | The figure is structurally complete and the export aspect ratio now closely matches the reference canvas, but local element positions and typography still need manual refit. | Refit local panels against the reference before calling the fixture accepted. |
 | MAJOR | source | row 1 plots | Log-axis tick density was reduced and geometric collisions are cleared, but visual-clash heuristics still flag several tick/math labels. | Separate genuine readability defects from checker false positives and keep the compact log-axis macro candidate. |
-| MAJOR | source | right converged picture | Right-side energy/distribution diagram is present, and the distribution labels have been spaced away from the lobe fills. The old single-token `deep` drift was a checker matching limit, not a missing right-panel label. | Continue aligning CB/VB, trap levels, dashed divider, and distribution lobes by manual reference comparison. |
+| MAJOR | source | right converged picture | Right-side energy/distribution diagram is present. CB/VB now read as line-style band edges, and the corrected deep-dominant g(E_t) lobe is visibly larger than the shallow lobe. | Continue aligning trap levels, dashed divider, and distribution lobes by manual reference comparison. |
 | MAJOR | source | molecular origin row | Polymer chains and sulfur markers exist, but chain amplitude, sulfur placement, and dashed boxes are approximate. | Tune chain coordinates and sulfur marker positions against the reference PNG. |
-| MAJOR | QA | collision/visual clash checks | `check_collisions.py` now reports 0 collisions. `check_visual_clash.py` reports 42 total candidates; 4 are suppressible by `_known_false_positives.yaml`, 25 are documented checker noise, and 13 remain source defects. | Drive the 13 source defects to 0 before acceptance; keep total candidates visible in the audit so false-positive drift remains reviewable. |
-| MINOR | macro | repeated primitives | `TrapLevel` was promoted into `polymer-paper-preamble.sty` and is used 8 times in the fixture. `BandBox`, `SmallLobe`, and chain patterns remain local until a second fixture proves reuse. | Promote additional primitives only after repeated source edits or a second fixture proves a stable abstraction. |
+| MAJOR | QA | collision/visual clash checks | `check_collisions.py` now reports 0 collisions. `check_visual_clash.py` reports 35 total candidates; many are known checker noise, and 13 remain tracked as source defects. | Drive the 13 source defects to 0 before acceptance; keep total candidates visible in the audit so false-positive drift remains reviewable. |
+| MINOR | macro | repeated primitives | `TrapLevel` was promoted into `polymer-paper-preamble.sty` and is used 8 times in the fixture. `BandBox` is now used as a compact band label primitive; `SmallLobe` and chain patterns remain local until a second fixture proves reuse. | Promote additional primitives only after repeated source edits or a second fixture proves a stable abstraction. |
 
 ## Checker Output
 
@@ -61,19 +61,19 @@ Observed:
 
 ```text
 WARN: flagship_macros_unused
-OK: no collisions found in golden_trap_depth_picture.pdf (115 words)
-42 visual clash candidate(s)
+OK: no collisions found in golden_trap_depth_picture.pdf (108 words)
+35 visual clash candidate(s)
 Generated: build/golden_trap_depth_picture.pdf, build/golden_trap_depth_picture.png (engine: lualatex)
 ```
 
 Visual-clash triage:
 
 ```text
-42 visual clash candidate(s)
-29 likely checker false positive(s): math subscript/superscript fragments,
-tick-label extraction, CB/VB text inside intentional band boxes, and tiny
-symbol fragments from the equation icon. Of these, 4 are currently suppressible
-via `_known_false_positives.yaml`; the rest remain visible because the global
+35 visual clash candidate(s)
+Several likely checker false positives: math subscript/superscript fragments,
+tick-label extraction, CB/VB compact band labels near band-edge lines, and tiny
+symbol fragments from the equation icon. Known false positives remain visible
+unless covered by `_known_false_positives.yaml`, because the global
 false-positive policy should stay conservative across future fixtures.
 13 unresolved visual clash(es): top-row equation label proximity, Debye inset
 math fragments, row-2 equation/arrow spacing, row-label proximity to separators,

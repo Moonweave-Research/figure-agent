@@ -51,8 +51,9 @@ traps, and teal convergence title/brace.
   Each step must have an incoming arrow from Row 1 evidence; the chain must flow left→right.
 - **Row 3 molecular origin**: sulfur atoms or disulfide bonds must be visually distinct (not just labels).
   "localized traps" label must be physically near the trap markers.
-- **Right-side lobes**: shallow lobe peak must be ≈2×–3× taller than deep lobe (visual proportionality).
-  Lobe peaks must align with cluster mean from g(E_t) PDF, not arbitrary positions.
+- **Right-side lobes**: deep lobe must visually dominate the shallow lobe
+  (≈2×–3× larger peak/amplitude in the g(E_t) distribution). Lobe peaks must
+  align with cluster mean from g(E_t) PDF, not arbitrary positions.
 
 ### Must avoid
 - Featureless waves, plain sine curves, or "gelatinous blob" polymer chains without segment detail.

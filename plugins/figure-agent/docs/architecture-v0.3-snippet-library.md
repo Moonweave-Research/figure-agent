@@ -43,7 +43,7 @@ Each snippet is a `\input`-able .tex chunk with `\providecommand` parameters. Re
 - Row 3 polymer: `polymer_chain.snippet.tex` with monomers=14, S_pattern="rich-cluster-x4-x12"
 - Row 1 plots: `log_plot.snippet.tex` with x_decades=6, y_decades=5
 - Right panel band: `band_diagram.snippet.tex` with shallow_levels=4, deep_levels=2+continuation
-- Right panel DOS: `dos_lobes.snippet.tex` with shallow_to_deep_ratio=2.5
+- Right panel DOS: `dos_lobes.snippet.tex` with deep_to_shallow_ratio=2.5
 ```
 
 L3 author (human or LLM) consumes the snippet refs and `\input`s them. L4.5 critique verifies snippet ref matches what's rendered (via `verify_by: structural` against the .tex AST + visual sanity check).

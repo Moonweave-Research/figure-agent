@@ -199,7 +199,8 @@ grounded_experiment:
     Grounded critique brief contains (a) build PNG, (b) reference PNG (golden_target_001.png),
     (c) briefing.md with §7 Author Intent clauses. All findings cite specific brief clauses
     or reference-comparison data. FN001–FN005 from v0.2 baseline are re-evaluated against
-    this run's findings G001–G006.
+    this run's findings G001–G006. Iter 8 later corrected G002's semantic direction:
+    the deep lobe, not the shallow lobe, is the intended dominant g(E_t) component.
 
   findings_grounded:
     - id: G001
@@ -215,11 +216,12 @@ grounded_experiment:
     - id: G002
       category: TP
       severity: MAJOR
-      grounded_in: "briefing §7 must_depict 'shallow lobe peak ≈2×–3× taller than deep'"
+      grounded_in: "briefing §7 must_depict corrected in iter 8: 'deep lobe peak ≈2×–3× larger than shallow'"
       description: >
-        Lobe height ratio was ~1.2–1.5×. Fixed by Bézier control-point adjustment
-        (line 178–183). Current PNG shows ~2.3–2.5× ratio (visual inspection confirms).
-      status: applied (G002 changes in .tex)
+        Earlier wording incorrectly stated that the shallow lobe should dominate.
+        The author corrected the intended semantics: shallow remains closer to CB,
+        deep remains closer to VB, and the deep g(E_t) component is larger.
+      status: superseded by iter 8 deep-dominant fix
 
     - id: G003
       category: TP

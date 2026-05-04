@@ -1,8 +1,8 @@
 ---
 schema: figure-agent.critique.v1
 fixture: golden_trap_depth_picture
-generated_at: 2026-05-04T07:51:36Z
-iteration: 7 (post v0.3 review-blocker fixes)
+generated_at: 2026-05-04T08:08:48Z
+iteration: 8 (post deep-dominant lobe + band-edge fix)
 verdict: revise
 grounding:
   - briefing.md §7 Author intent + Snippets used (now lists A1 polymer_chain + A2 log_plot)
@@ -24,7 +24,6 @@ findings:
     suggested_fix: "Do not mark accepted=true. For a later branch, add a callout/safe-label pattern and decide whether accepted fixtures should run visual clash strict by default."
     status: open
 inherited_open:
-  - "G002 (MAJOR, lobe height ratio): pre-existing from N=1; not addressed by A1/A2; targets A4 (dos_lobes via PGFPlots fillbetween). Claude visual review on 2026-05-04 confirmed this is a briefing §7 must-depict miss, not a cosmetic nit."
   - "Reference 'Discharge' label at (0.468, 0.075) — the original placement was *outside* the box on top. PGFPlots `title` puts it *inside* the box at the top. Drift 0.127 reported by /fig_compile is therefore intended — the new placement matches paper-figure convention better than the reference. Not a regression."
 closed_findings:
   - "G001 (BLOCKER, polymer chains '지렁이'): CLOSED in iter 5 by A1 polymer_chain.snippet.tex."
@@ -33,13 +32,16 @@ closed_findings:
   - "C002 (NIT, slope label tight): CLOSED in iter 7. Label moved to (axis cs:1.2e0, 8e-4) with white backing; visual clash no longer reports `slope`."
   - "C003 (NIT, tau_d label crowding): PARTIALLY CLOSED in iter 7. Label moved from (30, 3e-4) to (70, 8e-4) with white backing; remaining subscript `d` visual-clash warning is treated as part of C004 policy/gate work."
   - "B1 (MAJOR, Debye inline label clipping): CLOSED after Claude visual review. Label moved from (axis cs:9e1, 2e-1) to the lower-left empty plot region at (axis cs:3e-3, 1e-2) so `exp(-t/τ)` remains inside the plot area and off the curve."
+  - "G002 (MAJOR, lobe dominance): CLOSED in iter 8 after author correction. The prior briefing/review text had the ratio backwards; deep lobe, not shallow lobe, is the intended dominant g(E_t) component. Row 2 and the right-side distribution now render deep visibly larger than shallow."
+  - "B2-class (right energy-band encoding): CLOSED in iter 8 for this fixture. CB/VB are now line-style band edges with compact labels, not gray filled boxes."
 ---
 
-# Vision Critique — golden_trap_depth_picture (iter 7, v0.3 A1 + A2)
+# Vision Critique — golden_trap_depth_picture (iter 8, v0.3 A1 + A2 + deep-dominant DOS)
 
 **Verdict: REVISE for release.** A1/A2 integration compiles and improves the
-semantic authoring surface, but this fixture is still not accepted for
-manuscript/release because L6/L8 artifact gates remain open.
+semantic authoring surface, and iter 8 closes the previously inverted lobe
+ratio. This fixture is still not accepted for manuscript/release because L6/L8
+artifact gates remain open.
 
 A2 PGFPlots `log_plot` integration into Row 1 closes G004 (MAJOR) and
 FN001-class (Debye curve shape). The branch also fixes the immediate
@@ -97,11 +99,20 @@ golden artifacts must not treat that ambiguity as a pass. The correct next
 engineering work is a safe callout/label pattern plus an accepted-fixture
 strictness policy, not another compile-only macro tweak.
 
+**G002 — lobe dominance semantics (MAJOR, closed in iter 8).** The earlier
+briefing text said the shallow lobe should be 2×–3× taller than deep. That was
+the wrong source-of-truth. The corrected intent is deep-dominant: shallow traps
+remain closer to CB, deep traps remain closer to VB, but the lower-energy deep
+component carries the larger g(E_t) lobe. The fixture now encodes that in both
+Row 2 and the right-side distribution.
+
+**B2-class — right band encoding (closed for fixture).** The previous right-side
+CB/VB rendering read as gray boxes rather than band edges. Iter 8 replaces those
+with line-style CB/VB band edges and compact labels while preserving the vertical
+Energy axis and interior E_t divider.
+
 ## What this critique does NOT address
 
-- **G002 (MAJOR, lobe height ratio)**: still inherited; A4 target. Claude
-  visual review confirmed the shallow/deep lobe ratio is a real briefing §7
-  must-depict miss, not a cosmetic nit.
 - **C004 (MAJOR, strict visual gate policy)**: still open; this fixture remains
   `accepted: false`.
 - Discharge title drift 0.127 (vs reference): intended — title moved from

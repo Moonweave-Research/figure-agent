@@ -22,7 +22,9 @@
   trapShallow/.style={cAmber, line width=0.72pt},
   trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
   electron/.style={circle, draw=cBlue!75!black, fill=cBlue!45, inner sep=0pt, minimum size=1.35mm, line width=0.34pt},
-  bandbox/.style={draw=black, line width=0.45pt, fill=cLGray!30, minimum width=1.55cm, minimum height=0.48cm},
+  bandbox/.style={draw=none, fill=white, inner sep=0.8pt, minimum width=0.42cm, minimum height=0.20cm},
+  bandEdgeCB/.style={cBlue!80!black, line width=1.05pt, line cap=round},
+  bandEdgeVB/.style={cBlue!45!cRed!90!black, line width=1.05pt, line cap=round},
 ]
 
 \newcommand{\SmallLobe}[4]{%
@@ -116,8 +118,12 @@
   \node[text=cGray] at (6.88,0.36) {$\tau_d$}; % tau_d
   \draw[evidenceArrow] (7.75,1.18) -- (8.55,1.18);
   \node[text=black, font=\sffamily\fontsize{8.2}{9.8}\selectfont] at (8.95,1.18) {$g(E_t)$}; % g(E_t), E_t
-  \SmallLobe{9.45}{0.93}{cAmber}{shallow}
-  \SmallLobe{10.25}{0.93}{cBlue!45!cRed}{deep}
+  \begin{scope}[shift={(9.45,0.93)}, xscale=0.72, yscale=0.66]
+    \SmallLobe{0}{0}{cAmber}{shallow}
+  \end{scope}
+  \begin{scope}[shift={(10.05,0.78)}, xscale=1.18, yscale=1.24]
+    \SmallLobe{0}{0}{cBlue!45!cRed}{deep}
+  \end{scope}
   \draw[evidenceArrow] (11.20,1.18) -- (12.38,1.18);
 \end{scope}
 
@@ -164,8 +170,10 @@
   \node[titleTeal, anchor=west] at (1.15,5.75) {converged trap-depth picture};
   \draw[axis] (1.25,1.05) -- (1.25,4.95);
   \node[rotate=90, text=black] at (0.92,3.00) {Energy};
-  \BandBox{2.43}{4.85}{CB}
-  \BandBox{2.43}{1.10}{VB}
+  \draw[bandEdgeCB] (1.70,4.85) -- (3.16,4.85);
+  \BandBox{3.35}{4.85}{CB}
+  \draw[bandEdgeVB] (1.70,1.10) -- (3.16,1.10);
+  \BandBox{3.35}{1.10}{VB}
   \draw[cGray!45, dashed, line width=0.38pt] (3.62,0.95) -- (3.62,5.10);
   \node[text=black] at (3.82,3.12) {$E_t$}; % E_t
   \TrapLevel{2.02}{4.25}{trapShallow}
@@ -179,16 +187,12 @@
   \node[text=cBlue!45!cRed] at (2.95,2.50) {$\cdots$};
 
   \draw[axis, black] (4.05,1.52) -- (4.05,4.85);
-  \draw[axis, black] (4.05,1.52) -- (5.46,1.52);
+  \draw[axis, black] (4.05,1.52) -- (5.88,1.52);
   \node[text=black, font=\sffamily\fontsize{8.2}{9.8}\selectfont] at (4.98,5.35) {$g(E_t)$}; % g(E_t)
-  \draw[cAmber, line width=0.72pt, fill=cAmber!18]
-    (4.05,4.55) .. controls (4.50,4.20) and (5.55,4.30) .. (5.20,3.45)
-    .. controls (4.90,2.85) and (4.30,2.70) .. (4.05,2.50) -- cycle;
-  \draw[cBlue!45!cRed, line width=0.72pt, fill=cBlue!45!cRed!18]
-    (4.05,2.40) .. controls (4.30,2.10) and (4.65,2.20) .. (4.55,1.85)
-    .. controls (4.45,1.55) and (4.20,1.55) .. (4.05,1.55) -- cycle;
-  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,3.55) {shallow};
-  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,2.12) {deep};
+  \BellCurve[draw=cAmber, line width=0.72pt, fill=cAmber!18]{4.05,3.72,4.72,4.40,side}
+  \BellCurve[draw=cBlue!45!cRed, line width=0.72pt, fill=cBlue!45!cRed!18]{4.05,1.56,5.78,3.02,side}
+  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, fill=white, inner sep=0.65pt, anchor=west] at (4.82,4.06) {shallow};
+  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, fill=white, inner sep=0.65pt, anchor=west] at (5.32,2.28) {deep};
 \end{scope}
 
 \end{tikzpicture}
