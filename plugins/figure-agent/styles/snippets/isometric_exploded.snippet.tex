@@ -1,0 +1,69 @@
+%% isometric_exploded.snippet.tex
+%% 3D isometric exploded device cross-section (4-layer slab stack with leader
+%% callouts and dashed hidden-edge depth cues).
+%% Source: archived [tikz-paper-workflow]/test_quality/isometric_exploded_slab.tex
+%%         (2026-04-26 origin; vendored 2026-05-04 with raw-composition policy).
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). \input expands the full tikzpicture
+%% inline. Composition is intentionally raw TikZ so the author can:
+%%   - add or remove layers (more / fewer \begin{scope}..\end{scope} blocks)
+%%   - adjust shift={(x,y,z)} per layer to change explosion gap or spread
+%%   - retarget callout endpoints, swap left/right anchor sides
+%%   - delete or extend the dashed hidden-edge depth cues
+%%
+%% Override colors / labels BEFORE \input by predefining (\providecommand
+%% inside the snippet only sets defaults — caller \def or \newcommand wins):
+%%   \def\IsoExpAColor{cAmber}
+%%   \def\IsoExpALabel{glass substrate}
+%%
+%% Layer slots use Roman letters A/B/C/D (bottom→top) because TeX macro names
+%% may not contain digits.
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - tikzset: iso basis, iso label, iso callout, iso hidden edge
+%%   - macro: \IsoBlock{w}{d}{h}{color}{hook}
+%%   - palette tokens: cRed, cAmber, cTeal, cBlue, cGray
+%%
+%% 14 reference set fit: scr 8.27.58 a (3D isometric layered device),
+%%                       scr 8.32.10 A (MR array exploded view).
+
+\providecommand{\IsoExpAColor}{cRed}
+\providecommand{\IsoExpBColor}{cAmber}
+\providecommand{\IsoExpCColor}{cTeal}
+\providecommand{\IsoExpDColor}{cBlue}
+\providecommand{\IsoExpALabel}{substrate}
+\providecommand{\IsoExpBLabel}{adhesion layer}
+\providecommand{\IsoExpCLabel}{functional polymer}
+\providecommand{\IsoExpDLabel}{surface electrode}
+
+\begin{tikzpicture}[iso basis]
+  \begin{scope}[shift={(0,0,0)}]
+    \IsoBlock{4.4}{1.6}{0.34}{\IsoExpAColor}{}
+    \node[iso label, anchor=east] at (-0.20,0.20,0.18) {\IsoExpALabel};
+    \draw[iso callout] (-0.08,0.20,0.18) -- (0.65,0.18,0.18);
+  \end{scope}
+
+  \begin{scope}[shift={(0.22,0.10,0.78)}]
+    \IsoBlock{4.0}{1.45}{0.30}{\IsoExpBColor}{}
+    \node[iso label, anchor=east] at (-0.30,0.22,0.15) {\IsoExpBLabel};
+    \draw[iso callout] (-0.18,0.22,0.15) -- (0.65,0.18,0.15);
+  \end{scope}
+
+  \begin{scope}[shift={(0.44,0.20,1.42)}]
+    \IsoBlock{3.6}{1.30}{0.48}{\IsoExpCColor}{}
+    \node[iso label, anchor=west] at (4.35,0.86,0.28) {\IsoExpCLabel};
+    \draw[iso callout] (4.15,0.82,0.28) -- (3.10,0.72,0.28);
+  \end{scope}
+
+  \begin{scope}[shift={(0.66,0.30,2.20)}]
+    \IsoBlock{3.2}{1.15}{0.20}{\IsoExpDColor}{}
+    \node[iso label, anchor=west] at (4.15,0.45,0.12) {\IsoExpDLabel};
+    \draw[iso callout] (3.98,0.45,0.12) -- (2.75,0.35,0.12);
+  \end{scope}
+
+  \draw[iso hidden edge] (4.40,1.60,0.34) -- (4.62,1.70,0.78);
+  \draw[iso hidden edge] (4.22,1.55,1.08) -- (4.44,1.65,1.42);
+  \draw[iso hidden edge] (4.04,1.50,1.90) -- (4.26,1.60,2.20);
+  \node[iso label, text=cGray!70, anchor=west] at (5.20,1.95,0.58) {exploded spacing};
+\end{tikzpicture}

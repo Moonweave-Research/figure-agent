@@ -1,0 +1,13 @@
+% Smoke fixture: prove isometric_exploded.snippet.tex compiles standalone with
+% the production preamble at the archived-validated paper-grade scale.
+% Acceptance: 4 isometric slabs visible (red/amber/teal/blue), each with a
+% leader-line label outside its fill, plus 3 dashed hidden-edge depth cues
+% and the "exploded spacing" annotation at the right margin.
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{92mm}{!}{%
+  \input{../../../styles/snippets/isometric_exploded.snippet.tex}%
+}
+\end{document}
