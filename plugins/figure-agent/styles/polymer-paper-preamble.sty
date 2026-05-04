@@ -19,6 +19,60 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{etoolbox}  % \ifblank for robust empty-arg checks (\WavyChain trap_csv)
+\usepackage{xstring}   % \IfSubStr — used by L3 snippet macros (polymer_chain)
+\usepackage{chemfig}   % v0.3 L3 snippet library: chemistry-aware monomer rendering
+\usepackage{pgfplots}  % v0.3 L3 snippet library: function-evaluated axes/curves
+\pgfplotsset{compat=1.18}
+
+%% --- paper loglog style key (A2 log_plot snippet) ---
+%% Apply in any pgfplots axis to enforce Style Lock + paper-grade tick density.
+%% Caller specifies width/height as positional args; everything else inherits.
+%% Caller still picks xmin/xmax/ymin/ymax/xtick/ytick + plot data.
+%% Do NOT enable `log ticks with fixed point` — the default 10^k format is correct.
+%% `scale only axis` is load-bearing: without it, PGFPlots W/H includes title +
+%% xlabel + tick labels in the bbox, so a panel with title= ends up with a
+%% smaller inner plot area than a sibling without title — breaking visual
+%% parity across panels that share width/height. Surfaced 2026-05-04 from
+%% golden Row 1 (Discharge title= squeezed plot area). Do not remove.
+%% Spike-validated 2026-05-04 (G1-G3) on golden_trap_depth_picture.
+\pgfplotsset{
+  paper loglog/.style 2 args={
+    width=#1, height=#2,
+    scale only axis,
+    axis line style={cGray, line width=0.38pt},
+    tick style={cGray, line width=0.25pt},
+    tick label style={font=\sffamily\fontsize{5.0}{6.0}\selectfont, text=cGray!90!black},
+    label style={font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray},
+    title style={font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=black, yshift=-2pt},
+    grid style={cGray!30, dashed, line width=0.15pt},
+    minor grid style={cGray!25, dashed, line width=0.12pt},
+    xminorgrids=true, yminorgrids=true,
+    log basis x=10, log basis y=10,
+    every axis plot/.append style={line width=0.92pt},
+  }
+}
+
+%% --- chemfig defaults for paper-figure schematics ---
+%% Caller may override via local \setchemfig{...} in figure scope.
+\setchemfig{
+  atom sep=0.30cm,
+  bond offset=0.5pt,
+  double bond sep=1.2pt,
+  bond style={draw=cGray, line width=0.85pt},
+}
+%% Atom labels: sans-serif Arial; sulfur amber, others palette gray.
+%% Detection is by exact-string compare on the atom token (chemfig passes raw atom name).
+\makeatletter
+\renewcommand*\printatom[1]{%
+  \sffamily\fontsize{6.0}{7.2}\selectfont
+  \def\fa@tempa{#1}\def\fa@tempS{S}%
+  \ifx\fa@tempa\fa@tempS
+    \textcolor{cAmber}{#1}%
+  \else
+    \textcolor{cGray}{#1}%
+  \fi
+}
+\makeatother
 
 %% --- TikZ libraries ---
 \usetikzlibrary{
@@ -178,6 +232,8 @@
 %% --- Phase 1.2 bbox macros (Layer 3) ---
 %% Lifted styles + macros for log-log plots, band diagrams, bell curves, polymer chains.
 %% Shared paper-schematic macros for reusable plot, band, lobe, and chain idioms.
+\newif\ifBDnoEt
+\newif\ifBDnoTraps
 \tikzset{
   tickLabel/.style={
     font=\sffamily\fontsize{4.3}{5.2}\selectfont,
@@ -193,6 +249,10 @@
   trapShallow/.style={cAmber, line width=0.72pt},
   trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
   band diagram/.style={},
+  no_et/.is if=BDnoEt,
+  no_et/.default=true,
+  traps/.is choice,
+  traps/none/.code={\BDnoTrapstrue},
 }
 
 % \BandBox{x}{y}{label}: filled cLGray rectangle node used as CB or VB block.
@@ -300,7 +360,7 @@
 }
 \makeatother
 
-% \BandDiagram[<style keys>]{x1,y1,x2,y2,cb_y,vb_y,et_x,shallow_ys,deep_ys}: rounded teal frame + CB/VB bandboxes + Energy axis + dashed Et + \TrapLevel dashes. Optional [#1] passes pgfkeys to the wrapping `band diagram` style key (default empty). \BD@opts storage avoids LaTeX 9-slot \def limit; \begingroup placement isolates the option per-call.
+% \BandDiagram[<style keys>]{x1,y1,x2,y2,cb_y,vb_y,et_x,shallow_ys,deep_ys}: rounded teal frame + CB/VB bandboxes + Energy axis + dashed Et + \TrapLevel dashes. Optional [#1] passes pgfkeys to the wrapping `band diagram` style key (default empty). \BD@opts storage avoids LaTeX 9-slot \def limit; \begingroup placement isolates the option per-call. Boolean keys: [no_et] suppresses bandEt dashed line + auto $E_t$ text node (et_x slot still required); [traps=none] suppresses all \TrapLevel calls (shallow_ys/deep_ys slots can be empty {}).
 \makeatletter
 \newcommand{\BandDiagram}[2][]{%
   \begingroup
@@ -309,6 +369,8 @@
 }
 \def\BandDiagramDraw#1,#2,#3,#4,#5,#6,#7,#8,#9\relax{%
   \begin{scope}[band diagram]
+  \BDnoEtfalse
+  \BDnoTrapsfalse
   \expandafter\tikzset\expandafter{\BD@opts}%
   \pgfmathsetmacro{\BDcx}{(#1+#3)/2}%
   \pgfmathsetmacro{\BDaxX}{#1+0.63}%
@@ -323,10 +385,14 @@
   \draw[bandAxis] (\BDaxX,\BDaxYlo) -- (\BDaxX,\BDaxYhi);
   \node[rotate=90, text=cGray, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
     at (\BDaxX-0.18,\BDaxYmid) {Energy};
-  \draw[bandEt] (#7,\BDetYlo) -- (#7,\BDetYhi);
-  \node[text=cGray] at (#7+0.20,\BDaxYmid) {$E_t$};
-  \foreach \BDy in {#8} { \TrapLevel{\BDcx-0.41}{\BDy}{trapShallow} }%
-  \foreach \BDy in {#9} { \TrapLevel{\BDcx-0.25}{\BDy}{trapDeep} }%
+  \ifBDnoEt\else
+    \draw[bandEt] (#7,\BDetYlo) -- (#7,\BDetYhi);
+    \node[text=cGray] at (#7+0.20,\BDaxYmid) {$E_t$};
+  \fi
+  \ifBDnoTraps\else
+    \foreach \BDy in {#8} { \TrapLevel{\BDcx-0.41}{\BDy}{trapShallow} }%
+    \foreach \BDy in {#9} { \TrapLevel{\BDcx-0.25}{\BDy}{trapDeep} }%
+  \fi
   \end{scope}
   \endgroup
 }

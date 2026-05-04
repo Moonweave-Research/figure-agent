@@ -33,6 +33,18 @@
               {6,9,9,11.5, 11, 9.5, 7.5, {}, {}}
   \node[font=\sffamily\fontsize{6}{7}\selectfont] at (7.5,8.7) {BandDiagram (override demo)};
 
+  % --- BandDiagram: [no_et] suppresses Et line + $E_t$ text (Gap 3) ---
+  \BandDiagram[no_et]{9.5,0,12.5,3, 2.4, 0.6, 11, {}, {}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (11,-0.3) {BD [no\_et]};
+
+  % --- BandDiagram: [traps=none] suppresses trap dashes (Gap 5) ---
+  \BandDiagram[traps=none]{9.5,3.5,12.5,6.5, 5.9, 4.1, 11, {3.5,3.2}, {2.5}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (11,3.2) {BD [traps=none]};
+
+  % --- BandDiagram: [no_et, traps=none] (Gap 3+5 together; minimal band) ---
+  \BandDiagram[no_et, traps=none]{9.5,7,12.5,10, 9.4, 7.6, 11, {}, {}}
+  \node[font=\sffamily\fontsize{6}{7}\selectfont] at (11,6.7) {BD [no\_et, traps=none]};
+
   % --- LogLogPlot: 5 X ticks (3 labeled), 4 Y ticks (3 labeled) ---
   \LogLogPlot{12,0,16,4}
     {12,13,14,15,16}

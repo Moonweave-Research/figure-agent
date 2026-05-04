@@ -1,0 +1,46 @@
+%% log_plot.snippet.tex
+%% PGFPlots loglogaxis paper-style — A2 ship.
+%% License: pgfplots is LPPL 1.3c (TeX Live); style key code MIT-style.
+%%
+%% This snippet defines NO new macro. It documents the convention for the
+%% pre-existing `paper loglog` style key declared in polymer-paper-preamble.sty,
+%% so any consumer who \input-s this file is opting in to the convention and
+%% can find usage examples here.
+%%
+%% Usage:
+%%   \begin{loglogaxis}[
+%%     paper loglog={3.6cm}{2.6cm},
+%%     xmin=1e-3, xmax=1e3, ymin=1e-4, ymax=1e1,
+%%     xtick={1e-3, 1e0, 1e3},
+%%     ytick={1e-4, 1e-1, 1e1},
+%%     xlabel={$\log\,t$}, ylabel={$\log\,I$},
+%%   ]
+%%     \addplot[cBlue, line width=0.92pt, mark=none] coordinates {...};
+%%   \end{loglogaxis}
+%%
+%% Sizing contract (caller responsibility):
+%%   `paper loglog={W}{H}` — W and H are the INNER plot area (the data box).
+%%   The style includes `scale only axis`, so adding `title=` / `xlabel=` /
+%%   `ylabel=` grows the axis bbox OUTWARD (above/below/beside the data box)
+%%   without shrinking the plotted area. To fit a 2.75cm x 2.02cm fixture
+%%   target, pass {3.6cm}{2.6cm} — the data area will be exactly that.
+%%
+%% Pitfall (surfaced 2026-05-04 from golden Row 1):
+%%   WITHOUT `scale only axis`, two sibling axes that share `paper loglog={W}{H}`
+%%   render with DIFFERENT inner plot heights when one has `title=` and the
+%%   other does not — title eats from H. The current style key includes the
+%%   fix; do NOT remove it. If you hand-roll your own loglog style, copy
+%%   the `scale only axis` keyword.
+%%
+%% Sampling note: pgfplots `samples=N` uses linear sampling, which clusters
+%% points at the high end of a log axis. For deterministic curve placement
+%% prefer explicit `coordinates {...}` (log-spaced) over `\addplot {f(x)}`.
+%% If function evaluation is needed, set `samples=80, samples y=80`
+%% and verify visually. Spike G2 documented this confound.
+%%
+%% Annotation overlay: place text inside the axis with
+%%   \node at (axis cs:<x>, <y>) {...};
+%% which uses the data coordinate system (NOT the outer tikzpicture's).
+%%
+%% Smoke fixture: examples/_snippet_smoke/log_plot/log_plot_smoke.tex
+%% First production consumer: examples/golden_trap_depth_picture/golden_trap_depth_picture.tex Row 1.

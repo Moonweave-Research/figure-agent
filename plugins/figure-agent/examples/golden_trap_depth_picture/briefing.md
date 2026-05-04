@@ -64,3 +64,14 @@ traps, and teal convergence title/brace.
 - Shallow cluster peaks are closer to CB than deep cluster peaks.
 - Both lobes are visible and distinct (not merged or fused).
 - Row 1 evidence box title is *outside* the box (not centered within).
+
+### Snippets used (v0.3 L3 library)
+- **Row 1 log-log plots** (A2 SHIPPED 2026-05-04): PGFPlots `loglogaxis` with the `paper loglog` style key declared in `polymer-paper-preamble.sty`. Power-law plot uses log-spaced explicit coordinates of c·t^{-0.7}; Debye reference plot uses log-spaced explicit coordinates of exp(-t/30). No wrapper macro — caller writes raw PGFPlots syntax inside the style key. Convention documented in `styles/snippets/log_plot.snippet.tex` (docs-only, no executable code).
+- **Row 3 polymer chains** (A1 SHIPPED): `styles/snippets/polymer_chain.snippet.tex` — chemfig-based.
+  3 calls of `\PolymerChain{x}{y}{11}{s_csv}`. Monomer count reduced from briefing's
+  ≥14 wave-segment count to 11 chemfig monomers; the briefing intent ("monomer-level
+  texture, not featureless waves") is satisfied at 11 monomers because each is
+  individually visible as a backbone vertex with explicit C-C bonds. S branches are
+  single -S only (not polysulfide) and hang straight down for non-overlapping geometry;
+  density encoding is by branch frequency (sparse=every 3-4 monomers, rich=contiguous
+  4-5 monomers inside the dashed highlight box at x=4.20-5.85).

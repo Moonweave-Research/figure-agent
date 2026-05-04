@@ -1,0 +1,26 @@
+% Smoke fixture: prove polymer_chain.snippet.tex compiles standalone with
+% the production preamble + chemfig at the spike-validated scale.
+% Acceptance: 3 chains visible, middle chain has S-rich cluster inside dashed box.
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}  % loads chemfig + xstring + sets defaults
+
+\input{../../../styles/snippets/polymer_chain.snippet.tex}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm, y=1cm]
+  % Highlight box (S-rich segment marker)
+  \draw[gray!60, dashed, rounded corners=2pt, line width=0.4pt]
+    (3.50,0.85) rectangle (5.10,2.60);
+  \node[font=\tiny\sffamily, anchor=north, text=gray] at (4.30,0.83)
+    {S-rich cluster (mid chain monomers 6-9)};
+
+  % Top chain — sparse (every 4th monomer)
+  \PolymerChain{1.20}{2.20}{14}{3,7,11}
+
+  % Mid chain — sparse outside + rich cluster inside highlight
+  \PolymerChain{1.20}{1.40}{14}{3,6,7,8,9,12}
+
+  % Bottom chain — sparse (every 4th monomer)
+  \PolymerChain{1.20}{0.60}{14}{4,8,12}
+\end{tikzpicture}
+\end{document}

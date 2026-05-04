@@ -121,6 +121,22 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 - `bandplot` package vendoring — only if hand-curated TikZ proves insufficient
 - L7 Inkscape post-process polish — separate Gap 2 work, unchanged
 
+### Addendum (2026-05-04 EOD): v0.3.0 ship deferred — option ε
+
+**Decision: defer v0.3.0 ship until a real paper figure naturally exercises A1 (`\PolymerChain`) or A2 (`paper loglog/.style`).**
+
+Context: After A1 + A2 + A3 (Gap 3+5 only) were shipped on `golden_trap_depth_picture`, the planned N=2 fixture `fig3_trapping_concept` was found incompatible with the current `\BandDiagram` macro encoding (Gap 1: line-vs-box visual model; Gap 4: hard-coded "CB"/"VB" labels — both out of `/decide` Option B scope). A repo-wide survey found no other fixture exercises A1 or A2:
+
+- `n3_trial_01_trap_depth` uses `\WavyChain` + `\LogLogPlot` (the *sibling* macros of A1/A2, not A1/A2 themselves) — useful as a broad-catalog stability signal but does not directly defend the ship-gate clause "snippet approach generalizes; not just brief-overfit."
+- `dogfood_power_law_trap_pipeline` lacks `\BandDiagram` entirely.
+- All other fixtures predate the v0.3 deliverables.
+
+Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real* consumers organically pull the component), synthesizing a fixture purely to satisfy the gate violates the very condition the gate is meant to enforce. The macro Gap 3+5 extension + smoke + golden regression are durable on branch and require no v0.3.0 tag to remain useful.
+
+**Ship gate restated**: v0.3.0 ships when the next real manuscript figure pulls in A1 or A2, that figure compiles cleanly under the existing snippet API, and `/fig_critique` produces a grounded N=2 measurement. Until then v0.3 work continues in-place on `main` without tag.
+
+**Catalog stability signal (separate from ship gate)**: `/fig_critique n3_trial_01_trap_depth` is run as a rubric §4.2 evaluator-stability + library-catalog-stability probe. F1_w from this run is logged but is **not** treated as the §5.1 ship-gate metric.
+
 ## 6. Open issues for next session
 
 1. **chemfig + lualatex compatibility check** — does our preamble already work with chemfig, or is there a font/encoding clash to fix first?
