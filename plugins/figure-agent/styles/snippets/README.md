@@ -10,6 +10,7 @@ Plan: `docs/architecture-v0.3-snippet-library.md`.
 | `polymer_chain.snippet.tex` | `\PolymerChain{x}{y}{n_monomers}{s_csv}` | A1 integrated WIP | hand-curated TikZ; snippet code MIT-style |
 | `log_plot.snippet.tex` | (no macro — `paper loglog/.style` key in preamble) | A2 integrated WIP, 2026-05-04 | PGFPlots (LPPL 1.3) — TeX Live; style key MIT-style |
 | `isometric_exploded.snippet.tex` | (no macro — raw composition) | V1 vendored 2026-05-04 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/isometric_exploded_slab.tex` |
+| `layered_device_stack.snippet.tex` | (no macro — raw composition) | V2 vendored 2026-05-04 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/isometric_layered_device_stack.tex` |
 | `band_diagram.snippet.tex` | `\BandSnippet{...}` | A3 planned (deferred — see compass diagnosis) | hand-curated TikZ |
 | `dos_lobes.snippet.tex` | `\DOSLobes{...}` | A4 planned (deferred — see compass diagnosis) | PGFPlots fillbetween |
 
@@ -125,3 +126,32 @@ Nature/Sci-grade), screenshot 8.32.10 A (MR array exploded view).
 **First production consumer:** TBD — vendored as v0.3 dogfood asset; promote
 to a real fixture when a manuscript figure naturally uses the 4-layer
 exploded composition.
+
+## `layered_device_stack.snippet.tex` — V2 (vendored 2026-05-04)
+
+**Purpose:** 3D isometric collapsed (non-exploded) device stack with a
+trapped-charge region inside the dielectric layer. 4 layers
+(bottom electrode / dielectric polymer / trapped-charge film /
+top electrode), 5 charge dots in the dielectric, alternating-side leader
+callouts, single hidden-edge depth cue, and a bold title at upper-left.
+Vendored from archived `[tikz-paper-workflow]/test_quality/isometric_layered_device_stack.tex`.
+
+**No macro.** `\providecommand` exposes color/label tokens
+(`\IsoLDS{A..D}Color`, `\IsoLDS{A..D}Label`, `\IsoLDSTitle`). Charge-dot
+positions, hidden-edge endpoints, and per-layer thicknesses are intentionally
+raw TikZ — the author edits the snippet body directly to add/remove charge
+dots, retarget callouts, or change layer count.
+
+**Required preamble primitives** (from `polymer-paper-preamble.sty`):
+- `iso basis` tikzset
+- `\IsoBlock{w}{d}{h}{color}{hook}` macro
+- `iso label`, `iso callout`, `iso hidden edge`, `iso charge` styles
+- palette tokens `cAmber`, `cTeal`, `cBlue`, `cGray`
+
+**14-reference fit:** screenshot 8.32.10 A (MR array layered cross-section,
+Nature/Sci-grade), screenshot 8.27.58 a (3D isometric layered device).
+
+**Smoke fixture:** `examples/_snippet_smoke/layered_device_stack/layered_device_stack_smoke.tex`
+
+**First production consumer:** TBD — direct fit for sulfur polymer / actuator
+device schematics where trapped-charge dynamics are the figure's argument.
