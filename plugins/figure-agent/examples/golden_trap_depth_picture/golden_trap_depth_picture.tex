@@ -90,7 +90,7 @@
   \node[rotate=90] at (-1.08,1.28) {$\log\,I$};
   \draw[cGray, line width=0.75pt] (0.22,1.98) .. controls (0.95,1.96) and (1.70,1.82) .. (2.28,0.55);
   \draw[cGray, dashed, line width=0.38pt] (1.75,1.70) -- (1.75,0.63);
-  \node[align=left, text=cGray, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont] at (0.62,1.08) {Debye\\exp($-t/\tau$)};
+  \node[align=left, text=cGray, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont] at (0.62,1.08) {(Debye)};
   \node at (1.86,0.54) {$\tau_d$}; % tau_d
   \draw[evidenceArrow] (2.86,1.70) -- (4.76,1.70) -- (4.78,1.38) -- (5.14,1.35);
 \end{scope}
@@ -133,7 +133,7 @@
   \node[text=cAmber, font=\sffamily\itshape\fontsize{7.0}{8.4}\selectfont] at (3.80,0.40) {S-rich segments};
   \draw[evidenceArrow] (4.55,0.62) -- (4.92,1.47);
   \draw[evidenceArrow] (5.05,0.70) -- (5.05,1.43);
-  \node[align=center, font=\sffamily\itshape\fontsize{5.6}{6.7}\selectfont, text=black, fill=white, inner sep=1.2pt] at (6.18,0.22) {chemical origin\\(electronegativity,\\polarizability of S)};
+  \node[align=center, font=\sffamily\itshape\fontsize{5.6}{6.7}\selectfont, text=black, fill=white, inner sep=1.2pt] at (6.18,0.30) {chemical origin\\(electronegativity,\\polarizability of S)};
 
   \draw[cGray, dashed, rounded corners=2pt, line width=0.42pt] (7.65,1.12) rectangle (9.60,2.62);
   \node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=black] at (8.63,2.92) {localized traps};
@@ -145,7 +145,7 @@
   \node[text=cBlue!45!cRed] at (9.48,1.51) {$\cdots$};
   \draw[evidenceArrow] (7.10,1.78) -- (7.55,2.18);
   \draw[evidenceArrow] (9.65,1.88) -- (12.38,1.88) -- (12.40,2.08) -- (12.70,2.08);
-  \node[align=center, font=\sffamily\itshape\fontsize{5.6}{6.7}\selectfont, text=black, fill=white, inner sep=1.2pt] at (9.88,0.24) {physical origin\\(local potential\\fluctuations)};
+  \node[align=center, font=\sffamily\itshape\fontsize{5.6}{6.7}\selectfont, text=black, fill=white, inner sep=1.2pt] at (9.88,0.32) {physical origin\\(local potential\\fluctuations)};
   \draw[evidenceArrow] (7.15,0.52) .. controls (7.55,0.76) and (7.75,1.08) .. (7.82,1.12);
   \draw[evidenceArrow] (9.48,0.55) -- (9.40,1.12);
 \end{scope}
@@ -155,8 +155,8 @@
   \draw[cTeal, line width=1.0pt] (0.62,-0.10) .. controls (0.22,-0.10) and (0.22,-0.10) .. (0.22,0.28)
     -- (0.22,5.35) .. controls (0.22,5.73) and (0.22,5.73) .. (0.62,5.73);
   \node[titleTeal, anchor=west] at (1.15,5.75) {converged trap-depth picture};
-  \draw[axis] (1.25,1.15) -- (1.25,4.42);
-  \node[rotate=90, text=black] at (0.92,2.82) {Energy};
+  \draw[axis] (1.25,1.05) -- (1.25,4.95);
+  \node[rotate=90, text=black] at (0.92,3.00) {Energy};
   \BandBox{2.43}{4.85}{CB}
   \BandBox{2.43}{1.10}{VB}
   \draw[cGray!45, dashed, line width=0.38pt] (3.62,0.75) -- (3.62,5.05);
@@ -174,15 +174,14 @@
   \draw[axis, black] (4.05,1.52) -- (4.05,4.85);
   \draw[axis, black] (4.05,1.52) -- (5.46,1.52);
   \node[text=black, font=\sffamily\fontsize{8.2}{9.8}\selectfont] at (4.98,5.35) {$g(E_t)$}; % g(E_t)
-  \node[text=black] at (5.05,0.98) {$g(E_t)$}; % g(E_t)
   \draw[cAmber, line width=0.72pt, fill=cAmber!18]
     (4.05,4.38) .. controls (4.38,4.00) and (5.10,4.15) .. (4.88,3.55)
     .. controls (4.66,3.12) and (4.34,3.18) .. (4.05,2.95) -- cycle;
   \draw[cBlue!45!cRed, line width=0.72pt, fill=cBlue!45!cRed!18]
     (4.05,2.80) .. controls (4.44,2.42) and (5.18,2.62) .. (4.98,2.05)
     .. controls (4.78,1.62) and (4.32,1.68) .. (4.05,1.60) -- cycle;
-  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,3.55) {shallow};
-  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,2.12) {deep};
+  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,3.80) {shallow};
+  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,2.30) {deep};
 \end{scope}
 
 \end{tikzpicture}
