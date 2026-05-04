@@ -1,9 +1,9 @@
 # figure-agent v0.2 Architecture Proposal
 
-**Status**: DRAFT — iterating (rev 2 after Codex review)
+**Status**: ACCEPTED — landed across PR #7 (split) → #8a (frozen-legacy delete) → #9 (CI infra) → #8b (stage migration) → #11 (L4.5 vision critique). Released as v0.2.0 (2026-05-04).
 **Date**: 2026-05-03
 **Author**: session redesign after host-LLM vision insight + L3 architectural reset (2026-05-03)
-**Supersedes (when accepted)**: `docs/architecture-overview.md` (v0.1.7.2 — 11 layers)
+**Supersedes**: `docs/architecture-overview.md` (v0.1.7.2 — 11 layers); see Layer 4.5 / 9 sections in that file for the rewritten reference.
 
 > Living document. Edit freely. Mark resolved sections with `[RESOLVED]`,
 > open questions with `[OPEN]`, deferred decisions with `[DEFERRED]`.
@@ -328,4 +328,9 @@ PR ordering rationale: #7 → #8a → #8b → #9. #8b depends on #8a (smaller bl
 - 2026-05-03 — rev 2.1 selection_notes scope verified + critique automation level fixed
   - selection_notes: active callers in test_inputs / test_release_contract / fig_new / README beyond llm_author_prompt.py; PR #8a effort 2-3 hrs (was 1-2)
   - critique automation: option A (report-only) chosen for v0.2; escalation gated on N=5+ dogfood accuracy ≥ 80%
-- [add entries as decisions are made]
+- 2026-05-04 — proposal ACCEPTED; v0.2.0 release
+  - PR #7 (reference_extract split), PR #8 (frozen-legacy delete), PR #9 (CI infra fix — qpdf + Arial + qdf encoding + smoke pre-build), PR #10 (selected_preview stage gate removal), PR #11 (review_brief → critique_brief rename + L4.5 host orchestration) all merged.
+  - Final test count 188 pass (was 242; -54 from deleted frozen + selected_preview tests).
+  - All Python files <1000 lines (max: vtrace.py 622). Rot SAFE.
+  - plugin.json / pyproject.toml / uv.lock bumped 0.1.14 → 0.2.0.
+  - CHANGELOG.md `[0.2.0]` entry written.
