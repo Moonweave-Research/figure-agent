@@ -1,0 +1,77 @@
+%% layered_device_stack.snippet.tex
+%% 3D isometric layered device stack with trapped-charge region (collapsed
+%% view — layers pressed together, NOT exploded). 4 layers (bottom electrode /
+%% dielectric polymer / trapped-charge film / top electrode), 5 charge dots
+%% inside the dielectric film, leader callouts on alternating sides, and a
+%% single dashed depth cue.
+%%
+%% Source: archived [tikz-paper-workflow]/test_quality/isometric_layered_device_stack.tex
+%%         (2026-04-26 origin; vendored 2026-05-04 with raw-composition policy).
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). \input expands the full tikzpicture
+%% inline. Charge-dot positions, hidden-edge endpoints, and per-layer
+%% thicknesses are intentionally raw TikZ so the author can:
+%%   - reposition / add / remove charge dots inside the dielectric layer
+%%   - retarget callouts to different layer faces
+%%   - add or remove layers (more / fewer \begin{scope} blocks)
+%%   - edit per-layer thicknesses directly in the \IsoBlock height arg
+%%
+%% Override colors / labels / title BEFORE \input by predefining (Roman A/B/C/D
+%% slots because TeX macro names may not contain digits, A=bottom..D=top):
+%%   \def\IsoLDSAColor{cRed}
+%%   \def\IsoLDSALabel{Si substrate}
+%%   \def\IsoLDSTitle{Charge-trap actuator}
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - tikzset: iso basis, iso label, iso callout, iso hidden edge, iso charge
+%%   - macro: \IsoBlock{w}{d}{h}{color}{hook}
+%%   - palette tokens: cAmber, cTeal, cBlue, cGray
+%%
+%% 14 reference set fit: scr 8.32.10 A (MR array layered cross-section),
+%%                       scr 8.27.58 a (3D isometric layered device).
+
+\providecommand{\IsoLDSAColor}{cAmber}
+\providecommand{\IsoLDSBColor}{cTeal}
+\providecommand{\IsoLDSCColor}{cBlue}
+\providecommand{\IsoLDSDColor}{cGray}
+\providecommand{\IsoLDSALabel}{bottom electrode}
+\providecommand{\IsoLDSBLabel}{dielectric polymer}
+\providecommand{\IsoLDSCLabel}{trapped-charge region}
+\providecommand{\IsoLDSDLabel}{top electrode}
+\providecommand{\IsoLDSTitle}{Layered device stack}
+
+\begin{tikzpicture}[iso basis]
+  \node[font=\fontsize{9}{10.8}\selectfont\bfseries, text=cGray!90!black, anchor=west]
+    at (-0.40, -1.10, 2.95) {\IsoLDSTitle};
+
+  \begin{scope}[shift={(0,0,0)}]
+    \IsoBlock{4.8}{1.7}{0.28}{\IsoLDSAColor}{}
+    \node[iso label, anchor=east] at (-0.20,0.10,0.16) {\IsoLDSALabel};
+    \draw[iso callout] (-0.10,0.12,0.16) -- (0.65,0.10,0.16);
+  \end{scope}
+
+  \begin{scope}[shift={(0,0,0.42)}]
+    \IsoBlock{4.8}{1.7}{0.44}{\IsoLDSBColor}{}
+    \node[iso label, anchor=east] at (-0.20,0.14,0.64) {\IsoLDSBLabel};
+    \draw[iso callout] (-0.10,0.16,0.64) -- (0.80,0.15,0.64);
+  \end{scope}
+
+  \begin{scope}[shift={(0,0,1.04)}]
+    \IsoBlock{4.8}{1.7}{0.34}{\IsoLDSCColor}{}
+    \foreach \xx/\yy in {0.80/0.45,1.50/1.10,2.25/0.72,3.05/1.28,3.80/0.55}{
+      \fill[iso charge] (\xx,\yy,0.20) circle[radius=0.055];
+    }
+    \node[iso label, anchor=west] at (5.95,-0.70,0.28) {\IsoLDSCLabel};
+    \draw[iso callout] (5.75,-0.64,0.28) -- (3.78,0.58,0.20);
+  \end{scope}
+
+  \begin{scope}[shift={(0,0,1.56)}]
+    \IsoBlock{4.8}{1.7}{0.22}{\IsoLDSDColor}{}
+    \node[iso label, anchor=west] at (5.95,-0.88,0.32) {\IsoLDSDLabel};
+    \draw[iso callout] (5.75,-0.82,0.32) -- (4.25,0.35,0.12);
+  \end{scope}
+
+  \draw[iso hidden edge] (4.95,1.90,0.28) -- (4.95,1.90,1.78);
+  \node[iso label, text=cGray!70, anchor=west] at (5.95,-0.50,0.95) {fixed-view depth cue};
+\end{tikzpicture}

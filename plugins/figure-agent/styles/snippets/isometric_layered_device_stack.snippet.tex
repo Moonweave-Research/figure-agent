@@ -1,0 +1,62 @@
+%% isometric_layered_device_stack.snippet.tex
+%% Archived from: ~/workspace/ResearchOS/[tikz-paper-workflow]/test_quality/isometric_layered_device_stack.tex
+%% License: Same as parent manuscript (attributed to user)
+%% Purpose: 3D isometric view of stacked dielectric+electrode+trapped-charge device
+%% Requires: polymer-paper-preamble.sty (defines iso basis, \IsoBlock, iso callout, iso charge, iso label)
+%%
+%% Usage:
+%%   \input{styles/snippets/isometric_layered_device_stack.snippet.tex}
+%% Or copy-paste the TikZ code below into your .tex and edit layer counts, colors, labels, charge positions.
+
+\providecommand{\LayerCountA}{4}  % total layer count
+\providecommand{\LayerThicknessA}{0.28}  % bottom electrode thickness (cm)
+\providecommand{\LayerThicknessBD}{0.44}  % middle (dielectric) thickness (cm)
+\providecommand{\LayerThicknessBCD}{0.34}  % charge layer thickness (cm)
+\providecommand{\LayerThicknessBCDE}{0.22}  % top electrode thickness (cm)
+\providecommand{\LayerWidthA}{4.8}  % all layers width (cm)
+\providecommand{\LayerDepthA}{1.7}  % all layers depth (cm)
+\providecommand{\ColorLayerA}{cAmber}  % bottom electrode
+\providecommand{\ColorLayerBD}{cTeal}  % dielectric polymer
+\providecommand{\ColorLayerBCD}{cBlue}  % charge layer
+\providecommand{\ColorLayerBCDE}{cGray}  % top electrode
+
+\begin{tikzpicture}[iso basis]
+  \node[font=\fontsize{9}{10.8}\selectfont\bfseries, text=cGray!90!black, anchor=west]
+    at (-0.40, -1.10, 2.95) {Layered device stack};
+
+  % Layer A: bottom electrode
+  \begin{scope}[shift={(0,0,0)}]
+    \IsoBlock{\LayerWidthA}{\LayerDepthA}{\LayerThicknessA}{\ColorLayerA}{}
+    \node[iso label, anchor=east] at (-0.20,0.10,0.16) {bottom electrode};
+    \draw[iso callout] (-0.10,0.12,0.16) -- (0.65,0.10,0.16);
+  \end{scope}
+
+  % Layer B: dielectric
+  \begin{scope}[shift={(0,0,0.42)}]
+    \IsoBlock{\LayerWidthA}{\LayerDepthA}{\LayerThicknessBD}{\ColorLayerBD}{}
+    \node[iso label, anchor=east] at (-0.20,0.14,0.64) {dielectric polymer};
+    \draw[iso callout] (-0.10,0.16,0.64) -- (0.80,0.15,0.64);
+  \end{scope}
+
+  % Layer C: charge region with trapped dots
+  \begin{scope}[shift={(0,0,1.04)}]
+    \IsoBlock{\LayerWidthA}{\LayerDepthA}{\LayerThicknessBCD}{\ColorLayerBCD}{}
+    % Trapped charge dots: user can edit positions below
+    \foreach \x/\y in {0.80/0.45,1.50/1.10,2.25/0.72,3.05/1.28,3.80/0.55}{
+      \fill[iso charge] (\x,\y,0.20) circle[radius=0.055];
+    }
+    \node[iso label, anchor=west] at (5.95,-0.70,0.28) {trapped-charge region};
+    \draw[iso callout] (5.75,-0.64,0.28) -- (3.78,0.58,0.20);
+  \end{scope}
+
+  % Layer D: top electrode
+  \begin{scope}[shift={(0,0,1.56)}]
+    \IsoBlock{\LayerWidthA}{\LayerDepthA}{\LayerThicknessBCDE}{\ColorLayerBCDE}{}
+    \node[iso label, anchor=west] at (5.95,-0.88,0.32) {top electrode};
+    \draw[iso callout] (5.75,-0.82,0.32) -- (4.25,0.35,0.12);
+  \end{scope}
+
+  % Depth cue: hidden edge
+  \draw[iso hidden edge] (4.95,1.90,0.28) -- (4.95,1.90,1.78);
+  \node[iso label, text=cGray!70, anchor=west] at (5.95,-0.50,0.95) {fixed-view depth cue};
+\end{tikzpicture}

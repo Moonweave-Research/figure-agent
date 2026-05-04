@@ -1,0 +1,13 @@
+% Smoke fixture: prove layered_device_stack.snippet.tex compiles standalone
+% with the production preamble at the archived-validated paper-grade scale.
+% Acceptance: 4 layers stacked (amber/teal/blue/gray), 5 charge dots inside
+% the blue (trapped-charge) layer, 4 leader-line labels (alt. east/west),
+% bold title at upper-left, single dashed depth cue at the right rear edge.
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{92mm}{!}{%
+  \input{../../../styles/snippets/layered_device_stack.snippet.tex}%
+}
+\end{document}
