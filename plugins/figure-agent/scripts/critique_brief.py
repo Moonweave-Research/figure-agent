@@ -57,6 +57,18 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
         )
 
 
+def _reference_image_path(example_dir: Path) -> Path | None:
+    """Locate reference image in examples/<name>/reference/. Return path if exists."""
+    ref_dir = example_dir / "reference"
+    if not ref_dir.is_dir():
+        return None
+    # Prefer golden_target_001.png; fallback to any .png
+    for candidate in [ref_dir / "golden_target_001.png"] + sorted(ref_dir.glob("*.png")):
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _critique_source_paths(tex_path: Path, briefing_path: Path) -> tuple[Path, ...]:
     paths = [tex_path, briefing_path]
     if STYLE_LOCK_PATH.exists():
@@ -96,11 +108,21 @@ def generate_for(example_dir: Path) -> str:
     numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
     render_path = _example_relative_path(example_dir, png_path)
+    ref_image = _reference_image_path(example_dir)
+    ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
+
+    ref_section = ""
+    if ref_path:
+        ref_section = f"""
+
+**Reference image (for drift detection):** `{ref_path}`
+(If the current render differs from reference, cite both in findings.
+Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
     return f"""# Critique brief — {name}
 
 **Render to inspect:** `{render_path}`
-(The slash command loads this PNG into the host main loop via the Read tool.)
+(The slash command loads this PNG into the host main loop via the Read tool.){ref_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}

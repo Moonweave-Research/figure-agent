@@ -39,3 +39,28 @@ traps, and teal convergence title/brace.
 - g(E_t) has two lobes: shallow and deep.
 - The right-side diagram is the convergence endpoint for experiment,
   mathematical interpretation, and molecular origin.
+
+## 7. Author intent — semantic constraints (for vision critique grounding)
+
+### Must depict
+- **Row 1 polymer chain**: three parallel S-rich polymer chains, each with ≥14 distinct segments.
+  Segments must show monomer-level texture (not featureless waves). Color: black lines, no fill.
+- **Row 2 evidence narrative**: chain of causal arrows (Σ∫ → I(t)∝t^-n → n value → Debye ref → g(E_t)).
+  Each step must have an incoming arrow from Row 1 evidence; the chain must flow left→right.
+- **Row 3 molecular origin**: sulfur atoms or disulfide bonds must be visually distinct (not just labels).
+  "localized traps" label must be physically near the trap markers.
+- **Right-side lobes**: shallow lobe peak must be ≈2×–3× taller than deep lobe (visual proportionality).
+  Lobe peaks must align with cluster mean from g(E_t) PDF, not arbitrary positions.
+
+### Must avoid
+- Featureless waves, plain sine curves, or "gelatinous blob" polymer chains without segment detail.
+- Floating arrows not anchored to teal brace or evidence box.
+- Energy axis that doesn't span CB→VB range (E_t must be clearly interior).
+- Asymmetric continuation markers (if shallow has ellipsis, deep must also; if only deep marked, deep must be visually incomplete).
+- Redundant g(E_t) labels (label the distribution once per row, not twice in same plot).
+
+### Semantic assertions (auto-verifiable by critique)
+- Trap depth axis (E_t direction) is vertical and monotonic.
+- Shallow cluster peaks are closer to CB than deep cluster peaks.
+- Both lobes are visible and distinct (not merged or fused).
+- Row 1 evidence box title is *outside* the box (not centered within).
