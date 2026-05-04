@@ -39,7 +39,8 @@ def _require_file(path: Path, hint: str | None = None) -> None:
 def _author_intent(sections: dict[int, tuple[str, str]]) -> str:
     topic = sections.get(1, ("", ""))[1].strip()
     composition = sections.get(3, ("", ""))[1].strip()
-    parts = [part for part in [topic, composition] if part]
+    semantic_constraints = sections.get(7, ("", ""))[1].strip()
+    parts = [part for part in [topic, composition, semantic_constraints] if part]
     return "\n\n".join(parts) if parts else "(briefing.md §1 and §3 are empty)"
 
 

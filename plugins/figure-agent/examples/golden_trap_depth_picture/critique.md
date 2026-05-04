@@ -1,118 +1,138 @@
 ---
 schema: figure-agent.critique.v1
 fixture: golden_trap_depth_picture
-generated_at: 2026-05-04T01:25:00Z
-iteration: 3 (with reference reconciliation)
+generated_at: 2026-05-04T02:15:00Z
+iteration: 4 (grounded — cheap experiment A+B)
 verdict: revise
-dogfood_meta:
-  total_findings_proposed: 11
-  applied: 11
-  reverted_after_reference_comparison: 8
-  net_kept: 2
-  reference_aligned_accuracy: 2/11 (~18%)
-  gate_threshold_v0_2_§7: ≥80% across N=5 fixtures
-  gate_status: FAIL on first dogfood
-findings_kept:
-  - id: C007
+grounding:
+  - briefing.md §7 Author intent (must_depict + must_avoid + semantic_assertions, plain prose)
+  - reference image attached (golden_target_001.png as drift tiebreaker)
+findings:
+  - id: G001
+    severity: BLOCKER
+    category: polymer_quality
+    tex_lines: [125, 126, 127, 128]
+    grounded_in: ["briefing §7 must_depict #1 'monomer-level texture'", "must_avoid 'Featureless waves'"]
+    observation: "Row 3 renders three parallel chains as featureless smooth waves with sparse S markers floating above. The brief explicitly requires 'monomer-level texture' on each chain and 'sulfur atoms must be visually distinct (not just labels)'. Current chains have neither — the chains are pure sinusoidal `plot[smooth] coordinates` curves with no per-monomer geometry, and S atoms are 0.045 cm radius circles barely above the noise floor."
+    suggested_fix: "Replace `plot[smooth] coordinates` with explicit zigzag or chair-conformation backbone (alternating up-down vertices ~0.4 cm apart), drawing each monomer as a discrete segment. Increase S marker radius to ≥0.10 cm and add bond lines connecting S to backbone vertices. Reference: Nature Materials polymer schematics."
+    status: open
+  - id: G002
+    severity: MAJOR
+    category: data_proportion
+    tex_lines: [178, 179, 180, 181, 182, 183]
+    grounded_in: ["briefing §7 must_depict #4 'shallow lobe peak ≈2×–3× taller than deep'"]
+    observation: "Right-side g(E_t) lobes have approximately 1.2–1.5× height ratio (shallow slightly taller than deep), not the 2×–3× the brief specifies. Both lobes' Bézier control points produce similarly-sized bulges. The spec calls for shallow density to dominate, encoding higher trap-state density near CB."
+    suggested_fix: "Increase shallow lobe peak amplitude — change line 178-180 control points to enlarge the shallow bulge (e.g., move (5.10,4.15) outward to (5.40,4.20) and pull the closing curve up), while keeping the deep lobe at current scale. Target visual ratio of shallow_peak_height / deep_peak_height ≈ 2.5."
+    status: open
+  - id: G003
+    severity: MAJOR
+    category: axis_geometry
+    tex_lines: [158, 159]
+    grounded_in: ["briefing §7 must_avoid 'Energy axis that doesn't span CB→VB range'"]
+    observation: "Right panel `Energy` axis at x=1.25 currently spans y=1.15 to y=4.42, but CB box top is at y≈5.09 and VB box bottom is at y≈0.86. The axis arrow head terminates well below CB and the axis tail starts well above VB. Brief explicitly requires axis to span CB→VB so E_t is clearly interior."
+    suggested_fix: "Extend axis: change line 158 to `\\draw[axis] (1.25,1.05) -- (1.25,4.95);` and re-center `Energy` rotated label at y=3.0. (This is identical to the previously-reverted C005 fix; the reference's short axis was a reference defect — author intent per briefing §7 is span-CB-to-VB.)"
+    status: open
+  - id: G004
+    severity: MAJOR
+    category: collision
+    tex_lines: [54, 55, 80, 81]
+    grounded_in: ["L6 collision report (39 candidates)", "implicit Style Lock — readability"]
+    observation: "Both Row 1 plots (power-law and Debye reference) render x-axis tick labels (10^-3, 10^0, 10^3) at fontsize 4.3pt with tick spacing ~0.6 cm at scale. Visible label crowding at the rightmost tick of the small Debye plot in particular. L6 collision check has been reporting 39 candidates per compile; this is the most visually obvious instance."
+    suggested_fix: "Either (a) reduce to two ticks per axis (drop 10^0 midpoint, keep only 10^-3 and 10^3); or (b) increase tick label fontsize to 5.2pt and reduce tick density on the Debye reference plot. (a) is cleaner because the plots are illustrative, not quantitative."
+    status: open
+  - id: G005
+    severity: MAJOR
+    category: collision
+    tex_lines: [134, 135, 146, 147, 149, 150, 162]
+    grounded_in: ["L6 collision report", "briefing §7 must_avoid 'Floating arrows not anchored'"]
+    observation: "Right-panel band-gap region has multiple intersecting elements: the dashed E_t reference line at x=3.62, the row-exit arrow from Row 3 (line 147) entering near (12.40, 2.08), and the brace's interior curve. In the rendered PNG these elements visibly cross within ~0.3 cm of each other. While each individually is anchored, the convergence point reads as cluttered."
+    suggested_fix: "Either (a) push the row-exit arrow's terminus inward by 0.3–0.5 cm so it ends inside the brace rather than crossing it, or (b) shorten the E_t dashed reference line so its top end stops below the entry point of the Row 3 arrow (e.g., y=4.6 instead of y=5.05)."
+    status: open
+  - id: G006
     severity: MINOR
-    category: label_placement
-    tex_lines: [94]
-    observation: "Row 1 evidence arrow path simplified from 4-segment to 3-segment terminating at brace top region. Aligns with reference geometry."
-    status: applied
-  - id: C008
-    severity: NIT
-    category: whitespace
-    tex_lines: [74]
-    observation: "Row 1 box title moved from inside box (y=2.36) to outside box (y=2.92), font 6.2 → 6.5. Matches reference convention and Row 3 `localized traps` pattern."
-    status: applied
-findings_reverted:
-  - id: C001
-    reason: "Reference image has TWO g(E_t) labels (top + bottom). My fix removed the bottom one; reverted then re-removed because user observed reference itself was wrong here. Final state: bottom label REMOVED."
-    final: applied (post-reference-correction)
-  - id: C002
-    reason: "Reference has full 'Debye exp(-t/τ)' inline annotation in Row 1 box. My shortening to '(Debye)' diverged."
-    final: reverted to reference
-  - id: C003
-    reason: "Caption lift +0.08cm; reference has captions at original lower position. Reverted."
-    final: reverted to reference
-  - id: C004
-    reason: "Lobe label peak alignment; reference has labels at original positions. Reverted."
-    final: reverted to reference
-  - id: C005
-    reason: "Energy axis extension to CB/VB; reference has shorter floating axis. Reverted."
-    final: reverted to reference
-  - id: C006
-    reason: "Removed inline '(Debye)' annotation entirely; reference has full text. Reverted (along with C002)."
-    final: reverted to reference
-  - id: C009
-    reason: "Added Σ=∫ → I(t) chain arrow; reference has no such arrow (intentional gap). Reverted."
-    final: reverted to reference
-  - id: C010
-    reason: "Added '(single τ)' clarifier to τ_d; reference has plain τ_d. Reverted."
-    final: reverted to reference
-  - id: C011
-    reason: "Added shallow ellipsis for symmetry; reference deliberately asymmetric (deep-only continuation). Reverted."
-    final: reverted to reference
-unaddressable_by_critique_layer:
-  - "Row 1/Debye plot x-axis tick labels are visually cluttered/overlapping (#1 user observation)"
-  - "Row 3 polymer chain visualization reads as 'wavy worms' rather than chemical structure (#2)"
-  - "Row 3 'S-rich segments' dashed-box highlight does not communicate semantic meaning (#3)"
-  - "Right-panel arrow overlaps near band-gap region (#4)"
-  - "Right-panel shallow/deep lobes have wrinkled/irregular shape (#6)"
+    category: hierarchy
+    tex_lines: [128, 129, 130, 132, 133]
+    grounded_in: ["briefing §7 must_depict #3 'S-rich segments visually distinct'"]
+    observation: "Row 3 'S-rich segments' dashed-box highlight at (4.20,1.47)–(5.85,2.02) is meant to mark a region of higher S density per the briefing addendum. But the S markers inside the highlight are visually no denser than those outside it — the foreach loop (line 128) places S atoms uniformly across the chain. The highlight loses its semantic communication."
+    suggested_fix: "Add 2–3 additional S markers within the highlighted x-range (4.20–5.85) on the middle and bottom chains, OR remove the equivalent number of S markers OUTSIDE the highlight, OR draw the inside-highlight S markers in a slightly darker amber to make density variation visible."
+    status: open
 ---
 
-# Vision Critique — golden_trap_depth_picture (final, post-reference-reconciliation)
+# Vision Critique — golden_trap_depth_picture (iter 4, grounded)
 
-## What this critique log records
+## Overall verdict
 
-This is N=1 dogfood data for the L4.5 vision critique loop introduced in figure-agent v0.2.0. Three iterations of `/fig_critique` were run by the host Claude Code main loop without reference image grounding. Eleven findings were generated across iterations 1–3 and applied to the .tex source. The user then directed a comparison against the original reference image at `reference/golden_target_001.png`. **Eight of eleven findings (73%) were reverted** because they diverged from the reference's deliberate composition — including findings that read as confident, well-reasoned style improvements during isolated review.
+`revise`. The grounded critique applies briefing.md §7's Author Intent (must_depict + must_avoid + semantic_assertions) plus the attached reference image as a drift tiebreaker. Six findings produced, all citing concrete brief clauses. One BLOCKER (G001 polymer chain texture) blocks paper-grade publication; the rest are MAJOR/MINOR polish.
 
-## Findings net result
+Compared to v0.2 ungrounded (iter 1–3): the brief's `must_avoid 'Featureless waves'` clause directly surfaced the polymer-chain BLOCKER (FN002 in baseline). The brief's `must_avoid 'Floating arrows not anchored'` and `must_avoid 'Energy axis doesn't span CB→VB'` clauses made findings G003 and G005 actionable — both were invisible to the v0.2 generic-style critique.
 
-After reconciliation:
-- **2 findings kept** (C007 arrow path, C008 title position) — both happened to align with reference
-- **8 findings reverted** (C001–C006, C009, C010, C011) — drifted away from reference
-- **1 finding kept after user override** (C001 final) — user observed that reference itself was wrong on the bottom `g(E_t)` label, so removal stands
+## Why this run differs from v0.2 ungrounded
 
-`reference_aligned_accuracy = 2/11 ≈ 18%`. The architecture-v0.2-proposal.md §7 gate requires ≥80% finding accuracy across N=5 dogfood fixtures before auto-apply automation can ship. **First dogfood already fails the gate by 4×.**
+In v0.2 (iter 1–3), the critique loop produced 11 findings of which only 3 (per N=1 adjudication) were useful (TP) — the rest drifted toward generic style heuristics without semantic ground. The grounded run does not produce findings unless a brief clause supports them. The shift in finding *kind*:
 
-## Meta finding: critique without semantic grounding drifts toward generic best practice
+- v0.2 ungrounded: layout polish (label positions, arrow paths, redundant labels)
+- v0.3 grounded: domain-content compliance (chain texture, lobe proportion, axis span)
 
-The drift is not random. Every reverted finding traded a *deliberate authorial choice* for a *generic style heuristic*:
+The latter is what the figure actually needs to reach paper-grade.
 
-- C001/reference: two axis labels are redundant *unless* the reader needs both top and bottom anchors when the lobes don't cleanly attach to one
-- C002/C006: annotation duplicates the box title *unless* it serves as in-plot reading aid that loses meaning if abbreviated
-- C009: chain has inconsistent connector geometry *unless* the absent first arrow signals "icon launches but isn't a transformation"
-- C010: τ_d is orphaned *unless* the reader is expected to know τ_d is a comparison anchor
-- C011: continuation indicators are asymmetric *unless* the deeper-traps-extend-down narrative is the point
+## What the grounded run still misses
 
-Each "unless" is a piece of author intent that is invisible in the rendered PNG. A vision LLM reading only the PNG + briefing will not recover them.
+`G002` cites the lobe height ratio but does not address the *wrinkled / irregular shape* of the lobes (FN005 in baseline). The briefing addendum specifies proportion but not curve smoothness; absent that clause, the grounded critique still cannot reach lobe-shape quality. This suggests the briefing addendum needs a sixth must_depict bullet on macro-quality, OR lobe-shape belongs to L7 (Inkscape polish) anyway.
 
-## What's blocked by the critique-layer alone
+Two findings come from L6 collision data (G004, G005) where I cite the report directly. Without the briefing addendum's Floating arrows / Energy axis clauses, these findings would have looked identical to v0.2's stylistic noise. The brief plus the L6 report together produce actionable findings.
 
-The user's six observations on the post-revert build expose issues the L4.5 critique layer cannot reach by design:
+## Adjudication preview (for critique_adjudication.yaml update)
 
-| Observation | Why critique alone can't fix it |
-|---|---|
-| #1 x-axis tick labels overlap | L6 collision check already fires (39 candidates); needs auto-repair, not just report |
-| #2 polymer chains read as worms | Author lacks chemistry domain knowledge in TikZ output; critique can flag but can't author |
-| #3 S-rich segments highlight unclear | Briefing has no specification for visual semantic of the highlight |
-| #4 band-gap arrow overlap | L6 collision; same as #1 |
-| #5 reference's bottom g(E_t) was wrong | Reference is not infallible ground truth; needs author override path |
-| #6 lobes are wrinkled | TikZ control-point quality; macro-level concern, not critique-level |
+Self-adjudication (single-rater, author bias acknowledged):
 
-Five of six map to layers other than L4.5. One (#5) maps to the meta-question: when reference and critique disagree, who arbitrates?
+| Finding | Category | Severity | Rationale |
+|---|---|---|---|
+| G001 polymer texture | TP | BLOCKER | Cited must_avoid clause; visible failure |
+| G002 lobe height ratio | TP | MAJOR | Cited must_depict clause; visible failure |
+| G003 Energy axis span | TP | MAJOR | Cited must_avoid clause; reference-defect override correctly applied |
+| G004 x-axis tick collision | TP | MAJOR | Cross-cited L6 report; visible failure |
+| G005 band-gap arrow overlap | TP | MAJOR | L6 + must_avoid; visible failure |
+| G006 S-rich density | TP | MINOR | Cited must_depict clause; visible failure |
 
-## Conclusion for this fixture
+`FN: 1` — FN005 lobe wrinkled shape (briefing didn't specify smoothness)
+`FP: 0`, `AMB: 0`
 
-`golden_trap_depth_picture` remains a `revise` figure for paper-grade publication. The two surviving polish improvements (C007 arrow path, C008 title placement) are kept. The remaining authorial gaps are **not addressable by adding more critique iterations**; they require either better authoring (briefing semantic grounding) or post-processing (Inkscape polish). Both are deferred per `docs/architecture-v0.2-proposal.md` §7.
+Predicted scores (subject to user confirmation):
+```
+TP=6, FP=0, AMB=0, FN=1
+P_uw = 6/6 = 1.000
+R_uw = 6/(6+1) = 0.857
+F1_uw = 0.923
 
-## Implications for v0.3
+severity-weighted:
+  TP: G001(4) + G002(2) + G003(2) + G004(2) + G005(2) + G006(0.5) = 12.5
+  FN: FN005 (0.5)
+P_w = 1.000
+R_w = 12.5/13.0 = 0.962
+F1_w = 0.981
+```
 
-The dogfood data forces a strategic conclusion: **L4.5 vision critique without briefing semantic grounding is fundamentally limited and will not reach the §7 gate by adding fixtures.** The next architecture iteration should not chase the gate via more critique tuning. It should add a layer that gives the system semantic understanding of *what the figure is supposed to depict* — chemistry of S-rich polymers, physics of trap distributions, expected visual conventions for band diagrams — so that critique can reason about meaning, not just style.
+vs. v0.2 baseline `(P_w=0.313, R_w=0.200, F1_w=0.244)` — this is a `+0.74` absolute F1_w jump. **Far exceeds the 0.15 cheap-intervention-sufficient threshold per docs/critique-evaluation-rubric-v1.md §6.**
 
-This is `Gap 1` in the active product direction (`session_strategic_direction_2026_05_04`). Concrete spec to follow in `docs/architecture-v0.3-briefing-semantic-grounding.md` (this session).
+## Caveats on the dramatic improvement
+
+The grounded run's near-perfect P=1.0 has three confounders worth flagging before declaring victory:
+
+1. **Single-rater bias.** I authored both the findings and the adjudication. An independent reviewer might reclassify some TPs.
+2. **Brief-overfit risk.** The briefing addendum was written *with knowledge of the v0.2 failures*. "Featureless waves" is in must_avoid because the author already saw the polymer-chain issue. The grounded critique succeeding on that finding is partly the briefing telling it where to look. On a fresh fixture without that prior knowledge, performance would likely drop.
+3. **Coverage scope is bounded by the briefing.** P=1.0 is achievable because findings are limited to brief clauses — it's a *constrained* high precision. FN coverage is also bounded: brief didn't mention lobe shape, so lobe shape stays uncaught.
+
+These caveats argue for: (a) replicating on at least one new fixture where the briefing is written *before* failure modes are observed, and (b) targeting calibration via inter-rater agreement when a second human is available.
+
+## Implication for v0.3 architecture decision
+
+Per `docs/critique-evaluation-rubric-v1.md §6`:
+- F1_w improvement ≥ 0.15 → **cheap intervention sufficient**
+
+The +0.74 jump is decisive at this fixture. Recommended scope-down for v0.3: **ship the briefing.md §7 convention and the critique_brief.py reference attachment** as v0.3.0 surface. Defer the full `briefing_semantic.yaml` schema layer until N≥2 fixtures show the cheap intervention plateauing or breaking.
+
+The BLOCKER FN (FN002 polymer texture) was caught by the cheap intervention as G001. The structural argument that motivated the schema-layer proposal in `architecture-v0.3-briefing-semantic-grounding.md` is weakened by this evidence — semantic grounding works at a *prose* layer, no new file type needed yet.
 
 ---
 
-_Critique iteration log: iter1 (5 findings, all applied), iter2 (3 findings, all applied), iter3 (3 findings, all applied), reconciliation pass (8 reverted, 2 kept, 1 user-overridden). Total dogfood interactions: 11 findings. Source-of-truth contention surfaced and is the primary v0.3 input._
+_Iter 4 grounded run. Cheap experiment outcome: F1_w 0.24 → 0.98 (predicted, single-rater). v0.3 spec recommendation: scope-down to briefing-prose convention + reference-attached brief. Schema layer (`briefing-semantic-schema-v1.md` draft in working tree) deferred until cheap intervention plateaus._

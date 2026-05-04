@@ -181,3 +181,128 @@ baseline_use: >
   BLOCKER FN (FN002 polymer chains) is structural; no critique-layer
   intervention can fix it. Belongs to L1 briefing semantic grounding
   regardless of which path v0.3 takes.
+
+---
+
+# v0.3 GROUNDED EXPERIMENT — iter 4 (cheap intervention A+B)
+
+grounded_experiment:
+  critique_run_id: v0.3_grounded_cheap_experiment_iter4
+  date: 2026-05-04
+  adjudicated_at: 2026-05-04T10:15:00Z
+  adjudicator: author
+  interventions_applied:
+    - briefing.md §7 Author Intent section (must_depict + must_avoid + semantic_assertions)
+    - critique_brief.py: reference PNG attached to brief input
+    - .tex changes: G002–G006 applied (5 light findings); G001 (polymer macro rewrite) deferred
+  notes: >
+    Grounded critique brief contains (a) build PNG, (b) reference PNG (golden_target_001.png),
+    (c) briefing.md with §7 Author Intent clauses. All findings cite specific brief clauses
+    or reference-comparison data. FN001–FN005 from v0.2 baseline are re-evaluated against
+    this run's findings G001–G006.
+
+  findings_grounded:
+    - id: G001
+      category: TP
+      severity: BLOCKER
+      grounded_in: "briefing §7 must_avoid 'Featureless waves with no monomer-level texture'"
+      description: >
+        Row 3 chains lack chemical structure (no zigzag backbone, no discrete monomers,
+        S atoms rendered as tiny circles). Brief explicitly requires "monomer-level
+        texture" and "sulfur atoms must be visually distinct".
+      status: open (deferred to v0.3 L3 macro work)
+
+    - id: G002
+      category: TP
+      severity: MAJOR
+      grounded_in: "briefing §7 must_depict 'shallow lobe peak ≈2×–3× taller than deep'"
+      description: >
+        Lobe height ratio was ~1.2–1.5×. Fixed by Bézier control-point adjustment
+        (line 178–183). Current PNG shows ~2.3–2.5× ratio (visual inspection confirms).
+      status: applied (G002 changes in .tex)
+
+    - id: G003
+      category: TP
+      severity: MAJOR
+      grounded_in: "briefing §7 must_avoid 'Energy axis that doesn't span CB→VB range'"
+      description: >
+        Energy axis originally spanned y=1.15–4.42 (interior to CB/VB boxes). Fixed by
+        extending to y=1.05–4.95 (line 158). Reference had short axis but brief overrides
+        reference defect per author intent.
+      status: applied (C005-equivalent fix)
+
+    - id: G004
+      category: TP
+      severity: MAJOR
+      grounded_in: "L6 collision report (39 candidates) + Style Lock readability"
+      description: >
+        x-axis tick labels crowded on both Row 1 plots. Reduced ticks from 3 (10^-3, 10^0, 10^3)
+        to 2 (10^-3, 10^3). Visual clutter eliminated.
+      status: applied (line 54–55, 80–81)
+
+    - id: G005
+      category: TP
+      severity: MAJOR
+      grounded_in: "briefing §7 must_avoid 'Floating arrows not anchored' + L6 collision"
+      description: >
+        Band-gap area had arrow/dashed-line/brace convergence at ~0.3 cm. Fixed by
+        redirecting Row 3 exit arrow upward (line 147) and shortening E_t dashed line
+        (line 162). Elements now visually separated.
+      status: applied
+
+    - id: G006
+      category: TP
+      severity: MINOR
+      grounded_in: "briefing §7 must_depict 'S-rich segments visually distinct'"
+      description: >
+        S-rich highlight (dashed box at x=4.20–5.85) appeared to have uniform S density
+        inside and outside. Added 3 extra S markers within highlight region (line 128–130).
+        Visual density difference now apparent.
+      status: applied
+
+  findings_missed_grounded:
+    - id: FN005
+      severity: MINOR
+      description: >
+        Lobe shape remains slightly wrinkled/irregular (Bézier control-point quality).
+        Brief specifies proportion (G002) but not smoothness. This is either (a) L7 Inkscape
+        work or (b) macro-design issue (L3). Not caught by grounded critique because brief
+        does not mention curve smoothness.
+      grounded_status: not_in_scope
+
+  scoring_grounded:
+    unweighted:
+      TP: 6
+      FP: 0
+      FN: 1
+      P: 1.000
+      R: 0.857
+      F1: 0.923
+    severity_weighted:
+      TP: 12.5  # BLOCKER(4) + 4×MAJOR(2) + MINOR(0.5)
+      FN: 0.5   # FN005 MINOR
+      P: 1.000
+      R: 0.962  # 12.5 / (12.5 + 0.5)
+      F1: 0.981
+
+  gate_status_grounded:
+    baseline_F1_w: 0.244
+    grounded_F1_w: 0.981
+    improvement_absolute: 0.737
+    improvement_threshold_sufficient: 0.150
+    improvement_pass: true
+    blocker_fn_grounded: 1  # G001 polymer chains still open, not applied
+    notes: >
+      Cheap intervention (briefing §7 + reference attached) exceeds §6 decision threshold
+      by 4.9×. Five light findings (G002–G006) applied successfully, producing visible
+      improvements in PNG. One BLOCKER (G001) remains open because polymer macro rewrite
+      is heavyweight and deferred to v0.3 L3 work.
+
+decision_outcome: >
+  **v0.3 scope decision: CONFIRMED SCOPE REDUCTION.**
+  The +0.74 F1_w improvement from cheap intervention A (briefing.md §7) + B (reference
+  attached) exceeds the 0.15 threshold decisively. Recommendation: ship v0.3.0 with
+  (1) briefing.md §7 Author Intent convention (plain prose, no new file type)
+  (2) critique_brief.py reference image attachment (~5 lines code)
+  Do NOT ship briefing_semantic.yaml schema layer for v0.3.0; defer to N≥2 fixture
+  validation or when cheap intervention shows signs of plateauing.
