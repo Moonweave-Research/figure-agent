@@ -45,7 +45,7 @@ traps, and teal convergence title/brace.
 ### Must depict
 - **Row 3 polymer chain**: three parallel S-rich polymer chains, each with
   monomer-level texture rather than featureless waves. The production fixture
-  uses 11 chemfig monomers per chain to preserve layout fit against the
+  uses 11 schematic monomer vertices per chain to preserve layout fit against the
   reference target.
 - **Row 2 evidence narrative**: chain of causal arrows (Σ∫ → I(t)∝t^-n → n value → Debye ref → g(E_t)).
   Each step must have an incoming arrow from Row 1 evidence; the chain must flow left→right.
@@ -73,11 +73,11 @@ traps, and teal convergence title/brace.
 - **Row 1 plot annotations**: `\PlotCallout` from `polymer-paper-preamble.sty`.
   Used for slope and $\tau_d$ labels so labels have white backing plus a
   leader arrow instead of floating directly over data/reference lines.
-- **Row 3 polymer chains** (A1 integrated WIP): `styles/snippets/polymer_chain.snippet.tex` — chemfig-based.
+- **Row 3 polymer chains** (A1 integrated WIP): `styles/snippets/polymer_chain.snippet.tex` — schematic TikZ.
   3 calls of `\PolymerChain{x}{y}{11}{s_csv}`. The production fixture uses
-  11 chemfig monomers; the briefing intent ("monomer-level texture, not
-  featureless waves") is satisfied because each monomer is individually
-  visible as a backbone vertex with explicit C-C bonds. S branches are
-  single -S only (not polysulfide) and hang straight down for non-overlapping geometry;
-  density encoding is by branch frequency (sparse=every 3-4 monomers, rich=contiguous
-  4-5 monomers inside the dashed highlight box at x=4.20-5.85).
+  11 schematic monomer vertices; the briefing intent ("monomer-level texture,
+  not featureless waves") is satisfied because each monomer is individually
+  visible as a backbone vertex. S markers are small amber side groups, alternating
+  above/below the chain to avoid comb-like geometry; density encoding is by
+  branch frequency (sparse top/bottom chains, rich middle cluster inside the
+  dashed highlight box at x=4.20-5.85).

@@ -134,12 +134,12 @@
   }
   \node[rowlabel] at (0.85,1.42) {Molecular\\origin};
 
-  % v0.3: chemfig-based monomer-resolved chains (replaces 3 plot[smooth] + S \foreach)
-  % S branch index map for 11-monomer chain at atom_sep=0.30: monomer i lands at
-  % x ~ anchor + 0.52*(i-1). Highlight box (4.20-5.85) covers monomers 6-9.
-  \PolymerChain{1.65}{2.40}{11}{3,7,8,9}
+  % v0.3: schematic monomer-resolved chains (replaces 3 plot[smooth] + S \foreach)
+  % S branch index map for 11-monomer schematic chain: middle chain carries the
+  % S-rich segment; top/bottom chains stay sparse so the cluster reads clearly.
+  \PolymerChain{1.65}{2.40}{11}{3,8}
   \PolymerChain{1.60}{1.78}{11}{2,6,7,8,9}
-  \PolymerChain{1.60}{1.08}{11}{3,7,8,9}
+  \PolymerChain{1.60}{1.08}{11}{3,8}
   \draw[cGray, dashed, rounded corners=2pt, line width=0.40pt] (4.20,1.47) rectangle (5.85,2.02);
   \node[text=cAmber, font=\sffamily\itshape\fontsize{7.0}{8.4}\selectfont] at (3.80,0.40) {S-rich segments};
   \draw[evidenceArrow] (4.55,0.62) -- (4.92,1.47);

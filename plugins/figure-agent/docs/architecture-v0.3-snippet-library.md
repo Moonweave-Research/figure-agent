@@ -25,7 +25,7 @@ This document does not delete the schema work — it ranks it lower until snippe
 
 ```
 plugins/figure-agent/styles/snippets/
-├── polymer_chain.snippet.tex      # chemfig-based, S-rich polymer
+├── polymer_chain.snippet.tex      # schematic TikZ, S-rich polymer
 ├── log_plot.snippet.tex           # PGFPlots loglogaxis with proper minor grids
 ├── band_diagram.snippet.tex       # bandplot or curated TikZ for CB/VB/trap levels
 ├── dos_lobes.snippet.tex          # PGFPlots fillbetween or curated TikZ for sideways g(E)
@@ -51,9 +51,14 @@ L3 author (human or LLM) consumes the snippet refs and `\input`s them. L4.5 crit
 ### 2.3 polymer-paper-preamble.sty additions
 
 Vendor required packages:
-- `\RequirePackage{chemfig}` — polymer chemistry
+- `\RequirePackage{xstring}` — CSV membership checks for schematic snippets
 - `\RequirePackage{pgfplots}` and `\pgfplotsset{compat=1.18}` — log axes
 - `\RequirePackage{tikz-3dplot}` if 3D arises (defer until needed)
+
+`chemfig` remains loaded by `polymer-paper-preamble.sty` for chemistry labels
+and future molecular snippets, but A1 `\PolymerChain` moved to curated TikZ
+after visual review showed the raw structural look was too awkward for this
+manuscript schematic.
 
 `bandplot` is heavier; defer to v0.3.1 unless `band_diagram.snippet.tex` clearly needs it (likely we can hand-curate from references for now).
 
@@ -80,20 +85,29 @@ A snippet ships only if:
 4. **Attribution recorded** in `snippets/README.md` (license + source URL — most are LPPL/MIT or free)
 5. **One reference figure compiles** that uses the snippet (kept as `examples/_snippet_smoke/<name>/`)
 
-## 3. First spike — chemfig polymer chain
+## 3. First spike — polymer chain
 
 Step A1 of v0.3.0. ~30-60 minutes scoped.
 
 ### 3.1 Spike scope
-Replace lines 125-131 of `examples/golden_trap_depth_picture/golden_trap_depth_picture.tex` (the three `plot[smooth] coordinates` polymer chain definitions + S marker `\foreach`) with a chemfig-based snippet.
+Replace lines 125-131 of `examples/golden_trap_depth_picture/golden_trap_depth_picture.tex` (the three `plot[smooth] coordinates` polymer chain definitions + S marker `\foreach`) with a snippet-backed monomer chain.
 
 ### 3.2 Acceptance test
 Compile `golden_trap_depth_picture.tex` and visually inspect Row 3:
-- Are chains rendered as connected monomers with explicit backbone bonds?
+- Are chains rendered as connected monomer vertices with visible backbone texture?
 - Are S atoms attached to backbone vertices, not floating?
 - Does S-rich vs. S-sparse contrast inside the dashed highlight box become visible?
 
-If any of these is **no**, abort the spike and document why chemfig didn't work for this case before proceeding to other snippets. False starts are cheap; false confidence in chemfig wastes the rest of the snippet plan.
+If any of these is **no**, abort the spike and document why the selected
+implementation did not work for this case before proceeding to other snippets.
+False starts are cheap; false confidence in a weak molecular primitive wastes
+the rest of the snippet plan.
+
+Post visual review: the initial chemfig experiment delivered monomer detail but
+looked too much like a raw structural formula in the compact row. A1 now uses a
+curated TikZ zigzag with alternating S side-group markers so the manuscript
+schematic reads as polymer texture plus S-rich density, not as a literal
+atom-by-atom molecule drawing.
 
 ### 3.3 If spike succeeds
 - Promote to `polymer_chain.snippet.tex` with parameters extracted
@@ -156,7 +170,7 @@ Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real
 1. **Real N=2 consumer** — wait for a real manuscript figure to pull A1 or A2; do not synthesize a fixture only to satisfy the ship gate.
 2. **A3/A4 pressure** — keep BandDiagram line-vs-box and DOS-lobe improvements deferred until another figure creates direct pressure.
 3. **Snippet interface generalization** — keep the first 1-2 snippet interfaces small; later snippets should conform only where the pattern proves useful.
-4. **Attribution + license tracking** — chemfig and PGFPlots are LPPL 1.3-compatible; keep `styles/snippets/README.md` as the active catalog.
+4. **Attribution + license tracking** — PGFPlots is LPPL 1.3-compatible; A1 `\PolymerChain` is own curated TikZ. Keep `styles/snippets/README.md` as the active catalog.
 5. **Reference vs. snippet conflict** — when a reference image shows a feature the snippet does not generate by default, document the override in `briefing.md §7`.
 
 ## 7. Status of sibling docs
@@ -166,8 +180,8 @@ Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real
 | `architecture-v0.3-briefing-semantic-grounding.md` | demoted, kept as reference | Schema-layer hypothesis didn't fail per se; it was preempted by cheaper prose convention. Re-evaluate at N=3. |
 | `briefing-semantic-schema-v1.md` | demoted, kept as reference | Premature spec; schema may still inform §7 prose structure, not new file format. |
 | `critique-evaluation-rubric-v1.md` | active | Used to score v0.3 progress; still primary metric. Add §6 amendment: "applied-fix verification" gap (rubric measures finding-quality, not artifact-quality). |
-| `golden_trap_depth_picture/critique_adjudication.yaml` | active | N=1 baseline + iter 4 grounded run; will be augmented with iter 5 after chemfig spike. |
-| `golden_trap_depth_picture/critique.md` | active | Iter 4 grounded run record. Replaced when iter 5 is run. |
+| `golden_trap_depth_picture/critique_adjudication.yaml` | active | N=1 baseline + iter 4 grounded run; augmented by later polymer/log-plot iterations. |
+| `golden_trap_depth_picture/critique.md` | active | Current grounded critique record for the golden fixture. |
 
 ## 8. Next-session bootstrap checklist
 
