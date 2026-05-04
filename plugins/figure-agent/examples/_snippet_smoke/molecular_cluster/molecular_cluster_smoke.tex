@@ -1,0 +1,14 @@
+% Smoke fixture: prove molecular_cluster.snippet.tex compiles standalone with
+% the production preamble at the archived 88mm column-width scale.
+% Acceptance: S8 hero ring (8 amber spheres + bond lines + center "S_8" label),
+% reaction arrow with reagent annotations, two parallel polymer chains
+% (short S_x with 3 atoms, long S_y with 6 atoms) between aromatic hexagons,
+% 3-line caption stack at bottom.
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{88mm}{!}{%
+  \input{../../../styles/snippets/molecular_cluster.snippet.tex}%
+}
+\end{document}

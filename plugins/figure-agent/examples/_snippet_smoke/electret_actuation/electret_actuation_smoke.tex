@@ -1,0 +1,15 @@
+% Smoke fixture: prove electret_actuation.snippet.tex compiles standalone
+% with the production preamble at the archived 88mm column-width scale.
+% Acceptance: 2 sub-panels (Step 1: blue cantilever bending right toward +V
+% electrode; Step 2: red cantilever bending left away from -V electrode),
+% wall hatching + clamp + GND/floating annotation, 7 trapped negative
+% charges along each beam, bending-angle θ_+ / θ_- arcs, leftward E-field
+% arrows, horizontal force arrow, electret callout, 3-line caption.
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{88mm}{!}{%
+  \input{../../../styles/snippets/electret_actuation.snippet.tex}%
+}
+\end{document}

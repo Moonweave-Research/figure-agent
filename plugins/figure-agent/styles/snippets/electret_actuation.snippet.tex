@@ -1,0 +1,207 @@
+%% electret_actuation.snippet.tex
+%% Bidirectional Coulomb actuation panel: two side-by-side sub-panels showing
+%% a clamped cantilever beam (amber electret coating + inner blue/red beam)
+%% with seven trapped negative charges along the beam surface, bending toward
+%% (Step 1: +V → attract) or away from (Step 2: -V → repel) a vertical
+%% electrode plate. Includes wall hatching above the clamp, bending-angle
+%% arc + θ label, leftward E-field arrows, horizontal force arrow, and
+%% per-step bottom-of-panel label.
+%%
+%% Source: archived [tikz-paper-workflow]/test_quality/fig1_hook_panel_c_v2.tex
+%%         (origin 2026-04-25; vendored 2026-05-05 with raw-composition policy).
+%%         Geometry fix: electrode VERTICAL (parallel to cantilever); cantilever
+%%         hangs from clamp and bends sideways toward/away from electrode.
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). Title, panel label, voltage strings,
+%% per-step bottom labels, electret callout text, and caption strings are
+%% \providecommand slots. Cantilever spline control points, charge positions,
+%% E-field arrow y-coords, electrode rectangle bounds, and the bending-angle
+%% arc parameters stay raw TikZ — the author edits to retune deflection
+%% magnitude, charge density, or sub-panel separation.
+%%
+%% Override BEFORE \input by predefining (Roman letters; TeX macro names may
+%% not contain digits):
+%%   \def\EActTitle{Coulomb actuation}
+%%   \def\EActLabel{c}
+%%   \def\EActPosV{$+V$}
+%%   …
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - palette tokens: cAmber, cBlue, cRed, cTeal, cGray
+%%   - tikz with arrows.meta, dashed pattern (default tikz)
+%%
+%% 14 reference set fit: scr 7.42.05 (cantilever sequence two-step actuation),
+%%                       scr 8.18.33 (electret actuator schematic).
+
+\providecommand{\EActTitle}{Bidirectional Coulomb Actuation}
+\providecommand{\EActLabel}{c}
+\providecommand{\EActPosV}{$+V$}
+\providecommand{\EActNegV}{$-V$}
+\providecommand{\EActStepOne}{\textbf{Step 1:}\;$+V$ → attract}
+\providecommand{\EActStepTwo}{\textbf{Step 2:}\;$-V$ → repel}
+\providecommand{\EActElectretLbl}{electret\\film}
+\providecommand{\EActGndLabel}{GND}
+\providecommand{\EActFloatLabel}{floating}
+\providecommand{\EActFieldLabel}{$\mathbf{E}$}
+\providecommand{\EActCapHead}{Coulomb force from trapped charge}
+\providecommand{\EActCapMid}{$F_\mathrm{Coulomb} \propto q_\mathrm{trap}\,E$\quad(sign follows $V$ polarity)}
+\providecommand{\EActCapNote}{$\Rightarrow$ Trapped charge enables bidirectional control}
+
+\begin{tikzpicture}[
+  arr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.0pt},
+  arrS/.style={-{Stealth[length=3.5pt,width=2.5pt]}, line width=0.7pt},
+  arrH/.style={-{Stealth[length=7pt,width=5.5pt]}, line width=1.8pt},
+  arrD/.style={-{Stealth[length=3pt,width=2pt]}, line width=0.55pt, dashed},
+  lbl/.style={font=\fontsize{8.5}{10.2}\selectfont},
+  lblBig/.style={font=\fontsize{8.5}{10.2}\selectfont\bfseries},
+  slbl/.style={font=\fontsize{7}{8.4}\selectfont},
+  plbl/.style={font=\fontsize{13}{15.6}\selectfont\bfseries},
+  qnode/.style={circle, fill=cGray!85!black, inner sep=0pt, minimum size=0.18cm,
+                font=\fontsize{4.5}{5.4}\selectfont\bfseries, text=white},
+]
+
+%% ============ Title + panel label ============
+\node[plbl, anchor=north west] at (0.05, 7.15) {\textbf{\EActLabel}};
+\node[lblBig, cGray!80!black, anchor=north] at (3.70, 7.05) {\EActTitle};
+
+%% ============ Sub-panel offsets ============
+\def\oA{0.60}
+\def\oB{5.80}
+
+%% ============ SUB-PANEL C1 — +V attract ============
+
+%% Wall hatching
+\foreach \yh in {6.35, 6.43, 6.51}{
+  \draw[cGray!55, line width=0.5pt] (\oA-0.22, \yh) -- (\oA+0.56, \yh);
+}
+\draw[cGray!70, line width=0.6pt] (\oA-0.22, 6.35) -- (\oA+0.56, 6.35);
+
+%% Clamp + GND symbol
+\fill[cGray!55] (\oA-0.05, 5.95) rectangle (\oA+0.35, 6.35);
+\draw[cGray!70, line width=0.4pt]
+  (\oA-0.05, 5.95) rectangle (\oA+0.35, 6.35);
+\draw[cGray!85!black, line width=0.55pt] (\oA+0.57, 6.18) -- (\oA+0.90, 6.18);
+\draw[cGray!85!black, line width=0.55pt] (\oA+0.90, 6.18) -- (\oA+0.90, 6.00);
+\draw[cGray!85!black, line width=0.55pt] (\oA+0.78, 6.00) -- (\oA+1.02, 6.00);
+\draw[cGray!85!black, line width=0.45pt] (\oA+0.82, 5.94) -- (\oA+0.98, 5.94);
+\draw[cGray!85!black, line width=0.35pt] (\oA+0.86, 5.88) -- (\oA+0.94, 5.88);
+\node[slbl, cGray!70!black, anchor=west, font=\fontsize{6.5}{7.8}\selectfont]
+  at (\oA+0.58, 6.26) {\EActGndLabel};
+
+%% Cantilever — bends RIGHT toward +V
+\draw[cAmber, line width=5.0pt, opacity=0.32, line cap=round]
+  (\oA+0.15, 5.95)
+  .. controls (\oA+0.18, 4.70) and (\oA+0.55, 3.40)
+  .. (\oA+1.40, 2.65);
+\draw[cBlue, line width=2.6pt, line cap=round]
+  (\oA+0.15, 5.95)
+  .. controls (\oA+0.18, 4.70) and (\oA+0.55, 3.40)
+  .. (\oA+1.40, 2.65);
+
+%% Trapped negative charges
+\foreach \xa/\ya in
+  {0.20/5.35, 0.22/4.90, 0.27/4.45, 0.38/4.00, 0.55/3.55, 0.82/3.10, 1.15/2.80}{
+  \node[qnode] at (\oA+\xa, \ya) {$-$};
+}
+\fill[cBlue] (\oA+1.40, 2.65) circle (0.06);
+
+%% Bending angle arc
+\draw[arrS, cBlue!55]
+  (\oA+0.17, 5.05) to[bend right=22] (\oA+1.08, 3.25);
+\node[slbl, cBlue] at (\oA+0.60, 3.95) {$\theta_+$};
+
+%% +V electrode (vertical plate)
+\fill[cBlue!18] (\oA+1.95, 2.20) rectangle (\oA+2.25, 6.00);
+\draw[cBlue!55, line width=0.5pt]
+  (\oA+1.95, 2.20) rectangle (\oA+2.25, 6.00);
+\node[slbl, cBlue, rotate=-90] at (\oA+2.10, 4.10) {\EActPosV};
+
+%% E-field arrows (leftward)
+\foreach \yi in {3.30, 4.10, 4.90}{
+  \draw[arrS, cTeal!70] (\oA+1.92, \yi) -- (\oA+1.62, \yi);
+}
+\node[slbl, cTeal, anchor=east] at (\oA+1.58, 5.50) {\EActFieldLabel};
+
+%% Attraction force (toward electrode)
+\draw[arrH, cBlue!70] (\oA+1.50, 2.65) -- (\oA+1.90, 2.65);
+
+%% Electret callout
+\coordinate (electretAnchor) at (\oA-0.50, 4.20);
+\node[slbl, cAmber!80!black, anchor=east, align=right]
+  (electretLbl) at (electretAnchor) {\EActElectretLbl};
+\draw[arrD, cGray!60]
+  (electretLbl.east) to[bend right=10] (\oA+0.22, 4.20);
+
+%% Step-1 bottom label
+\node[slbl, cBlue!80!black, anchor=north]
+  at (\oA+1.10, 2.00) {\EActStepOne};
+
+%% ============ SUB-PANEL C2 — -V repel ============
+
+\foreach \yh in {6.35, 6.43, 6.51}{
+  \draw[cGray!55, line width=0.5pt] (\oB-0.22, \yh) -- (\oB+0.56, \yh);
+}
+\draw[cGray!70, line width=0.6pt] (\oB-0.22, 6.35) -- (\oB+0.56, 6.35);
+
+\fill[cGray!55] (\oB-0.05, 5.95) rectangle (\oB+0.35, 6.35);
+\draw[cGray!70, line width=0.4pt]
+  (\oB-0.05, 5.95) rectangle (\oB+0.35, 6.35);
+\draw[cGray!60, line width=0.5pt, dashed]
+  (\oB+0.57, 6.18) -- (\oB+0.82, 6.18);
+\node[slbl, cGray!70!black, anchor=west,
+      font=\fontsize{6.5}{7.8}\selectfont\itshape]
+  at (\oB+0.58, 6.28) {\EActFloatLabel};
+
+%% Cantilever — bends LEFT away from -V
+\draw[cAmber, line width=5.0pt, opacity=0.32, line cap=round]
+  (\oB+0.15, 5.95)
+  .. controls (\oB+0.10, 4.70) and (\oB-0.40, 3.40)
+  .. (\oB-1.15, 2.65);
+\draw[cRed, line width=2.6pt, line cap=round]
+  (\oB+0.15, 5.95)
+  .. controls (\oB+0.10, 4.70) and (\oB-0.40, 3.40)
+  .. (\oB-1.15, 2.65);
+
+%% Trapped negative charges (same polarity, carried over)
+\foreach \xa/\ya in
+  {0.14/5.35, 0.12/4.90, 0.05/4.45, -0.08/4.00, -0.30/3.55, -0.60/3.10, -0.92/2.80}{
+  \node[qnode] at (\oB+\xa, \ya) {$-$};
+}
+\fill[cRed] (\oB-1.15, 2.65) circle (0.06);
+
+%% Bending angle arc
+\draw[arrS, cRed!55]
+  (\oB+0.13, 5.05) to[bend left=22] (\oB-0.82, 3.25);
+\node[slbl, cRed] at (\oB-0.35, 3.95) {$\theta_-$};
+
+%% -V electrode
+\fill[cRed!15] (\oB+1.95, 2.20) rectangle (\oB+2.25, 6.00);
+\draw[cRed!55, line width=0.5pt]
+  (\oB+1.95, 2.20) rectangle (\oB+2.25, 6.00);
+\node[slbl, cRed, rotate=-90] at (\oB+2.10, 4.10) {\EActNegV};
+
+%% E-field arrows
+\foreach \yi in {3.30, 4.10, 4.90}{
+  \draw[arrS, cTeal!70] (\oB+1.92, \yi) -- (\oB+1.62, \yi);
+}
+\node[slbl, cTeal, anchor=east] at (\oB+1.58, 5.50) {\EActFieldLabel};
+
+%% Repulsion force
+\draw[arrH, cRed!70]
+  (\oB+0.10, 4.20) -- (\oB-0.40, 4.20);
+
+%% Step-2 bottom label
+\node[slbl, cRed!80!black, anchor=north]
+  at (\oB+0.00, 2.00) {\EActStepTwo};
+
+%% ============ Caption ============
+\coordinate (captionC) at (3.60, 1.40);
+\node[lbl, cGray!80!black] (capCtop) at (captionC)
+  {\textsf{\EActCapHead}};
+\node[slbl, cGray, anchor=north, below=0.8mm of capCtop.south]
+  (capCmid) {\EActCapMid};
+\node[slbl, cAmber!80!black, anchor=north, below=0.6mm of capCmid.south]
+  {\EActCapNote};
+
+\end{tikzpicture}

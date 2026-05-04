@@ -11,6 +11,10 @@ Plan: `docs/architecture-v0.3-snippet-library.md`.
 | `log_plot.snippet.tex` | (no macro — `paper loglog/.style` key in preamble) | A2 integrated WIP, 2026-05-04 | PGFPlots (LPPL 1.3) — TeX Live; style key MIT-style |
 | `isometric_exploded.snippet.tex` | (no macro — raw composition) | V1 vendored 2026-05-04 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/isometric_exploded_slab.tex` |
 | `layered_device_stack.snippet.tex` | (no macro — raw composition) | V2 vendored 2026-05-04 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/isometric_layered_device_stack.tex` |
+| `process_3column.snippet.tex` | (no macro — raw composition) | V3 vendored 2026-05-05 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/fig2_cvs_c3_tradeoff.tex` |
+| `molecular_cluster.snippet.tex` | (no macro — raw composition) | V4 vendored 2026-05-05 (Fig 1 panel a port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/fig1_hook_panel_a_v1.tex` |
+| `band_with_traps.snippet.tex` | (no macro — raw composition) | V5 vendored 2026-05-05 (Fig 1 panel b port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/fig1_hook_panel_b_v1.tex` |
+| `electret_actuation.snippet.tex` | (no macro — raw composition) | V6 vendored 2026-05-05 (Fig 1 panel c v2 port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/fig1_hook_panel_c_v2.tex` |
 | `band_diagram.snippet.tex` | `\BandSnippet{...}` | A3 planned (deferred — see compass diagnosis) | hand-curated TikZ |
 | `dos_lobes.snippet.tex` | `\DOSLobes{...}` | A4 planned (deferred — see compass diagnosis) | PGFPlots fillbetween |
 
@@ -155,3 +159,130 @@ Nature/Sci-grade), screenshot 8.27.58 a (3D isometric layered device).
 
 **First production consumer:** TBD — direct fit for sulfur polymer / actuator
 device schematics where trapped-charge dynamics are the figure's argument.
+
+## `process_3column.snippet.tex` — V3 (vendored 2026-05-05)
+
+**Purpose:** Three-column process / mechanism comparison schematic. Each
+column is a sealed dielectric cell (top/bottom electrodes + tinted polymer
+matrix + bottom 3-line caption) with raw inner content (traps, charge
+arrows, percolation routes) the author fills inline. Adjacent columns are
+joined by left→right connector arrows, bookended by a top title bar and a
+bottom summary caption. Vendored from archived
+`[tikz-paper-workflow]/test_quality/fig2_cvs_c3_tradeoff.tex`.
+
+**No macro.** `\providecommand` exposes the bookend strings (`\PTriTitle`,
+`\PTriSummary`), per-column titles (`\PTri{A..C}Title`), three caption
+lines per column (`\PTri{A..C}Cap{Head,Act,Note}`), and per-column accent
+colors (`\PTri{A..C}Accent`, A=left ... C=right; Roman letters because TeX
+macro names may not contain digits). Per-panel inner geometry — trap dot
+positions, charge arrow paths, percolation routes — stays raw TikZ so the
+author can replace one panel's inner content with a different mechanism or
+extend the strip to 4+ columns by adding scopes and connector arrows.
+
+**Required preamble primitives** (from `polymer-paper-preamble.sty`):
+- palette tokens `cAmberSphere`, `cRed`, `cBrown`, `cBlue`, `cTeal`, `cGray`
+- standard tikz + xcolor blend syntax (`!N!color`)
+
+**14-reference fit:** screenshot 7.13.45 (CVS strip layout), screenshot
+8.41.22 (process flow with mechanism panels).
+
+**Smoke fixture:** `examples/_snippet_smoke/process_3column/process_3column_smoke.tex`
+
+**First production consumer:** TBD — direct fit for "regime A → optimum →
+regime C" mechanism explanations (trade-off plots, dose-response, defect
+density, percolation thresholds).
+
+## `molecular_cluster.snippet.tex` — V4 (vendored 2026-05-05)
+
+**Purpose:** Sulfur polysulfide network hero panel for a Figure-1-style
+hook. S8 ring at top (sc7_v7 idiom: bond lines drawn first, amber spheres
+on top, white "S" labels) + reaction arrow with reagent annotations + two
+parallel polymer-chain segments (short S_x bridge vs long S_y bridge)
+between aromatic crosslinker hexagons + 3-line caption stack at bottom.
+Vendored from archived `[tikz-paper-workflow]/test_quality/fig1_hook_panel_a_v1.tex`.
+
+**No macro.** `\providecommand` exposes the title (`\McLTitle`), panel
+label (`\McLLabel`), reagent strings (`\McLReagentMain`,
+`\McLReagentAdd`), per-bridge labels and ranges (`\McL{Short,Long}{Label,Range}`),
+and 3 caption lines (`\McLCap{Head,Mid,Note}`). S8 ring geometry, chain
+spacing, hexagon positions, and per-monomer S sphere placements stay raw
+TikZ — the author edits in place to vary monomer count, spacing, or
+chemistry.
+
+**Required preamble primitives** (from `polymer-paper-preamble.sty`):
+- palette tokens `cAmber`, `cAmberSphere`, `cGray`, `cLGray`
+- standard tikz with arrows.meta, `regular polygon` shape
+
+**14-reference fit:** screenshot 5.34.12 (polysulfide network monomer chain),
+screenshot 6.21.50 (S8 ring + bridge length comparison).
+
+**Smoke fixture:** `examples/_snippet_smoke/molecular_cluster/molecular_cluster_smoke.tex`
+
+**First production consumer:** TBD — direct fit for sulfur polymer paper
+hook panel (Figure 1, panel a).
+
+## `band_with_traps.snippet.tex` — V5 (vendored 2026-05-05)
+
+**Purpose:** Charge trapping physics dual-panel for a Figure-1-style hook.
+Band diagram (LUMO/HOMO + shallow + deep trap level rows with electrons
+drawn as filled circles on selected sites) on the left, density-of-states
+sub-panel (band-edge fills + narrow Gaussian DOS at E_S + broader Gaussian
+at E_D) on the right. Dashed LUMO/HOMO horizontal guidelines bridge the
+gap between the two sub-panels at matched energies. Vendored from archived
+`[tikz-paper-workflow]/test_quality/fig1_hook_panel_b_v1.tex`.
+
+**No macro.** `\providecommand` exposes the title (`\BwTTitle`), panel
+label (`\BwTLabel`), band-edge labels (`\BwT{Lumo,Homo}Label`), trap-depth
+labels (`\BwTShallow`, `\BwTDeep`), DOS species labels (`\BwT{Shallow,Deep}DOS`,
+`\BwTGofE`, `\BwTEnergyLabel`), and 3 caption lines
+(`\BwTCap{Head,Mid,Note}`). Trap-state tick positions, electron occupation
+sites, and Gaussian DOS shape parameters stay raw TikZ — the author edits
+to tune trap density, occupancy, or DOS width.
+
+**Required preamble primitives** (from `polymer-paper-preamble.sty`):
+- palette tokens `cBlue`, `cRed`, `cGray`
+- standard tikz with arrows.meta, `plot smooth`
+
+**14-reference fit:** screenshot 6.42.18 (band + DOS dual-panel),
+screenshot 7.11.50 (trap-level diagram with electron occupancy).
+
+**Smoke fixture:** `examples/_snippet_smoke/band_with_traps/band_with_traps_smoke.tex`
+
+**First production consumer:** TBD — direct fit for sulfur polymer paper
+hook panel (Figure 1, panel b). NOTE: the deferred A3 `band_diagram.snippet.tex`
+will become a thinner primitive (band edges + traps only, no DOS sub-panel)
+once that work resumes; this V5 vendor is the full hero composition.
+
+## `electret_actuation.snippet.tex` — V6 (vendored 2026-05-05)
+
+**Purpose:** Bidirectional Coulomb actuation panel for a Figure-1-style
+hook. Two side-by-side sub-panels (Step 1: blue cantilever bending right
+toward +V vertical electrode plate; Step 2: red cantilever bending left
+away from -V plate) with: clamped-from-top wall hatching, GND vs floating
+clamp annotation, amber electret coating + inner colored beam, seven
+trapped negative charges along each beam, bending-angle θ_+ / θ_- arcs,
+leftward E-field arrows, horizontal force arrow, electret callout, 3-line
+caption. Vendored from archived `[tikz-paper-workflow]/test_quality/fig1_hook_panel_c_v2.tex`
+(geometry-fixed v2: vertical electrode parallel to cantilever).
+
+**No macro.** `\providecommand` exposes the title (`\EActTitle`), panel
+label (`\EActLabel`), voltage strings (`\EAct{Pos,Neg}V`), per-step bottom
+labels (`\EActStep{One,Two}`), electret callout text (`\EActElectretLbl`),
+clamp annotations (`\EActGndLabel`, `\EActFloatLabel`), field-vector
+label (`\EActFieldLabel`), and 3 caption lines (`\EActCap{Head,Mid,Note}`).
+Cantilever spline control points, charge positions, E-field arrow y-coords,
+electrode rectangle bounds, and bending-arc parameters stay raw TikZ —
+the author edits to retune deflection, charge density, or sub-panel
+separation.
+
+**Required preamble primitives** (from `polymer-paper-preamble.sty`):
+- palette tokens `cAmber`, `cBlue`, `cRed`, `cTeal`, `cGray`
+- standard tikz with arrows.meta, dashed pattern
+
+**14-reference fit:** screenshot 7.42.05 (cantilever sequence two-step
+actuation), screenshot 8.18.33 (electret actuator schematic).
+
+**Smoke fixture:** `examples/_snippet_smoke/electret_actuation/electret_actuation_smoke.tex`
+
+**First production consumer:** TBD — direct fit for sulfur polymer paper
+hook panel (Figure 1, panel c).

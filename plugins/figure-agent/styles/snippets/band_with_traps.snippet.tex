@@ -1,0 +1,149 @@
+%% band_with_traps.snippet.tex
+%% Charge trapping physics panel: band diagram (LUMO/HOMO with shallow + deep
+%% trap states between, electrons drawn as filled circles on selected trap
+%% sites) on the left, density-of-states (DOS) sub-panel on the right
+%% (conduction + valence band edges as flat dense regions, plus narrow
+%% Gaussian DOS at shallow/deep trap energies). LUMO/HOMO horizontal dashed
+%% guidelines bridge the gap between the two sub-panels at matched energies.
+%%
+%% Source: archived [tikz-paper-workflow]/test_quality/fig1_hook_panel_b_v1.tex
+%%         (origin 2026-04-24; vendored 2026-05-05 with raw-composition policy).
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). Title, panel label, band-edge labels,
+%% trap-depth labels, DOS species labels (E_S, E_D), and caption strings are
+%% \providecommand slots. Trap-state tick positions, electron occupation
+%% sites, and Gaussian DOS shape parameters stay raw TikZ — the author edits
+%% in place to tune trap density, electron occupancy pattern, or DOS width.
+%%
+%% Override BEFORE \input by predefining (Roman letters; TeX macro names may
+%% not contain digits):
+%%   \def\BwTTitle{Trap states}
+%%   \def\BwTLabel{b}
+%%   \def\BwTShallow{shallow}
+%%   …
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - palette tokens: cBlue, cRed, cGray
+%%   - tikz with arrows.meta, plot smooth (default tikz)
+%%
+%% 14 reference set fit: scr 6.42.18 (band + DOS dual-panel),
+%%                       scr 7.11.50 (trap-level diagram with electron occupancy).
+
+\providecommand{\BwTTitle}{Charge Trapping Physics}
+\providecommand{\BwTLabel}{b}
+\providecommand{\BwTLumoLabel}{LUMO}
+\providecommand{\BwTHomoLabel}{HOMO}
+\providecommand{\BwTEnergyLabel}{Energy}
+\providecommand{\BwTShallow}{shallow}
+\providecommand{\BwTDeep}{deep}
+\providecommand{\BwTShallowDOS}{$E_S$}
+\providecommand{\BwTDeepDOS}{$E_D$}
+\providecommand{\BwTGofE}{$g(E)$}
+\providecommand{\BwTCapHead}{Tunable shallow/deep trap states}
+\providecommand{\BwTCapMid}{depth \& density set by $S_x$ chain length}
+\providecommand{\BwTCapNote}{3 independent measurements confirm}
+
+\begin{tikzpicture}[
+  arr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.0pt},
+  arrS/.style={-{Stealth[length=3.5pt,width=2.5pt]}, line width=0.7pt},
+  lbl/.style={font=\fontsize{8.5}{10.2}\selectfont},
+  lblBig/.style={font=\fontsize{8.5}{10.2}\selectfont\bfseries},
+  slbl/.style={font=\fontsize{7}{8.4}\selectfont},
+  plbl/.style={font=\fontsize{13}{15.6}\selectfont\bfseries},
+]
+
+%% ============ Coordinates ============
+\def\bX{0.80}
+\def\eTop{5.20}
+\def\eBot{0.80}
+\def\eMid{3.00}
+\def\sLev{4.30}
+\def\dLev{2.20}
+\def\dX{4.30}
+
+%% ============ Title + panel label ============
+\node[lblBig, cGray!80!black, anchor=north] at (3.70, 6.20) {\BwTTitle};
+\node[plbl, anchor=north west] at (0.05, 6.35) {\textbf{\BwTLabel}};
+
+%% ============ Band diagram (left sub-panel) ============
+\draw[arr, cGray!70] (\bX, 0.35) -- (\bX, 5.65);
+\node[slbl, cGray, rotate=90, anchor=south] at (\bX-0.72, \eMid) {\BwTEnergyLabel};
+
+\node[slbl, cBlue, anchor=east] at (\bX-0.08, \eTop) {\textsf{\BwTLumoLabel}};
+\node[slbl, cRed, anchor=east] at (\bX-0.08, \eBot) {\textsf{\BwTHomoLabel}};
+
+\fill[cBlue!10] (\bX+0.12, \eTop) rectangle (\bX+2.80, \eTop+0.45);
+\draw[cBlue, line width=1.3pt] (\bX+0.12, \eTop) -- (\bX+2.80, \eTop);
+
+\fill[cRed!10] (\bX+0.12, \eBot-0.45) rectangle (\bX+2.80, \eBot);
+\draw[cRed, line width=1.3pt] (\bX+0.12, \eBot) -- (\bX+2.80, \eBot);
+
+%% Shallow trap states
+\foreach \xt in {0.40, 0.90, 1.40, 1.90, 2.40}{
+  \draw[cBlue!70, line width=1.0pt]
+    (\bX+\xt-0.14, \sLev) -- (\bX+\xt+0.14, \sLev);
+}
+\foreach \xt in {0.40, 0.90, 1.90}{
+  \fill[cBlue] (\bX+\xt, \sLev) circle (0.07);
+}
+\node[slbl, cBlue, anchor=center] at (\bX+1.40, 4.76) {\textsf{\BwTShallow}};
+
+%% Deep trap states
+\foreach \xt in {0.40, 0.90, 1.40, 1.90, 2.40}{
+  \draw[cRed!70, line width=1.0pt]
+    (\bX+\xt-0.14, \dLev) -- (\bX+\xt+0.14, \dLev);
+}
+\foreach \xt in {0.40, 1.40, 2.40}{
+  \fill[cRed] (\bX+\xt, \dLev) circle (0.07);
+}
+\node[slbl, cRed, anchor=center] at (\bX+1.40, 1.50) {\textsf{\BwTDeep}};
+
+%% Tunable range hint
+\draw[arrS, cGray!60] (\bX+2.55, \sLev+0.05) -- (\bX+2.55, \sLev+0.28);
+\draw[arrS, cGray!60] (\bX+2.55, \dLev-0.05) -- (\bX+2.55, \dLev-0.28);
+
+%% ============ DOS diagram (right sub-panel) ============
+\draw[arr, cGray!70] (\dX, 0.35) -- (\dX, 5.65);
+\draw[arr, cGray!70] (\dX, 0.35) -- (\dX+2.10, 0.35);
+\coordinate (dosAxisTip) at (\dX+2.10, 0.35);
+\node[slbl, cGray, anchor=west, right=0.6mm of dosAxisTip] {\BwTGofE};
+
+\fill[cBlue!15] (\dX+0.05, \eTop) rectangle (\dX+1.65, \eTop+0.45);
+\draw[cBlue, line width=0.8pt] (\dX+0.05, \eTop) -- (\dX+1.65, \eTop);
+
+\fill[cRed!12] (\dX+0.05, \eBot-0.45) rectangle (\dX+1.65, \eBot);
+\draw[cRed, line width=0.8pt] (\dX+0.05, \eBot) -- (\dX+1.65, \eBot);
+
+\draw[cBlue!80, line width=1.0pt, fill=cBlue!18]
+  (\dX, \sLev-0.42) --
+  plot[smooth, samples=40,
+    domain={\sLev-0.42}:{\sLev+0.42}]
+      ({\dX + 1.10*exp(-0.5*((\x-\sLev)/0.16)^2)}, \x)
+  -- (\dX, \sLev+0.42) -- cycle;
+\coordinate (esLbl) at (\dX+1.22, \sLev);
+\node[slbl, cBlue, anchor=west, right=0.5mm of esLbl] {\BwTShallowDOS};
+
+\draw[cRed!80, line width=1.0pt, fill=cRed!15]
+  (\dX, \dLev-0.60) --
+  plot[smooth, samples=40,
+    domain={\dLev-0.60}:{\dLev+0.60}]
+      ({\dX + 1.35*exp(-0.5*((\x-\dLev)/0.22)^2)}, \x)
+  -- (\dX, \dLev+0.60) -- cycle;
+\coordinate (edLbl) at (\dX+1.50, \dLev);
+\node[slbl, cRed, anchor=west, right=0.5mm of edLbl] {\BwTDeepDOS};
+
+\draw[cBlue!30, dashed, line width=0.4pt]
+  (\bX+2.80, \eTop) -- (\dX, \eTop);
+\draw[cRed!30, dashed, line width=0.4pt]
+  (\bX+2.80, \eBot) -- (\dX, \eBot);
+
+%% ============ Caption ============
+\coordinate (captionB) at (3.40, -0.05);
+\node[lbl, cBlue!70!black] (capBtop) at (captionB)
+  {\textsf{\BwTCapHead}};
+\node[slbl, cGray, anchor=north, below=0.8mm of capBtop.south]
+  (capBmid) {\BwTCapMid};
+\node[slbl, cGray, anchor=north, below=0.6mm of capBmid.south] {\BwTCapNote};
+
+\end{tikzpicture}

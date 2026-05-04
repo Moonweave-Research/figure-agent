@@ -1,0 +1,14 @@
+% Smoke fixture: prove process_3column.snippet.tex compiles standalone with
+% the production preamble at the archived 183mm paper-grade scale.
+% Acceptance: 3 columns of dielectric cells (electrodes + tinted matrix +
+% inner trap/charge content), 2 connector arrows between adjacent columns,
+% bold title bar at top, 1-line summary caption at bottom, default amber→
+% red→brown accent progression.
+\documentclass[border=8pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{183mm}{!}{%
+  \input{../../../styles/snippets/process_3column.snippet.tex}%
+}
+\end{document}

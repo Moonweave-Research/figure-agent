@@ -1,0 +1,158 @@
+%% molecular_cluster.snippet.tex
+%% Sulfur polysulfide network hero panel: S8 ring (sc7_v7 idiom — bond lines
+%% drawn first, amber spheres on top, white "S" labels), reaction arrow with
+%% reagent annotations, two parallel polymer-chain segments (short S_x bridge
+%% vs long S_y bridge between aromatic crosslinker hexagons), and a 3-line
+%% caption stack at the bottom.
+%%
+%% Source: archived [tikz-paper-workflow]/test_quality/fig1_hook_panel_a_v1.tex
+%%         (origin 2026-04-25; vendored 2026-05-05 with raw-composition policy).
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). Title, panel label, sulfur-bridge labels
+%% (\McL{Short,Long}{Label,Range}), reagent strings, and caption lines are
+%% \providecommand slots. The S8 ring geometry, the chain comparison layout
+%% (short vs long), and the aromatic hexagon positions stay raw TikZ — the
+%% author edits in place to vary monomer count, chain spacing, or chemistry.
+%%
+%% Override BEFORE \input by predefining (Roman letters; TeX macro names may
+%% not contain digits):
+%%   \def\McLTitle{S8 inverse vulcanization}
+%%   \def\McLLabel{a}
+%%   \def\McLCapHead{Cross-linked polysulfide}
+%%   …
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - palette tokens: cAmber, cAmberSphere, cGray, cLGray
+%%   - tikz with arrows.meta, regular polygon shape (default tikz)
+%%
+%% 14 reference set fit: scr 5.34.12 (polysulfide network monomer chain),
+%%                       scr 6.21.50 (S8 ring + bridge length comparison).
+
+\providecommand{\McLTitle}{Tunable Polysulfide Network}
+\providecommand{\McLLabel}{a}
+\providecommand{\McLReagentMain}{$\Delta$,\;160\,°C}
+\providecommand{\McLReagentAdd}{+\;DIB}
+\providecommand{\McLShortLabel}{$-\mathrm{S}_x-$}
+\providecommand{\McLShortRange}{$x\!=\!2$--4\,(short)}
+\providecommand{\McLLongLabel}{$-\mathrm{S}_y-$}
+\providecommand{\McLLongRange}{$y\!=\!4$--8\,(long)}
+\providecommand{\McLCapHead}{Cross-linked polysulfide (inverse vulcanization)}
+\providecommand{\McLCapMid}{sulfur content: 60--85\,wt\%}
+\providecommand{\McLCapNote}{bridge rank $x,y\!=\!2$--8 → tunable trap depth}
+
+\begin{tikzpicture}[
+  arr/.style={-{Stealth[length=5pt,width=3.5pt]}, line width=1.0pt},
+  arrS/.style={-{Stealth[length=3.5pt,width=2.5pt]}, line width=0.7pt},
+  lbl/.style={font=\fontsize{8.5}{10.2}\selectfont},
+  lblBig/.style={font=\fontsize{8.5}{10.2}\selectfont\bfseries},
+  slbl/.style={font=\fontsize{7}{8.4}\selectfont},
+  plbl/.style={font=\fontsize{13}{15.6}\selectfont\bfseries},
+  arene/.style={regular polygon, regular polygon sides=6,
+                fill=cGray!15, draw=cGray!55, line width=0.5pt,
+                minimum size=0.55cm, inner sep=0pt},
+]
+
+%% ============ Title + panel label ============
+\node[plbl, anchor=north west] at (0.05, 8.95) {\textbf{\McLLabel}};
+\node[lblBig, cGray!80!black, anchor=north] at (3.0, 8.80) {\McLTitle};
+
+%% ============ S8 ring (hero) — bond lines first, spheres on top ============
+\def\rCX{3.0}\def\rCY{7.40}\def\rR{0.82}
+
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\angA{90+45*\i}
+  \pgfmathsetmacro\angB{90+45*(\i+1)}
+  \draw[cAmber!80!black, line width=2.0pt]
+    ({\rCX+\rR*cos(\angA)},{\rCY+\rR*sin(\angA)})
+    --({\rCX+\rR*cos(\angB)},{\rCY+\rR*sin(\angB)});
+}
+\foreach \i in {0,...,7}{
+  \pgfmathsetmacro\ang{90+45*\i}
+  \filldraw[fill=cAmberSphere, draw=cAmber!85, line width=0.5pt]
+    ({\rCX+\rR*cos(\ang)},{\rCY+\rR*sin(\ang)}) circle (7pt);
+  \node[font=\fontsize{5}{6}\selectfont\bfseries, white]
+    at ({\rCX+\rR*cos(\ang)},{\rCY+\rR*sin(\ang)}) {S};
+}
+\node[font=\fontsize{8}{9.6}\selectfont\bfseries, cAmber!80!black]
+  at (\rCX,\rCY) {$\mathrm{S}_8$};
+
+%% ============ Reaction arrow (ring opening / inverse vulcanization) ============
+\draw[arr, cGray] (\rCX, 6.30) -- (\rCX, 5.72);
+\coordinate (arrowMid) at (\rCX, 6.01);
+\node[slbl, cGray!80, anchor=east, left=1.5mm of arrowMid] {\McLReagentMain};
+\node[slbl, cGray!80, anchor=west, right=1.5mm of arrowMid] {\McLReagentAdd};
+
+%% ============ Polymer chain comparison ============
+\def\chainY{5.15}
+
+%% --- SHORT CHAIN (S_x) ---
+\def\sXcx{1.55}
+\def\sXatA{0.68}
+\def\sXsep{0.26}
+
+\node[arene] (sxH1) at ({\sXcx-0.75}, \chainY) {};
+\draw[cGray!50, line width=0.35pt] ({\sXcx-0.75}, \chainY) circle (0.10cm);
+\draw[cGray!40, line width=0.8pt]
+  ({\sXcx-0.75+0.28}, \chainY) -- ({\sXcx+0.75-0.28}, \chainY);
+\foreach \k in {0,1,2}{
+  \pgfmathsetmacro\ax{\sXcx-0.75+\sXatA+\k*\sXsep}
+  \filldraw[fill=cAmberSphere, draw=cAmber!80, line width=0.3pt]
+    (\ax, \chainY) circle (3.5pt);
+  \node[font=\fontsize{4}{5}\selectfont\bfseries, white] at (\ax, \chainY) {S};
+}
+\node[arene] (sxH2) at ({\sXcx+0.75}, \chainY) {};
+\draw[cGray!50, line width=0.35pt] ({\sXcx+0.75}, \chainY) circle (0.10cm);
+
+\pgfmathsetmacro\sxAtomL{\sXcx-0.75+\sXatA}
+\pgfmathsetmacro\sxAtomR{\sXcx-0.75+\sXatA+2*\sXsep}
+\draw[cLGray, line width=0.45pt]
+  (\sxAtomL, \chainY-0.40) -- (\sxAtomR, \chainY-0.40);
+\node[slbl, cAmber!85!black, anchor=north]
+  at ({\sXcx-0.75+\sXatA+\sXsep}, \chainY-0.46) {\McLShortLabel};
+\node[slbl, cGray, anchor=north]
+  at ({\sXcx-0.75+\sXatA+\sXsep}, \chainY-0.82) {\McLShortRange};
+
+%% $x\!\uparrow$ arrow between chains
+\draw[arrS, cGray!55] ({\sXcx+0.75+0.15}, \chainY) -- ({\sXcx+0.75+0.55}, \chainY);
+\node[slbl, cGray!70, anchor=south]
+  at ({\sXcx+0.75+0.35}, \chainY+0.07) {$x\!\uparrow$};
+
+%% --- LONG CHAIN (S_y) ---
+\def\sYcx{4.45}
+\def\sYatA{0.50}
+
+\node[arene] (syH1) at ({\sYcx-1.15}, \chainY) {};
+\draw[cGray!50, line width=0.35pt] ({\sYcx-1.15}, \chainY) circle (0.10cm);
+\draw[cGray!40, line width=0.8pt]
+  ({\sYcx-1.15+0.28}, \chainY) -- ({\sYcx+1.15-0.28}, \chainY);
+\foreach \k in {0,1,2,3,4,5}{
+  \pgfmathsetmacro\ax{\sYcx-1.15+\sYatA+\k*\sXsep}
+  \filldraw[fill=cAmberSphere, draw=cAmber!80, line width=0.3pt]
+    (\ax, \chainY) circle (3.5pt);
+  \node[font=\fontsize{4}{5}\selectfont\bfseries, white] at (\ax, \chainY) {S};
+}
+\node[arene] (syH2) at ({\sYcx+1.15}, \chainY) {};
+\draw[cGray!50, line width=0.35pt] ({\sYcx+1.15}, \chainY) circle (0.10cm);
+
+\pgfmathsetmacro\syAtomL{\sYcx-1.15+\sYatA}
+\pgfmathsetmacro\syAtomR{\sYcx-1.15+\sYatA+5*\sXsep}
+\draw[cLGray, line width=0.45pt]
+  (\syAtomL, \chainY-0.40) -- (\syAtomR, \chainY-0.40);
+\node[slbl, cAmber!85!black, anchor=north]
+  at ({(\syAtomL+\syAtomR)/2}, \chainY-0.46) {\McLLongLabel};
+\node[slbl, cGray, anchor=north]
+  at ({(\syAtomL+\syAtomR)/2}, \chainY-0.82) {\McLLongRange};
+
+\node[slbl, cGray] at (0.22, \chainY) {$\cdots$};
+\node[slbl, cGray] at (5.82, \chainY) {$\cdots$};
+
+%% ============ Caption ============
+\coordinate (captionA) at (3.0, 3.52);
+\node[lbl, cAmber!85!black] (capAtop) at (captionA)
+  {\textsf{\McLCapHead}};
+\node[slbl, cGray, anchor=north, below=0.8mm of capAtop.south]
+  (capAmid) {\McLCapMid};
+\node[slbl, cGray, anchor=north, below=0.6mm of capAmid.south] {\McLCapNote};
+
+\end{tikzpicture}

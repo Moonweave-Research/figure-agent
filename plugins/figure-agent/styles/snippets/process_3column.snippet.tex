@@ -1,0 +1,181 @@
+%% process_3column.snippet.tex
+%% Three-column process / mechanism comparison schematic. Each column is a
+%% sealed dielectric cell (top/bottom electrodes + polymer matrix) plus a
+%% raw inner content layer (traps, charge paths, percolation routes, ...)
+%% the author fills inline. Adjacent columns are joined by horizontal arrows
+%% (left→right reading order).
+%%
+%% Source: archived [tikz-paper-workflow]/test_quality/fig2_cvs_c3_tradeoff.tex
+%%         (origin: trap formation vs. percolation trade-off; vendored
+%%         2026-05-05 with raw-composition policy).
+%% License: own work, MIT-style.
+%%
+%% Composition snippet (NOT a macro). \input expands the full tikzpicture
+%% inline. Column titles, caption strings, the bookend title/summary, and
+%% per-column accent colors are exposed as \providecommand slots. Per-panel
+%% inner geometry (trap dot positions, charge arrows, percolation paths) is
+%% intentionally raw TikZ so the author can:
+%%   - reposition / add / remove dots and arrows freely
+%%   - replace one panel's inner content with a different mechanism
+%%   - lengthen the strip (add a 4th \begin{scope} + connector arrow)
+%%
+%% Override BEFORE \input by predefining (Roman A/B/C slots; TeX macro names
+%% may not contain digits, A=left ... C=right):
+%%   \def\PTriTitle{Mechanism comparison}
+%%   \def\PTriSummary{Optimum sits between regimes A and C}
+%%   \def\PTriAAccent{cAmberSphere}   % Panel A accent (title tint, matrix fill)
+%%   \def\PTriATitle{Low sulfur}
+%%   \def\PTriACapHead{sparse traps}
+%%   \def\PTriACapAct{charge flows quickly}
+%%   \def\PTriACapNote{$n$ low (S60)}
+%%   % … same pattern for \PTriB*, \PTriC*
+%%
+%% Required preamble (provided by polymer-paper-preamble.sty):
+%%   - palette tokens: cAmberSphere, cRed, cBrown, cBlue, cTeal, cGray
+%%   - tikz, xcolor with !blend syntax (standard)
+%%
+%% 14 reference set fit: scr 7.13.45 (CVS strip layout),
+%%                       scr 8.41.22 (process flow with mechanism panels).
+
+\providecommand{\PTriTitle}{Trap formation vs.\ percolation trade-off}
+\providecommand{\PTriSummary}{Trap network forms with sulfur, but excess sulfur creates percolation shortcuts $\Rightarrow$ non-monotonic $n$ peak}
+
+\providecommand{\PTriAAccent}{cAmberSphere}
+\providecommand{\PTriATitle}{Low sulfur}
+\providecommand{\PTriACapHead}{sparse traps}
+\providecommand{\PTriACapAct}{charge flows quickly}
+\providecommand{\PTriACapNote}{$n$ low (S60)}
+
+\providecommand{\PTriBAccent}{cRed}
+\providecommand{\PTriBTitle}{Optimal sulfur (peak)}
+\providecommand{\PTriBCapHead}{dense trap network}
+\providecommand{\PTriBCapAct}{charge captured}
+\providecommand{\PTriBCapNote}{$n$ peak ($\bigstar$ S75)}
+
+\providecommand{\PTriCAccent}{cBrown}
+\providecommand{\PTriCTitle}{High sulfur (excess)}
+\providecommand{\PTriCCapHead}{percolation paths}
+\providecommand{\PTriCCapAct}{charge bypasses traps}
+\providecommand{\PTriCCapNote}{$n$ collapses (S85)}
+
+\begin{tikzpicture}[
+  arr/.style={-{Stealth[length=4pt,width=3pt]}, line width=0.9pt},
+  arrS/.style={-{Stealth[length=3pt,width=2pt]}, line width=0.6pt},
+  lbl/.style={font=\fontsize{8}{9.6}\selectfont},
+  slbl/.style={font=\fontsize{7}{8.4}\selectfont},
+  xslbl/.style={font=\fontsize{6.5}{7.8}\selectfont},
+  ttl/.style={font=\fontsize{8.5}{10.2}\selectfont\bfseries},
+  lblBig/.style={font=\fontsize{10}{12}\selectfont\bfseries},
+]
+
+%% ============ Top title bar ============
+\node[lblBig, cGray!85!black, anchor=north] at (8.0, 5.20) {\PTriTitle};
+
+%% ============ Panel A (left) ============
+\begin{scope}[shift={(0,0.5)}]
+  \node[ttl, text=\PTriAAccent!70!black, anchor=south] at (2.4, 3.65) {\PTriATitle};
+
+  %% Cell scaffold — electrodes + polymer matrix (shared per panel)
+  \fill[cBlue!15] (0.30, 3.10) rectangle (4.50, 3.30);
+  \fill[cBlue!15] (0.30, 0.50) rectangle (4.50, 0.70);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 3.10) rectangle (4.50, 3.30);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 0.50) rectangle (4.50, 0.70);
+  \node[xslbl, cBlue, anchor=center] at (2.40, 3.20) {electrode $(+)$};
+  \node[xslbl, cBlue, anchor=center] at (2.40, 0.60) {electrode $(-)$};
+  \fill[\PTriAAccent!15] (0.30, 0.70) rectangle (4.50, 3.10);
+  \draw[\PTriAAccent!40, line width=0.5pt] (0.30, 0.70) rectangle (4.50, 3.10);
+
+  %% --- Panel A content (raw — author may reposition / replace) ---
+  %% sparse traps
+  \foreach \xt/\yt in {1.10/1.50, 2.90/2.30, 3.80/1.20}{
+    \fill[\PTriAAccent!80] (\xt, \yt) circle (0.10);
+  }
+  %% charge flow (straight through)
+  \draw[arr, cTeal] (1.20, 3.05) -- (1.20, 0.75);
+  \draw[arr, cTeal] (2.40, 3.05) -- (2.40, 0.75);
+  \draw[arr, cTeal] (3.60, 3.05) -- (3.60, 0.75);
+  %% --- end Panel A content ---
+
+  \node[slbl, text=\PTriAAccent!70!black, anchor=center] at (2.40, 0.10) {\PTriACapHead};
+  \node[xslbl, cTeal!70!black, anchor=center] at (2.40, -0.20) {\PTriACapAct};
+  \node[xslbl, cGray, anchor=center] at (2.40, -0.50) {\PTriACapNote};
+\end{scope}
+
+%% Connector A → B
+\draw[arr, cGray!50, line width=1.2pt] (5.10, 2.20) -- (5.50, 2.20);
+
+%% ============ Panel B (middle) ============
+\begin{scope}[shift={(5.6,0.5)}]
+  \node[ttl, text=\PTriBAccent!70!black, anchor=south] at (2.4, 3.65) {\PTriBTitle};
+
+  \fill[cBlue!15] (0.30, 3.10) rectangle (4.50, 3.30);
+  \fill[cBlue!15] (0.30, 0.50) rectangle (4.50, 0.70);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 3.10) rectangle (4.50, 3.30);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 0.50) rectangle (4.50, 0.70);
+  \node[xslbl, cBlue, anchor=center] at (2.40, 3.20) {electrode $(+)$};
+  \node[xslbl, cBlue, anchor=center] at (2.40, 0.60) {electrode $(-)$};
+  \fill[\PTriBAccent!10] (0.30, 0.70) rectangle (4.50, 3.10);
+  \draw[\PTriBAccent!40, line width=0.5pt] (0.30, 0.70) rectangle (4.50, 3.10);
+
+  %% --- Panel B content (raw — author may reposition / replace) ---
+  %% dense, multi-depth traps (mix of accent + secondary)
+  \foreach \xt/\yt/\cc in {%
+    0.70/2.70/cAmberSphere, 1.20/2.20/\PTriBAccent, 0.95/1.50/cAmberSphere,
+    1.50/0.95/\PTriBAccent, 2.10/2.55/\PTriBAccent, 2.40/1.80/cAmberSphere,
+    2.05/1.10/\PTriBAccent, 2.85/2.20/\PTriBAccent, 3.10/1.45/cAmberSphere,
+    3.55/2.65/cAmberSphere, 3.80/1.85/\PTriBAccent, 3.45/0.95/\PTriBAccent,
+    4.00/1.10/cAmberSphere, 1.75/2.00/\PTriBAccent, 2.55/0.95/cAmberSphere}{
+    \fill[\cc!80] (\xt, \yt) circle (0.10);
+  }
+  %% charges captured (short curving arrows ending at traps)
+  \draw[arrS, cTeal] (1.00, 3.05) .. controls (1.10, 2.85) .. (1.20, 2.20);
+  \draw[arrS, cTeal] (2.20, 3.05) .. controls (2.20, 2.80) .. (2.10, 2.55);
+  \draw[arrS, cTeal] (3.40, 3.05) .. controls (3.50, 2.85) .. (3.55, 2.65);
+  %% --- end Panel B content ---
+
+  \node[slbl, text=\PTriBAccent!70!black, anchor=center] at (2.40, 0.10) {\PTriBCapHead};
+  \node[xslbl, cTeal!70!black, anchor=center] at (2.40, -0.20) {\PTriBCapAct};
+  \node[xslbl, cGray, anchor=center] at (2.40, -0.50) {\PTriBCapNote};
+\end{scope}
+
+%% Connector B → C
+\draw[arr, cGray!50, line width=1.2pt] (10.70, 2.20) -- (11.10, 2.20);
+
+%% ============ Panel C (right) ============
+\begin{scope}[shift={(11.2,0.5)}]
+  \node[ttl, text=\PTriCAccent!70!black, anchor=south] at (2.4, 3.65) {\PTriCTitle};
+
+  \fill[cBlue!15] (0.30, 3.10) rectangle (4.50, 3.30);
+  \fill[cBlue!15] (0.30, 0.50) rectangle (4.50, 0.70);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 3.10) rectangle (4.50, 3.30);
+  \draw[cBlue!50, line width=0.5pt] (0.30, 0.50) rectangle (4.50, 0.70);
+  \node[xslbl, cBlue, anchor=center] at (2.40, 3.20) {electrode $(+)$};
+  \node[xslbl, cBlue, anchor=center] at (2.40, 0.60) {electrode $(-)$};
+  \fill[\PTriCAccent!10] (0.30, 0.70) rectangle (4.50, 3.10);
+  \draw[\PTriCAccent!40, line width=0.5pt] (0.30, 0.70) rectangle (4.50, 3.10);
+
+  %% --- Panel C content (raw — author may reposition / replace) ---
+  %% percolation paths (clusters connecting top↔bottom)
+  \draw[\PTriCAccent!70, line width=1.6pt, rounded corners=1mm]
+    (1.10, 3.05) -- (1.10, 2.50) -- (1.30, 2.30) -- (1.20, 1.80) -- (1.40, 1.40) -- (1.20, 0.95) -- (1.20, 0.75);
+  \draw[\PTriCAccent!70, line width=1.6pt, rounded corners=1mm]
+    (3.20, 3.05) -- (3.30, 2.60) -- (3.10, 2.10) -- (3.30, 1.60) -- (3.10, 1.10) -- (3.20, 0.75);
+  %% residual isolated traps
+  \foreach \xt/\yt in {2.20/2.30, 2.60/1.50, 2.10/0.95}{
+    \fill[\PTriCAccent!50] (\xt, \yt) circle (0.08);
+  }
+  %% charge flowing through percolation paths (fast bypass)
+  \draw[arr, cTeal] (1.10, 3.05) -- (1.10, 2.50) -- (1.30, 2.30) -- (1.20, 1.80) -- (1.40, 1.40) -- (1.20, 0.95) -- (1.20, 0.75);
+  \draw[arr, cTeal] (3.20, 3.05) -- (3.30, 2.60) -- (3.10, 2.10) -- (3.30, 1.60) -- (3.10, 1.10) -- (3.20, 0.75);
+  %% --- end Panel C content ---
+
+  \node[slbl, text=\PTriCAccent!70!black, anchor=center] at (2.40, 0.10) {\PTriCCapHead};
+  \node[xslbl, cTeal!70!black, anchor=center] at (2.40, -0.20) {\PTriCCapAct};
+  \node[xslbl, cGray, anchor=center] at (2.40, -0.50) {\PTriCCapNote};
+\end{scope}
+
+%% ============ Bottom summary caption ============
+\node[lbl, cGray!85!black, anchor=north, text width=180mm, align=center] at (8.0, -0.95)
+  {\textsf{\PTriSummary}};
+
+\end{tikzpicture}
