@@ -1,0 +1,69 @@
+% Smoke fixture for log_plot snippet — verify paper loglog style key
+% renders both a power-law plot and a Debye exp(-t/tau) plot at fixture
+% target dimensions with Style Lock.
+%
+% Regression sentinel (added 2026-05-04): Plot B carries a `title=` while
+% Plot A does not. Both pass `paper loglog={3.6cm}{2.6cm}`. With the style's
+% `scale only axis` keyword in effect, both plots render with IDENTICAL
+% inner data-area height — the title grows the bbox upward, not inward.
+% If `scale only axis` is removed, Plot B's inner area shrinks vertically
+% to make room for the title, breaking visual parity. This is the exact
+% regression that surfaced on golden_trap_depth_picture Row 1 in 2026-05-04
+% (see polymer-paper-preamble.sty `paper loglog/.style` comment block).
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}  % loads pgfplots + paper loglog style key
+
+\input{../../../styles/snippets/log_plot.snippet.tex}  % docs/convention only
+
+\begin{document}
+\begin{tikzpicture}[x=1cm, y=1cm]
+
+  % Plot A: power-law I(t) ∝ t^{-n}
+  \begin{scope}
+    \begin{loglogaxis}[
+      paper loglog={3.6cm}{2.6cm},
+      xmin=1e-3, xmax=1e3, ymin=1e-4, ymax=1e1,
+      xtick={1e-3, 1e0, 1e3}, ytick={1e-4, 1e-1, 1e1},
+      xlabel={$\log\,t$}, ylabel={$\log\,I$},
+    ]
+      \addplot[cBlue, line width=0.92pt, mark=none] coordinates {
+        (1e-3, 1.0) (1e-2, 0.2) (1e-1, 0.04) (1e0, 8e-3)
+        (1e1, 1.6e-3) (1e2, 3.2e-4) (1e3, 6.4e-5)
+      };
+      \addplot[cBlue, dashed, line width=0.45pt, mark=none]
+        coordinates {(1e0, 8e-3) (1e0, 1.6e-3) (1e1, 1.6e-3)};
+      \node[font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=north east]
+        at (axis cs:1e3, 8e0) {$I(t)\propto t^{-n}$};
+      \node[text=cBlue, fill=white, inner sep=0.55pt,
+        font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=north west]
+        at (axis cs:1.2e0, 8e-4) {slope = $-n$};
+    \end{loglogaxis}
+  \end{scope}
+
+  % Plot B: Debye reference exp(-t/tau) — with title= to exercise scale-only-axis path.
+  \begin{scope}[shift={(5.0,0)}]
+    \begin{loglogaxis}[
+      paper loglog={3.6cm}{2.6cm},
+      xmin=1e-3, xmax=1e3, ymin=1e-4, ymax=1e1,
+      xtick={1e-3, 1e0, 1e3}, ytick={1e-4, 1e-1, 1e1},
+      xlabel={$\log\,t$}, ylabel={$\log\,I$},
+      title={Discharge (Debye reference)},
+    ]
+      \addplot[cGray, line width=0.75pt, mark=none] coordinates {
+        (1e-3, 0.99) (1e-2, 0.99) (1e-1, 0.99)
+        (1e0, 0.97) (3e0, 0.90) (1e1, 0.72)
+        (3e1, 0.37) (1e2, 0.036) (3e2, 4.5e-5)
+      };
+      \addplot[cGray, dashed, line width=0.38pt, mark=none]
+        coordinates {(30, 0.37) (30, 1e-4)};
+      \node[align=left, text=cGray, fill=white, inner sep=0.65pt,
+        font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
+        at (axis cs:3e-3, 1e-2) {Debye\\exp($-t/\tau$)};
+      \node[text=cGray, fill=white, inner sep=0.45pt,
+        font=\sffamily\fontsize{6.0}{7.2}\selectfont, anchor=south west]
+        at (axis cs:7e1, 8e-4) {$\tau_d$};
+    \end{loglogaxis}
+  \end{scope}
+
+\end{tikzpicture}
+\end{document}

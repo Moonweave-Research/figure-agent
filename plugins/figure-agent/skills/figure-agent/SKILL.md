@@ -1,6 +1,6 @@
 ---
 name: figure-agent
-description: Use for paper-figure quality, compile, export, and reproducibility gates around scientific schematics. A human or any LLM/tool may author the figure; figure-agent enforces Style Lock, compiles/exports, runs visual QA checks, and reports stale or unreplayable figure state. Prompt/image-gen helpers exist but are frozen legacy helpers, not the main development direction. Symbolic schematic axes are inside scope; quantitative data plots and measured datasets belong in matplotlib / Graph_making_hub.
+description: Use for paper-figure quality, compile, export, and reproducibility gates around scientific schematics. A human or any LLM/tool may author the figure; figure-agent enforces Style Lock, compiles/exports, runs visual QA checks, and reports stale or unreplayable figure state. Deleted v0.1 prompt/image-gen commands are historical only. Symbolic schematic axes are inside scope; quantitative data plots and measured datasets belong in matplotlib / Graph_making_hub.
 ---
 
 # figure-agent SKILL
@@ -24,16 +24,15 @@ Durable responsibilities:
 4. **Reproducibility** — keep per-figure folders, source, briefing, status, and
    exports auditable months later.
 
-Prompt/image-gen orchestration from v0.1 remains available but frozen. Do not
-expand it unless real dogfooding proves a repeated non-transient bottleneck.
+Prompt/image-gen orchestration from v0.1 is historical only in this plugin line.
+Do not route users to deleted commands.
 Active direction: `docs/quality-kernel-goal.md`.
 
 ## Workflow shape
 
 `/fig_new` is the shared entry point that scaffolds per-figure folders via
-a conversational interview. After scaffolding, the workflow branches; both
-paths land at the same `/fig_compile` and `/fig_export`, but only the
-quality-kernel path is the active development direction.
+a conversational interview. After scaffolding, author semantic TikZ from the
+briefing, optional reference image, and optional coordinate hints.
 
 ### Active (quality kernel)
 
@@ -75,12 +74,11 @@ authoring or drift review.
                              Report-only for v0.2; subscription tokens, zero external API.
 ```
 
-Replaces the v0.1 `/fig_review` HALT-then-paste workflow via rename + extend
+Replaces the v0.1 HALT-then-paste review surface via rename + extend
 (`scripts/review_brief.py` → `scripts/critique_brief.py`,
-`commands/fig_review.md` → `commands/fig_critique.md`). The remaining v0.1
-helpers (`/fig_prompt`, `/fig_preview_select`, prompt-template / redaction /
-selection-notes pipeline, `selected_preview` stage gate) were deleted in
-PR #8a + #8b. See `docs/architecture-v0.2-proposal.md`.
+`commands/fig_review.md` → `commands/fig_critique.md`). The old prompt-template,
+redaction, preview-selection pipeline, and selected-preview stage gate were
+deleted in PR #8a + #8b. See `docs/architecture-v0.2-proposal.md`.
 
 **Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
 

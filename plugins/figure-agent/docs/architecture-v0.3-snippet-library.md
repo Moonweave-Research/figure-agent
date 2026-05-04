@@ -1,6 +1,6 @@
 # Architecture v0.3 — L3 Snippet Library (active direction)
 
-**Status:** PLAN (2026-05-04)
+**Status:** PLAN + branch implementation in progress (2026-05-04)
 **Supersedes:** `architecture-v0.3-briefing-semantic-grounding.md` and `briefing-semantic-schema-v1.md` as the *active* v0.3 direction. Those documents remain in the repo as design reference but are demoted to **secondary tracks**.
 **Derived from:** N=1 dogfood failure (single-rater F1_w 0.244 → predicted 0.981 with prose grounding) + user real-quality assessment ("달라지는 게 없는데… 우리 피겨 에이전트 개선했냐?") + `/compass` STOP verdict (drift + rot SUSPICIOUS).
 **One-line goal:** stop authoring scientific-figure TikZ from scratch; vendor and curate battle-tested community packages and snippets so paper-grade reach becomes a composition problem, not an authoring problem.
@@ -109,7 +109,7 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 
 ## 5. v0.3.0 scope vs. v0.3.1+
 
-### v0.3.0 ships when
+### v0.3.0 original ship hypothesis (superseded by the addendum)
 - A1 (polymer chain) and A2 (log_plot) both ship and are used by `golden_trap_depth_picture` + `fig3_trapping_concept`
 - N=2 dogfood produces F1_w within 0.10 of N=1 (i.e., snippet approach generalizes; not just brief-overfit)
 - BLOCKER FN count = 0 on both fixtures
@@ -121,13 +121,29 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 - `bandplot` package vendoring — only if hand-curated TikZ proves insufficient
 - L7 Inkscape post-process polish — separate Gap 2 work, unchanged
 
+### Addendum (2026-05-04 EOD): v0.3.0 ship deferred — option ε
+
+**Decision: defer v0.3.0 ship until a real paper figure naturally exercises A1 (`\PolymerChain`) or A2 (`paper loglog/.style`).**
+
+Context: After A1 + A2 were integrated into `golden_trap_depth_picture` and the BandDiagram Gap 3+5 options were added as a separate macro hardening step, the planned N=2 fixture `fig3_trapping_concept` was found incompatible with the current `\BandDiagram` macro encoding (Gap 1: line-vs-box visual model; Gap 4: hard-coded "CB"/"VB" labels — both out of `/decide` Option B scope). A repo-wide survey found no other fixture exercises A1 or A2:
+
+- `n3_trial_01_trap_depth` uses `\WavyChain` + `\LogLogPlot` (the *sibling* macros of A1/A2, not A1/A2 themselves) — useful as a broad-catalog stability signal but does not directly defend the ship-gate clause "snippet approach generalizes; not just brief-overfit."
+- `dogfood_power_law_trap_pipeline` lacks `\BandDiagram` entirely.
+- All other fixtures predate the v0.3 deliverables.
+
+Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real* consumers organically pull the component), synthesizing a fixture purely to satisfy the gate violates the very condition the gate is meant to enforce. The macro Gap 3+5 extension + smoke + golden regression are durable on branch and require no v0.3.0 tag to remain useful.
+
+**Ship gate restated**: v0.3.0 ships when the next real manuscript figure pulls in A1 or A2, that figure compiles cleanly under the existing snippet API, and `/fig_critique` produces a grounded N=2 measurement. Until then v0.3 work continues in-place on `main` without tag.
+
+**Catalog stability signal (separate from ship gate)**: `/fig_critique n3_trial_01_trap_depth` is run as a rubric §4.2 evaluator-stability + library-catalog-stability probe. F1_w from this run is logged but is **not** treated as the §5.1 ship-gate metric.
+
 ## 6. Open issues for next session
 
-1. **chemfig + lualatex compatibility check** — does our preamble already work with chemfig, or is there a font/encoding clash to fix first?
-2. **PGFPlots minor-tick API for log axes** — confirm `minor xtick` and `xminorgrids=true` behave as expected at the current scale; minor tick spacing on log axes is non-trivial.
-3. **Snippet `\providecommand` interface design** — first 1-2 snippets define the pattern; later ones must conform. Resist over-design.
-4. **Attribution + license tracking** — chemfig is LPPL 1.3, PGFPlots is LPPL 1.3 — both compatible with our redistribution model. Record in `snippets/README.md` as snippets are added.
-5. **Reference vs. snippet conflict** — when reference image (e.g., `golden_target_001.png`) shows a feature the snippet doesn't generate by default, document the override in `briefing.md §7` (now we have the convention).
+1. **Real N=2 consumer** — wait for a real manuscript figure to pull A1 or A2; do not synthesize a fixture only to satisfy the ship gate.
+2. **A3/A4 pressure** — keep BandDiagram line-vs-box and DOS-lobe improvements deferred until another figure creates direct pressure.
+3. **Snippet interface generalization** — keep the first 1-2 snippet interfaces small; later snippets should conform only where the pattern proves useful.
+4. **Attribution + license tracking** — chemfig and PGFPlots are LPPL 1.3-compatible; keep `styles/snippets/README.md` as the active catalog.
+5. **Reference vs. snippet conflict** — when a reference image shows a feature the snippet does not generate by default, document the override in `briefing.md §7`.
 
 ## 7. Status of sibling docs
 
@@ -143,12 +159,11 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 
 When resuming in a new session:
 
-1. Read `MEMORY.md` index, especially the `session_handoff_2026_05_04_v0_3_pivot` entry (created at this session's closeout).
-2. Read this doc end-to-end.
-3. Verify TeX Live includes chemfig and PGFPlots (`tlmgr info chemfig` or just `kpsewhich chemfig.sty`).
-4. Confirm `golden_trap_depth_picture.tex` post-state matches the post-revert + 5-light-fixes state (commit `949aa4d`).
-5. Check `examples/fig3_trapping_concept/briefing.md` already has a §7 Author Intent (committed in this closeout) so it's ready for N=2 use after chemfig spike.
-6. Begin §3.1 chemfig spike on `golden_trap_depth_picture.tex` Row 3.
+1. Read this doc and `docs/superpowers/plans/2026-05-04-v0-3-review-blockers.md`.
+2. Confirm the branch state: A1 `\PolymerChain`, A2 `paper loglog`, and BandDiagram `[no_et]` / `[traps=none]` should exist.
+3. Run the current verification loop before making claims: `uv run pytest -q`, `uv run ruff check .`, and a golden fixture compile.
+4. Pick the next real manuscript figure that naturally needs A1/A2; do not create a fake N=2 fixture for metrics.
+5. If promoting v0.3.0, rerun critique/adjudication and only tag after artifact gates match the accepted criteria.
 
 ---
 

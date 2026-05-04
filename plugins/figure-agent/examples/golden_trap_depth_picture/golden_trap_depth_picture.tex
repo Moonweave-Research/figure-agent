@@ -1,6 +1,10 @@
 \documentclass[border=2pt]{standalone}
 \usepackage{polymer-paper-preamble}
 
+% v0.3 L3 snippet library
+\input{../../styles/snippets/polymer_chain.snippet.tex}
+\input{../../styles/snippets/log_plot.snippet.tex}  % docs only; style key in preamble
+
 \begin{document}
 % Required source tokens: Mathematical interpretation; Molecular origin.
 \begin{tikzpicture}[
@@ -44,65 +48,59 @@
   \node[rowlabel] at (0.78,0.98) {Experiment};
 \end{scope}
 
-% Row 1 power-law plot
+% Row 1 power-law plot — v0.3 A2: PGFPlots loglogaxis with paper loglog style
 \begin{scope}[shift={(3.15,6.15)}]
-  \draw[cGray, line width=0.38pt] (0,0.36) -- (2.75,0.36);
-  \draw[cGray, line width=0.38pt] (0,0.36) -- (0,2.38);
-  % minor grid lines (dashed)
-  \foreach \x in {0.458,0.917,1.833,2.292} {
-    \draw[cGray, line width=0.15pt, dashed] (\x,0.36) -- (\x,2.38);
-  }
-  % major ticks
-  \foreach \x in {0,1.375,2.75} {
-    \draw[cGray, line width=0.25pt] (\x,0.36) -- (\x,0.30);
-  }
-  \foreach \x/\lab in {0/{10^-3},1.375/{10^0},2.75/{10^3}} {
-    \node[tickLabel, anchor=north] at (\x,0.22) {$\lab$};
-  }
-  % minor grid lines (dashed)
-  \foreach \y in {0.78,1.20,2.04} {
-    \draw[cGray, line width=0.15pt, dashed] (0,\y) -- (2.75,\y);
-  }
-  % major ticks
-  \foreach \y in {0.36,1.62,2.38} {
-    \draw[cGray, line width=0.25pt] (0,\y) -- (-0.06,\y);
-  }
-  \foreach \y/\lab in {0.36/{10^-4},1.62/{10^-1},2.38/{10^1}} {
-    \node[tickLabel, anchor=east] at (-0.14,\y) {$\lab$};
-  }
-  \node at (1.38,-0.47) {$\log\,t$};
-  \node[rotate=90] at (-1.24,1.33) {$\log\,I$};
-  \draw[cBlue, line width=0.92pt] (0.18,2.25) -- (2.62,0.48);
-  \draw[cBlue, dashed, line width=0.45pt] (1.08,1.55) -- (1.08,0.98) -- (1.68,0.98);
-  \node[mathBlue] at (1.98,1.98) {$I(t)\propto t^{-n}$};
-  \node[text=cBlue, font=\sffamily\fontsize{6.0}{7.2}\selectfont] at (0.86,0.78) {slope = $-n$};
+  \begin{loglogaxis}[
+    paper loglog={3.6cm}{2.6cm},
+    xmin=1e-3, xmax=1e3, ymin=1e-4, ymax=1e1,
+    xtick={1e-3, 1e0, 1e3}, ytick={1e-4, 1e-1, 1e1},
+    xlabel={$\log\,t$}, ylabel={$\log\,I$},
+  ]
+    % I(t) = c * t^{-n}, n=0.7. Log-spaced explicit coords (see snippet docs §sampling).
+    \addplot[cBlue, line width=0.92pt, mark=none] coordinates {
+      (1e-3, 1.0) (1e-2, 0.2) (1e-1, 0.04) (1e0, 8e-3)
+      (1e1, 1.6e-3) (1e2, 3.2e-4) (1e3, 6.4e-5)
+    };
+    % Slope reference: vertical rise + horizontal run
+    \addplot[cBlue, dashed, line width=0.45pt, mark=none]
+      coordinates {(1e0, 8e-3) (1e0, 1.6e-3) (1e1, 1.6e-3)};
+    \node[font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=north east]
+      at (axis cs:1e3, 8e0) {$I(t)\propto t^{-n}$};
+    \node[text=cBlue, fill=white, inner sep=0.55pt,
+      font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=north west]
+      at (axis cs:1.2e0, 8e-4) {slope = $-n$};
+  \end{loglogaxis}
 \end{scope}
 
-% Row 1 Debye reference
-\begin{scope}[shift={(7.30,6.02)}]
-  \draw[cGray, rounded corners=2pt, line width=0.38pt] (-0.20,0.05) rectangle (2.70,2.72);
-  \node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=black] at (1.25,2.92) {Discharge (Debye reference)};
-  \draw[cGray, line width=0.36pt] (0.03,0.38) -- (2.48,0.38);
-  \draw[cGray, line width=0.36pt] (0.03,0.38) -- (0.03,2.20);
-  \foreach \x in {0.03,1.23,2.43} {
-    \draw[cGray, line width=0.25pt] (\x,0.38) -- (\x,0.32);
-  }
-  \foreach \x/\lab in {0.03/{10^-3},1.23/{10^0},2.43/{10^3}} {
-    \node[tickLabel, anchor=north] at (\x,0.23) {$\lab$};
-  }
-  \foreach \y in {0.38,0.74,1.10,1.46,1.82,2.18} {
-    \draw[cGray, line width=0.25pt] (0.03,\y) -- (-0.03,\y);
-  }
-  \foreach \y/\lab in {0.38/{10^-4},1.46/{10^-1},2.18/{10^1}} {
-    \node[tickLabel, anchor=east] at (-0.10,\y) {$\lab$};
-  }
-  \node at (1.25,-0.42) {$\log\,t$};
-  \node[rotate=90] at (-1.08,1.28) {$\log\,I$};
-  \draw[cGray, line width=0.75pt] (0.22,1.98) .. controls (0.95,1.96) and (1.70,1.82) .. (2.28,0.55);
-  \draw[cGray, dashed, line width=0.38pt] (1.75,1.70) -- (1.75,0.63);
-  \node[align=left, text=cGray, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont] at (0.62,1.08) {Debye\\exp($-t/\tau$)};
-  \node at (1.86,0.54) {$\tau_d$}; % tau_d
-  \draw[evidenceArrow] (2.86,1.70) -- (5.40,1.70) -- (5.54,1.30);
+% Row 1 Debye reference — v0.3 A2
+% shift x widened from 7.30 → 7.80 (2026-05-04): scale-only-axis moved tick
+% labels outside W=3.6cm bbox, so 0.55cm gap caused 10^3 (left) vs 10^-4
+% (right) collisions in strict mode. Mid-axis arrow target adjusted below.
+\begin{scope}[shift={(7.80,6.02)}]
+  \begin{loglogaxis}[
+    paper loglog={3.6cm}{2.6cm},
+    xmin=1e-3, xmax=1e3, ymin=1e-4, ymax=1e1,
+    xtick={1e-3, 1e0, 1e3}, ytick={1e-4, 1e-1, 1e1},
+    xlabel={$\log\,t$}, ylabel={$\log\,I$},
+    title={Discharge (Debye reference)},
+  ]
+    % Debye decay: exp(-t/tau), tau=30. Pre-evaluated for stable log sampling.
+    \addplot[cGray, line width=0.75pt, mark=none] coordinates {
+      (1e-3, 0.99) (1e-2, 0.99) (1e-1, 0.99)
+      (1e0, 0.97) (3e0, 0.90) (1e1, 0.72)
+      (3e1, 0.37) (1e2, 0.036) (3e2, 4.5e-5)
+    };
+    \addplot[cGray, dashed, line width=0.38pt, mark=none]
+      coordinates {(30, 0.37) (30, 1e-4)};
+    \node[align=left, text=cGray, fill=white, inner sep=0.65pt,
+      font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
+      at (axis cs:3e-3, 1e-2) {Debye\\exp($-t/\tau$)};
+    \node[text=cGray, fill=white, inner sep=0.45pt,
+      font=\sffamily\fontsize{6.0}{7.2}\selectfont, anchor=south west]
+      at (axis cs:7e1, 8e-4) {$\tau_d$};
+  \end{loglogaxis}
+  % Outgoing arrow to Row 2 — shifted to plot right edge after scale-only-axis fix
+  \draw[evidenceArrow] (3.60,1.30) -- (6.14,1.30) -- (6.28,0.90);
 \end{scope}
 
 % Row 2 label/icon and flow
@@ -132,13 +130,12 @@
   }
   \node[rowlabel] at (0.85,1.42) {Molecular\\origin};
 
-  \draw[cGray, line width=0.85pt] plot[smooth] coordinates {(1.65,2.40) (2.05,2.35) (2.45,2.44) (2.85,2.36) (3.25,2.44) (3.65,2.35) (4.05,2.43) (4.45,2.36) (4.85,2.43) (5.25,2.35) (5.65,2.43) (6.05,2.36) (6.45,2.43) (6.85,2.36)};
-  \draw[cGray, line width=0.85pt] plot[smooth] coordinates {(1.60,1.78) (2.00,1.73) (2.40,1.82) (2.80,1.74) (3.20,1.82) (3.60,1.73) (4.00,1.82) (4.40,1.74) (4.80,1.82) (5.20,1.73) (5.60,1.82) (6.00,1.74) (6.40,1.82) (6.80,1.74)};
-  \draw[cGray, line width=0.85pt] plot[smooth] coordinates {(1.60,1.08) (2.00,1.03) (2.40,1.12) (2.80,1.04) (3.20,1.12) (3.60,1.03) (4.00,1.12) (4.40,1.04) (4.80,1.12) (5.20,1.03) (5.60,1.12) (6.00,1.04) (6.40,1.12) (6.80,1.04)};
-  \foreach \x/\y in {2.35/2.40,3.65/2.40,4.82/2.40,5.30/2.40,5.88/2.40,3.08/1.78,4.60/1.78,5.05/1.78,5.50/1.78,2.35/1.08,3.80/1.08,4.50/1.08,5.20/1.08} {
-    \node[text=cAmber, font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (\x,\y+0.42) {S};
-    \draw[cAmber, fill=white, line width=0.50pt] (\x,\y+0.18) circle (0.045);
-  }
+  % v0.3: chemfig-based monomer-resolved chains (replaces 3 plot[smooth] + S \foreach)
+  % S branch index map for 11-monomer chain at atom_sep=0.30: monomer i lands at
+  % x ~ anchor + 0.52*(i-1). Highlight box (4.20-5.85) covers monomers 6-9.
+  \PolymerChain{1.65}{2.40}{11}{3,7,8,9}
+  \PolymerChain{1.60}{1.78}{11}{2,6,7,8,9}
+  \PolymerChain{1.60}{1.08}{11}{3,7,8,9}
   \draw[cGray, dashed, rounded corners=2pt, line width=0.40pt] (4.20,1.47) rectangle (5.85,2.02);
   \node[text=cAmber, font=\sffamily\itshape\fontsize{7.0}{8.4}\selectfont] at (3.80,0.40) {S-rich segments};
   \draw[evidenceArrow] (4.55,0.62) -- (4.92,1.47);

@@ -98,3 +98,23 @@
 Original byte-exact fixture check (L5 export staleness) does not apply here — panel (b) raw → macro is intentional format change, not rebuild staleness. If panel (b) is future golden fixture, the "golden" baseline must be set post-macro (macro version becomes authoritative). Byte-check then detects unintended changes to the macro-emitted output, not user revisions.
 
 **Action**: If panel (b) macro version is adopted for paper, regenerate golden fixture (`/fig_export fig3_trapping_concept --golden`). If rejected, keep raw.
+
+---
+
+## Status update (2026-05-04 EOD): Gap 3 + Gap 5 implemented in branch; Gap 1+2+4 remain open
+
+**Closed**:
+- **Gap 3** — `\BandDiagram[no_et]` boolean key implemented in `polymer-paper-preamble.sty`. Suppresses both the `bandEt` dashed line and the auto-generated `$E_t$` text node. Backward-compatible (default off).
+- **Gap 5** — `\BandDiagram[traps=none]` choice key implemented. Suppresses both `\foreach \BDy in {#8}` (shallow) and `\foreach \BDy in {#9}` (deep) `\TrapLevel` calls. Backward-compatible.
+
+**Verification**:
+- `examples/_macro_smoke/_macro_smoke.tex` extended with three new cases: `[no_et]`, `[traps=none]`, `[no_et, traps=none]`.
+- Focused compile/API tests cover `[no_et]` and `[traps=none]`.
+- `golden_trap_depth_picture` recompiles without strict text collisions; full artifact acceptance remains a separate gate.
+
+**Open**:
+- **Gap 1** (line vs box visual model) — design question, blocked on stakeholder input. Do not promote from single fixture.
+- **Gap 2** (TrapLevel extent — short dashes vs full-width) — requires Layer 2.5 coordinate hint, deferred.
+- **Gap 4** (hard-coded "CB"/"VB" — needs `[box_labels=...]` for "CB / LUMO"-style suffixes) — non-blocking (external labels work as workaround).
+
+**`fig3_trapping_concept` migration status**: NOT migrated to `\BandDiagram` macro. Closed Gap 3+5 alone is insufficient — fig3's panel (a)/(b) use line-style CB/VB + "CB / LUMO" suffix labels, which collide with Gap 1 (encoding) + Gap 4 (label hardcoding). Migration deferred until Gap 1+4 promote into scope under multi-fixture pressure.

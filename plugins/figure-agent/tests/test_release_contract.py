@@ -52,3 +52,45 @@ def test_fig_extract_documents_structural_hints_as_optional() -> None:
     assert "authoring evidence, not final source" in extractor
     assert "OCR + palette clusters still remain useful" in extractor
     assert "The hints carry two structures" not in extractor
+
+
+def test_public_docs_do_not_route_to_deleted_legacy_commands() -> None:
+    docs_by_path = {
+        "README.md": (REPO_ROOT / "README.md").read_text(),
+        "skills/figure-agent/SKILL.md": (
+            REPO_ROOT / "skills" / "figure-agent" / "SKILL.md"
+        ).read_text(),
+        "commands/fig_new.md": (REPO_ROOT / "commands" / "fig_new.md").read_text(),
+    }
+    forbidden_strings = [
+        "/fig_prompt",
+        "/fig_preview_select",
+        "prompt/image-gen orchestration remains available",
+        "Prompt/image-gen orchestration from v0.1 remains available",
+        "The earlier prompt/image-gen orchestration helpers remain available",
+        "v0.1 line is active",
+        "workflow remains available",
+    ]
+
+    for doc_path, doc_text in docs_by_path.items():
+        for forbidden in forbidden_strings:
+            assert forbidden not in doc_text, f"{doc_path} still contains {forbidden!r}"
+
+
+def test_package_descriptions_name_quality_kernel_direction() -> None:
+    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
+    marketplace = json.loads(
+        (REPO_ROOT.parents[1] / ".claude-plugin" / "marketplace.json").read_text()
+    )
+
+    texts = [
+        plugin["description"],
+        pyproject["project"]["description"],
+        marketplace["description"],
+        marketplace["plugins"][0]["description"],
+    ]
+
+    for text in texts:
+        assert "quality" in text.lower()
+        assert "prompt intent control" not in text

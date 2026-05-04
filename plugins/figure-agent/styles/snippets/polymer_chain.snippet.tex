@@ -1,0 +1,50 @@
+%% polymer_chain.snippet.tex
+%% Sulfur-rich copolymer chain with monomer-resolved backbone (chemfig-based).
+%% License: snippet code MIT-style; chemfig is LPPL 1.3 (TeX Live).
+%% Author origin: figure-agent v0.3 — first L3 snippet (PR pending).
+%%
+%% Usage:
+%%   \usepackage{chemfig}                       % consumer must load
+%%   \setchemfig{atom sep=0.30cm, ...}         % consumer sets global scale
+%%   \renewcommand*\printatom[1]{\sffamily ...} % consumer enforces font
+%%   \input{styles/snippets/polymer_chain.snippet.tex}
+%%   \PolymerChain{x_anchor}{y_anchor}{monomer_count}{s_csv}
+%%
+%% Args:
+%%   #1 = anchor_x (TikZ cm)
+%%   #2 = anchor_y (TikZ cm)
+%%   #3 = monomer_count (integer 4..16)
+%%   #4 = s_csv = comma-separated 1-based monomer indices that carry a single -S branch
+%%
+%% Geometry contract:
+%%   - Backbone is zigzag (-[:30]-[:-30]) at the consumer's atom sep
+%%   - S branches hang straight DOWN one atom-sep ([-:-90]S)
+%%   - Caller anchors at the LEFT end; chain extends right
+%%   - Approx horizontal span = monomer_count * 2 * atom_sep * cos(30deg)
+%%
+%% Density encoding (advisor-validated):
+%%   sparse  = S indices spaced ~4 apart (e.g. 3,7,11)
+%%   rich    = S indices contiguous     (e.g. 6,7,8,9)
+%%   mixed   = consumer composes (e.g. 3,7,8,9 = sparse left + rich middle)
+
+% Dependencies: chemfig, xstring — both loaded by polymer-paper-preamble.sty.
+% Snippet is intended to be \input-ed in the document preamble (before \begin{document}).
+
+\makeatletter
+% Inner helper: emit \chemfig text built via xdef so chemfig parser sees fully expanded
+\newcommand{\PolymerChain}[4]{%
+  \begingroup
+  \def\PCsidecsv{,#4,}%
+  \xdef\PCchainstr{[:30]}%
+  \pgfmathtruncatemacro{\PCnmono}{#3}%
+  \foreach \PCi in {1,...,\PCnmono} {%
+    \edef\PCneedle{,\PCi,}%
+    \IfSubStr{\PCsidecsv}{\PCneedle}%
+      {\xdef\PCchainstr{\PCchainstr-[:-30](-[:-90]S)-[:30]}}%
+      {\xdef\PCchainstr{\PCchainstr-[:-30]-[:30]}}%
+  }%
+  \node[anchor=west, inner sep=0pt] at (#1,#2)
+    {\expandafter\chemfig\expandafter{\PCchainstr}};
+  \endgroup
+}
+\makeatother
