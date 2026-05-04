@@ -66,6 +66,28 @@ amber=deep trap, gray=axis/recombination/escape (원본 sty 매크로 결).
 - Trapped electrons sit on trap levels, not floating freely in the gap.
 - Thermal escape is weak/negligible relative to deep-trap retention.
 
+## 7. Author Intent (vision critique grounding)
+
+### Must depict
+- **Panel (a) electrons** — round dots or circles (not zigzag or featureless), ideally 1-2 circled electrons mobile in CB region before fast recombination arrow.
+- **Panel (b) trap levels** — two distinct discrete lines (shallow 상단, deep 하단) in the mid-gap region; NOT continuous states. Visually separate from CB/VB band edges.
+- **Trapped electron cluster on deep trap** — ≥4 electron dots sitting directly on the deep trap line (or clustered ~0.1cm above it), indicating capture. NOT floating in the gap.
+- **Thermal escape arrow on deep trap** — small, weak upward arrow from deep trap toward CB (or labeled "kT ≪ E_t"), indicating *suppressed* escape. If arrow is present, must be ≪ injection arrow in size.
+- **Panel contrast** — (a) should be visually simpler (clean bands, fast recombination, fewer components); (b) more complex (two trap levels, cluster of electrons, retention physics). Spatial/visual density difference should be perceptible.
+
+### Must avoid
+- **Trap levels as energy curves** — E_t must be a line (discrete level), not Gaussian/smooth distribution.
+- **Floating electrons in gap** — all trapped electrons must be clearly anchored to trap levels, not drifting between CB and VB.
+- **Equal-sized arrows** — injection and thermal-escape arrows must differ visually (injection dominant, escape tiny/suppressed).
+- **Unlabeled trap levels** — shallow/deep distinction must be visually or textually clear (label or relative position).
+- **Polarization representation overlapping with charge dynamics** — if (a) includes dipole/polarization, keep it distinct from electron motion (use separate region or color).
+
+### Semantic assertions (for vision critique)
+1. "Can you identify which electrons are trapped vs. mobile in panel (b)?" → must be visually distinct (color or position).
+2. "The trap levels in panel (b) appear as discrete states, not a continuum." → verify as line features, not gradients.
+3. "Thermal escape from deep trap is suppressed (small arrow, labeled kT ≪ E_t)." → if arrow exists, size & label confirm suppression intent.
+4. "Panel (a) and (b) are visually contrastable as 'polarization-only' vs 'trap-retention' mechanisms." → composition density, component count should differ.
+
 ---
 
 When this briefing is filled, author `examples/fig3_trapping_concept/fig3_trapping_concept.tex` directly (cp `styles/tex_template.tex` to start) and run `/fig_compile fig3_trapping_concept`.
