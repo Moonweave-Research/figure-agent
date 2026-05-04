@@ -60,7 +60,10 @@ is `coordinate_hints.yaml -> semantic TikZ authoring`.
 
 Golden fixtures declare `accepted` + `golden_contract` in `spec.yaml`;
 `check_golden_artifacts.py` auto-escalates into accepted mode when the key is
-present. Override with `--no-require-accepted` for ad-hoc inspection.
+present. Override with `--no-require-accepted` for ad-hoc inspection. Keep
+`/fig_compile` report-only during authoring so the PNG/PDF are produced for
+human visual review; use `FIGURE_AGENT_STRICT=1` for manuscript/CI checks and
+`check_golden_artifacts.py --require-accepted` for the golden hard gate.
 
 For golden fixtures, `reference_image` points to the fixed visual target. Run
 `/fig_extract` to create `coordinate_hints.yaml` from that target before

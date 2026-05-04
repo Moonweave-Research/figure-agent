@@ -70,6 +70,9 @@ traps, and teal convergence title/brace.
 
 ### Snippets used (v0.3 L3 library)
 - **Row 1 log-log plots** (A2 integrated WIP, 2026-05-04): PGFPlots `loglogaxis` with the `paper loglog` style key declared in `polymer-paper-preamble.sty`. Power-law plot uses log-spaced explicit coordinates of c·t^{-0.7}; Debye reference plot uses log-spaced explicit coordinates of exp(-t/30). No wrapper macro — caller writes raw PGFPlots syntax inside the style key. Convention documented in `styles/snippets/log_plot.snippet.tex` (docs-only, no executable code).
+- **Row 1 plot annotations**: `\PlotCallout` from `polymer-paper-preamble.sty`.
+  Used for slope and $\tau_d$ labels so labels have white backing plus a
+  leader arrow instead of floating directly over data/reference lines.
 - **Row 3 polymer chains** (A1 integrated WIP): `styles/snippets/polymer_chain.snippet.tex` — chemfig-based.
   3 calls of `\PolymerChain{x}{y}{11}{s_csv}`. The production fixture uses
   11 chemfig monomers; the briefing intent ("monomer-level texture, not

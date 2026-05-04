@@ -285,6 +285,12 @@ def test_paper_loglog_style_counts_as_flagship_usage(tmp_path: Path) -> None:
     assert not any(v.category == "flagship_macros_unused" for v in violations)
 
 
+def test_plot_callout_counts_as_flagship_macro(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\PlotCallout{(0,0)}{(1,1)}{label}" + "\n")
+    violations = lint(tex)
+    assert not any(v.category == "flagship_macros_unused" for v in violations)
+
+
 def test_no_flagship_macro_emits_warn(tmp_path: Path) -> None:
     tex = _write(tmp_path, r"\node[fill=cAmber] {};" + "\n")
     violations = lint(tex)

@@ -57,6 +57,20 @@ Vendor required packages:
 
 `bandplot` is heavier; defer to v0.3.1 unless `band_diagram.snippet.tex` clearly needs it (likely we can hand-curate from references for now).
 
+### 2.3.1 Post-review annotation primitive
+
+The Row 1 label-on-line regression exposed a gap that is adjacent to A2 but not
+part of the log-axis snippet itself: authors were using bare inline `\node`
+annotations inside plots. v0.3 now includes `\PlotCallout` in
+`polymer-paper-preamble.sty` as the safe pattern for labels that point to a data
+trace, dashed guide, or reference marker.
+
+Scope boundary:
+- `paper loglog/.style` owns axis styling, tick density, and plot-area sizing.
+- `\PlotCallout` owns white-backed leader-label rendering.
+- The author still chooses coordinates; automatic label placement remains out
+  of scope.
+
 ### 2.4 Snippet acceptance criteria
 
 A snippet ships only if:

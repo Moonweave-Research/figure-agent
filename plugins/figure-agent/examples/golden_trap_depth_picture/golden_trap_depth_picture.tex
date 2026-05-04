@@ -68,9 +68,8 @@
       coordinates {(1e0, 8e-3) (1e0, 1.6e-3) (1e1, 1.6e-3)};
     \node[font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=north east]
       at (axis cs:1e3, 8e0) {$I(t)\propto t^{-n}$};
-    \node[text=cBlue, fill=white, inner sep=0.55pt,
-      font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=north west]
-      at (axis cs:1.2e0, 8e-4) {slope = $-n$};
+    \PlotCallout[text=cBlue, anchor=north west]
+      {(axis cs:1e0, 1.6e-3)}{(axis cs:1.2e0, 8e-4)}{slope = $-n$}
   \end{loglogaxis}
 \end{scope}
 
@@ -97,9 +96,8 @@
     \node[align=left, text=cGray, fill=white, inner sep=0.65pt,
       font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
       at (axis cs:3e-3, 1e-2) {Debye\\exp($-t/\tau$)};
-    \node[text=cGray, fill=white, inner sep=0.45pt,
-      font=\sffamily\fontsize{6.0}{7.2}\selectfont, anchor=south west]
-      at (axis cs:7e1, 8e-4) {$\tau_d$};
+    \PlotCallout[text=cGray, anchor=south west]
+      {(axis cs:30, 1e-3)}{(axis cs:7e1, 8e-4)}{$\tau_d$}
   \end{loglogaxis}
   % Outgoing arrow to Row 2 — shifted to plot right edge after scale-only-axis fix
   \draw[evidenceArrow] (3.60,1.30) -- (6.14,1.30) -- (6.28,0.90);

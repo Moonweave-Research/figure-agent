@@ -57,7 +57,11 @@ Golden fixtures additionally declare `accepted` and `golden_contract` keys in
 `spec.yaml`; `check_golden_artifacts.py` then auto-escalates into accepted-mode
 contract checks (rendered-label match, source-inventory floor, audit freshness,
 checker-warning budgets). Override with `--no-require-accepted` for ad-hoc
-basic-mode inspection. When `reference_image` is present, `/fig_extract` creates
+basic-mode inspection. `/fig_compile` remains report-only by default so the
+build PNG is available during visual iteration; manuscript/CI runs can still use
+`FIGURE_AGENT_STRICT=1`, and accepted fixtures use
+`check_golden_artifacts.py --require-accepted` as the hard gate. When
+`reference_image` is present, `/fig_extract` creates
 `coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
 structural hints; compile then uses those hints for drift check when available.
 
