@@ -65,11 +65,15 @@ FLAGSHIP_MACROS: frozenset[str] = frozenset(
         "\\WavyChain",
         "\\BandDiagram",
         "\\LogLogPlot",
+        "\\PlotCallout",
+        "\\PolymerChain",
+        "paper loglog",
     }
 )
 _RE_FLAGSHIP_CALL = re.compile(
     r"\\(IsoBlock|IsoCharge|GradSlab|IsoConeTip"
-    r"|BellCurve|WavyChain|BandDiagram|LogLogPlot)\b"
+    r"|BellCurve|WavyChain|BandDiagram|LogLogPlot|PlotCallout|PolymerChain)\b"
+    r"|paper\s+loglog\s*="
 )
 _RE_THIN_STROKE = re.compile(r"line width\s*=\s*(\d*\.?\d+)pt\b")
 

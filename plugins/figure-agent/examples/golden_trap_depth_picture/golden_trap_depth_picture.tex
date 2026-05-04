@@ -22,7 +22,9 @@
   trapShallow/.style={cAmber, line width=0.72pt},
   trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
   electron/.style={circle, draw=cBlue!75!black, fill=cBlue!45, inner sep=0pt, minimum size=1.35mm, line width=0.34pt},
-  bandbox/.style={draw=black, line width=0.45pt, fill=cLGray!30, minimum width=1.55cm, minimum height=0.48cm},
+  bandbox/.style={draw=none, fill=white, inner sep=0.8pt, minimum width=0.42cm, minimum height=0.20cm},
+  bandEdgeCB/.style={cBlue!80!black, line width=1.05pt, line cap=round},
+  bandEdgeVB/.style={cBlue!45!cRed!90!black, line width=1.05pt, line cap=round},
 ]
 
 \newcommand{\SmallLobe}[4]{%
@@ -31,80 +33,6 @@
     (#1+0.43,#2+0.69) .. controls (#1+0.63,#2+0.69) and (#1+0.65,#2+0.04) ..
     (#1+0.87,#2) -- cycle;
   \node[text=#3, tinyLabel] at (#1+0.43,#2-0.22) {#4};
-}
-
-% \DIBhex{x_center}{y_center}: m-DIB residue as ball-and-stick benzene ring +
-% two horizontal pendant balls (chain-extension direction). Ring radius 0.22cm,
-% 6 black ball vertices, pendant offset 0.18 cm. Span left-pendant to right-pendant
-% = 0.80 cm. Approximates m-disubstituted benzene linearized for chain depiction.
-\newcommand{\DIBhex}[2]{%
-  \begin{scope}[shift={(#1,#2)}]
-    \def\DIBR{0.22}%
-    \foreach \k in {0,...,5} {%
-      \pgfmathsetmacro{\hxa}{\DIBR*cos(\k*60)}%
-      \pgfmathsetmacro{\hya}{\DIBR*sin(\k*60)}%
-      \pgfmathsetmacro{\hxb}{\DIBR*cos((\k+1)*60)}%
-      \pgfmathsetmacro{\hyb}{\DIBR*sin((\k+1)*60)}%
-      \draw[black!85, line width=0.45pt] (\hxa,\hya) -- (\hxb,\hyb);}
-    \foreach \k in {0,...,5} {%
-      \pgfmathsetmacro{\hxc}{\DIBR*cos(\k*60)}%
-      \pgfmathsetmacro{\hyc}{\DIBR*sin(\k*60)}%
-      \node[circle, fill=black!85, draw=black, line width=0.18pt,
-            inner sep=0pt, minimum size=1.20mm] at (\hxc,\hyc) {};}
-    \def\DIBpen{0.18}%
-    \draw[black!85, line width=0.42pt] (-\DIBR,0) -- (-\DIBR-\DIBpen,0);
-    \node[circle, fill=black!85, draw=black, line width=0.18pt,
-          inner sep=0pt, minimum size=1.10mm] at (-\DIBR-\DIBpen,0) {};
-    \draw[black!85, line width=0.42pt] (\DIBR,0) -- (\DIBR+\DIBpen,0);
-    \node[circle, fill=black!85, draw=black, line width=0.18pt,
-          inner sep=0pt, minimum size=1.10mm] at (\DIBR+\DIBpen,0) {};
-  \end{scope}
-}
-
-% \InvVulcChain{x_phase}{y_anchor}: linear S/DIB inverse-vulcanization copolymer.
-% Pattern (chemistry-faithful, scope-relative):
-%   DIB_1 @ x=0.40 — S_3 — DIB_2 @ x=2.16 — S_6 (trap site) — DIB_3 @ x=4.64 — S_3 trail.
-% DIB residues = ball-and-stick m-benzene with 2 horizontal pendants (-CH2-...-S-).
-% S_n runs = amber pearl chain, C-S transition bonds drawn in black to mark
-% organic-sulfur boundary. Total span ~5.8 cm. S_6 middle run = trap-site cluster.
-\newcommand{\InvVulcChain}[2]{%
-  \begin{scope}[shift={(#1,#2)}]
-    %% DIB residues
-    \DIBhex{0.40}{0}
-    \DIBhex{2.16}{0}
-    \DIBhex{4.64}{0}
-    %% C-S boundary bond: DIB1 right pendant (0.80) → S_3 first atom (1.04)
-    \draw[black!75, line width=0.42pt] (0.80,0) -- (1.04,0);
-    %% S_3 left run
-    \foreach \i in {1,...,3} {%
-      \pgfmathsetmacro{\sx}{0.80+\i*0.24}%
-      \draw[cAmber, line width=1.05pt, line cap=round]
-        (\sx-0.24,0) -- (\sx,0);
-      \node[circle, fill=cAmber, draw=cAmber!75!black, line width=0.32pt,
-            inner sep=0pt, minimum size=1.65mm] at (\sx,0) {};}
-    %% S_3 last (1.52) → DIB2 left pendant (1.76)
-    \draw[black!75, line width=0.42pt] (1.52,0) -- (1.76,0);
-    %% DIB2 right pendant (2.56) → S_6 first atom (2.80)
-    \draw[black!75, line width=0.42pt] (2.56,0) -- (2.80,0);
-    %% S_6 middle run (RICH — dashed-box highlighted)
-    \foreach \i in {1,...,6} {%
-      \pgfmathsetmacro{\sx}{2.56+\i*0.24}%
-      \draw[cAmber, line width=1.05pt, line cap=round]
-        (\sx-0.24,0) -- (\sx,0);
-      \node[circle, fill=cAmber, draw=cAmber!75!black, line width=0.32pt,
-            inner sep=0pt, minimum size=1.65mm] at (\sx,0) {};}
-    %% S_6 last (4.00) → DIB3 left pendant (4.24)
-    \draw[black!75, line width=0.42pt] (4.00,0) -- (4.24,0);
-    %% DIB3 right pendant (5.04) → S_3 first atom (5.28)
-    \draw[black!75, line width=0.42pt] (5.04,0) -- (5.28,0);
-    %% S_3 right run (chain trail; no closing DIB)
-    \foreach \i in {1,...,3} {%
-      \pgfmathsetmacro{\sx}{5.04+\i*0.24}%
-      \draw[cAmber, line width=1.05pt, line cap=round]
-        (\sx-0.24,0) -- (\sx,0);
-      \node[circle, fill=cAmber, draw=cAmber!75!black, line width=0.32pt,
-            inner sep=0pt, minimum size=1.65mm] at (\sx,0) {};}
-  \end{scope}
 }
 
 % Canvas
@@ -140,8 +68,8 @@
       coordinates {(1e0, 8e-3) (1e0, 1.6e-3) (1e1, 1.6e-3)};
     \node[font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=north east]
       at (axis cs:1e3, 8e0) {$I(t)\propto t^{-n}$};
-    \node[text=cBlue, font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=north west]
-      at (axis cs:1e-2, 5e-5) {slope = $-n$};
+    \PlotCallout[text=cBlue, anchor=north west]
+      {(axis cs:1e0, 1.6e-3)}{(axis cs:1.2e0, 8e-4)}{slope = $-n$}
   \end{loglogaxis}
 \end{scope}
 
@@ -165,10 +93,11 @@
     };
     \addplot[cGray, dashed, line width=0.38pt, mark=none]
       coordinates {(30, 0.37) (30, 1e-4)};
-    \node[align=left, text=cGray, font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=east]
-      at (axis cs:5e1, 5e-1) {Debye\\exp($-t/\tau$)};
-    \node[text=cGray, font=\sffamily\fontsize{6.0}{7.2}\selectfont, anchor=east]
-      at (axis cs:5, 1e-3) {$\tau_d$};
+    \node[align=left, text=cGray, fill=white, inner sep=0.65pt,
+      font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
+      at (axis cs:3e-3, 1e-2) {Debye\\exp($-t/\tau$)};
+    \PlotCallout[text=cGray, anchor=south west]
+      {(axis cs:30, 1e-3)}{(axis cs:7e1, 8e-4)}{$\tau_d$}
   \end{loglogaxis}
   % Outgoing arrow to Row 2 — shifted to plot right edge after scale-only-axis fix
   \draw[evidenceArrow] (3.60,1.30) -- (6.14,1.30) -- (6.28,0.90);
@@ -187,47 +116,34 @@
   \node[text=cGray] at (6.88,0.36) {$\tau_d$}; % tau_d
   \draw[evidenceArrow] (7.75,1.18) -- (8.55,1.18);
   \node[text=black, font=\sffamily\fontsize{8.2}{9.8}\selectfont] at (8.95,1.18) {$g(E_t)$}; % g(E_t), E_t
-  \SmallLobe{9.45}{0.93}{cAmber}{shallow}
-  \SmallLobe{10.25}{0.93}{cBlue!45!cRed}{deep}
+  \begin{scope}[shift={(9.45,0.93)}, xscale=0.72, yscale=0.66]
+    \SmallLobe{0}{0}{cAmber}{shallow}
+  \end{scope}
+  \begin{scope}[shift={(10.05,0.78)}, xscale=1.18, yscale=1.24]
+    \SmallLobe{0}{0}{cBlue!45!cRed}{deep}
+  \end{scope}
   \draw[evidenceArrow] (11.20,1.18) -- (12.38,1.18);
 \end{scope}
 
 % Row 3 molecular origin
 \begin{scope}[shift={(0.25,0.08)}]
-  % Row 3 icon: mini inverse-vulcanization sulfur polymer fragment.
-  % Same visual language as the InvVulcChain rows below — organic zigzag (gray)
-  % flanking a short S-S-S backbone (amber pearls). Rows 1/2 used scope/Σ icons;
-  % this is the molecular counterpart, kept compact (≈0.9 × 0.4 cm).
-  \draw[cGray!70!black, line width=0.55pt, line cap=round, line join=round]
-    (0.30,2.30) -- (0.42,2.40) -- (0.54,2.20) -- (0.66,2.30);
-  \foreach \v in {0.30, 0.42, 0.54, 0.66} {
-    \draw[cGray!55, fill=white, line width=0.25pt] (\v,2.30) circle (0.026);
-  }
-  \foreach \i in {1,...,3} {
-    \pgfmathsetmacro{\sx}{0.66+\i*0.14}
-    \draw[cAmber, line width=0.85pt, line cap=round]
-      (\sx-0.14,2.30) -- (\sx,2.30);
-    \node[circle, fill=cAmber, draw=cAmber!75!black, line width=0.25pt,
-          inner sep=0pt, minimum size=1.0mm] at (\sx,2.30) {};
-  }
-  \draw[cGray!70!black, line width=0.55pt, line cap=round, line join=round]
-    (1.08,2.30) -- (1.20,2.40) -- (1.32,2.20);
-  \foreach \v in {1.08, 1.20, 1.32} {
-    \draw[cGray!55, fill=white, line width=0.25pt] (\v,2.30) circle (0.026);
+  \draw[cGray, line width=0.70pt] (0.38,2.30) .. controls (0.20,2.56) and (0.55,2.74) .. (0.78,2.58)
+    .. controls (0.60,2.28) and (0.88,2.06) .. (1.16,2.12);
+  \foreach \x/\y in {0.47/2.08,0.75/2.02,1.00/2.18} {
+    \draw[cAmber, fill=white, line width=0.45pt] (\x,\y) circle (0.045);
   }
   \node[rowlabel] at (0.85,1.42) {Molecular\\origin};
 
-  % v0.3 iteration 2: inverse-vulcanization linear sulfur copolymer (S backbone,
-  % organic spacer comonomer). Three chains stacked with ±0.05 cm phase shift to
-  % suggest packing heterogeneity (physical origin of traps); same composition each
-  % chain to honor sulfur-rich uniform stoichiometry. S_6 middle run is the trap site.
-  \InvVulcChain{1.50}{2.40}
-  \InvVulcChain{1.55}{1.78}
-  \InvVulcChain{1.45}{1.08}
-  \draw[cGray, dashed, rounded corners=2pt, line width=0.40pt] (4.00,0.85) rectangle (5.55,2.55);
-  \node[text=cAmber, font=\sffamily\itshape\fontsize{7.0}{8.4}\selectfont] at (4.30,0.55) {S-rich segments};
-  \draw[evidenceArrow] (4.50,0.72) -- (4.55,0.85);
-  \draw[evidenceArrow] (5.20,0.72) -- (5.20,0.85);
+  % v0.3: schematic monomer-resolved chains (replaces 3 plot[smooth] + S \foreach)
+  % S branch index map for 11-monomer schematic chain: middle chain carries the
+  % S-rich segment; top/bottom chains stay sparse so the cluster reads clearly.
+  \PolymerChain{1.65}{2.40}{11}{3,8}
+  \PolymerChain{1.60}{1.78}{11}{2,6,7,8,9}
+  \PolymerChain{1.60}{1.08}{11}{3,8}
+  \draw[cGray, dashed, rounded corners=2pt, line width=0.40pt] (4.20,1.47) rectangle (5.85,2.02);
+  \node[text=cAmber, font=\sffamily\itshape\fontsize{7.0}{8.4}\selectfont] at (3.80,0.40) {S-rich segments};
+  \draw[evidenceArrow] (4.55,0.62) -- (4.92,1.47);
+  \draw[evidenceArrow] (5.05,0.70) -- (5.05,1.43);
   \node[align=center, font=\sffamily\itshape\fontsize{5.6}{6.7}\selectfont, text=black, fill=white, inner sep=1.2pt] at (6.18,0.22) {chemical origin\\(electronegativity,\\polarizability of S)};
 
   \draw[cGray, dashed, rounded corners=2pt, line width=0.42pt] (7.65,1.12) rectangle (9.60,2.62);
@@ -252,8 +168,10 @@
   \node[titleTeal, anchor=west] at (1.15,5.75) {converged trap-depth picture};
   \draw[axis] (1.25,1.05) -- (1.25,4.95);
   \node[rotate=90, text=black] at (0.92,3.00) {Energy};
-  \BandBox{2.43}{4.85}{CB}
-  \BandBox{2.43}{1.10}{VB}
+  \draw[bandEdgeCB] (1.70,4.85) -- (3.16,4.85);
+  \BandBox{3.35}{4.85}{CB}
+  \draw[bandEdgeVB] (1.70,1.10) -- (3.16,1.10);
+  \BandBox{3.35}{1.10}{VB}
   \draw[cGray!45, dashed, line width=0.38pt] (3.62,0.95) -- (3.62,5.10);
   \node[text=black] at (3.82,3.12) {$E_t$}; % E_t
   \TrapLevel{2.02}{4.25}{trapShallow}
@@ -267,16 +185,12 @@
   \node[text=cBlue!45!cRed] at (2.95,2.50) {$\cdots$};
 
   \draw[axis, black] (4.05,1.52) -- (4.05,4.85);
-  \draw[axis, black] (4.05,1.52) -- (5.46,1.52);
+  \draw[axis, black] (4.05,1.52) -- (5.88,1.52);
   \node[text=black, font=\sffamily\fontsize{8.2}{9.8}\selectfont] at (4.98,5.35) {$g(E_t)$}; % g(E_t)
-  \draw[cAmber, line width=0.72pt, fill=cAmber!18]
-    (4.05,4.55) .. controls (4.50,4.20) and (5.55,4.30) .. (5.20,3.45)
-    .. controls (4.90,2.85) and (4.30,2.70) .. (4.05,2.50) -- cycle;
-  \draw[cBlue!45!cRed, line width=0.72pt, fill=cBlue!45!cRed!18]
-    (4.05,2.40) .. controls (4.30,2.10) and (4.65,2.20) .. (4.55,1.85)
-    .. controls (4.45,1.55) and (4.20,1.55) .. (4.05,1.55) -- cycle;
-  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,3.55) {shallow};
-  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, anchor=west] at (5.16,2.12) {deep};
+  \BellCurve[draw=cAmber, line width=0.72pt, fill=cAmber!18]{4.05,3.72,4.72,4.40,side}
+  \BellCurve[draw=cBlue!45!cRed, line width=0.72pt, fill=cBlue!45!cRed!18]{4.05,1.56,5.78,3.02,side}
+  \node[text=cAmber, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, fill=white, inner sep=0.65pt, anchor=west] at (4.82,4.06) {shallow};
+  \node[text=cBlue!45!cRed, font=\sffamily\itshape\fontsize{6.7}{8.0}\selectfont, fill=white, inner sep=0.65pt, anchor=west] at (5.32,2.28) {deep};
 \end{scope}
 
 \end{tikzpicture}

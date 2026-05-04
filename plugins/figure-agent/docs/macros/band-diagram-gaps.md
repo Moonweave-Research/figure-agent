@@ -101,16 +101,16 @@ Original byte-exact fixture check (L5 export staleness) does not apply here — 
 
 ---
 
-## Status update (2026-05-04 EOD): Gap 3 + Gap 5 closed; Gap 1+2+4 remain open
+## Status update (2026-05-04 EOD): Gap 3 + Gap 5 implemented in branch; Gap 1+2+4 remain open
 
 **Closed**:
-- **Gap 3** — `\BandDiagram[no_et]` boolean key shipped in `polymer-paper-preamble.sty`. Suppresses both the `bandEt` dashed line and the auto-generated `$E_t$` text node. Backward-compatible (default off).
-- **Gap 5** — `\BandDiagram[traps=none]` choice key shipped. Suppresses both `\foreach \BDy in {#8}` (shallow) and `\foreach \BDy in {#9}` (deep) `\TrapLevel` calls. Backward-compatible.
+- **Gap 3** — `\BandDiagram[no_et]` boolean key implemented in `polymer-paper-preamble.sty`. Suppresses both the `bandEt` dashed line and the auto-generated `$E_t$` text node. Backward-compatible (default off).
+- **Gap 5** — `\BandDiagram[traps=none]` choice key implemented. Suppresses both `\foreach \BDy in {#8}` (shallow) and `\foreach \BDy in {#9}` (deep) `\TrapLevel` calls. Backward-compatible.
 
 **Verification**:
-- `examples/_macro_smoke/_macro_smoke.tex` extended with three new cases: `[no_et]`, `[traps=none]`, `[no_et, traps=none]`. PNG inspection confirms each suppression is exact and additive.
-- `golden_trap_depth_picture` recompiles unchanged (no regression — drift = 0.127 same as prior iteration, intentional box-internal title).
-- `pytest`: 188/188 pass (no regression).
+- `examples/_macro_smoke/_macro_smoke.tex` extended with three new cases: `[no_et]`, `[traps=none]`, `[no_et, traps=none]`.
+- Focused compile/API tests cover `[no_et]` and `[traps=none]`.
+- `golden_trap_depth_picture` recompiles without strict text collisions; full artifact acceptance remains a separate gate.
 
 **Open**:
 - **Gap 1** (line vs box visual model) — design question, blocked on stakeholder input. Do not promote from single fixture.

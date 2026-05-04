@@ -34,8 +34,9 @@
         coordinates {(1e0, 8e-3) (1e0, 1.6e-3) (1e1, 1.6e-3)};
       \node[font=\sffamily\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=north east]
         at (axis cs:1e3, 8e0) {$I(t)\propto t^{-n}$};
-      \node[text=cBlue, font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=south west]
-        at (axis cs:1.5e0, 1.7e-3) {slope = $-n$};
+      \node[text=cBlue, fill=white, inner sep=0.55pt,
+        font=\sffamily\fontsize{5.5}{6.6}\selectfont, anchor=north west]
+        at (axis cs:1.2e0, 8e-4) {slope = $-n$};
     \end{loglogaxis}
   \end{scope}
 
@@ -55,10 +56,12 @@
       };
       \addplot[cGray, dashed, line width=0.38pt, mark=none]
         coordinates {(30, 0.37) (30, 1e-4)};
-      \node[align=left, text=cGray, font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
-        at (axis cs:3e-3, 5e-2) {Debye\\exp($-t/\tau$)};
-      \node[text=cGray, font=\sffamily\fontsize{6.0}{7.2}\selectfont]
-        at (axis cs:30, 3e-4) {$\tau_d$};
+      \node[align=left, text=cGray, fill=white, inner sep=0.65pt,
+        font=\sffamily\itshape\fontsize{6.0}{7.2}\selectfont, anchor=west]
+        at (axis cs:3e-3, 1e-2) {Debye\\exp($-t/\tau$)};
+      \node[text=cGray, fill=white, inner sep=0.45pt,
+        font=\sffamily\fontsize{6.0}{7.2}\selectfont, anchor=south west]
+        at (axis cs:7e1, 8e-4) {$\tau_d$};
     \end{loglogaxis}
   \end{scope}
 

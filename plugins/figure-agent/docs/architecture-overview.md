@@ -188,13 +188,15 @@ semantics. `lint_tex.py` enforces palette / font / hex / non-palette-color
 discipline at BLOCKER tier; `flagship_macros_unused` is WARN-only because some
 fixtures legitimately do not use the flagship macros.
 
-Two flagship macros currently follow the style-decoupled pattern:
-`\BellCurve` (primitive single-key, PR #1) and `\BandDiagram` (composite
-single-key α path, this pilot). Per-sub-element fan-out (β) for composite
-macros remains an open question; see
+Three flagship macros currently follow the style-decoupled/safe-authoring
+pattern: `\BellCurve` (primitive single-key, PR #1), `\BandDiagram` (composite
+single-key α path, this pilot), and `\PlotCallout` (annotation-safety primitive
+for plot labels). Per-sub-element fan-out (β) for composite macros remains an
+open question; see
 `docs/superpowers/specs/2026-05-03-banddiagram-caller-pgfkeys-design.md`
 §"Out of scope". Per-macro reference docs:
-`docs/macros/bell-curve.md`, `docs/macros/band-diagram.md`.
+`docs/macros/bell-curve.md`, `docs/macros/band-diagram.md`,
+`docs/macros/plot-callout.md`.
 
 ### Layer 4 — Compile Gates
 
@@ -220,7 +222,10 @@ Chain (in order):
 `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh ...` propagates `--strict`
 to the collision, clash, and drift checkers, promoting their findings to
 non-zero exit. Default mode preserves report-only ergonomics so dogfood
-iteration is not interrupted.
+iteration is not interrupted and a reviewable PNG/PDF is still emitted.
+Golden/ship decisions are made at Layer 6: fixtures with `golden_contract`
+must pass `check_golden_artifacts.py --require-accepted`, including the
+accepted flag and unresolved collision/clash budgets.
 
 ### Layer 5 — Export
 
@@ -269,7 +274,9 @@ Two `check_golden_artifacts` modes:
   requires the contract block, validates `accepted: true`, runs
   `required_labels` against pdftotext output, runs `source_inventory`
   regex counts against `<name>.tex`, asserts `QUALITY_AUDIT.md` freshness,
-  and applies collision/clash budget thresholds.
+  and applies collision/clash budget thresholds. This is the hard gate for
+  ship-blessed fixtures; it is intentionally stricter than the Layer 4
+  compile loop.
 
 `check_layout_drift.py` is the second Layer 6 gate (also fired from
 `compile.sh`). It is anchor-driven: each `required_labels` entry (str or

@@ -31,6 +31,10 @@ Steps:
      and the checker exits 0.
    - Strict mode is opt-in: with `FIGURE_AGENT_STRICT=1`, `compile.sh`
      propagates `--strict` to all checkers and any finding exits non-zero.
+   - Golden/ship acceptance is not decided by the edit-loop compile command.
+     Fixtures declaring `golden_contract` are gated by
+     `scripts/check_golden_artifacts.py --require-accepted`, which enforces
+     unresolved collision/clash budgets and rejects `accepted: false`.
 6. (Optional) Run `uv run python3 scripts/check_layout_drift.py examples/<name>` —
    only when `examples/<name>/coordinate_hints.yaml` exists. Reports per-label
    drift between the reference PNG OCR positions and the build PDF text
@@ -48,8 +52,9 @@ Steps:
 8. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
-Human-gated by default. Reports inform; do not block on WARN unless strict
-mode is explicitly enabled for manuscript, CI, or accepted-fixture gating.
+Human-gated by default. Reports inform during iteration; do not block on WARN
+unless strict mode is explicitly enabled for manuscript/CI or the fixture is
+being checked through the accepted-artifact gate.
 
 Lint is a /fig_compile sub-routine; no persistent state, re-runs every compile. Aligned with /fig_status freshness model.
 

@@ -160,8 +160,8 @@ Elements:
 - Teal title `converged trap-depth picture`.
 - Energy-level diagram:
   - vertical `Energy` axis;
-  - gray boxed `CB` at top;
-  - gray boxed `VB` at bottom;
+  - line-style `CB` band edge at top with compact label;
+  - line-style `VB` band edge at bottom with compact label;
   - orange shallow localized trap levels with blue electron dots near CB;
   - purple deep localized trap levels with blue electron dots near VB;
   - dashed vertical divider near the distribution plot;
@@ -171,7 +171,7 @@ Elements:
   - horizontal axis with arrow;
   - label `g(E_t)` above and on x-axis;
   - orange shallow lobe at higher energy;
-  - purple deep lobe at lower energy;
+  - larger purple deep lobe at lower energy;
   - labels `shallow` and `deep`.
 
 ## Defect Classification Required

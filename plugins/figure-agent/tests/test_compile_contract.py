@@ -132,6 +132,48 @@ def test_golden_trap_depth_picture_compiles_with_shared_preamble() -> None:
 @pytest.mark.skipif(
     shutil.which("lualatex") is None
     or shutil.which("pdftocairo") is None
+    or shutil.which("pdftotext") is None
+    or shutil.which("pdftoppm") is None,
+    reason="requires lualatex, pdftocairo, pdftotext, and pdftoppm",
+)
+@pytest.mark.parametrize(
+    ("fixture_dir", "tex_name"),
+    [
+        ("polymer_chain", "polymer_chain_smoke"),
+        ("log_plot", "log_plot_smoke"),
+    ],
+)
+def test_l3_snippet_smoke_fixtures_compile(fixture_dir: str, tex_name: str) -> None:
+    tex_path = (
+        REPO_ROOT
+        / "examples"
+        / "_snippet_smoke"
+        / fixture_dir
+        / f"{tex_name}.tex"
+    )
+
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert (
+        REPO_ROOT
+        / "examples"
+        / "_snippet_smoke"
+        / fixture_dir
+        / "build"
+        / f"{tex_name}.pdf"
+    ).exists()
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None
+    or shutil.which("pdftocairo") is None
     or shutil.which("rsvg-convert") is None,
     reason="requires lualatex, pdftocairo, and rsvg-convert",
 )

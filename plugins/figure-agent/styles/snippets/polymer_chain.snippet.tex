@@ -1,122 +1,79 @@
 %% polymer_chain.snippet.tex
-%% Inverse vulcanization sulfur-rich linear polymer — ball-and-stick TikZ schematic.
-%% Fixed pattern: C₄-S₄-C₄-S₆-C₄-S₄-C₃ (chemistry of sulfur polymer trap sites).
+%% Sulfur-rich copolymer chain with monomer-resolved schematic backbone.
 %% License: snippet code MIT-style.
-%% Author origin: figure-agent v0.3 — L3 snippet (ball-and-stick unified, reference-grounded).
+%% Author origin: figure-agent v0.3 — first L3 snippet (PR pending).
 %%
 %% Usage:
 %%   \input{styles/snippets/polymer_chain.snippet.tex}
-%%   \PolymerChainBallStick{x_anchor}{y_anchor}
+%%   \PolymerChain{x_anchor}{y_anchor}{monomer_count}{s_csv}
 %%
 %% Args:
-%%   #1 = anchor_x (TikZ cm, left end position)
-%%   #2 = anchor_y (TikZ cm, chain center y)
+%%   #1 = anchor_x (TikZ cm)
+%%   #2 = anchor_y (TikZ cm)
+%%   #3 = monomer_count (integer 4..16)
+%%   #4 = s_csv = comma-separated 1-based monomer indices that carry a single -S branch
 %%
-%% Visuals (Pyun-style ball-and-stick):
-%%   - C atom (organic spacer): black filled circle (0.08cm radius, outline 0.28pt)
-%%   - S atom: cAmber filled circle (0.10cm radius, outline 0.28pt)
-%%   - C-C bond: black line (0.70pt)
-%%   - S-S bond: cAmber line (1.0pt)
-%%   - bond length: 0.40cm
-%%   - Horizontal span ≈ 5.4cm (for 3-chain stacking with moderate gap)
+%% Geometry contract:
+%%   - Backbone is a light gray monomer-resolved zigzag path
+%%   - Each monomer vertex gets a tiny node marker
+%%   - S branches alternate above/below the backbone to avoid a comb-like structure
+%%   - Caller anchors at the LEFT end; chain extends right
+%%   - Approx horizontal span = (monomer_count - 1) * 0.42 cm
+%%
+%% Density encoding (advisor-validated):
+%%   sparse  = S indices spaced ~4 apart (e.g. 3,7,11)
+%%   rich    = S indices contiguous     (e.g. 6,7,8,9)
+%%   mixed   = consumer composes (e.g. 3,7,8,9 = sparse left + rich middle)
+
+% Dependency: xstring — loaded by polymer-paper-preamble.sty.
+% Snippet is intended to be \input-ed in the document preamble (before \begin{document}).
 
 \makeatletter
-\newcommand{\PolymerChainBallStick}[2]{%
+\newcommand{\PolymerChain}[4]{%
   \begingroup
-  \pgfmathsetmacro{\xstart}{#1}%
-  \pgfmathsetmacro{\yc}{#2}%
-  \pgfmathsetmacro{\bondlen}{0.40}%
-  \pgfmathsetmacro{\radiusC}{0.080}%
-  \pgfmathsetmacro{\radiusS}{0.100}%
-
-  % Helper: draw C atom (black ball) at given position
-  \newcommand{\DrawC}[1]{%
-    \draw[fill=black, line width=0.28pt, draw=black] (#1,\yc) circle (\radiusC);%
+  \def\PCsidecsv{,#4,}%
+  \pgfmathtruncatemacro{\PCnmono}{#3}%
+  \def\PCstep{0.42}%
+  \def\PCamp{0.115}%
+  \def\PCbranch{0.24}%
+  % Backbone segments: monomer-resolved, but schematic rather than full structure.
+  \foreach \PCi in {2,...,\PCnmono} {%
+    \pgfmathtruncatemacro{\PCprev}{\PCi-1}%
+    \pgfmathsetmacro{\PCxprev}{(#1)+(\PCprev-1)*\PCstep}%
+    \pgfmathsetmacro{\PCyprev}{(#2)+ifthenelse(mod(\PCprev,2)==0,\PCamp,-\PCamp)}%
+    \pgfmathsetmacro{\PCx}{(#1)+(\PCi-1)*\PCstep}%
+    \pgfmathsetmacro{\PCy}{(#2)+ifthenelse(mod(\PCi,2)==0,\PCamp,-\PCamp)}%
+    \draw[cGray!85!black, line width=0.56pt, line cap=round, line join=round]
+      (\PCxprev,\PCyprev) -- (\PCx,\PCy);
   }%
-  % Helper: draw S atom (cAmber ball) at given position
-  \newcommand{\DrawS}[1]{%
-    \draw[fill=cAmber, line width=0.28pt, draw=cAmber!50] (#1,\yc) circle (\radiusS);%
+  % Monomer vertices + sulfur side groups.
+  \foreach \PCi in {1,...,\PCnmono} {%
+    \pgfmathsetmacro{\PCx}{(#1)+(\PCi-1)*\PCstep}%
+    \pgfmathsetmacro{\PCy}{(#2)+ifthenelse(mod(\PCi,2)==0,\PCamp,-\PCamp)}%
+    \draw[cGray!70, fill=white, line width=0.28pt] (\PCx,\PCy) circle (0.026);
+    \edef\PCneedle{,\PCi,}%
+    \IfSubStr{\PCsidecsv}{\PCneedle}%
+      {%
+        \pgfmathsetmacro{\PCsign}{ifthenelse(mod(\PCi,2)==0,1,-1)}%
+        \pgfmathsetmacro{\PCsx}{\PCx+0.03*\PCsign}%
+        \pgfmathsetmacro{\PCsy}{\PCy+\PCsign*\PCbranch}%
+        \draw[cAmber, line width=0.36pt, line cap=round]
+          (\PCx,\PCy) -- (\PCsx,\PCsy-0.05*\PCsign);
+        \node[
+          circle,
+          draw=cAmber,
+          fill=cAmber!12,
+          inner sep=0pt,
+          minimum size=1.05mm,
+          line width=0.28pt
+        ] at (\PCsx,\PCsy) {};
+        \node[
+          text=cAmber,
+          font=\sffamily\bfseries\fontsize{3.6}{4.2}\selectfont
+        ] at (\PCsx,\PCsy) {S};
+      }%
+      {}%
   }%
-  % Helper: draw C-C bond (black line)
-  \newcommand{\BondCC}[2]{%
-    \draw[line width=0.70pt, black] (#1,\yc) -- (#2,\yc);%
-  }%
-  % Helper: draw S-S bond (cAmber line)
-  \newcommand{\BondSS}[2]{%
-    \draw[line width=1.0pt, cAmber] (#1,\yc) -- (#2,\yc);%
-  }%
-
-  % Organic spacer C₁-C₂-C₃-C₄ (x = 0, 0.4, 0.8, 1.2)
-  \DrawC{0.00}%
-  \BondCC{0.00}{0.40}%
-  \DrawC{0.40}%
-  \BondCC{0.40}{0.80}%
-  \DrawC{0.80}%
-  \BondCC{0.80}{1.20}%
-  \DrawC{1.20}%
-
-  % S₁-S₂-S₃-S₄ run (x = 1.6, 2.0, 2.4, 2.8)
-  \BondSS{1.20}{1.60}%
-  \DrawS{1.60}%
-  \BondSS{1.60}{2.00}%
-  \DrawS{2.00}%
-  \BondSS{2.00}{2.40}%
-  \DrawS{2.40}%
-  \BondSS{2.40}{2.80}%
-  \DrawS{2.80}%
-
-  % Organic spacer C₅-C₆-C₇-C₈ (x = 3.2, 3.6, 4.0, 4.4)
-  \BondCC{2.80}{3.20}%
-  \DrawC{3.20}%
-  \BondCC{3.20}{3.60}%
-  \DrawC{3.60}%
-  \BondCC{3.60}{4.00}%
-  \DrawC{4.00}%
-  \BondCC{4.00}{4.40}%
-  \DrawC{4.40}%
-
-  % S₅-S₆-S₇-S₈-S₉-S₁₀ run (x = 4.8, 5.2, 5.6, 6.0, 6.4, 6.8) — TRAP SITE
-  \BondSS{4.40}{4.80}%
-  \DrawS{4.80}%
-  \BondSS{4.80}{5.20}%
-  \DrawS{5.20}%
-  \BondSS{5.20}{5.60}%
-  \DrawS{5.60}%
-  \BondSS{5.60}{6.00}%
-  \DrawS{6.00}%
-  \BondSS{6.00}{6.40}%
-  \DrawS{6.40}%
-  \BondSS{6.40}{6.80}%
-  \DrawS{6.80}%
-
-  % Organic spacer C₉-C₁₀-C₁₁-C₁₂ (x = 7.2, 7.6, 8.0, 8.4)
-  \BondCC{6.80}{7.20}%
-  \DrawC{7.20}%
-  \BondCC{7.20}{7.60}%
-  \DrawC{7.60}%
-  \BondCC{7.60}{8.00}%
-  \DrawC{8.00}%
-  \BondCC{8.00}{8.40}%
-  \DrawC{8.40}%
-
-  % S₁₁-S₁₂-S₁₃-S₁₄ run (x = 8.8, 9.2, 9.6, 10.0)
-  \BondSS{8.40}{8.80}%
-  \DrawS{8.80}%
-  \BondSS{8.80}{9.20}%
-  \DrawS{9.20}%
-  \BondSS{9.20}{9.60}%
-  \DrawS{9.60}%
-  \BondSS{9.60}{10.00}%
-  \DrawS{10.00}%
-
-  % Organic terminal C₁₃-C₁₄-C₁₅ (x = 10.4, 10.8, 11.2)
-  \BondCC{10.00}{10.40}%
-  \DrawC{10.40}%
-  \BondCC{10.40}{10.80}%
-  \DrawC{10.80}%
-  \BondCC{10.80}{11.20}%
-  \DrawC{11.20}%
-
   \endgroup
 }
 \makeatother

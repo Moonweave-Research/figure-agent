@@ -1,7 +1,7 @@
 [project]
 name = "figure-agent"
 version = "0.2.0"
-description = "Claude Code plugin: schematic prompt intent control + vector compile."
+description = "Claude Code plugin: paper-figure quality kernel for semantic TikZ compile, checks, export, and reproducibility."
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.4.4",

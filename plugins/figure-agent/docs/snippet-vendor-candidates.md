@@ -11,7 +11,7 @@
 |---|---|
 | `candidate` | discovered; license + tool-coverage value not yet verified |
 | `under_review` | license verified; matching to a paper-figure type in progress |
-| `vendored` | shipped in `styles/snippets/`; entry mirrored in `README.md` |
+| `vendored` | present in `styles/snippets/`; entry mirrored in `README.md` |
 | `pattern_only` | not vendored as code, but the pattern/idiom is referenced inside our snippets |
 | `rejected_license` | license unrecoverable (null, restrictive); cannot vendor |
 | `rejected_unavailable` | source no longer exists (CTAN 404, repo deleted); not retrievable at this time |
@@ -49,7 +49,7 @@ Frame correction 2026-05-04 (post `/compass`): prior grading used "doesn't fit c
 
 | ID | Source | License | Suitability | Status | Target snippet | Notes |
 |----|--------|---------|-------------|--------|----------------|-------|
-| P-01 | `pgfplots` core (`\addplot`, `axis`, `loglogaxis`, `xticklabels`) | LPPL 1.3c | A | **`vendored`** (A2 SHIPPED 2026-05-04) | **A2 log_plot** | Vendored as TikZ style key (`paper loglog/.style`) in `polymer-paper-preamble.sty`. No wrapper macro. Sampling caveat: explicit `coordinates {…}` preferred over `\addplot {f(x)}` on log axes. |
+| P-01 | `pgfplots` core (`\addplot`, `axis`, `loglogaxis`, `xticklabels`) | LPPL 1.3c | A | **`vendored`** (A2 integrated WIP, 2026-05-04) | **A2 log_plot** | Vendored as TikZ style key (`paper loglog/.style`) in `polymer-paper-preamble.sty`. No wrapper macro. Sampling caveat: explicit `coordinates {…}` preferred over `\addplot {f(x)}` on log axes. |
 | P-02 | `pgfplots fillbetween` library | LPPL 1.3c | A | `under_review` | **A4 dos_lobes** | Replaces hand-rolled `\SmallLobe` Bézier. `\addplot fill between` over Gaussian fns. |
 | P-03 | `pgfplots ticks` library + minor-grid pattern | LPPL 1.3c | A | **`vendored`** (A2) | A2 log_plot (sub) | Folded into `paper loglog` style key (`xminorgrids=true, yminorgrids=true`). DO NOT enable `log ticks with fixed point` — breaks default `10^k` tick label format (G2 spike confirmed). |
 | P-04 | janosh/tikz pgfplots examples | MIT | B | `candidate` | A2 reference patterns | TODO: `gh api repos/janosh/tikz/contents` + grep `pgfplots` to enumerate; promote to `pattern_only` if useful idiom found. |

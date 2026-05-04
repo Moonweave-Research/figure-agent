@@ -2,11 +2,10 @@
 description: Conversational interview to scaffold a new figure (schematic) and auto-fill briefing.md + spec.yaml.
 ---
 
-> **Shared entry point.** `/fig_new` scaffolds the per-figure folder for both
-> the active quality-kernel workflow and the frozen v0.1 image-gen orchestration
-> path. After this command the user picks their path:
-> - active: author `<name>.tex` directly from briefing intent + optional `reference_image`, then `/fig_compile`;
-> - legacy: `/fig_prompt` → external image-gen → `/fig_preview_select` → author `<name>.tex`, then `/fig_compile`.
+> **Shared entry point.** `/fig_new` scaffolds the per-figure folder for the
+> active quality-kernel workflow. After this command, author `<name>.tex`
+> directly from briefing intent plus optional `reference_image` /
+> `coordinate_hints.yaml`, then run `/fig_compile`.
 >
 > See `docs/architecture-overview.md` for the layer model.
 
@@ -73,11 +72,12 @@ figure intent.
 
 After all 6 sections are filled (and any scope-drift conflicts resolved), tell the user:
 
-> "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. /fig_prompt <name> 실행하시면 normalized
-> prompt 생성합니다. 또는 briefing 더 손볼 부분 있으시면 알려주세요."
+> "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. target matching이 필요하면
+> reference PNG를 저장하고 spec.yaml.reference_image를 기록한 뒤 /fig_extract <name>을
+> 실행하세요. 이후 semantic TikZ를 작성하고 /fig_compile <name>으로 검증합니다."
 
-`selected/` is optional in v0.1. `/fig_new` does not need to create it; `/fig_preview_select`
-may create a copy or symlink there for convenience.
+`selected/` is not part of the active workflow. Historical preview-selection
+metadata is ignored by current stage inference.
 
 ## Lesson — why this matters
 
@@ -88,4 +88,4 @@ proceeded all the way through prompt generation, image gen, and a final-vector r
 for real data before reset. Step 3 above is the gate that catches this within the interview
 itself.
 
-Next: /fig_prompt <name>
+Next: author semantic TikZ from `briefing.md`; if target matching matters, run `/fig_extract <name>` first.

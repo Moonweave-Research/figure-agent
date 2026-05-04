@@ -138,7 +138,7 @@ Plan: `docs/architecture-v0.3-snippet-library.md`.
 
 | Snippet | Macro | Status | Source / License |
 |---|---|---|---|
-| `polymer_chain.snippet.tex` | `\PolymerChain{x}{y}{n_monomers}{s_csv}` | A1 (v0.3 first ship) | chemfig (LPPL 1.3) - TeX Live; snippet code MIT-style |
+| `polymer_chain.snippet.tex` | `\PolymerChain{x}{y}{n_monomers}{s_csv}` | A1 integrated WIP | chemfig (LPPL 1.3) - TeX Live; snippet code MIT-style |
 | `log_plot.snippet.tex` | `\LogPlot{...}` | A2 planned | PGFPlots (LPPL 1.3) |
 | `band_diagram.snippet.tex` | `\BandSnippet{...}` | A3 planned | hand-curated TikZ |
 | `dos_lobes.snippet.tex` | `\DOSLobes{...}` | A4 planned | PGFPlots fillbetween |

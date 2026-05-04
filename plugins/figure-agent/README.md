@@ -9,9 +9,9 @@ reproducibility infrastructure. A human or any LLM/tool may author the figure;
 the plugin's durable job is to enforce Style Lock, compile/export reliably,
 surface visual QA problems, and keep the figure reproducible.
 
-The earlier prompt/image-gen orchestration helpers remain available, but they
-are frozen legacy helpers rather than the main development direction. See
-`docs/quality-kernel-goal.md`.
+Earlier prompt/image-gen orchestration commands were removed from the active
+plugin surface. Historical design notes remain under `docs/historical/`; the
+maintained product direction is `docs/quality-kernel-goal.md`.
 
 **Plugin does not:**
 - Call image generation APIs
@@ -25,9 +25,9 @@ are frozen legacy helpers rather than the main development direction. See
 ## Workflow shape
 
 `/fig_new` is the **shared entry point** that scaffolds `examples/<name>/spec.yaml`
-+ `briefing.md` via a conversational interview. After scaffolding, the workflow
-branches into two paths; either is supported, but only the active path is
-maintained going forward.
++ `briefing.md` via a conversational interview. After scaffolding, author
+semantic TikZ from the briefing, optional reference image, and optional
+coordinate hints.
 
 ### Active (quality kernel)
 
@@ -57,7 +57,11 @@ Golden fixtures additionally declare `accepted` and `golden_contract` keys in
 `spec.yaml`; `check_golden_artifacts.py` then auto-escalates into accepted-mode
 contract checks (rendered-label match, source-inventory floor, audit freshness,
 checker-warning budgets). Override with `--no-require-accepted` for ad-hoc
-basic-mode inspection. When `reference_image` is present, `/fig_extract` creates
+basic-mode inspection. `/fig_compile` remains report-only by default so the
+build PNG is available during visual iteration; manuscript/CI runs can still use
+`FIGURE_AGENT_STRICT=1`, and accepted fixtures use
+`check_golden_artifacts.py --require-accepted` as the hard gate. When
+`reference_image` is present, `/fig_extract` creates
 `coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
 structural hints; compile then uses those hints for drift check when available.
 
@@ -69,17 +73,17 @@ structural hints; compile then uses those hints for drift check when available.
                              Report-only; subscription tokens, zero API calls.
 ```
 
-Replaces the v0.1 `/fig_review` HALT-then-paste workflow via
-rename + extend (see `docs/architecture-v0.2-proposal.md` §4.5).
-The earlier `/fig_prompt`, `/fig_preview_select`, and the prompt-template /
-redaction / selection-notes pipeline were removed in PR #8a.
+Replaces the v0.1 HALT-then-paste review surface via rename + extend
+(see `docs/architecture-v0.2-proposal.md` §4.5). The old prompt-template,
+redaction, and preview-selection pipeline was removed in PR #8a.
 
 ## Status
 
-v0.1 line is active; latest shipped plugin version is recorded in
-`.claude-plugin/plugin.json`. Active direction is recorded in
-`docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved
-under `docs/historical/design-v0.1.md` as a frozen reference.
+The latest shipped plugin version is recorded in `.claude-plugin/plugin.json`.
+The active line is the v0.2 quality-kernel release with v0.3 authoring
+grounding work in progress. Active direction is recorded in
+`docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved under
+`docs/historical/design-v0.1.md` as a frozen reference.
 
 ## Documentation map
 
@@ -107,9 +111,9 @@ and `uv run ruff check .`; `uv build` is not a release gate.
 ## History
 
 Successor to `[tikz-paper-workflow]` (archived 2026-04-27). The v0.1 prompt
-workflow remains available, but post-v0.1.7.2 development pivots toward a
-durable quality kernel: Style Lock, macro quality, compile/export reliability,
-visual QA, and reproducibility.
+workflow is preserved only in historical docs; active development is the durable
+quality kernel: Style Lock, macro quality, compile/export reliability, visual QA,
+and reproducibility.
 
 ## Repo location rationale
 

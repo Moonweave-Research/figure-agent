@@ -32,6 +32,26 @@ NIT     = 0.5
 
 Unweighted metrics are reported alongside severity-weighted ones; both are needed because (a) high-severity drift is the real risk signal, (b) NIT inflation should not mask a missed BLOCKER.
 
+### 1.2 Required visual-defect subcategories
+
+Every `/fig_critique` pass must explicitly check `label_placement`, even when
+the rendered PDF compiled without geometric text-bbox collisions. The current
+visual-clash checker can surface these as `text_on_path`, `text_on_fill`,
+`near_miss`, or `clipped_text`, but the critique rubric owns the reader-facing
+classification.
+
+Required subcategories:
+
+| Subcategory | Count as issue when | Default severity |
+|---|---|---|
+| `label_placement.text_on_line` | A label, equation fragment, or callout text visually sits on a plotted data trace, axis line, dashed reference line, or arrow so the reader cannot cleanly separate annotation from geometry. | MAJOR if semantic label or curve identity is affected; NIT if readable with backing/clearance. |
+| `label_placement.label_clipped` | Any intended label is cut by a plot box, figure boundary, scope clip, or export crop. | MAJOR; BLOCKER if the missing part changes the equation/label meaning. |
+| `label_placement.annotation_crosses_data` | A leader arrow or evidence arrow traverses a data curve, lobe, or dense glyph region when it could start at the plot edge or route through whitespace. | MAJOR if it obscures data; MINOR if only visually noisy. |
+
+Accepted or ship-blessed fixtures may not treat these as cosmetic simply
+because `check_collisions.py` reports zero bbox collisions. A critique that
+misses any reader-visible instance is recorded as an FN under this rubric.
+
 ## 2. Adjudication protocol
 
 ### 2.1 Single-author baseline (current state)

@@ -94,3 +94,29 @@ def test_figure_wide_tikzset_path_still_works(tmp_path: Path) -> None:
         r"\BandDiagram{0,0,4,3, 2.5, 0.5, 1.5, {}, {}}",
     )
     assert result.returncode == 0, result.stderr + result.stdout
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_no_et_option_compiles(tmp_path: Path) -> None:
+    """Gap 3: callers can suppress the Et dashed line and auto label."""
+    result = _compile(
+        tmp_path,
+        r"\BandDiagram[no_et]{0,0,4,3, 2.5, 0.5, 1.5, {2.2}, {1.2}}",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+
+
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None or shutil.which("pdftocairo") is None,
+    reason="requires lualatex and pdftocairo",
+)
+def test_traps_none_option_compiles(tmp_path: Path) -> None:
+    """Gap 5: callers can suppress all trap-level dash glyphs."""
+    result = _compile(
+        tmp_path,
+        r"\BandDiagram[traps=none]{0,0,4,3, 2.5, 0.5, 1.5, {2.2,2.0}, {1.2}}",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout

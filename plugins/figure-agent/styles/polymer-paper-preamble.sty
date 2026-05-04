@@ -20,14 +20,15 @@
 \usepackage{graphicx}
 \usepackage{etoolbox}  % \ifblank for robust empty-arg checks (\WavyChain trap_csv)
 \usepackage{xstring}   % \IfSubStr — used by L3 snippet macros (polymer_chain)
-\usepackage{chemfig}   % v0.3 L3 snippet library: chemistry-aware monomer rendering
+\usepackage{chemfig}   % optional chemistry labels/future molecular snippets
 \usepackage{pgfplots}  % v0.3 L3 snippet library: function-evaluated axes/curves
 \pgfplotsset{compat=1.18}
 
 %% --- paper loglog style key (A2 log_plot snippet) ---
 %% Apply in any pgfplots axis to enforce Style Lock + paper-grade tick density.
 %% Caller specifies width/height as positional args; everything else inherits.
-%% Caller still picks xmin/xmax/ymin/ymax/xtick/ytick + plot data.
+%% Caller still picks xmin/xmax/ymin/ymax/xtick/ytick + plot data and uses
+%% \PlotCallout for plot labels that need a leader instead of bare inline nodes.
 %% Do NOT enable `log ticks with fixed point` — the default 10^k format is correct.
 %% `scale only axis` is load-bearing: without it, PGFPlots W/H includes title +
 %% xlabel + tick labels in the bbox, so a panel with title= ends up with a
@@ -52,7 +53,7 @@
   }
 }
 
-%% --- chemfig defaults for paper-figure schematics ---
+%% --- chemfig defaults for optional chemistry-aware schematics ---
 %% Caller may override via local \setchemfig{...} in figure scope.
 \setchemfig{
   atom sep=0.30cm,
@@ -248,6 +249,11 @@
   bandEt/.style={cGray!45, dashed, line width=0.38pt},
   trapShallow/.style={cAmber, line width=0.72pt},
   trapDeep/.style={cBlue!45!cRed, line width=0.72pt},
+  plotCalloutLine/.style={-{Stealth[length=2.6pt,width=2.0pt]}, cGray!70, line width=0.34pt},
+  plotCalloutLabel/.style={
+    fill=white, inner sep=0.65pt, align=left,
+    font=\sffamily\fontsize{5.8}{7.0}\selectfont
+  },
   band diagram/.style={},
   no_et/.is if=BDnoEt,
   no_et/.default=true,
@@ -258,6 +264,13 @@
 % \BandBox{x}{y}{label}: filled cLGray rectangle node used as CB or VB block.
 \providecommand{\BandBox}[3]{%
   \node[bandbox] at (#1,#2) {#3};
+}
+
+% \PlotCallout[<node style>]{target coord}{label coord}{text}: white-backed plot annotation
+% with a short leader arrow. Coordinates may be plain TikZ or pgfplots axis coords.
+\newcommand{\PlotCallout}[4][]{%
+  \draw[plotCalloutLine] #3 -- #2;
+  \node[plotCalloutLabel, #1] at #3 {#4};
 }
 
 % \BellCurve[<style keys>]{x1,y1,x2,y2,orientation}: symmetric bell-lobe shape primitive.

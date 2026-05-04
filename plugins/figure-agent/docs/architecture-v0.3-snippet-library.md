@@ -1,6 +1,6 @@
 # Architecture v0.3 — L3 Snippet Library (active direction)
 
-**Status:** PLAN (2026-05-04)
+**Status:** PLAN + branch implementation in progress (2026-05-04)
 **Supersedes:** `architecture-v0.3-briefing-semantic-grounding.md` and `briefing-semantic-schema-v1.md` as the *active* v0.3 direction. Those documents remain in the repo as design reference but are demoted to **secondary tracks**.
 **Derived from:** N=1 dogfood failure (single-rater F1_w 0.244 → predicted 0.981 with prose grounding) + user real-quality assessment ("달라지는 게 없는데… 우리 피겨 에이전트 개선했냐?") + `/compass` STOP verdict (drift + rot SUSPICIOUS).
 **One-line goal:** stop authoring scientific-figure TikZ from scratch; vendor and curate battle-tested community packages and snippets so paper-grade reach becomes a composition problem, not an authoring problem.
@@ -25,7 +25,7 @@ This document does not delete the schema work — it ranks it lower until snippe
 
 ```
 plugins/figure-agent/styles/snippets/
-├── polymer_chain.snippet.tex      # chemfig-based, S-rich polymer
+├── polymer_chain.snippet.tex      # schematic TikZ, S-rich polymer
 ├── log_plot.snippet.tex           # PGFPlots loglogaxis with proper minor grids
 ├── band_diagram.snippet.tex       # bandplot or curated TikZ for CB/VB/trap levels
 ├── dos_lobes.snippet.tex          # PGFPlots fillbetween or curated TikZ for sideways g(E)
@@ -43,7 +43,7 @@ Each snippet is a `\input`-able .tex chunk with `\providecommand` parameters. Re
 - Row 3 polymer: `polymer_chain.snippet.tex` with monomers=14, S_pattern="rich-cluster-x4-x12"
 - Row 1 plots: `log_plot.snippet.tex` with x_decades=6, y_decades=5
 - Right panel band: `band_diagram.snippet.tex` with shallow_levels=4, deep_levels=2+continuation
-- Right panel DOS: `dos_lobes.snippet.tex` with shallow_to_deep_ratio=2.5
+- Right panel DOS: `dos_lobes.snippet.tex` with deep_to_shallow_ratio=2.5
 ```
 
 L3 author (human or LLM) consumes the snippet refs and `\input`s them. L4.5 critique verifies snippet ref matches what's rendered (via `verify_by: structural` against the .tex AST + visual sanity check).
@@ -51,11 +51,30 @@ L3 author (human or LLM) consumes the snippet refs and `\input`s them. L4.5 crit
 ### 2.3 polymer-paper-preamble.sty additions
 
 Vendor required packages:
-- `\RequirePackage{chemfig}` — polymer chemistry
+- `\RequirePackage{xstring}` — CSV membership checks for schematic snippets
 - `\RequirePackage{pgfplots}` and `\pgfplotsset{compat=1.18}` — log axes
 - `\RequirePackage{tikz-3dplot}` if 3D arises (defer until needed)
 
+`chemfig` remains loaded by `polymer-paper-preamble.sty` for chemistry labels
+and future molecular snippets, but A1 `\PolymerChain` moved to curated TikZ
+after visual review showed the raw structural look was too awkward for this
+manuscript schematic.
+
 `bandplot` is heavier; defer to v0.3.1 unless `band_diagram.snippet.tex` clearly needs it (likely we can hand-curate from references for now).
+
+### 2.3.1 Post-review annotation primitive
+
+The Row 1 label-on-line regression exposed a gap that is adjacent to A2 but not
+part of the log-axis snippet itself: authors were using bare inline `\node`
+annotations inside plots. v0.3 now includes `\PlotCallout` in
+`polymer-paper-preamble.sty` as the safe pattern for labels that point to a data
+trace, dashed guide, or reference marker.
+
+Scope boundary:
+- `paper loglog/.style` owns axis styling, tick density, and plot-area sizing.
+- `\PlotCallout` owns white-backed leader-label rendering.
+- The author still chooses coordinates; automatic label placement remains out
+  of scope.
 
 ### 2.4 Snippet acceptance criteria
 
@@ -66,20 +85,29 @@ A snippet ships only if:
 4. **Attribution recorded** in `snippets/README.md` (license + source URL — most are LPPL/MIT or free)
 5. **One reference figure compiles** that uses the snippet (kept as `examples/_snippet_smoke/<name>/`)
 
-## 3. First spike — chemfig polymer chain
+## 3. First spike — polymer chain
 
 Step A1 of v0.3.0. ~30-60 minutes scoped.
 
 ### 3.1 Spike scope
-Replace lines 125-131 of `examples/golden_trap_depth_picture/golden_trap_depth_picture.tex` (the three `plot[smooth] coordinates` polymer chain definitions + S marker `\foreach`) with a chemfig-based snippet.
+Replace lines 125-131 of `examples/golden_trap_depth_picture/golden_trap_depth_picture.tex` (the three `plot[smooth] coordinates` polymer chain definitions + S marker `\foreach`) with a snippet-backed monomer chain.
 
 ### 3.2 Acceptance test
 Compile `golden_trap_depth_picture.tex` and visually inspect Row 3:
-- Are chains rendered as connected monomers with explicit backbone bonds?
+- Are chains rendered as connected monomer vertices with visible backbone texture?
 - Are S atoms attached to backbone vertices, not floating?
 - Does S-rich vs. S-sparse contrast inside the dashed highlight box become visible?
 
-If any of these is **no**, abort the spike and document why chemfig didn't work for this case before proceeding to other snippets. False starts are cheap; false confidence in chemfig wastes the rest of the snippet plan.
+If any of these is **no**, abort the spike and document why the selected
+implementation did not work for this case before proceeding to other snippets.
+False starts are cheap; false confidence in a weak molecular primitive wastes
+the rest of the snippet plan.
+
+Post visual review: the initial chemfig experiment delivered monomer detail but
+looked too much like a raw structural formula in the compact row. A1 now uses a
+curated TikZ zigzag with alternating S side-group markers so the manuscript
+schematic reads as polymer texture plus S-rich density, not as a literal
+atom-by-atom molecule drawing.
 
 ### 3.3 If spike succeeds
 - Promote to `polymer_chain.snippet.tex` with parameters extracted
@@ -109,7 +137,7 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 
 ## 5. v0.3.0 scope vs. v0.3.1+
 
-### v0.3.0 ships when
+### v0.3.0 original ship hypothesis (superseded by the addendum)
 - A1 (polymer chain) and A2 (log_plot) both ship and are used by `golden_trap_depth_picture` + `fig3_trapping_concept`
 - N=2 dogfood produces F1_w within 0.10 of N=1 (i.e., snippet approach generalizes; not just brief-overfit)
 - BLOCKER FN count = 0 on both fixtures
@@ -125,7 +153,7 @@ Pause-points after each step: re-run `/fig_critique` + adjudicate against the v0
 
 **Decision: defer v0.3.0 ship until a real paper figure naturally exercises A1 (`\PolymerChain`) or A2 (`paper loglog/.style`).**
 
-Context: After A1 + A2 + A3 (Gap 3+5 only) were shipped on `golden_trap_depth_picture`, the planned N=2 fixture `fig3_trapping_concept` was found incompatible with the current `\BandDiagram` macro encoding (Gap 1: line-vs-box visual model; Gap 4: hard-coded "CB"/"VB" labels — both out of `/decide` Option B scope). A repo-wide survey found no other fixture exercises A1 or A2:
+Context: After A1 + A2 were integrated into `golden_trap_depth_picture` and the BandDiagram Gap 3+5 options were added as a separate macro hardening step, the planned N=2 fixture `fig3_trapping_concept` was found incompatible with the current `\BandDiagram` macro encoding (Gap 1: line-vs-box visual model; Gap 4: hard-coded "CB"/"VB" labels — both out of `/decide` Option B scope). A repo-wide survey found no other fixture exercises A1 or A2:
 
 - `n3_trial_01_trap_depth` uses `\WavyChain` + `\LogLogPlot` (the *sibling* macros of A1/A2, not A1/A2 themselves) — useful as a broad-catalog stability signal but does not directly defend the ship-gate clause "snippet approach generalizes; not just brief-overfit."
 - `dogfood_power_law_trap_pipeline` lacks `\BandDiagram` entirely.
@@ -139,11 +167,11 @@ Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real
 
 ## 6. Open issues for next session
 
-1. **chemfig + lualatex compatibility check** — does our preamble already work with chemfig, or is there a font/encoding clash to fix first?
-2. **PGFPlots minor-tick API for log axes** — confirm `minor xtick` and `xminorgrids=true` behave as expected at the current scale; minor tick spacing on log axes is non-trivial.
-3. **Snippet `\providecommand` interface design** — first 1-2 snippets define the pattern; later ones must conform. Resist over-design.
-4. **Attribution + license tracking** — chemfig is LPPL 1.3, PGFPlots is LPPL 1.3 — both compatible with our redistribution model. Record in `snippets/README.md` as snippets are added.
-5. **Reference vs. snippet conflict** — when reference image (e.g., `golden_target_001.png`) shows a feature the snippet doesn't generate by default, document the override in `briefing.md §7` (now we have the convention).
+1. **Real N=2 consumer** — wait for a real manuscript figure to pull A1 or A2; do not synthesize a fixture only to satisfy the ship gate.
+2. **A3/A4 pressure** — keep BandDiagram line-vs-box and DOS-lobe improvements deferred until another figure creates direct pressure.
+3. **Snippet interface generalization** — keep the first 1-2 snippet interfaces small; later snippets should conform only where the pattern proves useful.
+4. **Attribution + license tracking** — PGFPlots is LPPL 1.3-compatible; A1 `\PolymerChain` is own curated TikZ. Keep `styles/snippets/README.md` as the active catalog.
+5. **Reference vs. snippet conflict** — when a reference image shows a feature the snippet does not generate by default, document the override in `briefing.md §7`.
 
 ## 7. Status of sibling docs
 
@@ -152,19 +180,18 @@ Per advisor + the shadcn/Salesforce design-system pattern (ship when N≥2 *real
 | `architecture-v0.3-briefing-semantic-grounding.md` | demoted, kept as reference | Schema-layer hypothesis didn't fail per se; it was preempted by cheaper prose convention. Re-evaluate at N=3. |
 | `briefing-semantic-schema-v1.md` | demoted, kept as reference | Premature spec; schema may still inform §7 prose structure, not new file format. |
 | `critique-evaluation-rubric-v1.md` | active | Used to score v0.3 progress; still primary metric. Add §6 amendment: "applied-fix verification" gap (rubric measures finding-quality, not artifact-quality). |
-| `golden_trap_depth_picture/critique_adjudication.yaml` | active | N=1 baseline + iter 4 grounded run; will be augmented with iter 5 after chemfig spike. |
-| `golden_trap_depth_picture/critique.md` | active | Iter 4 grounded run record. Replaced when iter 5 is run. |
+| `golden_trap_depth_picture/critique_adjudication.yaml` | active | N=1 baseline + iter 4 grounded run; augmented by later polymer/log-plot iterations. |
+| `golden_trap_depth_picture/critique.md` | active | Current grounded critique record for the golden fixture. |
 
 ## 8. Next-session bootstrap checklist
 
 When resuming in a new session:
 
-1. Read `MEMORY.md` index, especially the `session_handoff_2026_05_04_v0_3_pivot` entry (created at this session's closeout).
-2. Read this doc end-to-end.
-3. Verify TeX Live includes chemfig and PGFPlots (`tlmgr info chemfig` or just `kpsewhich chemfig.sty`).
-4. Confirm `golden_trap_depth_picture.tex` post-state matches the post-revert + 5-light-fixes state (commit `949aa4d`).
-5. Check `examples/fig3_trapping_concept/briefing.md` already has a §7 Author Intent (committed in this closeout) so it's ready for N=2 use after chemfig spike.
-6. Begin §3.1 chemfig spike on `golden_trap_depth_picture.tex` Row 3.
+1. Read this doc and `docs/superpowers/plans/2026-05-04-v0-3-review-blockers.md`.
+2. Confirm the branch state: A1 `\PolymerChain`, A2 `paper loglog`, and BandDiagram `[no_et]` / `[traps=none]` should exist.
+3. Run the current verification loop before making claims: `uv run pytest -q`, `uv run ruff check .`, and a golden fixture compile.
+4. Pick the next real manuscript figure that naturally needs A1/A2; do not create a fake N=2 fixture for metrics.
+5. If promoting v0.3.0, rerun critique/adjudication and only tag after artifact gates match the accepted criteria.
 
 ---
 

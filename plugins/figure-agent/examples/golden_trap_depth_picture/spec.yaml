@@ -50,6 +50,9 @@ golden_contract:
     distribution_lobes:
       pattern: '\\SmallLobe\b'
       min: 2
+    plot_callouts:
+      pattern: '\\PlotCallout\b'
+      min: 2
     trap_levels:
       pattern: '\\TrapLevel\b'
       min: 8
