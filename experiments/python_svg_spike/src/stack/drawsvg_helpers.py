@@ -202,6 +202,7 @@ def nested_svg(svg_text: str, x: float, y: float, width: float, height: float) -
         raise ValueError("nested SVG requires a viewBox")
     body = re.sub(r"^<svg[^>]*>", "", cleaned.strip(), count=1)
     body = re.sub(r"</svg>\s*$", "", body)
+    body = re.sub(r"\s*<metadata>.*?</metadata>\s*", "", body, flags=re.DOTALL)
     return draw.Raw(
         f'<svg x="{x:.3f}" y="{y:.3f}" width="{width:.3f}" height="{height:.3f}" '
         f'viewBox="{escape_attr(view_box)}" overflow="visible">{body}</svg>'
