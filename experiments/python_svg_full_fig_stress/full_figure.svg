@@ -2255,4 +2255,31 @@ L 6.75403 -0
 <path d="M1644,593 L1666,615" stroke="#7a8490" stroke-width="0.7" />
 <path d="M1660,593 L1666,599" stroke="#7a8490" stroke-width="0.7" />
 <text x="1684" y="664" font-size="18" fill="#c31717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">+ V</text>
+<circle cx="1368" cy="648" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M1362.6,648 L1373.4,648" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="1353" cy="696" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M1347.6,696 L1358.4,696" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="1330" cy="746" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M1324.6,746 L1335.4,746" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="1305" cy="798" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M1299.6,798 L1310.4,798" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="1286" cy="843" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M1280.6,843 L1291.4,843" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<path d="M1400,648 C1460,628,1545,618,1624,638" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M1400,688 C1460,680,1545,678,1624,686" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M1400,733 C1460,739,1545,740,1624,734" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M1400,788 C1460,806,1545,798,1624,780" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M1545,703 L1469.0,703.0" stroke="#c31717" stroke-width="13" stroke-linecap="round" opacity="1.0" />
+<path d="M1442,703 L1469.0,719.0 L1469.0,687.0 Z" fill="#c31717" opacity="1.0" />
+<text x="1513" y="658" font-size="18" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">Repulsion</text>
+<text x="1513" y="680" font-size="18" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">force</text>
+<path d="M1453,778 L1517.0,778.0" stroke="#0b4ca8" stroke-width="6.5" stroke-linecap="round" opacity="0.85" />
+<path d="M1535,778 L1517.0,769.0 L1517.0,787.0 Z" fill="#0b4ca8" opacity="0.85" />
+<text x="1520" y="810" font-size="15" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Maxwell</text>
+<text x="1520" y="829" font-size="15" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">attraction</text>
+<rect x="1218" y="884" width="508" height="54" rx="8" ry="8" fill="#fff4f2" stroke="#f0ccc7" stroke-width="1.4" />
+<text x="1472.0" y="906" font-size="17" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">Charge-trapping-induced repulsion</text>
+<text x="1320" y="928" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Repulsion</text>
+<text x="1404" y="928" font-size="15" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">dominates</text>
+<text x="1500" y="928" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start">over Maxwell attraction.</text>
 </svg>

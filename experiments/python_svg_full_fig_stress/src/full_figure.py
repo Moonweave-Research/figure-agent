@@ -38,7 +38,28 @@ def build_figure() -> draw.Drawing:
     add_bl_dos_plot(drawing)
     add_bl_callout(drawing)
     add_br_probe_mechanics(drawing)
+    add_br_force_cues(drawing)
     return drawing
+
+
+def add_br_force_cues(drawing: draw.Drawing) -> None:
+    x, y, width, _ = BR
+    for cx, cy in [(x + 178, y + 150), (x + 163, y + 198), (x + 140, y + 248), (x + 115, y + 300), (x + 96, y + 345)]:
+        h.minus_charge(drawing, cx, cy, r=12)
+    for y0, y1, lift in [(y + 150, y + 140, -20), (y + 190, y + 188, -8), (y + 235, y + 236, 6), (y + 290, y + 282, 18)]:
+        path = draw.Path(fill="none", stroke="#aeb7c2", stroke_width=1.4, stroke_dasharray="8 8", opacity=0.75)
+        path.M(x + 210, y0)
+        path.C(x + 270, y0 + lift, x + 355, y1 + lift, x + 434, y1)
+        drawing.append(path)
+    h.arrow(drawing, x + 355, y + 205, x + 252, y + 205, h.RED_MID, width=13, head_length=27, head_width=32)
+    h.multiline_text(drawing, ["Repulsion", "force"], x + 323, y + 160, 18, 22, fill=h.RED, weight="700", italic=True)
+    h.arrow(drawing, x + 263, y + 280, x + 345, y + 280, h.BLUE_MID, width=6.5, head_length=18, head_width=18, opacity=0.85)
+    h.multiline_text(drawing, ["Maxwell", "attraction"], x + 330, y + 312, 15, 19, fill=h.BLUE_MID)
+    rounded_rect(drawing, x + 28, y + 386, width - 56, 54, fill="#fff4f2", stroke="#f0ccc7", radius=8)
+    h.text(drawing, "Charge-trapping-induced repulsion", x + width / 2, y + 408, 17, fill=h.RED, weight="700", italic=True, anchor="middle")
+    h.text(drawing, "Repulsion", x + 130, y + 430, 15, fill="#111111")
+    h.text(drawing, "dominates", x + 214, y + 430, 15, fill=h.RED, weight="700")
+    h.text(drawing, "over Maxwell attraction.", x + 310, y + 430, 15, fill="#111111")
 
 
 def add_br_probe_mechanics(drawing: draw.Drawing) -> None:
