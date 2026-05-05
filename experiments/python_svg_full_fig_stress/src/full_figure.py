@@ -86,7 +86,7 @@ def add_br_probe_mechanics(drawing: draw.Drawing) -> None:
     drawing.append(draw.Line(x + 52, y + 107, x + 66, y + 107, stroke="#111111", stroke_width=1.7))
     drawing.append(draw.Line(x + 56, y + 116, x + 62, y + 116, stroke="#111111", stroke_width=1.7))
     h.text(drawing, "Macroscopic probe", x + 108, y + 66, 24, fill=h.BLUE, weight="700")
-    h.multiline_text(drawing, ["Cantilever", "(probe)"], x + 146, y + 122, 15, 19, fill="#111111", anchor="middle")
+    h.multiline_text(drawing, ["Cantilever", "(probe)"], x + 104, y + 124, 15, 19, fill="#111111", anchor="middle")
     drawing.append(draw.Rectangle(x + 146, y + 95, 86, 24, fill="#c8cdd3", stroke="#66707b", stroke_width=1.2))
     h.hatching(drawing, x + 148, y + 97, 82, 20, step=8, color="#ffffff", stroke_width=1.1)
     drawing.append(draw.Rectangle(x + 166, y + 119, 38, 22, fill="#737d88", stroke="#4e5964", stroke_width=1.0))
@@ -132,7 +132,7 @@ def add_bl_dos_plot(drawing: draw.Drawing) -> None:
     h.arrow(drawing, px + 118, py + 98, px + 118, py + 148, "#111111", width=1.1, head_length=8, head_width=7)
     h.arrow(drawing, px + 118, py + 148, px + 118, py + 98, "#111111", width=1.1, head_length=8, head_width=7)
     drawing.append(math_svg(r"E_t", x=px + 128, y=py + 112, width=22, prefix="bl_et"))
-    drawing.append(math_svg(r"g(E_t)", x=px + 58, y=py + 176, width=54, prefix="bl_g_axis"))
+    drawing.append(math_svg(r"g(E_t)", x=px + 58, y=py + 178, width=44, prefix="bl_g_axis"))
     drawing.append(
         draw.Text(
             "Energy",
@@ -180,16 +180,25 @@ def add_bl_model_flow(drawing: draw.Drawing) -> None:
     drawing.append(draw.Line(brain_x + 27, brain_y + 7, brain_x + 27, brain_y + 42, stroke=h.BLUE, stroke_width=1.1))
     h.text(drawing, "Interpretation (converged trap model)", x + 96, y + 58, 22, fill=h.BLUE, weight="700")
     items = [
-        (x + 28, y + 112, 105, 46, r"I(t)\propto t^{-n}", "blue"),
-        (x + 168, y + 108, 96, 56, r"\mathrm{Debye}\ e^{-t/\tau}", "gray"),
-        (x + 302, y + 112, 75, 46, r"\tau_d", "gray"),
-        (x + 420, y + 112, 78, 46, r"g(E_t)", "gray"),
+        (x + 28, y + 112, 105, 46, r"I(t)\propto t^{-n}", "blue", 81),
+        (x + 168, y + 108, 96, 56, r"\mathrm{Debye}\ e^{-t/\tau}", "gray", 68),
+        (x + 302, y + 112, 75, 46, r"\tau_d", "gray", 44),
+        (x + 420, y + 112, 78, 46, r"g(E_t)", "gray", 52),
     ]
-    for index, (ix, iy, iw, ih, label, tone) in enumerate(items):
+    for index, (ix, iy, iw, ih, label, tone, math_width) in enumerate(items):
         stroke = h.BLUE_MID if tone == "blue" else "#b9c0c8"
         fill = "#f7fbff" if tone == "blue" else "#f7f7f7"
         drawing.append(draw.Rectangle(ix, iy, iw, ih, rx=5, ry=5, fill=fill, stroke=stroke, stroke_width=1.2))
-        drawing.append(math_svg(label, x=ix + 12, y=iy + 15, width=iw - 24, prefix=f"bl_flow_{index}", color=h.BLUE_MID if tone == "blue" else "#222222"))
+        drawing.append(
+            math_svg(
+                label,
+                x=ix + (iw - math_width) / 2,
+                y=iy + 16,
+                width=math_width,
+                prefix=f"bl_flow_{index}",
+                color=h.BLUE_MID if tone == "blue" else "#222222",
+            )
+        )
     for x1, x2 in [(x + 138, x + 166), (x + 268, x + 300), (x + 382, x + 416)]:
         h.arrow(drawing, x1, y + 135, x2, y + 135, "#6f7780", width=1.5, head_length=10, head_width=8)
 
@@ -285,7 +294,7 @@ def add_center_dos_math(drawing: draw.Drawing) -> None:
     drawing.append(draw.Line(x + 278, y + 292, ax + 176, y + 292, stroke="#6f7780", stroke_width=1.1, stroke_dasharray="6 6"))
     h.arrow(drawing, ax + 176, y + 292, ax + 176, y + 383, "#111111", width=1.4, head_length=12, head_width=10)
     h.arrow(drawing, ax + 176, y + 383, ax + 176, y + 292, "#111111", width=1.4, head_length=12, head_width=10)
-    drawing.append(math_svg(r"E_t\sim 0.5\text{--}1.0\,\mathrm{eV}", x=ax + 98, y=y + 337, width=102, prefix="center_et"))
+    drawing.append(math_svg(r"E_t\sim 0.5\text{--}1.0\,\mathrm{eV}", x=ax + 92, y=y + 325, width=96, prefix="center_et"))
 
 
 def _gaussian_lobe(
@@ -368,7 +377,7 @@ def add_tl_composition_swatch(drawing: draw.Drawing) -> None:
         drawing.append(draw.Rectangle(sx + index * sw / 4, sy, sw / 4, sh, fill=color, stroke="none"))
     h.arrow(drawing, sx + sw - 18, sy + sh / 2, sx + sw + 36, sy + sh / 2, "#d01812", width=16, head_length=30, head_width=40)
     drawing.append(draw.Rectangle(sx, sy, sw, sh, fill="none", stroke="#7a5018", stroke_width=1.0))
-    h.text(drawing, "S60", sx - 34, sy + 8, 20, fill="#111111", anchor="middle")
+    h.text(drawing, "S60", sx - 44, sy + 8, 20, fill="#111111", anchor="middle")
     h.text(drawing, "S85", sx + sw + 58, sy + 8, 20, fill="#111111", anchor="middle")
     h.text(drawing, "Increasing sulfur content", sx + sw / 2, sy + 43, 17, fill="#111111", italic=True, anchor="middle")
 
@@ -428,7 +437,7 @@ def add_tl_s8_ring(drawing: draw.Drawing) -> None:
     for px, py in points:
         drawing.append(draw.Circle(px, py, 10, fill="#ffd45a", stroke=h.AMBER_DARK, stroke_width=1.6))
         h.text(drawing, "S", px, py + 4, 11, fill="#5b3512", weight="700", anchor="middle")
-    h.text(drawing, "S8", cx, cy + 92, 20, fill="#111111", anchor="middle")
+    h.text(drawing, "S8", cx, cy + 70, 18, fill="#111111", anchor="middle")
 
 
 def add_layout_cards(drawing: draw.Drawing) -> None:
