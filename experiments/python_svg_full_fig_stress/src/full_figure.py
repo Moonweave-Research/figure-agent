@@ -34,7 +34,33 @@ def build_figure() -> draw.Drawing:
     add_tr_pe_loop(drawing)
     add_tr_current_decay(drawing)
     add_bl_model_flow(drawing)
+    add_bl_current_decay_plot(drawing)
     return drawing
+
+
+def add_bl_current_decay_plot(drawing: draw.Drawing) -> None:
+    x, y, _, _ = BL
+    px, py = x + 58, y + 220
+    h.arrow(drawing, px, py + 160, px, py + 20, "#111111", width=1.4, head_length=11, head_width=9)
+    h.arrow(drawing, px, py + 160, px + 170, py + 160, "#111111", width=1.4, head_length=11, head_width=9)
+    drawing.append(draw.Line(px + 10, py + 38, px + 158, py + 146, stroke=h.BLUE_MID, stroke_width=2.4))
+    drawing.append(draw.Line(px + 55, py + 85, px + 55, py + 148, stroke=h.BLUE_MID, stroke_width=1.3, stroke_dasharray="6 6"))
+    drawing.append(draw.Line(px + 55, py + 148, px + 120, py + 148, stroke=h.BLUE_MID, stroke_width=1.3, stroke_dasharray="6 6"))
+    drawing.append(math_svg(r"I(t)\propto t^{-n}", x=px + 76, y=py + 65, width=104, prefix="bl_decay_it", color=h.BLUE_MID))
+    h.text(drawing, "slope = -n", px + 54, py + 136, 14, fill=h.BLUE_MID, italic=True, anchor="middle")
+    h.text(drawing, "t (s)", px + 98, py + 193, 14, fill="#111111", italic=True, anchor="middle")
+    drawing.append(
+        draw.Text(
+            "I(t)",
+            14,
+            0,
+            0,
+            fill="#111111",
+            font_family="Helvetica, Arial, sans-serif",
+            transform=f"translate({px - 34} {py + 86}) rotate(-90)",
+            text_anchor="middle",
+        )
+    )
 
 
 def add_bl_model_flow(drawing: draw.Drawing) -> None:
