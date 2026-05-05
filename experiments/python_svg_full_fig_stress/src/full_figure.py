@@ -30,7 +30,24 @@ def build_figure() -> draw.Drawing:
     add_tl_bullets(drawing)
     add_center_energy_bands(drawing)
     add_center_dos_math(drawing)
+    add_center_callout(drawing)
     return drawing
+
+
+def add_center_callout(drawing: draw.Drawing) -> None:
+    x, y, width, _ = CENTER
+    rounded_rect(drawing, x + 36, y + 535, width - 72, 78, fill="#fff5f3", stroke="#f0ccc7", radius=10)
+    h.multiline_text(
+        drawing,
+        ["Deep states dominate the trap landscape", "near midgap, driving the long-lived", "repulsive response."],
+        x + width / 2,
+        y + 562,
+        18,
+        20,
+        fill=h.RED,
+        italic=True,
+        anchor="middle",
+    )
 
 
 def add_center_dos_math(drawing: draw.Drawing) -> None:
