@@ -201,9 +201,9 @@ def add_callout(drawing: draw.Drawing) -> None:
         italic=True,
         anchor="middle",
     )
-    h.text(drawing, "Repulsion", 216, 391, 15, fill="#111111", anchor="middle")
-    h.text(drawing, "dominates", 298, 391, 15, fill=h.RED, weight="700", anchor="middle")
-    h.text(drawing, "over Maxwell attraction.", 412, 391, 15, fill="#111111", anchor="middle")
+    h.text(drawing, "Repulsion", 180, 391, 15, fill="#111111")
+    h.text(drawing, "dominates", 250, 391, 15, fill=h.RED, weight="700")
+    h.text(drawing, "over Maxwell attraction.", 340, 391, 15, fill="#111111")
 
 
 def main() -> None:
