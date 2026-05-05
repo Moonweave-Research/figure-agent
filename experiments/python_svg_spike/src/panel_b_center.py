@@ -26,6 +26,7 @@ def build_panel() -> draw.Drawing:
     add_dos_shallow(drawing)
     add_dos_deep(drawing)
     add_et_annotation(drawing)
+    add_math_labels(drawing)
     return drawing
 
 
@@ -124,6 +125,15 @@ def add_et_annotation(drawing: draw.Drawing) -> None:
             color="#111111",
         )
     )
+
+
+def add_math_labels(drawing: draw.Drawing) -> None:
+    h.arrow(drawing, 318, 476, 318, 176, "#111111", width=1.7, head_length=13, head_width=11)
+    h.arrow(drawing, 318, 476, 494, 476, "#111111", width=1.7, head_length=13, head_width=11)
+    h.text(drawing, "DOS", 330, 158, 18, fill="#111111")
+    drawing.append(math_svg(r"g(E_t)", x=378, y=141, width=70, prefix="b_top_g", color="#111111"))
+    drawing.append(math_svg(r"g(E_t)", x=376, y=492, width=72, prefix="b_axis_g", color="#111111"))
+    drawing.append(math_svg(r"E_t", x=500, y=335, width=28, prefix="b_et_small", color="#111111"))
 
 
 def _gaussian_lobe(
