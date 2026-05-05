@@ -66,4 +66,8 @@
 <path d="M324,186 L352.0,203.0 L352.0,169.0 Z" fill="#c31717" opacity="1.0" />
 <text x="386" y="143" font-size="18" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">Repulsion</text>
 <text x="386" y="165" font-size="18" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">(dominant)</text>
+<path d="M330,255 L394.0,255.0" stroke="#0b4ca8" stroke-width="7" stroke-linecap="round" opacity="0.85" />
+<path d="M413,255 L394.0,245.5 L394.0,264.5 Z" fill="#0b4ca8" opacity="0.85" />
+<text x="392" y="286" font-size="14" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Maxwell attraction</text>
+<text x="392" y="304" font-size="14" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(suppressed)</text>
 </svg>

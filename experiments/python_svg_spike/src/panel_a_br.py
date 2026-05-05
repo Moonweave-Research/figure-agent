@@ -20,6 +20,7 @@ def build_panel() -> draw.Drawing:
     add_charges(drawing)
     add_electrode(drawing)
     add_repulsion_arrow(drawing)
+    add_maxwell_arrow(drawing)
     return drawing
 
 
@@ -112,6 +113,31 @@ def add_repulsion_arrow(drawing: draw.Drawing) -> None:
         fill=h.RED,
         weight="700",
         italic=True,
+        anchor="middle",
+    )
+
+
+def add_maxwell_arrow(drawing: draw.Drawing) -> None:
+    h.arrow(
+        drawing,
+        330,
+        255,
+        413,
+        255,
+        h.BLUE_MID,
+        width=7,
+        head_length=19,
+        head_width=19,
+        opacity=0.85,
+    )
+    h.multiline_text(
+        drawing,
+        ["Maxwell attraction", "(suppressed)"],
+        392,
+        286,
+        14,
+        18,
+        fill=h.BLUE_MID,
         anchor="middle",
     )
 
