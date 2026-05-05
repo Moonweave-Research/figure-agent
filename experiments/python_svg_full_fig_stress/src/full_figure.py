@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import drawsvg as draw
@@ -28,7 +29,57 @@ def build_figure() -> draw.Drawing:
     add_tl_composition_swatch(drawing)
     add_tl_bullets(drawing)
     add_center_energy_bands(drawing)
+    add_center_dos_math(drawing)
     return drawing
+
+
+def add_center_dos_math(drawing: draw.Drawing) -> None:
+    x, y, _, _ = CENTER
+    ax = x + 308
+    h.arrow(drawing, ax, y + 445, ax, y + 155, "#111111", width=1.7, head_length=13, head_width=11)
+    h.arrow(drawing, ax, y + 445, ax + 170, y + 445, "#111111", width=1.7, head_length=13, head_width=11)
+    h.text(drawing, "DOS", ax + 28, y + 135, 18, fill="#111111")
+    drawing.append(math_svg(r"g(E_t)", x=ax + 82, y=y + 118, width=56, prefix="center_top_g"))
+    drawing.append(math_svg(r"g(E_t)", x=ax + 80, y=y + 462, width=60, prefix="center_axis_g"))
+    drawing.append(_gaussian_lobe(fill="#dbeafe", stroke=h.BLUE_MID, x=ax + 12, y=y + 170, width=90, height=84, sigma=0.28, id_prefix="center_shallow"))
+    h.text(drawing, "shallow", ax + 120, y + 230, 17, fill=h.BLUE_MID)
+    drawing.append(_gaussian_lobe(fill="#e9a5a5", stroke=h.RED, x=ax + 8, y=y + 300, width=155, height=155, sigma=0.48, id_prefix="center_deep"))
+    h.text(drawing, "deep", ax + 138, y + 383, 19, fill=h.RED, weight="700")
+    drawing.append(draw.Line(x + 278, y + 292, ax + 176, y + 292, stroke="#6f7780", stroke_width=1.1, stroke_dasharray="6 6"))
+    h.arrow(drawing, ax + 176, y + 292, ax + 176, y + 383, "#111111", width=1.4, head_length=12, head_width=10)
+    h.arrow(drawing, ax + 176, y + 383, ax + 176, y + 292, "#111111", width=1.4, head_length=12, head_width=10)
+    drawing.append(math_svg(r"E_t\sim 0.5\text{--}1.0\,\mathrm{eV}", x=ax + 98, y=y + 337, width=102, prefix="center_et"))
+
+
+def _gaussian_lobe(
+    *,
+    fill: str,
+    stroke: str,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    sigma: float,
+    id_prefix: str,
+) -> draw.Raw:
+    import matplotlib
+
+    matplotlib.use("svg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    energy = np.linspace(-1.0, 1.0, 180)
+    density = np.exp(-0.5 * (energy / sigma) ** 2)
+    fig, ax = plt.subplots(figsize=(1.35, 1.4))
+    ax.fill_betweenx(energy, 0, density, color=fill, alpha=0.95)
+    ax.plot(density, energy, color=stroke, linewidth=1.4)
+    ax.set_xlim(0, 1.05)
+    ax.set_ylim(-1.0, 1.0)
+    ax.axis("off")
+    buffer = io.StringIO()
+    fig.savefig(buffer, format="svg", transparent=True, bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+    return h.nested_svg(buffer.getvalue(), x, y, width, height, prefix=id_prefix)
 
 
 def add_center_energy_bands(drawing: draw.Drawing) -> None:
