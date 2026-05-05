@@ -35,7 +35,36 @@ def build_figure() -> draw.Drawing:
     add_tr_current_decay(drawing)
     add_bl_model_flow(drawing)
     add_bl_current_decay_plot(drawing)
+    add_bl_dos_plot(drawing)
     return drawing
+
+
+def add_bl_dos_plot(drawing: draw.Drawing) -> None:
+    x, y, _, _ = BL
+    px, py = x + 330, y + 220
+    h.arrow(drawing, px, py + 160, px, py + 20, "#111111", width=1.4, head_length=11, head_width=9)
+    h.arrow(drawing, px, py + 160, px + 132, py + 160, "#111111", width=1.4, head_length=11, head_width=9)
+    drawing.append(_gaussian_lobe(fill="#dbeafe", stroke=h.BLUE_MID, x=px + 8, y=py + 35, width=78, height=58, sigma=0.26, id_prefix="bl_shallow"))
+    drawing.append(_gaussian_lobe(fill="#e9a5a5", stroke=h.RED, x=px + 8, y=py + 84, width=110, height=90, sigma=0.46, id_prefix="bl_deep"))
+    h.text(drawing, "shallow", px + 90, py + 58, 14, fill=h.BLUE_MID, italic=True)
+    h.text(drawing, "deep", px + 102, py + 135, 14, fill=h.RED, italic=True)
+    drawing.append(draw.Line(px, py + 98, px + 118, py + 98, stroke="#777777", stroke_width=1.0, stroke_dasharray="5 5"))
+    h.arrow(drawing, px + 118, py + 98, px + 118, py + 148, "#111111", width=1.1, head_length=8, head_width=7)
+    h.arrow(drawing, px + 118, py + 148, px + 118, py + 98, "#111111", width=1.1, head_length=8, head_width=7)
+    drawing.append(math_svg(r"E_t", x=px + 128, y=py + 112, width=22, prefix="bl_et"))
+    drawing.append(math_svg(r"g(E_t)", x=px + 58, y=py + 176, width=54, prefix="bl_g_axis"))
+    drawing.append(
+        draw.Text(
+            "Energy",
+            13,
+            0,
+            0,
+            fill="#111111",
+            font_family="Helvetica, Arial, sans-serif",
+            transform=f"translate({px - 30} {py + 90}) rotate(-90)",
+            text_anchor="middle",
+        )
+    )
 
 
 def add_bl_current_decay_plot(drawing: draw.Drawing) -> None:
