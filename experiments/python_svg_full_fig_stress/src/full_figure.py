@@ -36,7 +36,24 @@ def build_figure() -> draw.Drawing:
     add_bl_model_flow(drawing)
     add_bl_current_decay_plot(drawing)
     add_bl_dos_plot(drawing)
+    add_bl_callout(drawing)
     return drawing
+
+
+def add_bl_callout(drawing: draw.Drawing) -> None:
+    x, y, width, _ = BL
+    rounded_rect(drawing, x + 26, y + 385, width - 52, 54, fill="#f7fbff", stroke="#d7e2f2", radius=8)
+    h.multiline_text(
+        drawing,
+        ["Convergence to deep traps explains", "the extended repulsion."],
+        x + width / 2,
+        y + 408,
+        17,
+        20,
+        fill=h.BLUE,
+        italic=True,
+        anchor="middle",
+    )
 
 
 def add_bl_dos_plot(drawing: draw.Drawing) -> None:
