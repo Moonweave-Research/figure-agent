@@ -6,4 +6,7 @@
 <rect x="1" y="1" width="558" height="638" rx="28" ry="28" fill="#ffffff" stroke="#ddb9b9" stroke-width="1.4" />
 <rect x="36" y="28" width="488" height="80" rx="14" ry="14" fill="#fffafa" stroke="#efd6d6" stroke-width="1.0" />
 <text x="280.0" y="80" font-size="29" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">Converged deep charge trapping</text>
+<path d="M78,542 L78.0,150.0" stroke="#111111" stroke-width="2.0" stroke-linecap="round" opacity="1.0" />
+<path d="M78,134 L71.5,150.0 L84.5,150.0 Z" fill="#111111" opacity="1.0" />
+<text x="0" y="0" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" transform="translate(48 356) rotate(-90)" text-anchor="middle">Energy</text>
 </svg>

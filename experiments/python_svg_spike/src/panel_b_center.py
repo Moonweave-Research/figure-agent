@@ -16,6 +16,7 @@ def build_panel() -> draw.Drawing:
     drawing = draw.Drawing(WIDTH, HEIGHT)
     h.card(drawing, WIDTH, HEIGHT, stroke="#ddb9b9", radius=28)
     add_title(drawing)
+    add_energy_axis(drawing)
     return drawing
 
 
@@ -42,6 +43,22 @@ def add_title(drawing: draw.Drawing) -> None:
         fill=h.RED,
         weight="700",
         anchor="middle",
+    )
+
+
+def add_energy_axis(drawing: draw.Drawing) -> None:
+    h.arrow(drawing, 78, 542, 78, 134, "#111111", width=2.0, head_length=16, head_width=13)
+    drawing.append(
+        draw.Text(
+            "Energy",
+            18,
+            0,
+            0,
+            fill="#111111",
+            font_family="Helvetica, Arial, sans-serif",
+            transform="translate(48 356) rotate(-90)",
+            text_anchor="middle",
+        )
     )
 
 
