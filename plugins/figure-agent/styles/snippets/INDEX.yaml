@@ -1,0 +1,395 @@
+# L3 Snippet Library — Machine-Readable Index
+#
+# schema_version: 0.1 (2026-05-05, draft)
+# Purpose: matchable projection of styles/snippets/README.md for
+#          briefing→snippet selection, L2.5 reference-hint matching,
+#          and acceptance-gate verification.
+# Source-of-truth narrative remains the per-snippet section in README.md;
+# narrative changes there must update the matchable fields here in the
+# same commit.
+#
+# Schema (per snippet entry):
+#   file:          string  — path relative to plugin root
+#   status:        enum    — planned | vendored | integrated_wip | shipped | deferred
+#   track:         string  — A1..A4 (macro) | V1..V6 (vendor) | null
+#
+#   domain:                — what scientific subject is depicted
+#     primary:     enum    — polymer | band-structure | device-stack |
+#                            process-flow | actuation | plotting | molecule
+#     tags:        list    — free-form refinement keywords
+#
+#   role:                  — composition role inside a paper figure
+#     level:       enum    — primitive | composite | panel
+#     placement:   enum    — row-element | column | panel | inset | full-figure
+#     depicts:     string  — short noun-phrase description
+#
+#   axes:                  — quantitative axis behavior
+#     type:        enum    — symbolic | linear | semilog | loglog | none
+#     data_grounded: bool  — true if numeric data drives geometry
+#
+#   api:
+#     kind:        enum    — macro | style-key | raw-tikz
+#     signature:   string  — macro signature, style key, or "(none)"
+#     tunable:     list    — args / providecommand tokens callers override
+#
+#   preconditions:
+#     preamble:    string  — required .sty file
+#     palette_tokens: list — palette colors used
+#     requires_macros: list — preamble primitives the snippet calls
+#     compile_engine: enum — lualatex | pdflatex | xelatex | any
+#
+#   known_pitfalls: list   — short bullets (≤1 line each, monotonic — never delete)
+#   smoke_fixture: string  — standalone smoke fixture path
+#   consumed_by:   list    — production consumer fixtures (or empty)
+#
+#   discoverability:       — matcher (briefing→snippet) hits before reading API
+#     keywords:    list    — natural-language keywords
+#     reference_hints:     — what L2.5 reference_extract should yield
+#       palette_clusters: list   — matches palette.py output keys
+#       ocr_terms:        list   — matches ocr.py text_labels
+# ============================================================
+
+schema_version: 0.1
+generated: 2026-05-05
+narrative_source: styles/snippets/README.md
+
+snippets:
+
+  polymer_chain:
+    file: styles/snippets/polymer_chain.snippet.tex
+    status: integrated_wip
+    track: A1
+    domain:
+      primary: polymer
+      tags: [copolymer, sulfur-rich, monomer-resolved, backbone]
+    role:
+      level: primitive
+      placement: row-element
+      depicts: "monomer-resolved sulfur-copolymer chain segment"
+    axes:
+      type: symbolic
+      data_grounded: false
+    api:
+      kind: macro
+      signature: '\PolymerChain{anchor_x}{anchor_y}{monomer_count}{s_csv}'
+      tunable: [anchor_x, anchor_y, monomer_count, s_csv]
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cAmber]
+      requires_macros: []
+      compile_engine: lualatex
+    known_pitfalls:
+      - "schematic only — no stereochemistry, valence, or atom-by-atom layout"
+      - "monomer_count restricted to 4..16; outside range geometry breaks"
+      - "S marker indices must be 1-based and within range"
+    smoke_fixture: examples/_snippet_smoke/polymer_chain/polymer_chain_smoke.tex
+    consumed_by:
+      - "examples/golden_trap_depth_picture (Row 3)"
+    discoverability:
+      keywords: [polymer, chain, backbone, sulfur, copolymer, monomer, S-rich]
+      reference_hints:
+        palette_clusters: [cAmber, chain_gray]
+        ocr_terms: [polymer, chain, S]
+
+  log_plot:
+    file: styles/snippets/log_plot.snippet.tex
+    status: integrated_wip
+    track: A2
+    domain:
+      primary: plotting
+      tags: [pgfplots, log-log, power-law, debye, paper-grade]
+    role:
+      level: primitive
+      placement: row-element
+      depicts: "PGFPlots log-log axes with paper sizing contract"
+    axes:
+      type: loglog
+      data_grounded: true
+    api:
+      kind: style-key
+      signature: 'paper loglog/.style 2 args={W}{H}'
+      tunable: [W, H]
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: []
+      requires_macros: ['\PlotCallout']
+      compile_engine: lualatex
+    known_pitfalls:
+      - "leaky default — `title=` shrinks inner plot area; force-vary axis size before tagging (G004)"
+      - "samples=N is linear sampling; use explicit log-spaced coordinates {} for log-axis fidelity"
+      - "W/H include tick + axis labels, not data area (data ≈ W-1.0cm × H-0.6cm)"
+    smoke_fixture: examples/_snippet_smoke/log_plot/log_plot_smoke.tex
+    consumed_by:
+      - "examples/golden_trap_depth_picture (Row 1)"
+    discoverability:
+      keywords: [log-log, loglog, power-law, debye, decay, plot, axis, pgfplots]
+      reference_hints:
+        palette_clusters: []
+        ocr_terms: [log, frequency, time, '10^']
+
+  isometric_exploded:
+    file: styles/snippets/isometric_exploded.snippet.tex
+    status: vendored
+    track: V1
+    domain:
+      primary: device-stack
+      tags: [isometric, 3d, exploded, cross-section, layered]
+    role:
+      level: composite
+      placement: panel
+      depicts: "4-layer isometric exploded device cross-section with leader callouts"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for color/label only)"
+      tunable:
+        - '\IsoExpAColor..\IsoExpDColor'
+        - '\IsoExpALabel..\IsoExpDLabel'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cRed, cAmber, cTeal, cBlue, cGray]
+      requires_macros:
+        - '\IsoBlock'
+        - 'iso basis'
+        - 'iso label'
+        - 'iso callout'
+        - 'iso hidden edge'
+      compile_engine: lualatex
+    known_pitfalls:
+      - "providecommand uses Roman A..D, not 1..4 (TeX macro names cannot contain digits)"
+      - "explosion gaps + callout angles are raw TikZ; copy-edit snippet for non-default composition"
+      - "depends on multiple preamble primitives — moving snippet without preamble breaks compile"
+    smoke_fixture: examples/_snippet_smoke/isometric_exploded/isometric_exploded_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [isometric, exploded, 3d, device, layer, cross-section, slab]
+      reference_hints:
+        palette_clusters: [cRed, cAmber, cTeal, cBlue]
+        ocr_terms: [layer, electrode, substrate]
+
+  layered_device_stack:
+    file: styles/snippets/layered_device_stack.snippet.tex
+    status: vendored
+    track: V2
+    domain:
+      primary: device-stack
+      tags: [isometric, 3d, collapsed, charge-trapping, dielectric]
+    role:
+      level: composite
+      placement: panel
+      depicts: "3D collapsed 4-layer device stack with trapped-charge dots in dielectric"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for color/label/title only)"
+      tunable:
+        - '\IsoLDSAColor..\IsoLDSDColor'
+        - '\IsoLDSALabel..\IsoLDSDLabel'
+        - '\IsoLDSTitle'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cRed, cAmber, cTeal, cBlue, cGray]
+      requires_macros:
+        - '\IsoBlock'
+        - 'iso basis'
+        - 'iso label'
+        - 'iso callout'
+        - 'iso hidden edge'
+      compile_engine: lualatex
+    known_pitfalls:
+      - "charge-dot count + positions are raw TikZ; edit body to vary"
+      - "5 charge dots default — clutters at <2 layer thickness, sparse at >7 layers"
+    smoke_fixture: examples/_snippet_smoke/layered_device_stack/layered_device_stack_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [device, stack, dielectric, electrode, charge, trapping, collapsed, isometric]
+      reference_hints:
+        palette_clusters: [cRed, cAmber, cTeal, cBlue]
+        ocr_terms: [electrode, dielectric, trap, charge]
+
+  process_3column:
+    file: styles/snippets/process_3column.snippet.tex
+    status: vendored
+    track: V3
+    domain:
+      primary: process-flow
+      tags: [3-column, mechanism-comparison, regime-strip, trade-off]
+    role:
+      level: composite
+      placement: full-figure
+      depicts: "3-column dielectric-cell strip with connector arrows + bookend bars"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for titles/captions/accents)"
+      tunable:
+        - '\PTriTitle, \PTriSummary'
+        - '\PTri{A,B,C}Title'
+        - '\PTri{A,B,C}Cap{Head,Act,Note}'
+        - '\PTri{A,B,C}Accent'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cAmberSphere, cRed, cBrown, cBlue, cTeal, cGray]
+      requires_macros: []
+      compile_engine: lualatex
+    known_pitfalls:
+      - "fixed 3-column geometry — extending to 4+ columns requires snippet body edits"
+      - "inner trap/charge geometry is raw TikZ per column; replacing one column's mechanism is an in-place edit"
+    smoke_fixture: examples/_snippet_smoke/process_3column/process_3column_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [process, comparison, mechanism, three-column, regime, trade-off, percolation]
+      reference_hints:
+        palette_clusters: [cAmberSphere, cRed, cBrown]
+        ocr_terms: [regime, optimum, mechanism]
+
+  molecular_cluster:
+    file: styles/snippets/molecular_cluster.snippet.tex
+    status: vendored
+    track: V4
+    domain:
+      primary: molecule
+      tags: [polysulfide, S8-ring, reaction-arrow, hero-panel, fig1]
+    role:
+      level: panel
+      placement: panel
+      depicts: "S8-ring + reaction arrow + dual-bridge polymer hero panel"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for title/labels/reagents/captions)"
+      tunable:
+        - '\McLTitle, \McLLabel'
+        - '\McLReagentMain, \McLReagentAdd'
+        - '\McL{Short,Long}{Label,Range}'
+        - '\McLCap{Head,Mid,Note}'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cAmber, cAmberSphere, cGray, cLGray]
+      requires_macros: []
+      compile_engine: lualatex
+    known_pitfalls:
+      - "S8 ring uses sc7_v7 idiom (bonds first, spheres on top, white S labels) — do not reorder"
+      - "monomer count + spacing are raw TikZ; vary in place"
+      - "designed as Figure-1 hero — not for inline schematic use"
+    smoke_fixture: examples/_snippet_smoke/molecular_cluster/molecular_cluster_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [polysulfide, S8, ring, sulfur, reaction, polymer, hero, figure-1]
+      reference_hints:
+        palette_clusters: [cAmber, cAmberSphere]
+        ocr_terms: ['S8', 'polysulfide', 'S_x', 'S_y']
+
+  band_with_traps:
+    file: styles/snippets/band_with_traps.snippet.tex
+    status: vendored
+    track: V5
+    domain:
+      primary: band-structure
+      tags: [trap-states, dos, dual-panel, lumo-homo, hero-panel, fig1]
+    role:
+      level: panel
+      placement: panel
+      depicts: "Band-with-traps + DOS dual sub-panel with bridging dashed guides"
+    axes:
+      type: symbolic
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for title/labels/captions)"
+      tunable:
+        - '\BwTTitle, \BwTLabel'
+        - '\BwT{Lumo,Homo}Label'
+        - '\BwTShallow, \BwTDeep'
+        - '\BwT{Shallow,Deep}DOS, \BwTGofE, \BwTEnergyLabel'
+        - '\BwTCap{Head,Mid,Note}'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cBlue, cRed, cGray]
+      requires_macros: []
+      compile_engine: lualatex
+    known_pitfalls:
+      - "trap-state tick positions + electron occupancy raw TikZ"
+      - "Gaussian DOS shape parameters hardcoded inline — tune in place"
+      - "will be partially superseded once A3 \\BandSnippet macro ships (thinner primitive without DOS)"
+    smoke_fixture: examples/_snippet_smoke/band_with_traps/band_with_traps_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [band, diagram, trap, lumo, homo, dos, density-of-states, electron, occupancy]
+      reference_hints:
+        palette_clusters: [cBlue, cRed]
+        ocr_terms: ['LUMO', 'HOMO', 'E_S', 'E_D', 'g(E)']
+
+  electret_actuation:
+    file: styles/snippets/electret_actuation.snippet.tex
+    status: vendored
+    track: V6
+    domain:
+      primary: actuation
+      tags: [cantilever, coulomb, bidirectional, electret, hero-panel, fig1]
+    role:
+      level: panel
+      placement: panel
+      depicts: "Two-step bidirectional cantilever Coulomb actuation panel"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: raw-tikz
+      signature: "(none — providecommand tokens for title/voltage/steps/captions)"
+      tunable:
+        - '\EActTitle, \EActLabel'
+        - '\EAct{Pos,Neg}V'
+        - '\EActStep{One,Two}'
+        - '\EActElectretLbl, \EActGndLabel, \EActFloatLabel, \EActFieldLabel'
+        - '\EActCap{Head,Mid,Note}'
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cAmber, cBlue, cRed, cTeal, cGray]
+      requires_macros: []
+      compile_engine: lualatex
+    known_pitfalls:
+      - "v2 geometry only (vertical electrode parallel to cantilever); v1 deprecated"
+      - "spline control points + charge positions raw TikZ — retune in body"
+      - "fixed 7-charge default per beam; visual clutter at high charge counts"
+    smoke_fixture: examples/_snippet_smoke/electret_actuation/electret_actuation_smoke.tex
+    consumed_by: []
+    discoverability:
+      keywords: [cantilever, electret, actuation, coulomb, bending, voltage, charge, deflection]
+      reference_hints:
+        palette_clusters: [cAmber, cBlue, cRed]
+        ocr_terms: ['+V', '-V', 'theta', 'electret', 'GND']
+
+# Deferred entries (planned but not yet vendored).
+# Listed for discoverability so a matcher can surface "this exists in roadmap"
+# rather than silently failing.
+_planned:
+
+  band_diagram:
+    track: A3
+    status: deferred
+    reason: "compass diagnosis — 5 macro API gaps documented in docs/macros/band-diagram-gaps.md; awaiting multi-fixture pressure"
+    intended_role: "thinner primitive than band_with_traps — band edges + traps only, no DOS sub-panel"
+
+  dos_lobes:
+    track: A4
+    status: deferred
+    reason: "compass diagnosis — paired with A3, awaiting multi-fixture pressure"
+    intended_role: "PGFPlots fillbetween primitive for DOS lobe rendering"
+
+# ============================================================
+# Maintenance contract:
+# 1. Adding a snippet:    new entry + smoke fixture + README section in same commit
+# 2. Promoting status:    deferred → vendored when first commit lands;
+#                         vendored → integrated_wip when first non-smoke fixture consumes;
+#                         integrated_wip → shipped after consumer ships in a real manuscript
+# 3. known_pitfalls grows monotonically — never delete; if resolved, append "(resolved YYYY-MM-DD)"
+# 4. Schema changes:      bump schema_version; update header comment block
