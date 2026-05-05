@@ -33,7 +33,30 @@ def build_figure() -> draw.Drawing:
     add_center_callout(drawing)
     add_tr_pe_loop(drawing)
     add_tr_current_decay(drawing)
+    add_bl_model_flow(drawing)
     return drawing
+
+
+def add_bl_model_flow(drawing: draw.Drawing) -> None:
+    x, y, _, _ = BL
+    brain_x, brain_y = x + 32, y + 30
+    drawing.append(draw.Circle(brain_x + 18, brain_y + 24, 20, fill="#eef5fb", stroke=h.BLUE, stroke_width=1.2))
+    drawing.append(draw.Circle(brain_x + 36, brain_y + 24, 20, fill="#eef5fb", stroke=h.BLUE, stroke_width=1.2))
+    drawing.append(draw.Line(brain_x + 27, brain_y + 7, brain_x + 27, brain_y + 42, stroke=h.BLUE, stroke_width=1.1))
+    h.text(drawing, "Interpretation (converged trap model)", x + 96, y + 58, 22, fill=h.BLUE, weight="700")
+    items = [
+        (x + 28, y + 112, 105, 46, r"I(t)\propto t^{-n}", "blue"),
+        (x + 168, y + 108, 96, 56, r"\mathrm{Debye}\ e^{-t/\tau}", "gray"),
+        (x + 302, y + 112, 75, 46, r"\tau_d", "gray"),
+        (x + 420, y + 112, 78, 46, r"g(E_t)", "gray"),
+    ]
+    for index, (ix, iy, iw, ih, label, tone) in enumerate(items):
+        stroke = h.BLUE_MID if tone == "blue" else "#b9c0c8"
+        fill = "#f7fbff" if tone == "blue" else "#f7f7f7"
+        drawing.append(draw.Rectangle(ix, iy, iw, ih, rx=5, ry=5, fill=fill, stroke=stroke, stroke_width=1.2))
+        drawing.append(math_svg(label, x=ix + 12, y=iy + 15, width=iw - 24, prefix=f"bl_flow_{index}", color=h.BLUE_MID if tone == "blue" else "#222222"))
+    for x1, x2 in [(x + 138, x + 166), (x + 268, x + 300), (x + 382, x + 416)]:
+        h.arrow(drawing, x1, y + 135, x2, y + 135, "#6f7780", width=1.5, head_length=10, head_width=8)
 
 
 def add_tr_current_decay(drawing: draw.Drawing) -> None:
