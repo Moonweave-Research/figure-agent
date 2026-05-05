@@ -22,6 +22,7 @@ def math_svg(
 ) -> draw.Raw:
     svg_text, natural_width, natural_height = _render_latex_to_svg(latex_math)
     svg_text = _prefix_ids(svg_text, prefix)
+    svg_text = _sort_path_defs(svg_text)
     height = width * natural_height / natural_width
     inner = _strip_outer_svg(svg_text)
     return draw.Raw(
@@ -88,3 +89,14 @@ def _prefix_ids(svg_text: str, prefix: str) -> str:
         updated = updated.replace(f"#{old_id}'", f"#{new_id}'")
         updated = updated.replace(f'#{old_id}"', f'#{new_id}"')
     return updated
+
+
+def _sort_path_defs(svg_text: str) -> str:
+    def replace_defs(match: re.Match[str]) -> str:
+        content = match.group(1)
+        paths = re.findall(r"<path\b[^>]*/>", content)
+        if not paths:
+            return match.group(0)
+        return "<defs>\n" + "\n".join(sorted(paths)) + "\n</defs>"
+
+    return re.sub(r"<defs>\s*(.*?)\s*</defs>", replace_defs, svg_text, flags=re.DOTALL)
