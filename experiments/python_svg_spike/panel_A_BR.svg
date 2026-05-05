@@ -25,4 +25,14 @@
 <path d="M224,132 L298,132" stroke="#30363d" stroke-width="2.0" />
 <text x="194" y="101" font-size="14" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Cantilever</text>
 <text x="194" y="119" font-size="14" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(probe)</text>
+<circle cx="250" cy="145" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M244.6,145 L255.4,145" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="235" cy="189" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M229.6,189 L240.4,189" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="215" cy="235" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M209.6,235 L220.4,235" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="190" cy="281" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M184.6,281 L195.4,281" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
+<circle cx="161" cy="318" r="12" fill="#c31717" stroke="#7c0909" stroke-width="1.2" />
+<path d="M155.6,318 L166.4,318" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" />
 </svg>

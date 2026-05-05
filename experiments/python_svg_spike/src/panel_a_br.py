@@ -17,6 +17,7 @@ def build_panel() -> draw.Drawing:
     h.card(drawing, WIDTH, HEIGHT)
     add_cantilever_beam(drawing)
     add_clamp(drawing)
+    add_charges(drawing)
     return drawing
 
 
@@ -71,6 +72,11 @@ def add_clamp(drawing: draw.Drawing) -> None:
         fill="#111111",
         anchor="middle",
     )
+
+
+def add_charges(drawing: draw.Drawing) -> None:
+    for x, y in [(250, 145), (235, 189), (215, 235), (190, 281), (161, 318)]:
+        h.minus_charge(drawing, x, y, r=12)
 
 
 def main() -> None:
