@@ -194,7 +194,15 @@ def minus_charge(drawing: draw.Drawing, x: float, y: float, r: float = 11.0) -> 
     )
 
 
-def nested_svg(svg_text: str, x: float, y: float, width: float, height: float) -> draw.Raw:
+def nested_svg(
+    svg_text: str,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    *,
+    prefix: str,
+) -> draw.Raw:
     cleaned = _without_xml_declaration(svg_text)
     root = ET.fromstring(cleaned)
     view_box = root.attrib.get("viewBox")
@@ -203,6 +211,7 @@ def nested_svg(svg_text: str, x: float, y: float, width: float, height: float) -
     body = re.sub(r"^<svg[^>]*>", "", cleaned.strip(), count=1)
     body = re.sub(r"</svg>\s*$", "", body)
     body = re.sub(r"\s*<metadata>.*?</metadata>\s*", "", body, flags=re.DOTALL)
+    body = _prefix_svg_ids(body, prefix)
     return draw.Raw(
         f'<svg x="{x:.3f}" y="{y:.3f}" width="{width:.3f}" height="{height:.3f}" '
         f'viewBox="{escape_attr(view_box)}" overflow="visible">{body}</svg>'
@@ -210,7 +219,7 @@ def nested_svg(svg_text: str, x: float, y: float, width: float, height: float) -
 
 
 def raw_nested_from_file(path: str | Path, x: float, y: float, width: float, height: float) -> draw.Raw:
-    return nested_svg(Path(path).read_text(), x, y, width, height)
+    return nested_svg(Path(path).read_text(), x, y, width, height, prefix="nested")
 
 
 def _without_xml_declaration(svg_text: str) -> str:
@@ -221,3 +230,19 @@ def _without_xml_declaration(svg_text: str) -> str:
 
 def escape_attr(value: str) -> str:
     return html.escape(value, quote=True)
+
+
+def _prefix_svg_ids(svg_body: str, prefix: str) -> str:
+    ids = re.findall(r"id=\"([^\"]+)\"|id='([^']+)'", svg_body)
+    updated = svg_body
+    seen: list[str] = []
+    for double_quoted, single_quoted in ids:
+        old_id = double_quoted or single_quoted
+        if old_id not in seen:
+            seen.append(old_id)
+    for index, old_id in enumerate(seen):
+        new_id = f"{prefix}_{index}"
+        updated = updated.replace(f'id="{old_id}"', f'id="{new_id}"')
+        updated = updated.replace(f"id='{old_id}'", f"id='{new_id}'")
+        updated = updated.replace(f"#{old_id}", f"#{new_id}")
+    return updated

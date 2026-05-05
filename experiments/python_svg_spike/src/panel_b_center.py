@@ -102,12 +102,34 @@ def add_deep_lines(drawing: draw.Drawing) -> None:
 
 
 def add_dos_shallow(drawing: draw.Drawing) -> None:
-    drawing.append(_gaussian_lobe(fill="#dbeafe", stroke=h.BLUE_MID, x=318, y=184, width=92, height=82, sigma=0.28))
+    drawing.append(
+        _gaussian_lobe(
+            fill="#dbeafe",
+            stroke=h.BLUE_MID,
+            x=318,
+            y=184,
+            width=92,
+            height=82,
+            sigma=0.28,
+            id_prefix="dos_shallow",
+        )
+    )
     h.text(drawing, "shallow", 420, 240, 17, fill=h.BLUE_MID)
 
 
 def add_dos_deep(drawing: draw.Drawing) -> None:
-    drawing.append(_gaussian_lobe(fill="#e9a5a5", stroke=h.RED, x=318, y=294, width=146, height=172, sigma=0.48))
+    drawing.append(
+        _gaussian_lobe(
+            fill="#e9a5a5",
+            stroke=h.RED,
+            x=318,
+            y=294,
+            width=146,
+            height=172,
+            sigma=0.48,
+            id_prefix="dos_deep",
+        )
+    )
     h.text(drawing, "deep", 438, 395, 19, fill=h.RED, weight="700")
 
 
@@ -177,6 +199,7 @@ def _gaussian_lobe(
     width: float,
     height: float,
     sigma: float,
+    id_prefix: str,
 ) -> draw.Raw:
     import matplotlib
 
@@ -195,7 +218,7 @@ def _gaussian_lobe(
     buffer = io.StringIO()
     fig.savefig(buffer, format="svg", transparent=True, bbox_inches="tight", pad_inches=0)
     plt.close(fig)
-    return h.nested_svg(buffer.getvalue(), x, y, width, height)
+    return h.nested_svg(buffer.getvalue(), x, y, width, height, prefix=id_prefix)
 
 
 def main() -> None:
