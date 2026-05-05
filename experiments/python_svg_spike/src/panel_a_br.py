@@ -15,6 +15,7 @@ OUT = Path(__file__).resolve().parents[1] / "panel_A_BR.svg"
 def build_panel() -> draw.Drawing:
     drawing = draw.Drawing(WIDTH, HEIGHT)
     h.card(drawing, WIDTH, HEIGHT)
+    add_probe_icon(drawing)
     add_cantilever_beam(drawing)
     add_clamp(drawing)
     add_charges(drawing)
@@ -23,6 +24,23 @@ def build_panel() -> draw.Drawing:
     add_repulsion_arrow(drawing)
     add_maxwell_arrow(drawing)
     return drawing
+
+
+def add_probe_icon(drawing: draw.Drawing) -> None:
+    drawing.append(draw.Rectangle(35, 36, 54, 54, rx=5, ry=5, fill="#eef3f8", stroke="#203a59", stroke_width=1.2))
+    drawing.append(draw.Rectangle(47, 67, 38, 6, fill="#697789", stroke="#2d3845", stroke_width=0.9))
+    arm = draw.Path(fill="#64748b", stroke="#2d3845", stroke_width=1.2)
+    arm.M(52, 62)
+    arm.L(78, 45)
+    arm.L(84, 54)
+    arm.L(58, 71)
+    arm.Z()
+    drawing.append(arm)
+    drawing.append(draw.Line(60, 76, 60, 100, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(49, 100, 71, 100, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(53, 108, 67, 108, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(57, 116, 63, 116, stroke="#111111", stroke_width=1.7))
+    h.text(drawing, "Macroscopic probe", 108, 67, 22, fill=h.BLUE, weight="700")
 
 
 def add_cantilever_beam(drawing: draw.Drawing) -> None:
