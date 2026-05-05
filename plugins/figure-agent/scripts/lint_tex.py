@@ -239,8 +239,13 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
     # flagship_macros_unused WARN: fires once per file iff zero calls to any
     # flagship macro. Scanned over comment-stripped text so commented-out
     # calls do not suppress the warning.
+    # Exempt snippet smoke fixtures: V1..V6 vendor-track snippets are raw-TikZ
+    # by design (see styles/snippets/README.md "macro vs snippet dichotomy"),
+    # so the lint would otherwise fire false-positive on every smoke compile
+    # for those snippets.
     comment_stripped_all = "\n".join(stripped_lines)
-    if not _RE_FLAGSHIP_CALL.search(comment_stripped_all):
+    is_snippet_smoke = "_snippet_smoke" in tex_path.parts
+    if not is_snippet_smoke and not _RE_FLAGSHIP_CALL.search(comment_stripped_all):
         violations.append(
             Violation(
                 line=1,
