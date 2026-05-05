@@ -72,4 +72,10 @@
 <text x="80" y="301" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S60</text>
 <text x="520" y="301" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S85</text>
 <text x="288.0" y="336" font-size="17" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">Increasing sulfur content</text>
+<text x="112" y="363" font-size="22" fill="#b87914" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">✓</text>
+<text x="138" y="363" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Higher sulfur fraction</text>
+<text x="112" y="395" font-size="22" fill="#b87914" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">✓</text>
+<text x="138" y="395" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Longer S-S sequences</text>
+<text x="112" y="427" font-size="22" fill="#b87914" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">✓</text>
+<text x="138" y="427" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">More deep trapping sites</text>
 </svg>

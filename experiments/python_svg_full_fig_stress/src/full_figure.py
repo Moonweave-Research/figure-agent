@@ -25,7 +25,17 @@ def build_figure() -> draw.Drawing:
     add_tl_s8_ring(drawing)
     add_tl_polymer_chain(drawing)
     add_tl_composition_swatch(drawing)
+    add_tl_bullets(drawing)
     return drawing
+
+
+def add_tl_bullets(drawing: draw.Drawing) -> None:
+    x, y, _, _ = TL
+    items = ["Higher sulfur fraction", "Longer S-S sequences", "More deep trapping sites"]
+    for index, item in enumerate(items):
+        yy = y + 335 + index * 32
+        h.text(drawing, "✓", x + 86, yy, 22, fill="#b87914", weight="700", anchor="middle")
+        h.text(drawing, item, x + 112, yy, 18, fill="#111111", italic=True)
 
 
 def add_tl_composition_swatch(drawing: draw.Drawing) -> None:
