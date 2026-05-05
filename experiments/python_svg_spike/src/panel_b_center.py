@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import drawsvg as draw
@@ -21,6 +22,7 @@ def build_panel() -> draw.Drawing:
     add_homo_box(drawing)
     add_shallow_lines(drawing)
     add_deep_lines(drawing)
+    add_dos_shallow(drawing)
     return drawing
 
 
@@ -92,6 +94,41 @@ def add_deep_lines(drawing: draw.Drawing) -> None:
     h.multiline_text(drawing, ["deep", "states"], 120, 352, 17, 21, fill=h.RED, anchor="start")
     for y in [326, 346, 366, 386, 406, 426, 446]:
         drawing.append(draw.Line(176, y, 268, y, stroke=h.RED, stroke_width=3.5, stroke_linecap="round"))
+
+
+def add_dos_shallow(drawing: draw.Drawing) -> None:
+    drawing.append(_gaussian_lobe(fill="#dbeafe", stroke=h.BLUE_MID, x=318, y=184, width=92, height=82, sigma=0.28))
+    h.text(drawing, "shallow", 420, 240, 17, fill=h.BLUE_MID)
+
+
+def _gaussian_lobe(
+    *,
+    fill: str,
+    stroke: str,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    sigma: float,
+) -> draw.Raw:
+    import matplotlib
+
+    matplotlib.use("svg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    energy = np.linspace(-1.0, 1.0, 180)
+    density = np.exp(-0.5 * (energy / sigma) ** 2)
+    fig, ax = plt.subplots(figsize=(1.35, 1.4))
+    ax.fill_betweenx(energy, 0, density, color=fill, alpha=0.95)
+    ax.plot(density, energy, color=stroke, linewidth=1.4)
+    ax.set_xlim(0, 1.05)
+    ax.set_ylim(-1.0, 1.0)
+    ax.axis("off")
+    buffer = io.StringIO()
+    fig.savefig(buffer, format="svg", transparent=True, bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+    return h.nested_svg(buffer.getvalue(), x, y, width, height)
 
 
 def main() -> None:

@@ -5,6 +5,7 @@ import math
 import re
 from pathlib import Path
 from typing import Iterable
+import xml.etree.ElementTree as ET
 
 import drawsvg as draw
 
@@ -194,10 +195,16 @@ def minus_charge(drawing: draw.Drawing, x: float, y: float, r: float = 11.0) -> 
 
 
 def nested_svg(svg_text: str, x: float, y: float, width: float, height: float) -> draw.Raw:
-    body = _without_xml_declaration(svg_text)
+    cleaned = _without_xml_declaration(svg_text)
+    root = ET.fromstring(cleaned)
+    view_box = root.attrib.get("viewBox")
+    if not view_box:
+        raise ValueError("nested SVG requires a viewBox")
+    body = re.sub(r"^<svg[^>]*>", "", cleaned.strip(), count=1)
+    body = re.sub(r"</svg>\s*$", "", body)
     return draw.Raw(
         f'<svg x="{x:.3f}" y="{y:.3f}" width="{width:.3f}" height="{height:.3f}" '
-        f'overflow="visible">{body}</svg>'
+        f'viewBox="{escape_attr(view_box)}" overflow="visible">{body}</svg>'
     )
 
 
@@ -207,7 +214,8 @@ def raw_nested_from_file(path: str | Path, x: float, y: float, width: float, hei
 
 def _without_xml_declaration(svg_text: str) -> str:
     text_without_decl = re.sub(r"^\s*<\?xml[^>]*>\s*", "", svg_text)
-    return re.sub(r"^\s*<!--.*?-->\s*", "", text_without_decl, flags=re.DOTALL)
+    text_without_comment = re.sub(r"^\s*<!--.*?-->\s*", "", text_without_decl, flags=re.DOTALL)
+    return re.sub(r"^\s*<!DOCTYPE\s+svg[^>]*(?:\[[\s\S]*?\]\s*)?>\s*", "", text_without_comment)
 
 
 def escape_attr(value: str) -> str:
