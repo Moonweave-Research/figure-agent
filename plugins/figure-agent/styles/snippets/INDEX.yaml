@@ -93,9 +93,10 @@ snippets:
       - "S marker indices must be 1-based and within range"
     briefing_hooks:
       - "Row 3 polymer chain"
-      - "S-rich polymer"
-      - "sulfur-rich segment 분포"
+      - "sulfur-rich segment"
       - "polymer backbone with sulfur sites"
+      - "monomer-resolved"
+      - "monomer-level texture"
     anti_patterns:
       - "atom-level chemical formula 필요 시 (chemfig 같은 별도 도구 사용)"
       - "단일 isolated S atom 강조가 핵심일 때 (이 매크로는 cluster/density 표현용)"
@@ -361,9 +362,10 @@ snippets:
       - "Gaussian DOS shape parameters hardcoded inline — tune in place"
       - "will be partially superseded once A3 \\BandSnippet macro ships (thinner primitive without DOS)"
     briefing_hooks:
-      - "band diagram with shallow + deep trap levels and DOS profiles"
-      - "CB/VB with trap-level groups + g(E_t) side panel"
-      - "HOMO/LUMO band edges + DOS 두 봉우리"
+      - "shallow trap level"
+      - "deep trap level"
+      - "g(E_t)"
+      - "DOS 두 봉우리"
     anti_patterns:
       - "trap level만 필요하고 DOS sub-panel 불필요할 때 — A3 \\BandSnippet (deferred) 또는 inline TikZ"
       - "정량적 측정 g(E) 데이터를 그릴 때 (snippet은 schematic Gaussian)"
