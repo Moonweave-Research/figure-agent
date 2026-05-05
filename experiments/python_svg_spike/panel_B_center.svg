@@ -4,4 +4,6 @@
 <defs>
 </defs>
 <rect x="1" y="1" width="558" height="638" rx="28" ry="28" fill="#ffffff" stroke="#ddb9b9" stroke-width="1.4" />
+<rect x="36" y="28" width="488" height="80" rx="14" ry="14" fill="#fffafa" stroke="#efd6d6" stroke-width="1.0" />
+<text x="280.0" y="80" font-size="29" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">Converged deep charge trapping</text>
 </svg>
