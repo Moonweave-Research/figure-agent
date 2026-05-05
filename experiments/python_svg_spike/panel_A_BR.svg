@@ -4,4 +4,7 @@
 <defs>
 </defs>
 <rect x="1" y="1" width="618" height="418" rx="22" ry="22" fill="#ffffff" stroke="#e3e6eb" stroke-width="1.4" />
+<path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#c79623" stroke-width="28" stroke-linecap="round" opacity="0.35" />
+<path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#d0a538" stroke-width="20" stroke-linecap="round" />
+<path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#8d6414" stroke-width="1.4" stroke-linecap="round" opacity="0.55" />
 </svg>
