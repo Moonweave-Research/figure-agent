@@ -9,4 +9,37 @@
 <rect x="26" y="498" width="532" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
 <rect x="1190" y="498" width="564" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
 <rect x="615" y="185" width="530" height="640" rx="36" ry="36" fill="#fffefe" stroke="#ddb9b9" stroke-width="2.0" />
+<rect x="56" y="56" width="50" height="50" rx="4" ry="4" fill="#173763" stroke="#0b2342" stroke-width="1.2" />
+<circle cx="72" cy="72" r="6" fill="#eef6ff" />
+<circle cx="90" cy="72" r="6" fill="#eef6ff" />
+<circle cx="81" cy="86" r="6" fill="#eef6ff" />
+<path d="M72,72 L81,86" stroke="#eef6ff" stroke-width="2" />
+<path d="M90,72 L81,86" stroke="#eef6ff" stroke-width="2" />
+<text x="126" y="80" font-size="25" fill="#12366e" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Sulfur polymer origin</text>
+<text x="126" y="110" font-size="25" fill="#12366e" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">(composition tuning)</text>
+<path d="M153.24,206 L137.0,247.76" stroke="#8d6414" stroke-width="2.0" />
+<path d="M137.0,247.76 L93.5,253.56" stroke="#8d6414" stroke-width="2.0" />
+<path d="M93.5,253.56 L60.440000000000005,223.4" stroke="#8d6414" stroke-width="2.0" />
+<path d="M60.440000000000005,223.4 L62.76,179.9" stroke="#8d6414" stroke-width="2.0" />
+<path d="M62.76,179.9 L97.56,156.12" stroke="#8d6414" stroke-width="2.0" />
+<path d="M97.56,156.12 L140.48000000000002,168.88" stroke="#8d6414" stroke-width="2.0" />
+<path d="M140.48000000000002,168.88 L159.04,203.1" stroke="#8d6414" stroke-width="2.0" />
+<path d="M159.04,203.1 L153.24,206" stroke="#8d6414" stroke-width="2.0" />
+<circle cx="153.24" cy="206" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="153.24" y="210" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="137.0" cy="247.76" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="137.0" y="251.76" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="93.5" cy="253.56" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="93.5" y="257.56" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="60.440000000000005" cy="223.4" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="60.440000000000005" y="227.4" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="62.76" cy="179.9" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="62.76" y="183.9" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="97.56" cy="156.12" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="97.56" y="160.12" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="140.48000000000002" cy="168.88" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="140.48000000000002" y="172.88" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="159.04" cy="203.1" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
+<text x="159.04" y="207.1" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<text x="108" y="298" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S8</text>
 </svg>
