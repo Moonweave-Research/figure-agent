@@ -37,7 +37,41 @@ def build_figure() -> draw.Drawing:
     add_bl_current_decay_plot(drawing)
     add_bl_dos_plot(drawing)
     add_bl_callout(drawing)
+    add_br_probe_mechanics(drawing)
     return drawing
+
+
+def add_br_probe_mechanics(drawing: draw.Drawing) -> None:
+    x, y, _, _ = BR
+    drawing.append(draw.Rectangle(x + 34, y + 28, 54, 54, rx=5, ry=5, fill="#eef3f8", stroke="#203a59", stroke_width=1.2))
+    drawing.append(draw.Rectangle(x + 46, y + 59, 38, 6, fill="#697789", stroke="#2d3845", stroke_width=0.9))
+    arm = draw.Path(fill="#64748b", stroke="#2d3845", stroke_width=1.2)
+    arm.M(x + 51, y + 54)
+    arm.L(x + 77, y + 37)
+    arm.L(x + 83, y + 46)
+    arm.L(x + 57, y + 63)
+    arm.Z()
+    drawing.append(arm)
+    drawing.append(draw.Line(x + 59, y + 68, x + 59, y + 98, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(x + 48, y + 98, x + 70, y + 98, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(x + 52, y + 107, x + 66, y + 107, stroke="#111111", stroke_width=1.7))
+    drawing.append(draw.Line(x + 56, y + 116, x + 62, y + 116, stroke="#111111", stroke_width=1.7))
+    h.text(drawing, "Macroscopic probe", x + 108, y + 66, 24, fill=h.BLUE, weight="700")
+    h.multiline_text(drawing, ["Cantilever", "(probe)"], x + 146, y + 122, 15, 19, fill="#111111", anchor="middle")
+    drawing.append(draw.Rectangle(x + 146, y + 95, 86, 24, fill="#c8cdd3", stroke="#66707b", stroke_width=1.2))
+    h.hatching(drawing, x + 148, y + 97, 82, 20, step=8, color="#ffffff", stroke_width=1.1)
+    drawing.append(draw.Rectangle(x + 166, y + 119, 38, 22, fill="#737d88", stroke="#4e5964", stroke_width=1.0))
+    drawing.append(draw.Line(x + 148, y + 145, x + 222, y + 145, stroke="#30363d", stroke_width=2.0))
+    beam = ((x + 184, y + 119), (x + 178, y + 190, x + 152, y + 275, x + 95, y + 350))
+    drawing.append(h.cubic_path(beam[0], beam[1], fill="none", stroke=h.AMBER, stroke_width=28, stroke_linecap="round", opacity=0.35))
+    drawing.append(h.cubic_path(beam[0], beam[1], fill="none", stroke="#d0a538", stroke_width=20, stroke_linecap="round"))
+    drawing.append(h.cubic_path(beam[0], beam[1], fill="none", stroke=h.AMBER_DARK, stroke_width=1.2, stroke_linecap="round", opacity=0.55))
+    drawing.append(draw.Rectangle(x + 436, y + 95, 40, 270, fill="#cdd4dc", stroke="#43505c", stroke_width=1.3))
+    drawing.append(draw.Rectangle(x + 440, y + 100, 16, 260, fill="#eef2f6", opacity=0.6))
+    for yy in range(y + 135, y + 335, 36):
+        drawing.append(draw.Line(x + 444, yy, x + 468, yy, stroke="#ffffff", stroke_width=1.2))
+    h.hatching(drawing, x + 436, y + 95, 40, 270, step=16, color="#7a8490", stroke_width=0.7)
+    h.text(drawing, "+ V", x + 494, y + 166, 18, fill=h.RED_MID, italic=True)
 
 
 def add_bl_callout(drawing: draw.Drawing) -> None:

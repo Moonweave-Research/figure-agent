@@ -2197,4 +2197,62 @@ L 6.75403 -0
 <rect x="52" y="883" width="480" height="54" rx="8" ry="8" fill="#f7fbff" stroke="#d7e2f2" stroke-width="1.4" />
 <text x="292.0" y="906" font-size="17" fill="#12366e" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">Convergence to deep traps explains</text>
 <text x="292.0" y="926" font-size="17" fill="#12366e" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">the extended repulsion.</text>
+<rect x="1224" y="526" width="54" height="54" rx="5" ry="5" fill="#eef3f8" stroke="#203a59" stroke-width="1.2" />
+<rect x="1236" y="557" width="38" height="6" fill="#697789" stroke="#2d3845" stroke-width="0.9" />
+<path d="M1241,552 L1267,535 L1273,544 L1247,561 Z" fill="#64748b" stroke="#2d3845" stroke-width="1.2" />
+<path d="M1249,566 L1249,596" stroke="#111111" stroke-width="1.7" />
+<path d="M1238,596 L1260,596" stroke="#111111" stroke-width="1.7" />
+<path d="M1242,605 L1256,605" stroke="#111111" stroke-width="1.7" />
+<path d="M1246,614 L1252,614" stroke="#111111" stroke-width="1.7" />
+<text x="1298" y="564" font-size="24" fill="#12366e" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Macroscopic probe</text>
+<text x="1336" y="620" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Cantilever</text>
+<text x="1336" y="639" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(probe)</text>
+<rect x="1336" y="593" width="86" height="24" fill="#c8cdd3" stroke="#66707b" stroke-width="1.2" />
+<path d="M1338,615 L1338,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1338,607 L1346,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1338,599 L1354,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1342,595 L1362,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1350,595 L1370,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1358,595 L1378,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1366,595 L1386,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1374,595 L1394,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1382,595 L1402,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1390,595 L1410,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1398,595 L1418,615" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1406,595 L1420,609" stroke="#ffffff" stroke-width="1.1" />
+<path d="M1414,595 L1420,601" stroke="#ffffff" stroke-width="1.1" />
+<rect x="1356" y="617" width="38" height="22" fill="#737d88" stroke="#4e5964" stroke-width="1.0" />
+<path d="M1338,643 L1412,643" stroke="#30363d" stroke-width="2.0" />
+<path d="M1374,617 C1368,688,1342,773,1285,848" fill="none" stroke="#c79623" stroke-width="28" stroke-linecap="round" opacity="0.35" />
+<path d="M1374,617 C1368,688,1342,773,1285,848" fill="none" stroke="#d0a538" stroke-width="20" stroke-linecap="round" />
+<path d="M1374,617 C1368,688,1342,773,1285,848" fill="none" stroke="#8d6414" stroke-width="1.2" stroke-linecap="round" opacity="0.55" />
+<rect x="1626" y="593" width="40" height="270" fill="#cdd4dc" stroke="#43505c" stroke-width="1.3" />
+<rect x="1630" y="598" width="16" height="260" fill="#eef2f6" opacity="0.6" />
+<path d="M1634,633 L1658,633" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1634,669 L1658,669" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1634,705 L1658,705" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1634,741 L1658,741" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1634,777 L1658,777" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1634,813 L1658,813" stroke="#ffffff" stroke-width="1.2" />
+<path d="M1626,863 L1626,863" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,847 L1642,863" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,831 L1658,863" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,815 L1666,855" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,799 L1666,839" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,783 L1666,823" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,767 L1666,807" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,751 L1666,791" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,735 L1666,775" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,719 L1666,759" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,703 L1666,743" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,687 L1666,727" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,671 L1666,711" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,655 L1666,695" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,639 L1666,679" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,623 L1666,663" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1626,607 L1666,647" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1628,593 L1666,631" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1644,593 L1666,615" stroke="#7a8490" stroke-width="0.7" />
+<path d="M1660,593 L1666,599" stroke="#7a8490" stroke-width="0.7" />
+<text x="1684" y="664" font-size="18" fill="#c31717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">+ V</text>
 </svg>
