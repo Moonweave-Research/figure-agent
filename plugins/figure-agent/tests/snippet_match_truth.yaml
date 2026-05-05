@@ -1,0 +1,37 @@
+# Ground truth for scripts/match_snippet.py.
+# Each case names the briefing under test and the snippet IDs that the
+# matcher's top-N (N = len(expected_top)) must equal as a set.
+#
+# Empty expected_top + expected_behavior: applicability_gap means the
+# briefing has NO applicable panel-level snippet in the current INDEX
+# (e.g., multi-bit hero composition where bits are inline TikZ). The
+# matcher will still surface noise scores via topic-keyword overlap; this
+# is a documented limitation of substring matching without an
+# applicability gate.
+
+cases:
+  - name: golden_trap_depth_picture
+    briefing: examples/golden_trap_depth_picture/briefing.md
+    expected_top: [polymer_chain, log_plot]
+    note: "Row 3 chain (A1) + Row 1 plot (A2). band_with_traps is bit-level, not the V5 hero composition."
+
+  - name: dogfood_power_law_trap_pipeline
+    briefing: examples/dogfood_power_law_trap_pipeline/briefing.md
+    expected_top: [log_plot, polymer_chain, band_with_traps]
+    note: "Panel 1 log-log, Panel 3 polymer chain, Panel 4 explicit band+DOS dual."
+
+  - name: fig3_trap_schematic_v97
+    briefing: examples/fig3_trap_schematic_v97/briefing.md
+    expected_top: [polymer_chain, log_plot]
+    note: "Panel (e) chain, Panel (b) log-log. Other panels are bit-level inline TikZ."
+
+  - name: n3_trial_02_actuation_sequence
+    briefing: examples/n3_trial_02_actuation_sequence/briefing.md
+    expected_top: [electret_actuation]
+    note: "Cantilever bidirectional sequence. Material is S-rich polymer but polymer_chain (monomer-resolved chain) is wrong granularity."
+
+  - name: fig1_overview
+    briefing: examples/fig1_overview/briefing.md
+    expected_top: []
+    expected_behavior: applicability_gap
+    note: "Multi-bit hero composition. Bits ①②③④ are authored as inline TikZ; none of the V4/V5/V6 panel-level snippets applies. Topic overlap will surface noise scores. Matcher lacks an applicability gate."

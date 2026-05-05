@@ -75,6 +75,18 @@ def score(entry: dict, briefing: str) -> dict:
     }
 
 
+def match(briefing_path: Path, index_path: Path = INDEX_PATH) -> list[tuple[str, dict]]:
+    """Return scored snippet candidates sorted by score descending (positive only)."""
+    index = _load_index(index_path)
+    briefing = _briefing_text(briefing_path)
+    scored = [(sid, score(entry, briefing)) for sid, entry in index["snippets"].items()]
+    return sorted(
+        [(sid, r) for sid, r in scored if r["score"] > 0],
+        key=lambda x: x[1]["score"],
+        reverse=True,
+    )
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 2:
         print("usage: match_snippet.py <briefing.md>", file=sys.stderr)
@@ -84,13 +96,7 @@ def main(argv: list[str]) -> int:
         print(f"missing: {briefing_path}", file=sys.stderr)
         return 1
 
-    index = _load_index(INDEX_PATH)
-    briefing = _briefing_text(briefing_path)
-
-    scored = [(sid, score(entry, briefing)) for sid, entry in index["snippets"].items()]
-    results = [(sid, r) for sid, r in scored if r["score"] > 0]
-    results.sort(key=lambda x: x[1]["score"], reverse=True)
-
+    results = match(briefing_path)
     if not results:
         print("(no snippet candidates)")
         return 0
