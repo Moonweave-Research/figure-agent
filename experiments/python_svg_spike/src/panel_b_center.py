@@ -112,16 +112,16 @@ def add_dos_deep(drawing: draw.Drawing) -> None:
 
 
 def add_et_annotation(drawing: draw.Drawing) -> None:
-    drawing.append(draw.Line(276, 298, 488, 298, stroke="#6f7780", stroke_width=1.2, stroke_dasharray="6 6"))
-    drawing.append(draw.Line(488, 298, 488, 382, stroke="#111111", stroke_width=1.5))
-    drawing.append(draw.Lines(488, 296, 482, 309, 494, 309, close=True, fill="#111111"))
-    drawing.append(draw.Lines(488, 384, 482, 371, 494, 371, close=True, fill="#111111"))
+    drawing.append(draw.Line(276, 298, 500, 298, stroke="#6f7780", stroke_width=1.2, stroke_dasharray="6 6"))
+    drawing.append(draw.Line(500, 298, 500, 382, stroke="#111111", stroke_width=1.5))
+    drawing.append(draw.Lines(500, 296, 494, 309, 506, 309, close=True, fill="#111111"))
+    drawing.append(draw.Lines(500, 384, 494, 371, 506, 371, close=True, fill="#111111"))
     drawing.append(
         math_svg(
             r"E_t\sim 0.5\text{--}1.0\,\mathrm{eV}",
-            x=410,
-            y=326,
-            width=128,
+            x=372,
+            y=330,
+            width=108,
             prefix="b_et",
             color="#111111",
         )
