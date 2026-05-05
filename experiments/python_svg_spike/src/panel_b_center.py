@@ -27,6 +27,7 @@ def build_panel() -> draw.Drawing:
     add_dos_deep(drawing)
     add_et_annotation(drawing)
     add_math_labels(drawing)
+    add_callout(drawing)
     return drawing
 
 
@@ -134,6 +135,37 @@ def add_math_labels(drawing: draw.Drawing) -> None:
     drawing.append(math_svg(r"g(E_t)", x=378, y=141, width=70, prefix="b_top_g", color="#111111"))
     drawing.append(math_svg(r"g(E_t)", x=376, y=492, width=72, prefix="b_axis_g", color="#111111"))
     drawing.append(math_svg(r"E_t", x=500, y=335, width=28, prefix="b_et_small", color="#111111"))
+
+
+def add_callout(drawing: draw.Drawing) -> None:
+    drawing.append(
+        draw.Rectangle(
+            66,
+            556,
+            WIDTH - 132,
+            58,
+            rx=10,
+            ry=10,
+            fill="#fff5f3",
+            stroke="#f0ccc7",
+            stroke_width=1.1,
+        )
+    )
+    h.multiline_text(
+        drawing,
+        [
+            "Deep states dominate the trap landscape",
+            "near midgap, driving the long-lived",
+            "repulsive response.",
+        ],
+        WIDTH / 2,
+        577,
+        17,
+        18,
+        fill=h.RED,
+        italic=True,
+        anchor="middle",
+    )
 
 
 def _gaussian_lobe(
