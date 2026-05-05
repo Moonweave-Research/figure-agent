@@ -62,4 +62,14 @@
 <path d="M264,218 L281,208" stroke="#111111" stroke-width="2.0" />
 <path d="M439,192 L456,182" stroke="#111111" stroke-width="2.0" />
 <text x="486" y="210" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Sx</text>
+<rect x="114.0" y="293" width="87.0" height="16" fill="#ffe27a" stroke="none" />
+<rect x="201.0" y="293" width="87.0" height="16" fill="#f4be45" stroke="none" />
+<rect x="288.0" y="293" width="87.0" height="16" fill="#dc752b" stroke="none" />
+<rect x="375.0" y="293" width="87.0" height="16" fill="#c71912" stroke="none" />
+<path d="M444,301.0 L468.0,301.0" stroke="#d01812" stroke-width="16" stroke-linecap="round" opacity="1.0" />
+<path d="M498,301.0 L468.0,281.0 L468.0,321.0 Z" fill="#d01812" opacity="1.0" />
+<rect x="114" y="293" width="348" height="16" fill="none" stroke="#7a5018" stroke-width="1.0" />
+<text x="80" y="301" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S60</text>
+<text x="520" y="301" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S85</text>
+<text x="288.0" y="336" font-size="17" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">Increasing sulfur content</text>
 </svg>

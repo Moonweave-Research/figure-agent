@@ -24,7 +24,21 @@ def build_figure() -> draw.Drawing:
     add_layout_cards(drawing)
     add_tl_s8_ring(drawing)
     add_tl_polymer_chain(drawing)
+    add_tl_composition_swatch(drawing)
     return drawing
+
+
+def add_tl_composition_swatch(drawing: draw.Drawing) -> None:
+    x, y, _, _ = TL
+    colors = ["#ffe27a", "#f4be45", "#dc752b", "#c71912"]
+    sx, sy, sw, sh = x + 88, y + 265, 348, 16
+    for index, color in enumerate(colors):
+        drawing.append(draw.Rectangle(sx + index * sw / 4, sy, sw / 4, sh, fill=color, stroke="none"))
+    h.arrow(drawing, sx + sw - 18, sy + sh / 2, sx + sw + 36, sy + sh / 2, "#d01812", width=16, head_length=30, head_width=40)
+    drawing.append(draw.Rectangle(sx, sy, sw, sh, fill="none", stroke="#7a5018", stroke_width=1.0))
+    h.text(drawing, "S60", sx - 34, sy + 8, 20, fill="#111111", anchor="middle")
+    h.text(drawing, "S85", sx + sw + 58, sy + 8, 20, fill="#111111", anchor="middle")
+    h.text(drawing, "Increasing sulfur content", sx + sw / 2, sy + 43, 17, fill="#111111", italic=True, anchor="middle")
 
 
 def add_tl_polymer_chain(drawing: draw.Drawing) -> None:
