@@ -9,6 +9,14 @@
 <rect x="26" y="498" width="532" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
 <rect x="1190" y="498" width="564" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
 <rect x="615" y="185" width="530" height="640" rx="36" ry="36" fill="#fffefe" stroke="#ddb9b9" stroke-width="2.0" />
+<path d="M552,172.5 L586.4652531250274,235.68629739588354" stroke="#a9adb3" stroke-width="7" stroke-linecap="round" opacity="0.75" />
+<path d="M597,255 L594.805261067714,231.1372021544181 L578.1252451823408,240.23539263734898 Z" fill="#a9adb3" opacity="0.75" />
+<path d="M1196,172.5 L1174.2957179277798,234.24494037786758" stroke="#a9adb3" stroke-width="7" stroke-linecap="round" opacity="0.75" />
+<path d="M1167,255 L1183.258130037337,237.3953640284998 L1165.3333058182227,231.09451672723534 Z" fill="#a9adb3" opacity="0.75" />
+<path d="M574,588 L593.7708412870655,721.2382782389196" stroke="#a9adb3" stroke-width="7" stroke-linecap="round" opacity="0.75" />
+<path d="M597,743 L603.1679484111685,719.8438687946979 L584.3737341629626,722.6326876831414 Z" fill="#a9adb3" opacity="0.75" />
+<path d="M1172,588 L1167.709308468241,721.0114374845266" stroke="#a9adb3" stroke-width="7" stroke-linecap="round" opacity="0.75" />
+<path d="M1167,743 L1177.2043695544683,721.3177297776307 L1158.2142473820138,720.7051451914225 Z" fill="#a9adb3" opacity="0.75" />
 <rect x="56" y="56" width="50" height="50" rx="4" ry="4" fill="#173763" stroke="#0b2342" stroke-width="1.2" />
 <circle cx="72" cy="72" r="6" fill="#eef6ff" />
 <circle cx="90" cy="72" r="6" fill="#eef6ff" />

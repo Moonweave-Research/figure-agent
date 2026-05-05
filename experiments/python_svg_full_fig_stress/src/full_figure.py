@@ -24,6 +24,7 @@ def build_figure() -> draw.Drawing:
     drawing = draw.Drawing(WIDTH, HEIGHT)
     drawing.append(draw.Rectangle(0, 0, WIDTH, HEIGHT, fill="#ffffff"))
     add_layout_cards(drawing)
+    add_inter_panel_arrows(drawing)
     add_tl_s8_ring(drawing)
     add_tl_polymer_chain(drawing)
     add_tl_composition_swatch(drawing)
@@ -40,6 +41,13 @@ def build_figure() -> draw.Drawing:
     add_br_probe_mechanics(drawing)
     add_br_force_cues(drawing)
     return drawing
+
+
+def add_inter_panel_arrows(drawing: draw.Drawing) -> None:
+    h.arrow(drawing, TL[0] + TL[2] + 16, TL[1] + TL[3] * 0.34, CENTER[0] - 18, CENTER[1] + 70, "#a9adb3", width=7, head_length=22, head_width=19, opacity=0.75)
+    h.arrow(drawing, TR[0] - 18, TR[1] + TR[3] * 0.34, CENTER[0] + CENTER[2] + 22, CENTER[1] + 70, "#a9adb3", width=7, head_length=22, head_width=19, opacity=0.75)
+    h.arrow(drawing, BL[0] + BL[2] + 16, BL[1] + 90, CENTER[0] - 18, CENTER[1] + CENTER[3] - 82, "#a9adb3", width=7, head_length=22, head_width=19, opacity=0.75)
+    h.arrow(drawing, BR[0] - 18, BR[1] + 90, CENTER[0] + CENTER[2] + 22, CENTER[1] + CENTER[3] - 82, "#a9adb3", width=7, head_length=22, head_width=19, opacity=0.75)
 
 
 def add_br_force_cues(drawing: draw.Drawing) -> None:
