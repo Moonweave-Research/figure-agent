@@ -18,6 +18,7 @@ def build_panel() -> draw.Drawing:
     add_cantilever_beam(drawing)
     add_clamp(drawing)
     add_charges(drawing)
+    add_electrode(drawing)
     return drawing
 
 
@@ -77,6 +78,15 @@ def add_clamp(drawing: draw.Drawing) -> None:
 def add_charges(drawing: draw.Drawing) -> None:
     for x, y in [(250, 145), (235, 189), (215, 235), (190, 281), (161, 318)]:
         h.minus_charge(drawing, x, y, r=12)
+
+
+def add_electrode(drawing: draw.Drawing) -> None:
+    drawing.append(draw.Rectangle(510, 86, 38, 250, fill="#cdd4dc", stroke="#43505c", stroke_width=1.3))
+    drawing.append(draw.Rectangle(513, 90, 16, 242, fill="#eef2f6", opacity=0.6))
+    for y in range(122, 310, 34):
+        drawing.append(draw.Line(517, y, 541, y, stroke="#ffffff", stroke_width=1.2, opacity=0.9))
+    h.hatching(drawing, 510, 86, 38, 250, step=16, color="#7a8490", stroke_width=0.7)
+    h.text(drawing, "+ V", 560, 166, 18, fill=h.RED_MID, italic=True)
 
 
 def main() -> None:
