@@ -11,4 +11,6 @@
 <text x="0" y="0" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" transform="translate(48 356) rotate(-90)" text-anchor="middle">Energy</text>
 <rect x="116" y="128" width="166" height="42" rx="5" ry="5" fill="#f1f4f7" stroke="#a8b0ba" stroke-width="1.2" />
 <text x="199" y="156" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">LUMO</text>
+<rect x="116" y="492" width="166" height="42" rx="5" ry="5" fill="#f1f4f7" stroke="#a8b0ba" stroke-width="1.2" />
+<text x="199" y="520" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">HOMO</text>
 </svg>
