@@ -19,6 +19,7 @@ def build_panel() -> draw.Drawing:
     add_clamp(drawing)
     add_charges(drawing)
     add_electrode(drawing)
+    add_field_lines(drawing)
     add_repulsion_arrow(drawing)
     add_maxwell_arrow(drawing)
     return drawing
@@ -89,6 +90,20 @@ def add_electrode(drawing: draw.Drawing) -> None:
         drawing.append(draw.Line(517, y, 541, y, stroke="#ffffff", stroke_width=1.2, opacity=0.9))
     h.hatching(drawing, 510, 86, 38, 250, step=16, color="#7a8490", stroke_width=0.7)
     h.text(drawing, "+ V", 560, 166, 18, fill=h.RED_MID, italic=True)
+
+
+def add_field_lines(drawing: draw.Drawing) -> None:
+    for y0, y1, lift in [(138, 130, -20), (176, 174, -8), (218, 218, 6), (268, 262, 18)]:
+        path = draw.Path(
+            fill="none",
+            stroke="#aeb7c2",
+            stroke_width=1.4,
+            stroke_dasharray="8 8",
+            opacity=0.75,
+        )
+        path.M(280, y0)
+        path.C(342, y0 + lift, 430, y1 + lift, 508, y1)
+        drawing.append(path)
 
 
 def add_repulsion_arrow(drawing: draw.Drawing) -> None:

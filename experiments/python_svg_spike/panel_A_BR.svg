@@ -62,6 +62,10 @@
 <path d="M516,86 L548,118" stroke="#7a8490" stroke-width="0.7" />
 <path d="M532,86 L548,102" stroke="#7a8490" stroke-width="0.7" />
 <text x="560" y="166" font-size="18" fill="#c31717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">+ V</text>
+<path d="M280,138 C342,118,430,110,508,130" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M280,176 C342,168,430,166,508,174" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M280,218 C342,224,430,224,508,218" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
+<path d="M280,268 C342,286,430,280,508,262" fill="none" stroke="#aeb7c2" stroke-width="1.4" stroke-dasharray="8 8" opacity="0.75" />
 <path d="M430,186 L352.0,186.0" stroke="#c31717" stroke-width="14" stroke-linecap="round" opacity="1.0" />
 <path d="M324,186 L352.0,203.0 L352.0,169.0 Z" fill="#c31717" opacity="1.0" />
 <text x="386" y="143" font-size="18" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">Repulsion</text>
