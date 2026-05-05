@@ -17,6 +17,7 @@ def build_panel() -> draw.Drawing:
     h.card(drawing, WIDTH, HEIGHT, stroke="#ddb9b9", radius=28)
     add_title(drawing)
     add_energy_axis(drawing)
+    add_lumo_box(drawing)
     return drawing
 
 
@@ -60,6 +61,13 @@ def add_energy_axis(drawing: draw.Drawing) -> None:
             text_anchor="middle",
         )
     )
+
+
+def add_lumo_box(drawing: draw.Drawing) -> None:
+    drawing.append(
+        draw.Rectangle(116, 128, 166, 42, rx=5, ry=5, fill="#f1f4f7", stroke="#a8b0ba", stroke_width=1.2)
+    )
+    h.text(drawing, "LUMO", 199, 156, 23, fill="#111111", weight="700", anchor="middle")
 
 
 def main() -> None:
