@@ -274,6 +274,7 @@ snippets:
     known_pitfalls:
       - "fixed 3-column geometry — extending to 4+ columns requires snippet body edits"
       - "inner trap/charge geometry is raw TikZ per column; replacing one column's mechanism is an in-place edit"
+      - "electrode (+)/(−) labels sit on tinted polymer-matrix fill; contrast is borderline in middle/right panels (pink/gray accents) — verify legibility before paper submission"
     briefing_hooks: []  # no real briefing precedent yet
     anti_patterns:
       - "1~2 column 또는 4+ column 비교 (geometry는 3 고정)"
