@@ -39,6 +39,10 @@
 #     compile_engine: enum — lualatex | pdflatex | xelatex | any
 #
 #   known_pitfalls: list   — short bullets (≤1 line each, monotonic — never delete)
+#   briefing_hooks: list   — real §7 phrases mined from existing briefings;
+#                            empty list when no precedent (fabrication discouraged)
+#   anti_patterns:  list   — situations where this snippet should NOT be used
+#                            despite keyword match (prevents false-positive matches)
 #   smoke_fixture: string  — standalone smoke fixture path
 #   consumed_by:   list    — production consumer fixtures (or empty)
 #
@@ -49,9 +53,14 @@
 #       ocr_terms:        list   — matches ocr.py text_labels
 # ============================================================
 
-schema_version: 0.1
+schema_version: 0.2
 generated: 2026-05-05
 narrative_source: styles/snippets/README.md
+# changelog:
+#   0.2 (2026-05-05): add briefing_hooks (mined from real briefings only,
+#       empty list when no precedent) and anti_patterns (false-positive
+#       matcher guards). size_hint deferred — raw-tikz panels rot on edit.
+#   0.1 (2026-05-05): initial schema. 8 active snippets + 2 deferred.
 
 snippets:
 
@@ -82,6 +91,14 @@ snippets:
       - "schematic only — no stereochemistry, valence, or atom-by-atom layout"
       - "monomer_count restricted to 4..16; outside range geometry breaks"
       - "S marker indices must be 1-based and within range"
+    briefing_hooks:
+      - "Row 3 polymer chain"
+      - "S-rich polymer"
+      - "sulfur-rich segment 분포"
+      - "polymer backbone with sulfur sites"
+    anti_patterns:
+      - "atom-level chemical formula 필요 시 (chemfig 같은 별도 도구 사용)"
+      - "단일 isolated S atom 강조가 핵심일 때 (이 매크로는 cluster/density 표현용)"
     smoke_fixture: examples/_snippet_smoke/polymer_chain/polymer_chain_smoke.tex
     consumed_by:
       - "examples/golden_trap_depth_picture (Row 3)"
@@ -118,6 +135,13 @@ snippets:
       - "leaky default — `title=` shrinks inner plot area; force-vary axis size before tagging (G004)"
       - "samples=N is linear sampling; use explicit log-spaced coordinates {} for log-axis fidelity"
       - "W/H include tick + axis labels, not data area (data ≈ W-1.0cm × H-0.6cm)"
+    briefing_hooks:
+      - "log-log plot of I(t) ∝ t^(-n)"
+      - "power-law line + dashed Debye reference"
+      - "Row 1 log-log plots"
+    anti_patterns:
+      - "정량적 측정 데이터 plot — Graph_making_hub 사용 (snippet은 schematic axis용)"
+      - "축 tick 정확 수치 강제일 때 (paper-grade 외양 기본값)"
     smoke_fixture: examples/_snippet_smoke/log_plot/log_plot_smoke.tex
     consumed_by:
       - "examples/golden_trap_depth_picture (Row 1)"
@@ -161,6 +185,10 @@ snippets:
       - "providecommand uses Roman A..D, not 1..4 (TeX macro names cannot contain digits)"
       - "explosion gaps + callout angles are raw TikZ; copy-edit snippet for non-default composition"
       - "depends on multiple preamble primitives — moving snippet without preamble breaks compile"
+    briefing_hooks: []  # no real briefing precedent yet — populate when first consumer ships
+    anti_patterns:
+      - "단일 collapsed 디바이스 단면일 때 — V2 layered_device_stack 사용"
+      - "2D side-view cross-section만 필요할 때 (3D isometric overhead)"
     smoke_fixture: examples/_snippet_smoke/isometric_exploded/isometric_exploded_smoke.tex
     consumed_by: []
     discoverability:
@@ -203,6 +231,10 @@ snippets:
     known_pitfalls:
       - "charge-dot count + positions are raw TikZ; edit body to vary"
       - "5 charge dots default — clutters at <2 layer thickness, sparse at >7 layers"
+    briefing_hooks: []  # no real briefing precedent yet
+    anti_patterns:
+      - "exploded view가 필요할 때 — V1 isometric_exploded 사용"
+      - "charge-trapping 영역이 dielectric 외부일 때 (default geometry는 내부 가정)"
     smoke_fixture: examples/_snippet_smoke/layered_device_stack/layered_device_stack_smoke.tex
     consumed_by: []
     discoverability:
@@ -241,6 +273,10 @@ snippets:
     known_pitfalls:
       - "fixed 3-column geometry — extending to 4+ columns requires snippet body edits"
       - "inner trap/charge geometry is raw TikZ per column; replacing one column's mechanism is an in-place edit"
+    briefing_hooks: []  # no real briefing precedent yet
+    anti_patterns:
+      - "1~2 column 또는 4+ column 비교 (geometry는 3 고정)"
+      - "panel 간 비교가 mechanism이 아니라 정량 데이터일 때 (pgfplots multi-axis 사용)"
     smoke_fixture: examples/_snippet_smoke/process_3column/process_3column_smoke.tex
     consumed_by: []
     discoverability:
@@ -280,6 +316,10 @@ snippets:
       - "S8 ring uses sc7_v7 idiom (bonds first, spheres on top, white S labels) — do not reorder"
       - "monomer count + spacing are raw TikZ; vary in place"
       - "designed as Figure-1 hero — not for inline schematic use"
+    briefing_hooks: []  # no real briefing precedent yet
+    anti_patterns:
+      - "inline schematic으로 사용 (Fig 1 hero panel 전용 composition)"
+      - "단일 S8 ring만 필요할 때 (별도 primitive 없음, hero composition 강제)"
     smoke_fixture: examples/_snippet_smoke/molecular_cluster/molecular_cluster_smoke.tex
     consumed_by: []
     discoverability:
@@ -320,6 +360,13 @@ snippets:
       - "trap-state tick positions + electron occupancy raw TikZ"
       - "Gaussian DOS shape parameters hardcoded inline — tune in place"
       - "will be partially superseded once A3 \\BandSnippet macro ships (thinner primitive without DOS)"
+    briefing_hooks:
+      - "band diagram with shallow + deep trap levels and DOS profiles"
+      - "CB/VB with trap-level groups + g(E_t) side panel"
+      - "HOMO/LUMO band edges + DOS 두 봉우리"
+    anti_patterns:
+      - "trap level만 필요하고 DOS sub-panel 불필요할 때 — A3 \\BandSnippet (deferred) 또는 inline TikZ"
+      - "정량적 측정 g(E) 데이터를 그릴 때 (snippet은 schematic Gaussian)"
     smoke_fixture: examples/_snippet_smoke/band_with_traps/band_with_traps_smoke.tex
     consumed_by: []
     discoverability:
@@ -360,6 +407,14 @@ snippets:
       - "v2 geometry only (vertical electrode parallel to cantilever); v1 deprecated"
       - "spline control points + charge positions raw TikZ — retune in body"
       - "fixed 7-charge default per beam; visual clutter at high charge counts"
+    briefing_hooks:
+      - "polymer cantilever bidirectional bending"
+      - "polarity-dependent transient bending"
+      - "cantilever 두 컷 (인력 frame + 극성 swap 후 repulsive frame)"
+    anti_patterns:
+      - "단일 step 정적 cantilever schematic (snippet은 bidirectional 두 panel 강제)"
+      - "briefing이 'electret' 용어를 의도적으로 회피할 때 (예: fig1_overview) — providecommand 라벨 override 필요"
+      - "ferroelectric/piezoelectric 액추에이터 (electret과 semantics 불일치)"
     smoke_fixture: examples/_snippet_smoke/electret_actuation/electret_actuation_smoke.tex
     consumed_by: []
     discoverability:
