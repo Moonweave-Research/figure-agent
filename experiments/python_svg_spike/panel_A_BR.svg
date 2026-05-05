@@ -82,4 +82,9 @@
 <path d="M413,255 L394.0,245.5 L394.0,264.5 Z" fill="#0b4ca8" opacity="0.85" />
 <text x="392" y="286" font-size="14" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Maxwell attraction</text>
 <text x="392" y="304" font-size="14" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(suppressed)</text>
+<rect x="32" y="350" width="556" height="48" rx="8" ry="8" fill="#fff4f2" stroke="#f0ccc7" stroke-width="1.2" />
+<text x="310.0" y="371" font-size="17" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700" font-style="italic">Charge-trapping-induced repulsion</text>
+<text x="216" y="391" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Repulsion</text>
+<text x="298" y="391" font-size="15" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">dominates</text>
+<text x="412" y="391" font-size="15" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">over Maxwell attraction.</text>
 </svg>

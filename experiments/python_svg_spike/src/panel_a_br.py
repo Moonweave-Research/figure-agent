@@ -23,6 +23,7 @@ def build_panel() -> draw.Drawing:
     add_field_lines(drawing)
     add_repulsion_arrow(drawing)
     add_maxwell_arrow(drawing)
+    add_callout(drawing)
     return drawing
 
 
@@ -173,6 +174,36 @@ def add_maxwell_arrow(drawing: draw.Drawing) -> None:
         fill=h.BLUE_MID,
         anchor="middle",
     )
+
+
+def add_callout(drawing: draw.Drawing) -> None:
+    drawing.append(
+        draw.Rectangle(
+            32,
+            350,
+            556,
+            48,
+            rx=8,
+            ry=8,
+            fill="#fff4f2",
+            stroke="#f0ccc7",
+            stroke_width=1.2,
+        )
+    )
+    h.text(
+        drawing,
+        "Charge-trapping-induced repulsion",
+        WIDTH / 2,
+        371,
+        17,
+        fill=h.RED,
+        weight="700",
+        italic=True,
+        anchor="middle",
+    )
+    h.text(drawing, "Repulsion", 216, 391, 15, fill="#111111", anchor="middle")
+    h.text(drawing, "dominates", 298, 391, 15, fill=h.RED, weight="700", anchor="middle")
+    h.text(drawing, "over Maxwell attraction.", 412, 391, 15, fill="#111111", anchor="middle")
 
 
 def main() -> None:
