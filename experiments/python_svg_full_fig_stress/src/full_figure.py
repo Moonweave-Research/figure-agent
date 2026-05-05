@@ -31,7 +31,34 @@ def build_figure() -> draw.Drawing:
     add_center_energy_bands(drawing)
     add_center_dos_math(drawing)
     add_center_callout(drawing)
+    add_tr_pe_loop(drawing)
     return drawing
+
+
+def add_tr_pe_loop(drawing: draw.Drawing) -> None:
+    x, y, _, _ = TR
+    drawing.append(draw.Rectangle(x + 28, y + 28, 66, 50, rx=5, ry=5, fill="#eef4fb", stroke="#173763", stroke_width=1.4))
+    path = draw.Path(fill="none", stroke=h.BLUE, stroke_width=2.2)
+    path.M(x + 42, y + 58)
+    path.C(x + 50, y + 38, x + 70, y + 38, x + 78, y + 58)
+    path.C(x + 84, y + 75, x + 57, y + 75, x + 62, y + 58)
+    drawing.append(path)
+    drawing.append(draw.Circle(x + 84, y + 43, 4, fill=h.BLUE))
+    drawing.append(draw.Circle(x + 84, y + 62, 4, fill="none", stroke=h.BLUE, stroke_width=1.8))
+    h.text(drawing, "Electrical evidence", x + 112, y + 64, 25, fill=h.BLUE, weight="700")
+    h.text(drawing, "P-E response", x + 150, y + 122, 18, fill="#111111", anchor="middle")
+    px, py = x + 48, y + 150
+    drawing.append(draw.Line(px, py + 150, px + 190, py + 150, stroke="#111111", stroke_width=1.3, stroke_dasharray="7 7"))
+    drawing.append(draw.Line(px + 94, py + 28, px + 94, py + 252, stroke="#111111", stroke_width=1.3, stroke_dasharray="7 7"))
+    h.arrow(drawing, px + 10, py + 150, px + 194, py + 150, "#111111", width=1.3, head_length=12, head_width=10)
+    h.arrow(drawing, px + 94, py + 240, px + 94, py + 30, "#111111", width=1.3, head_length=12, head_width=10)
+    loop = draw.Path(fill="none", stroke=h.RED_MID, stroke_width=2.5)
+    loop.M(px + 4, py + 220)
+    loop.C(px + 80, py + 210, px + 38, py + 55, px + 180, py + 38)
+    loop.C(px + 92, py + 54, px + 142, py + 210, px + 4, py + 220)
+    drawing.append(loop)
+    h.text(drawing, "P", px + 82, py + 25, 17, fill="#111111", italic=True, anchor="end")
+    h.text(drawing, "E", px + 198, py + 157, 17, fill="#111111", italic=True)
 
 
 def add_center_callout(drawing: draw.Drawing) -> None:
