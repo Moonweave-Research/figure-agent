@@ -4,4 +4,9 @@
 <defs>
 </defs>
 <rect x="0" y="0" width="1780" height="1000" fill="#ffffff" />
+<rect x="26" y="28" width="510" height="425" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
+<rect x="1214" y="28" width="540" height="425" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
+<rect x="26" y="498" width="532" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
+<rect x="1190" y="498" width="564" height="460" rx="30" ry="30" fill="#fbfcfe" stroke="#e4e7eb" stroke-width="1.4" />
+<rect x="615" y="185" width="530" height="640" rx="36" ry="36" fill="#fffefe" stroke="#ddb9b9" stroke-width="2.0" />
 </svg>
