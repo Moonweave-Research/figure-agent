@@ -20,6 +20,7 @@ def build_panel() -> draw.Drawing:
     add_lumo_box(drawing)
     add_homo_box(drawing)
     add_shallow_lines(drawing)
+    add_deep_lines(drawing)
     return drawing
 
 
@@ -85,6 +86,12 @@ def add_shallow_lines(drawing: draw.Drawing) -> None:
         drawing.append(
             draw.Line(x1, y, x2, y, stroke=h.BLUE_MID, stroke_width=3.0, stroke_linecap="round")
         )
+
+
+def add_deep_lines(drawing: draw.Drawing) -> None:
+    h.multiline_text(drawing, ["deep", "states"], 120, 352, 17, 21, fill=h.RED, anchor="start")
+    for y in [326, 346, 366, 386, 406, 426, 446]:
+        drawing.append(draw.Line(176, y, 268, y, stroke=h.RED, stroke_width=3.5, stroke_linecap="round"))
 
 
 def main() -> None:
