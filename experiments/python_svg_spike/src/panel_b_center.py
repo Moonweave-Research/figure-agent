@@ -6,6 +6,7 @@ from pathlib import Path
 import drawsvg as draw
 
 from stack import drawsvg_helpers as h
+from stack.dvisvgm_math import math_svg
 
 
 WIDTH = 560
@@ -24,6 +25,7 @@ def build_panel() -> draw.Drawing:
     add_deep_lines(drawing)
     add_dos_shallow(drawing)
     add_dos_deep(drawing)
+    add_et_annotation(drawing)
     return drawing
 
 
@@ -105,6 +107,23 @@ def add_dos_shallow(drawing: draw.Drawing) -> None:
 def add_dos_deep(drawing: draw.Drawing) -> None:
     drawing.append(_gaussian_lobe(fill="#e9a5a5", stroke=h.RED, x=318, y=294, width=146, height=172, sigma=0.48))
     h.text(drawing, "deep", 458, 385, 19, fill=h.RED, weight="700")
+
+
+def add_et_annotation(drawing: draw.Drawing) -> None:
+    drawing.append(draw.Line(276, 298, 488, 298, stroke="#6f7780", stroke_width=1.2, stroke_dasharray="6 6"))
+    drawing.append(draw.Line(488, 298, 488, 382, stroke="#111111", stroke_width=1.5))
+    drawing.append(draw.Lines(488, 296, 482, 309, 494, 309, close=True, fill="#111111"))
+    drawing.append(draw.Lines(488, 384, 482, 371, 494, 371, close=True, fill="#111111"))
+    drawing.append(
+        math_svg(
+            r"E_t\sim 0.5\text{--}1.0\,\mathrm{eV}",
+            x=410,
+            y=326,
+            width=128,
+            prefix="b_et",
+            color="#111111",
+        )
+    )
 
 
 def _gaussian_lobe(
