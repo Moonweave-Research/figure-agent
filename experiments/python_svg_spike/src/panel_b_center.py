@@ -108,7 +108,7 @@ def add_dos_shallow(drawing: draw.Drawing) -> None:
 
 def add_dos_deep(drawing: draw.Drawing) -> None:
     drawing.append(_gaussian_lobe(fill="#e9a5a5", stroke=h.RED, x=318, y=294, width=146, height=172, sigma=0.48))
-    h.text(drawing, "deep", 458, 385, 19, fill=h.RED, weight="700")
+    h.text(drawing, "deep", 438, 395, 19, fill=h.RED, weight="700")
 
 
 def add_et_annotation(drawing: draw.Drawing) -> None:
