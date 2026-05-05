@@ -23,7 +23,24 @@ def build_figure() -> draw.Drawing:
     drawing.append(draw.Rectangle(0, 0, WIDTH, HEIGHT, fill="#ffffff"))
     add_layout_cards(drawing)
     add_tl_s8_ring(drawing)
+    add_tl_polymer_chain(drawing)
     return drawing
+
+
+def add_tl_polymer_chain(drawing: draw.Drawing) -> None:
+    x, y, _, _ = TL
+    h.text(drawing, "Delta", x + 178, y + 155, 17, fill="#111111", anchor="middle")
+    h.arrow(drawing, x + 140, y + 178, x + 225, y + 178, "#111111", width=2.4, head_length=16, head_width=13)
+    chain = [(x + 260, y + 172), (x + 295, y + 150), (x + 330, y + 172), (x + 365, y + 150), (x + 400, y + 172)]
+    for i, (x1, y1) in enumerate(chain[:-1]):
+        x2, y2 = chain[i + 1]
+        drawing.append(draw.Line(x1, y1, x2, y2, stroke=h.AMBER_DARK, stroke_width=2.4))
+    for px, py in chain:
+        drawing.append(draw.Circle(px, py, 10, fill="#ffd45a", stroke=h.AMBER_DARK, stroke_width=1.5))
+        h.text(drawing, "S", px, py + 4, 11, fill="#5b3512", weight="700", anchor="middle")
+    drawing.append(draw.Line(x + 238, y + 190, x + 255, y + 180, stroke="#111111", stroke_width=2.0))
+    drawing.append(draw.Line(x + 413, y + 164, x + 430, y + 154, stroke="#111111", stroke_width=2.0))
+    h.text(drawing, "Sx", x + 460, y + 182, 20, fill="#111111", anchor="middle")
 
 
 def add_tl_s8_ring(drawing: draw.Drawing) -> None:

@@ -42,4 +42,24 @@
 <circle cx="159.04" cy="203.1" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.6" />
 <text x="159.04" y="207.1" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
 <text x="108" y="298" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S8</text>
+<text x="204" y="183" font-size="17" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Delta</text>
+<path d="M166,206 L235.0,206.0" stroke="#111111" stroke-width="2.4" stroke-linecap="round" opacity="1.0" />
+<path d="M251,206 L235.0,199.5 L235.0,212.5 Z" fill="#111111" opacity="1.0" />
+<path d="M286,200 L321,178" stroke="#8d6414" stroke-width="2.4" />
+<path d="M321,178 L356,200" stroke="#8d6414" stroke-width="2.4" />
+<path d="M356,200 L391,178" stroke="#8d6414" stroke-width="2.4" />
+<path d="M391,178 L426,200" stroke="#8d6414" stroke-width="2.4" />
+<circle cx="286" cy="200" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.5" />
+<text x="286" y="204" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="321" cy="178" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.5" />
+<text x="321" y="182" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="356" cy="200" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.5" />
+<text x="356" y="204" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="391" cy="178" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.5" />
+<text x="391" y="182" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="426" cy="200" r="10" fill="#ffd45a" stroke="#8d6414" stroke-width="1.5" />
+<text x="426" y="204" font-size="11" fill="#5b3512" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<path d="M264,218 L281,208" stroke="#111111" stroke-width="2.0" />
+<path d="M439,192 L456,182" stroke="#111111" stroke-width="2.0" />
+<text x="486" y="210" font-size="20" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Sx</text>
 </svg>
