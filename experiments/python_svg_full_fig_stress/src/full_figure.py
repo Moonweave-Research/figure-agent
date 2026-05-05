@@ -5,6 +5,7 @@ from pathlib import Path
 import drawsvg as draw
 
 from stack import drawsvg_helpers as h
+from stack.dvisvgm_math import math_svg
 
 
 WIDTH = 1780
@@ -26,7 +27,40 @@ def build_figure() -> draw.Drawing:
     add_tl_polymer_chain(drawing)
     add_tl_composition_swatch(drawing)
     add_tl_bullets(drawing)
+    add_center_energy_bands(drawing)
     return drawing
+
+
+def add_center_energy_bands(drawing: draw.Drawing) -> None:
+    x, y, width, _ = CENTER
+    h.text(drawing, "Converged deep charge trapping", x + width / 2, y + 55, 30, fill=h.RED, weight="700", anchor="middle")
+    bx = x + 80
+    h.arrow(drawing, bx, y + 450, bx, y + 115, "#111111", width=2.0, head_length=16, head_width=13)
+    drawing.append(
+        draw.Text(
+            "Energy",
+            18,
+            0,
+            0,
+            fill="#111111",
+            font_family="Helvetica, Arial, sans-serif",
+            transform=f"translate({bx - 34} {y + 285}) rotate(-90)",
+            text_anchor="middle",
+        )
+    )
+    _label_box(drawing, x + 108, y + 120, 170, 45, "LUMO")
+    _label_box(drawing, x + 108, y + 445, 170, 45, "HOMO")
+    h.multiline_text(drawing, ["shallow", "states"], x + 112, y + 225, 17, 21, fill=h.BLUE_MID, anchor="start")
+    for x1, x2, yy in [(x + 188, x + 262, y + 220), (x + 182, x + 262, y + 244), (x + 202, x + 262, y + 268)]:
+        drawing.append(draw.Line(x1, yy, x2, yy, stroke=h.BLUE_MID, stroke_width=3.0, stroke_linecap="round"))
+    h.multiline_text(drawing, ["deep", "states"], x + 112, y + 330, 17, 21, fill=h.RED, anchor="start")
+    for yy in [y + 315, y + 335, y + 355, y + 375, y + 395, y + 415]:
+        drawing.append(draw.Line(x + 178, yy, x + 262, yy, stroke=h.RED, stroke_width=3.5, stroke_linecap="round"))
+
+
+def _label_box(drawing: draw.Drawing, x: float, y: float, width: float, height: float, label: str) -> None:
+    drawing.append(draw.Rectangle(x, y, width, height, rx=5, ry=5, fill="#f1f4f7", stroke="#a8b0ba", stroke_width=1.2))
+    h.text(drawing, label, x + width / 2, y + 30, 23, fill="#111111", weight="700", anchor="middle")
 
 
 def add_tl_bullets(drawing: draw.Drawing) -> None:

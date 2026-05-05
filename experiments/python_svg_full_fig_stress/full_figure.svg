@@ -78,4 +78,25 @@
 <text x="138" y="395" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Longer S-S sequences</text>
 <text x="112" y="427" font-size="22" fill="#b87914" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">✓</text>
 <text x="138" y="427" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">More deep trapping sites</text>
+<text x="880.0" y="240" font-size="30" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">Converged deep charge trapping</text>
+<path d="M695,635 L695.0,316.0" stroke="#111111" stroke-width="2.0" stroke-linecap="round" opacity="1.0" />
+<path d="M695,300 L688.5,316.0 L701.5,316.0 Z" fill="#111111" opacity="1.0" />
+<text x="0" y="0" font-size="18" fill="#111111" font-family="Helvetica, Arial, sans-serif" transform="translate(661 470) rotate(-90)" text-anchor="middle">Energy</text>
+<rect x="723" y="305" width="170" height="45" rx="5" ry="5" fill="#f1f4f7" stroke="#a8b0ba" stroke-width="1.2" />
+<text x="808.0" y="335" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">LUMO</text>
+<rect x="723" y="630" width="170" height="45" rx="5" ry="5" fill="#f1f4f7" stroke="#a8b0ba" stroke-width="1.2" />
+<text x="808.0" y="660" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">HOMO</text>
+<text x="727" y="410" font-size="17" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="start">shallow</text>
+<text x="727" y="431" font-size="17" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="start">states</text>
+<path d="M803,405 L877,405" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
+<path d="M797,429 L877,429" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
+<path d="M817,453 L877,453" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
+<text x="727" y="515" font-size="17" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="start">deep</text>
+<text x="727" y="536" font-size="17" fill="#a41010" font-family="Helvetica, Arial, sans-serif" text-anchor="start">states</text>
+<path d="M793,500 L877,500" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
+<path d="M793,520 L877,520" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
+<path d="M793,540 L877,540" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
+<path d="M793,560 L877,560" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
+<path d="M793,580 L877,580" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
+<path d="M793,600 L877,600" stroke="#a41010" stroke-width="3.5" stroke-linecap="round" />
 </svg>
