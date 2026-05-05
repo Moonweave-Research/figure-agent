@@ -16,6 +16,7 @@ def build_panel() -> draw.Drawing:
     drawing = draw.Drawing(WIDTH, HEIGHT)
     h.card(drawing, WIDTH, HEIGHT)
     add_cantilever_beam(drawing)
+    add_clamp(drawing)
     return drawing
 
 
@@ -52,6 +53,23 @@ def add_cantilever_beam(drawing: draw.Drawing) -> None:
             stroke_linecap="round",
             opacity=0.55,
         )
+    )
+
+
+def add_clamp(drawing: draw.Drawing) -> None:
+    drawing.append(draw.Rectangle(222, 82, 86, 24, fill="#c8cdd3", stroke="#66707b", stroke_width=1.2))
+    h.hatching(drawing, 224, 84, 82, 20, step=8, color="#ffffff", stroke_width=1.1)
+    drawing.append(draw.Rectangle(242, 106, 38, 22, fill="#737d88", stroke="#4e5964", stroke_width=1.0))
+    drawing.append(draw.Line(224, 132, 298, 132, stroke="#30363d", stroke_width=2.0))
+    h.multiline_text(
+        drawing,
+        ["Cantilever", "(probe)"],
+        194,
+        101,
+        14,
+        18,
+        fill="#111111",
+        anchor="middle",
     )
 
 

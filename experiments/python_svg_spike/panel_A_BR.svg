@@ -7,4 +7,22 @@
 <path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#c79623" stroke-width="28" stroke-linecap="round" opacity="0.35" />
 <path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#d0a538" stroke-width="20" stroke-linecap="round" />
 <path d="M258,108 C244,176,214,262,154,326" fill="none" stroke="#8d6414" stroke-width="1.4" stroke-linecap="round" opacity="0.55" />
+<rect x="222" y="82" width="86" height="24" fill="#c8cdd3" stroke="#66707b" stroke-width="1.2" />
+<path d="M224,104 L224,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M224,96 L232,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M224,88 L240,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M228,84 L248,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M236,84 L256,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M244,84 L264,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M252,84 L272,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M260,84 L280,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M268,84 L288,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M276,84 L296,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M284,84 L304,104" stroke="#ffffff" stroke-width="1.1" />
+<path d="M292,84 L306,98" stroke="#ffffff" stroke-width="1.1" />
+<path d="M300,84 L306,90" stroke="#ffffff" stroke-width="1.1" />
+<rect x="242" y="106" width="38" height="22" fill="#737d88" stroke="#4e5964" stroke-width="1.0" />
+<path d="M224,132 L298,132" stroke="#30363d" stroke-width="2.0" />
+<text x="194" y="101" font-size="14" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Cantilever</text>
+<text x="194" y="119" font-size="14" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(probe)</text>
 </svg>
