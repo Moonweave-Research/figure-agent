@@ -19,6 +19,7 @@ def build_panel() -> draw.Drawing:
     add_energy_axis(drawing)
     add_lumo_box(drawing)
     add_homo_box(drawing)
+    add_shallow_lines(drawing)
     return drawing
 
 
@@ -76,6 +77,14 @@ def add_homo_box(drawing: draw.Drawing) -> None:
         draw.Rectangle(116, 492, 166, 42, rx=5, ry=5, fill="#f1f4f7", stroke="#a8b0ba", stroke_width=1.2)
     )
     h.text(drawing, "HOMO", 199, 520, 23, fill="#111111", weight="700", anchor="middle")
+
+
+def add_shallow_lines(drawing: draw.Drawing) -> None:
+    h.multiline_text(drawing, ["shallow", "states"], 122, 232, 17, 21, fill=h.BLUE_MID, anchor="start")
+    for x1, x2, y in [(184, 268, 226), (178, 268, 250), (196, 268, 274)]:
+        drawing.append(
+            draw.Line(x1, y, x2, y, stroke=h.BLUE_MID, stroke_width=3.0, stroke_linecap="round")
+        )
 
 
 def main() -> None:

@@ -13,4 +13,9 @@
 <text x="199" y="156" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">LUMO</text>
 <rect x="116" y="492" width="166" height="42" rx="5" ry="5" fill="#f1f4f7" stroke="#a8b0ba" stroke-width="1.2" />
 <text x="199" y="520" font-size="23" fill="#111111" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">HOMO</text>
+<text x="122" y="232" font-size="17" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="start">shallow</text>
+<text x="122" y="253" font-size="17" fill="#0b4ca8" font-family="Helvetica, Arial, sans-serif" text-anchor="start">states</text>
+<path d="M184,226 L268,226" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
+<path d="M178,250 L268,250" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
+<path d="M196,274 L268,274" stroke="#0b4ca8" stroke-width="3.0" stroke-linecap="round" />
 </svg>
