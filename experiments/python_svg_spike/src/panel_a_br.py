@@ -19,6 +19,7 @@ def build_panel() -> draw.Drawing:
     add_clamp(drawing)
     add_charges(drawing)
     add_electrode(drawing)
+    add_repulsion_arrow(drawing)
     return drawing
 
 
@@ -87,6 +88,32 @@ def add_electrode(drawing: draw.Drawing) -> None:
         drawing.append(draw.Line(517, y, 541, y, stroke="#ffffff", stroke_width=1.2, opacity=0.9))
     h.hatching(drawing, 510, 86, 38, 250, step=16, color="#7a8490", stroke_width=0.7)
     h.text(drawing, "+ V", 560, 166, 18, fill=h.RED_MID, italic=True)
+
+
+def add_repulsion_arrow(drawing: draw.Drawing) -> None:
+    h.arrow(
+        drawing,
+        430,
+        186,
+        324,
+        186,
+        h.RED_MID,
+        width=14,
+        head_length=28,
+        head_width=34,
+    )
+    h.multiline_text(
+        drawing,
+        ["Repulsion", "(dominant)"],
+        386,
+        143,
+        18,
+        22,
+        fill=h.RED,
+        weight="700",
+        italic=True,
+        anchor="middle",
+    )
 
 
 def main() -> None:
