@@ -3,8 +3,10 @@
 First consumer of `styles/snippets/INDEX.yaml`. Ranks snippet candidates for a
 given `briefing.md` by keyword + briefing_hooks substring hits against §7
 (Author intent / Snippets), falling back to the whole document when §7 is
-absent. Output is meant to be eyeballed against expected matches — schema
-gaps and bad hooks surface as ranking surprises.
+absent. Within §7, subsections whose header begins with "Must avoid" / "Must
+not" / "Do not" / "Anti" are excluded from positive matching to prevent
+avoidance terms from triggering matches. Output is meant to be eyeballed
+against expected matches — schema gaps and bad hooks surface as surprises.
 
 anti_patterns is read but not scored: full-sentence anti-pattern strings are
 not designed for substring match. A future iteration may extract trigger
@@ -13,6 +15,7 @@ phrases; for now those entries are documentation-only.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -23,15 +26,35 @@ INDEX_PATH = Path(__file__).resolve().parent.parent / "styles" / "snippets" / "I
 KEYWORD_WEIGHT = 1
 HOOK_WEIGHT = 3
 
+# §7 subsection headers that contain anti-text (terms to avoid). These must
+# be excluded from positive matching — see fig1_overview "Bidirectional
+# Actuation / Actuator / Electret" avoidance which previously gave a
+# false-positive on electret_actuation.
+_SUBSECTION_HEADER = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
+_NEGATIVE_PREFIXES = ("must avoid", "must not", "do not", "anti")
+
 
 def _load_index(path: Path) -> dict:
     return yaml.safe_load(path.read_text())
 
 
+def _strip_negative_subsections(section_body: str) -> str:
+    parts = _SUBSECTION_HEADER.split(section_body)
+    if len(parts) < 3:
+        return section_body
+    keep = [parts[0]]
+    for i in range(1, len(parts), 2):
+        title = parts[i].strip().lower()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        if not title.startswith(_NEGATIVE_PREFIXES):
+            keep.append(f"### {parts[i]}\n{body}")
+    return "\n".join(keep)
+
+
 def _briefing_text(briefing_path: Path) -> str:
     sections = parse_briefing(briefing_path.read_text())
     if 7 in sections:
-        return sections[7][1]
+        return _strip_negative_subsections(sections[7][1])
     return briefing_path.read_text()
 
 
