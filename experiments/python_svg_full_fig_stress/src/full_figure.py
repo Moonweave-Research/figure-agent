@@ -32,7 +32,42 @@ def build_figure() -> draw.Drawing:
     add_center_dos_math(drawing)
     add_center_callout(drawing)
     add_tr_pe_loop(drawing)
+    add_tr_current_decay(drawing)
     return drawing
+
+
+def add_tr_current_decay(drawing: draw.Drawing) -> None:
+    x, y, _, _ = TR
+    h.text(drawing, "Current decay", x + 394, y + 122, 18, fill=h.BLUE_MID, anchor="middle")
+    px, py = x + 315, y + 145
+    h.arrow(drawing, px, py + 250, px, py + 38, "#111111", width=1.4, head_length=12, head_width=10)
+    h.arrow(drawing, px, py + 250, px + 220, py + 250, "#111111", width=1.4, head_length=12, head_width=10)
+    for index, label in enumerate(["10^-3", "10^-2", "10^-1", "10^0", "10^1", "10^2"]):
+        xx = px + 16 + index * 34
+        drawing.append(draw.Line(xx, py + 250, xx, py + 256, stroke="#111111", stroke_width=0.8))
+        h.text(drawing, label, xx, py + 274, 11, fill="#111111", anchor="middle")
+    for index, label in enumerate(["10^0", "10^-2", "10^-4", "10^-6", "10^-8"]):
+        yy = py + 50 + index * 43
+        drawing.append(draw.Line(px - 6, yy, px, yy, stroke="#111111", stroke_width=0.8))
+        h.text(drawing, label, px - 10, yy + 4, 11, fill="#111111", anchor="end")
+    drawing.append(draw.Line(px + 14, py + 60, px + 208, py + 230, stroke=h.BLUE_MID, stroke_width=2.5))
+    drawing.append(draw.Line(px + 82, py + 102, px + 82, py + 175, stroke=h.BLUE_MID, stroke_width=1.5, stroke_dasharray="6 6"))
+    drawing.append(draw.Line(px + 82, py + 175, px + 154, py + 175, stroke=h.BLUE_MID, stroke_width=1.5, stroke_dasharray="6 6"))
+    drawing.append(math_svg(r"I(t)\propto t^{-n}", x=px + 128, y=py + 88, width=108, prefix="tr_decay_it", color=h.BLUE_MID))
+    h.text(drawing, "slope = -n", px + 96, py + 210, 15, fill=h.BLUE_MID, italic=True)
+    h.text(drawing, "t (s)", px + 115, py + 306, 15, fill="#111111", italic=True, anchor="middle")
+    drawing.append(
+        draw.Text(
+            "I (A)",
+            15,
+            0,
+            0,
+            fill="#111111",
+            font_family="Helvetica, Arial, sans-serif",
+            transform=f"translate({px - 58} {py + 153}) rotate(-90)",
+            text_anchor="middle",
+        )
+    )
 
 
 def add_tr_pe_loop(drawing: draw.Drawing) -> None:
