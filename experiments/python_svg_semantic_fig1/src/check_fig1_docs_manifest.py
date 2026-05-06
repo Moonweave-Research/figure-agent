@@ -17,6 +17,8 @@ V19_PROMPT = ROOT / "reference_fidelity_execution_prompt_v19.md"
 V19_AUDIT = ROOT / "reference_fidelity_audit_v19.md"
 V19_HANDBACK = ROOT / "reference_fidelity_handback_v19.md"
 V20_PHYSICS_INVENTORY = ROOT / "physics_sanity_inventory_v20.md"
+V20_PHYSICS_CONTRACT = ROOT / "physics_sanity_contract_v20.md"
+V20_PHYSICS_HANDBACK = ROOT / "physics_sanity_gate_handback_v20.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -30,8 +32,10 @@ REQUIRED_MANIFEST_TOKENS = (
     "src/verify_fig1_scaffold_contract.py",
     "src/verify_fig1_causal_binding.py",
     "src/verify_fig1_causal_visibility.py",
+    "src/verify_fig1_physics_sanity.py",
     "src/run_fig1_gates.py",
     "src/verify_fig1_baseline_hash.py",
+    "src/test_fig1_physics_sanity.py",
     "dos_reference_schematic_handback_v9.md",
     "dos_density_profile_handback_v10.md",
     "dos_schematic_polish_handback_v11.md",
@@ -46,6 +50,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "reference_fidelity_audit_v19.md",
     "reference_fidelity_handback_v19.md",
     "physics_sanity_inventory_v20.md",
+    "physics_sanity_contract_v20.md",
+    "physics_sanity_gate_handback_v20.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -54,6 +60,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "v18 readability polish",
     "v19 reference-fidelity pass",
     "v20 physics sanity inventory",
+    "v20 physics sanity layer",
+    "force_target",
     "baseline hash",
 )
 
@@ -169,6 +177,36 @@ REQUIRED_V20_PHYSICS_INVENTORY_TOKENS = (
     "High-Priority Ambiguity",
 )
 
+REQUIRED_V20_PHYSICS_CONTRACT_TOKENS = (
+    "not publication-grade theory validation",
+    "layout/style evidence only",
+    "Hard Fail Now",
+    "Fail After Payload Clarification",
+    "Document Only",
+    "LUMO/HOMO",
+    "I(t) ~ t^-n",
+    "Debye exp(-t/tau)",
+    "g(Et)",
+    "ForceArrow",
+    "force_target",
+    "Human visual review",
+)
+
+REQUIRED_V20_PHYSICS_HANDBACK_TOKENS = (
+    "independent `physics-sanity` gate",
+    "src/verify_fig1_physics_sanity.py",
+    "src/test_fig1_physics_sanity.py",
+    "src/run_fig1_gates.py",
+    "No new scaffold",
+    "No new semantic content",
+    "ForceArrow",
+    "force_target",
+    "warning",
+    "Human visual review",
+    "previous hash",
+    "new hash",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -259,6 +297,20 @@ def main() -> int:
     for token in REQUIRED_V20_PHYSICS_INVENTORY_TOKENS:
         if token not in v20_inventory:
             return _fail(f"v20 physics sanity inventory missing token: {token}")
+
+    if not V20_PHYSICS_CONTRACT.exists():
+        return _fail(f"missing v20 physics sanity contract: {V20_PHYSICS_CONTRACT}")
+    v20_contract = V20_PHYSICS_CONTRACT.read_text()
+    for token in REQUIRED_V20_PHYSICS_CONTRACT_TOKENS:
+        if token not in v20_contract:
+            return _fail(f"v20 physics sanity contract missing token: {token}")
+
+    if not V20_PHYSICS_HANDBACK.exists():
+        return _fail(f"missing v20 physics sanity handback: {V20_PHYSICS_HANDBACK}")
+    v20_handback = V20_PHYSICS_HANDBACK.read_text()
+    for token in REQUIRED_V20_PHYSICS_HANDBACK_TOKENS:
+        if token not in v20_handback:
+            return _fail(f"v20 physics sanity handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

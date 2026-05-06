@@ -23,6 +23,7 @@ GATES = (
     Gate("scaffold-contract", "verify_fig1_scaffold_contract.py"),
     Gate("causal-binding", "verify_fig1_causal_binding.py"),
     Gate("causal-visibility", "verify_fig1_causal_visibility.py"),
+    Gate("physics-sanity", "verify_fig1_physics_sanity.py"),
 )
 
 
