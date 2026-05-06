@@ -37,6 +37,8 @@ Once clarified:
 
 Until then, `verify_fig1_physics_sanity.py` reports a warning rather than a hard failure for missing `force_target` semantics.
 
+If a future payload adds `force_target`, that field must land in the same commit as the strict vector check for the allowed target values. The gate must not silently stop warning just because the field exists.
+
 ## Document Only
 
 The following are outside this v20 gate:

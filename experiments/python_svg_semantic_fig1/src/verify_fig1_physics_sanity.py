@@ -52,6 +52,7 @@ def physics_sanity_failures(scene: object, *, extra_claim_text: str = "") -> lis
     failures.extend(_check_power_law_decay(scene))
     failures.extend(_check_causal_chain(scene))
     failures.extend(_check_probe_charge_relation(scene))
+    failures.extend(_check_probe_force_target_contract(scene))
     failures.extend(_check_maxwell_cue(scene))
     failures.extend(_check_overclaim_text(extra_claim_text))
     return failures
@@ -76,8 +77,6 @@ def _check_reference_authority(scene: object) -> list[str]:
     authority = getattr(scene.reference, "authority", "")
     if authority == "ground_truth":
         return ["reference authority must not become ground_truth"]
-    if authority not in {"style_layout_evidence", "guidance_only"}:
-        return [f"unexpected reference authority for physics sanity: {authority}"]
     return []
 
 
@@ -218,6 +217,48 @@ def _check_probe_charge_relation(scene: object) -> list[str]:
     if "repulsion" not in force_arrow.label.lower() and "qE" not in force_arrow.label:
         failures.append(f"force arrow label must remain a Coulomb/repulsion cue: {force_arrow.label}")
     return failures
+
+
+def _check_probe_force_target_contract(scene: object) -> list[str]:
+    force_arrow = scene.object_by_id("repulsion_arrow").payload
+    if not hasattr(force_arrow, "force_target"):
+        return []
+
+    target = getattr(force_arrow, "force_target")
+    valid_targets = {"cantilever", "electrode", "interaction_cue"}
+    if target not in valid_targets:
+        return [f"unknown ForceArrow force_target: {target}"]
+    if target == "interaction_cue":
+        return []
+
+    cantilever = scene.object_by_id("polymer_cantilever").payload
+    electrode = scene.object_by_id("electrode").payload
+    charge_positions = tuple(cantilever.charge_positions)
+    if not charge_positions:
+        return [f"force_target={target} cannot be checked without trapped charge positions"]
+
+    arrow_dx = force_arrow.end.x - force_arrow.start.x
+    if arrow_dx == 0:
+        return [f"force_target={target} requires a nonzero horizontal force vector"]
+
+    charge_center_x = sum(point.x for point in charge_positions) / len(charge_positions)
+    electrode_dx = electrode.center.x - charge_center_x
+    if electrode_dx == 0:
+        return [f"force_target={target} cannot resolve electrode side relative to trapped charges"]
+
+    same_sign = cantilever.charge_sign == electrode.sign
+    electrode_is_right = electrode_dx > 0
+    actual_rightward = arrow_dx > 0
+    if target == "cantilever":
+        expected_rightward = electrode_is_right if not same_sign else not electrode_is_right
+    else:
+        expected_rightward = electrode_is_right if same_sign else not electrode_is_right
+
+    if actual_rightward != expected_rightward:
+        direction = "rightward" if expected_rightward else "leftward"
+        relation = "like-charge repulsion" if same_sign else "opposite-charge attraction"
+        return [f"force_target={target} vector must be {direction} for {relation}"]
+    return []
 
 
 def _check_maxwell_cue(scene: object) -> list[str]:

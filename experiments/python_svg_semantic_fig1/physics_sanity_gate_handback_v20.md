@@ -25,7 +25,9 @@ This pass implements the first independent `physics-sanity` gate for Fig1 after 
 
 `ForceArrow` still lacks `force_target` or equivalent acted-on semantics. The new gate reports that as a warning because strict vector physics would otherwise overclaim correctness or incorrectly fail the existing reference-bound visual cue.
 
-The next strict probe pass should add target semantics first, then decide whether the visible rightward arrow is a reaction force on the electrode, an interaction cue, or an incorrect force-on-cantilever vector.
+Review follow-up hardening adds a future-proof guard: if `force_target` appears, the physics gate immediately applies target-specific vector checks for `cantilever`, `electrode`, and `interaction_cue` instead of silently dropping the warning.
+
+The next strict probe pass should add target semantics only together with any needed rendered label/geometry updates. The visible rightward arrow currently passes only as a reaction force on the electrode or as an interaction cue, not as force on the cantilever.
 
 ## Hash Record
 
