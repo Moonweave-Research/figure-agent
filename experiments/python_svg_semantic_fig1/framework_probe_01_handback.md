@@ -31,3 +31,9 @@ The probe verifier enforces these constraints:
 Initial RED failed because `fig_probe_01_scene.py` did not exist. After adding the minimal scene and renderer, `python experiments/python_svg_semantic_fig1/src/verify_fig_probe_01_contracts.py` passes.
 
 The visible result is intentionally modest. Its value is architectural: it confirms that the v14 split left a reusable engine path for a second semantic figure while keeping Fig1 policy caps isolated.
+
+## Visual interpretation
+
+This probe must not be used as visual-quality evidence. It only checks that a non-Fig1 scene can render through the shared engine without importing Fig1-specific policy modules.
+
+The probe is too small and too compositionally simple to test whether the framework can produce a publication-grade scientific schematic. Its result supports engine-boundary reuse, not semantic-first layout generation.

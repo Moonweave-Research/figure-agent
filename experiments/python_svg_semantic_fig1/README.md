@@ -45,6 +45,7 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `global_composition_asset_boundary_handback_v14.md`
 - `framework_probe_01_handback.md`
 - `framework_probe_02_handback.md`
+- `reference_scaffold_first_pivot_plan.md`
 
 The current renderer is semantic-driven: scene objects have typed payloads, rendering dispatches by object kind, and the SVG contains semantic IDs plus payload-derived geometry tokens. The v6 layer also computes DOS, P-E, and power-law decay path geometry from semantic payload model parameters instead of renderer-local curve constants.
 
@@ -55,6 +56,8 @@ The reference PNG is layout/style evidence only for this pilot. It is not ground
 ## Second-Figure Framework Probe
 
 `fig_probe_01` is a deliberately small second semantic figure. It is not a publication-quality Fig2 draft; it exists to test whether the shared `engine/` scene model, style tokens, semantic grouping, trap-state rendering, and payload-sampled DOS primitive can render a non-Fig1 composition without importing Fig1-specific policy modules.
+
+Important interpretation: this probe is architecture-only evidence. It is not visual-quality evidence and should not be used to argue that semantic-first layout synthesis is sufficient.
 
 Run it with:
 
@@ -67,6 +70,8 @@ The probe writes `fig_probe_01_semantic.svg` and `fig_probe_01_semantic.png`. It
 
 `fig_probe_02` is the stronger composition-pressure probe. It keeps the full Fig1 canvas scale and a five-panel structure with one central mechanism panel, four support panels, support-to-center flow arrows, electrical readouts, trap-spectrum readout, and a device-response cue. It still avoids Fig1-specific verifier/policy imports and writes only `data-probe2-role` composition roles.
 
+Important interpretation: this probe increases object and panel pressure, but its awkward visual structure shows that count/role correctness is not enough. It is visual failure evidence for pure semantic-first composition, not proof of publication-grade framework quality.
+
 Run it with:
 
 ```bash
@@ -75,6 +80,18 @@ python experiments/python_svg_semantic_fig1/src/verify_fig_probe_02_contracts.py
 ```
 
 The probe writes `fig_probe_02_semantic.svg` and `fig_probe_02_semantic.png`. Its verifier checks Fig1-scale canvas pressure, one-center-plus-four-support layout, source boundary isolation from Fig1 modules, payload-derived trap role counts, DOS sample exposure, and absence of Fig1 `data-panel-role` leakage.
+
+## Reference-Scaffold-First Pivot
+
+The experiment now treats `reference_scaffold_first_pivot_plan.md` as the next direction document. The key decision is to stop treating the semantic scene as a layout generator. A good reference, sketch, or human-authored scaffold should define panel bounds, local boxes, object-to-slot mapping, flow anchors, and visual hierarchy first; semantic payloads then control scientific meaning, computed geometry, roles, and mutation safety inside that scaffold.
+
+Fig1 v14 remains the byte-identity baseline for structure-only work:
+
+```text
+8291c26721d83444d5232108ad692c1baafa9651652a04cdb08eb6b900bdf879
+```
+
+Future real figures should not start from blank semantic synthesis. They should start from an approved scaffold, then bind semantic objects into it.
 
 ## Legacy Annotated Redraw
 

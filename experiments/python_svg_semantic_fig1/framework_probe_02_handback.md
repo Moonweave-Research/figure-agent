@@ -39,3 +39,9 @@ The probe verifier enforces:
 Initial RED failed because `fig_probe_02_scene.py` did not exist. After adding the scene and renderer, `python experiments/python_svg_semantic_fig1/src/verify_fig_probe_02_contracts.py` passes.
 
 The result is the first meaningful stress test of the v14 boundary split: `engine/` can support a second Fig-scale semantic schematic, while Fig1 visual policies remain isolated.
+
+## Visual interpretation
+
+This probe is not a publication-grade figure and should not be treated as proof that semantic-first layout synthesis works. It increases canvas size, panel count, object count, and role pressure, but its awkward structure shows the remaining gap: count/role correctness is not the same as reference-quality composition.
+
+The useful conclusion is narrower. `fig_probe_02` proves that the engine boundary can carry a larger non-Fig1 scene. It also provides failure evidence that future real figures need an approved reference scaffold before semantic payload binding starts.
