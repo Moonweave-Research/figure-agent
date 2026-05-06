@@ -62,6 +62,7 @@ def _panel_text(
     anchor: str = "start",
     weight: str | None = None,
     italic: bool = False,
+    causal_role: str | None = None,
 ) -> None:
     attrs: dict[str, object] = {
         "fill": fill or style.palette.ink,
@@ -69,6 +70,8 @@ def _panel_text(
         "text_anchor": anchor,
         "data-panel-role": role,
     }
+    if causal_role:
+        attrs["data-causal-role"] = causal_role
     if weight:
         attrs["font_weight"] = weight
     if italic:
@@ -280,11 +283,11 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
     bullet_box = column.box("bullet_list")
     relation_y = bullet_box.y + 34
     relation_labels = (
-        ("S fraction", bullet_box.x + 28),
-        ("S-S sequence", bullet_box.center.x),
-        ("deep traps", bullet_box.right - 35),
+        ("S-rich segments", bullet_box.x + 39, "origin-s-rich-segments"),
+        ("S-chain length", bullet_box.center.x, None),
+        ("localized traps", bullet_box.right - 48, "origin-localized-traps"),
     )
-    for index, (label, x) in enumerate(relation_labels):
+    for index, (label, x, causal_role) in enumerate(relation_labels):
         drawing.append(draw.Circle(x, relation_y, 3.0, fill=palette.sulfur_brown, opacity=0.72))
         _panel_text(
             drawing,
@@ -297,13 +300,14 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
             italic=True,
             anchor="middle",
             weight="700" if index == 2 else None,
+            causal_role=causal_role,
             style=style,
         )
-    p.arrow(drawing, Point(relation_labels[0][1] + 18, relation_y), Point(relation_labels[1][1] - 28, relation_y), palette.muted, width=1.0, head_length=7, head_width=6, opacity=0.62)
-    p.arrow(drawing, Point(relation_labels[1][1] + 34, relation_y), Point(relation_labels[2][1] - 25, relation_y), palette.deep_red_mid, width=1.1, head_length=7, head_width=6, opacity=0.72)
+    p.arrow(drawing, Point(relation_labels[0][1] + 48, relation_y), Point(relation_labels[1][1] - 45, relation_y), palette.muted, width=1.0, head_length=7, head_width=6, opacity=0.62)
+    p.arrow(drawing, Point(relation_labels[1][1] + 42, relation_y), Point(relation_labels[2][1] - 48, relation_y), palette.deep_red_mid, width=1.1, head_length=7, head_width=6, opacity=0.72)
     _panel_text(
         drawing,
-        "Composition controls trap density through sulfur-chain length.",
+        "Chemical + physical origin set trap density.",
         bullet_box.center.x,
         bullet_box.bottom - 5,
         11.2,
@@ -329,8 +333,11 @@ def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
     callout = _local_box(scene, obj.column, "hero_callout")
     compact_callout = Rect(callout.x + 24, callout.y + 8, callout.width - 48, callout.height - 22)
     p.rounded_rect(drawing, compact_callout, fill="#fff8f7", stroke=palette.deep_red_light, radius=6, stroke_width=0.75, opacity=0.82)
-    caption_lines = ("Deep traps near midgap", "drive long-lived repulsion.")
-    for index, line in enumerate(caption_lines):
+    caption_lines = (
+        (payload.converged_picture_label.replace("converged", "Converged", 1), "hero-converged-picture"),
+        ("deep states drive long-lived repulsion.", None),
+    )
+    for index, (line, causal_role) in enumerate(caption_lines):
         _panel_text(
             drawing,
             line,
@@ -341,6 +348,7 @@ def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
             fill=palette.deep_red,
             italic=True,
             anchor="middle",
+            causal_role=causal_role,
             style=style,
         )
     p.end_semantic_group(drawing)
@@ -818,6 +826,7 @@ def _plot_label(
     anchor: str = "start",
     italic: bool = False,
     weight: str | None = None,
+    causal_role: str | None = None,
 ) -> None:
     attrs: dict[str, object] = {
         "fill": fill,
@@ -825,6 +834,8 @@ def _plot_label(
         "text_anchor": anchor,
         **_plot_attrs(plot_id, "schematic-label"),
     }
+    if causal_role:
+        attrs["data-causal-role"] = causal_role
     if italic:
         attrs["font_style"] = "italic"
     if weight:
@@ -957,6 +968,17 @@ def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     drawing.append(_plot_polyline(highlight, plot_id=obj.id, role="schematic-curve", fill="none", stroke="#ffffff", stroke_width=0.65, opacity=0.42))
     _plot_label(drawing, obj.id, payload.label, Point(frame.x + frame.width * 0.50, frame.y + 28), 11.2, fill=payload.color, style=style, weight="700")
     _plot_label(drawing, obj.id, "slope = -n", Point(frame.x + frame.width * 0.38, frame.y + frame.height * 0.70), 9.2, fill=payload.color, style=style)
+    _plot_label(
+        drawing,
+        obj.id,
+        "extract n",
+        Point(frame.x + frame.width * 0.64, frame.y + frame.height * 0.58),
+        9.0,
+        fill=payload.color,
+        style=style,
+        italic=True,
+        causal_role="decay-extract-n",
+    )
     _plot_label(drawing, obj.id, "log t", Point(frame.right - 4, frame.bottom + 13), 9.6, fill=palette.ink, style=style, anchor="end", italic=True)
     _plot_label(drawing, obj.id, "log I", Point(frame.x - 1, frame.y + 17), 9.6, fill=palette.ink, style=style, italic=True)
     p.end_semantic_group(drawing)
@@ -1015,19 +1037,53 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     payload: TrapModelFlow = obj.payload
     col = _column(scene, obj.column)
     palette = style.palette
-    p.begin_semantic_group(drawing, obj, f"step_count={len(payload.steps)}")
+    display_steps = payload.causal_chain or payload.steps
+    causal_roles = (
+        "interpretation-step-power-law",
+        "interpretation-step-exponent-n",
+        "interpretation-step-debye",
+        "interpretation-step-tau-d",
+        "interpretation-step-trap-depth-distribution",
+    )
+    p.begin_semantic_group(drawing, obj, f"step_count={len(display_steps)} causal_chain={'|'.join(display_steps)}")
     flow_strip = _local_box(scene, obj.column, "flow_strip")
-    box_w = flow_strip.width / len(payload.steps)
-    baseline_y = flow_strip.center.y + 5
+    box_w = flow_strip.width / len(display_steps)
+    baseline_y = flow_strip.bottom - 5
     drawing.append(draw.Line(flow_strip.x + 10, baseline_y, flow_strip.right - 10, baseline_y, stroke=palette.rule, stroke_width=1.0, opacity=0.82))
     previous_center: Point | None = None
-    for index, step in enumerate(payload.steps):
+    for index, step in enumerate(display_steps):
         center = Point(flow_strip.x + index * box_w + box_w / 2 - 4, flow_strip.center.y)
-        lines = step.split("\n")
+        display_step = "Debye\nexp(-t/tau)" if step == "Debye exp(-t/tau)" else step
+        lines = display_step.split("\n")
+        causal_role = causal_roles[index] if index < len(causal_roles) else None
         if len(lines) == 1:
-            p.text(drawing, step, center.x, flow_strip.y + 21, 10.8, fill=palette.ink, anchor="middle", style=style)
+            _panel_text(
+                drawing,
+                step,
+                center.x,
+                flow_strip.y + 12,
+                11.2 if len(step) <= 8 else 9.7,
+                role="interpretation-causal-step",
+                fill=palette.ink,
+                anchor="middle",
+                weight="700" if step == "n" else None,
+                causal_role=causal_role,
+                style=style,
+            )
         else:
-            p.multiline_text(drawing, lines, center.x, flow_strip.y + 13, 9.7, 12.1, fill=palette.ink, anchor="middle", style=style)
+            for line_index, line in enumerate(lines):
+                _panel_text(
+                    drawing,
+                    line,
+                    center.x,
+                    flow_strip.y + 6 + line_index * 10.8,
+                    9.5,
+                    role="interpretation-causal-step",
+                    fill=palette.ink,
+                    anchor="middle",
+                    causal_role=causal_role,
+                    style=style,
+                )
         drawing.append(draw.Circle(center.x, baseline_y, 2.6, fill=palette.muted, opacity=0.55))
         if previous_center:
             p.arrow(drawing, Point(previous_center.x + 13, baseline_y), Point(center.x - 15, baseline_y), palette.muted, width=0.9, head_length=7, head_width=6, opacity=0.68)

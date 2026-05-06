@@ -166,24 +166,24 @@
 <path d="M419.0,265.0 L426.0,265.0" stroke="#c9252a" stroke-width="8" stroke-linecap="round" opacity="1.0" />
 <path d="M444.0,265.0 L426.0,255.0 L426.0,275.0 Z" fill="#c9252a" opacity="1.0" />
 <text x="288.0" y="289.0" font-size="12.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">Increasing sulfur content</text>
-<circle cx="146.0" cy="358.0" r="3.0" fill="#8c5a18" opacity="0.72" />
-<text x="146.0" y="382.0" font-size="11.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" font-style="italic">S fraction</text>
+<circle cx="157.0" cy="358.0" r="3.0" fill="#8c5a18" opacity="0.72" />
+<text x="157.0" y="382.0" font-size="11.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" data-causal-role="origin-s-rich-segments" font-style="italic">S-rich segments</text>
 <circle cx="265.5" cy="358.0" r="3.0" fill="#8c5a18" opacity="0.72" />
-<text x="265.5" y="382.0" font-size="11.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" font-style="italic">S-S sequence</text>
-<circle cx="378.0" cy="358.0" r="3.0" fill="#8c5a18" opacity="0.72" />
-<text x="378.0" y="382.0" font-size="11.6" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" font-weight="700" font-style="italic">deep traps</text>
-<path d="M164.0,358.0 L230.5,358.0" stroke="#69707a" stroke-width="1.0" stroke-linecap="round" opacity="0.62" />
-<path d="M237.5,358.0 L230.5,355.0 L230.5,361.0 Z" fill="#69707a" opacity="0.62" />
-<path d="M299.5,358.0 L346.0,358.0" stroke="#c9252a" stroke-width="1.1" stroke-linecap="round" opacity="0.72" />
-<path d="M353.0,358.0 L346.0,355.0 L346.0,361.0 Z" fill="#c9252a" opacity="0.72" />
-<text x="265.5" y="409.0" font-size="11.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation panel-conclusion" font-style="italic">Composition controls trap density through sulfur-chain length.</text>
+<text x="265.5" y="382.0" font-size="11.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" font-style="italic">S-chain length</text>
+<circle cx="365.0" cy="358.0" r="3.0" fill="#8c5a18" opacity="0.72" />
+<text x="365.0" y="382.0" font-size="11.6" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation" data-causal-role="origin-localized-traps" font-weight="700" font-style="italic">localized traps</text>
+<path d="M205.0,358.0 L213.5,358.0" stroke="#69707a" stroke-width="1.0" stroke-linecap="round" opacity="0.62" />
+<path d="M220.5,358.0 L213.5,355.0 L213.5,361.0 Z" fill="#69707a" opacity="0.62" />
+<path d="M307.5,358.0 L310.0,358.0" stroke="#c9252a" stroke-width="1.1" stroke-linecap="round" opacity="0.72" />
+<path d="M317.0,358.0 L310.0,355.0 L310.0,361.0 Z" fill="#c9252a" opacity="0.72" />
+<text x="265.5" y="409.0" font-size="11.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="origin-relation panel-conclusion" font-style="italic">Chemical + physical origin set trap density.</text>
 </g>
 <g id="semantic-deep_trap_hero" data-semantic-id="deep_trap_hero" data-semantic-kind="DeepTrapHero" data-payload-geometry="hero_ratio=2 band_id=band_diagram trap_id=trap_level_set dos_id=dos_lobes">
 <title>DeepTrapHero:deep_trap_hero</title>
 <text x="782.0" y="251.0" font-size="13.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Deep traps dominate the sulfur-polymer gap</text>
 <rect x="602.0" y="672.0" width="360.0" height="70.0" rx="6" ry="6" fill="#fff8f7" stroke="#f6d2d2" stroke-width="0.75" opacity="0.82" />
-<text x="782.0" y="699.0" font-size="13.0" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="hero-caption" font-style="italic">Deep traps near midgap</text>
-<text x="782.0" y="719.0" font-size="13.0" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="hero-caption" font-style="italic">drive long-lived repulsion.</text>
+<text x="782.0" y="699.0" font-size="13.0" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="hero-caption" data-causal-role="hero-converged-picture" font-style="italic">Converged trap-depth picture</text>
+<text x="782.0" y="719.0" font-size="13.0" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="hero-caption" font-style="italic">deep states drive long-lived repulsion.</text>
 </g>
 <g id="semantic-band_diagram" data-semantic-id="band_diagram" data-semantic-kind="BandDiagram" data-payload-geometry="lumo_y=0.18 homo_y=0.82">
 <title>BandDiagram:band_diagram</title>
@@ -300,6 +300,7 @@
 <path d="M1387.5,180.275 L1390.3272727272727,181.74772727272727 L1393.1545454545455,183.22045454545454 L1395.9818181818182,184.6931818181818 L1398.8090909090909,186.1659090909091 L1401.6363636363637,187.63863636363638 L1404.4636363636364,189.11136363636365 L1407.290909090909,190.58409090909092 L1410.1181818181817,192.0568181818182 L1412.9454545454546,193.52954545454546 L1415.7727272727273,195.00227272727273 L1418.6,196.475 L1421.4272727272728,197.9477272727273 L1424.2545454545455,199.42045454545456 L1427.081818181818,200.89318181818183 L1429.909090909091,202.3659090909091 L1432.7363636363636,203.83863636363637 L1435.5636363636363,205.31136363636364 L1438.3909090909092,206.7840909090909 L1441.2181818181818,208.2568181818182 L1444.0454545454545,209.72954545454544 L1446.8727272727274,211.20227272727274 L1449.7,212.675 L1452.5272727272727,214.14772727272728 L1455.3545454545454,215.62045454545455 L1458.1818181818182,217.09318181818182 L1461.009090909091,218.5659090909091 L1463.8363636363636,220.03863636363636 L1466.6636363636364,221.51136363636363 L1469.490909090909,222.9840909090909 L1472.3181818181818,224.4568181818182 L1475.1454545454546,225.92954545454546 L1477.9727272727273,227.40227272727273 L1480.8,228.875 L1483.6272727272726,230.34772727272727 L1486.4545454545455,231.82045454545454 L1489.2818181818182,233.2931818181818 L1492.1090909090908,234.7659090909091 L1494.9363636363637,236.23863636363637 L1497.7636363636364,237.71136363636364 L1500.590909090909,239.1840909090909 L1503.418181818182,240.65681818181818 L1506.2454545454545,242.12954545454548 L1509.0727272727272,243.60227272727272 L1511.9,245.07500000000002 L1514.7272727272727,246.54772727272726 L1517.5545454545454,248.02045454545456 L1520.3818181818183,249.49318181818182 L1523.209090909091,250.9659090909091 L1526.0363636363636,252.43863636363633 L1528.8636363636363,253.91136363636363 L1531.6909090909091,255.3840909090909 L1534.5181818181818,256.85681818181814 L1537.3454545454545,258.3295454545454 L1540.1727272727273,259.8022727272727 L1543.0,261.275" fill="none" stroke="#ffffff" stroke-width="0.65" opacity="0.42" data-plot-id="power_law_decay" data-plot-role="schematic-curve" />
 <text x="1465.25" y="201.0" font-size="11.2" fill="#0b4bb3" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-plot-id="power_law_decay" data-plot-role="schematic-label" font-weight="700">I(t) ~ t^-n</text>
 <text x="1446.59" y="278.0" font-size="9.2" fill="#0b4bb3" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-plot-id="power_law_decay" data-plot-role="schematic-label">slope = -n</text>
+<text x="1487.02" y="260.0" font-size="9.0" fill="#0b4bb3" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-plot-id="power_law_decay" data-plot-role="schematic-label" data-causal-role="decay-extract-n" font-style="italic">extract n</text>
 <text x="1539.0" y="336.0" font-size="9.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="end" data-plot-id="power_law_decay" data-plot-role="schematic-label" font-style="italic">log t</text>
 <text x="1386.5" y="190.0" font-size="9.6" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-plot-id="power_law_decay" data-plot-role="schematic-label" font-style="italic">log I</text>
 </g>
@@ -322,24 +323,28 @@
 <text x="458.0" y="736.3376000000001" font-size="7.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Et</text>
 <text x="458.0" y="736.3376000000001" font-size="7.5" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-plot-id="ispd_plot" data-plot-role="schematic-dos-depth-label">Et</text>
 </g>
-<g id="semantic-trap_model_flow" data-semantic-id="trap_model_flow" data-semantic-kind="TrapModelFlow" data-payload-geometry="step_count=4">
+<g id="semantic-trap_model_flow" data-semantic-id="trap_model_flow" data-semantic-kind="TrapModelFlow" data-payload-geometry="step_count=5 causal_chain=I(t) ~ t^-n|n|Debye exp(-t/tau)|tau_d|g(Et)">
 <title>TrapModelFlow:trap_model_flow</title>
-<path d="M60.0,571.0 L459.0,571.0" stroke="#d9dde4" stroke-width="1.0" opacity="0.82" />
-<text x="98.375" y="569.0" font-size="10.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">I(t) ~ t^-n</text>
-<circle cx="98.375" cy="571.0" r="2.6" fill="#69707a" opacity="0.55" />
-<text x="203.125" y="561.0" font-size="9.7" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Debye</text>
-<text x="203.125" y="573.1" font-size="9.7" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">exp(-t/tau)</text>
-<circle cx="203.125" cy="571.0" r="2.6" fill="#69707a" opacity="0.55" />
-<path d="M111.375,571.0 L181.125,571.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
-<path d="M188.125,571.0 L181.125,568.0 L181.125,574.0 Z" fill="#69707a" opacity="0.68" />
-<text x="307.875" y="569.0" font-size="10.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">tau_d</text>
-<circle cx="307.875" cy="571.0" r="2.6" fill="#69707a" opacity="0.55" />
-<path d="M216.125,571.0 L285.875,571.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
-<path d="M292.875,571.0 L285.875,568.0 L285.875,574.0 Z" fill="#69707a" opacity="0.68" />
-<text x="412.625" y="569.0" font-size="10.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">g(Et)</text>
-<circle cx="412.625" cy="571.0" r="2.6" fill="#69707a" opacity="0.55" />
-<path d="M320.875,571.0 L390.625,571.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
-<path d="M397.625,571.0 L390.625,568.0 L390.625,574.0 Z" fill="#69707a" opacity="0.68" />
+<path d="M60.0,579.0 L459.0,579.0" stroke="#d9dde4" stroke-width="1.0" opacity="0.82" />
+<text x="87.9" y="560.0" font-size="9.7" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-power-law">I(t) ~ t^-n</text>
+<circle cx="87.9" cy="579.0" r="2.6" fill="#69707a" opacity="0.55" />
+<text x="171.70000000000002" y="560.0" font-size="11.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-exponent-n" font-weight="700">n</text>
+<circle cx="171.70000000000002" cy="579.0" r="2.6" fill="#69707a" opacity="0.55" />
+<path d="M100.9,579.0 L149.70000000000002,579.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
+<path d="M156.70000000000002,579.0 L149.70000000000002,576.0 L149.70000000000002,582.0 Z" fill="#69707a" opacity="0.68" />
+<text x="255.5" y="554.0" font-size="9.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-debye">Debye</text>
+<text x="255.5" y="564.8" font-size="9.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-debye">exp(-t/tau)</text>
+<circle cx="255.5" cy="579.0" r="2.6" fill="#69707a" opacity="0.55" />
+<path d="M184.70000000000002,579.0 L233.5,579.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
+<path d="M240.5,579.0 L233.5,576.0 L233.5,582.0 Z" fill="#69707a" opacity="0.68" />
+<text x="339.29999999999995" y="560.0" font-size="11.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-tau-d">tau_d</text>
+<circle cx="339.29999999999995" cy="579.0" r="2.6" fill="#69707a" opacity="0.55" />
+<path d="M268.5,579.0 L317.29999999999995,579.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
+<path d="M324.29999999999995,579.0 L317.29999999999995,576.0 L317.29999999999995,582.0 Z" fill="#69707a" opacity="0.68" />
+<text x="423.09999999999997" y="560.0" font-size="11.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="interpretation-causal-step" data-causal-role="interpretation-step-trap-depth-distribution">g(Et)</text>
+<circle cx="423.09999999999997" cy="579.0" r="2.6" fill="#69707a" opacity="0.55" />
+<path d="M352.29999999999995,579.0 L401.09999999999997,579.0" stroke="#69707a" stroke-width="0.9" stroke-linecap="round" opacity="0.68" />
+<path d="M408.09999999999997,579.0 L401.09999999999997,576.0 L401.09999999999997,582.0 Z" fill="#69707a" opacity="0.68" />
 <path d="M82.0,798.0 L82.0,651.0" stroke="#171717" stroke-width="1.2" stroke-linecap="round" opacity="1.0" />
 <path d="M82.0,642.0 L78.5,651.0 L85.5,651.0 Z" fill="#171717" opacity="1.0" />
 <path d="M82.0,798.0 L229.0,798.0" stroke="#171717" stroke-width="1.2" stroke-linecap="round" opacity="1.0" />

@@ -11,6 +11,7 @@ V15_HANDBACK = ROOT / "scaffold_contract_handback_v15.md"
 SCAFFOLD_CONTRACT = ROOT / "scaffold_contract_v1.md"
 CAUSAL_BINDING = ROOT / "causal_reference_binding_v16.md"
 V16_HANDBACK = ROOT / "causal_reference_handback_v16.md"
+V17_HANDBACK = ROOT / "causal_visibility_handback_v17.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -23,6 +24,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "src/engine/scaffold.py",
     "src/verify_fig1_scaffold_contract.py",
     "src/verify_fig1_causal_binding.py",
+    "src/verify_fig1_causal_visibility.py",
     "dos_reference_schematic_handback_v9.md",
     "dos_density_profile_handback_v10.md",
     "dos_schematic_polish_handback_v11.md",
@@ -31,10 +33,12 @@ REQUIRED_MANIFEST_TOKENS = (
     "global_composition_asset_boundary_handback_v14.md",
     "scaffold_contract_handback_v15.md",
     "causal_reference_handback_v16.md",
+    "causal_visibility_handback_v17.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
     "causal diagram is not ground_truth",
+    "intentional visual semantic update",
 )
 
 REQUIRED_V14_TOKENS = (
@@ -75,6 +79,18 @@ REQUIRED_V16_TOKENS = (
     "semantic reference",
     "not ground_truth",
     "not a pixel-tracing target",
+    "Human visual review",
+)
+
+REQUIRED_V17_TOKENS = (
+    "intentional visual semantic update",
+    "not a new scaffold",
+    "S-rich segments",
+    "localized traps",
+    "extract n",
+    "Converged trap-depth picture",
+    "previous hash",
+    "new hash",
     "Human visual review",
 )
 
@@ -126,6 +142,13 @@ def main() -> int:
     for token in REQUIRED_V16_TOKENS:
         if token not in v16_handback:
             return _fail(f"v16 causal handback missing token: {token}")
+
+    if not V17_HANDBACK.exists():
+        return _fail(f"missing v17 visibility handback: {V17_HANDBACK}")
+    v17_handback = V17_HANDBACK.read_text()
+    for token in REQUIRED_V17_TOKENS:
+        if token not in v17_handback:
+            return _fail(f"v17 visibility handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0
