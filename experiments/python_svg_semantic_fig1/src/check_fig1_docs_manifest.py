@@ -13,6 +13,9 @@ CAUSAL_BINDING = ROOT / "causal_reference_binding_v16.md"
 V16_HANDBACK = ROOT / "causal_reference_handback_v16.md"
 V17_HANDBACK = ROOT / "causal_visibility_handback_v17.md"
 V18_HANDBACK = ROOT / "causal_readability_handback_v18.md"
+V19_PROMPT = ROOT / "reference_fidelity_execution_prompt_v19.md"
+V19_AUDIT = ROOT / "reference_fidelity_audit_v19.md"
+V19_HANDBACK = ROOT / "reference_fidelity_handback_v19.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -38,12 +41,16 @@ REQUIRED_MANIFEST_TOKENS = (
     "causal_reference_handback_v16.md",
     "causal_visibility_handback_v17.md",
     "causal_readability_handback_v18.md",
+    "reference_fidelity_execution_prompt_v19.md",
+    "reference_fidelity_audit_v19.md",
+    "reference_fidelity_handback_v19.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
     "causal diagram is not ground_truth",
     "intentional visual semantic update",
     "v18 readability polish",
+    "v19 reference-fidelity pass",
     "baseline hash",
 )
 
@@ -114,6 +121,38 @@ REQUIRED_V18_TOKENS = (
     "b43c192481c799e895bd616b57fdd3731dfc58b3bf2d5fcee932d204592c207f",
 )
 
+REQUIRED_V19_PROMPT_TOKENS = (
+    "panel-by-panel reference fidelity audit",
+    "Do not create a new scaffold",
+    "Do not add new semantic content",
+    "Do not pixel-trace the reference image",
+    "sulfur polymer origin",
+    "electrical evidence",
+    "center hero",
+    "interpretation",
+    "macroscopic probe",
+)
+
+REQUIRED_V19_AUDIT_TOKENS = (
+    "Interpretation panel first",
+    "Electrical evidence second",
+    "Do Now",
+    "Needs Partial Reference Or User Taste Decision",
+    "interpretation_card",
+    "electrical_evidence_card",
+)
+
+REQUIRED_V19_HANDBACK_TOKENS = (
+    "reference-fidelity polish pass",
+    "interpretation and electrical evidence panels",
+    "No new scaffold",
+    "No new semantic content",
+    "Human visual review",
+    "previous hash",
+    "new hash",
+    "55702be313ca70192560a569c8d45949b575e5bfa960252acd9e72f7294e230a",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -176,6 +215,27 @@ def main() -> int:
     for token in REQUIRED_V18_TOKENS:
         if token not in v18_handback:
             return _fail(f"v18 readability handback missing token: {token}")
+
+    if not V19_PROMPT.exists():
+        return _fail(f"missing v19 reference-fidelity prompt: {V19_PROMPT}")
+    v19_prompt = V19_PROMPT.read_text()
+    for token in REQUIRED_V19_PROMPT_TOKENS:
+        if token not in v19_prompt:
+            return _fail(f"v19 reference-fidelity prompt missing token: {token}")
+
+    if not V19_AUDIT.exists():
+        return _fail(f"missing v19 reference-fidelity audit: {V19_AUDIT}")
+    v19_audit = V19_AUDIT.read_text()
+    for token in REQUIRED_V19_AUDIT_TOKENS:
+        if token not in v19_audit:
+            return _fail(f"v19 reference-fidelity audit missing token: {token}")
+
+    if not V19_HANDBACK.exists():
+        return _fail(f"missing v19 reference-fidelity handback: {V19_HANDBACK}")
+    v19_handback = V19_HANDBACK.read_text()
+    for token in REQUIRED_V19_HANDBACK_TOKENS:
+        if token not in v19_handback:
+            return _fail(f"v19 reference-fidelity handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

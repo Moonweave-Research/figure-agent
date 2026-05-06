@@ -845,7 +845,7 @@ def _plot_label(
 
 def _draw_pe_hysteresis(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
     payload: PEHysteresisPlot = obj.payload
-    bounds = _evidence_badge_rect(scene, obj.id).inset(10, 24)
+    bounds = _evidence_badge_rect(scene, obj.id).inset(4, 16)
     plan = pe_hysteresis_plan(
         bounds,
         loop_width=payload.loop_width,
@@ -870,10 +870,10 @@ def _draw_pe_hysteresis(drawing: draw.Drawing, scene: Scene, obj: SemanticObject
     )
     frame = plan.frame
     palette = style.palette
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.center.y), Point(frame.right - 4, frame.center.y), color=palette.ink, width=0.9, opacity=0.72)
-    _plot_arrow_axis(drawing, obj.id, Point(frame.center.x, frame.bottom - 6), Point(frame.center.x, frame.y + 4), color=palette.ink, width=0.9, opacity=0.72)
-    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.x + 8, frame.center.y), Point(frame.right - 12, frame.center.y), color=palette.muted, width=0.8, opacity=0.36, dash="5 4")
-    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.center.x, frame.y + 8), Point(frame.center.x, frame.bottom - 8), color=palette.muted, width=0.8, opacity=0.36, dash="5 4")
+    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.center.y), Point(frame.right - 4, frame.center.y), color=palette.ink, width=1.1, opacity=0.80)
+    _plot_arrow_axis(drawing, obj.id, Point(frame.center.x, frame.bottom - 6), Point(frame.center.x, frame.y + 4), color=palette.ink, width=1.1, opacity=0.80)
+    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.x + 8, frame.center.y), Point(frame.right - 12, frame.center.y), color=palette.muted, width=0.9, opacity=0.42, dash="5 4")
+    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.center.x, frame.y + 8), Point(frame.center.x, frame.bottom - 8), color=palette.muted, width=0.9, opacity=0.42, dash="5 4")
     drawing.append(
         _plot_polyline(
             plan.curve_points,
@@ -881,7 +881,7 @@ def _draw_pe_hysteresis(drawing: draw.Drawing, scene: Scene, obj: SemanticObject
             role="schematic-curve",
             fill="none",
             stroke=payload.color,
-            stroke_width=style.plot_stroke_width,
+            stroke_width=style.plot_stroke_width + 0.35,
             close=True,
             opacity=0.96,
         )
@@ -899,15 +899,15 @@ def _draw_pe_hysteresis(drawing: draw.Drawing, scene: Scene, obj: SemanticObject
         opacity=0.58,
         dash="4 3",
     )
-    _plot_label(drawing, obj.id, "Pr", Point(remanent_x + 5, remanent_y - 4), 9.2, fill=payload.color, style=style, italic=True)
-    _plot_label(drawing, obj.id, "P", Point(frame.x + 2, frame.y + 16), 12, fill=palette.ink, style=style, italic=True)
-    _plot_label(drawing, obj.id, "E", Point(frame.right - 3, frame.center.y - 6), 12, fill=palette.ink, style=style, italic=True, anchor="end")
+    _plot_label(drawing, obj.id, "Pr", Point(remanent_x + 5, remanent_y - 4), 9.8, fill=payload.color, style=style, italic=True)
+    _plot_label(drawing, obj.id, "P", Point(frame.x + 1, frame.y + 16), 12.8, fill=palette.ink, style=style, italic=True)
+    _plot_label(drawing, obj.id, "E", Point(frame.right - 3, frame.center.y - 7), 12.8, fill=palette.ink, style=style, italic=True, anchor="end")
     p.end_semantic_group(drawing)
 
 
 def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
     payload: PowerLawDecayPlot = obj.payload
-    bounds = _evidence_badge_rect(scene, obj.id).inset(10, 24)
+    bounds = _evidence_badge_rect(scene, obj.id).inset(4, 16)
     plan = power_law_decay_plan(
         bounds,
         slope=payload.slope,
@@ -935,8 +935,8 @@ def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     )
     frame = plan.frame
     palette = style.palette
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.right - 3, frame.bottom - 6), color=palette.ink, width=0.95, opacity=0.72)
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.x + 8, frame.y + 4), color=palette.ink, width=0.95, opacity=0.72)
+    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.right - 3, frame.bottom - 6), color=palette.ink, width=1.1, opacity=0.80)
+    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.x + 8, frame.y + 4), color=palette.ink, width=1.1, opacity=0.80)
     x_tick_candidates = [tick for tick in plan.major_ticks if tick.axis == "x"]
     for tick in x_tick_candidates[:: max(1, len(x_tick_candidates) // 4)]:
         _plot_line(
@@ -946,8 +946,8 @@ def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
             Point(tick.point.x, frame.bottom - 6),
             Point(tick.point.x, frame.bottom - 1),
             color=palette.muted,
-            width=0.65,
-            opacity=0.45,
+            width=0.78,
+            opacity=0.55,
         )
     y_tick_candidates = [tick for tick in plan.major_ticks if tick.axis == "y"]
     for tick in y_tick_candidates[:: max(1, len(y_tick_candidates) // 4)]:
@@ -958,29 +958,29 @@ def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
             Point(frame.x + 3, tick.point.y),
             Point(frame.x + 8, tick.point.y),
             color=palette.muted,
-            width=0.65,
-            opacity=0.45,
+            width=0.78,
+            opacity=0.55,
         )
     for segment in plan.guide_segments:
-        _plot_line(drawing, obj.id, "schematic-guide", segment.start, segment.end, color=payload.color, width=1.0, opacity=0.68, dash="4 3")
-    drawing.append(_plot_polyline(plan.curve_points, plot_id=obj.id, role="schematic-curve", fill="none", stroke=payload.color, stroke_width=style.plot_stroke_width + 0.25))
+        _plot_line(drawing, obj.id, "schematic-guide", segment.start, segment.end, color=payload.color, width=1.15, opacity=0.72, dash="4 3")
+    drawing.append(_plot_polyline(plan.curve_points, plot_id=obj.id, role="schematic-curve", fill="none", stroke=payload.color, stroke_width=style.plot_stroke_width + 0.55))
     highlight = tuple(Point(point.x, point.y + 0.9) for point in plan.curve_points)
     drawing.append(_plot_polyline(highlight, plot_id=obj.id, role="schematic-curve", fill="none", stroke="#ffffff", stroke_width=0.65, opacity=0.42))
-    _plot_label(drawing, obj.id, payload.label, Point(frame.x + frame.width * 0.50, frame.y + 28), 11.2, fill=payload.color, style=style, weight="700")
-    _plot_label(drawing, obj.id, "slope = -n", Point(frame.x + frame.width * 0.38, frame.y + frame.height * 0.70), 9.2, fill=payload.color, style=style)
+    _plot_label(drawing, obj.id, payload.label, Point(frame.x + frame.width * 0.50, frame.y + 28), 12.0, fill=payload.color, style=style, weight="700")
+    _plot_label(drawing, obj.id, "slope = -n", Point(frame.x + frame.width * 0.36, frame.y + frame.height * 0.73), 9.8, fill=payload.color, style=style)
     _plot_label(
         drawing,
         obj.id,
         "extract n",
         Point(frame.x + frame.width * 0.70, frame.y + frame.height * 0.64),
-        10.4,
+        10.8,
         fill=payload.color,
         style=style,
         italic=True,
         causal_role="decay-extract-n",
     )
-    _plot_label(drawing, obj.id, "log t", Point(frame.right - 4, frame.bottom + 13), 9.6, fill=palette.ink, style=style, anchor="end", italic=True)
-    _plot_label(drawing, obj.id, "log I", Point(frame.x - 1, frame.y + 17), 9.6, fill=palette.ink, style=style, italic=True)
+    _plot_label(drawing, obj.id, "log t", Point(frame.right - 4, frame.bottom + 13), 10.0, fill=palette.ink, style=style, anchor="end", italic=True)
+    _plot_label(drawing, obj.id, "log I", Point(frame.x - 1, frame.y + 17), 10.0, fill=palette.ink, style=style, italic=True)
     p.end_semantic_group(drawing)
 
 
@@ -1049,10 +1049,20 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     flow_strip = _local_box(scene, obj.column, "flow_strip")
     box_w = flow_strip.width / len(display_steps)
     baseline_y = flow_strip.bottom - 5
-    drawing.append(draw.Line(flow_strip.x + 10, baseline_y, flow_strip.right - 10, baseline_y, stroke=palette.rule, stroke_width=1.0, opacity=0.82))
+    drawing.append(draw.Line(flow_strip.x + 8, baseline_y, flow_strip.right - 8, baseline_y, stroke=palette.rule, stroke_width=1.15, opacity=0.88))
     previous_center: Point | None = None
     for index, step in enumerate(display_steps):
         center = Point(flow_strip.x + index * box_w + box_w / 2 - 4, flow_strip.center.y)
+        step_box = Rect(center.x - box_w * 0.39, flow_strip.y - 8, box_w * 0.78, flow_strip.height + 10)
+        p.rounded_rect(
+            drawing,
+            step_box,
+            fill="#ffffff",
+            stroke=palette.shallow_blue if index == 0 else palette.rule,
+            radius=4,
+            stroke_width=0.85 if index == 0 else 0.72,
+            opacity=0.94,
+        )
         if step == "I(t) ~ t^-n":
             display_step = "I(t) ~\nt^-n"
         elif step == "Debye exp(-t/tau)":
@@ -1089,9 +1099,9 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
                     causal_role=causal_role,
                     style=style,
                 )
-        drawing.append(draw.Circle(center.x, baseline_y, 2.6, fill=palette.muted, opacity=0.55))
+        drawing.append(draw.Circle(center.x, baseline_y, 3.1, fill=palette.muted, opacity=0.62))
         if previous_center:
-            p.arrow(drawing, Point(previous_center.x + 13, baseline_y), Point(center.x - 15, baseline_y), palette.muted, width=0.9, head_length=7, head_width=6, opacity=0.68)
+            p.arrow(drawing, Point(previous_center.x + 13, baseline_y), Point(center.x - 15, baseline_y), palette.muted, width=1.05, head_length=8, head_width=6.5, opacity=0.72)
         previous_center = center
 
     decay: PowerLawDecayPlot = scene.object_by_kind("PowerLawDecayPlot").payload
@@ -1100,6 +1110,12 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     axis_w = plot.width - 32
     axis_h = plot.height - 28
     p.mini_axis(drawing, axis_origin, axis_w, axis_h, palette.ink)
+    for fraction in (0.22, 0.42, 0.62, 0.82):
+        tick_x = axis_origin.x + axis_w * fraction
+        drawing.append(draw.Line(tick_x, axis_origin.y + axis_h, tick_x, axis_origin.y + axis_h + 5, stroke=palette.muted, stroke_width=0.7, opacity=0.48))
+    for fraction in (0.24, 0.45, 0.66, 0.84):
+        tick_y = axis_origin.y + axis_h * fraction
+        drawing.append(draw.Line(axis_origin.x - 5, tick_y, axis_origin.x, tick_y, stroke=palette.muted, stroke_width=0.7, opacity=0.48))
     curve_points = power_law_loglog_points(
         Rect(axis_origin.x, axis_origin.y, axis_w, axis_h),
         slope=decay.slope,
@@ -1109,7 +1125,7 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
         log_i_bottom=decay.log_i_bottom,
         samples=decay.samples,
     )
-    drawing.append(p.polyline_path(curve_points, fill="none", stroke=decay.color, stroke_width=2.3))
+    drawing.append(p.polyline_path(curve_points, fill="none", stroke=decay.color, stroke_width=2.8))
     guide_point = curve_points[int(len(curve_points) * 0.28)]
     drawing.append(
         draw.Line(
@@ -1123,27 +1139,30 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
             opacity=0.75,
         )
     )
-    p.text(drawing, decay.label, curve_points[0].x + 62, curve_points[0].y + 22, 12.4, fill=decay.color, weight="700", style=style)
-    p.text(drawing, "slope = -n", guide_point.x - 18, guide_point.y + 68, 9.6, fill=decay.color, style=style)
-    p.text(drawing, "t (s)", axis_origin.x + plot.width - 48, axis_origin.y + plot.height - 6, 9.6, fill=palette.ink, style=style)
+    p.text(drawing, decay.label, curve_points[0].x + 64, curve_points[0].y + 24, 13.2, fill=decay.color, weight="700", style=style)
+    p.text(drawing, "slope = -n", guide_point.x - 22, guide_point.y + 70, 10.4, fill=decay.color, style=style)
+    p.text(drawing, "t (s)", axis_origin.x + plot.width - 48, axis_origin.y + plot.height - 5, 10.2, fill=palette.ink, style=style)
 
     deb = _local_box(scene, obj.column, "debye_tau")
-    p.text(drawing, "Debye", deb.center.x, deb.y, 10.0, fill=palette.ink, italic=True, anchor="middle", style=style)
-    p.text(drawing, "exp(-t/tau)", deb.center.x, deb.y + 16, 9.8, fill=palette.ink, italic=True, anchor="middle", style=style)
-    p.arrow(drawing, Point(deb.center.x, deb.y + 56), Point(deb.center.x, deb.y + 86), palette.ink, width=1.1, head_length=8, head_width=7)
-    p.text(drawing, "tau_d", deb.center.x, deb.y + 111, 13, fill=palette.ink, italic=True, anchor="middle", style=style)
+    deb_box = Rect(deb.x - 11, deb.y - 14, deb.width + 22, 43)
+    p.rounded_rect(drawing, deb_box, fill="#ffffff", stroke=palette.rule, radius=4, stroke_width=0.8, opacity=0.96)
+    p.text(drawing, "Debye", deb.center.x, deb.y - 1, 10.8, fill=palette.ink, italic=True, anchor="middle", style=style)
+    p.text(drawing, "exp(-t/tau)", deb.center.x, deb.y + 16, 10.2, fill=palette.ink, italic=True, anchor="middle", style=style)
+    p.arrow(drawing, Point(deb.center.x, deb.y + 53), Point(deb.center.x, deb.y + 86), palette.ink, width=1.25, head_length=9, head_width=8)
+    p.text(drawing, "tau_d", deb.center.x, deb.y + 112, 14.0, fill=palette.ink, italic=True, anchor="middle", style=style)
 
     callout = _local_box(scene, obj.column, "interpretation_callout")
-    drawing.append(draw.Line(callout.x + 18, callout.y, callout.right - 18, callout.y, stroke=palette.rule, stroke_width=1.0, opacity=0.82))
+    conclusion_band = Rect(callout.x + 10, callout.y + 2, callout.width - 20, callout.height - 8)
+    p.rounded_rect(drawing, conclusion_band, fill="#f7f9fc", stroke="#dfe6f1", radius=5, stroke_width=0.85, opacity=0.96)
     for index, line in enumerate(("Convergence to deep traps (tau_d) explains the", "extended repulsion.")):
         _panel_text(
             drawing,
             line,
             callout.center.x,
-            callout.y + 27 + index * 18,
-            12.8,
+            callout.y + 25 + index * 18,
+            13.4,
             role="interpretation-conclusion panel-conclusion",
-            fill=palette.muted,
+            fill=palette.ink if index == 0 else palette.muted,
             italic=True,
             anchor="middle",
             style=style,

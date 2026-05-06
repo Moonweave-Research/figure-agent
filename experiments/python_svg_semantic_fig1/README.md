@@ -55,6 +55,9 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `causal_reference_handback_v16.md`
 - `causal_visibility_handback_v17.md`
 - `causal_readability_handback_v18.md`
+- `reference_fidelity_execution_prompt_v19.md`
+- `reference_fidelity_audit_v19.md`
+- `reference_fidelity_handback_v19.md`
 - `framework_probe_01_handback.md`
 - `framework_probe_02_handback.md`
 - `reference_scaffold_first_pivot_plan.md`
@@ -70,6 +73,8 @@ The v16 causal binding layer keeps that visual scaffold authority unchanged whil
 The v17 causal visibility layer makes selected v16 bindings visible without replacing the scaffold: origin labels show `S-rich segments` and `localized traps`, the current-decay plot shows `extract n`, the interpretation flow shows `I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)`, and the hero callout names the `Converged trap-depth picture`. This is an intentional visual semantic update and still requires human visual review before publication-grade approval.
 
 The v18 readability polish keeps the v17 semantic content unchanged while repositioning and scaling those existing visible causal cues. It also adds `src/run_fig1_gates.py` as a thin runner for the existing Fig1 gates and `src/verify_fig1_baseline_hash.py` to pin the settled v18 baseline hash. No absolute min-font-size verifier is added; readability remains human-review territory, and human visual review remains required before publication-grade approval.
+
+The v19 reference-fidelity pass starts from `reference_fidelity_execution_prompt_v19.md` and `reference_fidelity_audit_v19.md`. It keeps the existing scaffold and semantics, then strengthens only the interpretation and electrical evidence panels: the interpretation chain regains lightweight step hierarchy, the Debye bridge/conclusion band read more deliberately, and the electrical schematic plots gain stronger axis/curve/label hierarchy without adding real plot frames or dense numeric ticks. Human visual review remains required before publication-grade approval.
 
 ## Second-Figure Framework Probe
 
