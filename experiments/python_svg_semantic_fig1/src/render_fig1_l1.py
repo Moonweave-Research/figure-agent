@@ -281,11 +281,11 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
     p.text(drawing, "Increasing sulfur content", ramp.center.x, ramp.y + 31, 12.2, fill=palette.ink, italic=True, anchor="middle", style=style)
 
     bullet_box = column.box("bullet_list")
-    relation_y = bullet_box.y + 34
+    relation_y = bullet_box.y + 30
     relation_labels = (
-        ("S-rich segments", bullet_box.x + 39, "origin-s-rich-segments"),
+        ("S-rich segments", bullet_box.x + 45, "origin-s-rich-segments"),
         ("S-chain length", bullet_box.center.x, None),
-        ("localized traps", bullet_box.right - 48, "origin-localized-traps"),
+        ("localized traps", bullet_box.right - 52, "origin-localized-traps"),
     )
     for index, (label, x, causal_role) in enumerate(relation_labels):
         drawing.append(draw.Circle(x, relation_y, 3.0, fill=palette.sulfur_brown, opacity=0.72))
@@ -293,8 +293,8 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
             drawing,
             label,
             x,
-            relation_y + 24,
-            11.6,
+            relation_y + 27,
+            12.6,
             role="origin-relation",
             fill=palette.ink if index < 2 else palette.deep_red,
             italic=True,
@@ -309,7 +309,7 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
         drawing,
         "Chemical + physical origin set trap density.",
         bullet_box.center.x,
-        bullet_box.bottom - 5,
+        bullet_box.bottom - 3,
         11.2,
         role="origin-relation panel-conclusion",
         fill=palette.muted,
@@ -331,7 +331,7 @@ def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
     )
     p.text(drawing, payload.subtitle, col.center.x, col.y + 78, style.typography.subtitle_size, fill=palette.muted, anchor="middle", style=style)
     callout = _local_box(scene, obj.column, "hero_callout")
-    compact_callout = Rect(callout.x + 24, callout.y + 8, callout.width - 48, callout.height - 22)
+    compact_callout = Rect(callout.x + 18, callout.y + 5, callout.width - 36, callout.height - 16)
     p.rounded_rect(drawing, compact_callout, fill="#fff8f7", stroke=palette.deep_red_light, radius=6, stroke_width=0.75, opacity=0.82)
     caption_lines = (
         (payload.converged_picture_label.replace("converged", "Converged", 1), "hero-converged-picture"),
@@ -342,8 +342,8 @@ def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
             drawing,
             line,
             compact_callout.center.x,
-            compact_callout.y + 27 + index * 20,
-            style.typography.callout_size,
+            compact_callout.y + 31 + index * 22,
+            style.typography.callout_size + 1.0,
             role="hero-caption",
             fill=palette.deep_red,
             italic=True,
@@ -972,8 +972,8 @@ def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
         drawing,
         obj.id,
         "extract n",
-        Point(frame.x + frame.width * 0.64, frame.y + frame.height * 0.58),
-        9.0,
+        Point(frame.x + frame.width * 0.70, frame.y + frame.height * 0.64),
+        10.4,
         fill=payload.color,
         style=style,
         italic=True,
@@ -1053,7 +1053,12 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
     previous_center: Point | None = None
     for index, step in enumerate(display_steps):
         center = Point(flow_strip.x + index * box_w + box_w / 2 - 4, flow_strip.center.y)
-        display_step = "Debye\nexp(-t/tau)" if step == "Debye exp(-t/tau)" else step
+        if step == "I(t) ~ t^-n":
+            display_step = "I(t) ~\nt^-n"
+        elif step == "Debye exp(-t/tau)":
+            display_step = "Debye\nexp(-t/tau)"
+        else:
+            display_step = step
         lines = display_step.split("\n")
         causal_role = causal_roles[index] if index < len(causal_roles) else None
         if len(lines) == 1:
@@ -1061,8 +1066,8 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
                 drawing,
                 step,
                 center.x,
-                flow_strip.y + 12,
-                11.2 if len(step) <= 8 else 9.7,
+                flow_strip.y + 14,
+                12.0 if len(step) <= 8 else 10.8,
                 role="interpretation-causal-step",
                 fill=palette.ink,
                 anchor="middle",
@@ -1076,8 +1081,8 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
                     drawing,
                     line,
                     center.x,
-                    flow_strip.y + 6 + line_index * 10.8,
-                    9.5,
+                    flow_strip.y + 9 + line_index * 12.0,
+                    10.8,
                     role="interpretation-causal-step",
                     fill=palette.ink,
                     anchor="middle",

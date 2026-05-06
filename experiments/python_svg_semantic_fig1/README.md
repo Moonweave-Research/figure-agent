@@ -18,6 +18,8 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/verify_fig1_causal_binding.py`
 - `src/verify_fig1_causal_visibility.py`
 - `src/fig1_visual_policies.py`
+- `src/run_fig1_gates.py`
+- `src/verify_fig1_baseline_hash.py`
 - `src/check_fig1_docs_manifest.py`
 - `src/fig_probe_01_scene.py`
 - `src/render_fig_probe_01.py`
@@ -52,6 +54,7 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `scaffold_contract_handback_v15.md`
 - `causal_reference_handback_v16.md`
 - `causal_visibility_handback_v17.md`
+- `causal_readability_handback_v18.md`
 - `framework_probe_01_handback.md`
 - `framework_probe_02_handback.md`
 - `reference_scaffold_first_pivot_plan.md`
@@ -65,6 +68,8 @@ The reference PNG is layout/style evidence only for this pilot. It is not ground
 The v16 causal binding layer keeps that visual scaffold authority unchanged while treating the user-provided causal diagram as a semantic reference only. It binds the narrative chain `I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)`, S-rich segments, localized traps, chemical/physical origin cues, and the converged trap-depth picture into typed payload fields and a separate verifier. The causal diagram is not ground_truth and is not a pixel-tracing target.
 
 The v17 causal visibility layer makes selected v16 bindings visible without replacing the scaffold: origin labels show `S-rich segments` and `localized traps`, the current-decay plot shows `extract n`, the interpretation flow shows `I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)`, and the hero callout names the `Converged trap-depth picture`. This is an intentional visual semantic update and still requires human visual review before publication-grade approval.
+
+The v18 readability polish keeps the v17 semantic content unchanged while repositioning and scaling those existing visible causal cues. It also adds `src/run_fig1_gates.py` as a thin runner for the existing Fig1 gates and `src/verify_fig1_baseline_hash.py` to pin the settled v18 baseline hash. No absolute min-font-size verifier is added; readability remains human-review territory, and human visual review remains required before publication-grade approval.
 
 ## Second-Figure Framework Probe
 
@@ -135,8 +140,10 @@ python experiments/python_svg_semantic_fig1/src/check_fig1_docs_manifest.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_scaffold_contract.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_causal_binding.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_causal_visibility.py
+python experiments/python_svg_semantic_fig1/src/run_fig1_gates.py
+python experiments/python_svg_semantic_fig1/src/verify_fig1_baseline_hash.py
 python -m xml.etree.ElementTree experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg
 rsvg-convert -w 1595 -h 986 experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg -o /tmp/fig1_reference_semantic_check.png
 ```
 
-`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, historical reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, reference probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, and visible-geometry payload mutation behavior. `verify_fig1_scaffold_contract.py` is the explicit scaffold verifier for panel loading, local box containment, object-slot binding, flow-anchor binding, and reference provenance. `verify_fig1_causal_binding.py` checks that the v16 causal diagram stays semantic-only while binding the experiment-to-Debye-to-`g(Et)` chain and molecular-origin cues into payloads. `verify_fig1_causal_visibility.py` checks that those causal bindings are visible as role-tagged SVG text. Fig1-specific visual policy caps from v12-v14 live in `fig1_visual_policies.py`, while README/handback governance lives in `check_fig1_docs_manifest.py`.
+`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, historical reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, reference probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, and visible-geometry payload mutation behavior. `verify_fig1_scaffold_contract.py` is the explicit scaffold verifier for panel loading, local box containment, object-slot binding, flow-anchor binding, and reference provenance. `verify_fig1_causal_binding.py` checks that the v16 causal diagram stays semantic-only while binding the experiment-to-Debye-to-`g(Et)` chain and molecular-origin cues into payloads. `verify_fig1_causal_visibility.py` checks that those causal bindings are visible as role-tagged SVG text. `run_fig1_gates.py` chains the existing Fig1 gates and summarizes pass/fail, while `verify_fig1_baseline_hash.py` checks the v18 baseline hash. Fig1-specific visual policy caps from v12-v14 live in `fig1_visual_policies.py`, while README/handback governance lives in `check_fig1_docs_manifest.py`.
