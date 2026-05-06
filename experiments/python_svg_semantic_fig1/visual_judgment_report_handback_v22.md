@@ -6,7 +6,7 @@ This pass adds a report-only visual judgment layer for Fig1. It is not a rendere
 
 ## Implemented Boundary
 
-- `src/report_fig1_visual_judgment.py` generates `fig1_visual_judgment_report.md` and `fig1_visual_judgment_report.json`.
+- `src/report_fig1_visual_judgment.py` generates tracked `fig1_visual_judgment_report.md` and an ignored local `fig1_visual_judgment_report.json` sidecar.
 - `src/test_fig1_visual_judgment_report.py` checks the report contract and confirms that the script is not added to `src/run_fig1_gates.py`.
 - The report reuses SVG bbox extraction for semantic object bounds and enriches visible text records with role tags from invisible SVG role markers.
 - No origin, hero, electrical evidence, interpretation, or probe layout changes were made.
@@ -37,6 +37,16 @@ The v21 probe force decision remains intentional: `force_target=cantilever` with
 
 ## Output Interpretation
 
-`fig1_visual_judgment_report.md` is the human-facing review surface. `fig1_visual_judgment_report.json` is the structured sidecar for future agents. The JSON includes panel bounds, semantic object bboxes, visible text bboxes, role tags, font sizes, panel density estimates, near-collision candidates, hierarchy notes, reading-order evidence, reference-divergence notes, and human review prompts.
+`fig1_visual_judgment_report.md` is the human-facing review surface and is the only tracked report artifact. `fig1_visual_judgment_report.json` is an ignored local structured sidecar for future agents. The JSON includes panel bounds, semantic object bboxes, visible text bboxes, role tags, font sizes, panel density estimates, near-collision candidates, hierarchy notes, reading-order evidence, reference-divergence notes, and human review prompts.
+
+## v23 Cleanup Note
+
+The follow-up cleanup keeps the report layer non-strict while reducing governance creep and misinformation risk:
+
+- Reference-divergence wording must reflect the actual `ForceArrow.force_target` and vector direction.
+- Known composite labels should not dominate text/text collision prompts.
+- Human review prompts should draw from multiple categories instead of being saturated by panel density.
+- The bbox-area hierarchy metric is retained only as a salience proxy and evidence item.
+- The JSON sidecar remains generated locally but is not a required tracked artifact.
 
 The report helps the next agent and human reviewer inspect visual risks. It does not claim publication-grade approval and does not replace human visual review.

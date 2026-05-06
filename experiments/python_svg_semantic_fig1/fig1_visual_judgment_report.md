@@ -21,32 +21,18 @@ Human visual review remains required before publication-grade approval.
 - candidate risk: macroscopic_probe_card has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.
 
 ### Text / Text Near-Collision
-- possible issue: deep_trap_hero_card text boxes may compete at 0.0px gap: 'Et ~' near '0.5-1.0 eV'.
-- possible issue: interpretation_card text boxes may compete at 0.0px gap: 'I(t) ~' near 't^-n'.
-- possible issue: interpretation_card text boxes may compete at 0.0px gap: 'Debye' near 'exp(-t/tau)'.
 - possible issue: macroscopic_probe_card text boxes may compete at 0.0px gap: '+' near 'Force on cantilever'.
-- possible issue: polymer_origin_card text boxes may compete at 0.0px gap: 'S-chain length' near 'localized traps'.
-- possible issue: deep_trap_hero_card text boxes may compete at 0.5px gap: 'deep' near 'states'.
-- possible issue: deep_trap_hero_card text boxes may compete at 0.6px gap: 'shallow' near 'states'.
 - candidate risk: polymer_origin_card text boxes may compete at 2.0px gap: 'S-rich segments' near 'S-chain length'.
 - candidate risk: polymer_origin_card text boxes may compete at 2.3px gap: 'Sulfur polymer origin' near '(composition tuning)'.
-- candidate risk: interpretation_card text boxes may compete at 2.6px gap: 'Convergence to deep traps (tau_...' near 'extended repulsion.'.
-- candidate risk: macroscopic_probe_card text boxes may compete at 3.2px gap: 'Cantilever' near '(probe)'.
 - candidate risk: electrical_evidence_card text boxes may compete at 4.6px gap: 'slope = -n' near 'extract n'.
 
 ### Text / Shape Conflict
-- possible issue: macroscopic_probe_card text 'Cantilever' is 0.0px from path mark (path); inspect label ownership and legibility.
-- possible issue: macroscopic_probe_card text '(probe)' is 0.0px from path mark (path); inspect label ownership and legibility.
-- possible issue: macroscopic_probe_card text '+' is 0.0px from path mark (path); inspect label ownership and legibility.
-- possible issue: macroscopic_probe_card text 'Force on cantilever' is 0.0px from path mark (path); inspect label ownership and legibility.
-- possible issue: macroscopic_probe_card text 'Force on cantilever' is 0.0px from circle mark (circle); inspect label ownership and legibility.
-- possible issue: macroscopic_probe_card text 'Maxwell attraction' is 0.0px from path mark (path); inspect label ownership and legibility.
 - candidate risk: deep_trap_hero_card text 'deep' is 2.2px from path mark (path); inspect label ownership and legibility.
 - candidate risk: deep_trap_hero_card text 'states' is 2.2px from path mark (path); inspect label ownership and legibility.
 
 ### Visual Hierarchy
 - evidence: hero maximum text size (24.0) exceeds support maximum (18.0); hierarchy appears intentional but still needs visual review.
-- candidate risk: primary semantic objects occupy about 0.25 of semantic bbox area; inspect whether semantic importance and visual weight still match.
+- evidence: bbox salience proxy: selected primary semantic objects occupy about 0.25 of semantic bbox area; use this as evidence only, not a visual hierarchy failure.
 
 ### Reading Order
 - evidence: likely panel reading order by top-left position: polymer_origin_card -> electrical_evidence_card -> deep_trap_hero_card -> interpretation_card -> macroscopic_probe_card.
@@ -57,18 +43,18 @@ Human visual review remains required before publication-grade approval.
 - evidence: macroscopic_probe_card first text sequence by bbox position: Macroscopic probe -> Cantilever -> (probe) -> + V -> Force on cantil... -> +.
 
 ### Reference Divergence
-- evidence: intentional v21 divergence retained: force_target=cantilever with arrow_direction=cantilever_leftward_repulsion; reference PNG remains layout/style evidence only.
-- inspect: No additional reference divergence is inferred by this script; inspect any future visual changes against scaffold, physics, readability, and causal-clarity reasons before treating them as justified.
+- evidence: intentional v21 divergence retained: probe force vector observed: force_target=cantilever, leftward=True, arrow_direction=cantilever_leftward_repulsion; v21 contract expects force_target=cantilever and leftward=True.
+- inspect: This report records the known v21 probe-force divergence only; inspect any other reference divergence manually against scaffold, physics, readability, and causal-clarity reasons before treating it as justified.
 
 ### Human Review Prompts
-- inspect: Inspect whether the leftward cantilever force arrow still reads clearly in the probe panel after the v21 physics divergence.
-- inspect: Inspect whether the center hero still receives first visual attention before support-panel details.
-- inspect: Inspect candidate crowded or sparse panels against the intended narrative order, not as automatic failures.
+- inspect: Inspect reference divergence: intentional v21 divergence retained: probe force vector observed: force_target=cantilever, leftward=True, arrow_direction=cantilever_leftward_repulsion; v21 contract expects force_target=cantilever and leftward=True.
+- inspect: Inspect text / text near-collision: macroscopic_probe_card text boxes may compete at 0.0px gap: '+' near 'Force on cantilever'.
+- inspect: Inspect text / shape conflict: deep_trap_hero_card text 'deep' is 2.2px from path mark (path); inspect label ownership and legibility.
+- inspect: Inspect visual hierarchy: hero maximum text size (24.0) exceeds support maximum (18.0); hierarchy appears intentional but still needs visual review.
 - inspect: Inspect panel density: polymer_origin_card has high approximate occupied area (0.86); inspect whether panel density harms first-pass reading.
-- inspect: Inspect panel density: electrical_evidence_card has moderate-high approximate occupied area (0.63); inspect whether whitespace is sufficient for scanning.
-- inspect: Inspect panel density: deep_trap_hero_card has high approximate occupied area (0.74); inspect whether panel density harms first-pass reading.
-- inspect: Inspect panel density: interpretation_card has high approximate occupied area (0.72); inspect whether panel density harms first-pass reading.
-- inspect: Inspect panel density: macroscopic_probe_card has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.
+- inspect: Inspect reading order: likely panel reading order by top-left position: polymer_origin_card -> electrical_evidence_card -> deep_trap_hero_card -> interpretation_card -> macroscopic_probe_card.
+- inspect: Inspect text / text near-collision: polymer_origin_card text boxes may compete at 2.0px gap: 'S-rich segments' near 'S-chain length'.
+- inspect: Inspect text / text near-collision: polymer_origin_card text boxes may compete at 2.3px gap: 'Sulfur polymer origin' near '(composition tuning)'.
 
 ## Evidence Snapshot
 

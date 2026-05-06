@@ -18,6 +18,7 @@ __pycache__/
 # Track directories (via .gitkeep) but ignore contents by default.
 # To commit a finished export, use `git add -f examples/<name>/exports/<file>`.
 /output/
+experiments/python_svg_semantic_fig1/fig1_visual_judgment_report.json
 **/build/*
 **/exports/*
 **/previews/*

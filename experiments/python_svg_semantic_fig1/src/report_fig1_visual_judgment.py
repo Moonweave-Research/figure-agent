@@ -53,6 +53,23 @@ SHAPE_CONFLICT_ROLES = (
     "threshold",
     "trap",
 )
+EXPECTED_COMPOSITE_TEXT_PAIRS = {
+    frozenset(("Et ~", "0.5-1.0 eV")),
+    frozenset(("I(t) ~", "t^-n")),
+    frozenset(("Debye", "exp(-t/tau)")),
+    frozenset(("deep", "states")),
+    frozenset(("shallow", "states")),
+    frozenset(("Cantilever", "(probe)")),
+    frozenset(("Convergence to deep traps (tau_d)", "extended repulsion.")),
+}
+PROBE_OWNED_TEXT_LABELS = {
+    "+",
+    "+ V",
+    "Cantilever",
+    "(probe)",
+    "Force on cantilever",
+    "Maxwell attraction",
+}
 
 
 def build_visual_judgment_report(scene: Scene, svg_path: str | Path = SVG) -> dict[str, Any]:
@@ -351,6 +368,8 @@ def _text_near_collision_category(text_boxes: list[dict[str, Any]]) -> dict[str,
         for second in text_boxes[index + 1 :]:
             if first["panel_id"] != second["panel_id"]:
                 continue
+            if _is_expected_text_pair(first, second):
+                continue
             distance = _bbox_gap(_bbox_from_record(first["bbox"]), _bbox_from_record(second["bbox"]))
             if distance <= 5.0:
                 candidates.append((distance, first, second))
@@ -395,6 +414,8 @@ def _text_shape_conflict_category(
         text_bbox = _bbox_from_record(text["bbox"])
         for shape in conflict_shapes:
             if text["panel_id"] != shape["panel_id"]:
+                continue
+            if _is_expected_text_shape_pair(text, shape):
                 continue
             shape_bbox = shape["bbox_obj"]
             distance = _bbox_gap(text_bbox, shape_bbox)
@@ -487,13 +508,12 @@ def _visual_hierarchy_category(
     primary_area = sum(item["area"] for item in primary_records)
     all_area = sum(item["area"] for item in semantic_boxes)
     primary_ratio = primary_area / all_area if all_area else 0.0
-    severity = "candidate risk" if primary_ratio < 0.42 else "evidence"
     items.append(
         {
-            "severity": severity,
+            "severity": "evidence",
             "message": (
-                f"primary semantic objects occupy about {primary_ratio:.2f} of semantic bbox area; "
-                "inspect whether semantic importance and visual weight still match."
+                f"bbox salience proxy: selected primary semantic objects occupy about {primary_ratio:.2f} "
+                "of semantic bbox area; use this as evidence only, not a visual hierarchy failure."
             ),
         }
     )
@@ -555,20 +575,31 @@ def _reading_order_category(
 
 def _reference_divergence_category(scene: Scene) -> dict[str, Any]:
     force_arrow = scene.object_by_id("repulsion_arrow").payload
-    direction = "cantilever_leftward_repulsion" if force_arrow.end.x < force_arrow.start.x else "non_leftward_probe_force"
+    target = getattr(force_arrow, "force_target", "") or "unspecified"
+    actual_leftward = force_arrow.end.x < force_arrow.start.x
+    if target == "cantilever" and actual_leftward:
+        direction = "cantilever_leftward_repulsion"
+    elif target == "electrode" and not actual_leftward:
+        direction = "electrode_rightward_reaction"
+    elif target == "interaction_cue":
+        direction = "interaction_cue"
+    else:
+        direction = "force_target_mismatch"
+    v21_contract_ok = target == "cantilever" and actual_leftward
     items = [
         {
-            "severity": "evidence",
+            "severity": "evidence" if v21_contract_ok else "possible issue",
             "message": (
-                "intentional v21 divergence retained: force_target=cantilever with "
-                f"arrow_direction={direction}; reference PNG remains layout/style evidence only."
+                ("intentional v21 divergence retained: " if v21_contract_ok else "")
+                + f"probe force vector observed: force_target={target}, leftward={actual_leftward}, "
+                f"arrow_direction={direction}; v21 contract expects force_target=cantilever and leftward=True."
             ),
         },
         {
             "severity": "inspect",
             "message": (
-                "No additional reference divergence is inferred by this script; inspect any future visual changes "
-                "against scaffold, physics, readability, and causal-clarity reasons before treating them as justified."
+                "This report records the known v21 probe-force divergence only; inspect any other reference divergence "
+                "manually against scaffold, physics, readability, and causal-clarity reasons before treating it as justified."
             ),
         },
     ]
@@ -576,18 +607,45 @@ def _reference_divergence_category(scene: Scene) -> dict[str, Any]:
 
 
 def _human_review_prompts(categories: list[dict[str, Any]]) -> list[str]:
-    prompts = [
-        "Inspect whether the leftward cantilever force arrow still reads clearly in the probe panel after the v21 physics divergence.",
-        "Inspect whether the center hero still receives first visual attention before support-panel details.",
-        "Inspect candidate crowded or sparse panels against the intended narrative order, not as automatic failures.",
-    ]
-    for category in categories:
+    prompts: list[str] = []
+    used_messages: set[str] = set()
+    category_by_name = {category["name"]: category for category in categories}
+    priority = (
+        "Reference Divergence",
+        "Text / Text Near-Collision",
+        "Text / Shape Conflict",
+        "Visual Hierarchy",
+        "Panel Density",
+        "Reading Order",
+    )
+
+    for name in priority:
+        category = category_by_name.get(name)
+        if not category:
+            continue
+        item = _first_prompt_item(category, allow_evidence=name in {"Reference Divergence", "Visual Hierarchy", "Reading Order"})
+        if item is None:
+            continue
+        prompts.append(f"Inspect {name.lower()}: {item['message']}")
+        used_messages.add(item["message"])
+        if len(prompts) >= 8:
+            return prompts
+
+    for name in priority:
+        category = category_by_name.get(name)
+        if not category:
+            continue
         for item in category["items"]:
-            if item["severity"] in {"possible issue", "candidate risk"}:
-                prompts.append(f"Inspect {category['name'].lower()}: {item['message']}")
-                if len(prompts) >= 8:
-                    return prompts
-    return prompts
+            if item["message"] in used_messages:
+                continue
+            if item["severity"] not in {"possible issue", "candidate risk"}:
+                continue
+            prompts.append(f"Inspect {name.lower()}: {item['message']}")
+            used_messages.add(item["message"])
+            if len(prompts) >= 8:
+                return prompts
+
+    return prompts or ["Inspect the rendered figure visually; this report did not infer a candidate risk."]
 
 
 def _walk_svg_elements(
@@ -630,6 +688,46 @@ def _shape_has_conflict_role(shape: dict[str, Any]) -> bool:
     if shape["tag"] in {"path", "line", "circle"} and shape.get("semantic_id"):
         return True
     return False
+
+
+def _is_expected_text_pair(first: dict[str, Any], second: dict[str, Any]) -> bool:
+    if frozenset((first["text"], second["text"])) in EXPECTED_COMPOSITE_TEXT_PAIRS:
+        return True
+    if first["semantic_id"] and first["semantic_id"] == second["semantic_id"]:
+        return _looks_like_label_continuation(first, second)
+    return False
+
+
+def _looks_like_label_continuation(first: dict[str, Any], second: dict[str, Any]) -> bool:
+    first_box = first["bbox"]
+    second_box = second["bbox"]
+    vertical_gap = _bbox_gap(_bbox_from_record(first_box), _bbox_from_record(second_box))
+    horizontal_overlap = min(first_box["right"], second_box["right"]) - max(first_box["left"], second_box["left"])
+    return vertical_gap <= 6.0 and horizontal_overlap > 0
+
+
+def _is_expected_text_shape_pair(text: dict[str, Any], shape: dict[str, Any]) -> bool:
+    if text["semantic_id"] and text["semantic_id"] == shape["semantic_id"]:
+        return True
+    if text["panel_id"] == "macroscopic_probe_card" and text["text"] in PROBE_OWNED_TEXT_LABELS:
+        return shape.get("semantic_kind") in {
+            "MacroscopicProbe",
+            "PolymerCantilever",
+            "Electrode",
+            "ForceArrow",
+            "MaxwellAttractionCue",
+        }
+    return False
+
+
+def _first_prompt_item(category: dict[str, Any], *, allow_evidence: bool = False) -> dict[str, str] | None:
+    severities = {"possible issue", "candidate risk"}
+    if allow_evidence:
+        severities.add("evidence")
+    for item in category["items"]:
+        if item["severity"] in severities:
+            return item
+    return None
 
 
 def _merge_invisible_text_role_markers(records: list[dict[str, Any]]) -> list[dict[str, Any]]:

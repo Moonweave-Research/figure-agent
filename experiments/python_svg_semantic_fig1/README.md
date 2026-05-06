@@ -68,7 +68,6 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `probe_force_target_options_v21.md`
 - `probe_force_target_handback_v21.md`
 - `fig1_visual_judgment_report.md`
-- `fig1_visual_judgment_report.json`
 - `visual_judgment_report_handback_v22.md`
 - `framework_probe_01_handback.md`
 - `framework_probe_02_handback.md`
@@ -92,7 +91,7 @@ The v20 physics sanity layer starts from the v20 physics sanity inventory and ad
 
 The v21 probe force-target pass follows `probe_force_target_options_v21.md` and locks the macroscopic probe arrow as `force_target="cantilever"`. This intentionally diverges from the rightward reference-style cue: with positive trapped charges next to a positive right-side electrode, the force on the cantilever is leftward, away from the electrode. The rendered SVG now exposes `arrow_direction=cantilever_leftward_repulsion`, and the physics gate also checks charge/electrode separation, force-arrow start proximity, and bend-state consistency. Human visual review remains required before publication-grade approval.
 
-The v22 visual judgment report layer adds `src/report_fig1_visual_judgment.py` as a report-only inspection surface. It reads the rendered SVG and scene payloads, reuses SVG bbox extraction, and writes `fig1_visual_judgment_report.md` plus `fig1_visual_judgment_report.json` with panel density, text/text near-collision, text/shape conflict, visual hierarchy, reading-order, reference-divergence, and human-review-prompt sections. It is not added to `src/run_fig1_gates.py`, does not add absolute min-font-size rules, does not pixel-trace the reference image, and does not claim publication-grade approval. Human visual review remains required before publication-grade approval.
+The v22 visual judgment report layer adds `src/report_fig1_visual_judgment.py` as a report-only inspection surface. It reads the rendered SVG and scene payloads, reuses SVG bbox extraction, and writes the tracked `fig1_visual_judgment_report.md` plus an ignored local `fig1_visual_judgment_report.json` sidecar with panel density, text/text near-collision, text/shape conflict, visual hierarchy, reading-order, reference-divergence, and human-review-prompt sections. It is not added to `src/run_fig1_gates.py`, does not add absolute min-font-size rules, does not pixel-trace the reference image, and does not claim publication-grade approval. Human visual review remains required before publication-grade approval.
 
 ## Second-Figure Framework Probe
 
