@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1200" height="620" viewBox="0 0 1200 620">
+<defs>
+</defs>
+<rect x="0" y="0" width="1200" height="620" fill="#ffffff" />
+
+<defs>
+  <linearGradient id="sulfurSwatch" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#f8d86b"/>
+    <stop offset="38%" stop-color="#e8b640"/>
+    <stop offset="70%" stop-color="#c88a27"/>
+    <stop offset="100%" stop-color="#825218"/>
+  </linearGradient>
+  <linearGradient id="badgeSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#ffffff"/>
+    <stop offset="100%" stop-color="#f5f8fc"/>
+  </linearGradient>
+  <linearGradient id="bandFill" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#ffffff"/>
+    <stop offset="100%" stop-color="#e9edf2"/>
+  </linearGradient>
+  <linearGradient id="deepDosFill" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#fbe1df" stop-opacity="0.92"/>
+    <stop offset="64%" stop-color="#dc6868" stop-opacity="0.66"/>
+    <stop offset="100%" stop-color="#a81016" stop-opacity="0.28"/>
+  </linearGradient>
+  <linearGradient id="shallowDosFill" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#e8f2ff" stop-opacity="0.92"/>
+    <stop offset="100%" stop-color="#1f6fd0" stop-opacity="0.28"/>
+  </linearGradient>
+  <linearGradient id="polymerBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#f4d46c"/>
+    <stop offset="55%" stop-color="#c28a25"/>
+    <stop offset="100%" stop-color="#8a5b18"/>
+  </linearGradient>
+  <linearGradient id="metalSheen" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#677282"/>
+    <stop offset="42%" stop-color="#edf1f5"/>
+    <stop offset="100%" stop-color="#7b8594"/>
+  </linearGradient>
+  <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+    <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#182032" flood-opacity="0.10"/>
+  </filter>
+  <filter id="softInsetShadow" x="-15%" y="-15%" width="130%" height="130%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#182032" flood-opacity="0.12"/>
+  </filter>
+  <filter id="deepGlow" x="-55%" y="-55%" width="210%" height="210%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+    <feColorMatrix in="blur" type="matrix" values="0.65 0 0 0 0.35  0 0.05 0 0 0  0 0 0.05 0 0  0 0 0 0.45 0" result="glow"/>
+    <feMerge>
+      <feMergeNode in="glow"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+  <pattern id="polymerGrain" patternUnits="userSpaceOnUse" width="18" height="18">
+    <path d="M2 12 C6 8, 11 16, 17 7" fill="none" stroke="#fff0b8" stroke-width="0.9" opacity="0.42"/>
+    <circle cx="5" cy="5" r="0.75" fill="#6b4211" opacity="0.28"/>
+    <circle cx="13" cy="14" r="0.7" fill="#fff4cb" opacity="0.55"/>
+  </pattern>
+</defs>
+
+<text x="52" y="48" font-size="23" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Framework probe 01 | second semantic figure</text>
+<text x="52" y="72" font-size="12.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">No reference image, no Fig1 policy roles; shared engine primitives only.</text>
+<text x="8" y="8" font-size="1" fill="none" font-family="Helvetica, Arial, sans-serif" data-probe-role="probe-scene-id">fig_probe_01</text>
+<rect x="42" y="92" width="318" height="450" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="54" y="104" width="294" height="426" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="201.0" y="134" font-size="17" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe-role="column-title">Material context</text>
+<rect x="442" y="72" width="330" height="490" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="454" y="84" width="306" height="466" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="607.0" y="114" font-size="17" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe-role="column-title">Payload trap model</text>
+<rect x="844" y="92" width="314" height="450" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="856" y="104" width="290" height="426" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="1001.0" y="134" font-size="17" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe-role="column-title">Interpretation cue</text>
+<g id="semantic-probe_layout_flow" data-semantic-id="probe_layout_flow" data-semantic-kind="LayoutFlow" data-payload-geometry="direction=material_to_payload_to_interpretation arrow_count=2">
+<title>LayoutFlow:probe_layout_flow</title>
+<path d="M368,315 L416.0,315.0" stroke="#69707a" stroke-width="1.5" stroke-linecap="round" opacity="0.34" data-probe-role="flow-arrow" />
+<path d="M430,315 L416.0,308.5 L416.0,321.5 Z" fill="#69707a" opacity="0.34" data-probe-role="flow-arrow" />
+<path d="M782,315 L820.0,315.0" stroke="#69707a" stroke-width="1.5" stroke-linecap="round" opacity="0.34" data-probe-role="flow-arrow" />
+<path d="M834,315 L820.0,308.5 L820.0,321.5 Z" fill="#69707a" opacity="0.34" data-probe-role="flow-arrow" />
+</g>
+<g id="semantic-probe_material" data-semantic-id="probe_material" data-semantic-kind="SulfurPolymerOrigin" data-payload-geometry="s8_atoms=6 chain_atoms=5 swatches=3">
+<title>SulfurPolymerOrigin:probe_material</title>
+<path d="M101,218 L143,238" stroke="#8c5a18" stroke-width="2.2" opacity="0.78" />
+<path d="M143,238 L185,218" stroke="#8c5a18" stroke-width="2.2" opacity="0.78" />
+<path d="M185,218 L227,238" stroke="#8c5a18" stroke-width="2.2" opacity="0.78" />
+<path d="M227,238 L269,218" stroke="#8c5a18" stroke-width="2.2" opacity="0.78" />
+<circle cx="101" cy="218" r="13" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="97.36" cy="214.36" r="3.12" fill="#fff3b7" opacity="0.7" />
+<text x="101" y="222.68" font-size="12.35" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="143" cy="238" r="13" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="139.36" cy="234.36" r="3.12" fill="#fff3b7" opacity="0.7" />
+<text x="143" y="242.68" font-size="12.35" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="185" cy="218" r="13" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="181.36" cy="214.36" r="3.12" fill="#fff3b7" opacity="0.7" />
+<text x="185" y="222.68" font-size="12.35" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="227" cy="238" r="13" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="223.36" cy="234.36" r="3.12" fill="#fff3b7" opacity="0.7" />
+<text x="227" y="242.68" font-size="12.35" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="269" cy="218" r="13" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="265.36" cy="214.36" r="3.12" fill="#fff3b7" opacity="0.7" />
+<text x="269" y="222.68" font-size="12.35" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<text x="76" y="341" font-size="13" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">sulfur-rich feed</text>
+<text x="76" y="363" font-size="14" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">-Sx- network</text>
+<rect x="76.0" y="344" width="76.66666666666667" height="28" rx="3" ry="3" fill="#f5d97a" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<text x="114.33333333333334" y="390" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">low S</text>
+<rect x="158.66666666666669" y="344" width="76.66666666666667" height="28" rx="3" ry="3" fill="#d7a238" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<text x="197.00000000000003" y="390" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">mid S</text>
+<rect x="241.33333333333334" y="344" width="76.66666666666667" height="28" rx="3" ry="3" fill="#955f1e" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<text x="279.6666666666667" y="390" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">high S</text>
+<text x="76" y="462" font-size="12.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start">composition drives trap density</text>
+</g>
+<g id="semantic-probe_band" data-semantic-id="probe_band" data-semantic-kind="BandDiagram" data-payload-geometry="lumo=0.16 homo=0.86">
+<title>BandDiagram:probe_band</title>
+<path d="M498,466 L498.0,157.0" stroke="#171717" stroke-width="1.1" stroke-linecap="round" opacity="1.0" />
+<path d="M498,148 L494.0,157.0 L502.0,157.0 Z" fill="#171717" opacity="1.0" />
+<text x="490" y="136" font-size="11" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Energy</text>
+<path d="M516,198.88 L606,198.88" stroke="#171717" stroke-width="1.6" data-probe-role="band-lumo" />
+<text x="620" y="202.88" font-size="11.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">LUMO</text>
+<path d="M516,421.48 L606,421.48" stroke="#171717" stroke-width="1.6" data-probe-role="band-homo" />
+<text x="620" y="425.48" font-size="11.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">HOMO</text>
+</g>
+<g id="semantic-probe_traps" data-semantic-id="probe_traps" data-semantic-kind="TrapLevelSet" data-payload-geometry="shallow_count=2 deep_count=4 energy_reference=normalized_bandgap_lumo_to_homo">
+<title>TrapLevelSet:probe_traps</title>
+<path d="M530.28,246.57999999999998 L572.28,246.57999999999998" stroke="#1f6fd0" stroke-width="1.7" stroke-linecap="round" opacity="0.92" data-probe-role="trap-shallow" />
+<path d="M527.28,275.2 L575.28,275.2" stroke="#1f6fd0" stroke-width="1.7" stroke-linecap="round" opacity="0.92" data-probe-role="trap-shallow" />
+<path d="M522.28,326.08000000000004 L580.28,326.08000000000004" stroke="#a81016" stroke-width="2.0" stroke-linecap="round" opacity="0.92" data-probe-role="trap-deep" />
+<path d="M519.28,351.52 L583.28,351.52" stroke="#a81016" stroke-width="2.0" stroke-linecap="round" opacity="0.92" data-probe-role="trap-deep" />
+<path d="M516.28,376.96 L586.28,376.96" stroke="#a81016" stroke-width="2.0" stroke-linecap="round" opacity="0.92" data-probe-role="trap-deep" />
+<path d="M513.28,402.4 L589.28,402.4" stroke="#a81016" stroke-width="2.0" stroke-linecap="round" opacity="0.92" data-probe-role="trap-deep" />
+<text x="520" y="276" font-size="11" fill="#1f6fd0" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">shallow</text>
+<text x="526" y="380" font-size="12" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700" font-style="italic">deep</text>
+</g>
+<g id="semantic-probe_dos" data-semantic-id="probe_dos" data-semantic-kind="DOSLobes" data-payload-geometry="model=gaussian_mixture shallow_sigma=(0.24, 0.3) deep_sigma=(0.28, 0.4) samples=48">
+<title>DOSLobes:probe_dos</title>
+<path d="M611,448 L611.0,162.0" stroke="#171717" stroke-width="1.0" stroke-linecap="round" opacity="1.0" />
+<path d="M611,154 L607.5,162.0 L614.5,162.0 Z" fill="#171717" opacity="1.0" />
+<path d="M611,448 L724.0,448.0" stroke="#171717" stroke-width="1.0" stroke-linecap="round" opacity="1.0" />
+<path d="M732,448 L724.0,444.5 L724.0,451.5 Z" fill="#171717" opacity="1.0" />
+<path d="M611,448 L611,154" stroke="none" data-probe-role="dos-axis" />
+<path d="M611,448 L732,448" stroke="none" data-probe-role="dos-axis" />
+<text x="683.6" y="461" font-size="8.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">g(Et)</text>
+<text x="683.6" y="461" font-size="8.2" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-probe-role="dos-axis-label">g(Et)</text>
+<path d="M619,250.0 L720,250.0" stroke="#171717" stroke-width="0.85" stroke-dasharray="5 5" opacity="0.68" data-probe-role="dos-threshold" />
+<path d="M611,195.0 L611.0,195.0 L612.1846705014265,196.0212765957447 L612.8138621150753,197.04255319148936 L613.4574548562572,198.06382978723406 L614.1527947568869,199.08510638297872 L614.9125878032561,200.10638297872342 L615.7413317200283,201.12765957446808 L616.6389092674381,202.14893617021278 L617.6016793000663,203.17021276595744 L618.6228786631149,204.19148936170214 L619.6928282588361,205.2127659574468 L620.7991174514776,206.2340425531915 L621.9268395022074,207.25531914893617 L623.0589101144558,208.27659574468086 L624.1764806108584,209.29787234042553 L625.25944423051,210.31914893617022 L626.2870243382191,211.3404255319149 L627.2384256042321,212.36170212765958 L628.0935231166904,213.38297872340425 L628.8335599928998,214.40425531914894 L629.4418215347449,215.4255319148936 L629.904253482136,216.4468085106383 L630.2099935177322,217.46808510638297 L630.3517887992598,218.48936170212767 L630.3348100558353,219.51063829787233 L630.1949409153139,220.53191489361703 L629.9375397774288,221.5531914893617 L629.5663851564789,222.5744680851064 L629.0870402145789,223.59574468085106 L628.5067169940277,224.61702127659575 L627.8340969502717,225.63829787234042 L627.0791133121468,226.6595744680851 L626.2527019074191,227.68085106382978 L625.3665278226432,228.70212765957447 L624.432695520335,229.72340425531917 L623.4634496912371,230.74468085106383 L622.4708729877293,231.7659574468085 L621.4665845274078,232.7872340425532 L620.4614389884517,233.80851063829786 L619.465218745376,234.82978723404256 L618.4862973208184,235.85106382978722 L617.5312226294094,236.87234042553192 L616.6040984590439,237.8936170212766 L615.7054542657129,238.91489361702128 L614.829690154069,239.93617021276594 L613.9576990392478,240.95744680851064 L613.0253945880075,241.97872340425533 L611.000002381456,243.0 L611,243.0 Z" fill="#dcecff" stroke="#1f6fd0" stroke-width="1.35" opacity="0.88" data-probe-role="dos-lobe-shallow" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="48" />
+<path d="M611,250.0 L611.0,250.0 L612.7423224849015,253.491914893617 L613.6900356240506,256.983829787234 L614.6486850251247,260.47574468085105 L615.6782014894858,263.9676595744681 L616.8016947906591,267.4595744680851 L618.0307760751649,270.9514893617021 L619.3712510031478,274.44340425531914 L620.8248717728607,277.9353191489362 L622.3899273420279,281.4272340425532 L624.0614280460778,284.91914893617025 L625.8311505436889,288.4110638297872 L627.687656271636,291.90297872340426 L629.6163395517545,295.3948936170213 L631.5995364419016,298.8868085106383 L633.6167122974415,302.3787234042553 L635.644737648056,305.87063829787235 L637.6582556232793,309.3625531914894 L639.6301386785095,312.85446808510636 L641.5320273821359,316.3463829787234 L643.3349394417503,319.83829787234043 L645.0099330400136,323.3302127659574 L646.5288050517263,326.82212765957445 L647.8648019761356,330.3140425531915 L648.993319586023,333.8059574468085 L649.8925664809003,337.29787234042556 L650.5441670036654,340.7897872340426 L650.9336803503618,344.28170212765957 L651.0510151209015,347.7736170212766 L650.8907219088068,351.2655319148936 L650.4521506285603,354.7574468085106 L649.789856683632,358.24936170212766 L648.9535374697113,361.7412765957447 L647.945915346265,365.23319148936173 L646.7717690375152,368.72510638297877 L645.4368266004615,372.21702127659574 L643.9474906791171,375.7089361702128 L642.3104650349247,379.20085106382976 L640.532237960707,382.6927659574468 L638.6183419864941,386.18468085106383 L636.5722358500839,389.67659574468087 L634.3934949443131,393.1685106382979 L632.0746160034158,396.6604255319149 L629.5947210863982,400.1523404255319 L626.90521852663,403.64425531914895 L623.889436966247,407.13617021276593 L620.1970976461363,410.62808510638297 L611.0000038980739,414.12 L611,414.12 Z" fill="#d98787" stroke="#a81016" stroke-width="1.45" opacity="0.78" data-probe-role="dos-lobe-deep" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="48" />
+<path d="M720,254.0 L720,348.472" stroke="#171717" stroke-width="0.9" opacity="0.86" data-probe-role="dos-depth-guide" />
+<path d="M720,254.0 L722.9,260.5 L717.1,260.5 Z" fill="#171717" opacity="0.86" data-probe-role="dos-depth-guide" />
+<path d="M720,348.472 L717.1,341.972 L722.9,341.972 Z" fill="#171717" opacity="0.86" data-probe-role="dos-depth-guide" />
+<text x="724" y="299.34656" font-size="7.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Et cue</text>
+<text x="724" y="299.34656" font-size="7.5" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-probe-role="dos-depth-label">Et cue</text>
+</g>
+<g id="semantic-probe_readout_flow" data-semantic-id="probe_readout_flow" data-semantic-kind="TrapModelFlow" data-payload-geometry="steps=3">
+<title>TrapModelFlow:probe_readout_flow</title>
+<text x="886" y="176" font-size="14" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Contract probe</text>
+<circle cx="942" cy="226" r="22" fill="#f4f7fb" stroke="#d9dde4" stroke-width="1.0" data-probe-role="readout-step" />
+<text x="942" y="231" font-size="12" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">1</text>
+<text x="942" y="271" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">scene payload</text>
+<path d="M968,226 L983.0,226.0" stroke="#69707a" stroke-width="1.0" stroke-linecap="round" opacity="0.52" />
+<path d="M990,226 L983.0,222.5 L983.0,229.5 Z" fill="#69707a" opacity="0.52" />
+<circle cx="1012" cy="226" r="22" fill="#f4f7fb" stroke="#d9dde4" stroke-width="1.0" data-probe-role="readout-step" />
+<text x="1012" y="231" font-size="12" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">2</text>
+<text x="1012" y="271" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">engine primitive</text>
+<path d="M1038,226 L1053.0,226.0" stroke="#69707a" stroke-width="1.0" stroke-linecap="round" opacity="0.52" />
+<path d="M1060,226 L1053.0,222.5 L1053.0,229.5 Z" fill="#69707a" opacity="0.52" />
+<circle cx="1082" cy="226" r="22" fill="#f4f7fb" stroke="#d9dde4" stroke-width="1.0" data-probe-role="readout-step" />
+<text x="1082" y="231" font-size="12" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">3</text>
+<text x="1082" y="271" font-size="10.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">semantic SVG</text>
+<rect x="886" y="356" width="230" height="58" rx="5" ry="5" fill="#fff8f7" stroke="#f1d4d2" stroke-width="0.8" opacity="1.0" />
+<text x="902" y="384" font-size="10.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Probe criterion:</text>
+<text x="902" y="399" font-size="10.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Second figure exercises shared geometry without Fig1 policy roles.</text>
+</g>
+</svg>

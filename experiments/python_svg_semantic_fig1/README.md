@@ -15,6 +15,9 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/verify_fig1_semantics.py`
 - `src/fig1_visual_policies.py`
 - `src/check_fig1_docs_manifest.py`
+- `src/fig_probe_01_scene.py`
+- `src/render_fig_probe_01.py`
+- `src/verify_fig_probe_01_contracts.py`
 - `src/engine/scientific_plots.py`
 - `visual_layout.yaml`
 - `reference_layout_spec_v1.md`
@@ -37,12 +40,26 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `visual_cohesion_handback_v12.md`
 - `support_panel_cohesion_handback_v13.md`
 - `global_composition_asset_boundary_handback_v14.md`
+- `framework_probe_01_handback.md`
 
 The current renderer is semantic-driven: scene objects have typed payloads, rendering dispatches by object kind, and the SVG contains semantic IDs plus payload-derived geometry tokens. The v6 layer also computes DOS, P-E, and power-law decay path geometry from semantic payload model parameters instead of renderer-local curve constants.
 
 The v7b layer keeps `drawsvg` as the semantic SVG compositor, but uses Matplotlib only as a scientific schematic calculator for log spacing, curve sampling, and payload-scaled placement. P-E, I(t), and ISPD are rendered as reference-style measurement glyphs, not literal mini publication plots: no plot frames, numeric tick labels, dense minor ticks, or grids. The v8 layer starts the broader reference-scaffold redraw by adding explicit hero band/trap/DOS mark roles and payload-count trap-state markers. The v9 layer replaces the generic Gaussian-looking DOS lobes with a reusable reference-style DOS schematic primitive shared by the hero DOS and interpretation mini-DOS. The v10 layer changes that primitive from fixed Bezier glyphs to payload-sampled asymmetric density profiles, so `deep_sigma`, `shallow_sigma`, and `samples` affect the visible DOS silhouette. The v11 layer adds a schematic polish pass over the sampled DOS paths: the hero deep lobe silhouette is remapped for a cleaner shoulder/tail, the trap-depth label is separated from the red lobe, and the mini-DOS keeps the shallow/deep lobe roles while reducing label clutter. The v12 layer starts a whole-figure cohesion pass from the panel-by-panel audit: hero typography is restrained, interpretation flow is no longer four boxed UI steps, and the electrical panel now has a compact conclusion cue tying the P-E and current-decay evidence together. The v13 layer continues that audit into the support panels: the origin panel is changed from a checklist into a compact composition relation, and the probe panel loses the boxed footer and heavy inset-shadow treatment while keeping the same force semantics. The v14 layer adds global composition roles for panel titles, support-to-hero flow arrows, and panel conclusions, then documents which parts are reusable asset candidates versus Fig1-only layout boundaries. The verifier uses Shapely and svgelements through `uv` to check schematic label containment while also rejecting over-real plot roles and enforcing DOS lobe separation, local DOS bounds, threshold guides, sampled DOS profile paths, low-density DOS tails, DOS-owned trap-depth annotation, hero DOS label/lobe clearance, mini-DOS label composition, v12 panel-composition constraints, v13 support-panel cohesion constraints, and v14 global composition/asset-boundary constraints.
 
 The reference PNG is layout/style evidence only for this pilot. It is not ground truth and not a pixel-tracing target: `visual_layout.yaml` converts the reference into explicit card bounds, local card boxes, object assignments, and flow anchors, then the scene payload drives the rendered geometry inside those regions.
+
+## Second-Figure Framework Probe
+
+`fig_probe_01` is a deliberately small second semantic figure. It is not a publication-quality Fig2 draft; it exists to test whether the shared `engine/` scene model, style tokens, semantic grouping, trap-state rendering, and payload-sampled DOS primitive can render a non-Fig1 composition without importing Fig1-specific policy modules.
+
+Run it with:
+
+```bash
+uv run --with drawsvg python experiments/python_svg_semantic_fig1/src/render_fig_probe_01.py
+python experiments/python_svg_semantic_fig1/src/verify_fig_probe_01_contracts.py
+```
+
+The probe writes `fig_probe_01_semantic.svg` and `fig_probe_01_semantic.png`. Its verifier checks source boundary isolation from Fig1 policy modules, payload-derived trap role counts, DOS sample exposure, and absence of Fig1 `data-panel-role` attributes.
 
 ## Legacy Annotated Redraw
 
