@@ -384,7 +384,7 @@
 <text x="1166.0" y="604.0" font-size="12.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">(probe)</text>
 <path d="M1102.0,842.0 L1525.0,842.0" stroke="#f6d2d2" stroke-width="1.0" opacity="0.84" />
 <text x="1313.5" y="868.0" font-size="16" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="probe-conclusion panel-conclusion" font-weight="700" font-style="italic">Charge-trapping-induced repulsion</text>
-<text x="1313.5" y="894.0" font-size="12.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="probe-conclusion panel-conclusion">Repulsion dominates over Maxwell attraction.</text>
+<text x="1313.5" y="894.0" font-size="12.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="probe-conclusion panel-conclusion">Like-charge repulsion drives the cantilever away from +V.</text>
 </g>
 <g id="semantic-polymer_cantilever" data-semantic-id="polymer_cantilever" data-semantic-kind="PolymerCantilever" data-payload-geometry="charge_sign=+ charge_count=5 initial_bend=toward_electrode repulsive_bend=away_from_electrode">
 <title>PolymerCantilever:polymer_cantilever</title>
@@ -427,11 +427,11 @@
 <path d="M1504.0,850.0 L1524.0,850.0" stroke="#ffffff" stroke-width="0.9" opacity="0.38" />
 <text x="1541.0" y="662.0" font-size="16" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">+ V</text>
 </g>
-<g id="semantic-repulsion_arrow" data-semantic-id="repulsion_arrow" data-semantic-kind="ForceArrow" data-payload-geometry="arrow_direction=reference_rightward_repulsion start_x=1332.0 end_x=1442.0">
+<g id="semantic-repulsion_arrow" data-semantic-id="repulsion_arrow" data-semantic-kind="ForceArrow" data-payload-geometry="force_target=cantilever arrow_direction=cantilever_leftward_repulsion start_x=1332.0 end_x=1222.0">
 <title>ForceArrow:repulsion_arrow</title>
-<path d="M1332.0,706.0 L1416.0,706.0" stroke="#a81016" stroke-width="7.2" stroke-linecap="round" opacity="1.0" />
-<path d="M1442.0,706.0 L1416.0,692.5 L1416.0,719.5 Z" fill="#a81016" opacity="1.0" />
-<text x="1394.0" y="672.0" font-size="16" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="probe-force-label" font-weight="700" font-style="italic">Repulsion force</text>
+<path d="M1332.0,706.0 L1248.0,706.0" stroke="#a81016" stroke-width="7.2" stroke-linecap="round" opacity="1.0" />
+<path d="M1222.0,706.0 L1248.0,719.5 L1248.0,692.5 Z" fill="#a81016" opacity="1.0" />
+<text x="1277.0" y="672.0" font-size="16" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-panel-role="probe-force-label" font-weight="700" font-style="italic">Force on cantilever</text>
 </g>
 <g id="semantic-maxwell_attraction_cue" data-semantic-id="maxwell_attraction_cue" data-semantic-kind="MaxwellAttractionCue" data-payload-geometry="maxwell_role=secondary_reference_cue start_x=1432.0 end_x=1352.0">
 <title>MaxwellAttractionCue:maxwell_attraction_cue</title>

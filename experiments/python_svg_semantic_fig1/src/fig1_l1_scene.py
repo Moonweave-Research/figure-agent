@@ -253,7 +253,7 @@ def build_scene() -> Scene:
     )
     electrode_bounds = Rect(cantilever_frame_2.right - 48, cantilever_frame_2.y + 62, 34, 270)
     arrow_start = Point(cantilever_frame_2.x + 250, cantilever_frame_2.y + 160)
-    arrow_end = Point(cantilever_frame_2.x + 360, cantilever_frame_2.y + 160)
+    arrow_end = Point(cantilever_frame_2.x + 140, cantilever_frame_2.y + 160)
 
     probe = SemanticObject(
         id="macroscopic_probe",
@@ -306,6 +306,7 @@ def build_scene() -> Scene:
             end=arrow_end,
             label="Coulomb qE",
             sign_condition="trapped charge sign equals electrode sign",
+            force_target="cantilever",
         ),
     )
 

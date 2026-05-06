@@ -182,6 +182,7 @@ class ForceArrow:
     end: Point
     label: str
     sign_condition: str
+    force_target: str = ""
 
 
 @dataclass(frozen=True)

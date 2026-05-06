@@ -1196,7 +1196,7 @@ def _draw_macroscopic_probe(drawing: draw.Drawing, scene: Scene, obj: SemanticOb
     )
     _panel_text(
         drawing,
-        "Repulsion dominates over Maxwell attraction.",
+        "Like-charge repulsion drives the cantilever away from +V.",
         callout.center.x,
         callout.y + 56,
         12.8,
@@ -1277,18 +1277,26 @@ def _draw_electrode(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
 
 def _draw_force_arrow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
     payload: ForceArrow = obj.payload
-    electrode: Electrode = scene.object_by_kind("Electrode").payload
-    direction = "reference_rightward_repulsion" if payload.end.x > payload.start.x and electrode.center.x > payload.start.x else "reference_mismatch"
+    target = payload.force_target or "unresolved"
+    arrow_dx = payload.end.x - payload.start.x
+    if target == "cantilever" and arrow_dx < 0:
+        direction = "cantilever_leftward_repulsion"
+    elif target == "electrode" and arrow_dx > 0:
+        direction = "electrode_rightward_reaction"
+    elif target == "interaction_cue":
+        direction = "interaction_cue"
+    else:
+        direction = "force_target_mismatch"
     p.begin_semantic_group(
         drawing,
         obj,
-        f"arrow_direction={direction} start_x={payload.start.x:.1f} end_x={payload.end.x:.1f}",
+        f"force_target={target} arrow_direction={direction} start_x={payload.start.x:.1f} end_x={payload.end.x:.1f}",
     )
     p.arrow(drawing, payload.start, payload.end, style.palette.deep_red, width=7.2, head_length=26, head_width=27)
     _panel_text(
         drawing,
-        "Repulsion force",
-        payload.start.x + 62,
+        "Force on cantilever",
+        (payload.start.x + payload.end.x) / 2,
         payload.start.y - 34,
         16,
         role="probe-force-label",

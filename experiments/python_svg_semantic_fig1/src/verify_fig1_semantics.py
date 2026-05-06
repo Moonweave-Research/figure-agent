@@ -309,10 +309,12 @@ def _check_probe_visual_semantics(scene: object) -> int:
     arrow = _object_by_kind(scene, "ForceArrow").payload
     electrode = _object_by_kind(scene, "Electrode").payload
     arrow_dx = arrow.end.x - arrow.start.x
-    if arrow_dx <= 0:
-        return _fail("reference repulsion arrow is not rightward")
+    if getattr(arrow, "force_target", "") != "cantilever":
+        return _fail(f"force arrow target is not cantilever: {getattr(arrow, 'force_target', '')}")
+    if arrow_dx >= 0:
+        return _fail("cantilever repulsion arrow is not leftward")
     if electrode.center.x <= arrow.start.x:
-        return _fail("reference electrode is not to the right of the repulsion cue")
+        return _fail("electrode is not to the right of the cantilever force cue")
     if arrow.label != "Coulomb qE":
         return _fail("force arrow is not labeled as Coulomb qE")
 
@@ -378,7 +380,8 @@ def _check_svg_output(scene: object) -> int:
         f"deep_depth_range_ev={traps.deep_depth_range_ev[0]:.1f}-{traps.deep_depth_range_ev[1]:.1f}",
         f"energy_reference={traps.energy_reference}",
         "direction=support_to_center_hero",
-        "arrow_direction=reference_rightward_repulsion",
+        "force_target=cantilever",
+        "arrow_direction=cantilever_leftward_repulsion",
         "maxwell_role=secondary_reference_cue",
         "local_boxes=6",
         f"dos_model={lobes.model}",

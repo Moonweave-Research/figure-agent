@@ -16,15 +16,14 @@ class Fig1PhysicsSanityTests(unittest.TestCase):
             f"expected failure containing {token!r}; got {failures}",
         )
 
-    def test_current_scene_passes_hard_failures_but_reports_probe_target_gap(self) -> None:
+    def test_current_scene_locks_cantilever_target_and_passes_probe_sanity(self) -> None:
         scene = build_scene()
+        force = scene.object_by_id("repulsion_arrow").payload
 
         self.assertEqual([], physics_sanity_failures(scene))
-        warnings = physics_sanity_warnings(scene)
-        self.assertTrue(
-            any("force_target" in warning for warning in warnings),
-            f"expected force_target warning; got {warnings}",
-        )
+        self.assertEqual([], physics_sanity_warnings(scene))
+        self.assertEqual("cantilever", force.force_target)
+        self.assertLess(force.end.x, force.start.x)
 
     def test_rejects_ground_truth_reference_authority(self) -> None:
         scene = build_scene()
@@ -115,12 +114,13 @@ class Fig1PhysicsSanityTests(unittest.TestCase):
 
         self.assert_physics_failure(scene.replace_payload("electrode", bad_electrode), "like-charge")
 
-    def test_force_target_cantilever_requires_strict_vector_check(self) -> None:
+    def test_force_target_cantilever_rejects_rightward_vector_toward_positive_electrode(self) -> None:
         scene = build_scene()
         force = scene.object_by_id("repulsion_arrow").payload
+        right_start, right_end = sorted((force.start, force.end), key=lambda point: point.x)
         targeted_force = SimpleNamespace(
-            start=force.start,
-            end=force.end,
+            start=right_start,
+            end=right_end,
             label=force.label,
             sign_condition=force.sign_condition,
             force_target="cantilever",
@@ -134,9 +134,10 @@ class Fig1PhysicsSanityTests(unittest.TestCase):
     def test_force_target_electrode_allows_current_rightward_reaction_vector(self) -> None:
         scene = build_scene()
         force = scene.object_by_id("repulsion_arrow").payload
+        right_start, right_end = sorted((force.start, force.end), key=lambda point: point.x)
         targeted_force = SimpleNamespace(
-            start=force.start,
-            end=force.end,
+            start=right_start,
+            end=right_end,
             label=force.label,
             sign_condition=force.sign_condition,
             force_target="electrode",
@@ -146,6 +147,28 @@ class Fig1PhysicsSanityTests(unittest.TestCase):
 
         self.assertEqual([], physics_sanity_warnings(targeted_scene))
         self.assertEqual([], physics_sanity_failures(targeted_scene))
+
+    def test_rejects_charge_positions_overlapping_electrode(self) -> None:
+        scene = build_scene()
+        cantilever = scene.object_by_id("polymer_cantilever").payload
+        electrode = scene.object_by_id("electrode").payload
+        bad_cantilever = replace(cantilever, charge_positions=(electrode.center,))
+
+        self.assert_physics_failure(scene.replace_payload("polymer_cantilever", bad_cantilever), "charge/electrode separation")
+
+    def test_rejects_force_arrow_start_far_from_charge_cluster(self) -> None:
+        scene = build_scene()
+        force = scene.object_by_id("repulsion_arrow").payload
+        far_force = replace(force, start=scene.object_by_id("electrode").payload.center)
+
+        self.assert_physics_failure(scene.replace_payload("repulsion_arrow", far_force), "force arrow start")
+
+    def test_rejects_probe_bend_state_drift(self) -> None:
+        scene = build_scene()
+        cantilever = scene.object_by_id("polymer_cantilever").payload
+        bad_cantilever = replace(cantilever, initial_bend="away_from_electrode")
+
+        self.assert_physics_failure(scene.replace_payload("polymer_cantilever", bad_cantilever), "bend")
 
     def test_rejects_maxwell_cue_role_or_direction_drift(self) -> None:
         scene = build_scene()

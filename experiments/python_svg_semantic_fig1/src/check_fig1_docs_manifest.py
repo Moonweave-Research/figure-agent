@@ -19,6 +19,8 @@ V19_HANDBACK = ROOT / "reference_fidelity_handback_v19.md"
 V20_PHYSICS_INVENTORY = ROOT / "physics_sanity_inventory_v20.md"
 V20_PHYSICS_CONTRACT = ROOT / "physics_sanity_contract_v20.md"
 V20_PHYSICS_HANDBACK = ROOT / "physics_sanity_gate_handback_v20.md"
+V21_PROBE_OPTIONS = ROOT / "probe_force_target_options_v21.md"
+V21_PROBE_HANDBACK = ROOT / "probe_force_target_handback_v21.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -52,6 +54,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "physics_sanity_inventory_v20.md",
     "physics_sanity_contract_v20.md",
     "physics_sanity_gate_handback_v20.md",
+    "probe_force_target_options_v21.md",
+    "probe_force_target_handback_v21.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -61,6 +65,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "v19 reference-fidelity pass",
     "v20 physics sanity inventory",
     "v20 physics sanity layer",
+    "v21 probe force-target pass",
+    "cantilever_leftward_repulsion",
     "force_target",
     "baseline hash",
 )
@@ -207,6 +213,33 @@ REQUIRED_V20_PHYSICS_HANDBACK_TOKENS = (
     "new hash",
 )
 
+REQUIRED_V21_PROBE_OPTIONS_TOKENS = (
+    "force_target=\"cantilever\"",
+    "force_target=\"electrode\"",
+    "force_target=\"interaction_cue\"",
+    "Decision: `force_target=\"cantilever\"`",
+    "Reference divergence acknowledged",
+    "layout/style evidence only",
+    "not ground_truth",
+    "cantilever_leftward_repulsion",
+    "Human visual review",
+)
+
+REQUIRED_V21_PROBE_HANDBACK_TOKENS = (
+    "semantic contract migration",
+    "No new scaffold",
+    "force_target=\"cantilever\"",
+    "Force on cantilever",
+    "cantilever_leftward_repulsion",
+    "charge/electrode separation",
+    "force-arrow start proximity",
+    "bend-state consistency",
+    "previous hash",
+    "new hash",
+    "0ceca15c136d21cb73676dcd91fb9a50aec54e41e05cd2b541dba0caef3b8edf",
+    "Human visual review",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -311,6 +344,20 @@ def main() -> int:
     for token in REQUIRED_V20_PHYSICS_HANDBACK_TOKENS:
         if token not in v20_handback:
             return _fail(f"v20 physics sanity handback missing token: {token}")
+
+    if not V21_PROBE_OPTIONS.exists():
+        return _fail(f"missing v21 probe force target options: {V21_PROBE_OPTIONS}")
+    v21_options = V21_PROBE_OPTIONS.read_text()
+    for token in REQUIRED_V21_PROBE_OPTIONS_TOKENS:
+        if token not in v21_options:
+            return _fail(f"v21 probe force target options missing token: {token}")
+
+    if not V21_PROBE_HANDBACK.exists():
+        return _fail(f"missing v21 probe force target handback: {V21_PROBE_HANDBACK}")
+    v21_handback = V21_PROBE_HANDBACK.read_text()
+    for token in REQUIRED_V21_PROBE_HANDBACK_TOKENS:
+        if token not in v21_handback:
+            return _fail(f"v21 probe force target handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

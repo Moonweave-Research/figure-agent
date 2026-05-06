@@ -53,6 +53,7 @@ def physics_sanity_failures(scene: object, *, extra_claim_text: str = "") -> lis
     failures.extend(_check_causal_chain(scene))
     failures.extend(_check_probe_charge_relation(scene))
     failures.extend(_check_probe_force_target_contract(scene))
+    failures.extend(_check_probe_geometry(scene))
     failures.extend(_check_maxwell_cue(scene))
     failures.extend(_check_overclaim_text(extra_claim_text))
     return failures
@@ -65,7 +66,7 @@ def physics_sanity_warnings(scene: object) -> list[str]:
     except KeyError:
         return ["probe force target cannot be checked because repulsion_arrow is missing"]
 
-    if not hasattr(force_arrow, "force_target"):
+    if not getattr(force_arrow, "force_target", ""):
         warnings.append(
             "probe ForceArrow has no force_target/acted_on semantics; "
             "strict vector physics remains contract-deferred"
@@ -221,7 +222,7 @@ def _check_probe_charge_relation(scene: object) -> list[str]:
 
 def _check_probe_force_target_contract(scene: object) -> list[str]:
     force_arrow = scene.object_by_id("repulsion_arrow").payload
-    if not hasattr(force_arrow, "force_target"):
+    if not getattr(force_arrow, "force_target", ""):
         return []
 
     target = getattr(force_arrow, "force_target")
@@ -261,6 +262,43 @@ def _check_probe_force_target_contract(scene: object) -> list[str]:
     return []
 
 
+def _check_probe_geometry(scene: object) -> list[str]:
+    failures: list[str] = []
+    cantilever = scene.object_by_id("polymer_cantilever").payload
+    electrode = scene.object_by_id("electrode").payload
+    force_arrow = scene.object_by_id("repulsion_arrow").payload
+    charge_positions = tuple(cantilever.charge_positions)
+
+    if cantilever.initial_bend != "toward_electrode" or cantilever.repulsive_bend != "away_from_electrode":
+        failures.append(
+            "probe bend states must remain initial_bend=toward_electrode and repulsive_bend=away_from_electrode"
+        )
+    if cantilever.initial_bend == cantilever.repulsive_bend:
+        failures.append("probe bend states must distinguish initial and repulsive bends")
+
+    if not charge_positions:
+        failures.append("probe geometry requires trapped charge positions")
+        return failures
+
+    if any(_point_in_rect(charge, electrode.bounds) for charge in charge_positions):
+        failures.append("charge/electrode separation violated: trapped charge overlaps electrode bounds")
+
+    charge_center_x = sum(point.x for point in charge_positions) / len(charge_positions)
+    if electrode.center.x > charge_center_x and charge_center_x >= electrode.bounds.x:
+        failures.append("charge/electrode separation violated: charge cluster is not left of the right electrode")
+    if electrode.center.x < charge_center_x and charge_center_x <= electrode.bounds.right:
+        failures.append("charge/electrode separation violated: charge cluster is not right of the left electrode")
+
+    nearest_start_distance = min(_distance(force_arrow.start, charge) for charge in charge_positions)
+    if nearest_start_distance > 105.0:
+        failures.append(f"force arrow start is too far from trapped charge cluster: {nearest_start_distance:.1f}")
+
+    frame = cantilever.frame_bounds[-1]
+    if not _point_in_rect(force_arrow.start, frame) or not _point_in_rect(force_arrow.end, frame):
+        failures.append("force arrow endpoints must remain inside the probe frame")
+    return failures
+
+
 def _check_maxwell_cue(scene: object) -> list[str]:
     maxwell = scene.object_by_id("maxwell_attraction_cue").payload
     failures: list[str] = []
@@ -293,6 +331,14 @@ def _read_claim_text(extra_claim_text: str) -> str:
 
 def _positive_pair(values: tuple[float, float]) -> bool:
     return len(values) == 2 and all(value > 0 for value in values)
+
+
+def _point_in_rect(point: object, rect: object) -> bool:
+    return rect.x <= point.x <= rect.right and rect.y <= point.y <= rect.bottom
+
+
+def _distance(start: object, end: object) -> float:
+    return ((start.x - end.x) ** 2 + (start.y - end.y) ** 2) ** 0.5
 
 
 def main() -> int:
