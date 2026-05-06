@@ -1,0 +1,117 @@
+{
+  "schema": "fig1_reference_visual_layout_v1",
+  "target": "reference_center_hero_with_support_cards",
+  "reference_image": "reference/source_variant_aesthetic_ref.png",
+  "reference_authority": "visual_layout_target",
+  "canvas": {
+    "width": 1595,
+    "height": 986
+  },
+  "regions": [
+    {
+      "id": "polymer_origin_card",
+      "index": 1,
+      "title": "Sulfur polymer origin\n(composition tuning)",
+      "role": "supporting",
+      "bounds": [22, 30, 455, 394],
+      "objects": ["sulfur_polymer_origin"],
+      "local_boxes": {
+        "origin_icon": [26, 22, 44, 44],
+        "s8_ring": [40, 84, 92, 112],
+        "reaction_arrow": [160, 126, 64, 24],
+        "sulfur_chain": [245, 110, 190, 72],
+        "composition_ramp": [132, 228, 268, 14],
+        "bullet_list": [96, 294, 295, 90]
+      }
+    },
+    {
+      "id": "electrical_evidence_card",
+      "index": 2,
+      "title": "Electrical evidence",
+      "role": "supporting",
+      "bounds": [1076, 30, 497, 394],
+      "objects": ["evidence_trio", "pe_hysteresis", "power_law_decay"],
+      "local_boxes": {
+        "pe_plot": [38, 105, 209.5, 240],
+        "decay_plot": [275.5, 105, 209.5, 240]
+      }
+    },
+    {
+      "id": "deep_trap_hero_card",
+      "index": 3,
+      "title": "Converged deep charge trapping",
+      "role": "hero",
+      "bounds": [548, 173, 468, 613],
+      "objects": ["deep_trap_hero", "band_diagram", "trap_level_set", "dos_lobes"],
+      "local_boxes": {
+        "band_area": [42, 90, 210, 405],
+        "dos_area": [255, 116, 178, 360],
+        "hero_callout": [30, 491, 408, 92]
+      }
+    },
+    {
+      "id": "interpretation_card",
+      "index": 4,
+      "title": "Interpretation (converged trap model)",
+      "role": "supporting",
+      "bounds": [22, 464, 475, 470],
+      "objects": ["trap_model_flow", "ispd_plot"],
+      "local_boxes": {
+        "flow_strip": [28, 84, 419, 36],
+        "decay_plot": [42, 160, 188, 184],
+        "debye_tau": [250, 188, 58, 82],
+        "ispd_plot": [340, 154, 126, 244],
+        "interpretation_callout": [24, 388, 427, 66]
+      }
+    },
+    {
+      "id": "macroscopic_probe_card",
+      "index": 5,
+      "title": "Macroscopic probe",
+      "role": "supporting",
+      "bounds": [1054, 464, 519, 470],
+      "objects": ["macroscopic_probe", "polymer_cantilever", "electrode", "repulsion_arrow", "maxwell_attraction_cue"],
+      "local_boxes": {
+        "probe_frame": [28, 82, 463, 300],
+        "probe_callout": [26, 374, 467, 76]
+      }
+    }
+  ],
+  "flow_arrows": [
+    {
+      "id": "polymer_to_hero",
+      "start_region": "polymer_origin_card",
+      "end_region": "deep_trap_hero_card",
+      "start": [488, 154],
+      "end": [535, 196]
+    },
+    {
+      "id": "electrical_to_hero",
+      "start_region": "electrical_evidence_card",
+      "end_region": "deep_trap_hero_card",
+      "start": [1066, 154],
+      "end": [1022, 196]
+    },
+    {
+      "id": "interpretation_to_hero",
+      "start_region": "interpretation_card",
+      "end_region": "deep_trap_hero_card",
+      "start": [505, 724],
+      "end": [545, 681]
+    },
+    {
+      "id": "probe_to_hero",
+      "start_region": "macroscopic_probe_card",
+      "end_region": "deep_trap_hero_card",
+      "start": [1050, 724],
+      "end": [1012, 681]
+    }
+  ],
+  "visual_rules": {
+    "hero_region": "deep_trap_hero_card",
+    "hero_must_be_center": true,
+    "support_cards_surround_hero": true,
+    "maxwell_attraction_is_secondary_cue": true,
+    "forbidden_framing": ["actuator", "bidirectional", "force-balance panel"]
+  }
+}
