@@ -16,6 +16,7 @@ V18_HANDBACK = ROOT / "causal_readability_handback_v18.md"
 V19_PROMPT = ROOT / "reference_fidelity_execution_prompt_v19.md"
 V19_AUDIT = ROOT / "reference_fidelity_audit_v19.md"
 V19_HANDBACK = ROOT / "reference_fidelity_handback_v19.md"
+V20_PHYSICS_INVENTORY = ROOT / "physics_sanity_inventory_v20.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -44,6 +45,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "reference_fidelity_execution_prompt_v19.md",
     "reference_fidelity_audit_v19.md",
     "reference_fidelity_handback_v19.md",
+    "physics_sanity_inventory_v20.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -51,6 +53,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "intentional visual semantic update",
     "v18 readability polish",
     "v19 reference-fidelity pass",
+    "v20 physics sanity inventory",
     "baseline hash",
 )
 
@@ -153,6 +156,19 @@ REQUIRED_V19_HANDBACK_TOKENS = (
     "55702be313ca70192560a569c8d45949b575e5bfa960252acd9e72f7294e230a",
 )
 
+REQUIRED_V20_PHYSICS_INVENTORY_TOKENS = (
+    "basic academic/physics sanity",
+    "not a publication-grade theory validation layer",
+    "independent `physics-sanity` gate",
+    "LUMO/HOMO",
+    "I(t) ~ t^-n",
+    "Debye exp(-t/tau)",
+    "g(Et)",
+    "ForceArrow",
+    "force_target",
+    "High-Priority Ambiguity",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -236,6 +252,13 @@ def main() -> int:
     for token in REQUIRED_V19_HANDBACK_TOKENS:
         if token not in v19_handback:
             return _fail(f"v19 reference-fidelity handback missing token: {token}")
+
+    if not V20_PHYSICS_INVENTORY.exists():
+        return _fail(f"missing v20 physics sanity inventory: {V20_PHYSICS_INVENTORY}")
+    v20_inventory = V20_PHYSICS_INVENTORY.read_text()
+    for token in REQUIRED_V20_PHYSICS_INVENTORY_TOKENS:
+        if token not in v20_inventory:
+            return _fail(f"v20 physics sanity inventory missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0
