@@ -10,7 +10,7 @@ This keeps the strongest result from Fig1 v14: the reference-derived scaffold pr
 
 `fig_probe_01` and `fig_probe_02` showed that the engine can render non-Fig1 scenes without importing Fig1 policy modules. They did not show that semantic-first composition produces publication-quality layouts.
 
-The probes are therefore architecture evidence, not visual-quality evidence. Their visible awkwardness is useful: it marks the boundary between semantic correctness and composition quality.
+The probes are therefore architecture evidence, not visual-quality evidence. Their visible awkwardness is useful: it marks the boundary between semantic correctness and composition quality. The failure mode should be read in two parts: the probes lack an approved scaffold, and their payload depth is lighter than Fig1. A future scaffold can solve composition guidance without automatically solving content depth.
 
 ## Target architecture
 
@@ -22,6 +22,23 @@ The renderer should be organized around four separate responsibilities:
 - **Verification layers**: semantic correctness, scaffold containment, Fig-specific visual policy, and docs governance as separate checks.
 
 The reference image, rough sketch, or human-authored scaffold remains layout/style evidence only. It is not ground truth and not a pixel-tracing target.
+
+## Scaffold contract lock
+
+Before adding another real figure, the scaffold contract is locked as:
+
+- **Contract source file**: Fig1 currently uses `visual_layout.yaml`.
+- **File format**: JSON object stored in the historical `.yaml` file; no YAML parser or PNG extraction is implied.
+- **Schema version field**: `src/engine/scaffold.py` normalizes the source into `ScaffoldContract.schema_version == "scaffold_contract_v1"` while preserving `source_schema == "fig1_reference_visual_layout_v1"`.
+
+The normalized contract has five responsibilities: canvas, panels with local boxes and object slots, flow anchors, composition rules, and provenance. Scaffold extraction moves reference dependency into an explicit human-authored contract; it does not remove the dependency on a good reference, sketch, or human composition pass.
+
+An approved scaffold requires all four gates:
+
+1. Panel count and panel role assignment are declared.
+2. Panel-to-panel flow anchors are declared.
+3. The hero panel is identified in composition rules.
+4. A human reviewer records a one-line sign-off that the scaffold is composition-grade.
 
 ## Fig1 preservation gate
 
@@ -43,6 +60,7 @@ If that hash changes during a structure-only refactor, the refactor failed.
 4. Add a scaffold verifier that checks panel bounds, local box containment, object-to-slot binding, and flow-anchor presence.
 5. Keep `verify_fig1_semantics.py`, `fig1_visual_policies.py`, and `check_fig1_docs_manifest.py` separate.
 6. Require an approved scaffold before starting any second real figure.
+7. Defer broad `src/figures/{fig1, probe_01, probe_02}/` nesting to a separate structural cleanup after the hash-stable scaffold extraction, because import-path churn is not required for this contract pass.
 
 ## Non-goals
 

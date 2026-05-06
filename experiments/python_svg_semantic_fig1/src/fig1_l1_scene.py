@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from engine.domain_primitives import (
@@ -24,7 +23,8 @@ from engine.domain_primitives import (
     TrapLevelSet,
     TrapModelFlow,
 )
-from engine.scene import Column, Layout, LayoutBox, Point, Rect, Reference, Scene, SemanticObject
+from engine.scene import Column, Point, Rect, Reference, Scene, SemanticObject
+from engine.scaffold import ScaffoldContract, columns_from_scaffold, layout_from_scaffold, load_scaffold_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,40 +34,8 @@ BRIEFING = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/fig
 SPEC = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview/spec.yaml"
 
 
-def load_visual_layout() -> dict[str, object]:
-    return json.loads(VISUAL_LAYOUT.read_text())
-
-
-def _columns(layout_data: dict[str, object]) -> tuple[Column, ...]:
-    columns: list[Column] = []
-    for region in layout_data["regions"]:
-        x, y, width, height = region["bounds"]
-        bounds = Rect(float(x), float(y), float(width), float(height))
-        local_boxes = tuple(
-            LayoutBox(
-                id=box_id,
-                bounds=Rect(
-                    bounds.x + float(box_bounds[0]),
-                    bounds.y + float(box_bounds[1]),
-                    float(box_bounds[2]),
-                    float(box_bounds[3]),
-                ),
-            )
-            for box_id, box_bounds in region.get("local_boxes", {}).items()
-        )
-        columns.append(
-            Column(
-                index=region["index"],
-                id=region["id"],
-                title=region["title"],
-                role=region["role"],
-                ratio=1.0,
-                bounds=bounds,
-                object_ids=tuple(region["objects"]),
-                local_boxes=local_boxes,
-            )
-        )
-    return tuple(columns)
+def load_fig1_scaffold() -> ScaffoldContract:
+    return load_scaffold_contract(VISUAL_LAYOUT)
 
 
 def _region(columns: tuple[Column, ...], region_id: str) -> Column:
@@ -78,9 +46,9 @@ def _region(columns: tuple[Column, ...], region_id: str) -> Column:
 
 
 def build_scene() -> Scene:
-    layout_data = load_visual_layout()
-    columns = _columns(layout_data)
-    canvas = layout_data["canvas"]
+    scaffold = load_fig1_scaffold()
+    columns = columns_from_scaffold(scaffold)
+    canvas = scaffold.canvas
     col_polymer = _region(columns, "polymer_origin_card")
     col_electrical = _region(columns, "electrical_evidence_card")
     col_hero = _region(columns, "deep_trap_hero_card")
@@ -347,25 +315,20 @@ def build_scene() -> Scene:
             title="Reference support cards route into center hero",
             arrow_pairs=(
                 *(
-                    (Point(*arrow["start"]), Point(*arrow["end"]))
-                    for arrow in layout_data["flow_arrows"]
+                    (anchor.start, anchor.end)
+                    for anchor in scaffold.flow_anchors
                 ),
             ),
             direction="support_to_center_hero",
         ),
     )
 
-    layout = Layout(
-        kind=layout_data["target"],
-        ratio=tuple(1.0 for _ in columns),
-        columns=columns,
-        flow_object_id="layout_flow",
-    )
+    layout = layout_from_scaffold(scaffold, columns)
 
     return Scene(
         id="fig1_reference_semantic_scene_v1",
-        width=int(canvas["width"]),
-        height=int(canvas["height"]),
+        width=canvas.width,
+        height=canvas.height,
         source_files=(BRIEFING, SPEC, str(VISUAL_LAYOUT)),
         reference=Reference(
             source="experiments/python_svg_semantic_fig1/reference/source_variant_aesthetic_ref.png",

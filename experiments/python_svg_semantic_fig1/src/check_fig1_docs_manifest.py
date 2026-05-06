@@ -7,6 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "README.md"
 V14_HANDBACK = ROOT / "global_composition_asset_boundary_handback_v14.md"
+V15_HANDBACK = ROOT / "scaffold_contract_handback_v15.md"
+SCAFFOLD_CONTRACT = ROOT / "scaffold_contract_v1.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -14,20 +16,40 @@ REQUIRED_MANIFEST_TOKENS = (
     "reference_vs_fig1_reference_semantic.png",
     "visual_layout.yaml",
     "reference_layout_spec_v1.md",
+    "scaffold_contract_v1.md",
+    "src/engine/scaffold.py",
+    "src/verify_fig1_scaffold_contract.py",
     "dos_reference_schematic_handback_v9.md",
     "dos_density_profile_handback_v10.md",
     "dos_schematic_polish_handback_v11.md",
     "visual_cohesion_handback_v12.md",
     "support_panel_cohesion_handback_v13.md",
     "global_composition_asset_boundary_handback_v14.md",
+    "scaffold_contract_handback_v15.md",
     "legacy annotated redraw",
     "layout/style evidence only",
+    "scaffold_contract_v1",
 )
 
 REQUIRED_V14_TOKENS = (
     "Reusable asset candidates",
     "Fig1-only boundaries",
     "Human visual review",
+)
+
+REQUIRED_SCAFFOLD_CONTRACT_TOKENS = (
+    "Source file format: JSON object",
+    "Normalized schema version: `scaffold_contract_v1`",
+    "Human one-line sign-off",
+    "not scientific ground truth",
+)
+
+REQUIRED_V15_TOKENS = (
+    "not a visual polish pass",
+    "ScaffoldContract.schema_version == \"scaffold_contract_v1\"",
+    "layout/style evidence",
+    "composition-grade",
+    "Deferred Cleanup",
 )
 
 
@@ -50,6 +72,20 @@ def main() -> int:
     for token in REQUIRED_V14_TOKENS:
         if token not in handback:
             return _fail(f"v14 handback missing asset-boundary token: {token}")
+
+    if not SCAFFOLD_CONTRACT.exists():
+        return _fail(f"missing scaffold contract doc: {SCAFFOLD_CONTRACT}")
+    scaffold_contract = SCAFFOLD_CONTRACT.read_text()
+    for token in REQUIRED_SCAFFOLD_CONTRACT_TOKENS:
+        if token not in scaffold_contract:
+            return _fail(f"scaffold contract doc missing token: {token}")
+
+    if not V15_HANDBACK.exists():
+        return _fail(f"missing v15 scaffold handback: {V15_HANDBACK}")
+    v15_handback = V15_HANDBACK.read_text()
+    for token in REQUIRED_V15_TOKENS:
+        if token not in v15_handback:
+            return _fail(f"v15 scaffold handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0
