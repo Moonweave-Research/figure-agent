@@ -9,6 +9,8 @@ MANIFEST = ROOT / "README.md"
 V14_HANDBACK = ROOT / "global_composition_asset_boundary_handback_v14.md"
 V15_HANDBACK = ROOT / "scaffold_contract_handback_v15.md"
 SCAFFOLD_CONTRACT = ROOT / "scaffold_contract_v1.md"
+CAUSAL_BINDING = ROOT / "causal_reference_binding_v16.md"
+V16_HANDBACK = ROOT / "causal_reference_handback_v16.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -17,8 +19,10 @@ REQUIRED_MANIFEST_TOKENS = (
     "visual_layout.yaml",
     "reference_layout_spec_v1.md",
     "scaffold_contract_v1.md",
+    "causal_reference_binding_v16.md",
     "src/engine/scaffold.py",
     "src/verify_fig1_scaffold_contract.py",
+    "src/verify_fig1_causal_binding.py",
     "dos_reference_schematic_handback_v9.md",
     "dos_density_profile_handback_v10.md",
     "dos_schematic_polish_handback_v11.md",
@@ -26,9 +30,11 @@ REQUIRED_MANIFEST_TOKENS = (
     "support_panel_cohesion_handback_v13.md",
     "global_composition_asset_boundary_handback_v14.md",
     "scaffold_contract_handback_v15.md",
+    "causal_reference_handback_v16.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
+    "causal diagram is not ground_truth",
 )
 
 REQUIRED_V14_TOKENS = (
@@ -50,6 +56,26 @@ REQUIRED_V15_TOKENS = (
     "layout/style evidence",
     "composition-grade",
     "Deferred Cleanup",
+)
+
+REQUIRED_CAUSAL_BINDING_TOKENS = (
+    "visual scaffold authority",
+    "causal/semantic reference",
+    "not ground_truth",
+    "not a pixel-tracing target",
+    "I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)",
+    "S-rich segments",
+    "localized traps",
+    "converged trap-depth picture",
+)
+
+REQUIRED_V16_TOKENS = (
+    "not a visual polish pass",
+    "visual scaffold authority",
+    "semantic reference",
+    "not ground_truth",
+    "not a pixel-tracing target",
+    "Human visual review",
 )
 
 
@@ -86,6 +112,20 @@ def main() -> int:
     for token in REQUIRED_V15_TOKENS:
         if token not in v15_handback:
             return _fail(f"v15 scaffold handback missing token: {token}")
+
+    if not CAUSAL_BINDING.exists():
+        return _fail(f"missing causal binding doc: {CAUSAL_BINDING}")
+    causal_binding = CAUSAL_BINDING.read_text()
+    for token in REQUIRED_CAUSAL_BINDING_TOKENS:
+        if token not in causal_binding:
+            return _fail(f"causal binding doc missing token: {token}")
+
+    if not V16_HANDBACK.exists():
+        return _fail(f"missing v16 causal handback: {V16_HANDBACK}")
+    v16_handback = V16_HANDBACK.read_text()
+    for token in REQUIRED_V16_TOKENS:
+        if token not in v16_handback:
+            return _fail(f"v16 causal handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

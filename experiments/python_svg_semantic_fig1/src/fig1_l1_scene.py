@@ -29,6 +29,7 @@ from engine.scaffold import ScaffoldContract, columns_from_scaffold, layout_from
 
 ROOT = Path(__file__).resolve().parents[1]
 VISUAL_LAYOUT = ROOT / "visual_layout.yaml"
+CAUSAL_BINDING = ROOT / "causal_reference_binding_v16.md"
 
 BRIEFING = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview/briefing.md"
 SPEC = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview/spec.yaml"
@@ -72,6 +73,12 @@ def build_scene() -> Scene:
                 CompositionSwatch("S85", "#8b571a"),
             ),
             footer_label="Tunable composition",
+            causal_segments=("S-rich segments",),
+            trap_origin_mechanisms=(
+                "chemical origin: electronegativity and polarizability of S",
+                "physical origin: local potential fluctuations",
+                "localized traps",
+            ),
         ),
     )
 
@@ -88,6 +95,8 @@ def build_scene() -> Scene:
             trap_object_id="trap_level_set",
             dos_object_id="dos_lobes",
             message="DEEP mid-gap states anchor long-lived charge storage.",
+            causal_role="converged_trap_depth_picture",
+            converged_picture_label="converged trap-depth picture",
         ),
     )
 
@@ -192,6 +201,8 @@ def build_scene() -> Scene:
             samples=56,
             label="I(t) ~ t^-n",
             color="#0b4bb3",
+            causal_role="experiment_current_decay_to_power_law_exponent",
+            extracted_parameter="n",
         ),
     )
 
@@ -211,6 +222,7 @@ def build_scene() -> Scene:
             deep_sigma=(0.24, 0.28),
             samples=56,
             color="#6f42c1",
+            trap_depth_output="g(Et)",
         ),
     )
 
@@ -223,6 +235,10 @@ def build_scene() -> Scene:
             title="Trap model",
             steps=("I(t) ~ t^-n", "Debye\nexp(-t/tau)", "tau_d", "g(Et)"),
             conclusion="Convergence to deep traps explains the extended repulsion.",
+            causal_chain=("I(t) ~ t^-n", "n", "Debye exp(-t/tau)", "tau_d", "g(Et)"),
+            debye_reference_label="Discharge Debye reference",
+            delay_parameter="tau_d",
+            output_distribution="g(Et)",
         ),
     )
 
@@ -329,7 +345,7 @@ def build_scene() -> Scene:
         id="fig1_reference_semantic_scene_v1",
         width=canvas.width,
         height=canvas.height,
-        source_files=(BRIEFING, SPEC, str(VISUAL_LAYOUT)),
+        source_files=(BRIEFING, SPEC, str(VISUAL_LAYOUT), str(CAUSAL_BINDING)),
         reference=Reference(
             source="experiments/python_svg_semantic_fig1/reference/source_variant_aesthetic_ref.png",
             authority="style_layout_evidence",

@@ -19,6 +19,8 @@ class SulfurPolymerOrigin:
     chain_label: str
     swatches: tuple[CompositionSwatch, ...]
     footer_label: str
+    causal_segments: tuple[str, ...] = ()
+    trap_origin_mechanisms: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,8 @@ class DeepTrapHero:
     trap_object_id: str
     dos_object_id: str
     message: str
+    causal_role: str = ""
+    converged_picture_label: str = ""
 
 
 @dataclass(frozen=True)
@@ -116,6 +120,8 @@ class PowerLawDecayPlot:
     samples: int
     label: str
     color: str
+    causal_role: str = ""
+    extracted_parameter: str = ""
 
 
 @dataclass(frozen=True)
@@ -130,6 +136,7 @@ class ISPDPlot:
     deep_sigma: tuple[float, float]
     samples: int
     color: str
+    trap_depth_output: str = ""
 
 
 @dataclass(frozen=True)
@@ -137,6 +144,10 @@ class TrapModelFlow:
     title: str
     steps: tuple[str, ...]
     conclusion: str
+    causal_chain: tuple[str, ...] = ()
+    debye_reference_label: str = ""
+    delay_parameter: str = ""
+    output_distribution: str = ""
 
 
 @dataclass(frozen=True)
