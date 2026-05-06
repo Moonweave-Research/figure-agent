@@ -14,11 +14,12 @@ SRC = Path(__file__).resolve().parent
 SVG = ROOT / "fig1_reference_semantic.svg"
 PNG = ROOT / "fig1_reference_semantic.png"
 COMPARISON = ROOT / "reference_vs_fig1_reference_semantic.png"
-MANIFEST = ROOT / "README.md"
 VISUAL_LAYOUT = ROOT / "visual_layout.yaml"
 
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+
+from fig1_visual_policies import check_fig1_visual_policies
 
 
 REQUIRED_KINDS = {
@@ -75,26 +76,6 @@ PLOT_SCHEMATIC_REQUIRED_ROLES = {
 PLOT_FORBIDDEN_REAL_PLOT_ROLES = ("plot-frame", "tick-label", "major-tick", "minor-tick")
 PLOT_TEXT_ROLES = ("schematic-label", "schematic-dos-depth-label")
 MINI_DOS_MAX_LABELS = 3
-INTERPRETATION_MAX_STEP_FRAMES = 1
-ORIGIN_MAX_BULLET_LABELS = 2
-PROBE_MAX_FORCE_LABEL_LINES = 1
-REQUIRED_SUPPORT_PANEL_CONCLUSIONS = 4
-REQUIRED_GLOBAL_FLOW_ARROWS = 4
-HERO_REQUIRED_ROLES = {
-    "band-edge": 2,
-    "energy-axis": 1,
-    "shallow-trap-state": 3,
-    "deep-trap-state": 7,
-    "trap-track": 2,
-    "dos-axis": 2,
-    "dos-lobe-shallow": 1,
-    "dos-lobe-deep": 1,
-    "dos-label": 1,
-    "dos-axis-label": 1,
-    "dos-threshold": 1,
-    "dos-depth-guide": 2,
-    "dos-depth-label": 1,
-}
 
 
 def _fail(message: str) -> int:
@@ -415,7 +396,7 @@ def _check_hero_reference_scaffold(scene: object) -> int:
     if not SVG.exists():
         return _fail(f"missing rendered SVG: {SVG}")
     root = ET.parse(SVG).getroot()
-    for role, minimum in HERO_REQUIRED_ROLES.items():
+    for role, minimum in _hero_required_roles(scene).items():
         found = _hero_role_elements(root, role)
         if len(found) < minimum:
             return _fail(f"hero reference scaffold missing role {role}: {len(found)} < {minimum}")
@@ -424,6 +405,26 @@ def _check_hero_reference_scaffold(scene: object) -> int:
     if ">bandgap<" in svg_text:
         return _fail("hero scaffold still renders literal bandgap text instead of a guide line")
     return _check_hero_dos_reference_grammar(scene, root)
+
+
+def _hero_required_roles(scene: object) -> dict[str, int]:
+    traps = _object_by_kind(scene, "TrapLevelSet").payload
+    band = _object_by_kind(scene, "BandDiagram").payload
+    return {
+        "band-edge": len((band.lumo, band.homo)),
+        "energy-axis": 1,
+        "shallow-trap-state": len(traps.shallow_positions),
+        "deep-trap-state": len(traps.deep_positions),
+        "trap-track": len(traps.shallow_positions) + len(traps.deep_positions) + 1,
+        "dos-axis": 2,
+        "dos-lobe-shallow": 1,
+        "dos-lobe-deep": 1,
+        "dos-label": 1,
+        "dos-axis-label": 1,
+        "dos-threshold": 1,
+        "dos-depth-guide": 2,
+        "dos-depth-label": 1,
+    }
 
 
 def _check_hero_dos_reference_grammar(scene: object, root: ET.Element) -> int:
@@ -621,181 +622,8 @@ def _check_scientific_plot_grammar(scene: object) -> int:
     return _check_plot_label_bounds_via_uv(scene)
 
 
-def _check_v12_visual_cohesion(scene: object) -> int:
-    if not SVG.exists():
-        return _fail(f"missing rendered SVG: {SVG}")
-    root = ET.parse(SVG).getroot()
-    failures: list[str] = []
-
-    electrical_conclusions = [
-        element
-        for element in _panel_role_elements(root, "electrical-conclusion")
-        if _text_value(element)
-    ]
-    if not electrical_conclusions:
-        failures.append("electrical evidence panel missing v12 conclusion cue")
-
-    hero_captions = [
-        element
-        for element in _panel_role_elements(root, "hero-caption")
-        if _text_value(element)
-    ]
-    if not hero_captions:
-        failures.append("hero panel missing v12 restrained caption role")
-    elif len(hero_captions) > 2:
-        failures.append(f"hero caption is too text-dominant: {len(hero_captions)} lines > 2")
-
-    interpretation_group = _semantic_group(root, "trap_model_flow")
-    if interpretation_group is None:
-        failures.append("interpretation panel missing trap model semantic group")
-    else:
-        step_frames = [
-            element
-            for element in interpretation_group.iter()
-            if element.tag.rsplit("}", 1)[-1] == "rect"
-            and element.attrib.get("fill") == "#f7f9fc"
-        ]
-        if len(step_frames) > INTERPRETATION_MAX_STEP_FRAMES:
-            failures.append(
-                f"interpretation flow uses too many boxed UI step frames: {len(step_frames)} > {INTERPRETATION_MAX_STEP_FRAMES}"
-            )
-
-    if failures:
-        return _fail("v12 visual cohesion checks failed:\n" + "\n".join(f"- {failure}" for failure in failures))
-    return 0
-
-
-def _check_v13_support_panel_cohesion(scene: object) -> int:
-    if not SVG.exists():
-        return _fail(f"missing rendered SVG: {SVG}")
-    root = ET.parse(SVG).getroot()
-    failures: list[str] = []
-
-    origin_relations = [
-        element
-        for element in _panel_role_elements(root, "origin-relation")
-        if _text_value(element)
-    ]
-    if not origin_relations:
-        failures.append("origin panel missing compact composition relation cue")
-
-    origin_bullets = [
-        element
-        for element in _panel_role_elements(root, "origin-bullet")
-        if _text_value(element)
-    ]
-    if len(origin_bullets) > ORIGIN_MAX_BULLET_LABELS:
-        failures.append(f"origin panel remains checklist-dense: {len(origin_bullets)} bullets > {ORIGIN_MAX_BULLET_LABELS}")
-
-    probe_force_labels = [
-        element
-        for element in _panel_role_elements(root, "probe-force-label")
-        if _text_value(element)
-    ]
-    if not probe_force_labels:
-        failures.append("probe panel missing normalized one-line force label")
-    elif len(probe_force_labels) > PROBE_MAX_FORCE_LABEL_LINES:
-        failures.append(f"probe force label is too dominant: {len(probe_force_labels)} lines > {PROBE_MAX_FORCE_LABEL_LINES}")
-
-    probe_group = _semantic_group(root, "macroscopic_probe")
-    if probe_group is None:
-        failures.append("probe panel missing macroscopic probe semantic group")
-    else:
-        boxed_footer = [
-            element
-            for element in probe_group.iter()
-            if element.tag.rsplit("}", 1)[-1] == "rect"
-            and element.attrib.get("fill") == "#fff8f7"
-        ]
-        if boxed_footer:
-            failures.append("probe panel still uses a boxed footer callout")
-
-    cantilever_group = _semantic_group(root, "polymer_cantilever")
-    if cantilever_group is None:
-        failures.append("probe panel missing polymer cantilever semantic group")
-    else:
-        shadowed_parts = [
-            element
-            for element in cantilever_group.iter()
-            if element.attrib.get("filter") == "url(#softInsetShadow)"
-        ]
-        if shadowed_parts:
-            failures.append("probe cantilever still uses heavy inset shadow effects")
-
-    if failures:
-        return _fail("v13 support-panel cohesion checks failed:\n" + "\n".join(f"- {failure}" for failure in failures))
-    return 0
-
-
-def _check_v14_global_composition_and_asset_boundary(scene: object) -> int:
-    if not SVG.exists():
-        return _fail(f"missing rendered SVG: {SVG}")
-    root = ET.parse(SVG).getroot()
-    failures: list[str] = []
-
-    support_titles = _panel_role_elements(root, "panel-title-support")
-    hero_titles = _panel_role_elements(root, "panel-title-hero")
-    if len(support_titles) < 4:
-        failures.append(f"support panel titles are not role-tagged consistently: {len(support_titles)} < 4")
-    if len(hero_titles) != 1:
-        failures.append(f"hero panel title role count mismatch: {len(hero_titles)} != 1")
-
-    flow_arrows = _panel_role_elements(root, "global-flow-arrow")
-    if len(flow_arrows) < REQUIRED_GLOBAL_FLOW_ARROWS:
-        failures.append(f"support-to-hero arrows are not globally role-tagged: {len(flow_arrows)} < {REQUIRED_GLOBAL_FLOW_ARROWS}")
-    else:
-        widths = [
-            float(element.attrib.get("stroke-width", "0"))
-            for element in flow_arrows
-            if element.tag.rsplit("}", 1)[-1] == "line"
-        ]
-        if widths and max(widths) > 2.0:
-            failures.append(f"support-to-hero arrows are too visually dominant: max width {max(widths):.2f} > 2.0")
-
-    support_conclusions = [
-        element
-        for element in _panel_role_elements(root, "panel-conclusion")
-        if _text_value(element)
-    ]
-    if len(support_conclusions) < REQUIRED_SUPPORT_PANEL_CONCLUSIONS:
-        failures.append(
-            f"support panel conclusion cues are not normalized: {len(support_conclusions)} < {REQUIRED_SUPPORT_PANEL_CONCLUSIONS}"
-        )
-
-    if MANIFEST.exists():
-        manifest = MANIFEST.read_text()
-        if "global_composition_asset_boundary_handback_v14.md" not in manifest:
-            failures.append("README missing v14 global composition asset-boundary handback")
-    else:
-        failures.append(f"missing experiment manifest: {MANIFEST}")
-
-    handback = ROOT / "global_composition_asset_boundary_handback_v14.md"
-    if not handback.exists():
-        failures.append("missing v14 asset-boundary handback")
-    else:
-        handback_text = handback.read_text()
-        for token in ("Reusable asset candidates", "Fig1-only boundaries", "Human visual review"):
-            if token not in handback_text:
-                failures.append(f"v14 handback missing asset-boundary token: {token}")
-
-    if failures:
-        return _fail("v14 global composition checks failed:\n" + "\n".join(f"- {failure}" for failure in failures))
-    return 0
-
-
-def _panel_role_elements(root: ET.Element, role: str) -> list[ET.Element]:
-    return [
-        element
-        for element in root.iter()
-        if role in element.attrib.get("data-panel-role", "").split()
-    ]
-
-
-def _semantic_group(root: ET.Element, semantic_id: str) -> ET.Element | None:
-    for element in root.iter():
-        if element.attrib.get("data-semantic-id") == semantic_id:
-            return element
-    return None
+def _check_fig1_visual_policies(scene: object) -> int:
+    return check_fig1_visual_policies(scene, SVG)
 
 
 def _plot_elements(root: ET.Element, plot_id: str, role: str) -> list[ET.Element]:
@@ -964,28 +792,6 @@ def _check_current_artifacts(scene: object) -> int:
             return _fail(f"missing generated artifact: {path}")
         if path.stat().st_size <= 0:
             return _fail(f"generated artifact is empty: {path}")
-
-    if not MANIFEST.exists():
-        return _fail(f"missing experiment manifest: {MANIFEST}")
-    manifest = MANIFEST.read_text()
-    required_manifest_tokens = (
-        "fig1_reference_semantic.svg",
-        "fig1_reference_semantic.png",
-        "reference_vs_fig1_reference_semantic.png",
-        "visual_layout.yaml",
-        "reference_layout_spec_v1.md",
-        "dos_reference_schematic_handback_v9.md",
-        "dos_density_profile_handback_v10.md",
-        "dos_schematic_polish_handback_v11.md",
-        "visual_cohesion_handback_v12.md",
-        "support_panel_cohesion_handback_v13.md",
-        "global_composition_asset_boundary_handback_v14.md",
-        "legacy annotated redraw",
-        "layout/style evidence only",
-    )
-    for token in required_manifest_tokens:
-        if token not in manifest:
-            return _fail(f"experiment manifest missing token: {token}")
     return 0
 
 
@@ -1094,9 +900,7 @@ def main() -> int:
         _check_svg_output,
         _check_hero_reference_scaffold,
         _check_scientific_plot_grammar,
-        _check_v12_visual_cohesion,
-        _check_v13_support_panel_cohesion,
-        _check_v14_global_composition_and_asset_boundary,
+        _check_fig1_visual_policies,
         _check_visual_constraints,
         _check_current_artifacts,
         _check_payload_mutation_changes_output,

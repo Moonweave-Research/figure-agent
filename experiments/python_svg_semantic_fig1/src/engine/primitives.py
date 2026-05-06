@@ -8,7 +8,6 @@ from typing import Callable, Iterable
 import drawsvg as draw
 
 from engine.scene import Point, Rect, SemanticObject
-from engine.scientific_geometry import gaussian_lobe_points
 from engine.style import DEFAULT_STYLE, FigureStyle
 
 
@@ -287,97 +286,6 @@ def polyline_path(
     if close:
         path.Z()
     return path
-
-
-def dos_lobe(
-    drawing: draw.Drawing,
-    anchor: Point,
-    width: float,
-    height: float,
-    fill: str,
-    stroke: str,
-    opacity: float,
-    *,
-    sigma: tuple[float, float] = (0.34, 0.46),
-    samples: int = 48,
-    attrs: dict[str, object] | None = None,
-) -> None:
-    profile = gaussian_lobe_points(
-        anchor,
-        width=width,
-        height=height,
-        samples=samples,
-        upper_sigma=sigma[0],
-        lower_sigma=sigma[1],
-    )
-    points = (Point(anchor.x, anchor.y - height / 2), *profile, Point(anchor.x, anchor.y + height / 2))
-    path = polyline_path(points, close=True, fill=fill, stroke=stroke, stroke_width=2.0, opacity=opacity, attrs=attrs)
-    drawing.append(path)
-
-
-def bezier_dos_lobe(drawing: draw.Drawing, anchor: Point, width: float, height: float, fill: str, stroke: str, opacity: float) -> None:
-    path = draw.Path(fill=fill, stroke=stroke, stroke_width=2.0, opacity=opacity)
-    path.M(anchor.x, anchor.y - height / 2)
-    path.C(anchor.x + width * 0.60, anchor.y - height * 0.48, anchor.x + width * 1.02, anchor.y - height * 0.10, anchor.x + width, anchor.y)
-    path.C(anchor.x + width * 0.96, anchor.y + height * 0.30, anchor.x + width * 0.36, anchor.y + height * 0.46, anchor.x, anchor.y + height / 2)
-    path.Z()
-    drawing.append(path)
-
-
-def draw_dos_pair(
-    drawing: draw.Drawing,
-    area: Rect,
-    *,
-    shallow_center_y: float,
-    shallow_width: float,
-    shallow_height: float,
-    deep_center_y: float,
-    deep_width: float,
-    deep_height: float,
-    shallow_label: str,
-    deep_label: str,
-    shallow_sigma: tuple[float, float] = (0.26, 0.32),
-    deep_sigma: tuple[float, float] = (0.42, 0.52),
-    samples: int = 72,
-    style: FigureStyle = DEFAULT_STYLE,
-) -> None:
-    palette = style.palette
-    hero_attr = "data-hero-role"
-    axis_x = area.x + 32
-    origin = Point(axis_x, area.y + 16)
-    mini_axis(drawing, origin, area.width - 52, area.height - 38, palette.ink)
-    drawing.append(draw.Line(origin.x, origin.y, origin.x, origin.y + area.height - 38, stroke="none", **{hero_attr: "dos-axis"}))
-    drawing.append(draw.Line(origin.x, origin.y + area.height - 38, origin.x + area.width - 52, origin.y + area.height - 38, stroke="none", **{hero_attr: "dos-axis"}))
-    drawing.append(draw.Text("DOS  g(Et)", 15, axis_x + 92, area.y + 28, fill=palette.ink, font_family=style.typography.family, text_anchor="start", font_weight="700", **{hero_attr: "dos-label"}))
-    mid_y = area.y + 16 + 0.48 * (area.height - 38)
-    drawing.append(draw.Line(axis_x, mid_y, axis_x + area.width - 58, mid_y, stroke=palette.ink, stroke_width=1.0, stroke_dasharray="5 5", opacity=0.52))
-    dos_lobe(
-        drawing,
-        Point(axis_x, area.y + shallow_center_y * area.height),
-        shallow_width,
-        shallow_height,
-        "url(#shallowDosFill)",
-        palette.shallow_blue,
-        0.9,
-        sigma=shallow_sigma,
-        samples=samples,
-        attrs={hero_attr: "dos-lobe-shallow"},
-    )
-    dos_lobe(
-        drawing,
-        Point(axis_x, area.y + deep_center_y * area.height),
-        deep_width,
-        deep_height,
-        "url(#deepDosFill)",
-        palette.deep_red,
-        0.94,
-        sigma=deep_sigma,
-        samples=samples,
-        attrs={hero_attr: "dos-lobe-deep"},
-    )
-    text(drawing, shallow_label, axis_x + shallow_width + 18, area.y + shallow_center_y * area.height + 5, 13, fill=palette.shallow_blue, style=style)
-    deep_label_x = min(axis_x + deep_width - 8, area.right - 8)
-    text(drawing, deep_label, deep_label_x, area.y + deep_center_y * area.height + 34, 16, fill=palette.deep_red, weight="700", anchor="end", style=style)
 
 
 def draw_reference_dos_schematic(

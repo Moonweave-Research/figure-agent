@@ -13,6 +13,8 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/fig1_l1_scene.py`
 - `src/render_fig1_l1.py`
 - `src/verify_fig1_semantics.py`
+- `src/fig1_visual_policies.py`
+- `src/check_fig1_docs_manifest.py`
 - `src/engine/scientific_plots.py`
 - `visual_layout.yaml`
 - `reference_layout_spec_v1.md`
@@ -65,8 +67,9 @@ Run the current pilot with:
 ```bash
 uv run --with drawsvg --with matplotlib --with numpy --with shapely --with svgelements --with svgpathtools python experiments/python_svg_semantic_fig1/src/render_fig1_l1.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_semantics.py
+python experiments/python_svg_semantic_fig1/src/check_fig1_docs_manifest.py
 python -m xml.etree.ElementTree experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg
 rsvg-convert -w 1595 -h 986 experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg -o /tmp/fig1_reference_semantic_check.png
 ```
 
-`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, reference probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, v12 hero/electrical/interpretation composition cues, v13 origin/probe cohesion cues, v14 panel title/flow/conclusion normalization, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, manifest coverage, and visible-geometry payload mutation behavior.
+`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, reference probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, and visible-geometry payload mutation behavior. Fig1-specific visual policy caps from v12-v14 live in `fig1_visual_policies.py`, while README/handback governance lives in `check_fig1_docs_manifest.py`.

@@ -40,7 +40,7 @@ v14 global composition checks failed:
 - `engine.style.FigureStyle` typography and stroke tokens for figure-wide visual rhythm.
 - `engine.primitives.arrow(..., attrs=...)` for semantic arrow role tagging.
 - `render_fig1_l1._panel_text()` as a candidate for a small public text helper that supports panel roles.
-- `verify_fig1_semantics.py` helpers `_panel_role_elements()` and `_semantic_group()` as candidates for a reusable semantic-SVG verifier utility.
+- `fig1_visual_policies.py` helpers `_panel_role_elements()` and `_semantic_group()` as candidates for a reusable semantic-SVG policy utility.
 - The DOS schematic primitive and schematic plot role checks from v9-v13 remain the strongest reusable scientific-figure assets.
 
 ## Fig1-only boundaries
@@ -48,7 +48,7 @@ v14 global composition checks failed:
 - `fig1_l1_scene.py` remains Fig1-specific because it owns exact panel assignments, copy, local boxes, and figure-level story order.
 - `visual_layout.yaml` remains Fig1-specific because its coordinates are derived from the current reference-layout pilot.
 - Panel-specific copy such as `Converged deep charge trapping`, `S fraction -> S-S sequence -> deep traps`, and `Repulsion dominates over Maxwell attraction` should not be promoted into a shared engine.
-- The v14 checks are reusable in shape, but their required counts are Fig1-specific until they are parameterized by scene layout.
+- The v12-v14 visual policy checks are reusable in shape, but their required counts are Fig1-specific until they are parameterized by scene layout.
 
 ## Human visual review
 
