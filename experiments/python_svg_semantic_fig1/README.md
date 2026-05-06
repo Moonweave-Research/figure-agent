@@ -18,6 +18,9 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/fig_probe_01_scene.py`
 - `src/render_fig_probe_01.py`
 - `src/verify_fig_probe_01_contracts.py`
+- `src/fig_probe_02_scene.py`
+- `src/render_fig_probe_02.py`
+- `src/verify_fig_probe_02_contracts.py`
 - `src/engine/scientific_plots.py`
 - `visual_layout.yaml`
 - `reference_layout_spec_v1.md`
@@ -41,6 +44,7 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `support_panel_cohesion_handback_v13.md`
 - `global_composition_asset_boundary_handback_v14.md`
 - `framework_probe_01_handback.md`
+- `framework_probe_02_handback.md`
 
 The current renderer is semantic-driven: scene objects have typed payloads, rendering dispatches by object kind, and the SVG contains semantic IDs plus payload-derived geometry tokens. The v6 layer also computes DOS, P-E, and power-law decay path geometry from semantic payload model parameters instead of renderer-local curve constants.
 
@@ -60,6 +64,17 @@ python experiments/python_svg_semantic_fig1/src/verify_fig_probe_01_contracts.py
 ```
 
 The probe writes `fig_probe_01_semantic.svg` and `fig_probe_01_semantic.png`. Its verifier checks source boundary isolation from Fig1 policy modules, payload-derived trap role counts, DOS sample exposure, and absence of Fig1 `data-panel-role` attributes.
+
+`fig_probe_02` is the stronger composition-pressure probe. It keeps the full Fig1 canvas scale and a five-panel structure with one central mechanism panel, four support panels, support-to-center flow arrows, electrical readouts, trap-spectrum readout, and a device-response cue. It still avoids Fig1-specific verifier/policy imports and writes only `data-probe2-role` composition roles.
+
+Run it with:
+
+```bash
+uv run --with drawsvg --with matplotlib --with numpy python experiments/python_svg_semantic_fig1/src/render_fig_probe_02.py
+python experiments/python_svg_semantic_fig1/src/verify_fig_probe_02_contracts.py
+```
+
+The probe writes `fig_probe_02_semantic.svg` and `fig_probe_02_semantic.png`. Its verifier checks Fig1-scale canvas pressure, one-center-plus-four-support layout, source boundary isolation from Fig1 modules, payload-derived trap role counts, DOS sample exposure, and absence of Fig1 `data-panel-role` leakage.
 
 ## Legacy Annotated Redraw
 

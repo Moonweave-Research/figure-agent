@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1595" height="986" viewBox="0 0 1595 986">
+<defs>
+</defs>
+<rect x="0" y="0" width="1595" height="986" fill="#ffffff" />
+
+<defs>
+  <linearGradient id="sulfurSwatch" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#f8d86b"/>
+    <stop offset="38%" stop-color="#e8b640"/>
+    <stop offset="70%" stop-color="#c88a27"/>
+    <stop offset="100%" stop-color="#825218"/>
+  </linearGradient>
+  <linearGradient id="badgeSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#ffffff"/>
+    <stop offset="100%" stop-color="#f5f8fc"/>
+  </linearGradient>
+  <linearGradient id="bandFill" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#ffffff"/>
+    <stop offset="100%" stop-color="#e9edf2"/>
+  </linearGradient>
+  <linearGradient id="deepDosFill" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#fbe1df" stop-opacity="0.92"/>
+    <stop offset="64%" stop-color="#dc6868" stop-opacity="0.66"/>
+    <stop offset="100%" stop-color="#a81016" stop-opacity="0.28"/>
+  </linearGradient>
+  <linearGradient id="shallowDosFill" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#e8f2ff" stop-opacity="0.92"/>
+    <stop offset="100%" stop-color="#1f6fd0" stop-opacity="0.28"/>
+  </linearGradient>
+  <linearGradient id="polymerBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#f4d46c"/>
+    <stop offset="55%" stop-color="#c28a25"/>
+    <stop offset="100%" stop-color="#8a5b18"/>
+  </linearGradient>
+  <linearGradient id="metalSheen" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#677282"/>
+    <stop offset="42%" stop-color="#edf1f5"/>
+    <stop offset="100%" stop-color="#7b8594"/>
+  </linearGradient>
+  <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+    <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#182032" flood-opacity="0.10"/>
+  </filter>
+  <filter id="softInsetShadow" x="-15%" y="-15%" width="130%" height="130%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#182032" flood-opacity="0.12"/>
+  </filter>
+  <filter id="deepGlow" x="-55%" y="-55%" width="210%" height="210%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+    <feColorMatrix in="blur" type="matrix" values="0.65 0 0 0 0.35  0 0.05 0 0 0  0 0 0.05 0 0  0 0 0 0.45 0" result="glow"/>
+    <feMerge>
+      <feMergeNode in="glow"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+  <pattern id="polymerGrain" patternUnits="userSpaceOnUse" width="18" height="18">
+    <path d="M2 12 C6 8, 11 16, 17 7" fill="none" stroke="#fff0b8" stroke-width="0.9" opacity="0.42"/>
+    <circle cx="5" cy="5" r="0.75" fill="#6b4211" opacity="0.28"/>
+    <circle cx="13" cy="14" r="0.7" fill="#fff4cb" opacity="0.55"/>
+  </pattern>
+</defs>
+
+<text x="54" y="48" font-size="24" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Probe 02 | Sulfur-network charge-retention mechanism</text>
+<text x="54" y="74" font-size="12.8" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Composition, electrical retention, trap-spectrum readout, and device response converge on deep trap population.</text>
+<rect x="56" y="114" width="360" height="336" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="56" y="114" width="360" height="336" fill="none" stroke="none" data-probe2-role="panel-frame" panel-id="composition_panel" panel-role="supporting" />
+<rect x="68" y="126" width="336" height="312" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="236.0" y="158" font-size="18.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe2-role="panel-title" panel-id="composition_panel">Composition tuning</text>
+<rect x="56" y="532" width="360" height="340" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="56" y="532" width="360" height="340" fill="none" stroke="none" data-probe2-role="panel-frame" panel-id="electrical_panel" panel-role="supporting" />
+<rect x="68" y="544" width="336" height="316" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="236.0" y="576" font-size="18.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe2-role="panel-title" panel-id="electrical_panel">Electrical retention</text>
+<rect x="492" y="132" width="610" height="722" rx="8.0" ry="8.0" fill="#fff7f6" stroke="#f6d2d2" stroke-width="1.25" opacity="1.0" />
+<rect x="492" y="132" width="610" height="722" fill="none" stroke="none" data-probe2-role="panel-frame" panel-id="trap_mechanism_panel" panel-role="hero" />
+<rect x="504" y="144" width="586" height="698" rx="6.0" ry="6.0" fill="none" stroke="#fde8e5" stroke-width="0.8" opacity="0.72" />
+<text x="797.0" y="176" font-size="24.0" fill="#a81016" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe2-role="panel-title" panel-id="trap_mechanism_panel">Trap distribution mechanism</text>
+<rect x="1180" y="114" width="360" height="336" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="1180" y="114" width="360" height="336" fill="none" stroke="none" data-probe2-role="panel-frame" panel-id="spectrum_panel" panel-role="supporting" />
+<rect x="1192" y="126" width="336" height="312" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="1360.0" y="158" font-size="18.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe2-role="panel-title" panel-id="spectrum_panel">Trap-spectrum readout</text>
+<rect x="1180" y="532" width="360" height="340" rx="8.0" ry="8.0" fill="#fcfdff" stroke="#d9dde4" stroke-width="1.0" opacity="1.0" />
+<rect x="1180" y="532" width="360" height="340" fill="none" stroke="none" data-probe2-role="panel-frame" panel-id="device_panel" panel-role="supporting" />
+<rect x="1192" y="544" width="336" height="316" rx="6.0" ry="6.0" fill="none" stroke="#edf1f6" stroke-width="0.8" opacity="0.72" />
+<text x="1360.0" y="576" font-size="18.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle" data-probe2-role="panel-title" panel-id="device_panel">Device response</text>
+<g id="semantic-probe2_layout_flow" data-semantic-id="probe2_layout_flow" data-semantic-kind="LayoutFlow" data-payload-geometry="direction=support_panels_to_center_mechanism arrow_count=4">
+<title>LayoutFlow:probe2_layout_flow</title>
+<path d="M424,282.0 L464.1086146034568,298.34054669029723" stroke="#69707a" stroke-width="1.65" stroke-linecap="round" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M478,304 L466.7496928146514,291.8579001719104 L461.46753639226216,304.8231932086841 Z" fill="#69707a" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M424,702.0 L469.4618503175454,636.3328828746567" stroke="#69707a" stroke-width="1.65" stroke-linecap="round" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M478,624 L463.70650497603896,632.3484130228445 L475.2171956590518,640.3173527264688 Z" fill="#69707a" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M1170,282.0 L1129.8913853965432,298.34054669029723" stroke="#69707a" stroke-width="1.65" stroke-linecap="round" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M1116,304 L1132.5324636077378,304.8231932086841 L1127.2503071853487,291.8579001719104 Z" fill="#69707a" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M1170,702.0 L1124.5381496824546,636.3328828746567" stroke="#69707a" stroke-width="1.65" stroke-linecap="round" opacity="0.3" data-probe2-role="support-to-center-flow" />
+<path d="M1116,624 L1118.7828043409481,640.3173527264688 L1130.293495023961,632.3484130228445 Z" fill="#69707a" opacity="0.3" data-probe2-role="support-to-center-flow" />
+</g>
+<g id="semantic-probe2_material" data-semantic-id="probe2_material" data-semantic-kind="SulfurPolymerOrigin" data-payload-geometry="s8_atoms=8 chain_atoms=6 swatches=4">
+<title>SulfurPolymerOrigin:probe2_material</title>
+<path d="M118,238 L161,260" stroke="#8c5a18" stroke-width="2.3" opacity="0.8" />
+<path d="M161,260 L204,238" stroke="#8c5a18" stroke-width="2.3" opacity="0.8" />
+<path d="M204,238 L247,260" stroke="#8c5a18" stroke-width="2.3" opacity="0.8" />
+<path d="M247,260 L290,238" stroke="#8c5a18" stroke-width="2.3" opacity="0.8" />
+<path d="M290,238 L333,260" stroke="#8c5a18" stroke-width="2.3" opacity="0.8" />
+<circle cx="118" cy="238" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="114.22" cy="234.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="118" y="242.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="161" cy="260" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="157.22" cy="256.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="161" y="264.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="204" cy="238" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="200.22" cy="234.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="204" y="242.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="247" cy="260" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="243.22" cy="256.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="247" y="264.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="290" cy="238" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="286.22" cy="234.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="290" y="242.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<circle cx="333" cy="260" r="13.5" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
+<circle cx="329.22" cy="256.22" r="3.2399999999999998" fill="#fff3b7" opacity="0.7" />
+<text x="333" y="264.86" font-size="12.825" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
+<text x="92" y="334" font-size="12.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">thermal copolymerization</text>
+<text x="92" y="356" font-size="13.5" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">-Sx- network fraction</text>
+<rect x="92.0" y="342" width="63.0" height="31" rx="3" ry="3" fill="#f8dc77" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<rect x="92.0" y="342" width="63.0" height="31" fill="none" stroke="none" data-probe2-role="composition-swatch" />
+<text x="123.5" y="391" font-size="10.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S50</text>
+<rect x="162.0" y="342" width="63.0" height="31" rx="3" ry="3" fill="#e7b947" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<rect x="162.0" y="342" width="63.0" height="31" fill="none" stroke="none" data-probe2-role="composition-swatch" />
+<text x="193.5" y="391" font-size="10.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S65</text>
+<rect x="232.0" y="342" width="63.0" height="31" rx="3" ry="3" fill="#ba7c25" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<rect x="232.0" y="342" width="63.0" height="31" fill="none" stroke="none" data-probe2-role="composition-swatch" />
+<text x="263.5" y="391" font-size="10.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S80</text>
+<rect x="302.0" y="342" width="63.0" height="31" rx="3" ry="3" fill="#764616" stroke="#ffffff" stroke-width="1.0" opacity="1.0" />
+<rect x="302.0" y="342" width="63.0" height="31" fill="none" stroke="none" data-probe2-role="composition-swatch" />
+<text x="333.5" y="391" font-size="10.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S90</text>
+<text x="92" y="428" font-size="11.4" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">richer sulfur network raises trap-state density</text>
+</g>
+<g id="semantic-probe2_evidence" data-semantic-id="probe2_evidence" data-semantic-kind="EvidenceTrio" data-payload-geometry="modalities=2 badge_gap=14">
+<title>EvidenceTrio:probe2_evidence</title>
+<text x="92" y="604" font-size="13.4" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Retention signatures</text>
+<rect x="90" y="614" width="144" height="134" rx="5" ry="5" fill="#ffffff" stroke="#dfe4ec" stroke-width="0.9" opacity="1.0" />
+<text x="102" y="636" font-size="12" fill="#b20f16" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">P-E</text>
+<text x="102" y="736" font-size="9.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">hysteresis memory</text>
+<rect x="242" y="614" width="140" height="134" rx="5" ry="5" fill="#ffffff" stroke="#dfe4ec" stroke-width="0.9" opacity="1.0" />
+<text x="254" y="636" font-size="12" fill="#0b4bb3" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">I(t)</text>
+<text x="254" y="736" font-size="9.2" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">slow current decay</text>
+<text x="235.0" y="814" font-size="10.8" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">paired electrical signatures point to long-lived stored charge</text>
+</g>
+<g id="semantic-probe2_pe" data-semantic-id="probe2_pe" data-semantic-kind="PEHysteresisPlot" data-payload-geometry="model=parametric_hysteresis samples=42 remanence=0.36">
+<title>PEHysteresisPlot:probe2_pe</title>
+<path d="M132,692 L205.0,692.0" stroke="#171717" stroke-width="0.9" stroke-linecap="round" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M212,692 L205.0,689.0 L205.0,695.0 Z" fill="#171717" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M132,692 L132.0,663.0" stroke="#171717" stroke-width="0.9" stroke-linecap="round" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M132,656 L129.0,663.0 L135.0,663.0 Z" fill="#171717" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M141.88235294117646,685.2104600089998 L143.35150645624103,685.1249492862668 L144.8206599713056,685.013010612847 L146.28981348637015,684.8668774332816 L147.7589670014347,684.6767855950702 L149.22812051649927,684.4306594913 L150.69727403156384,684.1138941404394 L152.16642754662843,683.7093591812081 L153.63558106169296,683.1978116540475 L155.10473457675752,682.5589599237221 L156.57388809182208,681.7734332191459 L158.04304160688665,680.8258161902951 L159.5121951219512,679.7086316916246 L160.98134863701577,678.426669480918 L162.45050215208033,677.0004756722244 L163.9196556671449,675.4674560937899 L165.38880918220946,673.8793318285454 L166.85796269727405,672.2958121091498 L168.32711621233858,670.7759230022965 L169.79626972740317,669.3695426498111 L171.2654232424677,668.1115922872017 L172.7345767575323,667.0200883642923 L174.20373027259686,666.0977043959182 L175.67288378766142,665.3354830178774 L177.14203730272598,664.7171745619863 L178.61119081779054,664.2231010483548 L180.0803443328551,663.8330279453231 L181.54949784791967,663.5279824877035 L183.01865136298423,663.291202264117 L184.4878048780488,663.1084717578674 L185.95695839311335,662.9680823555741 L187.42611190817792,662.8605932304372 L188.89526542324248,662.7785106300676 L190.36441893830704,662.71595533175 L191.8335724533716,662.6683548692359 L193.30272596843616,662.6321762963489 L194.77187948350073,662.6047032743365 L196.2410329985653,662.5838550605254 L197.71018651362985,662.5680422443754 L199.1793400286944,662.5560532940119 L200.64849354375897,662.5469661921231 L202.11764705882354,662.5400800999015 L202.11764705882354,662.7895399910002 L200.64849354375897,662.8750507137332 L199.1793400286944,662.986989387153 L197.71018651362985,663.1331225667184 L196.2410329985653,663.3232144049298 L194.77187948350073,663.5693405087 L193.30272596843616,663.8861058595606 L191.83357245337157,664.2906408187919 L190.36441893830704,664.8021883459525 L188.89526542324248,665.4410400762779 L187.42611190817792,666.2265667808541 L185.95695839311335,667.1741838097049 L184.4878048780488,668.2913683083754 L183.01865136298423,669.573330519082 L181.54949784791967,670.9995243277756 L180.0803443328551,672.5325439062101 L178.61119081779054,674.1206681714546 L177.14203730272595,675.7041878908502 L175.67288378766142,677.2240769977035 L174.20373027259683,678.6304573501889 L172.7345767575323,679.8884077127983 L171.2654232424677,680.9799116357077 L169.79626972740314,681.9022956040818 L168.32711621233858,682.6645169821226 L166.85796269727402,683.2828254380137 L165.38880918220946,683.7768989516452 L163.9196556671449,684.1669720546769 L162.45050215208033,684.4720175122965 L160.98134863701577,684.708797735883 L159.5121951219512,684.8915282421326 L158.04304160688665,685.0319176444259 L156.57388809182208,685.1394067695628 L155.10473457675752,685.2214893699324 L153.63558106169296,685.28404466825 L152.1664275466284,685.3316451307641 L150.69727403156384,685.3678237036511 L149.22812051649927,685.3952967256635 L147.7589670014347,685.4161449394746 L146.28981348637015,685.4319577556246 L144.8206599713056,685.4439467059881 L143.35150645624103,685.4530338078769 L141.88235294117646,685.4599199000985 Z" fill="none" stroke="#b20f16" stroke-width="1.8" opacity="1.0" data-probe2-role="plot-curve" />
+<text x="186.0" y="656.0" font-size="8.8" fill="#b20f16" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Pr</text>
+</g>
+<g id="semantic-probe2_decay" data-semantic-id="probe2_decay" data-semantic-kind="PowerLawDecayPlot" data-payload-geometry="model=power_law_loglog slope=-0.64 samples=52">
+<title>PowerLawDecayPlot:probe2_decay</title>
+<path d="M282,692 L353.0,692.0" stroke="#171717" stroke-width="0.9" stroke-linecap="round" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M360,692 L353.0,689.0 L353.0,695.0 Z" fill="#171717" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M282,692 L282.0,663.0" stroke="#171717" stroke-width="0.9" stroke-linecap="round" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M282,656 L279.0,663.0 L285.0,663.0 Z" fill="#171717" opacity="0.75" data-probe2-role="plot-axis" />
+<path d="M282.0,657.7485714285714 L283.52941176470586,658.1357983193277 L285.05882352941177,658.523025210084 L286.5882352941176,658.9102521008404 L288.11764705882354,659.2974789915967 L289.6470588235294,659.6847058823529 L291.1764705882353,660.0719327731092 L292.70588235294116,660.4591596638655 L294.2352941176471,660.8463865546219 L295.7647058823529,661.2336134453782 L297.29411764705884,661.6208403361345 L298.8235294117647,662.0080672268907 L300.3529411764706,662.395294117647 L301.88235294117646,662.7825210084034 L303.4117647058824,663.1697478991597 L304.94117647058823,663.556974789916 L306.47058823529414,663.9442016806722 L308.0,664.3314285714285 L309.52941176470586,664.7186554621849 L311.05882352941177,665.1058823529412 L312.5882352941176,665.4931092436975 L314.11764705882354,665.8803361344537 L315.6470588235294,666.26756302521 L317.1764705882353,666.6547899159664 L318.70588235294116,667.0420168067227 L320.2352941176471,667.429243697479 L321.7647058823529,667.8164705882353 L323.29411764705884,668.2036974789916 L324.8235294117647,668.5909243697479 L326.3529411764706,668.9781512605042 L327.88235294117646,669.3653781512605 L329.4117647058823,669.7526050420169 L330.94117647058823,670.1398319327731 L332.47058823529414,670.5270588235294 L334.0,670.9142857142857 L335.52941176470586,671.301512605042 L337.05882352941177,671.6887394957984 L338.5882352941176,672.0759663865546 L340.11764705882354,672.4631932773109 L341.6470588235294,672.8504201680672 L343.1764705882353,673.2376470588235 L344.70588235294116,673.6248739495799 L346.2352941176471,674.0121008403362 L347.7647058823529,674.3993277310924 L349.29411764705884,674.7865546218487 L350.8235294117647,675.173781512605 L352.3529411764706,675.5610084033614 L353.88235294117646,675.9482352941177 L355.4117647058823,676.3354621848739 L356.94117647058823,676.7226890756302 L358.47058823529414,677.1099159663866 L360.0,677.4971428571429" fill="none" stroke="#0b4bb3" stroke-width="1.95" opacity="1.0" data-probe2-role="plot-curve" />
+<text x="314" y="676" font-size="9.2" fill="#0b4bb3" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">t^-n</text>
+</g>
+<g id="semantic-probe2_band" data-semantic-id="probe2_band" data-semantic-kind="BandDiagram" data-payload-geometry="lumo=0.16 homo=0.84">
+<title>BandDiagram:probe2_band</title>
+<path d="M574,680 L574.0,234.0" stroke="#171717" stroke-width="1.2" stroke-linecap="round" opacity="1.0" data-probe2-role="energy-axis" />
+<path d="M574,224 L570.0,234.0 L578.0,234.0 Z" fill="#171717" opacity="1.0" data-probe2-role="energy-axis" />
+<path d="M600,296.96000000000004 L758,296.96000000000004" stroke="#171717" stroke-width="1.8" data-probe2-role="band-edge" />
+<text x="776" y="300.96000000000004" font-size="12.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">LUMO</text>
+<path d="M600,607.04 L758,607.04" stroke="#171717" stroke-width="1.8" data-probe2-role="band-edge" />
+<text x="776" y="611.04" font-size="12.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">HOMO</text>
+<text x="562" y="216" font-size="11" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Energy</text>
+</g>
+<g id="semantic-probe2_traps" data-semantic-id="probe2_traps" data-semantic-kind="TrapLevelSet" data-payload-geometry="shallow=3 deep=6 reference=normalized_bandgap_lumo_to_homo">
+<title>TrapLevelSet:probe2_traps</title>
+<path d="M642.32,356.24 L698.32,356.24" stroke="#1f6fd0" stroke-width="1.8" stroke-linecap="round" data-probe2-role="trap-shallow" />
+<path d="M638.32,388.15999999999997 L702.32,388.15999999999997" stroke="#1f6fd0" stroke-width="1.8" stroke-linecap="round" data-probe2-role="trap-shallow" />
+<path d="M634.32,420.08 L706.32,420.08" stroke="#1f6fd0" stroke-width="1.8" stroke-linecap="round" data-probe2-role="trap-shallow" />
+<path d="M632.32,465.68 L708.32,465.68" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<path d="M627.82,488.47999999999996 L712.82,488.47999999999996" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<path d="M623.32,511.28000000000003 L717.32,511.28000000000003" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<path d="M618.82,534.08 L721.82,534.08" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<path d="M614.32,556.88 L726.32,556.88" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<path d="M609.82,579.6800000000001 L730.82,579.6800000000001" stroke="#a81016" stroke-width="2.15" stroke-linecap="round" data-probe2-role="trap-deep" />
+<text x="622" y="374" font-size="12.3" fill="#1f6fd0" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">shallow traps</text>
+<text x="630" y="542" font-size="13.2" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700" font-style="italic">deep traps</text>
+</g>
+<g id="semantic-probe2_dos" data-semantic-id="probe2_dos" data-semantic-kind="DOSLobes" data-payload-geometry="model=gaussian_mixture deep_width=132 samples=64">
+<title>DOSLobes:probe2_dos</title>
+<path d="M798,664 L798.0,250.0" stroke="#171717" stroke-width="1.2" stroke-linecap="round" opacity="1.0" />
+<path d="M798,242 L794.5,250.0 L801.5,250.0 Z" fill="#171717" opacity="1.0" />
+<path d="M798,664 L1016.0,664.0" stroke="#171717" stroke-width="1.2" stroke-linecap="round" opacity="1.0" />
+<path d="M1024,664 L1016.0,660.5 L1016.0,667.5 Z" fill="#171717" opacity="1.0" />
+<path d="M798,664 L798,242" stroke="none" data-probe2-role="dos-axis" />
+<path d="M798,664 L1024,664" stroke="none" data-probe2-role="dos-axis" />
+<text x="816" y="242" font-size="15.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">DOS</text>
+<text x="816" y="242" font-size="15.0" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-probe2-role="dos-label">DOS</text>
+<text x="933.6" y="684" font-size="14.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">g(Et)</text>
+<text x="933.6" y="684" font-size="14.0" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-probe2-role="dos-axis-label">g(Et)</text>
+<path d="M806,358.28 L1034,358.28" stroke="#171717" stroke-width="1.0" stroke-dasharray="5 5" opacity="0.68" data-probe2-role="dos-threshold" />
+<path d="M798,287.28 L798.0,287.28 L799.8880441160948,288.26412698412696 L800.8124151711525,289.24825396825395 L801.7025056474869,290.23238095238094 L802.6227104527502,291.2165079365079 L803.5960655526517,292.2006349206349 L804.6333038920847,293.1847619047619 L805.7395978123695,294.1688888888889 L806.9167991626838,295.1530158730158 L808.1643315539528,296.1371428571428 L809.4795873935798,297.1212698412698 L810.8581231758748,298.1053968253968 L812.293772312457,299.08952380952377 L813.7787304654,300.07365079365076 L815.3036412530427,301.05777777777774 L816.857697384379,302.04190476190473 L818.4287654755499,303.0260317460317 L820.0035387231883,304.0101587301587 L821.5677188469698,304.9942857142857 L823.1062266358903,305.9784126984127 L824.6034387513871,306.96253968253967 L826.0434470286965,307.94666666666666 L827.4103353279462,308.93079365079365 L828.6884680094217,309.9149206349206 L829.8627833523127,310.89904761904756 L830.9190847185841,311.88317460317455 L831.8443219985594,312.86730158730154 L832.6268558726576,313.8514285714285 L833.2566976873964,314.8355555555555 L833.7257182670309,315.8196825396825 L834.0278197491131,316.8038095238095 L834.1590655171194,317.7879365079365 L834.1279741625835,318.77206349206347 L833.9711512815819,319.75619047619045 L833.6916499810235,320.74031746031744 L833.2916344008181,321.72444444444443 L832.7743240002737,322.7085714285714 L832.1439526569496,323.6926984126984 L831.405712716311,324.6768253968254 L830.5656849045976,325.6609523809524 L829.6307552719117,326.6450793650793 L828.6085205541858,327.6292063492063 L827.5071835227282,328.6133333333333 L826.3354400195408,329.5974603174603 L825.1023594459541,330.58158730158726 L823.8172604700658,331.56571428571425 L822.4895836304439,332.54984126984124 L821.1287623186574,333.5339682539682 L819.7440932888742,334.5180952380952 L818.3446073150968,335.5022222222222 L816.9389398021012,336.4863492063492 L815.5351998866025,337.4704761904762 L814.1408345267682,338.45460317460316 L812.76248066164,339.43873015873015 L811.4057924887065,340.4228571428571 L810.0752195974679,341.40698412698407 L808.7736890030234,342.39111111111106 L807.5020948402148,343.37523809523805 L806.2583816679478,344.35936507936503 L805.035689008147,345.343492063492 L803.8180089169094,346.327619047619 L802.5676576913052,347.311746031746 L801.1726656330289,348.295873015873 L798.0000025167299,349.28 L798,349.28 Z" fill="#dcecff" stroke="#1f6fd0" stroke-width="1.75" opacity="0.88" data-probe2-role="dos-lobe-shallow" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="64" />
+<path d="M798,358.28 L798.0,358.28 L799.6590125146051,361.98793650793647 L800.5612204054253,365.69587301587296 L801.4671678951471,369.4038095238095 L802.4380694838742,373.111746031746 L803.5001056278811,376.8196825396825 L804.6692672647252,380.527619047619 L805.9570840937708,384.23555555555555 L807.3724597846862,387.94349206349204 L808.9223233811289,391.65142857142854 L810.6118314760536,395.35936507936503 L812.4443753141519,399.0673015873016 L814.4214976562912,402.7752380952381 L816.5427696142507,406.4831746031746 L818.8056551633132,410.19111111111107 L821.2053808447818,413.89904761904756 L823.7348231071403,417.6069841269841 L826.3844229232114,421.3149206349206 L829.1421355047339,425.0228571428571 L831.9934215305392,428.73079365079366 L834.9212850263068,432.43873015873015 L837.906361744789,436.14666666666665 L840.9270605338205,439.85460317460314 L843.9597587272541,443.56253968253964 L846.9790510598403,447.2704761904762 L849.9580500173447,450.9784126984127 L852.8687339261579,454.6863492063492 L855.6823375085426,458.3942857142857 L858.3697781313962,462.10222222222217 L860.9021096106106,465.8101587301587 L863.2509942513915,469.5180952380952 L865.3891828551973,473.2260317460317 L867.2909917481309,476.93396825396826 L868.9327655171899,480.64190476190475 L870.2933141031245,484.34984126984125 L871.3543132033925,488.0577777777778 L872.1006575848204,491.76571428571424 L872.5207578787629,495.4736507936508 L872.6067727043085,499.1815873015873 L872.3547694971747,502.8895238095238 L871.764809161415,506.59746031746033 L870.8782150903156,510.3053968253968 L869.773526929046,514.0133333333333 L868.4543048685562,517.7212698412699 L866.9260064926484,521.4292063492063 L865.1953181207828,525.1371428571429 L863.2700427712225,528.8450793650793 L861.158960806733,532.5530158730159 L858.8716599200062,536.2609523809524 L856.4183292679868,539.9688888888888 L853.8095095120389,543.6768253968254 L851.0557854419867,547.384761904762 L848.1673992505065,551.0926984126984 L845.1537475011168,554.8006349206349 L842.0226976176606,558.5085714285714 L838.7796080293722,562.2165079365079 L835.4258319938752,565.9244444444444 L831.9562596337581,569.6323809523809 L828.3549174032057,573.3403174603175 L824.5862116372725,577.0482539682539 L820.5748846841875,580.7561904761905 L816.1495491724445,584.464126984127 L810.811872966963,588.1720634920634 L798.0000040016736,591.88 L798,591.88 Z" fill="url(#deepDosFill)" stroke="#a81016" stroke-width="1.9" opacity="0.88" data-probe2-role="dos-lobe-deep" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="64" />
+<text x="848.16" y="325.71999999999997" font-size="13.0" fill="#1f6fd0" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">shallow</text>
+<text x="848.16" y="325.71999999999997" font-size="13.0" fill="none" font-family="Helvetica, Arial, sans-serif" data-probe2-role="dos-label">shallow</text>
+<text x="894.84" y="521.88" font-size="13.5" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700" font-style="italic">deep</text>
+<text x="894.84" y="521.88" font-size="13.5" fill="none" font-family="Helvetica, Arial, sans-serif" data-probe2-role="dos-label">deep</text>
+<path d="M1034,360.28 L1034,498.43999999999994" stroke="#171717" stroke-width="1.0" opacity="0.86" data-probe2-role="dos-depth-guide" />
+<path d="M1034,360.28 L1037.5,368.28 L1030.5,368.28 Z" fill="#171717" opacity="0.86" data-probe2-role="dos-depth-guide" />
+<path d="M1034,498.43999999999994 L1030.5,490.43999999999994 L1037.5,490.43999999999994 Z" fill="#171717" opacity="0.86" data-probe2-role="dos-depth-guide" />
+<text x="1040" y="426.5968" font-size="11.0" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-style="italic">Et window</text>
+<text x="1040" y="426.5968" font-size="11.0" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="start" data-probe2-role="dos-depth-label">Et window</text>
+<rect x="560" y="718" width="476" height="84" rx="5" ry="5" fill="#fffdfc" stroke="#f3d9d6" stroke-width="0.8" opacity="1.0" />
+<text x="580" y="750" font-size="12.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Payload controls trap count, energy placement, and DOS silhouette.</text>
+<text x="580" y="768" font-size="12.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start">Support panels constrain the mechanism without overriding geometry.</text>
+</g>
+<g id="semantic-probe2_readout" data-semantic-id="probe2_readout" data-semantic-kind="TrapModelFlow" data-payload-geometry="steps=4">
+<title>TrapModelFlow:probe2_readout</title>
+<text x="1224" y="170" font-size="13.4" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Readout chain</text>
+<circle cx="1257.75" cy="230.0" r="16" fill="#f4f7fb" stroke="#d9dde4" stroke-width="0.9" data-probe2-role="readout-step" />
+<text x="1257.75" y="269.0" font-size="9.4" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">decay</text>
+<path d="M1276.75,230.0 L1300.25,230.0" stroke="#69707a" stroke-width="0.85" stroke-linecap="round" opacity="0.55" />
+<path d="M1306.25,230.0 L1300.25,227.0 L1300.25,233.0 Z" fill="#69707a" opacity="0.55" />
+<circle cx="1325.25" cy="230.0" r="16" fill="#f4f7fb" stroke="#d9dde4" stroke-width="0.9" data-probe2-role="readout-step" />
+<text x="1325.25" y="269.0" font-size="9.4" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">tau</text>
+<path d="M1344.25,230.0 L1367.75,230.0" stroke="#69707a" stroke-width="0.85" stroke-linecap="round" opacity="0.55" />
+<path d="M1373.75,230.0 L1367.75,227.0 L1367.75,233.0 Z" fill="#69707a" opacity="0.55" />
+<circle cx="1392.75" cy="230.0" r="16" fill="#f4f7fb" stroke="#d9dde4" stroke-width="0.9" data-probe2-role="readout-step" />
+<text x="1392.75" y="269.0" font-size="9.4" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Et</text>
+<path d="M1411.75,230.0 L1435.25,230.0" stroke="#69707a" stroke-width="0.85" stroke-linecap="round" opacity="0.55" />
+<path d="M1441.25,230.0 L1435.25,227.0 L1435.25,233.0 Z" fill="#69707a" opacity="0.55" />
+<circle cx="1460.25" cy="230.0" r="16" fill="#f4f7fb" stroke="#d9dde4" stroke-width="0.9" data-probe2-role="readout-step" />
+<text x="1460.25" y="269.0" font-size="9.4" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">g(Et)</text>
+<path d="M1227,392 L1227.0,322.0" stroke="#171717" stroke-width="1.0" stroke-linecap="round" opacity="1.0" />
+<path d="M1227,314 L1223.5,322.0 L1230.5,322.0 Z" fill="#171717" opacity="1.0" />
+<path d="M1227,392 L1330.0,392.0" stroke="#171717" stroke-width="1.0" stroke-linecap="round" opacity="1.0" />
+<path d="M1338,392 L1330.0,388.5 L1330.0,395.5 Z" fill="#171717" opacity="1.0" />
+<path d="M1227,392 L1227,314" stroke="none" data-probe2-role="mini-dos-axis" />
+<path d="M1227,392 L1338,392" stroke="none" data-probe2-role="mini-dos-axis" />
+<text x="1293.6" y="405" font-size="8.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">g(Et)</text>
+<text x="1293.6" y="405" font-size="8.2" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" data-probe2-role="mini-dos-axis-label">g(Et)</text>
+<path d="M1235,341.38 L1326,341.38" stroke="#171717" stroke-width="0.85" stroke-dasharray="5 5" opacity="0.68" data-probe2-role="mini-dos-threshold" />
+<path d="M1227,319 L1227.0,319.0 L1231.8961782599076,319.39435897435897 L1233.8827343257433,319.78871794871793 L1235.5449800139422,320.1830769230769 L1237.026753571803,320.5774358974359 L1238.3589030790758,320.9717948717949 L1239.5414102011334,321.36615384615385 L1240.5636911776014,321.7605128205128 L1241.4122985697707,322.1548717948718 L1242.0747003169581,322.54923076923075 L1242.5547758739008,322.94358974358977 L1242.8793018791168,323.33794871794873 L1243.0491662580862,323.7323076923077 L1243.066798909862,324.12666666666667 L1242.9371579236774,324.52102564102563 L1242.6677336024677,324.9153846153846 L1242.2684152439053,325.30974358974356 L1241.7512455520628,325.7041025641026 L1241.1300855628645,326.09846153846155 L1240.4202126655578,326.4928205128205 L1239.6378744013882,326.8871794871795 L1238.799820532199,327.28153846153845 L1237.9228350448384,327.6758974358974 L1237.0232881492414,328.07025641025643 L1236.1167259352178,328.4646153846154 L1235.2175122672193,328.85897435897436 L1234.338533871545,329.25333333333333 L1233.4909755919184,329.6476923076923 L1232.6841686416644,330.04205128205126 L1231.9255105073898,330.4364102564102 L1231.2204510010185,330.83076923076925 L1230.5725346330848,331.2251282051282 L1229.983484304252,331.6194871794872 L1229.453303316666,332.01384615384615 L1228.9803562044308,332.4082051282051 L1228.5613455897274,332.8025641025641 L1228.1909621532159,333.1969230769231 L1227.860397720313,333.59128205128206 L1227.5500936400301,333.98564102564103 L1227.000000559461,334.38 L1227,334.38 Z" fill="#dcecff" stroke="#1f6fd0" stroke-width="1.35" opacity="0.88" data-probe2-role="mini-dos-shallow" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="40" />
+<path d="M1227,341.38 L1227.0,341.38 L1234.0153421988716,342.5753846153846 L1237.0246433340951,343.77076923076925 L1239.6023978388369,344.9661538461538 L1241.9973859828517,346.16153846153844 L1244.2871449979054,347.35692307692307 L1246.499015969015,348.5523076923077 L1248.6394790186052,349.7476923076923 L1250.7045806528404,350.94307692307694 L1252.6845756543896,352.1384615384615 L1254.566367505816,353.33384615384614 L1256.3349816930852,354.52923076923076 L1257.974565924239,355.7246153846154 L1259.469136105439,356.92 L1260.8031715365832,358.11538461538464 L1261.962109809806,359.3107692307692 L1262.9327658570835,360.50615384615384 L1263.7036861957934,361.70153846153846 L1264.2654423917916,362.8969230769231 L1264.610864142053,364.0923076923077 L1264.7352106809174,365.2876923076923 L1264.6362786235795,366.4830769230769 L1264.3384129038964,367.67846153846153 L1263.8619412148305,368.87384615384616 L1263.2064423473282,370.0692307692308 L1262.3752033419476,371.2646153846154 L1261.372525364125,372.46 L1260.203541811177,373.6553846153846 L1258.8739635900315,374.85076923076923 L1257.3897256017212,376.04615384615386 L1255.7564893021674,377.2415384615385 L1253.9789195562823,378.43692307692305 L1252.0595798415732,379.6323076923077 L1249.9971287435665,380.8276923076923 L1247.7831173542781,382.0230769230769 L1245.395659484886,383.21846153846155 L1242.7849993406628,384.4138461538462 L1239.8328891058538,385.60923076923075 L1236.186167662207,386.8046153846154 L1227.0000036040706,388.0 L1227,388 Z" fill="#d98787" stroke="#a81016" stroke-width="1.45" opacity="0.78" data-probe2-role="mini-dos-deep" data-dos-profile="payload-sampled-asymmetric" data-dos-polish="schematic-v11" data-dos-samples="40" />
+<path d="M1326,345.38 L1326,368" stroke="#171717" stroke-width="0.9" opacity="0.86" data-probe2-role="mini-dos-guide" />
+<path d="M1326,345.38 L1328.9,351.88 L1323.1,351.88 Z" fill="#171717" opacity="0.86" data-probe2-role="mini-dos-guide" />
+<path d="M1326,368 L1323.1,361.5 L1328.9,361.5 Z" fill="#171717" opacity="0.86" data-probe2-role="mini-dos-guide" />
+<text x="1321" y="356.2376" font-size="7.5" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="end" font-style="italic">Et</text>
+<text x="1321" y="356.2376" font-size="7.5" fill="none" font-family="Helvetica, Arial, sans-serif" text-anchor="end" data-probe2-role="mini-dos-depth">Et</text>
+<text x="1368" y="330" font-size="11.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">compact</text>
+<text x="1368" y="345" font-size="11.5" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="start">readout</text>
+</g>
+<g id="semantic-probe2_device" data-semantic-id="probe2_device" data-semantic-kind="MacroscopicProbe" data-payload-geometry="frames=neutral:charged">
+<title>MacroscopicProbe:probe2_device</title>
+<rect x="1216" y="608" width="274" height="178" rx="5" ry="5" fill="#f8fafc" stroke="#dbe1ea" stroke-width="0.9" opacity="1.0" />
+<text x="1230" y="632" font-size="12.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">Probe response</text>
+<text x="1354.0" y="831" font-size="10.8" fill="#69707a" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-style="italic">stored charge produces retained bending response</text>
+</g>
+<g id="semantic-probe2_cantilever" data-semantic-id="probe2_cantilever" data-semantic-kind="PolymerCantilever" data-payload-geometry="charges=4 bend=retained_outward_bend">
+<title>PolymerCantilever:probe2_cantilever</title>
+<path d="M1242,710 L1306,710" stroke="#7d8794" stroke-width="12" stroke-linecap="square" />
+<path d="M1302,710 C1344,708,1388,736,1434,762" fill="none" stroke="#d5a534" stroke-width="22" stroke-linecap="round" />
+<path d="M1304,704 C1346,704,1389,732,1431,758" fill="none" stroke="#f2da80" stroke-width="5" stroke-linecap="round" opacity="0.48" />
+<circle cx="1338" cy="666" r="7.5" fill="#c9252a" stroke="#6c0d0d" stroke-width="1.0" />
+<text x="1338" y="668.85" font-size="10.125" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">-</text>
+<circle cx="1360" cy="692" r="7.5" fill="#c9252a" stroke="#6c0d0d" stroke-width="1.0" />
+<text x="1360" y="694.85" font-size="10.125" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">-</text>
+<circle cx="1380" cy="720" r="7.5" fill="#c9252a" stroke="#6c0d0d" stroke-width="1.0" />
+<text x="1380" y="722.85" font-size="10.125" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">-</text>
+<circle cx="1400" cy="748" r="7.5" fill="#c9252a" stroke="#6c0d0d" stroke-width="1.0" />
+<text x="1400" y="750.85" font-size="10.125" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">-</text>
+</g>
+<g id="semantic-probe2_electrode" data-semantic-id="probe2_electrode" data-semantic-kind="Electrode" data-payload-geometry="sign=- x=1460">
+<title>Electrode:probe2_electrode</title>
+<rect x="1450" y="620" width="28" height="150" rx="2" ry="2" fill="#9aa4af" stroke="#505965" stroke-width="1.0" opacity="1.0" />
+<text x="1486" y="654" font-size="12.5" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="start" font-weight="700">- V</text>
+</g>
+<g id="semantic-probe2_force" data-semantic-id="probe2_force" data-semantic-kind="ForceArrow" data-payload-geometry="condition=like_charge_repulsion label=retained repulsion">
+<title>ForceArrow:probe2_force</title>
+<path d="M1388,704 L1322.0,704.0" stroke="#a81016" stroke-width="5.8" stroke-linecap="round" opacity="1.0" data-probe2-role="device-force" />
+<path d="M1300,704 L1322.0,714.5 L1322.0,693.5 Z" fill="#a81016" opacity="1.0" data-probe2-role="device-force" />
+<text x="1292" y="686" font-size="11.2" fill="#a81016" font-family="Helvetica, Arial, sans-serif" text-anchor="end" font-weight="700">retained repulsion</text>
+</g>
+</svg>
