@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -21,6 +22,9 @@ V20_PHYSICS_CONTRACT = ROOT / "physics_sanity_contract_v20.md"
 V20_PHYSICS_HANDBACK = ROOT / "physics_sanity_gate_handback_v20.md"
 V21_PROBE_OPTIONS = ROOT / "probe_force_target_options_v21.md"
 V21_PROBE_HANDBACK = ROOT / "probe_force_target_handback_v21.md"
+V22_VISUAL_REPORT = ROOT / "fig1_visual_judgment_report.md"
+V22_VISUAL_REPORT_JSON = ROOT / "fig1_visual_judgment_report.json"
+V22_VISUAL_HANDBACK = ROOT / "visual_judgment_report_handback_v22.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -38,6 +42,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "src/run_fig1_gates.py",
     "src/verify_fig1_baseline_hash.py",
     "src/test_fig1_physics_sanity.py",
+    "src/report_fig1_visual_judgment.py",
+    "src/test_fig1_visual_judgment_report.py",
     "dos_reference_schematic_handback_v9.md",
     "dos_density_profile_handback_v10.md",
     "dos_schematic_polish_handback_v11.md",
@@ -56,6 +62,9 @@ REQUIRED_MANIFEST_TOKENS = (
     "physics_sanity_gate_handback_v20.md",
     "probe_force_target_options_v21.md",
     "probe_force_target_handback_v21.md",
+    "fig1_visual_judgment_report.md",
+    "fig1_visual_judgment_report.json",
+    "visual_judgment_report_handback_v22.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -66,6 +75,8 @@ REQUIRED_MANIFEST_TOKENS = (
     "v20 physics sanity inventory",
     "v20 physics sanity layer",
     "v21 probe force-target pass",
+    "v22 visual judgment report layer",
+    "report-only inspection surface",
     "cantilever_leftward_repulsion",
     "force_target",
     "baseline hash",
@@ -240,6 +251,40 @@ REQUIRED_V21_PROBE_HANDBACK_TOKENS = (
     "Human visual review",
 )
 
+REQUIRED_V22_VISUAL_REPORT_TOKENS = (
+    "Fig1 Visual Judgment Report v22",
+    "report-only visual judgment layer",
+    "Human visual review remains required",
+    "Panel Density",
+    "Text / Text Near-Collision",
+    "Text / Shape Conflict",
+    "Visual Hierarchy",
+    "Reading Order",
+    "Reference Divergence",
+    "Human Review Prompts",
+    "force_target=cantilever",
+    "cantilever_leftward_repulsion",
+)
+
+REQUIRED_V22_VISUAL_HANDBACK_TOKENS = (
+    "report-only visual judgment layer",
+    "src/report_fig1_visual_judgment.py",
+    "src/test_fig1_visual_judgment_report.py",
+    "fig1_visual_judgment_report.md",
+    "fig1_visual_judgment_report.json",
+    "Panel Density",
+    "Text / Text Near-Collision",
+    "Text / Shape Conflict",
+    "Visual Hierarchy",
+    "Reading Order",
+    "Reference Divergence",
+    "Human Review Prompts",
+    "No absolute min-font-size verifier",
+    "force_target=cantilever",
+    "cantilever_leftward_repulsion",
+    "Human visual review remains required",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -358,6 +403,33 @@ def main() -> int:
     for token in REQUIRED_V21_PROBE_HANDBACK_TOKENS:
         if token not in v21_handback:
             return _fail(f"v21 probe force target handback missing token: {token}")
+
+    if not V22_VISUAL_REPORT.exists():
+        return _fail(f"missing v22 visual judgment report: {V22_VISUAL_REPORT}")
+    v22_report = V22_VISUAL_REPORT.read_text()
+    for token in REQUIRED_V22_VISUAL_REPORT_TOKENS:
+        if token not in v22_report:
+            return _fail(f"v22 visual judgment report missing token: {token}")
+
+    if not V22_VISUAL_REPORT_JSON.exists():
+        return _fail(f"missing v22 visual judgment JSON report: {V22_VISUAL_REPORT_JSON}")
+    try:
+        v22_report_json = json.loads(V22_VISUAL_REPORT_JSON.read_text())
+    except json.JSONDecodeError as exc:
+        return _fail(f"invalid v22 visual judgment JSON report: {exc}")
+    if v22_report_json.get("schema_version") != "fig1_visual_judgment_report_v22":
+        return _fail("v22 visual judgment JSON report schema mismatch")
+    if v22_report_json.get("report_only") is not True:
+        return _fail("v22 visual judgment JSON report must be report_only=true")
+    if v22_report_json.get("blocking_failures") != []:
+        return _fail("v22 visual judgment JSON report must not declare blocking failures")
+
+    if not V22_VISUAL_HANDBACK.exists():
+        return _fail(f"missing v22 visual judgment handback: {V22_VISUAL_HANDBACK}")
+    v22_handback = V22_VISUAL_HANDBACK.read_text()
+    for token in REQUIRED_V22_VISUAL_HANDBACK_TOKENS:
+        if token not in v22_handback:
+            return _fail(f"v22 visual judgment handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

@@ -1,0 +1,2413 @@
+{
+  "blocking_failures": [],
+  "categories": [
+    {
+      "items": [
+        {
+          "message": "polymer_origin_card has high approximate occupied area (0.86); inspect whether panel density harms first-pass reading.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "electrical_evidence_card has moderate-high approximate occupied area (0.63); inspect whether whitespace is sufficient for scanning.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "deep_trap_hero_card has high approximate occupied area (0.74); inspect whether panel density harms first-pass reading.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "interpretation_card has high approximate occupied area (0.72); inspect whether panel density harms first-pass reading.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.",
+          "severity": "candidate risk"
+        }
+      ],
+      "name": "Panel Density"
+    },
+    {
+      "items": [
+        {
+          "message": "deep_trap_hero_card text boxes may compete at 0.0px gap: 'Et ~' near '0.5-1.0 eV'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "interpretation_card text boxes may compete at 0.0px gap: 'I(t) ~' near 't^-n'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "interpretation_card text boxes may compete at 0.0px gap: 'Debye' near 'exp(-t/tau)'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text boxes may compete at 0.0px gap: '+' near 'Force on cantilever'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "polymer_origin_card text boxes may compete at 0.0px gap: 'S-chain length' near 'localized traps'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "deep_trap_hero_card text boxes may compete at 0.5px gap: 'deep' near 'states'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "deep_trap_hero_card text boxes may compete at 0.6px gap: 'shallow' near 'states'.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "polymer_origin_card text boxes may compete at 2.0px gap: 'S-rich segments' near 'S-chain length'.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "polymer_origin_card text boxes may compete at 2.3px gap: 'Sulfur polymer origin' near '(composition tuning)'.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "interpretation_card text boxes may compete at 2.6px gap: 'Convergence to deep traps (tau_...' near 'extended repulsion.'.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "macroscopic_probe_card text boxes may compete at 3.2px gap: 'Cantilever' near '(probe)'.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "electrical_evidence_card text boxes may compete at 4.6px gap: 'slope = -n' near 'extract n'.",
+          "severity": "candidate risk"
+        }
+      ],
+      "name": "Text / Text Near-Collision"
+    },
+    {
+      "items": [
+        {
+          "message": "macroscopic_probe_card text 'Cantilever' is 0.0px from path mark (path); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text '(probe)' is 0.0px from path mark (path); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text '+' is 0.0px from path mark (path); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text 'Force on cantilever' is 0.0px from path mark (path); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text 'Force on cantilever' is 0.0px from circle mark (circle); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "macroscopic_probe_card text 'Maxwell attraction' is 0.0px from path mark (path); inspect label ownership and legibility.",
+          "severity": "possible issue"
+        },
+        {
+          "message": "deep_trap_hero_card text 'deep' is 2.2px from path mark (path); inspect label ownership and legibility.",
+          "severity": "candidate risk"
+        },
+        {
+          "message": "deep_trap_hero_card text 'states' is 2.2px from path mark (path); inspect label ownership and legibility.",
+          "severity": "candidate risk"
+        }
+      ],
+      "name": "Text / Shape Conflict"
+    },
+    {
+      "items": [
+        {
+          "message": "hero maximum text size (24.0) exceeds support maximum (18.0); hierarchy appears intentional but still needs visual review.",
+          "severity": "evidence"
+        },
+        {
+          "message": "primary semantic objects occupy about 0.25 of semantic bbox area; inspect whether semantic importance and visual weight still match.",
+          "severity": "candidate risk"
+        }
+      ],
+      "name": "Visual Hierarchy"
+    },
+    {
+      "items": [
+        {
+          "message": "likely panel reading order by top-left position: polymer_origin_card -> electrical_evidence_card -> deep_trap_hero_card -> interpretation_card -> macroscopic_probe_card.",
+          "severity": "evidence"
+        },
+        {
+          "message": "polymer_origin_card first text sequence by bbox position: Sulfur polymer ... -> (composition tu... -> S -> Delta -> S -> S.",
+          "severity": "evidence"
+        },
+        {
+          "message": "electrical_evidence_card first text sequence by bbox position: Electrical evid... -> P-E response -> Current decay -> P -> log I -> I(t) ~ t^-n.",
+          "severity": "evidence"
+        },
+        {
+          "message": "deep_trap_hero_card first text sequence by bbox position: Converged deep ... -> Deep traps domi... -> DOS g(Et) -> LUMO -> shallow -> shallow.",
+          "severity": "evidence"
+        },
+        {
+          "message": "interpretation_card first text sequence by bbox position: Interpretation ... -> I(t) ~ -> Debye -> n -> tau_d -> g(Et).",
+          "severity": "evidence"
+        },
+        {
+          "message": "macroscopic_probe_card first text sequence by bbox position: Macroscopic probe -> Cantilever -> (probe) -> + V -> Force on cantil... -> +.",
+          "severity": "evidence"
+        }
+      ],
+      "name": "Reading Order"
+    },
+    {
+      "items": [
+        {
+          "message": "intentional v21 divergence retained: force_target=cantilever with arrow_direction=cantilever_leftward_repulsion; reference PNG remains layout/style evidence only.",
+          "severity": "evidence"
+        },
+        {
+          "message": "No additional reference divergence is inferred by this script; inspect any future visual changes against scaffold, physics, readability, and causal-clarity reasons before treating them as justified.",
+          "severity": "inspect"
+        }
+      ],
+      "name": "Reference Divergence"
+    },
+    {
+      "items": [
+        {
+          "message": "Inspect whether the leftward cantilever force arrow still reads clearly in the probe panel after the v21 physics divergence.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect whether the center hero still receives first visual attention before support-panel details.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect candidate crowded or sparse panels against the intended narrative order, not as automatic failures.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect panel density: polymer_origin_card has high approximate occupied area (0.86); inspect whether panel density harms first-pass reading.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect panel density: electrical_evidence_card has moderate-high approximate occupied area (0.63); inspect whether whitespace is sufficient for scanning.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect panel density: deep_trap_hero_card has high approximate occupied area (0.74); inspect whether panel density harms first-pass reading.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect panel density: interpretation_card has high approximate occupied area (0.72); inspect whether panel density harms first-pass reading.",
+          "severity": "inspect"
+        },
+        {
+          "message": "Inspect panel density: macroscopic_probe_card has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.",
+          "severity": "inspect"
+        }
+      ],
+      "name": "Human Review Prompts"
+    }
+  ],
+  "figure_id": "fig1_reference_semantic_scene_v1",
+  "non_goals": [
+    "does not fail subjective visual risks",
+    "does not claim publication-grade approval",
+    "does not pixel-trace the reference image",
+    "does not add absolute min-font-size rules"
+  ],
+  "panels": [
+    {
+      "bounds": {
+        "height": 394.0,
+        "width": 455.0,
+        "x": 22.0,
+        "y": 30.0
+      },
+      "id": "polymer_origin_card",
+      "max_font_size": 18.0,
+      "median_font_size": 6.365,
+      "min_font_size": 5.89,
+      "occupied_area_ratio": 0.8572,
+      "role": "supporting",
+      "semantic_area_ratio": 0.8572,
+      "semantic_box_count": 1,
+      "text_area_ratio": 0.1182,
+      "text_box_count": 27,
+      "text_role_tags": [
+        "origin-localized-traps",
+        "origin-relation",
+        "origin-s-rich-segments",
+        "panel-conclusion",
+        "panel-title-support"
+      ],
+      "title": "Sulfur polymer origin\n(composition tuning)"
+    },
+    {
+      "bounds": {
+        "height": 394.0,
+        "width": 497.0,
+        "x": 1076.0,
+        "y": 30.0
+      },
+      "id": "electrical_evidence_card",
+      "max_font_size": 18.0,
+      "median_font_size": 11.5,
+      "min_font_size": 9.8,
+      "occupied_area_ratio": 0.6309,
+      "role": "supporting",
+      "semantic_area_ratio": 0.611,
+      "semantic_box_count": 3,
+      "text_area_ratio": 0.0732,
+      "text_box_count": 12,
+      "text_role_tags": [
+        "decay-extract-n",
+        "electrical-conclusion",
+        "panel-conclusion",
+        "panel-title-support",
+        "schematic-label"
+      ],
+      "title": "Electrical evidence"
+    },
+    {
+      "bounds": {
+        "height": 613.0,
+        "width": 468.0,
+        "x": 548.0,
+        "y": 173.0
+      },
+      "id": "deep_trap_hero_card",
+      "max_font_size": 24.0,
+      "median_font_size": 13.5,
+      "min_font_size": 11.0,
+      "occupied_area_ratio": 0.7396,
+      "role": "hero",
+      "semantic_area_ratio": 0.7015,
+      "semantic_box_count": 4,
+      "text_area_ratio": 0.1135,
+      "text_box_count": 17,
+      "text_role_tags": [
+        "dos-axis-label",
+        "dos-depth-label",
+        "dos-label",
+        "energy-axis",
+        "hero-caption",
+        "hero-converged-picture",
+        "panel-title-hero"
+      ],
+      "title": "Converged deep charge trapping"
+    },
+    {
+      "bounds": {
+        "height": 470.0,
+        "width": 475.0,
+        "x": 22.0,
+        "y": 464.0
+      },
+      "id": "interpretation_card",
+      "max_font_size": 18.0,
+      "median_font_size": 10.8,
+      "min_font_size": 7.5,
+      "occupied_area_ratio": 0.716,
+      "role": "supporting",
+      "semantic_area_ratio": 0.6821,
+      "semantic_box_count": 2,
+      "text_area_ratio": 0.099,
+      "text_box_count": 18,
+      "text_role_tags": [
+        "interpretation-causal-step",
+        "interpretation-conclusion",
+        "interpretation-step-debye",
+        "interpretation-step-exponent-n",
+        "interpretation-step-power-law",
+        "interpretation-step-tau-d",
+        "interpretation-step-trap-depth-distribution",
+        "panel-conclusion",
+        "panel-title-support",
+        "schematic-dos-depth-label",
+        "schematic-label"
+      ],
+      "title": "Interpretation (converged trap model)"
+    },
+    {
+      "bounds": {
+        "height": 470.0,
+        "width": 519.0,
+        "x": 1054.0,
+        "y": 464.0
+      },
+      "id": "macroscopic_probe_card",
+      "max_font_size": 18.0,
+      "median_font_size": 12.5,
+      "min_font_size": 11.2,
+      "occupied_area_ratio": 0.67,
+      "role": "supporting",
+      "semantic_area_ratio": 0.6557,
+      "semantic_box_count": 5,
+      "text_area_ratio": 0.0906,
+      "text_box_count": 13,
+      "text_role_tags": [
+        "panel-conclusion",
+        "panel-title-support",
+        "probe-conclusion",
+        "probe-force-label"
+      ],
+      "title": "Macroscopic probe"
+    }
+  ],
+  "report_only": true,
+  "schema_version": "fig1_visual_judgment_report_v22",
+  "semantic_boxes": [
+    {
+      "area": 331414.49,
+      "bbox": {
+        "bottom": 724.85,
+        "height": 571.7,
+        "left": 487.15,
+        "right": 1066.85,
+        "top": 153.15,
+        "width": 579.7
+      },
+      "id": "layout_flow",
+      "kind": "LayoutFlow",
+      "label": "Reference support-to-hero flow",
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "LayoutFlow"
+      ]
+    },
+    {
+      "area": 153674.55,
+      "bbox": {
+        "bottom": 413.8,
+        "height": 361.8,
+        "left": 47.625,
+        "right": 472.375,
+        "top": 52.0,
+        "width": 424.75
+      },
+      "id": "sulfur_polymer_origin",
+      "kind": "SulfurPolymerOrigin",
+      "label": "Sulfur polymer origin",
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "SulfurPolymerOrigin"
+      ]
+    },
+    {
+      "area": 188287.8,
+      "bbox": {
+        "bottom": 745.0,
+        "height": 506.15,
+        "left": 596.0,
+        "right": 968.0,
+        "top": 238.85,
+        "width": 372.0
+      },
+      "id": "deep_trap_hero",
+      "kind": "DeepTrapHero",
+      "label": "Deep charge trapping",
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "DeepTrapHero",
+        "primary"
+      ]
+    },
+    {
+      "area": 86173.286,
+      "bbox": {
+        "bottom": 666.575,
+        "height": 398.075,
+        "left": 566.025,
+        "right": 782.5,
+        "top": 268.5,
+        "width": 216.475
+      },
+      "id": "band_diagram",
+      "kind": "BandDiagram",
+      "label": "Band diagram",
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "BandDiagram",
+        "primary"
+      ]
+    },
+    {
+      "area": 28223.719,
+      "bbox": {
+        "bottom": 567.1,
+        "height": 191.25,
+        "left": 612.8,
+        "right": 760.375,
+        "top": 375.85,
+        "width": 147.575
+      },
+      "id": "trap_level_set",
+      "kind": "TrapLevelSet",
+      "label": "Trap level set",
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "TrapLevelSet",
+        "primary"
+      ]
+    },
+    {
+      "area": 56580.0,
+      "bbox": {
+        "bottom": 648.5,
+        "height": 345.0,
+        "left": 807.0,
+        "right": 971.0,
+        "top": 303.5,
+        "width": 164.0
+      },
+      "id": "dos_lobes",
+      "kind": "DOSLobes",
+      "label": "DOS lobes",
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "DOSLobes",
+        "primary"
+      ]
+    },
+    {
+      "area": 117341.8,
+      "bbox": {
+        "bottom": 396.75,
+        "height": 290.45,
+        "left": 1135.5,
+        "right": 1539.5,
+        "top": 106.3,
+        "width": 404.0
+      },
+      "id": "evidence_trio",
+      "kind": "EvidenceTrio",
+      "label": "Evidence trio",
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "EvidenceTrio"
+      ]
+    },
+    {
+      "area": 25363.575,
+      "bbox": {
+        "bottom": 325.55,
+        "height": 157.05,
+        "left": 1147.0,
+        "right": 1308.5,
+        "top": 168.5,
+        "width": 161.5
+      },
+      "id": "pe_hysteresis",
+      "kind": "PEHysteresisPlot",
+      "label": "P-E hysteresis",
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "PEHysteresisPlot"
+      ]
+    },
+    {
+      "area": 31273.257,
+      "bbox": {
+        "bottom": 346.5,
+        "height": 181.89,
+        "left": 1380.275,
+        "right": 1552.21,
+        "top": 164.61,
+        "width": 171.935
+      },
+      "id": "power_law_decay",
+      "kind": "PowerLawDecayPlot",
+      "label": "Power-law current decay",
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "PowerLawDecayPlot"
+      ]
+    },
+    {
+      "area": 15478.925,
+      "bbox": {
+        "bottom": 829.05,
+        "height": 165.55,
+        "left": 373.0,
+        "right": 466.5,
+        "top": 663.5,
+        "width": 93.5
+      },
+      "id": "ispd_plot",
+      "kind": "ISPDPlot",
+      "label": "ISPD trap DOS",
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "ISPDPlot"
+      ]
+    },
+    {
+      "area": 151694.904,
+      "bbox": {
+        "bottom": 912.0,
+        "height": 372.0,
+        "left": 55.218,
+        "right": 463.0,
+        "top": 540.0,
+        "width": 407.782
+      },
+      "id": "trap_model_flow",
+      "kind": "TrapModelFlow",
+      "label": "Trap model flow",
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "TrapModelFlow"
+      ]
+    },
+    {
+      "area": 137291.2,
+      "bbox": {
+        "bottom": 897.2,
+        "height": 323.8,
+        "left": 1101.5,
+        "right": 1525.5,
+        "top": 573.4,
+        "width": 424.0
+      },
+      "id": "macroscopic_probe",
+      "kind": "MacroscopicProbe",
+      "label": "Macroscopic probe",
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "MacroscopicProbe"
+      ]
+    },
+    {
+      "area": 109267.2,
+      "bbox": {
+        "bottom": 831.5,
+        "height": 288.0,
+        "left": 1106.0,
+        "right": 1485.4,
+        "top": 543.5,
+        "width": 379.4
+      },
+      "id": "polymer_cantilever",
+      "kind": "PolymerCantilever",
+      "label": "Polymer cantilever",
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "PolymerCantilever"
+      ]
+    },
+    {
+      "area": 19008.0,
+      "bbox": {
+        "bottom": 878.0,
+        "height": 270.0,
+        "left": 1497.0,
+        "right": 1567.4,
+        "top": 608.0,
+        "width": 70.4
+      },
+      "id": "electrode",
+      "kind": "Electrode",
+      "label": "Electrode",
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "Electrode"
+      ]
+    },
+    {
+      "area": 10433.28,
+      "bbox": {
+        "bottom": 720.0,
+        "height": 62.4,
+        "left": 1193.4,
+        "right": 1360.6,
+        "top": 657.6,
+        "width": 167.2
+      },
+      "id": "repulsion_arrow",
+      "kind": "ForceArrow",
+      "label": "Coulomb repulsion",
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "ForceArrow",
+        "primary"
+      ]
+    },
+    {
+      "area": 4247.312,
+      "bbox": {
+        "bottom": 794.8,
+        "height": 35.8,
+        "left": 1314.56,
+        "right": 1433.2,
+        "top": 759.0,
+        "width": 118.64
+      },
+      "id": "maxwell_attraction_cue",
+      "kind": "MaxwellAttractionCue",
+      "label": "Secondary Maxwell attraction cue",
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "MaxwellAttractionCue"
+      ]
+    }
+  ],
+  "shape_box_count": 238,
+  "svg": "fig1_reference_semantic.svg",
+  "text_boxes": [
+    {
+      "area": 4303.53,
+      "bbox": {
+        "bottom": 74.5,
+        "height": 20.7,
+        "left": 108.0,
+        "right": 315.9,
+        "top": 53.8,
+        "width": 207.9
+      },
+      "font_size": 18.0,
+      "font_weight": "700",
+      "index": 46,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "panel-title-support"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "Sulfur polymer origin"
+    },
+    {
+      "area": 4098.6,
+      "bbox": {
+        "bottom": 97.5,
+        "height": 20.7,
+        "left": 108.0,
+        "right": 306.0,
+        "top": 76.8,
+        "width": 198.0
+      },
+      "font_size": 18.0,
+      "font_weight": "700",
+      "index": 47,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "panel-title-support"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "(composition tuning)"
+    },
+    {
+      "area": 3893.67,
+      "bbox": {
+        "bottom": 78.5,
+        "height": 20.7,
+        "left": 1230.45,
+        "right": 1418.55,
+        "top": 57.8,
+        "width": 188.1
+      },
+      "font_size": 18.0,
+      "font_weight": "700",
+      "index": 50,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "panel-title-support"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "Electrical evidence"
+    },
+    {
+      "area": 10929.6,
+      "bbox": {
+        "bottom": 223.0,
+        "height": 27.6,
+        "left": 584.0,
+        "right": 980.0,
+        "top": 195.4,
+        "width": 396.0
+      },
+      "font_size": 24.0,
+      "font_weight": "700",
+      "index": 53,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "panel-title-hero"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "Converged deep charge trapping"
+    },
+    {
+      "area": 7582.41,
+      "bbox": {
+        "bottom": 512.5,
+        "height": 20.7,
+        "left": 76.35,
+        "right": 442.65,
+        "top": 491.8,
+        "width": 366.3
+      },
+      "font_size": 18.0,
+      "font_weight": "700",
+      "index": 56,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "panel-title-support"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "Interpretation (converged trap model)"
+    },
+    {
+      "area": 3483.81,
+      "bbox": {
+        "bottom": 512.5,
+        "height": 20.7,
+        "left": 1229.35,
+        "right": 1397.65,
+        "top": 491.8,
+        "width": 168.3
+      },
+      "font_size": 18.0,
+      "font_weight": "700",
+      "index": 59,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "panel-title-support"
+      ],
+      "semantic_id": "",
+      "semantic_kind": "",
+      "text": "Macroscopic probe"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 174.003,
+        "height": 7.32,
+        "left": 143.81,
+        "right": 147.629,
+        "top": 166.684,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 89,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 200.675,
+        "height": 7.32,
+        "left": 132.763,
+        "right": 136.582,
+        "top": 193.356,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 92,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 211.723,
+        "height": 7.32,
+        "left": 106.091,
+        "right": 109.91,
+        "top": 204.404,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 95,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 200.675,
+        "height": 7.32,
+        "left": 79.418,
+        "right": 83.237,
+        "top": 193.356,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 98,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 174.003,
+        "height": 7.32,
+        "left": 68.371,
+        "right": 72.19,
+        "top": 166.684,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 101,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 147.331,
+        "height": 7.32,
+        "left": 79.418,
+        "right": 83.237,
+        "top": 140.011,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 104,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 136.283,
+        "height": 7.32,
+        "left": 106.091,
+        "right": 109.91,
+        "top": 128.964,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 107,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 27.954,
+      "bbox": {
+        "bottom": 147.331,
+        "height": 7.32,
+        "left": 132.763,
+        "right": 136.582,
+        "top": 140.011,
+        "width": 3.819
+      },
+      "font_size": 6.365,
+      "font_weight": "700",
+      "index": 110,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 323.84,
+      "bbox": {
+        "bottom": 256.0,
+        "height": 18.4,
+        "left": 99.2,
+        "right": 116.8,
+        "top": 237.6,
+        "width": 17.6
+      },
+      "font_size": 16.0,
+      "font_weight": "",
+      "index": 111,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S8"
+    },
+    {
+      "area": 711.562,
+      "bbox": {
+        "bottom": 156.75,
+        "height": 17.25,
+        "left": 193.375,
+        "right": 234.625,
+        "top": 139.5,
+        "width": 41.25
+      },
+      "font_size": 15.0,
+      "font_weight": "",
+      "index": 114,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "Delta"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 177.704,
+        "height": 6.773,
+        "left": 265.233,
+        "right": 268.767,
+        "top": 170.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 123,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 193.704,
+        "height": 6.773,
+        "left": 296.9,
+        "right": 300.434,
+        "top": 186.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 126,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 177.704,
+        "height": 6.773,
+        "left": 328.566,
+        "right": 332.1,
+        "top": 170.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 129,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 193.704,
+        "height": 6.773,
+        "left": 360.233,
+        "right": 363.767,
+        "top": 186.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 132,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 177.704,
+        "height": 6.773,
+        "left": 391.9,
+        "right": 395.434,
+        "top": 170.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 135,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 193.704,
+        "height": 6.773,
+        "left": 423.566,
+        "right": 427.1,
+        "top": 186.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 138,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 23.938,
+      "bbox": {
+        "bottom": 177.704,
+        "height": 6.773,
+        "left": 455.233,
+        "right": 458.767,
+        "top": 170.931,
+        "width": 3.534
+      },
+      "font_size": 5.89,
+      "font_weight": "700",
+      "index": 141,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S"
+    },
+    {
+      "area": 323.84,
+      "bbox": {
+        "bottom": 210.0,
+        "height": 18.4,
+        "left": 449.4,
+        "right": 467.0,
+        "top": 191.6,
+        "width": 17.6
+      },
+      "font_size": 16.0,
+      "font_weight": "",
+      "index": 142,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "Sx"
+    },
+    {
+      "area": 426.938,
+      "bbox": {
+        "bottom": 268.75,
+        "height": 17.25,
+        "left": 47.625,
+        "right": 72.375,
+        "top": 251.5,
+        "width": 24.75
+      },
+      "font_size": 15.0,
+      "font_weight": "",
+      "index": 143,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S60"
+    },
+    {
+      "area": 426.938,
+      "bbox": {
+        "bottom": 268.75,
+        "height": 17.25,
+        "left": 447.625,
+        "right": 472.375,
+        "top": 251.5,
+        "width": 24.75
+      },
+      "font_size": 15.0,
+      "font_weight": "",
+      "index": 144,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S85"
+    },
+    {
+      "area": 2353.533,
+      "bbox": {
+        "bottom": 292.05,
+        "height": 14.03,
+        "left": 204.125,
+        "right": 371.875,
+        "top": 278.02,
+        "width": 167.75
+      },
+      "font_size": 12.2,
+      "font_weight": "",
+      "index": 148,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "Increasing sulfur content"
+    },
+    {
+      "area": 1506.235,
+      "bbox": {
+        "bottom": 384.15,
+        "height": 14.49,
+        "left": 111.025,
+        "right": 214.975,
+        "top": 369.66,
+        "width": 103.95
+      },
+      "font_size": 12.6,
+      "font_weight": "",
+      "index": 150,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "origin-relation",
+        "origin-s-rich-segments"
+      ],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S-rich segments"
+    },
+    {
+      "area": 1405.82,
+      "bbox": {
+        "bottom": 384.15,
+        "height": 14.49,
+        "left": 216.99,
+        "right": 314.01,
+        "top": 369.66,
+        "width": 97.02
+      },
+      "font_size": 12.6,
+      "font_weight": "",
+      "index": 152,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "origin-relation"
+      ],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "S-chain length"
+    },
+    {
+      "area": 1506.235,
+      "bbox": {
+        "bottom": 384.15,
+        "height": 14.49,
+        "left": 309.025,
+        "right": 412.975,
+        "top": 369.66,
+        "width": 103.95
+      },
+      "font_size": 12.6,
+      "font_weight": "700",
+      "index": 154,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "origin-localized-traps",
+        "origin-relation"
+      ],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "localized traps"
+    },
+    {
+      "area": 3490.995,
+      "bbox": {
+        "bottom": 413.8,
+        "height": 12.88,
+        "left": 129.98,
+        "right": 401.02,
+        "top": 400.92,
+        "width": 271.04
+      },
+      "font_size": 11.2,
+      "font_weight": "",
+      "index": 159,
+      "panel_id": "polymer_origin_card",
+      "role_tags": [
+        "origin-relation",
+        "panel-conclusion"
+      ],
+      "semantic_id": "sulfur_polymer_origin",
+      "semantic_kind": "SulfurPolymerOrigin",
+      "text": "Chemical + physical origin set trap density."
+    },
+    {
+      "area": 4841.471,
+      "bbox": {
+        "bottom": 254.375,
+        "height": 15.525,
+        "left": 626.075,
+        "right": 937.925,
+        "top": 238.85,
+        "width": 311.85
+      },
+      "font_size": 13.5,
+      "font_weight": "",
+      "index": 162,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "deep_trap_hero",
+      "semantic_kind": "DeepTrapHero",
+      "text": "Deep traps dominate the sulfur-polymer gap"
+    },
+    {
+      "area": 3471.16,
+      "bbox": {
+        "bottom": 703.5,
+        "height": 16.1,
+        "left": 674.2,
+        "right": 889.8,
+        "top": 687.4,
+        "width": 215.6
+      },
+      "font_size": 14.0,
+      "font_weight": "",
+      "index": 164,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "hero-caption",
+        "hero-converged-picture"
+      ],
+      "semantic_id": "deep_trap_hero",
+      "semantic_kind": "DeepTrapHero",
+      "text": "Converged trap-depth picture"
+    },
+    {
+      "area": 4834.83,
+      "bbox": {
+        "bottom": 725.5,
+        "height": 16.1,
+        "left": 631.85,
+        "right": 932.15,
+        "top": 709.4,
+        "width": 300.3
+      },
+      "font_size": 14.0,
+      "font_weight": "",
+      "index": 165,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "hero-caption"
+      ],
+      "semantic_id": "deep_trap_hero",
+      "semantic_kind": "DeepTrapHero",
+      "text": "deep states drive long-lived repulsion."
+    },
+    {
+      "area": 501.889,
+      "bbox": {
+        "bottom": 468.375,
+        "height": 13.225,
+        "left": 566.025,
+        "right": 603.975,
+        "top": 455.15,
+        "width": 37.95
+      },
+      "font_size": 11.5,
+      "font_weight": "",
+      "index": 171,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "energy-axis"
+      ],
+      "semantic_id": "band_diagram",
+      "semantic_kind": "BandDiagram",
+      "text": "Energy"
+    },
+    {
+      "area": 569.25,
+      "bbox": {
+        "bottom": 345.15,
+        "height": 17.25,
+        "left": 700.5,
+        "right": 733.5,
+        "top": 327.9,
+        "width": 33.0
+      },
+      "font_size": 15.0,
+      "font_weight": "700",
+      "index": 174,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "band_diagram",
+      "semantic_kind": "BandDiagram",
+      "text": "LUMO"
+    },
+    {
+      "area": 569.25,
+      "bbox": {
+        "bottom": 604.35,
+        "height": 17.25,
+        "left": 700.5,
+        "right": 733.5,
+        "top": 587.1,
+        "width": 33.0
+      },
+      "font_size": 15.0,
+      "font_weight": "700",
+      "index": 177,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "band_diagram",
+      "semantic_kind": "BandDiagram",
+      "text": "HOMO"
+    },
+    {
+      "area": 748.247,
+      "bbox": {
+        "bottom": 390.8,
+        "height": 14.95,
+        "left": 617.5,
+        "right": 667.55,
+        "top": 375.85,
+        "width": 50.05
+      },
+      "font_size": 13.0,
+      "font_weight": "",
+      "index": 201,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "trap_level_set",
+      "semantic_kind": "TrapLevelSet",
+      "text": "shallow"
+    },
+    {
+      "area": 641.355,
+      "bbox": {
+        "bottom": 406.3,
+        "height": 14.95,
+        "left": 617.5,
+        "right": 660.4,
+        "top": 391.35,
+        "width": 42.9
+      },
+      "font_size": 13.0,
+      "font_weight": "",
+      "index": 202,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "trap_level_set",
+      "semantic_kind": "TrapLevelSet",
+      "text": "states"
+    },
+    {
+      "area": 461.093,
+      "bbox": {
+        "bottom": 501.275,
+        "height": 15.525,
+        "left": 612.8,
+        "right": 642.5,
+        "top": 485.75,
+        "width": 29.7
+      },
+      "font_size": 13.5,
+      "font_weight": "",
+      "index": 203,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "trap_level_set",
+      "semantic_kind": "TrapLevelSet",
+      "text": "deep"
+    },
+    {
+      "area": 691.639,
+      "bbox": {
+        "bottom": 517.275,
+        "height": 15.525,
+        "left": 612.8,
+        "right": 657.35,
+        "top": 501.75,
+        "width": 44.55
+      },
+      "font_size": 13.5,
+      "font_weight": "",
+      "index": 204,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [],
+      "semantic_id": "trap_level_set",
+      "semantic_kind": "TrapLevelSet",
+      "text": "states"
+    },
+    {
+      "area": 1423.125,
+      "bbox": {
+        "bottom": 320.75,
+        "height": 17.25,
+        "left": 829.0,
+        "right": 911.5,
+        "top": 303.5,
+        "width": 82.5
+      },
+      "font_size": 15.0,
+      "font_weight": "700",
+      "index": 213,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "DOS g(Et)"
+    },
+    {
+      "area": 619.85,
+      "bbox": {
+        "bottom": 648.5,
+        "height": 16.1,
+        "left": 879.35,
+        "right": 917.85,
+        "top": 632.4,
+        "width": 38.5
+      },
+      "font_size": 14.0,
+      "font_weight": "",
+      "index": 215,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-axis-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "g(Et)"
+    },
+    {
+      "area": 748.247,
+      "bbox": {
+        "bottom": 375.53,
+        "height": 14.95,
+        "left": 854.7,
+        "right": 904.75,
+        "top": 360.58,
+        "width": 50.05
+      },
+      "font_size": 13.0,
+      "font_weight": "",
+      "index": 220,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "shallow"
+    },
+    {
+      "area": 461.093,
+      "bbox": {
+        "bottom": 529.575,
+        "height": 15.525,
+        "left": 906.6,
+        "right": 936.3,
+        "top": 514.05,
+        "width": 29.7
+      },
+      "font_size": 13.5,
+      "font_weight": "700",
+      "index": 222,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "deep"
+    },
+    {
+      "area": 306.13,
+      "bbox": {
+        "bottom": 459.097,
+        "height": 12.65,
+        "left": 935.8,
+        "right": 960.0,
+        "top": 446.447,
+        "width": 24.2
+      },
+      "font_size": 11.0,
+      "font_weight": "",
+      "index": 227,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-depth-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "Et ~"
+    },
+    {
+      "area": 765.325,
+      "bbox": {
+        "bottom": 470.647,
+        "height": 12.65,
+        "left": 899.5,
+        "right": 960.0,
+        "top": 457.997,
+        "width": 60.5
+      },
+      "font_size": 11.0,
+      "font_weight": "",
+      "index": 229,
+      "panel_id": "deep_trap_hero_card",
+      "role_tags": [
+        "dos-depth-label"
+      ],
+      "semantic_id": "dos_lobes",
+      "semantic_kind": "DOSLobes",
+      "text": "0.5-1.0 eV"
+    },
+    {
+      "area": 1282.71,
+      "bbox": {
+        "bottom": 121.25,
+        "height": 14.95,
+        "left": 1175.85,
+        "right": 1261.65,
+        "top": 106.3,
+        "width": 85.8
+      },
+      "font_size": 13.0,
+      "font_weight": "",
+      "index": 233,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [],
+      "semantic_id": "evidence_trio",
+      "semantic_kind": "EvidenceTrio",
+      "text": "P-E response"
+    },
+    {
+      "area": 1389.603,
+      "bbox": {
+        "bottom": 121.25,
+        "height": 14.95,
+        "left": 1409.775,
+        "right": 1502.725,
+        "top": 106.3,
+        "width": 92.95
+      },
+      "font_size": 13.0,
+      "font_weight": "",
+      "index": 235,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [],
+      "semantic_id": "evidence_trio",
+      "semantic_kind": "EvidenceTrio",
+      "text": "Current decay"
+    },
+    {
+      "area": 4515.417,
+      "bbox": {
+        "bottom": 396.75,
+        "height": 12.65,
+        "left": 1146.025,
+        "right": 1502.975,
+        "top": 384.1,
+        "width": 356.95
+      },
+      "font_size": 11.0,
+      "font_weight": "",
+      "index": 238,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "electrical-conclusion",
+        "panel-conclusion"
+      ],
+      "semantic_id": "evidence_trio",
+      "semantic_kind": "EvidenceTrio",
+      "text": "Persistent P-E response + slow decay support deep trapping."
+    },
+    {
+      "area": 121.491,
+      "bbox": {
+        "bottom": 213.25,
+        "height": 11.27,
+        "left": 1255.265,
+        "right": 1266.045,
+        "top": 201.98,
+        "width": 10.78
+      },
+      "font_size": 9.8,
+      "font_weight": "",
+      "index": 249,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "pe_hysteresis",
+      "semantic_kind": "PEHysteresisPlot",
+      "text": "Pr"
+    },
+    {
+      "area": 113.05,
+      "bbox": {
+        "bottom": 184.2,
+        "height": 14.72,
+        "left": 1147.0,
+        "right": 1154.68,
+        "top": 169.48,
+        "width": 7.68
+      },
+      "font_size": 12.8,
+      "font_weight": "",
+      "index": 250,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "pe_hysteresis",
+      "semantic_kind": "PEHysteresisPlot",
+      "text": "P"
+    },
+    {
+      "area": 113.05,
+      "bbox": {
+        "bottom": 244.2,
+        "height": 14.72,
+        "left": 1300.82,
+        "right": 1308.5,
+        "top": 229.48,
+        "width": 7.68
+      },
+      "font_size": 12.8,
+      "font_weight": "",
+      "index": 251,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "pe_hysteresis",
+      "semantic_kind": "PEHysteresisPlot",
+      "text": "E"
+    },
+    {
+      "area": 1001.88,
+      "bbox": {
+        "bottom": 196.0,
+        "height": 13.8,
+        "left": 1465.25,
+        "right": 1537.85,
+        "top": 182.2,
+        "width": 72.6
+      },
+      "font_size": 12.0,
+      "font_weight": "700",
+      "index": 274,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "power_law_decay",
+      "semantic_kind": "PowerLawDecayPlot",
+      "text": "I(t) ~ t^-n"
+    },
+    {
+      "area": 607.453,
+      "bbox": {
+        "bottom": 288.63,
+        "height": 11.27,
+        "left": 1441.8,
+        "right": 1495.7,
+        "top": 277.36,
+        "width": 53.9
+      },
+      "font_size": 9.8,
+      "font_weight": "",
+      "index": 275,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "power_law_decay",
+      "semantic_kind": "PowerLawDecayPlot",
+      "text": "slope = -n"
+    },
+    {
+      "area": 663.973,
+      "bbox": {
+        "bottom": 273.94,
+        "height": 12.42,
+        "left": 1498.75,
+        "right": 1552.21,
+        "top": 261.52,
+        "width": 53.46
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 276,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "decay-extract-n",
+        "schematic-label"
+      ],
+      "semantic_id": "power_law_decay",
+      "semantic_kind": "PowerLawDecayPlot",
+      "text": "extract n"
+    },
+    {
+      "area": 316.25,
+      "bbox": {
+        "bottom": 346.5,
+        "height": 11.5,
+        "left": 1517.5,
+        "right": 1545.0,
+        "top": 335.0,
+        "width": 27.5
+      },
+      "font_size": 10.0,
+      "font_weight": "",
+      "index": 277,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "power_law_decay",
+      "semantic_kind": "PowerLawDecayPlot",
+      "text": "log t"
+    },
+    {
+      "area": 316.25,
+      "bbox": {
+        "bottom": 184.5,
+        "height": 11.5,
+        "left": 1380.5,
+        "right": 1408.0,
+        "top": 173.0,
+        "width": 27.5
+      },
+      "font_size": 10.0,
+      "font_weight": "",
+      "index": 278,
+      "panel_id": "electrical_evidence_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "power_law_decay",
+      "semantic_kind": "PowerLawDecayPlot",
+      "text": "log I"
+    },
+    {
+      "area": 212.646,
+      "bbox": {
+        "bottom": 829.05,
+        "height": 9.43,
+        "left": 419.125,
+        "right": 441.675,
+        "top": 819.62,
+        "width": 22.55
+      },
+      "font_size": 8.2,
+      "font_weight": "",
+      "index": 287,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "schematic-label"
+      ],
+      "semantic_id": "ispd_plot",
+      "semantic_kind": "ISPDPlot",
+      "text": "g(Et)"
+    },
+    {
+      "area": 71.156,
+      "bbox": {
+        "bottom": 738.213,
+        "height": 8.625,
+        "left": 458.0,
+        "right": 466.25,
+        "top": 729.588,
+        "width": 8.25
+      },
+      "font_size": 7.5,
+      "font_weight": "",
+      "index": 295,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "schematic-dos-depth-label"
+      ],
+      "semantic_id": "ispd_plot",
+      "semantic_kind": "ISPDPlot",
+      "text": "Et"
+    },
+    {
+      "area": 442.649,
+      "bbox": {
+        "bottom": 559.7,
+        "height": 12.42,
+        "left": 70.08,
+        "right": 105.72,
+        "top": 547.28,
+        "width": 35.64
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 301,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-power-law"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "I(t) ~"
+    },
+    {
+      "area": 295.099,
+      "bbox": {
+        "bottom": 571.7,
+        "height": 12.42,
+        "left": 76.02,
+        "right": 99.78,
+        "top": 559.28,
+        "width": 23.76
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 302,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-power-law"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "t^-n"
+    },
+    {
+      "area": 99.36,
+      "bbox": {
+        "bottom": 565.0,
+        "height": 13.8,
+        "left": 168.1,
+        "right": 175.3,
+        "top": 551.2,
+        "width": 7.2
+      },
+      "font_size": 12.0,
+      "font_weight": "700",
+      "index": 305,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-exponent-n"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "n"
+    },
+    {
+      "area": 368.874,
+      "bbox": {
+        "bottom": 559.7,
+        "height": 12.42,
+        "left": 240.65,
+        "right": 270.35,
+        "top": 547.28,
+        "width": 29.7
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 310,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-debye"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "Debye"
+    },
+    {
+      "area": 811.523,
+      "bbox": {
+        "bottom": 571.7,
+        "height": 12.42,
+        "left": 222.83,
+        "right": 288.17,
+        "top": 559.28,
+        "width": 65.34
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 311,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-debye"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "exp(-t/tau)"
+    },
+    {
+      "area": 455.4,
+      "bbox": {
+        "bottom": 565.0,
+        "height": 13.8,
+        "left": 322.8,
+        "right": 355.8,
+        "top": 551.2,
+        "width": 33.0
+      },
+      "font_size": 12.0,
+      "font_weight": "",
+      "index": 316,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-tau-d"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "tau_d"
+    },
+    {
+      "area": 455.4,
+      "bbox": {
+        "bottom": 565.0,
+        "height": 13.8,
+        "left": 406.6,
+        "right": 439.6,
+        "top": 551.2,
+        "width": 33.0
+      },
+      "font_size": 12.0,
+      "font_weight": "",
+      "index": 321,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-causal-step",
+        "interpretation-step-trap-depth-distribution"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "g(Et)"
+    },
+    {
+      "area": 1212.275,
+      "bbox": {
+        "bottom": 692.55,
+        "height": 15.18,
+        "left": 164.0,
+        "right": 243.86,
+        "top": 677.37,
+        "width": 79.86
+      },
+      "font_size": 13.2,
+      "font_weight": "700",
+      "index": 339,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "I(t) ~ t^-n"
+    },
+    {
+      "area": 684.112,
+      "bbox": {
+        "bottom": 755.523,
+        "height": 11.96,
+        "left": 110.727,
+        "right": 167.927,
+        "top": 743.563,
+        "width": 57.2
+      },
+      "font_size": 10.4,
+      "font_weight": "",
+      "index": 340,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "slope = -n"
+    },
+    {
+      "area": 329.026,
+      "bbox": {
+        "bottom": 823.55,
+        "height": 11.73,
+        "left": 222.0,
+        "right": 250.05,
+        "top": 811.82,
+        "width": 28.05
+      },
+      "font_size": 10.2,
+      "font_weight": "",
+      "index": 341,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "t (s)"
+    },
+    {
+      "area": 368.874,
+      "bbox": {
+        "bottom": 653.7,
+        "height": 12.42,
+        "left": 286.15,
+        "right": 315.85,
+        "top": 641.28,
+        "width": 29.7
+      },
+      "font_size": 10.8,
+      "font_weight": "",
+      "index": 343,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "Debye"
+    },
+    {
+      "area": 723.858,
+      "bbox": {
+        "bottom": 670.55,
+        "height": 11.73,
+        "left": 270.145,
+        "right": 331.855,
+        "top": 658.82,
+        "width": 61.71
+      },
+      "font_size": 10.2,
+      "font_weight": "",
+      "index": 344,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "exp(-t/tau)"
+    },
+    {
+      "area": 619.85,
+      "bbox": {
+        "bottom": 767.5,
+        "height": 16.1,
+        "left": 281.75,
+        "right": 320.25,
+        "top": 751.4,
+        "width": 38.5
+      },
+      "font_size": 14.0,
+      "font_weight": "",
+      "index": 347,
+      "panel_id": "interpretation_card",
+      "role_tags": [],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "tau_d"
+    },
+    {
+      "area": 5224.298,
+      "bbox": {
+        "bottom": 880.35,
+        "height": 15.41,
+        "left": 89.99,
+        "right": 429.01,
+        "top": 864.94,
+        "width": 339.02
+      },
+      "font_size": 13.4,
+      "font_weight": "",
+      "index": 349,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-conclusion",
+        "panel-conclusion"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "Convergence to deep traps (tau_d) explains the"
+    },
+    {
+      "area": 2157.862,
+      "bbox": {
+        "bottom": 898.35,
+        "height": 15.41,
+        "left": 189.485,
+        "right": 329.515,
+        "top": 882.94,
+        "width": 140.03
+      },
+      "font_size": 13.4,
+      "font_weight": "",
+      "index": 350,
+      "panel_id": "interpretation_card",
+      "role_tags": [
+        "interpretation-conclusion",
+        "panel-conclusion"
+      ],
+      "semantic_id": "trap_model_flow",
+      "semantic_kind": "TrapModelFlow",
+      "text": "extended repulsion."
+    },
+    {
+      "area": 1239.7,
+      "bbox": {
+        "bottom": 589.5,
+        "height": 16.1,
+        "left": 1127.5,
+        "right": 1204.5,
+        "top": 573.4,
+        "width": 77.0
+      },
+      "font_size": 14.0,
+      "font_weight": "",
+      "index": 353,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "macroscopic_probe",
+      "semantic_kind": "MacroscopicProbe",
+      "text": "Cantilever"
+    },
+    {
+      "area": 691.797,
+      "bbox": {
+        "bottom": 607.125,
+        "height": 14.375,
+        "left": 1141.938,
+        "right": 1190.062,
+        "top": 592.75,
+        "width": 48.125
+      },
+      "font_size": 12.5,
+      "font_weight": "",
+      "index": 354,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "macroscopic_probe",
+      "semantic_kind": "MacroscopicProbe",
+      "text": "(probe)"
+    },
+    {
+      "area": 5343.36,
+      "bbox": {
+        "bottom": 872.0,
+        "height": 18.4,
+        "left": 1168.3,
+        "right": 1458.7,
+        "top": 853.6,
+        "width": 290.4
+      },
+      "font_size": 16.0,
+      "font_weight": "700",
+      "index": 356,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "panel-conclusion",
+        "probe-conclusion"
+      ],
+      "semantic_id": "macroscopic_probe",
+      "semantic_kind": "MacroscopicProbe",
+      "text": "Charge-trapping-induced repulsion"
+    },
+    {
+      "area": 5906.842,
+      "bbox": {
+        "bottom": 897.2,
+        "height": 14.72,
+        "left": 1112.86,
+        "right": 1514.14,
+        "top": 882.48,
+        "width": 401.28
+      },
+      "font_size": 12.8,
+      "font_weight": "",
+      "index": 357,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "panel-conclusion",
+        "probe-conclusion"
+      ],
+      "semantic_id": "macroscopic_probe",
+      "semantic_kind": "MacroscopicProbe",
+      "text": "Like-charge repulsion drives the cantilever away from +V."
+    },
+    {
+      "area": 106.437,
+      "bbox": {
+        "bottom": 678.601,
+        "height": 14.283,
+        "left": 1218.274,
+        "right": 1225.726,
+        "top": 664.318,
+        "width": 7.452
+      },
+      "font_size": 12.42,
+      "font_weight": "700",
+      "index": 379,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "polymer_cantilever",
+      "semantic_kind": "PolymerCantilever",
+      "text": "+"
+    },
+    {
+      "area": 106.437,
+      "bbox": {
+        "bottom": 717.601,
+        "height": 14.283,
+        "left": 1233.274,
+        "right": 1240.726,
+        "top": 703.318,
+        "width": 7.452
+      },
+      "font_size": 12.42,
+      "font_weight": "700",
+      "index": 381,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "polymer_cantilever",
+      "semantic_kind": "PolymerCantilever",
+      "text": "+"
+    },
+    {
+      "area": 106.437,
+      "bbox": {
+        "bottom": 757.601,
+        "height": 14.283,
+        "left": 1256.274,
+        "right": 1263.726,
+        "top": 743.318,
+        "width": 7.452
+      },
+      "font_size": 12.42,
+      "font_weight": "700",
+      "index": 383,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "polymer_cantilever",
+      "semantic_kind": "PolymerCantilever",
+      "text": "+"
+    },
+    {
+      "area": 106.437,
+      "bbox": {
+        "bottom": 796.601,
+        "height": 14.283,
+        "left": 1289.274,
+        "right": 1296.726,
+        "top": 782.318,
+        "width": 7.452
+      },
+      "font_size": 12.42,
+      "font_weight": "700",
+      "index": 385,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "polymer_cantilever",
+      "semantic_kind": "PolymerCantilever",
+      "text": "+"
+    },
+    {
+      "area": 106.437,
+      "bbox": {
+        "bottom": 828.601,
+        "height": 14.283,
+        "left": 1324.274,
+        "right": 1331.726,
+        "top": 814.318,
+        "width": 7.452
+      },
+      "font_size": 12.42,
+      "font_weight": "700",
+      "index": 387,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "polymer_cantilever",
+      "semantic_kind": "PolymerCantilever",
+      "text": "+"
+    },
+    {
+      "area": 485.76,
+      "bbox": {
+        "bottom": 666.0,
+        "height": 18.4,
+        "left": 1541.0,
+        "right": 1567.4,
+        "top": 647.6,
+        "width": 26.4
+      },
+      "font_size": 16.0,
+      "font_weight": "700",
+      "index": 396,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "electrode",
+      "semantic_kind": "Electrode",
+      "text": "+ V"
+    },
+    {
+      "area": 3076.48,
+      "bbox": {
+        "bottom": 676.0,
+        "height": 18.4,
+        "left": 1193.4,
+        "right": 1360.6,
+        "top": 657.6,
+        "width": 167.2
+      },
+      "font_size": 16.0,
+      "font_weight": "700",
+      "index": 401,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [
+        "probe-force-label"
+      ],
+      "semantic_id": "repulsion_arrow",
+      "semantic_kind": "ForceArrow",
+      "text": "Force on cantilever"
+    },
+    {
+      "area": 1428.134,
+      "bbox": {
+        "bottom": 794.8,
+        "height": 12.88,
+        "left": 1314.56,
+        "right": 1425.44,
+        "top": 781.92,
+        "width": 110.88
+      },
+      "font_size": 11.2,
+      "font_weight": "",
+      "index": 406,
+      "panel_id": "macroscopic_probe_card",
+      "role_tags": [],
+      "semantic_id": "maxwell_attraction_cue",
+      "semantic_kind": "MaxwellAttractionCue",
+      "text": "Maxwell attraction"
+    }
+  ]
+}

@@ -22,6 +22,8 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `src/run_fig1_gates.py`
 - `src/verify_fig1_baseline_hash.py`
 - `src/test_fig1_physics_sanity.py`
+- `src/report_fig1_visual_judgment.py`
+- `src/test_fig1_visual_judgment_report.py`
 - `src/check_fig1_docs_manifest.py`
 - `src/fig_probe_01_scene.py`
 - `src/render_fig_probe_01.py`
@@ -65,6 +67,9 @@ Use these files for the current semantic-driven reference-layout renderer:
 - `physics_sanity_gate_handback_v20.md`
 - `probe_force_target_options_v21.md`
 - `probe_force_target_handback_v21.md`
+- `fig1_visual_judgment_report.md`
+- `fig1_visual_judgment_report.json`
+- `visual_judgment_report_handback_v22.md`
 - `framework_probe_01_handback.md`
 - `framework_probe_02_handback.md`
 - `reference_scaffold_first_pivot_plan.md`
@@ -86,6 +91,8 @@ The v19 reference-fidelity pass starts from `reference_fidelity_execution_prompt
 The v20 physics sanity layer starts from the v20 physics sanity inventory and adds a separate basic-academic correctness gate. It audits energy ordering, trap ordering, decay notation, Debye-to-`g(Et)` causal semantics, reference authority, claim overreach, and probe charge/electrode consistency. `physics_sanity_contract_v20.md` defines hard-fail, deferred-fail, and document-only boundaries; `src/verify_fig1_physics_sanity.py` implements the current hard failures; and `src/test_fig1_physics_sanity.py` mutates payloads to prove the gate rejects known bad states. The unresolved `ForceArrow` `force_target` ambiguity remains a warning until the payload can state which object the force acts on; if that field appears, the gate immediately applies target-specific vector checks rather than silently passing. This is not publication-grade theory validation; it is a guard against clearly wrong sign, direction, ordering, model-chain, and claim errors.
 
 The v21 probe force-target pass follows `probe_force_target_options_v21.md` and locks the macroscopic probe arrow as `force_target="cantilever"`. This intentionally diverges from the rightward reference-style cue: with positive trapped charges next to a positive right-side electrode, the force on the cantilever is leftward, away from the electrode. The rendered SVG now exposes `arrow_direction=cantilever_leftward_repulsion`, and the physics gate also checks charge/electrode separation, force-arrow start proximity, and bend-state consistency. Human visual review remains required before publication-grade approval.
+
+The v22 visual judgment report layer adds `src/report_fig1_visual_judgment.py` as a report-only inspection surface. It reads the rendered SVG and scene payloads, reuses SVG bbox extraction, and writes `fig1_visual_judgment_report.md` plus `fig1_visual_judgment_report.json` with panel density, text/text near-collision, text/shape conflict, visual hierarchy, reading-order, reference-divergence, and human-review-prompt sections. It is not added to `src/run_fig1_gates.py`, does not add absolute min-font-size rules, does not pixel-trace the reference image, and does not claim publication-grade approval. Human visual review remains required before publication-grade approval.
 
 ## Second-Figure Framework Probe
 
@@ -151,6 +158,7 @@ Run the current pilot with:
 
 ```bash
 uv run --with drawsvg --with matplotlib --with numpy --with shapely --with svgelements --with svgpathtools python experiments/python_svg_semantic_fig1/src/render_fig1_l1.py
+python experiments/python_svg_semantic_fig1/src/report_fig1_visual_judgment.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_semantics.py
 python experiments/python_svg_semantic_fig1/src/check_fig1_docs_manifest.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_scaffold_contract.py
@@ -160,8 +168,9 @@ python experiments/python_svg_semantic_fig1/src/verify_fig1_physics_sanity.py
 python experiments/python_svg_semantic_fig1/src/run_fig1_gates.py
 python experiments/python_svg_semantic_fig1/src/verify_fig1_baseline_hash.py
 PYTHONPATH=experiments/python_svg_semantic_fig1/src python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_physics_sanity.py' -v
+PYTHONPATH=experiments/python_svg_semantic_fig1/src python -m unittest discover -s experiments/python_svg_semantic_fig1/src -p 'test_fig1_visual_judgment_report.py' -v
 python -m xml.etree.ElementTree experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg
 rsvg-convert -w 1595 -h 986 experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg -o /tmp/fig1_reference_semantic_check.png
 ```
 
-`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, historical reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, cantilever-target probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, and visible-geometry payload mutation behavior. `verify_fig1_scaffold_contract.py` is the explicit scaffold verifier for panel loading, local box containment, object-slot binding, flow-anchor binding, and reference provenance. `verify_fig1_causal_binding.py` checks that the v16 causal diagram stays semantic-only while binding the experiment-to-Debye-to-`g(Et)` chain and molecular-origin cues into payloads. `verify_fig1_causal_visibility.py` checks that those causal bindings are visible as role-tagged SVG text. `verify_fig1_physics_sanity.py` checks basic academic/physics invariants and the v21 cantilever-force geometry contract. `run_fig1_gates.py` chains the Fig1 gates including the pinned baseline hash check. Fig1-specific visual policy caps from v12-v14 live in `fig1_visual_policies.py`, README/handback governance lives in `check_fig1_docs_manifest.py`, and physics-sanity gate design starts from `physics_sanity_inventory_v20.md`.
+`verify_fig1_semantics.py` checks the required object kinds, trap/DOS dominance, trap energy ordering, computed curve-model sanity, historical reference card bounds and local boxes from `visual_layout.yaml`, center hero placement, support-to-hero flow arrows, cantilever-target probe force cues, evidence modalities, hero reference-scaffold roles, hero DOS morphology, sampled DOS density paths, hero DOS label/lobe clearance, mini-DOS label count and lobe avoidance, semantic SVG bboxes, schematic plot roles, rejection of over-real plot frames/tick labels/dense ticks, schematic label containment, forbidden actuator/force-balance framing terms, generated artifacts, and visible-geometry payload mutation behavior. `verify_fig1_scaffold_contract.py` is the explicit scaffold verifier for panel loading, local box containment, object-slot binding, flow-anchor binding, and reference provenance. `verify_fig1_causal_binding.py` checks that the v16 causal diagram stays semantic-only while binding the experiment-to-Debye-to-`g(Et)` chain and molecular-origin cues into payloads. `verify_fig1_causal_visibility.py` checks that those causal bindings are visible as role-tagged SVG text. `verify_fig1_physics_sanity.py` checks basic academic/physics invariants and the v21 cantilever-force geometry contract. `report_fig1_visual_judgment.py` generates a non-strict v22 visual judgment report for human inspection and is intentionally not part of `run_fig1_gates.py`. `run_fig1_gates.py` chains the Fig1 gates including the pinned baseline hash check. Fig1-specific visual policy caps from v12-v14 live in `fig1_visual_policies.py`, README/handback governance lives in `check_fig1_docs_manifest.py`, and physics-sanity gate design starts from `physics_sanity_inventory_v20.md`.
