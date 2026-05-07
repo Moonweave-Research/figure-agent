@@ -25,7 +25,6 @@ from engine.domain_primitives import (
     LayoutFlow,
     MacroscopicProbe,
     MaxwellAttractionCue,
-    PEHysteresisPlot,
     PolymerCantilever,
     PowerLawDecayPlot,
     SulfurPolymerOrigin,
@@ -34,7 +33,6 @@ from engine.domain_primitives import (
 )
 from engine.matplotlib_subrenderers import (
     fig1_electrical_style,
-    pe_hysteresis_fragment,
     power_law_decay_fragment,
 )
 from engine.scene import Point, Rect, Scene, SemanticObject
@@ -99,7 +97,6 @@ def build_drawing(scene: Scene, style: FigureStyle = DEFAULT_STYLE) -> draw.Draw
         "TrapLevelSet": _draw_trap_level_set,
         "DOSLobes": _draw_dos_lobes,
         "EvidenceTrio": _draw_evidence_trio,
-        "PEHysteresisPlot": _draw_pe_hysteresis,
         "PowerLawDecayPlot": _draw_power_law_decay,
         "ISPDPlot": _draw_ispd_plot,
         "TrapModelFlow": _draw_trap_model_flow,
@@ -1747,51 +1744,6 @@ def _plot_label(
     if weight:
         attrs["font_weight"] = weight
     drawing.append(draw.Text(value, size, point.x, point.y, **attrs))
-
-
-def _draw_pe_hysteresis(
-    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
-) -> None:
-    payload: PEHysteresisPlot = obj.payload
-    bounds = _evidence_badge_rect(scene, obj.id).inset(4, 16)
-    p.begin_semantic_group(
-        drawing,
-        obj,
-        "pe_model={} loop_width={:g} loop_height={:g} remanence={:g} samples={} "
-        "plot_grammar=matplotlib_fragment_fig1_electrical_style".format(
-            payload.model,
-            payload.loop_width,
-            payload.loop_height,
-            payload.remanence,
-            payload.samples_per_branch,
-        ),
-    )
-    fragment = pe_hysteresis_fragment(
-        payload, width=bounds.width, height=bounds.height, style=fig1_electrical_style()
-    )
-    drawing.append(
-        draw.Raw(
-            wrapped_fragment_svg(
-                fragment, x=bounds.x, y=bounds.y, semantic_id=obj.id, kind=obj.kind
-            )
-        )
-    )
-    _draw_fragment_plot_role_markers(
-        drawing,
-        obj.id,
-        bounds,
-        ("schematic-axis", "schematic-guide", "schematic-curve"),
-    )
-    _plot_label(
-        drawing,
-        obj.id,
-        "P-E loop",
-        Point(bounds.x + bounds.width * 0.58, bounds.y + bounds.height * 0.25),
-        1.0,
-        fill="none",
-        style=style,
-    )
-    p.end_semantic_group(drawing)
 
 
 def _draw_power_law_decay(
