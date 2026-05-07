@@ -155,6 +155,160 @@ def power_law_decay_fragment(
         )
 
 
+def vs_decay_fragment(
+    payload: VsDecayPlot,
+    *,
+    width: float,
+    height: float,
+    style: MatplotlibPlotStyle | None = None,
+) -> SvgFragment:
+    plot_style = style or _default_plot_style()
+    with mpl.rc_context(_rc_params(plot_style)):
+        fig, ax = plt.subplots(figsize=(width / 100, height / 100), dpi=100)
+        t = np.linspace(
+            max(payload.t_min, 1e-3), payload.t_max, max(8, payload.samples)
+        )
+        v = (t / payload.t_min) ** -0.42
+        ax.plot(t, v, color=payload.color, lw=plot_style.line_width)
+        ax.set_xscale("log")
+        ax.set_xlabel(payload.axis_label_t, labelpad=plot_style.label_pad)
+        ax.set_ylabel(payload.axis_label_v, labelpad=plot_style.label_pad, rotation=0)
+        ax.yaxis.set_label_coords(-0.16, 0.92)
+        ax.text(
+            0.55,
+            0.78,
+            payload.label,
+            transform=ax.transAxes,
+            color=payload.color,
+            fontsize=plot_style.font_size,
+        )
+        ax.text(
+            0.50,
+            0.40,
+            "non-Debye",
+            transform=ax.transAxes,
+            color=plot_style.annotation_color,
+            fontsize=plot_style.font_size - 0.5,
+            style="italic",
+        )
+        _style_small_axes(ax, plot_style)
+        return _fragment_from_figure(
+            fig,
+            width=width,
+            height=height,
+            role="vs-decay-plot",
+            prefix="fig1_vs_decay",
+        )
+
+
+def _gaussian_mixture_lobes(
+    width_left: float,
+    width_right: float,
+    height_left: float,
+    height_right: float,
+    sigma_left: tuple[float, float],
+    sigma_right: tuple[float, float],
+    samples: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    energy = np.linspace(0.0, 1.0, max(32, samples))
+    shallow_mu = 0.30
+    deep_mu = 0.66
+    shallow = height_left * np.exp(
+        -((energy - shallow_mu) ** 2) / (2 * sigma_left[0] ** 2)
+    )
+    deep = height_right * np.exp(-((energy - deep_mu) ** 2) / (2 * sigma_right[0] ** 2))
+    density = shallow + deep
+    return energy, density
+
+
+def ispd_dos_fragment(
+    payload: ISPDPlot,
+    *,
+    width: float,
+    height: float,
+    style: MatplotlibPlotStyle | None = None,
+) -> SvgFragment:
+    plot_style = style or _default_plot_style()
+    with mpl.rc_context(_rc_params(plot_style)):
+        fig, ax = plt.subplots(figsize=(width / 100, height / 100), dpi=100)
+        energy, density = _gaussian_mixture_lobes(
+            payload.shallow_width,
+            payload.deep_width,
+            payload.shallow_height,
+            payload.deep_height,
+            payload.shallow_sigma,
+            payload.deep_sigma,
+            payload.samples,
+        )
+        ax.plot(energy, density, color=payload.color, lw=plot_style.line_width)
+        ax.fill_between(energy, 0, density, color=payload.color, alpha=0.18)
+        ax.set_xlabel("Et", labelpad=plot_style.label_pad)
+        ax.set_ylabel(
+            payload.trap_depth_output or "g(Et)",
+            labelpad=plot_style.label_pad,
+            rotation=0,
+        )
+        ax.yaxis.set_label_coords(-0.20, 0.92)
+        ax.text(
+            0.18,
+            0.62,
+            "Shallow",
+            transform=ax.transAxes,
+            color=plot_style.annotation_color,
+            fontsize=plot_style.font_size - 0.5,
+        )
+        ax.text(
+            0.62,
+            0.78,
+            "Deep",
+            transform=ax.transAxes,
+            color=payload.color,
+            fontsize=plot_style.font_size,
+        )
+        _style_small_axes(ax, plot_style)
+        return _fragment_from_figure(
+            fig,
+            width=width,
+            height=height,
+            role="ispd-dos-plot",
+            prefix="fig1_ispd",
+        )
+
+
+def dos_lobes_fragment(
+    payload: DOSLobes,
+    *,
+    width: float,
+    height: float,
+    style: MatplotlibPlotStyle | None = None,
+) -> SvgFragment:
+    plot_style = style or _default_plot_style()
+    with mpl.rc_context(_rc_params(plot_style)):
+        fig, ax = plt.subplots(figsize=(width / 100, height / 100), dpi=100)
+        energy, density = _gaussian_mixture_lobes(
+            payload.shallow_width,
+            payload.deep_width,
+            payload.shallow_height,
+            payload.deep_height,
+            payload.shallow_sigma,
+            payload.deep_sigma,
+            payload.samples,
+        )
+        ax.plot(energy, density, color="#3a78c5", lw=plot_style.line_width)
+        ax.fill_between(energy, 0, density, color="#3a78c5", alpha=0.18)
+        ax.set_xlabel("Et", labelpad=plot_style.label_pad)
+        ax.set_ylabel("g(Et)", labelpad=plot_style.label_pad, rotation=0)
+        ax.yaxis.set_label_coords(-0.20, 0.92)
+        _style_small_axes(ax, plot_style)
+        return _fragment_from_figure(
+            fig,
+            width=width,
+            height=height,
+            role="dos-lobes-plot",
+            prefix="fig1_dos",
+        )
+
+
 def _rc_params(style: MatplotlibPlotStyle) -> dict[str, object]:
     return {
         "svg.fonttype": "none",

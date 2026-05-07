@@ -19,6 +19,7 @@ from engine.domain_primitives import (
     SulfurPolymerOrigin,
     TrapLevelSet,
     TrapModelFlow,
+    VsDecayPlot,
 )
 from engine.scene import Column, Point, Rect, Reference, Scene, SemanticObject
 from engine.scaffold import (
@@ -55,6 +56,7 @@ def build_scene() -> Scene:
     col_synthesis = _region(columns, "top_synthesis")
     col_traps = _region(columns, "localized_traps")
     col_release = _region(columns, "release_module")
+    col_vs_decay = _region(columns, "vs_decay_module")
     col_ispd = _region(columns, "ispd_module")
     col_probe = _region(columns, "probe_module")
 
@@ -174,6 +176,26 @@ def build_scene() -> Scene:
             color="#0b4bb3",
             causal_role="experiment_current_decay_to_power_law_exponent",
             extracted_parameter="n",
+        ),
+    )
+
+    vs_decay_plot = SemanticObject(
+        id="vs_decay_plot",
+        kind="VsDecayPlot",
+        column=col_vs_decay.index,
+        label="V_s(t) decay",
+        payload=VsDecayPlot(
+            title="V_s(t) decay",
+            model="non_debye_power_law",
+            decay_form="non-debye-power-law",
+            t_min=1.0,
+            t_max=1.0e4,
+            samples=64,
+            color="#2f3b58",
+            label="V_s(t)",
+            axis_label_t="t (s)",
+            axis_label_v="V_s",
+            causal_role="surface_voltage_decay_envelope",
         ),
     )
 
@@ -333,6 +355,7 @@ def build_scene() -> Scene:
             traps,
             dos,
             decay_plot,
+            vs_decay_plot,
             ispd_plot,
             trap_flow,
             probe,

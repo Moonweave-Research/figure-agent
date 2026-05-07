@@ -125,6 +125,21 @@ class PowerLawDecayPlot:
 
 
 @dataclass(frozen=True)
+class VsDecayPlot:
+    title: str
+    model: str
+    decay_form: str
+    t_min: float
+    t_max: float
+    samples: int
+    color: str
+    label: str
+    axis_label_t: str
+    axis_label_v: str
+    causal_role: str = ""
+
+
+@dataclass(frozen=True)
 class ISPDPlot:
     title: str
     model: str

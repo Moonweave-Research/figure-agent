@@ -96,7 +96,7 @@ Tasks:
 - [x] 3-B.3 Verify the chain-S row stays hand-drawn for now (chain is a polymer, not a ring; deferred to a future phase). Document this in section 7.
 - [x] 3-B.4 Render fig1, regenerate visual judgment report, recompute hash, update `EXPECTED_HASH` in `verify_fig1_baseline_hash.py`.
 - [x] 3-B.5 Run gate suite. Required: 8/8. Fix causal-binding/causal-visibility immediately if RDKit-injected ids conflict with semantic data attributes.
-- [ ] 3-B.6 Commit: `SEMANTIC.fig1: phase 3-B — RDKit S8 ring in top_synthesis`.
+- [x] 3-B.6 Commit: `SEMANTIC.fig1: phase 3-B — RDKit S8 ring in top_synthesis`.
 
 Exit criteria for 3-B:
 - top_synthesis panel renders S8 ring via RDKit (visible in PNG).
@@ -119,13 +119,13 @@ Touched paths:
 - artifacts (regen)
 
 Tasks:
-- [ ] 3-C.1 Add `VsDecayPlot` dataclass to `engine/domain_primitives.py` with fields: `model`, `decay_form` ("non-debye-power-law"), `t_min`, `t_max`, `samples`, `color`, `label`, `axis_label_t`, `axis_label_v`.
-- [ ] 3-C.2 Add `vs_decay_fragment(payload, *, width, height, style)` in `matplotlib_subrenderers.py` mirroring `power_law_decay_fragment` shape (rc_context, log/lin axes, role tags). Use `subrenderer="matplotlib"`, `role="vs-decay-plot"`.
-- [ ] 3-C.3 Add `ispd_dos_fragment(payload, *, width, height, style)` and `dos_lobes_fragment(payload, *, width, height, style)`. Both render Gaussian-mixture lobes from the existing `ISPDPlot` / `DOSLobes` payloads. Roles `ispd-dos-plot` / `dos-lobes-plot`. Respect `MINI_DOS_MAX_LABELS=3` constraint by suppressing extra ticks.
-- [ ] 3-C.4 Add `vs_decay_plot` SemanticObject in `fig1_l1_scene.py`, column `col_vs_decay`. Update `Scene.objects` tuple. Update `visual_layout.yaml.regions[vs_decay_module].objects` to `["vs_decay_plot"]`.
-- [ ] 3-C.5 Rewrite `_draw_ispd_plot`, `_draw_dos_lobes`, `_draw_vs_decay_curve` to call the fragments via `wrapped_fragment_svg` + `draw.Raw`. Preserve all `data-causal-role`, semantic-group boundaries, and label text expected by verifiers.
-- [ ] 3-C.6 Render + regen judgment + run gates + update hash.
-- [ ] 3-C.7 Confirm density goal (g): `vs_decay_module ≥ 0.20`, `ispd_module ≥ 0.20`, `localized_traps ≤ 0.70`. If not met, adjust fragment width/height in scene before locking the hash.
+- [x] 3-C.1 Add `VsDecayPlot` dataclass to `engine/domain_primitives.py` with fields: `model`, `decay_form` ("non-debye-power-law"), `t_min`, `t_max`, `samples`, `color`, `label`, `axis_label_t`, `axis_label_v`.
+- [x] 3-C.2 Add `vs_decay_fragment(payload, *, width, height, style)` in `matplotlib_subrenderers.py` mirroring `power_law_decay_fragment` shape (rc_context, log/lin axes, role tags). Use `subrenderer="matplotlib"`, `role="vs-decay-plot"`.
+- [x] 3-C.3 Add `ispd_dos_fragment(payload, *, width, height, style)` and `dos_lobes_fragment(payload, *, width, height, style)`. Both render Gaussian-mixture lobes from the existing `ISPDPlot` / `DOSLobes` payloads. Roles `ispd-dos-plot` / `dos-lobes-plot`. Respect `MINI_DOS_MAX_LABELS=3` constraint by suppressing extra ticks.
+- [x] 3-C.4 Add `vs_decay_plot` SemanticObject in `fig1_l1_scene.py`, column `col_vs_decay`. Update `Scene.objects` tuple. Update `visual_layout.yaml.regions[vs_decay_module].objects` to `["vs_decay_plot"]`.
+- [x] 3-C.5 Rewrite `_draw_ispd_plot`, `_draw_dos_lobes`, `_draw_vs_decay_curve` to call the fragments via `wrapped_fragment_svg` + `draw.Raw`. Preserve all `data-causal-role`, semantic-group boundaries, and label text expected by verifiers.
+- [x] 3-C.6 Render + regen judgment + run gates + update hash.
+- [x] 3-C.7 Confirm density goal (g): `vs_decay_module ≥ 0.20`, `ispd_module ≥ 0.20`, `localized_traps ≤ 0.70`. If not met, adjust fragment width/height in scene before locking the hash.
 - [ ] 3-C.8 Commit: `SEMANTIC.fig1: phase 3-C — matplotlib fragments for ISPD/DOS/Vs(t)`.
 
 Exit criteria for 3-C:
@@ -189,6 +189,17 @@ Exit criteria for 3-E:
 
 ## 7. Audit Notes (filled by Ralph as it executes)
 
+### 3-C.7 — density readings + ispd resize attempt (2026-05-08)
+
+After 3-C wiring, density readings:
+- `vs_decay_module`: 0.024 → **0.253** ✓ goal ≥ 0.20 met (panel was orphan, now hosts a real plot)
+- `ispd_module`: 0.090 → 0.148 ✗ goal ≥ 0.20 not met (matplotlib fragment is wired but plot-box still small)
+- `localized_traps`: 0.749 → 0.764 ✗ goal ≤ 0.70 slightly over (DOS lobes now visible adds area)
+
+Attempted to enlarge `ispd_plot` local box from `[195, 100, 130, 280]` to `[50, 80, 420, 320]` then `[120, 70, 280, 340]`. Both broke the `_deep_dos_lobe_has_tails` semantic check — the hidden schematic helper renders Gaussians whose tail aspect-ratio depends on the bounding box, and a wider box pushes the deep-lobe top-band beyond the 62%-of-peak threshold.
+
+Decision: roll back to `[195, 100, 130, 280]`. Density rebalance for goals (g) ispd ≥ 0.20 and localized_traps ≤ 0.70 is **deferred to Phase 3-E**, where typography and label re-anchoring is allowed to expand visible content without touching the hidden schematic geometry.
+
 ### 3-B.3 — chain-S row deferral (2026-05-07)
 
 The chain-S row at `_draw_sulfur_polymer_origin:847-885` and the four mini polymer chains in the composition ramp at `_draw_sulfur_polymer_origin:887-948` remain hand-drawn after 3-B. Reasons:
@@ -240,7 +251,7 @@ Decision: Fig1 surface and Fig1-only test files are cleansed in this phase; Fig 
 ## 8. Status Summary
 
 Phase 3-A: complete (commit `a5ab492`, 12 files, 8/8 gates, 52 tests pass, hash unchanged at `6d0a37ba…`)
-Phase 3-B: in progress
-Phase 3-C: blocked on 3-B
+Phase 3-B: complete (commit `ea1695d`, 7 files, 8/8 gates, 52 tests pass, hash `03e51b77…`, RDKit S8 ring rendered in top_synthesis)
+Phase 3-C: in progress
 Phase 3-D: blocked on 3-C
 Phase 3-E: blocked on 3-D

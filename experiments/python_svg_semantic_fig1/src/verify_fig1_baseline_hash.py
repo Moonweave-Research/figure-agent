@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SVG = ROOT / "fig1_reference_semantic.svg"
-EXPECTED_HASH = "03e51b775bb0dc063e131ecff6f684ab9cb6fd807546df01e01076e5e4d131e1"
+EXPECTED_HASH = "73a47dfc78b7643772ab9dcec4348ccf90287d18b82b8822c97ab31351546753"
 
 
 def _fail(message: str) -> int:

@@ -30,10 +30,14 @@ from engine.domain_primitives import (
     SulfurPolymerOrigin,
     TrapLevelSet,
     TrapModelFlow,
+    VsDecayPlot,
 )
 from engine.matplotlib_subrenderers import (
+    dos_lobes_fragment,
     fig1_electrical_style,
+    ispd_dos_fragment,
     power_law_decay_fragment,
+    vs_decay_fragment,
 )
 from engine.rdkit_subrenderers import s8_ring_fragment
 from engine.scene import Point, Rect, Scene, SemanticObject
@@ -99,6 +103,7 @@ def build_drawing(scene: Scene, style: FigureStyle = DEFAULT_STYLE) -> draw.Draw
         "DOSLobes": _draw_dos_lobes,
         "EvidenceTrio": _draw_evidence_trio,
         "PowerLawDecayPlot": _draw_power_law_decay,
+        "VsDecayPlot": _draw_vs_decay_plot,
         "ISPDPlot": _draw_ispd_plot,
         "TrapModelFlow": _draw_trap_model_flow,
         "MacroscopicProbe": _draw_macroscopic_probe,
@@ -119,8 +124,6 @@ def _draw_panel_decorations(
     column_by_id = {column.id: column for column in scene.layout.columns}
     if "localized_traps" in column_by_id:
         _draw_localized_traps_visual(drawing, column_by_id["localized_traps"], style)
-    if "vs_decay_module" in column_by_id:
-        _draw_vs_decay_curve(drawing, column_by_id["vs_decay_module"], style)
     if "release_module" in column_by_id:
         _draw_release_wells(drawing, column_by_id["release_module"], style)
 
@@ -428,94 +431,48 @@ def _draw_trapped_electron(
     )
 
 
-def _draw_vs_decay_curve(drawing: draw.Drawing, column, style: FigureStyle) -> None:
-    palette = style.palette
+def _draw_vs_decay_plot(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
+    payload: VsDecayPlot = obj.payload
+    column = _column_model(scene, obj.column)
     plot_area = column.box("vs_plot_area")
-    margin_x = 22
-    margin_y = 24
-    axis_origin = Point(plot_area.x + margin_x, plot_area.bottom - margin_y)
-    axis_w = plot_area.width - margin_x - 12
-    axis_h = plot_area.height - margin_y - 14
-    p.mini_axis(drawing, axis_origin, axis_w, axis_h, palette.ink)
-    samples = 48
-    points = []
-    for index in range(samples):
-        fraction = index / (samples - 1)
-        decay = math.exp(-fraction * 3.2)
-        points.append(
-            Point(axis_origin.x + fraction * axis_w, axis_origin.y - decay * axis_h)
-        )
+    p.begin_semantic_group(
+        drawing,
+        obj,
+        "vs_decay_model={} decay_form={} t_min={:g} t_max={:g} samples={} "
+        "plot_grammar=matplotlib_fragment_fig1_electrical_style".format(
+            payload.model,
+            payload.decay_form,
+            payload.t_min,
+            payload.t_max,
+            payload.samples,
+        ),
+    )
+    fragment = vs_decay_fragment(
+        payload,
+        width=plot_area.width,
+        height=plot_area.height,
+        style=fig1_electrical_style(),
+    )
     drawing.append(
-        p.polyline_path(
-            tuple(points), fill="none", stroke=palette.ink, stroke_width=1.5
-        )
-    )
-    for tick_fraction in (0.25, 0.5, 0.75):
-        tx = axis_origin.x + tick_fraction * axis_w
-        drawing.append(
-            draw.Line(
-                tx,
-                axis_origin.y,
-                tx,
-                axis_origin.y + 4,
-                stroke=palette.ink,
-                stroke_width=0.5,
+        draw.Raw(
+            wrapped_fragment_svg(
+                fragment,
+                x=plot_area.x,
+                y=plot_area.y,
+                semantic_id=obj.id,
+                kind=obj.kind,
             )
         )
-    for ty_fraction in (0.25, 0.5, 0.75):
-        ty = axis_origin.y - ty_fraction * axis_h
-        drawing.append(
-            draw.Line(
-                axis_origin.x - 4,
-                ty,
-                axis_origin.x,
-                ty,
-                stroke=palette.ink,
-                stroke_width=0.5,
-            )
-        )
-    for sample_fraction in (0.0, 0.2, 0.4, 0.6, 0.8):
-        decay = math.exp(-sample_fraction * 3.2)
-        drawing.append(
-            draw.Circle(
-                axis_origin.x + sample_fraction * axis_w,
-                axis_origin.y - decay * axis_h,
-                1.8,
-                fill=palette.ink,
-                stroke="none",
-            )
-        )
-    p.text(
-        drawing,
-        "V_s(t)",
-        axis_origin.x - 6,
-        axis_origin.y - axis_h * 0.48,
-        11.0,
-        fill=palette.ink,
-        anchor="end",
-        style=style,
     )
-    p.text(
+    _draw_fragment_plot_role_markers(
         drawing,
-        "t (s)",
-        axis_origin.x + axis_w - 6,
-        axis_origin.y + 14,
-        9.5,
-        fill=palette.ink,
-        anchor="end",
-        style=style,
+        obj.id,
+        plot_area,
+        ("schematic-axis", "schematic-curve", "schematic-non-debye"),
     )
-    p.text(
-        drawing,
-        "non-Debye",
-        axis_origin.x + axis_w * 0.62,
-        axis_origin.y - axis_h * 0.42,
-        9.0,
-        fill=palette.muted,
-        italic=True,
-        anchor="start",
-        style=style,
-    )
+    p.end_semantic_group(drawing)
 
 
 def _draw_release_wells(drawing: draw.Drawing, column, style: FigureStyle) -> None:
@@ -1312,6 +1269,24 @@ def _draw_dos_lobes(
             payload.samples,
         ),
     )
+    plot_inset = area.inset(20, 60)
+    fragment = dos_lobes_fragment(
+        payload,
+        width=plot_inset.width,
+        height=plot_inset.height,
+        style=fig1_electrical_style(),
+    )
+    drawing.append(
+        draw.Raw(
+            wrapped_fragment_svg(
+                fragment,
+                x=plot_inset.x,
+                y=plot_inset.y,
+                semantic_id=obj.id,
+                kind=obj.kind,
+            )
+        )
+    )
     hidden_layer = draw.Group(opacity=0)
     p.draw_reference_dos_schematic(
         hidden_layer,
@@ -1810,7 +1785,7 @@ def _draw_ispd_plot(
         drawing,
         obj,
         "ispd_model={} shallow_width={:g} deep_width={:g} samples={} "
-        "plot_grammar=matplotlib_schematic_dos_calculator major_ticks={} minor_ticks={}".format(
+        "plot_grammar=matplotlib_fragment_fig1_electrical_style major_ticks={} minor_ticks={}".format(
             payload.model,
             payload.shallow_width,
             payload.deep_width,
@@ -1819,8 +1794,26 @@ def _draw_ispd_plot(
             0,
         ),
     )
+    fragment = ispd_dos_fragment(
+        payload,
+        width=bounds.width,
+        height=bounds.height,
+        style=fig1_electrical_style(),
+    )
+    drawing.append(
+        draw.Raw(
+            wrapped_fragment_svg(
+                fragment,
+                x=bounds.x,
+                y=bounds.y,
+                semantic_id=obj.id,
+                kind=obj.kind,
+            )
+        )
+    )
+    hidden_layer = draw.Group(opacity=0)
     p.draw_reference_dos_schematic(
-        drawing,
+        hidden_layer,
         bounds,
         shallow_center_y=0.19,
         deep_center_y=0.59,
@@ -1845,11 +1838,12 @@ def _draw_ispd_plot(
         axis_label_role="schematic-label",
         axis_label="",
         title="",
-        show_lobe_labels=True,
+        show_lobe_labels=False,
         depth_label_side="right",
         compact=True,
         style=style,
     )
+    drawing.append(hidden_layer)
     p.end_semantic_group(drawing)
 
 

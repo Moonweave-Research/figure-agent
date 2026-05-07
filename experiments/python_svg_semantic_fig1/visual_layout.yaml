@@ -56,7 +56,7 @@
       "title": "V_s(t) decay",
       "role": "supporting",
       "bounds": [414, 488, 240, 470],
-      "objects": [],
+      "objects": ["vs_decay_plot"],
       "local_boxes": {
         "vs_plot_area": [24, 80, 192, 320],
         "vs_callout": [16, 412, 208, 46]
