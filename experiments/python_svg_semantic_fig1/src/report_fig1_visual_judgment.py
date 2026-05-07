@@ -72,10 +72,14 @@ PROBE_OWNED_TEXT_LABELS = {
 }
 
 
-def build_visual_judgment_report(scene: Scene, svg_path: str | Path = SVG) -> dict[str, Any]:
+def build_visual_judgment_report(
+    scene: Scene, svg_path: str | Path = SVG
+) -> dict[str, Any]:
     svg = Path(svg_path)
     if not svg.exists():
-        raise FileNotFoundError(f"missing rendered SVG for visual judgment report: {svg}")
+        raise FileNotFoundError(
+            f"missing rendered SVG for visual judgment report: {svg}"
+        )
 
     root = ET.parse(svg).getroot()
     semantic_boxes = _semantic_box_records(scene, svg)
@@ -95,7 +99,9 @@ def build_visual_judgment_report(scene: Scene, svg_path: str | Path = SVG) -> di
     categories.append(
         {
             "name": "Human Review Prompts",
-            "items": [{"severity": "inspect", "message": prompt} for prompt in review_prompts],
+            "items": [
+                {"severity": "inspect", "message": prompt} for prompt in review_prompts
+            ],
         }
     )
 
@@ -171,13 +177,32 @@ def markdown_for_report(report: dict[str, Any]) -> str:
                 semantic_count=panel["semantic_box_count"],
             )
         )
-    lines.extend(["", "### Semantic Object BBoxes", "", "| Semantic id | Kind | Panel | BBox |", "| --- | --- | --- | --- |"])
+    lines.extend(
+        [
+            "",
+            "### Semantic Object BBoxes",
+            "",
+            "| Semantic id | Kind | Panel | Sub-region | BBox |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
     for item in report["semantic_boxes"]:
         bbox = item["bbox"]
         bbox_text = f"{bbox['left']:.1f},{bbox['top']:.1f},{bbox['right']:.1f},{bbox['bottom']:.1f}"
-        lines.append(f"| {item['id']} | {item['kind']} | {item['panel_id']} | {bbox_text} |")
+        local_box = item.get("local_box_id") or "-"
+        lines.append(
+            f"| {item['id']} | {item['kind']} | {item['panel_id']} | {local_box} | {bbox_text} |"
+        )
 
-    lines.extend(["", "### Text BBox Summary", "", "| Panel | Text boxes | Font range | Role tags |", "| --- | ---: | --- | --- |"])
+    lines.extend(
+        [
+            "",
+            "### Text BBox Summary",
+            "",
+            "| Panel | Text boxes | Font range | Role tags |",
+            "| --- | ---: | --- | --- |",
+        ]
+    )
     for panel in report["panels"]:
         role_tags = ", ".join(panel["text_role_tags"][:8])
         if len(panel["text_role_tags"]) > 8:
@@ -210,12 +235,14 @@ def _semantic_box_records(scene: Scene, svg_path: Path) -> list[dict[str, Any]]:
         bbox = bboxes.get(obj.id)
         if bbox is None:
             continue
+        panel_id = _panel_id_for_bbox(scene, bbox)
         records.append(
             {
                 "id": obj.id,
                 "kind": obj.kind,
                 "label": obj.label,
-                "panel_id": _panel_id_for_bbox(scene, bbox),
+                "panel_id": panel_id,
+                "local_box_id": _local_box_id_for_bbox(scene, panel_id, bbox),
                 "role_tags": _semantic_role_tags(obj.id, obj.kind),
                 "bbox": _bbox_record(bbox),
                 "area": round(_bbox_area(bbox), 3),
@@ -236,11 +263,13 @@ def _text_box_records(scene: Scene, root: ET.Element) -> list[dict[str, Any]]:
         if not value:
             continue
         role_tags = _role_tags(element)
+        panel_id = _panel_id_for_bbox(scene, bbox)
         raw_records.append(
             {
                 "index": index,
                 "text": value,
-                "panel_id": _panel_id_for_bbox(scene, bbox),
+                "panel_id": panel_id,
+                "local_box_id": _local_box_id_for_bbox(scene, panel_id, bbox),
                 "semantic_id": semantic_id,
                 "semantic_kind": semantic_kind,
                 "role_tags": role_tags,
@@ -258,7 +287,16 @@ def _shape_box_records(scene: Scene, root: ET.Element) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for index, element, semantic_id, semantic_kind in _walk_svg_elements(root):
         tag = _local_name(element.tag)
-        if tag in {"text", "svg", "defs", "g", "title", "stop", "filter", "pattern"} or tag.startswith("fe"):
+        if tag in {
+            "text",
+            "svg",
+            "defs",
+            "g",
+            "title",
+            "stop",
+            "filter",
+            "pattern",
+        } or tag.startswith("fe"):
             continue
         bbox = _element_bbox(element)
         if bbox is None or _bbox_area(bbox) <= 0:
@@ -266,11 +304,13 @@ def _shape_box_records(scene: Scene, root: ET.Element) -> list[dict[str, Any]]:
         if _is_invisible_shape(element):
             continue
         role_tags = _role_tags(element)
+        panel_id = _panel_id_for_bbox(scene, bbox)
         records.append(
             {
                 "index": index,
                 "tag": tag,
-                "panel_id": _panel_id_for_bbox(scene, bbox),
+                "panel_id": panel_id,
+                "local_box_id": _local_box_id_for_bbox(scene, panel_id, bbox),
                 "semantic_id": semantic_id,
                 "semantic_kind": semantic_kind,
                 "role_tags": role_tags,
@@ -297,11 +337,27 @@ def _panel_records(
             if item["panel_id"] == column.id and item["id"] != "layout_flow"
         ]
         panel_text = [item for item in text_boxes if item["panel_id"] == column.id]
-        semantic_rectangles = [_clipped_bbox(_bbox_from_record(item["bbox"]), panel_bbox) for item in panel_semantic]
-        text_rectangles = [_clipped_bbox(_bbox_from_record(item["bbox"]), panel_bbox) for item in panel_text]
-        semantic_area = _rectangle_union_area([bbox for bbox in semantic_rectangles if bbox is not None])
-        text_area = _rectangle_union_area([bbox for bbox in text_rectangles if bbox is not None])
-        occupied_area = _rectangle_union_area([bbox for bbox in (*semantic_rectangles, *text_rectangles) if bbox is not None])
+        semantic_rectangles = [
+            _clipped_bbox(_bbox_from_record(item["bbox"]), panel_bbox)
+            for item in panel_semantic
+        ]
+        text_rectangles = [
+            _clipped_bbox(_bbox_from_record(item["bbox"]), panel_bbox)
+            for item in panel_text
+        ]
+        semantic_area = _rectangle_union_area(
+            [bbox for bbox in semantic_rectangles if bbox is not None]
+        )
+        text_area = _rectangle_union_area(
+            [bbox for bbox in text_rectangles if bbox is not None]
+        )
+        occupied_area = _rectangle_union_area(
+            [
+                bbox
+                for bbox in (*semantic_rectangles, *text_rectangles)
+                if bbox is not None
+            ]
+        )
         font_sizes = [item["font_size"] for item in panel_text]
         text_roles = sorted({role for item in panel_text for role in item["role_tags"]})
         records.append(
@@ -313,7 +369,7 @@ def _panel_records(
                     "x": column.bounds.x,
                     "y": column.bounds.y,
                     "width": column.bounds.width,
-                "height": column.bounds.height,
+                    "height": column.bounds.height,
                 },
                 "occupied_area_ratio": round(min(occupied_area / panel_area, 1.0), 4),
                 "semantic_area_ratio": round(min(semantic_area / panel_area, 1.0), 4),
@@ -322,7 +378,9 @@ def _panel_records(
                 "text_box_count": len(panel_text),
                 "min_font_size": round(min(font_sizes), 3) if font_sizes else 0.0,
                 "max_font_size": round(max(font_sizes), 3) if font_sizes else 0.0,
-                "median_font_size": round(statistics.median(font_sizes), 3) if font_sizes else 0.0,
+                "median_font_size": round(statistics.median(font_sizes), 3)
+                if font_sizes
+                else 0.0,
                 "text_role_tags": text_roles,
             }
         )
@@ -370,20 +428,30 @@ def _text_near_collision_category(text_boxes: list[dict[str, Any]]) -> dict[str,
                 continue
             if _is_expected_text_pair(first, second):
                 continue
-            distance = _bbox_gap(_bbox_from_record(first["bbox"]), _bbox_from_record(second["bbox"]))
+            distance = _bbox_gap(
+                _bbox_from_record(first["bbox"]), _bbox_from_record(second["bbox"])
+            )
             if distance <= 5.0:
                 candidates.append((distance, first, second))
-    candidates.sort(key=lambda item: (item[0], item[1]["panel_id"], item[1]["index"], item[2]["index"]))
+    candidates.sort(
+        key=lambda item: (
+            item[0],
+            item[1]["panel_id"],
+            item[1]["index"],
+            item[2]["index"],
+        )
+    )
 
     items: list[dict[str, str]] = []
     for distance, first, second in candidates[:14]:
         severity = "possible issue" if distance <= 1.0 else "candidate risk"
+        attribution = _format_text_pair_attribution(first, second)
         items.append(
             {
                 "severity": severity,
                 "message": (
                     f"{first['panel_id']} text boxes may compete at {distance:.1f}px gap: "
-                    f"'{_short(first['text'])}' near '{_short(second['text'])}'."
+                    f"'{_short(first['text'])}' near '{_short(second['text'])}'{attribution}."
                 ),
             }
         )
@@ -408,7 +476,9 @@ def _text_shape_conflict_category(
     text_boxes: list[dict[str, Any]],
     shape_boxes: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    conflict_shapes = [shape for shape in shape_boxes if _shape_has_conflict_role(shape)]
+    conflict_shapes = [
+        shape for shape in shape_boxes if _shape_has_conflict_role(shape)
+    ]
     candidates: list[tuple[float, dict[str, Any], dict[str, Any]]] = []
     for text in text_boxes:
         text_bbox = _bbox_from_record(text["bbox"])
@@ -421,18 +491,26 @@ def _text_shape_conflict_category(
             distance = _bbox_gap(text_bbox, shape_bbox)
             if distance <= 4.0 and text["semantic_id"] != shape["semantic_id"]:
                 candidates.append((distance, text, shape))
-    candidates.sort(key=lambda item: (item[0], item[1]["panel_id"], item[1]["index"], item[2]["index"]))
+    candidates.sort(
+        key=lambda item: (
+            item[0],
+            item[1]["panel_id"],
+            item[1]["index"],
+            item[2]["index"],
+        )
+    )
     candidates = _dedupe_text_shape_candidates(candidates)
 
     items: list[dict[str, str]] = []
     for distance, text, shape in candidates[:14]:
         roles = ", ".join(shape["role_tags"][:3]) or shape["tag"]
+        attribution = _format_text_shape_attribution(text, shape)
         items.append(
             {
                 "severity": "candidate risk" if distance > 0 else "possible issue",
                 "message": (
                     f"{text['panel_id']} text '{_short(text['text'])}' is {distance:.1f}px from "
-                    f"{shape['tag']} mark ({roles}); inspect label ownership and legibility."
+                    f"{shape['tag']} mark ({roles}){attribution}; inspect label ownership and legibility."
                 ),
             }
         )
@@ -456,7 +534,9 @@ def _text_shape_conflict_category(
 def _dedupe_text_shape_candidates(
     candidates: list[tuple[float, dict[str, Any], dict[str, Any]]],
 ) -> list[tuple[float, dict[str, Any], dict[str, Any]]]:
-    best_by_text_and_shape: dict[tuple[object, ...], tuple[float, dict[str, Any], dict[str, Any]]] = {}
+    best_by_text_and_shape: dict[
+        tuple[object, ...], tuple[float, dict[str, Any], dict[str, Any]]
+    ] = {}
     for distance, text, shape in candidates:
         key = (
             text["index"],
@@ -468,7 +548,12 @@ def _dedupe_text_shape_candidates(
             best_by_text_and_shape[key] = (distance, text, shape)
     return sorted(
         best_by_text_and_shape.values(),
-        key=lambda item: (item[0], item[1]["panel_id"], item[1]["index"], item[2]["index"]),
+        key=lambda item: (
+            item[0],
+            item[1]["panel_id"],
+            item[1]["index"],
+            item[2]["index"],
+        ),
     )
 
 
@@ -478,7 +563,9 @@ def _visual_hierarchy_category(
     semantic_boxes: list[dict[str, Any]],
 ) -> dict[str, Any]:
     items: list[dict[str, str]] = []
-    hero_panel = next(column for column in scene.layout.columns if column.role == "hero")
+    hero_panel = next(
+        column for column in scene.layout.columns if column.role == "hero"
+    )
     hero_text = [item for item in text_boxes if item["panel_id"] == hero_panel.id]
     support_text = [item for item in text_boxes if item["panel_id"] != hero_panel.id]
     hero_max = max((item["font_size"] for item in hero_text), default=0.0)
@@ -504,7 +591,9 @@ def _visual_hierarchy_category(
             }
         )
 
-    primary_records = [item for item in semantic_boxes if item["id"] in PRIMARY_SEMANTIC_IDS]
+    primary_records = [
+        item for item in semantic_boxes if item["id"] in PRIMARY_SEMANTIC_IDS
+    ]
     primary_area = sum(item["area"] for item in primary_records)
     all_area = sum(item["area"] for item in semantic_boxes)
     primary_ratio = primary_area / all_area if all_area else 0.0
@@ -534,7 +623,9 @@ def _reading_order_category(
     panel_records: list[dict[str, Any]],
     text_boxes: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    ordered_panels = sorted(panel_records, key=lambda item: (item["bounds"]["y"], item["bounds"]["x"]))
+    ordered_panels = sorted(
+        panel_records, key=lambda item: (item["bounds"]["y"], item["bounds"]["x"])
+    )
     panel_order = " -> ".join(panel["id"] for panel in ordered_panels)
     items: list[dict[str, str]] = [
         {
@@ -545,7 +636,9 @@ def _reading_order_category(
     unowned = [
         text
         for text in text_boxes
-        if not text["semantic_id"] and "panel-title-support" not in text["role_tags"] and "panel-title-hero" not in text["role_tags"]
+        if not text["semantic_id"]
+        and "panel-title-support" not in text["role_tags"]
+        and "panel-title-hero" not in text["role_tags"]
     ]
     if unowned:
         preview = ", ".join(f"'{_short(text['text'])}'" for text in unowned[:8])
@@ -563,7 +656,12 @@ def _reading_order_category(
         panel_text = [text for text in text_boxes if text["panel_id"] == panel["id"]]
         if len(panel_text) <= 1:
             continue
-        text_order = " -> ".join(_short(text["text"], limit=18) for text in sorted(panel_text, key=lambda item: (item["bbox"]["top"], item["bbox"]["left"]))[:6])
+        text_order = " -> ".join(
+            _short(text["text"], limit=18)
+            for text in sorted(
+                panel_text, key=lambda item: (item["bbox"]["top"], item["bbox"]["left"])
+            )[:6]
+        )
         items.append(
             {
                 "severity": "evidence",
@@ -623,7 +721,11 @@ def _human_review_prompts(categories: list[dict[str, Any]]) -> list[str]:
         category = category_by_name.get(name)
         if not category:
             continue
-        item = _first_prompt_item(category, allow_evidence=name in {"Reference Divergence", "Visual Hierarchy", "Reading Order"})
+        item = _first_prompt_item(
+            category,
+            allow_evidence=name
+            in {"Reference Divergence", "Visual Hierarchy", "Reading Order"},
+        )
         if item is None:
             continue
         prompts.append(f"Inspect {name.lower()}: {item['message']}")
@@ -645,7 +747,9 @@ def _human_review_prompts(categories: list[dict[str, Any]]) -> list[str]:
             if len(prompts) >= 8:
                 return prompts
 
-    return prompts or ["Inspect the rendered figure visually; this report did not infer a candidate risk."]
+    return prompts or [
+        "Inspect the rendered figure visually; this report did not infer a candidate risk."
+    ]
 
 
 def _walk_svg_elements(
@@ -675,7 +779,13 @@ def _semantic_role_tags(semantic_id: str, semantic_kind: str) -> list[str]:
 
 def _role_tags(element: ET.Element) -> list[str]:
     tags: list[str] = []
-    for key in ("data-panel-role", "data-hero-role", "data-plot-role", "data-flow-role", "data-causal-role"):
+    for key in (
+        "data-panel-role",
+        "data-hero-role",
+        "data-plot-role",
+        "data-flow-role",
+        "data-causal-role",
+    ):
         value = element.attrib.get(key, "")
         tags.extend(token for token in value.split() if token)
     return sorted(set(tags))
@@ -698,18 +808,27 @@ def _is_expected_text_pair(first: dict[str, Any], second: dict[str, Any]) -> boo
     return False
 
 
-def _looks_like_label_continuation(first: dict[str, Any], second: dict[str, Any]) -> bool:
+def _looks_like_label_continuation(
+    first: dict[str, Any], second: dict[str, Any]
+) -> bool:
     first_box = first["bbox"]
     second_box = second["bbox"]
-    vertical_gap = _bbox_gap(_bbox_from_record(first_box), _bbox_from_record(second_box))
-    horizontal_overlap = min(first_box["right"], second_box["right"]) - max(first_box["left"], second_box["left"])
+    vertical_gap = _bbox_gap(
+        _bbox_from_record(first_box), _bbox_from_record(second_box)
+    )
+    horizontal_overlap = min(first_box["right"], second_box["right"]) - max(
+        first_box["left"], second_box["left"]
+    )
     return vertical_gap <= 6.0 and horizontal_overlap > 0
 
 
 def _is_expected_text_shape_pair(text: dict[str, Any], shape: dict[str, Any]) -> bool:
     if text["semantic_id"] and text["semantic_id"] == shape["semantic_id"]:
         return True
-    if text["panel_id"] == "macroscopic_probe_card" and text["text"] in PROBE_OWNED_TEXT_LABELS:
+    if (
+        text["panel_id"] == "macroscopic_probe_card"
+        and text["text"] in PROBE_OWNED_TEXT_LABELS
+    ):
         return shape.get("semantic_kind") in {
             "MacroscopicProbe",
             "PolymerCantilever",
@@ -720,7 +839,9 @@ def _is_expected_text_shape_pair(text: dict[str, Any], shape: dict[str, Any]) ->
     return False
 
 
-def _first_prompt_item(category: dict[str, Any], *, allow_evidence: bool = False) -> dict[str, str] | None:
+def _first_prompt_item(
+    category: dict[str, Any], *, allow_evidence: bool = False
+) -> dict[str, str] | None:
     severities = {"possible issue", "candidate risk"}
     if allow_evidence:
         severities.add("evidence")
@@ -730,18 +851,21 @@ def _first_prompt_item(category: dict[str, Any], *, allow_evidence: bool = False
     return None
 
 
-def _merge_invisible_text_role_markers(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _merge_invisible_text_role_markers(
+    records: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     visible_records = [record for record in records if record["visible"]]
     invisible_records = [record for record in records if not record["visible"]]
     visible_by_key: dict[tuple[object, ...], dict[str, Any]] = {
-        _text_merge_key(record): record
-        for record in visible_records
+        _text_merge_key(record): record for record in visible_records
     }
     for invisible in invisible_records:
         visible = visible_by_key.get(_text_merge_key(invisible))
         if visible is None:
             continue
-        visible["role_tags"] = sorted(set(visible["role_tags"]) | set(invisible["role_tags"]))
+        visible["role_tags"] = sorted(
+            set(visible["role_tags"]) | set(invisible["role_tags"])
+        )
         if not visible["semantic_id"]:
             visible["semantic_id"] = invisible["semantic_id"]
         if not visible["semantic_kind"]:
@@ -764,8 +888,12 @@ def _text_merge_key(record: dict[str, Any]) -> tuple[object, ...]:
     )
 
 
-def _large_secondary_text_candidates(scene: Scene, text_boxes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    hero_panel_id = next(column.id for column in scene.layout.columns if column.role == "hero")
+def _large_secondary_text_candidates(
+    scene: Scene, text_boxes: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    hero_panel_id = next(
+        column.id for column in scene.layout.columns if column.role == "hero"
+    )
     return [
         text
         for text in text_boxes
@@ -779,7 +907,10 @@ def _panel_id_for_bbox(scene: Scene, bbox: BBox) -> str:
     center_x = (bbox.left + bbox.right) / 2
     center_y = (bbox.top + bbox.bottom) / 2
     for column in scene.layout.columns:
-        if column.bounds.x <= center_x <= column.bounds.right and column.bounds.y <= center_y <= column.bounds.bottom:
+        if (
+            column.bounds.x <= center_x <= column.bounds.right
+            and column.bounds.y <= center_y <= column.bounds.bottom
+        ):
             return column.id
     nearest = min(
         scene.layout.columns,
@@ -792,6 +923,44 @@ def _point_rect_distance(x: float, y: float, rect: Rect) -> float:
     dx = max(rect.x - x, 0.0, x - rect.right)
     dy = max(rect.y - y, 0.0, y - rect.bottom)
     return (dx * dx + dy * dy) ** 0.5
+
+
+def _local_box_id_for_bbox(scene: Scene, panel_id: str, bbox: BBox) -> str:
+    if not panel_id:
+        return ""
+    column = next((c for c in scene.layout.columns if c.id == panel_id), None)
+    if column is None or not column.local_boxes:
+        return ""
+    center_x = (bbox.left + bbox.right) / 2
+    center_y = (bbox.top + bbox.bottom) / 2
+    for box in column.local_boxes:
+        bounds = box.bounds
+        if (
+            bounds.x <= center_x <= bounds.right
+            and bounds.y <= center_y <= bounds.bottom
+        ):
+            return box.id
+    return ""
+
+
+def _format_text_pair_attribution(first: dict[str, Any], second: dict[str, Any]) -> str:
+    first_box = first.get("local_box_id", "")
+    second_box = second.get("local_box_id", "")
+    if not first_box and not second_box:
+        return ""
+    if first_box and first_box == second_box:
+        return f" [box={first_box}]"
+    return f" [box={first_box or 'panel'}, near={second_box or 'panel'}]"
+
+
+def _format_text_shape_attribution(text: dict[str, Any], shape: dict[str, Any]) -> str:
+    text_box = text.get("local_box_id", "")
+    shape_box = shape.get("local_box_id", "")
+    if not text_box and not shape_box:
+        return ""
+    if text_box and text_box == shape_box:
+        return f" [box={text_box}]"
+    return f" [text_box={text_box or 'panel'}, shape_box={shape_box or 'panel'}]"
 
 
 def _bbox_record(bbox: BBox) -> dict[str, float]:
