@@ -27,7 +27,10 @@ def generated_svg_text(scene: Any | None = None) -> str:
         from render_fig1_l1 import svg_text_for_scene
 
         return svg_text_for_scene(scene)
-    return _generated_svg_text_via_uv()
+    try:
+        return _generated_svg_text_in_process()
+    except ImportError:
+        return _generated_svg_text_via_uv()
 
 
 def render_parity_failures(svg_path: str | Path = SVG, *, scene: Any | None = None) -> list[str]:
@@ -49,8 +52,20 @@ def render_parity_failures(svg_path: str | Path = SVG, *, scene: Any | None = No
     return [
         "render parity mismatch: current source does not reproduce tracked Fig1 SVG "
         f"(tracked_sha256={expected_hash}, generated_sha256={actual_hash}, "
-        f"tracked_len={len(expected)}, generated_len={len(actual)}, {_first_diff_summary(expected, actual)})"
+        f"tracked_len={len(expected)}, generated_len={len(actual)}, {_first_diff_summary(expected, actual)}). "
+        "If the source change is intentional, re-render and update tracked SVG; otherwise revert source changes."
     ]
+
+
+def _generated_svg_text_in_process() -> str:
+    # Parity requires deterministic build_scene() and svg_text_for_scene(): no time-based IDs, randomness,
+    # or unordered set/dict iteration that can change emitted SVG text across runs.
+    if str(SRC) not in sys.path:
+        sys.path.insert(0, str(SRC))
+    from fig1_l1_scene import build_scene
+    from render_fig1_l1 import svg_text_for_scene
+
+    return svg_text_for_scene(build_scene())
 
 
 def _generated_svg_text_via_uv() -> str:
