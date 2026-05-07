@@ -14,7 +14,7 @@ Human visual review remains required before publication-grade approval.
 ## Category Findings
 
 ### Panel Density
-- candidate risk: top_synthesis has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.
+- candidate risk: top_synthesis has moderate-high approximate occupied area (0.61); inspect whether whitespace is sufficient for scanning.
 - possible issue: localized_traps has high approximate occupied area (0.75); inspect whether panel density harms first-pass reading.
 - evidence: release_module occupied area is 0.19 with text area 0.05; use as layout density evidence, not a pass/fail rule.
 - candidate risk: vs_decay_module is unusually sparse by bbox area (0.02); inspect whether the visual weight matches its semantic role.
@@ -63,7 +63,7 @@ Human visual review remains required before publication-grade approval.
 - inspect: Inspect text / text near-collision: localized_traps text boxes may compete at 2.0px gap: '−' near '−'.
 - inspect: Inspect text / shape conflict: localized_traps text '−' is 0.0px from path mark (dos-lobe-deep) [box=dos_area]; inspect label ownership and legibility.
 - inspect: Inspect visual hierarchy: hero maximum text size (16.0) does not exceed support maximum (16.0); inspect whether the center concept reads as primary.
-- inspect: Inspect panel density: top_synthesis has moderate-high approximate occupied area (0.67); inspect whether whitespace is sufficient for scanning.
+- inspect: Inspect panel density: top_synthesis has moderate-high approximate occupied area (0.61); inspect whether whitespace is sufficient for scanning.
 - inspect: Inspect reading order: likely panel reading order by top-left position: top_synthesis -> localized_traps -> release_module -> vs_decay_module -> ispd_module -> probe_module.
 - inspect: Inspect text / text near-collision: localized_traps text boxes may compete at 3.1px gap: 'qualitative trap landscape insi...' near 'DOS g(Et)' [box=dos_area].
 - inspect: Inspect text / text near-collision: localized_traps text boxes may compete at 4.0px gap: '−' near '−' [box=dos_area].
@@ -74,7 +74,7 @@ Human visual review remains required before publication-grade approval.
 
 | Panel | Role | Bounds | Occupied | Text | Semantic Objects |
 | --- | --- | --- | ---: | ---: | ---: |
-| top_synthesis | supporting | 22.0,30.0,900.0,410.0 | 0.668 | 0.041 | 1 |
+| top_synthesis | supporting | 22.0,30.0,900.0,410.0 | 0.608 | 0.041 | 1 |
 | localized_traps | hero | 940.0,30.0,633.0,410.0 | 0.749 | 0.088 | 4 |
 | release_module | supporting | 22.0,488.0,380.0,470.0 | 0.187 | 0.052 | 2 |
 | vs_decay_module | supporting | 414.0,488.0,240.0,470.0 | 0.024 | 0.024 | 0 |
@@ -86,7 +86,7 @@ Human visual review remains required before publication-grade approval.
 | Semantic id | Kind | Panel | Sub-region | BBox |
 | --- | --- | --- | --- | --- |
 | layout_flow | LayoutFlow | ispd_module | - | 211.5,231.5,1198.5,728.5 |
-| sulfur_polymer_origin | SulfurPolymerOrigin | top_synthesis | composition_ramp | 50.1,122.4,866.9,419.8 |
+| sulfur_polymer_origin | SulfurPolymerOrigin | top_synthesis | composition_ramp | 50.1,149.5,866.9,419.8 |
 | deep_trap_hero | DeepTrapHero | localized_traps | dos_area | 988.0,95.8,1522.0,435.5 |
 | band_diagram | BandDiagram | localized_traps | band_area | 946.0,119.5,1182.5,366.5 |
 | trap_level_set | TrapLevelSet | localized_traps | band_area | 1054.9,179.6,1151.9,302.7 |

@@ -35,6 +35,7 @@ from engine.matplotlib_subrenderers import (
     fig1_electrical_style,
     power_law_decay_fragment,
 )
+from engine.rdkit_subrenderers import s8_ring_fragment
 from engine.scene import Point, Rect, Scene, SemanticObject
 from engine.style import DEFAULT_STYLE, FigureStyle
 from engine.svg_fragments import wrapped_fragment_svg
@@ -777,45 +778,23 @@ def _draw_sulfur_polymer_origin(
     column.box("origin_icon")
 
     ring_box = column.box("s8_ring")
-    ring_center = ring_box.center
-    ring_radius = min(ring_box.width, ring_box.height) * 0.41
-    ring_points = [
-        Point(
-            ring_center.x
-            + ring_radius * math.cos(2 * math.pi * i / payload.s8_atom_count),
-            ring_center.y
-            + ring_radius * math.sin(2 * math.pi * i / payload.s8_atom_count),
-        )
-        for i in range(payload.s8_atom_count)
-    ]
-    for index, current in enumerate(ring_points):
-        nxt = ring_points[(index + 1) % len(ring_points)]
-        drawing.append(
-            draw.Line(
-                current.x,
-                current.y,
-                nxt.x,
-                nxt.y,
-                stroke=palette.sulfur_brown,
-                stroke_width=1.5,
+    ring_fragment = s8_ring_fragment(width=ring_box.width, height=ring_box.height)
+    drawing.append(
+        draw.Raw(
+            wrapped_fragment_svg(
+                ring_fragment,
+                x=ring_box.x,
+                y=ring_box.y,
+                semantic_id=f"{obj.id}__s8_ring",
+                kind="SulfurPolymerOrigin",
             )
         )
-    for atom in ring_points:
-        drawing.append(
-            draw.Circle(
-                atom.x,
-                atom.y,
-                4.5,
-                fill=palette.sulfur_yellow,
-                stroke=palette.sulfur_brown,
-                stroke_width=1.0,
-            )
-        )
+    )
     p.text(
         drawing,
         "S8",
-        ring_center.x,
-        ring_center.y + 82,
+        ring_box.center.x,
+        ring_box.bottom + 18,
         16,
         fill=palette.ink,
         anchor="middle",

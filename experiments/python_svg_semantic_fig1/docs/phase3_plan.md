@@ -70,8 +70,8 @@ Tasks (Ralph executes top-to-bottom):
 - [x] 3-A.8 Render fig1 via dispatcher and confirm baseline-hash unchanged (no semantic change). If hash drifts, investigate before continuing.
 - [x] 3-A.9 Run all `test_fig1_*.py` with full deps (incl. rdkit). Required: zero failures, zero errors.
 - [x] 3-A.10 Run gate suite via dispatcher. Required: 8/8.
-- [ ] 3-A.11 Stage only the in-scope paths above (use `git add` per path; for deletions use `git rm` or `git add -u <path>`). Skip `.agents/`, `.claude/`, `docs/` at repo root.
-- [ ] 3-A.12 Commit: `SEMANTIC.fig1: phase 3-A — commit library-fragment scaffolding + drop dead pe_hysteresis`.
+- [x] 3-A.11 Stage only the in-scope paths above (use `git add` per path; for deletions use `git rm` or `git add -u <path>`). Skip `.agents/`, `.claude/`, `docs/` at repo root.
+- [x] 3-A.12 Commit: `SEMANTIC.fig1: phase 3-A — commit library-fragment scaffolding + drop dead pe_hysteresis`.
 
 Exit criteria for 3-A:
 - All `pe_hysteresis*` symbols removed from src and tests.
@@ -91,11 +91,11 @@ Touched paths:
 - `experiments/python_svg_semantic_fig1/fig1_reference_semantic.svg` + `.png` + comparison png + judgment report (artifact regen)
 
 Tasks:
-- [ ] 3-B.1 Read `_draw_sulfur_polymer_origin` in render_fig1_l1.py end-to-end. Identify exact code block that draws the S8 ring shape (the eight `draw.Circle` ring) and the chain-S atom row.
-- [ ] 3-B.2 Replace the S8 ring block with `s8_ring_fragment(width=W, height=H)` where W,H come from `visual_layout.yaml.regions[top_synthesis].local_boxes.s8_ring`. Wrap with `wrapped_fragment_svg` and `draw.Raw`. Preserve `p.begin_semantic_group` / `end_semantic_group` boundaries and the `data-causal-role` attributes that downstream verifiers rely on.
-- [ ] 3-B.3 Verify the chain-S row stays hand-drawn for now (chain is a polymer, not a ring; deferred to a future phase). Document this in section 7.
-- [ ] 3-B.4 Render fig1, regenerate visual judgment report, recompute hash, update `EXPECTED_HASH` in `verify_fig1_baseline_hash.py`.
-- [ ] 3-B.5 Run gate suite. Required: 8/8. Fix causal-binding/causal-visibility immediately if RDKit-injected ids conflict with semantic data attributes.
+- [x] 3-B.1 Read `_draw_sulfur_polymer_origin` in render_fig1_l1.py end-to-end. Identify exact code block that draws the S8 ring shape (the eight `draw.Circle` ring) and the chain-S atom row.
+- [x] 3-B.2 Replace the S8 ring block with `s8_ring_fragment(width=W, height=H)` where W,H come from `visual_layout.yaml.regions[top_synthesis].local_boxes.s8_ring`. Wrap with `wrapped_fragment_svg` and `draw.Raw`. Preserve `p.begin_semantic_group` / `end_semantic_group` boundaries and the `data-causal-role` attributes that downstream verifiers rely on.
+- [x] 3-B.3 Verify the chain-S row stays hand-drawn for now (chain is a polymer, not a ring; deferred to a future phase). Document this in section 7.
+- [x] 3-B.4 Render fig1, regenerate visual judgment report, recompute hash, update `EXPECTED_HASH` in `verify_fig1_baseline_hash.py`.
+- [x] 3-B.5 Run gate suite. Required: 8/8. Fix causal-binding/causal-visibility immediately if RDKit-injected ids conflict with semantic data attributes.
 - [ ] 3-B.6 Commit: `SEMANTIC.fig1: phase 3-B — RDKit S8 ring in top_synthesis`.
 
 Exit criteria for 3-B:
@@ -189,6 +189,24 @@ Exit criteria for 3-E:
 
 ## 7. Audit Notes (filled by Ralph as it executes)
 
+### 3-B.3 — chain-S row deferral (2026-05-07)
+
+The chain-S row at `_draw_sulfur_polymer_origin:847-885` and the four mini polymer chains in the composition ramp at `_draw_sulfur_polymer_origin:887-948` remain hand-drawn after 3-B. Reasons:
+
+- They render an open polymer chain `(-S-)ₓ`, not the closed S8 ring; RDKit would render them as straight `S-S-S-...` paths without the staggered y-offset visual cue used here, losing the schematic shorthand.
+- The composition ramp varies atom counts per S60/S70/S80/S85 cell (4/6/8/10 atoms); a future RDKit polymer-chain primitive that accepts variable repeat-units would be the right wiring point.
+- Deferred until a `polymer_chain_fragment(repeat_units, ...)` exists in `engine/rdkit_subrenderers.py`. Tracked as a future phase, not Phase 3.
+
+### 3-B.1 — S8 ring code locations (2026-05-07)
+
+`_draw_sulfur_polymer_origin` (lines 764-1007 in render_fig1_l1.py) contains three sulfur drawings:
+
+- **lines 779-823** — S8 ring (target for 3-B.2): `column.box("s8_ring")` → bounds `[40, 80, 110, 124]`, computes `ring_center` + `ring_radius=min(w,h)*0.41`, draws 8 `draw.Line` segments + 8 `draw.Circle` atoms (radius 4.5), then a "S8" text label at `ring_center + (0, 82)`.
+- **lines 847-885** — chain-S row (preserved per 3-B.3): `column.box("sulfur_chain")` with 7 atoms, hand-drawn polymer chain, not a ring.
+- **lines 887-948** — composition ramp (preserved): four library entries S60/S70/S80/S85 with mini polymer chains, also not a ring.
+
+Plan: replace only lines 779-823 (ring + "S8" label) with `s8_ring_fragment(width=ring_box.width, height=ring_box.height)` wrapped via `wrapped_fragment_svg` and `draw.Raw`. The "S8" text caption is preserved as a separate `p.text` call below the fragment. Chain row + composition ramp untouched.
+
 ### 3-A.1 — pe_hysteresis full-tree grep (2026-05-07)
 
 Grep target: `pe_hysteresis|PEHysteresisPlot|pe_hysteresis_fragment` under `experiments/python_svg_semantic_fig1/src` and `plugins/figure-agent-py`.
@@ -221,8 +239,8 @@ Decision: Fig1 surface and Fig1-only test files are cleansed in this phase; Fig 
 
 ## 8. Status Summary
 
-Phase 3-A: in progress (3-A.1 audit done, plan amended for Fig probe 02 scope-preservation and dead code in render_fig1_l1.py + previews)
-Phase 3-B: blocked on 3-A
+Phase 3-A: complete (commit `a5ab492`, 12 files, 8/8 gates, 52 tests pass, hash unchanged at `6d0a37ba…`)
+Phase 3-B: in progress
 Phase 3-C: blocked on 3-B
 Phase 3-D: blocked on 3-C
 Phase 3-E: blocked on 3-D
