@@ -1,17 +1,17 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "figure-agent-local",
-  "description": "Local marketplace for the figure-agent plugin (paper-figure quality kernel).",
+  "name": "figure-agent-py-local",
+  "description": "Local marketplace for the figure-agent-py plugin (Python-first semantic SVG Fig1 renderer).",
   "owner": {
     "name": "Moon Choe",
     "email": "choimoonyoung3631@gmail.com"
   },
   "plugins": [
     {
-      "name": "figure-agent",
-      "description": "Paper-figure quality kernel for semantic TikZ compile, checks, export, and reproducibility.",
+      "name": "figure-agent-py",
+      "description": "Python-first semantic SVG renderer and verifier for the Fig1 scientific schematic.",
       "category": "research",
-      "source": "./plugins/figure-agent",
+      "source": "./plugins/figure-agent-py",
       "author": {
         "name": "Moon Choe",
         "email": "choimoonyoung3631@gmail.com"

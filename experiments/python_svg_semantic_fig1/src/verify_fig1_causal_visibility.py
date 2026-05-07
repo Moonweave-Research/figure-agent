@@ -18,7 +18,7 @@ REQUIRED_VISIBLE_ROLES = {
     "interpretation-step-debye": ("Debye", "exp(-t/tau)"),
     "interpretation-step-tau-d": ("tau_d",),
     "interpretation-step-trap-depth-distribution": ("g(Et)",),
-    "hero-converged-picture": ("Converged trap-depth picture",),
+    "hero-converged-picture": ("trap landscape",),
 }
 
 
@@ -40,7 +40,9 @@ def _elements_for_role(root: ET.Element, role: str) -> list[ET.Element]:
 
 
 def _combined_role_text(root: ET.Element, role: str) -> str:
-    return " ".join(_text_value(element) for element in _elements_for_role(root, role)).strip()
+    return " ".join(
+        _text_value(element) for element in _elements_for_role(root, role)
+    ).strip()
 
 
 def main() -> int:
@@ -58,11 +60,12 @@ def main() -> int:
 
     for forbidden in ("ground_truth", "pixel-tracing target", "new scaffold"):
         role_text = " ".join(
-            element.attrib.get("data-causal-role", "")
-            for element in root.iter()
+            element.attrib.get("data-causal-role", "") for element in root.iter()
         )
         if forbidden in role_text:
-            return _fail(f"causal visibility role over-promotes reference authority: {forbidden}")
+            return _fail(
+                f"causal visibility role over-promotes reference authority: {forbidden}"
+            )
 
     if not HANDBACK.exists():
         return _fail(f"missing v17 causal visibility handback: {HANDBACK}")

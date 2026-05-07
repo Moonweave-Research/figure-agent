@@ -79,18 +79,30 @@ def semantic_group_bboxes(svg_path: str | Path) -> dict[str, BBox]:
             merged = children[0]
             for bbox in children[1:]:
                 merged = merged.union(bbox)
-            bboxes[semantic_id] = merged
+            if semantic_id in bboxes:
+                bboxes[semantic_id] = bboxes[semantic_id].union(merged)
+            else:
+                bboxes[semantic_id] = merged
     return bboxes
 
 
-def _element_bboxes(parent: ET.Element) -> Iterable[BBox | None]:
+def _element_bboxes(parent: ET.Element, *, offset_x: float = 0.0, offset_y: float = 0.0) -> Iterable[BBox | None]:
     for element in list(parent):
         if element.attrib.get("data-semantic-id"):
             continue
+        tag = _local_name(element.tag)
+        transform_x, transform_y = _translate(element.attrib.get("transform", ""))
+        child_offset_x = offset_x + transform_x
+        child_offset_y = offset_y + transform_y
+        if tag == "svg":
+            child_offset_x += _float(element, "x")
+            child_offset_y += _float(element, "y")
+            yield from _element_bboxes(element, offset_x=child_offset_x, offset_y=child_offset_y)
+            continue
         bbox = _element_bbox(element)
         if bbox is not None:
-            yield bbox
-        yield from _element_bboxes(element)
+            yield _translated(bbox, offset_x, offset_y)
+        yield from _element_bboxes(element, offset_x=child_offset_x, offset_y=child_offset_y)
 
 
 def _element_bbox(element: ET.Element) -> BBox | None:

@@ -1,0 +1,36 @@
+{
+  "name": "figure-agent-py",
+  "version": "0.2.1",
+  "description": "Python-first semantic SVG renderer and verifier for the Fig1 scientific schematic.",
+  "author": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "research",
+    "figures",
+    "svg",
+    "semantic-rendering",
+    "scientific-schematics"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Figure Agent Py",
+    "shortDescription": "Python semantic SVG Fig1 renderer and verifier.",
+    "longDescription": "Wraps the experiments/python_svg_semantic_fig1 renderer, gates, and visual judgment report. It renders SVG/PNG from Python scene payloads and scaffold contracts, not TikZ .tex sources.",
+    "developerName": "Moon Choe",
+    "category": "Research",
+    "capabilities": [
+      "Research",
+      "Developer Tools",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use figure-agent-py to render Fig1.",
+      "Run the Fig1 semantic SVG gates.",
+      "Check the Fig1 visual judgment report."
+    ],
+    "brandColor": "#0F766E"
+  }
+}

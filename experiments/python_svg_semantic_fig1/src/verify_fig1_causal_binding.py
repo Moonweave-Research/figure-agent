@@ -48,10 +48,18 @@ def main() -> int:
 
     if scene.reference.authority == "ground_truth":
         return _fail("visual scaffold reference must not become ground_truth")
-    if scene.reference.source != "experiments/python_svg_semantic_fig1/reference/source_variant_aesthetic_ref.png":
-        return _fail("visual scaffold authority moved away from the original aesthetic reference")
+    accepted_reference_sources = (
+        "experiments/python_svg_semantic_fig1/reference/source_variant_aesthetic_ref.png",
+        "experiments/python_svg_semantic_fig1/reference/source_variant_vectorization_ref_v1.png",
+    )
+    if scene.reference.source not in accepted_reference_sources:
+        return _fail(
+            "visual scaffold authority moved away from the accepted reference set"
+        )
     if str(BINDING_DOC) not in scene.source_files:
-        return _fail("scene source files do not include the v16 causal binding document")
+        return _fail(
+            "scene source files do not include the v16 causal binding document"
+        )
 
     origin = scene.object_by_id("sulfur_polymer_origin").payload
     if "S-rich segments" not in getattr(origin, "causal_segments", ()):
@@ -62,8 +70,13 @@ def main() -> int:
             return _fail(f"origin payload missing trap-origin mechanism: {token}")
 
     decay = scene.object_by_id("power_law_decay").payload
-    if getattr(decay, "causal_role", "") != "experiment_current_decay_to_power_law_exponent":
-        return _fail("power-law decay payload missing experiment-to-exponent causal role")
+    if (
+        getattr(decay, "causal_role", "")
+        != "experiment_current_decay_to_power_law_exponent"
+    ):
+        return _fail(
+            "power-law decay payload missing experiment-to-exponent causal role"
+        )
     if getattr(decay, "extracted_parameter", "") != "n":
         return _fail("power-law decay payload missing extracted parameter n")
 
@@ -82,10 +95,18 @@ def main() -> int:
         return _fail("ISPD payload missing trap-depth output binding")
 
     hero = scene.object_by_id("deep_trap_hero").payload
-    if getattr(hero, "causal_role", "") != "converged_trap_depth_picture":
-        return _fail("hero payload missing converged trap-depth picture role")
-    if getattr(hero, "converged_picture_label", "") != "converged trap-depth picture":
-        return _fail("hero payload missing converged trap-depth picture label")
+    accepted_hero_roles = (
+        "converged_trap_depth_picture",
+        "qualitative_localized_trap_landscape",
+    )
+    if getattr(hero, "causal_role", "") not in accepted_hero_roles:
+        return _fail("hero payload missing recognised trap-landscape causal role")
+    accepted_hero_labels = (
+        "converged trap-depth picture",
+        "qualitative trap landscape",
+    )
+    if getattr(hero, "converged_picture_label", "") not in accepted_hero_labels:
+        return _fail("hero payload missing recognised trap-landscape label")
 
     required_doc_tokens = (
         "visual scaffold authority",

@@ -9,14 +9,11 @@ from engine.domain_primitives import (
     DOSLobes,
     DeepTrapHero,
     Electrode,
-    EvidenceModality,
-    EvidenceTrio,
     ForceArrow,
     ISPDPlot,
     LayoutFlow,
     MacroscopicProbe,
     MaxwellAttractionCue,
-    PEHysteresisPlot,
     PolymerCantilever,
     PowerLawDecayPlot,
     SulfurPolymerOrigin,
@@ -24,15 +21,20 @@ from engine.domain_primitives import (
     TrapModelFlow,
 )
 from engine.scene import Column, Point, Rect, Reference, Scene, SemanticObject
-from engine.scaffold import ScaffoldContract, columns_from_scaffold, layout_from_scaffold, load_scaffold_contract
+from engine.scaffold import (
+    ScaffoldContract,
+    columns_from_scaffold,
+    layout_from_scaffold,
+    load_scaffold_contract,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 VISUAL_LAYOUT = ROOT / "visual_layout.yaml"
 CAUSAL_BINDING = ROOT / "causal_reference_binding_v16.md"
 
-BRIEFING = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview/briefing.md"
-SPEC = "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent/examples/fig1_overview/spec.yaml"
+BRIEFING = ROOT / "README.md"
+SPEC = ROOT / "reference_layout_spec_v1.md"
 
 
 def load_fig1_scaffold() -> ScaffoldContract:
@@ -50,17 +52,17 @@ def build_scene() -> Scene:
     scaffold = load_fig1_scaffold()
     columns = columns_from_scaffold(scaffold)
     canvas = scaffold.canvas
-    col_polymer = _region(columns, "polymer_origin_card")
-    col_electrical = _region(columns, "electrical_evidence_card")
-    col_hero = _region(columns, "deep_trap_hero_card")
-    col_interpretation = _region(columns, "interpretation_card")
-    col_probe = _region(columns, "macroscopic_probe_card")
+    col_synthesis = _region(columns, "top_synthesis")
+    col_traps = _region(columns, "localized_traps")
+    col_release = _region(columns, "release_module")
+    col_ispd = _region(columns, "ispd_module")
+    col_probe = _region(columns, "probe_module")
 
     origin = SemanticObject(
         id="sulfur_polymer_origin",
         kind="SulfurPolymerOrigin",
-        column=col_polymer.index,
-        label="Sulfur polymer origin",
+        column=col_synthesis.index,
+        label="Sulfur-rich network",
         payload=SulfurPolymerOrigin(
             s8_atom_count=8,
             chain_atom_count=7,
@@ -72,7 +74,7 @@ def build_scene() -> Scene:
                 CompositionSwatch("S80", "#c98f2c"),
                 CompositionSwatch("S85", "#8b571a"),
             ),
-            footer_label="Tunable composition",
+            footer_label="S-chain length",
             causal_segments=("S-rich segments",),
             trap_origin_mechanisms=(
                 "chemical origin: electronegativity and polarizability of S",
@@ -85,25 +87,25 @@ def build_scene() -> Scene:
     hero = SemanticObject(
         id="deep_trap_hero",
         kind="DeepTrapHero",
-        column=col_hero.index,
-        label="Deep charge trapping",
+        column=col_traps.index,
+        label="localized traps",
         payload=DeepTrapHero(
-            title="Converged deep charge trapping",
-            subtitle="Deep traps dominate the sulfur-polymer gap",
+            title="localized traps",
+            subtitle="qualitative trap landscape inside the polymer network",
             hero_ratio=2.0,
             band_object_id="band_diagram",
             trap_object_id="trap_level_set",
             dos_object_id="dos_lobes",
-            message="DEEP mid-gap states anchor long-lived charge storage.",
-            causal_role="converged_trap_depth_picture",
-            converged_picture_label="converged trap-depth picture",
+            message="shallow and deep trap sites embedded in the polymer chain.",
+            causal_role="qualitative_localized_trap_landscape",
+            converged_picture_label="qualitative trap landscape",
         ),
     )
 
     band = SemanticObject(
         id="band_diagram",
         kind="BandDiagram",
-        column=col_hero.index,
+        column=col_traps.index,
         label="Band diagram",
         payload=BandDiagram(
             energy_axis_label="Energy",
@@ -116,7 +118,7 @@ def build_scene() -> Scene:
     traps = SemanticObject(
         id="trap_level_set",
         kind="TrapLevelSet",
-        column=col_hero.index,
+        column=col_traps.index,
         label="Trap level set",
         payload=TrapLevelSet(
             shallow_positions=(0.31, 0.38, 0.45),
@@ -135,7 +137,7 @@ def build_scene() -> Scene:
     dos = SemanticObject(
         id="dos_lobes",
         kind="DOSLobes",
-        column=col_hero.index,
+        column=col_traps.index,
         label="DOS lobes",
         payload=DOSLobes(
             model="gaussian_mixture",
@@ -154,44 +156,13 @@ def build_scene() -> Scene:
         ),
     )
 
-    trio = SemanticObject(
-        id="evidence_trio",
-        kind="EvidenceTrio",
-        column=col_electrical.index,
-        label="Evidence trio",
-        payload=EvidenceTrio(
-            title="Electrical evidence",
-            modalities=(
-                EvidenceModality("P-E", "PEHysteresisPlot", "pe_hysteresis", "P-E hysteresis", "#b20f16"),
-                EvidenceModality("I(t)", "PowerLawDecayPlot", "power_law_decay", "I(t) proportional t^-n", "#0b4bb3"),
-            ),
-            badge_gap=18.0,
-        ),
-    )
-
-    pe_plot = SemanticObject(
-        id="pe_hysteresis",
-        kind="PEHysteresisPlot",
-        column=col_electrical.index,
-        label="P-E hysteresis",
-        payload=PEHysteresisPlot(
-            title="P-E hysteresis",
-            model="parametric_hysteresis",
-            loop_width=145.0,
-            loop_height=82.0,
-            remanence=0.42,
-            samples_per_branch=48,
-            color="#b20f16",
-        ),
-    )
-
     decay_plot = SemanticObject(
         id="power_law_decay",
         kind="PowerLawDecayPlot",
-        column=col_electrical.index,
+        column=col_release.index,
         label="Power-law current decay",
         payload=PowerLawDecayPlot(
-            title="I(t) proportional t^-n",
+            title="I(t) ~ t^-n",
             model="power_law_loglog",
             slope=-0.72,
             log_t_min=-3.0,
@@ -209,17 +180,17 @@ def build_scene() -> Scene:
     ispd_plot = SemanticObject(
         id="ispd_plot",
         kind="ISPDPlot",
-        column=col_interpretation.index,
+        column=col_ispd.index,
         label="ISPD trap DOS",
         payload=ISPDPlot(
-            title="ISPD g(Et)",
+            title="ISPD-derived g(Et)",
             model="gaussian_mixture",
-            shallow_width=46.0,
+            shallow_width=62.0,
             deep_width=100.0,
-            shallow_height=42.0,
+            shallow_height=56.0,
             deep_height=76.0,
             shallow_sigma=(0.26, 0.32),
-            deep_sigma=(0.24, 0.28),
+            deep_sigma=(0.20, 0.20),
             samples=56,
             color="#6f42c1",
             trap_depth_output="g(Et)",
@@ -229,12 +200,12 @@ def build_scene() -> Scene:
     trap_flow = SemanticObject(
         id="trap_model_flow",
         kind="TrapModelFlow",
-        column=col_interpretation.index,
+        column=col_release.index,
         label="Trap model flow",
         payload=TrapModelFlow(
-            title="Trap model",
+            title="distributed release narrative",
             steps=("I(t) ~ t^-n", "Debye\nexp(-t/tau)", "tau_d", "g(Et)"),
-            conclusion="Convergence to deep traps explains the extended repulsion.",
+            conclusion="non-Debye power-law tail.",
             causal_chain=("I(t) ~ t^-n", "n", "Debye exp(-t/tau)", "tau_d", "g(Et)"),
             debye_reference_label="Discharge Debye reference",
             delay_parameter="tau_d",
@@ -242,18 +213,17 @@ def build_scene() -> Scene:
         ),
     )
 
-    cantilever_frame_1 = col_probe.box("probe_frame")
-    cantilever_frame_2 = cantilever_frame_1
+    cantilever_frame = col_probe.box("probe_frame")
     charges = (
-        Point(cantilever_frame_2.x + 140, cantilever_frame_2.y + 126),
-        Point(cantilever_frame_2.x + 155, cantilever_frame_2.y + 165),
-        Point(cantilever_frame_2.x + 178, cantilever_frame_2.y + 205),
-        Point(cantilever_frame_2.x + 211, cantilever_frame_2.y + 244),
-        Point(cantilever_frame_2.x + 246, cantilever_frame_2.y + 276),
+        Point(cantilever_frame.x + 107, cantilever_frame.y + 268),
+        Point(cantilever_frame.x + 103, cantilever_frame.y + 218),
+        Point(cantilever_frame.x + 99, cantilever_frame.y + 168),
+        Point(cantilever_frame.x + 95, cantilever_frame.y + 118),
+        Point(cantilever_frame.x + 91, cantilever_frame.y + 68),
     )
-    electrode_bounds = Rect(cantilever_frame_2.right - 48, cantilever_frame_2.y + 62, 34, 270)
-    arrow_start = Point(cantilever_frame_2.x + 250, cantilever_frame_2.y + 160)
-    arrow_end = Point(cantilever_frame_2.x + 140, cantilever_frame_2.y + 160)
+    electrode_bounds = Rect(cantilever_frame.x + 286, cantilever_frame.y + 42, 30, 240)
+    arrow_start = Point(cantilever_frame.x + 100, cantilever_frame.y + 175)
+    arrow_end = Point(cantilever_frame.x + 18, cantilever_frame.y + 175)
 
     probe = SemanticObject(
         id="macroscopic_probe",
@@ -262,7 +232,7 @@ def build_scene() -> Scene:
         label="Macroscopic probe",
         payload=MacroscopicProbe(
             title="Macroscopic probe",
-            frames=("Cantilever probe", "Charge-trapping-induced repulsion"),
+            frames=("Vertical cantilever", "Coulomb repulsion vs Maxwell attraction"),
             cantilever_object_id="polymer_cantilever",
             electrode_object_id="electrode",
             force_object_id="repulsion_arrow",
@@ -279,7 +249,7 @@ def build_scene() -> Scene:
             initial_bend="toward_electrode",
             repulsive_bend="away_from_electrode",
             charge_positions=charges,
-            frame_bounds=(cantilever_frame_1, cantilever_frame_2),
+            frame_bounds=(cantilever_frame, cantilever_frame),
         ),
     )
 
@@ -316,8 +286,8 @@ def build_scene() -> Scene:
         column=col_probe.index,
         label="Secondary Maxwell attraction cue",
         payload=MaxwellAttractionCue(
-            start=Point(cantilever_frame_2.x + 350, cantilever_frame_2.y + 220),
-            end=Point(cantilever_frame_2.x + 270, cantilever_frame_2.y + 220),
+            start=Point(cantilever_frame.x + 110, cantilever_frame.y + 90),
+            end=Point(cantilever_frame.x + 200, cantilever_frame.y + 90),
             label="Maxwell attraction",
             role="secondary_reference_cue",
         ),
@@ -327,16 +297,13 @@ def build_scene() -> Scene:
         id="layout_flow",
         kind="LayoutFlow",
         column=0,
-        label="Reference support-to-hero flow",
+        label="Vectorization narrative flow",
         payload=LayoutFlow(
-            title="Reference support cards route into center hero",
+            title="synthesis to traps then bottom row readouts",
             arrow_pairs=(
-                *(
-                    (anchor.start, anchor.end)
-                    for anchor in scaffold.flow_anchors
-                ),
+                *((anchor.start, anchor.end) for anchor in scaffold.flow_anchors),
             ),
-            direction="support_to_center_hero",
+            direction="synthesis_to_traps_then_bottom_row_readouts",
         ),
     )
 
@@ -346,11 +313,16 @@ def build_scene() -> Scene:
         id="fig1_reference_semantic_scene_v1",
         width=canvas.width,
         height=canvas.height,
-        source_files=(BRIEFING, SPEC, str(VISUAL_LAYOUT), str(CAUSAL_BINDING)),
+        source_files=(
+            str(BRIEFING),
+            str(SPEC),
+            str(VISUAL_LAYOUT),
+            str(CAUSAL_BINDING),
+        ),
         reference=Reference(
-            source="experiments/python_svg_semantic_fig1/reference/source_variant_aesthetic_ref.png",
+            source="experiments/python_svg_semantic_fig1/reference/source_variant_vectorization_ref_v1.png",
             authority="style_layout_evidence",
-            note="Reference PNG is the authoritative visual layout target, but remains non-traced visual evidence.",
+            note="Reference PNG is the authoritative vectorization composition target, but remains non-traced visual evidence.",
         ),
         layout=layout,
         objects=(
@@ -360,8 +332,6 @@ def build_scene() -> Scene:
             band,
             traps,
             dos,
-            trio,
-            pe_plot,
             decay_plot,
             ispd_plot,
             trap_flow,

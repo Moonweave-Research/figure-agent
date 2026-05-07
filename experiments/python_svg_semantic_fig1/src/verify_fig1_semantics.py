@@ -28,8 +28,6 @@ REQUIRED_KINDS = {
     "BandDiagram",
     "TrapLevelSet",
     "DOSLobes",
-    "EvidenceTrio",
-    "PEHysteresisPlot",
     "PowerLawDecayPlot",
     "ISPDPlot",
     "TrapModelFlow",
@@ -41,7 +39,6 @@ REQUIRED_KINDS = {
     "LayoutFlow",
 }
 
-EVIDENCE_MODALITIES = {"P-E", "I(t)"}
 FORBIDDEN_RENDERED_TERMS = (
     "force-balance",
     "force balance",
@@ -50,12 +47,10 @@ FORBIDDEN_RENDERED_TERMS = (
     "bidirectional-actuation",
 )
 PLOT_GRAMMAR_BOUNDS = {
-    "pe_hysteresis": "pe_plot",
-    "power_law_decay": "decay_plot",
+    "power_law_decay": "decay_inset",
     "ispd_plot": "ispd_plot",
 }
 PLOT_SCHEMATIC_REQUIRED_ROLES = {
-    "pe_hysteresis": ("schematic-axis", "schematic-guide", "schematic-curve", "schematic-label"),
     "power_law_decay": (
         "schematic-axis",
         "schematic-decade-hint",
@@ -73,7 +68,12 @@ PLOT_SCHEMATIC_REQUIRED_ROLES = {
         "schematic-label",
     ),
 }
-PLOT_FORBIDDEN_REAL_PLOT_ROLES = ("plot-frame", "tick-label", "major-tick", "minor-tick")
+PLOT_FORBIDDEN_REAL_PLOT_ROLES = (
+    "plot-frame",
+    "tick-label",
+    "major-tick",
+    "minor-tick",
+)
 PLOT_TEXT_ROLES = ("schematic-label", "schematic-dos-depth-label")
 MINI_DOS_MAX_LABELS = 3
 
@@ -131,13 +131,19 @@ def _check_trap_energy_model(scene: object) -> int:
     if traps.energy_reference != "normalized_bandgap_lumo_to_homo":
         return _fail(f"unexpected trap energy reference: {traps.energy_reference}")
     if traps.quantitative_status != "schematic_placeholder_until_fig3_ispd":
-        return _fail(f"unexpected trap quantitative status: {traps.quantitative_status}")
+        return _fail(
+            f"unexpected trap quantitative status: {traps.quantitative_status}"
+        )
     if tuple(round(value, 1) for value in traps.deep_depth_range_ev) != (0.5, 1.0):
         return _fail(f"unexpected deep trap depth range: {traps.deep_depth_range_ev}")
 
-    if not all(band.lumo.y < position < band.homo.y for position in traps.shallow_positions):
+    if not all(
+        band.lumo.y < position < band.homo.y for position in traps.shallow_positions
+    ):
         return _fail("shallow trap positions are not inside the HOMO-LUMO gap")
-    if not all(band.lumo.y < position < band.homo.y for position in traps.deep_positions):
+    if not all(
+        band.lumo.y < position < band.homo.y for position in traps.deep_positions
+    ):
         return _fail("deep trap positions are not inside the HOMO-LUMO gap")
     if max(traps.shallow_positions) >= min(traps.deep_positions):
         return _fail("deep traps are not deeper than shallow traps relative to LUMO")
@@ -147,18 +153,18 @@ def _check_trap_energy_model(scene: object) -> int:
 
 
 def _check_computed_geometry_models(scene: object) -> int:
-    from engine.scientific_geometry import gaussian_lobe_points, pe_hysteresis_points, power_law_loglog_points
+    from engine.scientific_geometry import (
+        gaussian_lobe_points,
+        power_law_loglog_points,
+    )
     from engine.scene import Point, Rect
 
     lobes = _object_by_kind(scene, "DOSLobes").payload
-    pe = _object_by_kind(scene, "PEHysteresisPlot").payload
     decay = _object_by_kind(scene, "PowerLawDecayPlot").payload
     ispd = _object_by_kind(scene, "ISPDPlot").payload
 
     if lobes.model != "gaussian_mixture":
         return _fail(f"unexpected DOS model: {lobes.model}")
-    if pe.model != "parametric_hysteresis":
-        return _fail(f"unexpected P-E model: {pe.model}")
     if decay.model != "power_law_loglog":
         return _fail(f"unexpected decay model: {decay.model}")
     if ispd.model != "gaussian_mixture":
@@ -189,19 +195,6 @@ def _check_computed_geometry_models(scene: object) -> int:
     if deep_area / shallow_area < lobes.min_deep_to_shallow_ratio:
         return _fail("computed deep DOS lobe area is not dominant")
 
-    pe_points = pe_hysteresis_points(
-        Point(0, 0),
-        width=pe.loop_width,
-        height=pe.loop_height,
-        remanence=pe.remanence,
-        samples_per_branch=pe.samples_per_branch,
-    )
-    if len(pe_points) != pe.samples_per_branch * 2:
-        return _fail("computed P-E loop sample count mismatch")
-    branch_gap = abs(pe_points[pe.samples_per_branch // 2].y - pe_points[pe.samples_per_branch + pe.samples_per_branch // 2].y)
-    if branch_gap < pe.loop_height * 0.22:
-        return _fail("computed P-E loop lacks remanent branch separation")
-
     decay_points = power_law_loglog_points(
         Rect(0, 0, 120, 80),
         slope=decay.slope,
@@ -213,15 +206,26 @@ def _check_computed_geometry_models(scene: object) -> int:
     )
     if decay.slope >= 0:
         return _fail("power-law decay slope must be negative")
-    if not all(decay_points[index].x < decay_points[index + 1].x for index in range(len(decay_points) - 1)):
+    if not all(
+        decay_points[index].x < decay_points[index + 1].x
+        for index in range(len(decay_points) - 1)
+    ):
         return _fail("computed decay points are not monotonic in time")
-    if not all(decay_points[index].y <= decay_points[index + 1].y for index in range(len(decay_points) - 1)):
+    if not all(
+        decay_points[index].y <= decay_points[index + 1].y
+        for index in range(len(decay_points) - 1)
+    ):
         return _fail("computed decay points do not decay on log-log axes")
     return 0
 
 
 def _profile_area(points: tuple[object, ...]) -> float:
-    return sum((points[index].x + points[index + 1].x) * abs(points[index + 1].y - points[index].y) / 2 for index in range(len(points) - 1))
+    return sum(
+        (points[index].x + points[index + 1].x)
+        * abs(points[index + 1].y - points[index].y)
+        / 2
+        for index in range(len(points) - 1)
+    )
 
 
 def _check_reference_visual_layout(scene: object) -> int:
@@ -232,14 +236,18 @@ def _check_reference_visual_layout(scene: object) -> int:
 
     canvas = layout_data["canvas"]
     if (scene.width, scene.height) != (canvas["width"], canvas["height"]):
-        return _fail(f"scene canvas does not match visual layout: {scene.width}x{scene.height}")
+        return _fail(
+            f"scene canvas does not match visual layout: {scene.width}x{scene.height}"
+        )
     if scene.layout.kind != layout_data["target"]:
         return _fail(f"scene layout kind mismatch: {scene.layout.kind}")
 
     regions = layout_data["regions"]
     columns = scene.layout.columns
     if len(columns) != len(regions):
-        return _fail(f"scene region count {len(columns)} != visual layout count {len(regions)}")
+        return _fail(
+            f"scene region count {len(columns)} != visual layout count {len(regions)}"
+        )
 
     by_region = {region["id"]: region for region in regions}
     for column in columns:
@@ -253,15 +261,24 @@ def _check_reference_visual_layout(scene: object) -> int:
         if tuple(column.object_ids) != tuple(region["objects"]):
             return _fail(f"region object assignment mismatch for {column.id}")
         expected = region["bounds"]
-        found = (column.bounds.x, column.bounds.y, column.bounds.width, column.bounds.height)
+        found = (
+            column.bounds.x,
+            column.bounds.y,
+            column.bounds.width,
+            column.bounds.height,
+        )
         for actual, target in zip(found, expected, strict=True):
             if not _close(actual, target):
-                return _fail(f"region bounds mismatch for {column.id}: {found} != {tuple(expected)}")
+                return _fail(
+                    f"region bounds mismatch for {column.id}: {found} != {tuple(expected)}"
+                )
 
         expected_boxes = region.get("local_boxes", {})
         actual_boxes = {box.id: box.bounds for box in column.local_boxes}
         if set(actual_boxes) != set(expected_boxes):
-            return _fail(f"local layout boxes mismatch for {column.id}: {sorted(actual_boxes)}")
+            return _fail(
+                f"local layout boxes mismatch for {column.id}: {sorted(actual_boxes)}"
+            )
         for box_id, expected_box in expected_boxes.items():
             actual = actual_boxes[box_id]
             absolute_expected = (
@@ -271,34 +288,24 @@ def _check_reference_visual_layout(scene: object) -> int:
                 expected_box[3],
             )
             found_box = (actual.x, actual.y, actual.width, actual.height)
-            for found_value, target_value in zip(found_box, absolute_expected, strict=True):
+            for found_value, target_value in zip(
+                found_box, absolute_expected, strict=True
+            ):
                 if not _close(found_value, target_value):
-                    return _fail(f"local box bounds mismatch for {column.id}.{box_id}: {found_box}")
+                    return _fail(
+                        f"local box bounds mismatch for {column.id}.{box_id}: {found_box}"
+                    )
 
     hero_region_id = layout_data["visual_rules"]["hero_region"]
     hero_columns = [column for column in columns if column.role == "hero"]
     if len(hero_columns) != 1 or hero_columns[0].id != hero_region_id:
         return _fail("hero region is not the unique visual-layout hero")
-    hero = hero_columns[0].bounds
-    canvas_center_x = scene.width / 2
-    if abs(hero.center.x - canvas_center_x) > 40:
-        return _fail("hero region is not centered in the reference composition")
 
-    polymer = next(column.bounds for column in columns if column.id == "polymer_origin_card")
-    electrical = next(column.bounds for column in columns if column.id == "electrical_evidence_card")
-    interpretation = next(column.bounds for column in columns if column.id == "interpretation_card")
-    probe = next(column.bounds for column in columns if column.id == "macroscopic_probe_card")
-    if not (polymer.center.x < hero.center.x < electrical.center.x):
-        return _fail("upper support cards do not flank the hero")
-    if not (interpretation.center.x < hero.center.x < probe.center.x):
-        return _fail("lower support cards do not flank the hero")
-    if not (polymer.center.y < hero.center.y and electrical.center.y < hero.center.y):
-        return _fail("upper support cards are not above the hero")
-    if not (interpretation.center.y > hero.center.y and probe.center.y > hero.center.y):
-        return _fail("lower support cards are not below the hero")
-
+    expected_direction = layout_data["visual_rules"].get(
+        "narrative_direction", "synthesis_to_traps_then_bottom_row_readouts"
+    )
     flow = _object_by_kind(scene, "LayoutFlow").payload
-    if flow.direction != "support_to_center_hero":
+    if flow.direction != expected_direction:
         return _fail(f"layout flow direction mismatch: {flow.direction}")
     if len(flow.arrow_pairs) != len(layout_data["flow_arrows"]):
         return _fail("layout flow arrow count does not match visual layout")
@@ -310,7 +317,9 @@ def _check_probe_visual_semantics(scene: object) -> int:
     electrode = _object_by_kind(scene, "Electrode").payload
     arrow_dx = arrow.end.x - arrow.start.x
     if getattr(arrow, "force_target", "") != "cantilever":
-        return _fail(f"force arrow target is not cantilever: {getattr(arrow, 'force_target', '')}")
+        return _fail(
+            f"force arrow target is not cantilever: {getattr(arrow, 'force_target', '')}"
+        )
     if arrow_dx >= 0:
         return _fail("cantilever repulsion arrow is not leftward")
     if electrode.center.x <= arrow.start.x:
@@ -321,24 +330,12 @@ def _check_probe_visual_semantics(scene: object) -> int:
     maxwell = _object_by_kind(scene, "MaxwellAttractionCue").payload
     if maxwell.role != "secondary_reference_cue":
         return _fail(f"Maxwell cue role mismatch: {maxwell.role}")
-    if maxwell.end.x >= maxwell.start.x:
-        return _fail("secondary Maxwell attraction cue is not leftward")
+    if maxwell.end.x <= maxwell.start.x:
+        return _fail(
+            "secondary Maxwell attraction cue is not rightward toward the electrode"
+        )
     if maxwell.label != "Maxwell attraction":
         return _fail("secondary Maxwell cue label mismatch")
-    return 0
-
-
-def _check_evidence_trio(scene: object) -> int:
-    trio = _object_by_kind(scene, "EvidenceTrio").payload
-    modalities = {modality.label for modality in trio.modalities}
-    if modalities != EVIDENCE_MODALITIES:
-        return _fail(f"evidence trio modalities mismatch: {sorted(modalities)}")
-    child_kinds = {modality.object_kind for modality in trio.modalities}
-    required = {"PEHysteresisPlot", "PowerLawDecayPlot"}
-    if child_kinds != required:
-        return _fail(f"evidence trio child kinds mismatch: {sorted(child_kinds)}")
-    if _object_by_kind(scene, "ISPDPlot").column != _object_by_kind(scene, "TrapModelFlow").column:
-        return _fail("ISPD plot is not grouped with the interpretation model panel")
     return 0
 
 
@@ -349,8 +346,14 @@ def _check_svg_output(scene: object) -> int:
     width = root.attrib.get("width")
     height = root.attrib.get("height")
     view_box = root.attrib.get("viewBox")
-    if (width, height, view_box) != (str(scene.width), str(scene.height), f"0 0 {scene.width} {scene.height}"):
-        return _fail(f"SVG canvas mismatch: width={width} height={height} viewBox={view_box}")
+    if (width, height, view_box) != (
+        str(scene.width),
+        str(scene.height),
+        f"0 0 {scene.width} {scene.height}",
+    ):
+        return _fail(
+            f"SVG canvas mismatch: width={width} height={height} viewBox={view_box}"
+        )
 
     svg_text = SVG.read_text()
     lowered = svg_text.lower()
@@ -368,7 +371,6 @@ def _check_svg_output(scene: object) -> int:
     traps = _object_by_kind(scene, "TrapLevelSet").payload
     lobes = _object_by_kind(scene, "DOSLobes").payload
     hero = _object_by_kind(scene, "DeepTrapHero").payload
-    pe = _object_by_kind(scene, "PEHysteresisPlot").payload
     decay = _object_by_kind(scene, "PowerLawDecayPlot").payload
     ispd = _object_by_kind(scene, "ISPDPlot").payload
     required_payload_tokens = (
@@ -379,19 +381,20 @@ def _check_svg_output(scene: object) -> int:
         f"hero_ratio={hero.hero_ratio:g}",
         f"deep_depth_range_ev={traps.deep_depth_range_ev[0]:.1f}-{traps.deep_depth_range_ev[1]:.1f}",
         f"energy_reference={traps.energy_reference}",
-        "direction=support_to_center_hero",
+        "direction=synthesis_to_traps_then_bottom_row_readouts",
         "force_target=cantilever",
         "arrow_direction=cantilever_leftward_repulsion",
         "maxwell_role=secondary_reference_cue",
         "local_boxes=6",
         f"dos_model={lobes.model}",
-        f"pe_model={pe.model}",
         f"decay_model={decay.model}",
         f"ispd_model={ispd.model}",
     )
     for token in required_payload_tokens:
         if token not in svg_text:
-            return _fail(f"rendered SVG missing payload-derived geometry token: {token}")
+            return _fail(
+                f"rendered SVG missing payload-derived geometry token: {token}"
+            )
     return 0
 
 
@@ -402,11 +405,15 @@ def _check_hero_reference_scaffold(scene: object) -> int:
     for role, minimum in _hero_required_roles(scene).items():
         found = _hero_role_elements(root, role)
         if len(found) < minimum:
-            return _fail(f"hero reference scaffold missing role {role}: {len(found)} < {minimum}")
+            return _fail(
+                f"hero reference scaffold missing role {role}: {len(found)} < {minimum}"
+            )
 
     svg_text = SVG.read_text()
     if ">bandgap<" in svg_text:
-        return _fail("hero scaffold still renders literal bandgap text instead of a guide line")
+        return _fail(
+            "hero scaffold still renders literal bandgap text instead of a guide line"
+        )
     return _check_hero_dos_reference_grammar(scene, root)
 
 
@@ -431,15 +438,23 @@ def _hero_required_roles(scene: object) -> dict[str, int]:
 
 
 def _check_hero_dos_reference_grammar(scene: object, root: ET.Element) -> int:
-    dos_area = next(column for column in scene.layout.columns if column.role == "hero").box("dos_area")
+    dos_area = next(
+        column for column in scene.layout.columns if column.role == "hero"
+    ).box("dos_area")
     shallow = _single_bbox_for_role(root, "dos-lobe-shallow")
     deep = _single_bbox_for_role(root, "dos-lobe-deep")
     threshold = _single_bbox_for_role(root, "dos-threshold")
-    depth_guides = [_bbox_from_svg_element(element) for element in _hero_role_elements(root, "dos-depth-guide")]
+    depth_guides = [
+        _bbox_from_svg_element(element)
+        for element in _hero_role_elements(root, "dos-depth-guide")
+    ]
     labels = [
         bbox
         for role in ("dos-label", "dos-axis-label", "dos-depth-label")
-        for bbox in (_bbox_from_svg_element(element) for element in _hero_role_elements(root, role))
+        for bbox in (
+            _bbox_from_svg_element(element)
+            for element in _hero_role_elements(root, role)
+        )
         if bbox is not None
     ]
 
@@ -474,11 +489,15 @@ def _check_hero_dos_reference_grammar(scene: object, root: ET.Element) -> int:
             if _sampled_dos_path_score(element) < 20:
                 return _fail(f"hero {role} is not a sampled DOS density profile")
             if role == "dos-lobe-deep" and not _deep_dos_lobe_has_tails(element):
-                return _fail("hero deep DOS lobe lacks a clear low-density tail at the threshold or band edge")
+                return _fail(
+                    "hero deep DOS lobe lacks a clear low-density tail at the threshold or band edge"
+                )
     return 0
 
 
-def _check_hero_dos_label_composition(root: ET.Element, shallow: "BBox", deep: "BBox") -> int:
+def _check_hero_dos_label_composition(
+    root: ET.Element, shallow: "BBox", deep: "BBox"
+) -> int:
     label_targets = {
         "shallow": shallow,
         "deep": deep,
@@ -488,7 +507,9 @@ def _check_hero_dos_label_composition(root: ET.Element, shallow: "BBox", deep: "
         if value not in label_targets:
             continue
         bbox = _bbox_from_svg_element(element)
-        if bbox is not None and _bbox_intersects(bbox, _expanded_bbox(label_targets[value], 4.0)):
+        if bbox is not None and _bbox_intersects(
+            bbox, _expanded_bbox(label_targets[value], 4.0)
+        ):
             return _fail(f"hero DOS {value} label collides with its lobe body")
 
     for element in _hero_role_elements(root, "dos-depth-label"):
@@ -533,7 +554,12 @@ def _text_value(element: ET.Element) -> str:
 def _bbox_from_svg_element(element: ET.Element) -> BBox | None:
     tag = element.tag.rsplit("}", 1)[-1]
     if tag == "path":
-        values = [float(value) for value in re.findall(r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?", element.attrib.get("d", ""))]
+        values = [
+            float(value)
+            for value in re.findall(
+                r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?", element.attrib.get("d", "")
+            )
+        ]
         if len(values) < 2:
             return None
         xs = values[0::2]
@@ -574,15 +600,30 @@ def _rect_bbox(rect: object) -> BBox:
 
 
 def _bbox_contains(outer: BBox, inner: BBox) -> bool:
-    return outer.left <= inner.left and inner.right <= outer.right and outer.top <= inner.top and inner.bottom <= outer.bottom
+    return (
+        outer.left <= inner.left
+        and inner.right <= outer.right
+        and outer.top <= inner.top
+        and inner.bottom <= outer.bottom
+    )
 
 
 def _expanded_bbox(bbox: BBox, padding: float) -> BBox:
-    return BBox(bbox.left - padding, bbox.top - padding, bbox.right + padding, bbox.bottom + padding)
+    return BBox(
+        bbox.left - padding,
+        bbox.top - padding,
+        bbox.right + padding,
+        bbox.bottom + padding,
+    )
 
 
 def _bbox_intersects(first: BBox, second: BBox) -> bool:
-    return first.left < second.right and first.right > second.left and first.top < second.bottom and first.bottom > second.top
+    return (
+        first.left < second.right
+        and first.right > second.left
+        and first.top < second.bottom
+        and first.bottom > second.top
+    )
 
 
 def _check_visual_constraints(scene: object) -> int:
@@ -606,7 +647,9 @@ def _check_scientific_plot_grammar(scene: object) -> int:
         for role in PLOT_FORBIDDEN_REAL_PLOT_ROLES:
             found = _plot_elements(root, plot_id, role)
             if found:
-                return _fail(f"{plot_id} uses over-real plot role instead of schematic glyph: {role}")
+                return _fail(
+                    f"{plot_id} uses over-real plot role instead of schematic glyph: {role}"
+                )
         for role in PLOT_SCHEMATIC_REQUIRED_ROLES[plot_id]:
             found = _plot_elements(root, plot_id, role)
             if not found:
@@ -615,9 +658,15 @@ def _check_scientific_plot_grammar(scene: object) -> int:
             for role in ("schematic-lobe-shallow", "schematic-lobe-deep"):
                 for element in _plot_elements(root, plot_id, role):
                     if _sampled_dos_path_score(element) < 20:
-                        return _fail(f"{plot_id} {role} is not a sampled DOS density profile")
-                    if role == "schematic-lobe-deep" and not _deep_dos_lobe_has_tails(element):
-                        return _fail(f"{plot_id} deep DOS lobe lacks a clear low-density tail")
+                        return _fail(
+                            f"{plot_id} {role} is not a sampled DOS density profile"
+                        )
+                    if role == "schematic-lobe-deep" and not _deep_dos_lobe_has_tails(
+                        element
+                    ):
+                        return _fail(
+                            f"{plot_id} deep DOS lobe lacks a clear low-density tail"
+                        )
             mini_composition = _check_mini_dos_label_composition(scene, root)
             if mini_composition:
                 return mini_composition
@@ -638,7 +687,9 @@ def _plot_elements(root: ET.Element, plot_id: str, role: str) -> list[ET.Element
     ]
 
 
-def _single_plot_bbox_for_role(root: ET.Element, plot_id: str, role: str) -> "BBox | None":
+def _single_plot_bbox_for_role(
+    root: ET.Element, plot_id: str, role: str
+) -> "BBox | None":
     bboxes = [
         bbox
         for element in _plot_elements(root, plot_id, role)
@@ -652,7 +703,11 @@ def _single_plot_bbox_for_role(root: ET.Element, plot_id: str, role: str) -> "BB
 
 def _check_mini_dos_label_composition(scene: object, root: ET.Element) -> int:
     plot_id = "ispd_plot"
-    local_bounds = _rect_bbox(scene.layout.columns[_object_by_kind(scene, "ISPDPlot").column - 1].box(PLOT_GRAMMAR_BOUNDS[plot_id]))
+    local_bounds = _rect_bbox(
+        scene.layout.columns[_object_by_kind(scene, "ISPDPlot").column - 1].box(
+            PLOT_GRAMMAR_BOUNDS[plot_id]
+        )
+    )
     shallow = _single_plot_bbox_for_role(root, plot_id, "schematic-lobe-shallow")
     deep = _single_plot_bbox_for_role(root, plot_id, "schematic-lobe-deep")
     if shallow is None or deep is None:
@@ -672,10 +727,14 @@ def _check_mini_dos_label_composition(scene: object, root: ET.Element) -> int:
                 return _fail("mini-DOS label escapes local plot bounds")
 
     if len(label_bboxes) > MINI_DOS_MAX_LABELS:
-        return _fail(f"mini-DOS has too many text labels for its box: {len(label_bboxes)} > {MINI_DOS_MAX_LABELS}")
+        return _fail(
+            f"mini-DOS has too many text labels for its box: {len(label_bboxes)} > {MINI_DOS_MAX_LABELS}"
+        )
 
     for value, bbox in label_bboxes:
-        if _bbox_intersects(bbox, _expanded_bbox(shallow, 3.0)) or _bbox_intersects(bbox, _expanded_bbox(deep, 3.0)):
+        if _bbox_intersects(bbox, _expanded_bbox(shallow, 3.0)) or _bbox_intersects(
+            bbox, _expanded_bbox(deep, 3.0)
+        ):
             return _fail(f"mini-DOS label overlaps the lobe body: {value}")
     return 0
 
@@ -692,7 +751,12 @@ def _sampled_dos_path_score(element: ET.Element) -> int:
 
 
 def _deep_dos_lobe_has_tails(element: ET.Element) -> bool:
-    values = [float(value) for value in re.findall(r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?", element.attrib.get("d", ""))]
+    values = [
+        float(value)
+        for value in re.findall(
+            r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?", element.attrib.get("d", "")
+        )
+    ]
     if len(values) < 8:
         return False
     points = list(zip(values[0::2], values[1::2], strict=False))
@@ -711,8 +775,7 @@ def _deep_dos_lobe_has_tails(element: ET.Element) -> bool:
 
 def _check_plot_label_bounds_via_uv(scene: object) -> int:
     plot_bounds = {
-        plot_id: _plot_bound_values(scene, plot_id)
-        for plot_id in PLOT_GRAMMAR_BOUNDS
+        plot_id: _plot_bound_values(scene, plot_id) for plot_id in PLOT_GRAMMAR_BOUNDS
     }
     script = f"""
 import json
@@ -769,7 +832,17 @@ for plot_id, values in plot_bounds.items():
                 raise SystemExit(plot_id + " schematic label escapes local plot bounds")
 """
     result = subprocess.run(
-        ["uv", "run", "--with", "shapely", "--with", "svgelements", "python", "-c", script],
+        [
+            "uv",
+            "run",
+            "--with",
+            "shapely",
+            "--with",
+            "svgelements",
+            "python",
+            "-c",
+            script,
+        ],
         cwd=ROOT.parents[1],
         text=True,
         capture_output=True,
@@ -779,7 +852,9 @@ for plot_id, values in plot_bounds.items():
     return 0
 
 
-def _plot_bound_values(scene: object, plot_id: str) -> tuple[float, float, float, float]:
+def _plot_bound_values(
+    scene: object, plot_id: str
+) -> tuple[float, float, float, float]:
     obj = scene.object_by_id(plot_id)
     box_id = PLOT_GRAMMAR_BOUNDS[plot_id]
     bounds = scene.layout.columns[obj.column - 1].box(box_id)
@@ -810,22 +885,49 @@ def _check_payload_mutation_changes_output(scene: object) -> int:
 
     traps = _object_by_kind(scene, "TrapLevelSet")
     lobes = _object_by_kind(scene, "DOSLobes")
-    pe = _object_by_kind(scene, "PEHysteresisPlot")
     decay = _object_by_kind(scene, "PowerLawDecayPlot")
     mutations = (
-        (traps.id, replace(traps.payload, deep_positions=traps.payload.deep_positions + (traps.payload.deep_positions[-1] + 0.02,))),
-        (lobes.id, replace(lobes.payload, deep_width=lobes.payload.deep_width + 18.0, deep_area=lobes.payload.deep_area + 3240.0)),
-        (lobes.id, replace(lobes.payload, deep_sigma=(lobes.payload.deep_sigma[0] * 0.82, lobes.payload.deep_sigma[1] * 0.82))),
-        (pe.id, replace(pe.payload, remanence=pe.payload.remanence + 0.08)),
+        (
+            traps.id,
+            replace(
+                traps.payload,
+                deep_positions=traps.payload.deep_positions
+                + (traps.payload.deep_positions[-1] + 0.02,),
+            ),
+        ),
+        (
+            lobes.id,
+            replace(
+                lobes.payload,
+                deep_width=lobes.payload.deep_width + 18.0,
+                deep_area=lobes.payload.deep_area + 3240.0,
+            ),
+        ),
+        (
+            lobes.id,
+            replace(
+                lobes.payload,
+                deep_sigma=(
+                    lobes.payload.deep_sigma[0] * 0.82,
+                    lobes.payload.deep_sigma[1] * 0.82,
+                ),
+            ),
+        ),
         (decay.id, replace(decay.payload, slope=decay.payload.slope - 0.18)),
     )
     for object_id, mutated_payload in mutations:
         mutated_scene = scene.replace_payload(object_id, mutated_payload)
         mutated_svg = svg_text_for_scene(mutated_scene)
         if original_svg == mutated_svg:
-            return _fail(f"renderer output did not change after payload mutation: {object_id}")
-        if _strip_payload_geometry(original_svg) == _strip_payload_geometry(mutated_svg):
-            return _fail(f"visible geometry did not change after payload mutation: {object_id}")
+            return _fail(
+                f"renderer output did not change after payload mutation: {object_id}"
+            )
+        if _strip_payload_geometry(original_svg) == _strip_payload_geometry(
+            mutated_svg
+        ):
+            return _fail(
+                f"visible geometry did not change after payload mutation: {object_id}"
+            )
 
     expected_mutated_count = len(mutations[0][1].deep_positions)
     trap_svg = svg_text_for_scene(scene.replace_payload(traps.id, mutations[0][1]))
@@ -853,13 +955,11 @@ def strip_payload_geometry(svg_text):
 
 traps = scene.object_by_kind("TrapLevelSet")
 lobes = scene.object_by_kind("DOSLobes")
-pe = scene.object_by_kind("PEHysteresisPlot")
 decay = scene.object_by_kind("PowerLawDecayPlot")
 mutations = (
     (traps.id, replace(traps.payload, deep_positions=traps.payload.deep_positions + (traps.payload.deep_positions[-1] + 0.02,))),
     (lobes.id, replace(lobes.payload, deep_width=lobes.payload.deep_width + 18.0, deep_area=lobes.payload.deep_area + 3240.0)),
     (lobes.id, replace(lobes.payload, deep_sigma=(lobes.payload.deep_sigma[0] * 0.82, lobes.payload.deep_sigma[1] * 0.82))),
-    (pe.id, replace(pe.payload, remanence=pe.payload.remanence + 0.08)),
     (decay.id, replace(decay.payload, slope=decay.payload.slope - 0.18)),
 )
 original_svg = svg_text_for_scene(scene)
@@ -875,7 +975,19 @@ if "deep_count=" + str(len(mutations[0][1].deep_positions)) not in trap_svg:
     raise SystemExit("mutated renderer output missing updated deep_count payload token")
 """
     result = subprocess.run(
-        ["uv", "run", "--with", "drawsvg", "--with", "matplotlib", "--with", "numpy", "python", "-c", script],
+        [
+            "uv",
+            "run",
+            "--with",
+            "drawsvg",
+            "--with",
+            "matplotlib",
+            "--with",
+            "numpy",
+            "python",
+            "-c",
+            script,
+        ],
         cwd=ROOT.parents[1],
         text=True,
         capture_output=True,
@@ -899,7 +1011,6 @@ def main() -> int:
         _check_computed_geometry_models,
         _check_reference_visual_layout,
         _check_probe_visual_semantics,
-        _check_evidence_trio,
         _check_svg_output,
         _check_hero_reference_scaffold,
         _check_scientific_plot_grammar,

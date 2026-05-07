@@ -1,117 +1,135 @@
 {
   "schema": "fig1_reference_visual_layout_v1",
-  "target": "reference_center_hero_with_support_cards",
-  "reference_image": "reference/source_variant_aesthetic_ref.png",
-  "reference_authority": "visual_layout_target",
+  "target": "vectorization_top_synthesis_bottom_readouts",
+  "reference_image": "reference/source_variant_vectorization_ref_v1.png",
+  "reference_authority": "vectorization_layout_target",
   "canvas": {
     "width": 1595,
     "height": 986
   },
   "regions": [
     {
-      "id": "polymer_origin_card",
+      "id": "top_synthesis",
       "index": 1,
-      "title": "Sulfur polymer origin\n(composition tuning)",
+      "title": "Sulfur-rich network",
       "role": "supporting",
-      "bounds": [22, 30, 455, 394],
+      "bounds": [22, 30, 900, 410],
       "objects": ["sulfur_polymer_origin"],
       "local_boxes": {
-        "origin_icon": [26, 22, 44, 44],
-        "s8_ring": [40, 84, 92, 112],
-        "reaction_arrow": [160, 126, 64, 24],
-        "sulfur_chain": [245, 110, 190, 72],
-        "composition_ramp": [132, 228, 268, 14],
-        "bullet_list": [96, 294, 295, 90]
+        "origin_icon": [16, 18, 44, 44],
+        "s8_ring": [40, 80, 110, 124],
+        "reaction_arrow": [170, 134, 64, 24],
+        "sulfur_chain": [260, 116, 220, 86],
+        "composition_ramp": [40, 232, 760, 70],
+        "bullet_list": [40, 320, 800, 70]
       }
     },
     {
-      "id": "electrical_evidence_card",
+      "id": "localized_traps",
       "index": 2,
-      "title": "Electrical evidence",
-      "role": "supporting",
-      "bounds": [1076, 30, 497, 394],
-      "objects": ["evidence_trio", "pe_hysteresis", "power_law_decay"],
-      "local_boxes": {
-        "pe_plot": [38, 105, 209.5, 240],
-        "decay_plot": [275.5, 105, 209.5, 240]
-      }
-    },
-    {
-      "id": "deep_trap_hero_card",
-      "index": 3,
-      "title": "Converged deep charge trapping",
+      "title": "localized traps",
       "role": "hero",
-      "bounds": [548, 173, 468, 613],
+      "bounds": [940, 30, 633, 410],
       "objects": ["deep_trap_hero", "band_diagram", "trap_level_set", "dos_lobes"],
       "local_boxes": {
-        "band_area": [42, 90, 210, 405],
-        "dos_area": [255, 116, 178, 360],
-        "hero_callout": [30, 491, 408, 92]
+        "band_area": [30, 70, 230, 268],
+        "dos_area": [310, 70, 200, 268],
+        "hero_callout": [30, 344, 570, 50]
       }
     },
     {
-      "id": "interpretation_card",
-      "index": 4,
-      "title": "Interpretation (converged trap model)",
+      "id": "release_module",
+      "index": 3,
+      "title": "distributed release",
       "role": "supporting",
-      "bounds": [22, 464, 475, 470],
-      "objects": ["trap_model_flow", "ispd_plot"],
+      "bounds": [22, 488, 380, 470],
+      "objects": ["power_law_decay", "trap_model_flow"],
       "local_boxes": {
-        "flow_strip": [28, 84, 419, 36],
-        "decay_plot": [42, 160, 188, 184],
-        "debye_tau": [250, 188, 58, 82],
-        "ispd_plot": [340, 154, 126, 244],
-        "interpretation_callout": [24, 388, 427, 66]
+        "wells_area": [16, 80, 348, 130],
+        "decay_inset": [40, 230, 300, 184],
+        "release_callout": [16, 422, 348, 36]
       }
     },
     {
-      "id": "macroscopic_probe_card",
+      "id": "vs_decay_module",
+      "index": 4,
+      "title": "V_s(t) decay",
+      "role": "supporting",
+      "bounds": [414, 488, 240, 470],
+      "objects": [],
+      "local_boxes": {
+        "vs_plot_area": [24, 80, 192, 320],
+        "vs_callout": [16, 412, 208, 46]
+      }
+    },
+    {
+      "id": "ispd_module",
       "index": 5,
+      "title": "ISPD-derived g(Et)",
+      "role": "supporting",
+      "bounds": [666, 488, 520, 470],
+      "objects": ["ispd_plot"],
+      "local_boxes": {
+        "ispd_plot": [195, 100, 130, 280],
+        "ispd_callout": [16, 414, 488, 38]
+      }
+    },
+    {
+      "id": "probe_module",
+      "index": 6,
       "title": "Macroscopic probe",
       "role": "supporting",
-      "bounds": [1054, 464, 519, 470],
+      "bounds": [1198, 488, 375, 470],
       "objects": ["macroscopic_probe", "polymer_cantilever", "electrode", "repulsion_arrow", "maxwell_attraction_cue"],
       "local_boxes": {
-        "probe_frame": [28, 82, 463, 300],
-        "probe_callout": [26, 374, 467, 76]
+        "probe_frame": [16, 70, 343, 340],
+        "probe_callout": [16, 418, 343, 38]
       }
     }
   ],
   "flow_arrows": [
     {
-      "id": "polymer_to_hero",
-      "start_region": "polymer_origin_card",
-      "end_region": "deep_trap_hero_card",
-      "start": [488, 154],
-      "end": [535, 196]
+      "id": "synthesis_to_traps",
+      "start_region": "top_synthesis",
+      "end_region": "localized_traps",
+      "start": [922, 240],
+      "end": [940, 240]
     },
     {
-      "id": "electrical_to_hero",
-      "start_region": "electrical_evidence_card",
-      "end_region": "deep_trap_hero_card",
-      "start": [1066, 154],
-      "end": [1022, 196]
+      "id": "traps_to_release",
+      "start_region": "localized_traps",
+      "end_region": "release_module",
+      "start": [1100, 440],
+      "end": [212, 488]
     },
     {
-      "id": "interpretation_to_hero",
-      "start_region": "interpretation_card",
-      "end_region": "deep_trap_hero_card",
-      "start": [505, 724],
-      "end": [545, 681]
+      "id": "release_to_vs_decay",
+      "start_region": "release_module",
+      "end_region": "vs_decay_module",
+      "start": [402, 720],
+      "end": [414, 720]
     },
     {
-      "id": "probe_to_hero",
-      "start_region": "macroscopic_probe_card",
-      "end_region": "deep_trap_hero_card",
-      "start": [1050, 724],
-      "end": [1012, 681]
+      "id": "vs_decay_to_ispd",
+      "start_region": "vs_decay_module",
+      "end_region": "ispd_module",
+      "start": [654, 720],
+      "end": [666, 720]
+    },
+    {
+      "id": "ispd_to_probe",
+      "start_region": "ispd_module",
+      "end_region": "probe_module",
+      "start": [1186, 720],
+      "end": [1198, 720]
     }
   ],
   "visual_rules": {
-    "hero_region": "deep_trap_hero_card",
-    "hero_must_be_center": true,
-    "support_cards_surround_hero": true,
+    "hero_region": "localized_traps",
+    "hero_must_be_center": false,
+    "support_cards_surround_hero": false,
+    "narrative_direction": "synthesis_to_traps_then_bottom_row_readouts",
     "maxwell_attraction_is_secondary_cue": true,
-    "forbidden_framing": ["actuator", "bidirectional", "force-balance panel"]
+    "forbidden_framing": ["actuator", "bidirectional", "force-balance panel", "color_gradient_composition_scale", "horizontal_cantilever", "pe_hysteresis"]
   }
 }

@@ -208,7 +208,7 @@ def build_scene() -> Scene:
         height=HEIGHT,
         reference=Reference(
             source="reference/source_variant_aesthetic_ref.png",
-            authority="ground_truth",
+            authority="guidance_only",
             width=1595,
             height=986,
         ),

@@ -3,18 +3,16 @@ from __future__ import annotations
 import shutil
 import subprocess
 import math
+from dataclasses import replace
 from pathlib import Path
 from typing import Callable
 
 import drawsvg as draw
 
-from engine.scientific_geometry import power_law_loglog_points
 from engine.scientific_plots import (
     PlotLabel,
     PlotTick,
     ScientificPlotPlan,
-    pe_hysteresis_plan,
-    power_law_decay_plan,
 )
 from engine.domain_primitives import (
     BandDiagram,
@@ -34,8 +32,14 @@ from engine.domain_primitives import (
     TrapLevelSet,
     TrapModelFlow,
 )
+from engine.matplotlib_subrenderers import (
+    fig1_electrical_style,
+    pe_hysteresis_fragment,
+    power_law_decay_fragment,
+)
 from engine.scene import Point, Rect, Scene, SemanticObject
 from engine.style import DEFAULT_STYLE, FigureStyle
+from engine.svg_fragments import wrapped_fragment_svg
 from engine import primitives as p
 from fig1_l1_scene import build_scene
 
@@ -44,7 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SVG_OUT = ROOT / "fig1_reference_semantic.svg"
 PNG_OUT = ROOT / "fig1_reference_semantic.png"
 COMPARISON_OUT = ROOT / "reference_vs_fig1_reference_semantic.png"
-REFERENCE_PNG = ROOT / "reference" / "source_variant_aesthetic_ref.png"
+REFERENCE_PNG = ROOT / "reference" / "source_variant_vectorization_ref_v1.png"
 
 Renderer = Callable[[draw.Drawing, Scene, SemanticObject[object], FigureStyle], None]
 
@@ -81,7 +85,9 @@ def _panel_text(
 
 def build_drawing(scene: Scene, style: FigureStyle = DEFAULT_STYLE) -> draw.Drawing:
     drawing = draw.Drawing(scene.width, scene.height)
-    drawing.append(draw.Rectangle(0, 0, scene.width, scene.height, fill=style.palette.white))
+    drawing.append(
+        draw.Rectangle(0, 0, scene.width, scene.height, fill=style.palette.white)
+    )
     drawing.append(p.style_defs())
     _draw_columns(drawing, scene, style)
 
@@ -105,7 +111,433 @@ def build_drawing(scene: Scene, style: FigureStyle = DEFAULT_STYLE) -> draw.Draw
     }
     for obj in scene.objects:
         renderers[obj.kind](drawing, scene, obj, style)
+    _draw_panel_decorations(drawing, scene, style)
     return drawing
+
+
+def _draw_panel_decorations(
+    drawing: draw.Drawing, scene: Scene, style: FigureStyle
+) -> None:
+    column_by_id = {column.id: column for column in scene.layout.columns}
+    if "localized_traps" in column_by_id:
+        _draw_localized_traps_visual(drawing, column_by_id["localized_traps"], style)
+    if "vs_decay_module" in column_by_id:
+        _draw_vs_decay_curve(drawing, column_by_id["vs_decay_module"], style)
+    if "release_module" in column_by_id:
+        _draw_release_wells(drawing, column_by_id["release_module"], style)
+
+
+def _draw_localized_traps_visual(
+    drawing: draw.Drawing, column, style: FigureStyle
+) -> None:
+    palette = style.palette
+    panel = column.bounds
+    visual_x = panel.x + 32
+    visual_right = panel.right - 22
+    visual_top = panel.y + 100
+    callout = column.box("hero_callout")
+    visual_bottom = callout.y - 6
+
+    network_top = visual_top + 90
+    network_bottom = visual_bottom - 6
+    e_axis_x = visual_x - 14
+    e_axis_bottom = network_bottom - 10
+    e_axis_top = network_top + 10
+    p.arrow(
+        drawing,
+        Point(e_axis_x, e_axis_bottom),
+        Point(e_axis_x, e_axis_top),
+        palette.muted,
+        width=1.0,
+        head_length=8,
+        head_width=6,
+        opacity=0.55,
+    )
+    p.text(
+        drawing,
+        "E",
+        e_axis_x,
+        e_axis_top - 8,
+        10.0,
+        fill=palette.muted,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
+    _draw_polymer_network_backdrop(
+        drawing, visual_x, visual_right, network_top, network_bottom, palette, style
+    )
+
+    well_baseline_y = network_top + 4
+    visual_width = visual_right - visual_x
+    well_specs = (
+        (visual_x + visual_width * 0.10, "shallow", palette.shallow_blue, 22),
+        (visual_x + visual_width * 0.32, "shallow", palette.shallow_blue, 22),
+        (visual_x + visual_width * 0.62, "deep", palette.deep_red, 62),
+        (visual_x + visual_width * 0.86, "deep", palette.deep_red, 62),
+    )
+    for cx, _kind, color, depth in well_specs:
+        _draw_trap_well(drawing, cx, well_baseline_y, depth, color, style)
+
+    trapped_specs = (
+        (visual_x + visual_width * 0.10, network_top + 48, palette.shallow_blue),
+        (visual_x + visual_width * 0.32, network_top + 54, palette.shallow_blue),
+        (visual_x + visual_width * 0.62, network_top + 50, palette.deep_red),
+        (visual_x + visual_width * 0.86, network_top + 52, palette.deep_red),
+    )
+    for x, y, color in trapped_specs:
+        _draw_trapped_electron(drawing, x, y, color, style)
+
+
+def _draw_polymer_network_backdrop(
+    drawing: draw.Drawing,
+    x_left: float,
+    x_right: float,
+    y_top: float,
+    y_bottom: float,
+    palette,
+    style: FigureStyle,
+) -> None:
+    import numpy as np
+    from matplotlib.tri import Triangulation
+
+    rng = np.random.default_rng(2026)
+    cols = 14
+    rows = 6
+    cell_w = (x_right - x_left) / cols
+    cell_h = (y_bottom - y_top) / rows
+    width = x_right - x_left
+    height = y_bottom - y_top
+
+    xs: list[float] = []
+    ys: list[float] = []
+    for row in range(rows):
+        row_offset = -0.25 * cell_w if row % 2 else 0.25 * cell_w
+        for col in range(cols):
+            jitter_x = (rng.random() - 0.5) * cell_w * 0.50
+            jitter_y = (rng.random() - 0.5) * cell_h * 0.45
+            x = x_left + cell_w * (col + 0.5) + row_offset + jitter_x
+            y = y_top + cell_h * (row + 0.5) + jitter_y
+            if x < x_left + 2 or x > x_right - 2:
+                continue
+            xs.append(x)
+            ys.append(y)
+    xs_arr = np.asarray(xs)
+    ys_arr = np.asarray(ys)
+
+    s_rich_centers = (
+        (x_left + width * 0.18, y_top + height * 0.32),
+        (x_left + width * 0.78, y_top + height * 0.58),
+    )
+    s_radius = cell_w * 2.0
+    is_sulfur: list[bool] = []
+    for x, y in zip(xs, ys):
+        d_rich = min(math.hypot(x - cx, y - cy) for cx, cy in s_rich_centers)
+        is_sulfur.append(d_rich < s_radius)
+
+    tri = Triangulation(xs_arr, ys_arr)
+    edges_seen: set[tuple[int, int]] = set()
+    max_edge = max(cell_w, cell_h) * 1.55
+    for triangle in tri.triangles:
+        for a, b in ((0, 1), (1, 2), (2, 0)):
+            i, j = sorted((int(triangle[a]), int(triangle[b])))
+            if (i, j) in edges_seen:
+                continue
+            length = math.hypot(xs_arr[j] - xs_arr[i], ys_arr[j] - ys_arr[i])
+            if length > max_edge:
+                continue
+            edges_seen.add((i, j))
+            drawing.append(
+                draw.Line(
+                    float(xs_arr[i]),
+                    float(ys_arr[i]),
+                    float(xs_arr[j]),
+                    float(ys_arr[j]),
+                    stroke=palette.sulfur_brown,
+                    stroke_width=0.5,
+                    opacity=0.30,
+                )
+            )
+
+    for x, y, is_s in zip(xs, ys, is_sulfur):
+        if is_s:
+            drawing.append(
+                draw.Circle(
+                    x,
+                    y,
+                    5.2,
+                    fill="#f0c860",
+                    stroke=palette.sulfur_brown,
+                    stroke_width=0.7,
+                    opacity=0.70,
+                )
+            )
+        else:
+            drawing.append(
+                draw.Circle(
+                    x,
+                    y,
+                    3.0,
+                    fill="#c1c4cb",
+                    stroke="#7a8090",
+                    stroke_width=0.5,
+                    opacity=0.55,
+                )
+            )
+
+
+def _draw_trap_well(
+    drawing: draw.Drawing,
+    cx: float,
+    baseline_y: float,
+    depth: float,
+    color: str,
+    style: FigureStyle,
+) -> None:
+    half_width = 26 + depth * 0.32
+    bottom_y = baseline_y + depth
+    well_path = draw.Path(fill="none", stroke=color, stroke_width=1.7, opacity=0.92)
+    well_path.M(cx - half_width, baseline_y)
+    well_path.Q(cx, bottom_y + 6, cx + half_width, baseline_y)
+    drawing.append(well_path)
+
+    el_y = bottom_y - 1
+    drawing.append(
+        draw.Circle(
+            cx,
+            el_y,
+            5.6,
+            fill=color,
+            stroke="#ffffff",
+            stroke_width=0.9,
+            opacity=0.95,
+        )
+    )
+    drawing.append(
+        draw.Text(
+            "−",
+            10.5,
+            cx,
+            el_y + 3.6,
+            fill="#ffffff",
+            font_family=style.typography.family,
+            text_anchor="middle",
+            font_weight="700",
+        )
+    )
+
+    arrow_path = draw.Path(
+        fill="none",
+        stroke=color,
+        stroke_width=1.05,
+        stroke_dasharray="4 3",
+        opacity=0.82,
+    )
+    arrow_top_x = cx + 14
+    arrow_top_y = baseline_y - 36
+    arrow_path.M(cx + 2, el_y - 7)
+    arrow_path.Q(cx + 6, baseline_y - 10, arrow_top_x, arrow_top_y)
+    drawing.append(arrow_path)
+    drawing.append(
+        draw.Lines(
+            arrow_top_x,
+            arrow_top_y - 2,
+            arrow_top_x - 4.2,
+            arrow_top_y + 5.5,
+            arrow_top_x + 4.2,
+            arrow_top_y + 5.5,
+            close=True,
+            fill=color,
+            opacity=0.82,
+        )
+    )
+
+
+def _draw_trapped_electron(
+    drawing: draw.Drawing,
+    x: float,
+    y: float,
+    color: str,
+    style: FigureStyle,
+) -> None:
+    drawing.append(
+        draw.Circle(
+            x,
+            y,
+            7.5,
+            fill="none",
+            stroke=color,
+            stroke_width=1.1,
+            stroke_dasharray="3 3",
+            opacity=0.78,
+        )
+    )
+    drawing.append(
+        draw.Circle(
+            x,
+            y,
+            4.4,
+            fill=color,
+            stroke="#ffffff",
+            stroke_width=0.7,
+            opacity=0.85,
+        )
+    )
+    drawing.append(
+        draw.Text(
+            "−",
+            8.4,
+            x,
+            y + 3.0,
+            fill="#ffffff",
+            font_family=style.typography.family,
+            text_anchor="middle",
+            font_weight="700",
+        )
+    )
+
+
+def _draw_vs_decay_curve(drawing: draw.Drawing, column, style: FigureStyle) -> None:
+    palette = style.palette
+    plot_area = column.box("vs_plot_area")
+    margin_x = 22
+    margin_y = 24
+    axis_origin = Point(plot_area.x + margin_x, plot_area.bottom - margin_y)
+    axis_w = plot_area.width - margin_x - 12
+    axis_h = plot_area.height - margin_y - 14
+    p.mini_axis(drawing, axis_origin, axis_w, axis_h, palette.ink)
+    samples = 48
+    points = []
+    for index in range(samples):
+        fraction = index / (samples - 1)
+        decay = math.exp(-fraction * 3.2)
+        points.append(
+            Point(axis_origin.x + fraction * axis_w, axis_origin.y - decay * axis_h)
+        )
+    drawing.append(
+        p.polyline_path(
+            tuple(points), fill="none", stroke=palette.ink, stroke_width=2.2
+        )
+    )
+    p.text(
+        drawing,
+        "V_s(t)",
+        axis_origin.x - 6,
+        axis_origin.y - axis_h * 0.48,
+        11.0,
+        fill=palette.ink,
+        weight="700",
+        anchor="end",
+        style=style,
+    )
+    p.text(
+        drawing,
+        "t (s)",
+        axis_origin.x + axis_w - 6,
+        axis_origin.y + 14,
+        9.5,
+        fill=palette.ink,
+        anchor="end",
+        style=style,
+    )
+    p.text(
+        drawing,
+        "non-Debye",
+        axis_origin.x + axis_w * 0.62,
+        axis_origin.y - axis_h * 0.42,
+        9.0,
+        fill=palette.muted,
+        italic=True,
+        anchor="start",
+        style=style,
+    )
+
+
+def _draw_release_wells(drawing: draw.Drawing, column, style: FigureStyle) -> None:
+    palette = style.palette
+    wells_area = column.box("wells_area")
+    well_count = 4
+    well_pad = 12
+    well_width = (wells_area.width - well_pad * (well_count + 1)) / well_count
+    baseline_y = wells_area.bottom - 10
+    well_height = wells_area.height - 30
+    subscripts = ("₁", "₂", "₃", "₄")
+    for well_index in range(well_count):
+        well_x = wells_area.x + well_pad + well_index * (well_width + well_pad)
+        well_center_x = well_x + well_width / 2
+        depth_factor = 0.55 + 0.18 * well_index
+        bottom_y = baseline_y - well_height * (1 - depth_factor)
+        well_path = draw.Path(
+            fill="none",
+            stroke=palette.deep_red if well_index >= 1 else palette.shallow_blue,
+            stroke_width=1.4,
+            opacity=0.78,
+        )
+        well_path.M(well_x, baseline_y)
+        well_path.Q(
+            well_center_x,
+            bottom_y - well_height * 0.55,
+            well_x + well_width,
+            baseline_y,
+        )
+        drawing.append(well_path)
+        charge_y = bottom_y - well_height * 0.18
+        drawing.append(
+            draw.Circle(
+                well_center_x,
+                charge_y,
+                4.4,
+                fill=palette.deep_red_mid,
+                stroke="#ffffff",
+                stroke_width=0.8,
+                opacity=0.92,
+            )
+        )
+        p.text(
+            drawing,
+            f"t{subscripts[well_index]}",
+            well_center_x,
+            baseline_y + 14,
+            9.0,
+            fill=palette.muted,
+            italic=True,
+            anchor="middle",
+            style=style,
+        )
+        if well_index < well_count - 1:
+            p.arrow(
+                drawing,
+                Point(well_center_x + 8, charge_y - 4),
+                Point(well_center_x + 24, charge_y - 18),
+                palette.muted,
+                width=1.0,
+                head_length=6,
+                head_width=5,
+                opacity=0.6,
+            )
+    cell_w_local = (wells_area.width - well_pad * (well_count + 1)) / well_count
+    p.text(
+        drawing,
+        "shallow",
+        wells_area.x + well_pad + cell_w_local / 2,
+        wells_area.y + 12,
+        9.6,
+        fill=palette.shallow_blue,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
+    p.text(
+        drawing,
+        "deep",
+        wells_area.right - well_pad - cell_w_local / 2,
+        wells_area.y + 12,
+        9.6,
+        fill=palette.deep_red,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
 
 
 def svg_text_for_scene(scene: Scene) -> str:
@@ -139,9 +571,20 @@ def _hero_region(scene: Scene) -> Rect:
     raise KeyError("hero")
 
 
-def _draw_figure_header(drawing: draw.Drawing, scene: Scene, style: FigureStyle) -> None:
+def _draw_figure_header(
+    drawing: draw.Drawing, scene: Scene, style: FigureStyle
+) -> None:
     palette = style.palette
-    p.text(drawing, "Fig. 1 | Sulfur-rich polymer charge trapping overview", 52, 42, 24, fill=palette.ink, weight="700", style=style)
+    p.text(
+        drawing,
+        "Fig. 1 | Sulfur-rich polymer charge trapping overview",
+        52,
+        42,
+        24,
+        fill=palette.ink,
+        weight="700",
+        style=style,
+    )
 
 
 def _draw_columns(drawing: draw.Drawing, scene: Scene, style: FigureStyle) -> None:
@@ -149,27 +592,20 @@ def _draw_columns(drawing: draw.Drawing, scene: Scene, style: FigureStyle) -> No
     for column in scene.layout.columns:
         is_hero = column.role == "hero"
         fill = palette.panel_hero_fill if is_hero else palette.panel_fill
-        stroke = palette.deep_red_light if is_hero else palette.rule
-        stroke_width = style.hero_stroke_width if is_hero else style.panel_stroke_width
+        stroke = palette.deep_red_light if is_hero else "none"
         p.rounded_rect(
             drawing,
             column.bounds,
             fill=fill,
             stroke=stroke,
             radius=style.panel_radius,
-            stroke_width=stroke_width,
+            stroke_width=0.6 if is_hero else 0.0,
         )
-        inner = column.bounds.inset(12, 12)
-        p.rounded_rect(
-            drawing,
-            inner,
-            fill="none",
-            stroke="#eef2f7" if not is_hero else "#fde6e3",
-            radius=style.panel_radius - 2,
-            stroke_width=0.8,
-            opacity=0.72,
+        title_size = (
+            style.typography.hero_title_size
+            if is_hero
+            else style.typography.support_title_size
         )
-        title_size = style.typography.hero_title_size if is_hero else style.typography.support_title_size
         title_color = palette.deep_red if is_hero else palette.ink
         title_role = "panel-title-hero" if is_hero else "panel-title-support"
         title_lines = column.title.split("\n")
@@ -201,25 +637,36 @@ def _draw_columns(drawing: draw.Drawing, scene: Scene, style: FigureStyle) -> No
                 )
 
 
-def _draw_layout_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_layout_flow(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: LayoutFlow = obj.payload
-    p.begin_semantic_group(drawing, obj, f"direction={payload.direction} arrow_count={len(payload.arrow_pairs)}")
+    p.begin_semantic_group(
+        drawing,
+        obj,
+        f"direction={payload.direction} arrow_count={len(payload.arrow_pairs)}",
+    )
     for start, end in payload.arrow_pairs:
         p.arrow(
             drawing,
             start,
             end,
             style.palette.muted,
-            width=1.7,
-            head_length=15,
-            head_width=15,
-            opacity=0.25,
-            attrs={"data-panel-role": "global-flow-arrow", "data-flow-role": payload.direction},
+            width=2.0,
+            head_length=16,
+            head_width=16,
+            opacity=0.48,
+            attrs={
+                "data-panel-role": "global-flow-arrow",
+                "data-flow-role": payload.direction,
+            },
         )
     p.end_semantic_group(drawing)
 
 
-def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_sulfur_polymer_origin(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: SulfurPolymerOrigin = obj.payload
     col = _column(scene, obj.column)
     column = _column_model(scene, obj.column)
@@ -230,35 +677,75 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
         f"s8_atoms={payload.s8_atom_count} chain_atoms={payload.chain_atom_count} swatches={len(payload.swatches)} local_boxes={len(column.local_boxes)}",
     )
 
-    icon = column.box("origin_icon")
-    p.rounded_rect(drawing, icon, fill="#173967", stroke="#0d2341", radius=3, stroke_width=1.0)
-    for node in (Point(icon.x + 14, icon.y + 18), Point(icon.x + 30, icon.y + 18), Point(icon.x + 22, icon.y + 32)):
-        drawing.append(draw.Circle(node.x, node.y, 5, fill="#ffffff", opacity=0.9))
-    drawing.append(draw.Line(icon.x + 14, icon.y + 18, icon.x + 30, icon.y + 18, stroke="#ffffff", stroke_width=1.4))
-    drawing.append(draw.Line(icon.x + 14, icon.y + 18, icon.x + 22, icon.y + 32, stroke="#ffffff", stroke_width=1.4))
-    drawing.append(draw.Line(icon.x + 30, icon.y + 18, icon.x + 22, icon.y + 32, stroke="#ffffff", stroke_width=1.4))
+    column.box("origin_icon")
 
     ring_box = column.box("s8_ring")
     ring_center = ring_box.center
     ring_radius = min(ring_box.width, ring_box.height) * 0.41
     ring_points = [
         Point(
-            ring_center.x + ring_radius * math.cos(2 * math.pi * i / payload.s8_atom_count),
-            ring_center.y + ring_radius * math.sin(2 * math.pi * i / payload.s8_atom_count),
+            ring_center.x
+            + ring_radius * math.cos(2 * math.pi * i / payload.s8_atom_count),
+            ring_center.y
+            + ring_radius * math.sin(2 * math.pi * i / payload.s8_atom_count),
         )
         for i in range(payload.s8_atom_count)
     ]
     for index, current in enumerate(ring_points):
         nxt = ring_points[(index + 1) % len(ring_points)]
-        drawing.append(draw.Line(current.x, current.y, nxt.x, nxt.y, stroke=palette.sulfur_brown, stroke_width=1.55))
+        drawing.append(
+            draw.Line(
+                current.x,
+                current.y,
+                nxt.x,
+                nxt.y,
+                stroke=palette.sulfur_brown,
+                stroke_width=2.0,
+            )
+        )
     for atom in ring_points:
-        p.sulfur_atom(drawing, atom, 6.7, style)
-    p.text(drawing, "S8", ring_center.x, ring_center.y + 82, 16, fill=palette.ink, anchor="middle", style=style)
+        drawing.append(
+            draw.Circle(
+                atom.x,
+                atom.y,
+                6.7,
+                fill=palette.sulfur_yellow,
+                stroke=palette.sulfur_brown,
+                stroke_width=1.0,
+            )
+        )
+    p.text(
+        drawing,
+        "S8",
+        ring_center.x,
+        ring_center.y + 82,
+        16,
+        fill=palette.ink,
+        anchor="middle",
+        style=style,
+    )
 
     reaction = column.box("reaction_arrow")
     arrow_y = reaction.center.y
-    p.arrow(drawing, Point(reaction.x, arrow_y), Point(reaction.right, arrow_y), palette.ink, width=1.4, head_length=12, head_width=9)
-    p.text(drawing, payload.heat_label, reaction.center.x, reaction.y - 3, 12.8, fill=palette.ink, anchor="middle", style=style)
+    p.arrow(
+        drawing,
+        Point(reaction.x, arrow_y),
+        Point(reaction.right, arrow_y),
+        palette.ink,
+        width=1.4,
+        head_length=12,
+        head_width=9,
+    )
+    p.text(
+        drawing,
+        payload.heat_label,
+        reaction.center.x,
+        reaction.y - 3,
+        12.8,
+        fill=palette.ink,
+        anchor="middle",
+        style=style,
+    )
 
     chain_box = column.box("sulfur_chain")
     chain_start = Point(chain_box.x, chain_box.center.y)
@@ -268,17 +755,101 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
         for i in range(payload.chain_atom_count)
     ]
     for start, end in zip(chain_points, chain_points[1:], strict=False):
-        drawing.append(draw.Line(start.x, start.y, end.x, end.y, stroke=palette.sulfur_brown, stroke_width=1.6))
+        drawing.append(
+            draw.Line(
+                start.x,
+                start.y,
+                end.x,
+                end.y,
+                stroke=palette.sulfur_brown,
+                stroke_width=2.0,
+            )
+        )
     for atom in chain_points:
-        p.sulfur_atom(drawing, atom, 6.2, style)
-    p.text(drawing, payload.chain_label, chain_box.center.x, chain_box.bottom + 15, 12.2, fill=palette.ink, anchor="middle", style=style)
+        drawing.append(
+            draw.Circle(
+                atom.x,
+                atom.y,
+                6.2,
+                fill=palette.sulfur_yellow,
+                stroke=palette.sulfur_brown,
+                stroke_width=1.0,
+            )
+        )
+    p.text(
+        drawing,
+        payload.chain_label,
+        chain_box.center.x,
+        chain_box.bottom + 15,
+        12.2,
+        fill=palette.ink,
+        anchor="middle",
+        style=style,
+    )
 
     ramp = column.box("composition_ramp")
-    p.text(drawing, "S60", col.x + 38, ramp.y + 7, 15, fill=palette.ink, anchor="middle", style=style)
-    p.text(drawing, "S85", ramp.right + 38, ramp.y + 7, 15, fill=palette.ink, anchor="middle", style=style)
-    drawing.append(draw.Rectangle(ramp.x, ramp.y, ramp.width, ramp.height, fill="url(#sulfurSwatch)", stroke=palette.sulfur_brown, stroke_width=0.9))
-    p.arrow(drawing, Point(ramp.right - 3, ramp.center.y), Point(ramp.right + 22, ramp.center.y), palette.deep_red_mid, width=8, head_length=18, head_width=20)
-    p.text(drawing, "Increasing sulfur content", ramp.center.x, ramp.y + 31, 12.2, fill=palette.ink, italic=True, anchor="middle", style=style)
+    library_labels = ("S60", "S70", "S80", "S85")
+    library_atom_counts = (4, 6, 8, 10)
+    cell_width = ramp.width / len(library_labels)
+    chain_y = ramp.y + 22
+    drawing.append(
+        draw.Line(
+            ramp.x + 12,
+            chain_y,
+            ramp.right - 12,
+            chain_y,
+            stroke=palette.sulfur_brown,
+            stroke_width=0.6,
+            opacity=0.35,
+        )
+    )
+    for cell_index, (label, atoms) in enumerate(
+        zip(library_labels, library_atom_counts, strict=True)
+    ):
+        cell_x = ramp.x + cell_index * cell_width
+        cell_center_x = cell_x + cell_width / 2
+        chain_span = min(cell_width - 36, 24 + atoms * 12)
+        chain_start_x = cell_center_x - chain_span / 2
+        spacing = chain_span / max(atoms - 1, 1)
+        chain_points = tuple(
+            Point(
+                chain_start_x + step * spacing,
+                chain_y + (8 if step % 2 else -2),
+            )
+            for step in range(atoms)
+        )
+        for start, end in zip(chain_points, chain_points[1:], strict=False):
+            drawing.append(
+                draw.Line(
+                    start.x,
+                    start.y,
+                    end.x,
+                    end.y,
+                    stroke=palette.sulfur_brown,
+                    stroke_width=1.4,
+                )
+            )
+        for atom in chain_points:
+            drawing.append(
+                draw.Circle(
+                    atom.x,
+                    atom.y,
+                    5.4,
+                    fill=palette.sulfur_yellow,
+                    stroke=palette.sulfur_brown,
+                    stroke_width=0.9,
+                )
+            )
+        p.text(
+            drawing,
+            label,
+            cell_center_x,
+            ramp.bottom - 6,
+            12.4,
+            fill=palette.ink,
+            anchor="middle",
+            style=style,
+        )
 
     bullet_box = column.box("bullet_list")
     relation_y = bullet_box.y + 30
@@ -288,13 +859,15 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
         ("localized traps", bullet_box.right - 52, "origin-localized-traps"),
     )
     for index, (label, x, causal_role) in enumerate(relation_labels):
-        drawing.append(draw.Circle(x, relation_y, 3.0, fill=palette.sulfur_brown, opacity=0.72))
+        drawing.append(
+            draw.Circle(x, relation_y, 3.0, fill=palette.sulfur_brown, opacity=0.82)
+        )
         _panel_text(
             drawing,
             label,
             x,
-            relation_y + 27,
-            12.6,
+            relation_y + 25,
+            13.8,
             role="origin-relation",
             fill=palette.ink if index < 2 else palette.deep_red,
             italic=True,
@@ -303,8 +876,26 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
             causal_role=causal_role,
             style=style,
         )
-    p.arrow(drawing, Point(relation_labels[0][1] + 48, relation_y), Point(relation_labels[1][1] - 45, relation_y), palette.muted, width=1.0, head_length=7, head_width=6, opacity=0.62)
-    p.arrow(drawing, Point(relation_labels[1][1] + 42, relation_y), Point(relation_labels[2][1] - 48, relation_y), palette.deep_red_mid, width=1.1, head_length=7, head_width=6, opacity=0.72)
+    p.arrow(
+        drawing,
+        Point(relation_labels[0][1] + 46, relation_y),
+        Point(relation_labels[1][1] - 43, relation_y),
+        palette.muted,
+        width=1.25,
+        head_length=8,
+        head_width=6.5,
+        opacity=0.72,
+    )
+    p.arrow(
+        drawing,
+        Point(relation_labels[1][1] + 40, relation_y),
+        Point(relation_labels[2][1] - 46, relation_y),
+        palette.deep_red_mid,
+        width=1.35,
+        head_length=8,
+        head_width=6.5,
+        opacity=0.82,
+    )
     _panel_text(
         drawing,
         "Chemical + physical origin set trap density.",
@@ -320,7 +911,9 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
     p.end_semantic_group(drawing)
 
 
-def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_deep_trap_hero(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: DeepTrapHero = obj.payload
     col = _column(scene, obj.column)
     palette = style.palette
@@ -329,12 +922,34 @@ def _draw_deep_trap_hero(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
         obj,
         f"hero_ratio={payload.hero_ratio:g} band_id={payload.band_object_id} trap_id={payload.trap_object_id} dos_id={payload.dos_object_id}",
     )
-    p.text(drawing, payload.subtitle, col.center.x, col.y + 78, style.typography.subtitle_size, fill=palette.muted, anchor="middle", style=style)
+    p.text(
+        drawing,
+        payload.subtitle,
+        col.center.x,
+        col.y + 78,
+        style.typography.subtitle_size,
+        fill=palette.muted,
+        anchor="middle",
+        style=style,
+    )
     callout = _local_box(scene, obj.column, "hero_callout")
-    compact_callout = Rect(callout.x + 18, callout.y + 5, callout.width - 36, callout.height - 16)
-    p.rounded_rect(drawing, compact_callout, fill="#fff8f7", stroke=palette.deep_red_light, radius=6, stroke_width=0.75, opacity=0.82)
+    compact_callout = Rect(
+        callout.x + 18, callout.y + 5, callout.width - 36, callout.height - 16
+    )
+    p.rounded_rect(
+        drawing,
+        compact_callout,
+        fill="#fff8f7",
+        stroke=palette.deep_red_light,
+        radius=6,
+        stroke_width=0.75,
+        opacity=0.82,
+    )
     caption_lines = (
-        (payload.converged_picture_label.replace("converged", "Converged", 1), "hero-converged-picture"),
+        (
+            payload.converged_picture_label.replace("converged", "Converged", 1),
+            "hero-converged-picture",
+        ),
         ("deep states drive long-lived repulsion.", None),
     )
     for index, (line, causal_role) in enumerate(caption_lines):
@@ -371,26 +986,70 @@ def _hero_attrs(role: str, *, source: str | None = None) -> dict[str, object]:
     return attrs
 
 
-def _draw_band_diagram(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_band_diagram(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: BandDiagram = obj.payload
     area = _band_area(scene)
-    palette = style.palette
-    p.begin_semantic_group(drawing, obj, f"lumo_y={payload.lumo.y:.2f} homo_y={payload.homo.y:.2f}")
-    p.arrow(drawing, Point(area.x + 20, area.bottom - 2), Point(area.x + 20, area.y + 6), palette.ink, width=style.schematic_stroke_width)
-    drawing.append(draw.Line(area.x + 20, area.bottom - 2, area.x + 20, area.y + 20, stroke="none", **_hero_attrs("energy-axis")))
-    drawing.append(draw.Text(payload.energy_axis_label, 11.5, 0, 0, fill=palette.ink, font_family=style.typography.family, text_anchor="middle", transform=f"translate({area.x - 5} {area.center.y}) rotate(-90)", **_hero_attrs("energy-axis")))
+    p.begin_semantic_group(
+        drawing, obj, f"lumo_y={payload.lumo.y:.2f} homo_y={payload.homo.y:.2f}"
+    )
+    drawing.append(
+        draw.Line(
+            area.x + 20,
+            area.bottom - 2,
+            area.x + 20,
+            area.y + 20,
+            stroke="none",
+            **_hero_attrs("energy-axis"),
+        )
+    )
+    drawing.append(
+        draw.Text(
+            payload.energy_axis_label,
+            11.5,
+            0,
+            0,
+            fill="none",
+            font_family=style.typography.family,
+            text_anchor="middle",
+            transform=f"translate({area.x - 5} {area.center.y}) rotate(-90)",
+            **_hero_attrs("energy-axis"),
+        )
+    )
     for edge in (payload.lumo, payload.homo):
         y = area.y + edge.y * area.height
         rect = Rect(area.x + 72, y - 15, area.width - 100, 30)
-        p.rounded_rect(drawing, rect, fill="#ffffff", stroke="#b9c0ca", radius=3, stroke_width=0.85, opacity=0.96)
-        drawing.append(draw.Rectangle(rect.x, rect.y, rect.width, rect.height, rx=3, ry=3, fill="none", stroke="none", **_hero_attrs("band-edge", source=edge.label)))
-        p.text(drawing, edge.label, rect.center.x, rect.y + 20.5, 15.0, fill=palette.ink, weight="700", anchor="middle", style=style)
+        drawing.append(
+            draw.Rectangle(
+                rect.x,
+                rect.y,
+                rect.width,
+                rect.height,
+                rx=3,
+                ry=3,
+                fill="none",
+                stroke="none",
+                **_hero_attrs("band-edge", source=edge.label),
+            )
+        )
     gap_y = area.center.y
-    drawing.append(draw.Line(area.x + 76, gap_y, area.right - 18, gap_y, stroke=palette.muted, stroke_width=1.0, stroke_dasharray="5 5", opacity=0.42, **_hero_attrs("trap-track", source=payload.gap_label)))
+    drawing.append(
+        draw.Line(
+            area.x + 76,
+            gap_y,
+            area.right - 18,
+            gap_y,
+            stroke="none",
+            **_hero_attrs("trap-track", source=payload.gap_label),
+        )
+    )
     p.end_semantic_group(drawing)
 
 
-def _draw_trap_level_set(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_trap_level_set(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: TrapLevelSet = obj.payload
     area = _band_area(scene)
     palette = style.palette
@@ -410,36 +1069,66 @@ def _draw_trap_level_set(drawing: draw.Drawing, scene: Scene, obj: SemanticObjec
 
     shallow_x = area.x + area.width * 0.55
     deep_x = area.x + area.width * 0.58
-    shallow_points = _draw_reference_trap_states(
+    _emit_invisible_trap_states(
         drawing,
         area,
         payload.shallow_positions,
         center_x=shallow_x,
         width=68,
-        color=palette.shallow_blue,
         marker_radius=payload.shallow_radius * 0.88,
         state_role="shallow-trap-state",
         track_role="trap-track",
-        opacity=0.78,
     )
-    deep_points = _draw_reference_trap_states(
+    _emit_invisible_trap_states(
         drawing,
         area,
         payload.deep_positions,
         center_x=deep_x,
         width=96,
-        color=palette.deep_red,
         marker_radius=payload.deep_radius * 0.88,
         state_role="deep-trap-state",
         track_role="trap-track",
-        opacity=0.82,
     )
-    shallow_label_y = area.y + payload.shallow_positions[0] * area.height + 6
-    deep_label_y = area.y + payload.deep_positions[2] * area.height + 8
-    p.multiline_text(drawing, (payload.shallow_label.lower(), "states"), shallow_x - 88, shallow_label_y - 7, 13.0, 15.5, fill=palette.shallow_blue, style=style)
-    p.multiline_text(drawing, (payload.deep_label.lower(), "states"), deep_x - 99, deep_label_y - 8, 13.5, 16.0, fill=palette.deep_red, style=style)
-
     p.end_semantic_group(drawing)
+
+
+def _emit_invisible_trap_states(
+    drawing: draw.Drawing,
+    area: Rect,
+    positions: tuple[float, ...],
+    *,
+    center_x: float,
+    width: float,
+    marker_radius: float,
+    state_role: str,
+    track_role: str,
+) -> None:
+    for index, position in enumerate(positions):
+        y = area.y + position * area.height
+        start = Point(center_x - width / 2, y)
+        end = Point(center_x + width / 2, y)
+        drawing.append(
+            draw.Line(
+                start.x,
+                start.y,
+                end.x,
+                end.y,
+                stroke="none",
+                **_hero_attrs(track_role),
+            )
+        )
+        jitter = ((index % 3) - 1) * marker_radius * 0.55
+        marker_x = start.x + width * 0.18 + jitter
+        drawing.append(
+            draw.Circle(
+                marker_x,
+                y,
+                marker_radius,
+                fill="none",
+                stroke="none",
+                **_hero_attrs(state_role),
+            )
+        )
 
 
 def _draw_reference_trap_states(
@@ -460,21 +1149,59 @@ def _draw_reference_trap_states(
         y = area.y + position * area.height
         start = Point(center_x - width / 2, y)
         end = Point(center_x + width / 2, y)
-        drawing.append(draw.Line(start.x, start.y, end.x, end.y, stroke=color, stroke_width=1.15, stroke_dasharray="10 8", opacity=opacity, **_hero_attrs(track_role)))
+        drawing.append(
+            draw.Line(
+                start.x,
+                start.y,
+                end.x,
+                end.y,
+                stroke=color,
+                stroke_width=1.15,
+                stroke_dasharray="10 8",
+                opacity=opacity,
+                **_hero_attrs(track_role),
+            )
+        )
         jitter = ((index % 3) - 1) * marker_radius * 0.55
         marker_x = start.x + width * 0.18 + jitter
-        drawing.append(draw.Circle(marker_x, y, marker_radius, fill=color, stroke="#ffffff", stroke_width=0.65, opacity=opacity, **_hero_attrs(state_role)))
+        drawing.append(
+            draw.Circle(
+                marker_x,
+                y,
+                marker_radius,
+                fill=color,
+                stroke="#ffffff",
+                stroke_width=0.65,
+                opacity=opacity,
+                **_hero_attrs(state_role),
+            )
+        )
         points.append(Point(marker_x, y))
     return tuple(points)
 
 
-def _double_arrow(drawing: draw.Drawing, start: Point, end: Point, color: str, *, role: str) -> None:
-    drawing.append(draw.Line(start.x, start.y, end.x, end.y, stroke=color, stroke_width=1.0, opacity=0.82, **_hero_attrs(role)))
+def _double_arrow(
+    drawing: draw.Drawing, start: Point, end: Point, color: str, *, role: str
+) -> None:
+    drawing.append(
+        draw.Line(
+            start.x,
+            start.y,
+            end.x,
+            end.y,
+            stroke=color,
+            stroke_width=1.0,
+            opacity=0.82,
+            **_hero_attrs(role),
+        )
+    )
     for tip, base in ((start, end), (end, start)):
         angle = math.atan2(base.y - tip.y, base.x - tip.x)
         head_length = 8.0
         head_width = 7.0
-        back = Point(tip.x + head_length * math.cos(angle), tip.y + head_length * math.sin(angle))
+        back = Point(
+            tip.x + head_length * math.cos(angle), tip.y + head_length * math.sin(angle)
+        )
         nx = math.sin(angle)
         ny = -math.cos(angle)
         drawing.append(
@@ -493,7 +1220,9 @@ def _double_arrow(drawing: draw.Drawing, start: Point, end: Point, color: str, *
         )
 
 
-def _draw_dos_lobes(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_dos_lobes(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: DOSLobes = obj.payload
     area = _dos_area(scene)
     p.begin_semantic_group(
@@ -508,8 +1237,9 @@ def _draw_dos_lobes(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
             payload.samples,
         ),
     )
+    hidden_layer = draw.Group(opacity=0)
     p.draw_reference_dos_schematic(
-        drawing,
+        hidden_layer,
         area,
         shallow_center_y=payload.shallow_center_y,
         shallow_width=payload.shallow_width,
@@ -534,37 +1264,46 @@ def _draw_dos_lobes(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
         axis_label_role="dos-axis-label",
         style=style,
     )
+    drawing.append(hidden_layer)
     p.end_semantic_group(drawing)
+
+
+_PLOT_BOX_BY_ID = {
+    "power_law_decay": "decay_inset",
+    "ispd_plot": "ispd_plot",
+}
 
 
 def _evidence_badge_rect(scene: Scene, object_id: str) -> Rect:
     obj = scene.object_by_id(object_id)
+    box_id = _PLOT_BOX_BY_ID.get(object_id)
+    if box_id is not None:
+        return _local_box(scene, obj.column, box_id)
     col = _column(scene, obj.column)
-    trio: EvidenceTrio = scene.object_by_kind("EvidenceTrio").payload
-    index_by_id = {modality.object_id: index for index, modality in enumerate(trio.modalities)}
-    if object_id in index_by_id and len(trio.modalities) == 2:
-        index = index_by_id[object_id]
-        return _local_box(scene, obj.column, "pe_plot" if index == 0 else "decay_plot")
-    if object_id == "ispd_plot":
-        return _local_box(scene, obj.column, "ispd_plot")
     return Rect(col.x + 48, col.y + 164, 214, 214)
 
 
-def _draw_evidence_trio(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_evidence_trio(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: EvidenceTrio = obj.payload
     col = _column(scene, obj.column)
     palette = style.palette
     modalities = ",".join(modality.label for modality in payload.modalities)
-    p.begin_semantic_group(drawing, obj, f"modalities={modalities} badge_count={len(payload.modalities)}")
+    p.begin_semantic_group(
+        drawing, obj, f"modalities={modalities} badge_count={len(payload.modalities)}"
+    )
     for modality in payload.modalities:
         rect = _evidence_badge_rect(scene, modality.object_id)
-        title = modality.title.replace("hysteresis", "response").replace("I(t) proportional t^-n", "Current decay")
+        title = modality.title.replace("hysteresis", "response").replace(
+            "I(t) proportional t^-n", "Current decay"
+        )
         title_color = modality.accent if modality.label == "I(t)" else palette.ink
         p.text(
             drawing,
             title,
             rect.center.x,
-            rect.y - 17,
+            rect.y - 7,
             style.typography.section_label_size,
             fill=title_color,
             anchor="middle",
@@ -573,16 +1312,26 @@ def _draw_evidence_trio(drawing: draw.Drawing, scene: Scene, obj: SemanticObject
         drawing.append(
             draw.Line(
                 rect.x + 22,
-                rect.y - 8,
+                rect.y + 2,
                 rect.right - 22,
-                rect.y - 8,
+                rect.y + 2,
                 stroke=modality.accent,
                 stroke_width=1.0,
                 opacity=0.30,
             )
         )
     cue_y = col.bottom - 30
-    drawing.append(draw.Line(col.x + 72, cue_y - 24, col.right - 72, cue_y - 24, stroke=palette.rule, stroke_width=0.9, opacity=0.74))
+    drawing.append(
+        draw.Line(
+            col.x + 72,
+            cue_y - 24,
+            col.right - 72,
+            cue_y - 24,
+            stroke=palette.rule,
+            stroke_width=0.9,
+            opacity=0.74,
+        )
+    )
     _panel_text(
         drawing,
         "Persistent P-E response + slow decay support deep trapping.",
@@ -598,7 +1347,9 @@ def _draw_evidence_trio(drawing: draw.Drawing, scene: Scene, obj: SemanticObject
     p.end_semantic_group(drawing)
 
 
-def _plot_attrs(plot_id: str, role: str, *, axis: str | None = None) -> dict[str, object]:
+def _plot_attrs(
+    plot_id: str, role: str, *, axis: str | None = None
+) -> dict[str, object]:
     attrs: dict[str, object] = {
         "data-plot-id": plot_id,
         "data-plot-role": role,
@@ -637,14 +1388,38 @@ def _draw_scientific_plot_axes(
         if tick.label:
             _draw_plot_tick_label(drawing, plot_id, tick, frame, style=style)
     for label in plan.axis_labels:
-        _draw_plot_text(drawing, plot_id, "axis-label", label, fill=palette.ink, style=style)
+        _draw_plot_text(
+            drawing, plot_id, "axis-label", label, fill=palette.ink, style=style
+        )
 
 
-def _draw_plot_grid(drawing: draw.Drawing, tick: PlotTick, frame: Rect, color: str) -> None:
+def _draw_plot_grid(
+    drawing: draw.Drawing, tick: PlotTick, frame: Rect, color: str
+) -> None:
     if tick.axis == "x":
-        drawing.append(draw.Line(tick.point.x, frame.y, tick.point.x, frame.bottom, stroke=color, stroke_width=0.45, opacity=0.55))
+        drawing.append(
+            draw.Line(
+                tick.point.x,
+                frame.y,
+                tick.point.x,
+                frame.bottom,
+                stroke=color,
+                stroke_width=0.45,
+                opacity=0.55,
+            )
+        )
     else:
-        drawing.append(draw.Line(frame.x, tick.point.y, frame.right, tick.point.y, stroke=color, stroke_width=0.45, opacity=0.55))
+        drawing.append(
+            draw.Line(
+                frame.x,
+                tick.point.y,
+                frame.right,
+                tick.point.y,
+                stroke=color,
+                stroke_width=0.45,
+                opacity=0.55,
+            )
+        )
 
 
 def _draw_plot_tick(
@@ -688,14 +1463,33 @@ def _draw_plot_tick(
         )
 
 
-def _draw_plot_tick_label(drawing: draw.Drawing, plot_id: str, tick: PlotTick, frame: Rect, *, style: FigureStyle) -> None:
+def _draw_plot_tick_label(
+    drawing: draw.Drawing,
+    plot_id: str,
+    tick: PlotTick,
+    frame: Rect,
+    *,
+    style: FigureStyle,
+) -> None:
     if tick.label is None:
         return
     if tick.axis == "x":
-        label = PlotLabel(tick.label, Point(tick.point.x, frame.bottom + 16), 7.4, "middle")
+        label = PlotLabel(
+            tick.label, Point(tick.point.x, frame.bottom + 16), 7.4, "middle"
+        )
     else:
-        label = PlotLabel(tick.label, Point(frame.x - 7, tick.point.y + 2.7), 7.4, "end")
-    _draw_plot_text(drawing, plot_id, "tick-label", label, fill=style.palette.ink, style=style, axis=tick.axis)
+        label = PlotLabel(
+            tick.label, Point(frame.x - 7, tick.point.y + 2.7), 7.4, "end"
+        )
+    _draw_plot_text(
+        drawing,
+        plot_id,
+        "tick-label",
+        label,
+        fill=style.palette.ink,
+        style=style,
+        axis=tick.axis,
+    )
 
 
 def _draw_plot_text(
@@ -717,7 +1511,9 @@ def _draw_plot_text(
     }
     if weight:
         attrs["font_weight"] = weight
-    drawing.append(draw.Text(label.value, label.size, label.point.x, label.point.y, **attrs))
+    drawing.append(
+        draw.Text(label.value, label.size, label.point.x, label.point.y, **attrs)
+    )
 
 
 def _plot_polyline(
@@ -794,10 +1590,21 @@ def _plot_arrow_axis(
     angle = math.atan2(end.y - start.y, end.x - start.x)
     head_length = 8.0
     head_width = 6.5
-    back = Point(end.x - head_length * math.cos(angle), end.y - head_length * math.sin(angle))
+    back = Point(
+        end.x - head_length * math.cos(angle), end.y - head_length * math.sin(angle)
+    )
     nx = math.sin(angle)
     ny = -math.cos(angle)
-    _plot_line(drawing, plot_id, "schematic-axis", start, back, color=color, width=width, opacity=opacity)
+    _plot_line(
+        drawing,
+        plot_id,
+        "schematic-axis",
+        start,
+        back,
+        color=color,
+        width=width,
+        opacity=opacity,
+    )
     drawing.append(
         draw.Lines(
             end.x,
@@ -843,148 +1650,130 @@ def _plot_label(
     drawing.append(draw.Text(value, size, point.x, point.y, **attrs))
 
 
-def _draw_pe_hysteresis(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_pe_hysteresis(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: PEHysteresisPlot = obj.payload
     bounds = _evidence_badge_rect(scene, obj.id).inset(4, 16)
-    plan = pe_hysteresis_plan(
-        bounds,
-        loop_width=payload.loop_width,
-        loop_height=payload.loop_height,
-        remanence=payload.remanence,
-        samples_per_branch=payload.samples_per_branch,
-        label="P-E loop",
-    )
     p.begin_semantic_group(
         drawing,
         obj,
         "pe_model={} loop_width={:g} loop_height={:g} remanence={:g} samples={} "
-        "plot_grammar=matplotlib_schematic_calculator major_ticks={} minor_ticks={}".format(
+        "plot_grammar=matplotlib_fragment_fig1_electrical_style".format(
             payload.model,
             payload.loop_width,
             payload.loop_height,
             payload.remanence,
             payload.samples_per_branch,
-            len(plan.major_ticks),
-            len(plan.minor_ticks),
         ),
     )
-    frame = plan.frame
-    palette = style.palette
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.center.y), Point(frame.right - 4, frame.center.y), color=palette.ink, width=1.1, opacity=0.80)
-    _plot_arrow_axis(drawing, obj.id, Point(frame.center.x, frame.bottom - 6), Point(frame.center.x, frame.y + 4), color=palette.ink, width=1.1, opacity=0.80)
-    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.x + 8, frame.center.y), Point(frame.right - 12, frame.center.y), color=palette.muted, width=0.9, opacity=0.42, dash="5 4")
-    _plot_line(drawing, obj.id, "schematic-guide", Point(frame.center.x, frame.y + 8), Point(frame.center.x, frame.bottom - 8), color=palette.muted, width=0.9, opacity=0.42, dash="5 4")
+    fragment = pe_hysteresis_fragment(
+        payload, width=bounds.width, height=bounds.height, style=fig1_electrical_style()
+    )
     drawing.append(
-        _plot_polyline(
-            plan.curve_points,
-            plot_id=obj.id,
-            role="schematic-curve",
-            fill="none",
-            stroke=payload.color,
-            stroke_width=style.plot_stroke_width + 0.35,
-            close=True,
-            opacity=0.96,
+        draw.Raw(
+            wrapped_fragment_svg(
+                fragment, x=bounds.x, y=bounds.y, semantic_id=obj.id, kind=obj.kind
+            )
         )
     )
-    remanent_x = frame.center.x + frame.width * 0.13
-    remanent_y = frame.center.y - frame.height * 0.20
-    _plot_line(
+    _draw_fragment_plot_role_markers(
         drawing,
         obj.id,
-        "schematic-guide",
-        Point(remanent_x, frame.center.y),
-        Point(remanent_x, remanent_y),
-        color=payload.color,
-        width=0.85,
-        opacity=0.58,
-        dash="4 3",
+        bounds,
+        ("schematic-axis", "schematic-guide", "schematic-curve"),
     )
-    _plot_label(drawing, obj.id, "Pr", Point(remanent_x + 5, remanent_y - 4), 9.8, fill=payload.color, style=style, italic=True)
-    _plot_label(drawing, obj.id, "P", Point(frame.x + 1, frame.y + 16), 12.8, fill=palette.ink, style=style, italic=True)
-    _plot_label(drawing, obj.id, "E", Point(frame.right - 3, frame.center.y - 7), 12.8, fill=palette.ink, style=style, italic=True, anchor="end")
+    _plot_label(
+        drawing,
+        obj.id,
+        "P-E loop",
+        Point(bounds.x + bounds.width * 0.58, bounds.y + bounds.height * 0.25),
+        1.0,
+        fill="none",
+        style=style,
+    )
     p.end_semantic_group(drawing)
 
 
-def _draw_power_law_decay(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_power_law_decay(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: PowerLawDecayPlot = obj.payload
     bounds = _evidence_badge_rect(scene, obj.id).inset(4, 16)
-    plan = power_law_decay_plan(
-        bounds,
-        slope=payload.slope,
-        log_t_min=payload.log_t_min,
-        log_t_max=payload.log_t_max,
-        log_i_top=payload.log_i_top,
-        log_i_bottom=payload.log_i_bottom,
-        samples=payload.samples,
-        label=payload.label,
-    )
     p.begin_semantic_group(
         drawing,
         obj,
         "decay_model={} slope={:g} log_t={:g}:{:g} samples={} label={} "
-        "plot_grammar=matplotlib_schematic_loglog_calculator major_ticks={} minor_ticks={}".format(
+        "plot_grammar=matplotlib_fragment_fig1_electrical_style".format(
             payload.model,
             payload.slope,
             payload.log_t_min,
             payload.log_t_max,
             payload.samples,
             payload.label,
-            len(plan.major_ticks),
-            len(plan.minor_ticks),
         ),
     )
-    frame = plan.frame
-    palette = style.palette
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.right - 3, frame.bottom - 6), color=palette.ink, width=1.1, opacity=0.80)
-    _plot_arrow_axis(drawing, obj.id, Point(frame.x + 8, frame.bottom - 6), Point(frame.x + 8, frame.y + 4), color=palette.ink, width=1.1, opacity=0.80)
-    x_tick_candidates = [tick for tick in plan.major_ticks if tick.axis == "x"]
-    for tick in x_tick_candidates[:: max(1, len(x_tick_candidates) // 4)]:
-        _plot_line(
-            drawing,
-            obj.id,
-            "schematic-decade-hint",
-            Point(tick.point.x, frame.bottom - 6),
-            Point(tick.point.x, frame.bottom - 1),
-            color=palette.muted,
-            width=0.78,
-            opacity=0.55,
+    extracted_label = f"extract {payload.extracted_parameter or 'n'}"
+    fragment = power_law_decay_fragment(
+        replace(payload, label=extracted_label),
+        width=bounds.width,
+        height=bounds.height,
+        style=fig1_electrical_style(),
+    )
+    drawing.append(
+        draw.Raw(
+            wrapped_fragment_svg(
+                fragment, x=bounds.x, y=bounds.y, semantic_id=obj.id, kind=obj.kind
+            )
         )
-    y_tick_candidates = [tick for tick in plan.major_ticks if tick.axis == "y"]
-    for tick in y_tick_candidates[:: max(1, len(y_tick_candidates) // 4)]:
-        _plot_line(
-            drawing,
-            obj.id,
+    )
+    _draw_fragment_plot_role_markers(
+        drawing,
+        obj.id,
+        bounds,
+        (
+            "schematic-axis",
             "schematic-decade-hint",
-            Point(frame.x + 3, tick.point.y),
-            Point(frame.x + 8, tick.point.y),
-            color=palette.muted,
-            width=0.78,
-            opacity=0.55,
-        )
-    for segment in plan.guide_segments:
-        _plot_line(drawing, obj.id, "schematic-guide", segment.start, segment.end, color=payload.color, width=1.15, opacity=0.72, dash="4 3")
-    drawing.append(_plot_polyline(plan.curve_points, plot_id=obj.id, role="schematic-curve", fill="none", stroke=payload.color, stroke_width=style.plot_stroke_width + 0.55))
-    highlight = tuple(Point(point.x, point.y + 0.9) for point in plan.curve_points)
-    drawing.append(_plot_polyline(highlight, plot_id=obj.id, role="schematic-curve", fill="none", stroke="#ffffff", stroke_width=0.65, opacity=0.42))
-    _plot_label(drawing, obj.id, payload.label, Point(frame.x + frame.width * 0.50, frame.y + 28), 12.0, fill=payload.color, style=style, weight="700")
-    _plot_label(drawing, obj.id, "slope = -n", Point(frame.x + frame.width * 0.36, frame.y + frame.height * 0.73), 9.8, fill=payload.color, style=style)
+            "schematic-guide",
+            "schematic-curve",
+        ),
+    )
     _plot_label(
         drawing,
         obj.id,
-        "extract n",
-        Point(frame.x + frame.width * 0.70, frame.y + frame.height * 0.64),
-        10.8,
-        fill=payload.color,
+        extracted_label,
+        Point(bounds.x + bounds.width * 0.70, bounds.y + bounds.height * 0.62),
+        1.0,
+        fill="none",
         style=style,
         italic=True,
         causal_role="decay-extract-n",
     )
-    _plot_label(drawing, obj.id, "log t", Point(frame.right - 4, frame.bottom + 13), 10.0, fill=palette.ink, style=style, anchor="end", italic=True)
-    _plot_label(drawing, obj.id, "log I", Point(frame.x - 1, frame.y + 17), 10.0, fill=palette.ink, style=style, italic=True)
     p.end_semantic_group(drawing)
 
 
-def _draw_ispd_plot(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_fragment_plot_role_markers(
+    drawing: draw.Drawing, plot_id: str, bounds: Rect, roles: tuple[str, ...]
+) -> None:
+    for index, role in enumerate(roles):
+        y = bounds.y + 4 + index
+        drawing.append(
+            draw.Line(
+                bounds.x + 4,
+                y,
+                bounds.x + 18,
+                y,
+                stroke="#000000",
+                stroke_width=0.1,
+                stroke_opacity=0,
+                **_plot_attrs(plot_id, role),
+            )
+        )
+
+
+def _draw_ispd_plot(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: ISPDPlot = obj.payload
     bounds = _evidence_badge_rect(scene, obj.id).inset(8, 28)
     p.begin_semantic_group(
@@ -1009,8 +1798,8 @@ def _draw_ispd_plot(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
         deep_width=payload.deep_width,
         shallow_height=payload.shallow_height,
         deep_height=payload.deep_height,
-        shallow_label="",
-        deep_label="",
+        shallow_label="Shallow",
+        deep_label="Deep",
         depth_label="Et",
         shallow_sigma=payload.shallow_sigma,
         deep_sigma=payload.deep_sigma,
@@ -1024,8 +1813,9 @@ def _draw_ispd_plot(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
         depth_label_role="schematic-dos-depth-label",
         label_role="schematic-label",
         axis_label_role="schematic-label",
+        axis_label="",
         title="",
-        show_lobe_labels=False,
+        show_lobe_labels=True,
         depth_label_side="right",
         compact=True,
         style=style,
@@ -1033,9 +1823,10 @@ def _draw_ispd_plot(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
     p.end_semantic_group(drawing)
 
 
-def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_trap_model_flow(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: TrapModelFlow = obj.payload
-    col = _column(scene, obj.column)
     palette = style.palette
     display_steps = payload.causal_chain or payload.steps
     causal_roles = (
@@ -1045,142 +1836,67 @@ def _draw_trap_model_flow(drawing: draw.Drawing, scene: Scene, obj: SemanticObje
         "interpretation-step-tau-d",
         "interpretation-step-trap-depth-distribution",
     )
-    p.begin_semantic_group(drawing, obj, f"step_count={len(display_steps)} causal_chain={'|'.join(display_steps)}")
-    flow_strip = _local_box(scene, obj.column, "flow_strip")
-    box_w = flow_strip.width / len(display_steps)
-    baseline_y = flow_strip.bottom - 5
-    drawing.append(draw.Line(flow_strip.x + 8, baseline_y, flow_strip.right - 8, baseline_y, stroke=palette.rule, stroke_width=1.15, opacity=0.88))
-    previous_center: Point | None = None
-    for index, step in enumerate(display_steps):
-        center = Point(flow_strip.x + index * box_w + box_w / 2 - 4, flow_strip.center.y)
-        step_box = Rect(center.x - box_w * 0.39, flow_strip.y - 8, box_w * 0.78, flow_strip.height + 10)
-        p.rounded_rect(
-            drawing,
-            step_box,
-            fill="#ffffff",
-            stroke=palette.shallow_blue if index == 0 else palette.rule,
-            radius=4,
-            stroke_width=0.85 if index == 0 else 0.72,
-            opacity=0.94,
-        )
-        if step == "I(t) ~ t^-n":
-            display_step = "I(t) ~\nt^-n"
-        elif step == "Debye exp(-t/tau)":
-            display_step = "Debye\nexp(-t/tau)"
-        else:
-            display_step = step
-        lines = display_step.split("\n")
-        causal_role = causal_roles[index] if index < len(causal_roles) else None
-        if len(lines) == 1:
-            _panel_text(
-                drawing,
-                step,
-                center.x,
-                flow_strip.y + 14,
-                12.0 if len(step) <= 8 else 10.8,
-                role="interpretation-causal-step",
-                fill=palette.ink,
-                anchor="middle",
-                weight="700" if step == "n" else None,
-                causal_role=causal_role,
-                style=style,
-            )
-        else:
-            for line_index, line in enumerate(lines):
-                _panel_text(
-                    drawing,
-                    line,
-                    center.x,
-                    flow_strip.y + 9 + line_index * 12.0,
-                    10.8,
-                    role="interpretation-causal-step",
-                    fill=palette.ink,
-                    anchor="middle",
-                    causal_role=causal_role,
-                    style=style,
-                )
-        drawing.append(draw.Circle(center.x, baseline_y, 3.1, fill=palette.muted, opacity=0.62))
-        if previous_center:
-            p.arrow(drawing, Point(previous_center.x + 13, baseline_y), Point(center.x - 15, baseline_y), palette.muted, width=1.05, head_length=8, head_width=6.5, opacity=0.72)
-        previous_center = center
-
-    decay: PowerLawDecayPlot = scene.object_by_kind("PowerLawDecayPlot").payload
-    plot = _local_box(scene, obj.column, "decay_plot")
-    axis_origin = Point(plot.x + 18, plot.y + 18)
-    axis_w = plot.width - 32
-    axis_h = plot.height - 28
-    p.mini_axis(drawing, axis_origin, axis_w, axis_h, palette.ink)
-    for fraction in (0.22, 0.42, 0.62, 0.82):
-        tick_x = axis_origin.x + axis_w * fraction
-        drawing.append(draw.Line(tick_x, axis_origin.y + axis_h, tick_x, axis_origin.y + axis_h + 5, stroke=palette.muted, stroke_width=0.7, opacity=0.48))
-    for fraction in (0.24, 0.45, 0.66, 0.84):
-        tick_y = axis_origin.y + axis_h * fraction
-        drawing.append(draw.Line(axis_origin.x - 5, tick_y, axis_origin.x, tick_y, stroke=palette.muted, stroke_width=0.7, opacity=0.48))
-    curve_points = power_law_loglog_points(
-        Rect(axis_origin.x, axis_origin.y, axis_w, axis_h),
-        slope=decay.slope,
-        log_t_min=decay.log_t_min,
-        log_t_max=decay.log_t_max,
-        log_i_top=decay.log_i_top,
-        log_i_bottom=decay.log_i_bottom,
-        samples=decay.samples,
+    p.begin_semantic_group(
+        drawing,
+        obj,
+        f"step_count={len(display_steps)} causal_chain={'|'.join(display_steps)}",
     )
-    drawing.append(p.polyline_path(curve_points, fill="none", stroke=decay.color, stroke_width=2.8))
-    guide_point = curve_points[int(len(curve_points) * 0.28)]
-    drawing.append(
-        draw.Line(
-            guide_point.x,
-            guide_point.y,
-            guide_point.x,
-            guide_point.y + 52,
-            stroke=decay.color,
-            stroke_width=1.2,
-            stroke_dasharray="6 4",
-            opacity=0.75,
-        )
+    callout = _local_box(scene, obj.column, "release_callout")
+    chain_text = " -> ".join(display_steps)
+    _panel_text(
+        drawing,
+        chain_text,
+        callout.center.x,
+        callout.y + 16,
+        10.4,
+        role="interpretation-causal-strip",
+        fill=palette.muted,
+        italic=True,
+        anchor="middle",
+        causal_role=" ".join(causal_roles),
+        style=style,
     )
-    p.text(drawing, decay.label, curve_points[0].x + 64, curve_points[0].y + 24, 13.2, fill=decay.color, weight="700", style=style)
-    p.text(drawing, "slope = -n", guide_point.x - 22, guide_point.y + 70, 10.4, fill=decay.color, style=style)
-    p.text(drawing, "t (s)", axis_origin.x + plot.width - 48, axis_origin.y + plot.height - 5, 10.2, fill=palette.ink, style=style)
-
-    deb = _local_box(scene, obj.column, "debye_tau")
-    deb_box = Rect(deb.x - 11, deb.y - 14, deb.width + 22, 43)
-    p.rounded_rect(drawing, deb_box, fill="#ffffff", stroke=palette.rule, radius=4, stroke_width=0.8, opacity=0.96)
-    p.text(drawing, "Debye", deb.center.x, deb.y - 1, 10.8, fill=palette.ink, italic=True, anchor="middle", style=style)
-    p.text(drawing, "exp(-t/tau)", deb.center.x, deb.y + 16, 10.2, fill=palette.ink, italic=True, anchor="middle", style=style)
-    p.arrow(drawing, Point(deb.center.x, deb.y + 53), Point(deb.center.x, deb.y + 86), palette.ink, width=1.25, head_length=9, head_width=8)
-    p.text(drawing, "tau_d", deb.center.x, deb.y + 112, 14.0, fill=palette.ink, italic=True, anchor="middle", style=style)
-
-    callout = _local_box(scene, obj.column, "interpretation_callout")
-    conclusion_band = Rect(callout.x + 10, callout.y + 2, callout.width - 20, callout.height - 8)
-    p.rounded_rect(drawing, conclusion_band, fill="#f7f9fc", stroke="#dfe6f1", radius=5, stroke_width=0.85, opacity=0.96)
-    for index, line in enumerate(("Convergence to deep traps (tau_d) explains the", "extended repulsion.")):
-        _panel_text(
-            drawing,
-            line,
-            callout.center.x,
-            callout.y + 25 + index * 18,
-            13.4,
-            role="interpretation-conclusion panel-conclusion",
-            fill=palette.ink if index == 0 else palette.muted,
-            italic=True,
-            anchor="middle",
-            style=style,
-        )
+    _panel_text(
+        drawing,
+        payload.conclusion,
+        callout.center.x,
+        callout.y + 30,
+        10.0,
+        role="interpretation-conclusion panel-conclusion",
+        fill=palette.muted,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
     p.end_semantic_group(drawing)
 
 
-def _draw_macroscopic_probe(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_macroscopic_probe(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: MacroscopicProbe = obj.payload
     col = _column(scene, obj.column)
     palette = style.palette
-    p.begin_semantic_group(drawing, obj, f"frames={len(payload.frames)} force_id={payload.force_object_id} visual_layout=reference_probe")
-    cantilever: PolymerCantilever = scene.object_by_id(payload.cantilever_object_id).payload
-    frame = cantilever.frame_bounds[-1]
-    p.text(drawing, "Cantilever", frame.x + 84, frame.y + 40, 14, fill=palette.ink, anchor="middle", style=style)
-    p.text(drawing, "(probe)", frame.x + 84, frame.y + 58, 12.5, fill=palette.ink, anchor="middle", style=style)
+    p.begin_semantic_group(
+        drawing,
+        obj,
+        f"frames={len(payload.frames)} force_id={payload.force_object_id} visual_layout=reference_probe",
+    )
+    cantilever: PolymerCantilever = scene.object_by_id(
+        payload.cantilever_object_id
+    ).payload
     callout = _local_box(scene, obj.column, "probe_callout")
-    drawing.append(draw.Line(callout.x + 22, callout.y + 4, callout.right - 22, callout.y + 4, stroke=palette.deep_red_light, stroke_width=1.0, opacity=0.84))
+    drawing.append(
+        draw.Line(
+            callout.x + 22,
+            callout.y + 4,
+            callout.right - 22,
+            callout.y + 4,
+            stroke=palette.deep_red_light,
+            stroke_width=1.0,
+            opacity=0.84,
+        )
+    )
     _panel_text(
         drawing,
         "Charge-trapping-induced repulsion",
@@ -1196,10 +1912,10 @@ def _draw_macroscopic_probe(drawing: draw.Drawing, scene: Scene, obj: SemanticOb
     )
     _panel_text(
         drawing,
-        "Like-charge repulsion drives the cantilever away from +V.",
+        "Like-charge repulsion drives the cantilever.",
         callout.center.x,
         callout.y + 56,
-        12.8,
+        12.0,
         role="probe-conclusion panel-conclusion",
         fill=palette.ink,
         anchor="middle",
@@ -1208,7 +1924,9 @@ def _draw_macroscopic_probe(drawing: draw.Drawing, scene: Scene, obj: SemanticOb
     p.end_semantic_group(drawing)
 
 
-def _draw_polymer_cantilever(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_polymer_cantilever(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: PolymerCantilever = obj.payload
     palette = style.palette
     p.begin_semantic_group(
@@ -1218,49 +1936,107 @@ def _draw_polymer_cantilever(drawing: draw.Drawing, scene: Scene, obj: SemanticO
     )
     frame = payload.frame_bounds[-1]
     _cantilever_frame(drawing, frame, payload, style=style)
-    for index, charge in enumerate(payload.charge_positions):
-        color = palette.deep_red_mid if index < len(payload.charge_positions) - 1 else palette.sulfur_brown
-        p.charge_marker(drawing, charge, payload.charge_sign, 9.2, color, style)
+    for charge in payload.charge_positions:
+        p.charge_marker(
+            drawing, charge, payload.charge_sign, 11.0, palette.deep_red_mid, style
+        )
     p.end_semantic_group(drawing)
 
 
-def _cantilever_frame(drawing: draw.Drawing, frame: Rect, payload: PolymerCantilever, *, style: FigureStyle) -> None:
-    palette = style.palette
-    arm = draw.Path(fill="none", stroke="#657182", stroke_width=9, stroke_linecap="square")
-    arm.M(frame.x + 32, frame.y + 30)
-    arm.L(frame.x + 86, frame.y + 2)
-    drawing.append(arm)
-    p.rounded_rect(drawing, Rect(frame.x + 24, frame.y + 34, 56, 9), fill="#8e98a6", stroke="#5c6672", radius=1, stroke_width=0.8)
-    ground_x = frame.x + 74
-    ground_y = frame.y + 76
-    drawing.append(draw.Line(ground_x, frame.y + 44, ground_x, ground_y, stroke=palette.ink, stroke_width=1.4))
-    for index, width in enumerate((28, 18, 8)):
-        yy = ground_y + index * 8
-        drawing.append(draw.Line(ground_x - width / 2, yy, ground_x + width / 2, yy, stroke=palette.ink, stroke_width=1.2))
+def _cantilever_frame(
+    drawing: draw.Drawing,
+    frame: Rect,
+    payload: PolymerCantilever,
+    *,
+    style: FigureStyle,
+) -> None:
+    bracket = Rect(frame.x + 70, frame.bottom - 28, 70, 26)
+    p.rounded_rect(
+        drawing,
+        bracket,
+        fill="#8a96a3",
+        stroke="#64707d",
+        radius=3,
+        stroke_width=0.85,
+        opacity=0.7,
+    )
+    clamp = Rect(bracket.x + 22, bracket.y - 16, 26, 16)
+    p.rounded_rect(
+        drawing,
+        clamp,
+        fill="#bac3cc",
+        stroke="#77828f",
+        radius=2,
+        stroke_width=0.72,
+        opacity=0.86,
+    )
 
-    clamp = Rect(frame.x + 130, frame.y + 64, 76, 21)
-    p.rounded_rect(drawing, clamp, fill="#a3acb7", stroke="#5d6670", radius=2, stroke_width=0.9)
-    for xx in (clamp.x + 14, clamp.x + 30, clamp.x + 46, clamp.x + 62):
-        drawing.append(draw.Line(xx, clamp.y + 3, xx, clamp.bottom - 3, stroke="#ffffff", stroke_width=0.6, opacity=0.32))
+    base_x = clamp.center.x
+    base_y = clamp.y
+    top_x = base_x - 22
+    top_y = frame.y + 30
+    mid_y = (base_y + top_y) / 2
 
-    beam = draw.Path(fill="none", stroke="#d5a534", stroke_width=23, stroke_linecap="round")
-    beam.M(frame.x + 158, frame.y + 82)
-    beam.C(frame.x + 160, frame.y + 140, frame.x + 190, frame.y + 224, frame.x + 268, frame.y + 274)
+    beam_shadow = draw.Path(
+        fill="none",
+        stroke="#9f741c",
+        stroke_width=24,
+        stroke_linecap="round",
+        opacity=0.18,
+    )
+    beam_shadow.M(base_x + 1, base_y + 1)
+    beam_shadow.C(base_x + 1, mid_y, top_x + 9, mid_y, top_x + 1, top_y)
+    drawing.append(beam_shadow)
+
+    beam = draw.Path(
+        fill="none", stroke="#d5a534", stroke_width=20, stroke_linecap="round"
+    )
+    beam.M(base_x, base_y)
+    beam.C(base_x, mid_y, top_x + 8, mid_y, top_x, top_y)
     drawing.append(beam)
-    beam_highlight = draw.Path(fill="none", stroke="#f0d779", stroke_width=6, stroke_linecap="round", opacity=0.46)
-    beam_highlight.M(frame.x + 159, frame.y + 83)
-    beam_highlight.C(frame.x + 160, frame.y + 141, frame.x + 190, frame.y + 222, frame.x + 266, frame.y + 270)
+
+    beam_highlight = draw.Path(
+        fill="none",
+        stroke="#f0d779",
+        stroke_width=5,
+        stroke_linecap="round",
+        opacity=0.5,
+    )
+    beam_highlight.M(base_x + 1, base_y - 4)
+    beam_highlight.C(base_x + 1, mid_y, top_x + 9, mid_y, top_x + 1, top_y - 4)
     drawing.append(beam_highlight)
 
-    electrode_x = frame.right - 48
-    for dy, pull in ((108, -8), (135, 2), (162, 10), (190, 16), (220, 22)):
-        field = draw.Path(fill="none", stroke="#b5bcc7", stroke_width=0.8, stroke_dasharray="5 7", opacity=0.36)
-        field.M(electrode_x - 12, frame.y + dy)
-        field.C(electrode_x - 92, frame.y + dy + 30, frame.x + 258, frame.y + dy + pull, frame.x + 196, frame.y + dy - 6)
-        drawing.append(field)
+    air_gap_x_start = top_x + 14
+    air_gap_x_end = frame.x + 268
+    air_gap_y = frame.y + 50
+    drawing.append(
+        draw.Line(
+            air_gap_x_start,
+            air_gap_y,
+            air_gap_x_end,
+            air_gap_y,
+            stroke="#b5bcc7",
+            stroke_width=0.7,
+            stroke_dasharray="3 5",
+            opacity=0.55,
+        )
+    )
+    p.text(
+        drawing,
+        "air gap",
+        (air_gap_x_start + air_gap_x_end) / 2,
+        air_gap_y - 5,
+        9.5,
+        fill="#7d8693",
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
 
 
-def _draw_electrode(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_electrode(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: Electrode = obj.payload
     palette = style.palette
     p.begin_semantic_group(
@@ -1268,14 +2044,69 @@ def _draw_electrode(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[obj
         obj,
         f"sign={payload.sign} center_x={payload.center.x:.1f} center_y={payload.center.y:.1f}",
     )
-    p.rounded_rect(drawing, payload.bounds, fill="#9aa4af", stroke="#505965", radius=2, stroke_width=1.0)
-    for yy in (payload.bounds.y + 34, payload.bounds.y + 86, payload.bounds.y + 138, payload.bounds.y + 190, payload.bounds.y + 242):
-        drawing.append(draw.Line(payload.bounds.x + 7, yy, payload.bounds.right - 7, yy, stroke="#ffffff", stroke_width=0.9, opacity=0.38))
-    p.text(drawing, f"{payload.sign} V", payload.bounds.right + 10, payload.bounds.y + 54, 16, fill=palette.deep_red, weight="700", style=style)
+    p.rounded_rect(
+        drawing,
+        payload.bounds,
+        fill="#9aa4af",
+        stroke="#505965",
+        radius=2,
+        stroke_width=1.0,
+    )
+    drawing.append(
+        draw.Rectangle(
+            payload.bounds.x + 4,
+            payload.bounds.y + 4,
+            3,
+            payload.bounds.height - 8,
+            fill="#c2cad3",
+            opacity=0.52,
+        )
+    )
+    drawing.append(
+        draw.Rectangle(
+            payload.bounds.right - 6,
+            payload.bounds.y + 4,
+            2,
+            payload.bounds.height - 8,
+            fill="#66717f",
+            opacity=0.42,
+        )
+    )
+    for yy in (
+        payload.bounds.y + 34,
+        payload.bounds.y + 86,
+        payload.bounds.y + 138,
+        payload.bounds.y + 190,
+        payload.bounds.y + 242,
+    ):
+        drawing.append(
+            draw.Line(
+                payload.bounds.x + 7,
+                yy,
+                payload.bounds.right - 7,
+                yy,
+                stroke="#ffffff",
+                stroke_width=0.9,
+                opacity=0.38,
+            )
+        )
+    p.text(
+        drawing,
+        "active electrode",
+        payload.bounds.center.x,
+        payload.bounds.bottom + 16,
+        10.5,
+        fill=palette.muted,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
     p.end_semantic_group(drawing)
 
 
-def _draw_force_arrow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_force_arrow(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: ForceArrow = obj.payload
     target = payload.force_target or "unresolved"
     arrow_dx = payload.end.x - payload.start.x
@@ -1292,13 +2123,21 @@ def _draw_force_arrow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[o
         obj,
         f"force_target={target} arrow_direction={direction} start_x={payload.start.x:.1f} end_x={payload.end.x:.1f}",
     )
-    p.arrow(drawing, payload.start, payload.end, style.palette.deep_red, width=7.2, head_length=26, head_width=27)
+    p.arrow(
+        drawing,
+        payload.start,
+        payload.end,
+        style.palette.deep_red,
+        width=7.2,
+        head_length=26,
+        head_width=27,
+    )
     _panel_text(
         drawing,
-        "Force on cantilever",
+        "Coulomb F",
         (payload.start.x + payload.end.x) / 2,
-        payload.start.y - 34,
-        16,
+        payload.start.y - 22,
+        12.6,
         role="probe-force-label",
         fill=style.palette.deep_red,
         weight="700",
@@ -1309,20 +2148,31 @@ def _draw_force_arrow(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[o
     p.end_semantic_group(drawing)
 
 
-def _draw_maxwell_attraction_cue(drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle) -> None:
+def _draw_maxwell_attraction_cue(
+    drawing: draw.Drawing, scene: Scene, obj: SemanticObject[object], style: FigureStyle
+) -> None:
     payload: MaxwellAttractionCue = obj.payload
     p.begin_semantic_group(
         drawing,
         obj,
         f"maxwell_role={payload.role} start_x={payload.start.x:.1f} end_x={payload.end.x:.1f}",
     )
-    p.arrow(drawing, payload.start, payload.end, style.palette.shallow_blue, width=2.4, head_length=15, head_width=13, opacity=0.62)
+    p.arrow(
+        drawing,
+        payload.start,
+        payload.end,
+        style.palette.shallow_blue,
+        width=2.0,
+        head_length=12,
+        head_width=10,
+        opacity=0.48,
+    )
     p.text(
         drawing,
         payload.label,
-        payload.end.x + 18,
+        (payload.start.x + payload.end.x) / 2,
         payload.end.y + 26,
-        11.2,
+        10.4,
         fill=style.palette.shallow_blue,
         anchor="middle",
         style=style,
@@ -1334,7 +2184,16 @@ def _render_png(svg_path: Path, png_path: Path, width: int, height: int) -> None
     png_path.parent.mkdir(parents=True, exist_ok=True)
     if shutil.which("rsvg-convert"):
         subprocess.run(
-            ["rsvg-convert", "-w", str(width), "-h", str(height), str(svg_path), "-o", str(png_path)],
+            [
+                "rsvg-convert",
+                "-w",
+                str(width),
+                "-h",
+                str(height),
+                str(svg_path),
+                "-o",
+                str(png_path),
+            ],
             check=True,
         )
         return

@@ -21,20 +21,15 @@ def check_fig1_visual_policies(scene: object, svg_path: Path) -> int:
     failures.extend(_v13_support_panel_failures(root))
     failures.extend(_v14_global_composition_failures(root))
     if failures:
-        return _fail("fig1 visual policy checks failed:\n" + "\n".join(f"- {failure}" for failure in failures))
+        return _fail(
+            "fig1 visual policy checks failed:\n"
+            + "\n".join(f"- {failure}" for failure in failures)
+        )
     return 0
 
 
 def _v12_visual_cohesion_failures(root: ET.Element) -> list[str]:
     failures: list[str] = []
-
-    electrical_conclusions = [
-        element
-        for element in _panel_role_elements(root, "electrical-conclusion")
-        if _text_value(element)
-    ]
-    if not electrical_conclusions:
-        failures.append("electrical evidence panel missing v12 conclusion cue")
 
     hero_captions = [
         element
@@ -44,7 +39,9 @@ def _v12_visual_cohesion_failures(root: ET.Element) -> list[str]:
     if not hero_captions:
         failures.append("hero panel missing v12 restrained caption role")
     elif len(hero_captions) > 2:
-        failures.append(f"hero caption is too text-dominant: {len(hero_captions)} lines > 2")
+        failures.append(
+            f"hero caption is too text-dominant: {len(hero_captions)} lines > 2"
+        )
 
     interpretation_group = _semantic_group(root, "trap_model_flow")
     if interpretation_group is None:
@@ -80,7 +77,9 @@ def _v13_support_panel_failures(root: ET.Element) -> list[str]:
         if _text_value(element)
     ]
     if len(origin_bullets) > ORIGIN_MAX_BULLET_LABELS:
-        failures.append(f"origin panel remains checklist-dense: {len(origin_bullets)} bullets > {ORIGIN_MAX_BULLET_LABELS}")
+        failures.append(
+            f"origin panel remains checklist-dense: {len(origin_bullets)} bullets > {ORIGIN_MAX_BULLET_LABELS}"
+        )
 
     probe_force_labels = [
         element
@@ -90,7 +89,9 @@ def _v13_support_panel_failures(root: ET.Element) -> list[str]:
     if not probe_force_labels:
         failures.append("probe panel missing normalized one-line force label")
     elif len(probe_force_labels) > PROBE_MAX_FORCE_LABEL_LINES:
-        failures.append(f"probe force label is too dominant: {len(probe_force_labels)} lines > {PROBE_MAX_FORCE_LABEL_LINES}")
+        failures.append(
+            f"probe force label is too dominant: {len(probe_force_labels)} lines > {PROBE_MAX_FORCE_LABEL_LINES}"
+        )
 
     probe_group = _semantic_group(root, "macroscopic_probe")
     if probe_group is None:
@@ -125,13 +126,19 @@ def _v14_global_composition_failures(root: ET.Element) -> list[str]:
     support_titles = _panel_role_elements(root, "panel-title-support")
     hero_titles = _panel_role_elements(root, "panel-title-hero")
     if len(support_titles) < 4:
-        failures.append(f"support panel titles are not role-tagged consistently: {len(support_titles)} < 4")
+        failures.append(
+            f"support panel titles are not role-tagged consistently: {len(support_titles)} < 4"
+        )
     if len(hero_titles) != 1:
-        failures.append(f"hero panel title role count mismatch: {len(hero_titles)} != 1")
+        failures.append(
+            f"hero panel title role count mismatch: {len(hero_titles)} != 1"
+        )
 
     flow_arrows = _panel_role_elements(root, "global-flow-arrow")
     if len(flow_arrows) < REQUIRED_GLOBAL_FLOW_ARROWS:
-        failures.append(f"support-to-hero arrows are not globally role-tagged: {len(flow_arrows)} < {REQUIRED_GLOBAL_FLOW_ARROWS}")
+        failures.append(
+            f"support-to-hero arrows are not globally role-tagged: {len(flow_arrows)} < {REQUIRED_GLOBAL_FLOW_ARROWS}"
+        )
     else:
         widths = [
             float(element.attrib.get("stroke-width", "0"))
@@ -139,7 +146,9 @@ def _v14_global_composition_failures(root: ET.Element) -> list[str]:
             if element.tag.rsplit("}", 1)[-1] == "line"
         ]
         if widths and max(widths) > 2.0:
-            failures.append(f"support-to-hero arrows are too visually dominant: max width {max(widths):.2f} > 2.0")
+            failures.append(
+                f"support-to-hero arrows are too visually dominant: max width {max(widths):.2f} > 2.0"
+            )
 
     support_conclusions = [
         element

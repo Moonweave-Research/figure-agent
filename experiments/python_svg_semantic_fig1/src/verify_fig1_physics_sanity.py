@@ -48,7 +48,6 @@ def physics_sanity_failures(scene: object, *, extra_claim_text: str = "") -> lis
     failures.extend(_check_reference_authority(scene))
     failures.extend(_check_band_and_traps(scene))
     failures.extend(_check_dos_parameters(scene))
-    failures.extend(_check_pe_hysteresis(scene))
     failures.extend(_check_power_law_decay(scene))
     failures.extend(_check_causal_chain(scene))
     failures.extend(_check_probe_charge_relation(scene))
@@ -64,7 +63,9 @@ def physics_sanity_warnings(scene: object) -> list[str]:
     try:
         force_arrow = scene.object_by_id("repulsion_arrow").payload
     except KeyError:
-        return ["probe force target cannot be checked because repulsion_arrow is missing"]
+        return [
+            "probe force target cannot be checked because repulsion_arrow is missing"
+        ]
 
     if not getattr(force_arrow, "force_target", ""):
         warnings.append(
@@ -89,20 +90,33 @@ def _check_band_and_traps(scene: object) -> list[str]:
     if band.lumo.label != "LUMO" or band.homo.label != "HOMO":
         failures.append("LUMO/HOMO labels must remain bound to the correct band edges")
     if not band.lumo.y < band.homo.y:
-        failures.append("LUMO/HOMO vertical order must keep LUMO above HOMO on the energy schematic")
+        failures.append(
+            "LUMO/HOMO vertical order must keep LUMO above HOMO on the energy schematic"
+        )
 
     trap_positions = tuple(traps.shallow_positions) + tuple(traps.deep_positions)
     if not trap_positions:
         failures.append("trap level set must contain at least one trap position")
     if not all(band.lumo.y < position < band.homo.y for position in trap_positions):
         failures.append("trap positions must stay inside the LUMO/HOMO bandgap")
-    if traps.shallow_positions and traps.deep_positions and max(traps.shallow_positions) >= min(traps.deep_positions):
-        failures.append("shallow/deep trap ordering must keep deep traps deeper than shallow traps")
+    if (
+        traps.shallow_positions
+        and traps.deep_positions
+        and max(traps.shallow_positions) >= min(traps.deep_positions)
+    ):
+        failures.append(
+            "shallow/deep trap ordering must keep deep traps deeper than shallow traps"
+        )
     if traps.energy_reference != "normalized_bandgap_lumo_to_homo":
         failures.append(f"unexpected trap energy reference: {traps.energy_reference}")
     if traps.quantitative_status != "schematic_placeholder_until_fig3_ispd":
-        failures.append(f"unexpected trap quantitative status: {traps.quantitative_status}")
-    if not _positive_pair(traps.deep_depth_range_ev) or traps.deep_depth_range_ev[0] >= traps.deep_depth_range_ev[1]:
+        failures.append(
+            f"unexpected trap quantitative status: {traps.quantitative_status}"
+        )
+    if (
+        not _positive_pair(traps.deep_depth_range_ev)
+        or traps.deep_depth_range_ev[0] >= traps.deep_depth_range_ev[1]
+    ):
         failures.append(f"invalid deep trap depth range: {traps.deep_depth_range_ev}")
     return failures
 
@@ -125,42 +139,50 @@ def _check_dos_parameters(scene: object) -> list[str]:
         lobes.min_deep_to_shallow_ratio,
     )
     if not all(value > 0 for value in numeric_values):
-        failures.append("DOS widths, heights, areas, and dominance ratio must be positive")
+        failures.append(
+            "DOS widths, heights, areas, and dominance ratio must be positive"
+        )
     if not _positive_pair(lobes.shallow_sigma) or not _positive_pair(lobes.deep_sigma):
         failures.append("DOS sigma values must be positive pairs")
     if lobes.samples < 8:
-        failures.append(f"DOS sample count is too small for schematic geometry: {lobes.samples}")
-    if lobes.shallow_area > 0 and lobes.deep_area / lobes.shallow_area < lobes.min_deep_to_shallow_ratio:
+        failures.append(
+            f"DOS sample count is too small for schematic geometry: {lobes.samples}"
+        )
+    if (
+        lobes.shallow_area > 0
+        and lobes.deep_area / lobes.shallow_area < lobes.min_deep_to_shallow_ratio
+    ):
         failures.append("DOS deep area must dominate shallow area")
-    if lobes.shallow_width > 0 and lobes.deep_width / lobes.shallow_width < lobes.min_deep_to_shallow_ratio:
+    if (
+        lobes.shallow_width > 0
+        and lobes.deep_width / lobes.shallow_width < lobes.min_deep_to_shallow_ratio
+    ):
         failures.append("DOS deep width must dominate shallow width")
     if not (band.lumo.y < lobes.shallow_center_y < lobes.deep_center_y < band.homo.y):
         failures.append("DOS shallow/deep centers must follow LUMO-to-HOMO order")
 
     if ispd.model != "gaussian_mixture":
         failures.append(f"ISPD model must remain gaussian_mixture: {ispd.model}")
-    if not all(value > 0 for value in (ispd.shallow_width, ispd.deep_width, ispd.shallow_height, ispd.deep_height)):
+    if not all(
+        value > 0
+        for value in (
+            ispd.shallow_width,
+            ispd.deep_width,
+            ispd.shallow_height,
+            ispd.deep_height,
+        )
+    ):
         failures.append("ISPD widths and heights must be positive")
     if not _positive_pair(ispd.shallow_sigma) or not _positive_pair(ispd.deep_sigma):
         failures.append("ISPD sigma values must be positive pairs")
     if ispd.samples < 8:
-        failures.append(f"ISPD sample count is too small for schematic geometry: {ispd.samples}")
+        failures.append(
+            f"ISPD sample count is too small for schematic geometry: {ispd.samples}"
+        )
     if ispd.trap_depth_output != "g(Et)":
-        failures.append(f"ISPD trap-depth output must remain g(Et): {ispd.trap_depth_output}")
-    return failures
-
-
-def _check_pe_hysteresis(scene: object) -> list[str]:
-    pe = scene.object_by_id("pe_hysteresis").payload
-    failures: list[str] = []
-    if pe.model != "parametric_hysteresis":
-        failures.append(f"P-E model must remain parametric_hysteresis: {pe.model}")
-    if pe.loop_width <= 0 or pe.loop_height <= 0:
-        failures.append("P-E loop dimensions must be positive")
-    if not 0.0 < pe.remanence < 1.0:
-        failures.append(f"P-E remanence must stay in schematic normalized range (0, 1): {pe.remanence}")
-    if pe.samples_per_branch < 8:
-        failures.append(f"P-E branch sample count is too small: {pe.samples_per_branch}")
+        failures.append(
+            f"ISPD trap-depth output must remain g(Et): {ispd.trap_depth_output}"
+        )
     return failures
 
 
@@ -168,13 +190,17 @@ def _check_power_law_decay(scene: object) -> list[str]:
     decay = scene.object_by_id("power_law_decay").payload
     failures: list[str] = []
     if decay.model != "power_law_loglog":
-        failures.append(f"power-law decay model must remain power_law_loglog: {decay.model}")
+        failures.append(
+            f"power-law decay model must remain power_law_loglog: {decay.model}"
+        )
     if decay.slope >= 0:
         failures.append("power-law decay slope must be negative for n > 0")
     if "t^-n" not in decay.label and "t^{-n}" not in decay.label:
         failures.append(f"power-law label must retain t^-n notation: {decay.label}")
     if decay.extracted_parameter != "n":
-        failures.append(f"power-law extracted parameter must remain n: {decay.extracted_parameter}")
+        failures.append(
+            f"power-law extracted parameter must remain n: {decay.extracted_parameter}"
+        )
     if decay.log_t_min >= decay.log_t_max:
         failures.append("power-law log-time bounds must increase")
     if decay.log_i_top <= decay.log_i_bottom:
@@ -189,13 +215,19 @@ def _check_causal_chain(scene: object) -> list[str]:
     flow = scene.object_by_id("trap_model_flow").payload
 
     if tuple(flow.causal_chain) != EXPECTED_CAUSAL_CHAIN:
-        failures.append("causal chain must remain I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)")
+        failures.append(
+            "causal chain must remain I(t) ~ t^-n -> n -> Debye exp(-t/tau) -> tau_d -> g(Et)"
+        )
     if flow.debye_reference_label != "Discharge Debye reference":
-        failures.append(f"Debye reference label must remain a reference bridge: {flow.debye_reference_label}")
+        failures.append(
+            f"Debye reference label must remain a reference bridge: {flow.debye_reference_label}"
+        )
     if flow.delay_parameter != "tau_d":
         failures.append(f"delay parameter must remain tau_d: {flow.delay_parameter}")
     if flow.output_distribution != "g(Et)":
-        failures.append(f"output distribution must remain g(Et): {flow.output_distribution}")
+        failures.append(
+            f"output distribution must remain g(Et): {flow.output_distribution}"
+        )
     return failures
 
 
@@ -210,13 +242,19 @@ def _check_probe_charge_relation(scene: object) -> list[str]:
     if electrode.sign not in {"+", "-"}:
         failures.append(f"invalid electrode sign: {electrode.sign}")
     if electrode.sign not in electrode.label:
-        failures.append(f"electrode label must include electrode sign: {electrode.label}")
+        failures.append(
+            f"electrode label must include electrode sign: {electrode.label}"
+        )
 
     sign_condition = force_arrow.sign_condition.lower()
     if "equals" in sign_condition and cantilever.charge_sign != electrode.sign:
-        failures.append("like-charge force condition requires trapped charge and electrode signs to match")
+        failures.append(
+            "like-charge force condition requires trapped charge and electrode signs to match"
+        )
     if "repulsion" not in force_arrow.label.lower() and "qE" not in force_arrow.label:
-        failures.append(f"force arrow label must remain a Coulomb/repulsion cue: {force_arrow.label}")
+        failures.append(
+            f"force arrow label must remain a Coulomb/repulsion cue: {force_arrow.label}"
+        )
     return failures
 
 
@@ -236,7 +274,9 @@ def _check_probe_force_target_contract(scene: object) -> list[str]:
     electrode = scene.object_by_id("electrode").payload
     charge_positions = tuple(cantilever.charge_positions)
     if not charge_positions:
-        return [f"force_target={target} cannot be checked without trapped charge positions"]
+        return [
+            f"force_target={target} cannot be checked without trapped charge positions"
+        ]
 
     arrow_dx = force_arrow.end.x - force_arrow.start.x
     if arrow_dx == 0:
@@ -245,19 +285,25 @@ def _check_probe_force_target_contract(scene: object) -> list[str]:
     charge_center_x = sum(point.x for point in charge_positions) / len(charge_positions)
     electrode_dx = electrode.center.x - charge_center_x
     if electrode_dx == 0:
-        return [f"force_target={target} cannot resolve electrode side relative to trapped charges"]
+        return [
+            f"force_target={target} cannot resolve electrode side relative to trapped charges"
+        ]
 
     same_sign = cantilever.charge_sign == electrode.sign
     electrode_is_right = electrode_dx > 0
     actual_rightward = arrow_dx > 0
     if target == "cantilever":
-        expected_rightward = electrode_is_right if not same_sign else not electrode_is_right
+        expected_rightward = (
+            electrode_is_right if not same_sign else not electrode_is_right
+        )
     else:
         expected_rightward = electrode_is_right if same_sign else not electrode_is_right
 
     if actual_rightward != expected_rightward:
         direction = "rightward" if expected_rightward else "leftward"
-        relation = "like-charge repulsion" if same_sign else "opposite-charge attraction"
+        relation = (
+            "like-charge repulsion" if same_sign else "opposite-charge attraction"
+        )
         return [f"force_target={target} vector must be {direction} for {relation}"]
     return []
 
@@ -269,32 +315,52 @@ def _check_probe_geometry(scene: object) -> list[str]:
     force_arrow = scene.object_by_id("repulsion_arrow").payload
     charge_positions = tuple(cantilever.charge_positions)
 
-    if cantilever.initial_bend != "toward_electrode" or cantilever.repulsive_bend != "away_from_electrode":
+    if (
+        cantilever.initial_bend != "toward_electrode"
+        or cantilever.repulsive_bend != "away_from_electrode"
+    ):
         failures.append(
             "probe bend states must remain initial_bend=toward_electrode and repulsive_bend=away_from_electrode"
         )
     if cantilever.initial_bend == cantilever.repulsive_bend:
-        failures.append("probe bend states must distinguish initial and repulsive bends")
+        failures.append(
+            "probe bend states must distinguish initial and repulsive bends"
+        )
 
     if not charge_positions:
         failures.append("probe geometry requires trapped charge positions")
         return failures
 
     if any(_point_in_rect(charge, electrode.bounds) for charge in charge_positions):
-        failures.append("charge/electrode separation violated: trapped charge overlaps electrode bounds")
+        failures.append(
+            "charge/electrode separation violated: trapped charge overlaps electrode bounds"
+        )
 
     charge_center_x = sum(point.x for point in charge_positions) / len(charge_positions)
     if electrode.center.x > charge_center_x and charge_center_x >= electrode.bounds.x:
-        failures.append("charge/electrode separation violated: charge cluster is not left of the right electrode")
-    if electrode.center.x < charge_center_x and charge_center_x <= electrode.bounds.right:
-        failures.append("charge/electrode separation violated: charge cluster is not right of the left electrode")
+        failures.append(
+            "charge/electrode separation violated: charge cluster is not left of the right electrode"
+        )
+    if (
+        electrode.center.x < charge_center_x
+        and charge_center_x <= electrode.bounds.right
+    ):
+        failures.append(
+            "charge/electrode separation violated: charge cluster is not right of the left electrode"
+        )
 
-    nearest_start_distance = min(_distance(force_arrow.start, charge) for charge in charge_positions)
+    nearest_start_distance = min(
+        _distance(force_arrow.start, charge) for charge in charge_positions
+    )
     if nearest_start_distance > 105.0:
-        failures.append(f"force arrow start is too far from trapped charge cluster: {nearest_start_distance:.1f}")
+        failures.append(
+            f"force arrow start is too far from trapped charge cluster: {nearest_start_distance:.1f}"
+        )
 
     frame = cantilever.frame_bounds[-1]
-    if not _point_in_rect(force_arrow.start, frame) or not _point_in_rect(force_arrow.end, frame):
+    if not _point_in_rect(force_arrow.start, frame) or not _point_in_rect(
+        force_arrow.end, frame
+    ):
         failures.append("force arrow endpoints must remain inside the probe frame")
     return failures
 
@@ -303,9 +369,13 @@ def _check_maxwell_cue(scene: object) -> list[str]:
     maxwell = scene.object_by_id("maxwell_attraction_cue").payload
     failures: list[str] = []
     if maxwell.role != "secondary_reference_cue":
-        failures.append(f"Maxwell attraction cue must remain secondary_reference_cue: {maxwell.role}")
-    if not maxwell.start.x > maxwell.end.x:
-        failures.append("Maxwell attraction cue must remain leftward in the reference panel")
+        failures.append(
+            f"Maxwell attraction cue must remain secondary_reference_cue: {maxwell.role}"
+        )
+    if not maxwell.start.x < maxwell.end.x:
+        failures.append(
+            "Maxwell attraction cue must remain rightward toward the electrode"
+        )
     return failures
 
 
@@ -316,7 +386,9 @@ def _check_overclaim_text(extra_claim_text: str) -> list[str]:
         match = pattern.search(claim_text)
         if match:
             snippet = " ".join(match.group(0).split())
-            failures.append(f"overclaim detected for schematic g(Et) distribution: {snippet}")
+            failures.append(
+                f"overclaim detected for schematic g(Et) distribution: {snippet}"
+            )
             break
     return failures
 

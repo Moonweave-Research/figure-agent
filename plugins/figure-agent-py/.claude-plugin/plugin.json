@@ -1,0 +1,9 @@
+{
+  "name": "figure-agent-py",
+  "description": "Python-first semantic SVG renderer and verifier for the Fig1 scientific schematic. It wraps experiments/python_svg_semantic_fig1 and does not use the TikZ/lualatex compile chain.",
+  "version": "0.2.1",
+  "author": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  }
+}

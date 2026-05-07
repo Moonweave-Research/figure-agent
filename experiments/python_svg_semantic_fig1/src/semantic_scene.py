@@ -5,7 +5,7 @@ from typing import Literal
 
 
 Role = Literal["visual_anchor", "data_visualization", "process_flow", "annotation", "mechanism"]
-Authority = Literal["ground_truth", "guidance_only", "known_defects"]
+Authority = Literal["guidance_only", "known_defects"]
 Severity = Literal["BLOCKER", "MAJOR", "MINOR"]
 
 
