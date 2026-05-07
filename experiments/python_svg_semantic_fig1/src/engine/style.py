@@ -11,14 +11,14 @@ class Palette:
     panel_fill: str = "#fcfdff"
     panel_hero_fill: str = "#fff7f6"
     panel_tint: str = "#f4f7fb"
-    sulfur_yellow: str = "#f3c84e"
-    sulfur_amber: str = "#c78e25"
-    sulfur_brown: str = "#8c5a18"
-    shallow_blue: str = "#1f6fd0"
-    shallow_blue_light: str = "#dcecff"
-    deep_red: str = "#a81016"
-    deep_red_mid: str = "#c9252a"
-    deep_red_light: str = "#f6d2d2"
+    sulfur_yellow: str = "#e0c884"
+    sulfur_amber: str = "#b89060"
+    sulfur_brown: str = "#7a5a30"
+    shallow_blue: str = "#3a78c5"
+    shallow_blue_light: str = "#dde8f5"
+    deep_red: str = "#9d3838"
+    deep_red_mid: str = "#b85050"
+    deep_red_light: str = "#ead7d7"
     violet: str = "#6f42c1"
     violet_light: str = "#eadfff"
     metal: str = "#818b99"
@@ -29,8 +29,8 @@ class Palette:
 class Typography:
     family: str = "Helvetica, Arial, sans-serif"
     title_size: float = 22.0
-    hero_title_size: float = 24.0
-    support_title_size: float = 18.0
+    hero_title_size: float = 16.0
+    support_title_size: float = 13.5
     subtitle_size: float = 13.5
     label_size: float = 15.0
     section_label_size: float = 13.0

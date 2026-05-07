@@ -178,12 +178,45 @@ def _draw_localized_traps_visual(
     )
     for cx, _kind, color, depth in well_specs:
         _draw_trap_well(drawing, cx, well_baseline_y, depth, color, style)
+    p.text(
+        drawing,
+        "shallow",
+        visual_x + visual_width * 0.21,
+        well_baseline_y - 12,
+        9.5,
+        fill=palette.shallow_blue,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
+    p.text(
+        drawing,
+        "deep",
+        visual_x + visual_width * 0.74,
+        well_baseline_y - 12,
+        9.5,
+        fill=palette.deep_red,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
 
     trapped_specs = (
         (visual_x + visual_width * 0.10, network_top + 48, palette.shallow_blue),
         (visual_x + visual_width * 0.32, network_top + 54, palette.shallow_blue),
         (visual_x + visual_width * 0.62, network_top + 50, palette.deep_red),
         (visual_x + visual_width * 0.86, network_top + 52, palette.deep_red),
+    )
+    p.text(
+        drawing,
+        "polymer network",
+        visual_x + visual_width * 0.5,
+        network_bottom + 4,
+        8.5,
+        fill=palette.muted,
+        italic=True,
+        anchor="middle",
+        style=style,
     )
     for x, y, color in trapped_specs:
         _draw_trapped_electron(drawing, x, y, color, style)
@@ -265,10 +298,10 @@ def _draw_polymer_network_backdrop(
                 draw.Circle(
                     x,
                     y,
-                    5.2,
-                    fill="#f0c860",
+                    4.0,
+                    fill="#e0c884",
                     stroke=palette.sulfur_brown,
-                    stroke_width=0.7,
+                    stroke_width=0.5,
                     opacity=0.70,
                 )
             )
@@ -277,7 +310,7 @@ def _draw_polymer_network_backdrop(
                 draw.Circle(
                     x,
                     y,
-                    3.0,
+                    2.4,
                     fill="#c1c4cb",
                     stroke="#7a8090",
                     stroke_width=0.5,
@@ -296,7 +329,7 @@ def _draw_trap_well(
 ) -> None:
     half_width = 26 + depth * 0.32
     bottom_y = baseline_y + depth
-    well_path = draw.Path(fill="none", stroke=color, stroke_width=1.7, opacity=0.92)
+    well_path = draw.Path(fill="none", stroke=color, stroke_width=1.5, opacity=0.92)
     well_path.M(cx - half_width, baseline_y)
     well_path.Q(cx, bottom_y + 6, cx + half_width, baseline_y)
     drawing.append(well_path)
@@ -364,11 +397,11 @@ def _draw_trapped_electron(
         draw.Circle(
             x,
             y,
-            7.5,
+            5.0,
             fill="none",
             stroke=color,
-            stroke_width=1.1,
-            stroke_dasharray="3 3",
+            stroke_width=0.8,
+            stroke_dasharray="2 2",
             opacity=0.78,
         )
     )
@@ -416,9 +449,44 @@ def _draw_vs_decay_curve(drawing: draw.Drawing, column, style: FigureStyle) -> N
         )
     drawing.append(
         p.polyline_path(
-            tuple(points), fill="none", stroke=palette.ink, stroke_width=2.2
+            tuple(points), fill="none", stroke=palette.ink, stroke_width=1.5
         )
     )
+    for tick_fraction in (0.25, 0.5, 0.75):
+        tx = axis_origin.x + tick_fraction * axis_w
+        drawing.append(
+            draw.Line(
+                tx,
+                axis_origin.y,
+                tx,
+                axis_origin.y + 4,
+                stroke=palette.ink,
+                stroke_width=0.5,
+            )
+        )
+    for ty_fraction in (0.25, 0.5, 0.75):
+        ty = axis_origin.y - ty_fraction * axis_h
+        drawing.append(
+            draw.Line(
+                axis_origin.x - 4,
+                ty,
+                axis_origin.x,
+                ty,
+                stroke=palette.ink,
+                stroke_width=0.5,
+            )
+        )
+    for sample_fraction in (0.0, 0.2, 0.4, 0.6, 0.8):
+        decay = math.exp(-sample_fraction * 3.2)
+        drawing.append(
+            draw.Circle(
+                axis_origin.x + sample_fraction * axis_w,
+                axis_origin.y - decay * axis_h,
+                1.8,
+                fill=palette.ink,
+                stroke="none",
+            )
+        )
     p.text(
         drawing,
         "V_s(t)",
@@ -426,7 +494,6 @@ def _draw_vs_decay_curve(drawing: draw.Drawing, column, style: FigureStyle) -> N
         axis_origin.y - axis_h * 0.48,
         11.0,
         fill=palette.ink,
-        weight="700",
         anchor="end",
         style=style,
     )
@@ -507,13 +574,13 @@ def _draw_release_wells(drawing: draw.Drawing, column, style: FigureStyle) -> No
         if well_index < well_count - 1:
             p.arrow(
                 drawing,
-                Point(well_center_x + 8, charge_y - 4),
-                Point(well_center_x + 24, charge_y - 18),
-                palette.muted,
+                Point(well_center_x + 10, charge_y - 6),
+                Point(well_center_x + (well_width - 8), charge_y - 22),
+                palette.deep_red_mid,
                 width=1.0,
-                head_length=6,
-                head_width=5,
-                opacity=0.6,
+                head_length=7,
+                head_width=6,
+                opacity=0.75,
             )
     cell_w_local = (wells_area.width - well_pad * (well_count + 1)) / well_count
     p.text(
@@ -534,6 +601,27 @@ def _draw_release_wells(drawing: draw.Drawing, column, style: FigureStyle) -> No
         wells_area.y + 12,
         9.6,
         fill=palette.deep_red,
+        italic=True,
+        anchor="middle",
+        style=style,
+    )
+    p.arrow(
+        drawing,
+        Point(wells_area.x + 12, wells_area.y + 26),
+        Point(wells_area.right - 12, wells_area.y + 26),
+        palette.muted,
+        width=0.6,
+        head_length=7,
+        head_width=5,
+        opacity=0.55,
+    )
+    p.text(
+        drawing,
+        "increasing Et",
+        wells_area.center.x,
+        wells_area.y + 22,
+        8.2,
+        fill=palette.muted,
         italic=True,
         anchor="middle",
         style=style,
@@ -600,6 +688,18 @@ def _draw_columns(drawing: draw.Drawing, scene: Scene, style: FigureStyle) -> No
             stroke=stroke,
             radius=style.panel_radius,
             stroke_width=0.6 if is_hero else 0.0,
+        )
+        label_letter = chr(ord("a") + column.index - 1)
+        p.text(
+            drawing,
+            label_letter,
+            column.bounds.x + 14,
+            column.bounds.y + 22,
+            14.0,
+            fill=palette.ink,
+            weight="700",
+            anchor="middle",
+            style=style,
         )
         title_size = (
             style.typography.hero_title_size
@@ -700,7 +800,7 @@ def _draw_sulfur_polymer_origin(
                 nxt.x,
                 nxt.y,
                 stroke=palette.sulfur_brown,
-                stroke_width=2.0,
+                stroke_width=1.5,
             )
         )
     for atom in ring_points:
@@ -708,7 +808,7 @@ def _draw_sulfur_polymer_origin(
             draw.Circle(
                 atom.x,
                 atom.y,
-                6.7,
+                4.5,
                 fill=palette.sulfur_yellow,
                 stroke=palette.sulfur_brown,
                 stroke_width=1.0,
@@ -762,7 +862,7 @@ def _draw_sulfur_polymer_origin(
                 end.x,
                 end.y,
                 stroke=palette.sulfur_brown,
-                stroke_width=2.0,
+                stroke_width=1.5,
             )
         )
     for atom in chain_points:
@@ -770,7 +870,7 @@ def _draw_sulfur_polymer_origin(
             draw.Circle(
                 atom.x,
                 atom.y,
-                6.2,
+                4.0,
                 fill=palette.sulfur_yellow,
                 stroke=palette.sulfur_brown,
                 stroke_width=1.0,
@@ -792,16 +892,15 @@ def _draw_sulfur_polymer_origin(
     library_atom_counts = (4, 6, 8, 10)
     cell_width = ramp.width / len(library_labels)
     chain_y = ramp.y + 22
-    drawing.append(
-        draw.Line(
-            ramp.x + 12,
-            chain_y,
-            ramp.right - 12,
-            chain_y,
-            stroke=palette.sulfur_brown,
-            stroke_width=0.6,
-            opacity=0.35,
-        )
+    p.arrow(
+        drawing,
+        Point(ramp.x + 12, chain_y),
+        Point(ramp.right - 12, chain_y),
+        palette.sulfur_brown,
+        width=0.6,
+        head_length=8,
+        head_width=6,
+        opacity=0.42,
     )
     for cell_index, (label, atoms) in enumerate(
         zip(library_labels, library_atom_counts, strict=True)
@@ -834,7 +933,7 @@ def _draw_sulfur_polymer_origin(
                 draw.Circle(
                     atom.x,
                     atom.y,
-                    5.4,
+                    3.5,
                     fill=palette.sulfur_yellow,
                     stroke=palette.sulfur_brown,
                     stroke_width=0.9,
@@ -939,11 +1038,11 @@ def _draw_deep_trap_hero(
     p.rounded_rect(
         drawing,
         compact_callout,
-        fill="#fff8f7",
-        stroke=palette.deep_red_light,
+        fill="none",
+        stroke="none",
         radius=6,
-        stroke_width=0.75,
-        opacity=0.82,
+        stroke_width=0.0,
+        opacity=1.0,
     )
     caption_lines = (
         (
@@ -1950,7 +2049,7 @@ def _cantilever_frame(
     *,
     style: FigureStyle,
 ) -> None:
-    bracket = Rect(frame.x + 70, frame.bottom - 28, 70, 26)
+    bracket = Rect(frame.x + 70, frame.y + 2, 70, 26)
     p.rounded_rect(
         drawing,
         bracket,
@@ -1960,7 +2059,7 @@ def _cantilever_frame(
         stroke_width=0.85,
         opacity=0.7,
     )
-    clamp = Rect(bracket.x + 22, bracket.y - 16, 26, 16)
+    clamp = Rect(bracket.x + 22, bracket.bottom, 26, 16)
     p.rounded_rect(
         drawing,
         clamp,
@@ -1972,43 +2071,21 @@ def _cantilever_frame(
     )
 
     base_x = clamp.center.x
-    base_y = clamp.y
-    top_x = base_x - 22
-    top_y = frame.y + 30
-    mid_y = (base_y + top_y) / 2
-
-    beam_shadow = draw.Path(
-        fill="none",
-        stroke="#9f741c",
-        stroke_width=24,
-        stroke_linecap="round",
-        opacity=0.18,
-    )
-    beam_shadow.M(base_x + 1, base_y + 1)
-    beam_shadow.C(base_x + 1, mid_y, top_x + 9, mid_y, top_x + 1, top_y)
-    drawing.append(beam_shadow)
+    base_y = clamp.bottom
+    free_x = base_x + 16
+    free_y = frame.bottom - 30
+    mid_y = (base_y + free_y) / 2
 
     beam = draw.Path(
-        fill="none", stroke="#d5a534", stroke_width=20, stroke_linecap="round"
+        fill="none", stroke="#c9a14a", stroke_width=8, stroke_linecap="round"
     )
     beam.M(base_x, base_y)
-    beam.C(base_x, mid_y, top_x + 8, mid_y, top_x, top_y)
+    beam.C(base_x, mid_y, free_x - 8, mid_y, free_x, free_y)
     drawing.append(beam)
 
-    beam_highlight = draw.Path(
-        fill="none",
-        stroke="#f0d779",
-        stroke_width=5,
-        stroke_linecap="round",
-        opacity=0.5,
-    )
-    beam_highlight.M(base_x + 1, base_y - 4)
-    beam_highlight.C(base_x + 1, mid_y, top_x + 9, mid_y, top_x + 1, top_y - 4)
-    drawing.append(beam_highlight)
-
-    air_gap_x_start = top_x + 14
+    air_gap_x_start = free_x + 14
     air_gap_x_end = frame.x + 268
-    air_gap_y = frame.y + 50
+    air_gap_y = frame.bottom - 50
     drawing.append(
         draw.Line(
             air_gap_x_start,
@@ -2092,7 +2169,7 @@ def _draw_electrode(
         )
     p.text(
         drawing,
-        "active electrode",
+        f"({payload.sign}) electrode",
         payload.bounds.center.x,
         payload.bounds.bottom + 16,
         10.5,
@@ -2140,7 +2217,6 @@ def _draw_force_arrow(
         12.6,
         role="probe-force-label",
         fill=style.palette.deep_red,
-        weight="700",
         italic=True,
         anchor="middle",
         style=style,

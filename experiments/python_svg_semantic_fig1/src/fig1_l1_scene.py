@@ -66,8 +66,8 @@ def build_scene() -> Scene:
         payload=SulfurPolymerOrigin(
             s8_atom_count=8,
             chain_atom_count=7,
-            heat_label="Heat 160 C",
-            chain_label="-Sx- chain",
+            heat_label="Δ 160 °C",
+            chain_label="(-S-)ₓ",
             swatches=(
                 CompositionSwatch("S60", "#f8dd72"),
                 CompositionSwatch("S70", "#edc24f"),
