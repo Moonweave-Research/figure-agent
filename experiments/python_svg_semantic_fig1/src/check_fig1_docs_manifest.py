@@ -23,6 +23,7 @@ V21_PROBE_OPTIONS = ROOT / "probe_force_target_options_v21.md"
 V21_PROBE_HANDBACK = ROOT / "probe_force_target_handback_v21.md"
 V22_VISUAL_REPORT = ROOT / "fig1_visual_judgment_report.md"
 V22_VISUAL_HANDBACK = ROOT / "visual_judgment_report_handback_v22.md"
+V24_RENDER_PARITY_HANDBACK = ROOT / "render_parity_gate_handback_v24.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -38,8 +39,10 @@ REQUIRED_MANIFEST_TOKENS = (
     "src/verify_fig1_causal_visibility.py",
     "src/verify_fig1_physics_sanity.py",
     "src/run_fig1_gates.py",
+    "src/verify_fig1_render_parity.py",
     "src/verify_fig1_baseline_hash.py",
     "src/test_fig1_physics_sanity.py",
+    "src/test_fig1_render_parity.py",
     "src/report_fig1_visual_judgment.py",
     "src/test_fig1_visual_judgment_report.py",
     "dos_reference_schematic_handback_v9.md",
@@ -62,6 +65,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "probe_force_target_handback_v21.md",
     "fig1_visual_judgment_report.md",
     "visual_judgment_report_handback_v22.md",
+    "render_parity_gate_handback_v24.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -73,6 +77,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "v20 physics sanity layer",
     "v21 probe force-target pass",
     "v22 visual judgment report layer",
+    "v24 render parity gate",
     "report-only inspection surface",
     "cantilever_leftward_repulsion",
     "force_target",
@@ -281,6 +286,18 @@ REQUIRED_V22_VISUAL_HANDBACK_TOKENS = (
     "Human visual review remains required",
 )
 
+REQUIRED_V24_RENDER_PARITY_HANDBACK_TOKENS = (
+    "hard render parity gate",
+    "src/verify_fig1_render_parity.py",
+    "src/test_fig1_render_parity.py",
+    "src/run_fig1_gates.py",
+    "fig1_reference_semantic.svg",
+    "byte-for-byte",
+    "does not render or compare PNG files",
+    "does not add subjective visual judgment rules",
+    "render parity and baseline hash are orthogonal",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -413,6 +430,13 @@ def main() -> int:
     for token in REQUIRED_V22_VISUAL_HANDBACK_TOKENS:
         if token not in v22_handback:
             return _fail(f"v22 visual judgment handback missing token: {token}")
+
+    if not V24_RENDER_PARITY_HANDBACK.exists():
+        return _fail(f"missing v24 render parity handback: {V24_RENDER_PARITY_HANDBACK}")
+    v24_handback = V24_RENDER_PARITY_HANDBACK.read_text()
+    for token in REQUIRED_V24_RENDER_PARITY_HANDBACK_TOKENS:
+        if token not in v24_handback:
+            return _fail(f"v24 render parity handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

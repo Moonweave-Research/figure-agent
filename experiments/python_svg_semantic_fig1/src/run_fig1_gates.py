@@ -24,6 +24,7 @@ GATES = (
     Gate("causal-binding", "verify_fig1_causal_binding.py"),
     Gate("causal-visibility", "verify_fig1_causal_visibility.py"),
     Gate("physics-sanity", "verify_fig1_physics_sanity.py"),
+    Gate("render-parity", "verify_fig1_render_parity.py"),
     Gate("baseline-hash", "verify_fig1_baseline_hash.py"),
 )
 
