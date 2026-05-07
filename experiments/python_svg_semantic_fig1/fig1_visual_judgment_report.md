@@ -36,7 +36,7 @@ Human visual review remains required before publication-grade approval.
 
 ### Reading Order
 - evidence: likely panel reading order by top-left position: polymer_origin_card -> electrical_evidence_card -> deep_trap_hero_card -> interpretation_card -> macroscopic_probe_card.
-- evidence: polymer_origin_card first text sequence by bbox position: Sulfur polymer ... -> (composition tu... -> S -> Delta -> S -> S.
+- evidence: polymer_origin_card first text sequence by bbox position: Sulfur polymer ... -> (composition tu... -> S -> S -> S -> Heat 160 C.
 - evidence: electrical_evidence_card first text sequence by bbox position: Electrical evid... -> P-E response -> Current decay -> P -> log I -> I(t) ~ t^-n.
 - evidence: deep_trap_hero_card first text sequence by bbox position: Converged deep ... -> Deep traps domi... -> DOS g(Et) -> LUMO -> shallow -> shallow.
 - evidence: interpretation_card first text sequence by bbox position: Interpretation ... -> I(t) ~ -> Debye -> n -> tau_d -> g(Et).
@@ -62,7 +62,7 @@ Human visual review remains required before publication-grade approval.
 
 | Panel | Role | Bounds | Occupied | Text | Semantic Objects |
 | --- | --- | --- | ---: | ---: | ---: |
-| polymer_origin_card | supporting | 22.0,30.0,455.0,394.0 | 0.857 | 0.118 | 1 |
+| polymer_origin_card | supporting | 22.0,30.0,455.0,394.0 | 0.857 | 0.123 | 1 |
 | electrical_evidence_card | supporting | 1076.0,30.0,497.0,394.0 | 0.631 | 0.073 | 3 |
 | deep_trap_hero_card | hero | 548.0,173.0,468.0,613.0 | 0.740 | 0.114 | 4 |
 | interpretation_card | supporting | 22.0,464.0,475.0,470.0 | 0.716 | 0.099 | 2 |

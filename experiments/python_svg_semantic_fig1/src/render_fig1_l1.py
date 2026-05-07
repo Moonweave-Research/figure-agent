@@ -258,7 +258,7 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
     reaction = column.box("reaction_arrow")
     arrow_y = reaction.center.y
     p.arrow(drawing, Point(reaction.x, arrow_y), Point(reaction.right, arrow_y), palette.ink, width=1.4, head_length=12, head_width=9)
-    p.text(drawing, "Delta", reaction.center.x, reaction.y - 3, 15, fill=palette.ink, anchor="middle", style=style)
+    p.text(drawing, payload.heat_label, reaction.center.x, reaction.y - 3, 12.8, fill=palette.ink, anchor="middle", style=style)
 
     chain_box = column.box("sulfur_chain")
     chain_start = Point(chain_box.x, chain_box.center.y)
@@ -271,7 +271,7 @@ def _draw_sulfur_polymer_origin(drawing: draw.Drawing, scene: Scene, obj: Semant
         drawing.append(draw.Line(start.x, start.y, end.x, end.y, stroke=palette.sulfur_brown, stroke_width=1.6))
     for atom in chain_points:
         p.sulfur_atom(drawing, atom, 6.2, style)
-    p.text(drawing, "Sx", chain_box.right + 10, chain_box.bottom - 6, 16, fill=palette.ink, anchor="end", style=style)
+    p.text(drawing, payload.chain_label, chain_box.center.x, chain_box.bottom + 15, 12.2, fill=palette.ink, anchor="middle", style=style)
 
     ramp = column.box("composition_ramp")
     p.text(drawing, "S60", col.x + 38, ramp.y + 7, 15, fill=palette.ink, anchor="middle", style=style)

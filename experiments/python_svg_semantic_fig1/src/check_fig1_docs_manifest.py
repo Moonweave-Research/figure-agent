@@ -24,6 +24,7 @@ V21_PROBE_HANDBACK = ROOT / "probe_force_target_handback_v21.md"
 V22_VISUAL_REPORT = ROOT / "fig1_visual_judgment_report.md"
 V22_VISUAL_HANDBACK = ROOT / "visual_judgment_report_handback_v22.md"
 V24_RENDER_PARITY_HANDBACK = ROOT / "render_parity_gate_handback_v24.md"
+V25_ORIGIN_PAYLOAD_HANDBACK = ROOT / "origin_payload_visibility_handback_v25.md"
 
 REQUIRED_MANIFEST_TOKENS = (
     "fig1_reference_semantic.svg",
@@ -43,6 +44,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "src/verify_fig1_baseline_hash.py",
     "src/test_fig1_physics_sanity.py",
     "src/test_fig1_render_parity.py",
+    "src/test_fig1_origin_payload_visibility.py",
     "src/report_fig1_visual_judgment.py",
     "src/test_fig1_visual_judgment_report.py",
     "dos_reference_schematic_handback_v9.md",
@@ -66,6 +68,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "fig1_visual_judgment_report.md",
     "visual_judgment_report_handback_v22.md",
     "render_parity_gate_handback_v24.md",
+    "origin_payload_visibility_handback_v25.md",
     "legacy annotated redraw",
     "layout/style evidence only",
     "scaffold_contract_v1",
@@ -78,6 +81,7 @@ REQUIRED_MANIFEST_TOKENS = (
     "v21 probe force-target pass",
     "v22 visual judgment report layer",
     "v24 render parity gate",
+    "v25 origin payload visibility",
     "report-only inspection surface",
     "cantilever_leftward_repulsion",
     "force_target",
@@ -298,6 +302,22 @@ REQUIRED_V24_RENDER_PARITY_HANDBACK_TOKENS = (
     "render parity and baseline hash are orthogonal",
 )
 
+REQUIRED_V25_ORIGIN_PAYLOAD_HANDBACK_TOKENS = (
+    "semantic-to-visual payload visibility",
+    "src/render_fig1_l1.py",
+    "src/test_fig1_origin_payload_visibility.py",
+    "Heat 160 C",
+    "-Sx- chain",
+    "No new scaffold",
+    "No new semantic content",
+    "No new strict aesthetic gate",
+    "No absolute min-font-size verifier",
+    "Human visual review remains required",
+    "previous hash",
+    "new hash",
+    "76c7976517daf457f7f996945c69d8fd75314113b3125076c41527b04b2ec946",
+)
+
 
 def _fail(message: str) -> int:
     print(message, file=sys.stderr)
@@ -437,6 +457,13 @@ def main() -> int:
     for token in REQUIRED_V24_RENDER_PARITY_HANDBACK_TOKENS:
         if token not in v24_handback:
             return _fail(f"v24 render parity handback missing token: {token}")
+
+    if not V25_ORIGIN_PAYLOAD_HANDBACK.exists():
+        return _fail(f"missing v25 origin payload visibility handback: {V25_ORIGIN_PAYLOAD_HANDBACK}")
+    v25_handback = V25_ORIGIN_PAYLOAD_HANDBACK.read_text()
+    for token in REQUIRED_V25_ORIGIN_PAYLOAD_HANDBACK_TOKENS:
+        if token not in v25_handback:
+            return _fail(f"v25 origin payload visibility handback missing token: {token}")
 
     print("fig1 docs manifest passed")
     return 0

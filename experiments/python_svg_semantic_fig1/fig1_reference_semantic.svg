@@ -131,7 +131,7 @@
 <text x="108.0" y="252.0" font-size="16" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S8</text>
 <path d="M182.0,168.0 L234.0,168.0" stroke="#171717" stroke-width="1.4" stroke-linecap="round" opacity="1.0" />
 <path d="M246.0,168.0 L234.0,163.5 L234.0,172.5 Z" fill="#171717" opacity="1.0" />
-<text x="214.0" y="153.0" font-size="15" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Delta</text>
+<text x="214.0" y="153.0" font-size="12.8" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">Heat 160 C</text>
 <path d="M267.0,174.0 L298.6666666666667,190.0" stroke="#8c5a18" stroke-width="1.6" />
 <path d="M298.6666666666667,190.0 L330.3333333333333,174.0" stroke="#8c5a18" stroke-width="1.6" />
 <path d="M330.3333333333333,174.0 L362.0,190.0" stroke="#8c5a18" stroke-width="1.6" />
@@ -159,7 +159,7 @@
 <circle cx="457.0" cy="174.0" r="6.2" fill="#f3c84e" stroke="#8c5a18" stroke-width="1.0" />
 <circle cx="455.264" cy="172.264" r="1.488" fill="#fff3b7" opacity="0.7" />
 <text x="457.0" y="176.232" font-size="5.89" fill="#8c5a18" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" font-weight="700">S</text>
-<text x="467.0" y="206.0" font-size="16" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="end">Sx</text>
+<text x="362.0" y="227.0" font-size="12.2" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">-Sx- chain</text>
 <text x="60.0" y="265.0" font-size="15" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S60</text>
 <text x="460.0" y="265.0" font-size="15" fill="#171717" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">S85</text>
 <rect x="154.0" y="258.0" width="268.0" height="14.0" fill="url(#sulfurSwatch)" stroke="#8c5a18" stroke-width="0.9" />
