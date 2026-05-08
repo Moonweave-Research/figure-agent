@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from export_freshness import compute_export_state
+from export_freshness import EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
 
 # Match critique_brief's freshness source set so /fig_status and /fig_critique agree.
@@ -26,6 +26,10 @@ _NEXT_4 = (
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
 _NEXT_4_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_4_TRACKED_STALE = (
+    "tracked golden artifact is intentionally stale;"
+    " to roll forward run /fig_export <name> --force-golden."
+)
 _NEXT_4_PARTIAL = (
     "exports are incomplete — re-run /fig_export <name> to generate the"
     " missing PDF/SVG/TIFF/PNG artifacts."
@@ -214,7 +218,9 @@ def infer_stage(example_dir: Path) -> dict:
         # Priority: stale_export > partial_export > not_accepted > done.
         # partial_export sits above not-accepted because incomplete artifacts
         # block both manuscript use and the golden contract gate.
-        if is_stale:
+        if is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
+            next_template = _NEXT_4_TRACKED_STALE
+        elif is_stale:
             next_template = _NEXT_4_STALE
         elif partial:
             next_template = _NEXT_4_PARTIAL

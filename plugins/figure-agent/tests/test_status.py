@@ -560,7 +560,8 @@ def test_real_golden_fixture_is_not_accepted() -> None:
     assert result["stage"] == 4
     assert result["accepted"] is False
     if "stale_export" in result["notes"]:
-        assert "/fig_compile" in result["next"]
+        # Golden fixture is TRACKED_GOLDEN → stale hint must mention --force-golden
+        assert "--force-golden" in result["next"]
         assert "QUALITY_AUDIT" not in result["next"]
     else:
         assert "QUALITY_AUDIT.md" in result["next"]
@@ -637,3 +638,44 @@ def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     status_mod._print_single(result)
     captured = capsys.readouterr()
     assert "Exports: MISSING" in captured.out
+
+
+def test_tracked_golden_stale_gives_force_golden_hint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When exports_substate is TRACKED_GOLDEN and sources are newer, the next
+    hint must mention --force-golden rather than the generic /fig_compile advice.
+    """
+    import subprocess
+
+    import export_freshness
+    import status as status_mod
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=repo, check=True)
+
+    fig_dir = repo / "examples" / "golden_fig"
+    (fig_dir / "exports").mkdir(parents=True)
+    pdf = fig_dir / "exports" / "golden_fig.pdf"
+    pdf.write_bytes(b"%PDF")
+    subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
+
+    # Sources newer than the tracked PDF → stale
+    (fig_dir / "spec.yaml").write_text(
+        "name: golden_fig\npanels: []\nstyle_profile: polymer-default\n", encoding="utf-8"
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig_dir / "golden_fig.tex").write_text("% tex", encoding="utf-8")
+    old_time = 1_000_000.0
+    os.utime(pdf, (old_time, old_time))
+
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+
+    result = status_mod.infer_stage(fig_dir)
+    assert result["exports_substate"] == "TRACKED_GOLDEN"
+    assert "stale_export" in result["notes"]
+    assert "--force-golden" in result["next"]
+    assert "/fig_compile" not in result["next"]
