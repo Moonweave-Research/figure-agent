@@ -170,3 +170,34 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
     assert "schema: figure-agent.critique.v1" in brief
+
+
+def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
+    """spec.yaml reference_image declaration must take precedence over directory scan."""
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    # Create a spec-declared reference image at a non-default path
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    spec_ref = ref_dir / "foo.png"
+    spec_ref.write_bytes(b"PNG")
+    # Also place a different image that the directory scan would find first
+    other_ref = ref_dir / "golden_target_001.png"
+    other_ref.write_bytes(b"OTHER")
+
+    # Rewrite spec.yaml to declare reference_image
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "style_profile: polymer-default\n"
+        "reference_image: reference/foo.png\n",
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "examples/review_demo/reference/foo.png" in brief
+    # golden_target_001.png must NOT appear — spec takes precedence
+    assert "golden_target_001.png" not in brief

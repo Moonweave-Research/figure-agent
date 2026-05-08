@@ -58,12 +58,17 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
         )
 
 
-def _reference_image_path(example_dir: Path) -> Path | None:
-    """Locate reference image in examples/<name>/reference/. Return path if exists."""
+def _reference_image_path(example_dir: Path, spec: dict) -> Path | None:
+    """Locate reference image. spec.yaml reference_image takes precedence over directory scan."""
+    ref_image_str = spec.get("reference_image")
+    if ref_image_str:
+        candidate = example_dir / ref_image_str
+        if candidate.is_file():
+            return candidate
+    # Fallback: scan reference/ directory
     ref_dir = example_dir / "reference"
     if not ref_dir.is_dir():
         return None
-    # Prefer golden_target_001.png; fallback to any .png
     for candidate in [ref_dir / "golden_target_001.png"] + sorted(ref_dir.glob("*.png")):
         if candidate.exists():
             return candidate
@@ -109,7 +114,7 @@ def generate_for(example_dir: Path) -> str:
     numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
     render_path = _example_relative_path(example_dir, png_path)
-    ref_image = _reference_image_path(example_dir)
+    ref_image = _reference_image_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
 
     ref_section = ""
