@@ -61,8 +61,23 @@ def test_state_missing_when_no_exports_pdf(tmp_path: Path) -> None:
 
 def test_state_fresh_when_exports_pdf_matches_build(tmp_path: Path) -> None:
     fixture = _scaffold_minimal_fixture(tmp_path, "fix_fresh")
-    shutil.copy(fixture / "build" / "fix_fresh.pdf", fixture / "exports" / "fix_fresh.pdf")
+    exports = fixture / "exports"
+    shutil.copy(fixture / "build" / "fix_fresh.pdf", exports / "fix_fresh.pdf")
+    # All sibling artifacts must exist for FRESH to be returned
+    (exports / "fix_fresh.svg").write_bytes(b"<svg/>")
+    (exports / "fix_fresh.tif").write_bytes(b"TIFF")
+    (exports / "fix_fresh.png").write_bytes(b"PNG")
     assert compute_export_state(fixture, "fix_fresh") == EXPORT_FRESH
+
+
+def test_state_stale_when_sibling_missing(tmp_path: Path) -> None:
+    fixture = _scaffold_minimal_fixture(tmp_path, "fix_sib")
+    exports = fixture / "exports"
+    shutil.copy(fixture / "build" / "fix_sib.pdf", exports / "fix_sib.pdf")
+    # SVG absent — must return STALE even though PDF content matches
+    (exports / "fix_sib.tif").write_bytes(b"TIFF")
+    (exports / "fix_sib.png").write_bytes(b"PNG")
+    assert compute_export_state(fixture, "fix_sib") == EXPORT_STALE
 
 
 def test_state_stale_when_exports_pdf_differs_from_build(tmp_path: Path) -> None:

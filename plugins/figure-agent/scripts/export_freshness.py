@@ -47,6 +47,19 @@ def compute_export_state(example_dir: Path, name: str) -> str:
         return EXPORT_MISSING
     if is_tracked(exports_pdf, REPO_ROOT):
         return EXPORT_TRACKED_GOLDEN
+
+    # All four artifacts must be present; any missing sibling → STALE
+    exports_dir = example_dir / "exports"
+    tif_present = (exports_dir / f"{name}.tif").is_file() or (
+        exports_dir / f"{name}.tiff"
+    ).is_file()
+    if not (
+        (exports_dir / f"{name}.svg").is_file()
+        and tif_present
+        and (exports_dir / f"{name}.png").is_file()
+    ):
+        return EXPORT_STALE
+
     if not build_pdf.is_file():
         return EXPORT_STALE  # exports exist but build/ is gone — treat as stale
     if compute_pdf_content_hash(exports_pdf) == compute_pdf_content_hash(build_pdf):

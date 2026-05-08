@@ -4,7 +4,7 @@
 
 ## P0 — correctness (export 무결성)
 
-- [ ] **D1** `scripts/run_export.py` FRESH 판정이 exports/<name>.pdf 하나만 본다.
+- [x] **D1** `scripts/run_export.py` FRESH 판정이 exports/<name>.pdf 하나만 본다. (commit PLACEHOLDER)
   evidence: `scripts/export_freshness.py:46-54`. SVG/TIFF/PNG 누락 시 `_regenerate` 미호출.
   fix: `compute_export_state`가 4개 artifact(PDF/SVG/TIFF/PNG) 모두 존재 + PDF 컨텐츠 fresh를 요구. 누락은 `STALE`.
   test: `tests/test_export_freshness.py` 신규 — PDF만 있고 SVG 없을 때 STALE.
@@ -52,4 +52,4 @@
 
 모든 P0/P1/P2/P3 항목 처리 후 `uv run pytest -x` 통과 시:
 1. `git log --oneline | head -10` 출력.
-2. `<promise>FIGURE_AGENT_REVIEW_8_CLOSED</promise>`
+2. `<promise>REVIEW_CLOSED</promise>`
