@@ -1,6 +1,6 @@
 # Architecture v0.4.2 — Perception Data Only (D-1)
 
-**Status:** DRAFT (2026-05-08) — handoff to Codex session for implementation
+**Status:** DRAFT (2026-05-08, rev 1 — path convention corrected from `build/<name>/` to `examples/<name>/build/` after Codex caught the inconsistency with live `/fig_compile` layout) — handoff to Codex session for implementation
 **Predecessors (rejected):** `architecture-v0.4-build-perception-pack.md`, `architecture-v0.4.1-build-perception-pack.md`. See `feedback_perception_spec_rejected.md` for the lesson driving this scope.
 **Successor companion:** `architecture-v0.5-per-panel-reference-workflow.md` (D-2).
 **Scope owner:** Codex session (implementation), not this session.
@@ -26,11 +26,16 @@ The pack is a **data lens**, not a critic. Whatever judgment happens uses this d
 
 ## 3. Outputs (locked: 2 only)
 
+Under the plugin's existing per-figure folder convention (`examples/<name>/build/...`):
+
 ```
-build/<name>/
-  perception/
-    extract.yaml       # every pdfplumber primitive, normalized to one cm convention
-    overlay.png        # rendered PNG with endpoint dots + small labels
+examples/<name>/
+  build/
+    <name>.pdf          # existing — produced by /fig_compile
+    <name>.png          # existing
+    perception/         # NEW — owned by this spec
+      extract.yaml      # every pdfplumber primitive, normalized to one cm convention
+      overlay.png       # rendered PNG with endpoint dots + small labels
 ```
 
 No `report.md`, no `topology.yaml`. The two outputs alone are enough for a user grepping/eyeballing during grind, and enough for the host LLM in `/fig_critique` to reference if it wants.
@@ -40,7 +45,7 @@ No `report.md`, no `topology.yaml`. The two outputs alone are enough for a user 
 ```yaml
 schema_version: "0.4.2"
 source:
-  pdf_path: build/<name>/<name>.pdf
+  pdf_path: examples/<name>/build/<name>.pdf
   pdf_size_cm: [W, H]              # pdfplumber page.width/72*2.54, etc.
 coordinate_space:
   pdf_origin: top_left
@@ -116,7 +121,7 @@ L4 lualatex compile  →  L4.1 perception extract (NEW, this spec)  →  L4.5 cr
 
 ## 7. Probe baseline (single fixture, descriptive only)
 
-For `fig1_overview_v2/build/fig1_overview_v2.pdf` as of 2026-05-08:
+For `examples/fig1_overview_v2/build/fig1_overview_v2.pdf` as of 2026-05-08:
 
 | Field | Value |
 |---|---|
@@ -132,7 +137,7 @@ These are sanity-check values, not regression gates. If a re-run gives different
 ## 8. Acceptance criteria
 
 1. `uv run pytest` continues to pass (no new failures).
-2. Running `/fig_compile fig1_overview_v2` produces `build/fig1_overview_v2/perception/extract.yaml` and `overlay.png`.
+2. Running `/fig_compile fig1_overview_v2` produces `examples/fig1_overview_v2/build/perception/extract.yaml` and `overlay.png`.
 3. extract.yaml validates against the §4 schema.
 4. overlay.png loads in any image viewer; endpoint dots are visible.
 5. Per-fixture probe rerun for fig1_overview_v2 reproduces §7 counts within ±2 (small drift OK from pdfplumber version updates).
@@ -149,7 +154,7 @@ These are intentional. The corresponding workflow lives in `architecture-v0.5-pe
 
 ## 10. Codex session implementation notes
 
-- New file: `scripts/perception_pack.py`. Single function `build_perception_pack(name: str) -> None` that reads `build/<name>/<name>.pdf` and writes the two outputs.
+- New file: `scripts/perception_pack.py`. Single function `build_perception_pack(name: str) -> None` that reads `examples/<name>/build/<name>.pdf` and writes the two outputs to `examples/<name>/build/perception/`.
 - Wire into `/fig_compile` after the existing checks.
 - Tests: `tests/test_perception_pack.py` with the §7 fixture as a regression case (counts only, no topology assertions).
 - Add pdfplumber to runtime deps. Update `uv.lock`.
