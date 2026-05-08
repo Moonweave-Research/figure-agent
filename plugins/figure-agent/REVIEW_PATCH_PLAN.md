@@ -14,7 +14,7 @@
   fix: `_reference_image_path`가 먼저 `parse_spec(...)["reference_image"]` 시도, 없을 때만 디렉터리 fallback.
   test: `tests/test_critique_brief.py` 신규 — `reference_image: reference/foo.png` 선언 시 그것을 사용.
 
-- [ ] **D3** critique freshness 소스 셋이 `spec.yaml`, reference image, `coordinate_hints.yaml` 누락.
+- [x] **D3** critique freshness 소스 셋이 `spec.yaml`, reference image, `coordinate_hints.yaml` 누락. (commit PLACEHOLDER)
   evidence: `scripts/critique_brief.py:73-77` + `scripts/status.py:13` 주석의 정합 약속.
   fix: `scripts/critique_brief.py:_critique_source_paths` + `scripts/status.py:_source_paths` 둘 다에 spec.yaml + 해석된 reference_image + coordinate_hints.yaml 추가 (존재할 때만).
   test: `tests/test_critique_brief.py` + `tests/test_status.py` 양쪽에 신규 케이스.

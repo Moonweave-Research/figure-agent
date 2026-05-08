@@ -196,8 +196,30 @@ def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
         encoding="utf-8",
     )
 
+    # All new source files must be older than the build PNG to pass freshness check
+    old_time = 1_000_000.0
+    for path in (spec_ref, other_ref, example_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+
     brief = generate_for(example_dir)
 
     assert "examples/review_demo/reference/foo.png" in brief
     # golden_target_001.png must NOT appear — spec takes precedence
     assert "golden_target_001.png" not in brief
+
+
+def test_critique_brief_stale_when_coordinate_hints_newer_than_png(tmp_path, capsys, monkeypatch):
+    """coordinate_hints.yaml newer than build PNG must trigger stale error."""
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    hints = example_dir / "coordinate_hints.yaml"
+    hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
+    # PNG was created before coordinate_hints.yaml
+    png_path = example_dir / "build" / "review_demo.png"
+    old_time = 1_000_000.0
+    os.utime(png_path, (old_time, old_time))
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert "run /fig_compile first" in captured.err
+    assert "coordinate_hints.yaml" in captured.err

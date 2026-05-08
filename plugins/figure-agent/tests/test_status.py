@@ -50,8 +50,6 @@ def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     assert result["stage"] == 1
 
 
-
-
 def test_stage_2_tex_stale_pdf(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -91,10 +89,11 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     build_dir.mkdir()
     pdf = build_dir / "myfig.pdf"
     pdf.write_bytes(b"%PDF")
-    # Make pdf newer than tex
+    # All sources must be older than the build pdf
     old_time = time.time() - 100
     os.utime(tex, (old_time, old_time))
     os.utime(fig_dir / "briefing.md", (old_time, old_time))
+    os.utime(fig_dir / "spec.yaml", (old_time, old_time))
     new_time = time.time() - 10
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
@@ -228,6 +227,33 @@ def test_stage_4_stale_export_when_source_newer(tmp_path: Path) -> None:
     assert "done" not in result["next"]
 
 
+def test_stage_4_stale_export_when_coordinate_hints_newer(tmp_path: Path) -> None:
+    """coordinate_hints.yaml newer than exports must trigger stale_export."""
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    for fname, content in (
+        ("myfig.pdf", b"%PDF"),
+        ("myfig.svg", b"<svg/>"),
+        ("myfig.tif", b"TIFF"),
+        ("myfig.png", b"\x89PNG"),
+    ):
+        (exports_dir / fname).write_bytes(content)
+    old_time = time.time() - 100
+    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+    for fname in ("myfig.pdf", "myfig.svg", "myfig.tif", "myfig.png"):
+        os.utime(exports_dir / fname, (old_time, old_time))
+    hints = fig_dir / "coordinate_hints.yaml"
+    hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
+    result = infer_stage(fig_dir)
+    assert result["stage"] == 4
+    assert "stale_export" in result["notes"]
+
 
 def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
     fig = tmp_path / "missing_briefing"
@@ -245,8 +271,6 @@ def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
     assert "missing_briefing" in result["notes"]
     assert "briefing.md" in result["next"]
     assert "/fig_review" not in result["next"]
-
-
 
 
 def test_reference_image_existing_is_not_treated_as_selected_preview(tmp_path: Path) -> None:
@@ -583,7 +607,6 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     lines = [ln for ln in captured.out.splitlines() if ln.strip()]
     names = [ln.split()[0] for ln in lines]
     assert names == sorted(names)
-
 
 
 def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:

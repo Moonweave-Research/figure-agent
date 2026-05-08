@@ -54,9 +54,22 @@ def _all_four_exports_present(exports_dir: Path, name: str) -> bool:
     return has_pdf and has_svg and has_tif and has_png
 
 
-def _source_paths(example_dir: Path, name: str) -> tuple[Path, ...]:
+def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     """Sources that should be older than any compiled artifact (matches critique_brief)."""
-    candidates = [example_dir / f"{name}.tex", example_dir / "briefing.md", STYLE_LOCK_PATH]
+    candidates: list[Path] = [
+        example_dir / f"{name}.tex",
+        example_dir / "briefing.md",
+        example_dir / "spec.yaml",
+    ]
+    ref_image_str = spec.get("reference_image")
+    if ref_image_str:
+        ref_path = example_dir / ref_image_str
+        if ref_path.is_file():
+            candidates.append(ref_path)
+    hints_path = example_dir / "coordinate_hints.yaml"
+    if hints_path.exists():
+        candidates.append(hints_path)
+    candidates.append(STYLE_LOCK_PATH)
     return tuple(path for path in candidates if path.exists())
 
 
@@ -171,7 +184,7 @@ def infer_stage(example_dir: Path) -> dict:
         spec = parse_spec(spec_path.read_text(encoding="utf-8"))
 
     accepted = _resolve_accepted(spec)
-    sources = _source_paths(example_dir, name)
+    sources = _source_paths(example_dir, name, spec)
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
 

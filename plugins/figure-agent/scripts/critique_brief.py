@@ -75,8 +75,19 @@ def _reference_image_path(example_dir: Path, spec: dict) -> Path | None:
     return None
 
 
-def _critique_source_paths(tex_path: Path, briefing_path: Path) -> tuple[Path, ...]:
-    paths = [tex_path, briefing_path]
+def _critique_source_paths(
+    tex_path: Path, briefing_path: Path, example_dir: Path, spec: dict
+) -> tuple[Path, ...]:
+    paths: list[Path] = [tex_path, briefing_path]
+    spec_path = example_dir / "spec.yaml"
+    if spec_path.exists():
+        paths.append(spec_path)
+    ref_image = _reference_image_path(example_dir, spec)
+    if ref_image is not None:
+        paths.append(ref_image)
+    hints_path = example_dir / "coordinate_hints.yaml"
+    if hints_path.exists():
+        paths.append(hints_path)
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
     return tuple(paths)
@@ -108,7 +119,7 @@ def generate_for(example_dir: Path) -> str:
     png_path = example_dir / "build" / f"{name}.png"
     _require_file(tex_path)
     _require_file(png_path, "run /fig_compile first")
-    _require_fresh_png(png_path, _critique_source_paths(tex_path, briefing_path))
+    _require_fresh_png(png_path, _critique_source_paths(tex_path, briefing_path, example_dir, spec))
 
     tex = tex_path.read_text(encoding="utf-8")
     numbered_tex = _line_numbered(tex)
