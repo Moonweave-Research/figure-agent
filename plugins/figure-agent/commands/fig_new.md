@@ -11,7 +11,7 @@ description: Conversational interview to scaffold a new figure (schematic) and a
 
 Create a new figure project via a conversational interview. **Do not just dump a markdown
 template and ask the user to fill it in an editor** — that defeats the purpose of the plugin.
-Run a 6-question interview in chat, write each answer into `briefing.md` as it arrives.
+Run a 7-question interview in chat, write each answer into `briefing.md` as it arrives.
 
 **Usage**: `/fig_new <name>`
 
@@ -22,13 +22,15 @@ Run from the plugin root.
 Create directory `examples/<name>/` (`<name>` maps to `examples/<name>/`) with:
 - subdirs `previews/`, `build/`, `exports/` (each containing `.gitkeep`)
 - `spec.yaml` skeleton (`name`, `panels: []`, `style_profile: polymer-default`)
-- `briefing.md` skeleton with 6 empty sections (Topic / Vocabulary / Composition /
-  Normalize / Style notes / Physics invariants), each prefaced with `## N. <title>`
-  and an HTML-comment TODO hint
+- `briefing.md` skeleton with 7 empty sections (Topic / Vocabulary / Composition /
+  Normalize / Style notes / Physics invariants / Author intent), each prefaced with
+  `## N. <title>` and an HTML-comment TODO hint. Section 7 is the cheap-intervention
+  payload that grounds `/fig_critique` against generic-best-practice drift; `critique_brief.py`
+  reads §7 verbatim into the vision brief.
 
 ## Step 2 — Run the interview
 
-Ask the user the following six questions, one per turn (or all at once if user asks for it).
+Ask the user the following seven questions, one per turn (or all at once if user asks for it).
 After each answer, **write the answer into the corresponding section of `briefing.md`**
 (strip the HTML-comment TODO when overwriting). For §3, also propagate panel structure into
 `spec.yaml`.
@@ -42,6 +44,15 @@ After each answer, **write the answer into the corresponding section of `briefin
 6. **§6 Physics invariants** — "그림이 반드시 지켜야 하는 물리/개념 제약은? (예:
    trap level 위치, arrow 방향, 보존해야 할 관계. 이 섹션은 prompt normalization에서
    일반화하지 않고 그대로 보존되므로 짧고 개념 중심으로 작성)"
+7. **§7 Author intent — semantic constraints (for vision critique grounding)** —
+   "vision critique이 generic best-practice로 표류하지 않도록 author intent를 두 항목으로 명시:
+   (a) **Must depict** — 반드시 시각적으로 식별 가능해야 할 의미 단위 (예: 'polymer
+   chain은 wave가 아닌 monomer-level chemistry로 보여야 함').
+   (b) **Must avoid** — generic style heuristic으로 잘못 추가될 수 있는 변경 (예: '비대칭이
+   narrative point — 대칭 ellipsis 추가 금지').
+   짧은 bullet 몇 개로 OK; semantic_assertions / snippets used 등 세부는 .tex 작성 후 보강.
+   이 섹션이 비어 있으면 critique이 N=1 dogfood처럼 generic-best-practice drift로 떨어짐
+   (golden_trap_depth_picture: §7 없을 때 F1_w=0.244 → §7+reference attach 후 0.981)."
 
 ## Step 3 — Scope-drift check (CRITICAL)
 
@@ -70,11 +81,13 @@ figure intent.
 
 ## Step 4 — Confirm and hand off
 
-After all 6 sections are filled (and any scope-drift conflicts resolved), tell the user:
+After all 7 sections are filled (and any scope-drift conflicts resolved), tell the user:
 
 > "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. target matching이 필요하면
 > reference PNG를 저장하고 spec.yaml.reference_image를 기록한 뒤 /fig_extract <name>을
-> 실행하세요. 이후 semantic TikZ를 작성하고 /fig_compile <name>으로 검증합니다."
+> 실행하세요. 이후 semantic TikZ를 작성하고 /fig_compile <name>으로 검증합니다.
+> /fig_critique 실행 시 §7 Author intent + reference image가 자동으로 vision brief에
+> 첨부되어 generic-best-practice drift를 막습니다 (cheap-intervention v0.3.0)."
 
 `selected/` is not part of the active workflow. Historical preview-selection
 metadata is ignored by current stage inference.

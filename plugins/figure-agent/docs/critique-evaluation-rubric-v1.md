@@ -214,6 +214,55 @@ Decision rule:
 - If `F1_w` improves by 0.05–0.15: partial improvement. v0.3 schema may still help but priority drops.
 - If `F1_w` improvement <0.05: cheap intervention insufficient. v0.3 schema layer justified. **And** BLOCKER FN must be addressed regardless (it's an L0 / L1 problem, not L4.5).
 
+### 6.1 Plateau criterion — v0.3.0 ship vs schema-layer trigger (added 2026-05-08)
+
+The cheap experiment outcome on `golden_trap_depth_picture` (recorded in `examples/golden_trap_depth_picture/critique_adjudication.yaml:280-303`) was `grounded_F1_w = 0.981` (4.9× the §6 threshold). Per the adjudication's `decision_outcome`, the cheap intervention ships as v0.3.0 and the schema layer (briefing_semantic.yaml) is deferred until N≥2 plateau is verified.
+
+**Plateau definition (single fixture, second occurrence):**
+
+```
+Run /fig_critique on a second fixture (≠ golden_trap_depth_picture) with cheap intervention active
+(briefing §7 + spec.yaml.reference_image).
+Adjudicate per §1, score per §3.
+
+  grounded_F1_w  ≥ 0.9       → plateau confirmed
+                                v0.3.0 ship declared complete
+                                schema layer permanently deferred
+                                (architecture-v0.3-briefing-semantic-grounding.md may close)
+
+  grounded_F1_w  < 0.9       → cheap intervention insufficient on archetype-2
+                                schema layer trigger active
+                                advisor pass to determine whether gap is content-specific
+                                (one-off, document and re-test on archetype-3)
+                                or methodology-level (open schema layer for implementation)
+```
+
+**Why `F1_w ≥ 0.9` (not 0.85, not improvement-relative):**
+
+- `golden_trap_depth_picture` set the bar at 0.981. A 0.9 floor is conservative against that established margin while leaving 0.08 headroom for archetype-specific noise.
+- `F1_w ≥ 0.85` would risk false-positive plateau when the second fixture is on a downward trend (e.g., 0.981 → 0.86 hides a real degradation).
+- Reusing `improvement_absolute ≥ 0.15` (§6 rule) lacks an absolute floor; it allows e.g. `0.244 → 0.40` to qualify as plateau, masking poor performance on the downstream-comparable metric.
+- The user-confirmed threshold (advisor option α, recorded in memory `project_v0_3_figure_quality_spec_rejected`).
+
+**Open: which fixture is N=2?**
+
+Not decided in this rubric. Candidates with archetype diversity from `golden_trap_depth_picture` (band/trap-depth):
+
+- `n3_trial_02_actuation_sequence` — process / temporal-flow archetype
+- `dogfood_power_law_trap_pipeline` — quantitative plot archetype
+- `fig1_overview_v2` — composite overview archetype (active session work)
+
+Selection deferred to next session. Whichever is chosen requires briefing §7 retrofit before `/fig_critique` runs (cheap-intervention payload).
+
+**Trigger flow (when `F1_w < 0.9`):**
+
+1. Author records the metric in fixture's `critique_adjudication.yaml` under `gate_status_grounded`
+2. Advisor pass: classify gap as content-specific or methodology-level
+3. If methodology: re-open `architecture-v0.3-briefing-semantic-grounding.md` and proceed to implementation plan via `superpowers:writing-plans`
+4. If content-specific: document the divergence, re-test on a third archetype before promoting any architecture change
+
+This criterion replaces the rejected `architecture-v0.3-llm-figure-quality-judgment.md` decision rule. The rejected spec proposed targeting the same vision-LLM judgment problem with a heavier 4-layer pipeline; the §6.1 criterion makes the lighter cheap-intervention path the v0.3.0 ship target with an explicit trigger for the heavy path if it fails.
+
 ## 7. Open issues
 
 1. **Single-rater limitation acknowledged.** All v0.3 scores are author-self-adjudicated. Real industry calibration requires ≥2 raters. v0.3 isn't claiming statistical defensibility; it's claiming directional honesty.
