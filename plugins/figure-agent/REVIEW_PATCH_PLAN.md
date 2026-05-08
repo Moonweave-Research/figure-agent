@@ -23,7 +23,7 @@
 
 - [SKIP - empirical: exports/ 자체가 비어 있어 artifact missing 단계가 먼저 끊김. golden_contract 판정에 도달하지 않음. /fig_export 미실행 fixture들이 대상이므로 gate 로직 fix가 불필요.] **D4**
 
-- [x] **D5** TRACKED_GOLDEN ↔ `/fig_status stale_export` 안내 충돌. (commit PLACEHOLDER)
+- [x] **D5** TRACKED_GOLDEN ↔ `/fig_status stale_export` 안내 충돌. (commit e2520fd)
   evidence: `scripts/status.py:204` (`_NEXT_4_STALE`) vs `scripts/run_export.py:77-83` (TRACKED_GOLDEN skip).
   fix: status가 `exports_substate == TRACKED_GOLDEN` + stale 동시일 때 `_NEXT_4_TRACKED_STALE` 분기 — "tracked golden artifact는 의도적 stale; rolling forward 시 `/fig_export <name> --force-golden`".
   test: `tests/test_status.py` 신규.
