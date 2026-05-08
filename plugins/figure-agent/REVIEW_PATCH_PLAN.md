@@ -35,7 +35,7 @@
   fix: `scripts/status.py:_append_reference_image_check`가 hints의 `metadata.extraction_version`를 `EXTRACTION_VERSION`과 비교; 불일치 시 `coordinate_hints_outdated` note. 문서 예시도 `"0.3"`으로 갱신.
   test: `tests/test_status.py` 신규 — 0.1 hints에서 `coordinate_hints_outdated` 출력. 기존 `tests/test_status.py:295,314`의 0.1 픽스처는 outdated 기대값으로 갱신.
 
-- [ ] **D7** `style_profile`이 dead metadata.
+- [x] **D7** `style_profile`이 dead metadata. (commit PLACEHOLDER)
   evidence: 7개 fixture가 spec.yaml에 `polymer-default` 또는 `polymer-paper` 선언. 코드 어디서도 키 미읽음.
   fix: `scripts/inputs.py:parse_spec`에 known-set ({"polymer-default","polymer-paper"}) 검증 ValueError. `scripts/status.py`에 알 수 없는 값일 때 `style_profile_unknown` note. lint_tex.py는 건드리지 않음.
   test: `tests/test_inputs.py` — 알 수 없는 값에 ValueError. `tests/test_status.py` — note 출력. **기존 모든 fixture의 style_profile 값이 known-set 안에 있는지 확인 필수.** 만약 알 수 없는 값이 있으면 `[SKIP - multi-style v0.2+ lock]`.

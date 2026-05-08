@@ -155,3 +155,16 @@ def test_parse_spec_real_fig3_fixture_pinned():
         "selected_preview": None,
         "selection_notes": expected_selection_notes,
     }
+
+
+def test_parse_spec_raises_for_unknown_style_profile() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="Unknown style_profile"):
+        parse_spec("name: test\npanels: []\nstyle_profile: unknown-profile\n")
+
+
+def test_parse_spec_accepts_known_style_profiles() -> None:
+    for profile in ("polymer-default", "polymer-paper"):
+        result = parse_spec(f"name: test\npanels: []\nstyle_profile: {profile}\n")
+        assert result["style_profile"] == profile

@@ -11,6 +11,8 @@ _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _BLOCKQUOTE = re.compile(r"^>\s.*$", re.MULTILINE)
 _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 
+_KNOWN_STYLE_PROFILES = {"polymer-default", "polymer-paper"}
+
 
 def parse_spec(text: str) -> dict:
     data = yaml.safe_load(text)
@@ -24,6 +26,11 @@ def parse_spec(text: str) -> dict:
     else:
         panels = [p for p in panels if isinstance(p, dict)]
     data["panels"] = panels
+    profile = data.get("style_profile")
+    if profile is not None and profile not in _KNOWN_STYLE_PROFILES:
+        raise ValueError(
+            f"Unknown style_profile {profile!r}; known: {sorted(_KNOWN_STYLE_PROFILES)}"
+        )
     return data
 
 

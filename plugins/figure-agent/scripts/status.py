@@ -190,7 +190,14 @@ def infer_stage(example_dir: Path) -> dict:
 
     spec: dict = {}
     if spec_path.exists():
-        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        try:
+            spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        except ValueError:
+            notes.append("style_profile_unknown")
+            import yaml as _yaml  # noqa: PLC0415
+
+            raw = _yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+            spec = raw if isinstance(raw, dict) else {}
 
     accepted = _resolve_accepted(spec)
     sources = _source_paths(example_dir, name, spec)

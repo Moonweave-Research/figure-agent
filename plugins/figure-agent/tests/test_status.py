@@ -399,6 +399,21 @@ def test_coordinate_hints_check_skips_when_reference_image_absent(tmp_path: Path
     assert not any(n.startswith("coordinate_hints_") for n in result["notes"])
 
 
+def test_style_profile_unknown_surfaces_note(tmp_path: Path) -> None:
+    """Unknown style_profile value must produce style_profile_unknown note
+    without crashing infer_stage."""
+    fig_dir = tmp_path / "badfig"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "name: badfig\npanels: []\nstyle_profile: future-profile\n", encoding="utf-8"
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert "style_profile_unknown" in result["notes"]
+
+
 def test_reference_image_missing_surfaces_separate_note(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()
