@@ -323,6 +323,28 @@ def test_coordinate_hints_present_clears_note(tmp_path: Path) -> None:
 
     assert "coordinate_hints_missing" not in result["notes"]
     assert ("coordinate_hints", "present") in result["checks"]
+    assert "coordinate_hints_outdated" in result["notes"]
+
+
+def test_coordinate_hints_outdated_when_version_matches(tmp_path: Path) -> None:
+    """extraction_version matching EXTRACTION_VERSION must NOT produce outdated note."""
+    from reference_extract import EXTRACTION_VERSION
+
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "reference" / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "previews").mkdir()
+    (fig_dir / "coordinate_hints.yaml").write_text(
+        f"metadata:\n  extraction_version: '{EXTRACTION_VERSION}'\ntext_labels: []\n",
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert ("coordinate_hints", "present") in result["checks"]
+    assert "coordinate_hints_outdated" not in result["notes"]
 
 
 def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:

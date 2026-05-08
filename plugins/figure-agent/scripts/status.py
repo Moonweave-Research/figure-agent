@@ -151,12 +151,17 @@ def _append_reference_image_check(
     try:
         import yaml as _yaml
 
-        _yaml.safe_load(hints_path.read_text(encoding="utf-8"))
+        hints_data = _yaml.safe_load(hints_path.read_text(encoding="utf-8")) or {}
     except Exception:
         notes.append("coordinate_hints_parse_error")
         return
     if hints_path.stat().st_mtime < reference_path.stat().st_mtime:
         notes.append("coordinate_hints_stale")
+    from reference_extract import EXTRACTION_VERSION as _EXTRACTION_VERSION  # noqa: PLC0415
+
+    hints_version = (hints_data.get("metadata") or {}).get("extraction_version")
+    if hints_version != _EXTRACTION_VERSION:
+        notes.append("coordinate_hints_outdated")
 
 
 def infer_stage(example_dir: Path) -> dict:

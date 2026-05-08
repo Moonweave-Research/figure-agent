@@ -38,7 +38,7 @@ If `coordinate_hints.yaml` already exists and is no older than the reference, th
 
 ```yaml
 metadata:
-  extraction_version: "0.1"
+  extraction_version: "0.3"
   created_at: "2026-04-30T..."
   reference_image_path: reference/golden_target_001.png
   reference_image_hash: sha256:...
