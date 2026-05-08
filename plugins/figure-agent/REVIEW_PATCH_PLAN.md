@@ -42,7 +42,7 @@
 
 ## P3 — 새 layer (큰 결정, 문서만)
 
-- [ ] **D8** L5.5 post-export visual critic 부재.
+- [x] **D8** L5.5 post-export visual critic 부재. (commit PLACEHOLDER)
   evidence: `commands/fig_critique.md`는 `build/<name>.png`만 본다. dvisvgm SVG → rsvg-convert PNG 경로의 export PNG는 별개.
   scope: spec만. 구현은 보류.
   fix: `docs/architecture-v0.2.1-l5_5-export-critic.md` 작성 — 트리거 시점, 입력(`exports/<name>.png` + 동일 brief), output 경로(`exports_critique.md`), report-only N=5+ 게이트, freshness 입력 셋(D3와 정합).
