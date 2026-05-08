@@ -30,7 +30,7 @@
 
 ## P2 — 데이터 모델 정확성
 
-- [x] **D6** `coordinate_hints.yaml`이 `extraction_version: 0.1`로 남아도 stale 미감지. (commit PLACEHOLDER)
+- [x] **D6** `coordinate_hints.yaml`이 `extraction_version: 0.1`로 남아도 stale 미감지. (commit 0a28044)
   evidence: `scripts/reference_extract.py:77` `EXTRACTION_VERSION="0.3"`. 실제 사례: `examples/fig3_trap_schematic_v97/coordinate_hints.yaml:2`. 문서 drift: `commands/fig_extract.md:41`.
   fix: `scripts/status.py:_append_reference_image_check`가 hints의 `metadata.extraction_version`를 `EXTRACTION_VERSION`과 비교; 불일치 시 `coordinate_hints_outdated` note. 문서 예시도 `"0.3"`으로 갱신.
   test: `tests/test_status.py` 신규 — 0.1 hints에서 `coordinate_hints_outdated` 출력. 기존 `tests/test_status.py:295,314`의 0.1 픽스처는 outdated 기대값으로 갱신.
