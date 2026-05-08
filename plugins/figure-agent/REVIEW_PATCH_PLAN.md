@@ -4,7 +4,7 @@
 
 ## P0 — correctness (export 무결성)
 
-- [x] **D1** `scripts/run_export.py` FRESH 판정이 exports/<name>.pdf 하나만 본다. (commit PLACEHOLDER)
+- [x] **D1** `scripts/run_export.py` FRESH 판정이 exports/<name>.pdf 하나만 본다. (commit 2f32aa4)
   evidence: `scripts/export_freshness.py:46-54`. SVG/TIFF/PNG 누락 시 `_regenerate` 미호출.
   fix: `compute_export_state`가 4개 artifact(PDF/SVG/TIFF/PNG) 모두 존재 + PDF 컨텐츠 fresh를 요구. 누락은 `STALE`.
   test: `tests/test_export_freshness.py` 신규 — PDF만 있고 SVG 없을 때 STALE.
