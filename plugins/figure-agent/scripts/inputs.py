@@ -14,6 +14,33 @@ _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
 _KNOWN_STYLE_PROFILES = {"polymer-default", "polymer-paper"}
 
 
+def _normalize_panel(panel: dict, index: int) -> dict:
+    normalized = dict(panel)
+    panel_id = normalized.get("id", f"index {index}")
+    reference_image = normalized.get("reference_image")
+    if reference_image is not None and not isinstance(reference_image, str):
+        raise ValueError(f"panels[{panel_id!r}].reference_image must be a string path")
+
+    bbox = normalized.get("bbox_pdf_cm")
+    if bbox is None:
+        return normalized
+    if not isinstance(bbox, list | tuple) or len(bbox) != 4:
+        raise ValueError(f"panels[{panel_id!r}].bbox_pdf_cm must be a list of four numbers")
+    try:
+        normalized_bbox = [float(value) for value in bbox]
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"panels[{panel_id!r}].bbox_pdf_cm must be a list of four numbers"
+        ) from exc
+    x0, y0, x1, y1 = normalized_bbox
+    if x1 <= x0 or y1 <= y0:
+        raise ValueError(
+            f"panels[{panel_id!r}].bbox_pdf_cm must be [x0, y0, x1, y1] with x1>x0, y1>y0"
+        )
+    normalized["bbox_pdf_cm"] = normalized_bbox
+    return normalized
+
+
 def parse_spec(text: str) -> dict:
     data = yaml.safe_load(text)
     if data is None:
@@ -24,7 +51,11 @@ def parse_spec(text: str) -> dict:
     if not isinstance(panels, list):
         panels = []
     else:
-        panels = [p for p in panels if isinstance(p, dict)]
+        panels = [
+            _normalize_panel(panel, index)
+            for index, panel in enumerate(panels)
+            if isinstance(panel, dict)
+        ]
     data["panels"] = panels
     profile = data.get("style_profile")
     if profile is not None and profile not in _KNOWN_STYLE_PROFILES:

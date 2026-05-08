@@ -126,6 +126,40 @@ panels:
     assert spec["panels"][1]["id"] == "b"
 
 
+def test_parse_spec_accepts_panel_reference_image_and_normalizes_bbox_pdf_cm():
+    text = """name: panel_refs
+panels:
+  - id: row1
+    caption: First row
+    reference_image: reference/row1.png
+    bbox_pdf_cm: [0, 1.25, "3.5", 4]
+"""
+    spec = parse_spec(text)
+
+    assert spec["panels"] == [
+        {
+            "id": "row1",
+            "caption": "First row",
+            "reference_image": "reference/row1.png",
+            "bbox_pdf_cm": [0.0, 1.25, 3.5, 4.0],
+        }
+    ]
+
+
+def test_parse_spec_rejects_invalid_panel_bbox_pdf_cm():
+    import pytest
+
+    text = """name: panel_refs
+panels:
+  - id: row1
+    caption: First row
+    reference_image: reference/row1.png
+    bbox_pdf_cm: [0, 1, 2]
+"""
+    with pytest.raises(ValueError, match="bbox_pdf_cm"):
+        parse_spec(text)
+
+
 def test_parse_spec_real_fig3_fixture_pinned():
     fixture = REPO_ROOT / "examples" / "fig3_trapping_concept" / "spec.yaml"
     if not fixture.exists():

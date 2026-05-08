@@ -40,6 +40,10 @@ briefing, optional reference image, and optional coordinate hints.
 /fig_new <name>          scaffold (briefing + spec)
                          [user saves reference PNG and records it as
                           spec.yaml.reference_image when target matching matters]
+                         [for multi-panel target matching, user may save panel
+                          reference PNGs under reference/ and record
+                          panels[].reference_image plus panels[].bbox_pdf_cm;
+                          run scripts/spec_bbox_helper.py to compute bboxes]
 /fig_extract <name>      reference PNG -> OCR + palette clusters + optional vtracer structural hints
                          -> coordinate_hints.yaml
                          [human/LLM authors semantic TikZ from briefing intent,
@@ -73,6 +77,8 @@ authoring or drift review.
 
 ```
 /fig_critique <name>         host Claude reads build/<name>.png + briefing,
+                             plus any panel crop/reference pairs declared by
+                             panels[].reference_image + panels[].bbox_pdf_cm,
                              writes structured critique.md (YAML + Markdown).
                              Report-only for v0.2; subscription tokens, zero external API.
 ```

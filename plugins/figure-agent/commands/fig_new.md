@@ -4,8 +4,9 @@ description: Conversational interview to scaffold a new figure (schematic) and a
 
 > **Shared entry point.** `/fig_new` scaffolds the per-figure folder for the
 > active quality-kernel workflow. After this command, author `<name>.tex`
-> directly from briefing intent plus optional `reference_image` /
-> `coordinate_hints.yaml`, then run `/fig_compile`.
+> directly from briefing intent plus optional `reference_image`,
+> optional per-panel `panels[].reference_image` + `panels[].bbox_pdf_cm`,
+> and `coordinate_hints.yaml`, then run `/fig_compile`.
 >
 > See `docs/architecture-overview.md` for the layer model.
 
@@ -33,7 +34,9 @@ Create directory `examples/<name>/` (`<name>` maps to `examples/<name>/`) with:
 Ask the user the following seven questions, one per turn (or all at once if user asks for it).
 After each answer, **write the answer into the corresponding section of `briefing.md`**
 (strip the HTML-comment TODO when overwriting). For §3, also propagate panel structure into
-`spec.yaml`.
+`spec.yaml`. If the user already has fixed per-panel references, optionally record each
+panel's `reference_image` path under `panels[]`; leave `bbox_pdf_cm` absent until the user
+runs `uv run python3 scripts/spec_bbox_helper.py <name> --panel id=<id> x=<x0>,<x1> y=<y0>,<y1>`.
 
 1. **§1 Topic** — "이 figure가 무엇을 보여주나요? (1-2 문장으로 한 줄 요지)"
 2. **§2 Domain vocabulary** — "어떤 도메인 용어를 써야 하나요? (재료/메커니즘/구조/물리 용어)"
@@ -84,10 +87,13 @@ figure intent.
 After all 7 sections are filled (and any scope-drift conflicts resolved), tell the user:
 
 > "briefing 완료 ─ examples/<name>/briefing.md 에 기록됨. target matching이 필요하면
-> reference PNG를 저장하고 spec.yaml.reference_image를 기록한 뒤 /fig_extract <name>을
-> 실행하세요. 이후 semantic TikZ를 작성하고 /fig_compile <name>으로 검증합니다.
-> /fig_critique 실행 시 §7 Author intent + reference image가 자동으로 vision brief에
-> 첨부되어 generic-best-practice drift를 막습니다 (cheap-intervention v0.3.0)."
+> figure-level reference PNG를 저장하고 spec.yaml.reference_image를 기록한 뒤
+> /fig_extract <name>을 실행하세요. multi-panel target matching이 필요하면
+> panel reference PNG를 reference/ 아래에 저장하고 panels[].reference_image를 기록한 뒤
+> spec_bbox_helper로 bbox_pdf_cm를 계산하세요. 이후 semantic TikZ를 작성하고
+> /fig_compile <name>으로 검증합니다. /fig_critique 실행 시 §7 Author intent +
+> reference image가 자동으로 vision brief에 첨부되어 generic-best-practice drift를
+> 막습니다 (panel reference가 있으면 panel crop/reference pair도 함께 첨부)."
 
 `selected/` is not part of the active workflow. Historical preview-selection
 metadata is ignored by current stage inference.

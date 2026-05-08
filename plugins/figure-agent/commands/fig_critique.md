@@ -14,9 +14,9 @@ Prerequisites:
 
 Steps:
 
-1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against `<name>.tex`, `briefing.md`, and `polymer-paper-preamble.sty`; it then emits the briefing context, the line-numbered TikZ source, and the severity/category rubric. If the brief errors (stale render, missing files), STOP and instruct the user to re-run `/fig_compile <name>`.
+1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against `<name>.tex`, `briefing.md`, and `polymer-paper-preamble.sty`; it then emits the briefing context, the line-numbered TikZ source, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique. If the brief errors (stale render, missing files), STOP and instruct the user to re-run `/fig_compile <name>`.
 
-2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. The host model inspects the image directly; do not call any external vision API.
+2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. The host model inspects the images directly; do not call any external vision API.
 
 3. Apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
    - `severity`: BLOCKER / MAJOR / MINOR / NIT
@@ -33,6 +33,16 @@ schema: figure-agent.critique.v1
 fixture: <name>
 generated_at: <ISO-8601 timestamp>
 verdict: ready | revise | block
+panels:
+  - id: <panel id>
+    findings:
+      - id: P001
+        severity: MAJOR
+        category: structural
+        tex_lines: [42, 57]
+        observation: "panel crop omits the ring geometry present in the panel reference"
+        suggested_fix: "add the missing ring motif inside the panel bbox"
+        status: open
 findings:
   - id: C001
     severity: MAJOR
@@ -47,6 +57,8 @@ findings:
 
 <one-paragraph overall verdict, then per-finding prose discussion>
 ```
+
+Use `panels: []` when no panel-level reference comparison was available. Keep cross-panel and whole-figure issues in top-level `findings:`; do not move existing figure-level findings under `panels:`.
 
 `verdict` rules:
 - `ready` — zero BLOCKER and zero MAJOR findings

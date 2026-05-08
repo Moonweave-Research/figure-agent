@@ -12,15 +12,18 @@ Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
 from inputs import parse_briefing, parse_spec
+from PIL import Image
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
+_PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
 class CritiqueBriefError(Exception):
@@ -65,14 +68,50 @@ def _reference_image_path(example_dir: Path, spec: dict) -> Path | None:
         candidate = example_dir / ref_image_str
         if candidate.is_file():
             return candidate
+    panel_ref_paths = {
+        example_dir / reference
+        for panel in spec.get("panels", [])
+        if isinstance((reference := panel.get("reference_image")), str) and reference.strip()
+    }
     # Fallback: scan reference/ directory
     ref_dir = example_dir / "reference"
     if not ref_dir.is_dir():
         return None
     for candidate in [ref_dir / "golden_target_001.png"] + sorted(ref_dir.glob("*.png")):
+        if candidate in panel_ref_paths:
+            continue
         if candidate.exists():
             return candidate
     return None
+
+
+def _panel_id(panel: dict, index: int) -> str:
+    panel_id = panel.get("id")
+    if panel_id is None:
+        return f"panel_{index + 1}"
+    return str(panel_id)
+
+
+def _safe_panel_filename(panel_id: str) -> str:
+    return _PANEL_ID_SAFE.sub("_", panel_id).strip("._") or "panel"
+
+
+def _panel_reference_path(example_dir: Path, panel: dict) -> Path | None:
+    reference = panel.get("reference_image")
+    if not isinstance(reference, str) or not reference.strip():
+        return None
+    return example_dir / reference
+
+
+def _panel_reference_paths(example_dir: Path, spec: dict) -> tuple[Path, ...]:
+    paths: list[Path] = []
+    for panel in spec.get("panels", []):
+        if panel.get("bbox_pdf_cm") is None:
+            continue
+        ref_path = _panel_reference_path(example_dir, panel)
+        if ref_path is not None and ref_path.exists():
+            paths.append(ref_path)
+    return tuple(paths)
 
 
 def _critique_source_paths(
@@ -85,6 +124,7 @@ def _critique_source_paths(
     ref_image = _reference_image_path(example_dir, spec)
     if ref_image is not None:
         paths.append(ref_image)
+    paths.extend(_panel_reference_paths(example_dir, spec))
     hints_path = example_dir / "coordinate_hints.yaml"
     if hints_path.exists():
         paths.append(hints_path)
@@ -99,6 +139,107 @@ def _line_numbered(text: str) -> str:
     return "".join(
         f"{line_number:4d}: {line}\n" for line_number, line in enumerate(text.splitlines(), start=1)
     )
+
+
+def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:
+    if not pdf_path.is_file():
+        raise CritiqueBriefError(f"missing {pdf_path}; run /fig_compile first")
+    try:
+        import pdfplumber
+    except ImportError as exc:
+        raise CritiqueBriefError("pdfplumber required for panel bbox cropping") from exc
+
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            raise CritiqueBriefError(f"empty PDF {pdf_path}")
+        page = pdf.pages[0]
+        return (float(page.width) * 2.54 / 72.0, float(page.height) * 2.54 / 72.0)
+
+
+def _crop_panel_png(
+    png_path: Path,
+    pdf_path: Path,
+    bbox_pdf_cm: list[float],
+    output_path: Path,
+) -> Path:
+    page_width_cm, page_height_cm = _pdf_page_size_cm(pdf_path)
+    x0, y0, x1, y1 = bbox_pdf_cm
+    if x1 <= x0 or y1 <= y0:
+        raise CritiqueBriefError("bbox_pdf_cm must satisfy x1>x0 and y1>y0")
+    if x0 < 0 or y0 < 0 or x1 > page_width_cm or y1 > page_height_cm:
+        raise CritiqueBriefError(
+            "bbox_pdf_cm outside PDF page bounds "
+            f"[0, 0, {page_width_cm:.3f}, {page_height_cm:.3f}]"
+        )
+
+    with Image.open(png_path) as image:
+        width_px, height_px = image.size
+        crop_box = (
+            round(x0 / page_width_cm * width_px),
+            round(y0 / page_height_cm * height_px),
+            round(x1 / page_width_cm * width_px),
+            round(y1 / page_height_cm * height_px),
+        )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        image.crop(crop_box).save(output_path)
+    return output_path
+
+
+def _format_bbox(values: list[float]) -> str:
+    return "[" + ", ".join(f"{value:.3f}" for value in values) + "]"
+
+
+def _panel_reference_sections(
+    example_dir: Path, spec: dict, png_path: Path, pdf_path: Path
+) -> tuple[str, str]:
+    contexts: list[str] = []
+    warnings: list[str] = []
+    for index, panel in enumerate(spec.get("panels", [])):
+        ref_path = _panel_reference_path(example_dir, panel)
+        if ref_path is None:
+            continue
+        panel_id = _panel_id(panel, index)
+        if not ref_path.is_file():
+            reference = panel.get("reference_image")
+            warnings.append(
+                f"WARN: Panel `{panel_id}` declares reference_image `{reference}` "
+                "but that file is missing; skipping per-panel comparison."
+            )
+            continue
+        bbox = panel.get("bbox_pdf_cm")
+        if bbox is None:
+            warnings.append(
+                f"WARN: Panel `{panel_id}` declares reference_image but no bbox_pdf_cm; "
+                "skipping per-panel comparison."
+            )
+            continue
+
+        crop_path = example_dir / "build" / "panel_crops" / f"{_safe_panel_filename(panel_id)}.png"
+        try:
+            _crop_panel_png(png_path, pdf_path, bbox, crop_path)
+        except CritiqueBriefError as exc:
+            raise CritiqueBriefError(f"panel `{panel_id}` crop failed: {exc}") from exc
+
+        contexts.append(
+            "\n".join(
+                [
+                    f"### Panel `{panel_id}`",
+                    f"- Build crop: `{_example_relative_path(example_dir, crop_path)}`",
+                    f"- Panel reference: `{_example_relative_path(example_dir, ref_path)}`",
+                    f"- bbox_pdf_cm: {_format_bbox(bbox)}",
+                    "- Critique instruction: Compare this panel's build crop to its reference. "
+                    "Note structural/topological deviations; style lock is handled elsewhere.",
+                ]
+            )
+        )
+
+    warning_section = ""
+    if warnings:
+        warning_section = "\n\n## Per-panel reference warnings\n" + "\n".join(warnings)
+    context_section = ""
+    if contexts:
+        context_section = "\n\n## Per-panel reference contexts\n" + "\n\n".join(contexts)
+    return warning_section, context_section
 
 
 def generate_for(example_dir: Path) -> str:
@@ -117,6 +258,7 @@ def generate_for(example_dir: Path) -> str:
 
     tex_path = example_dir / f"{name}.tex"
     png_path = example_dir / "build" / f"{name}.png"
+    pdf_path = example_dir / "build" / f"{name}.pdf"
     _require_file(tex_path)
     _require_file(png_path, "run /fig_compile first")
     _require_fresh_png(png_path, _critique_source_paths(tex_path, briefing_path, example_dir, spec))
@@ -135,11 +277,18 @@ def generate_for(example_dir: Path) -> str:
 **Reference image (for drift detection):** `{ref_path}`
 (If the current render differs from reference, cite both in findings.
 Use reference image as a tiebreaker in case of conflicting interpretations.)"""
+    panel_warning_section, panel_context_section = _panel_reference_sections(
+        example_dir, spec, png_path, pdf_path
+    )
+    image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
+    render_read_note = (
+        "(The slash command loads this PNG into the host main loop via the Read tool.)"
+    )
 
     return f"""# Critique brief — {name}
 
 **Render to inspect:** `{render_path}`
-(The slash command loads this PNG into the host main loop via the Read tool.){ref_section}
+{render_read_note}{image_context_sections}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -179,6 +328,16 @@ schema: figure-agent.critique.v1
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 verdict: ready | revise | block
+panels:
+  - id: <panel id>
+    findings:
+      - id: P001
+        severity: BLOCKER | MAJOR | MINOR | NIT
+        category: structural | physics | label_placement | whitespace | hierarchy | palette | style
+        tex_lines: [<int>, ...]
+        observation: "<panel-specific difference between build crop and panel reference>"
+        suggested_fix: "<concrete edit to the .tex>"
+        status: open
 findings:
   - id: C001
     severity: BLOCKER | MAJOR | MINOR | NIT
@@ -194,6 +353,8 @@ findings:
 <one-paragraph overall verdict, then per-finding prose discussion>
 ```
 
+Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
+Keep figure-level findings in top-level `findings:`; do not move them under panels.
 `verdict: ready` if zero BLOCKER + zero MAJOR findings; `revise` for any
 MAJOR/MINOR; `block` only if a BLOCKER physics violation makes the figure
 unsuitable for manuscript use. Critique is **report-only** for v0.2 — do
