@@ -9,7 +9,7 @@
   fix: `compute_export_state`가 4개 artifact(PDF/SVG/TIFF/PNG) 모두 존재 + PDF 컨텐츠 fresh를 요구. 누락은 `STALE`.
   test: `tests/test_export_freshness.py` 신규 — PDF만 있고 SVG 없을 때 STALE.
 
-- [x] **D2** `scripts/critique_brief.py`가 `spec.yaml.reference_image`를 무시. (commit PLACEHOLDER)
+- [x] **D2** `scripts/critique_brief.py`가 `spec.yaml.reference_image`를 무시. (commit 2a4a160)
   evidence: `scripts/critique_brief.py:61-70`.
   fix: `_reference_image_path`가 먼저 `parse_spec(...)["reference_image"]` 시도, 없을 때만 디렉터리 fallback.
   test: `tests/test_critique_brief.py` 신규 — `reference_image: reference/foo.png` 선언 시 그것을 사용.
