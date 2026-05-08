@@ -1,0 +1,505 @@
+% fig1_overview_v2 — 2-row 7-panel narrative overview
+% Canvas: 14cm × 9cm  →  \resizebox{178mm}{!}  (target NatComm 178mm × ~120mm)
+% Row 1 (y=5.00..9.00): A (x=0..3.50) | B (x=3.55..6.85) | C HERO (x=6.90..13.95, ~1.5×)
+% Inter-row gap (y=4.50..5.00) carries the C → Row 2 "convergent evidence" arrow.
+% Row 2 (y=0.10..4.45): D (x=0..4.45) | E (x=4.50..6.95) | F (x=7.00..10.45) | G (x=10.50..13.95)
+%
+% Implementation status (design.md v2.1 §10):
+%   Panel C   — IMPLEMENTED (HERO #1)
+%   Panels A, B, D, E, F, G — placeholder regions (filled in subsequent rounds)
+%
+% Spring-layout / chemfig packages intentionally NOT imported here:
+% Panel A draft used graphdrawing/force which design.md §7 forbids; chemfig
+% will be re-introduced when Panel A's S₈ corner inset is authored.
+
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  interArrow/.style={-{Stealth[length=7pt,width=5pt]}, cGray!55!black,
+                     line width=1.4pt},
+  % --- 3-tier inline label hierarchy (design.md §6, fig2 calibration) ---
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
+                    text=cGray!80!black},
+]
+
+% ============================================================
+% Figure-wide background wash (single canvas tone — §2.2 compliant)
+% ============================================================
+\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
+
+% ============================================================
+% Panel scaffold reminders — text-only at low opacity (§2.2 compliant)
+% Bbox refs: A x=0..3.50 y=5..9 | B x=3.55..6.85 y=5..9
+%            D x=0..4.45 y=0.1..4.45 | E x=4.50..6.95 | F x=7..10.45 | G x=10.5..13.95
+% ============================================================
+
+% ============================================================
+% Panel A — Sulfur-rich polymer (DIB-linked polysulfide network)
+% Reference: examples/fig1_overview_v2/reference/sulfur_polymer_panelA_ref.png
+% Chemistry-correct rendering: DIB benzene rings + polysulfide wavy chains
+% + S₈ ring inset + transformation hint.
+% ============================================================
+
+% --- Soft amber radial wash (centered on triangle centroid for balance) ---
+\fill[cAmber!10] (1.62, 6.90) circle (1.95cm);
+\fill[cAmber!06] (1.62, 6.90) circle (1.45cm);
+
+% Phase 4 prototype — 3 DIB benzene rings in triangular layout.
+% Each DIB: hexagonal aromatic ring + 2 polysulfide chains at varying angles
+% to suggest amorphous network branching.
+
+% --- Helper: DIB benzene ring at origin (used inside scope shift) ---
+% Bumped to radius 0.42cm (was 0.35) + slightly thicker aromatic notation.
+\newcommand{\dibRing}{
+  \pgfmathsetmacro{\dibR}{0.42}
+  \draw[cGray!85!black, line width=0.65pt]
+    (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
+    (240:\dibR) -- (300:\dibR) -- cycle;
+  \draw[cGray!85!black, line width=0.55pt] (66:\dibR*0.78) -- (114:\dibR*0.78);
+  \draw[cGray!85!black, line width=0.55pt] (186:\dibR*0.78) -- (234:\dibR*0.78);
+  \draw[cGray!85!black, line width=0.55pt] (306:\dibR*0.78) -- (354:\dibR*0.78);
+}
+
+% --- Helper: polysulfide chain (angle, label_x, label, end_radius) ---
+% #4 = chain end radius (varies 0.85-1.20 for organic asymmetry)
+% Solid = 0.50..(end-0.30), Faded tail = (end-0.30)..end
+% \polysulfide{angle}{label_x}{label}{end_radius}{amplitude}
+\newcommand{\polysulfide}[5]{
+  \begin{scope}[rotate=#1]
+    \pgfmathsetmacro{\fadeStart}{#4 - 0.30}
+    % Isopropenyl linker
+    \draw[cAmber!85!black, line width=0.85pt] (0.42, 0) -- (0.58, 0);
+    % Wavy main solid (amplitude #5)
+    \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60,
+          domain=0.58:\fadeStart]
+          plot (\x, {#5*sin((\x-0.58)*900)});
+    % Wavy faded tail
+    \draw[cAmber!85!black, line width=0.85pt, smooth, samples=50,
+          domain=\fadeStart:#4, opacity=0.25]
+          plot (\x, {#5*sin((\x-0.58)*900)});
+    \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+          text=cAmber!85!black]
+      at (#2, 0.18) {#3};
+  \end{scope}
+}
+
+% DIB1 — top-center (centered between DIB2 and DIB3 for equilateral triangle)
+\begin{scope}[shift={(1.62, 7.90)}]
+  \dibRing
+  \polysulfide{210}{0.65}{S}{1.10}{0.09}                 % toward DIB2
+  \polysulfide{330}{0.70}{S\,--\,S}{1.20}{0.10}          % toward DIB3 (wider wave)
+\end{scope}
+
+% DIB2 — bottom-left
+\begin{scope}[shift={(0.85, 6.40)}]
+  \dibRing
+  \polysulfide{30}{0.65}{S\,--\,S\,--\,S}{1.05}{0.08}    % toward DIB1
+  \polysulfide{180}{0.62}{S}{0.85}{0.07}                 % short terminal (narrower wave)
+\end{scope}
+
+% DIB3 — bottom-right
+\begin{scope}[shift={(2.40, 6.40)}]
+  \dibRing
+  \polysulfide{150}{0.65}{S\,--\,S}{1.10}{0.10}          % toward DIB1
+  \polysulfide{0}{0.62}{S}{0.85}{0.07}                   % short terminal
+\end{scope}
+
+% S₈ ring inset — upper-right corner of Panel A (bumped for prominence)
+\begin{scope}[shift={(3.00, 8.55)}]
+  \pgfmathsetmacro{\sR}{0.40}  % S₈ ring radius (bumped 0.32→0.40)
+  % Octagonal bond polygon
+  \foreach \i in {0,...,7} {
+    \pgfmathsetmacro{\sang}{90 - \i*45}
+    \pgfmathsetmacro{\snext}{90 - (\i+1)*45}
+    \draw[cAmber!75!black, line width=0.60pt]
+      ({cos(\sang)*\sR}, {sin(\sang)*\sR}) --
+      ({cos(\snext)*\sR}, {sin(\snext)*\sR});
+  }
+  % S labels at each vertex (bigger, white-fill so ring lines don't cross)
+  \foreach \i in {0,...,7} {
+    \pgfmathsetmacro{\sang}{90 - \i*45}
+    \node[font=\sffamily\bfseries\fontsize{5.8}{7}\selectfont,
+          text=cAmber!85!black, fill=white, inner sep=0.5pt]
+      at ({cos(\sang)*\sR}, {sin(\sang)*\sR}) {S};
+  }
+\end{scope}
+
+% Linear polysulfide notation (S-S-S) — placed inside Panel A bounds (left of ring)
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cAmber!85!black, anchor=east] at (2.55, 8.55) {S\,–\,S\,–\,S};
+
+% Transformation arrow — S₈ ring → polymer network area
+% Stronger line width + arrow head; lands near DIB1 upper-right edge.
+\draw[cAmber!85!black, dashed, line width=0.90pt,
+      -{Stealth[length=5pt,width=4pt]}]
+  (2.85, 8.20) to[out=-110, in=35] (1.95, 7.70);
+
+% --- Caption (placeholder during prototype phase) ---
+\node[font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
+      text=cAmber!75!black]                         at (1.45, 5.85) {Sulfur-rich polymer};
+\node[labelMute]                                    at (1.45, 5.60) {DIB-linked polysulfide network};
+
+% --- A → B connector (clean, no label) ---
+\draw[cGray!55!black, line width=0.55pt,
+      -{Stealth[length=4pt,width=2.5pt]}]
+  (3.45, 6.80) -- (3.62, 6.80);
+
+% ============================================================
+% Panel B — S₆₀..S₈₅ chain length (soft tunability)  x: 3.55..6.85, y: 5..9
+% 4 horizontal zigzag chains (subitizing limit), top→bottom = short→long.
+% All chains uniform gold (no per-composition gradient — design.md Q5).
+% ============================================================
+
+% --- Chain 1 (top, S₆₀, shortest) ---
+\draw[cAmber!80!black, line width=0.85pt, smooth, samples=60,
+      domain=3.80:5.15]
+      plot (\x, {8.40 + 0.10*sin( (\x-3.80)*900 ) });
+\foreach \sx in {3.95, 4.30, 4.65, 5.00} {
+  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
+        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
+    at (\sx, 8.50) {};
+}
+\node[labelStrong, text=cAmber!85!black, anchor=west]
+  at (5.30, 8.40) {S$_{60}$};
+
+% --- Chain 2 ---
+\draw[cAmber!80!black, line width=0.85pt, smooth, samples=70,
+      domain=3.80:5.60]
+      plot (\x, {7.65 + 0.10*sin( (\x-3.80)*900 ) });
+\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35} {
+  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
+        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
+    at (\sx, 7.75) {};
+}
+
+% --- Chain 3 ---
+\draw[cAmber!80!black, line width=0.85pt, smooth, samples=80,
+      domain=3.80:6.10]
+      plot (\x, {6.90 + 0.10*sin( (\x-3.80)*900 ) });
+\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35, 5.70, 6.00} {
+  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
+        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
+    at (\sx, 7.00) {};
+}
+
+% --- Chain 4 (bottom, S₈₅, longest) ---
+\draw[cAmber!80!black, line width=0.85pt, smooth, samples=90,
+      domain=3.80:6.65]
+      plot (\x, {6.15 + 0.10*sin( (\x-3.80)*900 ) });
+\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35, 5.70, 6.05, 6.40} {
+  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
+        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
+    at (\sx, 6.25) {};
+}
+\node[labelStrong, text=cAmber!85!black, anchor=east]
+  at (6.82, 6.15) {S$_{85}$};
+
+% --- Bottom axis arrow + label ---
+\draw[cGray!65!black, line width=0.45pt,
+      -{Stealth[length=3.5pt,width=2.5pt]}]
+  (3.80, 5.65) -- (6.65, 5.65);
+\node[labelMute] at (5.20, 5.42) {S-chain length};
+
+% --- B → C connector (clean) ---
+\draw[cGray!55!black, line width=0.55pt,
+      -{Stealth[length=4pt,width=2.5pt]}]
+  (6.78, 6.85) -- (6.93, 6.85);
+
+% ============================================================
+% Panel C — Localized traps  (HERO #1)   x: 6.90..13.95, y: 5.00..9.00
+% ============================================================
+
+% --- Faded polymer network background (4 chains + cross-links, opacity 0.42) ---
+% Recovers design.md §4 "rich amorphous network" intent — 4 chains stacked
+% vertically with 4 cross-link bonds, ~20 S atoms total. Atom size bumped to
+% 0.55mm so polymer reads through the fade. opacity raised 0.28→0.42 per
+% critique C002 (backdrop too faint, region read as 4-panel split).
+\begin{scope}[opacity=0.42]
+  % Chain 1 — top-left (highest)
+  \draw[cGray!75!black, line width=0.80pt, smooth, samples=80,
+        domain=7.40:10.40]
+        plot (\x, {8.20 + 0.17*sin( (\x-7.40)*600 ) });
+  \foreach \sx in {7.55, 8.15, 8.75, 9.35, 9.95} {
+    \fill[cAmber!80!black] (\sx, 8.37) circle (0.55mm);
+  }
+
+  % Chain 2 — top-right (highest)
+  \draw[cGray!75!black, line width=0.80pt, smooth, samples=80,
+        domain=10.80:13.70]
+        plot (\x, {8.05 + 0.17*sin( (\x-10.80)*600 ) });
+  \foreach \sx in {10.95, 11.55, 12.15, 12.75, 13.35} {
+    \fill[cAmber!80!black] (\sx, 8.22) circle (0.55mm);
+  }
+
+  % Chain 3 — mid-left (lower row, slight x offset for amorphous feel)
+  \draw[cGray!75!black, line width=0.80pt, smooth, samples=70,
+        domain=7.50:10.30]
+        plot (\x, {7.40 + 0.17*sin( (\x-7.50)*600 ) });
+  \foreach \sx in {7.65, 8.25, 8.85, 9.45, 10.05} {
+    \fill[cAmber!80!black] (\sx, 7.57) circle (0.55mm);
+  }
+
+  % Chain 4 — mid-right (lower row)
+  \draw[cGray!75!black, line width=0.80pt, smooth, samples=70,
+        domain=10.85:13.60]
+        plot (\x, {7.30 + 0.17*sin( (\x-10.85)*600 ) });
+  \foreach \sx in {11.00, 11.60, 12.20, 12.80, 13.40} {
+    \fill[cAmber!80!black] (\sx, 7.47) circle (0.55mm);
+  }
+
+  % Cross-link bonds (vertical, top↔mid chains — sparse, ~1 per quadrant)
+  \draw[cGray!75!black, line width=0.55pt] (8.15, 8.37) -- (8.25, 7.57);
+  \draw[cGray!75!black, line width=0.55pt] (9.35, 8.37) -- (9.45, 7.57);
+  \draw[cGray!75!black, line width=0.55pt] (11.55, 8.22) -- (11.60, 7.47);
+  \draw[cGray!75!black, line width=0.55pt] (12.75, 8.22) -- (12.80, 7.47);
+\end{scope}
+
+% --- Energy baseline reference ---
+\draw[cGray!45, dashed, line width=0.30pt] (7.20, 6.85) -- (13.70, 6.85);
+
+% --- Deep energy landscape — 3 wells, blue, amplitude 0.60 (left, briefing §3 Panel C) ---
+% C001 BLOCKER fix: amplitudes swapped so left=deep (blue, briefing §6 deeper wells = blue).
+\draw[cBlue!75!black, line width=1.30pt, smooth, samples=140,
+      domain=7.30:9.80]
+      plot (\x, {6.85 - 0.60*abs(sin( ((\x-7.30)/0.8333)*180 ))});
+
+% --- Shallow energy landscape — 4 wells, red, amplitude 0.22 (right) ---
+\draw[cRed!80!black, line width=1.00pt, smooth, samples=180,
+      domain=10.05:13.65]
+      plot (\x, {6.85 - 0.22*abs(sin( ((\x-10.05)/0.90)*180 ))});
+
+% --- Deep electrons (3 × blue ⊖ at deep well bottoms, y=6.25) ---
+\foreach \ex in {7.72, 8.55, 9.38} {
+  \node[circle, draw=cBlue!85!black, fill=cBlue!55,
+        inner sep=0pt, minimum size=1.7mm, line width=0.4pt,
+        font=\sffamily\fontsize{5.5}{7}\selectfont, text=white]
+    at (\ex, 6.25) {$-$};
+}
+
+% --- Shallow electrons (4 × red ⊖ at shallow well bottoms, y=6.63) ---
+\foreach \ex in {10.50, 11.40, 12.30, 13.20} {
+  \node[circle, draw=cRed!85!black, fill=cRed!55,
+        inner sep=0pt, minimum size=1.7mm, line width=0.4pt,
+        font=\sffamily\fontsize{5.5}{7}\selectfont, text=white]
+    at (\ex, 6.63) {$-$};
+}
+
+% --- Region labels (inline only, labelStrong tier) ---
+% C001 fix: left=deep (blue, briefing convention), right=shallow (red).
+\node[labelStrong, text=cBlue!75!black] at (8.55, 5.85) {deep};
+\node[labelStrong, text=cRed!80!black]  at (11.85, 5.85) {shallow};
+
+% --- Subtitle (labelMute tier) ---
+\node[labelMute] at (10.42, 5.32) {localized traps};
+
+% ============================================================
+% Panel D — Kinetic evidence I(t) ~ t^-n   x: 0.00..4.45, y: 0.10..4.45
+% Multi-slope log-log: shallow-rich (steep, blue) + deep-rich (gentle, red)
+% + Debye reference (dashed gray) + non-Debye tail highlight.
+% Concept labels only — composition-specific (S60/S85) forbidden by design.md.
+% ============================================================
+
+% --- Plot axes ---
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (0.40, 0.85) -- (4.30, 0.85);
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (0.40, 0.85) -- (0.40, 3.95);
+
+% --- non-Debye tail highlight (faint red wash, lower-right region) ---
+% Wash alone carries the "deep-rich persists where Debye fails" message;
+% explicit "non-Debye" text dropped to reduce label competition.
+\fill[cRed!8] (3.00, 0.88) rectangle (4.28, 2.50);
+
+% --- Debye reference (dashed gray, exponential → fast drop in log-log) ---
+\draw[cGray!75!black, line width=0.65pt, dashed, smooth]
+  plot coordinates {(0.55, 3.40) (1.50, 3.30) (2.20, 3.05)
+                    (2.70, 2.50) (3.00, 1.55) (3.15, 0.95)};
+
+% --- Shallow-rich I(t) — steep slope (high n), blue ---
+\draw[cBlue!75!black, line width=0.95pt]
+  (0.55, 3.65) -- (3.70, 1.10);
+
+% --- Deep-rich I(t) — gentle slope (low n), red, persists in tail ---
+% C007 fix: extend with shallower slope so non-Debye tail is unambiguous
+% (deep-rich line clearly above Debye reference at long t).
+\draw[cRed!80!black, line width=1.05pt]
+  (0.55, 3.10) -- (4.25, 2.30);
+
+% --- Curve callouts (concept labels — NO composition tags) ---
+\node[labelStd, text=cBlue!75!black] at (1.85, 1.95) {shallow-rich};
+\node[labelStd, text=cRed!80!black]  at (3.65, 2.45) {deep-rich};
+
+% --- Main equation label (labelStrong, message-carrying) ---
+\node[labelStrong, text=cGray!85!black] at (2.30, 4.20) {$I(t) \sim t^{-n}$};
+
+% --- Axis labels (minimal, no tick numbers) ---
+\node[labelStd, text=cGray, anchor=west]            at (4.32, 0.85) {$\log\,t$};
+\node[labelStd, text=cGray, rotate=90, anchor=south] at (0.10, 2.40) {$\log\,I$};
+
+% ============================================================
+% Panel E — V_s(t) ISPD raw decay   x: 4.50..6.95, y: 0.10..4.45
+% Single log-log plot, schematic open-circle data — paired with Panel F.
+% ============================================================
+
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (4.70, 0.85) -- (6.85, 0.85);
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (4.70, 0.85) -- (4.70, 3.95);
+
+% Power-law decay envelope (log-log → straight line w/ slope)
+\draw[cRed!75!black, line width=0.75pt, dashed]
+  (4.85, 3.65) -- (6.75, 1.20);
+
+% Open-circle data markers (schematic, ~7 points along envelope)
+\foreach \px/\py in {%
+  4.95/3.55, 5.25/3.20, 5.55/2.85, 5.85/2.50,
+  6.15/2.15, 6.45/1.80, 6.75/1.45%
+} {
+  \fill[white] (\px, \py) circle (0.95mm);
+  \draw[cRed!75!black, line width=0.45pt] (\px, \py) circle (0.95mm);
+}
+
+% Axis labels
+\node[labelStd, text=cGray, anchor=west] at (6.90, 0.85) {$\log\,t$};
+\node[labelStd, text=cGray, rotate=90, anchor=south] at (4.45, 2.40) {$\log V_s$};
+
+% Subtitle (labelMute)
+\node[labelMute] at (5.78, 4.18) {surface potential decay};
+
+% ============================================================
+% E ↔ F paired connector — "ISPD" transformation
+% Short arrow + label between Panel E (right) and Panel F (left).
+% ============================================================
+\draw[cGray!65!black, line width=0.55pt,
+      -{Stealth[length=3.5pt,width=2.5pt]}]
+  (6.88, 2.40) -- (7.17, 2.40);
+\node[labelMute, anchor=south] at (7.02, 2.50) {ISPD};
+
+% ============================================================
+% Panel F — g(E_t) bimodal trap DOS  (HERO #2)   x: 7.00..10.45, y: 0.10..4.45
+% Deep peak height = shallow × 1.8  (design.md §4 / Q4)
+% Plot frame style: shared with Panel E (paired ISPD) — defined inline here,
+% Panel E reuses same axis weights/fonts when implemented.
+% ============================================================
+
+% --- Plot axes (cGray, thin Stealth) ---
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (7.20, 0.85) -- (10.40, 0.85);
+\draw[cGray, line width=0.40pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (7.20, 0.85) -- (7.20, 3.95);
+
+% --- Shallow Gaussian (left, blue, peak height 1.50) ---
+\BellCurve[draw=cBlue!75!black, fill=cBlue!22, line width=0.65pt]%
+  {7.65, 0.85, 8.55, 2.35, up}
+
+% --- Deep Gaussian (right, red, peak height 2.70 ≈ 1.8× shallow) ---
+\BellCurve[draw=cRed!80!black, fill=cRed!28, line width=0.75pt]%
+  {9.00, 0.85, 9.90, 3.55, up}
+
+% --- τ_d double-headed arrow (between Shallow and Deep peaks, briefing §2/§3) ---
+% C005/FN-1 fix: τ_d arrow was missing entirely from .tex despite briefing requirement.
+\draw[cRed!80!black, line width=0.85pt, dashed,
+      {Stealth[length=4pt,width=3pt]}-{Stealth[length=4pt,width=3pt]}]
+  (8.55, 3.75) -- (9.90, 3.75);
+\node[labelStrong, text=cRed!80!black] at (9.22, 3.92) {$\tau_d$};
+
+% --- Axis labels (only x-axis label; y-axis sense carried by subtitle) ---
+\node[labelStd, text=cGray, anchor=west] at (10.45, 0.85) {$E_t$};
+
+% --- Region labels under x-axis (labelStrong tier, color-linked to Panel C) ---
+\node[labelStrong, text=cBlue!75!black] at (8.10, 0.55) {Shallow};
+\node[labelStrong, text=cRed!80!black]  at (9.45, 0.55) {Deep};
+
+% --- Panel F subtitle (labelMute) ---
+\node[labelMute] at (8.75, 4.18) {trap DOS (ISPD-derived)};
+
+% ============================================================
+% Panel G — Mechanical evidence (bent cantilever, v7-pattern)
+% Re-authored 2026-05-08 v3: adopt sc7_concept_tikz_v7.tex pattern for natural
+% cantilever bending — single control-point quadratic bezier + two-stroke
+% layering (dark outer + light inner) + line cap=round + dashed reference line.
+% Layout per briefing §3 Panel G: electrode LEFT, polymer strip RIGHT (bending
+% AWAY from electrode). Panel area x:10.50..13.95, y:0.10..4.45.
+% ============================================================
+
+% --- Electrode (LEFT, flat dark gray with subtle horizontal gradient) ---
+\path[draw=cGray!75!black, line width=0.55pt, shade,
+      left color=cGray!75!black, right color=cGray!50!black]
+  (10.95, 0.50) rectangle (11.40, 3.80);
+
+% --- Top clamp / fixture (anchor for cantilever, dark slab) ---
+\filldraw[fill=cGray!55!black, draw=cGray!75!black, line width=0.30pt,
+          rounded corners=0.4mm]
+  (12.30, 3.78) rectangle (12.70, 3.95);
+
+% --- Vertical reference line (un-bent strip silhouette, dashed faint) ---
+% Visualizes the bending displacement: tip deflects rightward from this line.
+\draw[cGray!35, line width=0.35pt, dashed] (12.50, 0.70) -- (12.50, 3.78);
+
+% --- Cantilever strip — v7 two-stroke bezier (single control point) ---
+% Outer stroke: darker amber, thicker (6pt = ~0.21cm visual width).
+% Inner stroke: lighter amber, thinner (4pt). Edge-highlight pseudo-3D effect.
+% Single control point at (12.65, 1.95) gives soft natural bend, tip displaced
+% ~0.7cm rightward (cantilever deflection visualization).
+\draw[cAmber!85!black, line width=6pt, line cap=round]
+  (12.50, 3.78) ..controls(12.65, 1.95).. (13.20, 0.85);
+\draw[cAmber!55!white, line width=4pt, line cap=round]
+  (12.50, 3.78) ..controls(12.65, 1.95).. (13.20, 0.85);
+
+% --- q_tr trapped charges along strip's electrode-facing (LEFT) edge ---
+% Positions computed at bezier params t≈0.20, 0.45, 0.70, 0.92 with
+% perpendicular offset toward smaller x (~0.10cm to land on left edge).
+\foreach \qx/\qy in {%
+  12.50/3.05,
+  12.62/2.30,
+  12.80/1.55,
+  13.00/0.95%
+} {
+  \node[circle, draw=cBlue!85!black, fill=cBlue!65,
+        inner sep=0pt, minimum size=1.6mm, line width=0.30pt,
+        font=\sffamily\fontsize{5}{6}\selectfont, text=white]
+    at (\qx, \qy) {$-$};
+}
+
+% --- q_tr label (top of charge stack) ---
+\node[labelStd, text=cBlue!75!black, anchor=south east]
+  at (12.42, 3.20) {$q_{tr}$};
+
+% --- Air gap label (between electrode and strip mid-region) ---
+\node[labelMute] at (11.85, 1.95) {air gap};
+
+% --- Coulomb repulsion (red, polymer pushed AWAY from electrode = RIGHTWARD) ---
+% Tail at strip mid-right, head outside strip to the right.
+\draw[cRed!80!black, line width=1.1pt, -{Stealth[length=5.5pt,width=4.5pt]}]
+  (13.05, 2.55) -- (13.65, 2.55);
+\node[labelStrong, text=cRed!80!black, anchor=west]
+  at (13.05, 2.85) {Coulomb};
+\node[labelStd, text=cRed!75!black, anchor=west]
+  at (13.05, 2.30) {repulsion};
+
+% --- Maxwell attraction (blue, polymer pulled TOWARD electrode = LEFTWARD) ---
+% Tail at strip lower-left, head pointing into air gap.
+\draw[cBlue!75!black, line width=1.1pt, -{Stealth[length=5.5pt,width=4.5pt]}]
+  (12.55, 1.20) -- (11.95, 1.20);
+\node[labelStrong, text=cBlue!75!black, anchor=west]
+  at (12.60, 1.45) {Maxwell};
+\node[labelStd, text=cBlue!70!black, anchor=west]
+  at (12.60, 0.95) {attraction};
+
+% ============================================================
+% Inter-row connector — "convergent evidence"
+% Drops at x=10.42 ≈ F-G boundary (Row 2 visual midpoint).
+% ============================================================
+% C006 fix: "convergent evidence" label removed (not in briefing).
+% Connector arrow alone carries the Row 1 → Row 2 transition.
+\draw[interArrow] (10.42, 5.00) -- (10.42, 4.55);
+
+\end{tikzpicture}%
+}
+\end{document}
