@@ -62,6 +62,7 @@ uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "${STRICT_ARGS[@]}"
 if [[ -f "coordinate_hints.yaml" ]]; then
   uv run python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi
+uv run python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

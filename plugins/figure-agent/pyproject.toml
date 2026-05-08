@@ -5,6 +5,7 @@ description = "Claude Code plugin: paper-figure quality kernel for semantic TikZ
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.4.4",
+    "pdfplumber>=0.11.4",
     "pillow>=12.2.0",
     "pyyaml>=6.0.3",
     "scipy>=1.12.0",
@@ -26,7 +27,6 @@ py-modules = []
 
 [dependency-groups]
 dev = [
-    "pdfplumber>=0.11.9",
     "pytest>=9.0.3",
     "ruff>=0.15.5",
 ]
