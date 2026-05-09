@@ -2,6 +2,44 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.5.0] - 2026-05-09
+
+Per-panel reference grounding and perception-data release. Keeps the product
+identity as a paper-figure quality kernel, while adding build-side descriptive
+geometry data and panel-grounded critique context.
+
+### Added
+
+- **v0.4.2 Perception Data Only** — `/fig_compile` now always writes
+  `build/perception/extract.yaml` and `build/perception/overlay.png` after a
+  successful PDF/PNG build. The pack is descriptive only: raw pdfplumber
+  primitives plus endpoint overlay, no topology judgment or lonely-endpoint
+  classifier.
+- **v0.5 Per-panel references** — `spec.yaml.panels[].reference_image` plus
+  `panels[].bbox_pdf_cm` can ground `/fig_critique` on build-crop/reference
+  pairs. Missing bbox emits a warning instead of silently pretending the panel
+  was compared.
+- `scripts/spec_bbox_helper.py` — converts source TikZ cm boxes into PDF-cm
+  `bbox_pdf_cm` lines so users do not hand-compute resizebox/border offsets.
+- `examples/fig1_overview_v2/` — multi-panel dogfood fixture with reference
+  images, coordinate hints, critique notes, and design record.
+
+### Changed
+
+- `pdfplumber` is now a runtime dependency because `/fig_compile` requires it
+  for the perception pack and `/fig_critique` uses it for panel cropping.
+- `/fig_status` now honors Layer 5 export content state directly: when
+  `exports_substate == STALE`, status reports `stale_export` and routes to
+  `/fig_export` even if export file mtimes are newer than the source files.
+- `/fig_status` freshness now includes `spec.yaml`, figure-level reference
+  image, optional `coordinate_hints.yaml`, and the style lock. `/fig_critique`
+  additionally treats participating panel reference images as freshness
+  sources.
+
+### Tests
+
+- 221 pytest pass, 1 xfail; ruff clean.
+
 ## [0.2.0] - 2026-05-04
 
 Architecture cleanup release. Slims the v0.1 11-layer model to 7 functional

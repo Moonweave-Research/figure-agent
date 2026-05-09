@@ -14,7 +14,7 @@ Prerequisites:
 
 Steps:
 
-1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against `<name>.tex`, `briefing.md`, and `polymer-paper-preamble.sty`; it then emits the briefing context, the line-numbered TikZ source, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique. If the brief errors (stale render, missing files), STOP and instruct the user to re-run `/fig_compile <name>`.
+1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against `<name>.tex`, `briefing.md`, `spec.yaml`, resolved figure-level reference image, panel reference images that participate in critique, `coordinate_hints.yaml` when present, and `polymer-paper-preamble.sty`; it then emits the briefing context, the line-numbered TikZ source, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique. If the brief errors (stale render, missing files), STOP and instruct the user to re-run `/fig_compile <name>`.
 
 2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. The host model inspects the images directly; do not call any external vision API.
 
@@ -65,6 +65,6 @@ Use `panels: []` when no panel-level reference comparison was available. Keep cr
 - `revise` — any MAJOR or MINOR findings (or NIT-only)
 - `block` — at least one BLOCKER physics violation that makes the figure unsuitable for manuscript use
 
-5. **STOP.** Critique is **report-only** for v0.2. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation is gated on N=5+ dogfood accuracy ≥ 80% per `docs/architecture-v0.2-proposal.md` §7.
+5. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation is gated on N=5+ dogfood accuracy ≥ 80% per `docs/architecture-v0.2-proposal.md` §7.
 
 Cost: 0원 (subscription tokens only). The plugin orchestrates; the host Claude Code main loop reads the PNG and produces the critique. CLAUDE.md policy: "delegates vision tasks to host main loop; never calls external vision API directly."

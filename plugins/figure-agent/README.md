@@ -41,6 +41,7 @@ coordinate hints.
                           reference PNG, and coordinate_hints.yaml;
                           SVG-to-TikZ path conversion is not the active workflow]
 /fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
+                         + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
@@ -80,8 +81,8 @@ redaction, and preview-selection pipeline was removed in PR #8a.
 ## Status
 
 The latest shipped plugin version is recorded in `.claude-plugin/plugin.json`.
-The active line is the v0.2 quality-kernel release with v0.3 authoring
-grounding work in progress. Active direction is recorded in
+The active line is the v0.5 quality-kernel release with per-panel reference
+grounding and build-side perception data. Active direction is recorded in
 `docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved under
 `docs/historical/design-v0.1.md` as a frozen reference.
 
@@ -89,6 +90,10 @@ grounding work in progress. Active direction is recorded in
 
 Active:
 - `docs/architecture-overview.md` — layer-by-layer reference; start here.
+- `docs/architecture-v0.4.2-perception-data-only.md` — descriptive perception
+  pack emitted by `/fig_compile`.
+- `docs/architecture-v0.5-per-panel-reference-workflow.md` — panel reference
+  image + crop workflow for `/fig_critique`.
 - `docs/quality-kernel-goal.md` — current product direction (durable kernel,
   frozen-legacy boundary, export tracking policy).
 - `docs/golden-target-trap-depth-picture.md` — Golden Target 001 acceptance

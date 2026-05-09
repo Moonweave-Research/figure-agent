@@ -50,6 +50,7 @@ briefing, optional reference image, and optional coordinate hints.
                           reference PNG, and coordinate_hints.yaml;
                           SVG-to-TikZ path conversion is not the active workflow]
 /fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
+                         + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
@@ -66,8 +67,10 @@ Golden fixtures declare `accepted` + `golden_contract` in `spec.yaml`;
 `check_golden_artifacts.py` auto-escalates into accepted mode when the key is
 present. Override with `--no-require-accepted` for ad-hoc inspection. Keep
 `/fig_compile` report-only during authoring so the PNG/PDF are produced for
-human visual review; use `FIGURE_AGENT_STRICT=1` for manuscript/CI checks and
-`check_golden_artifacts.py --require-accepted` for the golden hard gate.
+human visual review; the perception data pack is always emitted under
+`build/perception/` after successful render. Use `FIGURE_AGENT_STRICT=1` for
+manuscript/CI checks and `check_golden_artifacts.py --require-accepted` for the
+golden hard gate.
 
 For golden fixtures, `reference_image` points to the fixed visual target. Run
 `/fig_extract` to create `coordinate_hints.yaml` from that target before
@@ -80,7 +83,7 @@ authoring or drift review.
                              plus any panel crop/reference pairs declared by
                              panels[].reference_image + panels[].bbox_pdf_cm,
                              writes structured critique.md (YAML + Markdown).
-                             Report-only for v0.2; subscription tokens, zero external API.
+                             Report-only; subscription tokens, zero external API.
 ```
 
 Replaces the v0.1 HALT-then-paste review surface via rename + extend
@@ -139,4 +142,6 @@ redirect to matplotlib?"):
   hard gate)
 - Checks: `scripts/check_collisions.py`, `scripts/check_visual_clash.py`,
   `scripts/check_layout_drift.py` (auto-fires when `coordinate_hints.yaml` exists)
+- Perception pack: `scripts/perception_pack.py` writes
+  `build/perception/extract.yaml` and `build/perception/overlay.png`
 - Export: `scripts/export_svg.sh`, `scripts/svg_to_png.sh`

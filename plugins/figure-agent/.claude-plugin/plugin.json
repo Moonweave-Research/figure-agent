@@ -1,7 +1,7 @@
 {
   "name": "figure-agent",
   "description": "Quality kernel for paper schematics: Style Lock, compile/export reliability, visual QA gates, L4.5 host-orchestrated vision critique, and per-figure reproducibility. A human or any LLM/tool may author the TikZ source; the plugin enforces invariants regardless of author. Tool-agnostic: does not call external image-gen or vision APIs (vision tasks are delegated to the host Claude Code main loop).",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "author": {
     "name": "Moon Choe",
     "email": "choimoonyoung3631@gmail.com"

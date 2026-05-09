@@ -7,10 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from export_freshness import EXPORT_TRACKED_GOLDEN, compute_export_state
+from export_freshness import EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
 
-# Match critique_brief's freshness source set so /fig_status and /fig_critique agree.
+# Shared build/export freshness source set. /fig_critique adds panel references
+# for crop/reference comparisons, but status should not require a rebuild for
+# critique-only panel-reference edits.
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 
 _NEXT_0 = "run /fig_new <name> to create the figure scaffold."
@@ -26,6 +28,7 @@ _NEXT_4 = (
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
 )
 _NEXT_4_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
+_NEXT_4_EXPORT_STALE = "exports are stale or incomplete — re-run /fig_export <name>."
 _NEXT_4_TRACKED_STALE = (
     "tracked golden artifact is intentionally stale;"
     " to roll forward run /fig_export <name> --force-golden."
@@ -59,7 +62,7 @@ def _all_four_exports_present(exports_dir: Path, name: str) -> bool:
 
 
 def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
-    """Sources that should be older than any compiled artifact (matches critique_brief)."""
+    """Sources that should be older than any compiled/exported artifact."""
     candidates: list[Path] = [
         example_dir / f"{name}.tex",
         example_dir / "briefing.md",
@@ -224,7 +227,9 @@ def infer_stage(example_dir: Path) -> dict:
         if partial:
             notes.append("partial_export")
         export_paths = _existing_export_paths(exports_dir, name)
-        is_stale = _is_stale(sources, export_paths)
+        source_stale = _is_stale(sources, export_paths)
+        export_content_stale = exports_substate == EXPORT_STALE
+        is_stale = source_stale or export_content_stale
         if is_stale:
             notes.append("stale_export")
         # Priority: stale_export > partial_export > not_accepted > done.
@@ -232,8 +237,10 @@ def infer_stage(example_dir: Path) -> dict:
         # block both manuscript use and the golden contract gate.
         if is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
             next_template = _NEXT_4_TRACKED_STALE
-        elif is_stale:
+        elif source_stale:
             next_template = _NEXT_4_STALE
+        elif export_content_stale:
+            next_template = _NEXT_4_EXPORT_STALE
         elif partial:
             next_template = _NEXT_4_PARTIAL
         elif accepted is False:

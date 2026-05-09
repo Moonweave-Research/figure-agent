@@ -41,15 +41,24 @@ Steps:
    positions, anchored on `spec.yaml.golden_contract.required_labels`.
    Report-only by default; `--strict` (or `FIGURE_AGENT_STRICT=1`) makes
    matched-but-drifted labels exit non-zero.
-7. Report:
+7. `scripts/compile.sh` always runs `scripts/perception_pack.py <name>` after
+   successful render and checks. It writes:
+   - `examples/<name>/build/perception/extract.yaml`
+   - `examples/<name>/build/perception/overlay.png`
+
+   This step requires `pdfplumber` and fails hard if the dependency is missing.
+   The pack is descriptive only: raw PDF primitives plus endpoint overlay, not
+   a topology judgment or automatic critique.
+8. Report:
    - Compile success/fail
    - Collision report (count, severity)
    - Visual clash report (WARN list, NOT blocking)
    - Layout drift report when emitted (per-label drift / uncovered counts,
      aspect-ratio header)
+   - Perception pack paths when generated
    After review of compile + clash reports, run `/fig_critique <name>` for the
    host-orchestrated vision critique before exporting.
-8. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
+9. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
 Human-gated by default. Reports inform during iteration; do not block on WARN

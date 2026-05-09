@@ -31,9 +31,10 @@ subscription tokens — no external API call originates from plugin code.
                       → coordinate_hints.yaml (recommended when spec.yaml.reference_image exists)
                       [user/LLM authors examples/<name>/<name>.tex]
 /fig_compile <name>   lint + lualatex + collision/clash checks
+                      + perception data pack in build/perception/
                       (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>  L4.5 — host reads build/<name>.png + briefing,
-                      writes structured critique.md (report-only for v0.2)
+                      writes structured critique.md (report-only)
 /fig_export <name>    PDF / SVG / TIFF / PNG export (dvisvgm preserves text)
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```
@@ -51,4 +52,5 @@ was renamed and extended into `/fig_critique` (PR #9). See
 - Successor to `[tikz-paper-workflow]/` (archived 2026-04-27).
 - Reference-layer architecture deprecated (Y0 pilot evidence).
 - v0.1 spec: `docs/historical/design-v0.1.md` (frozen historical).
-- v0.2 direction: `docs/quality-kernel-goal.md` (active).
+- v0.5 direction: `docs/quality-kernel-goal.md` plus
+  `docs/architecture-v0.5-per-panel-reference-workflow.md` (active).

@@ -229,6 +229,52 @@ def test_stage_4_stale_export_when_source_newer(tmp_path: Path) -> None:
     assert "done" not in result["next"]
 
 
+def test_stage_4_export_substate_stale_redirects_to_fig_export(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Content-stale exports must not present the figure as done when all
+    mtimes are fresh. export_freshness already owns the PDF content hash;
+    status.py must honor that substate in its user-facing Next hint.
+    """
+    import status as status_mod
+
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "myfig.pdf").write_bytes(b"%PDF build")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    for fname, content in (
+        ("myfig.pdf", b"%PDF stale export"),
+        ("myfig.svg", b"<svg/>"),
+        ("myfig.tif", b"TIFF"),
+        ("myfig.png", b"\x89PNG"),
+    ):
+        (exports_dir / fname).write_bytes(content)
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+    for path in exports_dir.iterdir():
+        os.utime(path, (fresh_time, fresh_time))
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "STALE")
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["exports_substate"] == "STALE"
+    assert "stale_export" in result["notes"]
+    assert "/fig_export" in result["next"]
+    assert "/fig_compile" not in result["next"]
+    assert "done" not in result["next"]
+
+
 def test_stage_4_stale_export_when_coordinate_hints_newer(tmp_path: Path) -> None:
     """coordinate_hints.yaml newer than exports must trigger stale_export."""
     fig_dir = tmp_path / "myfig"
@@ -464,7 +510,11 @@ def test_accepted_true_resolves_in_result(tmp_path: Path) -> None:
     assert result["accepted"] is True
 
 
-def test_accepted_false_resolves_in_result(tmp_path: Path) -> None:
+def test_accepted_false_resolves_in_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import status as status_mod
+
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
     _make_spec(fig_dir, accepted=False)
@@ -474,7 +524,8 @@ def test_accepted_false_resolves_in_result(tmp_path: Path) -> None:
     (exports / "myfig.svg").write_bytes(b"<svg/>")
     (exports / "myfig.tif").write_bytes(b"TIFF")
     (exports / "myfig.png").write_bytes(b"\x89PNG")
-    result = infer_stage(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    result = status_mod.infer_stage(fig_dir)
     assert result["stage"] == 4
     assert result["accepted"] is False
     assert "QUALITY_AUDIT.md" in result["next"]
@@ -630,6 +681,8 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
 
     import status as status_mod
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     old_argv = sys.argv
     sys.argv = ["status.py"]
