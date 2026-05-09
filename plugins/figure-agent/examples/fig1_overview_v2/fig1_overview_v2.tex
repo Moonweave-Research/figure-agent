@@ -42,20 +42,16 @@
 % ============================================================
 % Panel A — Sulfur-rich polymer (DIB-linked polysulfide network)
 % Reference: examples/fig1_overview_v2/reference/sulfur_polymer_panelA_ref.png
-% Chemistry-correct rendering: DIB benzene rings + polysulfide wavy chains
-% + S₈ ring inset + transformation hint.
+% REWRITE: 3 DIBs connected via explicit bridge chains (scope+rotate).
+% Triangle of bridges — no independent floating chains.
+% Dangling chains at edges suggest larger network beyond this fragment.
 % ============================================================
 
-% --- Soft amber radial wash (centered on triangle centroid for balance) ---
-\fill[cAmber!10] (1.62, 6.90) circle (1.95cm);
-\fill[cAmber!06] (1.62, 6.90) circle (1.45cm);
+% --- Soft amber radial wash (centered on new triangle centroid 1.62, 6.80) ---
+\fill[cAmber!10] (1.62, 6.80) circle (2.00cm);
+\fill[cAmber!06] (1.62, 6.80) circle (1.50cm);
 
-% Phase 4 prototype — 3 DIB benzene rings in triangular layout.
-% Each DIB: hexagonal aromatic ring + 2 polysulfide chains at varying angles
-% to suggest amorphous network branching.
-
-% --- Helper: DIB benzene ring at origin (used inside scope shift) ---
-% Bumped to radius 0.42cm (was 0.35) + slightly thicker aromatic notation.
+% --- DIB ring helper ---
 \newcommand{\dibRing}{
   \pgfmathsetmacro{\dibR}{0.42}
   \draw[cGray!85!black, line width=0.65pt]
@@ -66,54 +62,69 @@
   \draw[cGray!85!black, line width=0.55pt] (306:\dibR*0.78) -- (354:\dibR*0.78);
 }
 
-% --- Helper: polysulfide chain (angle, label_x, label, end_radius) ---
-% #4 = chain end radius (varies 0.85-1.20 for organic asymmetry)
-% Solid = 0.50..(end-0.30), Faded tail = (end-0.30)..end
-% \polysulfide{angle}{label_x}{label}{end_radius}{amplitude}
-\newcommand{\polysulfide}[5]{
-  \begin{scope}[rotate=#1]
-    \pgfmathsetmacro{\fadeStart}{#4 - 0.30}
-    % Isopropenyl linker
-    \draw[cAmber!85!black, line width=0.85pt] (0.42, 0) -- (0.58, 0);
-    % Wavy main solid (amplitude #5)
-    \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60,
-          domain=0.58:\fadeStart]
-          plot (\x, {#5*sin((\x-0.58)*900)});
-    % Wavy faded tail
-    \draw[cAmber!85!black, line width=0.85pt, smooth, samples=50,
-          domain=\fadeStart:#4, opacity=0.25]
-          plot (\x, {#5*sin((\x-0.58)*900)});
-    \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont,
-          text=cAmber!85!black]
-      at (#2, 0.18) {#3};
-  \end{scope}
-}
+% --- Isopropenyl linker bonds (ring vertex r=0.42 → chain start r=0.60) ---
+% DIB1 (1.62, 7.80) linkers: toward DIB2 @ 238.5° and toward DIB3 @ 301.5°
+\draw[cAmber!85!black, line width=0.85pt] (1.400, 7.442) -- (1.306, 7.289);
+\draw[cAmber!85!black, line width=0.85pt] (1.840, 7.442) -- (1.934, 7.289);
+% DIB2 (0.70, 6.30) linkers: toward DIB1 @ 58.5° and toward DIB3 @ 0°
+\draw[cAmber!85!black, line width=0.85pt] (0.920, 6.658) -- (1.014, 6.812);
+\draw[cAmber!85!black, line width=0.85pt] (1.120, 6.300) -- (1.300, 6.300);
+% DIB3 (2.55, 6.30) linkers: toward DIB1 @ 121.5° and toward DIB2 @ 180°
+\draw[cAmber!85!black, line width=0.85pt] (2.330, 6.658) -- (2.236, 6.812);
+\draw[cAmber!85!black, line width=0.85pt] (2.130, 6.300) -- (1.950, 6.300);
 
-% DIB1 — top-center (centered between DIB2 and DIB3 for equilateral triangle)
-\begin{scope}[shift={(1.62, 7.90)}]
-  \dibRing
-  \polysulfide{210}{0.65}{S}{1.10}{0.09}                 % toward DIB2
-  \polysulfide{330}{0.70}{S\,--\,S}{1.20}{0.10}          % toward DIB3 (wider wave)
+% --- Bridge 1: DIB1–DIB2 — length 0.560cm @ 238.5° — trisulfide bridge ---
+\begin{scope}[shift={(1.306, 7.289)}, rotate=238.5]
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60, domain=0:0.560]
+       plot (\x, {0.08*sin(\x*800)});
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
+    at (0.28, 0.21) {S\,--\,S\,--\,S};
 \end{scope}
 
-% DIB2 — bottom-left
-\begin{scope}[shift={(0.85, 6.40)}]
-  \dibRing
-  \polysulfide{30}{0.65}{S\,--\,S\,--\,S}{1.05}{0.08}    % toward DIB1
-  \polysulfide{180}{0.62}{S}{0.85}{0.07}                 % short terminal (narrower wave)
+% --- Bridge 2: DIB1–DIB3 — length 0.566cm @ 301.5° — disulfide bridge ---
+\begin{scope}[shift={(1.934, 7.289)}, rotate=301.5]
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60, domain=0:0.566]
+       plot (\x, {0.08*sin(\x*800)});
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
+    at (0.283, 0.21) {S\,--\,S};
 \end{scope}
 
-% DIB3 — bottom-right
-\begin{scope}[shift={(2.40, 6.40)}]
-  \dibRing
-  \polysulfide{150}{0.65}{S\,--\,S}{1.10}{0.10}          % toward DIB1
-  \polysulfide{0}{0.62}{S}{0.85}{0.07}                   % short terminal
+% --- Bridge 3: DIB2–DIB3 — length 0.650cm @ 0° — sulfide bridge ---
+\begin{scope}[shift={(1.300, 6.300)}, rotate=0]
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=55, domain=0:0.650]
+       plot (\x, {0.07*sin(\x*800)});
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
+    at (0.325, 0.19) {S};
 \end{scope}
 
-% S₈ ring inset — upper-right corner of Panel A (bumped for prominence)
+% --- Dangling chains (suggest larger network beyond visible fragment) ---
+% Dangling A: exits upper-left (phantom DIB above panel)
+\begin{scope}[shift={(0.32, 8.20)}, rotate=215]
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=40, domain=0:0.22]
+       plot (\x, {0.09*sin(\x*800)});
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=30, domain=0.22:0.38, opacity=0.22]
+       plot (\x, {0.09*sin(\x*800)});
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
+    at (0.12, 0.21) {S};
+\end{scope}
+% Dangling B: exits lower-right (phantom DIB below-right)
+\begin{scope}[shift={(3.05, 6.10)}, rotate=325]
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=40, domain=0:0.22]
+       plot (\x, {0.09*sin(\x*800)});
+  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=30, domain=0.22:0.38, opacity=0.22]
+       plot (\x, {0.09*sin(\x*800)});
+  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
+    at (0.12, 0.21) {S};
+\end{scope}
+
+% --- 3 DIB rings drawn LAST so they cover linker/bridge endpoints cleanly ---
+\begin{scope}[shift={(1.62, 7.80)}] \dibRing \end{scope}
+\begin{scope}[shift={(0.70, 6.30)}] \dibRing \end{scope}
+\begin{scope}[shift={(2.55, 6.30)}] \dibRing \end{scope}
+
+% --- S₈ ring inset (upper-right corner of Panel A) ---
 \begin{scope}[shift={(3.00, 8.55)}]
-  \pgfmathsetmacro{\sR}{0.40}  % S₈ ring radius (bumped 0.32→0.40)
-  % Octagonal bond polygon
+  \pgfmathsetmacro{\sR}{0.40}
   \foreach \i in {0,...,7} {
     \pgfmathsetmacro{\sang}{90 - \i*45}
     \pgfmathsetmacro{\snext}{90 - (\i+1)*45}
@@ -121,7 +132,6 @@
       ({cos(\sang)*\sR}, {sin(\sang)*\sR}) --
       ({cos(\snext)*\sR}, {sin(\snext)*\sR});
   }
-  % S labels at each vertex (bigger, white-fill so ring lines don't cross)
   \foreach \i in {0,...,7} {
     \pgfmathsetmacro{\sang}{90 - \i*45}
     \node[font=\sffamily\bfseries\fontsize{5.8}{7}\selectfont,
@@ -130,22 +140,21 @@
   }
 \end{scope}
 
-% Linear polysulfide notation (S-S-S) — placed inside Panel A bounds (left of ring)
+% Linear S-S-S notation (left of S₈ ring, inside Panel A bounds)
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cAmber!85!black, anchor=east] at (2.55, 8.55) {S\,–\,S\,–\,S};
 
-% Transformation arrow — S₈ ring → polymer network area
-% Stronger line width + arrow head; lands near DIB1 upper-right edge.
+% Transformation arrow: S₈ → DIB1 area
 \draw[cAmber!85!black, dashed, line width=0.90pt,
       -{Stealth[length=5pt,width=4pt]}]
   (2.85, 8.20) to[out=-110, in=35] (1.95, 7.70);
 
-% --- Caption (placeholder during prototype phase) ---
+% --- Caption ---
 \node[font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
-      text=cAmber!75!black]                         at (1.45, 5.85) {Sulfur-rich polymer};
-\node[labelMute]                                    at (1.45, 5.60) {DIB-linked polysulfide network};
+      text=cAmber!75!black] at (1.45, 5.85) {Sulfur-rich polymer};
+\node[labelMute]            at (1.45, 5.60) {DIB-linked polysulfide network};
 
-% --- A → B connector (clean, no label) ---
+% --- A → B connector (clean) ---
 \draw[cGray!55!black, line width=0.55pt,
       -{Stealth[length=4pt,width=2.5pt]}]
   (3.45, 6.80) -- (3.62, 6.80);
