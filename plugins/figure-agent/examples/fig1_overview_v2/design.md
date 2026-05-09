@@ -1,7 +1,10 @@
 # Fig 1 Overview Design — fig1_overview_v2
 
-**Version**: v2.1 (2026-05-08, Q&A 인터뷰 + 어드바이저 final review 반영)
+**Version**: v2.2 (2026-05-09, chemistry-accuracy update for Panel A)
 **Status**: Locked. 남은 implementation detail (arrow weights, plot tick density, qtr marker count, atom 정확한 배치)은 first compile 후 visual judgment로 결정.
+
+**v2.2 변경 (chemistry-accuracy):**
+- Issue 4: Panel A "8 S + 4 C atoms" → DIB benzene ring + polysulfide chain. v2.1까지의 generic atom-bond mesh는 inverse vulcanized DIB-sulfur polymer를 식별 못 함 — 화학자가 봐도 generic S-C polymer로 읽힘. **DIB 벤젠 ring (1,3-diisopropenylbenzene) + polysulfide chain** 명시 표현으로 정정.
 
 **v2.1 변경 (어드바이저 final review):**
 - Issue 1: Panel D 라벨을 *concept-based* (shallow-rich/deep-rich)로 정정 — composition 라벨 (S60/S85) 금지 명시. Fig 3 영역 침범 회피.
@@ -101,21 +104,27 @@ Deep charge trap이 *발생*하는 무대
 
 ## 4. Per-panel design
 
-### Panel A — Sulfur-rich network (sparse identifier)
+### Panel A — Sulfur-rich polymer (chemistry-accurate identifier)
 
-- **Semantic claim**: *"이 paper의 시료는 inverse vulcanization으로 만든 sulfur-rich polymer다."*
+- **Semantic claim**: *"이 paper의 시료는 DIB cross-linker로 inverse vulcanization한 sulfur-rich polymer다."*
 - **Role**: 재료 식별. 시각 무게는 가벼움 (HERO #1인 Panel C에 시각 무게 양보).
-- **Design (Split 2 — sparse identifier)**:
-  - **Network**: ~12 atoms (8 S gold + 4 C gray), 불규칙 cross-linked topology, manual TikZ 배치 (spring layout 사용 X)
-  - **S₈ ring inset**: 우상단 corner, 작게 (Panel A 면적의 ~20%). chemfig `*8(-S-...-)`.
-  - **Inline 라벨**: 네트워크 옆 *"polymer network"*, S₈ 옆 *"S₈"*
+- **Design (chemistry-correct, v2.2)**:
+  - **DIB benzene ring(s)**: 1,3-diisopropenylbenzene 코어. 1-2개 ring. Manual hexagonal aromatic notation. (radius ~0.40-0.45cm, panel 작으므로)
+  - **Polysulfide chain**: DIB ring 1,3-meta vertex에서 나오는 wavy chain. S, S–S, S–S–S 라벨로 polysulfide multiplicity 시사.
+  - **Isopropenyl linker**: ring vertex와 chain 사이 short straight gray bond — 1,3-diisopropenylbenzene의 −CH₂−CH(CH₃)− linker 시사.
+  - **S₈ ring inset**: 우상단 corner, 작게 (Panel A 면적의 ~15-20%). manual octagon (chemfig 또는 직접 좌표).
+  - **Optional 변환 화살표**: S₈ ring → DIB area, dashed amber. inverse vulcanization 서사.
+  - **Inline 라벨**: "Sulfur-rich polymer" + subtitle "DIB-linked polysulfide network", S₈ 옆 *"S₈"* (선택).
 - **Forbidden**:
-  - 24+ atoms (rich network — Panel C와 redundant, hero 위계 invert)
-  - S₈을 panel 중앙에 두기 (Q11 결정대로 corner inset)
+  - 3+ DIB rings (network density 너무 높아 Panel C HERO 위계 invert)
+  - S₈을 panel 중앙에 두기 (corner inset 유지)
   - 결정 격자 패턴 (amorphous decoration)
+  - generic atom-bond mesh (8 S + 4 C — DIB 정체성 불명확, v2.1까지의 표현 방식)
 - **Render approach**:
-  - S₈ → `chemfig` `*8(-S-S-S-S-S-S-S-S-)` with `atom style` (gold fill)
-  - Network → manual TikZ nodes
+  - DIB ring → manual hexagon + 3 internal aromatic lines
+  - Polysulfide chain → bezier curve (`\draw .. controls .. ..`) NOT sine 함수
+  - Linker → 짧은 straight gray line
+  - S₈ → manual octagon
 - **Connection out**: 우측 화살표 (clean, 라벨 X) → Panel B
 
 ### Panel B — S₆₀–S₈₅ chain length (soft tunability)

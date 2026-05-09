@@ -40,21 +40,22 @@
 % ============================================================
 
 % ============================================================
-% Panel A — Sulfur-rich polymer (DIB-linked polysulfide network)
-% Reference: examples/fig1_overview_v2/reference/sulfur_polymer_panelA_ref.png
-% REWRITE: 3 DIBs connected via explicit bridge chains (scope+rotate).
-% Triangle of bridges — no independent floating chains.
-% Dangling chains at edges suggest larger network beyond this fragment.
+% Panel A — Sulfur-rich polymer (chemistry-accurate identifier) — design.md §4 v2.2
+% Spec: 2 DIB benzene rings linked by polysulfide bridge chain + dangling chains
+% at 1,3-meta vertices toward panel edges (suggesting larger network).
+% + S₈ ring inset upper-right + transformation arrow.
+% Bezier chains (sine forbidden). Manual hexagonal aromatic notation.
+% Forbidden: 3+ DIB rings, S₈ in center, generic atom-bond mesh.
+% Connection out: 우측 화살표 clean → Panel B.
 % ============================================================
 
-% --- Soft amber radial wash (centered on new triangle centroid 1.62, 6.80) ---
-\fill[cAmber!10] (1.62, 6.80) circle (2.00cm);
-\fill[cAmber!06] (1.62, 6.80) circle (1.50cm);
+% --- Subtle amber wash (figure-wide consistency, centered on bridge midpoint) ---
+\fill[cAmber!08] (1.75, 6.95) circle (1.55cm);
 
-% --- DIB ring helper ---
+% --- DIB benzene ring helper (r=0.42, hexagonal aromatic notation) ---
 \newcommand{\dibRing}{
   \pgfmathsetmacro{\dibR}{0.42}
-  \draw[cGray!85!black, line width=0.65pt]
+  \draw[cGray!85!black, line width=0.70pt]
     (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
     (240:\dibR) -- (300:\dibR) -- cycle;
   \draw[cGray!85!black, line width=0.55pt] (66:\dibR*0.78) -- (114:\dibR*0.78);
@@ -62,97 +63,90 @@
   \draw[cGray!85!black, line width=0.55pt] (306:\dibR*0.78) -- (354:\dibR*0.78);
 }
 
-% --- Isopropenyl linker bonds (ring vertex r=0.42 → chain start r=0.60) ---
-% DIB1 (1.62, 7.80) linkers: toward DIB2 @ 238.5° and toward DIB3 @ 301.5°
-\draw[cAmber!85!black, line width=0.85pt] (1.400, 7.442) -- (1.306, 7.289);
-\draw[cAmber!85!black, line width=0.85pt] (1.840, 7.442) -- (1.934, 7.289);
-% DIB2 (0.70, 6.30) linkers: toward DIB1 @ 58.5° and toward DIB3 @ 0°
-\draw[cAmber!85!black, line width=0.85pt] (0.920, 6.658) -- (1.014, 6.812);
-\draw[cAmber!85!black, line width=0.85pt] (1.120, 6.300) -- (1.300, 6.300);
-% DIB3 (2.55, 6.30) linkers: toward DIB1 @ 121.5° and toward DIB2 @ 180°
-\draw[cAmber!85!black, line width=0.85pt] (2.330, 6.658) -- (2.236, 6.812);
-\draw[cAmber!85!black, line width=0.85pt] (2.130, 6.300) -- (1.950, 6.300);
+% Two-DIB centers (meta-substituted, bridged):
+% DIB1 (upper-left)  center = (1.10, 7.60), r = 0.42
+%   vertex @180° (toward panel-left dangling chain): (0.680, 7.600)
+%   vertex @300° (toward bridge / DIB2):             (1.310, 7.236)
+% DIB2 (lower-right) center = (2.40, 6.30), r = 0.42
+%   vertex @120° (toward bridge / DIB1):             (2.190, 6.664)
+%   vertex   @0° (toward panel-right dangling chain):(2.820, 6.300)
+%
+% Isopropenyl linker length = 0.13cm (short straight gray, ring vertex → chain anchor):
+%   DIB1 @180° → (0.550, 7.600)
+%   DIB1 @300° → (1.375, 7.123)
+%   DIB2 @120° → (2.125, 6.777)
+%   DIB2 @0°   → (2.950, 6.300)
 
-% --- Bridge 1: DIB1–DIB2 — length 0.560cm @ 238.5° — trisulfide bridge ---
-\begin{scope}[shift={(1.306, 7.289)}, rotate=238.5]
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60, domain=0:0.560]
-       plot (\x, {0.08*sin(\x*800)});
-  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
-    at (0.28, 0.21) {S\,--\,S\,--\,S};
-\end{scope}
+% --- Isopropenyl linker bonds (4 short gray straight) ---
+\draw[cGray!75!black, line width=0.80pt] (0.680, 7.600) -- (0.550, 7.600);
+\draw[cGray!75!black, line width=0.80pt] (1.310, 7.236) -- (1.375, 7.123);
+\draw[cGray!75!black, line width=0.80pt] (2.190, 6.664) -- (2.125, 6.777);
+\draw[cGray!75!black, line width=0.80pt] (2.820, 6.300) -- (2.950, 6.300);
 
-% --- Bridge 2: DIB1–DIB3 — length 0.566cm @ 301.5° — disulfide bridge ---
-\begin{scope}[shift={(1.934, 7.289)}, rotate=301.5]
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=60, domain=0:0.566]
-       plot (\x, {0.08*sin(\x*800)});
-  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
-    at (0.283, 0.21) {S\,--\,S};
-\end{scope}
+% --- Bridge chain (DIB1 ↔ DIB2): polysulfide -S-S- linkage carrying network identity ---
+\draw[cAmber!85!black, line width=0.95pt]
+  (1.375, 7.123)
+  .. controls (1.55, 7.10) and (1.65, 6.78) .. (1.80, 6.85)
+  .. controls (1.95, 6.92) and (2.00, 6.65) .. (2.125, 6.777);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!85!black,
+      anchor=west, fill=white, inner sep=0.6pt]
+  at (1.82, 7.05) {S\,--\,S};
 
-% --- Bridge 3: DIB2–DIB3 — length 0.650cm @ 0° — sulfide bridge ---
-\begin{scope}[shift={(1.300, 6.300)}, rotate=0]
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=55, domain=0:0.650]
-       plot (\x, {0.07*sin(\x*800)});
-  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
-    at (0.325, 0.19) {S};
-\end{scope}
+% --- Dangling chain 1 (DIB1 @180° → panel-left edge, fade-out) ---
+\draw[cAmber!85!black, line width=0.95pt]
+  (0.550, 7.600)
+  .. controls (0.40, 7.65) and (0.30, 7.85) .. (0.18, 7.92);
+\draw[cAmber!85!black, line width=0.95pt, opacity=0.32]
+  (0.18, 7.92)
+  .. controls (0.05, 7.99) and (-0.05, 8.05) .. (-0.10, 8.10);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!85!black]
+  at (0.30, 8.10) {S\,--\,S\,--\,S};
 
-% --- Dangling chains (suggest larger network beyond visible fragment) ---
-% Dangling A: exits upper-left (phantom DIB above panel)
-\begin{scope}[shift={(0.32, 8.20)}, rotate=215]
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=40, domain=0:0.22]
-       plot (\x, {0.09*sin(\x*800)});
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=30, domain=0.22:0.38, opacity=0.22]
-       plot (\x, {0.09*sin(\x*800)});
-  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
-    at (0.12, 0.21) {S};
-\end{scope}
-% Dangling B: exits lower-right (phantom DIB below-right)
-\begin{scope}[shift={(3.05, 6.10)}, rotate=325]
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=40, domain=0:0.22]
-       plot (\x, {0.09*sin(\x*800)});
-  \draw[cAmber!85!black, line width=0.85pt, smooth, samples=30, domain=0.22:0.38, opacity=0.22]
-       plot (\x, {0.09*sin(\x*800)});
-  \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cAmber!85!black]
-    at (0.12, 0.21) {S};
-\end{scope}
+% --- Dangling chain 2 (DIB2 @0° → panel-right edge, fade-out) ---
+\draw[cAmber!85!black, line width=0.95pt]
+  (2.950, 6.300)
+  .. controls (3.10, 6.20) and (3.22, 6.05) .. (3.32, 5.92);
+\draw[cAmber!85!black, line width=0.95pt, opacity=0.32]
+  (3.32, 5.92)
+  .. controls (3.42, 5.83) and (3.50, 5.78) .. (3.55, 5.72);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!85!black]
+  at (3.18, 6.20) {S\,--\,S};
 
-% --- 3 DIB rings drawn LAST so they cover linker/bridge endpoints cleanly ---
-\begin{scope}[shift={(1.62, 7.80)}] \dibRing \end{scope}
-\begin{scope}[shift={(0.70, 6.30)}] \dibRing \end{scope}
-\begin{scope}[shift={(2.55, 6.30)}] \dibRing \end{scope}
+% --- DIB rings drawn LAST so they cover linker endpoints cleanly ---
+\begin{scope}[shift={(1.10, 7.60)}] \dibRing \end{scope}
+\begin{scope}[shift={(2.40, 6.30)}] \dibRing \end{scope}
 
-% --- S₈ ring inset (upper-right corner of Panel A) ---
-\begin{scope}[shift={(3.00, 8.55)}]
-  \pgfmathsetmacro{\sR}{0.40}
+% --- S₈ ring inset (upper-right corner, manual octagon, ~15-20% panel area) ---
+\begin{scope}[shift={(2.95, 8.50)}]
+  \pgfmathsetmacro{\sR}{0.32}
   \foreach \i in {0,...,7} {
     \pgfmathsetmacro{\sang}{90 - \i*45}
     \pgfmathsetmacro{\snext}{90 - (\i+1)*45}
-    \draw[cAmber!75!black, line width=0.60pt]
+    \draw[cAmber!75!black, line width=0.55pt]
       ({cos(\sang)*\sR}, {sin(\sang)*\sR}) --
       ({cos(\snext)*\sR}, {sin(\snext)*\sR});
   }
   \foreach \i in {0,...,7} {
     \pgfmathsetmacro{\sang}{90 - \i*45}
-    \node[font=\sffamily\bfseries\fontsize{5.8}{7}\selectfont,
-          text=cAmber!85!black, fill=white, inner sep=0.5pt]
+    \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont,
+          text=cAmber!85!black, fill=white, inner sep=0.3pt]
       at ({cos(\sang)*\sR}, {sin(\sang)*\sR}) {S};
   }
 \end{scope}
 
-% Linear S-S-S notation (left of S₈ ring, inside Panel A bounds)
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cAmber!85!black, anchor=east] at (2.55, 8.55) {S\,–\,S\,–\,S};
+% --- Transformation arrow: S₈ → DIB (inverse vulcanization 서사) ---
+\draw[cAmber!85!black, dashed, line width=0.85pt,
+      -{Stealth[length=4.5pt,width=3.5pt]}]
+  (2.78, 8.20) to[out=-115, in=40] (2.10, 7.30);
 
-% Transformation arrow: S₈ → DIB1 area
-\draw[cAmber!85!black, dashed, line width=0.90pt,
-      -{Stealth[length=5pt,width=4pt]}]
-  (2.85, 8.20) to[out=-110, in=35] (1.95, 7.70);
+% --- "S₈" label below ring ---
+\node[labelStd, text=cAmber!75!black, anchor=north]
+  at (2.95, 8.10) {S$_8$};
 
 % --- Caption ---
 \node[font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
-      text=cAmber!75!black] at (1.45, 5.85) {Sulfur-rich polymer};
-\node[labelMute]            at (1.45, 5.60) {DIB-linked polysulfide network};
+      text=cAmber!75!black] at (1.55, 5.42) {Sulfur-rich polymer};
+\node[labelMute]            at (1.55, 5.17) {DIB-linked polysulfide network};
 
 % --- A → B connector (clean) ---
 \draw[cGray!55!black, line width=0.55pt,
