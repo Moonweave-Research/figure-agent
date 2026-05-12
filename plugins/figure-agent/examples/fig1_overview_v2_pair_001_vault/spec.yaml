@@ -1,0 +1,16 @@
+name: fig1_overview_v2_pair_001_vault
+title: "Fig 1 — Charge trapping in sulfur-rich polymer (pair_001 vault arm)"
+reference_image: reference/codex_gen_overview_v1.png
+panels:
+  - id: A
+    caption: Sulfur-rich network
+    reference_image: reference/sulfur_polymer_panelA_ref.png
+    bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
+style_profile: polymer-paper
+notes: |
+  pair_001 vault arm. Authored using approved-only tikz-vault references from
+  query_id 966e2e89 as grammar/style anchors (metadata only — source paths
+  masked). Same design.md snapshot SHA as no_vault arm
+  (fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7).
+  degraded_mode=true preserved because chroma_v2 indexes still absent.
+accepted: false
