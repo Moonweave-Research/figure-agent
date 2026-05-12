@@ -1,0 +1,20 @@
+name: fig1_energy_landscape_v1_pair_002_no_vault
+title: "Fig 1 — Trap energy landscape in sulfur-rich polymer (pair_002 no_vault arm)"
+panels:
+  - id: A
+    caption: Sulfur-rich polymer network with localized trap sites
+  - id: B
+    caption: Shallow / deep trap energy landscape
+  - id: C
+    caption: Current transient and surface-potential decay
+  - id: D
+    caption: Trap-depth distribution comparison
+style_profile: polymer-paper
+notes: |
+  pair_002 no_vault arm. Authored only from the immutable design.md snapshot
+  (SHA 9b4e36033336826a566dfb7dfb95e6ac4c51851aee423e6696fdd60b0dd89f07).
+  No tikz-vault references, no record metadata, no grammar/style pool consulted.
+  Idioms: manual bezier curves throughout; preamble palette + base style only,
+  no L3 snippet macros (\BellCurve / \WavyChain / paper loglog) used.
+  Same design.md snapshot as the paired vault arm.
+accepted: false

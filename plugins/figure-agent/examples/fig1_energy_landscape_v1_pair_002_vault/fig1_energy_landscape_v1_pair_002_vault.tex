@@ -1,0 +1,254 @@
+% fig1_energy_landscape_v1_pair_002_vault — 2x2 4-panel trap-landscape schematic
+% Pilot pair: fig1_energy_landscape_v1_pair_002 / arm: vault
+%
+% Authoring grammar: approved tikz-vault records (query a5c0a136, approved_only).
+% Metadata-only grounding (raw_source_path_exposed=false). degraded_mode=true
+% preserved (chroma_v2 indexes absent).
+%
+% Vault grammar applied per panel (see briefing.md §2):
+%   Panel A : \WavyChain zigzag chains + S markers   [cho2024_fig1_s8_polymerization motif]
+%             dashed bond-exchange arrow             [cho2024_fig1_dynamic_exchange annotation]
+%   Panel B : depth-hierarchical amplitudes          [patel2019_fig7_recombination_band layout]
+%             corona retention motif at deep well    [cho2024_fig7_corona_charge annotation]
+%   Panel D : \BellCurve macro (shallow + deep)      [patel2019_fig4_trap_dos motif]
+%   Figure  : 2x2 composite layout proportions       [cho2024_fig2_mxene_percolation layout]
+
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
+                    text=cGray!80!black},
+  axisArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray, line width=0.55pt},
+  thinAxis/.style={cGray!70!black, line width=0.55pt},
+  panelLabel/.style={font=\sffamily\bfseries\fontsize{9.5}{11}\selectfont},
+]
+
+% Figure-wide background wash (vault layout anchor: cho2024_fig2_mxene_percolation)
+\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
+
+% ============================================================
+% Panel A — Sulfur-rich polymer network (vault motif: cho2024_fig1_s8_polymerization)
+% Bbox: x=0..6.85  y=4.55..9.00
+% ============================================================
+\node[panelLabel, anchor=north west] at (0.05, 8.95) {A};
+
+% --- DIB aromatic ring nodes (two cross-links) ---
+\newcommand{\dibRing}[2]{%
+  \begin{scope}[shift={(#1,#2)}]
+    \pgfmathsetmacro{\dr}{0.32}
+    \draw[cGray!85!black, line width=0.65pt]
+      (0:\dr) -- (60:\dr) -- (120:\dr) -- (180:\dr) --
+      (240:\dr) -- (300:\dr) -- cycle;
+    \draw[cGray!85!black, line width=0.50pt] (66:0.74*\dr) -- (114:0.74*\dr);
+    \draw[cGray!85!black, line width=0.50pt] (186:0.74*\dr) -- (234:0.74*\dr);
+    \draw[cGray!85!black, line width=0.50pt] (306:0.74*\dr) -- (354:0.74*\dr);
+  \end{scope}
+}
+\dibRing{1.85}{7.55}
+\dibRing{4.95}{6.05}
+
+% --- Two polymer chains using \WavyChain zigzag (vault motif anchor) ---
+% Chain 1: upper, links both DIB rings; S markers at 4 positions
+\WavyChain{0.30, 6.55, 7.55, zigzag, {0.95, 2.95, 3.85, 5.55}, {}}
+% Chain 2: lower, parallel chain through second DIB area; S markers at 3 positions
+\WavyChain{0.30, 6.55, 5.45, zigzag, {1.20, 3.55, 4.95}, {}}
+
+% --- DIB linker connectors (short straight gray bonds) ---
+\draw[cGray!75!black, line width=0.50pt] (1.53, 7.55) -- (1.69, 7.55);
+\draw[cGray!75!black, line width=0.50pt] (2.17, 7.55) -- (2.45, 7.55);
+\draw[cGray!75!black, line width=0.50pt] (4.63, 6.05) -- (4.79, 6.05);
+\draw[cGray!75!black, line width=0.50pt] (5.27, 6.05) -- (5.55, 6.05);
+
+% --- Localized trap sites: 4 shallow (blue) + 3 deep (red) ---
+\foreach \tx/\ty in {1.05/7.95, 3.40/7.30, 2.25/5.90, 4.30/5.65} {
+  \node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
+        minimum size=1.7mm, line width=0.40pt] at (\tx, \ty) {};
+}
+\foreach \tx/\ty in {2.95/6.80, 4.75/6.85, 5.85/5.95} {
+  \node[circle, draw=cRed!85!black, fill=cRed!40, inner sep=0pt,
+        minimum size=2.2mm, line width=0.50pt] at (\tx, \ty) {};
+}
+
+% --- Incoming charge arrow (vault annotation grammar) ---
+\draw[-{Stealth[length=6pt,width=4pt]}, cGray!75!black, line width=0.95pt]
+  (0.20, 8.85) -- (0.95, 8.10);
+\node[labelMute, anchor=south west] at (0.20, 8.85) {$e^{-}$};
+
+% --- Retained charge marker (inside deepest trap) ---
+\node[circle, draw=cRed!90!black, fill=cRed!55, inner sep=0pt,
+      minimum size=2.6mm, line width=0.55pt,
+      font=\sffamily\fontsize{5}{6}\selectfont, text=white]
+  at (2.95, 6.80) {$-$};
+
+% --- Dashed bond-exchange annotation (vault annotation: cho2024_fig1_dynamic_exchange) ---
+% Connects retained-charge deep trap to the lower DIB ring to read as a
+% chain-dynamics motif rather than a static dot.
+\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!80!black,
+      line width=0.55pt] (2.95, 6.65) to[bend right=10] (4.55, 6.05);
+\node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont, anchor=south]
+  at (3.75, 6.42) {exchange};
+
+% --- Panel A inline labels (typography hierarchy preserved) ---
+\node[labelStrong, anchor=north west, text=cAmber!70!black]
+  at (0.10, 8.55) {sulfur-rich network};
+\node[labelMute, anchor=north east] at (6.80, 8.55) {localized traps};
+
+% Legend dots for shallow/deep, anchored to the network bottom-left so they
+% do not collide with the "localized traps" inline label.
+\node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
+      minimum size=1.7mm, line width=0.40pt] at (0.30, 4.80) {};
+\node[labelMute, anchor=west] at (0.45, 4.80) {shallow};
+\node[circle, draw=cRed!85!black, fill=cRed!40, inner sep=0pt,
+      minimum size=2.2mm, line width=0.50pt] at (1.85, 4.80) {};
+\node[labelMute, anchor=west] at (2.00, 4.80) {deep};
+
+% ============================================================
+% Panel B — Energy landscape (vault layout: patel2019_fig7_recombination_band)
+%   depth-hierarchical amplitudes: shallow ~0.40 / deep ~1.00
+% Bbox: x=7.05..13.95  y=4.55..9.00
+% ============================================================
+\node[panelLabel, anchor=north west] at (7.10, 8.95) {B};
+
+% Axes
+\draw[axisArr] (7.40, 5.10) -- (13.70, 5.10);
+\draw[axisArr] (7.40, 5.10) -- (7.40, 8.50);
+\node[labelMute, anchor=north] at (10.55, 5.05) {position};
+\node[labelMute, anchor=south west] at (7.45, 8.55) {energy};
+
+% Region overlays (depth-hierarchy visual cue, anchor: recombination band layout)
+\fill[cBlue!18, opacity=0.55] (7.60, 5.20) rectangle (10.45, 6.90);
+\fill[cRed!18, opacity=0.55] (10.95, 5.20) rectangle (13.55, 6.90);
+
+% --- Shallow region energy curve (3 shallow wells, amplitude 0.40) ---
+% Baseline y=7.85, wells dip to y=7.45
+\draw[cBlue!85!black, line width=1.00pt]
+  (7.60, 7.85)
+  .. controls (7.95, 7.85) and (8.05, 7.45) .. (8.30, 7.45)
+  .. controls (8.55, 7.45) and (8.65, 7.85) .. (8.85, 7.85)
+  .. controls (8.95, 7.85) and (9.00, 7.45) .. (9.15, 7.45)
+  .. controls (9.30, 7.45) and (9.35, 7.85) .. (9.55, 7.85)
+  .. controls (9.70, 7.85) and (9.80, 7.45) .. (9.95, 7.45)
+  .. controls (10.10, 7.45) and (10.20, 7.85) .. (10.45, 7.85);
+
+% --- Deep region energy curve (2 deep wells, amplitude 1.00) ---
+% Baseline y=7.85, wells dip to y=6.85 (depth contrast 2.5x shallow)
+\draw[cRed!85!black, line width=1.10pt]
+  (10.95, 7.85)
+  .. controls (11.10, 7.85) and (11.20, 6.85) .. (11.45, 6.85)
+  .. controls (11.70, 6.85) and (11.80, 7.85) .. (12.10, 7.85)
+  .. controls (12.30, 7.85) and (12.40, 6.85) .. (12.65, 6.85)
+  .. controls (12.90, 6.85) and (13.00, 7.85) .. (13.55, 7.85);
+
+% Joining segment between shallow and deep regions
+\draw[cGray!70!black, line width=0.85pt] (10.45, 7.85) -- (10.95, 7.85);
+
+% --- Region labels ---
+\node[labelStrong, text=cBlue!75!black, anchor=south] at (9.02, 6.95) {shallow};
+\node[labelStrong, text=cRed!75!black, anchor=south] at (12.25, 6.95) {deep};
+
+% --- Escape arrow from shallow well (dashed upward) ---
+\draw[-{Stealth[length=5pt,width=3.5pt]}, dashed, cBlue!75!black,
+      line width=0.65pt] (8.30, 7.40) -- (8.30, 8.30);
+\node[labelMute, text=cBlue!75!black, anchor=south west]
+  at (8.30, 8.20) {escape};
+
+% --- Retention motif at deep well (vault annotation: cho2024_fig7_corona_charge) ---
+% Thicker retention arrow PLUS small filled charge dot at well minimum to read
+% as "charge bound in trap" rather than a plain arrow.
+\node[circle, draw=cRed!90!black, fill=cRed!60, inner sep=0pt,
+      minimum size=2.0mm, line width=0.55pt] at (12.65, 6.85) {};
+\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!85!black, line width=1.25pt]
+  (12.65, 6.10) -- (12.65, 6.75);
+\node[labelMute, text=cRed!75!black, anchor=north west]
+  at (12.70, 6.15) {retention};
+
+% ============================================================
+% Panel C — Decay signatures (typography hierarchy preserved)
+% Bbox: x=0..6.85  y=0.10..4.45
+% ============================================================
+\node[panelLabel, anchor=north west] at (0.05, 4.40) {C};
+
+% Top subplot: I(t) ~ t^-n  (sub-bbox: x=0.85..6.50  y=2.85..4.20)
+\draw[thinAxis] (0.85, 2.85) -- (0.85, 4.20);
+\draw[thinAxis] (0.85, 2.85) -- (6.50, 2.85);
+
+\draw[cGray!50!black, dashed, line width=0.55pt]
+  (1.05, 4.05) .. controls (1.55, 3.85) and (2.40, 3.55) .. (3.30, 3.10)
+              .. controls (4.20, 2.92) and (5.30, 2.88) .. (6.30, 2.88);
+\draw[cBlue!85!black, line width=0.95pt]
+  (1.05, 4.05) -- (6.30, 3.05);
+
+\node[labelStrong, anchor=north west] at (0.85, 4.30) {$I(t)\sim t^{-n}$};
+\node[labelMute, anchor=south east] at (6.30, 2.90) {Debye};
+\node[labelMute, anchor=north east, text=cBlue!75!black]
+  at (6.30, 3.10) {slow tail};
+
+% Bottom subplot: V_s(t)  (sub-bbox: x=0.85..6.50  y=0.55..2.30)
+\draw[thinAxis] (0.85, 0.55) -- (0.85, 2.30);
+\draw[thinAxis] (0.85, 0.55) -- (6.50, 0.55);
+
+\draw[cGray!50!black, dashed, line width=0.55pt]
+  (1.05, 2.10) .. controls (1.55, 1.40) and (2.20, 0.80) .. (3.20, 0.70)
+              .. controls (4.20, 0.65) and (5.30, 0.60) .. (6.30, 0.60);
+\draw[cRed!85!black, line width=0.95pt]
+  (1.05, 2.10) .. controls (1.40, 1.95) and (1.80, 1.80) .. (2.55, 1.62)
+              .. controls (3.30, 1.42) and (4.30, 1.20) .. (5.30, 1.00)
+              .. controls (5.80, 0.92) and (6.10, 0.85) .. (6.30, 0.82);
+
+\node[labelStrong, anchor=north west] at (0.85, 2.45) {$V_s(t)$};
+\node[labelMute, anchor=north east, text=cRed!75!black]
+  at (6.30, 1.00) {slow tail};
+
+% Axis labels — placed outside subplot regions to avoid the no_vault arm's overlap.
+\node[labelMute, anchor=east, rotate=90] at (0.55, 3.50) {$\log\,I$};
+\node[labelMute, anchor=east, rotate=90] at (0.55, 1.40) {$V_s$};
+\node[labelMute, anchor=north] at (3.65, 0.45) {$\log\,t$};
+
+% ============================================================
+% Panel D — Trap-depth distribution via \BellCurve  (vault motif: patel2019_fig4_trap_dos)
+% Bbox: x=7.05..13.95  y=0.10..4.45
+% ============================================================
+\node[panelLabel, anchor=north west] at (7.10, 4.40) {D};
+
+% Axes
+\draw[thinAxis] (7.55, 0.80) -- (13.70, 0.80);
+\draw[thinAxis] (7.55, 0.80) -- (7.55, 3.80);
+\node[labelMute, anchor=north] at (10.60, 0.70) {trap depth};
+\node[labelMute, anchor=east, rotate=90] at (7.45, 2.30) {$g(E_t)$};
+
+% --- Shallow distribution (vault motif: \BellCurve up orientation, narrower) ---
+\BellCurve[draw=cBlue!80!black, fill=cBlue!22, line width=0.75pt]%
+  {8.30, 0.80, 9.90, 2.40, up}
+
+% --- Deep distribution (vault motif: \BellCurve up orientation, broader/taller) ---
+\BellCurve[draw=cRed!80!black, fill=cRed!22, line width=0.80pt]%
+  {10.80, 0.80, 13.50, 3.10, up}
+
+% --- Vertical E_t marker between peaks ---
+\draw[cGray!60!black, dashed, line width=0.55pt]
+  (10.30, 0.80) -- (10.30, 3.50);
+\node[labelMute, anchor=south] at (10.30, 3.50) {$E_t$};
+
+% --- Shallow → fast release callout ---
+\draw[-{Stealth[length=5pt,width=3.5pt]}, cBlue!80!black, line width=0.85pt]
+  (8.95, 2.45) .. controls (8.55, 2.70) and (8.20, 2.85) .. (8.00, 2.70);
+\node[labelMute, text=cBlue!75!black, anchor=south] at (8.30, 2.85) {fast release};
+
+% --- Deep → long retention callout ---
+\draw[-{Stealth[length=5pt,width=3.5pt]}, cRed!80!black, line width=0.95pt]
+  (12.30, 3.20) .. controls (12.75, 3.45) and (13.10, 3.55) .. (13.30, 3.40);
+\node[labelMute, text=cRed!75!black, anchor=south] at (13.05, 3.55) {long retention};
+
+% --- Distribution inline labels ---
+\node[labelMute, text=cBlue!75!black, anchor=north] at (9.10, 0.75) {shallow};
+\node[labelMute, text=cRed!75!black, anchor=north] at (12.20, 0.75) {deep};
+
+\end{tikzpicture}%
+}%
+\end{document}

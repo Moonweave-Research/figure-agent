@@ -1,0 +1,27 @@
+name: fig1_energy_landscape_v1_pair_002_vault
+title: "Fig 1 — Trap energy landscape in sulfur-rich polymer (pair_002 vault arm)"
+panels:
+  - id: A
+    caption: Sulfur-rich polymer network with localized trap sites
+  - id: B
+    caption: Shallow / deep trap energy landscape
+  - id: C
+    caption: Current transient and surface-potential decay
+  - id: D
+    caption: Trap-depth distribution comparison
+style_profile: polymer-paper
+notes: |
+  pair_002 vault arm. Same design.md snapshot SHA as the no_vault arm
+  (9b4e36033336826a566dfb7dfb95e6ac4c51851aee423e6696fdd60b0dd89f07).
+  Authored using approved-only tikz-vault records (query_id
+  a5c0a136-f6b3-4d72-940a-54a87dd6a97b, approved_pool) as grammar/style
+  anchors; record metadata only (raw_source_path_exposed=false).
+  Vault grammar applied per panel:
+    Panel A : \WavyChain zigzag polymer chains  [cho2024_fig1_s8_polymerization motif]
+              dashed bond-exchange motif        [cho2024_fig1_dynamic_exchange annotation]
+    Panel B : hierarchical depth-encoded wells  [patel2019_fig7_recombination_band layout]
+              corona retention arrow grammar    [cho2024_fig7_corona_charge annotation]
+    Panel D : \BellCurve trap-DOS distributions [patel2019_fig4_trap_dos motif]
+    Figure  : 2x2 composite proportions         [cho2024_fig2_mxene_percolation layout]
+  degraded_mode=true preserved (chroma_v2 indexes absent).
+accepted: false
