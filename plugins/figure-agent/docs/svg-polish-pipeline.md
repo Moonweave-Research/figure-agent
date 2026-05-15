@@ -59,14 +59,15 @@ Without (a)+(b)+(c), Path B collapses into "ad-hoc per-figure scripts" — worse
 ## 6. Dependencies / prerequisites
 
 - **Sub-region iteration tool data** (`subregion-iteration-tool.md`). Sub-region dogfood will surface *which specific operations* TikZ cannot reach. Without that empirical list, polish-DSL design is speculation — and speculation was the failure mode of v0.3/v0.4 specs.
+  - *Status (2026-05-15):* Enumeration done (`subregion-iteration-tool.md` §8). Iteration log + "TikZ-cannot-do-X" pattern still pending — see decision gate (1) + (2) below.
 - v0.5 per-panel reference workflow stable (✓).
 
 ## 7. Decision gate
 
 Do **not** enter design until:
 
-1. Sub-region tool produces ≥ 1 working dogfood with iteration log on a real figure.
-2. Iteration log surfaces a concrete "TikZ cannot do X" pattern with ≥ 3 occurrences across distinct figures or panels.
-3. SVG element-ID stability across re-compile is verified (independent check, single golden fixture, three rebuild cycles).
+1. Sub-region tool produces ≥ 1 working dogfood with **iteration log** (not just enumeration) on a real figure. *Status:* enumeration ✅ (`subregion-iteration-tool.md` §8); iteration log ❌ pending.
+2. Iteration log surfaces a concrete "TikZ cannot do X" pattern with ≥ 3 occurrences across distinct figures or panels. *Status:* ❌ pending — requires (1) first.
+3. SVG element-ID stability across re-compile is verified (independent check, single golden fixture, three rebuild cycles). *Status:* ❌ pending — independent of (1)+(2); could be tested in parallel.
 
 Path A vs Path B is **decision-deferred** until (1)–(3) are met. Even after that, only enter Path B if (3) passes; if SVG IDs are unstable, Path B is infeasible regardless of other arguments.
