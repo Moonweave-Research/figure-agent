@@ -1,127 +1,119 @@
 # figure-agent
 
-Claude Code plugin for paper-grade scientific figures.
+A Claude Code plugin that helps you build **reproducible, paper-grade scientific figures** in TikZ — so the same `.tex` source rebuilds the same figure every time, even after revisions.
 
-**Current product direction: quality kernel.**
+You (or any LLM) draw the figure. The plugin handles the boring-but-critical parts: keeping styles consistent, catching layout problems, running the build, and exporting clean PDF/SVG.
 
-`figure-agent` is now treated as paper-figure quality, compile, and
-reproducibility infrastructure. A human or any LLM/tool may author the figure;
-the plugin's durable job is to enforce Style Lock, compile/export reliably,
-surface visual QA problems, and keep the figure reproducible.
+---
 
-Earlier prompt/image-gen orchestration commands were removed from the active
-plugin surface. Historical design notes remain under `docs/historical/`; the
-maintained product direction is `docs/quality-kernel-goal.md`.
+## What you get
 
-**Plugin does not:**
-- Call image generation APIs
-- Manage API keys
-- Pay per-figure inference cost
+- **One folder per figure** with a fixed structure — never lose track of which source matches which output.
+- **Style Lock** — palette, fonts, line weights stay consistent across every figure in a manuscript.
+- **Build + visual QA** in one command — compile errors, label collisions, and clash warnings all in one report.
+- **Vision critique without API costs** — the host Claude Code reads your compiled figure and writes feedback. Subscription tokens only; no external API keys, no per-figure inference bill.
+- **Export to PDF / SVG / TIFF / PNG** with text staying as text (SVG preserves editable labels).
 
-**User or external tool does:**
-- Provide a reference, sketch, draft image, or direct editable source.
-- Author the final editable TikZ/SVG source with a human, an LLM, or both.
+## What this is NOT
 
-## Workflow shape
+- ❌ **Image generation.** No DALL·E / Imagen / SDXL calls. You author the TikZ.
+- ❌ **Data plots.** Numerical plots from real datasets go in `[Graph_making_hub]/`. This plugin is for **symbolic schematics** — energy diagrams, mechanism cartoons, device overviews.
+- ❌ **Auto-magic SVG → TikZ converter.** Reference images are used as visual guides for *you*, not as inputs to a code generator.
+- ❌ **Paid API service.** All vision work is done by the host Claude Code session you're already running.
 
-`/fig_new` is the **shared entry point** that scaffolds `examples/<name>/spec.yaml`
-+ `briefing.md` via a conversational interview. After scaffolding, author
-semantic TikZ from the briefing, optional reference image, and optional
-coordinate hints.
+---
 
-### Active (quality kernel)
+## The six commands
 
 ```
-/fig_new <name>          scaffold (briefing + spec)
-                         [user saves reference PNG and records it as
-                          spec.yaml.reference_image when target matching matters]
-/fig_extract <name>      reference PNG -> OCR + palette clusters + optional vtracer structural hints
-                         -> coordinate_hints.yaml
-                         [human/LLM authors semantic TikZ from briefing intent,
-                          reference PNG, and coordinate_hints.yaml;
-                          SVG-to-TikZ path conversion is not the active workflow]
-/fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
-                         + perception data pack (extract.yaml + overlay.png)
-                         (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
-/fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
-/fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
+/fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
+/fig_extract  (optional) Read a reference PNG → labels, palette, layout hints
+/fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
+/fig_critique Have host Claude read the build PNG and write critique.md
+/fig_export   Export final PDF / SVG / TIFF / PNG
+/fig_status   "Where am I?" — read-only stage check
 ```
 
-The active authoring contract is semantic reconstruction. `coordinate_hints.yaml`
-provides placement evidence, but the final source should be readable TikZ using
-shared macros and named drawing constructs. The handoff is
-`coordinate_hints.yaml -> semantic TikZ authoring`; SVG-to-TikZ path conversion
-is not the active workflow, and may be used only as a diagnostic or reference
-aid when manual geometry inspection is useful.
+## A typical figure (start to finish)
 
-Golden fixtures additionally declare `accepted` and `golden_contract` keys in
-`spec.yaml`; `check_golden_artifacts.py` then auto-escalates into accepted-mode
-contract checks (rendered-label match, source-inventory floor, audit freshness,
-checker-warning budgets). Override with `--no-require-accepted` for ad-hoc
-basic-mode inspection. `/fig_compile` remains report-only by default so the
-build PNG is available during visual iteration; manuscript/CI runs can still use
-`FIGURE_AGENT_STRICT=1`, and accepted fixtures use
-`check_golden_artifacts.py --require-accepted` as the hard gate. When
-`reference_image` is present, `/fig_extract` creates
-`coordinate_hints.yaml` from OCR, palette clusters, and optional vtracer
-structural hints; compile then uses those hints for drift check when available.
+```bash
+# 1. Scaffold the folder. Claude asks you 7 questions and fills briefing.md.
+/fig_new fig3_trap_concept
 
-### L4.5 Vision Critique (host-orchestrated, no external API)
+# 2. (Optional) If you have a reference image (paper figure, sketch, mockup),
+#    drop it in examples/fig3_trap_concept/reference/ and extract hints.
+/fig_extract fig3_trap_concept
 
-```
-/fig_critique <name>         host Claude reads build/<name>.png + briefing,
-                             writes structured critique.md (YAML + Markdown).
-                             Report-only; subscription tokens, zero API calls.
+# 3. You (or an LLM) write examples/fig3_trap_concept/fig3_trap_concept.tex
+#    using briefing.md intent + reference + coordinate_hints.yaml.
+
+# 4. Compile. This runs Style Lock + builds PDF + PNG + collision/clash checks.
+/fig_compile fig3_trap_concept
+
+# 5. Get vision feedback. Host Claude reads the build PNG.
+/fig_critique fig3_trap_concept   # writes critique.md
+
+# 6. Iterate: edit .tex (often one line at a time), re-compile, re-critique.
+#    When the critique looks clean, export.
+/fig_export fig3_trap_concept
 ```
 
-Replaces the v0.1 HALT-then-paste review surface via rename + extend
-(see `docs/architecture-v0.2-proposal.md` §4.5). The old prompt-template,
-redaction, and preview-selection pipeline was removed in PR #8a.
+**Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
 
-## Status
+---
 
-The latest shipped plugin version is recorded in `.claude-plugin/plugin.json`.
-The active line is the v0.5 quality-kernel release with per-panel reference
-grounding and build-side perception data. Active direction is recorded in
-`docs/quality-kernel-goal.md`; the original v0.1 ship spec is preserved under
-`docs/historical/design-v0.1.md` as a frozen reference.
+## Current state (v0.5.0)
+
+| Area | What's working |
+|---|---|
+| **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
+| **Vision critique** | `/fig_critique` reads build PNG + per-panel reference crops, writes structured `critique.md`. Host Claude only — no external API. |
+| **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
+| **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
+| **Reproducibility** | Stale-render detection compares build PNG mtime against `.tex`, briefing, spec, reference images, hints, and the shared preamble. |
+| **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate. |
+
+## What's experimental / proposed (not built)
+
+Filed as pre-spec issues; **no design committed**. Each has a decision gate that blocks design until empirical data exists. This is a deliberate response to v0.3/v0.4 specs being rejected for lack of data.
+
+- **`docs/subregion-iteration-tool.md`** — lift critique granularity from panel → sub-region (e.g., the 8 distinct elements inside one panel). Prerequisite: v0.5 dogfood log on `fig1_overview_v2`.
+- **`docs/svg-polish-pipeline.md`** — TikZ skeleton + SVG polish layer (Inkscape-replayable operations) for the final 5–10% of paper-grade quality. Prerequisite: sub-region tool data + verified SVG element-ID stability.
+
+Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.
+
+---
 
 ## Documentation map
 
-Active:
-- `docs/architecture-overview.md` — layer-by-layer reference; start here.
-- `docs/architecture-v0.4.2-perception-data-only.md` — descriptive perception
-  pack emitted by `/fig_compile`.
-- `docs/architecture-v0.5-per-panel-reference-workflow.md` — panel reference
-  image + crop workflow for `/fig_critique`.
-- `docs/quality-kernel-goal.md` — current product direction (durable kernel,
-  frozen-legacy boundary, export tracking policy).
-- `docs/golden-target-trap-depth-picture.md` — Golden Target 001 acceptance
-  criteria (the canonical fixture spec).
-- `docs/golden-target-001-retrospective.md` — N=1 evidence retrospective and
-  the gap list driving v0.2 cleanup.
+**Read these first:**
+- `docs/architecture-overview.md` — the layer-by-layer reference. Start here.
+- `docs/quality-kernel-goal.md` — current product direction.
+- `docs/architecture-v0.5-per-panel-reference-workflow.md` — how `/fig_critique` works now.
 
-Historical (not maintained, pinned for context):
-- `docs/historical/design-v0.1.md` — v0.1 ship spec.
-- `docs/historical/roadmap-v0.1.7-selection-notes.md` — v0.1.7 selection_notes
-  rollout decisions; superseded by the quality-kernel goal.
-- `docs/historical/superpowers-plan-2026-04-29-golden-target-001.md` —
-  executed implementation plan for Golden Target 001.
+**Topic deep-dives:**
+- `docs/architecture-v0.4.2-perception-data-only.md` — the perception data pack.
+- `docs/golden-target-trap-depth-picture.md` — Golden Target 001 spec.
+- `docs/golden-target-001-retrospective.md` — N=1 evidence + gap list.
+- `docs/macros/` — macro API docs (band-diagram, bell-curve, plot-callout).
+- `docs/trials/` — dated dogfood reports.
 
-v0.1 is source-only as a Claude Code plugin. Use
-`claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`,
-`claude plugin validate ../../.claude-plugin/marketplace.json`, `uv run pytest`,
-and `uv run ruff check .`; `uv build` is not a release gate.
+**Frozen historical (do not maintain, kept for context):**
+- `docs/historical/design-v0.1.md` — the v0.1 prompt/preview/selection-notes workflow that was removed in v0.2.
+- `docs/historical/roadmap-v0.1.7-selection-notes.md` — rollout decisions superseded by the quality-kernel goal.
+
+---
+
+## Power-user notes
+
+- **Strict mode.** `FIGURE_AGENT_STRICT=1` promotes collision/clash findings to hard fail. Useful in CI; off by default so build PNG stays available during iteration.
+- **Golden fixture gate.** `check_golden_artifacts.py` auto-escalates when `spec.yaml` declares `accepted: true`. Override with `--no-require-accepted` for ad-hoc inspection.
+- **Skip critique on export.** `scripts/run_export.py <name> --skip-critique` for intentional drafts. Otherwise, when a reference image is present, missing/stale `critique.md` blocks export.
+- **Plugin install.** Validate with `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`, and `claude plugin validate ../../.claude-plugin/marketplace.json`. Test with `uv run pytest` and `uv run ruff check .`. `uv build` is *not* a release gate.
+- **Repo location.** Lives under `~/workspace/ResearchOS/` as a sibling to `[Athena]/` and `[Graph_making_hub]/` for development proximity. Plugin install copies to `~/.claude/plugins/cache/…` regardless.
+
+---
 
 ## History
 
-Successor to `[tikz-paper-workflow]` (archived 2026-04-27). The v0.1 prompt
-workflow is preserved only in historical docs; active development is the durable
-quality kernel: Style Lock, macro quality, compile/export reliability, visual QA,
-and reproducibility.
-
-## Repo location rationale
-
-Lives under `~/workspace/ResearchOS/` as sibling to `[Athena]/`, `[Graph_making_hub]/`. Plugin
-install copies to `~/.claude/plugins/cache/...` regardless of repo location, so position is
-chosen for development proximity to research data.
+Successor to `[tikz-paper-workflow]/` (archived 2026-04-27). The v0.1 prompt-template / preview-selection workflow is preserved only in `docs/historical/`. Active development is the quality kernel: Style Lock, macro quality, compile/export reliability, visual QA, and reproducibility.
