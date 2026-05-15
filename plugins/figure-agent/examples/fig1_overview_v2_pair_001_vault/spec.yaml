@@ -6,6 +6,24 @@ panels:
     caption: Sulfur-rich network
     reference_image: reference/sulfur_polymer_panelA_ref.png
     bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
+  - id: B
+    caption: S60–S85 chain length scaffold
+    bbox_pdf_cm: [4.655, 0.141, 8.850, 5.227]
+  - id: C
+    caption: Localized traps (HERO #1)
+    bbox_pdf_cm: [8.914, 0.141, 17.878, 5.227]
+  - id: D
+    caption: Kinetic I(t) ~ t^{-n}
+    bbox_pdf_cm: [0.141, 5.926, 5.799, 11.457]
+  - id: E
+    caption: Vs(t) decay
+    bbox_pdf_cm: [5.863, 5.926, 8.978, 11.457]
+  - id: F
+    caption: ISPD g(Et) bimodal (HERO #2)
+    bbox_pdf_cm: [9.041, 5.926, 13.428, 11.457]
+  - id: G
+    caption: Macroscopic Coulomb probe
+    bbox_pdf_cm: [13.491, 5.926, 17.878, 11.457]
 style_profile: polymer-paper
 notes: |
   pair_001 vault arm. Authored using approved-only tikz-vault references from
