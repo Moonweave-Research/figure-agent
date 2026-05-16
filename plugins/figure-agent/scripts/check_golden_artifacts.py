@@ -33,6 +33,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lint_tex import strip_tex_comment  # noqa: E402
+from reference_pack import reference_pack_failures  # noqa: E402
 
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
@@ -355,6 +356,29 @@ def publication_compliance_failures(audit_path: Path) -> list[str]:
     return failures
 
 
+def _spec_declares_reference_inputs(spec_path: Path) -> bool:
+    if not spec_path.exists():
+        return False
+    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return False
+    if isinstance(data.get("reference_image"), str) and data["reference_image"].strip():
+        return True
+    for panel in data.get("panels", []):
+        if isinstance(panel, dict):
+            reference = panel.get("reference_image")
+            if isinstance(reference, str) and reference.strip():
+                return True
+    return False
+
+
+def reference_pack_gate_failures(example_dir: Path, spec_path: Path) -> list[str]:
+    pack_path = example_dir / "reference" / "reference_pack.md"
+    if pack_path.exists() or _spec_declares_reference_inputs(spec_path):
+        return reference_pack_failures(pack_path)
+    return []
+
+
 def check_example(
     example_dir: Path,
     *,
@@ -427,6 +451,7 @@ def check_example(
             failures.append("QUALITY_AUDIT.md is stale or missing")
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
         failures.extend(publication_compliance_failures(audit))
+        failures.extend(reference_pack_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
                 audit,

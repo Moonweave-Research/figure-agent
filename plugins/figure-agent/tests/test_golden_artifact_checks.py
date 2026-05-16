@@ -455,6 +455,53 @@ def test_require_accepted_mode_requires_publication_compliance(
     assert "QUALITY_AUDIT.md does not declare submission-safe: true" in failures
 
 
+def test_require_accepted_mode_requires_reference_pack_for_reference_image(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "needsReferencePack"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    (fixture / "spec.yaml").write_text(
+        "name: fixture\n"
+        "accepted: true\n"
+        "reference_image: reference/ref.png\n"
+        "golden_contract:\n"
+        "  required_labels:\n"
+        '    - "Foo"\n'
+        "  source_inventory: {}\n",
+        encoding="utf-8",
+    )
+    (fixture / "reference").mkdir()
+    (fixture / "reference" / "ref.png").write_bytes(b"png")
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert any("missing reference pack" in failure for failure in failures)
+
+
+def test_require_accepted_mode_validates_reference_pack(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "badReferencePack"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    ref_dir = fixture / "reference"
+    ref_dir.mkdir()
+    (ref_dir / "reference_pack.md").write_text(
+        "| File | Role | Use | Do Not Transfer |\n"
+        "|---|---|---|---|\n"
+        "| `reference/ref.png` |  | style only |  |\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "reference row missing role: reference/ref.png" in failures
+    assert "reference row missing Do Not Transfer boundary: reference/ref.png" in failures
+
+
 def test_checker_warning_counts_reads_quality_audit() -> None:
     audit = """
     Observed:

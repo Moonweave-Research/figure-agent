@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-16
 **Pilot:** `examples/fig1_overview_v2_pair_001_vault`
-**Decision:** integrate manual artifacts into critique brief, then add narrow accepted/sub-region parsers
+**Decision:** integrate manual artifacts into critique brief, then add narrow accepted/sub-region/reference parsers
 
 ## Decision
 
@@ -15,9 +15,10 @@ two narrow tooling changes:
 2. make `check_golden_artifacts.py --require-accepted` reject `accepted: true`
    unless theory and provenance/publication evidence are explicitly passing.
 
-Do not implement a reference-pack parser, schema-level sub-region model, cropper,
-or auto-segmentation yet. The current evidence supports parsing the live
-Markdown active-set log, but not a durable `spec.yaml` schema.
+Do not implement a schema-level sub-region model, cropper, or auto-segmentation
+yet. The current evidence supports parsing the live Markdown active-set log and
+the existing Reference Roles table, but not a durable `spec.yaml` sub-region
+schema.
 
 ## Evidence From This Loop
 
@@ -73,6 +74,8 @@ Implemented an accepted-fixture gate enhancement:
 2. Reject BLOCKER rows whose evidence does not start with a passing status.
 3. Require `QUALITY_AUDIT.md` to include provenance/publication compliance and
    `submission-safe: true` before `accepted: true` can pass.
+4. If reference inputs are declared, require `reference/reference_pack.md` and
+   validate that each reference row has a role and Do-Not-Transfer boundary.
 
 ## Deferred States
 
@@ -83,8 +86,9 @@ Implemented an accepted-fixture gate enhancement:
 - `implement a stronger theory-guard checker`: deferred because current guard
   evidence is prose-level and requires human/source/render adjudication; the
   accepted gate only checks explicit BLOCKER pass/fail status.
-- `implement reference-pack parser`: deferred; include prose first, then decide
-  whether structure is stable enough to parse.
+- `implement a stronger reference-policy checker`: deferred; current parser
+  validates role/boundary presence but does not decide journal-specific policy
+  or scientific truth.
 
 ## Residual Low Risk
 

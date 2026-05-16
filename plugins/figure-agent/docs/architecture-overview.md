@@ -206,7 +206,8 @@ open question; see
 **Files**: optional `examples/<name>/authoring_contract.md`,
 `examples/<name>/reference/reference_pack.md`,
 `examples/<name>/authoring_plan.md`, `examples/<name>/theory_guard.md`,
-`examples/<name>/subregion_iteration_log.md`, `scripts/subregion_active_set.py`.
+`examples/<name>/subregion_iteration_log.md`, `scripts/subregion_active_set.py`,
+`scripts/reference_pack.py`.
 
 This layer sits between semantic authoring and compile/export acceptance. It is
 not a lualatex, collision, or visual-clash gate. Its job is to record the
@@ -226,6 +227,12 @@ parses the Markdown Active Target Set and Iteration Log tables so `/fig_critique
 can focus the host review on currently active sub-regions. This parser is
 text-form evidence plumbing only; it is not a sub-region schema, bbox cropper,
 or auto-segmentation layer.
+
+When `reference/reference_pack.md` exists, `scripts/reference_pack.py` parses the
+Reference Roles table so accepted-mode validation can require role and
+Do-Not-Transfer boundaries for every reference row. The parser does not decide
+scientific truth; it only prevents boundary-free references from passing as
+publication-ready evidence.
 
 ### Layer 4 — Compile Gates
 
@@ -305,7 +312,8 @@ Two `check_golden_artifacts` modes:
   regex counts against `<name>.tex`, asserts `QUALITY_AUDIT.md` freshness,
   requires a passing `theory_guard.md` BLOCKER table, requires
   `QUALITY_AUDIT.md` to contain provenance/publication-compliance evidence
-  with `submission-safe: true`, and applies collision/clash budget thresholds.
+  with `submission-safe: true`, validates `reference/reference_pack.md` when
+  reference inputs are declared, and applies collision/clash budget thresholds.
   This is the hard gate for ship-blessed fixtures; it is intentionally
   stricter than the Layer 4 compile loop.
 
