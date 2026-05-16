@@ -1,0 +1,264 @@
+% fig5_floating_clip_mechanism — 2-panel mechanism schematic
+% Paper Fig 5 sub-panel A (mechanism); paired with photos + matplotlib plots
+%
+% Anchored on planning/session_summary_260427_mechanism.md:
+%   - F_clip = Q_clip × E_active (simple model)
+%   - 7-phase pulsed bias protocol (A through G)
+%   - Phase A grounded poling locks Q_clip = -CV_0
+%   - Phase B disconnect = floating, Q_clip frozen
+%   - Phase D polarity reverse → Coulomb repulsion transient
+%   - Phase E relaxation → intrinsic carrier shielding → attraction returns
+%   - Coulomb-Maxwell competition framework
+%
+% Paper framing v9.7 LOCKED: charge-trap-centered (NOT actuation showcase).
+
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{decorations.pathmorphing,patterns}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  primaryArrow/.style={-{Stealth[length=7pt,width=5pt]}, line width=0.9pt},
+  forceArrow/.style={-{Stealth[length=8pt,width=6pt]}, line width=1.0pt},
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
+                    text=cGray!80!black},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{9.5}{11}\selectfont,
+                      text=cGray!90!black},
+]
+
+% Figure-wide background wash
+\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
+
+% Panel letters
+\node[panelLetter, anchor=north west] at (0.10, 9.05) {A};
+\node[panelLetter, anchor=north west] at (0.10, 5.30) {B};
+
+% ============================================================
+% Panel A — 7-phase voltage waveform
+% Panel A bbox: x=0..14  y=5.5..9
+% ============================================================
+
+% Phase bands (light vertical shading, A=grounded-tint, B-G=floating-tint)
+% 7 phases × 1.8cm each starting at x=0.70
+\fill[cLGray!18] (0.70, 5.80) rectangle (2.50, 8.80);  % Phase A — grounded (slightly darker)
+\foreach \px/\pcolor in {2.50/cAmber!05, 4.30/cAmber!05, 6.10/cAmber!05,
+                         7.90/cAmber!05, 9.70/cAmber!05, 11.50/cAmber!05} {
+  \fill[\pcolor] (\px, 5.80) rectangle ({\px+1.80}, 8.80);
+}
+
+% Phase boundary lines (thin gray)
+\foreach \px in {2.50, 4.30, 6.10, 7.90, 9.70, 11.50, 13.30} {
+  \draw[cGray!35, line width=0.20pt, dashed]
+    (\px, 5.80) -- (\px, 8.80);
+}
+
+% Voltage levels (3 horizontal references): +V_0, 0, -V_0
+\draw[cGray!40, line width=0.25pt, densely dotted] (0.70, 8.30) -- (13.30, 8.30); % +V_0 ref
+\draw[cGray!55, line width=0.30pt]                   (0.70, 7.30) -- (13.30, 7.30); % 0 ref (x-axis)
+\draw[cGray!40, line width=0.25pt, densely dotted] (0.70, 6.30) -- (13.30, 6.30); % -V_0 ref
+
+% y-axis arrow (V_active)
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.70, 5.80) -- (0.70, 8.85);
+% x-axis arrow (time)
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.70, 7.30) -- (13.50, 7.30);
+
+% Axis tip labels
+\node[labelMute, anchor=east, rotate=90] at (0.55, 8.65) {$V_{\mathrm{active}}$};
+\node[labelMute, anchor=north] at (13.45, 7.25) {time};
+
+% Voltage level labels (left of y-axis)
+\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (0.62, 8.30) {$+V_0$};
+\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (0.62, 7.30) {$0$};
+\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (0.62, 6.30) {$-V_0$};
+
+% 7-phase waveform (square wave, 3 levels)
+% Phase A: +V_0 (x=0.70..2.50, y=8.30)
+% Phase B: +V_0 (x=2.50..4.30, y=8.30) — clip disconnect during this phase
+% Phase C: 0    (x=4.30..6.10, y=7.30)
+% Phase D: -V_0 (x=6.10..7.90, y=6.30) — polarity reversed
+% Phase E: -V_0 (x=7.90..9.70, y=6.30)
+% Phase F: 0    (x=9.70..11.50, y=7.30)
+% Phase G: +V_0 (x=11.50..13.30, y=8.30) — repeat
+\draw[cRed!75!black, line width=1.0pt]
+  (0.70, 8.30) -- (2.50, 8.30)
+  -- (2.50, 8.30) -- (4.30, 8.30)
+  -- (4.30, 7.30) -- (6.10, 7.30)
+  -- (6.10, 6.30) -- (7.90, 6.30)
+  -- (7.90, 6.30) -- (9.70, 6.30)
+  -- (9.70, 7.30) -- (11.50, 7.30)
+  -- (11.50, 8.30) -- (13.30, 8.30);
+
+% Vertical transition edges (sharp jumps)
+\draw[cRed!75!black, line width=1.0pt] (4.30, 8.30) -- (4.30, 7.30);
+\draw[cRed!75!black, line width=1.0pt] (6.10, 7.30) -- (6.10, 6.30);
+\draw[cRed!75!black, line width=1.0pt] (9.70, 6.30) -- (9.70, 7.30);
+\draw[cRed!75!black, line width=1.0pt] (11.50, 7.30) -- (11.50, 8.30);
+
+% Phase letter labels (centered in each phase, above waveform max)
+\foreach \px/\letter in {1.60/A, 3.40/B, 5.20/C, 7.00/D, 8.80/E, 10.60/F, 12.40/G} {
+  \node[labelStrong, anchor=south, text=cGray!90!black]
+    at (\px, 8.60) {\letter};
+}
+
+% Clip status annotation (above phase A vs B-G)
+\node[labelMute, anchor=south, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!75!black, fill=cLGray!18, inner sep=1pt]
+  at (1.60, 8.80) {clip: \textbf{GROUNDED}};
+\node[labelMute, anchor=south, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!75!black, fill=cAmber!05, inner sep=1pt]
+  at (7.90, 8.80) {clip: FLOATING (Q$_{\mathrm{clip}}$ locked)};
+
+% Key event markers
+% Phase A→B boundary: Q_clip lock event
+\draw[-{Stealth[length=4pt,width=3pt]}, cBlue!70!black, line width=0.45pt]
+  (2.50, 6.00) -- (2.50, 5.85);
+\node[labelMute, anchor=north, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+      text=cBlue!75!black] at (2.50, 5.85) {Q$_{\mathrm{clip}}$ lock};
+
+% Phase C→D boundary: polarity flip event (mechanism signature)
+\draw[-{Stealth[length=4pt,width=3pt]}, cRed!70!black, line width=0.45pt]
+  (6.10, 6.00) -- (6.10, 5.85);
+\node[labelMute, anchor=north, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+      text=cRed!75!black] at (6.10, 5.85) {polarity flip $\rightarrow$ repulsion};
+
+% ============================================================
+% Panel B — Geometry + force diagram (Phase D snapshot)
+% Panel B bbox: x=0..14  y=0..5
+% Phase D = V_active = -V_0, Q_clip = -CV_0 (locked from Phase A)
+% Same sign → Coulomb REPULSION, cantilever bends AWAY from active electrode
+% ============================================================
+
+% Panel B internal title
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!75!black] at (7.00, 5.10) {Phase D snapshot: V$_{\mathrm{active}} = -V_0$, locked Q$_{\mathrm{clip}}$ same sign $\Rightarrow$ Coulomb repulsion};
+
+% --- Active electrode (LEFT) ---
+% Tall rectangle with metallic gradient
+\shade[left color=cGray!75!black, right color=cGray!40!black]
+  (1.00, 0.80) rectangle (1.25, 4.30);
+\draw[cGray!85!black, line width=0.55pt]
+  (1.00, 0.80) rectangle (1.25, 4.30);
+% Left-edge metallic highlight
+\draw[white, opacity=0.45, line width=0.35pt]
+  (1.005, 0.85) -- (1.005, 4.25);
+
+% Hatching off left edge of active electrode
+\foreach \ey in {1.00, 1.40, 1.80, 2.20, 2.60, 3.00, 3.40, 3.80} {
+  \draw[cGray!75!black, line width=0.30pt]
+    (1.00, \ey) -- (0.85, {\ey-0.08});
+}
+
+% Active electrode label + voltage annotation (Phase D)
+\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (1.125, 4.35) {active electrode};
+\node[labelMute, anchor=north, font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cRed!75!black] at (1.125, 0.75) {$V_{\mathrm{active}} = -V_0$};
+
+% --- Air gap dimension ---
+\draw[<->, cGray!55!black, line width=0.32pt]
+  (1.30, 2.55) -- (5.45, 2.55);
+\node[labelMute, anchor=center, fill=cLGray!8, inner sep=1pt,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (3.40, 2.55) {$d_{\mathrm{air}}$};
+
+% --- Cantilever clip + mount (TOP, floating) ---
+% Mount hatch at top
+\draw[cGray!50!black, line width=0.45pt] (5.80, 4.50) -- (6.40, 4.50);
+\foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
+  \draw[cGray!50!black, line width=0.30pt]
+    ({5.80+\dx}, 4.50) -- ({5.75+\dx}, 4.58);
+}
+% Clip block (gradient) — FLOATING (no ground line)
+\shade[top color=cGray!38!white, bottom color=cGray!55!white]
+  (5.85, 4.20) rectangle (6.35, 4.35);
+\draw[cGray!60!black, line width=0.5pt]
+  (5.85, 4.20) rectangle (6.35, 4.35);
+\draw[cGray!60!black, line width=0.5pt] (6.10, 4.35) -- (6.10, 4.50);
+
+% Q_clip label (locked negative charge)
+\node[labelStrong, anchor=west, font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
+      text=cBlue!75!black, fill=cLGray!8, inner sep=1pt]
+  at (6.50, 4.27) {$Q_{\mathrm{clip}} = -CV_0$ (locked)};
+
+% --- Polymer cantilever (bends RIGHT in Phase D — Coulomb repulsion AWAY from electrode) ---
+% Root at (6.10, 4.20), curving right toward x=6.60 at tip
+% bezier ctrls: (6.10, 3.20), (6.30, 2.20), tip (6.60, 1.45)
+\shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
+  (6.10, 4.20) .. controls (6.10, 3.20) and (6.30, 2.20) ..
+  (6.60, 1.45) -- (6.35, 1.45) .. controls (6.05, 2.20) and
+  (5.85, 3.20) .. (5.85, 4.20) -- cycle;
+\draw[cAmber!80!black, line width=0.70pt, rounded corners=0.3mm]
+  (6.10, 4.20) .. controls (6.10, 3.20) and (6.30, 2.20) ..
+  (6.60, 1.45) -- (6.35, 1.45) .. controls (6.05, 2.20) and
+  (5.85, 3.20) .. (5.85, 4.20) -- cycle;
+
+% Internal chain hints (material-identity per §9 exception)
+\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
+  (6.025, 4.10) .. controls (6.025, 3.20) and (6.225, 2.20) ..
+  (6.475, 1.48);
+\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
+  (5.925, 4.10) .. controls (5.925, 3.20) and (6.125, 2.20) ..
+  (6.375, 1.48);
+
+% Trapped charges (3 ●, polarity-neutral)
+\foreach \cx/\cy in {6.00/3.50, 6.10/2.70, 6.25/1.90} {
+  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
+        minimum size=1.6mm, line width=0.40pt] at (\cx,\cy) {};
+}
+% q_tr label
+\draw[cRed!55!black, line width=0.35pt] (6.15, 3.50) -- (6.45, 3.50);
+\node[labelMute, anchor=west, fill=white, inner sep=1pt,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
+  at (6.45, 3.50) {$q_{tr}$};
+
+% --- Force vectors at clip ---
+% F_Coulomb (red, REPULSION → toward right, AWAY from left active electrode at Phase D)
+\draw[forceArrow, cRed!85!black]
+  (6.20, 4.27) -- (7.50, 4.27);
+\node[labelStrong, anchor=west, font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
+      text=cRed!75!black] at (7.55, 4.32) {$F_{\mathrm{Coulomb}}$};
+\node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cRed!75!black] at (7.55, 4.15) {(repulsion: $Q_{\mathrm{clip}} \cdot E_{\mathrm{active}}$)};
+
+% F_image / F_Maxwell (dashed pink ← toward electrode, always present)
+\draw[-{Stealth[length=6pt,width=4pt]}, cRed!45!black, dashed, line width=0.6pt]
+  (6.00, 3.95) -- (5.20, 3.95);
+\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!50!black] at (5.20, 3.95) {$F_{\mathrm{image}}$ (attraction)};
+
+% Net bending arrow on cantilever (thick gray, indicating net direction)
+\draw[-{Stealth[length=8pt,width=6pt]}, cGray!70!black, line width=1.4pt, opacity=0.55]
+  (6.40, 2.20) -- (6.85, 2.20);
+\node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cGray!75!black] at (6.95, 2.20) {net bend};
+
+% --- Time-scale annotation (lower right, for reader to gain physics context) ---
+\node[labelMute, anchor=north west,
+      font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!70!black,
+      fill=cLGray!8, inner sep=2pt, align=left]
+  at (9.80, 1.50) {Time scales:\\
+                    $V_{\mathrm{active}}$ change $\sim$ instant\\
+                    image charge in clip $\sim$ ps\\
+                    Q$_{\mathrm{clip}}$ via ground (Phase A only) $\sim \mu$s\\
+                    mobile carrier drift $\sim$ ms\\
+                    trap capture/detrap $\sim \tau_d$ (Fig 1 F)\\
+                    deep trap relaxation $\sim$ hour};
+
+% --- Phase D mechanism summary (small inset label) ---
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!75!black, fill=cLGray!8, inner sep=2pt, align=center]
+  at (7.40, 0.80) {Locked Q$_{\mathrm{clip}}$ + reversed $V_{\mathrm{active}}$\\
+                    $\Rightarrow$ same-sign Coulomb repulsion};
+
+\end{tikzpicture}
+}%
+\end{document}

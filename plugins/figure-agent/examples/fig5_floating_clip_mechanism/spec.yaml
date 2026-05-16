@@ -1,0 +1,24 @@
+name: fig5_floating_clip_mechanism
+title: "Fig 5 — Floating-clip Coulomb probe mechanism (paper Fig 5 panel a)"
+panels:
+  - id: A
+    caption: 7-phase voltage waveform timeline
+    bbox_pdf_cm: [0.141, 0.141, 17.878, 3.500]
+  - id: B
+    caption: Geometry + force diagram (Phase D snapshot)
+    bbox_pdf_cm: [0.141, 3.700, 17.878, 9.200]
+style_profile: polymer-paper
+notes: |
+  Mechanism schematic for paper Fig 5 — covers sub-panel A (mechanism) only.
+  Sub-panels B (stills), C (Δθ time-trace), D (t₅₀ extraction) belong in
+  matplotlib / Graph_making_hub (out of figure-agent scope).
+
+  Anchored on planning/session_summary_260427_mechanism.md:
+  - Floating-clip + air gap geometry
+  - F_clip = Q_clip × E_active simple model
+  - 7-phase pulsed bias protocol (A through G)
+  - Coulomb-Maxwell competition framework
+
+  Paper framing v9.7 LOCKED: charge-trap-centered (NOT actuation showcase).
+  Bending = macroscopic probe.
+accepted: false
