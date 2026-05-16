@@ -1,7 +1,7 @@
 ---
 schema: figure-agent.critique.v1
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-16T02:51:42Z
+generated_at: 2026-05-16T13:04:34Z
 verdict: revise
 author_resolution_at: 2026-05-16T10:40:00+09:00
 author_resolution: "linear poly(S-r-DIB) primary microstructure selected; old Panel A network reference is anti-reference topology evidence"
@@ -9,46 +9,17 @@ panels: []
 findings:
   - id: C001
     severity: MINOR
-    category: label_placement
-    tex_lines: [720, 723]
-    observation: >-
-      The compile collision report flags overlap between the two-line
-      "Coulomb" / "repulsion" label stack. This does not invert the Panel G
-      Coulomb-only physics, but the two labels are tight enough to remain a
-      visual-polish risk before manuscript acceptance.
-    suggested_fix: >-
-      Increase the y separation between the two Panel G Coulomb-repulsion label
-      nodes or make the second line slightly smaller while preserving the
-      leftward Coulomb arrow.
-    status: accepted_residual_risk
-  - id: C002
-    severity: MINOR
-    category: label_placement
-    tex_lines: [199, 205]
-    observation: >-
-      The compile collision report flags tight spacing between "Sulfur-rich
-      polymer" and "poly(S-r-DIB) linear copolymer". The labels preserve the
-      resolved linear-topology claim, but the stack is close enough to merit
-      final visual polish.
-    suggested_fix: >-
-      Add a small vertical offset between the Panel A title and subtitle or
-      reduce the subtitle size slightly. Do not change the "linear copolymer"
-      wording unless manuscript chemistry changes.
-    status: accepted_residual_risk
-  - id: C003
-    severity: MINOR
     category: style
     tex_lines: [177, 187, 704, 709]
     observation: >-
-      The visual-clash report still flags several text-on-path/text-on-fill
-      candidates around sulfur and charge symbols. These are common false
-      positives for intentionally embedded atom/charge glyphs, but they should
-      remain visible in the acceptance audit because dense symbolic regions are
-      where final crop inspection usually fails first.
+      The compile collision report is now clean, but the visual-clash report
+      still flags 34 text-on-path/text-on-fill candidates around embedded
+      sulfur labels, panel letters, symbolic labels, and charge glyphs. These
+      are mostly expected for intentionally embedded schematic symbols, but
+      they remain crop-review targets before any accepted:true decision.
     suggested_fix: >-
-      Treat the flagged glyph regions as manual crop-review targets before any
-      accepted:true decision. Patch only if the rendered crop shows actual
-      illegibility.
+      Treat the remaining visual-clash candidates as manual crop-review
+      targets. Patch only if the rendered crop shows actual illegibility.
     status: accepted_residual_risk
 ---
 
@@ -59,7 +30,7 @@ violations from the current brief/source/render evidence: Panel A remains
 linear poly(S-r-DIB), Panel C keeps mixed shallow/deep traps in one matrix,
 Panel D preserves the non-Debye tail, Row 2 remains a three-spoke independent
 evidence structure, and Panel G remains Coulomb-only. The figure is still not
-accepted because report-only visual QA leaves MINOR label/glyph polish risks.
+accepted because report-only visual QA still leaves MINOR crop-review risk.
 
 ## Theory Adjudication
 
@@ -82,12 +53,11 @@ The main theory guard items pass at source-review level:
 
 ## Visual Adjudication
 
-Compile succeeded but emitted report-only warnings: 3 collision candidates and
-45 visual-clash candidates. The collision candidates are not acceptance
-blockers, but C001 and C002 should be inspected in the final crop review. The
-visual-clash list mostly targets deliberate embedded symbols (`S`, minus, and
-charge glyphs), so C003 is recorded as accepted residual risk unless human
-visual inspection shows illegibility.
+Compile succeeded with `OK: no collisions found`. The visual-clash report now
+has 34 candidates, down from 45 before the label-spacing patch. The remaining
+list mostly targets deliberate embedded symbols (`S`, panel letters, symbolic
+labels, and charge glyphs), so C001 is recorded as accepted residual risk
+unless human visual inspection shows illegibility.
 
 ## Provenance Notes
 
@@ -97,7 +67,6 @@ reference is anti-reference evidence for forbidden topology transfer.
 
 ## Method Notes
 
-This critique is report-only. It was regenerated after the current compile
-using the host `/fig_critique` fallback flow: `scripts/critique_brief.py`,
-current rendered artifacts, source review, and compile visual-QA reports. No
-automatic edits were applied to the TikZ source.
+This critique is report-only. It was refreshed after the current compile using
+the host `/fig_critique` fallback flow: `scripts/critique_brief.py`, current
+rendered artifacts, source review, and compile visual-QA reports.

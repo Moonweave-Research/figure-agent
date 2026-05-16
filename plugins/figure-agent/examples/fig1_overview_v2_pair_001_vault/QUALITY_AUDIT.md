@@ -8,12 +8,12 @@
 
 | Check | Command | Result |
 |---|---|---|
-| Compile/render | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | PASS, exit 0. Generated `build/fig1_overview_v2_pair_001_vault.pdf` and `.png`. Report-only warnings: 3 collision candidates, 45 visual-clash candidates. |
+| Compile/render | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | PASS, exit 0. Generated `build/fig1_overview_v2_pair_001_vault.pdf` and `.png`. Collision report clean; report-only visual-clash warnings: 34 candidates. |
 | Status before export | `uv run python scripts/status.py fig1_overview_v2_pair_001_vault` | Initially `critique: stale`, `Exports: STALE`; export blocked as expected. |
-| Critique refresh | `uv run python3 scripts/critique_brief.py examples/fig1_overview_v2_pair_001_vault`, then host-written `critique.md` | PASS. Fresh critique generated at `2026-05-16T02:45:32Z`. |
-| Export | `uv run python scripts/run_export.py fig1_overview_v2_pair_001_vault` | PASS, exit 0. Regenerated exports from stale state. |
-| Status after export | `uv run python scripts/status.py fig1_overview_v2_pair_001_vault` | PASS. Stage 4/4, `critique: fresh`, `Exports: FRESH`, `accepted: false`. |
-| Tests | `uv run pytest -q` | PASS. `228 passed, 1 skipped, 1 xfailed in 56.63s`. |
+| Critique refresh | `uv run python3 scripts/critique_brief.py examples/fig1_overview_v2_pair_001_vault`, then host-written `critique.md` | PASS. Fresh critique generated at `2026-05-16T13:04:34Z`. |
+| Export | `uv run python scripts/run_export.py fig1_overview_v2_pair_001_vault --force-golden` | PASS, exit 0. Rolled forward tracked golden PDF/SVG exports after the TikZ polish patch. |
+| Status after export | `uv run python scripts/status.py fig1_overview_v2_pair_001_vault` | PASS. Stage 4/4, `critique: fresh`, `Exports: TRACKED_GOLDEN`, `accepted: false`, no stale-export note. |
+| Tests | `uv run pytest -q` | PASS. `229 passed, 1 skipped, 1 xfailed in 70.91s`. |
 | Lint | `uv run ruff check .` | PASS. `All checks passed!`. |
 
 ## Theory Guard Result
@@ -35,14 +35,16 @@ not submission-safe for this loop, not left as an unresolved theory defect.
 
 ## Visual Quality Result
 
-Visual build is reviewable but not acceptance-clean.
+Visual build is reviewable, with the prior collision findings closed.
 
-- Collision report: 3 candidates.
-- Visual clash report: 45 candidates.
+- Collision report: 0 candidates.
+- Visual clash report: 34 candidates.
 - `critique.md` adjudicates these as MINOR visual-polish risks, not theory
   blockers.
-- Remaining crop-review targets: Panel G two-line "Coulomb / repulsion" label,
-  Panel A title/subtitle stack, dense embedded sulfur/charge glyph regions.
+- Closed in this pass: Panel G two-line "Coulomb / repulsion" spacing, Panel A
+  title/subtitle spacing, and the `inv. vulc.`/S8 near collision.
+- Remaining crop-review targets: dense embedded sulfur labels, panel letters,
+  symbolic labels, and charge glyph regions.
 
 ## Critique Adjudication
 
@@ -50,15 +52,15 @@ Fresh `critique.md` verdict is `revise`.
 
 - BLOCKER findings: 0.
 - MAJOR findings: 0.
-- MINOR findings: 3.
-- Accepted residual risk: all three MINOR findings are accepted residual risk
-  for this milestone decision only. They must be revisited before any
+- MINOR findings: 1.
+- Accepted residual risk: the remaining MINOR visual-clash finding is accepted
+  residual risk for this milestone decision only. It must be revisited before any
   `accepted: true` or submission-safe claim.
 
 The critique changed the acceptance decision by preventing export until it was
-fresh and by keeping visual-polish issues visible in this audit. It did not
-trigger a TikZ patch in this loop because no High/Medium theory or structural
-finding was found.
+fresh and by keeping visual-polish issues visible in this audit. The low-risk
+label-spacing findings triggered a scoped TikZ patch; no High/Medium theory or
+structural finding was found.
 
 ## Provenance and Publication Compliance
 
