@@ -1,6 +1,6 @@
 metadata:
   extraction_version: '0.3'
-  created_at: '2026-05-08T00:06:18+00:00'
+  created_at: '2026-05-09T01:54:20+00:00'
   reference_image_path: reference/codex_gen_overview_v1.png
   reference_image_hash: sha256:bb380ccf4ed960708e2da510a206fbeecf3883c1be606af1276df99b124bad0e
   ocr_status: ok

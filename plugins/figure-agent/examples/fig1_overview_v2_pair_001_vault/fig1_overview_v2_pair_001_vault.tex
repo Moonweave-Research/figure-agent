@@ -6,7 +6,7 @@
 % preserved (chroma_v2 absent).
 %
 % Vault grammar applied per panel (see briefing.md §2):
-%   Panel A : decorations.pathmorphing snake chain      [manual_seed_cho2024_fig1_s8_polymerization motif]
+%   Panel A : linear DIB-polysulfide-DIB microstructure [manual_seed_cho2024_fig1_s8_polymerization motif]
 %             dashed bond-exchange arrow                [manual_seed_cho2024_fig1_dynamic_exchange annotation]
 %             shapes.geometric regular polygon S8       [shared shapes.geometric grammar]
 %   Panel C : depth-encoded shallow/deep amplitudes     [manual_seed_natcommun2024_fig1 energy_diagram motif]
@@ -28,32 +28,76 @@
 \resizebox{178mm}{!}{%
 \begin{tikzpicture}[
   every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  % R4 style-guide tier (vault style_guide line_weights):
+  %   primary 0.9pt — narrative paths (interArrow, snake chain, well curves, polymer outline).
+  %   secondary 0.55pt — axes, spines, faint reference lines.
+  %   annotation 0.7pt — schematic outlines that are not narrative (DIB ring, S8, polymer strip).
   interArrow/.style={-{Stealth[length=7pt,width=5pt]}, cGray!55!black,
-                     line width=1.0pt},
+                     line width=0.9pt},
   rowBridgeArrow/.style={-{Stealth[length=10pt,width=7pt]}, cGray!70!black,
                          line width=1.6pt},
   labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
   labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
   labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
                     text=cGray!80!black},
-  snakeChain/.style={decorate, decoration={snake, amplitude=0.7mm, segment length=2.4mm},
-                     cAmber, line width=1.0pt},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{9.5}{11}\selectfont,
+                      text=cGray!90!black},
 ]
 
 % Figure-wide background wash
 \fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
 
+% R4: panel letters A–G at NW corner of each panel bbox (bold sans, anchor=north west).
+% Row 2 letters parked in inter-row gap (y≈4.55) so they do not collide with
+% in-panel y-axis end labels like g(E_t).
+\node[panelLetter, anchor=north west] at (0.10, 9.05) {A};
+\node[panelLetter, anchor=north west] at (3.60, 9.05) {B};
+\node[panelLetter, anchor=north west] at (6.95, 9.05) {C};
+\node[panelLetter, anchor=north west] at (0.10, 4.55) {D};
+\node[panelLetter, anchor=north west] at (4.55, 4.55) {E};
+\node[panelLetter, anchor=north west] at (7.05, 4.55) {F};
+\node[panelLetter, anchor=north west] at (10.55, 4.55) {G};
+
 % ============================================================
-% Panel A — Sulfur-rich polymer (vault grammar: snake chain + S8 polygon)
+% Figure-wide macro: skeletal polysulfide zigzag chain (used by Panels A + B).
+% Optional offset [#1] shifts the zigzag vertically:
+%   default -0.06 cm → chain centered on (x0, y0) [Panel B use].
+%   pass 0          → first atom AT (x0, y0)      [Panel A use, anchored at DIB junction].
+% ============================================================
+\newcommand{\zigSChain}[4][-0.04]{% [#1]=zig offset, #2=x0, #3=y0, #4=n atoms
+  % R11 delicate: bond spacing 0.12→0.10cm, amplitude 0.12→0.08cm,
+  % atom radius 0.04→0.025cm, bond width 0.7→0.5pt. Reduces "beads-on-string"
+  % cartoon feel; closer to NC chemistry-paper line weight conventions.
+  \begin{scope}[shift={(#2,#3)}]
+    \foreach \i in {0,...,\numexpr#4-2\relax} {
+      \pgfmathsetmacro{\xa}{0.10*\i}
+      \pgfmathsetmacro{\ya}{#1 + 0.08*mod(\i,2)}
+      \pgfmathtruncatemacro{\inext}{\i+1}
+      \pgfmathsetmacro{\xb}{0.10*\inext}
+      \pgfmathsetmacro{\yb}{#1 + 0.08*mod(\inext,2)}
+      \draw[cAmber!85!black, line width=0.5pt] (\xa,\ya) -- (\xb,\yb);
+    }
+    \foreach \i in {0,...,\numexpr#4-1\relax} {
+      \pgfmathsetmacro{\xa}{0.10*\i}
+      \pgfmathsetmacro{\ya}{#1 + 0.08*mod(\i,2)}
+      \fill[cAmber!85!black] (\xa,\ya) circle (0.025cm);
+    }
+  \end{scope}
+}
+
+% ============================================================
+% Panel A — Sulfur-rich polymer (linear poly(S-r-DIB) + DIB rings + S8 inset)
 % ============================================================
 % Panel A bbox: x=0..3.50  y=5..9
 
-\fill[cAmber!08] (1.75, 6.95) circle (1.55cm);
+% R10: horizontal-row layout — wash replaced with horizontal ellipse hugging
+% the zigzag row of 4 rings + center polysulfide chains.
+\fill[cAmber!08] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
 
-% --- Two DIB benzene rings (meta-substituted, bridged) ---
+% --- DIB benzene rings (meta-substituted, linear primary microstructure) ---
 \newcommand{\dibRingAt}[2]{%
   \begin{scope}[shift={(#1,#2)}]
-    \pgfmathsetmacro{\dibR}{0.42}
+    \pgfmathsetmacro{\dibR}{0.26}
     \draw[cGray!85!black, line width=0.70pt]
       (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
       (240:\dibR) -- (300:\dibR) -- cycle;
@@ -62,46 +106,103 @@
     \draw[cGray!85!black, line width=0.55pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
   \end{scope}
 }
-\dibRingAt{1.10}{7.60}
-\dibRingAt{2.40}{6.30}
+% R10 horizontal-row zigzag layout: 4 DIB rings in alternating high/low row,
+% ring R=0.26 cm, horizontal spacing 0.75 cm, vertical zigzag amplitude 0.55 cm.
+% Each ring uses 2 meta vertices for polysulfide attachments (degree 2 ✓).
+% Topology: linear chain Ring_a → Ring_b → Ring_c → Ring_d (with terminal danglings).
+\dibRingAt{0.75}{7.10}
+\dibRingAt{1.50}{6.55}
+\dibRingAt{2.25}{7.10}
+\dibRingAt{3.00}{6.55}
 
-% --- Isopropenyl linker bonds ---
-\draw[cGray!75!black, line width=0.55pt] (0.680,7.600) -- (0.550,7.600);
-\draw[cGray!75!black, line width=0.55pt] (1.310,7.236) -- (1.375,7.123);
-\draw[cGray!75!black, line width=0.55pt] (2.190,6.664) -- (2.125,6.777);
-\draw[cGray!75!black, line width=0.55pt] (2.820,6.300) -- (2.950,6.300);
+% Quaternary C(CH3)2 methyl pair at each DIB-polysulfide junction (post-R7
+% reference fix: poly(S-r-DIB) has gem-dimethyl quaternary C between each
+% phenyl ring and its polysulfide chain, originating from 1,3-DIB's
+% isopropenyl groups). Two short methyl stubs perpendicular to the chain axis.
+\newcommand{\methylPair}[4]{%
+  \pgfmathsetmacro{\mdx}{#3-#1}
+  \pgfmathsetmacro{\mdy}{#4-#2}
+  \pgfmathsetmacro{\mnorm}{sqrt(\mdx*\mdx + \mdy*\mdy)}
+  \pgfmathsetmacro{\mnx}{\mdx/\mnorm}
+  \pgfmathsetmacro{\mny}{\mdy/\mnorm}
+  \draw[cGray!75!black, line width=0.45pt]
+    (#1,#2) -- ({#1 - 0.08*\mny}, {#2 + 0.08*\mnx});
+  \draw[cGray!75!black, line width=0.45pt]
+    (#1,#2) -- ({#1 + 0.08*\mny}, {#2 - 0.08*\mnx});
+}
 
-% --- Polysulfide bridge chain (DIB1 → DIB2) via snake decoration ---
-% This is the vault-grammar differentiator: snake decoration instead of manual bezier.
-\draw[snakeChain] (1.375,7.123) -- (2.125,6.777);
+% --- Isopropenyl linker bonds (8 total: 2 per ring at META positions, R10) ---
+% Vertex assignments:
+%   Ring_a (0.75,7.10): 300° (LR → chain to b)  + 180° (L → left dangling)
+%   Ring_b (1.50,6.55): 120° (UL ← from a)      + 0°   (R  → chain to c)
+%   Ring_c (2.25,7.10): 240° (LL ← from b)      + 0°   (R  → chain to d)
+%   Ring_d (3.00,6.55): 120° (UL ← from c)      + 0°   (R  → right dangling)
+% All vertex pairs are 120° apart (meta).
+\draw[cGray!75!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
+\draw[cGray!75!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
+\draw[cGray!75!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
+\draw[cGray!75!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
+\draw[cGray!75!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
+\draw[cGray!75!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
+\draw[cGray!75!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
+\draw[cGray!75!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
 
-% --- Left dangling polysulfide chain (panel-edge) ---
-\draw[snakeChain] (0.550,7.600) -- (0.10,8.05);
-\node[labelMute, anchor=south east] at (0.27,7.90) {S--S--S};
+% --- Polysulfide segments (R10 horizontal-row zigzag, linear chain) ---
+% 3 internal chains (a→b, b→c, c→d) + left + right danglings.
+\draw[cAmber!85!black, line width=0.9pt] (0.93, 6.79) -- (1.32, 6.86);   % Ring_a → Ring_b (slight down)
+\draw[cAmber!85!black, line width=0.9pt] (1.86, 6.55) -- (2.07, 6.79);   % Ring_b → Ring_c (up-right)
+\draw[cAmber!85!black, line width=0.9pt] (2.61, 7.10) -- (2.82, 6.86);   % Ring_c → Ring_d (down-right)
+% Open chain ends (both terminals of linear copolymer)
+\draw[cAmber!85!black, line width=0.9pt] (0.39, 7.10) -- (0.10, 7.20);   % left dangling
+\draw[cAmber!85!black, line width=0.9pt] (3.36, 6.55) -- (3.50, 6.50);   % right dangling
 
-% --- Right dangling polysulfide chain (panel-edge) ---
-\draw[snakeChain] (2.950,6.300) -- (3.45,6.10);
-\node[labelMute, anchor=south west] at (3.28,6.18) {S--S};
+% Quaternary C(CH3)2 methyl pairs at the 6 internal junctions
+\methylPair{0.93}{6.79}{1.32}{6.86}
+\methylPair{1.32}{6.86}{0.93}{6.79}
+\methylPair{1.86}{6.55}{2.07}{6.79}
+\methylPair{2.07}{6.79}{1.86}{6.55}
+\methylPair{2.61}{7.10}{2.82}{6.86}
+\methylPair{2.82}{6.86}{2.61}{7.10}
+% R10: (S)_x composition label centered above the row, larger font (replaces
+% the prior small-on-short-chain placement). Acts as a single panel-level
+% composition annotation for all polysulfide segments.
+\node[font=\sffamily\fontsize{8}{9.5}\selectfont, text=cAmber!85!black,
+      anchor=south, inner sep=1pt]
+  at (1.90, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
 
-% --- S-S labels along the bridge chain ---
-\node[labelMute] at (1.75, 6.78) {S--S};
-
-% --- S8 ring inset (upper-right corner, vault shapes.geometric grammar) ---
+% --- S8 ring inset: explicit S atoms + center "S_8" identity label.
+% Background octagon kept as cAmberSphere wash; 8 "S" letters sit on the
+% vertices + bold "S_8" at center (reference idiom: vertex atoms name the
+% element, center label names the ring).
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
-      line width=0.7pt, minimum size=8mm, fill=cAmberSphere!40,
-      inner sep=0pt] (s8) at (3.05,8.50) {\fontsize{6}{7}\sffamily S$_8$};
+      line width=0.7pt, minimum size=7mm, fill=cAmberSphere!40,
+      inner sep=0pt] (s8) at (3.05,8.45) {};
+\foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
+  \node[font=\sffamily\bfseries\fontsize{4.4}{5.2}\selectfont,
+        text=cAmber!95!black, inner sep=0pt,
+        fill=cAmberSphere!40]
+    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.45 + 0.35*sin(\ang+22.5)}) {S};
+}
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+      text=cAmber!95!black, anchor=center] at (3.05, 8.45) {S$_8$};
 
-% --- Inverse vulcanization transformation arrow (vault annotation grammar: dashed exchange) ---
+% --- Inverse vulcanization transformation arrow (S8 → DIB Ring_c 60° vertex) ---
+% R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
+% the transformation destination semantically meaningful rather than landing in
+% empty space.
 \draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!70!black,
-      line width=0.55pt] (s8.south west) to[bend right=12] (1.55,7.95);
+      line width=0.55pt] (s8.south west) to[bend right=14] (2.38,7.32);
 \node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont,
-      anchor=south] at (2.40,8.18) {inv.\ vulc.};
+      anchor=south, fill=white, inner sep=1pt] at (2.55,8.00) {inv.\ vulc.};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
   at (0.10,5.80) {Sulfur-rich polymer};
+% R10 subtitle: changed from "DIB-linked polysulfide network" — strictly,
+% poly(S-r-DIB) is a LINEAR random copolymer (DIB is bivalent; no covalent
+% crosslinks in the primary microstructure). Subtitle reflects molecular truth.
 \node[labelMute, anchor=north west]
-  at (0.10,5.55) {DIB-linked polysulfide network};
+  at (0.10,5.55) {poly(S-r-DIB) linear copolymer};
 
 % Inter-panel arrow A → B
 \draw[interArrow] (3.50, 7.0) -- (3.85, 7.0);
@@ -111,15 +212,29 @@
 % ============================================================
 % Panel B bbox: x=3.55..6.85  y=5..9
 
-\foreach \y/\frac in {8.30/0.55, 7.55/0.70, 6.80/0.85, 6.05/1.00} {
-  \draw[snakeChain] (3.95, \y) -- ({3.95 + 2.65*\frac}, \y);
+% B2a: explicit skeletal zigzag chains using shared \zigSChain macro defined
+% near the top of the figure (figure-wide; also drives Panel A chains).
+% Counts 10/14/18/24 give ~2.4× S60→S85 progression with visibly countable atoms.
+% B2b + B3: each row labeled at its own right endpoint (anchor=west, x bound
+% to atom count) with stronger amber contrast (cAmber!90!black) and upright
+% sans (chemistry convention: element symbol upright, subscript upright).
+% R11 delicate Panel B: bond spacing now 0.10cm (was 0.12), atom radius 0.025
+% (was 0.04). xend formula and label y both reflect the new geometry.
+% v6: chain row spacing 0.75→0.60 (span 2.25→1.80, 20% compression)
+% center y=7.00; bottom-chain↔axis gap now 0.45 cm (was 0.40).
+\foreach \y/\n/\sn in {7.90/10/60, 7.30/14/70, 6.70/18/75, 6.10/24/85} {
+  \zigSChain{3.95}{\y}{\n}
+  \pgfmathsetmacro{\xend}{3.95 + 0.10*(\n-1)}
+  \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
+        anchor=west, inner sep=2pt]
+    at (\xend, {\y + 0.04}) {S$_{\sn}$};
 }
-\node[labelMute, anchor=west, text=cAmber!70!black] at (6.60, 8.30) {S$_{60}$};
-\node[labelMute, anchor=west, text=cAmber!70!black] at (6.60, 6.05) {S$_{85}$};
 % Axis arrow
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.45pt]
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
   (3.95, 5.65) -- (6.60, 5.65);
-\node[labelMute, anchor=north] at (5.20, 5.62) {S-chain length};
+% B4: axis label gains the chemistry variable n (chain monomer count) — top-tier
+% schematic idiom; reader maps S_n on chain → axis n.
+\node[labelMute, anchor=north] at (5.20, 5.62) {Chain length, $n$};
 
 \draw[interArrow] (6.85, 7.0) -- (7.20, 7.0);
 
@@ -130,112 +245,317 @@
 % ============================================================
 % Panel C bbox: x=6.90..13.95  y=5..9
 
-% --- Faded polymer-network backdrop (vault motif: multiscale morphology) ---
-\foreach \i in {1,2,...,16} {
-  \pgfmathsetmacro{\xnoise}{0.15*rand}
-  \pgfmathsetmacro{\ynoise}{0.10*rand}
-  \pgfmathsetmacro{\px}{7.20 + 0.40*\i + \xnoise}
-  \pgfmathsetmacro{\py}{8.40 + \ynoise}
-  \node[circle, draw=cGray!35!white, fill=cGray!12!white, inner sep=0pt,
-        minimum size=2.0mm, line width=0.25pt] at (\px,\py) {};
-}
-% Network connector segments (faded)
-\foreach \xa/\xb in {7.35/7.95, 7.95/8.50, 8.50/9.10, 9.10/9.70, 9.70/10.40,
-                     10.40/11.00, 11.00/11.65, 11.65/12.30, 12.30/12.95,
-                     12.95/13.50} {
-  \draw[cGray!30!white, line width=0.30pt] (\xa,8.42) -- (\xb,8.42);
+% --- δ design: hybrid spatial+energy split-half representation ---
+% LEFT half (x=6.95..10.30):  polymer matrix with embedded ⊖ trap sites
+%                             (shallow blue + deep red mixed in real space).
+% RIGHT half (x=10.50..13.80): pure energy diagram — horizontal trap level
+%                              lines (shallow cluster near mobility edge,
+%                              deep cluster further down) + E_C/E_V refs.
+% Dotted leader lines bind each LEFT site to its RIGHT level. Replaces the
+% prior "left=shallow region / right=deep region" spatial split which
+% mis-suggested phase segregation. Idiom: ref01b Haneef 2020 JMCC Fig 2 +
+% ref08a Liu 2025 NComm Fig 1a.
+
+% R12 simplification: 7 horizontal trap level lines → 2 filled band rectangles
+% (shallow + deep), reduces "ladder rungs" clutter per user critique. Reader
+% reads shallow vs deep by COLOR; binding from LEFT sites to RIGHT bands is
+% implicit via color matching, so leader lines are dropped entirely. Element
+% count: 27 → 12 (~55% reduction).
+
+% --- LEFT half: organic polymer-mass (R19, post user critique).
+% Drops cube/sheet "container" idiom. Sample = organic amber blob (soft
+% radial-gradient, no hard edge) with TANGLED polysulfide chains crossing
+% inside. Reads as the BULK material derived from Panel B's individual chains
+% — zoom-out narrative (molecule → single chain → tangled mass). Chemistry
+% explicit (S atoms on chains) but arrangement organic (not aligned like B).
+%
+% --- LEFT half: NC-grade rectangular sheet (R22 quality push).
+% Smaller sheet (2.30 × 1.50 cm vs R21's 2.80 × 2.10). Linear top→bottom
+% gradient adds depth without violating "no decoration" convention (the
+% gradient hints at film thickness/translucency, not aesthetic flourish).
+% Top-edge highlight + right-edge shadow = subtle 3D feel without drop shadow.
+\shade[top color=cAmber!10, bottom color=cAmber!38]
+  (7.55, 6.20) rectangle (9.85, 7.70);
+\draw[cAmber!75!black, line width=0.55pt]
+  (7.55, 6.20) rectangle (9.85, 7.70);
+% Top-edge highlight (subtle white reflection, opacity 0.5)
+\draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.68) -- (9.80, 7.68);
+% Right-edge thin shadow accent (depth cue)
+\draw[cAmber!85!black, line width=0.30pt, opacity=0.45]
+  (9.85, 6.22) -- (9.85, 7.68);
+
+% 3 wavy chain hints, varied weights for depth
+\draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
+  {(7.65, 7.30) (8.05, 7.40) (8.50, 7.30) (9.00, 7.40) (9.45, 7.30) (9.75, 7.35)};
+\draw[cAmber!70!black, line width=0.55pt] plot[smooth] coordinates
+  {(7.65, 6.85) (8.10, 6.95) (8.60, 6.85) (9.10, 6.95) (9.60, 6.85) (9.75, 6.90)};
+\draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
+  {(7.65, 6.40) (8.05, 6.30) (8.50, 6.40) (9.00, 6.30) (9.45, 6.40) (9.75, 6.35)};
+
+% Atom dots at chain peaks — varied sizes for depth perception
+\foreach \px/\py/\sz in {8.05/7.40/0.026, 9.00/7.40/0.022,
+                          8.10/6.95/0.028, 9.10/6.95/0.025,
+                          8.05/6.30/0.026, 9.00/6.30/0.022} {
+  \fill[cAmber!85!black] (\px, \py) circle (\sz cm);
 }
 
-% --- LEFT REGION: SHALLOW (blue, 3 shallow wells, 3 electrons) ---
-% Wells: shallow amplitude 0.30, centered y=7.00
-\draw[cBlue!85!black, line width=0.85pt]
-  (7.30,7.30) cos (7.65,7.00) sin (8.00,6.70) cos (8.35,7.00) sin
-  (8.70,7.30) cos (9.05,7.00) sin (9.40,6.70) cos (9.75,7.00) sin
-  (10.10,7.30) cos (10.35,7.05);
-% Shallow electrons (3, in well minima)
-\foreach \wx in {8.00, 9.05, 10.10} {
-  \node[circle, draw=cBlue!90!black, fill=cBlue!30, inner sep=0pt,
-        minimum size=2.6mm, line width=0.55pt,
-        font=\sffamily\fontsize{5}{6}\selectfont] at (\wx, 6.55) {$-$};
-}
-\node[labelStrong, text=cBlue!75!black, anchor=south]
-  at (8.70, 7.55) {shallow};
+% --- LEFT: 4 ⊖ trap sites (2 shallow + 2 deep) ---
+\coordinate (siteS1) at (8.25, 7.30);
+\coordinate (siteS2) at (9.35, 6.95);
+\coordinate (siteD1) at (7.85, 6.45);
+\coordinate (siteD2) at (9.25, 6.40);
 
-% --- RIGHT REGION: DEEP (red, 4 deeper wells, 4 electrons + escape arrows) ---
-% Wells: deep amplitude 0.60, centered y=6.85
-\draw[cRed!85!black, line width=0.95pt]
-  (10.35,7.05) sin (10.55,7.05) cos (10.95,6.45) sin (11.35,7.05) cos
-  (11.75,6.40) sin (12.15,7.05) cos (12.55,6.45) sin (12.95,7.05) cos
-  (13.35,6.50) sin (13.75,7.05);
-% Deep electrons (4, in well minima)
-\foreach \wx in {10.95, 11.75, 12.55, 13.35} {
-  \node[circle, draw=cRed!90!black, fill=cRed!30, inner sep=0pt,
-        minimum size=2.8mm, line width=0.60pt,
-        font=\sffamily\fontsize{5}{6}\selectfont] at (\wx, 6.25) {$-$};
+% Sheet caption below rectangle
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
+% R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
+% reads through better.
+\foreach \site in {siteS1, siteS2} {
+  \node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
+        minimum size=1.4mm, line width=0.32pt,
+        font=\sffamily\fontsize{4}{4.8}\selectfont] at (\site) {$-$};
 }
-% Escape arrows (2, dashed, upward, from deep wells)
-\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cRed!80!black,
-      line width=0.55pt] (10.95, 6.50) -- (10.95, 7.55);
-\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cRed!80!black,
-      line width=0.55pt] (12.55, 6.50) -- (12.55, 7.55);
-\node[labelStrong, text=cRed!75!black, anchor=south]
-  at (12.15, 7.55) {deep};
+\foreach \site in {siteD1, siteD2} {
+  \node[circle, draw=cRed!85!black, fill=cRed!25, inner sep=0pt,
+        minimum size=1.5mm, line width=0.38pt,
+        font=\sffamily\fontsize{4}{4.8}\selectfont] at (\site) {$-$};
+}
 
-% --- Panel C label ---
-\node[labelMute, anchor=north] at (10.40, 5.95) {localized traps};
+% --- RIGHT half: energy diagram references + Vacuum level (R15) ---
+% R15: Vacuum level dashed reference at y=8.55 (above E_C) — adds ref04 anchor
+% convention. Vacuum is a *reference level*, not a quantitative measurement,
+% so allowed under briefing schematic rule.
+\draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (13.80, 8.55);
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!60!black,
+      anchor=west] at (13.83, 8.55) {vacuum};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (13.80, 8.30);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      anchor=west] at (13.83, 8.30) {$E_C$};
+\draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (13.80, 7.85);
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=west] at (13.83, 7.85) {mobility edge};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (13.80, 5.30);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      anchor=west] at (13.83, 5.30) {$E_V$};
+
+% R15: Gaussian DOS overlays (between Energy axis and trap lines).
+% ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
+% energetic disorder distribution. Shallow narrow σ=0.06 (tight localization).
+% Deep wider σ=0.18 (broader trap-depth distribution → "deep dominates"
+% via spread, complementing the 1 vs 3 line count and 1 vs 2 ⊖ count).
+\fill[cBlue!18, opacity=0.55]
+  plot[domain=7.20:7.80, samples=25, smooth]
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x)
+  -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
+\draw[cBlue!75!black, line width=0.50pt]
+  plot[domain=7.20:7.80, samples=25, smooth]
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x);
+\fill[cRed!18, opacity=0.55]
+  plot[domain=5.40:6.70, samples=30, smooth]
+    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
+  -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
+\draw[cRed!75!black, line width=0.55pt]
+  plot[domain=5.40:6.70, samples=30, smooth]
+    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
+
+% --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
+% Convention #2 from 3rd reference search: top-tier figures use a real graph-
+% style axis with tick marks at reference levels, not an arrow. eV anchors
+% omitted per briefing §4 "Eₜ 정확 수치 라벨 (정량은 Fig 3)" — schematic axis only.
+\draw[cGray!70!black, line width=0.45pt] (10.50, 5.20) -- (10.50, 8.45);
+\foreach \tickY in {8.30, 7.85, 7.49, 6.05, 5.30} {
+  \draw[cGray!70!black, line width=0.35pt] (10.43, \tickY) -- (10.50, \tickY);
+}
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
+      anchor=south, rotate=90] at (10.36, 6.85) {Energy};
+
+% --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
+% R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
+% Both shallow & deep show distribution via 2 stacked levels per category.
+\foreach \tY in {7.55, 7.35} {
+  \draw[cBlue!80!black, line width=0.80pt] (10.95, \tY) -- (11.55, \tY);
+}
+\foreach \tY in {6.20, 5.85} {
+  \draw[cRed!80!black, line width=0.80pt] (10.95, \tY) -- (11.55, \tY);
+}
+% ⊖ markers on each trap line (1 per level, color-matched)
+\foreach \dx/\dy in {11.15/7.55, 11.35/7.35} {
+  \node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
+        minimum size=1.5mm, line width=0.35pt,
+        font=\sffamily\fontsize{4.2}{5}\selectfont] at (\dx,\dy) {$-$};
+}
+\foreach \dx/\dy in {11.15/6.20, 11.35/5.85} {
+  \node[circle, draw=cRed!85!black, fill=cRed!25, inner sep=0pt,
+        minimum size=1.6mm, line width=0.40pt,
+        font=\sffamily\fontsize{4.2}{5}\selectfont] at (\dx,\dy) {$-$};
+}
+% Region labels — anchor to trap line clusters on right
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+      text=cBlue!75!black, anchor=west] at (11.60, 7.45) {shallow};
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!75!black, anchor=west] at (11.60, 6.02) {deep};
+
+% Escape arrows from BOTH shallow and deep (showing both are dynamic, no
+% one-sided "dominate" claim). Shallow escapes easier (shorter arrow with
+% larger head). Deep harder (longer arrow, smaller head).
+\draw[-{Stealth[length=3pt,width=2.4pt]}, dashed, cBlue!70!black,
+      line width=0.35pt] (11.10, 7.55) -- (11.10, 7.82);
+\draw[-{Stealth[length=2.6pt,width=2pt]}, dashed, cRed!70!black,
+      line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
+
+% Trap depth annotation: E_C → deep band mid (encodes depth scale, no
+% "dominate" overstatement)
+\draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
+      cGray!70!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      anchor=east, fill=white, inner sep=0.5pt]
+  at (13.52, 7.00) {$\Delta E_t$};
+
+% R13: Re-add thin BLACK straight leaders (checklist #12 — no arrowhead, no
+% color, 0.30pt). Each LEFT ⊖ → its corresponding RIGHT band left edge.
+% Two red leaders converge on the deep band = "multiple deep sites map to
+% one deep distribution".
+% R20: leaders color-matched to ⊖ (shallow tint blue, deep tint red) for
+% stronger visual binding LEFT site ↔ RIGHT level. Still dashed, low opacity.
+\draw[cBlue!55!black, densely dashed, line width=0.28pt] (siteS1) -- (10.50, 7.55);
+\draw[cBlue!55!black, densely dashed, line width=0.28pt] (siteS2) -- (10.50, 7.35);
+\draw[cRed!55!black, densely dashed, line width=0.28pt] (siteD1) -- (10.50, 6.20);
+\draw[cRed!55!black, densely dashed, line width=0.28pt] (siteD2) -- (10.50, 5.85);
+
+% R13: Half-identity labels and panel role subtitle.
+\node[labelMute, anchor=south,
+      font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!65!black] at (8.35, 8.55) {real space};
+\node[labelMute, anchor=south,
+      font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!65!black] at (12.20, 8.78) {energy diagram};
+\node[labelMute, anchor=south,
+      font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!75!black] at (10.40, 8.92) {localized traps};
 
 % ============================================================
-% Convergent evidence — vertical Stealth arrow C → Row 2
-% (DESIGN.MD §2.2 + §5: 강한 line weight + 라벨 "convergent evidence")
+% Row 2 cover-binding background — shared faded polymer matrix
+% (briefing §3 #1, M2 baseline; cAmber!8 tint + 3 wavy chain hints
+%  underneath Panels D/E/F/G, opacity ~0.15 effective)
 % ============================================================
-\draw[rowBridgeArrow] (10.40, 5.65) -- (10.40, 4.65);
-\node[labelStrong, anchor=west] at (10.55, 5.18) {convergent evidence};
+\fill[cAmber!8, rounded corners=2mm] (-0.05, 0.05) rectangle (14.05, 4.55);
+\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 1.20) (2.50, 1.05) (5.00, 1.30) (7.50, 1.10) (10.00, 1.25) (12.50, 1.05) (13.90, 1.20)};
+\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 2.50) (2.50, 2.65) (5.00, 2.45) (7.50, 2.60) (10.00, 2.40) (12.50, 2.60) (13.90, 2.50)};
+\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 3.80) (2.50, 3.65) (5.00, 3.85) (7.50, 3.70) (10.00, 3.80) (12.50, 3.65) (13.90, 3.75)};
+
+% ============================================================
+% Convergent evidence — 3-spoke branching C → Row 2
+% (briefing §4: divergent geometry; "convergent" semantic carried by caption
+%  + Panel C/F color matching, NOT by arrow direction)
+% Anti-goal: linear D→E→F→G chain (causation misleading; briefing §8.7)
+% ============================================================
+% Caption above branching root (italic gray; carries "convergent" semantic)
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!75!black, anchor=south, align=center]
+  at (7.00, 4.92) {convergent evidence -- three independent probes of the same trap};
+
+% Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
+\coordinate (branchRoot) at (6.95, 4.85);
+
+% 3 spokes — Stealth, narrative weight 0.9pt cGray
+%   spoke 1: kinetic     → Panel D entry (2.20, 4.30)
+%   spoke 2: ISPD        → Panel E-F boundary (6.95, 4.32)
+%   spoke 3: mechanical  → Panel G entry (12.20, 4.30)
+\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+  (branchRoot) -- (2.20, 4.30);
+\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+  (branchRoot) -- (6.95, 4.32);
+\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+  (branchRoot) -- (12.20, 4.30);
+
+% Spoke modality labels (mid-spoke, italic small, with background fill to clear
+% the chain-hint lines underneath)
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=south, fill=cAmber!8, inner sep=1pt]
+  at (4.50, 4.55) {kinetic};
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=south, fill=cAmber!8, inner sep=1pt]
+  at (6.95, 4.50) {ISPD};
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=south, fill=cAmber!8, inner sep=1pt]
+  at (9.55, 4.55) {mechanical};
 
 % ============================================================
 % Panel D — Kinetic I(t) ~ t^{-n} (scaffold)
 % ============================================================
 % Panel D bbox: x=0..4.45  y=0.1..4.45
 
-% Axis frame
-\draw[cGray!70!black, line width=0.55pt] (0.55, 0.45) -- (0.55, 4.10);
-\draw[cGray!70!black, line width=0.55pt] (0.55, 0.45) -- (4.10, 0.45);
-\node[labelMute, anchor=east, rotate=90] at (0.45, 2.30) {log $I$};
-\node[labelMute, anchor=north] at (2.30, 0.35) {log $t$};
+% M2 axis arrow (briefing §3: D/E/F = iconic cartoon, NO axis frame,
+% only Stealth-tipped arrows for direction; tickless, no numerical labels)
+% v6: axis-top compressed 4.10→3.40 (less "tall" plot per user feedback)
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.55, 0.45) -- (0.55, 3.40);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.55, 0.45) -- (4.10, 0.45);
+% Axis labels at arrow tips (axis-end convention, replaces mid-axis labels)
+\node[labelMute, anchor=east, rotate=90] at (0.45, 3.20) {$\log I$};
+\node[labelMute, anchor=north] at (3.95, 0.35) {$\log t$};
 
-% Two slope curves
-\draw[cBlue!80!black, line width=0.90pt] (0.70, 3.80) -- (3.95, 0.80);
-\draw[cRed!80!black, line width=0.90pt] (0.70, 3.40) -- (3.95, 1.55);
-% Debye reference (dashed gray)
-\draw[cGray!70!black, dashed, line width=0.55pt]
-  (0.70, 3.80) .. controls (1.80, 3.50) and (2.60, 1.80) .. (3.30, 0.50);
+% v6: two power-law lines separated (no crossing). deep-rich stays above
+% shallow-rich throughout — deep trap retains charge longer = less steep
+% slope. Both lines diverge with x; gap widens to the right.
+\draw[cRed!80!black, line width=0.80pt] (0.70, 3.30) -- (3.95, 1.55);
+\draw[cBlue!80!black, line width=0.80pt] (0.70, 2.80) -- (3.95, 0.55);
+% v6: Debye dashed — starts near deep-rich at left, drops steeper, ends
+% clearly below both power-law tails per briefing §8.4 (non-Debye tail).
+\draw[cGray!70!black, dashed, line width=0.65pt]
+  (0.82, 3.35) .. controls (1.20, 3.20) and (1.50, 1.30) .. (2.50, 0.55);
+\draw[cGray!55!black, line width=0.35pt] (2.45, 0.60) -- (2.70, 0.75);
+\node[labelMute, text=cGray!65!black, anchor=west, fill=white, inner sep=1pt]
+  at (2.70, 0.75) {Debye};
 
-\node[labelStrong, anchor=west] at (0.70, 3.95) {$I(t)\!\sim\!t^{-n}$};
-\node[labelMute, anchor=west, text=cBlue!75!black] at (2.50, 1.95) {shallow-rich};
-\node[labelMute, anchor=west, text=cRed!75!black] at (2.55, 2.40) {deep-rich};
+\node[labelStrong, anchor=west] at (0.70, 3.55) {$I(t)\!\sim\!t^{-n}$};
+\node[labelMute, anchor=south, text=cRed!75!black] at (2.50, 2.55) {deep-rich};
+\node[labelMute, anchor=south, text=cBlue!75!black] at (3.00, 1.45) {shallow-rich};
 
-\draw[interArrow] (4.45, 2.30) -- (4.55, 2.30);
+% M2 Row 2 internal flow: D→E inter-arrow removed (briefing §4: 3-spoke from
+% C carries the Row 2 narrative; horizontal D→E would re-introduce linear
+% chain feel that briefing §8.7 forbids)
 
 % ============================================================
 % Panel E — Vs(t) decay scaffold
 % ============================================================
 % Panel E bbox: x=4.50..6.95  y=0.1..4.45
 
-\draw[cGray!70!black, line width=0.55pt] (4.70, 0.45) -- (4.70, 4.10);
-\draw[cGray!70!black, line width=0.55pt] (4.70, 0.45) -- (6.80, 0.45);
+% M2 axis arrows (Stealth-tipped, no frame, no ticks)
+% v6: axis-top compressed 4.10→3.40
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (4.85, 0.45) -- (4.85, 3.40);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (4.85, 0.45) -- (6.80, 0.45);
 
-\foreach \x/\y in {4.95/3.85, 5.20/3.50, 5.50/3.05, 5.85/2.55, 6.20/1.95,
-                   6.55/1.30} {
+% v6: S-shape stretched-exponential V_s(t) — flat-top (V≈V_0), steep middle
+% (around τ), slow tail (asymptotic). Replaces v5 accelerating-decay shape
+% which read as wrong physics. 12 waypoints; markers at 6.
+\draw[cRed!70!black, line width=0.80pt]
+  plot[smooth] coordinates
+  {(4.92, 3.20) (5.10, 3.15) (5.30, 3.05) (5.50, 2.80)
+   (5.70, 2.40) (5.85, 1.90) (6.00, 1.45) (6.15, 1.10)
+   (6.30, 0.85) (6.45, 0.70) (6.60, 0.60) (6.75, 0.55)};
+\foreach \x/\y in {5.10/3.15, 5.50/2.80, 5.85/1.90, 6.15/1.10, 6.45/0.70,
+                   6.75/0.55} {
   \node[circle, draw=cRed!70!black, fill=white, inner sep=0pt,
         minimum size=1.4mm, line width=0.40pt] at (\x,\y) {};
 }
-% Trend line
-\draw[cRed!50!black, dashed, line width=0.45pt]
-  (4.85, 3.95) -- (6.65, 1.15);
 
-\node[labelMute, anchor=south] at (5.80, 3.95) {$V_s(t)$};
-\node[labelMute, anchor=north] at (5.75, 0.35) {log $t$};
-\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (5.85, 4.10) {surface potential decay};
+% C001 fix: Vs(t) becomes rotated y-axis label (was inline above-axis colliding with subtitle);
+% subtitle 'surface potential decay' moved up above panel top.
+% Axis labels at arrow tips (axis-end convention)
+\node[labelMute, rotate=90, anchor=center,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (4.68, 3.20) {$V_s(t)$};
+\node[labelMute, anchor=north] at (6.65, 0.35) {$\log t$};
+% R5: redundant 'surface potential decay' subtitle removed — V_s(t) y-label
+% and ISPD inter-arrow already name the technique. Per style_guide "no
+% decorative copy".
 
 % Paired ISPD arrow E → F
 \draw[interArrow] (6.95, 2.30) -- (7.05, 2.30);
@@ -246,70 +566,170 @@
 % ============================================================
 % Panel F bbox: x=7.00..10.45  y=0.1..4.45
 
-\draw[cGray!70!black, line width=0.55pt] (7.20, 0.45) -- (7.20, 4.10);
-\draw[cGray!70!black, line width=0.55pt] (7.20, 0.45) -- (10.30, 0.45);
+% M2 axis arrows (Stealth-tipped, no frame, no ticks)
+% v6: axis-top compressed 4.10→3.40
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (7.20, 0.45) -- (7.20, 3.40);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (7.20, 0.45) -- (10.30, 0.45);
 
-% Shallow Gaussian (blue, left, smaller)
+% v6: peaks lowered for less "tall" graph (briefing §5 1.8× ratio preserved:
+% shallow=1.05, deep=1.95 above base → 1.86×).
+% Shallow Gaussian (blue, left, smaller) — peak y=1.50
 \draw[cBlue!85!black, fill=cBlue!25, line width=0.80pt]
-  (7.45, 0.45) .. controls (7.95, 0.45) and (7.95, 2.10) .. (8.20, 2.10)
-              .. controls (8.45, 2.10) and (8.45, 0.45) .. (8.95, 0.45);
-% Deep Gaussian (red, right, taller — 1.8× per design Q4)
+  (7.45, 0.45) .. controls (7.95, 0.45) and (7.95, 1.50) .. (8.20, 1.50)
+              .. controls (8.45, 1.50) and (8.45, 0.45) .. (8.95, 0.45);
+% Deep Gaussian (red, right, taller) — peak y=2.40
 \draw[cRed!85!black, fill=cRed!25, line width=0.80pt]
-  (8.95, 0.45) .. controls (9.15, 0.45) and (9.15, 3.40) .. (9.55, 3.40)
-              .. controls (9.95, 3.40) and (9.95, 0.45) .. (10.15, 0.45);
+  (8.95, 0.45) .. controls (9.15, 0.45) and (9.15, 2.40) .. (9.55, 2.40)
+              .. controls (9.95, 2.40) and (9.95, 0.45) .. (10.15, 0.45);
 
-% Tau_d arrow between peaks
+% Tau_d arrow between peaks (lowered with peaks)
 \draw[<->, cRed!70!black, dashed, line width=0.55pt]
-  (8.20, 3.55) -- (9.55, 3.55);
+  (8.20, 2.55) -- (9.55, 2.55);
 \node[labelMute, anchor=south, text=cRed!70!black]
-  at (8.90, 3.60) {$\tau_d$};
+  at (8.90, 2.60) {$\tau_d$};
 
 \node[labelMute, anchor=north, text=cBlue!75!black] at (8.20, 0.35) {Shallow};
 \node[labelMute, anchor=north, text=cRed!75!black] at (9.55, 0.35) {Deep};
-\node[labelMute, anchor=east] at (7.15, 2.30) {$g(E_t)$};
-\node[labelMute, anchor=north] at (8.75, 0.20) {$E_t$};
+% v6: g(E_t) label y moved to new axis-top region
+\node[labelMute, anchor=north west,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (7.25, 3.30) {$g(E_t)$};
+\node[labelMute, anchor=west] at (10.35, 0.50) {$E_t$};
 
-\draw[interArrow] (10.45, 2.30) -- (10.55, 2.30);
+% M2 Row 2 internal flow: F→G inter-arrow removed (briefing §4: 3-spoke from
+% C carries the Row 2 narrative; horizontal F→G would re-introduce linear
+% chain feel that briefing §8.7 forbids)
 
 % ============================================================
-% Panel G — Macroscopic Coulomb probe (NO Maxwell — v2.2 §2.3 정정)
-% ============================================================
+% Panel G — Macroscopic Coulomb probe (v5 — F1 Nature-grade air-gap fix 2026-05-16)
+% v5 changes (single focus: cantilever–electrode clearance + metallic polish):
+%   * Electrode shifted right: x 12.70..12.95 → 13.55..13.80 (+0.85cm)
+%   * Hatching:                12.95..13.10 → 13.80..13.95
+%   * Ground symbol x_center:  12.825       → 13.675
+%   * Air gap:                 0.575 → 1.425 cm (2.48×) — ~31° max swing buffer
+%   * Nature-grade polish:
+%     - Polymer:   top→bottom amber linear gradient (cAmber!42 → cAmber!22)
+%     - Electrode: left→right metallic gradient   (cGray!75!black → cGray!40!black)
+%                  + left-edge white highlight (opacity 0.50)
+%     - Clip blk:  top→bottom gray gradient (cGray!55!white → cGray!38!white)
+%     - Air gap label: inline mid-arrow w/ cAmber!8 fill (row 2 wash match)
+% v4 history preserved in polymer-strip comments below.
+% briefing §8.5 invariants preserved: clip TOP, polymer hanging, Coulomb-only.
 % Panel G bbox: x=10.50..13.95  y=0.1..4.45
+% Z-order: mount/clip/electrode/undeflected BEFORE polymer; markers + arrows AFTER.
+% ============================================================
 
-% Clip (top) — small rectangle
-\draw[cGray!60!black, fill=cGray!50!white, line width=0.5pt]
-  (12.10, 4.05) rectangle (12.55, 4.20);
-\draw[cGray!60!black, line width=0.5pt] (12.30, 4.20) -- (12.30, 4.30);
-
-% Electrode (left, vertical block)
-\draw[cGray!70!black, fill=cGray!50!black, line width=0.55pt]
-  (10.85, 0.65) rectangle (11.20, 3.95);
-
-% Polymer strip — hanging from clip, curved away from electrode (Coulomb repulsion)
-\draw[cAmber!75!black, fill=cAmber!30, line width=0.75pt]
-  (12.10, 4.05) .. controls (12.30, 3.20) and (12.70, 2.40) ..
-  (13.30, 1.85) -- (13.45, 2.00) .. controls (12.95, 2.55) and
-  (12.55, 3.30) .. (12.40, 4.05) -- cycle;
-
-% Trapped charge markers (q_tr) on polymer strip interior
-\foreach \cx/\cy in {12.55/3.45, 12.85/2.80, 13.10/2.30} {
-  \node[circle, draw=cAmber!85!black, fill=cAmberSphere!50, inner sep=0pt,
-        minimum size=1.6mm, line width=0.40pt] at (\cx,\cy) {};
+% --- Fixed mount hatch + clip (top, universal symbol — no label) ---
+\draw[cGray!50!black, line width=0.45pt] (11.85, 4.30) -- (12.40, 4.30);
+\foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
+  \draw[cGray!50!black, line width=0.30pt]
+    ({11.85+\dx}, 4.30) -- ({11.80+\dx}, 4.38);
 }
-\node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (13.55, 2.95) {$q_{tr}$};
+% v5.1: clip block — top-bottom gradient (light source from upper-left,
+% briefing §9 light-source LOCKED; top lighter = matches Panel C LEFT L278)
+\shade[top color=cGray!38!white, bottom color=cGray!55!white]
+  (11.90, 4.00) rectangle (12.35, 4.15);
+\draw[cGray!60!black, line width=0.5pt]
+  (11.90, 4.00) rectangle (12.35, 4.15);
+\draw[cGray!60!black, line width=0.5pt] (12.125, 4.15) -- (12.125, 4.30);
 
-% Coulomb repulsion arrow (red, polymer → away from electrode)
-\draw[-{Stealth[length=8pt,width=6pt]}, cRed!80!black, line width=1.0pt]
-  (12.10, 1.80) -- (13.00, 1.50);
-\node[labelStrong, anchor=west, text=cRed!75!black]
-  at (13.05, 1.55) {Coulomb};
-\node[labelMute, anchor=north west, text=cRed!75!black]
-  at (13.05, 1.45) {repulsion};
+% --- Electrode (RIGHT, v5 shift +0.85cm, metallic gradient + edge highlight) ---
+\shade[left color=cGray!75!black, right color=cGray!40!black]
+  (13.55, 0.80) rectangle (13.80, 3.80);
+\draw[cGray!85!black, line width=0.55pt]
+  (13.55, 0.80) rectangle (13.80, 3.80);
+% Left-edge metallic highlight (subtle white reflection)
+\draw[white, opacity=0.50, line width=0.38pt]
+  (13.555, 0.85) -- (13.555, 3.75);
+\foreach \ey in {1.00, 1.40, 1.80, 2.20, 2.60, 3.00, 3.40} {
+  \draw[cGray!75!black, line width=0.30pt]
+    (13.80, \ey) -- (13.95, {\ey+0.08});
+}
+% 3-bar ground symbol (standard electrical reference)
+\draw[cGray!70!black, fill=cGray!50!black, line width=0.40pt]
+  (13.57, 0.75) -- (13.78, 0.75) -- (13.675, 0.60) -- cycle;
+\draw[cGray!70!black, line width=0.30pt] (13.61, 0.57) -- (13.74, 0.57);
+\draw[cGray!70!black, line width=0.30pt] (13.64, 0.52) -- (13.71, 0.52);
+\draw[cGray!70!black, line width=0.30pt] (13.66, 0.47) -- (13.69, 0.47);
+% Labels positioned ABOVE + BELOW electrode (no polymer overlap)
+\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (13.675, 3.85) {electrode};
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!65!black] at (13.675, 0.42) {(grounded)};
 
-% Air gap label
-\node[labelMute, anchor=north, font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (11.60, 1.10) {air gap};
+% --- Undeflected reference dashed line (drawn BEFORE polymer; fill covers interior) ---
+\draw[cGray!55!black, dashed, line width=0.30pt]
+  (12.125, 4.00) -- (12.125, 1.20);
+\node[labelMute, anchor=west, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!55!black] at (12.15, 2.70) {undeflected};
+
+% --- Polymer strip (length 2.75, bend Δx=0.60 = 21.5% — figure-research v4) ---
+% v4 (2026-05-15) per figure-research/refs/panel_g_cantilever/candidates.md:
+%   corpus dominant idioms (5 papers inspected):
+%     * tip-finish: SQUARE CUT horizontal (tapered/slanted 0 cases)
+%     * bend-angle exaggeration: 20-25% Δx/L (ref06 reference; 12.5% reads weak)
+%     * motion device: NO arc arrow; bend exaggeration + Coulomb arrow suffice
+%   Fix from v3 (Δx 0.35→0.60, tip slanted→horizontal, rounded corners 0.3mm)
+% Root still vertical (cantilever physics preserved): C1=(12.25, 3.00).
+% Mid-bend at C2=(12.05, 2.00). Tip square: y=1.25 both corners.
+% v5.1: shade (top-bottom amber gradient, briefing §9 light-source LOCKED:
+% top lighter = upper-left source, matches Panel C LEFT L278) + outline.
+\shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
+  (12.25, 4.00) .. controls (12.25, 3.00) and (12.05, 2.00) ..
+  (11.65, 1.25) -- (11.40, 1.25) .. controls (11.80, 2.00) and
+  (12.00, 3.00) .. (12.00, 4.00) -- cycle;
+\draw[cAmber!80!black, line width=0.70pt, rounded corners=0.3mm]
+  (12.25, 4.00) .. controls (12.25, 3.00) and (12.05, 2.00) ..
+  (11.65, 1.25) -- (11.40, 1.25) .. controls (11.80, 2.00) and
+  (12.00, 3.00) .. (12.00, 4.00) -- cycle;
+% v5.1: polymer-body internal chain hints (briefing §9 material-identity
+% exception): 2 faint cAmber chains parallel to cantilever midline, offset
+% ±0.05cm. Reads as poly chain identity, matches Panel C LEFT thin-film
+% convention. ≤0.40 opacity, ≤0.40pt — within briefing §9 budget.
+\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
+  (12.175, 3.92) .. controls (12.175, 3.00) and (11.975, 2.00) ..
+  (11.575, 1.32);
+\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
+  (12.075, 3.92) .. controls (12.075, 3.00) and (11.875, 2.00) ..
+  (11.475, 1.32);
+
+% --- Trapped charge markers (3, distributed; positions adjusted to new shape) ---
+\foreach \cx/\cy in {12.10/3.40, 11.95/2.50, 11.75/1.60} {
+  \node[circle, draw=cRed!75!black, fill=cRed!15!white, inner sep=0pt,
+        minimum size=1.6mm, line width=0.40pt,
+        font=\sffamily\fontsize{4.5}{5.4}\selectfont, text=cRed!70!black]
+    at (\cx,\cy) {$\ominus$};
+}
+% q_tr label — leader from polymer right edge (~12.22 at y=3.40) to label
+\draw[cRed!55!black, line width=0.35pt] (12.22, 3.40) -- (12.35, 3.40);
+\node[labelMute, anchor=west, fill=white, inner sep=1pt,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
+  at (12.35, 3.40) {$q_{tr}$};
+
+% --- Coulomb repulsion arrow + 2-line label (LEFT of polymer mid) ---
+% Adjusted start to new polymer right at y=2.20 (~12.00 in new shape)
+\draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
+  (11.95, 2.20) -- (11.10, 2.20);
+\node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
+      anchor=east] at (11.10, 2.33) {Coulomb};
+\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!75!black] at (11.10, 2.10) {repulsion};
+
+% --- Δx displacement (just below tip, full Δx=0.60 visible) ---
+% Tip center at y=1.25 = (11.40+11.65)/2 = 11.525
+\draw[<->, cGray!55!black, line width=0.30pt]
+  (11.525, 1.10) -- (12.125, 1.10);
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+      text=cGray!65!black] at (11.825, 1.08) {$\Delta x$};
+
+% --- Air gap dimension (v5: extends to new electrode left, label inline center) ---
+\draw[<->, cGray!55!black, line width=0.32pt]
+  (12.125, 0.85) -- (13.55, 0.85);
+\node[labelMute, anchor=center, fill=cAmber!8, inner sep=1pt,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
+  at (12.84, 0.85) {air gap};
 
 \end{tikzpicture}
 }%

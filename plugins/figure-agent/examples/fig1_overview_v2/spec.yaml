@@ -1,10 +1,14 @@
 name: fig1_overview_v2
 title: "Fig 1 — Charge trapping in sulfur-rich polymer: full narrative overview"
 reference_image: reference/codex_gen_overview_v1.png
+panels:
+  - id: A
+    caption: poly(S-r-DIB) primary microstructure
+    bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
 style_profile: polymer-paper
 notes: |
   Fresh start from codex_gen_overview_v1.png reference (2026-05-08).
-  2-row, 7-panel layout. Row 1: network → chain length → localized traps.
+  2-row, 7-panel layout. Row 1: linear primary microstructure → chain length → localized traps.
   Row 2: distributed release + I(t) → Vs(t) decay → ISPD g(Et) → macroscopic probe.
   Replaces the 4-column L1-strip concept in legacy fig1_overview/.
 accepted: false

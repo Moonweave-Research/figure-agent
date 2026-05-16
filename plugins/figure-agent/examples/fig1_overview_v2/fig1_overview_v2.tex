@@ -155,59 +155,81 @@
 
 % ============================================================
 % Panel B — S₆₀..S₈₅ chain length (soft tunability)  x: 3.55..6.85, y: 5..9
-% 4 horizontal zigzag chains (subitizing limit), top→bottom = short→long.
-% All chains uniform gold (no per-composition gradient — design.md Q5).
+% 4 horizontal atom-explicit chains (subitizing limit), top→bottom short→long.
+% Each chain: gold S atoms + gray cross-link C atoms alternating along zigzag
+% backbone (design.md §4: "gold S 원자 + gray cross-link 원자 + bond").
+% Labels (S₆₀, S₈₅) anchored EAST of chain start to avoid overlap with terminal atom.
+% Atom counts: S60=4S+3C(7), mid=5S+4C(9)/6S+5C(11), S85=8S+7C(15) → 2.1× length ratio.
+% Bond pitch=0.20cm, zigzag amplitude=0.10cm, chain start x=3.95 (uniform).
 % ============================================================
 
-% --- Chain 1 (top, S₆₀, shortest) ---
-\draw[cAmber!80!black, line width=0.85pt, smooth, samples=60,
-      domain=3.80:5.15]
-      plot (\x, {8.40 + 0.10*sin( (\x-3.80)*900 ) });
-\foreach \sx in {3.95, 4.30, 4.65, 5.00} {
-  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
-        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
-    at (\sx, 8.50) {};
-}
-\node[labelStrong, text=cAmber!85!black, anchor=west]
-  at (5.30, 8.40) {S$_{60}$};
+% Helper: one chain row — backbone polyline + S atoms (even idx) + C atoms (odd idx)
+% Args: #1=y_center, #2=n_atoms (must be odd: 7, 9, 11, 15)
 
-% --- Chain 2 ---
-\draw[cAmber!80!black, line width=0.85pt, smooth, samples=70,
-      domain=3.80:5.60]
-      plot (\x, {7.65 + 0.10*sin( (\x-3.80)*900 ) });
-\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35} {
+% --- Chain 1 (top, S₆₀, n=7: 4 S + 3 C) ---
+\node[labelStrong, text=cAmber!85!black, anchor=east] at (3.85, 8.40) {S$_{60}$};
+\draw[cAmber!75!black, line width=0.70pt]
+  (3.95, 8.50) -- (4.15, 8.30) -- (4.35, 8.50) -- (4.55, 8.30)
+  -- (4.75, 8.50) -- (4.95, 8.30) -- (5.15, 8.50);
+\foreach \sx/\sy in {3.95/8.50, 4.35/8.50, 4.75/8.50, 5.15/8.50} {
   \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
-        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
-    at (\sx, 7.75) {};
+        inner sep=0pt, minimum size=1.3mm, line width=0.25pt] at (\sx, \sy) {};
+}
+\foreach \cx/\cy in {4.15/8.30, 4.55/8.30, 4.95/8.30} {
+  \node[circle, fill=cGray!65, draw=cGray!85!black,
+        inner sep=0pt, minimum size=0.85mm, line width=0.20pt] at (\cx, \cy) {};
 }
 
-% --- Chain 3 ---
-\draw[cAmber!80!black, line width=0.85pt, smooth, samples=80,
-      domain=3.80:6.10]
-      plot (\x, {6.90 + 0.10*sin( (\x-3.80)*900 ) });
-\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35, 5.70, 6.00} {
+% --- Chain 2 (n=9: 5 S + 4 C) ---
+\draw[cAmber!75!black, line width=0.70pt]
+  (3.95, 7.75) -- (4.15, 7.55) -- (4.35, 7.75) -- (4.55, 7.55)
+  -- (4.75, 7.75) -- (4.95, 7.55) -- (5.15, 7.75) -- (5.35, 7.55) -- (5.55, 7.75);
+\foreach \sx/\sy in {3.95/7.75, 4.35/7.75, 4.75/7.75, 5.15/7.75, 5.55/7.75} {
   \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
-        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
-    at (\sx, 7.00) {};
+        inner sep=0pt, minimum size=1.3mm, line width=0.25pt] at (\sx, \sy) {};
+}
+\foreach \cx/\cy in {4.15/7.55, 4.55/7.55, 4.95/7.55, 5.35/7.55} {
+  \node[circle, fill=cGray!65, draw=cGray!85!black,
+        inner sep=0pt, minimum size=0.85mm, line width=0.20pt] at (\cx, \cy) {};
 }
 
-% --- Chain 4 (bottom, S₈₅, longest) ---
-\draw[cAmber!80!black, line width=0.85pt, smooth, samples=90,
-      domain=3.80:6.65]
-      plot (\x, {6.15 + 0.10*sin( (\x-3.80)*900 ) });
-\foreach \sx in {3.95, 4.30, 4.65, 5.00, 5.35, 5.70, 6.05, 6.40} {
+% --- Chain 3 (n=11: 6 S + 5 C) ---
+\draw[cAmber!75!black, line width=0.70pt]
+  (3.95, 7.00) -- (4.15, 6.80) -- (4.35, 7.00) -- (4.55, 6.80)
+  -- (4.75, 7.00) -- (4.95, 6.80) -- (5.15, 7.00) -- (5.35, 6.80)
+  -- (5.55, 7.00) -- (5.75, 6.80) -- (5.95, 7.00);
+\foreach \sx/\sy in {3.95/7.00, 4.35/7.00, 4.75/7.00, 5.15/7.00, 5.55/7.00, 5.95/7.00} {
   \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
-        inner sep=0pt, minimum size=1.1mm, line width=0.25pt]
-    at (\sx, 6.25) {};
+        inner sep=0pt, minimum size=1.3mm, line width=0.25pt] at (\sx, \sy) {};
 }
-\node[labelStrong, text=cAmber!85!black, anchor=east]
-  at (6.82, 6.15) {S$_{85}$};
+\foreach \cx/\cy in {4.15/6.80, 4.55/6.80, 4.95/6.80, 5.35/6.80, 5.75/6.80} {
+  \node[circle, fill=cGray!65, draw=cGray!85!black,
+        inner sep=0pt, minimum size=0.85mm, line width=0.20pt] at (\cx, \cy) {};
+}
+
+% --- Chain 4 (bottom, S₈₅, n=15: 8 S + 7 C) ---
+\node[labelStrong, text=cAmber!85!black, anchor=east] at (3.85, 6.25) {S$_{85}$};
+\draw[cAmber!75!black, line width=0.70pt]
+  (3.95, 6.25) -- (4.15, 6.05) -- (4.35, 6.25) -- (4.55, 6.05)
+  -- (4.75, 6.25) -- (4.95, 6.05) -- (5.15, 6.25) -- (5.35, 6.05)
+  -- (5.55, 6.25) -- (5.75, 6.05) -- (5.95, 6.25) -- (6.15, 6.05)
+  -- (6.35, 6.25) -- (6.55, 6.05) -- (6.75, 6.25);
+\foreach \sx/\sy in {3.95/6.25, 4.35/6.25, 4.75/6.25, 5.15/6.25, 5.55/6.25,
+                     5.95/6.25, 6.35/6.25, 6.75/6.25} {
+  \node[circle, fill=cAmber!85!black, draw=cAmber!95!black,
+        inner sep=0pt, minimum size=1.3mm, line width=0.25pt] at (\sx, \sy) {};
+}
+\foreach \cx/\cy in {4.15/6.05, 4.55/6.05, 4.95/6.05, 5.35/6.05, 5.75/6.05,
+                     6.15/6.05, 6.55/6.05} {
+  \node[circle, fill=cGray!65, draw=cGray!85!black,
+        inner sep=0pt, minimum size=0.85mm, line width=0.20pt] at (\cx, \cy) {};
+}
 
 % --- Bottom axis arrow + label ---
 \draw[cGray!65!black, line width=0.45pt,
       -{Stealth[length=3.5pt,width=2.5pt]}]
-  (3.80, 5.65) -- (6.65, 5.65);
-\node[labelMute] at (5.20, 5.42) {S-chain length};
+  (3.95, 5.55) -- (6.75, 5.55);
+\node[labelMute] at (5.35, 5.32) {S-chain length};
 
 % --- B → C connector (clean) ---
 \draw[cGray!55!black, line width=0.55pt,

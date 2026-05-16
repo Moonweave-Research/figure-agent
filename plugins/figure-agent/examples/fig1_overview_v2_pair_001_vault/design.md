@@ -1,7 +1,13 @@
 # Fig 1 Overview Design — fig1_overview_v2
 
-**Version**: v2.2 (2026-05-09, chemistry-accuracy update for Panel A)
-**Status**: Locked. 남은 implementation detail (arrow weights, plot tick density, qtr marker count, atom 정확한 배치)은 first compile 후 visual judgment로 결정.
+**Version**: v2.3 (2026-05-15, advisor-driven layout fix + R12 band simplification + figure-wide delicate tone)
+**Status**: Active. Major panel-level revisions applied post v2.2 — see v2.3 change log.
+
+**v2.3 변경 (advisor design fix + R10/R11/R12 series + tone sweep):**
+- **Panel A** rewritten as horizontal-row zigzag (R10): 4 DIB rings high-low staggered, ring R=0.32→0.26 cm. Chemistry-correct linear topology (DIB is bivalent, each ring has exactly 2 polysulfide attachments at meta vertices). Quaternary C(CH₃)₂ junctions explicit via `\methylPair`. (S)_x parenthesis idiom (ref01 Zheng 2024 NComm). Subtitle changed "DIB-linked polysulfide network" → "poly(S-r-DIB) linear copolymer" (molecular truth).
+- **Panel B** delicate tone (R11): atom radius 0.04→0.025 cm, bond width 0.7→0.5 pt, bond spacing 0.12→0.10 cm, zigzag amplitude 0.12→0.08 cm. All 4 rows labeled (S₆₀ / S₇₀ / S₇₅ / S₈₅).
+- **Panel C** band-simplified split-half (R12): 7 horizontal trap level lines → 2 filled band rectangles (shallow + deep). 14 ⊖ markers → 6. 7 dashed leaders → 0 (color coding alone binds sites to bands). Sub-captions dropped. Element count 27 → 12 (~55% reduction). Supersedes v2.2 wave-and-wells spatial-region representation (which misrepresented physics: traps coexist within same polymer, not spatially segregated).
+- Panel G refinement: ⊖ marker size 1.8→1.6 mm, "Coulomb repulsion" labelStrong→7.5pt bold sans, arrow line 0.9→0.7 pt.
 
 **v2.2 변경 (chemistry-accuracy):**
 - Issue 4: Panel A "8 S + 4 C atoms" → DIB benzene ring + polysulfide chain. v2.1까지의 generic atom-bond mesh는 inverse vulcanized DIB-sulfur polymer를 식별 못 함 — 화학자가 봐도 generic S-C polymer로 읽힘. **DIB 벤젠 ring (1,3-diisopropenylbenzene) + polysulfide chain** 명시 표현으로 정정.
@@ -87,7 +93,7 @@ Deep charge trap이 *발생*하는 무대
 
 | 4-bit | 7-panel | 의미 운반 |
 |---|---|---|
-| **① Material** | A (network) + B (S-chain 분포) | 재료 + 분자 heterogeneity |
+| **① Material** | A (linear primary microstructure) + B (S-chain 분포) | 재료 + 분자 heterogeneity |
 | **② Trap site (HERO #1)** | C (localized traps) | trap이 *발생*하는 자리 |
 | **③④ Convergent evidence (3 lines)** | D (kinetic) + E↔F (ISPD) + G (mechanical) | 3 lines of evidence 수렴 |
 
@@ -104,67 +110,86 @@ Deep charge trap이 *발생*하는 무대
 
 ## 4. Per-panel design
 
-### Panel A — Sulfur-rich polymer (chemistry-accurate identifier)
+### Panel A — Sulfur-rich polymer (v2.3 — horizontal-row zigzag, chemistry-correct linear copolymer)
 
-- **Semantic claim**: *"이 paper의 시료는 DIB cross-linker로 inverse vulcanization한 sulfur-rich polymer다."*
-- **Role**: 재료 식별. 시각 무게는 가벼움 (HERO #1인 Panel C에 시각 무게 양보).
-- **Design (chemistry-correct, v2.2)**:
-  - **DIB benzene ring(s)**: 1,3-diisopropenylbenzene 코어. 1-2개 ring. Manual hexagonal aromatic notation. (radius ~0.40-0.45cm, panel 작으므로)
-  - **Polysulfide chain**: DIB ring 1,3-meta vertex에서 나오는 wavy chain. S, S–S, S–S–S 라벨로 polysulfide multiplicity 시사.
-  - **Isopropenyl linker**: ring vertex와 chain 사이 short straight gray bond — 1,3-diisopropenylbenzene의 −CH₂−CH(CH₃)− linker 시사.
-  - **S₈ ring inset**: 우상단 corner, 작게 (Panel A 면적의 ~15-20%). manual octagon (chemfig 또는 직접 좌표).
-  - **Optional 변환 화살표**: S₈ ring → DIB area, dashed amber. inverse vulcanization 서사.
-  - **Inline 라벨**: "Sulfur-rich polymer" + subtitle "DIB-linked polysulfide network", S₈ 옆 *"S₈"* (선택).
+- **Semantic claim**: *"이 paper의 시료는 bivalent DIB comonomer로 inverse vulcanization한 sulfur-rich polymer (linear random copolymer poly(S-r-DIB))다."*
+- **Role**: 재료 식별 (linear molecular structure). 시각 무게는 가벼움 (HERO #1인 Panel C에 시각 무게 양보).
+- **Design (R10 horizontal-row zigzag, post advisor design fix)**:
+  - **4 DIB benzene rings**: high-low staggered horizontal row (Ring_a/Ring_c at y=7.10 high, Ring_b/Ring_d at y=6.55 low; horizontal spacing 0.75 cm). Ring R = 0.26 cm. Manual hexagonal aromatic notation with 3 internal double-bond ticks.
+  - **Linear chain topology**: Ring_a → Ring_b → Ring_c → Ring_d (3 internal polysulfide segments + 2 terminal danglings). Each DIB has exactly 2 polysulfide attachments at **meta-position vertices** (120° apart). poly(S-r-DIB) is a **linear random copolymer**; DIB is bivalent so no covalent crosslinking is possible.
+  - **Polysulfide segments**: ref01 Zheng 2024 NComm Fig 1 idiom — direct amber line between DIB nodes + single floating `-(S)_x-` parenthesis composition label centered above the row.
+  - **Quaternary C(CH₃)₂ junctions**: at the 6 internal DIB-polysulfide junctions, 2 short methyl stubs each (via `\methylPair` macro). Represents the gem-dimethyl carbon from the isopropenyl→isopropyl polymerization product.
+  - **S₈ ring inset**: 우상단 corner. Regular octagon polygon + 8 explicit "S" letters at vertices + bold "S₈" center label. cAmber stroke + cAmberSphere fill.
+  - **Inverse vulcanization arrow**: dashed amber, S₈.south-west → Ring_c 60° vertex (chemistry-meaningful — S adds to vinyl carbon at that ring position).
+  - **Background wash**: cAmber!08 horizontal ellipse (1.55×0.65 cm) hugging the row.
+  - **Inline labels**: bold "Sulfur-rich polymer" + italic subtitle "poly(S-r-DIB) linear copolymer" at panel bottom-left. "inv. vulc." italic label adjacent to inverse-vulcanization arrow.
 - **Forbidden**:
-  - 3+ DIB rings (network density 너무 높아 Panel C HERO 위계 invert)
+  - 3+ polysulfide attachments per DIB ring (violates bivalent chemistry)
+  - Ortho/para vertex pairs (must be meta, 120° apart)
+  - 2D crosslinked network depiction (molecular structure is linear chain)
   - S₈을 panel 중앙에 두기 (corner inset 유지)
-  - 결정 격자 패턴 (amorphous decoration)
-  - generic atom-bond mesh (8 S + 4 C — DIB 정체성 불명확, v2.1까지의 표현 방식)
+  - "DIB-linked polysulfide network" subtitle wording (replaced by "linear copolymer")
 - **Render approach**:
-  - DIB ring → manual hexagon + 3 internal aromatic lines
-  - Polysulfide chain → bezier curve (`\draw .. controls .. ..`) NOT sine 함수
-  - Linker → 짧은 straight gray line
-  - S₈ → manual octagon
+  - DIB ring → `\dibRingAt` macro (hexagon + 3 aromatic ticks)
+  - Polysulfide segments → straight `\draw` between meta vertices + `\methylPair` stubs
+  - S₈ → regular polygon node + 8 vertex S labels + center "S₈" bold
+  - inv. vulc. arrow → dashed bezier with bend=14
 - **Connection out**: 우측 화살표 (clean, 라벨 X) → Panel B
 
-### Panel B — S₆₀–S₈₅ chain length (soft tunability)
+### Panel B — S₆₀–S₈₅ chain length (v2.3 — delicate atomistic zigzag)
 
 - **Semantic claim**: *"우리는 S60–S85 범위에서 시료를 따로 제작했다."*
-- **Role**: ① Material의 sub-element. 시료 함량 범위 노출 (soft tunability).
-- **Design**:
-  - **4개 horizontal chain** (subitizing 한계 ≤4 → counting effort 0)
-  - 위→아래로 짧음 → 긺 (S% ↑ → 평균 chain 길이 ↑)
-  - 각 chain: gold S 원자 + gray cross-link 원자 + bond. **모든 chain 동일 gold** (함량별 색 그라데이션 X)
-  - **Inline 라벨**: top chain 옆 *"S₆₀"*, bottom chain 옆 *"S₈₅"*, **중간 두 chain 라벨 X** (4개 chain 자체가 *범위* 운반, "..." enumeration 신호 회피)
-  - 하단 axis arrow + *"S-chain length →"* 라벨
+- **Role**: ① Material의 sub-element. 시료 함량 범위 노출 (soft tunability) + atomistic chain reference for the linear copolymer's variable polysulfide length.
+- **Design (R11 delicate)**:
+  - **4 explicit zigzag skeletal chains** with atom counts 10/14/18/24 (≈2.4× S60→S85 length ratio).
+  - **Atom rendering**: small filled cAmber!85 circles, radius **0.025 cm** (was 0.04 — reduced to avoid "beads on string" cartoon look).
+  - **Bond rendering**: line width **0.5pt** cAmber!85 (was 0.7pt).
+  - **Bond spacing**: **0.10 cm** between atoms (was 0.12).
+  - **Zigzag amplitude**: **0.08 cm** half-amplitude (was 0.12 — flatter chain).
+  - **Inline labels**: **all 4 chains labeled** with S_n endpoint label (S₆₀ / S₇₀ / S₇₅ / S₈₅). cAmber!90, upright sans 6.5pt, anchor=west at terminal atom + 2pt inner sep.
+  - **Axis**: bottom horizontal arrow + "Chain length, n" italic label (n = chain monomer count variable).
+  - **Render approach**: `\zigSChain` macro (shared with Panel A historically; Panel A now uses linear segments + methylPair instead, so `\zigSChain` is Panel B-exclusive).
 - **Forbidden**:
   - 함량별 sweep curve / 색 그라데이션
   - 5개 이상 chain (enumeration 톤, Fig 3 redundancy)
   - 정량 plot
-- **Render approach**: manual TikZ chains (간단한 chain 패턴)
+  - "..." enumeration 라벨
+  - Coarse atom radius (>0.03 cm) — cartoon feel
 - **Connection out**: 우측 화살표 (clean) → Panel C
 
-### Panel C — Localized traps (HERO #1)
+### Panel C — Localized traps (v2.3 — hybrid spatial+energy band split, supersedes v2.2 wave-and-wells)
 
-- **Semantic claim**: *"이 network 안에서 *deep + shallow* trap이 발생한다. Deep trap이 *우세*다."*
+- **Semantic claim**: *"이 polymer 안에 deep + shallow trap이 함께 존재 (공간적으로 segregation 없이 혼재). Deep trap이 *우세*다."*
 - **Role**: ② Hero. trap 발생 자리 + visual focal point.
-- **Design (Split 2 — rich integrated network + trap)**:
-  - **Background**: polymer network 24–30 atoms (Panel A의 sparse identifier보다 풍부), 불규칙 amorphous topology, faded/lighter (network detail 뒤로)
-  - **Foreground**: Asymmetric potential energy landscape — 좌→우로 진폭 증가 (좌측 얕은 wave, 우측 깊은 wave)
-  - **좌측 region (shallow, blue)**: 3 well + 3 blue ⊖ electron
-  - **우측 region (deep, red)**: 4 well + 4 red ⊖ electron + **1–2 escape arrow up (dashed)** — Panel D의 *distributed release* narrative 시사
-  - **Hero 강조 수단**: well 깊이 좌→우 증가 + 개수 비대칭 (3 vs 4) + electron 개수 비대칭 + red saturation (deep) > blue (shallow) + escape arrow
-  - **Inline 라벨**: *"shallow"* (좌), *"deep"* (우), *"localized traps"* (panel 안 어딘가)
-  - **폭**: Row 1 안에서 1.5× (A, B 대비)
-- **Forbidden**:
-  - Sinusoidal symmetric landscape (deep > shallow asymmetry 메시지 약화)
-  - shallow ≥ deep 개수 (hero 실패)
+- **Design (R12 band-simplified split-half — replaces v2.2 wave-and-wells)**:
+  - **폭**: Row 1 안에서 1.5× (A, B 대비) — HERO 위계 유지.
+  - **LEFT half (x=6.95..10.30, polymer matrix view)**:
+    - 5 wavy amber chains crossing horizontally (cAmber!40, 0.40pt smooth bezier).
+    - 3 embedded ⊖ trap sites **mixed in space** (NOT spatially segregated): 1 cBlue!85 shallow ⊖ at (8.30, 7.30) + 2 cRed!85 deep ⊖ at (7.75, 6.50) and (9.30, 5.95). Marker minimum size 1.6–1.8 mm.
+  - **RIGHT half (x=10.55..13.80, trap-band energy diagram view)**:
+    - References: cGray!60 solid horizontal **E_C** at y=8.30, cGray!55 dashed **mobility edge** at y=7.85, cGray!60 solid **E_V** at y=5.30.
+    - Energy axis arrow (cGray!70, 0.40pt) at x=10.50 with rotated "Energy" label at x=10.40.
+    - **Shallow trap band**: cBlue!75 border + cBlue!18 fill rounded rectangle, narrow height (7.38..7.60), x=10.95..11.80. Contains 1 cBlue ⊖.
+    - **Deep trap band**: cRed!75 border + cRed!18 fill rounded rectangle, **taller** (5.75..6.30 — encodes broader energy spread). Contains 2 cRed ⊖ (encodes "deep dominates" via 2:1 count).
+    - **"shallow"** / **"deep"** bold labels (6.5pt sans) anchored east of each band.
+    - **Single escape arrow** from deep band to mobility edge (cRed!70 dashed, 0.35pt) — Boltzmann thermal release hint.
+    - **ΔE_tᵈ depth annotation**: cRed!75 double-headed arrow at x=13.55 spanning E_C → deep band bottom + label.
+  - **Color mapping**: shallow=blue / deep=red consistent with Panel F bimodal g(E_t).
+  - **NO leaders**: shallow/deep color coding alone binds LEFT sites ↔ RIGHT bands (dropped 7 dashed leaders that previously crossed the corridor).
+  - **NO sub-captions**: dropped "polymer matrix" / "trap level diagram" subtitles — band identity is self-evident from color + position.
+- **Forbidden** (R12 additions):
+  - **Layered trap level lines** (3 shallow + 4 deep horizontal rungs — "ladder rungs clutter" per user critique)
+  - Spatially segregated regions ("left=shallow region / right=deep region" wave-and-wells — misrepresents physics; traps coexist in same polymer matrix)
+  - Dashed leader lines from LEFT ⊖ to RIGHT structures (color coding suffices)
+  - Sub-panel captions at bottom (redundant given band labels)
+  - More than 3 ⊖ in LEFT half (over-density)
   - Eₜ 정확 수치 라벨 (정량은 Fig 3)
 - **Render approach**:
-  - Background network → manual TikZ
-  - Energy landscape → `\draw plot` 또는 manual bezier
-  - Wells/electrons → TikZ nodes
-- **Connection out**: 하단 vertical arrow → Row 2 + 라벨 *"convergent evidence"* (figure 전체 row-transition signal, line weight 강하게)
+  - LEFT polymer chains → `\draw plot[smooth] coordinates {...}` (5 chains, manual coords)
+  - LEFT ⊖ sites → circle nodes with cBlue/cRed fill+border
+  - RIGHT bands → filled rounded rectangles
+  - References → straight horizontal lines + axis arrow + labels
+- **Connection out**: 하단 vertical rowBridgeArrow → Row 2 + "convergent evidence" bold label.
 
 ### Panel D — Kinetic evidence (I(t) ~ t⁻ⁿ)
 
@@ -282,7 +307,7 @@ Deep charge trap이 *발생*하는 무대
 | `chemfig` | Panel A S₈ ring (atom style로 gold fill), Panel B chain |
 | `pgfplots` (`paper loglog/.style`) | Panel D I(t), E Vₛ(t), F g(Eₜ) |
 | **`graphdrawing` (`spring layout`) — 사용 X** | 좌표 통제 불가 입증됨 |
-| Raw TikZ | Panel A network 배치, Panel C trap landscape, Panel G probe |
+| Raw TikZ | Panel A linear microstructure 배치, Panel C trap landscape, Panel G probe |
 | `polymer-paper-preamble` 매크로 | 우선순위 낮음 — 패키지 직접 사용이 투명 |
 
 ---
@@ -361,7 +386,7 @@ Deep charge trap이 *발생*하는 무대
 | Q8 수직 화살표 라벨 | "convergent evidence" | 3 line evidence 수렴 의미 |
 | Q9 landscape | Asymmetric (좌→우 진폭 증가) | deep > shallow 메시지를 곡선으로 직접 |
 | Q10 well/electron | Shallow 3+3 / Deep 4+4 + 1–2 escape arrow | 균형 + 동적 의미 |
-| Q11 Panel A 배치 | Network 메인 + S₈ 우상단 작은 inset | "S₈이 building block" hint |
+| Q11 Panel A 배치 | Linear primary microstructure 메인 + S₈ 우상단 작은 inset | "S₈이 building block" hint |
 | Q12 Panel G | Isometric 3D, 클립 위, air gap 라벨 표시, 받침대 생략 | hanging cantilever 정합 |
 | Q13 Panel D | Multi-slope iconic plot (2 곡선 + Debye + non-Debye 라벨), 라벨은 **concept-based** (shallow-rich/deep-rich, low n/high n) — composition 라벨 X | data가 아니라 concept 운반 + Fig 3 영역 회피 (어드바이저 final review 정정) |
 | Q14 Panel E framing | 3 lines of evidence (E ↔ F paired ISPD line) | 구조 정직 (어드바이저 지적) |

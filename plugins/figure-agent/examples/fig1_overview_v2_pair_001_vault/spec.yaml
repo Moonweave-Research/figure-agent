@@ -3,8 +3,7 @@ title: "Fig 1 — Charge trapping in sulfur-rich polymer (pair_001 vault arm)"
 reference_image: reference/codex_gen_overview_v1.png
 panels:
   - id: A
-    caption: Sulfur-rich network
-    reference_image: reference/sulfur_polymer_panelA_ref.png
+    caption: poly(S-r-DIB) primary microstructure
     bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
   - id: B
     caption: S60–S85 chain length scaffold
