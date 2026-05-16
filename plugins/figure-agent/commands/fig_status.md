@@ -49,12 +49,14 @@ Notes that may appear:
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
 - `panel_reference_image_missing` — a panel declares `bbox_pdf_cm` and `reference_image` but the image file is not found at the declared path relative to the example directory; correct the path in `spec.yaml` or add the file before running `/fig_critique <name>`.
 - `critique_missing` — the fixture has a usable figure-level `reference_image` or at least one panel with both `reference_image` and `bbox_pdf_cm`, but no `critique.md`; run `/fig_critique <name>` before `/fig_export <name>`.
-- `critique_stale` — `critique.md` is older than a critique input (`<name>.tex`, `briefing.md`, `spec.yaml`, usable reference image, participating panel reference image, `coordinate_hints.yaml`, or Style Lock); re-run `/fig_critique <name>`.
+- `critique_stale` — `critique.md` is older than a critique input (`<name>.tex`, `briefing.md`, `spec.yaml`, usable reference image, participating panel reference image, `coordinate_hints.yaml`, reference-conditioned authoring docs, or Style Lock); re-run `/fig_critique <name>`.
 
 Build/export freshness source set: `<name>.tex`, `briefing.md`, `spec.yaml`,
 resolved figure-level `reference_image`, `coordinate_hints.yaml` when present,
 and `styles/polymer-paper-preamble.sty`. Editing any of these without
 recompiling marks the build pdf or exports as stale. `/fig_critique` additionally
-checks panel reference images that participate in crop/reference comparison.
+checks panel reference images that participate in crop/reference comparison and
+optional reference-conditioned authoring docs (`authoring_contract.md`,
+`reference/reference_pack.md`, `authoring_plan.md`, `theory_guard.md`).
 
 Next: follow the printed Next: hint for this figure's stage.
