@@ -232,9 +232,12 @@
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
   (3.95, 5.65) -- (6.60, 5.65);
-% B4: axis label gains the chemistry variable n (chain monomer count) — top-tier
-% schematic idiom; reader maps S_n on chain → axis n.
-\node[labelMute, anchor=north] at (5.20, 5.62) {Chain length, $n$};
+% v8 Q1 fix: axis label corrected from "Chain length, n" (chain atom count
+% interpretation) to actual composition variable = sulfur weight-percent.
+% Sample labels S60..S85 are wt% S sample names (per planning/sulfur_sample_
+% selection_policy.md + session_260427); visual chain length progression
+% (10/14/18/24 atoms drawn) is artistic correlate, NOT literal atom count.
+\node[labelMute, anchor=north] at (5.20, 5.62) {Sulfur content, wt\%};
 
 \draw[interArrow] (6.85, 7.0) -- (7.20, 7.0);
 
@@ -310,15 +313,17 @@
       text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
 % R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
 % reads through better.
+% v8: ⊖ → ● (carrier-polarity neutral; Q6 lit verification — both electron
+% and hole trap possible; ⊖ would over-imply electron-only per Nicolai 2012
+% / Haneef 2020 convention). Solid filled circle = "trap site identity",
+% charge sign semantic deferred to paper experimental data.
 \foreach \site in {siteS1, siteS2} {
-  \node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
-        minimum size=1.4mm, line width=0.32pt,
-        font=\sffamily\fontsize{4}{4.8}\selectfont] at (\site) {$-$};
+  \node[circle, draw=cBlue!85!black, fill=cBlue!75!black, inner sep=0pt,
+        minimum size=1.4mm, line width=0.32pt] at (\site) {};
 }
 \foreach \site in {siteD1, siteD2} {
-  \node[circle, draw=cRed!85!black, fill=cRed!25, inner sep=0pt,
-        minimum size=1.5mm, line width=0.38pt,
-        font=\sffamily\fontsize{4}{4.8}\selectfont] at (\site) {$-$};
+  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
+        minimum size=1.5mm, line width=0.38pt] at (\site) {};
 }
 
 % --- RIGHT half: energy diagram references + Vacuum level (R15) ---
@@ -380,15 +385,14 @@
   \draw[cRed!80!black, line width=1.00pt] (10.95, \tY) -- (11.55, \tY);
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
+% v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
 \foreach \dx/\dy in {11.15/7.55, 11.35/7.35} {
-  \node[circle, draw=cBlue!85!black, fill=cBlue!25, inner sep=0pt,
-        minimum size=1.5mm, line width=0.35pt,
-        font=\sffamily\fontsize{4.2}{5}\selectfont] at (\dx,\dy) {$-$};
+  \node[circle, draw=cBlue!85!black, fill=cBlue!75!black, inner sep=0pt,
+        minimum size=1.5mm, line width=0.35pt] at (\dx,\dy) {};
 }
 \foreach \dx/\dy in {11.15/6.20, 11.35/5.85} {
-  \node[circle, draw=cRed!85!black, fill=cRed!25, inner sep=0pt,
-        minimum size=1.6mm, line width=0.40pt,
-        font=\sffamily\fontsize{4.2}{5}\selectfont] at (\dx,\dy) {$-$};
+  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
+        minimum size=1.6mm, line width=0.40pt] at (\dx,\dy) {};
 }
 % Region labels — anchor to trap line clusters on right
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
@@ -702,11 +706,12 @@
   (11.475, 1.31);
 
 % --- Trapped charge markers (v7: y scaled 0.78 anchored at tip) ---
+% v8: $\ominus$ → ● (carrier-neutral; q_tr label carries 'trapped charge'
+% semantic; Q6 lit verification — Nicolai 2012 / Haneef 2020 convention
+% says ⊖ implies electron-specific, but paper data not committed yet)
 \foreach \cx/\cy in {12.10/2.93, 11.95/2.23, 11.75/1.52} {
-  \node[circle, draw=cRed!75!black, fill=cRed!15!white, inner sep=0pt,
-        minimum size=1.6mm, line width=0.40pt,
-        font=\sffamily\fontsize{4.5}{5.4}\selectfont, text=cRed!70!black]
-    at (\cx,\cy) {$\ominus$};
+  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
+        minimum size=1.6mm, line width=0.40pt] at (\cx,\cy) {};
 }
 % q_tr label — leader from polymer right edge (v7: y 3.40→2.93)
 \draw[cRed!55!black, line width=0.35pt] (12.22, 2.93) -- (12.35, 2.93);
