@@ -192,17 +192,22 @@
 % empty space.
 \draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!70!black,
       line width=0.55pt] (s8.south west) to[bend right=14] (2.38,7.32);
+% v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
+%  S8 ring's lower-left vertex S atom. New position sits along the arrow path
+%  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
 \node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont,
-      anchor=south, fill=white, inner sep=1pt] at (2.30,7.88) {inv.\ vulc.};
+      anchor=south, fill=white, inner sep=1pt] at (2.15,7.82) {inv.\ vulc.};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
-  at (0.10,5.86) {Sulfur-rich polymer};
+  at (0.10,5.80) {Sulfur-rich polymer};
 % R10 subtitle: changed from "DIB-linked polysulfide network" — strictly,
 % poly(S-r-DIB) is a LINEAR random copolymer (DIB is bivalent; no covalent
 % crosslinks in the primary microstructure). Subtitle reflects molecular truth.
+% v8.2 polish: subtitle dropped from y=5.55 to y=5.42 — was clipping descenders
+%  of "polymer" against ascenders of "poly" (IoU=0.055 collision).
 \node[labelMute, anchor=north west]
-  at (0.10,5.45) {poly(S-r-DIB) linear copolymer};
+  at (0.10,5.42) {poly(S-r-DIB) linear copolymer};
 
 % Inter-panel arrow A → B
 \draw[interArrow] (3.50, 7.0) -- (3.85, 7.0);
@@ -228,6 +233,15 @@
   \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
         anchor=west, inner sep=2pt]
     at (\xend, {\y + 0.04}) {S$_{\sn}$};
+}
+% B-4 (v8.4 NEW): sample boundary dividers — 3 thin dotted lines between
+% adjacent chain rows so 4 chains read as 4 *distinct samples* (S60/S70/S75/
+% S85), not as a single chain bundle. Per briefing §13.2 B-4 spec: cGray!25,
+% 0.18pt, densely dotted; x extent 3.85..6.30 covers full chain row span;
+% y at midpoints between adjacent chain centers (chain spacing 0.60, midpoints
+% at 7.60 / 7.00 / 6.40).
+\foreach \dy in {7.60, 7.00, 6.40} {
+  \draw[cGray!25, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
@@ -311,6 +325,18 @@
 % Sheet caption below rectangle
 \node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
       text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
+
+% C-L6 (v8.5 NEW): thin-film thickness anchor per briefing §13.3 C-L6.
+% Short double-headed dimension arrow inside sheet's left interior edge
+% (x=7.42 slightly inside the 7.55 left border so arrow doesn't blend into
+% the border line) spanning the sheet height with a small margin. Rotated
+% 'd ≈ 1 μm' label reads bottom-to-top to fit the 0.50cm gap between
+% panel-C left edge (6.95) and sheet left edge (7.55). Macroscale anchor —
+% "this rectangle is a real micron-thick spin-coat film, not an abstract box."
+\draw[{Stealth[length=2pt,width=1.5pt]}-{Stealth[length=2pt,width=1.5pt]},
+      cGray!65!black, line width=0.28pt] (7.42, 6.28) -- (7.42, 7.62);
+\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!70!black,
+      anchor=south, rotate=90] at (7.36, 6.95) {$d \approx 1\,\mu$m};
 % R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
 % reads through better.
 % v8: ⊖ → ● (carrier-polarity neutral; Q6 lit verification — both electron
@@ -345,16 +371,19 @@
 
 % R15: Gaussian DOS overlays (between Energy axis and trap lines).
 % ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
-% energetic disorder distribution. Shallow narrow σ=0.06 (tight localization).
-% Deep wider σ=0.18 (broader trap-depth distribution → "deep dominates"
-% via spread, complementing the 1 vs 3 line count and 1 vs 2 ⊖ count).
+% energetic disorder distribution. Shallow narrow σ=0.085 (tight localization,
+% briefing §13.3 C-R1b spec). Deep wider σ=0.18 (broader trap-depth
+% distribution → "deep dominates" via spread, complementing the 2-line stack
+% per category and 1+1 ● count per band per §13.3 C-R2/C-R3).
+% v8.3 audit closure: σ 0.06 → 0.085 to match briefing §13.3 C-R1b (denominator
+% 0.0072 → 0.01445 = 2 × 0.085²).
 \fill[cBlue!18, opacity=0.55]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x)
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!75!black, line width=0.50pt]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x);
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
 \fill[cRed!18, opacity=0.55]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
@@ -409,10 +438,13 @@
       line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
 
 % Trap depth annotation: E_C → deep band mid (encodes depth scale, no
-% "dominate" overstatement)
+% "dominate" overstatement).
+% v8.3 audit closure: arrow + label color cGray!70!black → cRed!75!black to
+% match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
+% trap species (color convention §8.6 / §13.9 Binding-1).
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cGray!70!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      cRed!75!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cRed!75!black,
       anchor=east, fill=white, inner sep=0.5pt]
   at (13.52, 7.00) {$\Delta E_t$};
 
@@ -460,287 +492,383 @@
 % Caption above branching root (italic gray; carries "convergent" semantic)
 \node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
       text=cGray!75!black, anchor=south, align=center]
-  at (7.00, 4.92) {convergent evidence -- three independent probes of the same trap};
+  at (7.00, 4.92) {convergent evidence --- three independent probes of the same trap};
 
 % Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
 \coordinate (branchRoot) at (6.95, 4.85);
 
 % 3 spokes — Stealth, narrative weight 0.9pt cGray
-%   spoke 1: kinetic     → Panel D entry (2.20, 4.30)
-%   spoke 2: ISPD        → Panel E-F boundary (6.95, 4.32)
-%   spoke 3: mechanical  → Panel G entry (12.20, 4.30)
-% v7: spoke 1 endpoint shifted with D's new bbox (was 2.20, now 1.73 — D mid)
+% v8.6 endpoints: realigned to 3-column bbox centers (Column D / E / F top)
+%   spoke 1: kinetic     → Column D top center (2.28, 4.30)
+%   spoke 2: ISPD-paired → Column E top center (6.975, 4.30) [vertical]
+%   spoke 3: mechanical  → Column F top center (11.70, 4.30)
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
-  (branchRoot) -- (1.73, 4.30);
+  (branchRoot) -- (2.28, 4.30);
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
-  (branchRoot) -- (6.95, 4.32);
+  (branchRoot) -- (6.975, 4.30);
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
-  (branchRoot) -- (12.20, 4.30);
+  (branchRoot) -- (11.70, 4.30);
 
-% Spoke modality labels (mid-spoke, italic small, with background fill to clear
-% the chain-hint lines underneath)
-% v7: 'kinetic' label moved to new spoke midpoint (D entry shifted)
+% Spoke modality labels (mid-spoke, italic small, with cAmber!8 fill punch)
+% v8.6 positions: midpoints recomputed for new spoke endpoints
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (4.34, 4.55) {kinetic};
+  at (4.55, 4.55) {kinetic};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (6.95, 4.50) {ISPD};
+  at (6.975, 4.50) {ISPD};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (9.55, 4.55) {mechanical};
+  at (9.40, 4.55) {mechanical};
 
 % ============================================================
-% Panel D — Kinetic I(t) ~ t^{-n} (scaffold)
+% v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
+%   Replaces pre-v8.6 4-panel D/E/F/G layout per briefing §6 + §13.5-§13.7.
+%   Each column: apparatus zone (top y=2.80..4.25) + result zone (y=0.20..2.60).
+%   Column D (kinetic):   x=0.05..4.50, spoke endpoint (2.28, 4.30)
+%   Column E (ISPD):      x=4.65..9.30, spoke endpoint (6.975, 4.30) vertical
+%   Column F (mechanical): x=9.45..13.95, spoke endpoint (11.70, 4.30)
 % ============================================================
-% Panel D bbox: x=0..3.45  y=0.1..4.45 (v7 width-normalized; was x=0..4.45)
-% v7 scale factor 0.803 applied to all x anchored at axis origin x=0.55.
 
-% M2 axis arrow (briefing §3: D/E/F = iconic cartoon, NO axis frame,
-% only Stealth-tipped arrows for direction; tickless, no numerical labels)
-% v6: axis-top compressed 4.10→3.40. v7: x-axis 4.10→3.40.
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (0.55, 0.45) -- (0.55, 3.40);
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (0.55, 0.45) -- (3.40, 0.45);
-% Axis labels at arrow tips (axis-end convention, replaces mid-axis labels)
-\node[labelMute, anchor=east, rotate=90] at (0.45, 3.20) {$\log I$};
-\node[labelMute, anchor=north] at (3.28, 0.35) {$\log t$};
+% =============== Column D — Kinetic =================
 
-% v6/v7: two power-law lines separated (no crossing). deep-rich stays above
-% shallow-rich throughout — deep trap retains charge longer = less steep
-% slope. v7: x-shrunk to width 3.45 (anchored at x=0.55, factor 0.803).
-\draw[cRed!80!black, line width=0.80pt] (0.67, 3.30) -- (3.28, 1.55);
-\draw[cBlue!80!black, line width=0.80pt] (0.67, 2.80) -- (3.28, 0.55);
-% v6/v7: Debye dashed — starts near deep-rich at left, drops steeper, ends
-% clearly below both power-law tails per briefing §8.4 (non-Debye tail).
-\draw[cGray!70!black, dashed, line width=0.65pt]
-  (0.77, 3.35) .. controls (1.07, 3.20) and (1.31, 1.30) .. (2.12, 0.55);
-\draw[cGray!55!black, line width=0.35pt] (2.08, 0.60) -- (2.28, 0.75);
+% D-2 apparatus zone (v8.7): SMU box + MIM sample stack + ground
+% (Generic instrument synthesis per briefing §13.5 D-2; Wang Nat Commun
+%  2022 Fig 1e equivalent-circuit framing partial-mined.)
+% SMU box (LEFT, source-meter unit with dual V/A function)
+\draw[cGray!75!black, line width=0.30pt]
+  (0.55, 3.10) rectangle (1.55, 3.95);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
+  at (0.80, 3.78) {V};
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
+  at (0.80, 3.27) {A};
+% "SMU" label inside box
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
+  at (1.20, 3.52) {SMU};
+% Tiny indicator (digital-readout cue)
+\draw[cGray!60!black, line width=0.18pt]
+  (1.05, 3.45) -- (1.40, 3.45) -- (1.40, 3.60) -- (1.05, 3.60) -- cycle;
+
+% MIM sample stack (CENTER): top electrode + polymer + bottom electrode
+% Top electrode (cross-hatched gray rectangle)
+\fill[cGray!35!white] (1.95, 3.78) rectangle (3.15, 3.86);
+\draw[cGray!75!black, line width=0.30pt]
+  (1.95, 3.78) rectangle (3.15, 3.86);
+% Top-electrode hatching (single-direction subtle)
+\foreach \hx in {2.00, 2.10, 2.20, 2.30, 2.40, 2.50, 2.60, 2.70, 2.80, 2.90, 3.00, 3.10} {
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.86) -- ({\hx-0.03}, 3.79);
+}
+% Polymer film (cAmber filled)
+\fill[cAmber!28] (1.95, 3.48) rectangle (3.15, 3.78);
+\draw[cAmber!70!black, line width=0.30pt]
+  (1.95, 3.48) rectangle (3.15, 3.78);
+% Bottom electrode (hatched)
+\fill[cGray!35!white] (1.95, 3.40) rectangle (3.15, 3.48);
+\draw[cGray!75!black, line width=0.30pt]
+  (1.95, 3.40) rectangle (3.15, 3.48);
+\foreach \hx in {2.00, 2.10, 2.20, 2.30, 2.40, 2.50, 2.60, 2.70, 2.80, 2.90, 3.00, 3.10} {
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.48) -- ({\hx-0.03}, 3.41);
+}
+
+% 2 leads from SMU box to MIM stack
+% Top lead: SMU top right → MIM top electrode left
+\draw[cGray!75!black, line width=0.28pt]
+  (1.55, 3.82) -- (1.75, 3.82) -- (1.75, 3.82) -- (1.95, 3.82);
+% Bottom lead: SMU bottom right → MIM bottom electrode left
+\draw[cGray!75!black, line width=0.28pt]
+  (1.55, 3.44) -- (1.75, 3.44) -- (1.75, 3.44) -- (1.95, 3.44);
+
+% Ground symbol at bottom electrode RIGHT side
+\draw[cGray!75!black, line width=0.28pt] (3.15, 3.44) -- (3.30, 3.44) -- (3.30, 3.30);
+\draw[cGray!75!black, line width=0.30pt] (3.22, 3.30) -- (3.38, 3.30);
+\draw[cGray!75!black, line width=0.25pt] (3.25, 3.27) -- (3.35, 3.27);
+\draw[cGray!75!black, line width=0.22pt] (3.27, 3.24) -- (3.33, 3.24);
+
+% Tiny "film" label below sample stack
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cAmber!70!black]
+  at (2.55, 3.32) {film};
+
+% D-3 result zone axes (Stealth tipped, no ticks)
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.45, 0.40) -- (0.45, 2.60);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
+  (0.45, 0.40) -- (4.20, 0.40);
+\node[labelMute, anchor=east, rotate=90] at (0.35, 2.45) {$\log I$};
+\node[labelMute, anchor=north] at (4.10, 0.30) {$\log t$};
+
+% D-5 deep-rich + D-6 shallow-rich power-law curves (briefing §13.5)
+\draw[cRed!80!black, line width=0.80pt] (0.65, 2.40) -- (3.85, 1.10);
+\draw[cBlue!80!black, line width=0.80pt] (0.65, 1.90) -- (3.85, 0.50);
+
+% D-7a Debye dashed reference (ends below both power-law tails per §8.4)
+\draw[cGray!70!black, dashed, line width=0.55pt]
+  (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
+\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.70);
 \node[labelMute, text=cGray!65!black, anchor=west, fill=white, inner sep=1pt]
-  at (2.28, 0.75) {Debye};
+  at (2.70, 0.70) {Debye};
 
-\node[labelStrong, anchor=west] at (0.67, 3.55) {$I(t)\!\sim\!t^{-n}$};
-\node[labelMute, anchor=south, text=cRed!75!black] at (2.12, 2.55) {deep-rich};
-\node[labelMute, anchor=south, text=cBlue!75!black] at (2.52, 1.45) {shallow-rich};
+% D-4 main equation label
+\node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
-% M2 Row 2 internal flow: D→E inter-arrow removed (briefing §4: 3-spoke from
-% C carries the Row 2 narrative; horizontal D→E would re-introduce linear
-% chain feel that briefing §8.7 forbids)
+% D-7b curve ID labels
+\node[labelMute, anchor=south, text=cRed!75!black] at (2.20, 1.75) {deep-rich};
+\node[labelMute, anchor=south, text=cBlue!75!black] at (2.50, 1.05) {shallow-rich};
 
-% ============================================================
-% Panel E — Vs(t) decay scaffold
-% ============================================================
-% Panel E bbox: x=3.50..6.95  y=0.1..4.45 (v7 width-normalized; was x=4.50..6.95)
-% v7 axis origin shifted 4.85→3.85; x scale factor 1.513 anchored at new origin.
+% =============== Column E — ISPD-paired =================
 
-% M2 axis arrows (Stealth-tipped, no frame, no ticks)
-% v6: axis-top compressed 4.10→3.40. v7: axis origin 4.85→3.85.
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (3.85, 0.45) -- (3.85, 3.40);
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (3.85, 0.45) -- (6.80, 0.45);
+% E-2 apparatus zone (v8.7): He et al Nat Commun 2024 Fig 1c adaptation
+% Layout: corona needle (LEFT, charging) + sample slab (CENTER) + Kelvin probe
+%   (RIGHT, V_s readout) + V_s meter box (FAR-RIGHT). Per briefing §13.6 E-2.
 
-% v6.1/v7: linear-t stretched-exponential V_s(t) = V_r + (V_0-V_r)·exp(-(t/τ)^β)
-% with β≈0.8, V_0=3.20, V_r=0.55, τ≈0.6. Steep initial drop, slow asymptotic
-% tail. v7: x-scaled 1.513 anchored at new axis origin 3.85.
-\draw[cRed!70!black, line width=0.80pt]
-  plot[smooth] coordinates
-  {(3.96, 3.20) (4.15, 2.54) (4.38, 2.09) (4.68, 1.72)
-   (4.98, 1.43) (5.29, 1.24) (5.59, 1.08) (5.89, 0.97)
-   (6.19, 0.89) (6.50, 0.82) (6.73, 0.79)};
-% v7 polish #18: E markers fill=white → fill=cRed!50 (filled convention)
-\foreach \x/\y in {4.15/2.54, 4.61/1.79, 5.06/1.37, 5.51/1.11, 5.97/0.95,
-                   6.42/0.84} {
-  \node[circle, draw=cRed!70!black, fill=cRed!50, inner sep=0pt,
-        minimum size=1.4mm, line width=0.40pt] at (\x,\y) {};
-}
+% Sample slab (CENTER) — wider for better readability
+\fill[cAmber!28] (6.30, 3.40) rectangle (7.85, 3.50);
+\draw[cGray!75!black, line width=0.30pt]
+  (6.30, 3.40) rectangle (7.85, 3.50);
+% Sample ground symbol (3-bar at right edge of sample, indicating grounded base)
+\draw[cGray!75!black, line width=0.25pt] (7.85, 3.45) -- (7.95, 3.45) -- (7.95, 3.32);
+\draw[cGray!75!black, line width=0.30pt] (7.88, 3.32) -- (8.02, 3.32);
+\draw[cGray!75!black, line width=0.25pt] (7.90, 3.29) -- (8.00, 3.29);
+\draw[cGray!75!black, line width=0.22pt] (7.92, 3.26) -- (7.98, 3.26);
 
-% C001 fix: Vs(t) becomes rotated y-axis label (was inline above-axis colliding with subtitle);
-% subtitle 'surface potential decay' moved up above panel top.
-% Axis labels at arrow tips (axis-end convention); v7: V_s label x 4.68→3.59
+% Corona needle (LEFT, charging step)
+% Thin vertical needle with sharp apex pointing down to sample LEFT half
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.95) -- (6.55, 3.65);
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.65) -- (6.52, 3.55);
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.65) -- (6.58, 3.55);
+% "+" polarity cue near needle apex (corona discharge)
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!85!black]
+  at (6.40, 3.60) {$+$};
+% "Corona" label above needle
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      anchor=south] at (6.55, 3.96) {Corona};
+
+% Kelvin probe (RIGHT, V_s readout)
+% Small horizontal rectangle hovering above sample RIGHT half
+\fill[cGray!35!white] (7.25, 3.62) rectangle (7.55, 3.72);
+\draw[cGray!75!black, line width=0.30pt]
+  (7.25, 3.62) rectangle (7.55, 3.72);
+% Probe support stem (thin vertical line to instrument box above)
+\draw[cGray!75!black, line width=0.22pt]
+  (7.40, 3.72) -- (7.40, 3.85);
+% "Probe" label
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      anchor=west] at (7.58, 3.67) {Probe};
+
+% V_s meter box (FAR-RIGHT, electrostatic meter)
+\draw[cGray!75!black, line width=0.30pt]
+  (8.20, 3.70) rectangle (8.95, 4.00);
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
+  at (8.575, 3.85) {$V_s$ meter};
+% Mini-readout indicator inside meter box (small numeric display cue)
+\draw[cGray!60!black, line width=0.15pt]
+  (8.30, 3.75) -- (8.85, 3.75);
+% Lead from probe support to meter box LEFT side
+\draw[cGray!75!black, line width=0.22pt]
+  (7.40, 3.85) -- (8.20, 3.85);
+
+% "Sample" label below slab (subtle)
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cAmber!70!black]
+  at (7.075, 3.32) {sample};
+
+% E-3 V_s sub-zone axes
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (4.95, 1.65) -- (4.95, 2.55);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (4.95, 1.65) -- (8.55, 1.65);
 \node[labelMute, rotate=90, anchor=center,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (3.59, 3.20) {$V_s(t)$};
-% v6.1: linear t-axis (was log t). v7: x 6.65→6.57.
-\node[labelMute, anchor=north] at (6.57, 0.35) {$t$};
-% R5: redundant 'surface potential decay' subtitle removed — V_s(t) y-label
-% and ISPD inter-arrow already name the technique. Per style_guide "no
-% decorative copy".
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (4.83, 2.30) {$V_s(t)$};
+\node[labelMute, anchor=north,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (8.50, 1.55) {$t$};
 
-% Paired ISPD arrow E → F
-\draw[interArrow] (6.95, 2.30) -- (7.05, 2.30);
-\node[labelMute, anchor=south] at (7.00, 2.35) {ISPD};
+% E-4 V_s stretched-exp decay curve
+\draw[cRed!70!black, line width=0.70pt]
+  plot[smooth] coordinates
+  {(5.10, 2.40) (5.45, 2.05) (5.85, 1.85) (6.25, 1.78)
+   (6.65, 1.75) (7.10, 1.73) (7.55, 1.72) (8.00, 1.72) (8.40, 1.72)};
+\foreach \mx/\my in {5.45/2.05, 5.85/1.85, 6.45/1.77, 7.05/1.73, 7.65/1.72} {
+  \node[circle, draw=cRed!70!black, fill=cRed!50, inner sep=0pt,
+        minimum size=1.2mm, line width=0.35pt] at (\mx,\my) {};
+}
 
-% ============================================================
-% Panel F — ISPD g(Et) bimodal (HERO #2)
-% ============================================================
-% Panel F bbox: x=7.00..10.45  y=0.1..4.45
+% E-5 internal raw→derived inter-arrow (vertical, between V_s and g(E_t))
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.35pt]
+  (8.70, 1.95) -- (8.70, 1.20);
+\node[labelMute, anchor=west, font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!75!black] at (8.75, 1.55) {ISPD};
 
-% M2 axis arrows (Stealth-tipped, no frame, no ticks)
-% v6: axis-top compressed 4.10→3.40
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (7.20, 0.45) -- (7.20, 3.40);
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
-  (7.20, 0.45) -- (10.30, 0.45);
+% E-6 g(E_t) sub-zone axes
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (4.95, 0.40) -- (4.95, 1.35);
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
+  (4.95, 0.40) -- (8.55, 0.40);
+\node[labelMute, rotate=90, anchor=center,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (4.83, 1.15) {$g(E_t)$};
+\node[labelMute, anchor=north,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (8.50, 0.30) {$E_t$};
 
-% v6: peaks lowered for less "tall" graph (briefing §5 1.8× ratio preserved:
-% shallow=1.05, deep=1.95 above base → 1.86×).
-% Shallow Gaussian (blue, left, smaller) — peak y=1.50
-\draw[cBlue!85!black, fill=cBlue!25, line width=0.80pt]
-  (7.45, 0.45) .. controls (7.95, 0.45) and (7.95, 1.50) .. (8.20, 1.50)
-              .. controls (8.45, 1.50) and (8.45, 0.45) .. (8.95, 0.45);
-% Deep Gaussian (red, right, taller) — peak y=2.40
-\draw[cRed!85!black, fill=cRed!25, line width=0.80pt]
-  (8.95, 0.45) .. controls (9.15, 0.45) and (9.15, 2.40) .. (9.55, 2.40)
-              .. controls (9.95, 2.40) and (9.95, 0.45) .. (10.15, 0.45);
+% E-7 shallow Gaussian + E-8 deep Gaussian (1.86× height per §5 Q4)
+\draw[cBlue!85!black, fill=cBlue!25, line width=0.70pt]
+  (5.30, 0.40) .. controls (5.55, 0.40) and (5.55, 0.95) .. (5.70, 0.95)
+              .. controls (5.85, 0.95) and (5.85, 0.40) .. (6.10, 0.40);
+\draw[cRed!85!black, fill=cRed!25, line width=0.70pt]
+  (6.20, 0.40) .. controls (6.40, 0.40) and (6.40, 1.20) .. (6.80, 1.20)
+              .. controls (7.20, 1.20) and (7.20, 0.40) .. (7.40, 0.40);
 
-% Tau_d arrow between peaks (lowered with peaks)
-\draw[<->, cRed!70!black, dashed, line width=0.55pt]
-  (8.20, 2.55) -- (9.55, 2.55);
-\node[labelMute, anchor=south, text=cRed!70!black]
-  at (8.90, 2.60) {$\tau_d$};
+% E-9 τ_d annotation between peaks
+\draw[<->, cRed!70!black, dashed, line width=0.45pt]
+  (5.70, 1.30) -- (6.80, 1.30);
+\node[labelMute, anchor=south, text=cRed!70!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont]
+  at (6.25, 1.32) {$\tau_d$};
 
-\node[labelMute, anchor=north, text=cBlue!75!black] at (8.20, 0.35) {Shallow};
-\node[labelMute, anchor=north, text=cRed!75!black] at (9.55, 0.35) {Deep};
-% v6: g(E_t) label y moved to new axis-top region
-\node[labelMute, anchor=north west,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (7.25, 3.30) {$g(E_t)$};
-\node[labelMute, anchor=west] at (10.35, 0.50) {$E_t$};
+% E-10 base labels
+\node[labelMute, anchor=north, text=cBlue!75!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (5.70, 0.32) {Shallow};
+\node[labelMute, anchor=north, text=cRed!75!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (6.80, 0.32) {Deep};
 
-% M2 Row 2 internal flow: F→G inter-arrow removed (briefing §4: 3-spoke from
-% C carries the Row 2 narrative; horizontal F→G would re-introduce linear
-% chain feel that briefing §8.7 forbids)
+% =============== Column F — Mechanical =================
 
-% ============================================================
-% Panel G — Macroscopic Coulomb probe (v5 — F1 Nature-grade air-gap fix 2026-05-16)
-% v5 changes (single focus: cantilever–electrode clearance + metallic polish):
-%   * Electrode shifted right: x 12.70..12.95 → 13.55..13.80 (+0.85cm)
-%   * Hatching:                12.95..13.10 → 13.80..13.95
-%   * Ground symbol x_center:  12.825       → 13.675
-%   * Air gap:                 0.575 → 1.425 cm (2.48×) — ~31° max swing buffer
-%   * Nature-grade polish:
-%     - Polymer:   top→bottom amber linear gradient (cAmber!42 → cAmber!22)
-%     - Electrode: left→right metallic gradient   (cGray!75!black → cGray!40!black)
-%                  + left-edge white highlight (opacity 0.50)
-%     - Clip blk:  top→bottom gray gradient (cGray!55!white → cGray!38!white)
-%     - Air gap label: inline mid-arrow w/ cAmber!8 fill (row 2 wash match)
-% v4 history preserved in polymer-strip comments below.
-% briefing §8.5 invariants preserved: clip TOP, polymer hanging, Coulomb-only.
-% Panel G bbox: x=10.50..13.95  y=0.1..4.45
-% Z-order: mount/clip/electrode/undeflected BEFORE polymer; markers + arrows AFTER.
-% ============================================================
+% F-2 apparatus zone: PSU box + 2 leads + neutral fixture
+% v8.6 polish: lead routing avoids crossing neutral polymer (was at y=3.45
+%  cutting through polymer y=3.05..4.05). New routing: top lead goes ABOVE
+%  fixture (y=4.30), bottom lead goes BELOW PSU (y=2.80).
+% PSU box (LEFT)
+\draw[cGray!75!black, line width=0.30pt]
+  (9.85, 3.50) rectangle (10.40, 4.00);
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
+  at (10.125, 3.80) {V};
+% Pulse trace on PSU display
+\draw[cGray!60!black, line width=0.20pt]
+  (9.92, 3.60) -- (10.02, 3.60) -- (10.02, 3.72)
+              -- (10.15, 3.72) -- (10.15, 3.60) -- (10.35, 3.60);
+% Neutral fixture (RIGHT 2/3 of zone, enlarged for readability)
+% Neutral clip block at top (Conrad 2016 mount-spacer stipple convention)
+\fill[cGray!50!white] (12.25, 4.10) rectangle (12.65, 4.20);
+\draw[cGray!75!black, line width=0.30pt]
+  (12.25, 4.10) rectangle (12.65, 4.20);
+% Mount-spacer stipple pattern above clip (Conrad 2016 convention — small triangles
+% indicating fixed support)
+\foreach \sx in {12.30, 12.40, 12.50, 12.60} {
+  \draw[cGray!60!black, line width=0.18pt]
+    ({\sx-0.025}, 4.20) -- (\sx, 4.25) -- ({\sx+0.025}, 4.20);
+}
+% Neutral polymer (straight, pale — "before trapping baseline")
+\fill[cAmber!18, opacity=0.6]
+  (12.40, 4.10) rectangle (12.50, 2.90);
+\draw[cAmber!70!black, line width=0.32pt, opacity=0.6]
+  (12.40, 4.10) rectangle (12.50, 2.90);
+% Neutral electrode (Conrad 2016 cross-section style: cross-hatched)
+\fill[cGray!35!white] (13.30, 2.90) rectangle (13.50, 4.05);
+\draw[cGray!75!black, line width=0.30pt]
+  (13.30, 2.90) rectangle (13.50, 4.05);
+% Cross-hatch pattern (45° + 135° per Conrad convention)
+\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
+  \draw[cGray!60!black, line width=0.15pt] (13.30, \hy) -- (13.40, {\hy+0.08});
+}
+\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
+  \draw[cGray!60!black, line width=0.15pt] (13.40, \hy) -- (13.50, {\hy+0.08});
+}
+% Lead from PSU top to clip (ABOVE fixture top, no polymer crossing)
+\draw[cGray!75!black, line width=0.28pt]
+  (10.40, 3.90) -- (10.70, 3.90) -- (10.70, 4.30)
+              -- (12.45, 4.30) -- (12.45, 4.20);
+% Lead from PSU bottom to electrode (BELOW PSU, no polymer crossing)
+\draw[cGray!75!black, line width=0.28pt]
+  (10.40, 3.60) -- (10.70, 3.60) -- (10.70, 2.80)
+              -- (13.40, 2.80) -- (13.40, 2.90);
+% "−" polarity indicator near electrode
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!85!black]
+  at (13.20, 2.78) {$-$};
 
-% --- Fixed mount hatch + clip (v7: shifted down by 0.60 — polymer compressed) ---
-\draw[cGray!50!black, line width=0.45pt] (11.85, 3.70) -- (12.40, 3.70);
+% F-3 Maxwell baseline arrow (light pink dashed, polymer → electrode)
+% v8.6 §8.5 amendment: Maxwell ALLOWED in apparatus zone (baseline cue).
+% At mid-polymer height (y=3.50): "force on polymer toward electrode."
+\draw[-{Stealth[length=4pt,width=3pt]}, cRed!40!black, dashed,
+      opacity=0.75, line width=0.40pt]
+  (12.55, 3.50) -- (13.25, 3.50);
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cRed!55!black,
+      anchor=south] at (12.90, 3.55) {$F_{\mathrm{Maxwell}}$};
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=north] at (12.90, 3.46) {baseline};
+% "air gap" small label in apparatus zone (Conrad 2016 convention — labels the gap)
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!60!black]
+  at (12.92, 3.08) {air gap};
+
+% F-4 result zone clip + mount
+\fill[cGray!50!white] (11.55, 2.42) rectangle (11.95, 2.52);
+\draw[cGray!75!black, line width=0.40pt]
+  (11.55, 2.42) rectangle (11.95, 2.52);
+\draw[cGray!50!black, line width=0.40pt] (11.45, 2.65) -- (12.05, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
-  \draw[cGray!50!black, line width=0.30pt]
-    ({11.85+\dx}, 3.70) -- ({11.80+\dx}, 3.78);
+  \draw[cGray!50!black, line width=0.25pt]
+    ({11.45+\dx}, 2.65) -- ({11.40+\dx}, 2.72);
 }
-% v5.1/v7: clip block — top-bottom gradient + shifted down (4.00..4.15 → 3.40..3.55)
-\shade[top color=cGray!38!white, bottom color=cGray!55!white]
-  (11.90, 3.40) rectangle (12.35, 3.55);
-\draw[cGray!60!black, line width=0.5pt]
-  (11.90, 3.40) rectangle (12.35, 3.55);
-\draw[cGray!60!black, line width=0.5pt] (12.125, 3.55) -- (12.125, 3.70);
+\draw[cGray!75!black, line width=0.40pt] (11.75, 2.52) -- (11.75, 2.65);
 
-% --- Electrode (RIGHT, v5 shift +0.85cm + v7 height shortened to match polymer) ---
-% v7: electrode top y=3.80 → 3.40 (height 3.00 → 2.60)
-\shade[left color=cGray!75!black, right color=cGray!40!black]
-  (13.55, 0.80) rectangle (13.80, 3.40);
-\draw[cGray!85!black, line width=0.55pt]
-  (13.55, 0.80) rectangle (13.80, 3.40);
-% Left-edge metallic highlight (subtle white reflection)
-\draw[white, opacity=0.50, line width=0.38pt]
-  (13.555, 0.85) -- (13.555, 3.35);
-% v7: hatching reduced 7 lines→6 (top line y=3.40 dropped to fit new electrode top)
-\foreach \ey in {1.00, 1.40, 1.80, 2.20, 2.60, 3.00} {
-  \draw[cGray!75!black, line width=0.30pt]
-    (13.80, \ey) -- (13.95, {\ey+0.08});
-}
-% 3-bar ground symbol (standard electrical reference)
-\draw[cGray!70!black, fill=cGray!50!black, line width=0.40pt]
-  (13.57, 0.75) -- (13.78, 0.75) -- (13.675, 0.60) -- cycle;
-\draw[cGray!70!black, line width=0.30pt] (13.61, 0.57) -- (13.74, 0.57);
-\draw[cGray!70!black, line width=0.30pt] (13.64, 0.52) -- (13.71, 0.52);
-\draw[cGray!70!black, line width=0.30pt] (13.66, 0.47) -- (13.69, 0.47);
-% Labels positioned ABOVE + BELOW electrode (v7: 'electrode' y 3.85→3.45)
-\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!85!black] at (13.675, 3.45) {electrode};
-\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!65!black] at (13.675, 0.42) {(grounded)};
-
-% --- Undeflected reference dashed line (v7: top y 4.00→3.40) ---
-\draw[cGray!55!black, dashed, line width=0.30pt]
-  (12.125, 3.40) -- (12.125, 1.20);
-\node[labelMute, anchor=west, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!55!black] at (12.15, 2.30) {undeflected};
-
-% --- Polymer strip (length 2.75, bend Δx=0.60 = 21.5% — figure-research v4) ---
-% v4 (2026-05-15) per figure-research/refs/panel_g_cantilever/candidates.md:
-%   corpus dominant idioms (5 papers inspected):
-%     * tip-finish: SQUARE CUT horizontal (tapered/slanted 0 cases)
-%     * bend-angle exaggeration: 20-25% Δx/L (ref06 reference; 12.5% reads weak)
-%     * motion device: NO arc arrow; bend exaggeration + Coulomb arrow suffice
-%   Fix from v3 (Δx 0.35→0.60, tip slanted→horizontal, rounded corners 0.3mm)
-% Root still vertical (cantilever physics preserved): C1=(12.25, 3.00).
-% Mid-bend at C2=(12.05, 2.00). Tip square: y=1.25 both corners.
-% v5.1: shade (top-bottom amber gradient, briefing §9 light-source LOCKED).
-% v7: all y-coords scaled 0.78 anchored at tip y=1.25 → polymer L 2.75→2.15.
+% F-5 bent cantilever polymer (curved LEFT = Coulomb REPULSION away from electrode)
 \shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
-  (12.25, 3.40) .. controls (12.25, 2.62) and (12.05, 1.84) ..
-  (11.65, 1.25) -- (11.40, 1.25) .. controls (11.80, 1.84) and
-  (12.00, 2.62) .. (12.00, 3.40) -- cycle;
-\draw[cAmber!80!black, line width=0.70pt, rounded corners=0.3mm]
-  (12.25, 3.40) .. controls (12.25, 2.62) and (12.05, 1.84) ..
-  (11.65, 1.25) -- (11.40, 1.25) .. controls (11.80, 1.84) and
-  (12.00, 2.62) .. (12.00, 3.40) -- cycle;
-% v5.1/v7: polymer internal chain hints (briefing §9 material-identity
-% exception) — y scaled 0.78 anchored at tip.
-\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
-  (12.175, 3.33) .. controls (12.175, 2.62) and (11.975, 1.84) ..
-  (11.575, 1.31);
-\draw[cAmber!65!black, line width=0.30pt, opacity=0.38]
-  (12.075, 3.33) .. controls (12.075, 2.62) and (11.875, 1.84) ..
-  (11.475, 1.31);
+  (11.62, 2.42) .. controls (11.62, 1.85) and (11.35, 1.35) ..
+  (11.05, 0.85) -- (11.20, 0.85) .. controls (11.50, 1.35) and
+  (11.75, 1.85) .. (11.75, 2.42) -- cycle;
+\draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]
+  (11.62, 2.42) .. controls (11.62, 1.85) and (11.35, 1.35) ..
+  (11.05, 0.85) -- (11.20, 0.85) .. controls (11.50, 1.35) and
+  (11.75, 1.85) .. (11.75, 2.42) -- cycle;
+\draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
+  (11.555, 2.35) .. controls (11.555, 1.85) and (11.285, 1.35) .. (10.985, 0.88);
+\draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
+  (11.685, 2.35) .. controls (11.685, 1.85) and (11.415, 1.35) .. (11.115, 0.88);
 
-% --- Trapped charge markers (v7: y scaled 0.78 anchored at tip) ---
-% v8: $\ominus$ → ● (carrier-neutral; q_tr label carries 'trapped charge'
-% semantic; Q6 lit verification — Nicolai 2012 / Haneef 2020 convention
-% says ⊖ implies electron-specific, but paper data not committed yet)
-\foreach \cx/\cy in {12.10/2.93, 11.95/2.23, 11.75/1.52} {
+% F-6 3 q_tr markers along polymer
+\foreach \cx/\cy in {11.55/2.00, 11.45/1.55, 11.30/1.10} {
   \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
-        minimum size=1.6mm, line width=0.40pt] at (\cx,\cy) {};
+        minimum size=1.4mm, line width=0.35pt] at (\cx,\cy) {};
 }
-% q_tr label — leader from polymer right edge (v7: y 3.40→2.93)
-\draw[cRed!55!black, line width=0.35pt] (12.22, 2.93) -- (12.35, 2.93);
+\draw[cRed!55!black, line width=0.30pt] (11.78, 2.00) -- (11.95, 2.00);
 \node[labelMute, anchor=west, fill=white, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
-  at (12.35, 2.93) {$q_{tr}$};
+  at (11.95, 2.00) {$q_{tr}$};
 
-% --- Coulomb repulsion arrow + 2-line label (v7: y 2.20→1.99) ---
+% F-7 Coulomb repulsion arrow + 2-line label (v8.2 SE/NE anchor pattern)
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
-  (11.95, 1.99) -- (11.10, 1.99);
+  (11.45, 1.30) -- (10.60, 1.30);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
-      anchor=east] at (11.10, 2.17) {Coulomb};
-\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black] at (11.10, 1.80) {repulsion};
+      anchor=south east] at (10.60, 1.35) {Coulomb};
+\node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!75!black] at (10.60, 1.25) {repulsion};
 
-% --- Δx displacement (just below tip, full Δx=0.60 visible) ---
-% Tip center at y=1.25 = (11.40+11.65)/2 = 11.525
+% F-8 result zone electrode + ground + air gap
+\shade[left color=cGray!75!black, right color=cGray!40!black]
+  (13.55, 0.30) rectangle (13.80, 2.50);
+\draw[cGray!85!black, line width=0.50pt]
+  (13.55, 0.30) rectangle (13.80, 2.50);
+\draw[white, opacity=0.50, line width=0.35pt]
+  (13.555, 0.35) -- (13.555, 2.45);
+\foreach \ey in {0.60, 1.00, 1.40, 1.80, 2.20} {
+  \draw[cGray!75!black, line width=0.28pt]
+    (13.80, \ey) -- (13.95, {\ey+0.08});
+}
+\draw[cGray!70!black, fill=cGray!50!black, line width=0.35pt]
+  (13.57, 0.25) -- (13.78, 0.25) -- (13.675, 0.12) -- cycle;
+\draw[cGray!70!black, line width=0.28pt] (13.61, 0.10) -- (13.74, 0.10);
+\draw[cGray!70!black, line width=0.28pt] (13.64, 0.06) -- (13.71, 0.06);
+\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (13.675, 2.55) {electrode};
 \draw[<->, cGray!55!black, line width=0.30pt]
-  (11.525, 1.10) -- (12.125, 1.10);
-\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!65!black] at (11.825, 1.08) {$\Delta x$};
-
-% --- Air gap dimension (v5: extends to new electrode left, label inline center) ---
-\draw[<->, cGray!55!black, line width=0.32pt]
-  (12.125, 0.85) -- (13.55, 0.85);
+  (11.55, 0.55) -- (13.55, 0.55);
 \node[labelMute, anchor=center, fill=cAmber!8, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (12.84, 0.85) {air gap};
+  at (12.55, 0.55) {air gap};
 
+% ============================================================
+% v8.6 ROW 2 END — legacy 4-panel D/E/F/G content removed in v8.6 restructure.
+%   Pre-v8.6 .tex preserved in git history at commit 8e7edca (v8.5).
+% ============================================================
 \end{tikzpicture}
 }%
 \end{document}

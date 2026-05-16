@@ -31,10 +31,10 @@
 ]
 
 % Figure-wide background wash
-\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
+\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.45);
 
 % Panel letters
-\node[panelLetter, anchor=north west] at (0.10, 9.05) {A};
+\node[panelLetter, anchor=north west] at (0.10, 9.40) {A};
 \node[panelLetter, anchor=north west] at (0.10, 5.30) {B};
 
 % ============================================================
@@ -109,13 +109,14 @@
     at (\px, 8.60) {\letter};
 }
 
-% Clip status annotation (above phase A vs B-G)
+% Clip status annotation (lifted above phase letters to avoid vertical collision;
+%  v3: previously at y=8.80 overlapping phase-letter band; now at y=9.10)
 \node[labelMute, anchor=south, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
       text=cGray!75!black, fill=cLGray!18, inner sep=1pt]
-  at (1.60, 8.80) {clip: \textbf{GROUNDED}};
+  at (1.60, 9.10) {clip: \textbf{GROUNDED}};
 \node[labelMute, anchor=south, font=\sffamily\fontsize{5.5}{6.6}\selectfont,
       text=cGray!75!black, fill=cAmber!05, inner sep=1pt]
-  at (7.90, 8.80) {clip: FLOATING (Q$_{\mathrm{clip}}$ locked)};
+  at (7.90, 9.10) {clip: FLOATING (Q$_{\mathrm{clip}}$ locked)};
 
 % Key event markers
 % Phase A→B boundary: Q_clip lock event
@@ -137,9 +138,10 @@
 % Same sign → Coulomb REPULSION, cantilever bends AWAY from active electrode
 % ============================================================
 
-% Panel B internal title
+% Panel B internal title (v3: moved from y=5.10 to y=5.45 — Q_clip chip at y=4.72
+%  with anchor=south + fill extends up to ~y=5.02 and was occluding the title)
 \node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!75!black] at (7.00, 5.10) {Phase D snapshot: V$_{\mathrm{active}} = -V_0$, locked Q$_{\mathrm{clip}}$ same sign $\Rightarrow$ Coulomb repulsion};
+      text=cGray!75!black] at (7.00, 5.45) {Phase D snapshot: V$_{\mathrm{active}} = -V_0$, locked Q$_{\mathrm{clip}}$ same sign $\Rightarrow$ Coulomb repulsion};
 
 % --- Active electrode (LEFT) ---
 % Tall rectangle with metallic gradient
@@ -219,16 +221,19 @@
 \draw[cRed!55!black, line width=0.35pt] (6.15, 3.50) -- (6.45, 3.50);
 \node[labelMute, anchor=west, fill=white, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
-  at (6.45, 3.50) {$q_{tr}$};
+  at (6.45, 3.50) {$q_{t,r}$};
 
 % --- Force vectors at clip ---
 % F_Coulomb (red, REPULSION → toward right, AWAY from left active electrode at Phase D)
+% v3: arrow base moved from (6.20, ..) — was inside clip rect (5.85..6.35) — to clip's right edge
 \draw[forceArrow, cRed!85!black]
-  (6.20, 4.27) -- (7.50, 4.27);
-\node[labelStrong, anchor=west, font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
+  (6.37, 4.27) -- (7.50, 4.27);
+% v3: F_Coulomb label lifted from y=4.32 to y=4.45 (anchor=south west) so the
+%  arrow line at y=4.27 no longer strikes through the text baseline.
+\node[labelStrong, anchor=south west, font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
       text=cRed!75!black] at (7.55, 4.32) {$F_{\mathrm{Coulomb}}$};
-\node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
-      text=cRed!75!black] at (7.55, 4.15) {(repulsion: $Q_{\mathrm{clip}} \cdot E_{\mathrm{active}}$)};
+\node[labelMute, anchor=north west, font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cRed!75!black] at (7.55, 4.20) {(repulsion: $Q_{\mathrm{clip}} \cdot E_{\mathrm{active}}$)};
 
 % F_image / F_Maxwell (dashed pink ← toward electrode, always present)
 \draw[-{Stealth[length=6pt,width=4pt]}, cRed!45!black, dashed, line width=0.6pt]
