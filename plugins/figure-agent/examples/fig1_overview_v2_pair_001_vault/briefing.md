@@ -119,7 +119,16 @@ setup, so no addition.
 
 ---
 
-## §3.3 Row 2 size hierarchy verification gate (v8.5 NEW)
+## §3.3 Row 2 size hierarchy verification gate (v8.5 NEW, v8.6 SUPERSEDED by §6 Option α restructure)
+
+**v8.6 status:** The "G is heavier than D/E/F" asymmetry that motivated §3.3 has been
+*structurally* dissolved by the v8.6 Option α 3-column restructure (§6). All 3 columns
+(D / E / F) now share the same internal pattern: apparatus zone on top + result zone on
+bottom. G's old isometric-scene register is no longer an outlier because every column
+has an apparatus zone. The §3.3 gate is preserved below as ARCHIVED reference but its
+escalation triggers (a/b/c/d) are now empty by design.
+
+**Archived (pre-v8.6) §3.3 verification gate — kept for cross-reference:**
 
 **Problem statement**: §5 Hero hierarchy locks "Row 2 = evidence radiation,
 4 panels equal." But G inherits an isometric mechanical scene register (clip
@@ -266,32 +275,46 @@ Total ~9s for Row 1 (A 1s + B 1s + C 5s + transitions 1.6s + descend 0.5s).
 
 ---
 
-## §5. Hero hierarchy mechanism (시각적, NOT semantic)
+## §5. Hero hierarchy mechanism (시각적, NOT semantic) — v8.6 Option α restructure
 
-| 메커니즘 | Panel C | Row 2 plot (D/E/F) | Row 2 schematic (G) |
-|---|---|---|---|
-| 면적 | 1.5× width | equal | equal |
-| Color saturation | deep-red strong + shallow-blue strong | mid | mid + isometric tone |
-| Detail density | maximum (LEFT polymer + RIGHT band + ● markers + leaders + escape arrows) | minimal (axis arrow + 1-2 curve + 1 label) | medium (cantilever + ● + air gap + Coulomb arrow) |
-| Position | Row 1 우측 dominant | Row 2 equal | Row 2 equal |
+| 메커니즘 | Panel C | Row 2 Col 1 (kinetic) | Row 2 Col 2 (ISPD-paired) | Row 2 Col 3 (mechanical) |
+|---|---|---|---|---|
+| 면적 | 1.5× width | equal (~4.5cm) | equal | equal |
+| Internal structure (v8.6) | scene dominant | apparatus zone (top) + result zone (bottom) | apparatus zone (top) + V_s + g(E_t) stacked (bottom) | apparatus zone (top, baseline) + result zone (bottom, active) |
+| Color saturation | deep-red strong + shallow-blue strong | mid (deep-red + shallow-blue power-law) | mid (cBlue + cRed bimodal) | mid (apparatus mono cGray + result cAmber polymer + bold cRed Coulomb) |
+| Detail density | maximum | apparatus icon + 2-line plot | apparatus icon + V_s decay + bimodal Gaussian | apparatus (PSU + neutral fixture + light Maxwell baseline) + result (bent + Coulomb + q_tr) |
+| Position | Row 1 우측 dominant | Row 2 left | Row 2 center | Row 2 right |
 
-Result: Panel C *시각적 hero*; Row 2는 *evidence radiation*으로 평등 분포. Row 2 내부 hero 위계 없음 (3 lines는 평등).
+Result: Panel C *시각적 hero*; Row 2는 *3 columns of evidence*로 평등 분포 — modality count (3) = column count (3). 각 column 내부 "apparatus (위) → result (아래)" 동일 register pattern. **Pre-v8.6 4-panel asymmetry (D/E/F = plot, G = scene) 폐기.**
 
 ---
 
-## §6. Per-panel ROLE (NOT current implementation snapshot — see §7)
+## §6. Per-panel ROLE (v8.6 Option α restructure — Row 2 panel→column re-mapping)
+
+**Row 1 (unchanged):**
 
 | Panel | Narrative role | Aesthetic register |
 |---|---|---|
 | A | 재료 identity — poly(S-r-DIB) primary microstructure | schematic (chemistry) |
 | B | 분자 heterogeneity — variable sulfur composition (S60..S85 wt% samples) | hybrid (skeletal + conceptual axis) |
 | C | **HERO #1** — trap landscape (LEFT real-space + RIGHT energy diagram) | schematic dominant (scene) |
-| D | Kinetic evidence icon — I(t) ~ t⁻ⁿ shape | iconic cartoon |
-| E | ISPD raw V_s decay icon | iconic cartoon |
-| F | ISPD-derived g(E_t) bimodal icon | iconic cartoon |
-| G | Mechanical evidence scene — Coulomb-driven bending | schematic (isometric scene) |
 
-E ↔ F는 *paired ISPD transformation*으로 묶음 — single spoke from C, paired short-arrow internal.
+**Row 2 (v8.6 RESTRUCTURED — 4 panels → 3 columns; each column has apparatus zone on top + result zone on bottom):**
+
+| Column | ID label | Narrative role | Apparatus zone (top) | Result zone (bottom) |
+|---|---|---|---|---|
+| 1 | **D** (retained letter for caption continuity) | Kinetic evidence | current-source ⊙ + 2 probes + thin-film slab | I(t)~t⁻ⁿ power-law plot (deep-rich red + shallow-rich blue + Debye dashed reference) |
+| 2 | **E** (retained letter; ISPD-paired internal split via short arrow) | ISPD-paired evidence | corona needle ▽ + Kelvin probe ▭ + thin-film slab | V_s(t) decay (top sub-zone) + g(E_t) bimodal Gaussian (bottom sub-zone) — stacked within column |
+| 3 | **F** (was G; letter renamed to maintain alphabetical Row 2 flow) | Mechanical evidence | Power supply (V_active source) + 2 leads + neutral cantilever fixture + electrode (rest state) + **Maxwell attraction baseline** (light pink, polymer→electrode direction) | Bent cantilever (active state) + 3 q_tr ● markers (deep red) + **Coulomb repulsion** (bold red, electrode-away direction) — Coulomb WINS against Maxwell baseline |
+
+**v8.6 letter re-mapping rationale:** old D/E/F/G (4 panels) → new D/E/F (3 columns). Old E+F (ISPD raw + derived) merge into single column E with internal vertical split. Old G (mechanical scene) → new column F. Caption labels (A..F) form continuous 6-panel alphabet without gap.
+
+E column internal split is *paired ISPD transformation* (V_s raw → g(E_t) derived) — single spoke from C drops into column top, internal short arrow signals raw→derived transformation.
+
+**Pre-v8.6 archived (DO NOT reintroduce without §3.3 escalation gate trigger):**
+- 4-panel D/E/F/G horizontal layout
+- G as standalone full-scene panel (asymmetric register with D/E/F plots)
+- v8.4 mini setup icons (≤0.5cm peripheral) — superseded by proper apparatus zones
 
 ---
 
@@ -317,7 +340,20 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 8.2 Color convention: **shallow = blue, deep = red.** Consistent across Panel C, F, G. **Color-blindness redundancy** (Q10 확인 2026-05-16): color 외 position + size 동시 encoding — shallow는 mobility edge 근처 (높이 위), deep는 멀리 (낮은 위치); F-3 deep Gaussian이 F-2 shallow 대비 1.86× tall. 적록 색맹 (~6-8%) reader도 position + size로 shallow ↔ deep 식별 가능 (triple-encoding). Shape 차이 도입 (e.g., ●/◆)은 scope 밖 — color convention 충분.
 8.3 Panel C representation: **hybrid split-half**. LEFT = polymer matrix with mixed-depth ● sites (NOT spatially segregated — same polymer contains both kinds). RIGHT = trap-level energy diagram with E_C / mobility edge / E_V references + shallow + deep horizontal trap-level structures + escape arrows + ΔE_t^d depth annotation. Dashed gray leaders bind LEFT sites to RIGHT energy levels.
 8.4 Power-law I(t) ~ t⁻ⁿ lies **above Debye reference** at long times (non-Debye tail). Cannot be below. **Physical basis LOCKED (Q19)**: Curie–von Schweidler (CvS) law (Curie 1889 / von Schweidler 1907), Jonscher universal dielectric response (Jonscher 1977). CvS power-law tail이 Debye exponential보다 long-t에서 항상 위 = 정의적 (non-exponential ≡ slower decay). 본 paper Fig 3에서 CvS n exponent 정량.
-8.5 Panel G: **only Coulomb repulsion** arrow (red, polymer → away from electrode). Maxwell attraction arrow **forbidden** (design.md v2.2 §2.3). Cantilever clip on **TOP**, polymer hanging down. **Justification (Q16, planning/session_260427)**: Maxwell attraction (image-charge induced)은 *항상 존재* (Phase C에서 단독 작용 명시) — 그러나 Fig 1 G는 paper의 **novel signature** = polarity-locked Coulomb 척력 (F_clip = Q_clip × E_active simple model)만 표현. Maxwell 화살표 추가 시 narrative novelty 희석. Maxwell + Coulomb 동시 표현은 Fig 5 (mechanism scene) 또는 SI Methods 영역; Fig 1 G는 qualitative illustration of macro probe identity.
+8.5 Column F (was Panel G — mechanical evidence column post-v8.6): Cantilever clip on **TOP**, polymer hanging down. **v8.6 Maxwell-vs-Coulomb contrast amendment (formerly "Maxwell forbidden" pre-v8.6):**
+
+- **Apparatus zone (top of column, rest state):** Maxwell attraction arrow ALLOWED — depicted as light pink (`cRed!35!white`, dashed, thin 0.40pt) arrow pointing FROM neutral polymer TOWARD electrode. Label: "F_Maxwell (image/induced attraction, baseline)" italic 5.5pt cGray. Polymer is rendered in *pale* tone (cAmber!18..30, opacity 0.6) and *undeflected* (straight, no bend) to signal "neutral, no trapped charges yet." This zone establishes the *attractive baseline* — what would happen if there were NO trapped charges. Power supply + electrode + neutral fixture set up the field, Maxwell attraction is the unavoidable consequence.
+- **Result zone (bottom of column, active state):** **only Coulomb repulsion** arrow — bold red `cRed!80!black` solid 0.7pt, electrode-away direction (polymer LEFT). NO Maxwell arrow in this zone (would dilute novelty cue). Polymer rendered in *saturated* tone (cAmber!22→cAmber!42 gradient, current convention) and *bent* (the actual signature). 3 q_tr ● markers (deep red, polarity-same as electrode). Result zone narrates: "trapped charges drive net Coulomb repulsion that WINS against the apparatus-zone Maxwell baseline."
+
+**Maxwell-vs-Coulomb contrast convention (v8.6 LOCKED):** when both forces are shown across zones, Maxwell = light/secondary (cRed!35 dashed thin), Coulomb = bold primary (cRed!80 solid). Color tier signals which force wins. Color asymmetry IS the novelty argument — Coulomb thicker/darker = "Coulomb dominates."
+
+**Justification for amendment (v8.6):** the pre-v8.6 "Maxwell forbidden" rule (design.md v2.2 §2.3, briefing §8.5 pre-v8.6) was intended to keep Fig 1 G simple. But hiding Maxwell makes Coulomb read as "just an arrow" without context — reader cannot tell why Coulomb is novel. The "Coulomb wins AGAINST baseline Maxwell" tension is the paper's actual claim per planning/session_260427_mechanism.md (F_clip = Q_clip × E_active vs F_Maxwell ∝ E²). Apparatus-vs-result zone split (v8.6) is the natural place to show this tension without cluttering the result. Fig 5 still owns the full mechanism (7-phase + Phase D snapshot); Fig 1 Column F now shows the macro-probe identity AND the force-tension at cartoon level.
+
+**Anti-violation rules:**
+- Maxwell arrow in result zone (alongside Coulomb) → FORBIDDEN; collapses the contrast.
+- Both arrows equal weight → FORBIDDEN; color tier discrimination required.
+- Coulomb arrow in apparatus zone → FORBIDDEN; apparatus is the *baseline before trapping*, no Coulomb because no q_tr.
+- Quantitative force values (e.g., "F_Coulomb = 12 nN") → FORBIDDEN; Fig 1 is qualitative.
 8.6 Panel C ↔ Panel F color-consistent (bimodal: blue Shallow / red Deep).
 8.7 **Branching arrow physics constraint**: 3 spoke from C **must** match the 3 evidence lines in design.md §3.2 (kinetic / ISPD / mechanical). No new evidence line, no missing line. Spoke 순서 + label은 measurement modality, NOT causation chain — physics는 *3 independent measurements of same trap*, *not* causation chain D→...→G.
 8.8 Composition labels (S60 / S70 / S75 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("shallow-rich" / "deep-rich" / "low n" / "high n"). Numbers 60/70/75/85 refer to wt% S per planning/sulfur_sample_selection_policy.md. Drawn chain atom counts (10/14/18/24 in B-1) is artistic correlate only.
@@ -579,67 +615,70 @@ require a §17 amendment.
 ### §13.4 Row 2 cover-binding — 10 sub-regions (v7 split from 3, coord-explicit)
 
 **Background layer (2):**
-- **Row2-BG-wash** background tint: `\fill[cAmber!8, rounded corners=2mm] (-0.05, 0.05) rectangle (14.05, 4.55)`. **Role**: 4 panel (D/E/F/G)을 시각적으로 1 scene으로 결속; no hard panel borders (briefing §3 cover-binding mechanism #1)
+- **Row2-BG-wash** background tint: `\fill[cAmber!8, rounded corners=2mm] (-0.05, 0.05) rectangle (14.05, 4.55)`. **Role**: 3 columns (D/E/F)을 시각적으로 1 scene으로 결속; no hard column borders (briefing §3 cover-binding mechanism #1). Pre-v8.6 4-panel bind language updated to 3-column.
 - **Row2-BG-chains** 3 wavy chain hints (cAmber!22, line width 0.30pt, plot[smooth]) crossing horizontally at y ≈ 1.20 / 2.50 / 3.80 spanning x=0.10..13.90. **Role**: row 2 "floor" 의 polymer material identity — Panel C-L thin film chain hints과 visual binding (zoom-out: micro chain → macro bulk → measurement scene)
 
 **Branching root + caption (2):**
 - **Row2-Caption** 'convergent evidence — three independent probes of the same trap' (font: sffamily italic 6.5pt, text=cGray!75!black, anchor=south align=center) at (7.00, 4.92). **Role**: 의미 gate — divergent 화살표 geometry를 convergent semantic으로 invert; reader 2초 안에 "3 lines → 1 trap" 인식
 - **Row2-Root** branchRoot coordinate (6.95, 4.85) — Panel C 하단 (x 6.95 = Panel C left edge + 0.05 inset) + inter-row gap (y 4.55 wash top to 5.00 Panel C bottom) 안에 위치. **Role**: 3 spoke의 공통 출발점; "동일 trap의 3 measurement modality" 시각적 anchor
 
-**3 spokes (3):**
-- **Row2-Spoke-Kinetic** (6.95, 4.85) → (1.73, 4.30) v7 (was 2.20). Style: Stealth 6pt×4pt arrow tip, cGray!65!black, line width=0.9pt. **Role**: C → D narrative spoke (kinetic modality); endpoint (1.73, 4.30) = Panel D 신 bbox 중심 위쪽
-- **Row2-Spoke-ISPD** (6.95, 4.85) → (6.95, 4.32). Same style. **Role**: C → E↔F (paired ISPD) spoke; vertical (수직), E↔F 사이 boundary로 종료 → 두 panel 하나로 묶음
-- **Row2-Spoke-Mechanical** (6.95, 4.85) → (12.20, 4.30). Same style. **Role**: C → G narrative spoke (mechanical modality); endpoint = Panel G 중심 위쪽
+**3 spokes (3) — v8.6 endpoints updated to 3-column layout:**
+- **Row2-Spoke-Kinetic** (6.95, 4.85) → (2.28, 4.30) v8.6 (was (1.73, 4.30) v7). Style: Stealth 6pt×4pt arrow tip, cGray!65!black, line width=0.9pt. **Role**: C → Column D (kinetic) narrative spoke; endpoint (2.28, 4.30) = new Column 1 bbox center top.
+- **Row2-Spoke-ISPD** (6.95, 4.85) → (6.975, 4.30). Endpoint shifted from (6.95, 4.32) → (6.975, 4.30) to align with new Column E bbox center top. Same style. **Role**: C → Column E (paired ISPD) spoke; vertical, lands at column-top → reader sees V_s + g(E_t) as one column.
+- **Row2-Spoke-Mechanical** (6.95, 4.85) → (11.70, 4.30) v8.6 (was (12.20, 4.30) v7). Same style. **Role**: C → Column F (mechanical) narrative spoke; endpoint (11.70, 4.30) = new Column 3 bbox center top.
 
-**3 modality labels (3):**
-- **Row2-Label-Kinetic** 'kinetic' (font: sffamily italic 6pt, text=cGray!75!black, anchor=south, fill=cAmber!8, inner sep=1pt) at (4.34, 4.55) v7 (was 4.50). **Role**: kinetic spoke modality 명명; cAmber!8 fill로 BG-chains line 위에 punch (가독성 확보)
-- **Row2-Label-ISPD** 'ISPD' same style at (6.95, 4.50). **Role**: ISPD paired spoke 명명; 두 panel(E+F) 공유 modality 명시
-- **Row2-Label-Mechanical** 'mechanical' same style at (9.55, 4.55). **Role**: mechanical spoke modality 명명; G의 macro register와 connect
+**3 modality labels (3) — v8.6 positions updated to 3-column centers:**
+- **Row2-Label-Kinetic** 'kinetic' (font: sffamily italic 6pt, text=cGray!75!black, anchor=south, fill=cAmber!8, inner sep=1pt) at (4.55, 4.55) v8.6 (was (4.34, 4.55) v7). **Role**: kinetic spoke modality 명명; new position is midway between C and Column D top.
+- **Row2-Label-ISPD** 'ISPD' same style at (6.975, 4.50). **Role**: ISPD paired spoke 명명; Column E modality.
+- **Row2-Label-Mechanical** 'mechanical' same style at (9.40, 4.55) v8.6 (was (9.55, 4.55) v7). **Role**: mechanical spoke modality 명명; new position is midway between C and Column F top.
 
 **Anti-chain mechanism note**: 3 spoke가 발산형 geometry이지만 reader가 convergent로 invert하는 메커니즘 = (a) shared origin (C HERO, 단일 source); (b) caption "convergent evidence" semantic 명시; (c) Panel C ↔ Panel F color match (shallow blue + deep red), 동일 trap 시각 echo. §8.7 forbids linear chain (D→E→F→G); 이 3중 메커니즘이 그 forbidden 강제.
 
-### §13.5 Panel D — 5 sub-regions (iconic kinetic cartoon)
+### §13.5 Column D — Kinetic evidence (v8.6 restructure, 7 sub-regions)
 
-**Reading order**: (1) kinetic spoke 진입 (1.73, 4.30) → (2) equation $I(t)\sim t^{-n}$ 라벨 (mental model 주입) → (3) deep-rich 빨간 선 (위, less-steep) → (4) shallow-rich 파란 선 (아래, steeper) → (5) Debye dashed 우하단 (둘 다보다 아래 = non-Debye 증명) → (6) axis tip labels 확인 종료.
+**Column bbox**: x=0.05..4.50, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + mini-gap y=2.65..2.80 + result zone y=0.20..2.60.
 
-- **D-1** axis arrows Stealth-tipped (cGray!65 0.50pt) — v6: axis-top 4.10→3.40; v7: x-axis end 4.10→3.40 (width-normalized 4.45→3.45); tip labels '$\log I$' (y=3.20) / '$\log t$' (x=3.28). **Role**: log-log frame은 power-law를 직선으로 압축; tick 없이 arrow만 = M2 cartoon register (reader가 plot 분석 모드 진입 안 함)
-- **D-2** 2 power-law straight slopes (v6: 0.80pt; v7 x-shrunk 0.803 anchored at axis origin 0.55) — deep-rich cRed!80 (0.67,3.30)→(3.28,1.55) above, shallow-rich cBlue!80 (0.67,2.80)→(3.28,0.55) below; diverge, NO crossing. **Role**: less-steep red = smaller n = deep trap = 느린 release = retention 길다; 두 라인 색 = C-R2/R3 shallow/deep band과 binding (trap population 종속 kinetics). **n ↔ trap depth model (Q20, planning/session_260427)**: Jonscher / Dissado-Hill universal dielectric response framework (Jonscher 1977 / Dissado-Hill 1984). Composition (S60..S85 = wt% S, Q1 LOCKED)이 trap density 변조 → n 직접 영향. 본 paper Fig 3에 **CvS n exponent**로 정량.
-- **D-3** Debye dashed reference curve (v6+v7: cGray!70 0.65pt, steep bezier (0.77,3.35) ctrl→ (2.12,0.55); ends clearly below both power-law tails per §8.4) + thin straight leader (2.08,0.60)→(2.28,0.75) + 'Debye' label white fill. **Role**: "non-Debye tail" 주장의 시각적 anchor — 비교 기준 없으면 power-law 단독으로는 의미 없음. Debye exponential이 long-t에서 빠르게 떨어지고 power-law는 그 위에 있다는 visual proof
-- **D-4** main equation label '$I(t)\sim t^{-n}$' (v7: (0.67,3.55) labelStrong, above axis top). **Role**: panel 진입 즉시 mental model 주입 — reader가 두 선을 "I(t)~t^-n 라는 가족 중 다른 n 값" 으로 읽음
-- **D-5** curve identification labels (v7: 'deep-rich' cRed!75 (2.12,2.55) anchor=south + 'shallow-rich' cBlue!75 (2.52,1.45) anchor=south). **Role**: 각 곡선의 sample 정체 명시 — "sample이 어떤 trap 조성이면 어떤 곡선이 나오는지" 인과 binding
-- **D-6** kinetic-measurement setup mini-icon (v8.4 NEW): inside Panel D top-right corner around `(3.05, 3.30)`, ≤ 0.5×0.5cm bbox, monochrome cGray!75!black 0.30pt stroke. Glyph = current-source symbol (small circle with horizontal arrow inside) + 2 thin lead lines to a 0.30×0.10cm sample slab. **Role**: visualizes "kinetic measurement = current-time response under bias" without quantitative anchoring; reinforces *independent apparatus* claim of Row2-Caption per §3.2 setup-context rule. Reads at peripheral vision only — reader recognizes "apparatus exists" not its details
+**Reading order**: (1) kinetic spoke 진입 (column top, x≈2.28) → (2) **D-2 apparatus icon** (current-source ⊙ + 2 leads + thin-film slab) "이 측정은 bias 인가 + I 측정" → (3) **D-4 equation label** `I(t)~t⁻ⁿ` (mental model) → (4) **D-5 deep-rich red curve** (위, less-steep) → (5) **D-6 shallow-rich blue curve** (아래, steeper) → (6) **D-3 Debye dashed** 우하단 (둘 다보다 아래 = non-Debye 증명) → (7) D-7 curve ID labels.
 
-### §13.6 Panel E — 4 sub-regions (iconic ISPD-raw cartoon)
+- **D-1** column-frame: implicit bbox boundary (no visible stroke, just coordinate anchor). 3-spoke endpoint lands at column top center `(2.28, 4.25)`. **Role**: column-level layout anchor; replaces pre-v8.6 individual Panel D bbox.
+- **D-2** apparatus zone — kinetic-measurement icon at column-top-center around `(2.28, 3.55)`. Glyph: thin-film slab (horizontal rectangle ~0.80cm × 0.10cm) + current source (circle, radius ~0.10cm, with internal arrow indicating current direction) + 2 thin lead lines connecting source to film. Mono cGray!75!black, 0.30pt stroke. Width ~1.20cm × height ~0.80cm. **Role**: apparatus zone hero — visualizes "kinetic measurement = bias driven current vs time on thin-film sample" at fully-readable scale (not v8.4 ≤0.5cm peripheral). Replaces v8.4 D-6 mini-icon.
+- **D-3** result-zone axis arrows Stealth-tipped (cGray!65 0.40pt). Origin shifted from pre-v8.6 (0.55, 0.45) to fit new column bbox; new origin `(0.45, 0.40)`. Tip labels `\log I` (rotated at y=2.55) / `\log t` (at x ~4.20, y=0.30). **Role**: log-log frame compresses power-law to straight lines; tick-less = cartoon register preserved.
+- **D-4** main equation label `$I(t)\sim t^{-n}$` at column-result top, around `(0.55, 2.70)`, labelStrong. **Role**: mental-model anchor; reader reads curves as "I~t^-n family with different n values."
+- **D-5** deep-rich power-law line (cRed!80 0.80pt) from `(0.55, 2.45)` to `(3.20, 1.05)`. Less-steep = smaller n = deep trap dominant = longer retention.
+- **D-6** shallow-rich power-law line (cBlue!80 0.80pt) from `(0.55, 1.95)` to `(3.20, 0.45)`. Steeper = larger n = shallow trap dominant.
+- **D-7** Debye dashed reference (cGray!70 0.55pt, bezier) + leader + 'Debye' label white-fill. Ends clearly below both power-law tails per §8.4. + curve-ID labels: 'deep-rich' cRed!75 + 'shallow-rich' cBlue!75 inline near each curve.
 
-**Reading order**: (1) ISPD spoke 진입 (6.95, 4.32) — paired E↔F 묶음 인지 → (2) $V_s(t)$ y-label (좌상 회전) "raw measurement" 신호 → (3) 곡선 top-left (V₀ ≈ 3.20) → (4) 6 filled markers 따라 내려가기 (steep initial drop) → (5) 곡선 long tail (V_r ≈ 0.55 asymptote) → (6) $t$ x-axis 라벨 (linear t, NOT log) → (7) ISPD inter-arrow 우측으로 → F panel.
+### §13.6 Column E — ISPD-paired evidence (v8.6 restructure, 10 sub-regions)
 
-- **E-1** axis arrows Stealth-tipped (v6: axis-top 3.40; v7: axis origin 4.85→3.85, bbox 4.50..6.95→3.50..6.95 widened); tip labels '$V_s(t)$' rotated at (3.59,3.20) + '$t$' (v6.1: linear t-axis) at (6.57,0.35). **Role**: linear-t (not log) = stretched-exp fitting의 실제 좌표계; cartoon register는 D와 동일
-- **E-2** linear-t stretched-exponential decay curve (cRed!70 0.80pt, 11 waypoints; β≈0.8, V_0=3.20, V_r=0.55, τ≈0.6). v7: x scaled 1.513 anchored at 3.85 → waypoints (3.96,3.20)→(6.73,0.79). **Role**: raw V_s 시간 도메인 measurement; concave-up shape = trap-mediated long tail (β<1); F의 g(E_t)는 이 곡선의 inverse-Laplace 같은 derived 산물. **Parameter values LOCKED arbitrary (Q11 확인)**: β=0.8 / V_0=3.20 / V_r=0.55 / τ≈0.6는 **cartoon illustrative values** (paper 실제 측정값 아님); 정량 fitting result는 Fig 2/3 또는 SI 영역. shape는 stretched-exp identity 유지, 수치는 figure scope 밖.
-- **E-3** 6 ISPD markers (v7 polish #18: fill=cRed!50 — filled convention, was open). v7 marker x's scaled: (4.15,2.54)(4.61,1.79)(5.06,1.37)(5.51,1.11)(5.97,0.95)(6.42,0.84). **Role**: "data point" convention — 곡선은 fit, marker는 실제 측정; 6개 = 충분 density without crowding
-- **E-4** paired ISPD inter-arrow → F + 'ISPD' label (E↔F paired transformation per briefing §6). **Role**: 두 panel을 single spoke (ISPD)로 묶어 reader에게 "같은 measurement 종류" 신호 — V_s raw → g(E_t) derived 변환의 시각적 명명. **Abbreviation expansion responsibility (Q12)**: figure 자체에는 "ISPD" 약어만 (다른 modality 'kinetic' / 'mechanical'은 일상어이므로 ISPD만 약어 status). **figure caption first-use에서 "ISPD (Iso-thermal Surface Potential Decay) measurement" 한 번 expansion 필수** — cover figure / standalone exposure 대비. paper introduction이 별도로 expansion 다뤄도 figure caption 책임 분리 권장 (asymmetric treatment 정당화: familiarity asymmetry).
-- **E-5 / F-6 (shared)** ISPD-apparatus setup mini-icon (v8.4 NEW): centered between E and F panels around `(7.05, 2.55)` (slightly above the existing E-4 ISPD inter-arrow + label), ≤ 0.5×0.5cm bbox, monochrome cGray!75!black 0.30pt stroke. Glyph = small downward-pointing corona needle (triangle apex down) + horizontal thin sample slab + small 2-prong Kelvin probe rectangle hovering above the slab. **Role**: visualizes "non-contact surface-potential measurement apparatus" shared by E (raw V_s) and F (derived g(E_t)) per §6 paired ISPD; one icon for both panels reinforces §6 pairing semantically. Anti-violation: must NOT depict measured potential value, must NOT show electrode rotation — purely typological. Per §3.2 setup-context rule
+**Column bbox**: x=4.65..9.30, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + V_s sub-zone y=1.50..2.60 + g(E_t) sub-zone y=0.20..1.40 + mini-gap y=2.65..2.80.
 
-### §13.7 Panel F — 5 sub-regions (iconic g(E_t) cartoon)
+**Reading order**: (1) ISPD spoke 진입 (column top, x≈6.975) → (2) **E-2 apparatus icon** (corona ▽ + Kelvin probe ▭ + thin-film slab) "비접촉 표면 전위 측정" → (3) E-3 V_s sub-zone axis + **E-4 V_s decay curve** (raw measurement) → (4) **E-5 internal raw→derived inter-arrow** "이제 derive 함" → (5) E-6 g(E_t) sub-zone axis + **E-7 shallow Gaussian** (좌, 파랑, 낮음) → (6) **E-8 deep Gaussian** (우, 빨강, 1.86× 높음, "deep dominant") → (7) **E-9 τ_d annotation** → (8) E-10 Shallow/Deep base labels.
 
-**Reading order**: (1) E의 ISPD inter-arrow에서 도착 (left entry) → (2) $g(E_t)$ y-label (좌상 north-west, "density of states" 신호) → (3) shallow Gaussian (좌, 파랑, 낮음) → (4) deep Gaussian (우, 빨강, 1.86× 높음 = "deep dominant") → (5) τ_d dashed 화살표 between peaks (시상수 분리) → (6) base 라벨 'Shallow' / 'Deep' (color confirmation; C-R2/R3 ↔ F-2/F-3 ↔ G-4 binding 닫음) → (7) $E_t$ x-axis 라벨.
+- **E-1** column-frame: bbox anchor at top center `(6.975, 4.25)`. 3-spoke 2nd endpoint lands here.
+- **E-2** apparatus zone — ISPD-apparatus icon at column-top-center around `(6.975, 3.55)`. Glyph: thin-film slab (horizontal rectangle ~0.80cm × 0.10cm) + corona needle (downward-pointing triangle, apex at slab top, ~0.20cm tall, positioned LEFT half of slab) + Kelvin probe (small rectangle ~0.20cm × 0.10cm, RIGHT half, hovering ~0.05cm above slab) + thin probe support stem. Mono cGray!75!black, 0.30pt. Width ~1.20cm × height ~0.80cm. **Role**: apparatus zone hero — shared by raw V_s + derived g(E_t) per §6 paired ISPD. Replaces v8.4 E-5/F-6 shared mini-icon.
+- **E-3** V_s sub-zone axis arrows Stealth-tipped (cGray!65 0.40pt). Origin around `(4.95, 1.65)`. Tip labels `$V_s(t)$` rotated at upper left + `$t$` at right.
+- **E-4** V_s stretched-exp decay curve (cRed!70 0.70pt, smooth bezier 7-9 waypoints). β≈0.8 shape preserved; cartoon illustrative values per Q11. Scaled to fit V_s sub-zone bbox.
+- **E-5** internal ISPD raw→derived inter-arrow (Stealth, 0.35pt cGray!60) connecting V_s sub-zone bottom-right to g(E_t) sub-zone top-left + 'ISPD' label italic 6pt cGray!75 inline. Replaces pre-v8.6 horizontal E→F inter-arrow.
+- **E-6** g(E_t) sub-zone axis arrows Stealth-tipped (cGray!65 0.40pt). Origin around `(4.95, 0.40)`. Tip labels `$g(E_t)$` top-left + `$E_t$` right.
+- **E-7** shallow Gaussian (cBlue!85 border + cBlue!25 fill, 0.70pt). σ≈0.085 per §13.3 (v8.3 spec). Peak position LEFT side of g(E_t) sub-zone.
+- **E-8** deep Gaussian (cRed!85 border + cRed!25 fill, 0.70pt). σ≈0.18, peak 1.86× shallow height per §5 Q4. Peak position RIGHT side of g(E_t) sub-zone.
+- **E-9** τ_d double-headed dashed arrow between Gaussian peaks (cRed!70 0.45pt) + `$\tau_d$` label.
+- **E-10** 'Shallow' / 'Deep' base labels at Gaussian feet (cBlue!75 / cRed!75 italic). Closes color binding per §13.9 Binding-1.
 
-- **F-1** axis arrows Stealth-tipped (v6: axis-top 4.10→3.40); tip labels '$g(E_t)$' top-left at (7.25,3.30) anchor=north west + '$E_t$' right at (10.35,0.50). **Role**: energy domain (E_t) + 상태 density (g) — D의 시간 domain과 dual; bimodal 형상이 즉시 "2 trap species" 신호
-- **F-2** shallow Gaussian (cBlue!85 border + cBlue!25 fill, v6: peak y=1.50, x=7.45..8.95, 0.80pt). **Role**: narrow σ = 좁은 trap depth 분포 (얕은 trap이 비교적 균질); 낮은 peak height = 적은 state density
-- **F-3** deep Gaussian (cRed!85 border + cRed!25 fill, v6: peak y=2.40 = 1.86× shallow height per §5 Q4, x=8.95..10.15, 0.80pt). **Role**: taller (1.86×) = "deep dominant" density 인코딩; wider σ = 깊은 trap이 broader spread; F의 hero element
-- **F-4** τ_d double-headed dashed arrow between peaks (v6: y=2.55, was 3.55; cRed!70 0.55pt) + '$\tau_d$' label at (8.90,2.60). **Role**: 두 peak 사이 time-constant 분리의 abstract 표현; dashed = literal 거리 아님 (E_t 축 자체가 시상수 ↔ trap depth 관계의 derived); reader가 "shallow 빠른 release, deep 느린 release" 로 읽음
-- **F-5** 'Shallow' / 'Deep' base labels (cBlue!75 / cRed!75). **Role**: figure-wide color convention 묶음 — Shallow=cBlue / Deep=cRed가 C-R2/R3 band ↔ F Gaussian ↔ G ● 셋 모두 흐름 (§8.6)
+### §13.7 Column F — Mechanical evidence (v8.6 restructure, supersedes Panel G; 8 sub-regions)
 
-### §13.8 Panel G — 7 sub-regions (isometric mechanical scene)
+**Column bbox**: x=9.45..13.95, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + mini-gap y=2.65..2.80 + result zone y=0.20..2.60.
 
-**Reading order**: (1) mechanical spoke 진입 (12.20, 4.30) → (2) mount hatch + clip block (위 고정 지지) → (3) cantilever 매달려 내려옴 (amber gradient, polymer identity) → (4) 3 q_tr ● 빨간 markers (charge entity; C/F deep red과 binding) → (5) $q_{tr}$ label (우상, white fill로 강조) → (6) 폴리머가 LEFT로 휜 시각 인지 → (7) "Coulomb / repulsion" 빨간 화살표 + 라벨 (force vector — G의 hero claim) → (8) undeflected dashed (reference 기준) → (9) Δx 치수 (실제 displacement) → (10) air gap 치수 + 라벨 (clearance, 31° swing buffer 시각화) → (11) electrode (우, 금속 gradient) → (12) ground 심볼 + '(grounded)' 라벨 (reference potential 종료).
+**Reading order**: (1) mechanical spoke 진입 (column top, x≈11.70) → (2) **F-2 apparatus zone** — PSU box + leads to electrode + neutral cantilever fixture + **F-3 Maxwell attraction baseline** (light pink, polymer→electrode, "baseline before charges") → (3) reader 시선 아래로 → (4) **F-4 result clip** (TOP, same fixture geometry) → (5) **F-5 bent cantilever** (left, AWAY from electrode — bend signature) → (6) **F-6 3 q_tr ● markers** (cRed deep — color binding to C/E) + `$q_{tr}$` label → (7) **F-7 Coulomb repulsion arrow** (bold cRed!80 0.7pt, polymer→away from electrode) + 2-line label "Coulomb / repulsion" — **Coulomb WINS against apparatus-zone Maxwell baseline** → (8) **F-8 result-zone electrode + air gap** dimension cue.
 
-- **G-1** clip rectangle (top, 11.90..12.35; v7 y-shifted: 4.00..4.15→3.40..3.55; v5.1 gradient cGray!38!white→cGray!55!white per §9) + stub down to polymer + mount hatch at y=3.70 (was 4.30). **Role**: 'fixed support' 보편 기호; briefing §8.5 LOCKED — clip TOP, polymer 매달림 down
-- **G-2** electrode block (**RIGHT** vertical, F1 shifted: 13.55..13.80; v7 height: 0.80..3.40 (was 0.80..3.80, height 3.00→2.60); v5 metallic gradient + left highlight opacity 0.50) + hatching 6 lines (v7 reduced from 7) to x=13.95 + 3-bar ground at x_center=13.675 + 'electrode' label (13.675,3.45) (v7 y 3.85→3.45). **Role**: Coulomb 척력의 target; grounded = reference potential (mutual induction 배제, 순수 Coulomb); metallic gradient = material identity (polymer organic vs metal inorganic)
-- **G-3** polymer strip (v7: y-scaled 0.78 anchored at tip y=1.25 → L 2.75→2.15, root (12.25,3.40)/(12.00,3.40), tip (11.65,1.25)/(11.40,1.25); bezier ctrls (12.25/12.00, 2.62) and (12.05/11.80, 1.84); v5.1 gradient cAmber!22→cAmber!42 per §9; outline cAmber!80!black 0.70pt rounded 0.3mm) curved away from electrode; v5.1 internal: 2 chain hints (cAmber!65!black 0.30pt opacity 0.38; v7 y-scaled to (12.075/12.175, 3.33..1.31)). **Role**: bend LEFT = Coulomb REPULSION (같은 부호 척력) per §8.5; chain hints = poly material identity (Panel C-L thin film과 visual binding); cantilever 형태 = micro→macro 다리. **Quantitative model (Q15, planning/session_260427)**: F_clip = Q_clip × E_active (floating-clip protocol, Phase A grounded poling으로 Q_clip lock); Fig 1 G는 qualitative — 정량 model은 paper Fig 5 + SI Methods S0 (Coulomb-Maxwell framework)
-- **G-4** 3 q_tr markers (v7 y-scaled: (12.10,2.93)/(11.95,2.23)/(11.75,1.52)). v8: $\ominus$ → ● filled red dot (carrier-neutral; q_tr label이 charge semantic 담당). **Role**: ensemble representation — 3 = "sufficient to illustrate"; 절대 count 아님; cRed = C/F deep red과 color-bind (deep trap이 macro bending 야기); ● polarity-neutral per §8.1
-- **G-5** q_tr leader (12.22,2.93)→(12.35,2.93) + '$q_{tr}$' label white fill cRed!70. **Role**: trapped charge entity 명명; white fill = wash 위에서 가독성 확보 (다른 cAmber!8 punch와 달리 white로 강조)
-- **G-6** Coulomb repulsion arrow (cRed!80 Stealth 0.7pt; v7 y 2.20→1.99: (11.95,1.99)→(11.10,1.99)) + 'Coulomb' (11.10,2.04) anchor=south east / 'repulsion' (11.10,1.94) anchor=north east 2-line stacked (**v8.2 polish**: anchor 변경 + y 2.09/1.91 → 2.04/1.94 — anchor=east 시 두 라벨 bbox가 arrow line at y=1.99 둘 다 가로질러 IoU=0.157 충돌; SE/NE anchor flip로 arrow가 라벨 사이를 지나게 분리). **Role**: G 가장 강한 visual claim — force vector + bold red text가 panel narrative ("거시적 발현")의 anchor; briefing §8.5 LOCKED: Maxwell attraction 화살표 금지, Coulomb-only
-- **G-7** air gap dimension (F1: 0.575→1.425cm, ↔ arrow 12.125→13.55 at y=0.85, unchanged in v7) + 'air gap' inline label (12.84,0.85) anchor=center fill=cAmber!8; 'undeflected' dashed line (v7: 12.125,3.40→12.125,1.20) + label (12.15,2.30) (v7: y 2.70→2.30); Δx dim (11.525,1.10)→(12.125,1.10) unchanged. **Role**: 3개 dimension이 macro 기하 communicating — air gap (clearance, 31° swing buffer 의도) / Δx (실제 displacement) / undeflected (reference 기준선). Three-dimension idiom이 cantilever physics를 quantitative-feeling 없이 cartoon-grade로 전달
+- **F-1** column-frame: bbox anchor at top center `(11.70, 4.25)`. 3-spoke 3rd endpoint lands here.
+- **F-2** apparatus zone — power-supply + neutral fixture mini-scene at column-top, ~1.40cm wide × ~0.90cm tall, centered around `(11.70, 3.55)`. Elements: (a) PSU box `cGray!75!black` 0.30pt outline, ~0.40cm × 0.40cm, labeled "V" or with small pulse trace on display, around `(10.65, 3.55)`. (b) 2 thin leads (0.25pt) from PSU box: one to clip-mount (top of neutral fixture), one to electrode (RIGHT side). Polarity: lower lead = "−" sign indicating V=-V₀ applied to electrode. (c) Neutral cantilever fixture (compressed reproduction of result-zone geometry, but UNDEFLECTED — straight vertical polymer): clip block 0.10cm × 0.04cm at apparatus-zone top, polymer rectangle ~0.04cm × 0.30cm hanging straight down, electrode block 0.04cm × 0.30cm at right. Polymer color = `cAmber!18` (pale, low saturation) opacity 0.6 — "neutral, no trapped charges yet." **Role**: apparatus zone hero — establishes the *setup at rest* with power supply + neutral fixture + applied bias (no charges yet, no bend).
+- **F-3** Maxwell attraction baseline arrow (cRed!35!white dashed, 0.35pt, Stealth tip length 3pt, polymer→electrode direction inside apparatus-zone neutral fixture) + 'F_Maxwell' label italic 5.5pt cGray!70 + parenthetical 'image/induced attraction (baseline)' below. **Role**: baseline attractive force present *regardless of charges* (Maxwell stress / dielectric polarization). Light pink + dashed signals "weaker / baseline / not the winner." Per §8.5 v8.6 amendment: Maxwell ALLOWED in apparatus zone, FORBIDDEN in result zone.
+- **F-4** result-zone clip + mount: clip rectangle `(11.55, 2.45)` rectangle `(11.90, 2.55)` cGray gradient + stub down + mount hatch above. **Role**: 'fixed support' icon at result-zone top.
+- **F-5** result-zone polymer cantilever (bent LEFT, AWAY from electrode = Coulomb REPULSION per §8.5): root `(11.625, 2.45)`, tip `(11.20, 0.85)`, bend shape ~0.35cm Δx; cAmber!22→cAmber!42 gradient per §9; outline cAmber!80!black 0.55pt rounded 0.3mm. Internal: 2 thin chain hints (cAmber!65!black 0.25pt opacity 0.38). Compressed from pre-v8.6 L=2.15cm to L≈1.60cm to fit result-zone bbox.
+- **F-6** 3 q_tr ● markers (cRed!75!black fill, cRed!85!black border, ~1.4mm diameter, 0.40pt outline) at positions tracking the bent cantilever interior. Plus q_tr leader from polymer right edge to fill=white label `$q_{tr}$` italic 6.5pt cRed!70 to the RIGHT of polymer.
+- **F-7** Coulomb repulsion arrow (cRed!80!black Stealth-tipped, line width 0.7pt) from polymer tip area to LEFT (away from electrode) + 2-line label stack `Coulomb` (bfseries 7pt) + `repulsion` (mute 6.5pt) cRed!75!black, anchored to keep arrow line BETWEEN labels (v8.2 SE/NE anchor pattern carried over). **Role**: G's hero claim — force vector + bold red text. Maxwell-vs-Coulomb contrast: this arrow is bold/solid (cRed!80 0.7pt) vs apparatus-zone Maxwell (light pink dashed 0.35pt). Color tier asymmetry = Coulomb WINS.
+- **F-8** result-zone electrode + air gap: electrode RIGHT vertical block `(13.55, 0.30)` rectangle `(13.80, 2.50)` cGray metallic gradient + hatching 4-5 lines + 3-bar ground at base + 'electrode' label above. Air-gap dimension arrow `(11.55, 0.50)` ↔ `(13.55, 0.50)` cGray 0.32pt + 'air gap' inline label cAmber!8 fill. **Role**: completes the macro-probe scene; clearance + reference potential. **Removed from pre-v8.6 G-7**: undeflected dashed line + Δx dimension + (grounded) parenthetical — already dropped in v8.5 G simplification, NOT reintroduced.
 
 ### §13.9 Cross-panel bindings (semantic + visual echo mechanisms)
 
@@ -703,12 +742,28 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 
 ### §13.10 Totals + active iteration map
 
-**Total sub-regions**: 56 (A:8 + B:4 [v8.4 +B-4 sample boundary] + C:11 + Row2:10 [v7 split, was 3] + D:6 [v8.4 +D-6 kinetic icon] + E:5 [v8.4 +E-5 shared ISPD icon] + F:5 [F-6 = same shared icon as E-5; counted under E to avoid double-count] + G:7).
+**Total sub-regions (v8.6 restructure)**: 58 (A:8 + B:4 + C:12 [+C-L6 v8.5 thickness anchor] + Row2:10 + Column D:7 + Column E:10 + Column F:8 - 1 [pre-v8.6 redundancy collapse]). Pre-v8.6 totals: 57 (4-panel: D:6 + E:5 + F:5 [shared] + G:7 = 22). Post-v8.6 Row2 column totals: 7+10+8 = 25 (+3 from sub-region split into apparatus zone elements).
 
-**Active iteration target** (post-v7, 2026-05-16):
-- (none — all panels at stable point after v5/v5.1/v6/v6.1/v7 closure)
+**Active iteration target (v8.6, 2026-05-16):**
+- Compile + visual review of 3-column Row 2 in progress
+- Potential refinement: apparatus zone glyph readability, spoke endpoint visual alignment, V_s ↔ g(E_t) internal arrow polish, Maxwell-vs-Coulomb color tier discrimination check
 
-**Recently iterated (v5–v8.4, 2026-05-15..16)**:
+**Recently iterated (v5–v8.6, 2026-05-15..16):**
+- v8.6 (Row 2 Option α restructure — 4 panels → 3 columns with apparatus + result zones):
+  - §6 RESTRUCTURED panel-role table: D/E/F/G (4 panels) → Column D/E/F (3 columns, each apparatus+result)
+  - §8.5 AMENDED Maxwell rule: ALLOWED in Column F apparatus zone (baseline cue), FORBIDDEN in result zone (Coulomb-only novelty preserved). Maxwell-vs-Coulomb color tier convention LOCKED.
+  - §3.3 ARCHIVED size-hierarchy gate (asymmetry dissolved structurally by 3-column restructure)
+  - §13.4 spoke endpoints + modality label positions updated to 3-column centers (2.28, 6.975, 11.70)
+  - §13.5-§13.7 REWRITTEN: 21 sub-regions (pre-v8.6 D:6 + E:5 + F:5 + G:7) → 25 sub-regions (Column D:7 + Column E:10 + Column F:8). Apparatus zone sub-regions added (D-2 kinetic icon full-scale, E-2 ISPD icon full-scale, F-2 PSU + neutral fixture, F-3 Maxwell baseline).
+  - v8.4 mini-icons SUPERSEDED — full-scale apparatus zones replace ≤0.5cm peripheral icons.
+  - Total sub-regions 57 → 58 (Column-F apparatus zone splits PSU/Maxwell into 2 sub-regions; redundancy collapse via column-frame unification).
+- v8.5 (Row 2 hierarchy rebalance + briefing 4 new sections):
+  - §3.3 NEW Row 2 size hierarchy verification gate (now archived by v8.6 §6 restructure)
+  - §15 NEW Export-time specs
+  - §17 NEW Dashed-line semantics consolidation
+  - §18 NEW Cross-figure consistency
+  - C-L6 NEW thickness anchor + Panel G simplification (undeflected / Δx / "(grounded)" removed)
+- v8.4 (Row 2 register asymmetry attempt with mini-icons — SUPERSEDED by v8.6):
 - v8.4 (Row 2 register asymmetry closure + Panel B sample-boundary clarity):
   - §3.2 NEW Setup-context rule (≤ 0.5cm mini-icons, mono cGray, ≤ 0.30pt, peripheral-vision read)
   - D-6 NEW kinetic-measurement setup icon (current source + sample slab) at (3.05, 3.30)

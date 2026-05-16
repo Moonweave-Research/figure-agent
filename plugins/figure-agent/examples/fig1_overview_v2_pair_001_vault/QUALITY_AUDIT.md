@@ -1,8 +1,15 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
-**Date:** 2026-05-16 (last updated post-v8.3, 16:30+09:00)
+**Date:** 2026-05-16 (last updated post-v8.6 Row 2 restructure)
 **Decision:** accepted: false
 **submission-safe:** false
+
+**v8.6 status note:** Row 2 was restructured from 4 panels (D/E/F/G) to 3
+columns (D/E/F = kinetic / ISPD-paired / mechanical) per briefing §6 + §13.5-§13.7
+re-mapping. Apparatus + result zone vertical stacking added per §3.2. Maxwell
+attraction arrow ADDED to Column F apparatus zone per §8.5 amendment (was
+forbidden pre-v8.6). All audit gates below are re-stale until fresh /fig_critique
++ human visual crop review completes for v8.6.
 
 ## Build Evidence
 
