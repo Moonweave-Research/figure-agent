@@ -532,20 +532,61 @@
 
 % =============== Column D — Kinetic =================
 
-% D-2 apparatus zone: current-source ⊙ + 2 leads + thin-film slab
-% Centered around (2.28, 3.55). Mono cGray!75!black 0.30pt per §3.2.
-\fill[cAmber!20] (1.83, 3.30) rectangle (2.73, 3.42);
+% D-2 apparatus zone (v8.7): SMU box + MIM sample stack + ground
+% (Generic instrument synthesis per briefing §13.5 D-2; Wang Nat Commun
+%  2022 Fig 1e equivalent-circuit framing partial-mined.)
+% SMU box (LEFT, source-meter unit with dual V/A function)
 \draw[cGray!75!black, line width=0.30pt]
-  (1.83, 3.30) rectangle (2.73, 3.42);
-% Current source circle + internal arrow
-\draw[cGray!75!black, line width=0.30pt] (2.28, 3.85) circle (0.13);
-\draw[-{Stealth[length=2pt,width=1.5pt]}, cGray!75!black, line width=0.20pt]
-  (2.28, 3.93) -- (2.28, 3.77);
-% 2 leads from source to slab (T-junctions)
-\draw[cGray!75!black, line width=0.25pt] (2.05, 3.85) -- (2.05, 3.42);
-\draw[cGray!75!black, line width=0.25pt] (2.51, 3.85) -- (2.51, 3.42);
-\draw[cGray!75!black, line width=0.25pt] (2.05, 3.85) -- (2.15, 3.85);
-\draw[cGray!75!black, line width=0.25pt] (2.41, 3.85) -- (2.51, 3.85);
+  (0.55, 3.10) rectangle (1.55, 3.95);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
+  at (0.80, 3.78) {V};
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
+  at (0.80, 3.27) {A};
+% "SMU" label inside box
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
+  at (1.20, 3.52) {SMU};
+% Tiny indicator (digital-readout cue)
+\draw[cGray!60!black, line width=0.18pt]
+  (1.05, 3.45) -- (1.40, 3.45) -- (1.40, 3.60) -- (1.05, 3.60) -- cycle;
+
+% MIM sample stack (CENTER): top electrode + polymer + bottom electrode
+% Top electrode (cross-hatched gray rectangle)
+\fill[cGray!35!white] (1.95, 3.78) rectangle (3.15, 3.86);
+\draw[cGray!75!black, line width=0.30pt]
+  (1.95, 3.78) rectangle (3.15, 3.86);
+% Top-electrode hatching (single-direction subtle)
+\foreach \hx in {2.00, 2.10, 2.20, 2.30, 2.40, 2.50, 2.60, 2.70, 2.80, 2.90, 3.00, 3.10} {
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.86) -- ({\hx-0.03}, 3.79);
+}
+% Polymer film (cAmber filled)
+\fill[cAmber!28] (1.95, 3.48) rectangle (3.15, 3.78);
+\draw[cAmber!70!black, line width=0.30pt]
+  (1.95, 3.48) rectangle (3.15, 3.78);
+% Bottom electrode (hatched)
+\fill[cGray!35!white] (1.95, 3.40) rectangle (3.15, 3.48);
+\draw[cGray!75!black, line width=0.30pt]
+  (1.95, 3.40) rectangle (3.15, 3.48);
+\foreach \hx in {2.00, 2.10, 2.20, 2.30, 2.40, 2.50, 2.60, 2.70, 2.80, 2.90, 3.00, 3.10} {
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.48) -- ({\hx-0.03}, 3.41);
+}
+
+% 2 leads from SMU box to MIM stack
+% Top lead: SMU top right → MIM top electrode left
+\draw[cGray!75!black, line width=0.28pt]
+  (1.55, 3.82) -- (1.75, 3.82) -- (1.75, 3.82) -- (1.95, 3.82);
+% Bottom lead: SMU bottom right → MIM bottom electrode left
+\draw[cGray!75!black, line width=0.28pt]
+  (1.55, 3.44) -- (1.75, 3.44) -- (1.75, 3.44) -- (1.95, 3.44);
+
+% Ground symbol at bottom electrode RIGHT side
+\draw[cGray!75!black, line width=0.28pt] (3.15, 3.44) -- (3.30, 3.44) -- (3.30, 3.30);
+\draw[cGray!75!black, line width=0.30pt] (3.22, 3.30) -- (3.38, 3.30);
+\draw[cGray!75!black, line width=0.25pt] (3.25, 3.27) -- (3.35, 3.27);
+\draw[cGray!75!black, line width=0.22pt] (3.27, 3.24) -- (3.33, 3.24);
+
+% Tiny "film" label below sample stack
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cAmber!70!black]
+  at (2.55, 3.32) {film};
 
 % D-3 result zone axes (Stealth tipped, no ticks)
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
@@ -575,20 +616,59 @@
 
 % =============== Column E — ISPD-paired =================
 
-% E-2 apparatus zone: corona ▽ + Kelvin probe ▭ + thin-film slab
-% Centered around (6.975, 3.55).
-\fill[cAmber!20] (6.55, 3.40) rectangle (7.40, 3.50);
+% E-2 apparatus zone (v8.7): He et al Nat Commun 2024 Fig 1c adaptation
+% Layout: corona needle (LEFT, charging) + sample slab (CENTER) + Kelvin probe
+%   (RIGHT, V_s readout) + V_s meter box (FAR-RIGHT). Per briefing §13.6 E-2.
+
+% Sample slab (CENTER) — wider for better readability
+\fill[cAmber!28] (6.30, 3.40) rectangle (7.85, 3.50);
 \draw[cGray!75!black, line width=0.30pt]
-  (6.55, 3.40) rectangle (7.40, 3.50);
-% Corona needle (downward triangle apex pointing to slab top)
+  (6.30, 3.40) rectangle (7.85, 3.50);
+% Sample ground symbol (3-bar at right edge of sample, indicating grounded base)
+\draw[cGray!75!black, line width=0.25pt] (7.85, 3.45) -- (7.95, 3.45) -- (7.95, 3.32);
+\draw[cGray!75!black, line width=0.30pt] (7.88, 3.32) -- (8.02, 3.32);
+\draw[cGray!75!black, line width=0.25pt] (7.90, 3.29) -- (8.00, 3.29);
+\draw[cGray!75!black, line width=0.22pt] (7.92, 3.26) -- (7.98, 3.26);
+
+% Corona needle (LEFT, charging step)
+% Thin vertical needle with sharp apex pointing down to sample LEFT half
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.95) -- (6.55, 3.65);
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.65) -- (6.52, 3.55);
+\draw[cGray!75!black, line width=0.30pt] (6.55, 3.65) -- (6.58, 3.55);
+% "+" polarity cue near needle apex (corona discharge)
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!85!black]
+  at (6.40, 3.60) {$+$};
+% "Corona" label above needle
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      anchor=south] at (6.55, 3.96) {Corona};
+
+% Kelvin probe (RIGHT, V_s readout)
+% Small horizontal rectangle hovering above sample RIGHT half
+\fill[cGray!35!white] (7.25, 3.62) rectangle (7.55, 3.72);
 \draw[cGray!75!black, line width=0.30pt]
-  (6.65, 3.85) -- (6.85, 3.85) -- (6.75, 3.65) -- cycle;
-% Kelvin probe (small rectangle hovering above slab right half)
-\draw[cGray!75!black, line width=0.30pt]
-  (7.05, 3.65) rectangle (7.28, 3.75);
-% Probe support stem
+  (7.25, 3.62) rectangle (7.55, 3.72);
+% Probe support stem (thin vertical line to instrument box above)
 \draw[cGray!75!black, line width=0.22pt]
-  (7.165, 3.75) -- (7.165, 3.88);
+  (7.40, 3.72) -- (7.40, 3.85);
+% "Probe" label
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      anchor=west] at (7.58, 3.67) {Probe};
+
+% V_s meter box (FAR-RIGHT, electrostatic meter)
+\draw[cGray!75!black, line width=0.30pt]
+  (8.20, 3.70) rectangle (8.95, 4.00);
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
+  at (8.575, 3.85) {$V_s$ meter};
+% Mini-readout indicator inside meter box (small numeric display cue)
+\draw[cGray!60!black, line width=0.15pt]
+  (8.30, 3.75) -- (8.85, 3.75);
+% Lead from probe support to meter box LEFT side
+\draw[cGray!75!black, line width=0.22pt]
+  (7.40, 3.85) -- (8.20, 3.85);
+
+% "Sample" label below slab (subtle)
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cAmber!70!black]
+  at (7.075, 3.32) {sample};
 
 % E-3 V_s sub-zone axes
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
@@ -667,19 +747,32 @@
   (9.92, 3.60) -- (10.02, 3.60) -- (10.02, 3.72)
               -- (10.15, 3.72) -- (10.15, 3.60) -- (10.35, 3.60);
 % Neutral fixture (RIGHT 2/3 of zone, enlarged for readability)
-% Neutral clip block at top
+% Neutral clip block at top (Conrad 2016 mount-spacer stipple convention)
 \fill[cGray!50!white] (12.25, 4.10) rectangle (12.65, 4.20);
 \draw[cGray!75!black, line width=0.30pt]
   (12.25, 4.10) rectangle (12.65, 4.20);
+% Mount-spacer stipple pattern above clip (Conrad 2016 convention — small triangles
+% indicating fixed support)
+\foreach \sx in {12.30, 12.40, 12.50, 12.60} {
+  \draw[cGray!60!black, line width=0.18pt]
+    ({\sx-0.025}, 4.20) -- (\sx, 4.25) -- ({\sx+0.025}, 4.20);
+}
 % Neutral polymer (straight, pale — "before trapping baseline")
 \fill[cAmber!18, opacity=0.6]
   (12.40, 4.10) rectangle (12.50, 2.90);
 \draw[cAmber!70!black, line width=0.32pt, opacity=0.6]
   (12.40, 4.10) rectangle (12.50, 2.90);
-% Neutral electrode (smaller than result-zone electrode)
-\fill[cGray!50!white] (13.30, 2.90) rectangle (13.50, 4.05);
+% Neutral electrode (Conrad 2016 cross-section style: cross-hatched)
+\fill[cGray!35!white] (13.30, 2.90) rectangle (13.50, 4.05);
 \draw[cGray!75!black, line width=0.30pt]
   (13.30, 2.90) rectangle (13.50, 4.05);
+% Cross-hatch pattern (45° + 135° per Conrad convention)
+\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
+  \draw[cGray!60!black, line width=0.15pt] (13.30, \hy) -- (13.40, {\hy+0.08});
+}
+\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
+  \draw[cGray!60!black, line width=0.15pt] (13.40, \hy) -- (13.50, {\hy+0.08});
+}
 % Lead from PSU top to clip (ABOVE fixture top, no polymer crossing)
 \draw[cGray!75!black, line width=0.28pt]
   (10.40, 3.90) -- (10.70, 3.90) -- (10.70, 4.30)
@@ -702,6 +795,9 @@
       anchor=south] at (12.90, 3.55) {$F_{\mathrm{Maxwell}}$};
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!65!black,
       anchor=north] at (12.90, 3.46) {baseline};
+% "air gap" small label in apparatus zone (Conrad 2016 convention — labels the gap)
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!60!black]
+  at (12.92, 3.08) {air gap};
 
 % F-4 result zone clip + mount
 \fill[cGray!50!white] (11.55, 2.42) rectangle (11.95, 2.52);
