@@ -33,9 +33,22 @@ _NEXT_4 = (
 )
 _NEXT_4_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
 _NEXT_4_EXPORT_STALE = "exports are stale or incomplete — re-run /fig_export <name>."
+_NEXT_4_STALE_CRITIQUE_REQUIRED = (
+    "exports are stale — re-run /fig_compile <name>, then /fig_critique <name>,"
+    " then /fig_export <name>."
+)
+_NEXT_4_EXPORT_STALE_CRITIQUE_REQUIRED = (
+    "exports are stale or incomplete — run /fig_critique <name>,"
+    " then /fig_export <name>."
+)
 _NEXT_4_TRACKED_STALE = (
     "tracked golden artifact is intentionally stale;"
     " to roll forward run /fig_export <name> --force-golden."
+)
+_NEXT_4_TRACKED_STALE_CRITIQUE_REQUIRED = (
+    "tracked golden artifact is stale and reference-grounded critique is missing or stale;"
+    " run /fig_compile <name>, then /fig_critique <name>,"
+    " then /fig_export <name> --force-golden."
 )
 _NEXT_4_TRACKED_PARTIAL = (
     "tracked golden exports are incomplete;"
@@ -323,11 +336,16 @@ def infer_stage(example_dir: Path) -> dict:
         is_stale = source_stale or export_content_stale
         if is_stale:
             notes.append("stale_export")
-        # Priority: stale_export > partial_export > critique_required > not_accepted > done.
-        # critique_required sits above not_accepted: you cannot meaningfully accept
-        # a figure whose reference-grounded critique is missing or stale.
-        # partial_export sits above both because incomplete artifacts block manuscript use.
-        if is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
+        # Priority: stale_export / partial_export stay above done, but their
+        # remediation must include critique when run_export.py will enforce it.
+        if is_stale and _critique_needs_action(critique_state):
+            if exports_substate == EXPORT_TRACKED_GOLDEN:
+                next_template = _NEXT_4_TRACKED_STALE_CRITIQUE_REQUIRED
+            elif source_stale:
+                next_template = _NEXT_4_STALE_CRITIQUE_REQUIRED
+            else:
+                next_template = _NEXT_4_EXPORT_STALE_CRITIQUE_REQUIRED
+        elif is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
             next_template = _NEXT_4_TRACKED_STALE
         elif source_stale:
             next_template = _NEXT_4_STALE

@@ -420,6 +420,47 @@ def test_stage_4_stale_export_when_source_newer(tmp_path: Path) -> None:
     assert "done" not in result["next"]
 
 
+def test_stage_4_stale_export_and_stale_critique_keeps_critique_in_next(
+    tmp_path: Path,
+) -> None:
+    name = "stale_export_and_critique"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "critique.md").write_text("old critique", encoding="utf-8")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    for ext in (".pdf", ".svg", ".tif", ".png"):
+        (exports_dir / f"{name}{ext}").write_bytes(b"stub")
+
+    old_time = time.time() - 100
+    middle_time = time.time() - 50
+    fresh_time = time.time() - 5
+    for path in exports_dir.iterdir():
+        os.utime(path, (old_time, old_time))
+    os.utime(fig_dir / "critique.md", (middle_time, middle_time))
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert "stale_export" in result["notes"]
+    assert "critique_stale" in result["notes"]
+    assert "/fig_compile" in result["next"]
+    assert "/fig_critique" in result["next"]
+    assert "/fig_export" in result["next"]
+
+
 def test_stage_4_export_substate_stale_redirects_to_fig_export(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
