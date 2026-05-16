@@ -39,6 +39,9 @@ Layer 2.5: Reference Analysis          (OCR + palette clusters + optional vtrace
 Layer 3: Semantic TikZ Authoring       (<name>.tex + polymer-paper-preamble.sty)
    |
    v
+Layer 3.5: Theory Guard                (authoring/acceptance review; not compile)
+   |
+   v
 Layer 4: Compile Gates                 (compile.sh: lint -> lualatex -> checks)
    |
    v
@@ -197,6 +200,25 @@ open question; see
 §"Out of scope". Per-macro reference docs:
 `docs/macros/bell-curve.md`, `docs/macros/band-diagram.md`,
 `docs/macros/plot-callout.md`.
+
+### Layer 3.5 — Theory Guard
+
+**Files**: optional `examples/<name>/authoring_contract.md`,
+`examples/<name>/reference/reference_pack.md`,
+`examples/<name>/authoring_plan.md`, `examples/<name>/theory_guard.md`.
+
+This layer sits between semantic authoring and compile/export acceptance. It is
+not a lualatex, collision, or visual-clash gate. Its job is to record the
+scientific invariants that the rendered figure must not violate: topology,
+mechanistic causality, color/label semantics, and publication-policy risks that
+compile artifacts cannot prove.
+
+For reference-conditioned pilots, `theory_guard.md` lists BLOCKER and MAJOR
+claims with check methods and evidence. Any BLOCKER failure keeps the figure at
+`accepted: false`. `accepted: true` requires a passing theory guard plus visual,
+export, critique, provenance, and publication-compliance evidence. The theory
+guard may block acceptance, but it does not replace Layer 4 compile gates or
+Layer 6 artifact validation.
 
 ### Layer 4 — Compile Gates
 
