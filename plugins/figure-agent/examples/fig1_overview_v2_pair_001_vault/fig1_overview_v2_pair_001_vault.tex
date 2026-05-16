@@ -234,6 +234,15 @@
         anchor=west, inner sep=2pt]
     at (\xend, {\y + 0.04}) {S$_{\sn}$};
 }
+% B-4 (v8.4 NEW): sample boundary dividers — 3 thin dotted lines between
+% adjacent chain rows so 4 chains read as 4 *distinct samples* (S60/S70/S75/
+% S85), not as a single chain bundle. Per briefing §13.2 B-4 spec: cGray!25,
+% 0.18pt, densely dotted; x extent 3.85..6.30 covers full chain row span;
+% y at midpoints between adjacent chain centers (chain spacing 0.60, midpoints
+% at 7.60 / 7.00 / 6.40).
+\foreach \dy in {7.60, 7.00, 6.40} {
+  \draw[cGray!25, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+}
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
   (3.95, 5.65) -- (6.60, 5.65);
@@ -316,6 +325,18 @@
 % Sheet caption below rectangle
 \node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
       text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
+
+% C-L6 (v8.5 NEW): thin-film thickness anchor per briefing §13.3 C-L6.
+% Short double-headed dimension arrow inside sheet's left interior edge
+% (x=7.42 slightly inside the 7.55 left border so arrow doesn't blend into
+% the border line) spanning the sheet height with a small margin. Rotated
+% 'd ≈ 1 μm' label reads bottom-to-top to fit the 0.50cm gap between
+% panel-C left edge (6.95) and sheet left edge (7.55). Macroscale anchor —
+% "this rectangle is a real micron-thick spin-coat film, not an abstract box."
+\draw[{Stealth[length=2pt,width=1.5pt]}-{Stealth[length=2pt,width=1.5pt]},
+      cGray!65!black, line width=0.28pt] (7.42, 6.28) -- (7.42, 7.62);
+\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!70!black,
+      anchor=south, rotate=90] at (7.36, 6.95) {$d \approx 1\,\mu$m};
 % R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
 % reads through better.
 % v8: ⊖ → ● (carrier-polarity neutral; Q6 lit verification — both electron
@@ -535,6 +556,23 @@
 \node[labelMute, anchor=south, text=cRed!75!black] at (2.12, 2.55) {deep-rich};
 \node[labelMute, anchor=south, text=cBlue!75!black] at (2.52, 1.45) {shallow-rich};
 
+% D-6 (v8.4 NEW): kinetic-measurement setup mini-icon per briefing §3.2 + §13.5.
+% Total bbox ≤ 0.5×0.5cm at top-right corner (3.05, 3.30) anchor centroid.
+% Glyph: current-source circle (small ⊙ with arrow inside, indicating bias I)
+% + 2 thin leads to a sample slab. Monochrome cGray!75!black, ≤0.30pt.
+% Reads at peripheral vision: "apparatus = current source + sample under bias."
+\begin{scope}[shift={(2.85, 2.95)}]
+  % Sample slab (bottom)
+  \draw[cGray!75!black, line width=0.30pt] (0.05, 0.00) rectangle (0.35, 0.06);
+  % Lead from sample top to source bottom
+  \draw[cGray!75!black, line width=0.25pt] (0.20, 0.06) -- (0.20, 0.18);
+  % Source circle (current-source convention: circle with arrow inside)
+  \draw[cGray!75!black, line width=0.30pt] (0.20, 0.27) circle (0.09);
+  % Arrow inside circle (current direction, downward into sample)
+  \draw[-{Stealth[length=2pt,width=1.5pt]}, cGray!75!black, line width=0.20pt]
+    (0.20, 0.33) -- (0.20, 0.21);
+\end{scope}
+
 % M2 Row 2 internal flow: D→E inter-arrow removed (briefing §4: 3-spoke from
 % C carries the Row 2 narrative; horizontal D→E would re-introduce linear
 % chain feel that briefing §8.7 forbids)
@@ -582,6 +620,27 @@
 % Paired ISPD arrow E → F
 \draw[interArrow] (6.95, 2.30) -- (7.05, 2.30);
 \node[labelMute, anchor=south] at (7.00, 2.35) {ISPD};
+
+% E-5 / F-6 (v8.4 NEW): shared ISPD-apparatus setup mini-icon per briefing
+% §3.2 + §13.6/§13.7. Total bbox 0.45×0.30cm, centered around (6.85, 2.80)
+% — sits in the empty zone above the existing ISPD inter-arrow + label and
+% above F's tau_d arrow (y=2.55), in the dead space between E V_s tail
+% (ends low ~y=0.79) and F's vertical axis arrow (at x=7.20). One icon binds
+% E↔F per §6 paired ISPD; reads at peripheral vision: "non-contact
+% surface-potential measurement = corona charge + Kelvin probe over sample."
+\begin{scope}[shift={(6.65, 2.65)}]
+  % Corona needle (downward-pointing triangle, apex at sample top)
+  \draw[cGray!75!black, line width=0.30pt]
+    (0.05, 0.42) -- (0.15, 0.42) -- (0.10, 0.30) -- cycle;
+  % Kelvin probe (small rectangle hovering above sample)
+  \draw[cGray!75!black, line width=0.30pt]
+    (0.25, 0.30) rectangle (0.40, 0.36);
+  % Probe support stem (thin connector to a notional manipulator above)
+  \draw[cGray!75!black, line width=0.20pt] (0.32, 0.36) -- (0.32, 0.42);
+  % Sample slab (horizontal substrate, below corona + Kelvin probe)
+  \draw[cGray!75!black, line width=0.30pt]
+    (0.00, 0.18) rectangle (0.45, 0.24);
+\end{scope}
 
 % ============================================================
 % Panel F — ISPD g(Et) bimodal (HERO #2)
@@ -676,17 +735,17 @@
 \draw[cGray!70!black, line width=0.30pt] (13.61, 0.57) -- (13.74, 0.57);
 \draw[cGray!70!black, line width=0.30pt] (13.64, 0.52) -- (13.71, 0.52);
 \draw[cGray!70!black, line width=0.30pt] (13.66, 0.47) -- (13.69, 0.47);
-% Labels positioned ABOVE + BELOW electrode (v7: 'electrode' y 3.85→3.45)
+% v8.5 G simplification (per user directive 2026-05-16: "G가 메인 피겨가
+%  아니라, evidence 중 하나이므로 너무 안 크게"): dropped '(grounded)'
+%  parenthetical — 3-bar ground symbol carries the convention already.
+%  'electrode' label kept (non-EE reader may not parse hatched bar without it).
 \node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cGray!85!black] at (13.675, 3.45) {electrode};
-\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!65!black] at (13.675, 0.42) {(grounded)};
 
-% --- Undeflected reference dashed line (v7: top y 4.00→3.40) ---
-\draw[cGray!55!black, dashed, line width=0.30pt]
-  (12.125, 3.40) -- (12.125, 1.20);
-\node[labelMute, anchor=west, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!55!black] at (12.15, 2.30) {undeflected};
+% v8.5 G simplification: 'undeflected' dashed reference line + label REMOVED.
+% Cantilever bend direction (LEFT) + Coulomb arrow (LEFT) + electrode (RIGHT)
+% already make the force-direction story unambiguous; the reference line was
+% adding visual weight without narrative gain in the cover-figure register.
 
 % --- Polymer strip (length 2.75, bend Δx=0.60 = 21.5% — figure-research v4) ---
 % v4 (2026-05-15) per figure-research/refs/panel_g_cantilever/candidates.md:
@@ -741,12 +800,11 @@
 \node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cRed!75!black] at (11.10, 1.94) {repulsion};
 
-% --- Δx displacement (just below tip, full Δx=0.60 visible) ---
-% Tip center at y=1.25 = (11.40+11.65)/2 = 11.525
-\draw[<->, cGray!55!black, line width=0.30pt]
-  (11.525, 1.10) -- (12.125, 1.10);
-\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
-      text=cGray!65!black] at (11.825, 1.08) {$\Delta x$};
+% v8.5 G simplification: Δx displacement arrow + label REMOVED. Without the
+% 'undeflected' reference line, Δx loses its anchor; and quantitative
+% displacement read is out of scope for Fig 1 cartoon register (belongs in
+% Fig 5 mechanism scene). Air gap dimension retained — clearance scale is
+% essential for the "macro probe" identity claim.
 
 % --- Air gap dimension (v5: extends to new electrode left, label inline center) ---
 \draw[<->, cGray!55!black, line width=0.32pt]

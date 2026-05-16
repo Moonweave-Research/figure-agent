@@ -63,6 +63,113 @@ P-B (isometric on D/E/F) + P-C (silhouette inset on Row 2 panels)는 **거절** 
 
 ---
 
+## §3.2 Setup-context icons on Row 2 (v8.4 NEW)
+
+**Problem solved**: Pre-v8.4 Row 2 had register asymmetry — G was a full
+isometric mechanical scene (electrode + cantilever + air gap + ground), but
+D/E/F were context-less iconic plots. The "convergent evidence — three
+**independent** probes" caption (Row2-Caption) was carried entirely by text;
+reader had no visual anchor for "3 different apparatus measure same trap."
+
+**Decision**: Add 2 mini setup icons (NOT 3) — Panel D gets a kinetic
+measurement icon, E↔F share one ISPD apparatus icon (per §6 paired ISPD;
+F is derived from E so they share apparatus). G already shows its full
+setup, so no addition.
+
+**Locked constraint set (v8.4):**
+
+- **Size cap**: ≤ 0.5cm × 0.5cm bbox per icon. Hard upper bound. Larger
+  defeats §1 anti-goal "Fig 2/3 in disguise."
+- **Color**: monochromatic — `cGray!75!black` stroke only, NO fill, NO color.
+  Apparatus icons are *referential*, not part of figure-wide color binding.
+- **Line weight**: ≤ 0.30pt (reference tier per §10 3-tier line weight ladder).
+- **Position**:
+  - **D-6** (kinetic icon): inside Panel D bbox, top-right corner near
+    `(3.20, 3.30)` (just under axis-tip `\log I`).
+  - **E↔F shared (E-5/F-6)**: in the **inter-panel gap** between E and F,
+    centered around the existing ISPD inter-arrow location at approximately
+    `(7.05, 2.55)`. Sits above the E-4 ISPD inter-arrow label or inline with
+    it as a glyph extension.
+- **Allowed glyphs** (kept iconic, no realism):
+  - Kinetic D-6: 2 horizontal terminal lines + a circle (current-source
+    symbol `⊙` or simple constant-current schematic) + thin 1-segment lead
+    to a sample slab. NO labels, NO unit, NO ground.
+  - ISPD shared: corona-like needle pointing down + thin sample slab + small
+    Kelvin probe rectangle hovering above. NO labels.
+- **FORBIDDEN**:
+  - Apparatus larger than 0.5×0.5cm (would tilt toward Fig 2/3 register).
+  - Color fill (would compete with shallow/deep blue/red color binding §13.9).
+  - Apparatus labels beyond the existing modality words (kinetic / ISPD /
+    mechanical) on the spokes.
+  - Quantitative annotation (V values, current values, distances).
+  - Light-source gradient on icons (apparatus is purely schematic; gradients
+    are reserved for material-identity cues per §9 light-source convention).
+- **Reading-flow expectation**: setup icons read at the *peripheral vision*
+  level only — reader recognizes "there is an apparatus here" without
+  parsing the apparatus details. If reader has to dwell on icon to read it,
+  icon is too detailed.
+
+**Anti-violations to monitor in next dogfood:**
+
+- Icon overlapping curve / data marker → re-position to corner.
+- Icon read as 5th plot element (curve / marker / label / axis / icon) →
+  reduce stroke weight or move further into corner.
+- Setup icon implying quantitative measurement (e.g., voltmeter reading
+  number) → strip detail.
+
+---
+
+## §3.3 Row 2 size hierarchy verification gate (v8.5 NEW)
+
+**Problem statement**: §5 Hero hierarchy locks "Row 2 = evidence radiation,
+4 panels equal." But G inherits an isometric mechanical scene register (clip
++ polymer + air gap + electrode + ground), which is structurally heavier than
+D/E/F's iconic cartoon plots. Pre-v8.4, G was visually dominant Row 2 element
+— effectively a "second hero" within Row 2 → §5 violation in practice.
+
+**Decision history**:
+- v8.4 attempt: add mini-icons (≤ 0.5cm) to D/E/F per §3.2 to lift the
+  *apparatus visual claim* on the iconic-plot side. Outcome: helped but did
+  not close the gap — G still felt heavier than D/E/F.
+- v8.5 closure (user directive 2026-05-16: *"G가 메인 피겨가 아니라
+  evidence 중 하나이므로 너무 안 크게"*): strip G of decorative elements
+  ('undeflected' reference line, Δx dimension, '(grounded)' parenthetical)
+  to bring G's visual weight down to D/E/F-equivalent. *No size rescale* —
+  G keeps current bbox; only ornament density reduced.
+
+**Locked verification gate (apply at every Row 2 dogfood / critique pass):**
+
+1. **Element count audit**: G should have ≤ 8 distinct visual elements
+   post-v8.5: (1) clip block + mount hatch, (2) polymer cantilever + chain
+   hints, (3) 3 q_tr markers + leader + label, (4) Coulomb arrow + 2-line
+   label, (5) electrode block + hatching + ground symbol + 'electrode' label,
+   (6) air gap dimension + label, (7) shared Row2-BG wash, (8) mechanical
+   spoke entry. Anything beyond this list reopens the §5 violation risk.
+2. **Visual-weight parity check**: when reviewer scans Row 2 in ~3s, no
+   panel should "pop out" first. If G consistently catches eye before
+   D/E/F, hierarchy gate FAILS → escalate by either (a) further G strip,
+   (b) D/E/F mini-icon enlargement to 1.0cm cap, (c) Option D pivot.
+3. **Anti-Option-D rule (LOCKED)**: making G bigger or moving G to "hero"
+   position is FORBIDDEN. G is one of 3 evidence panels per the paper's
+   v9.7 charge-trap-centered framing (NOT actuation showcase). Option D
+   pivot reverses paper narrative.
+4. **Anti-G-removal rule**: G cannot be deleted — the "macroscopic probe"
+   modality is one of the 3 convergent evidence lines (§8.7). Mechanical
+   evidence requires *some* physical-setup visualization (other 2 modalities
+   are derived plots, but mechanical evidence is inherently a setup +
+   observation pair).
+5. **Setup-icon escalation gate**: if §3.2 mini-icons read as "noise" rather
+   than "apparatus" in human dogfood, escalate icon size cap to 1.0cm but
+   keep monochrome + stroke-only constraint to preserve cover-feel.
+
+**Active escalation triggers (reopen this section)**:
+- Reviewer feedback: "G feels like the main result"
+- Reviewer feedback: "D/E/F icons are illegible / look like data markers"
+- Cross-figure check: Fig 5 mechanism schematic redundant with Fig 1 G
+  (if so, simplify Fig 1 G further toward "result-only" iconic register)
+
+---
+
 ## §4. Row 2 branching arrow + label semantics
 
 - **Geometry**: Panel C 하단 single arrow가 Row 2 entry transition zone (above D/E/F/G, between rows)에서 3 spoke로 발산.
@@ -188,9 +295,9 @@ E ↔ F는 *paired ISPD transformation*으로 묶음 — single spoke from C, pa
 
 ---
 
-## §7. Current .tex state vs design target — ALIGNED (post-v8.3 audit closure, 2026-05-16)
+## §7. Current .tex state vs design target — ALIGNED (post-v8.4 Row 2 setup-icons + Panel B dividers, 2026-05-16)
 
-v5/v5.1/v6/v6.1/v7 → v8.2 (IoU polish) → v8.3 (briefing-grounded audit) 거치며 briefing 의도와 `.tex`가 정렬됨. 잔여 deferred item만 active.
+v5/v5.1/v6/v6.1/v7 → v8.2 (IoU polish) → v8.3 (briefing-grounded audit) → v8.4 (Row 2 register asymmetry closure + Panel B sample boundary) 거치며 briefing 의도와 `.tex`가 정렬됨. 잔여 deferred item만 active.
 
 | Layer | Status | Notes |
 |---|---|---|
@@ -319,6 +426,97 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 
 ---
 
+## §15. Export-time specs (v8.5 NEW)
+
+Briefing was previously silent on output specs. This section locks
+journal-submission-grade parameters so `/fig_export` runs are reproducible
+and `accepted: true` claims are verifiable.
+
+**Target journal envelope** (broad: tuneable per actual submission):
+- **Width (single-column)**: 89 mm (Nature family) ↔ 88 mm (Science) ↔ 86 mm
+  (ACS). Use 89 mm as Fig 1 default — fits all 3 families with ≤1 mm crop.
+- **Width (double-column / full-width)**: 178–183 mm. Fig 1 is two-row +
+  7-panel composite — **full-width** is canonical. Current `\resizebox{178mm}`
+  in `.tex` line 21 matches.
+- **Height**: free for cover-style figures; current ~115 mm (514 × 322 pt
+  graphic per /fig_export log) ≈ 113 × 178 mm presentation; well within
+  full-page (~240 mm available).
+- **Font sizes (post-resize at 178 mm)**: panel letters ~9.5 pt, region
+  labels ~8.5 pt, axis labels ~7.5 pt, tick labels ~7 pt, mini-icon labels
+  ~5.5 pt. Anything < 5 pt at final width = FORBIDDEN (illegibility risk
+  in print).
+
+**Raster + vector outputs (all 4 required for submission)**:
+- **PDF** (vector master): `/fig_export` default. Embed all fonts as
+  Type 1 / OpenType (no Type 3 — Nature explicit reject). `lualatex` with
+  the current preamble produces embeddable fonts via `\sffamily` Helvetica
+  family.
+- **SVG** (web / supplementary): `dvisvgm` from PDF → text remains text
+  (NOT outlined paths) so screen readers / search indexing works.
+- **TIFF** (raster master for typesetter): 600 DPI minimum at final width.
+  Current ~34 MB at 178 mm × 600 DPI = correct envelope (Nature: 300–600
+  DPI for line+halftone composites; we sit at upper bound).
+- **PNG** (review proof, NOT submission): 600 DPI rasterization for crop
+  reviewers; submission-grade outputs are PDF + TIFF.
+
+**FORBIDDEN export practices**:
+- Outlined text in SVG (kills accessibility + makes future edits manual)
+- Embedded raster inside PDF (Fig 1 is fully vector; raster embeds =
+  resolution downgrade)
+- Font subsetting that strips italic / bold variants (subscript / equation
+  labels lose typography)
+- Color profile drift: figure uses RGB; CMYK conversion belongs at
+  typesetter stage, not export stage
+
+**Reproducibility gate**: every published figure release commits
+- `examples/<name>/exports/<name>.{pdf,svg,tiff,png}` (current convention)
+- a short `exports/README.md` recording: build SHA, target journal, target
+  width, font embedding mode, color profile. (Currently absent for this
+  fixture — add at v0.x submission release.)
+
+---
+
+## §17. Dashed-line semantics consolidation (v8.5 NEW)
+
+Pre-v8.5: §10 #17 marked this as "active, kept as-is — 4 distinct semantics."
+Per-panel specs (§13.X) each spelled out the meaning in context, but the
+4 semantics were never enumerated in one place. This section consolidates
+the convention so a reviewer can cross-check the dashed-line discipline
+without grepping the briefing.
+
+**Locked dashed-line semantic table:**
+
+| Semantic | Where | Style | Why dashed (not solid) |
+|---|---|---|---|
+| **Reference / contrast** | Panel D Debye dashed curve | `dashed, cGray!70!black, 0.65pt` | "What it would be if Debye held" — counterfactual reference. Solid would suggest measured data. |
+| **Dynamic / transition** | Panel C-R4 escape arrows (shallow + deep → mobility edge), Panel C-R1 mobility edge horizontal line | `dashed, cBlue!70 / cRed!70, 0.35pt` + `dashed, cGray!?, 0.30pt` for edge | Energetic boundary that carriers *cross* — not a structural feature, a probabilistic transition. |
+| **Transformation (reaction)** | Panel A inv. vulc. arrow (S₈ → Ring_c vertex) | `dashed, cAmber!70!black, 0.55pt`, Stealth arrow | Chemical reaction (not a literal bond) — process, not state. |
+| **Binding / leader** | Panel C dashed leaders (C-L ● sites ↔ C-R trap levels) | `densely dashed, cBlue!55 / cRed!55, 0.28pt`, NO arrow | "Same trap, two views" semantic binding — not a physical line, conceptual correspondence. |
+
+**Discrimination rules** (so the 4 don't visually collide):
+- **Color rule**: gray = reference, color (blue/red) = trap-species binding,
+  amber = chemical/material origin. Color tells the reader *which semantic*.
+- **Weight rule**: reference ≥ 0.65pt (most visible), transition ~0.35pt,
+  transformation ~0.55pt, leader ≤ 0.30pt (most subtle).
+- **Arrow tip rule**: transformation + transition use Stealth tips (directed
+  process); reference + leader use no arrow tips (no directionality).
+- **Density rule**: leader uses `densely dashed` (tighter pattern, reads as
+  "this is a thin construction line"); others use plain `dashed`.
+
+**FORBIDDEN dashed-line uses** (would collapse the 4-semantic discipline):
+- Dashed arrow with no tip (looks like a broken solid line — semantic noise)
+- Mixing colors per dashed semantic (e.g., red dashed for reference would
+  collide with deep-trap escape arrow)
+- Dashed line as a panel border (solid border or no border, not dashed)
+- Dashed line for measurement-data uncertainty bands (use light fill, not
+  dashed envelope)
+
+**Future-figure inheritance** (per §18): Fig 2..6 must reuse the same 4
+dashed semantics with the same color + weight rules. New dashed meanings
+require a §17 amendment.
+
+---
+
 ## §13. Sub-region enumeration (iteration unit / dogfood design input)
 
 **Frame**: per `docs/subregion-iteration-tool.md` §7 decision gate ("tool shape must come from observed iteration"), this enumeration lives in `briefing.md` as *text-form design input*, NOT in `spec.yaml` schema (subregions[] field does not exist yet). Each sub-region is an *iteration unit* — the smallest patch granularity for `feedback_element_iteration_workflow.md` 1-line-patch cycles.
@@ -345,6 +543,7 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 - **B-1** 4 zigzag skeletal chains (10/14/18/24 atoms drawn; bond spacing 0.10cm, amplitude 0.08cm, atom r=0.025cm, bond w=0.5pt — R11 delicate). v6: chain row spacing compressed 0.75→0.60 (span 2.25→1.80; chain y = 7.90/7.30/6.70/6.10, center y=7.00). **Role**: **sulfur composition variation (wt%) visual sampling** (Q1 LOCKED: numbers = wt% S, NOT chain atom count); 4 samples (S60..S85) = sufficient monotonic progression; zigzag = sff skeletal chemistry convention; shared `\zigSChain` macro = A↔B chain identity binding (§13.9 cross-row). **Note**: drawn atom count (10/14/18/24)은 **artistic correlate** — longer drawn chain = qualitative "more S" 시각화; literal chain atom count 아님 (briefing §3.1 reader DO/DON'T 참조)
 - **B-2** sample-name endpoint labels at terminal atoms (S₆₀ / S₇₀ / S₇₅ / S₈₅, cAmber!90 6.5pt; full 4-label set). **Role**: **sample names derived from sulfur wt%** (Q1 LOCKED): S60 = 60 wt% S sample, ..., S85 = 85 wt% S sample (per planning/sulfur_sample_selection_policy.md); subscript form은 sample naming convention (NOT atom count subscript). §8.8 LOCKED — S60..S85 composition labels는 B에만 허용 (Row 2 plot은 concept만); right anchor at terminal atom = chain의 "끝" 시각 정렬
 - **B-3** bottom horizontal axis arrow + '**Sulfur content, wt%**' italic label (v8 Q1 fix; was 'Chain length, n'). **Role**: composition variable 명시; arrow = direction (60 wt% → 85 wt%, monotonic 보장); B-2의 sample-name labels (S60..S85)이 이 axis 위에서 wt% progression으로 읽힘
+- **B-4** sample boundary divider lines (v8.4 NEW): 4 chains 사이에 3개의 thin horizontal `cGray!25, line width=0.18pt, densely dotted` divider lines, x extent 동일 (chain row span 0.10..3.10), y at midpoints between adjacent chains. **Role**: 4개 chain row이 *4개 distinct sample* (S60/S70/S75/S85) 임을 시각적으로 명시 — pre-v8.4에서 chain bundle처럼 한 덩어리로 읽히는 risk 차단. divider는 *separation cue* only (NOT data axis), 따라서 dotted + 매우 얕은 cGray로 inter-sample boundary만 표시. **Forbidden**: solid lines (axis tone 침범), color (sample-identity confusion), width > 0.20pt (mechanism-tier 침범)
 
 ### §13.3 Panel C — 11 sub-regions (HERO #1, 5s dwell)
 
@@ -366,6 +565,7 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 - **C-L3** embedded ● trap sites (v8: 2 shallow cBlue + 2 deep cRed filled dots; coordinates siteS1/S2/D1/D2 at chain peaks/junctions). **Role**: trap이 polymer 내부에 *공간 분포* 명시 — NOT spatially segregated (briefing §8.3 LOCKED); shallow + deep mixed in same matrix; chain junction에 위치 = chain defect 시각화. v8 carrier-neutral marker (was ●); §8.1 carrier-polarity note 참조
 - **C-L4** top-edge white highlight (opacity 0.55) + right-edge cAmber shadow (opacity 0.45) — depth cues. **Role**: figure-wide light source anchor — upper-LEFT (briefing §9 LOCKED); 다른 panel(Panel G clip/polymer/electrode) gradient는 이 anchor와 방향 일치 필수
 - **C-L5** 'poly(S-r-DIB) thin film' subtitle below sheet (italic 5.5pt cGray!70). **Role**: bulk material 정체성 명시 (chemistry 명명); A-8 'Sulfur-rich polymer' label과 binding (분자→bulk identity 동일)
+- **C-L6** thin-film thickness anchor (v8.5 NEW): small ↕ double-headed arrow at LEFT edge of polymer sheet (around x=7.45, spanning y=6.20..7.70 = full sheet height) + inline `'$d \approx 1\,\mu$m'` label (anchor=east, italic 5.5pt cGray!70). **Role**: macroscale anchor — pre-v8.5에 sheet는 "thin film"이라 했지만 두께 감각 없이 abstract rectangle로 읽혔음. 작은 dimension 1개로 reader가 "이건 마이크론 두께 실물 필름이다" 인지. **Locked discipline (per §3.2 setup-context rule philosophy)**: arrow ≤ 0.30pt cGray, label 5.5pt italic, NO units other than μm (절대 nm/Å는 chemistry-scale 모호; mm/cm은 too thick → typological mismatch). Value '≈ 1 μm' = generic poly(S-r-DIB) spin-coat range; 정확한 measured thickness는 Methods/SI. Per briefing §17 dashed semantic 분류 외 (이 dimension은 solid arrow). **Forbidden**: ticks on the dimension, multiple thickness labels (only 1 reference value), arrow span > sheet height (overshoots → reads as "polymer extends beyond what's drawn")
 
 **RIGHT half (energy diagram, x=10.50..13.80):**
 - **C-R1** E_C / mobility edge (dashed) / E_V reference horizontal lines + 'Energy' rotated label + vertical axis arrow at x=10.50. **Role**: semiconductor band edge reference; mobility edge (dashed) = "delocalized vs localized" 경계, trap states는 이 아래; E_C / E_V 정량 값 없음 (cartoon register). **Sample regime LOCKED**: poly(S-r-DIB)은 **fully amorphous** (Q7 확인 2026-05-16) → Mott-CFO mobility-edge model 적용이 적절; semi-crystalline / dual-phase 가정 금지
@@ -407,6 +607,7 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 - **D-3** Debye dashed reference curve (v6+v7: cGray!70 0.65pt, steep bezier (0.77,3.35) ctrl→ (2.12,0.55); ends clearly below both power-law tails per §8.4) + thin straight leader (2.08,0.60)→(2.28,0.75) + 'Debye' label white fill. **Role**: "non-Debye tail" 주장의 시각적 anchor — 비교 기준 없으면 power-law 단독으로는 의미 없음. Debye exponential이 long-t에서 빠르게 떨어지고 power-law는 그 위에 있다는 visual proof
 - **D-4** main equation label '$I(t)\sim t^{-n}$' (v7: (0.67,3.55) labelStrong, above axis top). **Role**: panel 진입 즉시 mental model 주입 — reader가 두 선을 "I(t)~t^-n 라는 가족 중 다른 n 값" 으로 읽음
 - **D-5** curve identification labels (v7: 'deep-rich' cRed!75 (2.12,2.55) anchor=south + 'shallow-rich' cBlue!75 (2.52,1.45) anchor=south). **Role**: 각 곡선의 sample 정체 명시 — "sample이 어떤 trap 조성이면 어떤 곡선이 나오는지" 인과 binding
+- **D-6** kinetic-measurement setup mini-icon (v8.4 NEW): inside Panel D top-right corner around `(3.05, 3.30)`, ≤ 0.5×0.5cm bbox, monochrome cGray!75!black 0.30pt stroke. Glyph = current-source symbol (small circle with horizontal arrow inside) + 2 thin lead lines to a 0.30×0.10cm sample slab. **Role**: visualizes "kinetic measurement = current-time response under bias" without quantitative anchoring; reinforces *independent apparatus* claim of Row2-Caption per §3.2 setup-context rule. Reads at peripheral vision only — reader recognizes "apparatus exists" not its details
 
 ### §13.6 Panel E — 4 sub-regions (iconic ISPD-raw cartoon)
 
@@ -416,6 +617,7 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 - **E-2** linear-t stretched-exponential decay curve (cRed!70 0.80pt, 11 waypoints; β≈0.8, V_0=3.20, V_r=0.55, τ≈0.6). v7: x scaled 1.513 anchored at 3.85 → waypoints (3.96,3.20)→(6.73,0.79). **Role**: raw V_s 시간 도메인 measurement; concave-up shape = trap-mediated long tail (β<1); F의 g(E_t)는 이 곡선의 inverse-Laplace 같은 derived 산물. **Parameter values LOCKED arbitrary (Q11 확인)**: β=0.8 / V_0=3.20 / V_r=0.55 / τ≈0.6는 **cartoon illustrative values** (paper 실제 측정값 아님); 정량 fitting result는 Fig 2/3 또는 SI 영역. shape는 stretched-exp identity 유지, 수치는 figure scope 밖.
 - **E-3** 6 ISPD markers (v7 polish #18: fill=cRed!50 — filled convention, was open). v7 marker x's scaled: (4.15,2.54)(4.61,1.79)(5.06,1.37)(5.51,1.11)(5.97,0.95)(6.42,0.84). **Role**: "data point" convention — 곡선은 fit, marker는 실제 측정; 6개 = 충분 density without crowding
 - **E-4** paired ISPD inter-arrow → F + 'ISPD' label (E↔F paired transformation per briefing §6). **Role**: 두 panel을 single spoke (ISPD)로 묶어 reader에게 "같은 measurement 종류" 신호 — V_s raw → g(E_t) derived 변환의 시각적 명명. **Abbreviation expansion responsibility (Q12)**: figure 자체에는 "ISPD" 약어만 (다른 modality 'kinetic' / 'mechanical'은 일상어이므로 ISPD만 약어 status). **figure caption first-use에서 "ISPD (Iso-thermal Surface Potential Decay) measurement" 한 번 expansion 필수** — cover figure / standalone exposure 대비. paper introduction이 별도로 expansion 다뤄도 figure caption 책임 분리 권장 (asymmetric treatment 정당화: familiarity asymmetry).
+- **E-5 / F-6 (shared)** ISPD-apparatus setup mini-icon (v8.4 NEW): centered between E and F panels around `(7.05, 2.55)` (slightly above the existing E-4 ISPD inter-arrow + label), ≤ 0.5×0.5cm bbox, monochrome cGray!75!black 0.30pt stroke. Glyph = small downward-pointing corona needle (triangle apex down) + horizontal thin sample slab + small 2-prong Kelvin probe rectangle hovering above the slab. **Role**: visualizes "non-contact surface-potential measurement apparatus" shared by E (raw V_s) and F (derived g(E_t)) per §6 paired ISPD; one icon for both panels reinforces §6 pairing semantically. Anti-violation: must NOT depict measured potential value, must NOT show electrode rotation — purely typological. Per §3.2 setup-context rule
 
 ### §13.7 Panel F — 5 sub-regions (iconic g(E_t) cartoon)
 
@@ -501,12 +703,18 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 
 ### §13.10 Totals + active iteration map
 
-**Total sub-regions**: 53 (A:8 + B:3 + C:11 + Row2:10 [v7 split, was 3] + D:5 + E:4 + F:5 + G:7).
+**Total sub-regions**: 56 (A:8 + B:4 [v8.4 +B-4 sample boundary] + C:11 + Row2:10 [v7 split, was 3] + D:6 [v8.4 +D-6 kinetic icon] + E:5 [v8.4 +E-5 shared ISPD icon] + F:5 [F-6 = same shared icon as E-5; counted under E to avoid double-count] + G:7).
 
 **Active iteration target** (post-v7, 2026-05-16):
 - (none — all panels at stable point after v5/v5.1/v6/v6.1/v7 closure)
 
-**Recently iterated (v5–v8.3, 2026-05-15..16)**:
+**Recently iterated (v5–v8.4, 2026-05-15..16)**:
+- v8.4 (Row 2 register asymmetry closure + Panel B sample-boundary clarity):
+  - §3.2 NEW Setup-context rule (≤ 0.5cm mini-icons, mono cGray, ≤ 0.30pt, peripheral-vision read)
+  - D-6 NEW kinetic-measurement setup icon (current source + sample slab) at (3.05, 3.30)
+  - E-5 / F-6 NEW shared ISPD-apparatus icon (corona needle + sample + Kelvin probe) at (7.05, 2.55) — single icon binds E↔F per §6 paired ISPD
+  - B-4 NEW sample boundary divider lines (3 thin dotted cGray!25, separates 4 chains as distinct samples vs reading as bundle)
+  - Total sub-regions 53 → 56
 - v8.3 (briefing-grounded audit closure):
   - Gap #1 C-R1b shallow Gaussian σ 0.06 → 0.085 (briefing §13.3 spec)
   - Gap #2 C-R5 ΔE_t arrow + label color cGray!70!black → cRed!75!black (binds depth scalar to deep trap species per §8.6 / §13.9 Binding-1)
@@ -529,4 +737,89 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 - Panel A 전체, Panel C 전체 (C-R borders 1.00pt now per §10 mechanism tier), Row2 cover-binding
 
 **Known iteration-debt items** (remaining):
-- #17 dashed-line semantics (Debye D-3 + escape C-R4 + inv.vulc. A-6 + leaders): kept as-is — distinct semantics, consolidation would lose information
+- #17 dashed-line semantics (Debye D-3 + escape C-R4 + inv.vulc. A-6 + leaders): **CLOSED v8.5** — consolidated into briefing §17 with locked semantic table + discrimination rules + forbidden-use list.
+
+---
+
+## §18. Cross-figure consistency (paper-wide anchors, v8.5 NEW)
+
+Fig 1 is the paper's **identity figure** (cover + graphical-abstract role).
+Its conventions establish the visual grammar that Fig 2..6 must inherit.
+Without an explicit inheritance clause, sister-figure authors silently
+diverge → reader sees "different paper" across panels → narrative coherence
+breaks.
+
+**Locked paper-wide anchors set by Fig 1** (Fig 2..6 SHALL conform):
+
+1. **Color binding** (§8.6 / §13.9 Binding-1, v8.3 strengthened):
+   - Shallow trap species → `cBlue` family (border `cBlue!85!black`, fill
+     `cBlue!18..25`, accent `cBlue!75..80!black`).
+   - Deep trap species → `cRed` family (border `cRed!85!black`, fill
+     `cRed!18..25`, accent `cRed!75..80!black`).
+   - Trapped-charge marker (`q_tr`, `q_clip`) → cRed family (Binding-2 per
+     §13.9 inherits to Fig 5).
+   - Polymer / material identity → `cAmber` family (A/B/C-L sheet/G strip).
+   - Gray / neutral references (axis, dimension, secondary annotation) →
+     `cGray!55..75!black`.
+   - **Forbidden**: re-using cBlue for non-shallow or cRed for non-deep
+     semantic (e.g., Fig 5 mechanism schematic uses cRed for Coulomb arrow
+     — OK because force *causes* deep trap response; cRed for Maxwell
+     attraction would violate).
+
+2. **Typography hierarchy** (§10):
+   - panel-letter `\bfseries 9.5pt` (`labelStrong` family + `panelLetter` style)
+   - region-label `\bfseries 8.5pt`
+   - axis-label `\itshape 7.5pt`
+   - tick-label / sub-annotation `\itshape 7pt` or smaller
+   - mini-icon / setup `\itshape 5.5pt`
+   - **Forbidden**: serif fonts anywhere; Times / Computer Modern in math
+     (use `\sffamily` consistently). Variable symbols italic, units upright,
+     subscript labels (sample names) upright.
+
+3. **Line-weight tiers** (§10 3-tier):
+   - Mechanism / hero (trap level lines, force arrows, primary curves):
+     1.0–1.5pt
+   - Curve / measurement: 0.6–0.8pt
+   - Reference / leader / annotation: 0.2–0.4pt
+   - **Forbidden**: line weights > 1.5pt (cover-feel grain too coarse) or
+     < 0.18pt (print loss).
+
+4. **Arrow tip style** (§10): one tip style throughout the paper = `Stealth`
+   (sized per element: 4pt for inter-panel, 6–8pt for primary force/spoke).
+   - **Forbidden**: latex-tip, harpoon, triangle — mixing tip styles makes
+     "different arrows = different processes" cue noisy.
+
+5. **Dashed-line semantics** (§17): 4 locked semantics (reference / dynamic
+   transition / chemical transformation / binding leader) with color, weight,
+   and density discrimination rules. Sister figures may use only these 4;
+   new dashed meanings require §17 amendment AND amendment must be
+   echoed in Fig 1 (so the figure's grammar shifts together).
+
+6. **Gradient + light source** (§9 LOCKED): upper-left light source for all
+   gradient fills (`top color=lighter, bottom color=darker` or `left color=
+   lighter, right color=darker`). Panel C-L4 anchors the convention.
+
+7. **Setup-icon discipline** (§3.2): ≤ 0.5cm bbox per icon, monochrome
+   cGray!75!black stroke only, ≤ 0.30pt line, peripheral-vision read.
+   Sister figures showing measurement context must follow same size cap.
+
+8. **Composition labels** (§8.8): sample names S60/S70/S75/S85 only in
+   composition-variable panels (Fig 1 Panel B + Fig 4 composition sweep);
+   forbidden on result panels (Fig 1 Row 2 + Fig 2/3 plots = concept labels
+   like "deep-rich" / "shallow-rich" / "low n" only).
+
+**Inheritance protocol**:
+- Each new figure's briefing must include a `§-cross-figure-check` section
+  enumerating which §18 anchors apply + any explicit exceptions with
+  justification.
+- Cross-figure violations are caught at QUALITY_AUDIT stage (new theory
+  guard TG-CFG-002: "Color / typography / line-weight conventions match
+  Fig 1 anchor or have documented exception").
+
+**Out of scope of §18** (paper-author decision, not figure-agent's):
+- Equation rendering (Methods / Discussion text)
+- Citation typography
+- Caption formatting style (handled by §14 caption template — DEFERRED
+  pending separate add)
+- Provenance / AI-image policy statement (handled by §16 — DEFERRED
+  pending separate add)
