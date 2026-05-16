@@ -21,8 +21,12 @@ _NEXT_1 = (
     " (cp styles/tex_template.tex to start), then /fig_compile <name>."
 )
 _NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
-# Stage 3: prefer /fig_export; /fig_critique is the optional vision-review step.
+# Stage 3: prefer /fig_export unless reference grounding makes critique required.
 _NEXT_3 = "run /fig_critique <name> for vision review (optional), then /fig_export <name>."
+_NEXT_3_CRITIQUE_REQUIRED = (
+    "run /fig_critique <name> before /fig_export <name>"
+    " because reference-grounded critique is missing or stale."
+)
 _NEXT_4 = (
     "done — outputs in examples/<name>/exports/."
     " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
@@ -33,6 +37,10 @@ _NEXT_4_TRACKED_STALE = (
     "tracked golden artifact is intentionally stale;"
     " to roll forward run /fig_export <name> --force-golden."
 )
+_NEXT_4_TRACKED_PARTIAL = (
+    "tracked golden exports are incomplete;"
+    " to roll forward missing artifacts run /fig_export <name> --force-golden."
+)
 _NEXT_4_PARTIAL = (
     "exports are incomplete — re-run /fig_export <name> to generate the"
     " missing PDF/SVG/TIFF/PNG artifacts."
@@ -41,9 +49,17 @@ _NEXT_4_NOT_ACCEPTED = (
     "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
     " defects, then set accepted: true in spec.yaml."
 )
+_NEXT_4_CRITIQUE_REQUIRED = (
+    "run /fig_critique <name> before treating exports as final;"
+    " if no edits are needed, existing exports can remain in place."
+)
 _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
+CRITIQUE_NOT_REQUIRED = "NOT_REQUIRED"
+CRITIQUE_MISSING = "MISSING"
+CRITIQUE_STALE = "STALE"
+CRITIQUE_FRESH = "FRESH"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -78,6 +94,66 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
         candidates.append(hints_path)
     candidates.append(STYLE_LOCK_PATH)
     return tuple(path for path in candidates if path.exists())
+
+
+def _panel_reference_paths(example_dir: Path, spec: dict) -> tuple[Path, ...]:
+    paths: list[Path] = []
+    for panel in spec.get("panels", []):
+        if panel.get("bbox_pdf_cm") is None:
+            continue
+        reference = panel.get("reference_image")
+        if not isinstance(reference, str) or not reference.strip():
+            continue
+        ref_path = example_dir / reference.strip()
+        if ref_path.is_file():
+            paths.append(ref_path)
+    return tuple(paths)
+
+
+def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
+    paths = list(_source_paths(example_dir, name, spec))
+    paths.extend(_panel_reference_paths(example_dir, spec))
+    return tuple(dict.fromkeys(paths))
+
+
+def compute_critique_state(example_dir: Path, name: str, spec: dict | None = None) -> str:
+    """Return NOT_REQUIRED/MISSING/STALE/FRESH for reference-grounded critique."""
+    spec_path = example_dir / "spec.yaml"
+    if spec is None:
+        if not spec_path.exists():
+            return CRITIQUE_NOT_REQUIRED
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+
+    has_figure_reference = False
+    reference_image = spec.get("reference_image") if spec else None
+    if isinstance(reference_image, str) and reference_image.strip():
+        has_figure_reference = (example_dir / reference_image.strip()).is_file()
+    has_panel_reference = bool(_panel_reference_paths(example_dir, spec))
+    if not has_figure_reference and not has_panel_reference:
+        return CRITIQUE_NOT_REQUIRED
+
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return CRITIQUE_MISSING
+    if _is_stale(_critique_source_paths(example_dir, name, spec), (critique_path,)):
+        return CRITIQUE_STALE
+    return CRITIQUE_FRESH
+
+
+def _critique_needs_action(state: str) -> bool:
+    return state in {CRITIQUE_MISSING, CRITIQUE_STALE}
+
+
+def _append_critique_check(
+    checks: list[tuple[str, str]], notes: list[str], critique_state: str
+) -> None:
+    if critique_state == CRITIQUE_NOT_REQUIRED:
+        return
+    checks.append(("critique", critique_state.lower()))
+    if critique_state == CRITIQUE_MISSING:
+        notes.append("critique_missing")
+    elif critique_state == CRITIQUE_STALE:
+        notes.append("critique_stale")
 
 
 def _is_stale(sources: tuple[Path, ...], targets: tuple[Path, ...]) -> bool:
@@ -167,6 +243,18 @@ def _append_reference_image_check(
         notes.append("coordinate_hints_outdated")
 
 
+def _append_panel_reference_checks(notes: list[str], spec: dict, example_dir: Path) -> None:
+    for panel in spec.get("panels", []):
+        if panel.get("bbox_pdf_cm") is None:
+            continue
+        reference = panel.get("reference_image")
+        if not isinstance(reference, str) or not reference.strip():
+            continue
+        if not (example_dir / reference.strip()).is_file():
+            notes.append("panel_reference_image_missing")
+            return  # one note is enough; caller can see spec.yaml for details
+
+
 def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
@@ -204,8 +292,10 @@ def infer_stage(example_dir: Path) -> dict:
 
     accepted = _resolve_accepted(spec)
     sources = _source_paths(example_dir, name, spec)
+    critique_state = compute_critique_state(example_dir, name, spec)
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
+    _append_panel_reference_checks(notes, spec, example_dir)
 
     if spec_path.exists() and not briefing_path.exists():
         checks.append(("spec_yaml", "present"))
@@ -223,6 +313,7 @@ def infer_stage(example_dir: Path) -> dict:
     # Stage 4: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
         checks.append(("exports", "present"))
+        _append_critique_check(checks, notes, critique_state)
         partial = not _all_four_exports_present(exports_dir, name)
         if partial:
             notes.append("partial_export")
@@ -232,17 +323,22 @@ def infer_stage(example_dir: Path) -> dict:
         is_stale = source_stale or export_content_stale
         if is_stale:
             notes.append("stale_export")
-        # Priority: stale_export > partial_export > not_accepted > done.
-        # partial_export sits above not-accepted because incomplete artifacts
-        # block both manuscript use and the golden contract gate.
+        # Priority: stale_export > partial_export > critique_required > not_accepted > done.
+        # critique_required sits above not_accepted: you cannot meaningfully accept
+        # a figure whose reference-grounded critique is missing or stale.
+        # partial_export sits above both because incomplete artifacts block manuscript use.
         if is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
             next_template = _NEXT_4_TRACKED_STALE
         elif source_stale:
             next_template = _NEXT_4_STALE
         elif export_content_stale:
             next_template = _NEXT_4_EXPORT_STALE
+        elif partial and exports_substate == EXPORT_TRACKED_GOLDEN:
+            next_template = _NEXT_4_TRACKED_PARTIAL
         elif partial:
             next_template = _NEXT_4_PARTIAL
+        elif _critique_needs_action(critique_state):
+            next_template = _NEXT_4_CRITIQUE_REQUIRED
         elif accepted is False:
             next_template = _NEXT_4_NOT_ACCEPTED
         else:
@@ -260,11 +356,15 @@ def infer_stage(example_dir: Path) -> dict:
     # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
+        _append_critique_check(checks, notes, critique_state)
+        next_template = (
+            _NEXT_3_CRITIQUE_REQUIRED if _critique_needs_action(critique_state) else _NEXT_3
+        )
         return {
             "stage": 3,
             "name": name,
             "checks": checks,
-            "next": _NEXT_3.replace("<name>", name),
+            "next": next_template.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,

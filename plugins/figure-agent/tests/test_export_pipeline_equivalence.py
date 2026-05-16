@@ -58,7 +58,7 @@ def test_layer_b_equivalence_smoke(fixture_dir: Path, spec: dict) -> None:
         capture_output=True,
     )
     subprocess.run(
-        ["uv", "run", "python", "scripts/run_export.py", name],
+        ["uv", "run", "python", "scripts/run_export.py", name, "--skip-critique"],
         cwd=REPO_ROOT,
         check=True,
         capture_output=True,

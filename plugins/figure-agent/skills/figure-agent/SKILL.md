@@ -52,6 +52,7 @@ briefing, optional reference image, and optional coordinate hints.
 /fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
+/fig_critique <name>     required before export when usable reference grounding exists
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
 ```
@@ -85,6 +86,11 @@ authoring or drift review.
                              writes structured critique.md (YAML + Markdown).
                              Report-only; subscription tokens, zero external API.
 ```
+
+When a usable figure-level reference image or panel reference+bbox pair exists,
+`/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
+pre-export checkpoint. Use `scripts/run_export.py <name> --skip-critique` only
+for intentional draft exports.
 
 Replaces the v0.1 HALT-then-paste review surface via rename + extend
 (`scripts/review_brief.py` → `scripts/critique_brief.py`,

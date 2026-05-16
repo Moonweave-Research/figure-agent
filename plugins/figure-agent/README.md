@@ -11,6 +11,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 - **One folder per figure** with a fixed structure — never lose track of which source matches which output.
 - **Style Lock** — palette, fonts, line weights stay consistent across every figure in a manuscript.
 - **Build + visual QA** in one command — compile errors, label collisions, and clash warnings all in one report.
+- **Reference analysis** — `reference PNG -> OCR + palette clusters + optional vtracer structural hints`, then `coordinate_hints.yaml -> semantic TikZ authoring`. SVG-to-TikZ path conversion is not the active workflow.
 - **Vision critique without API costs** — the host Claude Code reads your compiled figure and writes feedback. Subscription tokens only; no external API keys, no per-figure inference bill.
 - **Export to PDF / SVG / TIFF / PNG** with text staying as text (SVG preserves editable labels).
 
@@ -27,7 +28,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 
 ```
 /fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
-/fig_extract  (optional) Read a reference PNG → labels, palette, layout hints
+/fig_extract  (optional) reference PNG -> OCR + palette clusters + optional vtracer structural hints
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
 /fig_critique Have host Claude read the build PNG and write critique.md
 /fig_export   Export final PDF / SVG / TIFF / PNG
@@ -46,6 +47,8 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 
 # 3. You (or an LLM) write examples/fig3_trap_concept/fig3_trap_concept.tex
 #    using briefing.md intent + reference + coordinate_hints.yaml.
+#    Contract: coordinate_hints.yaml -> semantic TikZ authoring.
+#    SVG-to-TikZ path conversion is not the active workflow.
 
 # 4. Compile. This runs Style Lock + builds PDF + PNG + collision/clash checks.
 /fig_compile fig3_trap_concept

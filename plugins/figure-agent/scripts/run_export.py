@@ -6,7 +6,7 @@ Reads exports/ sub-state for `<name>` and dispatches:
   FRESH            -> no-op
   TRACKED_GOLDEN   -> skip with warning. --force-golden overrides.
 
-Usage: uv run python scripts/run_export.py <name> [--force-golden]
+Usage: uv run python scripts/run_export.py <name> [--force-golden] [--skip-critique]
 """
 
 from __future__ import annotations
@@ -23,6 +23,11 @@ from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
     EXPORT_TRACKED_GOLDEN,
     compute_export_state,
+)
+from status import (  # noqa: E402
+    CRITIQUE_MISSING,
+    CRITIQUE_STALE,
+    compute_critique_state,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -61,12 +66,32 @@ def main() -> int:
     parser.add_argument(
         "--force-golden", action="store_true", help="override TRACKED_GOLDEN protection"
     )
+    parser.add_argument(
+        "--skip-critique",
+        action="store_true",
+        help="export even when reference-grounded critique is missing or stale",
+    )
     args = parser.parse_args()
 
     example_dir = REPO_ROOT / "examples" / args.name
     if not example_dir.is_dir():
         print(f"run_export.py: examples/{args.name}/ not found", file=sys.stderr)
         return 1
+
+    if not args.skip_critique:
+        try:
+            critique_state = compute_critique_state(example_dir, args.name)
+        except ValueError as exc:
+            print(f"run_export.py: invalid spec.yaml: {exc}", file=sys.stderr)
+            return 1
+        if critique_state in {CRITIQUE_MISSING, CRITIQUE_STALE}:
+            note = "critique_missing" if critique_state == CRITIQUE_MISSING else "critique_stale"
+            print(
+                f"run_export.py: {note} for {args.name}; run /fig_critique {args.name} "
+                "before /fig_export, or pass --skip-critique to override.",
+                file=sys.stderr,
+            )
+            return 1
 
     state = compute_export_state(example_dir, args.name)
 

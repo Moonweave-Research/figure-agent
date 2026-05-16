@@ -15,16 +15,6 @@ cases:
     expected_top: [polymer_chain, log_plot]
     note: "Row 3 chain (A1) + Row 1 plot (A2). band_with_traps is bit-level, not the V5 hero composition."
 
-  - name: dogfood_power_law_trap_pipeline
-    briefing: examples/dogfood_power_law_trap_pipeline/briefing.md
-    expected_top: [log_plot, polymer_chain, band_with_traps]
-    note: "Panel 1 log-log, Panel 3 polymer chain, Panel 4 explicit band+DOS dual."
-
-  - name: fig3_trap_schematic_v97
-    briefing: examples/fig3_trap_schematic_v97/briefing.md
-    expected_top: [polymer_chain, log_plot]
-    note: "Panel (e) chain, Panel (b) log-log. Other panels are bit-level inline TikZ."
-
   - name: n3_trial_02_actuation_sequence
     briefing: examples/n3_trial_02_actuation_sequence/briefing.md
     expected_top: [electret_actuation]

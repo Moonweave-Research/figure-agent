@@ -102,6 +102,197 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     assert result["stage"] == 3
 
 
+def test_stage_3_panel_reference_missing_critique_redirects_to_fig_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "panel_ref_fig"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: panel_ref_fig",
+                "style_profile: polymer-default",
+                "panels:",
+                "  - id: A",
+                "    reference_image: reference/panel_a.png",
+                "    bbox_pdf_cm: [0, 0, 1, 1]",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig_dir / "panel_ref_fig.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "panel_a.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "panel_ref_fig.pdf").write_bytes(b"%PDF")
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / "panel_ref_fig.tex",
+        reference / "panel_a.png",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(build_dir / "panel_ref_fig.pdf", (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "critique_missing" in result["notes"]
+    assert "/fig_critique" in result["next"]
+    assert "before /fig_export" in result["next"]
+
+
+def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "stale_critique_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / "stale_critique_fig.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "stale_critique_fig.pdf").write_bytes(b"%PDF")
+    (fig_dir / "critique.md").write_text("old critique", encoding="utf-8")
+
+    old_time = time.time() - 100
+    middle_time = time.time() - 50
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / "stale_critique_fig.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (middle_time, middle_time))
+    os.utime(fig_dir / "critique.md", (old_time, old_time))
+    os.utime(build_dir / "stale_critique_fig.pdf", (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "critique_stale" in result["notes"]
+    assert "/fig_critique" in result["next"]
+    assert "before /fig_export" in result["next"]
+
+
+def _make_fresh_exports(fig_dir: Path, name: str) -> None:
+    """Create all-four exports + matching build PDF so compute_export_state → FRESH."""
+    pdf_bytes = b"%PDF-1.4 stub"
+    build_dir = fig_dir / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / f"{name}.pdf").write_bytes(pdf_bytes)
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir(exist_ok=True)
+    (exports_dir / f"{name}.pdf").write_bytes(pdf_bytes)
+    (exports_dir / f"{name}.svg").write_bytes(b"<svg/>")
+    (exports_dir / f"{name}.tif").write_bytes(b"TIFF")
+    (exports_dir / f"{name}.png").write_bytes(b"\x89PNG")
+
+
+def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    name = "stale_critique_stage4"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    for ext in (".pdf", ".svg", ".tif", ".png"):
+        (exports_dir / f"{name}{ext}").write_bytes(b"stub")
+    (fig_dir / "critique.md").write_text("old critique", encoding="utf-8")
+    monkeypatch.setattr(sys.modules["status"], "compute_export_state", lambda *_: "FRESH")
+
+    old_time = time.time() - 100
+    middle_time = time.time() - 50
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (middle_time, middle_time))
+    os.utime(fig_dir / "critique.md", (old_time, old_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert "critique_stale" in result["notes"]
+    assert "/fig_critique" in result["next"]
+
+
+def test_stage_4_critique_required_takes_priority_over_not_accepted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    name = "critique_vs_accepted"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png", accepted=False)
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    for ext in (".pdf", ".svg", ".tif", ".png"):
+        (exports_dir / f"{name}{ext}").write_bytes(b"stub")
+    monkeypatch.setattr(sys.modules["status"], "compute_export_state", lambda *_: "FRESH")
+
+    old_time = time.time() - 100
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (old_time, old_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert "critique_missing" in result["notes"]
+    assert "/fig_critique" in result["next"]
+    assert "not accepted" not in result["next"]
+
+
+def test_panel_reference_image_missing_emits_note(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "missing_panel_ref"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: missing_panel_ref",
+                "style_profile: polymer-default",
+                "panels:",
+                "  - id: A",
+                "    reference_image: reference/nonexistent.png",
+                "    bbox_pdf_cm: [0, 0, 1, 1]",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert "panel_reference_image_missing" in result["notes"]
+
+
 def test_stage_4_partial_export_svg_only(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -510,9 +701,7 @@ def test_accepted_true_resolves_in_result(tmp_path: Path) -> None:
     assert result["accepted"] is True
 
 
-def test_accepted_false_resolves_in_result(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_accepted_false_resolves_in_result(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import status as status_mod
 
     fig_dir = tmp_path / "myfig"
@@ -771,3 +960,48 @@ def test_tracked_golden_stale_gives_force_golden_hint(
     assert "stale_export" in result["notes"]
     assert "--force-golden" in result["next"]
     assert "/fig_compile" not in result["next"]
+
+
+def test_tracked_golden_partial_export_gives_force_golden_hint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tracked golden with missing sibling exports cannot be fixed by plain
+    /fig_export because run_export.py protects tracked artifacts unless
+    --force-golden is explicit.
+    """
+    import subprocess
+
+    import export_freshness
+    import status as status_mod
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=repo, check=True)
+
+    fig_dir = repo / "examples" / "golden_partial"
+    (fig_dir / "exports").mkdir(parents=True)
+    (fig_dir / "spec.yaml").write_text(
+        "name: golden_partial\npanels: []\nstyle_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig_dir / "golden_partial.tex").write_text("% tex", encoding="utf-8")
+    pdf = fig_dir / "exports" / "golden_partial.pdf"
+    pdf.write_bytes(b"%PDF")
+    subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
+
+    old_time = 1_000_000.0
+    fresh_time = time.time() + 100.0
+    for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / "golden_partial.tex"):
+        os.utime(path, (old_time, old_time))
+    os.utime(pdf, (fresh_time, fresh_time))
+
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+
+    result = status_mod.infer_stage(fig_dir)
+    assert result["exports_substate"] == "TRACKED_GOLDEN"
+    assert "partial_export" in result["notes"]
+    assert "--force-golden" in result["next"]
+    assert "re-run /fig_export <name> to generate" not in result["next"]

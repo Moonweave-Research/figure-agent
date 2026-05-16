@@ -22,7 +22,7 @@ uv run python3 scripts/status.py examples/<name>   # one figure (full check list
 | 0 | directory missing | /fig_new <name> |
 | 1 | spec.yaml present; no .tex authored yet | author <name>.tex from briefing.md, then /fig_compile <name> |
 | 2 | .tex present; build pdf missing or stale | /fig_compile <name> |
-| 3 | build pdf fresh; no exports | /fig_critique <name> for vision review (optional), then /fig_export <name> |
+| 3 | build pdf fresh; no exports | /fig_critique <name> when reference-grounded critique is missing/stale, then /fig_export <name> |
 | 4 | export artifact present | done (or revise + recompile + re-export) |
 
 The v0.1 stages 2/3 (preview-images-without-selection / selected_preview-set-without-tex) were removed in the v0.2 frozen-legacy cleanup along with `/fig_prompt` and `/fig_preview_select`. Active authoring now goes directly from `briefing.md` to `<name>.tex`; see `docs/architecture-overview.md` Layer 3 for the full picture.
@@ -47,6 +47,9 @@ Notes that may appear:
 - `coordinate_hints_stale` — `coordinate_hints.yaml` is older than the reference image; re-run `/fig_extract <name> --rebuild`.
 - `coordinate_hints_parse_error` — `coordinate_hints.yaml` is not valid YAML; regenerate with `/fig_extract <name> --rebuild`.
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
+- `panel_reference_image_missing` — a panel declares `bbox_pdf_cm` and `reference_image` but the image file is not found at the declared path relative to the example directory; correct the path in `spec.yaml` or add the file before running `/fig_critique <name>`.
+- `critique_missing` — the fixture has a usable figure-level `reference_image` or at least one panel with both `reference_image` and `bbox_pdf_cm`, but no `critique.md`; run `/fig_critique <name>` before `/fig_export <name>`.
+- `critique_stale` — `critique.md` is older than a critique input (`<name>.tex`, `briefing.md`, `spec.yaml`, usable reference image, participating panel reference image, `coordinate_hints.yaml`, or Style Lock); re-run `/fig_critique <name>`.
 
 Build/export freshness source set: `<name>.tex`, `briefing.md`, `spec.yaml`,
 resolved figure-level `reference_image`, `coordinate_hints.yaml` when present,
