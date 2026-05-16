@@ -24,6 +24,7 @@ MISSING_INVARIANTS = (
 )
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
+_HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 
 
 class CritiqueBriefError(Exception):
@@ -139,6 +140,61 @@ def _line_numbered(text: str) -> str:
     return "".join(
         f"{line_number:4d}: {line}\n" for line_number, line in enumerate(text.splitlines(), start=1)
     )
+
+
+def _markdown_sections(text: str) -> dict[str, str]:
+    matches = list(_HEADING_RE.finditer(text))
+    sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        title = match.group(2).strip()
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        body = text[start:end].strip()
+        sections[title.lower()] = body
+    return sections
+
+
+def _selected_markdown_sections(path: Path, titles: tuple[str, ...]) -> list[str]:
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8")
+    sections = _markdown_sections(text)
+    selected: list[str] = []
+    for title in titles:
+        body = sections.get(title.lower())
+        if body:
+            selected.append(f"#### {title}\n{body}")
+    return selected
+
+
+def _optional_authoring_context(example_dir: Path) -> str:
+    blocks: list[str] = []
+
+    contract_sections = _selected_markdown_sections(
+        example_dir / "authoring_contract.md",
+        ("Theory Invariants", "Forbidden Transfers", "Source Limitations", "Acceptance Rubric"),
+    )
+    if contract_sections:
+        blocks.append("### Authoring Contract\n" + "\n\n".join(contract_sections))
+
+    reference_pack = example_dir / "reference" / "reference_pack.md"
+    if reference_pack.is_file():
+        blocks.append("### Reference Pack\n" + reference_pack.read_text(encoding="utf-8").strip())
+
+    plan_sections = _selected_markdown_sections(
+        example_dir / "authoring_plan.md",
+        ("Patch Order", "Human Checkpoints"),
+    )
+    if plan_sections:
+        blocks.append("### Authoring Plan\n" + "\n\n".join(plan_sections))
+
+    theory_guard = example_dir / "theory_guard.md"
+    if theory_guard.is_file():
+        blocks.append("### Theory Guard\n" + theory_guard.read_text(encoding="utf-8").strip())
+
+    if not blocks:
+        return ""
+    return "\n\n## Reference-conditioned authoring context\n" + "\n\n".join(blocks)
 
 
 def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:
@@ -281,6 +337,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
+    authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
     )
@@ -295,6 +352,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 ## Physics invariants the figure MUST honor
 {invariants}
+{authoring_context_section}
 
 ## Source under review (TikZ)
 ```tex

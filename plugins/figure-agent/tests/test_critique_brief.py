@@ -318,3 +318,59 @@ def test_critique_brief_warns_when_skipped_panel_reference_is_newer_than_png(tmp
     brief = generate_for(example_dir)
 
     assert "Panel `a` declares reference_image but no bbox_pdf_cm" in brief
+
+
+def test_critique_brief_includes_reference_conditioned_authoring_docs(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "authoring_contract.md").write_text(
+        "# Authoring Contract\n\n"
+        "## Theory Invariants\n\n"
+        "- BLOCKER: keep topology linear.\n\n"
+        "## Forbidden Transfers\n\n"
+        "- Do not transfer network topology.\n\n"
+        "## Source Limitations\n\n"
+        "- coordinate_hints.yaml is absent.\n\n"
+        "## Acceptance Rubric\n\n"
+        "- BLOCKER rejects acceptance.\n",
+        encoding="utf-8",
+    )
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    (ref_dir / "reference_pack.md").write_text(
+        "# Reference Pack\n\n"
+        "| File | Role | Use | Do Not Transfer |\n"
+        "|---|---|---|---|\n"
+        "| `reference/a.png` | anti_reference | motif only | Do Not Transfer topology |\n",
+        encoding="utf-8",
+    )
+    (example_dir / "authoring_plan.md").write_text(
+        "# Authoring Plan\n\n"
+        "## Patch Order\n\n"
+        "1. Fix Row2-BR2.\n\n"
+        "## Human Checkpoints\n\n"
+        "- Confirm manuscript chemistry.\n",
+        encoding="utf-8",
+    )
+    (example_dir / "theory_guard.md").write_text(
+        "# Theory Guard\n\n"
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-A-001 | BLOCKER | topology is linear | source review | pass |\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference-conditioned authoring context" in brief
+    assert "### Authoring Contract" in brief
+    assert "- BLOCKER: keep topology linear." in brief
+    assert "- Do not transfer network topology." in brief
+    assert "### Reference Pack" in brief
+    assert "| `reference/a.png` | anti_reference | motif only | Do Not Transfer topology |" in brief
+    assert "### Authoring Plan" in brief
+    assert "1. Fix Row2-BR2." in brief
+    assert "- Confirm manuscript chemistry." in brief
+    assert "### Theory Guard" in brief
+    assert "| TG-A-001 | BLOCKER | topology is linear | source review | pass |" in brief
