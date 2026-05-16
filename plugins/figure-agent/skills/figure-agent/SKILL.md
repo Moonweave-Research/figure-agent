@@ -34,6 +34,13 @@ Active direction: `docs/quality-kernel-goal.md`.
 a conversational interview. After scaffolding, author semantic TikZ from the
 briefing, optional reference image, and optional coordinate hints.
 
+For reference-conditioned authoring pilots, read
+`examples/<name>/authoring_contract.md` and
+`examples/<name>/reference/reference_pack.md` before editing TikZ. Write or
+refresh `examples/<name>/authoring_plan.md` first, naming the panel/sub-region
+patch order, theory-critical decisions, and human checkpoints. The first TikZ
+patch must trace back to the plan rather than to chat-only intent.
+
 ### Active (quality kernel)
 
 ```
@@ -49,6 +56,8 @@ briefing, optional reference image, and optional coordinate hints.
                          [human/LLM authors semantic TikZ from briefing intent,
                           reference PNG, and coordinate_hints.yaml;
                           SVG-to-TikZ path conversion is not the active workflow]
+                         [reference-conditioned pilots: contract/reference pack
+                          -> authoring_plan.md -> scoped TikZ patch]
 /fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
