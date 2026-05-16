@@ -18,6 +18,7 @@ __pycache__/
 # Track directories (via .gitkeep) but ignore contents by default.
 # To commit a finished export, use `git add -f examples/<name>/exports/<file>`.
 /output/
+/tmp/
 **/build/*
 **/exports/*
 **/previews/*
