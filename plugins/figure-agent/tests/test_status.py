@@ -921,6 +921,26 @@ def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     assert "Exports: MISSING" in captured.out
 
 
+def test_main_resolves_single_name_under_examples(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """The documented /fig_status <name> form should resolve examples/<name>."""
+    import status as status_mod
+
+    examples_dir = tmp_path / "examples"
+    fixture = examples_dir / "named_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "named_fig"])
+
+    assert status_mod.main() == 0
+
+    captured = capsys.readouterr()
+    assert "named_fig — stage 1/4" in captured.out
+
+
 def test_tracked_golden_stale_gives_force_golden_hint(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

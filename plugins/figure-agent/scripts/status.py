@@ -447,6 +447,13 @@ def main() -> int:
         return 0
 
     example_dir = Path(sys.argv[1])
+    if (
+        not example_dir.is_absolute()
+        and len(example_dir.parts) == 1
+        and not example_dir.exists()
+        and (Path("examples") / example_dir).is_dir()
+    ):
+        example_dir = Path("examples") / example_dir
     result = infer_stage(example_dir)
     _print_single(result)
     return 0
