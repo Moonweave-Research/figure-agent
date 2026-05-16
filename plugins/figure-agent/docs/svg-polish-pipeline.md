@@ -16,7 +16,7 @@ Author currently bridges this gap manually in Inkscape per figure. Repeated, non
 
 ## 2. Why this matters
 
-`figure-agent`'s core identity (`plugins/figure-agent/CLAUDE.md`) is **reproducibility**: `.tex` source → identical PDF. A naïve "open in Inkscape, save SVG" loop violates that contract — once author hand-nudges, TikZ source ceases to be authoritative.
+`figure-agent`'s core identity (`skills/figure-agent/SKILL.md` and `AGENTS.md`) is **reproducibility**: `.tex` source → identical PDF. A naïve "open in Inkscape, save SVG" loop violates that contract — once author hand-nudges, TikZ source ceases to be authoritative.
 
 Two paths exist (settled in conversation 2026-05-15):
 

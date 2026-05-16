@@ -73,7 +73,7 @@ Layer 10: Documentation                (docs/ active + docs/historical/)
 **Plugin code**: none.
 
 The plugin is gen-tool-agnostic by design (declared in `plugin.json`,
-`SKILL.md`, `CLAUDE.md`, `AGENTS.md`). External inputs include:
+`SKILL.md`, and `AGENTS.md`). External inputs include:
 
 - The user's intent, which is captured into `briefing.md` during the
   `/fig_new` interview (Layer 2).
@@ -90,7 +90,7 @@ or generates anything in Layer 0.
 
 ### Layer 1 — Identity / Onboarding
 
-**Files**: `README.md`, `CLAUDE.md`, `AGENTS.md`, `.claude-plugin/plugin.json`,
+**Files**: `README.md`, `AGENTS.md`, `.claude-plugin/plugin.json`,
 `skills/figure-agent/SKILL.md`, `commands/*.md`.
 
 These are the surfaces that tell a new user (or a new agent session) what

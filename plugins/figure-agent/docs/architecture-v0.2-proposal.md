@@ -128,7 +128,7 @@ The single largest value addition. Evolves frozen `/fig_review` into an automate
    5. STOP. No auto-apply, no patch staging — report-only mode (see §7).
 ```
 
-**Cost**: 0원 (subscription tokens only). Zero API calls. CLAUDE.md policy untouched — host orchestration is not an external API call.
+**Cost**: 0원 (subscription tokens only). Zero API calls. `SKILL.md` policy remains unchanged — host orchestration is not an external API call.
 
 **Numbering choice**: L4.5 (not L5) because Export already occupies L5 in the existing `architecture-overview.md` and is referenced by tests (`test_export_freshness.py`, `test_export_pipeline_equivalence.py`). Renumbering Export would force downstream doc/test churn for zero pipeline-semantic gain.
 
@@ -258,7 +258,7 @@ PR #8a — Frozen-legacy clean delete (no stage migration; 2-3 hrs)
    ├─ README.md:103 — drop historical roadmap reference
    ├─ leave existing fixture spec.yaml files alone (yaml ignores unknown keys;
    │   preserves historical record across 5 fixtures)
-   └─ CLAUDE.md / SKILL.md / README.md frozen-section trim
+   └─ SKILL.md / README.md frozen-section trim
 
 PR #8b — Stage-model migration (selected_preview removal)
    ├─ refactor scripts/status.py Stage 2/3 logic to drop selected_preview dependency
@@ -278,7 +278,7 @@ PR #9 — L4.5 Vision Critique (rename + extend, NOT new file)
    │  (slash command Reads PNG, calls critique_brief.py for prompt context,
    │   host Claude writes the critique inline → file)
    ├─ examples/<name>/critique.md schema doc (see §4.6)
-   └─ CLAUDE.md policy clarification:
+   └─ SKILL.md policy clarification:
        "delegates vision tasks to host Claude Code main loop;
         never calls external vision API directly"
 ```
