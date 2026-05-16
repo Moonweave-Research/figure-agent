@@ -9,6 +9,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import check_golden_artifacts as golden_checks  # noqa: E402
 from check_golden_artifacts import (  # noqa: E402
     audit_is_fresh,
     check_example,
@@ -270,6 +271,42 @@ def _write_minimal_export_set(exports: Path, name: str, *, tiff_extension: str =
     (exports / f"{name}{tiff_extension}").write_bytes(b"II*\x00")  # minimal TIFF magic
 
 
+def _write_minimal_accepted_fixture(fixture: Path) -> None:
+    name = fixture.name
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text(
+        "name: fixture\n"
+        "accepted: true\n"
+        "golden_contract:\n"
+        "  required_labels:\n"
+        '    - "Foo"\n'
+        "  source_inventory: {}\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text("Foo", encoding="utf-8")
+    (fixture / "briefing.md").write_text("brief", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", name)
+    (fixture / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "**submission-safe:** true\n\n"
+        "OK: no collisions found\n"
+        "0 visual clash candidate(s)\n"
+        "0 unresolved visual clash(es)\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+
+
+def _write_passing_theory_guard(fixture: Path) -> None:
+    (fixture / "theory_guard.md").write_text(
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-1 | BLOCKER | invariant | source review | Pass: invariant verified. |\n",
+        encoding="utf-8",
+    )
+
+
 def test_check_example_basic_mode_skips_label_and_inventory_checks(tmp_path: Path) -> None:
     """Without --require-accepted (and without spec.accepted), only
     artifact-shape gates run."""
@@ -365,6 +402,57 @@ def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -
     )
 
     assert any("golden_contract block missing" in failure for failure in failures)
+
+
+def test_require_accepted_mode_requires_theory_guard(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "needsTheory"
+    _write_minimal_accepted_fixture(fixture)
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "missing theory guard: theory_guard.md" in failures
+
+
+def test_require_accepted_mode_rejects_failed_blocker_theory_guard(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "failedTheory"
+    _write_minimal_accepted_fixture(fixture)
+    (fixture / "theory_guard.md").write_text(
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-1 | BLOCKER | invariant | source review | FAIL: unresolved topology. |\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert any("theory BLOCKER not passing: TG-1" in failure for failure in failures)
+
+
+def test_require_accepted_mode_requires_publication_compliance(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "needsPublication"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    (fixture / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "OK: no collisions found\n"
+        "0 visual clash candidate(s)\n"
+        "0 unresolved visual clash(es)\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md" in failures
+    assert "QUALITY_AUDIT.md does not declare submission-safe: true" in failures
 
 
 def test_checker_warning_counts_reads_quality_audit() -> None:

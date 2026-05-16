@@ -319,6 +319,42 @@ def checker_budget_failures(
     return failures
 
 
+def theory_guard_failures(theory_guard_path: Path) -> list[str]:
+    if not theory_guard_path.exists():
+        return ["missing theory guard: theory_guard.md"]
+
+    failures: list[str] = []
+    for line in theory_guard_path.read_text(encoding="utf-8").splitlines():
+        if "|" not in line:
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 5:
+            continue
+        guard_id, severity, _claim, _method, evidence = cells[:5]
+        if severity != "BLOCKER" or guard_id == "ID":
+            continue
+
+        status = evidence.lower().lstrip()
+        has_bad_status = status.startswith(("fail", "failed", "unresolved", "unknown", "open"))
+        has_pass_status = status.startswith(("pass", "passed", "closed", "resolved", "verified"))
+        if has_bad_status or not has_pass_status:
+            failures.append(f"theory BLOCKER not passing: {guard_id}")
+    return failures
+
+
+def publication_compliance_failures(audit_path: Path) -> list[str]:
+    if not audit_path.exists():
+        return ["missing audit: QUALITY_AUDIT.md"]
+
+    audit_text = audit_path.read_text(encoding="utf-8")
+    failures: list[str] = []
+    if "Provenance and Publication Compliance" not in audit_text:
+        failures.append("missing Provenance and Publication Compliance section in QUALITY_AUDIT.md")
+    if not re.search(r"submission-safe(?:\*\*)?:\s*(true|yes)\b", audit_text, re.IGNORECASE):
+        failures.append("QUALITY_AUDIT.md does not declare submission-safe: true")
+    return failures
+
+
 def check_example(
     example_dir: Path,
     *,
@@ -389,6 +425,8 @@ def check_example(
 
         if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, png)):
             failures.append("QUALITY_AUDIT.md is stale or missing")
+        failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
+        failures.extend(publication_compliance_failures(audit))
         failures.extend(
             checker_budget_failures(
                 audit,

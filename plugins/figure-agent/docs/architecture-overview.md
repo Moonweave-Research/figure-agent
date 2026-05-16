@@ -296,9 +296,11 @@ Two `check_golden_artifacts` modes:
   requires the contract block, validates `accepted: true`, runs
   `required_labels` against pdftotext output, runs `source_inventory`
   regex counts against `<name>.tex`, asserts `QUALITY_AUDIT.md` freshness,
-  and applies collision/clash budget thresholds. This is the hard gate for
-  ship-blessed fixtures; it is intentionally stricter than the Layer 4
-  compile loop.
+  requires a passing `theory_guard.md` BLOCKER table, requires
+  `QUALITY_AUDIT.md` to contain provenance/publication-compliance evidence
+  with `submission-safe: true`, and applies collision/clash budget thresholds.
+  This is the hard gate for ship-blessed fixtures; it is intentionally
+  stricter than the Layer 4 compile loop.
 
 `check_layout_drift.py` is the second Layer 6 gate (also fired from
 `compile.sh`). It is anchor-driven: each `required_labels` entry (str or
