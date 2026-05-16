@@ -374,3 +374,28 @@ def test_critique_brief_includes_reference_conditioned_authoring_docs(tmp_path):
     assert "- Confirm manuscript chemistry." in brief
     assert "### Theory Guard" in brief
     assert "| TG-A-001 | BLOCKER | topology is linear | source review | pass |" in brief
+
+
+def test_critique_brief_includes_subregion_active_set(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "subregion_iteration_log.md").write_text(
+        "# Sub-Region Iteration Log\n\n"
+        "## Active Target Set\n\n"
+        "| State | Sub-region ID | Evidence | Notes |\n"
+        "|---|---|---|---|\n"
+        "| active target | G-2, G-7 | review | patch electrode and gap |\n"
+        "| named but stable | D-1..D-3 | log | stable |\n\n"
+        "## Iteration Log\n\n"
+        "| Iteration | Sub-region ID | Problem | Patch Summary | Result | Follow-up |\n"
+        "|---|---|---|---|---|---|\n"
+        "| v7 | G-2, G-7 | setup weak | widened gap | improved | recheck |\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "### Sub-region Active Set" in brief
+    assert "- Active targets: G-2, G-7" in brief
+    assert "- Observed patch units: G-2, G-7" in brief

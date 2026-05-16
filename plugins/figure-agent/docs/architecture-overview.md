@@ -205,7 +205,8 @@ open question; see
 
 **Files**: optional `examples/<name>/authoring_contract.md`,
 `examples/<name>/reference/reference_pack.md`,
-`examples/<name>/authoring_plan.md`, `examples/<name>/theory_guard.md`.
+`examples/<name>/authoring_plan.md`, `examples/<name>/theory_guard.md`,
+`examples/<name>/subregion_iteration_log.md`, `scripts/subregion_active_set.py`.
 
 This layer sits between semantic authoring and compile/export acceptance. It is
 not a lualatex, collision, or visual-clash gate. Its job is to record the
@@ -219,6 +220,12 @@ claims with check methods and evidence. Any BLOCKER failure keeps the figure at
 export, critique, provenance, and publication-compliance evidence. The theory
 guard may block acceptance, but it does not replace Layer 4 compile gates or
 Layer 6 artifact validation.
+
+When `subregion_iteration_log.md` exists, `scripts/subregion_active_set.py`
+parses the Markdown Active Target Set and Iteration Log tables so `/fig_critique`
+can focus the host review on currently active sub-regions. This parser is
+text-form evidence plumbing only; it is not a sub-region schema, bbox cropper,
+or auto-segmentation layer.
 
 ### Layer 4 — Compile Gates
 

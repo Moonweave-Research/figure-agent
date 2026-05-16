@@ -18,6 +18,7 @@ from pathlib import Path
 
 from inputs import parse_briefing, parse_spec
 from PIL import Image
+from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
@@ -129,6 +130,9 @@ def _critique_source_paths(
     hints_path = example_dir / "coordinate_hints.yaml"
     if hints_path.exists():
         paths.append(hints_path)
+    subregion_log = example_dir / "subregion_iteration_log.md"
+    if subregion_log.exists():
+        paths.append(subregion_log)
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
     return tuple(paths)
@@ -192,9 +196,34 @@ def _optional_authoring_context(example_dir: Path) -> str:
     if theory_guard.is_file():
         blocks.append("### Theory Guard\n" + theory_guard.read_text(encoding="utf-8").strip())
 
+    subregion_context = _subregion_active_context(example_dir)
+    if subregion_context:
+        blocks.append(subregion_context)
+
     if not blocks:
         return ""
     return "\n\n## Reference-conditioned authoring context\n" + "\n\n".join(blocks)
+
+
+def _subregion_active_context(example_dir: Path) -> str:
+    log_path = example_dir / "subregion_iteration_log.md"
+    if not log_path.is_file():
+        return ""
+    text = log_path.read_text(encoding="utf-8")
+    rows = parse_active_target_rows(text)
+    active_ids = active_subregion_ids(rows)
+    patch_ids = iteration_patch_ids(text)
+    active_display = ", ".join(active_ids) if active_ids else "(none)"
+    patch_display = ", ".join(patch_ids) if patch_ids else "(none)"
+    return "\n".join(
+        [
+            "### Sub-region Active Set",
+            f"- Active targets: {active_display}",
+            f"- Observed patch units: {patch_display}",
+            "- Critique instruction: focus sub-region findings on active targets. "
+            "Do not reopen named-but-stable regions without concrete visual or theory evidence.",
+        ]
+    )
 
 
 def _pdf_page_size_cm(pdf_path: Path) -> tuple[float, float]:

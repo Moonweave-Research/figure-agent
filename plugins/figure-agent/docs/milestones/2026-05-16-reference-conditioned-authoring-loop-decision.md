@@ -2,18 +2,22 @@
 
 **Date:** 2026-05-16
 **Pilot:** `examples/fig1_overview_v2_pair_001_vault`
-**Decision:** integrate contract/reference pack into critique brief
+**Decision:** integrate manual artifacts into critique brief, then add narrow accepted/sub-region parsers
 
 ## Decision
 
 The manual protocol changed critique and acceptance decisions enough to justify
-one narrow tooling change: make `scripts/critique_brief.py` include
-`authoring_contract.md`, `reference/reference_pack.md`, `authoring_plan.md`,
-and `theory_guard.md` when they exist.
+two narrow tooling changes:
 
-Do not implement a sub-region parser, theory-guard checker, or reference-pack
-parser yet. The current evidence proves that the documents are useful in the
-host review loop, but it does not prove the schema or checker shape.
+1. make `scripts/critique_brief.py` include `authoring_contract.md`,
+   `reference/reference_pack.md`, `authoring_plan.md`, `theory_guard.md`, and
+   the live sub-region active-set summary when those files exist;
+2. make `check_golden_artifacts.py --require-accepted` reject `accepted: true`
+   unless theory and provenance/publication evidence are explicitly passing.
+
+Do not implement a reference-pack parser, schema-level sub-region model, cropper,
+or auto-segmentation yet. The current evidence supports parsing the live
+Markdown active-set log, but not a durable `spec.yaml` schema.
 
 ## Evidence From This Loop
 
@@ -26,8 +30,9 @@ host review loop, but it does not prove the schema or checker shape.
   reopening the old Panel A network-vs-linear conflict as a MAJOR finding.
 - The manual theory guard kept the audit focused on scientific BLOCKERs rather
   than compile success.
-- The sub-region log supplied live evidence, but the active target set is empty
-  after v7. That is not enough to design a parser.
+- The sub-region log supplied live evidence. Its active target set is empty
+  after v7, which is enough to parse and preserve the current active-set state,
+  but not enough to design a schema or crop pipeline.
 
 ## Manual Artifacts Changed Decisions
 
@@ -45,9 +50,9 @@ They did not change patch decisions in this loop:
 - Existing dirty `briefing.md` and `.tex` edits were preserved.
 - The final decision stayed `accepted: false`.
 
-## Next Implementation Slice
+## Implemented Tooling Slice
 
-Implement a narrow `critique_brief.py` enhancement:
+Implemented a narrow `critique_brief.py` enhancement:
 
 1. If `authoring_contract.md` exists, include its Theory Invariants,
    Forbidden Transfers, Source Limitations, and Acceptance Rubric sections in
@@ -57,17 +62,27 @@ Implement a narrow `critique_brief.py` enhancement:
 3. If `theory_guard.md` exists, include the guard table as explicit
    physics/narrative checks.
 4. If `authoring_plan.md` exists, include Patch Order and Human Checkpoints.
-5. Preserve backward compatibility: figures without these files must produce
+5. If `subregion_iteration_log.md` exists, parse its Active Target Set and
+   Iteration Log tables and include active targets plus observed patch units.
+6. Preserve backward compatibility: figures without these files must produce
    the same critique brief shape as before.
+
+Implemented an accepted-fixture gate enhancement:
+
+1. Require `theory_guard.md` in accepted mode.
+2. Reject BLOCKER rows whose evidence does not start with a passing status.
+3. Require `QUALITY_AUDIT.md` to include provenance/publication compliance and
+   `submission-safe: true` before `accepted: true` can pass.
 
 ## Deferred States
 
 - `no code yet, manual protocol unstable`: rejected. The protocol exposed a
   concrete generated-brief gap.
-- `implement sub-region active-set parser`: deferred until more active-patch
+- `implement sub-region schema/crop pipeline`: deferred until more active-patch
   cycles and cross-fixture evidence exist.
-- `implement theory-guard checker`: deferred because current guard evidence is
-  prose-level and requires human/source/render adjudication.
+- `implement a stronger theory-guard checker`: deferred because current guard
+  evidence is prose-level and requires human/source/render adjudication; the
+  accepted gate only checks explicit BLOCKER pass/fail status.
 - `implement reference-pack parser`: deferred; include prose first, then decide
   whether structure is stable enough to parse.
 

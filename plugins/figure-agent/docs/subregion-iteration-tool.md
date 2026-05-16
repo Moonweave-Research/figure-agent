@@ -1,6 +1,6 @@
 # Sub-Region Iteration Tool — Issue / Pre-Spec
 
-**Status:** ISSUE (pre-design). No implementation committed.
+**Status:** ISSUE + narrow parser prototype. No schema, cropper, or auto-segmentation committed.
 **Filed:** 2026-05-15
 **Drives from:** `feedback_element_iteration_workflow.md`, `feedback_subregion_iteration_unit.md`.
 **Predecessor work:** `architecture-v0.5-per-panel-reference-workflow.md` lifted granularity from figure → panel. This issue asks whether to lift granularity panel → sub-region.
@@ -70,6 +70,14 @@ units vs. named-but-stable catalog entries* (§8.3 #2). Without enough of the
 latter, schema design optimizes for the wrong dimension.
 
 Tool shape must come from observed iteration, not from this issue.
+
+**Narrow parser prototype (2026-05-16):** `scripts/subregion_active_set.py`
+parses `subregion_iteration_log.md` Markdown tables and emits the current active
+target IDs plus observed patch-unit IDs. `scripts/critique_brief.py` includes
+that summary in the reference-conditioned authoring context when the log exists.
+This is not a schema commitment: it reads the live evidence file, keeps an empty
+active set empty, and does not infer boundaries, crop sub-regions, or modify
+TikZ.
 
 ---
 
