@@ -185,6 +185,57 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
     assert "before /fig_export" in result["next"]
 
 
+@pytest.mark.parametrize(
+    "authoring_doc",
+    (
+        "authoring_contract.md",
+        "reference/reference_pack.md",
+        "authoring_plan.md",
+        "theory_guard.md",
+    ),
+)
+def test_stage_3_authoring_doc_stale_critique_redirects_to_fig_critique(
+    tmp_path: Path,
+    authoring_doc: str,
+) -> None:
+    name = "stale_authoring_context_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    (fig_dir / "critique.md").write_text("critique from old authoring context", encoding="utf-8")
+
+    authoring_path = fig_dir / authoring_doc
+    authoring_path.parent.mkdir(parents=True, exist_ok=True)
+    authoring_path.write_text("updated authoring context", encoding="utf-8")
+
+    old_time = time.time() - 100
+    critique_time = time.time() - 50
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(fig_dir / "critique.md", (critique_time, critique_time))
+    os.utime(authoring_path, (fresh_time, fresh_time))
+    os.utime(build_dir / f"{name}.pdf", (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "critique_stale" in result["notes"]
+    assert "/fig_critique" in result["next"]
+
+
 def _make_fresh_exports(fig_dir: Path, name: str) -> None:
     """Create all-four exports + matching build PDF so compute_export_state → FRESH."""
     pdf_bytes = b"%PDF-1.4 stub"

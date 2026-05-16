@@ -123,9 +123,20 @@ def _panel_reference_paths(example_dir: Path, spec: dict) -> tuple[Path, ...]:
     return tuple(paths)
 
 
+def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
+    candidates = (
+        example_dir / "authoring_contract.md",
+        example_dir / "reference" / "reference_pack.md",
+        example_dir / "authoring_plan.md",
+        example_dir / "theory_guard.md",
+    )
+    return tuple(path for path in candidates if path.is_file())
+
+
 def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     paths = list(_source_paths(example_dir, name, spec))
     paths.extend(_panel_reference_paths(example_dir, spec))
+    paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
 
 
