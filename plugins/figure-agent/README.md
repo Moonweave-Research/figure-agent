@@ -65,7 +65,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 
 ---
 
-## Current state (v0.5.0)
+## Current state (v0.5.1)
 
 | Area | What's working |
 |---|---|
@@ -113,6 +113,7 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - **Golden fixture gate.** `check_golden_artifacts.py` auto-escalates when `spec.yaml` declares `accepted: true`. Override with `--no-require-accepted` for ad-hoc inspection.
 - **Skip critique on export.** `scripts/run_export.py <name> --skip-critique` for intentional drafts. Otherwise, when a reference image is present, missing/stale `critique.md` blocks export.
 - **Plugin install.** Validate with `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`, and `claude plugin validate ../../.claude-plugin/marketplace.json`. Test with `uv run pytest` and `uv run ruff check .`. `uv build` is *not* a release gate.
+- **Plugin cache audit.** Local installs copy the working directory into `~/.claude/plugins/cache/`. If a local install was made from a dirty checkout, run `python3 scripts/plugin_package_audit.py ~/.claude/plugins/cache/figure-agent-local/figure-agent/<version> --clean --max-mib 300` after `claude plugin update figure-agent@figure-agent-local` to remove generated build/cache paths and confirm the installed package is not bloated.
 - **Repo location.** Lives under `~/workspace/ResearchOS/` as a sibling to `[Athena]/` and `[Graph_making_hub]/` for development proximity. Plugin install copies to `~/.claude/plugins/cache/…` regardless.
 
 ---

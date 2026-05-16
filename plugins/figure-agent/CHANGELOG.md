@@ -2,6 +2,22 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.5.1] - 2026-05-16
+
+Patch release for local Claude plugin installation hygiene.
+
+### Added
+
+- `scripts/plugin_package_audit.py` detects generated build/cache paths in an
+  installed plugin cache and can remove them with `--clean`.
+- Release contract coverage for package-cache cleanup and the README install
+  note that explains when to run the audit.
+
+### Changed
+
+- Documentation now treats post-install cache audit as part of the local
+  plugin-update runbook when the install source may contain generated files.
+
 ## [0.5.0] - 2026-05-09
 
 Per-panel reference grounding and perception-data release. Keeps the product

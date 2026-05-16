@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
+import sys
 import tomllib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_ROOT = REPO_ROOT / "scripts"
+
+sys.path.insert(0, str(SCRIPTS_ROOT))
+
+from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -94,3 +100,45 @@ def test_package_descriptions_name_quality_kernel_direction() -> None:
     for text in texts:
         assert "quality" in text.lower()
         assert "prompt intent control" not in text
+
+
+def test_readme_documents_plugin_package_audit() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+
+    assert "scripts/plugin_package_audit.py" in readme
+    assert "--max-mib" in readme
+    assert "~/.claude/plugins/cache/" in readme
+
+
+def test_plugin_package_audit_detects_and_removes_generated_junk(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "figure-agent"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / "commands").mkdir()
+    (plugin_root / "scripts").mkdir()
+    (plugin_root / "examples" / "demo" / "build").mkdir(parents=True)
+    (plugin_root / "examples" / "demo" / "exports").mkdir(parents=True)
+    (plugin_root / ".venv" / "bin").mkdir(parents=True)
+    (plugin_root / ".pytest_cache").mkdir()
+    (plugin_root / "dist").mkdir()
+    (plugin_root / "figure_agent.egg-info").mkdir()
+    (plugin_root / "commands" / "fig_status.md").write_text("status", encoding="utf-8")
+    (plugin_root / "scripts" / "status.py").write_text("print('ok')", encoding="utf-8")
+    (plugin_root / "examples" / "demo" / "build" / "demo.pdf").write_bytes(b"%PDF")
+
+    junk = find_packaging_junk(plugin_root)
+
+    assert plugin_root / ".venv" in junk
+    assert plugin_root / ".pytest_cache" in junk
+    assert plugin_root / "dist" in junk
+    assert plugin_root / "figure_agent.egg-info" in junk
+    assert plugin_root / "examples" / "demo" / "build" in junk
+    assert plugin_root / "examples" / "demo" / "exports" in junk
+    assert plugin_root / "commands" not in junk
+    assert plugin_root / "scripts" not in junk
+
+    remove_paths(junk)
+
+    assert not (plugin_root / ".venv").exists()
+    assert not (plugin_root / "examples" / "demo" / "build").exists()
+    assert (plugin_root / "commands" / "fig_status.md").is_file()
+    assert (plugin_root / "scripts" / "status.py").is_file()
