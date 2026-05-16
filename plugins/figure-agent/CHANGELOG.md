@@ -2,6 +2,21 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.5.2] - 2026-05-16
+
+Acceptance-gate and critique-context hardening for the reference-conditioned
+authoring loop.
+
+### Added
+
+- `scripts/subregion_active_set.py` parses text-form sub-region iteration logs
+  and feeds active-target summaries into `/fig_critique` briefs.
+- `scripts/reference_pack.py` parses Reference Roles tables and validates that
+  reference rows have roles plus Do-Not-Transfer boundaries.
+- Accepted-mode artifact validation now requires a passing `theory_guard.md`,
+  provenance/publication compliance with `submission-safe: true`, and valid
+  reference-pack boundaries when reference inputs are declared.
+
 ## [0.5.1] - 2026-05-16
 
 Patch release for local Claude plugin installation hygiene.
