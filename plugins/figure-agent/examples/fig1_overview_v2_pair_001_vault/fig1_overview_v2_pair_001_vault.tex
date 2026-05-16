@@ -350,16 +350,19 @@
 
 % R15: Gaussian DOS overlays (between Energy axis and trap lines).
 % ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
-% energetic disorder distribution. Shallow narrow σ=0.06 (tight localization).
-% Deep wider σ=0.18 (broader trap-depth distribution → "deep dominates"
-% via spread, complementing the 1 vs 3 line count and 1 vs 2 ⊖ count).
+% energetic disorder distribution. Shallow narrow σ=0.085 (tight localization,
+% briefing §13.3 C-R1b spec). Deep wider σ=0.18 (broader trap-depth
+% distribution → "deep dominates" via spread, complementing the 2-line stack
+% per category and 1+1 ● count per band per §13.3 C-R2/C-R3).
+% v8.3 audit closure: σ 0.06 → 0.085 to match briefing §13.3 C-R1b (denominator
+% 0.0072 → 0.01445 = 2 × 0.085²).
 \fill[cBlue!18, opacity=0.55]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x)
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!75!black, line width=0.50pt]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.0072)}, \x);
+    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
 \fill[cRed!18, opacity=0.55]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
@@ -414,10 +417,13 @@
       line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
 
 % Trap depth annotation: E_C → deep band mid (encodes depth scale, no
-% "dominate" overstatement)
+% "dominate" overstatement).
+% v8.3 audit closure: arrow + label color cGray!70!black → cRed!75!black to
+% match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
+% trap species (color convention §8.6 / §13.9 Binding-1).
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cGray!70!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      cRed!75!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cRed!75!black,
       anchor=east, fill=white, inner sep=0.5pt]
   at (13.52, 7.00) {$\Delta E_t$};
 
@@ -465,7 +471,7 @@
 % Caption above branching root (italic gray; carries "convergent" semantic)
 \node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
       text=cGray!75!black, anchor=south, align=center]
-  at (7.00, 4.92) {convergent evidence -- three independent probes of the same trap};
+  at (7.00, 4.92) {convergent evidence --- three independent probes of the same trap};
 
 % Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
 \coordinate (branchRoot) at (6.95, 4.85);

@@ -188,9 +188,9 @@ E ↔ F는 *paired ISPD transformation*으로 묶음 — single spoke from C, pa
 
 ---
 
-## §7. Current .tex state vs design target — ALIGNED (post-v7, 2026-05-16)
+## §7. Current .tex state vs design target — ALIGNED (post-v8.3 audit closure, 2026-05-16)
 
-v5/v5.1/v6/v6.1/v7 거치며 briefing 의도와 `.tex`가 정렬됨. 잔여 deferred item만 active.
+v5/v5.1/v6/v6.1/v7 → v8.2 (IoU polish) → v8.3 (briefing-grounded audit) 거치며 briefing 의도와 `.tex`가 정렬됨. 잔여 deferred item만 active.
 
 | Layer | Status | Notes |
 |---|---|---|
@@ -436,7 +436,7 @@ External-question 비판 중 non-critical 항목은 host 판단으로 figure sco
 - **G-3** polymer strip (v7: y-scaled 0.78 anchored at tip y=1.25 → L 2.75→2.15, root (12.25,3.40)/(12.00,3.40), tip (11.65,1.25)/(11.40,1.25); bezier ctrls (12.25/12.00, 2.62) and (12.05/11.80, 1.84); v5.1 gradient cAmber!22→cAmber!42 per §9; outline cAmber!80!black 0.70pt rounded 0.3mm) curved away from electrode; v5.1 internal: 2 chain hints (cAmber!65!black 0.30pt opacity 0.38; v7 y-scaled to (12.075/12.175, 3.33..1.31)). **Role**: bend LEFT = Coulomb REPULSION (같은 부호 척력) per §8.5; chain hints = poly material identity (Panel C-L thin film과 visual binding); cantilever 형태 = micro→macro 다리. **Quantitative model (Q15, planning/session_260427)**: F_clip = Q_clip × E_active (floating-clip protocol, Phase A grounded poling으로 Q_clip lock); Fig 1 G는 qualitative — 정량 model은 paper Fig 5 + SI Methods S0 (Coulomb-Maxwell framework)
 - **G-4** 3 q_tr markers (v7 y-scaled: (12.10,2.93)/(11.95,2.23)/(11.75,1.52)). v8: $\ominus$ → ● filled red dot (carrier-neutral; q_tr label이 charge semantic 담당). **Role**: ensemble representation — 3 = "sufficient to illustrate"; 절대 count 아님; cRed = C/F deep red과 color-bind (deep trap이 macro bending 야기); ● polarity-neutral per §8.1
 - **G-5** q_tr leader (12.22,2.93)→(12.35,2.93) + '$q_{tr}$' label white fill cRed!70. **Role**: trapped charge entity 명명; white fill = wash 위에서 가독성 확보 (다른 cAmber!8 punch와 달리 white로 강조)
-- **G-6** Coulomb repulsion arrow (cRed!80 Stealth 0.7pt; v7 y 2.20→1.99: (11.95,1.99)→(11.10,1.99)) + 'Coulomb' (11.10,2.09)/'repulsion' (11.10,1.91) 2-line stacked. **Role**: G 가장 강한 visual claim — force vector + bold red text가 panel narrative ("거시적 발현")의 anchor; briefing §8.5 LOCKED: Maxwell attraction 화살표 금지, Coulomb-only
+- **G-6** Coulomb repulsion arrow (cRed!80 Stealth 0.7pt; v7 y 2.20→1.99: (11.95,1.99)→(11.10,1.99)) + 'Coulomb' (11.10,2.04) anchor=south east / 'repulsion' (11.10,1.94) anchor=north east 2-line stacked (**v8.2 polish**: anchor 변경 + y 2.09/1.91 → 2.04/1.94 — anchor=east 시 두 라벨 bbox가 arrow line at y=1.99 둘 다 가로질러 IoU=0.157 충돌; SE/NE anchor flip로 arrow가 라벨 사이를 지나게 분리). **Role**: G 가장 강한 visual claim — force vector + bold red text가 panel narrative ("거시적 발현")의 anchor; briefing §8.5 LOCKED: Maxwell attraction 화살표 금지, Coulomb-only
 - **G-7** air gap dimension (F1: 0.575→1.425cm, ↔ arrow 12.125→13.55 at y=0.85, unchanged in v7) + 'air gap' inline label (12.84,0.85) anchor=center fill=cAmber!8; 'undeflected' dashed line (v7: 12.125,3.40→12.125,1.20) + label (12.15,2.30) (v7: y 2.70→2.30); Δx dim (11.525,1.10)→(12.125,1.10) unchanged. **Role**: 3개 dimension이 macro 기하 communicating — air gap (clearance, 31° swing buffer 의도) / Δx (실제 displacement) / undeflected (reference 기준선). Three-dimension idiom이 cantilever physics를 quantitative-feeling 없이 cartoon-grade로 전달
 
 ### §13.9 Cross-panel bindings (semantic + visual echo mechanisms)
@@ -506,7 +506,15 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 **Active iteration target** (post-v7, 2026-05-16):
 - (none — all panels at stable point after v5/v5.1/v6/v6.1/v7 closure)
 
-**Recently iterated (v5–v7, 2026-05-15..16)**:
+**Recently iterated (v5–v8.3, 2026-05-15..16)**:
+- v8.3 (briefing-grounded audit closure):
+  - Gap #1 C-R1b shallow Gaussian σ 0.06 → 0.085 (briefing §13.3 spec)
+  - Gap #2 C-R5 ΔE_t arrow + label color cGray!70!black → cRed!75!black (binds depth scalar to deep trap species per §8.6 / §13.9 Binding-1)
+  - Gap #4 Row2-Caption em-dash: `--` → `---` (rendered – → —)
+- v8.2 polish (IoU collision closure):
+  - Panel A subtitle 'poly(S-r-DIB) linear copolymer' y 5.55 → 5.42 (descender/ascender clip)
+  - Panel A 'inv. vulc.' (2.55, 8.00) → (2.15, 7.82) (S8 vertex bump)
+  - Panel G G-6 Coulomb / repulsion anchor flip + y 2.09/1.91 → 2.04/1.94 (see §13.8 G-6)
 - v5/v5.1 (Panel G F1 polish): electrode shift +0.85cm, air gap 0.575→1.425cm, metallic + polymer gradients, light-source upper-left LOCKED, polymer internal chain hints (Gemini #2/#3/#4 adjudication)
 - v6 (D/E/F drawing quality): D lines separated no-cross + Debye redrawn, E S-shape, F peaks lowered, D/E/F axis-top 4.10→3.40, B chain spacing 0.75→0.60
 - v6.1 (Panel E linear-t): x-axis log t→t + linear-t stretched-exp curve
