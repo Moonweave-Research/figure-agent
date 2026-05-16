@@ -192,8 +192,11 @@
 % empty space.
 \draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!70!black,
       line width=0.55pt] (s8.south west) to[bend right=14] (2.38,7.32);
+% v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
+%  S8 ring's lower-left vertex S atom. New position sits along the arrow path
+%  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
 \node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont,
-      anchor=south, fill=white, inner sep=1pt] at (2.55,8.00) {inv.\ vulc.};
+      anchor=south, fill=white, inner sep=1pt] at (2.15,7.82) {inv.\ vulc.};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
@@ -201,8 +204,10 @@
 % R10 subtitle: changed from "DIB-linked polysulfide network" — strictly,
 % poly(S-r-DIB) is a LINEAR random copolymer (DIB is bivalent; no covalent
 % crosslinks in the primary microstructure). Subtitle reflects molecular truth.
+% v8.2 polish: subtitle dropped from y=5.55 to y=5.42 — was clipping descenders
+%  of "polymer" against ascenders of "poly" (IoU=0.055 collision).
 \node[labelMute, anchor=north west]
-  at (0.10,5.55) {poly(S-r-DIB) linear copolymer};
+  at (0.10,5.42) {poly(S-r-DIB) linear copolymer};
 
 % Inter-panel arrow A → B
 \draw[interArrow] (3.50, 7.0) -- (3.85, 7.0);
@@ -722,10 +727,13 @@
 % --- Coulomb repulsion arrow + 2-line label (v7: y 2.20→1.99) ---
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
   (11.95, 1.99) -- (11.10, 1.99);
+% v8.2 polish: anchors flipped to south east / north east so the arrow line at
+%  y=1.99 sits BETWEEN the labels rather than crossing through both bounding
+%  boxes (was IoU=0.157 collision between Coulomb / repulsion).
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
-      anchor=east] at (11.10, 2.09) {Coulomb};
-\node[labelMute, anchor=east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black] at (11.10, 1.91) {repulsion};
+      anchor=south east] at (11.10, 2.04) {Coulomb};
+\node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cRed!75!black] at (11.10, 1.94) {repulsion};
 
 % --- Δx displacement (just below tip, full Δx=0.60 visible) ---
 % Tip center at y=1.25 = (11.40+11.65)/2 = 11.525
