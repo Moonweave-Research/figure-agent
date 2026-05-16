@@ -184,10 +184,11 @@
   (5.85, 4.20) rectangle (6.35, 4.35);
 \draw[cGray!60!black, line width=0.5pt] (6.10, 4.35) -- (6.10, 4.50);
 
-% Q_clip label (locked negative charge)
-\node[labelStrong, anchor=west, font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
+% v2 polish: Q_clip label moved above clip (was at (6.50, 4.27) overlapping
+% F_Coulomb arrow). Now centered above mount hatch.
+\node[labelStrong, anchor=south, font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
       text=cBlue!75!black, fill=cLGray!8, inner sep=1pt]
-  at (6.50, 4.27) {$Q_{\mathrm{clip}} = -CV_0$ (locked)};
+  at (6.10, 4.72) {$Q_{\mathrm{clip}} = -CV_0$ (locked)};
 
 % --- Polymer cantilever (bends RIGHT in Phase D — Coulomb repulsion AWAY from electrode) ---
 % Root at (6.10, 4.20), curving right toward x=6.60 at tip
