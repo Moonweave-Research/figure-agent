@@ -60,10 +60,14 @@ Original gate split into two:
 | Prerequisite | State | Evidence |
 |---|---|---|
 | Enumeration (≥1 concrete panel sub-region list) | ✅ MET | §8 case study — 46 sub-regions across `fig1_overview_v2_pair_001_vault` 7 panels + Row 2 cover-binding. Source: `examples/fig1_overview_v2_pair_001_vault/briefing.md` §13. |
-| Iteration log (which sub-regions actually received 1-line patches over multiple cycles) | ❌ PENDING | §8.4 explicitly requests this as the next dogfood input. Without it, "iteration density correct?" remains unanswered. |
+| Iteration log (which sub-regions actually received 1-line patches over multiple cycles) | 🟡 LIVE EVIDENCE STARTED | `examples/fig1_overview_v2_pair_001_vault/subregion_iteration_log.md` records the v5-v7 active/stable split and concrete patch units. More cycles and at least one cross-fixture comparison are still required before tool design unblocks. |
 | Cross-fixture generalization | ❌ PENDING | §8.4 requests enumeration for at least one other fixture (`fig1_overview_v2` no-vault arm or `golden_trap_depth_picture`). Single-fixture form might not generalize. |
 
-**Design remains blocked** until iteration log + cross-fixture comparison surface. The enumeration alone tells us *what* sub-regions exist; the iteration log tells us *which ones are real iteration units vs. named-but-stable catalog entries* (§8.3 #2). Without the latter, schema design optimizes for the wrong dimension.
+**Design remains blocked** until the live iteration log has enough cycles and
+cross-fixture comparison surfaces. The enumeration alone tells us *what*
+sub-regions exist; the iteration log tells us *which ones are real iteration
+units vs. named-but-stable catalog entries* (§8.3 #2). Without enough of the
+latter, schema design optimizes for the wrong dimension.
 
 Tool shape must come from observed iteration, not from this issue.
 
@@ -114,4 +118,5 @@ A: From this case: text-form sub-region list in `briefing.md` is sufficient *as 
 ### 8.4 Next dogfood inputs requested
 
 - Iteration log: which sub-regions actually got 1-line patches over the next 5-10 cycles, and which were "named but never touched"? — informs whether enumeration density is correct.
+- Pilot live log: `examples/fig1_overview_v2_pair_001_vault/subregion_iteration_log.md` is now the current evidence surface for the v5-v7 loop. Treat it as live evidence, not as a finalized schema.
 - Cross-fixture comparison: enumerate sub-regions for at least one other fixture (`fig1_overview_v2` no-vault arm or `golden_trap_depth_picture`) to test whether the form generalizes.
