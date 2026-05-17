@@ -317,12 +317,17 @@ def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str
 
 def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
     stop_reason = loop_decision["stop_reason"]
+    recommended = loop_decision.get("recommended_next_action", "")
     if stop_reason == "human_gate_required":
         level = "human_review_required"
     elif stop_reason == "patch_target_recommended":
         level = "patch_allowed"
     elif stop_reason == "ambiguous_patch_selection":
         level = "ambiguous_patch_selection"
+    elif stop_reason == "status_action_required" and "--force-golden" in recommended:
+        level = "manual_approval_required"
+    elif stop_reason == "status_action_required" and "accepted: true" in recommended:
+        level = "manual_approval_required"
     elif stop_reason in {
         "status_action_required",
         "missing_adjudication",

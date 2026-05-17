@@ -9,7 +9,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
+from fig_loop import FigLoopError, _escalation_summary, ensure_safe_command, run_loop  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 
@@ -171,6 +171,32 @@ def test_loop_human_gate_is_domain_review_required(tmp_path: Path) -> None:
     assert iteration["escalation_level"] == "human_review_required"
     assert iteration["requires_user_input"] is True
     assert iteration["requires_domain_review"] is True
+
+
+def test_loop_force_golden_status_action_is_manual_approval_required(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "loop_demo.tex").write_text("\\documentclass{standalone}\n", encoding="utf-8")
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect tracked golden approval",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration_path = run_dir / "iteration_001.json"
+    data = json.loads(iteration_path.read_text(encoding="utf-8"))
+    data["stop_reason"] = "status_action_required"
+    data["recommended_next_action"] = (
+        "tracked golden artifact is intentionally stale; "
+        "to roll forward run /fig_export loop_demo --force-golden."
+    )
+
+    escalation = _escalation_summary(data)
+    assert escalation["escalation_level"] == "manual_approval_required"
+    assert escalation["requires_user_input"] is True
+    assert escalation["requires_domain_review"] is False
 
 
 def test_loop_records_stale_adjudication(tmp_path: Path) -> None:
