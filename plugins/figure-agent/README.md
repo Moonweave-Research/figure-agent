@@ -73,7 +73,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 | **Vision critique** | `/fig_critique` reads build PNG + per-panel reference crops, writes structured `critique.md`. Host Claude only — no external API. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
-| **Reproducibility** | Stale-render detection compares build PNG mtime against `.tex`, briefing, spec, reference images, hints, and the shared preamble. |
+| **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context), and reports a `final_ready` state vector. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate. |
 
 ## What's experimental / proposed (not built)
@@ -110,8 +110,9 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 ## Power-user notes
 
 - **Strict mode.** `FIGURE_AGENT_STRICT=1` promotes collision/clash findings to hard fail. Useful in CI; off by default so build PNG stays available during iteration.
-- **Golden fixture gate.** `check_golden_artifacts.py` auto-escalates when `spec.yaml` declares `accepted: true`. Override with `--no-require-accepted` for ad-hoc inspection.
-- **Skip critique on export.** `scripts/run_export.py <name> --skip-critique` for intentional drafts. Otherwise, when a reference image is present, missing/stale `critique.md` blocks export.
+- **Golden fixture gate.** `check_golden_artifacts.py` auto-escalates when `spec.yaml` declares the `accepted` key (`true` or `false`). Override with `--no-require-accepted` for ad-hoc inspection.
+- **Skip critique on export.** `scripts/run_export.py <name> --skip-critique` for intentional drafts. Otherwise, when a declared reference image is usable, missing/stale `critique.md` blocks export. Declared-but-missing references are configuration errors and are not bypassed by `--skip-critique`.
+- **Status vector.** `/fig_status` prints `render_state`, `critique_state`, `export_state`, `acceptance_state`, and `final_ready`; use `final_ready: true` as the quick release triage signal, not stage 4 alone.
 - **Plugin install.** Validate with `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`, and `claude plugin validate ../../.claude-plugin/marketplace.json`. Test with `uv run pytest` and `uv run ruff check .`. `uv build` is *not* a release gate.
 - **Plugin cache audit.** Local installs copy the working directory into `~/.claude/plugins/cache/`. If a local install was made from a dirty checkout, run `python3 scripts/plugin_package_audit.py ~/.claude/plugins/cache/figure-agent-local/figure-agent/<version> --clean --max-mib 300` after `claude plugin update figure-agent@figure-agent-local` to remove generated build/cache paths and confirm the installed package is not bloated.
 - **Repo location.** Lives under `~/workspace/ResearchOS/` as a sibling to `[Athena]/` and `[Graph_making_hub]/` for development proximity. Plugin install copies to `~/.claude/plugins/cache/…` regardless.

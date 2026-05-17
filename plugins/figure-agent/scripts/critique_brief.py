@@ -18,6 +18,7 @@ from pathlib import Path
 
 from inputs import parse_briefing, parse_spec
 from PIL import Image
+from status import compute_reference_input_failures
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 
 MISSING_INVARIANTS = (
@@ -66,10 +67,9 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
 def _reference_image_path(example_dir: Path, spec: dict) -> Path | None:
     """Locate reference image. spec.yaml reference_image takes precedence over directory scan."""
     ref_image_str = spec.get("reference_image")
-    if ref_image_str:
-        candidate = example_dir / ref_image_str
-        if candidate.is_file():
-            return candidate
+    if isinstance(ref_image_str, str) and ref_image_str.strip():
+        candidate = example_dir / ref_image_str.strip()
+        return candidate if candidate.is_file() else None
     panel_ref_paths = {
         example_dir / reference
         for panel in spec.get("panels", [])
@@ -105,17 +105,6 @@ def _panel_reference_path(example_dir: Path, panel: dict) -> Path | None:
     return example_dir / reference
 
 
-def _panel_reference_paths(example_dir: Path, spec: dict) -> tuple[Path, ...]:
-    paths: list[Path] = []
-    for panel in spec.get("panels", []):
-        if panel.get("bbox_pdf_cm") is None:
-            continue
-        ref_path = _panel_reference_path(example_dir, panel)
-        if ref_path is not None and ref_path.exists():
-            paths.append(ref_path)
-    return tuple(paths)
-
-
 def _critique_source_paths(
     tex_path: Path, briefing_path: Path, example_dir: Path, spec: dict
 ) -> tuple[Path, ...]:
@@ -123,16 +112,6 @@ def _critique_source_paths(
     spec_path = example_dir / "spec.yaml"
     if spec_path.exists():
         paths.append(spec_path)
-    ref_image = _reference_image_path(example_dir, spec)
-    if ref_image is not None:
-        paths.append(ref_image)
-    paths.extend(_panel_reference_paths(example_dir, spec))
-    hints_path = example_dir / "coordinate_hints.yaml"
-    if hints_path.exists():
-        paths.append(hints_path)
-    subregion_log = example_dir / "subregion_iteration_log.md"
-    if subregion_log.exists():
-        paths.append(subregion_log)
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
     return tuple(paths)
@@ -282,6 +261,12 @@ def _panel_reference_sections(
     for index, panel in enumerate(spec.get("panels", [])):
         ref_path = _panel_reference_path(example_dir, panel)
         if ref_path is None:
+            if panel.get("bbox_pdf_cm") is not None:
+                panel_id = _panel_id(panel, index)
+                warnings.append(
+                    f"WARN: Panel `{panel_id}` declares bbox_pdf_cm but no reference_image; "
+                    "skipping per-panel comparison."
+                )
             continue
         panel_id = _panel_id(panel, index)
         if not ref_path.is_file():
@@ -340,6 +325,12 @@ def generate_for(example_dir: Path) -> str:
     spec = parse_spec(spec_path.read_text(encoding="utf-8"))
     sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
     name = str(spec.get("name") or example_dir.name)
+    reference_failures = compute_reference_input_failures(example_dir, spec)
+    if reference_failures:
+        failures = "; ".join(reference_failures)
+        raise CritiqueBriefError(
+            f"{failures}; fix declared reference inputs before /fig_critique"
+        )
 
     tex_path = example_dir / f"{name}.tex"
     png_path = example_dir / "build" / f"{name}.png"

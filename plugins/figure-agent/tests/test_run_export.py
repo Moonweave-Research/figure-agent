@@ -32,6 +32,28 @@ def _make_reference_fixture(tmp_path: Path) -> Path:
     return repo
 
 
+def _make_missing_reference_fixture(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    fixture = repo / "examples" / "broken_ref_fig"
+    (fixture / "build").mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: broken_ref_fig",
+                "style_profile: polymer-default",
+                "reference_image: reference/missing.png",
+                "panels: []",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fixture / "broken_ref_fig.tex").write_text("% tikz", encoding="utf-8")
+    (fixture / "build" / "broken_ref_fig.pdf").write_bytes(b"%PDF")
+    return repo
+
+
 def test_run_export_blocks_reference_fixture_without_critique(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
@@ -46,6 +68,52 @@ def test_run_export_blocks_reference_fixture_without_critique(
     assert "critique_missing" in captured.err
     assert "/fig_critique ref_fig" in captured.err
     assert "--skip-critique" in captured.err
+
+
+def test_run_export_blocks_declared_missing_reference_before_regenerate(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_missing_reference_fixture(tmp_path)
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "reference_image_missing" in captured.err
+    assert "reference/missing.png" in captured.err
+
+
+def test_run_export_skip_critique_still_blocks_declared_missing_reference(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_missing_reference_fixture(tmp_path)
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "reference_image_missing" in captured.err
+    assert "reference/missing.png" in captured.err
 
 
 def test_run_export_skip_critique_allows_regenerate(

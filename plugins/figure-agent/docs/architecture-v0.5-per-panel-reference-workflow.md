@@ -49,9 +49,10 @@ panels:
 ```
 
 **Compatibility:**
-- If `panels[i].reference_image` is present, v0.5 critique uses it for that panel.
-- If absent, falls back to the existing figure-level `reference_image` for that panel (current behavior, no regression).
-- If `bbox_pdf_cm` is present, the build crop is taken from those coordinates. If absent, `/fig_critique` either skips the panel-level comparison or uses a heuristic crop (TBD by Codex implementation; recommend skip-and-warn so missing bbox doesn't silently degrade the comparison).
+- Per-panel critique requires both `panels[i].reference_image` and `panels[i].bbox_pdf_cm`.
+- If either field is absent, `/fig_critique` skips that panel-level comparison and emits a WARN in the generated brief.
+- If `reference_image` is declared but the file is missing, treat it as configuration error; fix the path or add the file before critique/export.
+- There is no figure-level-reference fallback for panel crops: comparing a panel crop to a full-figure reference is scale-mismatched and produces noisy findings.
 
 **Coordinate convention:** PDF cm, top-left origin, y-down. Computed correctly: `cm_per_source = (\resizebox width in cm) / (source canvas width in cm)`; `origin_offset = border_pt × 2.54 / 72`. **Do NOT make the user compute these manually** (Gemini v0.4.1 review #4 was right). Provide a helper:
 
@@ -106,7 +107,7 @@ This step is **optional** — v0.5 MVP can ship without `/fig_extract` per-panel
 
 1. `uv run pytest` continues to pass.
 2. Adding `panels[i].reference_image` + `panels[i].bbox_pdf_cm` to a fixture's spec.yaml triggers per-panel critique.
-3. Absence of either field falls back to figure-level reference comparison (no regression on existing fixtures).
+3. Absence of either field emits a WARN and skips that panel-level comparison; a declared-but-missing file fails closed.
 4. `scripts/spec_bbox_helper.py` correctly converts source-cm to pdf-cm using the .tex's actual resizebox + border (sanity check: fig1_overview_v2 should give `cm_per_source ≈ 1.271` and `origin ≈ [0.141, 0.141]`).
 5. critique.md gains a `panels:` array with at least one finding per panel that has reference_image+bbox.
 6. Documentation updated:

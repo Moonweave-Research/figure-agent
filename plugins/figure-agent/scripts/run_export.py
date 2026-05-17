@@ -26,8 +26,10 @@ from export_freshness import (  # noqa: E402
 )
 from status import (  # noqa: E402
     CRITIQUE_MISSING,
+    CRITIQUE_REFERENCE_MISSING,
     CRITIQUE_STALE,
     compute_critique_state,
+    compute_reference_input_failures,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -78,12 +80,20 @@ def main() -> int:
         print(f"run_export.py: examples/{args.name}/ not found", file=sys.stderr)
         return 1
 
+    try:
+        critique_state = compute_critique_state(example_dir, args.name)
+    except ValueError as exc:
+        print(f"run_export.py: invalid spec.yaml: {exc}", file=sys.stderr)
+        return 1
+    if critique_state == CRITIQUE_REFERENCE_MISSING:
+        failures = "; ".join(compute_reference_input_failures(example_dir))
+        print(
+            f"run_export.py: {failures}; fix declared reference inputs before /fig_export.",
+            file=sys.stderr,
+        )
+        return 1
+
     if not args.skip_critique:
-        try:
-            critique_state = compute_critique_state(example_dir, args.name)
-        except ValueError as exc:
-            print(f"run_export.py: invalid spec.yaml: {exc}", file=sys.stderr)
-            return 1
         if critique_state in {CRITIQUE_MISSING, CRITIQUE_STALE}:
             note = "critique_missing" if critique_state == CRITIQUE_MISSING else "critique_stale"
             print(

@@ -187,9 +187,31 @@ def required_export_artifact_failures(exports: Path, name: str) -> list[str]:
         failures.append(f"missing artifact: {svg}")
     if not (tif.exists() or tiff.exists()):
         failures.append(f"missing artifact: {tif} (or {tiff.name})")
+    else:
+        tiff_failure = tiff_artifact_failure(tif if tif.exists() else tiff)
+        if tiff_failure:
+            failures.append(tiff_failure)
     if not png.exists():
         failures.append(f"missing artifact: {png}")
     return failures
+
+
+def tiff_artifact_path(exports: Path, name: str) -> Path:
+    tif = exports / f"{name}.tif"
+    if tif.exists():
+        return tif
+    return exports / f"{name}.tiff"
+
+
+def tiff_artifact_failure(path: Path) -> str | None:
+    try:
+        with Image.open(path) as image:
+            if image.format != "TIFF":
+                return f"invalid TIFF artifact: {path} is {image.format or 'unknown format'}"
+            image.verify()
+    except Exception as exc:
+        return f"invalid TIFF artifact: {path}: {exc}"
+    return None
 
 
 def load_golden_contract(spec_path: Path) -> dict | None:
@@ -397,6 +419,7 @@ def check_example(
     pdf = exports / f"{name}.pdf"
     svg = exports / f"{name}.svg"
     png = exports / f"{name}.png"
+    tif = tiff_artifact_path(exports, name)
     failures: list[str] = []
 
     # Auto-escalate to accepted mode whenever the fixture's spec.yaml declares
@@ -447,7 +470,7 @@ def check_example(
 
         failures.extend(source_inventory_failures(tex, contract.get("source_inventory")))
 
-        if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, png)):
+        if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, tif, png)):
             failures.append("QUALITY_AUDIT.md is stale or missing")
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
         failures.extend(publication_compliance_failures(audit))
