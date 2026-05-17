@@ -167,6 +167,7 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
         example_dir / "reference" / "reference_pack.md",
         example_dir / "authoring_plan.md",
         example_dir / "theory_guard.md",
+        example_dir / "subregion_iteration_log.md",
     )
     return tuple(path for path in candidates if path.is_file())
 

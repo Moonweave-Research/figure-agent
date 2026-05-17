@@ -102,7 +102,7 @@ def _panel_reference_path(example_dir: Path, panel: dict) -> Path | None:
     reference = panel.get("reference_image")
     if not isinstance(reference, str) or not reference.strip():
         return None
-    return example_dir / reference
+    return example_dir / reference.strip()
 
 
 def _critique_source_paths(

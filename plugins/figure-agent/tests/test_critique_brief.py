@@ -333,6 +333,32 @@ def test_critique_brief_adds_panel_reference_context_when_ref_and_bbox_present(t
     assert (example_dir / "build" / "panel_crops" / "a.png").is_file()
 
 
+def test_critique_brief_strips_panel_reference_path_whitespace(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant", png=False)
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    Image.new("RGB", (40, 40), "white").save(ref_dir / "panel_a.png")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "    reference_image: ' reference/panel_a.png '\n"
+        "    bbox_pdf_cm: [0, 0, 3.5, 1.75]\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    _write_real_render_pair(example_dir)
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "Panel `a`" in brief
+    assert "`examples/review_demo/reference/panel_a.png`" in brief
+    assert "Per-panel reference warnings" not in brief
+
+
 def test_critique_brief_warns_and_skips_panel_reference_without_bbox(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"
@@ -355,6 +381,27 @@ def test_critique_brief_warns_and_skips_panel_reference_without_bbox(tmp_path):
 
     assert "WARN" in brief
     assert "Panel `a` declares reference_image but no bbox_pdf_cm" in brief
+    assert "Per-panel reference contexts" not in brief
+
+
+def test_critique_brief_warns_and_skips_missing_panel_reference_without_bbox(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "    reference_image: reference/missing_panel.png\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "WARN" in brief
+    assert "Panel `a` declares reference_image `reference/missing_panel.png`" in brief
     assert "Per-panel reference contexts" not in brief
 
 

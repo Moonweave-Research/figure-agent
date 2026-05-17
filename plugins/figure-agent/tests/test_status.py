@@ -203,6 +203,7 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
         "reference/reference_pack.md",
         "authoring_plan.md",
         "theory_guard.md",
+        "subregion_iteration_log.md",
     ),
 )
 def test_stage_3_authoring_doc_stale_critique_redirects_to_fig_critique(
