@@ -61,6 +61,13 @@ def _write_adjudication(
     )
 
 
+def _assert_agent_action_required(iteration: dict) -> None:
+    assert iteration["escalation_level"] == "agent_action_required"
+    assert iteration["requires_user_input"] is False
+    assert iteration["requires_domain_review"] is False
+    assert iteration["patch_handoff"] is None
+
+
 def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     before_files = _fixture_files(fixture)
@@ -218,6 +225,7 @@ def test_loop_records_stale_adjudication(tmp_path: Path) -> None:
     assert iteration["adjudication"]["state"] == "stale"
     assert iteration["recommended_next_action"] == "review or refresh critique_adjudication.yaml"
     assert iteration["stop_reason"] == "stale_adjudication"
+    _assert_agent_action_required(iteration)
 
 
 def test_loop_records_invalid_adjudication_without_traceback(tmp_path: Path) -> None:
@@ -415,6 +423,7 @@ def test_loop_stops_on_missing_reference_input(tmp_path: Path) -> None:
     assert manifest["final_stop_reason"] == "reference_input_missing"
     assert iteration["stop_reason"] == "reference_input_missing"
     assert iteration["axis_verdicts"]["reference_fidelity"]["verdict"] == "blocked"
+    _assert_agent_action_required(iteration)
     assert iteration["recommended_next_action"] == (
         "fix declared reference inputs before continuing"
     )
@@ -536,7 +545,82 @@ def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
     assert iteration["stop_reason"] == "missing_adjudication"
     assert iteration["active_patch_target"] is None
     assert iteration["patch_handoff"] is None
+    _assert_agent_action_required(iteration)
     assert iteration["recommended_next_action"] == "create critique_adjudication.yaml"
+
+
+@pytest.mark.parametrize("critique_state", ["MISSING", "STALE"])
+def test_loop_missing_or_stale_critique_is_agent_action_required(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    critique_state: str,
+) -> None:
+    _make_fixture(tmp_path)
+    status_result = {
+        "stage": 4,
+        "name": "loop_demo",
+        "checks": [],
+        "next": f"run /fig_critique loop_demo because critique is {critique_state.lower()}.",
+        "notes": [f"critique_{critique_state.lower()}"],
+        "accepted": None,
+        "exports_substate": "FRESH",
+        "render_state": "FRESH",
+        "critique_state": critique_state,
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_loop_mod, "infer_stage", lambda _example_dir: status_result)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect critique freshness",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    _assert_agent_action_required(iteration)
+
+
+def test_loop_non_golden_stale_export_is_agent_action_required(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _make_fixture(tmp_path)
+    status_result = {
+        "stage": 4,
+        "name": "loop_demo",
+        "checks": [],
+        "next": "exports are stale — re-run /fig_compile loop_demo then /fig_export loop_demo.",
+        "notes": ["stale_export"],
+        "accepted": None,
+        "exports_substate": "STALE",
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "STALE",
+        "acceptance_state": "NOT_DECLARED",
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_loop_mod, "infer_stage", lambda _example_dir: status_result)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale export",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    _assert_agent_action_required(iteration)
 
 
 def test_loop_marks_status_action_required_when_status_next_blocks_patch(
@@ -559,6 +643,7 @@ def test_loop_marks_status_action_required_when_status_next_blocks_patch(
     assert manifest["final_stop_reason"] == "status_action_required"
     assert iteration["stop_reason"] == "status_action_required"
     assert iteration["patch_handoff"] is None
+    _assert_agent_action_required(iteration)
     assert iteration["recommended_next_action"] == (
         "run /fig_compile loop_demo to compile the TikZ source."
     )

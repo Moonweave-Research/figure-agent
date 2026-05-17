@@ -166,3 +166,38 @@ reviewer judgments. Routine stale-state and single-target polish work should be
 agent-actionable. The current pilot state is not a domain-review request; it is
 a manual approval checkpoint for tracked golden roll-forward via
 `/fig_export fig1_overview_v2_pair_001_vault --force-golden`.
+
+## Dogfood Run 3: Issue 6D/6E Closeout Evidence
+
+Command:
+
+```bash
+uv run python3 scripts/fig_loop.py fig1_overview_v2_pair_001_vault \
+  --goal "Verify escalation policy on pilot fixture"
+```
+
+Run directory:
+
+```text
+.scratch/fig-loop-runs/20260517-231322-215885-fig1_overview_v2_pair_001_vault
+```
+
+Observed decision:
+
+- `stop_reason: status_action_required`
+- `escalation_level: manual_approval_required`
+- `requires_user_input: true`
+- `requires_domain_review: false`
+- `human_gate_status: not_requested`
+- `adjudication_state: fresh`
+- `decisions: C004 resolved`
+- `patch_handoff: null`
+- `recommended_next_action: tracked golden artifact is intentionally stale; to
+  roll forward run /fig_export fig1_overview_v2_pair_001_vault --force-golden.`
+
+Closeout judgment:
+
+This run confirms that the pilot fixture is not asking for domain review. The
+only user-facing checkpoint is the explicit tracked-golden roll-forward approval.
+Because the only adjudicated finding is `C004: resolved`, `/fig_loop` does not
+create a patch handoff or reopen resolved critique work.

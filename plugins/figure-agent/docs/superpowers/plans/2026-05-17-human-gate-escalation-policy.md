@@ -98,11 +98,11 @@ Use these levels in runner output:
 
 **Acceptance criteria:**
 
-- [ ] Missing render maps to `agent_action_required`.
-- [ ] Missing/stale critique maps to `agent_action_required`.
-- [ ] Missing/stale adjudication maps to `agent_action_required`.
-- [ ] Non-golden stale export maps to `agent_action_required`.
-- [ ] Reference input missing remains blocking but not a review request; it should be an input repair action.
+- [x] Missing render maps to `agent_action_required`.
+- [x] Missing/stale critique maps to `agent_action_required`.
+- [x] Missing/stale adjudication maps to `agent_action_required`.
+- [x] Non-golden stale export maps to `agent_action_required`.
+- [x] Reference input missing remains blocking but not a review request; it should be an input repair action.
 
 ### Issue 6E: Dogfood Escalation Policy on Pilot Fixture
 
@@ -114,11 +114,11 @@ Use these levels in runner output:
 
 **Acceptance criteria:**
 
-- [ ] Run `/fig_loop fig1_overview_v2_pair_001_vault --goal "Verify escalation policy on pilot fixture"` and record the newest `decision.md` summary.
-- [ ] Confirm C004 remains resolved and does not request human review.
-- [ ] Confirm `TRACKED_GOLDEN --force-golden` is surfaced as manual approval, not human review.
-- [ ] Confirm no patch handoff is generated unless exactly one unresolved actionable finding exists.
-- [ ] Document any remaining friction in `docs/milestones/2026-05-17-fig-loop-pilot.md`.
+- [x] Run `/fig_loop fig1_overview_v2_pair_001_vault --goal "Verify escalation policy on pilot fixture"` and record the newest `decision.md` summary.
+- [x] Confirm C004 remains resolved and does not request human review.
+- [x] Confirm `TRACKED_GOLDEN --force-golden` is surfaced as manual approval, not human review.
+- [x] Confirm no patch handoff is generated unless exactly one unresolved actionable finding exists.
+- [x] Document any remaining friction in `docs/milestones/2026-05-17-fig-loop-pilot.md`.
 
 ## Implementation Tasks
 
@@ -524,9 +524,9 @@ Expected:
 
 ## Review Checklist
 
-- [ ] Can a routine stale critique/export state proceed without asking the user?
-- [ ] Can exactly one minor visual patch produce a patch handoff?
-- [ ] Can two patch candidates avoid accidental first-target selection?
-- [ ] Can `needs_human` still block patch handoff?
-- [ ] Are `--force-golden` and `accepted: true` approval checkpoints, not domain-review requests?
-- [ ] Does the pilot fixture show the intended escalation level after the change?
+- [x] Can a routine stale critique/export state proceed without asking the user?
+- [x] Can exactly one minor visual patch produce a patch handoff?
+- [x] Can two patch candidates avoid accidental first-target selection?
+- [x] Can `needs_human` still block patch handoff?
+- [x] Are `--force-golden` and `accepted: true` approval checkpoints, not domain-review requests?
+- [x] Does the pilot fixture show the intended escalation level after the change?
