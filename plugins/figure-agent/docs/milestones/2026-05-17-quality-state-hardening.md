@@ -43,10 +43,11 @@ future `critique.md` should carry:
 - `rubric_version`
 - `critique_input_hash`
 
-Status: prompt contract now asks the host-written critique to include these
-fields. `scripts/quality_manifest.py` provides deterministic input hashing.
-The next slice should make `/fig_status` compare this hash when existing
-critique files contain it.
+Status: prompt contract asks the host-written critique to include these fields.
+`scripts/quality_manifest.py` provides deterministic input hashing, and
+`/fig_status` plus `/fig_export` compare the hash when existing critique files
+contain complete hash metadata. Legacy critiques without hash metadata keep the
+mtime fallback.
 
 ### P2. Readiness separation
 

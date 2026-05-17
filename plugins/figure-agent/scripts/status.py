@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
+from quality_manifest import critique_hash_freshness, critique_manifest_paths
 from reference_contract import (
     compute_reference_input_failures,
     declared_figure_reference_path,
@@ -136,16 +137,7 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
 
 
 def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
-    paths = list(_source_paths(example_dir, name, spec))
-    ref_path = declared_figure_reference_path(example_dir, spec)
-    if ref_path is not None:
-        paths.append(ref_path)
-    hints_path = example_dir / "coordinate_hints.yaml"
-    if hints_path.exists():
-        paths.append(hints_path)
-    paths.extend(participating_panel_reference_paths(example_dir, spec))
-    paths.extend(_authoring_context_paths(example_dir))
-    return tuple(dict.fromkeys(paths))
+    return critique_manifest_paths(example_dir, name, spec, style_lock_path=STYLE_LOCK_PATH)
 
 
 def compute_critique_state(example_dir: Path, name: str, spec: dict | None = None) -> str:
@@ -167,6 +159,15 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     critique_path = example_dir / "critique.md"
     if not critique_path.is_file():
         return CRITIQUE_MISSING
+    hash_freshness = critique_hash_freshness(
+        critique_path,
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
+    )
+    if hash_freshness is not None:
+        return CRITIQUE_FRESH if hash_freshness else CRITIQUE_STALE
     if _is_stale(_critique_source_paths(example_dir, name, spec), (critique_path,)):
         return CRITIQUE_STALE
     return CRITIQUE_FRESH

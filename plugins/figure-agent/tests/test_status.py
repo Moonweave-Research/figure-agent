@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
+from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +47,44 @@ def _make_spec(
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
+
+
+def _critique_input_hash(fig_dir: Path, name: str) -> str:
+    spec = status_mod.parse_spec((fig_dir / "spec.yaml").read_text(encoding="utf-8"))
+    return input_manifest_hash(
+        status_mod._critique_source_paths(fig_dir, name, spec),
+        base_dir=REPO_ROOT,
+    )
+
+
+def _write_hashed_critique(
+    fig_dir: Path,
+    name: str,
+    *,
+    critique_input_hash: str | None = None,
+    generator_version: str | None = None,
+    rubric_version: str = "figure-agent.critique-rubric.v1",
+) -> None:
+    generator_version = generator_version or file_sha256(
+        REPO_ROOT / "scripts" / "critique_brief.py"
+    )
+    critique_input_hash = critique_input_hash or _critique_input_hash(fig_dir, name)
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        f"fixture: {name}\n"
+        "generated_at: 2026-05-17T00:00:00Z\n"
+        "generator: critique_brief.py\n"
+        f"generator_version: {generator_version}\n"
+        f"rubric_version: {rubric_version}\n"
+        f"critique_input_hash: {critique_input_hash}\n"
+        "verdict: ready\n"
+        "panels: []\n"
+        "findings: []\n"
+        "---\n"
+        "# Vision Critique\n",
+        encoding="utf-8",
+    )
 
 
 def test_stage_0_missing_directory(tmp_path: Path) -> None:
@@ -194,6 +233,145 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
     assert "critique_stale" in result["notes"]
     assert "/fig_critique" in result["next"]
     assert "before /fig_export" in result["next"]
+
+
+def test_hash_metadata_keeps_matching_critique_fresh_even_when_mtime_is_old(
+    tmp_path: Path,
+) -> None:
+    name = "hash_fresh_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name)
+
+    old_time = time.time() - 100
+    source_time = time.time() - 10
+    os.utime(fig_dir / "critique.md", (old_time, old_time))
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (source_time, source_time))
+    os.utime(build_dir / f"{name}.pdf", (source_time, source_time))
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
+
+
+def test_hash_metadata_marks_critique_stale_when_input_content_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_changed_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    old_hash = _critique_input_hash(fig_dir, name)
+    _write_hashed_critique(fig_dir, name, critique_input_hash=old_hash)
+    (fig_dir / "briefing.md").write_text("changed briefing", encoding="utf-8")
+
+    source_time = time.time() - 100
+    critique_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (source_time, source_time))
+    os.utime(fig_dir / "critique.md", (critique_time, critique_time))
+    os.utime(build_dir / f"{name}.pdf", (critique_time, critique_time))
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_marks_critique_stale_when_rubric_version_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_rubric_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version="figure-agent.critique-rubric.v0",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_marks_critique_stale_when_generator_version_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_generator_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        generator_version="sha256:00000000000000000000000000000000",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_malformed_critique_frontmatter_falls_back_to_mtime(
+    tmp_path: Path,
+) -> None:
+    name = "malformed_frontmatter_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        "generator_version: sha256:bad\n"
+        "rubric_version: figure-agent.critique-rubric.v1\n"
+        "critique_input_hash: [unterminated\n"
+        "---\n"
+        "# Vision Critique\n",
+        encoding="utf-8",
+    )
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(fig_dir / "critique.md", (fresh_time, fresh_time))
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
 
 
 @pytest.mark.parametrize(

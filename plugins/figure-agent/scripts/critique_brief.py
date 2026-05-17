@@ -18,18 +18,17 @@ from pathlib import Path
 
 from inputs import parse_briefing, parse_spec
 from PIL import Image
-from quality_manifest import file_sha256, input_manifest_hash
-from reference_contract import (
-    compute_reference_input_failures,
-    declared_figure_reference_path,
-    participating_panel_reference_paths,
+from quality_manifest import (
+    CRITIQUE_RUBRIC_VERSION,
+    compute_critique_input_hash,
+    critique_generator_version,
 )
+from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
-CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
@@ -99,32 +98,6 @@ def _critique_source_paths(
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
     return tuple(paths)
-
-
-def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
-    candidates = (
-        example_dir / "authoring_contract.md",
-        example_dir / "reference" / "reference_pack.md",
-        example_dir / "authoring_plan.md",
-        example_dir / "theory_guard.md",
-        example_dir / "subregion_iteration_log.md",
-    )
-    return tuple(path for path in candidates if path.is_file())
-
-
-def _critique_manifest_paths(
-    tex_path: Path, briefing_path: Path, example_dir: Path, spec: dict
-) -> tuple[Path, ...]:
-    paths = list(_critique_source_paths(tex_path, briefing_path, example_dir, spec))
-    ref_path = declared_figure_reference_path(example_dir, spec)
-    if ref_path is not None:
-        paths.append(ref_path)
-    hints_path = example_dir / "coordinate_hints.yaml"
-    if hints_path.is_file():
-        paths.append(hints_path)
-    paths.extend(participating_panel_reference_paths(example_dir, spec))
-    paths.extend(_authoring_context_paths(example_dir))
-    return tuple(dict.fromkeys(paths))
 
 
 def _line_numbered(text: str) -> str:
@@ -355,10 +328,12 @@ def generate_for(example_dir: Path) -> str:
     render_path = _example_relative_path(example_dir, png_path)
     ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
-    generator_version = file_sha256(Path(__file__))
-    critique_input_hash = input_manifest_hash(
-        _critique_manifest_paths(tex_path, briefing_path, example_dir, spec),
-        base_dir=REPO_ROOT,
+    generator_version = critique_generator_version(Path(__file__))
+    critique_input_hash = compute_critique_input_hash(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
     )
 
     ref_section = ""
