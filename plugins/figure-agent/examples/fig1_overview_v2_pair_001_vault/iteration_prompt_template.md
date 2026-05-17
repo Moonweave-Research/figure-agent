@@ -31,12 +31,35 @@ Sequential reads (cache for the duration of this iter):
 1. `panel_goals.md` §Panel `<ID>` — load intent / forbidden / 4-axis acceptance / known issues / sub-region checklist
 2. `spec.yaml` `panels[<ID>]` — load `bbox_pdf_cm` + `reference_image` (may be absent for A/B/C)
 3. `reference/audit_table.md` row for `<ID>` — load transferable + do-not-transfer + usability tag
-4. `build/fig1_overview_v2_pair_001_vault.png` — current visual baseline (Read tool)
+4. **Generate per-panel crop** at 600 DPI via `pdftocairo` (D pre-step — see below), then Read the crop instead of full-figure PNG
 5. `fig1_overview_v2_pair_001_vault.tex` lines for sub-regions in scope (per `briefing.md` §13.`<ID>`)
 6. `subregion_iteration_log.md` last 3 entries for this panel — load prior scope + 4-axis trajectory
 7. `critique.md` open findings for this panel — input to scope selection
 
 Parallel reads OK; do not skip any step.
+
+### D pre-step: per-panel crop to overcome Read-tool downsample
+
+Build PNG is 600 DPI / 4272×2688 — but Read tool downsamples for conversation display, making sub-pixel (≤0.15pt) changes invisible. Per-panel crop preserves DPI within a smaller file → micro-changes register.
+
+Approximate per-panel crop coordinates (top-left origin, 600 DPI pixels):
+
+| Panel | `pdftocairo` args | Crop dims |
+|---|---|---|
+| A | `-x 0 -y 0 -W 1100 -H 1300` | 1100×1300 |
+| B | `-x 1080 -y 0 -W 1000 -H 1300` | 1000×1300 |
+| C | `-x 2100 -y 0 -W 2180 -H 1300` | 2180×1300 |
+| Row2 | `-x 0 -y 1180 -W 4272 -H 200` | 4272×200 |
+| D | `-x 0 -y 1380 -W 1380 -H 1308` | 1380×1308 |
+| E | `-x 1450 -y 1380 -W 1450 -H 1308` | 1450×1308 |
+| F | `-x 2920 -y 1380 -W 1352 -H 1308` | 1352×1308 |
+
+Command pattern (run after every compile):
+```bash
+pdftocairo -png -r 600 <x> <y> <W> <H> -singlefile build/<name>.pdf build/panel_<ID>_iter<N>
+```
+
+Then Read `build/panel_<ID>_iter<N>.png` for scoring — NOT the full figure PNG.
 
 ---
 
@@ -67,7 +90,22 @@ Document the choice + 1-line rationale in iter log.
 - Mark this in iter log as `reference: briefing-only`
 - Higher drift risk acknowledged
 
-### Step 3: Patch proposal
+### Step 3: Patch proposal — delta-size guideline (Panel A pilot lesson)
+
+**Perceptibility tiers** (apply each patch consciously):
+
+| Change type | Delta | PNG-visible? | When to use |
+|---|---|---|---|
+| Weight tweak | ±0.05–0.15pt | sub-pixel at 178mm display, ⚠️ marginal even on crop | only when print-scale tuning is the goal (not initial Nature-grade push); flag honestly as ⚠️ |
+| Weight jump | ±0.20pt+ | visible on crop | aesthetic axis genuine improvement |
+| Tone shift | ±20%+ saturation | visible on crop | palette / wash / fill perceivable change |
+| Font size | +20%+ pt | clearly visible | typography rebalance |
+| Position / coord | ±0.10cm+ | clearly visible | layout fix |
+| Structural (new node, removed node, shape change) | — | always visible | major polish or correction |
+
+**Default for Nature-grade iteration**: prefer **≥+30% delta** OR multi-category mix (weight + tone + position) over micro-tweaks. Reserve micro-tweaks for print-scale-only tuning, marked explicitly.
+
+**Panel A pilot lesson** (iter 1+2 vs iter 3): 0.10pt weight changes are *technically correct* but sub-pixel — both author and user perceived "no change". A axis stayed ⚠️ for 2 iters. iter 3's +36% font + +50% tone moved A axis to ✅ in one pass. Trust this signal — bigger jumps faster.
 
 For each sub-region in scope, draft 1 patch:
 
@@ -162,6 +200,8 @@ fig1 panel-<ID> iter <N>/10: <2-3 word patch summary>
 
 Per-iter commit (NOT batched) — enables `git revert <iter-hash>` rollback.
 
+**Commit hash policy**: do NOT backfill commit hash into the iter log entry. Hash is retrievable via `git log --oneline | grep "panel-<ID> iter <N>"` anytime. Backfilling creates a second small commit per iter, doubling history noise. Panel A iter 1 has a backfilled hash as a relic; iter 2+ pattern is preferred.
+
 Do NOT push to remote autonomously. Push happens at panel-closure (all 4 axes ✅ for 2 consecutive iters) with user confirmation.
 
 ---
@@ -199,6 +239,9 @@ LLM picks the diagnosis + writes 3-line escalation message to user. Loop does no
 | Bundle multiple iter changes in one commit | Anti-rollback — single revert can't isolate bad patch |
 | Compile failure → continue scoring | Bad data; revert and exit iter |
 | Skipping log entry "because it was minor" | Loop opacity; next session can't bootstrap |
+| **Micro-tweak (≤0.15pt) at iter 1–2 of Nature-grade push** | Sub-pixel = invisible to author + user; A axis stays ⚠️; wastes iter budget. Use only for print-scale tuning. (Panel A pilot lesson) |
+| **Reading full-figure PNG for scoring** | Read-tool downsamples; micro/medium changes invisible. ALWAYS generate per-panel crop (`pdftocairo -W <px> -H <px>`) and Read the crop. (Panel A pilot lesson) |
+| **Skipping D pre-step on iter 1** | Establishing high-zoom baseline first iter avoids 2-iter false-⚠️ before discovering downsample issue. |
 
 ---
 
