@@ -70,6 +70,24 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Notes**: Two consecutive iters with A ⚠️ — Nature-grade for Panel A apparently requires more than weight/color tweaks. Iter 3-5 candidates: A-5 (S₈ inset proportion), A-7 (wash ellipse), A-8 (typography hierarchy). If A still ⚠️ by iter 7, escalation diagnosis (a) TikZ ceiling or (b) need structural change beyond 1-line patches becomes likely.
 - **Visibility gate**: intended yes (linker bonds darker matching ring; methyl stubs slightly more present at PNG) | anomaly none (no rogue stroke; color/weight changes preserve 3-tier discipline)
 
+### Panel A iter 3/10 — 2026-05-17 — A+B mode (perceptible deltas)
+
+- **Scope**: A-5 (S₈ atom letter font) + A-7 (wash ellipse tone)
+- **Rationale**: After iter 1+2 micro-tweaks (0.10pt) showed sub-pixel changes invisible at typical PNG view resolution (user-flagged "그림 똑같다"), strategy pivoted to **A+B mode**: A = bigger per-patch deltas (≥+30%), B = different sub-region categories (structural/typography vs weight-only). Validates Nature-grade progress requires perceptible jumps.
+- **Reference source**: briefing-only (Panel A positive-reference gap); workflow validation iter (D pre-step: per-panel crop generation via `pdftocairo -W 1100 -H 1300` to overcome Read-tool downsample)
+- **Patches**:
+  - A-5: S₈ atom letter font 4.4pt → 6pt (+36%) — 8 vertex S identities now readable; before, only outer S-S bond labels rendered (.tex L183, `\fontsize{4.4}{5.2}` → `\fontsize{6}{7.2}`)
+  - A-7: wash ellipse tone cAmber!08 → cAmber!12 (+50%) — row-binding cue perceivable rather than near-invisible (.tex L95, `\fill[cAmber!08]` → `\fill[cAmber!12]`)
+- **Briefing edits**: none (§13.1 A-5 font + A-7 wash tone within polish-range, not locked)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ⚠️→✅ 🎯
+- **Score delta (vs iter 2)**: T unchanged | S unchanged | L unchanged | **A ⚠️→✅ first transition**
+- **Notes**: Panel A reached Nature-grade chemistry-paper presence at iter 3 (cumulative: iter 1 aromatic ticks + iter 2 linker color binding + methyl visibility + iter 3 S₈ atom identity + wash binding). Per template termination rule, need 1 more consecutive ✅ iter with no new sub-regions touched for closure. Iter 4 candidate: verification-only OR continued polish on A-6/A-8.
+- **Visibility gate**: intended yes (S₈ vertex identities readable, wash visible as row anchor) | anomaly none (no overlap, no rogue stroke; palette/font stay within §10 polish ceiling)
+- **Workflow validation**:
+  - **D (DPI investigation)**: build PNG was already 600 DPI (4272×2688). Apparent low-res was Read-tool downsample at conversation-display layer. Fix: `pdftocairo -W <px> -H <px>` per-panel crop, smaller file = less downsample → micro-changes visible.
+  - **A (delta size)**: ≥+30% changes (font, tone, color hue) PNG-visible at standard resolution; <±0.15pt weight tweaks remain sub-pixel.
+  - **B (sub-region category)**: structural / typography / wash hue changes more transformative than weight-only tweaks on the same sub-region. Future iters should mix categories.
+
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,
   escape arrow, inverse-vulcanization arrow, and leaders carry different
   meanings. This is low-priority residual risk unless final review finds that

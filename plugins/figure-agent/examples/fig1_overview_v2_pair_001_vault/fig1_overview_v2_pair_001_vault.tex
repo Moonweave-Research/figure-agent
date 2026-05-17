@@ -92,7 +92,10 @@
 
 % R10: horizontal-row layout — wash replaced with horizontal ellipse hugging
 % the zigzag row of 4 rings + center polysulfide chains.
-\fill[cAmber!08] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
+% Panel A iter 3/10: wash tone cAmber!08→!12 (+50%) so the row-binding
+% cue is perceivable rather than near-invisible; still well below content
+% saturation (chain cAmber!85, ring cGray!85).
+\fill[cAmber!12] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
 
 % --- DIB benzene rings (meta-substituted, linear primary microstructure) ---
 \newcommand{\dibRingAt}[2]{%
@@ -179,8 +182,11 @@
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
       line width=0.7pt, minimum size=7mm, fill=cAmberSphere!40,
       inner sep=0pt] (s8) at (3.05,8.45) {};
+% Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
+% identities read at standard view (PNG-visible delta; previous 4.4pt
+% rendered as nearly-invisible marks inside octagon).
 \foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
-  \node[font=\sffamily\bfseries\fontsize{4.4}{5.2}\selectfont,
+  \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
         text=cAmber!95!black, inner sep=0pt,
         fill=cAmberSphere!40]
     at ({3.05 + 0.35*cos(\ang+22.5)}, {8.45 + 0.35*sin(\ang+22.5)}) {S};
