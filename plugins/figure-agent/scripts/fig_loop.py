@@ -22,6 +22,7 @@ from critique_adjudication import (  # noqa: E402
     load_adjudication,
 )
 from status import infer_stage  # noqa: E402
+from subregion_active_set import active_subregion_ids, parse_active_target_rows  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
@@ -101,20 +102,191 @@ def _adjudication_state(example_dir: Path) -> dict[str, Any]:
         "state": "stale" if stale else "fresh",
         "path": str(adjudication_path),
         "decision_count": len(adjudication.get("decisions", [])),
+        "decisions": adjudication.get("decisions", []),
         "source_critique_hash": adjudication["source_critique_hash"],
     }
 
 
-def _recommended_next_action(status_result: dict[str, Any], adjudication: dict[str, Any]) -> str:
-    if "critique_reference_missing" in status_result.get("notes", []):
-        return "fix declared reference inputs before continuing"
+def _reference_input_missing(status_result: dict[str, Any]) -> bool:
+    reference_notes = {
+        "critique_reference_missing",
+        "reference_image_missing",
+        "panel_reference_image_missing",
+    }
+    return bool(reference_notes.intersection(status_result.get("notes", [])))
+
+
+def _active_subregion_target(example_dir: Path) -> dict[str, str | None] | None:
+    log_path = example_dir / "subregion_iteration_log.md"
+    if not log_path.is_file():
+        return None
+    rows = parse_active_target_rows(log_path.read_text(encoding="utf-8"))
+    active_ids = active_subregion_ids(rows)
+    if not active_ids:
+        return None
+    return {
+        "finding_id": None,
+        "patch_target": active_ids[0],
+        "reason": "active sub-region target",
+    }
+
+
+def _first_decision(adjudication: dict[str, Any], decision: str) -> dict[str, Any] | None:
+    if adjudication["state"] != "fresh":
+        return None
+    for item in adjudication.get("decisions", []):
+        if item.get("decision") == decision:
+            return item
+    return None
+
+
+def _loop_decision(
+    status_result: dict[str, Any],
+    adjudication: dict[str, Any],
+    example_dir: Path,
+) -> dict[str, Any]:
+    if _reference_input_missing(status_result):
+        return {
+            "stop_reason": "reference_input_missing",
+            "recommended_next_action": "fix declared reference inputs before continuing",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
     if adjudication["state"] == "stale":
-        return "review or refresh critique_adjudication.yaml"
+        return {
+            "stop_reason": "stale_adjudication",
+            "recommended_next_action": "review or refresh critique_adjudication.yaml",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
     if adjudication["state"] == "invalid":
-        return "fix critique_adjudication.yaml"
+        return {
+            "stop_reason": "invalid_adjudication",
+            "recommended_next_action": "fix critique_adjudication.yaml",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
+    human_decision = _first_decision(adjudication, "needs_human")
+    if human_decision:
+        finding_id = human_decision["finding_id"]
+        return {
+            "stop_reason": "human_gate_required",
+            "recommended_next_action": f"human review required for {finding_id}",
+            "active_patch_target": None,
+            "human_gate_status": "required",
+        }
+
+    apply_decision = _first_decision(adjudication, "apply")
+    if apply_decision:
+        finding_id = apply_decision["finding_id"]
+        patch_target = apply_decision["patch_target"]
+        return {
+            "stop_reason": "patch_target_recommended",
+            "recommended_next_action": f"patch {finding_id}: {patch_target}",
+            "active_patch_target": {
+                "finding_id": finding_id,
+                "patch_target": patch_target,
+                "reason": apply_decision["reason"],
+            },
+            "human_gate_status": "not_requested",
+        }
+
     if adjudication["state"] == "missing" and (status_result.get("critique_state") == "FRESH"):
-        return "create critique_adjudication.yaml"
-    return status_result.get("next", "inspect figure state")
+        return {
+            "stop_reason": "missing_adjudication",
+            "recommended_next_action": "create critique_adjudication.yaml",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
+    active_subregion = _active_subregion_target(example_dir)
+    if active_subregion:
+        return {
+            "stop_reason": "active_subregion_recommended",
+            "recommended_next_action": (
+                f"patch active sub-region: {active_subregion['patch_target']}"
+            ),
+            "active_patch_target": active_subregion,
+            "human_gate_status": "not_requested",
+        }
+
+    if adjudication["state"] == "fresh" and adjudication.get("decisions"):
+        return {
+            "stop_reason": "no_actionable_findings",
+            "recommended_next_action": "no actionable adjudicated findings remain",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
+    return {
+        "stop_reason": "verify_only_complete",
+        "recommended_next_action": status_result.get("next", "inspect figure state"),
+        "active_patch_target": None,
+        "human_gate_status": "not_requested",
+    }
+
+
+def _axis_verdicts(
+    status_result: dict[str, Any],
+    adjudication: dict[str, Any],
+    loop_decision: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    stop_reason = loop_decision["stop_reason"]
+    return {
+        "render": {
+            "state": status_result.get("render_state"),
+            "verdict": "fresh" if status_result.get("render_state") == "FRESH" else "not_ready",
+        },
+        "static_visual": {
+            "state": "not_evaluated",
+            "verdict": "not_evaluated",
+        },
+        "critique": {
+            "state": status_result.get("critique_state"),
+            "verdict": "ready"
+            if status_result.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
+            else "needs_action",
+        },
+        "adjudication": {
+            "state": adjudication["state"],
+            "verdict": _adjudication_verdict(adjudication, stop_reason),
+        },
+        "theory": {
+            "state": "not_evaluated",
+            "verdict": "human_review_not_requested",
+        },
+        "reference_fidelity": {
+            "state": status_result.get("notes", []),
+            "verdict": "blocked" if stop_reason == "reference_input_missing" else "not_blocked",
+        },
+        "story_hierarchy": {
+            "state": "not_evaluated",
+            "verdict": "not_evaluated",
+        },
+        "export": {
+            "state": status_result.get("export_state"),
+            "verdict": "fresh" if status_result.get("export_state") == "FRESH" else "not_ready",
+        },
+        "publication_safety": {
+            "state": status_result.get("acceptance_state"),
+            "verdict": "human_gate"
+            if loop_decision["human_gate_status"] == "required"
+            else "not_cleared",
+        },
+    }
+
+
+def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str:
+    if stop_reason == "patch_target_recommended":
+        return "actionable"
+    if stop_reason == "human_gate_required":
+        return "human_gate"
+    if adjudication["state"] in {"stale", "invalid", "missing"}:
+        return adjudication["state"]
+    if stop_reason == "no_actionable_findings":
+        return "complete"
+    return "not_actionable"
 
 
 def _decision_markdown(
@@ -123,24 +295,32 @@ def _decision_markdown(
     goal: str,
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
-    next_action: str,
+    loop_decision: dict[str, Any],
 ) -> str:
     notes = status_result.get("notes", [])
     notes_text = ", ".join(notes) if notes else "(none)"
+    active_patch_target = loop_decision["active_patch_target"]
+    if active_patch_target:
+        finding_id = active_patch_target["finding_id"]
+        patch_target = active_patch_target["patch_target"]
+        active_patch_text = f"{finding_id} -> {patch_target}" if finding_id else str(patch_target)
+    else:
+        active_patch_text = "(none)"
     return "\n".join(
         [
             f"# Fig Loop Decision: {name}",
             "",
             f"- mode: {MODE}",
             f"- goal: {goal}",
-            "- stop_reason: verify_only_complete",
+            f"- stop_reason: {loop_decision['stop_reason']}",
             f"- stage: {status_result.get('stage')}/4",
             f"- render_state: {status_result.get('render_state')}",
             f"- critique_state: {status_result.get('critique_state')}",
             f"- export_state: {status_result.get('export_state')}",
             f"- adjudication_state: {adjudication['state']}",
+            f"- active_patch_target: {active_patch_text}",
             f"- notes: {notes_text}",
-            f"- recommended_next_action: {next_action}",
+            f"- recommended_next_action: {loop_decision['recommended_next_action']}",
             "",
             "Verify-only mode records loop evidence only. It does not patch source, "
             "compile outputs, export artifacts, or acceptance state.",
@@ -170,15 +350,19 @@ def run_loop(
 
     status_result = infer_stage(example_dir)
     adjudication = _adjudication_state(example_dir)
-    next_action = _recommended_next_action(status_result, adjudication)
+    loop_decision = _loop_decision(status_result, adjudication, example_dir)
+    axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision)
     completed_at = _utc_now()
 
     iteration = {
         "iteration": 1,
         "status": status_result,
+        "axis_verdicts": axis_verdicts,
         "adjudication": adjudication,
-        "recommended_next_action": next_action,
-        "human_gate_status": "not_requested",
+        "stop_reason": loop_decision["stop_reason"],
+        "active_patch_target": loop_decision["active_patch_target"],
+        "recommended_next_action": loop_decision["recommended_next_action"],
+        "human_gate_status": loop_decision["human_gate_status"],
     }
     manifest = {
         "schema": "figure-agent.fig-loop-run.v1",
@@ -188,7 +372,7 @@ def run_loop(
         "run_dir": str(run_dir),
         "started_at": started_at,
         "completed_at": completed_at,
-        "final_stop_reason": "verify_only_complete",
+        "final_stop_reason": loop_decision["stop_reason"],
         "branch": _git_value(repo_root, ("rev-parse", "--abbrev-ref", "HEAD")),
         "commit": _git_value(repo_root, ("rev-parse", "HEAD")),
         "iterations": ["iteration_001.json"],
@@ -203,7 +387,7 @@ def run_loop(
             goal=goal,
             status_result=status_result,
             adjudication=adjudication,
-            next_action=next_action,
+            loop_decision=loop_decision,
         ),
         encoding="utf-8",
     )

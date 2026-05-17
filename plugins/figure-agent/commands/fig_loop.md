@@ -15,8 +15,11 @@ uv run python3 scripts/fig_loop.py <name> --goal "<goal>"
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
-- `iteration_001.json` — `/fig_status`-equivalent state plus `critique_adjudication.yaml` status when present.
-- `decision.md` — human-readable stop reason and recommended next action.
+- `iteration_001.json` — `/fig_status`-equivalent state, per-axis verdicts,
+  `critique_adjudication.yaml` status, stop reason, active patch target, and
+  recommended next action.
+- `decision.md` — human-readable stop reason, active patch target, and
+  recommended next action.
 
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
 change acceptance state, stage files, or run git mutation commands. Use it to
