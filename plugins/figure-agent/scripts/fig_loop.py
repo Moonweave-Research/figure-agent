@@ -140,6 +140,12 @@ def _first_decision(adjudication: dict[str, Any], decision: str) -> dict[str, An
     return None
 
 
+def _decisions_with_value(adjudication: dict[str, Any], decision: str) -> list[dict[str, Any]]:
+    if adjudication["state"] != "fresh":
+        return []
+    return [item for item in adjudication.get("decisions", []) if item.get("decision") == decision]
+
+
 def _loop_decision(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
@@ -177,8 +183,18 @@ def _loop_decision(
             "human_gate_status": "required",
         }
 
-    apply_decision = _first_decision(adjudication, "apply")
-    if apply_decision:
+    apply_decisions = _decisions_with_value(adjudication, "apply")
+    if len(apply_decisions) > 1:
+        return {
+            "stop_reason": "ambiguous_patch_selection",
+            "recommended_next_action": (
+                "select exactly one apply decision in critique_adjudication.yaml"
+            ),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+    if len(apply_decisions) == 1:
+        apply_decision = apply_decisions[0]
         finding_id = apply_decision["finding_id"]
         patch_target = apply_decision["patch_target"]
         return {
@@ -305,6 +321,8 @@ def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
         level = "human_review_required"
     elif stop_reason == "patch_target_recommended":
         level = "patch_allowed"
+    elif stop_reason == "ambiguous_patch_selection":
+        level = "ambiguous_patch_selection"
     elif stop_reason in {
         "status_action_required",
         "missing_adjudication",

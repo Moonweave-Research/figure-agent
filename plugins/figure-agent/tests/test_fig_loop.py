@@ -288,6 +288,50 @@ def test_loop_identifies_apply_decision_patch_target(tmp_path: Path) -> None:
     assert "patch_handoff_target: finding C001" in decision
 
 
+def test_loop_stops_when_multiple_apply_decisions_make_patch_target_ambiguous(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "first overlap",
+                "patch_target": "panel A",
+                "evidence": "critique C001",
+            },
+            {
+                "finding_id": "C002",
+                "decision": "apply",
+                "reason": "second overlap",
+                "patch_target": "panel B",
+                "evidence": "critique C002",
+            },
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "choose next patch",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "ambiguous_patch_selection"
+    assert iteration["active_patch_target"] is None
+    assert iteration["patch_handoff"] is None
+    assert iteration["escalation_level"] == "ambiguous_patch_selection"
+    assert iteration["recommended_next_action"] == (
+        "select exactly one apply decision in critique_adjudication.yaml"
+    )
+
+
 def test_loop_stops_on_human_gated_decision(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     critique = fixture / "critique.md"
