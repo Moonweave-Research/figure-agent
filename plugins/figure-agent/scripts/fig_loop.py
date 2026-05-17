@@ -219,6 +219,14 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
+    if not status_result.get("workflow_ready"):
+        return {
+            "stop_reason": "status_action_required",
+            "recommended_next_action": status_result.get("next", "inspect figure state"),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
     return {
         "stop_reason": "verify_only_complete",
         "recommended_next_action": status_result.get("next", "inspect figure state"),

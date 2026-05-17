@@ -105,3 +105,35 @@ These cases require human/domain review before the next patch.
 This protocol prepares safe dogfood evidence for Issue 5. It does not implement
 safe auto-patch. At least five dogfood runs must show which finding classes are
 reliable before any auto-patch mode is considered.
+
+## Dogfood Run 1: fig1_overview_v2_pair_001_vault
+
+Command:
+
+```bash
+uv run python3 scripts/fig_loop.py fig1_overview_v2_pair_001_vault \
+  --goal "dogfood Issue 4B patch handoff usability"
+```
+
+Observed state:
+
+- `render_state: MISSING`
+- `critique_state: STALE`
+- `export_state: TRACKED_GOLDEN`
+- notes: `coordinate_hints_missing`, `critique_stale`, `partial_export`,
+  `stale_export`
+- `patch_handoff: null`
+
+Usability finding:
+
+The first run exposed that stale/missing status prerequisites were previously
+reported as `verify_only_complete`, which could be misread as a clean loop stop.
+The runner now reports `status_action_required` when no patch target is selected
+but `/fig_status` still requires compile/critique/export work.
+
+Current next action:
+
+Before patch-assisted dogfood can evaluate a real handoff on this fixture,
+refresh the status prerequisites: compile, critique when freshness requires it,
+and export according to the `/fig_status` next hint. Do not infer a patch target
+from this run because `patch_handoff` is null.

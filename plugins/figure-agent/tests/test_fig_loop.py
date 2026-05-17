@@ -83,7 +83,7 @@ def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path)
     assert manifest["fixture"] == "loop_demo"
     assert manifest["goal"] == "inspect current loop state"
     assert manifest["mode"] == "verify-only"
-    assert manifest["final_stop_reason"] == "verify_only_complete"
+    assert manifest["final_stop_reason"] == "status_action_required"
     assert iteration["status"]["stage"] == 1
     assert set(iteration["axis_verdicts"]) == {
         "render",
@@ -97,8 +97,8 @@ def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path)
         "publication_safety",
     }
     assert iteration["adjudication"]["state"] == "missing"
-    assert iteration["stop_reason"] == "verify_only_complete"
-    assert "verify_only_complete" in decision
+    assert iteration["stop_reason"] == "status_action_required"
+    assert "status_action_required" in decision
 
 
 def test_loop_records_fresh_adjudication(tmp_path: Path) -> None:
@@ -369,6 +369,32 @@ def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
     assert iteration["active_patch_target"] is None
     assert iteration["patch_handoff"] is None
     assert iteration["recommended_next_action"] == "create critique_adjudication.yaml"
+
+
+def test_loop_marks_status_action_required_when_status_next_blocks_patch(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "loop_demo.tex").write_text("\\documentclass{standalone}\n", encoding="utf-8")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale status",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["status"]["render_state"] == "MISSING"
+    assert manifest["final_stop_reason"] == "status_action_required"
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["patch_handoff"] is None
+    assert iteration["recommended_next_action"] == (
+        "run /fig_compile loop_demo to compile the TikZ source."
+    )
+    assert "stop_reason: status_action_required" in decision
 
 
 def test_loop_fails_for_missing_fixture(tmp_path: Path) -> None:
