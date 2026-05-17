@@ -27,7 +27,10 @@
 \begin{document}
 \resizebox{178mm}{!}{%
 \begin{tikzpicture}[
-  every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  % Figure-wide Nature compliance (iter 8 P2 defensive): default node text
+  % capped at 7pt so any node without explicit font override stays within
+  % Nature's "max 7 pt for all other text" rule.
+  every node/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
   % R4 style-guide tier (vault style_guide line_weights):
   %   primary 0.9pt — narrative paths (interArrow, snake chain, well curves, polymer outline).
   %   secondary 0.55pt — axes, spines, faint reference lines.
@@ -36,11 +39,15 @@
                      line width=0.9pt},
   rowBridgeArrow/.style={-{Stealth[length=10pt,width=7pt]}, cGray!70!black,
                          line width=1.6pt},
-  labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
-  labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  % Figure-wide Nature compliance (2026-05-17): max text size 7pt for
+  % non-panel-letter text per Nature/Nat Comm formatting guide.
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
   labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
                     text=cGray!80!black},
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{9.5}{11}\selectfont,
+  % Figure-wide Nature compliance: panel letter 8pt bold upright per Nature
+  % final-submission rule "8 pt bold, upright (not italic) a, b, c"
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
                       text=cGray!90!black},
 ]
 
@@ -51,12 +58,14 @@
 % v8.6 restructure: Row 2 letters re-anchored to 3-column boundaries.
 %   D at column D NW (x=0.10)  | E at column E NW (x=4.70)
 %   F at column F NW (x=9.50)  | G letter REMOVED (no column G in v8.6)
-\node[panelLetter, anchor=north west] at (0.10, 9.05) {A};
-\node[panelLetter, anchor=north west] at (3.60, 9.05) {B};
-\node[panelLetter, anchor=north west] at (6.95, 9.05) {C};
-\node[panelLetter, anchor=north west] at (0.10, 4.55) {D};
-\node[panelLetter, anchor=north west] at (4.70, 4.55) {E};
-\node[panelLetter, anchor=north west] at (9.50, 4.55) {F};
+% Figure-wide Nature compliance: lowercase panel letters per Nature/Nat Comm
+% rule "8 pt bold, upright (not italic) a, b, c".
+\node[panelLetter, anchor=north west] at (0.10, 9.05) {a};
+\node[panelLetter, anchor=north west] at (3.60, 9.05) {b};
+\node[panelLetter, anchor=north west] at (6.95, 9.05) {c};
+\node[panelLetter, anchor=north west] at (0.10, 4.55) {d};
+\node[panelLetter, anchor=north west] at (4.70, 4.55) {e};
+\node[panelLetter, anchor=north west] at (9.50, 4.55) {f};
 
 % ============================================================
 % Figure-wide macro: skeletal polysulfide zigzag chain (used by Panels A + B).
@@ -92,7 +101,10 @@
 
 % R10: horizontal-row layout — wash replaced with horizontal ellipse hugging
 % the zigzag row of 4 rings + center polysulfide chains.
-\fill[cAmber!08] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
+% Panel A iter 3/10: wash tone cAmber!08→!12 (+50%) so the row-binding
+% cue is perceivable rather than near-invisible; still well below content
+% saturation (chain cAmber!85, ring cGray!85).
+\fill[cAmber!12] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
 
 % --- DIB benzene rings (meta-substituted, linear primary microstructure) ---
 \newcommand{\dibRingAt}[2]{%
@@ -101,9 +113,11 @@
     \draw[cGray!85!black, line width=0.70pt]
       (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
       (240:\dibR) -- (300:\dibR) -- cycle;
-    \draw[cGray!85!black, line width=0.55pt] (66:0.78*\dibR) -- (114:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.55pt] (186:0.78*\dibR) -- (234:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.55pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
+    % Panel A iter 1/10: aromatic tick width 0.55→0.65pt for Nature-grade
+    % chemistry weight presence (ratio to outline 0.70pt now 0.93, was 0.79).
+    \draw[cGray!85!black, line width=0.65pt] (66:0.78*\dibR) -- (114:0.78*\dibR);
+    \draw[cGray!85!black, line width=0.65pt] (186:0.78*\dibR) -- (234:0.78*\dibR);
+    \draw[cGray!85!black, line width=0.65pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
   \end{scope}
 }
 % R10 horizontal-row zigzag layout: 4 DIB rings in alternating high/low row,
@@ -125,9 +139,9 @@
   \pgfmathsetmacro{\mnorm}{sqrt(\mdx*\mdx + \mdy*\mdy)}
   \pgfmathsetmacro{\mnx}{\mdx/\mnorm}
   \pgfmathsetmacro{\mny}{\mdy/\mnorm}
-  \draw[cGray!75!black, line width=0.45pt]
+  \draw[cGray!75!black, line width=0.55pt]
     (#1,#2) -- ({#1 - 0.08*\mny}, {#2 + 0.08*\mnx});
-  \draw[cGray!75!black, line width=0.45pt]
+  \draw[cGray!75!black, line width=0.55pt]
     (#1,#2) -- ({#1 + 0.08*\mny}, {#2 - 0.08*\mnx});
 }
 
@@ -138,14 +152,14 @@
 %   Ring_c (2.25,7.10): 240° (LL ← from b)      + 0°   (R  → chain to d)
 %   Ring_d (3.00,6.55): 120° (UL ← from c)      + 0°   (R  → right dangling)
 % All vertex pairs are 120° apart (meta).
-\draw[cGray!75!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
-\draw[cGray!75!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
-\draw[cGray!75!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
-\draw[cGray!75!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
-\draw[cGray!75!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
-\draw[cGray!75!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
-\draw[cGray!75!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
-\draw[cGray!75!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
+\draw[cGray!85!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
+\draw[cGray!85!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
+\draw[cGray!85!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
+\draw[cGray!85!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
+\draw[cGray!85!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
+\draw[cGray!85!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
+\draw[cGray!85!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
+\draw[cGray!85!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
 
 % --- Polysulfide segments (R10 horizontal-row zigzag, linear chain) ---
 % 3 internal chains (a→b, b→c, c→d) + left + right danglings.
@@ -166,25 +180,34 @@
 % R10: (S)_x composition label centered above the row, larger font (replaces
 % the prior small-on-short-chain placement). Acts as a single panel-level
 % composition annotation for all polysulfide segments.
-\node[font=\sffamily\fontsize{8}{9.5}\selectfont, text=cAmber!85!black,
+% iter 8 P1 fix: (S)_x label 8pt → 7pt to satisfy Nature max-text-size
+% rule (8pt was sole non-panel-letter violation post figure-wide pass).
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cAmber!85!black,
       anchor=south, inner sep=1pt]
-  at (1.90, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
+  at (1.85, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
 
 % --- S8 ring inset: explicit S atoms + center "S_8" identity label.
 % Background octagon kept as cAmberSphere wash; 8 "S" letters sit on the
 % vertices + bold "S_8" at center (reference idiom: vertex atoms name the
 % element, center label names the ring).
+% Panel A iter 7/10: S₈ inset shifted (3.05, 8.45) → (3.05, 8.55) to free
+% vertical room for full-text "inverse vulcanization" 2-line label between
+% (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
+% corner position (§13.1 A-5 semantic).
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
       line width=0.7pt, minimum size=7mm, fill=cAmberSphere!40,
-      inner sep=0pt] (s8) at (3.05,8.45) {};
+      inner sep=0pt] (s8) at (3.05,8.55) {};
+% Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
+% identities read at standard view (PNG-visible delta; previous 4.4pt
+% rendered as nearly-invisible marks inside octagon).
 \foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
-  \node[font=\sffamily\bfseries\fontsize{4.4}{5.2}\selectfont,
+  \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
         text=cAmber!95!black, inner sep=0pt,
         fill=cAmberSphere!40]
-    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.45 + 0.35*sin(\ang+22.5)}) {S};
+    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.55 + 0.35*sin(\ang+22.5)}) {S};
 }
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cAmber!95!black, anchor=center] at (3.05, 8.45) {S$_8$};
+      text=cAmber!95!black, anchor=center] at (3.05, 8.55) {S$_8$};
 
 % --- Inverse vulcanization transformation arrow (S8 → DIB Ring_c 60° vertex) ---
 % R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
@@ -195,8 +218,15 @@
 % v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
 %  S8 ring's lower-left vertex S atom. New position sits along the arrow path
 %  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
-\node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont,
-      anchor=south, fill=white, inner sep=1pt] at (2.15,7.82) {inv.\ vulc.};
+% Panel A iter 7/10 (M1 Nature-compliance fix): non-standard abbreviation
+% "inv. vulc." replaced with full text "inverse vulcanization" as 2-line
+% stacked label. Nature/Nat Comm rule: standard abbreviations OR full
+% text; "inv. vulc." is idiosyncratic and was undefined in caption.md.
+% 2-line stacked at italic 5.5pt fits the available gap between (S)_x
+% top (y=7.85) and S₈ bottom (y=8.10) without restructuring S₈ position.
+\node[font=\sffamily\fontsize{5}{5.7}\itshape\selectfont, text=cGray!75!black,
+      anchor=center, fill=white, inner sep=1pt, align=center]
+  at (2.50, 8.00) {inverse\\vulcanization};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
@@ -217,31 +247,33 @@
 % ============================================================
 % Panel B bbox: x=3.55..6.85  y=5..9
 
-% B2a: explicit skeletal zigzag chains using shared \zigSChain macro defined
-% near the top of the figure (figure-wide; also drives Panel A chains).
-% Counts 10/14/18/24 give ~2.4× S60→S85 progression with visibly countable atoms.
-% B2b + B3: each row labeled at its own right endpoint (anchor=west, x bound
-% to atom count) with stronger amber contrast (cAmber!90!black) and upright
-% sans (chemistry convention: element symbol upright, subscript upright).
-% R11 delicate Panel B: bond spacing now 0.10cm (was 0.12), atom radius 0.025
-% (was 0.04). xend formula and label y both reflect the new geometry.
-% v6: chain row spacing 0.75→0.60 (span 2.25→1.80, 20% compression)
-% center y=7.00; bottom-chain↔axis gap now 0.45 cm (was 0.40).
-\foreach \y/\n/\sn in {7.90/10/60, 7.30/14/70, 6.70/18/75, 6.10/24/85} {
+% Panel B iter 1/10 (2026-05-17): restructured 4 → 3 representative chains
+% per user "개념 figure" framing. Actual experimental sample set is
+% S60/S70/S75/S80/S85 (5 samples, 60-85 wt% S, briefing §8.8 Q1 LOCKED
+% updated). Concept-figure overview shows endpoints + middle (S60/S75/S85)
+% for visual clarity; full 5-sample data is in Fig 2~ (quantitative figures).
+%
+% B-1: 3 zigzag chains, atom counts 10/18/24 (monotonic, artistic correlate).
+% B-2: 3 endpoint labels S60/S75/S85 at terminal atom (anchor=west).
+% R11 delicate: bond spacing 0.10cm, atom r=0.025cm, bond width 0.5pt.
+% Chain y positions span 1.80cm (7.90 / 7.00 / 6.10), spacing 0.90cm —
+% increased from prior 0.60cm for cleaner breathing room with fewer chains.
+\foreach \y/\n/\sn in {7.90/10/60, 7.00/18/75, 6.10/24/85} {
   \zigSChain{3.95}{\y}{\n}
   \pgfmathsetmacro{\xend}{3.95 + 0.10*(\n-1)}
   \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
         anchor=west, inner sep=2pt]
     at (\xend, {\y + 0.04}) {S$_{\sn}$};
 }
-% B-4 (v8.4 NEW): sample boundary dividers — 3 thin dotted lines between
-% adjacent chain rows so 4 chains read as 4 *distinct samples* (S60/S70/S75/
-% S85), not as a single chain bundle. Per briefing §13.2 B-4 spec: cGray!25,
-% 0.18pt, densely dotted; x extent 3.85..6.30 covers full chain row span;
-% y at midpoints between adjacent chain centers (chain spacing 0.60, midpoints
-% at 7.60 / 7.00 / 6.40).
-\foreach \dy in {7.60, 7.00, 6.40} {
-  \draw[cGray!25, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+% B-4 (post-iter1 update): 2 sample boundary dividers between 3 chains.
+% Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
+% 3.85..6.30 covers chain row span; y at midpoints between adjacent chains.
+% New midpoints: y=7.45 (between 7.90 and 7.00) / y=6.55 (between 7.00 and 6.10).
+% Panel B iter 2/10: divider tone cGray!40 → cGray!55 (+38%) so 3-chain
+% sample-distinctness reads at print scale more confidently. Width held
+% at 0.18pt — §13.2 forbidden cap >0.20pt (mechanism-tier 침범 회피).
+\foreach \dy in {7.45, 6.55} {
+  \draw[cGray!55, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
@@ -377,20 +409,23 @@
 % per category and 1+1 ● count per band per §13.3 C-R2/C-R3).
 % v8.3 audit closure: σ 0.06 → 0.085 to match briefing §13.3 C-R1b (denominator
 % 0.0072 → 0.01445 = 2 × 0.085²).
-\fill[cBlue!18, opacity=0.55]
+% v8.7 critique C001 fix: horizontal scale 0.28/0.32 → 0.45/0.55 + opacity
+% 0.55 → 0.70 so the bell shape registers at 178mm print scale as a visible
+% Gaussian distribution (Q8 narrative "continuous DOS, not 2-level traps").
+\fill[cBlue!18, opacity=0.70]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!75!black, line width=0.50pt]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!18, opacity=0.55]
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
+\fill[cRed!18, opacity=0.70]
   plot[domain=5.40:6.70, samples=30, smooth]
-    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
 \draw[cRed!75!black, line width=0.55pt]
   plot[domain=5.40:6.70, samples=30, smooth]
-    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
 
 % --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
 % Convention #2 from 3rd reference search: top-tier figures use a real graph-
@@ -432,8 +467,11 @@
 % Escape arrows from BOTH shallow and deep (showing both are dynamic, no
 % one-sided "dominate" claim). Shallow escapes easier (shorter arrow with
 % larger head). Deep harder (longer arrow, smaller head).
+% v8.7 critique C005 fix: shallow weight 0.35 → 0.50pt for visible "easy
+% escape" cue. Deep stays at 0.35pt — weight asymmetry encodes activation
+% energy difference (thicker = easier).
 \draw[-{Stealth[length=3pt,width=2.4pt]}, dashed, cBlue!70!black,
-      line width=0.35pt] (11.10, 7.55) -- (11.10, 7.82);
+      line width=0.50pt] (11.10, 7.55) -- (11.10, 7.82);
 \draw[-{Stealth[length=2.6pt,width=2pt]}, dashed, cRed!70!black,
       line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
 
@@ -546,9 +584,8 @@
   at (0.65, 3.42) {A};
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (1.00, 3.57) {SMU};
-% Tiny readout indicator
-\draw[cGray!60!black, line width=0.18pt]
-  (0.85, 3.50) -- (1.20, 3.50) -- (1.20, 3.62) -- (0.85, 3.62) -- cycle;
+% v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
+% already carry source-meter identity; rectangle was decorative noise.
 
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
 % Top electrode (single-direction hatched, slightly thicker)
@@ -586,6 +623,11 @@
 % contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
   at (2.60, 3.62) {polymer film};
+% v8.7 critique C012 fix: name the MIM architecture so the 3-layer structure
+% is reader-identifiable even though polymer dominates visually. Compact
+% label in apparatus zone top-left, outside the stack to avoid lead-routing.
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=north west] at (0.10, 4.20) {MIM stack};
 
 % D-3 result zone axes (Stealth tipped, no ticks)
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
@@ -600,7 +642,13 @@
 \draw[cBlue!80!black, line width=0.80pt] (0.65, 1.90) -- (3.85, 0.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
-\draw[cGray!70!black, dashed, line width=0.55pt]
+% Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
+% (+36%) + tone cGray!70 → cGray!85 (+21%) so the reference-comparison
+% anchor reads with confidence vs power-law curves. Mined from Wang NatComm
+% 2022 Fig 1 (audit_table.md D-ref04 transferable: reference-curve styling).
+% Width 0.75pt stays under mechanism-tier 1.0pt — correct hierarchy preserved
+% (reference < primary curves 0.80pt).
+\draw[cGray!85!black, dashed, line width=0.75pt]
   (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
 \draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.70);
 \node[labelMute, text=cGray!65!black, anchor=west, fill=white, inner sep=1pt]
@@ -660,9 +708,8 @@
   (8.20, 3.70) rectangle (8.95, 4.00);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (8.575, 3.85) {$V_s$ meter};
-% Mini-readout indicator inside meter box (small numeric display cue)
-\draw[cGray!60!black, line width=0.15pt]
-  (8.30, 3.75) -- (8.85, 3.75);
+% v8.7 critique C008: V_s meter mini-readout indicator deleted — meter label
+% already carries function; line was invisible at print scale anyway.
 % Lead from probe support to meter box LEFT side
 \draw[cGray!75!black, line width=0.22pt]
   (7.40, 3.85) -- (8.20, 3.85);
@@ -758,7 +805,8 @@
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
   at (10.125, 3.80) {$V_{\mathrm{active}}$};
 % Pulse trace on PSU display
-\draw[cGray!60!black, line width=0.20pt]
+% v8.7 critique C003 v2 fix: width 0.40 → 0.60pt for clearer print-scale visibility.
+\draw[cGray!75!black, line width=0.60pt]
   (9.92, 3.60) -- (10.02, 3.60) -- (10.02, 3.72)
               -- (10.15, 3.72) -- (10.15, 3.60) -- (10.35, 3.60);
 % Neutral fixture (RIGHT 2/3 of zone, enlarged for readability)
@@ -773,9 +821,12 @@
     ({\sx-0.025}, 4.20) -- (\sx, 4.25) -- ({\sx+0.025}, 4.20);
 }
 % Neutral polymer (straight, pale — "before trapping baseline")
-\fill[cAmber!18, opacity=0.6]
+% v8.7 critique C006 fix: opacity 0.6 → 0.75 so apparatus polymer is
+% perceptible as a distinct object that Maxwell arrow acts upon. Still pale
+% relative to result-zone saturated cAmber!22→!42 gradient.
+\fill[cAmber!18, opacity=0.75]
   (12.40, 4.10) rectangle (12.50, 2.90);
-\draw[cAmber!70!black, line width=0.32pt, opacity=0.6]
+\draw[cAmber!70!black, line width=0.32pt, opacity=0.75]
   (12.40, 4.10) rectangle (12.50, 2.90);
 % Neutral electrode (Conrad 2016 cross-section style: cross-hatched)
 % v8.7 critique iter 3: x-aligned with result-zone electrode (x=13.55..13.80)
@@ -814,11 +865,11 @@
 \draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
       line width=0.45pt]
   (12.55, 3.50) -- (13.50, 3.50);
-% v8.8 dogfood patch: lift the baseline label off the dashed arrow path
-% while keeping the Maxwell cue secondary to the result-zone Coulomb arrow.
+% v8.7 critique iter 1: 2-line label stack → 1-line inline "F_Maxwell (baseline)"
+% v8.7 critique C009 fix: anchor flipped south → north so label sits BELOW arrow
+% line (y=3.50) at y=3.45, freeing the polymer-electrode gap for the arrow itself.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (12.90, 3.66) {$F_{\mathrm{Maxwell}}$ (baseline)};
+      anchor=north] at (12.90, 3.45) {$F_{\mathrm{Maxwell}}$ (baseline)};
 % v8.7 critique iter 1: REMOVED duplicate "air gap" label in apparatus zone
 % (kept only the result-zone version to avoid redundant labeling).
 

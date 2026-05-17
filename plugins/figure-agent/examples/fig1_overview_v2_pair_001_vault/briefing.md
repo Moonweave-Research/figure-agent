@@ -202,7 +202,7 @@ D/E/F's iconic cartoon plots. Pre-v8.4, G was visually dominant Row 2 element
 | 1 | Eye enters figure from top-left (Panel A) | 1s | reading habit (좌→우, 위→아래); A의 'Sulfur-rich polymer' bold label이 anchor |
 | 2 | Scan A: 4 DIB rings + polysulfide segments + S₈ ring (top-right) + inv.vulc. arrow | 1s | chemistry detail; "재료가 뭔지" 식별 |
 | 3 | Inter-arrow A → B horizontal trigger | 0.3s | "→" Stealth arrow at y=7.0 = "다음 zoom level" 신호 |
-| 4 | Scan B: 4 zigzag chains (S60..S85 samples) + axis 'Sulfur content, wt%' | 1s | "sulfur composition variable, monotonic wt% progression" 인식 |
+| 4 | Scan B: 3 representative zigzag chains (S60/S75/S85, endpoints + middle) + axis 'Sulfur content, wt%' | 1s | "sulfur composition variable, monotonic wt% progression" 인식 |
 | 5 | Inter-arrow B → C horizontal trigger | 0.3s | "→" 두 번째 arrow = bulk material로 또 한 번 zoom-out |
 | 6 | Panel C HERO dwell (split-half) | **5s** | C-L sheet (real-space) + C-R energy diagram + shallow/deep band + ● markers + dashed leaders + ΔE_t depth |
 | 7 | Descend toward Row 2 via caption | 0.5s | "convergent evidence" caption 시작 → §4.1 Row 2 flow 진입 |
@@ -212,7 +212,7 @@ Total ~9s for Row 1 (A 1s + B 1s + C 5s + transitions 1.6s + descend 0.5s).
 **Zoom-out mechanism — 3-step molecular→bulk progression**:
 
 1. **A: molecular detail** — chemistry-specific (DIB ring + polysulfide + S₈ + isopropenyl methyl pairs). Reader가 "재료 분자 구조" 식별. cAmber!8 wash ellipse가 ring+chain 묶음.
-2. **B: sulfur composition sampling** — 4 samples (S60/S70/S75/S85 = 60/70/75/85 wt% S) variation. Same `\zigSChain` macro로 A의 분자 detail이 composition variable로 abstract. Reader가 "황 함량이 다른 4 sample" 인식 (Q1 LOCKED: numbers = wt%, NOT atom count).
+2. **B: sulfur composition sampling** — concept-figure overview: 3 representative chains shown (S60/S75/S85 = endpoints + middle of the actual 5-sample paper set S60/S70/S75/S80/S85, 60/70/75/80/85 wt% S). Same `\zigSChain` macro로 A의 분자 detail이 composition variable로 abstract. Reader가 "황 함량이 다른 sample이 여럿 존재 + 범위는 S60..S85" 인식 (Q1 LOCKED: numbers = wt%, NOT atom count; full 5-sample dataset belongs to Fig 2~).
 3. **C HERO: bulk thin film + energy landscape** — Panel B의 ensemble이 bulk poly(S-r-DIB) thin film (C-L)으로 묶이고, 그 안에 trap states (● markers)가 분포. C-R는 같은 trap을 energy domain에서 다시 보여줌 (split-half binding).
 
 **Cross-panel echo** (A → B → C 연속성):
@@ -356,7 +356,7 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 - Quantitative force values (e.g., "F_Coulomb = 12 nN") → FORBIDDEN; Fig 1 is qualitative.
 8.6 Panel C ↔ Panel F color-consistent (bimodal: blue Shallow / red Deep).
 8.7 **Branching arrow physics constraint**: 3 spoke from C **must** match the 3 evidence lines in design.md §3.2 (kinetic / ISPD / mechanical). No new evidence line, no missing line. Spoke 순서 + label은 measurement modality, NOT causation chain — physics는 *3 independent measurements of same trap*, *not* causation chain D→...→G.
-8.8 Composition labels (S60 / S70 / S75 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("shallow-rich" / "deep-rich" / "low n" / "high n"). Numbers 60/70/75/85 refer to wt% S per planning/sulfur_sample_selection_policy.md. Drawn chain atom counts (10/14/18/24 in B-1) is artistic correlate only.
+8.8 Composition labels (S60 / S70 / S75 / S80 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("shallow-rich" / "deep-rich" / "low n" / "high n"). Numbers 60/70/75/80/85 refer to wt% S per planning/sulfur_sample_selection_policy.md (5 samples in paper; **Panel B shows 3 representative: S60/S75/S85** = endpoints + middle, concept-figure visual clarity per v8.7 iter1 user-confirmed restructure). Full 5-sample dataset belongs to Fig 2~ (quantitative panels). Drawn chain atom counts (10/18/24 in B-1) is artistic correlate only.
 
 ---
 
@@ -382,7 +382,7 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 - **Quantitative cross-panel inference 차단**: D의 n 값 ↔ F peak ratio 정량 연결, G의 Δx 값 ↔ q_tr charge 수치 inference 등은 reader가 *시도하면 안 되는* 추론 (cartoon register; Fig 3에서 다룸).
 - **Panel A topology 위반 금지** [LOCKED §6 + §12.3]: poly(S-r-DIB)는 **linear copolymer** (DIB는 bivalent, 결합 가능 위치 2개). Crosslinked network / branched / dendritic 표현 금지. DIB ring을 2개 초과 substituent로 그리거나 polysulfide segment이 3-way junction 형성 금지. A-1/A-2의 4 ring + 3 segment 구조가 **canonical**.
 - **Panel A S₈ ring 형태 변형 금지**: regular octagon만 허용 (`shapes.geometric regular polygon sides=8`). Hexagon, decagon, fused-ring 변형은 chemistry 위반. S₈ vertices 8개 = 'S' atom letters 8개, 중앙 'S₈' label = canonical.
-- **Panel B chain length monotonicity 위반 금지**: S₆₀ < S₇₀ < S₇₅ < S₈₅ atom count 순서가 위→아래 chain 길이 monotonic increase로 시각화. 순서 뒤바뀜 / 비-monotonic 변형 금지 (chain length variable이 ordering임을 깸).
+- **Panel B chain length monotonicity 위반 금지**: 표시된 3 representative sample (S₆₀ < S₇₅ < S₈₅) 의 drawn atom count 순서가 위→아래 monotonic increase로 시각화. 순서 뒤바뀜 / 비-monotonic 변형 금지 (chain length variable이 ordering임을 깸). 실제 paper 전체 sample 집합은 5개 (S60/S70/S75/S80/S85) 이며 monotonic 유지; Panel B는 그 중 3개 representative만 표시.
 - **Panel C-L spatial segregation 금지** [LOCKED §8.3]: shallow + deep trap이 polymer matrix 안에서 *공간적으로 분리* 되어 표시되면 안 됨 (e.g., LEFT half = shallow only, RIGHT half = deep only). MIXED distribution이 canonical — shallow ● + deep ●이 동일 matrix에 산재.
 - **Panel C dashed leader 형태 변형 금지** [LOCKED §17 dashed semantics]: C-L ● site → C-R trap level binding은 cBlue!55!black / cRed!55!black `densely dashed` 0.28pt **straight** line only. Curved / Stealth-tipped / 색 변형 금지 (semantic = "binding"; arrow=transition, curve=process와 분리 유지).
 - **Panel C ΔE_t 수치 부착 금지**: C-R5의 `$\Delta E_t$` annotation은 *symbolic depth scalar*. 단위 (eV) 또는 수치 부착 시 cartoon register 위반 + Fig 3 정량 plot 영역 침범.
@@ -574,12 +574,12 @@ require a §17 amendment.
 
 ### §13.2 Panel B — 3 sub-regions
 
-**Reading order**: (1) panel letter 'B' (좌상) → (2) 4 zigzag chains stacked vertically (B-1, n=60→85 위→아래 monotonic progression 인지) → (3) S₆₀ / S₇₀ / S₇₅ / S₈₅ endpoint labels at chain tails (B-2, composition coord) → (4) bottom axis arrow + 'Chain length, n' label (B-3, variable n 명시) → (5) inter-arrow → C HERO 진입.
+**Reading order**: (1) panel letter 'b' (좌상) → (2) 3 zigzag chains stacked vertically (B-1, S60→S75→S85 위→아래 monotonic progression 인지, representative subset of 5-sample paper set) → (3) S₆₀ / S₇₅ / S₈₅ endpoint labels at chain tails (B-2, composition coord) → (4) bottom axis arrow + 'Sulfur content, wt%' label (B-3, variable composition 명시) → (5) inter-arrow → C HERO 진입.
 
-- **B-1** 4 zigzag skeletal chains (10/14/18/24 atoms drawn; bond spacing 0.10cm, amplitude 0.08cm, atom r=0.025cm, bond w=0.5pt — R11 delicate). v6: chain row spacing compressed 0.75→0.60 (span 2.25→1.80; chain y = 7.90/7.30/6.70/6.10, center y=7.00). **Role**: **sulfur composition variation (wt%) visual sampling** (Q1 LOCKED: numbers = wt% S, NOT chain atom count); 4 samples (S60..S85) = sufficient monotonic progression; zigzag = sff skeletal chemistry convention; shared `\zigSChain` macro = A↔B chain identity binding (§13.9 cross-row). **Note**: drawn atom count (10/14/18/24)은 **artistic correlate** — longer drawn chain = qualitative "more S" 시각화; literal chain atom count 아님 (briefing §3.1 reader DO/DON'T 참조)
+- **B-1** 3 zigzag skeletal chains, representative subset of full 5-sample paper set (10/18/24 atoms drawn; bond spacing 0.10cm, amplitude 0.08cm, atom r=0.025cm, bond w=0.5pt — R11 delicate). v8.7 iter1 (2026-05-17): restructured 4 → 3 chains for concept-figure clarity; chain y = 7.90 / 7.00 / 6.10 (span 1.80cm, spacing 0.90cm — increased from prior 0.60cm for cleaner breathing room). **Role**: **sulfur composition variation (wt%) visual sampling** (Q1 LOCKED: numbers = wt% S, NOT chain atom count); 3 representative samples (S60/S75/S85 = endpoints + middle) for visual clarity in overview figure; full 5-sample dataset (S60/S70/S75/S80/S85) belongs to Fig 2~ quantitative panels. Zigzag = sff skeletal chemistry convention; shared `\zigSChain` macro = A↔B chain identity binding (§13.9 cross-row). **Note**: drawn atom count (10/18/24) is **artistic correlate** — longer drawn chain = qualitative "more S" 시각화; literal chain atom count 아님 (briefing §3.1 reader DO/DON'T 참조)
 - **B-2** sample-name endpoint labels at terminal atoms (S₆₀ / S₇₀ / S₇₅ / S₈₅, cAmber!90 6.5pt; full 4-label set). **Role**: **sample names derived from sulfur wt%** (Q1 LOCKED): S60 = 60 wt% S sample, ..., S85 = 85 wt% S sample (per planning/sulfur_sample_selection_policy.md); subscript form은 sample naming convention (NOT atom count subscript). §8.8 LOCKED — S60..S85 composition labels는 B에만 허용 (Row 2 plot은 concept만); right anchor at terminal atom = chain의 "끝" 시각 정렬
 - **B-3** bottom horizontal axis arrow + '**Sulfur content, wt%**' italic label (v8 Q1 fix; was 'Chain length, n'). **Role**: composition variable 명시; arrow = direction (60 wt% → 85 wt%, monotonic 보장); B-2의 sample-name labels (S60..S85)이 이 axis 위에서 wt% progression으로 읽힘
-- **B-4** sample boundary divider lines (v8.4 NEW): 4 chains 사이에 3개의 thin horizontal `cGray!25, line width=0.18pt, densely dotted` divider lines, x extent 동일 (chain row span 0.10..3.10), y at midpoints between adjacent chains. **Role**: 4개 chain row이 *4개 distinct sample* (S60/S70/S75/S85) 임을 시각적으로 명시 — pre-v8.4에서 chain bundle처럼 한 덩어리로 읽히는 risk 차단. divider는 *separation cue* only (NOT data axis), 따라서 dotted + 매우 얕은 cGray로 inter-sample boundary만 표시. **Forbidden**: solid lines (axis tone 침범), color (sample-identity confusion), width > 0.20pt (mechanism-tier 침범)
+- **B-4** sample boundary divider lines (v8.4 NEW, v8.7 iter1+iter2 updated): 3 chains 사이에 2개의 thin horizontal `cGray!55, line width=0.18pt, densely dotted` divider lines (tone progression: !25→!40 post-C002 → !55 post-iter2 +38% for perceptible print-scale separation), x extent 동일 (3.85..6.30), y at midpoints between adjacent chains (7.45 / 6.55). **Role**: 3개 chain row이 *3개 distinct representative sample* (S60/S75/S85) 임을 시각적으로 명시 — chain bundle 오독 risk 차단. divider는 *separation cue* only (NOT data axis), 따라서 dotted + 얕은 cGray로 inter-sample boundary만 표시. **Forbidden**: solid lines (axis tone 침범), color (sample-identity confusion), width > 0.20pt (mechanism-tier 침범)
 
 ### §13.3 Panel C — 11 sub-regions (HERO #1, 5s dwell)
 
@@ -727,7 +727,7 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 - **A-3 (S)_x ↔ B variable n** [composition tag]: A의 `(S)_x` label에서 'x' = B의 'n' (chain monomer 수); A는 generic chemistry, B는 specific length quantization.
 - **A/B ↔ C-L material identity** [amber tone]: cAmber!8 wash (A) + cAmber chains (B) + cAmber gradient sheet (C-L) — 동일 hue family가 "분자 (A) → length variation (B) → bulk thin film (C-L)" zoom-out 흐름 시각화.
 - **A → B → C HERO eye-flow** [3-zoom narrative]: A "재료 식별" 1s → B "분자 heterogeneity" 1s → C "trap landscape" 5s dwell (§2 visual story arc). 좌→우 horizontal progression = "분자 단위 → bulk 단위 → trap 단위" mental zoom.
-- **B-3 'Chain length, n' axis ↔ C-L sheet** [discrete→continuous]: B의 discrete 4 chains이 C-L의 continuous bulk sheet으로 압축 (ensemble→bulk averaging mental model).
+- **B-3 'Sulfur content, wt%' axis ↔ C-L sheet** [discrete→continuous]: B의 discrete 3 representative chains이 C-L의 continuous bulk sheet으로 압축 (ensemble→bulk averaging mental model; bulk thin film이 5-sample composition range 전체의 representative).
 - **C-L ↔ C-R within Panel C** [split-half binding]: C-L의 4 ● sites와 C-R의 4 trap levels이 동일 trap 분포를 2 representation (real-space + energy diagram); §8.3 LOCKED — dashed leaders가 site↔level 직접 binding (visual proof: "같은 trap이 두 그림에 나타남").
 
 **Cross-row bindings (Row 1 → Row 2):**
@@ -786,7 +786,7 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
   - §3.2 NEW Setup-context rule (≤ 0.5cm mini-icons, mono cGray, ≤ 0.30pt, peripheral-vision read)
   - D-6 NEW kinetic-measurement setup icon (current source + sample slab) at (3.05, 3.30)
   - E-5 / F-6 NEW shared ISPD-apparatus icon (corona needle + sample + Kelvin probe) at (7.05, 2.55) — single icon binds E↔F per §6 paired ISPD
-  - B-4 NEW sample boundary divider lines (3 thin dotted cGray!25, separates 4 chains as distinct samples vs reading as bundle)
+  - B-4 sample boundary divider lines (post-v8.7 iter1: 2 dotted cGray!40 between 3 representative chains)
   - Total sub-regions 53 → 56
 - v8.3 (briefing-grounded audit closure):
   - Gap #1 C-R1b shallow Gaussian σ 0.06 → 0.085 (briefing §13.3 spec)
@@ -876,7 +876,7 @@ breaks.
    cGray!75!black stroke only, ≤ 0.30pt line, peripheral-vision read.
    Sister figures showing measurement context must follow same size cap.
 
-8. **Composition labels** (§8.8): sample names S60/S70/S75/S85 only in
+8. **Composition labels** (§8.8): sample names S60/S70/S75/S80/S85 (5 samples in paper) only in
    composition-variable panels (Fig 1 Panel B + Fig 4 composition sweep);
    forbidden on result panels (Fig 1 Row 2 + Fig 2/3 plots = concept labels
    like "deep-rich" / "shallow-rich" / "low n" only).

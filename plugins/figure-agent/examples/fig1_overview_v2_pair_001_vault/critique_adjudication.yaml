@@ -1,9 +1,0 @@
-schema: figure-agent.critique-adjudication.v1
-fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:cba338d98c9c84d2a4e93200defb2081653ff7ba6a0aacb93a20d4a34592b5a2
-decisions:
-  - finding_id: C004
-    decision: resolved
-    reason: "v8.8 dogfood patch lifted the Maxwell baseline label off the dashed arrow path."
-    patch_target: "Panel F apparatus zone, Maxwell baseline label at tex lines 817-819"
-    evidence: "bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex; visual clash candidates 56 -> 54."

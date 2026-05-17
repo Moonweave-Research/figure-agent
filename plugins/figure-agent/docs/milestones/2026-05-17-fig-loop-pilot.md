@@ -201,3 +201,18 @@ This run confirms that the pilot fixture is not asking for domain review. The
 only user-facing checkpoint is the explicit tracked-golden roll-forward approval.
 Because the only adjudicated finding is `C004: resolved`, `/fig_loop` does not
 create a patch handoff or reopen resolved critique work.
+
+## Merge Preflight Note
+
+The local `main` branch continued visual iteration on
+`fig1_overview_v2_pair_001_vault` after the loop dogfood runs above. During
+merge preflight, the active fixture source and `critique.md` were preserved from
+`main` instead of carrying forward the branch-local dogfood fixture edits. The
+branch-local `critique_adjudication.yaml` was not carried forward because its
+`C004` decision referred to the dogfood critique's Maxwell-label finding, while
+the active `main` critique has a different finding history.
+
+Treat Dogfood Runs 2-3 as evidence for the `/fig_loop` contract and escalation
+policy, not as the current post-merge visual acceptance state for this fixture.
+After the visual iteration stabilizes, rerun `/fig_critique` and recreate
+`critique_adjudication.yaml` before using this fixture as the next pilot state.

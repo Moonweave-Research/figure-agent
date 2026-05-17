@@ -5,29 +5,61 @@ panels:
   - id: A
     caption: poly(S-r-DIB) primary microstructure
     bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
+    # No positive reference yet; sulfur_polymer_panelA_ref.png is an
+    # anti-reference (network topology forbidden). See reference/audit_table.md.
   - id: B
-    caption: S60–S85 chain length scaffold
+    caption: Sulfur composition variation — 3 representative chains (S60/S75/S85) of paper's 5-sample range (S60/S70/S75/S80/S85)
     bbox_pdf_cm: [4.655, 0.141, 8.850, 5.227]
+    # Concept-figure scaffold (post-iter1 2026-05-17 restructure 4→3). Full
+    # 5-sample dataset belongs to Fig 2~ quantitative panels. See
+    # reference/audit_table.md.
   - id: C
-    caption: Localized traps (HERO #1)
+    caption: Localized traps (HERO #1) — real-space + energy diagram split
     bbox_pdf_cm: [8.914, 0.141, 17.878, 5.227]
+    # No reference; figure-research recommended (highest-priority gap).
   - id: D
-    caption: Kinetic I(t) ~ t^{-n}
-    bbox_pdf_cm: [0.141, 5.926, 5.799, 11.457]
+    caption: Column D — Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)
+    bbox_pdf_cm: [0.205, 5.926, 5.883, 11.457]
+    reference_image: reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
+    # PRIMARY: Wang NatComm 2022 Fig 1 (HANDOFF-adopted). 3-axis audit: theoretical
+    # PARTIAL (triboelectric not CvS), structural PASS, storyline PARTIAL.
+    # Transfer: equivalent-circuit symbols, side-by-side condition compare,
+    # polymer-stack cross-section. Do-not-transfer: triboelectric mechanism,
+    # breakdown narrative. Full audit: reference/audit_table.md.
   - id: E
-    caption: Vs(t) decay
-    bbox_pdf_cm: [5.863, 5.926, 8.978, 11.457]
+    caption: Column E — ISPD-paired evidence (corona+probe apparatus + V_s decay + g(E_t) derived)
+    bbox_pdf_cm: [6.074, 5.926, 12.008, 11.457]
+    reference_image: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
+    # PRIMARY: He NatComm 2024 Fig 1c (HANDOFF-adopted, full-spectrum match).
+    # 3-axis audit: theoretical PASS, structural PASS, storyline PASS.
+    # Transfer: probe-above-sample geometry, motion-stage labeling, sample-on-
+    # grounded-substrate cross-section, concept-apparatus-result row layout.
+    # Do-not-transfer: photo-aesthetic mixing (Fig 1b), TENG-specific labels.
   - id: F
-    caption: ISPD g(Et) bimodal (HERO #2)
-    bbox_pdf_cm: [9.041, 5.926, 13.428, 11.457]
-  - id: G
-    caption: Macroscopic Coulomb probe
-    bbox_pdf_cm: [13.491, 5.926, 17.878, 11.457]
+    caption: Column F — Mechanical evidence (PSU+fixture apparatus + Maxwell baseline + Coulomb result)
+    bbox_pdf_cm: [12.199, 5.926, 17.878, 11.457]
+    reference_image: reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
+    # PRIMARY: Conrad NatComm 2016 Fig 1 (HANDOFF-adopted, structural anchor).
+    # 3-axis audit: theoretical PARTIAL (MEMS not polymer), structural PASS,
+    # storyline PARTIAL. Transfer: cross-section line convention (electrode
+    # hatching 45°+135° + insulator stipple); parameter labels (d, L, U);
+    # deflection arrow notation. Do-not-transfer: MEMS-scale labels,
+    # no-external-source convention. Secondary candidate (Wang NatComm 2024
+    # dropletelectret) deferred until F's Maxwell-stress visualization needs
+    # reinforcement (v8.8+).
 style_profile: polymer-paper
 notes: |
-  pair_001 vault arm. Authored using approved-only tikz-vault references from
-  query_id 966e2e89 as grammar/style anchors (metadata only — source paths
-  masked). Same design.md snapshot SHA as no_vault arm
+  pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
+  D/E/F (3 columns, each split apparatus zone top + result zone bottom).
+  Pre-v8.6 G panel removed (merged into v8.6 Column F).
+
+  Authored using approved-only tikz-vault references from query_id 966e2e89
+  as grammar/style anchors (metadata only — source paths masked). Same
+  design.md snapshot SHA as no_vault arm
   (fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7).
   degraded_mode=true preserved because chroma_v2 indexes still absent.
+
+  Per-panel reference_image: D/E/F adopted per HANDOFF v8.7. Row 1 (A/B/C)
+  references are gaps tracked in reference/audit_table.md — figure-research
+  recommended before deep iteration on Panel C (HERO, highest priority).
 accepted: false
