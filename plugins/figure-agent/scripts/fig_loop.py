@@ -299,6 +299,32 @@ def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str
     return "not_actionable"
 
 
+def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
+    stop_reason = loop_decision["stop_reason"]
+    if stop_reason == "human_gate_required":
+        level = "human_review_required"
+    elif stop_reason == "patch_target_recommended":
+        level = "patch_allowed"
+    elif stop_reason in {
+        "status_action_required",
+        "missing_adjudication",
+        "stale_adjudication",
+        "invalid_adjudication",
+        "reference_input_missing",
+    }:
+        level = "agent_action_required"
+    elif stop_reason == "no_actionable_findings":
+        level = "none"
+    else:
+        level = "none"
+
+    return {
+        "escalation_level": level,
+        "requires_user_input": level in {"manual_approval_required", "human_review_required"},
+        "requires_domain_review": level == "human_review_required",
+    }
+
+
 def _patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | None:
     active_patch_target = loop_decision["active_patch_target"]
     if not active_patch_target:
@@ -350,6 +376,7 @@ def _decision_markdown(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
     loop_decision: dict[str, Any],
+    escalation: dict[str, Any],
     patch_handoff: dict[str, Any] | None,
 ) -> str:
     notes = status_result.get("notes", [])
@@ -372,6 +399,7 @@ def _decision_markdown(
             f"- mode: {MODE}",
             f"- goal: {goal}",
             f"- stop_reason: {loop_decision['stop_reason']}",
+            f"- escalation_level: {escalation['escalation_level']}",
             f"- stage: {status_result.get('stage')}/4",
             f"- render_state: {status_result.get('render_state')}",
             f"- critique_state: {status_result.get('critique_state')}",
@@ -412,6 +440,7 @@ def run_loop(
     adjudication = _adjudication_state(example_dir)
     loop_decision = _loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision)
+    escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
     completed_at = _utc_now()
 
@@ -425,6 +454,7 @@ def run_loop(
         "patch_handoff": patch_handoff,
         "recommended_next_action": loop_decision["recommended_next_action"],
         "human_gate_status": loop_decision["human_gate_status"],
+        **escalation,
     }
     manifest = {
         "schema": "figure-agent.fig-loop-run.v1",
@@ -450,6 +480,7 @@ def run_loop(
             status_result=status_result,
             adjudication=adjudication,
             loop_decision=loop_decision,
+            escalation=escalation,
             patch_handoff=patch_handoff,
         ),
         encoding="utf-8",

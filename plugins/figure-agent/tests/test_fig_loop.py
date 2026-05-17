@@ -121,6 +121,58 @@ def test_loop_records_fresh_adjudication(tmp_path: Path) -> None:
     assert iteration["axis_verdicts"]["adjudication"]["verdict"] == "complete"
 
 
+def test_loop_status_action_is_agent_action_required(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "loop_demo.tex").write_text("\\documentclass{standalone}\n", encoding="utf-8")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect status action",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "agent_action_required"
+    assert iteration["requires_user_input"] is False
+    assert iteration["requires_domain_review"] is False
+    assert "escalation_level: agent_action_required" in decision
+
+
+def test_loop_human_gate_is_domain_review_required(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C002",
+                "decision": "needs_human",
+                "reason": "mechanism arrow semantics may change",
+                "patch_target": "",
+                "evidence": "",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect human gate",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["escalation_level"] == "human_review_required"
+    assert iteration["requires_user_input"] is True
+    assert iteration["requires_domain_review"] is True
+
+
 def test_loop_records_stale_adjudication(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     critique = fixture / "critique.md"
