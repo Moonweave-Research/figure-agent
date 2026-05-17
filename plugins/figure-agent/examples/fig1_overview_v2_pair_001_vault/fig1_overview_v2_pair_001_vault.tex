@@ -168,7 +168,7 @@
 % composition annotation for all polysulfide segments.
 \node[font=\sffamily\fontsize{8}{9.5}\selectfont, text=cAmber!85!black,
       anchor=south, inner sep=1pt]
-  at (1.90, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
+  at (2.10, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
 
 % --- S8 ring inset: explicit S atoms + center "S_8" identity label.
 % Background octagon kept as cAmberSphere wash; 8 "S" letters sit on the
@@ -240,8 +240,11 @@
 % 0.18pt, densely dotted; x extent 3.85..6.30 covers full chain row span;
 % y at midpoints between adjacent chain centers (chain spacing 0.60, midpoints
 % at 7.60 / 7.00 / 6.40).
+% v8.7 critique C002 fix: tone cGray!25 → cGray!40 so 4 zigzag chains read
+% as 4 *distinct samples* at 178mm print scale (was invisible, chain bundle
+% misread risk). Width held at 0.18pt — §13.2 forbidden cap is >0.20pt.
 \foreach \dy in {7.60, 7.00, 6.40} {
-  \draw[cGray!25, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+  \draw[cGray!40, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
@@ -377,20 +380,23 @@
 % per category and 1+1 ● count per band per §13.3 C-R2/C-R3).
 % v8.3 audit closure: σ 0.06 → 0.085 to match briefing §13.3 C-R1b (denominator
 % 0.0072 → 0.01445 = 2 × 0.085²).
-\fill[cBlue!18, opacity=0.55]
+% v8.7 critique C001 fix: horizontal scale 0.28/0.32 → 0.45/0.55 + opacity
+% 0.55 → 0.70 so the bell shape registers at 178mm print scale as a visible
+% Gaussian distribution (Q8 narrative "continuous DOS, not 2-level traps").
+\fill[cBlue!18, opacity=0.70]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!75!black, line width=0.50pt]
   plot[domain=7.20:7.80, samples=25, smooth]
-    ({10.55 + 0.28*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!18, opacity=0.55]
+    ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
+\fill[cRed!18, opacity=0.70]
   plot[domain=5.40:6.70, samples=30, smooth]
-    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
 \draw[cRed!75!black, line width=0.55pt]
   plot[domain=5.40:6.70, samples=30, smooth]
-    ({10.55 + 0.32*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
+    ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
 
 % --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
 % Convention #2 from 3rd reference search: top-tier figures use a real graph-
@@ -432,8 +438,11 @@
 % Escape arrows from BOTH shallow and deep (showing both are dynamic, no
 % one-sided "dominate" claim). Shallow escapes easier (shorter arrow with
 % larger head). Deep harder (longer arrow, smaller head).
+% v8.7 critique C005 fix: shallow weight 0.35 → 0.50pt for visible "easy
+% escape" cue. Deep stays at 0.35pt — weight asymmetry encodes activation
+% energy difference (thicker = easier).
 \draw[-{Stealth[length=3pt,width=2.4pt]}, dashed, cBlue!70!black,
-      line width=0.35pt] (11.10, 7.55) -- (11.10, 7.82);
+      line width=0.50pt] (11.10, 7.55) -- (11.10, 7.82);
 \draw[-{Stealth[length=2.6pt,width=2pt]}, dashed, cRed!70!black,
       line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
 
@@ -546,9 +555,8 @@
   at (0.65, 3.42) {A};
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (1.00, 3.57) {SMU};
-% Tiny readout indicator
-\draw[cGray!60!black, line width=0.18pt]
-  (0.85, 3.50) -- (1.20, 3.50) -- (1.20, 3.62) -- (0.85, 3.62) -- cycle;
+% v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
+% already carry source-meter identity; rectangle was decorative noise.
 
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
 % Top electrode (single-direction hatched, slightly thicker)
@@ -586,6 +594,11 @@
 % contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
   at (2.60, 3.62) {polymer film};
+% v8.7 critique C012 fix: name the MIM architecture so the 3-layer structure
+% is reader-identifiable even though polymer dominates visually. Compact
+% label in apparatus zone top-left, outside the stack to avoid lead-routing.
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=north west] at (0.10, 4.20) {MIM stack};
 
 % D-3 result zone axes (Stealth tipped, no ticks)
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
@@ -660,9 +673,8 @@
   (8.20, 3.70) rectangle (8.95, 4.00);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (8.575, 3.85) {$V_s$ meter};
-% Mini-readout indicator inside meter box (small numeric display cue)
-\draw[cGray!60!black, line width=0.15pt]
-  (8.30, 3.75) -- (8.85, 3.75);
+% v8.7 critique C008: V_s meter mini-readout indicator deleted — meter label
+% already carries function; line was invisible at print scale anyway.
 % Lead from probe support to meter box LEFT side
 \draw[cGray!75!black, line width=0.22pt]
   (7.40, 3.85) -- (8.20, 3.85);
@@ -758,7 +770,8 @@
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
   at (10.125, 3.80) {$V_{\mathrm{active}}$};
 % Pulse trace on PSU display
-\draw[cGray!60!black, line width=0.20pt]
+% v8.7 critique C003 v2 fix: width 0.40 → 0.60pt for clearer print-scale visibility.
+\draw[cGray!75!black, line width=0.60pt]
   (9.92, 3.60) -- (10.02, 3.60) -- (10.02, 3.72)
               -- (10.15, 3.72) -- (10.15, 3.60) -- (10.35, 3.60);
 % Neutral fixture (RIGHT 2/3 of zone, enlarged for readability)
@@ -773,9 +786,12 @@
     ({\sx-0.025}, 4.20) -- (\sx, 4.25) -- ({\sx+0.025}, 4.20);
 }
 % Neutral polymer (straight, pale — "before trapping baseline")
-\fill[cAmber!18, opacity=0.6]
+% v8.7 critique C006 fix: opacity 0.6 → 0.75 so apparatus polymer is
+% perceptible as a distinct object that Maxwell arrow acts upon. Still pale
+% relative to result-zone saturated cAmber!22→!42 gradient.
+\fill[cAmber!18, opacity=0.75]
   (12.40, 4.10) rectangle (12.50, 2.90);
-\draw[cAmber!70!black, line width=0.32pt, opacity=0.6]
+\draw[cAmber!70!black, line width=0.32pt, opacity=0.75]
   (12.40, 4.10) rectangle (12.50, 2.90);
 % Neutral electrode (Conrad 2016 cross-section style: cross-hatched)
 % v8.7 critique iter 3: x-aligned with result-zone electrode (x=13.55..13.80)
@@ -815,8 +831,10 @@
       line width=0.45pt]
   (12.55, 3.50) -- (13.50, 3.50);
 % v8.7 critique iter 1: 2-line label stack → 1-line inline "F_Maxwell (baseline)"
+% v8.7 critique C009 fix: anchor flipped south → north so label sits BELOW arrow
+% line (y=3.50) at y=3.45, freeing the polymer-electrode gap for the arrow itself.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=south] at (12.90, 3.52) {$F_{\mathrm{Maxwell}}$ (baseline)};
+      anchor=north] at (12.90, 3.45) {$F_{\mathrm{Maxwell}}$ (baseline)};
 % v8.7 critique iter 1: REMOVED duplicate "air gap" label in apparatus zone
 % (kept only the result-zone version to avoid redundant labeling).
 
