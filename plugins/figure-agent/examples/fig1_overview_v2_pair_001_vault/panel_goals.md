@@ -131,7 +131,7 @@ Total: **57 sub-regions** across 6 panels + 1 cover-binding band.
 - S2. Drawn atom counts 10/18/24 (artistic correlate, not literal) — §13.2 B-1
 - S3. Endpoint labels S₆₀/S₇₅/S₈₅ at terminal atoms (cAmber!90 6.5pt subscript) — §13.2 B-2
 - S4. Bottom axis arrow + 'Sulfur content, wt%' italic label at (5.20, 5.62) — §13.2 B-3
-- S5. B-4 sample boundary dividers at y=7.45 / 6.55 (2 dividers between 3 chains), x extent 3.85..6.30 — §13.2 B-4 (post-C002 + iter1 update: cGray!40)
+- S5. B-4 sample boundary dividers at y=7.45 / 6.55 (2 dividers between 3 chains), x extent 3.85..6.30 — §13.2 B-4 (post-C002 + iter1 + iter2: cGray!55, +38% from !40 for perceptible print-scale)
 
 *스토리 (Storyline)*
 - L1. 2-second intent: "여러 sample (S60..S85 wt% range) 중 representative 3개 — sulfur content monotonically increases"
@@ -141,7 +141,7 @@ Total: **57 sub-regions** across 6 panels + 1 cover-binding band.
 
 *미감 (Aesthetic)*
 - A1. Zigzag bond width 0.50pt R11 delicate (NOT mechanism-tier) — §13.2 B-1
-- A2. B-4 divider: cGray!40 (post-fix), 0.18pt, densely dotted — separator only, NOT data-axis weight (§13.2 forbidden cap >0.20pt)
+- A2. B-4 divider: cGray!55 (post-iter2, was !40), 0.18pt, densely dotted — separator only, NOT data-axis weight (§13.2 forbidden cap >0.20pt)
 - A3. Chain row vertical rhythm: 0.90cm spacing (iter1 expanded) — breathing room generous; clean Nature-grade composition
 - A4. Sample labels (S₆₀/S₇₅/S₈₅) subscript hierarchy clean — cAmber!90 reads as "darker than chain" without competing with chain identity
 - A5. Axis arrow Stealth-tipped (length 4pt, width 3pt) cGray!60!black 0.55pt — annotation tier

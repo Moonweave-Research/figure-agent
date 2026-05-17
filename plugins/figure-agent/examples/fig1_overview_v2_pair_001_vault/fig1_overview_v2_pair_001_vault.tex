@@ -269,8 +269,11 @@
 % Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
 % 3.85..6.30 covers chain row span; y at midpoints between adjacent chains.
 % New midpoints: y=7.45 (between 7.90 and 7.00) / y=6.55 (between 7.00 and 6.10).
+% Panel B iter 2/10: divider tone cGray!40 → cGray!55 (+38%) so 3-chain
+% sample-distinctness reads at print scale more confidently. Width held
+% at 0.18pt — §13.2 forbidden cap >0.20pt (mechanism-tier 침범 회피).
 \foreach \dy in {7.45, 6.55} {
-  \draw[cGray!40, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+  \draw[cGray!55, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]

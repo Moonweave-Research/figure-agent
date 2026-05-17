@@ -121,6 +121,21 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Panel B iter 2/10 — 2026-05-18 — B-4 divider tone polish (Nature-grade)
+
+- **Scope**: B-4 (sample boundary divider tone)
+- **Rationale**: Post-iter1 3-chain restructure, divider at cGray!40 still subtle at print scale. Per A+B mode lesson (≥+30% delta perceptible), bump tone +38% to cGray!55 while holding width 0.18pt (§13.2 forbidden cap >0.20pt). Strengthens 3 distinct sample binding.
+- **Reference source**: briefing-only (Panel B reference gap; concept-figure framing)
+- **Patches**:
+  - .tex B-4 foreach: `cGray!40` → `cGray!55` (single 1-line)
+- **Briefing edits (Type A)**:
+  - §13.2 B-4 spec: tone history "!25→!40→!55" + iter2 rationale documented
+  - panel_goals.md Panel B S5 + A2 references updated
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 1)**: T/S/L unchanged | A improved (divider now perceptible at print scale; 3 distinct sample binding visually confirmed)
+- **Notes**: Conservative single sub-region scope. Visual clash count 56 → 56 unchanged.
+- **Visibility gate**: intended yes (dividers visible separating 3 chains) | anomaly none (no overlap, no axis-tone violation)
+
 ### Panel B iter 1/10 — 2026-05-17 — restructure 4→3 representative chains (β)
 
 - **Scope**: B-1 + B-2 + B-4 (atomic structural change; concept-figure overview restructure)
