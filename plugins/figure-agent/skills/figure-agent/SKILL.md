@@ -62,6 +62,8 @@ patch must trace back to the plan rather than to chat-only intent.
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
+/fig_loop <name> --goal "<goal>"
+                         verify-only loop evidence record under .scratch/fig-loop-runs/
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
 ```
@@ -100,6 +102,12 @@ When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
 pre-export checkpoint. Use `scripts/run_export.py <name> --skip-critique` only
 for intentional draft exports.
+
+`/fig_loop <name> --goal "<goal>"` records a single verify-only loop checkpoint
+under `.scratch/fig-loop-runs/`. It shares `/fig_status` state inference and
+records `critique_adjudication.yaml` as missing, fresh, stale, or invalid when
+present. It does not patch source, compile, export, accept artifacts, or mutate
+git state.
 
 Replaces the v0.1 HALT-then-paste review surface via rename + extend
 (`scripts/review_brief.py` → `scripts/critique_brief.py`,
