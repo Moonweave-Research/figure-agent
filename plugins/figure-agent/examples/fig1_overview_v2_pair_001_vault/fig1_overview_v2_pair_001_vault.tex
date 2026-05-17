@@ -642,7 +642,13 @@
 \draw[cBlue!80!black, line width=0.80pt] (0.65, 1.90) -- (3.85, 0.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
-\draw[cGray!70!black, dashed, line width=0.55pt]
+% Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
+% (+36%) + tone cGray!70 → cGray!85 (+21%) so the reference-comparison
+% anchor reads with confidence vs power-law curves. Mined from Wang NatComm
+% 2022 Fig 1 (audit_table.md D-ref04 transferable: reference-curve styling).
+% Width 0.75pt stays under mechanism-tier 1.0pt — correct hierarchy preserved
+% (reference < primary curves 0.80pt).
+\draw[cGray!85!black, dashed, line width=0.75pt]
   (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
 \draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.70);
 \node[labelMute, text=cGray!65!black, anchor=west, fill=white, inner sep=1pt]

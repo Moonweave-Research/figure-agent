@@ -121,6 +121,24 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column D iter 1/10 — 2026-05-18 — D-7 Debye reference (FIRST reference-grounded iter)
+
+- **Scope**: D-7 (Debye dashed reference curve)
+- **Rationale**: First reference-grounded loop iter. Wang NatComm 2022 Fig 1 = primary reference per spec.yaml + audit_table.md. Mining "reference-curve styling" transferable aspect. Current Debye (cGray!70 0.55pt) reads as background line; Wang convention is stronger reference styling. Validates reference-grounded loop pattern (vs Panel A/B reference-free).
+- **Reference source**: `reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png` — Wang NatComm 2022. Audit: theoretical PARTIAL, structural PASS, storyline PARTIAL. **Transferable mined**: reference-curve styling convention. **Do-not-transfer respected**: triboelectric mechanism, breakdown narrative (no content transfer, visual weight only).
+- **Patches**:
+  - D-7 Debye: weight `0.55 → 0.75pt` (+36%); tone `cGray!70 → cGray!85` (+21%); width 0.75pt stays under mechanism-tier 1.0pt (correct hierarchy: reference 0.75 < primary curves 0.80pt)
+- **Briefing edits (Type A)**: §13.5 D-7 weight/tone references — pending (low priority, polish-tier; defer to next iter or batch with D-7b curve labels)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs prior post-Nature-compliance state)**: T unchanged (§8.4 LOCKED preserved — Debye still below power-law endpoints at right) | S unchanged (same coords) | L improved (reference role clearer) | A improved (reference comparison anchor confidently visible)
+- **Reference-grounded workflow data point #1**: 
+  - Patch citation is clear: reference path + transferable aspect named
+  - Audit-table do-not-transfer respected (visual weight only, no content)
+  - Workflow indistinguishable from reference-free except for Step 2 reference scan step + commit-message reference path
+  - Easier to justify aesthetic decisions vs reference-free (concrete benchmark vs subjective judgment)
+- **Notes**: Conservative single sub-region scope for first reference-grounded iter. Visual clash count 56 → 56 unchanged.
+- **Visibility gate**: intended yes (Debye clearly distinguishable as reference comparison) | anomaly none (no overlap with curves or labels; §8.4 below-endpoints rule maintained)
+
 ### Panel B iter 2/10 — 2026-05-18 — B-4 divider tone polish (Nature-grade)
 
 - **Scope**: B-4 (sample boundary divider tone)
