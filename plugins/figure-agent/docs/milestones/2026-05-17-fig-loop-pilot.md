@@ -137,3 +137,32 @@ Before patch-assisted dogfood can evaluate a real handoff on this fixture,
 refresh the status prerequisites: compile, critique when freshness requires it,
 and export according to the `/fig_status` next hint. Do not infer a patch target
 from this run because `patch_handoff` is null.
+
+## Dogfood Run 2: Escalation Policy on Pilot Fixture
+
+Command:
+
+```bash
+uv run python3 scripts/fig_loop.py fig1_overview_v2_pair_001_vault \
+  --goal "Verify escalation policy on pilot fixture"
+```
+
+Observed decision:
+
+- `stop_reason: status_action_required`
+- `escalation_level: manual_approval_required`
+- `requires_user_input: true`
+- `requires_domain_review: false`
+- `render_state: FRESH`
+- `critique_state: FRESH`
+- `export_state: TRACKED_GOLDEN`
+- `patch_handoff: null`
+
+Usability finding:
+
+The desired steady state is that `/fig_loop` asks for human/domain review only
+for mechanism, topology, reference-role, publication-safety, or conflicting
+reviewer judgments. Routine stale-state and single-target polish work should be
+agent-actionable. The current pilot state is not a domain-review request; it is
+a manual approval checkpoint for tracked golden roll-forward via
+`/fig_export fig1_overview_v2_pair_001_vault --force-golden`.

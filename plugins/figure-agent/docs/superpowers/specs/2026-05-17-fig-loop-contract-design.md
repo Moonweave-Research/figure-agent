@@ -159,6 +159,7 @@ Each `iteration_NNN.json` records:
 - findings seen,
 - adjudication state,
 - active patch target,
+- escalation level and whether user/domain review is required,
 - recommended next action,
 - human gate status.
 
@@ -218,6 +219,18 @@ The loop stops when any of these is true:
 - The loop reaches workflow-ready state for the requested mode.
 
 The stop reason must be explicit in `decision.md`.
+
+The loop also records an escalation level so manual approval and human/domain
+review are not conflated:
+
+| Level | Meaning |
+|---|---|
+| `none` | Loop is closed for the requested mode. |
+| `agent_action_required` | Routine command or local loop-contract work is needed. |
+| `patch_allowed` | Exactly one safe patch target exists. |
+| `manual_approval_required` | A deliberate state promotion is needed, such as `--force-golden` or `accepted: true`. |
+| `human_review_required` | Domain judgment is needed for mechanism, topology, reference role, publication safety, or conflicting reviewer signals. |
+| `ambiguous_patch_selection` | More than one patch target is actionable, so the loop must not choose one silently. |
 
 ## 9. Runner Boundary
 

@@ -17,7 +17,7 @@ Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
 - `iteration_001.json` — `/fig_status`-equivalent state, per-axis verdicts,
   `critique_adjudication.yaml` status, stop reason, active patch target,
-  `patch_handoff`, and recommended next action.
+  `patch_handoff`, escalation summary, and recommended next action.
 - `decision.md` — human-readable stop reason, active patch target, and
   recommended next action.
 
@@ -25,6 +25,25 @@ Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
 checkpoint before a human or later automation decides what to patch.
+
+## Escalation Summary
+
+`iteration_001.json` records:
+
+- `escalation_level`
+- `requires_user_input`
+- `requires_domain_review`
+
+Escalation levels:
+
+| Level | Meaning |
+|---|---|
+| `none` | Loop is closed for the requested mode. |
+| `agent_action_required` | An ordinary command or local loop-contract refresh is needed; do not ask for human/domain review. |
+| `patch_allowed` | Exactly one safe patch target is selected and `patch_handoff` is non-null. |
+| `manual_approval_required` | A deliberate promotion or state-changing approval is needed, such as `--force-golden` or `accepted: true`; this is not domain review. |
+| `human_review_required` | Domain judgment is required for mechanism, topology, reference role, publication safety, or conflicting reviewer signals. |
+| `ambiguous_patch_selection` | More than one actionable target exists, or no single safe target can be selected. |
 
 ## Patch-Assisted Handoff
 
