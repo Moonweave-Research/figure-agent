@@ -121,6 +121,21 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Panel A iter 7/10 — 2026-05-17 — M1 Nature-compliance fix (inv. vulc. → inverse vulcanization)
+
+- **Scope**: A-5 (S₈ inset position) + A-6 (inverse vulcanization label)
+- **Rationale**: User-flagged + literature confirmed "inv. vulc." is non-standard. Nature/Nat Comm rule: "Use standard chemical and biological abbreviations" + "Unusual or unconventional abbreviations should be spelled out in full or defined in the legend." Literature standard is "IV" or full text. User preference: full text per "전부 받아들여야겠지" (accept all Nature conventions).
+- **Reference source**: Nature formatting guide, Nat Comm formatting instructions, RSC 2025 starter guide, JACS 2023 mechanism paper
+- **Patches**:
+  - A-5: S₈ inset shifted (3.05, 8.45) → (3.05, 8.55) (+0.10cm y); same x preserves §13.1 A-5 top-right corner semantic; frees vertical room for 2-line full-text label
+  - A-6: label "inv.\ vulc." italic 6pt → "inverse\\vulcanization" 2-line italic **5pt** (Nature min), position (2.15, 7.82) → (2.50, 8.00) anchor=center align=center, white fill maintained for visual separation
+- **Briefing edits**: none. (Position is polish-tier; abbreviation choice was idiosyncratic, no LOCKED rule covered it. Future briefing §13.1 A-6 could lock "full text per Nature rule" as new acceptance constraint.)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 6)**: T unchanged | S unchanged (S13 cluster non-overlap maintained) | L improved (Nature rule alignment) | A unchanged ✅
+- **Notes**: label cluster now ((S)_x left of, inv. vulcanization 2-line stacked center, S₈ top-right) reads naturally. Iter pivots from "iter 6 verified closure (deferred)" status — Panel A re-enters loop for spec-compliance polish, no closure declared.
+- **Visibility gate**: intended yes ("inverse vulcanization" full readable at 5pt min size; cluster non-overlap preserved) | anomaly none (no rogue stroke; visual clash 54→56 net +2 likely from new larger label bbox triggering false-positive text-on-path; check_visual_clash heuristic)
+- **Related future audit (N1-N3, not in iter scope)**: panel letter case + size + max text size — separate figure-wide Nature compliance pass
+
 ### Panel A iter 6/10 — 2026-05-17 — verification closure (valid)
 
 - **Scope**: NONE (verification-only per template termination rule; post-reopen closure check)

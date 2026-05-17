@@ -179,9 +179,13 @@
 % Background octagon kept as cAmberSphere wash; 8 "S" letters sit on the
 % vertices + bold "S_8" at center (reference idiom: vertex atoms name the
 % element, center label names the ring).
+% Panel A iter 7/10: S₈ inset shifted (3.05, 8.45) → (3.05, 8.55) to free
+% vertical room for full-text "inverse vulcanization" 2-line label between
+% (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
+% corner position (§13.1 A-5 semantic).
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
       line width=0.7pt, minimum size=7mm, fill=cAmberSphere!40,
-      inner sep=0pt] (s8) at (3.05,8.45) {};
+      inner sep=0pt] (s8) at (3.05,8.55) {};
 % Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
 % identities read at standard view (PNG-visible delta; previous 4.4pt
 % rendered as nearly-invisible marks inside octagon).
@@ -189,10 +193,10 @@
   \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
         text=cAmber!95!black, inner sep=0pt,
         fill=cAmberSphere!40]
-    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.45 + 0.35*sin(\ang+22.5)}) {S};
+    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.55 + 0.35*sin(\ang+22.5)}) {S};
 }
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cAmber!95!black, anchor=center] at (3.05, 8.45) {S$_8$};
+      text=cAmber!95!black, anchor=center] at (3.05, 8.55) {S$_8$};
 
 % --- Inverse vulcanization transformation arrow (S8 → DIB Ring_c 60° vertex) ---
 % R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
@@ -203,11 +207,15 @@
 % v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
 %  S8 ring's lower-left vertex S atom. New position sits along the arrow path
 %  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
-% Panel A iter 5/10: inv.vulc. label moved to (2.40, 7.90) — vacates the
-% (S)_x label region (now at x=1.85). Sits in gap above (S)_x top (y=7.85)
-% and below S₈ bottom (y=8.10), along dashed-arrow midpath toward S₈.
-\node[labelMute, font=\sffamily\fontsize{6}{7}\itshape\selectfont,
-      anchor=south, fill=white, inner sep=1pt] at (2.40,7.90) {inv.\ vulc.};
+% Panel A iter 7/10 (M1 Nature-compliance fix): non-standard abbreviation
+% "inv. vulc." replaced with full text "inverse vulcanization" as 2-line
+% stacked label. Nature/Nat Comm rule: standard abbreviations OR full
+% text; "inv. vulc." is idiosyncratic and was undefined in caption.md.
+% 2-line stacked at italic 5.5pt fits the available gap between (S)_x
+% top (y=7.85) and S₈ bottom (y=8.10) without restructuring S₈ position.
+\node[font=\sffamily\fontsize{5}{5.7}\itshape\selectfont, text=cGray!75!black,
+      anchor=center, fill=white, inner sep=1pt, align=center]
+  at (2.50, 8.00) {inverse\\vulcanization};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
