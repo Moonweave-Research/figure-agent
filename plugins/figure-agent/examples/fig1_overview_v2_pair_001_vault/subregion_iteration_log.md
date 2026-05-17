@@ -104,11 +104,28 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (all sub-regions perceivable at standard PNG view) | anomaly none
 - **Next**: template improvement pass (delta-size guideline, D pre-step formalization, per-iter crop). Then promote learnings to template before next panel pilot.
 
+### Panel A iter 5/10 — 2026-05-17 — closure REOPEN + label cluster fix
+
+- **CLOSURE INVALIDATION**: iter 4 closure declared at `9f2c40d` is **REVOKED**. User-flagged label-cluster overlap ((S)_x + inv.vulc. crowding above ring row) — audit blind spot, acceptance criterion (S13) was missing. False-closure pattern: 4 axes ✅ achieved against incomplete acceptance set.
+- **Scope**: A-3 ((S)_x position) + A-6 (inv. vulc. position)
+- **Rationale**: User direction: (S)_x left-shift + inv.vulc. critique-iter position. Literature check (WebSearch + WebFetch) confirmed `(S)_x` notation defensible (no standard convention); briefing semantic unchanged. Cluster separation strategy: (S)_x to true ring-row geometric center; inv.vulc. up and right onto dashed-arrow midpath.
+- **Reference source**: briefing-only (Panel A reference gap, literature notation cross-check via 2025 RSC review + 2023 JACS mechanism paper)
+- **Patches**:
+  - A-3 `(S)_x`: anchor x 2.10 → 1.85 (-0.25cm); rationale: ring centers average (0.75+1.50+2.25+3.00)/4 = 1.875 → true geometric center, "centered above row" briefing §13.1 fully satisfied
+  - A-6 `inv. vulc.`: position (2.15, 7.82) → (2.40, 7.90); rationale: vacate (S)_x label region, settle in gap between (S)_x top (y=7.85) and S₈ bottom (y=8.10), aligned along dashed-arrow midpath
+- **Briefing edits**: none in this iter. Separately flagged for user: briefing claims sample range S60..S85, user clarified actual range 65–85 wt% S → S60 (40 wt% DIB) would be in crosslinked regime contradicting "linear copolymer" subtitle; Type A edit candidate pending user confirmation of actual sample names.
+- **New acceptance bullet (panel_goals.md S13)**: "Label cluster mutual bbox non-overlap, minimum 0.05cm gap" — closes audit blind spot from iter 1-4
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 4)**: S ✅→✅ (S13 now in acceptance set, this iter PASS) | A unchanged ✅
+- **Notes**: visual clash count 58→54 confirms label-on-label conflict reduction. (S)_x at true ring-row center reads naturally; inv.vulc. on arrow path reads as proper arrow annotation; 3-way cluster ((S)_x / inv.vulc. / S₈) clearly separated.
+- **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
+- **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
+
 ## Panel closure summary
 
 | Panel | Closure iter | Iters to ✅ | Strategy notes |
 |---|---|---|---|
-| A | iter 4 (verified) | iter 3 (A axis ✅ first achieved) | A+B mode (≥+30% delta, multi-category) after iter 1+2 micro-tweaks failed perceptibility. D pre-step (`pdftocairo` per-panel crop) added at iter 3 to overcome Read-tool downsample. |
+| A | **REVOKED** (iter 4 closure invalid; iter 5 first valid ✅, iter 6 verification pending) | iter 3 (A axis ✅) → iter 5 (S13 added) | A+B mode (≥+30% delta, multi-category) after iter 1+2 micro-tweaks failed perceptibility. D pre-step at iter 3. iter 4 closure invalidated by user-flagged label-cluster blind spot; iter 5 closed via new S13 acceptance + position fix. Audit lesson: bullet-coverage gaps are blind spots. |
 
 
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,

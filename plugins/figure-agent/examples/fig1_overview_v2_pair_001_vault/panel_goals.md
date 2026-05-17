@@ -68,6 +68,7 @@ Total: **57 sub-regions** across 6 panels + 1 cover-binding band.
 - S4. S₈ inset at (3.05, 8.45), 7mm regular polygon, 8 atom letters at 0/45/90/.../315° vertices — §13.1 A-5
 - S5. dashed inv.vulc. arrow connects S₈ vertex → Ring_c (60° vertex) — §13.1 A-6
 - S6. cAmber!08 wash ellipse 1.55×0.65cm centered (1.85, 6.83) hugs ring row — §13.1 A-7
+- **S13 (added v8.7 iter 5)**: Label cluster ((S)_x + inv.vulc. + S₈ inset) mutual bbox overlap absent — minimum 0.05cm gap between any two label bounding boxes. Rationale: iter 4 false-closure revealed audit blind spot — original acceptance didn't enforce label-on-label non-overlap. v8.7 iter 5 fix: (S)_x x=2.10→1.85 + inv.vulc. (2.15, 7.82)→(2.40, 7.90).
 
 *스토리 (Storyline)*
 - L1. 2-second intent: "sulfur-rich linear copolymer (poly(S-r-DIB)) + S₈ inv.vulc. origin" reads as a single sentence
