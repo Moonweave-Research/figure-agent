@@ -54,7 +54,7 @@ The no-argument summary includes `ready: true|false` for quick triage across all
 Notes that may appear:
 
 - `partial_export` — not all four of pdf/svg/tif/png are present in `exports/`.
-- `stale_export` — either the freshness source set is newer than export artifacts, or Layer 5 reports `exports_substate == STALE`. If source files are newer, re-run `/fig_compile` then `/fig_export`; if only export content differs from the fresh build PDF, re-run `/fig_export`.
+- `stale_export` — either the freshness source set is newer than export artifacts, or Layer 5 reports `exports_substate == STALE`. If `render_state` is stale, re-run `/fig_compile` then `/fig_export`; if render is already fresh and only exports are behind, re-run `/fig_export`.
 - `reference_image_missing` — `spec.yaml` names a `reference_image` path that is not present relative to the example directory.
 - `coordinate_hints_missing` — `reference_image` exists but no `coordinate_hints.yaml` has been generated; run `/fig_extract <name>` (Layer 2.5).
 - `coordinate_hints_stale` — `coordinate_hints.yaml` is older than the reference image; re-run `/fig_extract <name> --rebuild`.
