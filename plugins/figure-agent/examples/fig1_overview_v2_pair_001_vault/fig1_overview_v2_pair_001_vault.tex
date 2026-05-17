@@ -247,33 +247,29 @@
 % ============================================================
 % Panel B bbox: x=3.55..6.85  y=5..9
 
-% B2a: explicit skeletal zigzag chains using shared \zigSChain macro defined
-% near the top of the figure (figure-wide; also drives Panel A chains).
-% Counts 10/14/18/24 give ~2.4× S60→S85 progression with visibly countable atoms.
-% B2b + B3: each row labeled at its own right endpoint (anchor=west, x bound
-% to atom count) with stronger amber contrast (cAmber!90!black) and upright
-% sans (chemistry convention: element symbol upright, subscript upright).
-% R11 delicate Panel B: bond spacing now 0.10cm (was 0.12), atom radius 0.025
-% (was 0.04). xend formula and label y both reflect the new geometry.
-% v6: chain row spacing 0.75→0.60 (span 2.25→1.80, 20% compression)
-% center y=7.00; bottom-chain↔axis gap now 0.45 cm (was 0.40).
-\foreach \y/\n/\sn in {7.90/10/60, 7.30/14/70, 6.70/18/75, 6.10/24/85} {
+% Panel B iter 1/10 (2026-05-17): restructured 4 → 3 representative chains
+% per user "개념 figure" framing. Actual experimental sample set is
+% S60/S70/S75/S80/S85 (5 samples, 60-85 wt% S, briefing §8.8 Q1 LOCKED
+% updated). Concept-figure overview shows endpoints + middle (S60/S75/S85)
+% for visual clarity; full 5-sample data is in Fig 2~ (quantitative figures).
+%
+% B-1: 3 zigzag chains, atom counts 10/18/24 (monotonic, artistic correlate).
+% B-2: 3 endpoint labels S60/S75/S85 at terminal atom (anchor=west).
+% R11 delicate: bond spacing 0.10cm, atom r=0.025cm, bond width 0.5pt.
+% Chain y positions span 1.80cm (7.90 / 7.00 / 6.10), spacing 0.90cm —
+% increased from prior 0.60cm for cleaner breathing room with fewer chains.
+\foreach \y/\n/\sn in {7.90/10/60, 7.00/18/75, 6.10/24/85} {
   \zigSChain{3.95}{\y}{\n}
   \pgfmathsetmacro{\xend}{3.95 + 0.10*(\n-1)}
   \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
         anchor=west, inner sep=2pt]
     at (\xend, {\y + 0.04}) {S$_{\sn}$};
 }
-% B-4 (v8.4 NEW): sample boundary dividers — 3 thin dotted lines between
-% adjacent chain rows so 4 chains read as 4 *distinct samples* (S60/S70/S75/
-% S85), not as a single chain bundle. Per briefing §13.2 B-4 spec: cGray!25,
-% 0.18pt, densely dotted; x extent 3.85..6.30 covers full chain row span;
-% y at midpoints between adjacent chain centers (chain spacing 0.60, midpoints
-% at 7.60 / 7.00 / 6.40).
-% v8.7 critique C002 fix: tone cGray!25 → cGray!40 so 4 zigzag chains read
-% as 4 *distinct samples* at 178mm print scale (was invisible, chain bundle
-% misread risk). Width held at 0.18pt — §13.2 forbidden cap is >0.20pt.
-\foreach \dy in {7.60, 7.00, 6.40} {
+% B-4 (post-iter1 update): 2 sample boundary dividers between 3 chains.
+% Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
+% 3.85..6.30 covers chain row span; y at midpoints between adjacent chains.
+% New midpoints: y=7.45 (between 7.90 and 7.00) / y=6.55 (between 7.00 and 6.10).
+\foreach \dy in {7.45, 6.55} {
   \draw[cGray!40, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow

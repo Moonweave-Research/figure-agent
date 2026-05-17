@@ -8,9 +8,11 @@ panels:
     # No positive reference yet; sulfur_polymer_panelA_ref.png is an
     # anti-reference (network topology forbidden). See reference/audit_table.md.
   - id: B
-    caption: S60–S85 sulfur composition variation
+    caption: Sulfur composition variation — 3 representative chains (S60/S75/S85) of paper's 5-sample range (S60/S70/S75/S80/S85)
     bbox_pdf_cm: [4.655, 0.141, 8.850, 5.227]
-    # No reference; figure-research recommended. See reference/audit_table.md.
+    # Concept-figure scaffold (post-iter1 2026-05-17 restructure 4→3). Full
+    # 5-sample dataset belongs to Fig 2~ quantitative panels. See
+    # reference/audit_table.md.
   - id: C
     caption: Localized traps (HERO #1) — real-space + energy diagram split
     bbox_pdf_cm: [8.914, 0.141, 17.878, 5.227]

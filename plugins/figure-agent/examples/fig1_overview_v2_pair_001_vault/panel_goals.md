@@ -105,57 +105,58 @@ Total: **57 sub-regions** across 6 panels + 1 cover-binding band.
 ---
 
 <a id="panel-b"></a>
-## Panel B — Sulfur composition variation — 3+1 sub-regions
+## Panel B — Sulfur composition variation — 3+1 sub-regions (post-iter1 restructure)
 
-**Intent** (2s reader): "한 polymer가 아니라 *4개 distinct sample* (S60..S85 wt%)이고, sulfur content가 monotonically 증가한다." 4 zigzag chain + S₆₀..S₈₅ endpoint label + bottom axis arrow가 wt% variable의 ordered sampling으로 읽힘. Drawn-atom 개수는 artistic correlate (qualitative more-S), literal atom count 아님.
+**Intent** (2s reader): "polymer 조성이 변화하는 sample이 *여럿* 있고, sulfur 함량이 monotonically 증가한다 (S60→S85 wt% range)." Concept-figure overview: 3 representative chains (S60/S75/S85 = endpoints + middle) of the actual 5-sample paper set (S60/S70/S75/S80/S85) + endpoint labels + axis arrow가 wt% variable의 ordered sampling으로 읽힘. Drawn-atom 개수는 artistic correlate.
 
 **Forbidden**
-- 4 chain이 하나의 chain bundle처럼 묶여 읽힘 — sample distinctness 깨짐 (B-4 divider가 막아야 함)
-- S₆₀..S₈₅ 라벨이 *chain atom 개수*로 읽힘 (Q1 LOCKED = wt% sample name)
-- chain 길이가 wt% 순서와 다르게 표현 (S₆₀ < S₇₀ < S₇₅ < S₈₅ 순서 깨짐, §9 P-A monotonicity)
+- 3 chain이 하나의 chain bundle처럼 묶여 읽힘 — sample distinctness 깨짐 (B-4 divider가 막아야 함)
+- S₆₀/S₇₅/S₈₅ 라벨이 *chain atom 개수*로 읽힘 (Q1 LOCKED = wt% sample name)
+- chain 길이가 wt% 순서와 다르게 표현 (S₆₀ < S₇₅ < S₈₅ 순서 깨짐, §9 P-A monotonicity)
 - S60..S85 라벨이 Row 2 plot panel에도 등장 (§8.8 — Panel B에만 허용; Row 2는 'shallow-rich'/'deep-rich' concept만)
 - chain hue가 cAmber family 외 (Panel A material binding 깨짐)
 - B-4 divider가 solid / colored / > 0.20pt (§13.2 forbidden — axis-tone 침범 / mechanism-tier 침범)
+- Panel B에 full 5-sample data 표시 (quantitative figures area; overview는 concept만)
 
 **Acceptance criteria** (4-axis)
 
 *이론 (Theoretical)*
-- T1. S60/S70/S75/S85 are wt% sulfur sample names, NOT chain atom counts (Q1 LOCKED) — §8.8 + §9
+- T1. S60/S75/S85 (paper set의 representative subset) are wt% sulfur sample names, NOT chain atom counts (Q1 LOCKED, briefing §8.8) — full paper set S60/S70/S75/S80/S85
 - T2. Composition labels appear only in Panel B; forbidden in Row 2 plot panels — §8.8
-- T3. Chain length monotonicity: S60 < S70 < S75 < S85 enforced top-to-bottom — §9 forbidden non-monotonic
+- T3. Chain length monotonicity: S60 < S75 < S85 enforced top-to-bottom — §9 forbidden non-monotonic
+- T4. Concept figure scope: 3 representative chains only (full 5-sample dataset belongs to Fig 2~ quantitative panels)
 
 *구조 (Structural)*
-- S1. 4 zigzag skeletal chains stacked, chain row spacing 0.60cm (v6 compress), centers at y=7.90/7.30/6.70/6.10 — §13.2 B-1
-- S2. Drawn atom counts 10/14/18/24 (artistic correlate, not literal) — §13.2 B-1
-- S3. Endpoint labels S₆₀/S₇₀/S₇₅/S₈₅ at terminal atoms (cAmber!90 6.5pt subscript) — §13.2 B-2
+- S1. 3 zigzag skeletal chains stacked, chain row spacing 0.90cm (iter1 expanded from 0.60cm), centers at y=7.90/7.00/6.10 — §13.2 B-1
+- S2. Drawn atom counts 10/18/24 (artistic correlate, not literal) — §13.2 B-1
+- S3. Endpoint labels S₆₀/S₇₅/S₈₅ at terminal atoms (cAmber!90 6.5pt subscript) — §13.2 B-2
 - S4. Bottom axis arrow + 'Sulfur content, wt%' italic label at (5.20, 5.62) — §13.2 B-3
-- S5. B-4 sample boundary dividers at y=7.60/7.00/6.40, x extent 3.85..6.30 — §13.2 B-4 (post-C002 fix: cGray!40)
+- S5. B-4 sample boundary dividers at y=7.45 / 6.55 (2 dividers between 3 chains), x extent 3.85..6.30 — §13.2 B-4 (post-C002 + iter1 update: cGray!40)
 
 *스토리 (Storyline)*
-- L1. 2-second intent: "4 distinct samples (S60..S85 wt%), sulfur content monotonically increases"
-- L2. Reading order: panel letter B → 4 chains 위→아래 (n=60→85 monotonic recognition) → endpoint labels at chain tails → bottom axis arrow + label → inter-arrow to C
-- L3. 4 chain bundle ≠ 4 distinct samples — B-4 dividers prevent bundle misread
+- L1. 2-second intent: "여러 sample (S60..S85 wt% range) 중 representative 3개 — sulfur content monotonically increases"
+- L2. Reading order: panel letter b → 3 chains 위→아래 (S60→S85 monotonic recognition) → endpoint labels at chain tails → bottom axis arrow + 'Sulfur content, wt%' label → inter-arrow to C
+- L3. 3 chain bundle ≠ 3 distinct samples — B-4 dividers prevent bundle misread
 - L4. cAmber chain identity binds to A material continuity (\zigSChain shared macro) — §13.9
 
 *미감 (Aesthetic)*
 - A1. Zigzag bond width 0.50pt R11 delicate (NOT mechanism-tier) — §13.2 B-1
 - A2. B-4 divider: cGray!40 (post-fix), 0.18pt, densely dotted — separator only, NOT data-axis weight (§13.2 forbidden cap >0.20pt)
-- A3. Chain row vertical rhythm: 0.60cm spacing breathing room adequate — no crowding after B-4 added
-- A4. Sample labels (S₆₀..S₈₅) subscript hierarchy clean — cAmber!90 reads as "darker than chain" without competing with chain identity
+- A3. Chain row vertical rhythm: 0.90cm spacing (iter1 expanded) — breathing room generous; clean Nature-grade composition
+- A4. Sample labels (S₆₀/S₇₅/S₈₅) subscript hierarchy clean — cAmber!90 reads as "darker than chain" without competing with chain identity
 - A5. Axis arrow Stealth-tipped (length 4pt, width 3pt) cGray!60!black 0.55pt — annotation tier
-- A6. Reference benchmark: **no positive reference for Panel B** (audit_table.md gap). Until figure-research closes, aesthetic judged against §10 alone.
+- A6. Reference benchmark: concept figure (literature audit 2026-05-17: field uses property plots / sample photos for quantitative; schematic scaffold acceptable for overview/cover); no positive panel-B-specific reference
 
 **Known issues / open**
-- post-v8.7 critique 실행됨; C002 (B-4 dividers) resolved at cGray!40
-- B-1 drawn atom count (10/14/18/24)이 literal로 오독되는 risk — briefing §3.1 reader DO/DON'T가 caption에서 보조하는지 미검증
-- 4 chain row 간격 v6에서 0.75→0.60 compress (span 2.25→1.80) — divider 추가 후에도 시각 호흡이 충분한지 PNG 검증 필요
-- Positive reference gap (audit_table.md) — figure-research for polymer-composition-gradient scaffolds recommended
+- post-v8.7 iter1: 4→3 representative restructure SHIPPED. Cross-panel sample identity to Panel C/D/E/F intentionally abstract (concept figure does not specify which sample → measurement)
+- B-1 drawn atom count (10/18/24) literal misread risk — caption.md disclaimer (v8.6 caption rewrite pending) to clarify artistic-correlate
+- Positive reference gap: concept figure framing reduces priority
 
-**Sub-region checklist** (mirror of §13.2)
-- [ ] **B-1** 4 zigzag skeletal chains (S60/S70/S75/S85, drawn-atom artistic correlate)
-- [ ] **B-2** sample-name endpoint labels (S₆₀/S₇₀/S₇₅/S₈₅, wt% per Q1 LOCKED)
+**Sub-region checklist** (mirror of §13.2, iter1 update)
+- [ ] **B-1** 3 representative zigzag skeletal chains (S60/S75/S85, drawn-atom artistic correlate)
+- [ ] **B-2** sample-name endpoint labels (S₆₀/S₇₅/S₈₅, wt% per Q1 LOCKED, representative subset)
 - [ ] **B-3** bottom axis arrow + 'Sulfur content, wt%' label
-- [ ] **B-4** sample boundary divider lines (cGray!25, 0.18pt dotted, v8.4 NEW)
+- [ ] **B-4** sample boundary divider lines (2 between 3 chains, cGray!40 0.18pt dotted)
 
 ---
 

@@ -121,6 +121,31 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Panel B iter 1/10 — 2026-05-17 — restructure 4→3 representative chains (β)
+
+- **Scope**: B-1 + B-2 + B-4 (atomic structural change; concept-figure overview restructure)
+- **Rationale**: User-driven audit ("개념 figure" framing + "굳이 모든 sample 다 보여줄 필요?") + literature finding (2025 RSC Starter Guide: IV field uses property plots not scaffold-of-chains for quantitative wt% sweep). Concept figure justifies *minimum sufficient* representation: 3 representative (endpoints + middle) instead of 5 full sampling. Full 5-sample dataset deferred to Fig 2~.
+- **Reference source**: Literature audit (RSC 2025, NComm 2024 Structural evolution) + Nature concept-figure conventions; briefing-only Panel B design.
+- **Patches (atomic, structural)**:
+  - .tex Panel B foreach: 4 items `{7.90/10/60, 7.30/14/70, 6.70/18/75, 6.10/24/85}` → 3 items `{7.90/10/60, 7.00/18/75, 6.10/24/85}` (S70 + S85's adjacent chains removed; S75 elevated to middle position; chain spacing 0.60→0.90 for breathing room)
+  - .tex Panel B dividers foreach: `{7.60, 7.00, 6.40}` (3 dividers) → `{7.45, 6.55}` (2 dividers at new midpoints between 3 chains)
+- **Briefing Type B edits** (user-authorized via "제안대로 진행"):
+  - §8.8 Q1 LOCKED: sample list "S60/S70/S75/S85" → "S60/S70/S75/S80/S85" (5 samples in paper) + "Panel B shows 3 representative: S60/S75/S85" clause + Fig 2~ deferral note
+  - §13.2 B-1: "4 zigzag chains" → "3 representative" with iter1 restructure note; atom counts "10/14/18/24" → "10/18/24"; y positions update
+  - §13.2 B-4: "3 dividers between 4 chains" → "2 dividers between 3 representative chains"; positions update
+  - §13.9 B-3 cross-binding: "discrete 4 chains" → "discrete 3 representative chains"
+  - §9 monotonicity rule: "S₆₀ < S₇₀ < S₇₅ < S₈₅" → "(displayed) S₆₀ < S₇₅ < S₈₅ + (paper-full) S60/S70/S75/S80/S85"
+  - §1-§2 visual story arc references updated
+- **panel_goals.md edits**: Panel B section fully rewritten — intent, forbidden, 4-axis acceptance (T1-T4, S1-S5, L1-L4, A1-A6), sub-region checklist all updated for 3 representative chains
+- **spec.yaml**: Panel B caption updated to clarify 3 representative + paper-full 5
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs prior state with 4 chains)**: T improved (briefing-narrative coherence: actual 5-sample paper set now properly documented) | S improved (cleaner geometry, 0.90cm spacing) | L improved (3 representative = clearer concept-figure narrative, less crowded) | A improved (breathing room, less visual density)
+- **Notes**: 
+  - This is a **structural commitment iter** (Type B briefing edit) — touches 3 sub-regions atomically because they're interlocked (chain count, label count, divider count must match). Deviates from template ≤2 sub-region rule per "structural commitment" exception, documented.
+  - Cross-panel sample identity intentionally abstract for concept figure (Panel C/D/E/F do not specify "this is sample X" — concept conveys "trap exists across composition range").
+  - 5-sample full data deferred to Fig 2~ (quantitative panels).
+- **Visibility gate**: intended yes (3 chains + labels + dividers + axis all readable at panel B crop) | anomaly none (no overlap, clean spacing)
+
 ### Panel A iter 8/10 — 2026-05-17 — P1+P2 font cap (residual Nature N3 violations)
 
 - **Scope**: A-3 ((S)_x label fontsize) + figure-wide default font fallback
