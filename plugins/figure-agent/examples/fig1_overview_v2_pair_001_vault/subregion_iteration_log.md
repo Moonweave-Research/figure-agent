@@ -88,6 +88,29 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
   - **A (delta size)**: ≥+30% changes (font, tone, color hue) PNG-visible at standard resolution; <±0.15pt weight tweaks remain sub-pixel.
   - **B (sub-region category)**: structural / typography / wash hue changes more transformative than weight-only tweaks on the same sub-region. Future iters should mix categories.
 
+### Panel A iter 4/10 — 2026-05-17 — verification-only closure
+
+- **Scope**: NONE (verification iter per template termination rule)
+- **Rationale**: Iter 3 reached first all-4-axis ✅. Template termination: "All 4 axes ✅ for 2 consecutive iters with no new sub-regions touched → panel done." Iter 4 verifies state holds at 4-axis ✅ without further patches.
+- **Reference source**: N/A
+- **Patches**: NONE
+- **Briefing edits**: none
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 3)**: all axes unchanged, no patches applied
+- **Closure status**: ✅ **PANEL A CLOSED** (2 consecutive 4-axis ✅ verified, no new sub-region touches)
+- **Remaining (deferred, not blocking closure)**:
+  - A-6 (inv. vulc. dashed arrow + label) — visible but path clarity could improve in future polish round
+  - A-8 (typography proportion) — 'Sulfur-rich polymer' bold label occupies ~30% panel vertical; not Nature-grade weakness but proportion could rebalance toward drawing in a future hero-figure pass
+- **Visibility gate**: intended yes (all sub-regions perceivable at standard PNG view) | anomaly none
+- **Next**: template improvement pass (delta-size guideline, D pre-step formalization, per-iter crop). Then promote learnings to template before next panel pilot.
+
+## Panel closure summary
+
+| Panel | Closure iter | Iters to ✅ | Strategy notes |
+|---|---|---|---|
+| A | iter 4 (verified) | iter 3 (A axis ✅ first achieved) | A+B mode (≥+30% delta, multi-category) after iter 1+2 micro-tweaks failed perceptibility. D pre-step (`pdftocairo` per-panel crop) added at iter 3 to overcome Read-tool downsample. |
+
+
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,
   escape arrow, inverse-vulcanization arrow, and leaders carry different
   meanings. This is low-priority residual risk unless final review finds that
