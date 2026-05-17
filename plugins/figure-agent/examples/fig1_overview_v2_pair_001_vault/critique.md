@@ -1,9 +1,12 @@
 ---
 schema: figure-agent.critique.v1
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-16T02:51:42Z
-last_updated_at: 2026-05-16T16:30:00+09:00
+generated_at: 2026-05-17T13:26:39Z
+last_updated_at: 2026-05-17T13:26:39Z
 verdict: minor_polish_only
+generator_version: sha256:69233fb7d9e5495f318c7a8bfb2f5a43691c7a8f734bd4a22aa70368f0defdeb
+rubric_version: figure-agent.critique-rubric.v1
+critique_input_hash: sha256:3b2cf95b1a0483f9f94196d11357769fdccdc45b2a14a76c068e04b7852ff664
 author_resolution_at: 2026-05-16T10:40:00+09:00
 author_resolution: "linear poly(S-r-DIB) primary microstructure selected; old Panel A network reference is anti-reference topology evidence"
 panels: []
@@ -11,138 +14,129 @@ findings:
   - id: C001
     severity: MINOR
     category: label_placement
-    tex_lines: [728, 733, 735]
+    tex_lines: [866, 869]
     observation: >-
-      The compile collision report flags overlap between the two-line
-      "Coulomb" / "repulsion" label stack. This does not invert the Panel G
-      Coulomb-only physics, but the two labels are tight enough to remain a
-      visual-polish risk before manuscript acceptance.
+      The older two-line "Coulomb" / "repulsion" stack remains resolved in
+      the current render: the arrow runs between the labels and both words are
+      legible.
     suggested_fix: >-
-      Increase the y separation between the two Panel G Coulomb-repulsion label
-      nodes or make the second line slightly smaller while preserving the
-      leftward Coulomb arrow.
+      No patch needed unless a later crop review reopens the mechanical result
+      label stack.
     status: resolved
     resolution_commit: 49b6af0
-    resolution_note: >-
-      v8.2 polish — Coulomb / repulsion anchors flipped to south east /
-      north east at y=2.04/1.94 so the arrow line at y=1.99 sits BETWEEN
-      the labels. IoU=0.157 collision eliminated.
   - id: C002
     severity: MINOR
     category: label_placement
-    tex_lines: [199, 205]
+    tex_lines: [206, 209]
     observation: >-
-      The compile collision report flags tight spacing between "Sulfur-rich
-      polymer" and "poly(S-r-DIB) linear copolymer". The labels preserve the
-      resolved linear-topology claim, but the stack is close enough to merit
-      final visual polish.
+      The Panel A title/subtitle stack remains resolved in the current render:
+      "Sulfur-rich polymer" and "poly(S-r-DIB) linear copolymer" no longer
+      collide.
     suggested_fix: >-
-      Add a small vertical offset between the Panel A title and subtitle or
-      reduce the subtitle size slightly. Do not change the "linear copolymer"
-      wording unless manuscript chemistry changes.
+      No patch needed unless the title or subtitle wording changes.
     status: resolved
     resolution_commit: 49b6af0
-    resolution_note: >-
-      v8.2 polish — subtitle 'poly(S-r-DIB) linear copolymer' dropped from
-      y=5.55 to y=5.42 to clear descender / ascender intersection. IoU=0.055
-      collision eliminated.
   - id: C003
     severity: MINOR
-    category: style
-    tex_lines: [177, 187, 706, 711]
+    category: visual_audit
+    tex_lines: [177, 187, 706, 711, 788, 792]
     observation: >-
-      The visual-clash report still flags several text-on-path/text-on-fill
-      candidates around sulfur and charge symbols. These are common false
-      positives for intentionally embedded atom/charge glyphs, but they should
-      remain visible in the acceptance audit because dense symbolic regions are
-      where final crop inspection usually fails first.
+      The compile/perception pass still reports many report-only visual-clash
+      candidates, mostly thin strokes, intentional embedded glyphs, and
+      text-on-fill/near-miss warnings. Human inspection of the current render
+      does not show a blocker or major scientific misread.
     suggested_fix: >-
-      Treat the flagged glyph regions as manual crop-review targets before any
-      accepted:true decision. Patch only if the rendered crop shows actual
-      illegibility.
+      Keep these regions visible in the acceptance audit. Patch only if a crop
+      review shows actual illegibility.
     status: accepted_residual_risk
+  - id: C004
+    severity: MINOR
+    category: label_placement
+    tex_lines: [817, 819]
+    patch_target: "Panel F apparatus zone, Maxwell baseline label at tex lines 817-819"
+    observation: >-
+      The inline "$F_{Maxwell}$ (baseline)" label was readable but visually
+      crowded with the dashed Maxwell arrow and nearby apparatus geometry. The
+      v8.8 dogfood patch lifts the label above the arrow path, preserving the
+      intended hierarchy "Maxwell baseline < Coulomb result."
+    suggested_fix: >-
+      No further patch needed unless final crop review reopens apparatus-zone
+      label spacing.
+    status: resolved
+    resolution_note: >-
+      v8.8 dogfood patch moved the label from y=3.52 to y=3.66, added a light
+      fill pad, and left the result-zone Coulomb arrow unchanged.
 post_critique_changes:
   - commit: 49b6af0
-    label: v8.2 polish — IoU collision closure
-    summary: Resolved C001 + C002. Also moved Panel A "inv. vulc." (2.55, 8.00) → (2.15, 7.82) to clear the S8 vertex bump (residual IoU=0.068/0.092 vs chain composition label, below 0.1 visual-defect threshold).
+    label: "v8.2 polish - IoU collision closure"
+    summary: >-
+      Resolved C001 and C002. Also moved the Panel A "inv. vulc." annotation to
+      clear the S8 vertex bump, leaving only a sub-threshold residual proximity
+      to the chain composition label.
   - commit: 39b5e44
-    label: v8.3 audit closure — briefing-grounded gap fixes
-    summary: |-
-      Full briefing.md (524 lines) ↔ .tex (754 lines) audit identified 4 gaps
-      not surfaced by this critique pass:
-      - Gap #1 C-R1b shallow Gaussian σ 0.06 → 0.085 (briefing §13.3 spec)
-      - Gap #2 C-R5 ΔE_t arrow + label color cGray!70!black → cRed!75!black
-        (binds depth scalar to deep trap species per §8.6 / §13.9 Binding-1)
-      - Gap #3 G-6 Coulomb/repulsion label coords: briefing §13.8 + §13.10
-        updated to record v8.2 anchor flip pattern (briefing predated v8.2).
-      - Gap #4 Row2-Caption em-dash: `--` → `---` (rendered – → —)
-post_v8_3_metrics:
-  collision_candidates: 2
-  visual_clash_candidates: 38
-  collision_residuals:
-    - inv. vulc. × −(S)x− composition label, IoU=0.068/0.092 (below 0.1 threshold; v8.2 polish trade-off — cleared S8 vertex bump at IoU=0.145)
+    label: "v8.3 audit closure - briefing-grounded gap fixes"
+    summary: >-
+      Closed briefing-grounded shallow Gaussian, trap-depth color, Coulomb label
+      documentation, and em-dash issues.
+  - label: "v8.6/v8.7 row-2 restructure"
+    summary: >-
+      Replaced the older four-panel row-2 treatment with three apparatus plus
+      plot columns: kinetic, ISPD, and mechanical. The new mechanical column
+      legitimately shows a light Maxwell baseline in the apparatus zone and a
+      stronger Coulomb repulsion result zone.
+  - label: "v8.8 dogfood loop patch"
+    summary: >-
+      Resolved C004 by lifting the Maxwell baseline label off the dashed arrow
+      path while keeping Maxwell secondary to the Coulomb result cue.
+current_render_metrics:
+  compile_exit: 0
+  collision_candidates: 3
+  visual_clash_candidates: 54
+  notes:
+    - "Style lock warnings are report-only and dominated by thin-stroke checks."
+    - "No fresh BLOCKER or MAJOR theory violation was found by source/render review."
 ---
 
-# Vision Critique — fig1_overview_v2_pair_001_vault
+# Vision Critique - fig1_overview_v2_pair_001_vault
 
-Verdict: minor_polish_only (post-v8.3). The original critique pass (2026-05-16
-02:51 UTC) found no new BLOCKER or MAJOR theory violations; verdict was
-`revise` because of 3 MINOR label/glyph polish risks. Two of those (C001 +
-C002) were closed by the v8.2 polish (commit 49b6af0). The remaining MINOR
-(C003) is accepted residual risk pending manual crop review.
+Verdict: `minor_polish_only`. The current render compiles and preserves the
+main scientific narrative: linear sulfur-rich poly(S-r-DIB) leads to mixed
+shallow/deep traps, three independent evidence spokes point back to the same
+trap model, and the mechanical result zone is Coulomb-repulsion dominated.
 
-The figure is still not `accepted: true` because publication-compliance
-(TG-PUB-001) and human visual crop review (QUALITY_AUDIT.md acceptance check
-#3 / #4) remain outstanding. Theory invariants (TG-A-001 .. TG-ROW2-001) all
-PASS at source level.
+The figure is still not `accepted: true` because publication compliance and
+human crop review remain separate acceptance surfaces. The critique gate is
+fresh for the current input set, but acceptance remains outside this critique.
 
 ## Theory Adjudication
 
-The previous Panel A topology conflict remains resolved on the linear side.
-`authoring_contract.md` and `reference/reference_pack.md` make
-`reference/sulfur_polymer_panelA_ref.png` an anti-reference for topology, so
-the network-style reference must not drive a structural finding unless new
-manuscript evidence changes the chemistry decision.
+The source/render review found no fresh BLOCKER or MAJOR theory issue.
 
-The main theory guard items pass at source-review level:
+- TG-A-001: Panel A reads as linear poly(S-r-DIB), not a 2D covalent network.
+- TG-C-001: Panel C keeps shallow/deep traps in one polymer matrix.
+- TG-CFG-001: Shallow/deep color semantics remain blue/red across Panels C,
+  E/F, and the mechanical charge cues.
+- TG-D-001: The non-Debye power-law traces remain above the Debye reference at
+  long time.
+- TG-G-001/TG-G-002: The result zone remains Coulomb-only; Maxwell appears only
+  as a lighter apparatus-zone baseline.
+- TG-ROW2-001: Row 2 reads as three independent spokes: kinetic, ISPD, and
+  mechanical.
 
-- TG-A-001: Panel A comments and labels preserve linear poly(S-r-DIB).
-- TG-C-001: Panel C source keeps shallow/deep trap markers in the same polymer
-  sheet and the energy diagram as a split view, not phase segregation.
-- TG-CFG-001: C/F color semantics stay shallow blue and deep red; G uses red
-  charge/force cues for trapped-charge mechanics. v8.3 strengthens this for
-  C-R5 ΔE_t (Gap #2 closure: depth scalar now binds to deep red).
-- TG-D-001: the Debye reference ends below the long-time power-law traces.
-- TG-G-001: no Maxwell-attraction arrow or actuator framing is present.
-- TG-ROW2-001: the three spokes remain kinetic, ISPD, and mechanical.
+## Visual Adjudication
 
-## Visual Adjudication (post-v8.3)
+The current compile/render path succeeds. The remaining issues are visual
+polish and acceptance-audit visibility, not source-blocking defects.
 
-Compile succeeds with report-only warnings: 2 collision candidates (down from
-3 at original critique time) and 38 visual-clash candidates (down from 45).
+- C001 and C002 remain resolved from the earlier IoU polish.
+- C003 remains accepted residual risk: perception warnings should stay visible
+  during final crop review, but they do not currently justify a source patch.
+- C004 is resolved by the v8.8 dogfood patch: the Maxwell-baseline label now
+  sits above the dashed apparatus-zone arrow.
 
-- C001 (Coulomb/repulsion stack): RESOLVED in v8.2 — anchor flip at y=2.04/1.94.
-- C002 (Sulfur-rich/subtitle stack): RESOLVED in v8.2 — subtitle y=5.55→5.42.
-- C003 (sulfur/charge glyph false positives): ACCEPTED_RESIDUAL_RISK — manual
-  crop-review target.
-- Residual collisions (inv. vulc. × −(S)x− composition label, IoU 0.068/0.092):
-  the v8.2 polish trade-off — moved inv. vulc. from S8-vertex collision
-  (IoU=0.145, MINOR) to a chain-composition-label proximity below the 0.1
-  visual-defect threshold. Acceptable because (a) IoU below threshold,
-  (b) human visual inspection of the rendered PNG shows both labels remain
-  individually readable.
+## Patch Guidance
 
-## Provenance Notes
-
-Reference usage is bounded by `reference/reference_pack.md`. The figure-level
-reference remains style/layout evidence only. The old Panel A network
-reference is anti-reference evidence for forbidden topology transfer.
-
-## Method Notes
-
-This critique is report-only. The original critique was generated using the
-host `/fig_critique` fallback flow (`scripts/critique_brief.py`, current
-rendered artifacts, source review, compile visual-QA reports). The post-v8.3
-update is a host-side reconciliation against v8.2 + v8.3 commit evidence; no
-automatic edits were applied to the TikZ source by this update. A fresh
-`/fig_critique` pass is the next gate before paper submission.
+No actionable critique finding remains after C004 resolution. Do not change
+accepted/golden/export state from this critique. Before acceptance, keep C003
+visible for manual crop review and rerun `/fig_loop` after any future source,
+critique, or adjudication change.

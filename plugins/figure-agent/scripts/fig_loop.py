@@ -211,18 +211,18 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
-    if adjudication["state"] == "fresh" and adjudication.get("decisions"):
-        return {
-            "stop_reason": "no_actionable_findings",
-            "recommended_next_action": "no actionable adjudicated findings remain",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
     if not status_result.get("workflow_ready"):
         return {
             "stop_reason": "status_action_required",
             "recommended_next_action": status_result.get("next", "inspect figure state"),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
+    if adjudication["state"] == "fresh" and adjudication.get("decisions"):
+        return {
+            "stop_reason": "no_actionable_findings",
+            "recommended_next_action": "no actionable adjudicated findings remain",
             "active_patch_target": None,
             "human_gate_status": "not_requested",
         }
@@ -292,7 +292,9 @@ def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str
         return "human_gate"
     if adjudication["state"] in {"stale", "invalid", "missing"}:
         return adjudication["state"]
-    if stop_reason == "no_actionable_findings":
+    if stop_reason == "no_actionable_findings" or (
+        adjudication["state"] == "fresh" and adjudication.get("decisions")
+    ):
         return "complete"
     return "not_actionable"
 

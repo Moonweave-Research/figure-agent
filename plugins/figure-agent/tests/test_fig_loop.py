@@ -117,7 +117,7 @@ def test_loop_records_fresh_adjudication(tmp_path: Path) -> None:
     iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
     assert iteration["adjudication"]["state"] == "fresh"
     assert iteration["adjudication"]["decision_count"] == 1
-    assert iteration["stop_reason"] == "no_actionable_findings"
+    assert iteration["stop_reason"] == "status_action_required"
     assert iteration["axis_verdicts"]["adjudication"]["verdict"] == "complete"
 
 
@@ -380,6 +380,47 @@ def test_loop_marks_status_action_required_when_status_next_blocks_patch(
     run_dir = run_loop(
         "loop_demo",
         "inspect stale status",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["status"]["render_state"] == "MISSING"
+    assert manifest["final_stop_reason"] == "status_action_required"
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["patch_handoff"] is None
+    assert iteration["recommended_next_action"] == (
+        "run /fig_compile loop_demo to compile the TikZ source."
+    )
+    assert "stop_reason: status_action_required" in decision
+
+
+def test_loop_status_action_required_when_resolved_adjudication_but_status_unready(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "loop_demo.tex").write_text("\\documentclass{standalone}\n", encoding="utf-8")
+    critique_path = fixture / "critique.md"
+    critique_path.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique_path),
+        decisions=[
+            {
+                "finding_id": "C001",
+                "decision": "resolved",
+                "reason": "already patched",
+                "patch_target": "panel label",
+                "evidence": "compile passed",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect resolved adjudication with stale status",
         repo_root=tmp_path,
         runs_root=tmp_path / ".scratch" / "fig-loop-runs",
     )

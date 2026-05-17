@@ -814,9 +814,11 @@
 \draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
       line width=0.45pt]
   (12.55, 3.50) -- (13.50, 3.50);
-% v8.7 critique iter 1: 2-line label stack → 1-line inline "F_Maxwell (baseline)"
+% v8.8 dogfood patch: lift the baseline label off the dashed arrow path
+% while keeping the Maxwell cue secondary to the result-zone Coulomb arrow.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=south] at (12.90, 3.52) {$F_{\mathrm{Maxwell}}$ (baseline)};
+      anchor=south, fill=cAmber!8, inner sep=1pt]
+  at (12.90, 3.66) {$F_{\mathrm{Maxwell}}$ (baseline)};
 % v8.7 critique iter 1: REMOVED duplicate "air gap" label in apparatus zone
 % (kept only the result-zone version to avoid redundant labeling).
 
