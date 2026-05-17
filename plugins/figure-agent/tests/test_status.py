@@ -11,9 +11,20 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from status import infer_stage  # noqa: E402
+import status as status_mod  # noqa: E402
+from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(autouse=True)
+def stable_style_lock_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep status tests independent from checkout mtimes."""
+    style_lock = tmp_path / "polymer-paper-preamble.sty"
+    style_lock.write_text("% stable style lock\n", encoding="utf-8")
+    old_time = time.time() - 1000
+    os.utime(style_lock, (old_time, old_time))
+    monkeypatch.setattr(status_mod, "STYLE_LOCK_PATH", style_lock)
 
 
 def _make_spec(
@@ -192,6 +203,7 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
         "reference/reference_pack.md",
         "authoring_plan.md",
         "theory_guard.md",
+        "subregion_iteration_log.md",
     ),
 )
 def test_stage_3_authoring_doc_stale_critique_redirects_to_fig_critique(
@@ -558,13 +570,21 @@ def test_stage_4_export_substate_stale_redirects_to_fig_export(
     assert "done" not in result["next"]
 
 
-def test_stage_4_stale_export_when_coordinate_hints_newer(tmp_path: Path) -> None:
-    """coordinate_hints.yaml newer than exports must trigger stale_export."""
+def test_stage_4_coordinate_hints_newer_stales_critique_not_exports(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """coordinate_hints.yaml is critique/reference context, not a render source."""
+    import status as status_mod
+
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
-    _make_spec(fig_dir)
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
     tex = fig_dir / "myfig.tex"
     tex.write_text("% tikz", encoding="utf-8")
+    (fig_dir / "critique.md").write_text("old critique", encoding="utf-8")
     exports_dir = fig_dir / "exports"
     exports_dir.mkdir()
     for fname, content in (
@@ -575,15 +595,27 @@ def test_stage_4_stale_export_when_coordinate_hints_newer(tmp_path: Path) -> Non
     ):
         (exports_dir / fname).write_bytes(content)
     old_time = time.time() - 100
-    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+    for path in (
+        tex,
+        fig_dir / "briefing.md",
+        fig_dir / "spec.yaml",
+        reference / "golden.png",
+        fig_dir / "critique.md",
+    ):
         os.utime(path, (old_time, old_time))
     for fname in ("myfig.pdf", "myfig.svg", "myfig.tif", "myfig.png"):
         os.utime(exports_dir / fname, (old_time, old_time))
     hints = fig_dir / "coordinate_hints.yaml"
     hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
     result = infer_stage(fig_dir)
+
     assert result["stage"] == 4
-    assert "stale_export" in result["notes"]
+    assert "critique_stale" in result["notes"]
+    assert "stale_export" not in result["notes"]
+    assert "/fig_critique" in result["next"]
+    assert "/fig_compile" not in result["next"]
 
 
 def test_missing_briefing_blocks_stage_advance(tmp_path: Path) -> None:
@@ -758,6 +790,39 @@ def test_reference_image_missing_surfaces_separate_note(tmp_path: Path) -> None:
     assert "selected_preview_missing" not in result["notes"]
 
 
+def test_declared_missing_reference_keeps_critique_gate_closed(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden_target_001.png")
+
+    assert compute_critique_state(fig_dir, "goldenfig") == CRITIQUE_REFERENCE_MISSING
+
+
+def test_declared_missing_reference_next_hint_requires_fix_not_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden_target_001.png")
+    (fig_dir / "goldenfig.tex").write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "goldenfig.pdf").write_bytes(b"%PDF")
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / "goldenfig.tex"):
+        os.utime(path, (old_time, old_time))
+    os.utime(build_dir / "goldenfig.pdf", (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "critique_reference_missing" in result["notes"]
+    assert "fix declared reference inputs" in result["next"]
+    assert "/fig_critique" not in result["next"]
+
+
 def test_previews_as_file_not_directory_does_not_crash(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -772,6 +837,8 @@ def test_smoke_fixture_smoke_trap_demo() -> None:
     fixture = REPO_ROOT / "examples" / "smoke_trap_demo"
     if not fixture.exists():
         return
+    if not (fixture / "build" / "smoke_trap_demo.pdf").exists():
+        pytest.skip("smoke_trap_demo build artifacts are gitignored")
     result = infer_stage(fixture)
     assert result["stage"] == 4
     assert "partial_export" not in result["notes"]
@@ -948,7 +1015,7 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     _make_spec(fig1)
     (fig1 / "previews").mkdir()
 
-    # Stage 6 figure
+    # Stage 4 figure
     fig2 = examples_dir / "zeta_fig"
     fig2.mkdir()
     _make_spec(fig2)
@@ -996,6 +1063,114 @@ def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:
     assert result["exports_substate"] == "MISSING"
 
 
+def test_infer_stage_returns_status_vector_for_ready_final(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "ready_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "ready_fig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "ready_fig.pdf").write_bytes(b"%PDF")
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "ready_fig.pdf").write_bytes(b"%PDF")
+    (exports / "ready_fig.svg").write_bytes(b"<svg/>")
+    (exports / "ready_fig.tif").write_bytes(b"TIFF")
+    (exports / "ready_fig.png").write_bytes(b"\x89PNG")
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / "ready_fig.tex",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(build / "ready_fig.pdf", (fresh_time, fresh_time))
+    for path in exports.iterdir():
+        os.utime(path, (fresh_time, fresh_time))
+
+    import status as status_mod
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["critique_state"] == "NOT_REQUIRED"
+    assert result["export_state"] == "FRESH"
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_infer_stage_status_vector_not_ready_when_not_accepted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=False)
+    (fig_dir / "goldenfig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "goldenfig.pdf").write_bytes(b"%PDF")
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    import status as status_mod
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_ACCEPTED"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    (fig_dir / "goldenfig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "goldenfig.pdf").write_bytes(b"%PDF")
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    import status as status_mod
+
+    monkeypatch.setattr(
+        status_mod,
+        "compute_export_state",
+        lambda _example, _name: "TRACKED_GOLDEN",
+    )
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
 def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     """_print_single must surface exports_substate so users see MISSING /
     TRACKED_GOLDEN / STALE / FRESH for each fixture.
@@ -1011,6 +1186,23 @@ def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     status_mod._print_single(result)
     captured = capsys.readouterr()
     assert "Exports: MISSING" in captured.out
+
+
+def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
+    fixture = tmp_path / "no_exports_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert (
+        "States: render=NOT_AUTHORED critique=NOT_REQUIRED "
+        "export=MISSING acceptance=NOT_DECLARED "
+        "workflow_ready=false golden_ready=false release_ready=false final_ready=false"
+    ) in captured.out
 
 
 def test_main_resolves_single_name_under_examples(
@@ -1071,6 +1263,75 @@ def test_tracked_golden_stale_gives_force_golden_hint(
     assert result["exports_substate"] == "TRACKED_GOLDEN"
     assert "stale_export" in result["notes"]
     assert "--force-golden" in result["next"]
+    assert "/fig_compile" not in result["next"]
+
+
+def test_tracked_golden_stale_with_fresh_render_and_missing_critique_skips_compile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import subprocess
+
+    import export_freshness
+    import status as status_mod
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=repo, check=True)
+
+    fig_dir = repo / "examples" / "golden_fig"
+    (fig_dir / "reference").mkdir(parents=True)
+    (fig_dir / "build").mkdir()
+    (fig_dir / "exports").mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "name: golden_fig\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "reference_image: reference/golden.png\n",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig_dir / "golden_fig.tex").write_text("% tex", encoding="utf-8")
+    (fig_dir / "reference" / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "build" / "golden_fig.pdf").write_bytes(b"%PDF")
+    for suffix, content in {
+        "pdf": b"%PDF",
+        "svg": b"<svg/>",
+        "tif": b"TIFF",
+        "png": b"\x89PNG",
+    }.items():
+        (fig_dir / "exports" / f"golden_fig.{suffix}").write_bytes(content)
+    subprocess.run(
+        ["git", "add", str((fig_dir / "exports" / "golden_fig.pdf").relative_to(repo))],
+        cwd=repo,
+        check=True,
+    )
+
+    now = time.time()
+    export_time = now - 200
+    source_time = now - 100
+    build_time = now - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / "golden_fig.tex",
+        fig_dir / "reference" / "golden.png",
+    ):
+        os.utime(path, (source_time, source_time))
+    os.utime(fig_dir / "build" / "golden_fig.pdf", (build_time, build_time))
+    for path in (fig_dir / "exports").iterdir():
+        os.utime(path, (export_time, export_time))
+
+    monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["critique_state"] == "MISSING"
+    assert "stale_export" in result["notes"]
+    assert "--force-golden" in result["next"]
+    assert "/fig_critique" in result["next"]
     assert "/fig_compile" not in result["next"]
 
 

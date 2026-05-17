@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -268,7 +269,10 @@ def _write_minimal_export_set(exports: Path, name: str, *, tiff_extension: str =
     (exports / f"{name}.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
     Image.new("RGB", (1200, 800), "white").save(exports / f"{name}.png")
     (exports / f"{name}.svg").write_text(_DUMMY_SVG_50_RECTS, encoding="utf-8")
-    (exports / f"{name}{tiff_extension}").write_bytes(b"II*\x00")  # minimal TIFF magic
+    Image.new("RGB", (1200, 800), "white").save(
+        exports / f"{name}{tiff_extension}",
+        dpi=(600, 600),
+    )
 
 
 def _write_minimal_accepted_fixture(fixture: Path) -> None:
@@ -353,6 +357,35 @@ def test_check_example_accepts_tiff_extension(tmp_path: Path) -> None:
     failures = check_example(fixture, require_accepted=False)
 
     assert failures == []
+
+
+def test_check_example_rejects_corrupt_tiff(tmp_path: Path) -> None:
+    fixture = tmp_path / "badTiff"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: badTiff\n", encoding="utf-8")
+    (fixture / "badTiff.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "badTiff")
+    (fixture / "exports" / "badTiff.tif").write_bytes(b"II*\x00")
+
+    failures = check_example(fixture, require_accepted=False)
+
+    assert any("invalid TIFF artifact" in failure for failure in failures)
+
+
+def test_check_example_rejects_low_resolution_tiff(tmp_path: Path) -> None:
+    fixture = tmp_path / "lowDpiTiff"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: lowDpiTiff\n", encoding="utf-8")
+    (fixture / "lowDpiTiff.tex").write_text("% empty", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "lowDpiTiff")
+    Image.new("RGB", (1200, 800), "white").save(
+        fixture / "exports" / "lowDpiTiff.tif",
+        dpi=(72, 72),
+    )
+
+    failures = check_example(fixture, require_accepted=False)
+
+    assert any("TIFF resolution below 600 dpi" in failure for failure in failures)
 
 
 def test_check_example_auto_escalates_when_spec_has_accepted_key(tmp_path: Path) -> None:
@@ -453,6 +486,32 @@ def test_require_accepted_mode_requires_publication_compliance(
 
     assert "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md" in failures
     assert "QUALITY_AUDIT.md does not declare submission-safe: true" in failures
+
+
+def test_require_accepted_mode_includes_tiff_in_audit_freshness(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "staleTiffAudit"
+    _write_minimal_accepted_fixture(fixture)
+    _write_passing_theory_guard(fixture)
+    monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+    old_time = 100.0
+    fresh_time = 200.0
+    for path in (
+        fixture / "spec.yaml",
+        fixture / "briefing.md",
+        fixture / "staleTiffAudit.tex",
+        fixture / "exports" / "staleTiffAudit.pdf",
+        fixture / "exports" / "staleTiffAudit.svg",
+        fixture / "exports" / "staleTiffAudit.png",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(fixture / "QUALITY_AUDIT.md", (old_time + 1, old_time + 1))
+    os.utime(fixture / "exports" / "staleTiffAudit.tif", (fresh_time, fresh_time))
+
+    failures = check_example(fixture, require_accepted=True)
+
+    assert "QUALITY_AUDIT.md is stale or missing" in failures
 
 
 def test_require_accepted_mode_requires_reference_pack_for_reference_image(

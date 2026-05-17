@@ -342,11 +342,17 @@ A second golden fixture only needs a `golden_contract` block in its
 `tests/test_status.py`.
 
 `infer_stage(example_dir)` returns `{stage: 0..4, accepted: True/False/None,
-checks, notes, next}` from filesystem + `spec.yaml` only — no side effects.
-Stage line includes `(accepted)` or `(not accepted)` marker for fixtures
-that declare the `accepted` key. Notes surface stale / missing /
-replayability hazards (`stale_export`, `reference_image_missing`,
-`partial_export`, `previews_not_directory`, `missing_briefing`).
+checks, notes, next, workflow_ready, golden_ready, release_ready, final_ready}`
+from filesystem + `spec.yaml` only — no side effects. Stage line includes
+`(accepted)` or `(not accepted)` marker for fixtures that declare the
+`accepted` key. Notes surface stale / missing / replayability hazards
+(`stale_export`, `reference_image_missing`, `partial_export`,
+`previews_not_directory`, `missing_briefing`).
+
+`workflow_ready` means the local render/critique/export loop is closed.
+`golden_ready` additionally requires `accepted: true`. `release_ready` requires
+a content-fresh export state. `final_ready` is kept as a compatibility alias for
+`release_ready`.
 
 `status.py` is read-only; it never modifies any file.
 

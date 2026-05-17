@@ -182,6 +182,17 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
     assert "panels:" in brief
 
 
+def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "generator: critique_brief.py" in brief
+    assert "generator_version: sha256:" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1" in brief
+    assert "critique_input_hash: sha256:" in brief
+
+
 def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
     """spec.yaml reference_image declaration must take precedence over directory scan."""
     example_dir = _write_example(tmp_path, section6="- invariant")
@@ -218,21 +229,109 @@ def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
     assert "golden_target_001.png" not in brief
 
 
-def test_critique_brief_stale_when_coordinate_hints_newer_than_png(tmp_path, capsys, monkeypatch):
-    """coordinate_hints.yaml newer than build PNG must trigger stale error."""
+def test_critique_brief_does_not_scan_reference_directory_without_spec_reference(
+    tmp_path,
+):
+    """Reference grounding must be explicit in spec.yaml, not inferred from files."""
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    implicit_ref = ref_dir / "golden_target_001.png"
+    implicit_ref.write_bytes(b"PNG")
+
+    old_time = 1_000_000.0
+    os.utime(implicit_ref, (old_time, old_time))
+
+    brief = generate_for(example_dir)
+
+    assert "Reference image (for drift detection)" not in brief
+    assert "golden_target_001.png" not in brief
+
+
+def test_critique_brief_allows_coordinate_hints_newer_than_png(tmp_path, capsys, monkeypatch):
+    """coordinate_hints.yaml is critique context, not a render source."""
     example_dir = _write_example(tmp_path, section6="- invariant")
     hints = example_dir / "coordinate_hints.yaml"
     hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
-    # PNG was created before coordinate_hints.yaml
+    # PNG is fresh against render sources but older than coordinate_hints.yaml.
     png_path = example_dir / "build" / "review_demo.png"
     old_time = 1_000_000.0
-    os.utime(png_path, (old_time, old_time))
+    png_time = 4_000_000_000.0
+    for path in (
+        example_dir / "review_demo.tex",
+        example_dir / "briefing.md",
+        example_dir / "spec.yaml",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(png_path, (png_time, png_time))
+    os.utime(hints, (png_time + 100, png_time + 100))
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert "run /fig_compile first" not in captured.err
+    assert "# Critique brief — review_demo" in captured.out
+
+
+def test_critique_brief_allows_reference_image_newer_than_png(
+    tmp_path, capsys, monkeypatch
+):
+    """Reference image changes make critique stale, but do not make the render stale."""
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    reference = ref_dir / "foo.png"
+    reference.write_bytes(b"PNG")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "style_profile: polymer-default\n"
+        "reference_image: reference/foo.png\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    old_time = 1_000_000.0
+    png_time = 4_000_000_000.0
+    newer_time = png_time + 100
+    for path in (
+        example_dir / "review_demo.tex",
+        example_dir / "briefing.md",
+        example_dir / "spec.yaml",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(png_path, (png_time, png_time))
+    os.utime(reference, (newer_time, newer_time))
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert "run /fig_compile first" not in captured.err
+    assert "examples/review_demo/reference/foo.png" in captured.out
+
+
+def test_critique_brief_blocks_missing_declared_reference_without_fallback(
+    tmp_path, capsys, monkeypatch
+):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    (ref_dir / "golden_target_001.png").write_bytes(b"OTHER")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "reference_image: reference/missing.png\n",
+        encoding="utf-8",
+    )
 
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
     assert main() == 2
     captured = capsys.readouterr()
-    assert "run /fig_compile first" in captured.err
-    assert "coordinate_hints.yaml" in captured.err
+    assert captured.out == ""
+    assert "reference_image_missing: reference/missing.png" in captured.err
+    assert "golden_target_001.png" not in captured.err
 
 
 def test_critique_brief_adds_panel_reference_context_when_ref_and_bbox_present(tmp_path):
@@ -264,6 +363,32 @@ def test_critique_brief_adds_panel_reference_context_when_ref_and_bbox_present(t
     assert (example_dir / "build" / "panel_crops" / "a.png").is_file()
 
 
+def test_critique_brief_strips_panel_reference_path_whitespace(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant", png=False)
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    Image.new("RGB", (40, 40), "white").save(ref_dir / "panel_a.png")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "    reference_image: ' reference/panel_a.png '\n"
+        "    bbox_pdf_cm: [0, 0, 3.5, 1.75]\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    _write_real_render_pair(example_dir)
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "Panel `a`" in brief
+    assert "`examples/review_demo/reference/panel_a.png`" in brief
+    assert "Per-panel reference warnings" not in brief
+
+
 def test_critique_brief_warns_and_skips_panel_reference_without_bbox(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"
@@ -286,6 +411,49 @@ def test_critique_brief_warns_and_skips_panel_reference_without_bbox(tmp_path):
 
     assert "WARN" in brief
     assert "Panel `a` declares reference_image but no bbox_pdf_cm" in brief
+    assert "Per-panel reference contexts" not in brief
+
+
+def test_critique_brief_warns_and_skips_missing_panel_reference_without_bbox(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "    reference_image: reference/missing_panel.png\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "WARN" in brief
+    assert "Panel `a` declares reference_image `reference/missing_panel.png`" in brief
+    assert "Per-panel reference contexts" not in brief
+
+
+def test_critique_brief_warns_and_skips_panel_bbox_without_reference_image(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: a\n"
+        "    caption: demo panel\n"
+        "    bbox_pdf_cm: [0, 0, 3.5, 1.75]\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    newer_time = 4_000_000_000.0
+    os.utime(png_path, (newer_time, newer_time))
+
+    brief = generate_for(example_dir)
+
+    assert "WARN" in brief
+    assert "Panel `a` declares bbox_pdf_cm but no reference_image" in brief
     assert "Per-panel reference contexts" not in brief
 
 

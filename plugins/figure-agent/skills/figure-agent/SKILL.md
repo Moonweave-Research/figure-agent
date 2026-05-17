@@ -63,7 +63,7 @@ patch must trace back to the plan rather than to chat-only intent.
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
-/fig_status [<name>]     stage + accepted-state inference; legacy hints carry a [legacy] marker
+/fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
 ```
 
 Agent rule: when `coordinate_hints.yaml` exists, read it before authoring or
@@ -107,7 +107,7 @@ Replaces the v0.1 HALT-then-paste review surface via rename + extend
 redaction, preview-selection pipeline, and selected-preview stage gate were
 deleted in PR #8a + #8b. See `docs/architecture-v0.2-proposal.md`.
 
-**Status query** (not a workflow step): /fig_status <name> — infers stage from filesystem + spec.yaml; with no arg, summarizes all figures.
+**Status query** (not a workflow step): /fig_status <name> — infers stage plus render/critique/export/acceptance/final_ready state from filesystem + spec.yaml; with no arg, summarizes all figures.
 
 ## Per-figure folder convention
 
@@ -118,11 +118,13 @@ examples/<name>/
 ├── reference/         # optional saved reference PNGs for target matching
 ├── coordinate_hints.yaml # /fig_extract authoring hints from reference_image
 ├── previews/          # user-generated draft images saved under examples/<name>/previews/
-├── selected/          # optional symlink or copy of chosen preview
 ├── <name>.tex         # human/LLM-authored TikZ source
 ├── build/             # compile artifacts (gitignored)
 └── exports/           # final PDF/SVG/TIFF/PNG (gitignored — checked in only on release)
 ```
+
+`selected/` and selected-preview metadata are v0.1 legacy surfaces, not part of
+the active workflow.
 
 ## Boundaries
 
