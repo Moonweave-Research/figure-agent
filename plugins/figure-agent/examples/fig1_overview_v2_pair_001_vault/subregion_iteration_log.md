@@ -130,7 +130,7 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Briefing edits**: none in this iter
 - **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
 - **Score delta (vs iter 5)**: all axes unchanged, no patches applied
-- **Closure status**: ✅ **PANEL A CLOSED (valid)** — 2 consecutive 4-axis ✅ verified against expanded acceptance set (incl. S13 label-cluster); iter 4 false-closure pattern resolved.
+- **Closure status**: **DEFERRED per user instruction** ("정식 클로저는 하지마", 2026-05-17). Template rule's 2-consecutive-✅ condition met technically (iter 5 + iter 6), but formal panel closure NOT declared. Panel A iteration suspended in "valid ✅ state, pending further user direction" — additional sub-regions (e.g., A-8 typography subtitle pending Panel B sample-range resolution) or deferred items may reopen the loop without closure-revoke ceremony.
 - **Sample range note (out of iter scope, flagged for follow-up)**: User confirmed actual paper samples = S60/S70/S75/S80/S85 (5 samples, 60-85 wt% S). Briefing currently locks S60..S85 with 4 samples (S60/S70/S75/S85, briefing §8.8 Q1 LOCKED). Two discrepancies: (1) Panel B has 4 chains, paper has 5; (2) S60 = 40 wt% DIB which literature (RSC 2025 starter guide, JACS 2023 mechanism) flags as crosslinked-regime threshold — "linear copolymer" subtitle (A-8) becomes conditional at this composition. Both flagged as Type B briefing edit candidates (require structural commitment change), deferred per user instruction "패널 A 이터레이션까지만 진행" — Panel B iteration scope.
 - **Visibility gate**: intended yes (all sub-regions perceivable at standard PNG view + per-panel crop) | anomaly none
 - **Remaining deferred (non-blocking)**:
@@ -141,9 +141,9 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 
 ## Panel closure summary
 
-| Panel | Closure iter | Iters to ✅ | Strategy notes |
+| Panel | Closure status | Iters to ✅ | Strategy notes |
 |---|---|---|---|
-| A | **iter 6 (valid, 2026-05-17)** | iter 3 (A axis ✅ first) → iter 5 (S13 added, all ✅) → iter 6 (verify) | A+B mode (≥+30% delta, multi-category) after iter 1+2 micro-tweaks failed perceptibility. D pre-step at iter 3. iter 4 closure invalidated by user-flagged label-cluster blind spot; iter 5 closed via new S13 acceptance + position fix; iter 6 verified. Audit lesson: bullet-coverage gaps are blind spots, and user feedback caught a closure false-positive. Sample range (60/70/75/80/85) confirmed by user but defers to Panel B iter for figure update. |
+| A | **deferred** (iter 6 verified 4-axis ✅ × 2 consecutive; formal closure withheld per user) | iter 3 (A axis ✅ first) → iter 5 (S13 added, all ✅) → iter 6 (verify) | A+B mode (≥+30% delta, multi-category) after iter 1+2 micro-tweaks failed perceptibility. D pre-step at iter 3. iter 4 closure invalidated by user-flagged label-cluster blind spot; iter 5 closed via new S13 acceptance + position fix; iter 6 verified. Audit lesson: bullet-coverage gaps are blind spots, and user feedback caught a closure false-positive. Sample range (60/70/75/80/85) confirmed by user but defers to Panel B iter for figure update. Closure status suspended per user "정식 클로저는 하지마" — Panel A remains in "valid ✅ state, iteration suspended" with re-entry available without closure-revoke ceremony. |
 
 
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,
