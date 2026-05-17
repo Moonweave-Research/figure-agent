@@ -36,11 +36,15 @@
                      line width=0.9pt},
   rowBridgeArrow/.style={-{Stealth[length=10pt,width=7pt]}, cGray!70!black,
                          line width=1.6pt},
-  labelStrong/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont},
-  labelStd/.style={font=\sffamily\fontsize{7.5}{9}\selectfont},
+  % Figure-wide Nature compliance (2026-05-17): max text size 7pt for
+  % non-panel-letter text per Nature/Nat Comm formatting guide.
+  labelStrong/.style={font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont},
+  labelStd/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
   labelMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont,
                     text=cGray!80!black},
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{9.5}{11}\selectfont,
+  % Figure-wide Nature compliance: panel letter 8pt bold upright per Nature
+  % final-submission rule "8 pt bold, upright (not italic) a, b, c"
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
                       text=cGray!90!black},
 ]
 
@@ -51,12 +55,14 @@
 % v8.6 restructure: Row 2 letters re-anchored to 3-column boundaries.
 %   D at column D NW (x=0.10)  | E at column E NW (x=4.70)
 %   F at column F NW (x=9.50)  | G letter REMOVED (no column G in v8.6)
-\node[panelLetter, anchor=north west] at (0.10, 9.05) {A};
-\node[panelLetter, anchor=north west] at (3.60, 9.05) {B};
-\node[panelLetter, anchor=north west] at (6.95, 9.05) {C};
-\node[panelLetter, anchor=north west] at (0.10, 4.55) {D};
-\node[panelLetter, anchor=north west] at (4.70, 4.55) {E};
-\node[panelLetter, anchor=north west] at (9.50, 4.55) {F};
+% Figure-wide Nature compliance: lowercase panel letters per Nature/Nat Comm
+% rule "8 pt bold, upright (not italic) a, b, c".
+\node[panelLetter, anchor=north west] at (0.10, 9.05) {a};
+\node[panelLetter, anchor=north west] at (3.60, 9.05) {b};
+\node[panelLetter, anchor=north west] at (6.95, 9.05) {c};
+\node[panelLetter, anchor=north west] at (0.10, 4.55) {d};
+\node[panelLetter, anchor=north west] at (4.70, 4.55) {e};
+\node[panelLetter, anchor=north west] at (9.50, 4.55) {f};
 
 % ============================================================
 % Figure-wide macro: skeletal polysulfide zigzag chain (used by Panels A + B).

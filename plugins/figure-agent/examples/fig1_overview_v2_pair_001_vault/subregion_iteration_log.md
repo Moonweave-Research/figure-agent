@@ -121,6 +121,35 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Figure-wide Nature compliance pass — 2026-05-17 (N1+N2+N3)
+
+NOT a Panel iter — figure-wide intervention touching all panels. Logged separately for traceability.
+
+- **Scope**: preamble style definitions (panelLetter, labelStrong, labelStd) + 6 panel letter uses (A..F → a..f)
+- **Rationale**: User direction "전부 받아들여야겠지. 전월 양식에 따라" — adopt all Nature/Nat Comm figure regulations. Three rule violations identified in earlier audit:
+  - N1: panel letters uppercase, Nat Comm rule = lowercase "a, b, c"
+  - N2: panel letter 9.5pt, Nat Comm rule = 8pt
+  - N3: labelStrong 8.5pt + labelStd 7.5pt, Nature rule = "Maximum text size for all other text should be 7 pt"
+- **Reference source**: Nature formatting guide, Nat Comm formatting instructions
+- **Patches** (preamble L39-46):
+  - `panelLetter`: fontsize 9.5/11 → 8/9.6 (N2)
+  - `labelStrong`: fontsize 8.5/10.2 → 7/8.4 (N3) — affects "Sulfur-rich polymer", panel C "real space"/"energy diagram", any other labelStrong-tagged label
+  - `labelStd`: fontsize 7.5/9 → 7/8.4 (N3)
+  - `labelMute` unchanged (already 7pt italic)
+- **Panel letter uses** (L54-59):
+  - `A`/`B`/`C`/`D`/`E`/`F` → `a`/`b`/`c`/`d`/`e`/`f` (N1) — 6 line changes, anchor=north west preserved
+- **Briefing edits**: none in this pass. Briefing §13 references "Panel A", "Panel B" etc. in body text — those naming references unchanged (body convention can use uppercase even when figure labels are lowercase per typical Nature convention).
+- **4-axis scores (figure-wide, all panels)**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta**: T/S unchanged. L improved (Nature rule alignment). A: typography hierarchy compressed but Nature-compliant; "Sulfur-rich polymer" bold no longer dominates Panel A → drawing-as-hero proportion improved.
+- **Notes**:
+  - Visual hierarchy: panel letter 8pt bold (top tier) > labelStrong 7pt bold (2nd) > labelStd 7pt regular > labelMute 7pt italic. Hierarchy now compressed (1pt diff between top and next tier) — by Nature design.
+  - "Sulfur-rich polymer" label proportion improved (was visually dominant, now properly subordinate to drawing).
+  - Visual clash count: 56 → 55 (negligible delta, no regressions).
+- **Visibility gate**: intended yes (all panel letters + labels readable at print scale) | anomaly none
+- **Out of scope for this pass** (deferred):
+  - N4 (wash ellipse cAmber tint): "avoid excessive colour" borderline call; design-intent element, defer to submission-review
+  - N5 (caption.md abbreviation definitions): caption requires full v8.6 6-panel rewrite, separate task
+
 ### Panel A iter 7/10 — 2026-05-17 — M1 Nature-compliance fix (inv. vulc. → inverse vulcanization)
 
 - **Scope**: A-5 (S₈ inset position) + A-6 (inverse vulcanization label)
