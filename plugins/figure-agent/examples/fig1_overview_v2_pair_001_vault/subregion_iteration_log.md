@@ -54,9 +54,21 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Score delta (vs prior iter)**: baseline established for Nature-grade loop on Panel A (no prior iter)
 - **Notes**: 0.10pt weight increase is at perceptibility edge in PNG raster; print scale (TIFF 600 DPI) should register more strongly. Panel A still has "schoolbook chemistry" feel overall — single patch on 1 element not transformative. Iter 2-3 candidates: A-2 (polysulfide segments) + A-4 (methyl pairs) to lift A axis to ✅.
 - **Visibility gate**: intended yes (aromatic ticks present, hexagonal ring identity preserved) | anomaly none (no rogue stroke, no overlap, no ghost label)
-- **Commit**: (populated below after auto-commit)
+- **Commit**: `a902864`
 
-## Residual Risk
+### Panel A iter 2/10 — 2026-05-17
+
+- **Scope**: A-2 (polysulfide linker bonds — ring↔chain junction stubs) + A-4 (methyl pair stubs in `\methylPair` macro)
+- **Rationale**: A-2 linker bonds previously cGray!75 — slight color mismatch with ring outline cGray!85 weakened chain-integrity visual binding. A-4 methyl stubs 0.45pt × 0.08cm — too subtle even for detail-tier role; "completely invisible at PNG" exceeds the "subtle but perceivable" intent of A-4 §13.1 role.
+- **Reference source**: briefing-only (Panel A positive-reference gap)
+- **Patches**:
+  - A-2: 8 linker bond lines (`.tex` L143-150) color cGray!75!black → cGray!85!black (rationale: matches ring outline color exactly for chain-identity visual binding)
+  - A-4: `\methylPair` macro lines (`.tex` L128, L130) line width 0.45pt → 0.55pt (rationale: detail tier lifted from "invisible" to "subtle but perceivable", still well below polysulfide 0.9pt = no competition)
+- **Briefing edits**: none (briefing §13.1 does not lock linker bond color or methyl stub weight)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ⚠️
+- **Score delta (vs iter 1)**: T unchanged | S unchanged | L unchanged | A unchanged (incremental progress without ⚠️→✅ transition)
+- **Notes**: Two consecutive iters with A ⚠️ — Nature-grade for Panel A apparently requires more than weight/color tweaks. Iter 3-5 candidates: A-5 (S₈ inset proportion), A-7 (wash ellipse), A-8 (typography hierarchy). If A still ⚠️ by iter 7, escalation diagnosis (a) TikZ ceiling or (b) need structural change beyond 1-line patches becomes likely.
+- **Visibility gate**: intended yes (linker bonds darker matching ring; methyl stubs slightly more present at PNG) | anomaly none (no rogue stroke; color/weight changes preserve 3-tier discipline)
 
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,
   escape arrow, inverse-vulcanization arrow, and leaders carry different

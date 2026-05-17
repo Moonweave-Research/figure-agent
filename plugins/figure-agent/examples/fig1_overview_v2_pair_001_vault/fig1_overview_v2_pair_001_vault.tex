@@ -127,9 +127,9 @@
   \pgfmathsetmacro{\mnorm}{sqrt(\mdx*\mdx + \mdy*\mdy)}
   \pgfmathsetmacro{\mnx}{\mdx/\mnorm}
   \pgfmathsetmacro{\mny}{\mdy/\mnorm}
-  \draw[cGray!75!black, line width=0.45pt]
+  \draw[cGray!75!black, line width=0.55pt]
     (#1,#2) -- ({#1 - 0.08*\mny}, {#2 + 0.08*\mnx});
-  \draw[cGray!75!black, line width=0.45pt]
+  \draw[cGray!75!black, line width=0.55pt]
     (#1,#2) -- ({#1 + 0.08*\mny}, {#2 - 0.08*\mnx});
 }
 
@@ -140,14 +140,14 @@
 %   Ring_c (2.25,7.10): 240° (LL ← from b)      + 0°   (R  → chain to d)
 %   Ring_d (3.00,6.55): 120° (UL ← from c)      + 0°   (R  → right dangling)
 % All vertex pairs are 120° apart (meta).
-\draw[cGray!75!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
-\draw[cGray!75!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
-\draw[cGray!75!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
-\draw[cGray!75!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
-\draw[cGray!75!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
-\draw[cGray!75!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
-\draw[cGray!75!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
-\draw[cGray!75!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
+\draw[cGray!85!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
+\draw[cGray!85!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
+\draw[cGray!85!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
+\draw[cGray!85!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
+\draw[cGray!85!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
+\draw[cGray!85!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
+\draw[cGray!85!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
+\draw[cGray!85!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
 
 % --- Polysulfide segments (R10 horizontal-row zigzag, linear chain) ---
 % 3 internal chains (a→b, b→c, c→d) + left + right danglings.
