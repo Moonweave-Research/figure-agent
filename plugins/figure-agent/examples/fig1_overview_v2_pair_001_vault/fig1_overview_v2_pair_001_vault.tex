@@ -27,7 +27,10 @@
 \begin{document}
 \resizebox{178mm}{!}{%
 \begin{tikzpicture}[
-  every node/.style={font=\sffamily\fontsize{8}{10}\selectfont},
+  % Figure-wide Nature compliance (iter 8 P2 defensive): default node text
+  % capped at 7pt so any node without explicit font override stays within
+  % Nature's "max 7 pt for all other text" rule.
+  every node/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
   % R4 style-guide tier (vault style_guide line_weights):
   %   primary 0.9pt — narrative paths (interArrow, snake chain, well curves, polymer outline).
   %   secondary 0.55pt — axes, spines, faint reference lines.
@@ -177,7 +180,9 @@
 % R10: (S)_x composition label centered above the row, larger font (replaces
 % the prior small-on-short-chain placement). Acts as a single panel-level
 % composition annotation for all polysulfide segments.
-\node[font=\sffamily\fontsize{8}{9.5}\selectfont, text=cAmber!85!black,
+% iter 8 P1 fix: (S)_x label 8pt → 7pt to satisfy Nature max-text-size
+% rule (8pt was sole non-panel-letter violation post figure-wide pass).
+\node[font=\sffamily\fontsize{7}{8.4}\selectfont, text=cAmber!85!black,
       anchor=south, inner sep=1pt]
   at (1.85, 7.55) {$\mathord{-}(\mathrm{S})_x\mathord{-}$};
 

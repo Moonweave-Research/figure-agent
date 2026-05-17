@@ -121,6 +121,21 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Panel A iter 8/10 — 2026-05-17 — P1+P2 font cap (residual Nature N3 violations)
+
+- **Scope**: A-3 ((S)_x label fontsize) + figure-wide default font fallback
+- **Rationale**: Post figure-wide N1+N2+N3 pass, residual 8pt usages still present: (S)_x label explicit 8pt (line 180) and `every node` default 8pt (line 30). Both exceed Nature/Nat Comm 7pt cap for non-panel-letter text. Audit miss from previous pass — pass closed N1/N2/N3 in style definitions but didn't sweep individual `\fontsize{...}` explicit overrides.
+- **Reference source**: Nature formatting guide max-text-size rule
+- **Patches**:
+  - P1 (A-3): `(S)_x` label explicit fontsize `\fontsize{8}{9.5}` → `\fontsize{7}{8.4}` — closes sole explicit non-panel-letter 8pt violation
+  - P2 (defensive figure-wide): `every node/.style` default fontsize `\fontsize{8}{10}` → `\fontsize{7}{8.4}` — prevents future silent inheritance violations on any node lacking explicit font override
+- **Briefing edits**: none (font size is polish-tier, not §13.1 locked)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 7)**: T/S/L unchanged | A: residual Nature N3 violation closed
+- **Notes**: (S)_x label slightly smaller, cluster non-overlap (S13) preserved with extra clearance. Default 8pt → 7pt is defensive — no visible nodes inherited 8pt (all explicit), but future patches now safe.
+- **Visibility gate**: intended yes ((S)_x readable at 7pt, all labels intact) | anomaly none (visual clash 55 → 55 unchanged)
+- **Audit pattern lesson**: Figure-wide style pass missed explicit per-node fontsize overrides. Add to template anti-patterns: "Style-definition sweep must be paired with per-`\fontsize{...}` explicit-override grep, not assumed equivalent."
+
 ### Figure-wide Nature compliance pass — 2026-05-17 (N1+N2+N3)
 
 NOT a Panel iter — figure-wide intervention touching all panels. Logged separately for traceability.
