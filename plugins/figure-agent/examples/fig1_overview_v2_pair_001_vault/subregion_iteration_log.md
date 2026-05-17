@@ -37,6 +37,25 @@ units from `briefing.md` section 13 and the current v5-v7 authoring history.
 | v8.3 | C-R5 | ΔE_t depth annotation arrow + label rendered cGray!70!black; `briefing.md` §13.3 spec calls for cRed!75 to bind the depth scalar to the deep trap species. | Recolored arrow + label to cRed!75!black per briefing §8.6 / §13.9 Binding-1. | Color binding strengthens TG-CFG-001 deep-red consistency. | None. |
 | v8.3 | Row2-Caption | "convergent evidence -- three independent probes ..." used `--` (en-dash) but briefing §13.4 Row2-Caption spec calls for em-dash. | Changed `--` to `---` so the rendered caption shows —. | Em-dash convention restored. | None — typographic fix only. |
 
+## Element-Iteration Loop (Nature-grade, 4-axis)
+
+Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade aesthetic + element-by-element quality. 4-axis acceptance: 이론 (T) / 구조 (S) / 스토리 (L) / 미감 (A). 10-iter cap per panel.
+
+### Panel A iter 1/10 — 2026-05-17
+
+- **Scope**: A-1 (4 DIB rings) + A-3 ((S)_x label verification)
+- **Rationale**: A-1 is largest visual element + carries chemistry-drawing weight; A-3 just-fixed (C004 commit `34d973a`) needs validation in new iter context
+- **Reference source**: briefing-only (Panel A positive-reference gap per audit_table.md); anti-reference (`sulfur_polymer_panelA_ref.png`) confirmed pattern to avoid (crosslinked network, >2 sulfide attachments per ring)
+- **Patches**:
+  - A-1: aromatic tick weight 0.55→0.65pt (.tex L104-106, applied to all 3 tick lines in `\dibRingAt` macro) — rationale: tick/outline ratio 0.79→0.93, closer to Nature chemistry-paper convention where ring outline and aromatic ticks have comparable weight presence
+  - A-3: NO PATCH — verification only (post-C004 placement at x=2.10, y=7.55 confirmed centered above ring row, no overlap with S₈ inset at y=8.45)
+- **Briefing edits**: none (briefing §13.1 does not lock aromatic tick width)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ⚠️
+- **Score delta (vs prior iter)**: baseline established for Nature-grade loop on Panel A (no prior iter)
+- **Notes**: 0.10pt weight increase is at perceptibility edge in PNG raster; print scale (TIFF 600 DPI) should register more strongly. Panel A still has "schoolbook chemistry" feel overall — single patch on 1 element not transformative. Iter 2-3 candidates: A-2 (polysulfide segments) + A-4 (methyl pairs) to lift A axis to ✅.
+- **Visibility gate**: intended yes (aromatic ticks present, hexagonal ring identity preserved) | anomaly none (no rogue stroke, no overlap, no ghost label)
+- **Commit**: (populated below after auto-commit)
+
 ## Residual Risk
 
 - Dashed-line semantics (#17) remain intentionally diverse: Debye reference,

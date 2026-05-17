@@ -101,9 +101,11 @@
     \draw[cGray!85!black, line width=0.70pt]
       (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
       (240:\dibR) -- (300:\dibR) -- cycle;
-    \draw[cGray!85!black, line width=0.55pt] (66:0.78*\dibR) -- (114:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.55pt] (186:0.78*\dibR) -- (234:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.55pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
+    % Panel A iter 1/10: aromatic tick width 0.55→0.65pt for Nature-grade
+    % chemistry weight presence (ratio to outline 0.70pt now 0.93, was 0.79).
+    \draw[cGray!85!black, line width=0.65pt] (66:0.78*\dibR) -- (114:0.78*\dibR);
+    \draw[cGray!85!black, line width=0.65pt] (186:0.78*\dibR) -- (234:0.78*\dibR);
+    \draw[cGray!85!black, line width=0.65pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
   \end{scope}
 }
 % R10 horizontal-row zigzag layout: 4 DIB rings in alternating high/low row,
