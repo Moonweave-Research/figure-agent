@@ -227,6 +227,17 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
+    if (
+        status_result.get("workflow_ready")
+        and status_result.get("acceptance_state") == "NOT_ACCEPTED"
+    ):
+        return {
+            "stop_reason": "status_action_required",
+            "recommended_next_action": status_result.get("next", "inspect figure state"),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
     if not status_result.get("workflow_ready"):
         return {
             "stop_reason": "status_action_required",
@@ -320,7 +331,7 @@ def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
     recommended = loop_decision.get("recommended_next_action", "")
     if stop_reason == "human_gate_required":
         level = "human_review_required"
-    elif stop_reason == "patch_target_recommended":
+    elif stop_reason in {"patch_target_recommended", "active_subregion_recommended"}:
         level = "patch_allowed"
     elif stop_reason == "ambiguous_patch_selection":
         level = "ambiguous_patch_selection"

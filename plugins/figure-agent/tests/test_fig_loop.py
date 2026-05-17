@@ -9,6 +9,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import fig_loop as fig_loop_mod  # noqa: E402
 from fig_loop import FigLoopError, _escalation_summary, ensure_safe_command, run_loop  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -446,6 +447,51 @@ def test_loop_uses_active_subregion_when_no_apply_decision(tmp_path: Path) -> No
     assert iteration["patch_handoff"]["target_type"] == "subregion"
     assert iteration["patch_handoff"]["target_id"] == "D-2"
     assert iteration["patch_handoff"]["patch_target"] == "D-2"
+    assert iteration["escalation_level"] == "patch_allowed"
+    assert iteration["requires_user_input"] is False
+    assert iteration["requires_domain_review"] is False
+
+
+def test_loop_not_accepted_ready_state_is_manual_approval_required(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _make_fixture(tmp_path)
+    status_result = {
+        "stage": 4,
+        "name": "loop_demo",
+        "checks": [],
+        "next": (
+            "golden fixture is not accepted yet — resolve examples/loop_demo/"
+            "QUALITY_AUDIT.md defects, then set accepted: true in spec.yaml."
+        ),
+        "notes": [],
+        "accepted": False,
+        "exports_substate": "FRESH",
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_ACCEPTED",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_loop_mod, "infer_stage", lambda _example_dir: status_result)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect approval gate",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "manual_approval_required"
+    assert iteration["requires_user_input"] is True
+    assert iteration["requires_domain_review"] is False
+    assert iteration["patch_handoff"] is None
 
 
 def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
