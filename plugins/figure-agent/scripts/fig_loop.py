@@ -289,6 +289,50 @@ def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str
     return "not_actionable"
 
 
+def _patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | None:
+    active_patch_target = loop_decision["active_patch_target"]
+    if not active_patch_target:
+        return None
+
+    finding_id = active_patch_target.get("finding_id")
+    patch_target = active_patch_target["patch_target"]
+    target_type = "finding" if finding_id else "subregion"
+    target_id = finding_id if finding_id else patch_target
+    example_prefix = f"examples/{name}"
+    return {
+        "target_type": target_type,
+        "target_id": target_id,
+        "patch_target": patch_target,
+        "reason": active_patch_target["reason"],
+        "allowed_edit_scope": [
+            f"{example_prefix}/{name}.tex",
+            f"{example_prefix}/authoring_plan.md",
+            f"{example_prefix}/subregion_iteration_log.md",
+        ],
+        "forbidden_edit_scope": [
+            "accepted",
+            "golden_contract",
+            f"{example_prefix}/exports/",
+            f"{example_prefix}/build/",
+            f"{example_prefix}/critique.md",
+            "unrelated examples",
+            "broad refactors",
+            "multiple findings in one patch",
+        ],
+        "required_closeout_checks": [
+            f"/fig_compile {name}",
+            f"/fig_critique {name} when critique freshness requires it",
+            f"update or recreate {example_prefix}/critique_adjudication.yaml",
+            "preserve unresolved findings",
+            f"/fig_loop {name} --goal <same goal or next goal>",
+        ],
+        "unresolved_findings_requirement": (
+            "Do not delete, rewrite, or hide unresolved critique findings; record only the"
+            " selected target decision in critique_adjudication.yaml."
+        ),
+    }
+
+
 def _decision_markdown(
     *,
     name: str,
@@ -296,6 +340,7 @@ def _decision_markdown(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
     loop_decision: dict[str, Any],
+    patch_handoff: dict[str, Any] | None,
 ) -> str:
     notes = status_result.get("notes", [])
     notes_text = ", ".join(notes) if notes else "(none)"
@@ -306,6 +351,10 @@ def _decision_markdown(
         active_patch_text = f"{finding_id} -> {patch_target}" if finding_id else str(patch_target)
     else:
         active_patch_text = "(none)"
+    if patch_handoff:
+        handoff_text = f"{patch_handoff['target_type']} {patch_handoff['target_id']}"
+    else:
+        handoff_text = "(none)"
     return "\n".join(
         [
             f"# Fig Loop Decision: {name}",
@@ -319,6 +368,7 @@ def _decision_markdown(
             f"- export_state: {status_result.get('export_state')}",
             f"- adjudication_state: {adjudication['state']}",
             f"- active_patch_target: {active_patch_text}",
+            f"- patch_handoff_target: {handoff_text}",
             f"- notes: {notes_text}",
             f"- recommended_next_action: {loop_decision['recommended_next_action']}",
             "",
@@ -352,6 +402,7 @@ def run_loop(
     adjudication = _adjudication_state(example_dir)
     loop_decision = _loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision)
+    patch_handoff = _patch_handoff(name, loop_decision)
     completed_at = _utc_now()
 
     iteration = {
@@ -361,6 +412,7 @@ def run_loop(
         "adjudication": adjudication,
         "stop_reason": loop_decision["stop_reason"],
         "active_patch_target": loop_decision["active_patch_target"],
+        "patch_handoff": patch_handoff,
         "recommended_next_action": loop_decision["recommended_next_action"],
         "human_gate_status": loop_decision["human_gate_status"],
     }
@@ -388,6 +440,7 @@ def run_loop(
             status_result=status_result,
             adjudication=adjudication,
             loop_decision=loop_decision,
+            patch_handoff=patch_handoff,
         ),
         encoding="utf-8",
     )

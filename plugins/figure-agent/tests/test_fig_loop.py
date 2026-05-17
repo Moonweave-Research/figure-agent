@@ -200,7 +200,40 @@ def test_loop_identifies_apply_decision_patch_target(tmp_path: Path) -> None:
     }
     assert iteration["axis_verdicts"]["adjudication"]["verdict"] == "actionable"
     assert iteration["recommended_next_action"] == "patch C001: panel A label cluster"
+    assert iteration["patch_handoff"] == {
+        "target_type": "finding",
+        "target_id": "C001",
+        "patch_target": "panel A label cluster",
+        "reason": "label overlaps the arrow",
+        "allowed_edit_scope": [
+            "examples/loop_demo/loop_demo.tex",
+            "examples/loop_demo/authoring_plan.md",
+            "examples/loop_demo/subregion_iteration_log.md",
+        ],
+        "forbidden_edit_scope": [
+            "accepted",
+            "golden_contract",
+            "examples/loop_demo/exports/",
+            "examples/loop_demo/build/",
+            "examples/loop_demo/critique.md",
+            "unrelated examples",
+            "broad refactors",
+            "multiple findings in one patch",
+        ],
+        "required_closeout_checks": [
+            "/fig_compile loop_demo",
+            "/fig_critique loop_demo when critique freshness requires it",
+            "update or recreate examples/loop_demo/critique_adjudication.yaml",
+            "preserve unresolved findings",
+            "/fig_loop loop_demo --goal <same goal or next goal>",
+        ],
+        "unresolved_findings_requirement": (
+            "Do not delete, rewrite, or hide unresolved critique findings; record only the"
+            " selected target decision in critique_adjudication.yaml."
+        ),
+    }
     assert "active_patch_target: C001 -> panel A label cluster" in decision
+    assert "patch_handoff_target: finding C001" in decision
 
 
 def test_loop_stops_on_human_gated_decision(tmp_path: Path) -> None:
@@ -232,6 +265,7 @@ def test_loop_stops_on_human_gated_decision(tmp_path: Path) -> None:
     assert iteration["stop_reason"] == "human_gate_required"
     assert iteration["human_gate_status"] == "required"
     assert iteration["active_patch_target"] is None
+    assert iteration["patch_handoff"] is None
     assert iteration["axis_verdicts"]["publication_safety"]["verdict"] == "human_gate"
     assert iteration["recommended_next_action"] == "human review required for C002"
 
@@ -287,6 +321,9 @@ def test_loop_uses_active_subregion_when_no_apply_decision(tmp_path: Path) -> No
         "patch_target": "D-2",
         "reason": "active sub-region target",
     }
+    assert iteration["patch_handoff"]["target_type"] == "subregion"
+    assert iteration["patch_handoff"]["target_id"] == "D-2"
+    assert iteration["patch_handoff"]["patch_target"] == "D-2"
 
 
 def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
@@ -330,6 +367,7 @@ def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
     assert iteration["status"]["critique_state"] == "FRESH"
     assert iteration["stop_reason"] == "missing_adjudication"
     assert iteration["active_patch_target"] is None
+    assert iteration["patch_handoff"] is None
     assert iteration["recommended_next_action"] == "create critique_adjudication.yaml"
 
 
