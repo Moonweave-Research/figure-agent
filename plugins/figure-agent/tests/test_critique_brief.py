@@ -182,6 +182,17 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
     assert "panels:" in brief
 
 
+def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "generator: critique_brief.py" in brief
+    assert "generator_version: sha256:" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1" in brief
+    assert "critique_input_hash: sha256:" in brief
+
+
 def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
     """spec.yaml reference_image declaration must take precedence over directory scan."""
     example_dir = _write_example(tmp_path, section6="- invariant")
@@ -215,6 +226,25 @@ def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
 
     assert "examples/review_demo/reference/foo.png" in brief
     # golden_target_001.png must NOT appear — spec takes precedence
+    assert "golden_target_001.png" not in brief
+
+
+def test_critique_brief_does_not_scan_reference_directory_without_spec_reference(
+    tmp_path,
+):
+    """Reference grounding must be explicit in spec.yaml, not inferred from files."""
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    implicit_ref = ref_dir / "golden_target_001.png"
+    implicit_ref.write_bytes(b"PNG")
+
+    old_time = 1_000_000.0
+    os.utime(implicit_ref, (old_time, old_time))
+
+    brief = generate_for(example_dir)
+
+    assert "Reference image (for drift detection)" not in brief
     assert "golden_target_001.png" not in brief
 
 

@@ -18,13 +18,20 @@ from pathlib import Path
 
 from inputs import parse_briefing, parse_spec
 from PIL import Image
-from status import compute_reference_input_failures
+from quality_manifest import file_sha256, input_manifest_hash
+from reference_contract import (
+    compute_reference_input_failures,
+    declared_figure_reference_path,
+    participating_panel_reference_paths,
+)
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
-STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
+CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 
@@ -64,29 +71,6 @@ def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
         )
 
 
-def _reference_image_path(example_dir: Path, spec: dict) -> Path | None:
-    """Locate reference image. spec.yaml reference_image takes precedence over directory scan."""
-    ref_image_str = spec.get("reference_image")
-    if isinstance(ref_image_str, str) and ref_image_str.strip():
-        candidate = example_dir / ref_image_str.strip()
-        return candidate if candidate.is_file() else None
-    panel_ref_paths = {
-        example_dir / reference
-        for panel in spec.get("panels", [])
-        if isinstance((reference := panel.get("reference_image")), str) and reference.strip()
-    }
-    # Fallback: scan reference/ directory
-    ref_dir = example_dir / "reference"
-    if not ref_dir.is_dir():
-        return None
-    for candidate in [ref_dir / "golden_target_001.png"] + sorted(ref_dir.glob("*.png")):
-        if candidate in panel_ref_paths:
-            continue
-        if candidate.exists():
-            return candidate
-    return None
-
-
 def _panel_id(panel: dict, index: int) -> str:
     panel_id = panel.get("id")
     if panel_id is None:
@@ -115,6 +99,32 @@ def _critique_source_paths(
     if STYLE_LOCK_PATH.exists():
         paths.append(STYLE_LOCK_PATH)
     return tuple(paths)
+
+
+def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
+    candidates = (
+        example_dir / "authoring_contract.md",
+        example_dir / "reference" / "reference_pack.md",
+        example_dir / "authoring_plan.md",
+        example_dir / "theory_guard.md",
+        example_dir / "subregion_iteration_log.md",
+    )
+    return tuple(path for path in candidates if path.is_file())
+
+
+def _critique_manifest_paths(
+    tex_path: Path, briefing_path: Path, example_dir: Path, spec: dict
+) -> tuple[Path, ...]:
+    paths = list(_critique_source_paths(tex_path, briefing_path, example_dir, spec))
+    ref_path = declared_figure_reference_path(example_dir, spec)
+    if ref_path is not None:
+        paths.append(ref_path)
+    hints_path = example_dir / "coordinate_hints.yaml"
+    if hints_path.is_file():
+        paths.append(hints_path)
+    paths.extend(participating_panel_reference_paths(example_dir, spec))
+    paths.extend(_authoring_context_paths(example_dir))
+    return tuple(dict.fromkeys(paths))
 
 
 def _line_numbered(text: str) -> str:
@@ -343,8 +353,13 @@ def generate_for(example_dir: Path) -> str:
     numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
     render_path = _example_relative_path(example_dir, png_path)
-    ref_image = _reference_image_path(example_dir, spec)
+    ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
+    generator_version = file_sha256(Path(__file__))
+    critique_input_hash = input_manifest_hash(
+        _critique_manifest_paths(tex_path, briefing_path, example_dir, spec),
+        base_dir=REPO_ROOT,
+    )
 
     ref_section = ""
     if ref_path:
@@ -405,6 +420,10 @@ Write findings to `examples/{name}/critique.md` with this exact structure
 schema: figure-agent.critique.v1
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
+generator: critique_brief.py
+generator_version: {generator_version}
+rubric_version: {CRITIQUE_RUBRIC_VERSION}
+critique_input_hash: {critique_input_hash}
 verdict: ready | revise | block
 panels:
   - id: <panel id>

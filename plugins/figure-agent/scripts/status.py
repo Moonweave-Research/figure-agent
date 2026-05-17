@@ -9,6 +9,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
+from reference_contract import (
+    compute_reference_input_failures,
+    declared_figure_reference_path,
+    participating_panel_reference_paths,
+)
 
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
@@ -119,48 +124,6 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     return tuple(path for path in candidates if path.exists())
 
 
-def _panel_reference_paths(example_dir: Path, spec: dict) -> tuple[Path, ...]:
-    paths: list[Path] = []
-    for panel in spec.get("panels", []):
-        if panel.get("bbox_pdf_cm") is None:
-            continue
-        reference = panel.get("reference_image")
-        if not isinstance(reference, str) or not reference.strip():
-            continue
-        ref_path = example_dir / reference.strip()
-        if ref_path.is_file():
-            paths.append(ref_path)
-    return tuple(paths)
-
-
-def compute_reference_input_failures(example_dir: Path, spec: dict | None = None) -> list[str]:
-    """Return declared reference inputs that should participate but are missing."""
-    spec_path = example_dir / "spec.yaml"
-    if spec is None:
-        if not spec_path.exists():
-            return []
-        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-
-    failures: list[str] = []
-    reference_image = spec.get("reference_image") if spec else None
-    if isinstance(reference_image, str) and reference_image.strip():
-        reference_image = reference_image.strip()
-        if not (example_dir / reference_image).is_file():
-            failures.append(f"reference_image_missing: {reference_image}")
-
-    for index, panel in enumerate(spec.get("panels", [])):
-        if panel.get("bbox_pdf_cm") is None:
-            continue
-        reference = panel.get("reference_image")
-        if not isinstance(reference, str) or not reference.strip():
-            continue
-        reference = reference.strip()
-        if not (example_dir / reference).is_file():
-            panel_id = panel.get("id") or f"panel_{index + 1}"
-            failures.append(f"panel_reference_image_missing: {panel_id}: {reference}")
-    return failures
-
-
 def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
     candidates = (
         example_dir / "authoring_contract.md",
@@ -174,15 +137,13 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
 
 def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     paths = list(_source_paths(example_dir, name, spec))
-    ref_image_str = spec.get("reference_image")
-    if isinstance(ref_image_str, str) and ref_image_str.strip():
-        ref_path = example_dir / ref_image_str.strip()
-        if ref_path.is_file():
-            paths.append(ref_path)
+    ref_path = declared_figure_reference_path(example_dir, spec)
+    if ref_path is not None:
+        paths.append(ref_path)
     hints_path = example_dir / "coordinate_hints.yaml"
     if hints_path.exists():
         paths.append(hints_path)
-    paths.extend(_panel_reference_paths(example_dir, spec))
+    paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
 
@@ -198,11 +159,8 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     if compute_reference_input_failures(example_dir, spec):
         return CRITIQUE_REFERENCE_MISSING
 
-    has_figure_reference = False
-    reference_image = spec.get("reference_image") if spec else None
-    if isinstance(reference_image, str) and reference_image.strip():
-        has_figure_reference = (example_dir / reference_image.strip()).is_file()
-    has_panel_reference = bool(_panel_reference_paths(example_dir, spec))
+    has_figure_reference = declared_figure_reference_path(example_dir, spec) is not None
+    has_panel_reference = bool(participating_panel_reference_paths(example_dir, spec))
     if not has_figure_reference and not has_panel_reference:
         return CRITIQUE_NOT_REQUIRED
 
@@ -306,10 +264,9 @@ def _compute_render_state(
     return RENDER_FRESH
 
 
-def _final_ready(
+def _workflow_ready(
     stage: int,
     notes: list[str],
-    accepted: bool | None,
     exports_substate: str,
     render_state: str,
     critique_state: str,
@@ -317,11 +274,18 @@ def _final_ready(
     return (
         stage == 4
         and not notes
-        and accepted is not False
         and render_state == RENDER_FRESH
         and exports_substate in {EXPORT_FRESH, EXPORT_TRACKED_GOLDEN}
         and not _critique_needs_action(critique_state)
     )
+
+
+def _golden_ready(workflow_ready: bool, accepted: bool | None) -> bool:
+    return workflow_ready and accepted is True
+
+
+def _release_ready(golden_ready: bool, exports_substate: str) -> bool:
+    return golden_ready and exports_substate == EXPORT_FRESH
 
 
 def _status_vector(
@@ -332,14 +296,18 @@ def _status_vector(
     render_state: str,
     critique_state: str,
 ) -> dict:
+    workflow_ready = _workflow_ready(stage, notes, exports_substate, render_state, critique_state)
+    golden_ready = _golden_ready(workflow_ready, accepted)
+    release_ready = _release_ready(golden_ready, exports_substate)
     return {
         "render_state": render_state,
         "critique_state": critique_state,
         "export_state": exports_substate,
         "acceptance_state": _acceptance_state(accepted),
-        "final_ready": _final_ready(
-            stage, notes, accepted, exports_substate, render_state, critique_state
-        ),
+        "workflow_ready": workflow_ready,
+        "golden_ready": golden_ready,
+        "release_ready": release_ready,
+        "final_ready": release_ready,
     }
 
 
@@ -614,6 +582,9 @@ def _print_single(result: dict) -> None:
         f"critique={result.get('critique_state', '?')} "
         f"export={result.get('export_state', '?')} "
         f"acceptance={result.get('acceptance_state', '?')} "
+        f"workflow_ready={str(bool(result.get('workflow_ready'))).lower()} "
+        f"golden_ready={str(bool(result.get('golden_ready'))).lower()} "
+        f"release_ready={str(bool(result.get('release_ready'))).lower()} "
         f"final_ready={final_ready}"
     )
     if notes:
@@ -630,7 +601,7 @@ def main() -> int:
             result = infer_stage(entry)
             marker = _accepted_marker(result.get("accepted"))
             exports = result.get("exports_substate", "?")
-            ready = str(bool(result.get("final_ready"))).lower()
+            ready = str(bool(result.get("release_ready"))).lower()
             line = (
                 f"{result['name']}  stage {result['stage']}/4{marker}"
                 f"  exports: {exports}  ready: {ready}"

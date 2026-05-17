@@ -47,9 +47,12 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `critique_state`: `NOT_REQUIRED`, `MISSING`, `STALE`, `REFERENCE_MISSING`, or `FRESH`.
 - `export_state`: same value as `exports_substate` (`MISSING`, `TRACKED_GOLDEN`, `STALE`, or `FRESH`).
 - `acceptance_state`: `NOT_DECLARED`, `NOT_ACCEPTED`, or `ACCEPTED`.
-- `final_ready`: `true` only when stage 4 has no notes, render is fresh, export is fresh or tracked golden, critique is fresh/not-required, and `accepted` is not `false`.
+- `workflow_ready`: `true` when stage 4 has no notes, render is fresh, export is fresh or tracked golden, and critique is fresh/not-required.
+- `golden_ready`: `true` when `workflow_ready` is true and `accepted: true` is declared.
+- `release_ready`: `true` when `golden_ready` is true and the export state is content-fresh (`FRESH`, not merely `TRACKED_GOLDEN`).
+- `final_ready`: compatibility alias for `release_ready`.
 
-The no-argument summary includes `ready: true|false` for quick triage across all fixtures.
+The no-argument summary includes `ready: true|false`, which follows `release_ready`.
 
 Notes that may appear:
 

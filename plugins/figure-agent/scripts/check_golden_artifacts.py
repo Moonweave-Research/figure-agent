@@ -39,6 +39,7 @@ VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
 )
 IGNORED_SVG_SUBTREES = frozenset({"defs", "desc", "metadata", "style", "title"})
+MIN_TIFF_DPI = 590.0
 
 
 def _local_name(tag: str) -> str:
@@ -203,11 +204,47 @@ def tiff_artifact_path(exports: Path, name: str) -> Path:
     return exports / f"{name}.tiff"
 
 
+def _float_or_none(value: object) -> float | None:
+    try:
+        return float(value)  # PIL IFDRational implements float().
+    except (TypeError, ValueError):
+        return None
+
+
+def _tiff_dpi(image: Image.Image) -> tuple[float, float] | None:
+    dpi = image.info.get("dpi")
+    if isinstance(dpi, tuple) and len(dpi) >= 2:
+        x_dpi = _float_or_none(dpi[0])
+        y_dpi = _float_or_none(dpi[1])
+        if x_dpi is not None and y_dpi is not None:
+            return x_dpi, y_dpi
+
+    x_resolution = image.tag_v2.get(282)
+    y_resolution = image.tag_v2.get(283)
+    resolution_unit = image.tag_v2.get(296, 2)
+    x_value = _float_or_none(x_resolution)
+    y_value = _float_or_none(y_resolution)
+    if x_value is None or y_value is None:
+        return None
+    if resolution_unit == 3:  # pixels per centimeter
+        return x_value * 2.54, y_value * 2.54
+    return x_value, y_value
+
+
 def tiff_artifact_failure(path: Path) -> str | None:
     try:
         with Image.open(path) as image:
             if image.format != "TIFF":
                 return f"invalid TIFF artifact: {path} is {image.format or 'unknown format'}"
+            dpi = _tiff_dpi(image)
+            if dpi is None:
+                return f"invalid TIFF artifact: {path} missing DPI metadata"
+            x_dpi, y_dpi = dpi
+            if x_dpi < MIN_TIFF_DPI or y_dpi < MIN_TIFF_DPI:
+                return (
+                    f"TIFF resolution below 600 dpi: {path} "
+                    f"reports {x_dpi:.1f}x{y_dpi:.1f} dpi"
+                )
             image.verify()
     except Exception as exc:
         return f"invalid TIFF artifact: {path}: {exc}"

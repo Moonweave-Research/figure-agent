@@ -24,12 +24,12 @@ from export_freshness import (  # noqa: E402
     EXPORT_TRACKED_GOLDEN,
     compute_export_state,
 )
+from reference_contract import compute_reference_input_failures  # noqa: E402
 from status import (  # noqa: E402
     CRITIQUE_MISSING,
     CRITIQUE_REFERENCE_MISSING,
     CRITIQUE_STALE,
     compute_critique_state,
-    compute_reference_input_failures,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

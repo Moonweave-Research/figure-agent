@@ -1102,7 +1102,10 @@ def test_infer_stage_returns_status_vector_for_ready_final(
     assert result["critique_state"] == "NOT_REQUIRED"
     assert result["export_state"] == "FRESH"
     assert result["acceptance_state"] == "NOT_DECLARED"
-    assert result["final_ready"] is True
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
 
 
 def test_infer_stage_status_vector_not_ready_when_not_accepted(
@@ -1129,6 +1132,42 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
     result = status_mod.infer_stage(fig_dir)
 
     assert result["acceptance_state"] == "NOT_ACCEPTED"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    (fig_dir / "goldenfig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "goldenfig.pdf").write_bytes(b"%PDF")
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    (exports / "goldenfig.pdf").write_bytes(b"%PDF")
+    (exports / "goldenfig.svg").write_bytes(b"<svg/>")
+    (exports / "goldenfig.tif").write_bytes(b"TIFF")
+    (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+
+    import status as status_mod
+
+    monkeypatch.setattr(
+        status_mod,
+        "compute_export_state",
+        lambda _example, _name: "TRACKED_GOLDEN",
+    )
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
     assert result["final_ready"] is False
 
 
@@ -1161,7 +1200,8 @@ def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
     captured = capsys.readouterr()
     assert (
         "States: render=NOT_AUTHORED critique=NOT_REQUIRED "
-        "export=MISSING acceptance=NOT_DECLARED final_ready=false"
+        "export=MISSING acceptance=NOT_DECLARED "
+        "workflow_ready=false golden_ready=false release_ready=false final_ready=false"
     ) in captured.out
 
 
