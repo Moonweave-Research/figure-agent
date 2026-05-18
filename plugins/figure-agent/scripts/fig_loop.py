@@ -492,11 +492,11 @@ def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
 
 
 _AUTO_PATCH_ALLOWED_TERMS = {
-    "label offset": ("label offset", "offset", "move the label", "move label"),
+    "label offset": ("label offset", "offset label", "move the label", "move label"),
     "text overlap": ("overlap", "crowding", "crowded", "collision"),
     "clipping": ("clip",),
     "whitespace balance": ("whitespace",),
-    "palette/style": ("palette", "style"),
+    "palette/style": ("palette violation", "style violation"),
     "line weight/style": ("line weight", "stroke weight"),
 }
 
@@ -742,6 +742,8 @@ def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "final_stop_reason": manifest["final_stop_reason"],
         "escalation_level": iteration["escalation_level"],
         "patch_handoff_present": iteration.get("patch_handoff") is not None,
+        "auto_patch_eligibility": iteration.get("auto_patch_eligibility"),
+        "recommended_next_action": iteration.get("recommended_next_action"),
     }
 
 

@@ -63,6 +63,8 @@ Blocked classes:
 Non-candidate class:
 
 - generic label wording or copy edits without a concrete geometry defect
+- generic `offset` or `style` language without a concrete label/geometry
+  qualifier
 
 Classification outputs:
 
@@ -84,7 +86,9 @@ Classification outputs:
 }
 ```
 
-`may_edit` must be `false` in this slice.
+`may_edit` must be `false` in this slice. `auto_patch_eligibility` is always
+present and nullable in `iteration_001.json`; it is `null` when there is no
+single patch handoff.
 
 ## Task 1: Add Safe Candidate Classification
 

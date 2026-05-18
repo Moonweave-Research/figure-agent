@@ -27,6 +27,8 @@ becomes one JSON object with:
 - `final_stop_reason`
 - `escalation_level`
 - `patch_handoff_present`
+- `auto_patch_eligibility`
+- `recommended_next_action`
 
 On preflight failure, the command preserves the existing error contract: exit
 code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
@@ -114,9 +116,10 @@ stay outside patch-assisted automation.
 
 ## Auto-Patch Eligibility
 
-When exactly one `patch_handoff` exists, `/fig_loop` also records
-`auto_patch_eligibility` in `iteration_001.json`. This field is advisory and
-read-only; it does not grant edit permission.
+`/fig_loop` records `auto_patch_eligibility` in `iteration_001.json` and in
+`--json` stdout. The field is always present and nullable: it is `null` unless
+exactly one `patch_handoff` exists. This field is advisory and read-only; it
+does not grant edit permission.
 
 - `auto_patch_candidate` means the target appears to be a small label, overlap,
   clipping, whitespace, palette/style, or line-weight issue.
@@ -127,8 +130,8 @@ read-only; it does not grant edit permission.
   publication safety.
 
 Generic label wording changes are `patch_assisted_only` unless the finding also
-states a concrete geometry problem such as overlap, clipping, offset, crowding,
-or collision.
+states a concrete geometry problem such as overlap, clipping, label offset,
+crowding, or collision. Generic `offset` and `style` language is not enough.
 
 In this version, `auto_patch_eligibility.may_edit` is always `false`. The runner
 must not edit figure source, critique output, exports, accepted metadata, or
