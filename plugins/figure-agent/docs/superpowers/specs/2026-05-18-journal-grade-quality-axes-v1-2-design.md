@@ -354,12 +354,20 @@ these conditions is true:
 - `blocking_items` is not a list.
 - `rationale` or `evidence` is empty for `pass`, `needs_patch`,
   `needs_human`, or `block`.
+- `needs_patch` or `block` has an empty `blocking_items` list.
+- `recommended_action` conflicts with `verdict`:
+  - `pass` and `not_applicable` require `none`,
+  - `needs_patch` requires `patch` or `revise_briefing`,
+  - `needs_human` requires `human_review` or `revise_briefing`,
+  - `block` requires `block_release` or `human_review`.
 - `panel_role_coherence.panel_roles` is missing, not a list, or contains a
   non-mapping item when the axis is applicable.
 - `panel_roles[].role` or `panel_roles[].role_quality` has an unsupported
   value.
 - `publication_readiness.verdict` is less severe than any applicable upstream
   axis verdict.
+- `publication_readiness.verdict` is `not_applicable` while any upstream axis
+  is applicable.
 
 ## Readiness Summary Rule
 
@@ -377,6 +385,8 @@ Recommended conservative rule:
 - `pass` requires all applicable axes to be `pass`.
 - `not_applicable` axes do not count as passing evidence; they only remove the
   axis from this figure's scope.
+- `publication_readiness` cannot be `not_applicable` when any upstream axis is
+  applicable, because it is the conservative readiness summary for the figure.
 
 Implementation must enforce the same rule deterministically during v1.2
 validation. The host LLM may explain the summary, but it must not be trusted to
@@ -394,6 +404,12 @@ Every `block` and every `needs_patch` axis must be connected to at least one of:
 The quality axes are not allowed to hide actionable problems in prose. If an
 axis says `needs_patch`, the normal finding/adjudication path must be able to
 see what should be patched.
+
+For machine validation, `patch` and `block_release` actions are considered
+connected only when the axis `blocking_items` text references an existing
+panel/top-level finding id such as `C001 - <reason>` or `P001 - <reason>`.
+Human-review and
+revise-briefing actions may remain as blocking-item-only handoffs.
 
 ## Automation Boundaries
 

@@ -14,27 +14,27 @@ Prerequisites:
 
 Steps:
 
-1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, mandatory audit checklists, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
+1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, mandatory audit checklists, journal-grade quality axes, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
 
 2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. The host model inspects the images directly; do not call any external vision API.
 
-3. Fill the mandatory audit checklists first, then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. Empty `audit_enumeration` blocks are invalid for schema v1.1. Any `structural_defect`, `incomplete`, `BLOCKER`, or `MAJOR` audit item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`. For each finding, identify:
+3. Fill the mandatory audit checklists first, then fill `quality_axes` for every journal-grade audit axis. Do not collapse the axes into a single score. `publication_readiness` must be at least as severe as the most severe applicable upstream axis. Empty `audit_enumeration` blocks are invalid for schema v1.2, and empty or malformed `quality_axes` blocks are invalid for schema v1.2. Any `structural_defect`, `incomplete`, `BLOCKER`, `MAJOR`, `needs_patch`, or `block` audit item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`, `human_review`, `revise_briefing`, or `block_release`. For `patch` or `block_release` quality-axis actions, include the linked finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`. Then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
    - `severity`: BLOCKER / MAJOR / MINOR / NIT
    - `category`: structural / physics / label_placement / whitespace / hierarchy / palette / style
    - `tex_lines`: the source line numbers that need revision (cite from the line-numbered .tex in the brief)
    - `observation`: what is wrong, citing what is visible in the PNG
    - `suggested_fix`: a concrete edit to `<name>.tex`
 
-4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.1):
+4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.2):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.1
+schema: figure-agent.critique.v1.2
 fixture: <name>
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
 generator_version: sha256:<generator hash>
-rubric_version: figure-agent.critique-rubric.v1.1
+rubric_version: figure-agent.critique-rubric.v1.2
 critique_input_hash: sha256:<input manifest hash>
 verdict: ready | revise | block
 audit_enumeration:
@@ -63,6 +63,82 @@ audit_enumeration:
       reference: provided_reference | briefing | reference_pack | not_provided
       severity: BLOCKER | MAJOR | MINOR | NIT
       proposed_action: add | expand | accept_simplification
+quality_axes:
+  message_storyline:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<message/story verdict rationale>"
+    evidence: "<visible evidence, briefing/spec reference, or finding id>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  panel_role_coherence:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<panel role coherence summary>"
+    evidence: "<panel ids and visual evidence>"
+    panel_roles:
+      - panel_id: "<id>"
+        role: setup | mechanism | result | comparison | control | zoom | model | workflow | context
+        role_quality: clear | weak | missing | redundant
+        rationale: "<one-line>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  subregion_integration:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<sub-region/global integration summary>"
+    evidence: "<subregion id, log evidence, or visible evidence>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  component_fidelity:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<component fidelity summary>"
+    evidence: "<component audit ids or visible evidence>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  scientific_plausibility:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<scientific plausibility summary>"
+    evidence: "<theory guard, briefing invariant, or visible evidence>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  composition_layout:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<layout/composition summary>"
+    evidence: "<visible evidence, checker output, or finding id>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  label_annotation_semantics:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<label semantics summary>"
+    evidence: "<label-target audit ids or visible evidence>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  journal_polish:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<polish summary>"
+    evidence: "<visible evidence or export-scale issue>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  reference_fidelity:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<reference fidelity summary>"
+    evidence: "<reference path, panel id, or reference_pack note>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
+  publication_readiness:
+    verdict: pass | needs_patch | needs_human | block | not_applicable
+    confidence: low | medium | high
+    rationale: "<conservative readiness summary>"
+    evidence: "<axis verdict summary>"
+    blocking_items: []
+    recommended_action: none | patch | human_review | revise_briefing | block_release
 panels:
   - id: <panel id>
     findings:

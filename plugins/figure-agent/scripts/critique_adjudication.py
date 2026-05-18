@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import warnings
 from pathlib import Path
@@ -15,11 +16,58 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
 CRITIQUE_SCHEMA_V1 = "figure-agent.critique.v1"
 CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
+CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
 ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
 _PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
 _ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
     {"provided_reference", "briefing", "reference_pack", "not_provided"}
 )
+_QUALITY_AXIS_NAMES = (
+    "message_storyline",
+    "panel_role_coherence",
+    "subregion_integration",
+    "component_fidelity",
+    "scientific_plausibility",
+    "composition_layout",
+    "label_annotation_semantics",
+    "journal_polish",
+    "reference_fidelity",
+    "publication_readiness",
+)
+_QUALITY_VERDICTS = frozenset(
+    {"pass", "needs_patch", "needs_human", "block", "not_applicable"}
+)
+_QUALITY_CONFIDENCES = frozenset({"low", "medium", "high"})
+_QUALITY_ACTIONS = frozenset(
+    {"none", "patch", "human_review", "revise_briefing", "block_release"}
+)
+_PANEL_ROLES = frozenset(
+    {
+        "setup",
+        "mechanism",
+        "result",
+        "comparison",
+        "control",
+        "zoom",
+        "model",
+        "workflow",
+        "context",
+    }
+)
+_PANEL_ROLE_QUALITIES = frozenset({"clear", "weak", "missing", "redundant"})
+_QUALITY_SEVERITY_RANK = {
+    "pass": 0,
+    "needs_patch": 1,
+    "needs_human": 2,
+    "block": 3,
+}
+_QUALITY_ACTIONS_BY_VERDICT = {
+    "pass": frozenset({"none"}),
+    "not_applicable": frozenset({"none"}),
+    "needs_patch": frozenset({"patch", "revise_briefing"}),
+    "needs_human": frozenset({"human_review", "revise_briefing"}),
+    "block": frozenset({"block_release", "human_review"}),
+}
 
 
 class CritiqueAdjudicationError(ValueError):
@@ -50,6 +98,33 @@ def _require_non_empty_string(data: dict[str, Any], key: str, *, label: str) -> 
     value = data.get(key)
     if not isinstance(value, str) or not value.strip():
         raise CritiqueAdjudicationError(f"{label}.{key} must be a non-empty string")
+    return value
+
+
+def _require_string_value(data: dict[str, Any], key: str, *, label: str) -> str:
+    value = data.get(key)
+    if not isinstance(value, str):
+        raise CritiqueAdjudicationError(f"{label}.{key} must be a string")
+    return value.strip()
+
+
+def _require_enum(
+    data: dict[str, Any],
+    key: str,
+    allowed: frozenset[str],
+    *,
+    label: str,
+) -> str:
+    value = _require_string_value(data, key, label=label)
+    if value not in allowed:
+        allowed_values = ", ".join(sorted(allowed))
+        raise CritiqueAdjudicationError(f"{label}.{key} must be one of: {allowed_values}")
+    return value
+
+
+def _require_list(value: Any, label: str) -> list[Any]:
+    if not isinstance(value, list):
+        raise CritiqueAdjudicationError(f"{label} must be a list")
     return value
 
 
@@ -195,6 +270,149 @@ def _validate_v1_1_audit(frontmatter: dict[str, Any]) -> None:
             )
 
 
+def _validate_quality_axis(
+    axis: dict[str, Any],
+    axis_name: str,
+    *,
+    require_panel_roles: bool = False,
+) -> str:
+    label = f"critique frontmatter.quality_axes.{axis_name}"
+    verdict = _require_enum(axis, "verdict", _QUALITY_VERDICTS, label=label)
+    _require_enum(axis, "confidence", _QUALITY_CONFIDENCES, label=label)
+    action = _require_enum(axis, "recommended_action", _QUALITY_ACTIONS, label=label)
+
+    allowed_actions = _QUALITY_ACTIONS_BY_VERDICT[verdict]
+    if action not in allowed_actions:
+        allowed = ", ".join(sorted(allowed_actions))
+        raise CritiqueAdjudicationError(
+            f"{label}.recommended_action must be one of {allowed} for verdict {verdict}"
+        )
+
+    if verdict != "not_applicable":
+        _require_non_empty_string(axis, "rationale", label=label)
+        _require_non_empty_string(axis, "evidence", label=label)
+    else:
+        _require_string_value(axis, "rationale", label=label)
+        _require_string_value(axis, "evidence", label=label)
+
+    blocking_items = _require_list(axis.get("blocking_items"), f"{label}.blocking_items")
+    for index, item in enumerate(blocking_items):
+        if not isinstance(item, str) or not item.strip():
+            raise CritiqueAdjudicationError(
+                f"{label}.blocking_items[{index}] must be a non-empty string"
+            )
+    if verdict in {"needs_patch", "block"} and not blocking_items:
+        raise CritiqueAdjudicationError(
+            f"{label}.blocking_items must be a non-empty list for verdict {verdict}"
+        )
+
+    if require_panel_roles and verdict != "not_applicable":
+        _validate_panel_roles(axis, label)
+
+    return verdict
+
+
+def _validate_panel_roles(axis: dict[str, Any], axis_label: str) -> None:
+    panel_roles = _require_non_empty_list(axis.get("panel_roles"), f"{axis_label}.panel_roles")
+    for index, raw_role in enumerate(panel_roles):
+        role_label = f"{axis_label}.panel_roles[{index}]"
+        role_item = _require_mapping(raw_role, role_label)
+        _require_non_empty_string(role_item, "panel_id", label=role_label)
+        _require_enum(role_item, "role", _PANEL_ROLES, label=role_label)
+        _require_enum(role_item, "role_quality", _PANEL_ROLE_QUALITIES, label=role_label)
+        _require_non_empty_string(role_item, "rationale", label=role_label)
+
+
+def _validate_v1_2_quality_axes(frontmatter: dict[str, Any]) -> None:
+    quality_axes = _require_mapping(
+        frontmatter.get("quality_axes"),
+        "critique frontmatter.quality_axes",
+    )
+    verdicts: dict[str, str] = {}
+    for axis_name in _QUALITY_AXIS_NAMES:
+        axis = _require_mapping(
+            quality_axes.get(axis_name),
+            f"critique frontmatter.quality_axes.{axis_name}",
+        )
+        verdicts[axis_name] = _validate_quality_axis(
+            axis,
+            axis_name,
+            require_panel_roles=axis_name == "panel_role_coherence",
+        )
+
+    readiness_verdict = verdicts["publication_readiness"]
+    upstream_verdicts = [
+        verdict
+        for axis_name, verdict in verdicts.items()
+        if axis_name != "publication_readiness" and verdict != "not_applicable"
+    ]
+    if readiness_verdict == "not_applicable" and upstream_verdicts:
+        raise CritiqueAdjudicationError(
+            "critique frontmatter.quality_axes.publication_readiness.verdict "
+            "cannot be not_applicable while upstream axes are applicable"
+        )
+    if readiness_verdict != "not_applicable" and upstream_verdicts:
+        required_rank = max(_QUALITY_SEVERITY_RANK[verdict] for verdict in upstream_verdicts)
+        readiness_rank = _QUALITY_SEVERITY_RANK[readiness_verdict]
+        if readiness_rank < required_rank:
+            raise CritiqueAdjudicationError(
+                "critique frontmatter.quality_axes.publication_readiness.verdict "
+                "is less severe than an applicable upstream quality axis"
+            )
+
+
+def _validate_v1_2_audit_to_finding(frontmatter: dict[str, Any]) -> None:
+    quality_axes = _require_mapping(
+        frontmatter.get("quality_axes"),
+        "critique frontmatter.quality_axes",
+    )
+    findings = _findings_from_critique(frontmatter)
+    finding_ids = {
+        _finding_id(finding, f"critique finding {index}")
+        for index, finding in enumerate(findings)
+    }
+    finding_required_axes: list[str] = []
+    for axis_name in _QUALITY_AXIS_NAMES:
+        axis = _require_mapping(
+            quality_axes.get(axis_name),
+            f"critique frontmatter.quality_axes.{axis_name}",
+        )
+        verdict = str(axis.get("verdict", "")).strip()
+        action = str(axis.get("recommended_action", "")).strip()
+        if verdict in {"needs_patch", "block"} and action not in {
+            "human_review",
+            "revise_briefing",
+        }:
+            finding_required_axes.append(axis_name)
+            blocking_items = _require_list(
+                axis.get("blocking_items"),
+                f"critique frontmatter.quality_axes.{axis_name}.blocking_items",
+            )
+            if not finding_ids:
+                continue
+            if any(
+                isinstance(item, str)
+                and re.search(
+                    rf"(^|[^A-Za-z0-9_.-]){re.escape(finding_id)}($|[^A-Za-z0-9_.-])",
+                    item,
+                )
+                for item in blocking_items
+                for finding_id in finding_ids
+            ):
+                continue
+            raise CritiqueAdjudicationError(
+                "critique frontmatter.quality_axes."
+                f"{axis_name}.blocking_items must reference a panel/top-level "
+                "finding id for patch or block_release action"
+            )
+    if finding_required_axes and not finding_ids:
+        axes = ", ".join(finding_required_axes)
+        raise CritiqueAdjudicationError(
+            "critique frontmatter.quality_axes must include at least one "
+            f"panel/top-level findings item for patch or block_release axis: {axes}"
+        )
+
+
 def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
     tex_lines = finding.get("tex_lines")
     if (
@@ -255,6 +473,10 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
         )
     elif critique_schema == CRITIQUE_SCHEMA_V1_1:
         _validate_v1_1_audit(frontmatter)
+    elif critique_schema == CRITIQUE_SCHEMA_V1_2:
+        _validate_v1_1_audit(frontmatter)
+        _validate_v1_2_quality_axes(frontmatter)
+        _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
         raise CritiqueAdjudicationError(f"unsupported critique schema: {critique_schema}")
     fixture_value = frontmatter.get("fixture")

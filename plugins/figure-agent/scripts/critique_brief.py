@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.1). No external API is called; the brief itself is API-free.
+v1.2). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -37,6 +37,25 @@ _PHYSICAL_CHECK_VALUES = (
     "cable_gravity | floating_components | spatial_proximity | "
     "direction_orientation | material_distinction"
 )
+_QUALITY_AXIS_NAMES = (
+    "message_storyline",
+    "panel_role_coherence",
+    "subregion_integration",
+    "component_fidelity",
+    "scientific_plausibility",
+    "composition_layout",
+    "label_annotation_semantics",
+    "journal_polish",
+    "reference_fidelity",
+    "publication_readiness",
+)
+_QUALITY_VERDICT_VALUES = "pass | needs_patch | needs_human | block | not_applicable"
+_QUALITY_CONFIDENCE_VALUES = "low | medium | high"
+_QUALITY_ACTION_VALUES = "none | patch | human_review | revise_briefing | block_release"
+_PANEL_ROLE_VALUES = (
+    "setup | mechanism | result | comparison | control | zoom | model | workflow | context"
+)
+_PANEL_ROLE_QUALITY_VALUES = "clear | weak | missing | redundant"
 
 
 class CritiqueBriefError(Exception):
@@ -283,6 +302,150 @@ bounded reference provenance, severity, and proposed action.
 """
 
 
+def _journal_quality_axes() -> str:
+    return """## Journal-Grade Quality Axes (host LLM MUST evaluate)
+
+After completing `audit_enumeration`, evaluate every quality axis below under
+top-level YAML field `quality_axes`. Do not collapse these axes into one opaque
+score. Every `pass`, `needs_patch`, `needs_human`, or `block` verdict needs
+concrete visible, briefing, reference, theory-guard, or finding evidence.
+Use `not_applicable` only when the figure lacks the relevant input or structure.
+
+### 1. Message and Storyline
+Evaluate the one-sentence figure message, first-read order, relation to the
+manuscript claim, missing story bridges, main-conclusion prominence, and
+decorative/non-explanatory content.
+
+### 2. Panel Role Coherence
+Classify every panel role as setup, mechanism, result, comparison, control,
+zoom, model, workflow, or context. Flag missing, redundant, weak, or misordered
+panel roles.
+
+### 3. Sub-region Integration
+If sub-region context exists, evaluate active sub-region ids, integration with
+stable regions, global imbalance from local fixes, detail-level mismatch, and
+callout/zoom link correctness.
+
+### 4. Component Fidelity
+Evaluate component identity, support/mount/frame/stage, material boundaries,
+wire/cable/arrow endpoints, standard missing parts, and whether omissions are
+acceptable schematic simplifications.
+
+### 5. Scientific Plausibility
+Evaluate arrows, fields, flows, forces, charge motion, current, energy ordering,
+scale/proximity, material/interface meaning, theory-guard invariants, and
+mechanism-level label/object conflicts.
+
+### 6. Composition and Layout
+Evaluate visual hierarchy, reading path, spacing, alignment, density, white
+space, relative scale, thumbnail readability, and whether the figure reads as
+one coherent system instead of assembled fragments.
+
+### 7. Label and Annotation Semantics
+Evaluate every label-target audit item, terminology consistency, leader-line
+necessity, label density, cross-panel label grammar, and annotation usefulness
+versus clutter.
+
+### 8. Journal Polish
+Evaluate typography hierarchy, line-weight economy, palette economy, semantic
+color consistency, export-scale contrast, schematic restraint, and absence of
+decorative noise.
+
+### 9. Reference Fidelity
+When references exist, evaluate role/topology transfer, per-panel reference
+crop comparisons, preserved key relations, intentional omissions versus
+incomplete drawing, hallucinated additions, and source limitations.
+
+### 10. Publication Readiness
+Conservatively summarize whether the figure passes, needs a patch, needs human
+review, or blocks release. This summary cannot be less severe than any
+applicable upstream quality axis.
+"""
+
+
+def _quality_axis_schema(axis_name: str, *, evidence: str, rationale: str) -> str:
+    return "\n".join(
+        [
+            f"  {axis_name}:",
+            f"    verdict: {_QUALITY_VERDICT_VALUES}",
+            f"    confidence: {_QUALITY_CONFIDENCE_VALUES}",
+            f"    rationale: \"<{rationale}>\"",
+            f"    evidence: \"<{evidence}>\"",
+            "    blocking_items: []",
+            f"    recommended_action: {_QUALITY_ACTION_VALUES}",
+        ]
+    )
+
+
+def _quality_axes_schema() -> str:
+    axis_schema = {
+        "message_storyline": _quality_axis_schema(
+            "message_storyline",
+            rationale="message/story verdict rationale",
+            evidence="visible evidence, briefing/spec reference, or finding id",
+        ),
+        "panel_role_coherence": "\n".join(
+            [
+                "  panel_role_coherence:",
+                f"    verdict: {_QUALITY_VERDICT_VALUES}",
+                f"    confidence: {_QUALITY_CONFIDENCE_VALUES}",
+                "    rationale: \"<panel role coherence summary>\"",
+                "    evidence: \"<panel ids and visual evidence>\"",
+                "    panel_roles:",
+                "      - panel_id: \"<id>\"",
+                f"        role: {_PANEL_ROLE_VALUES}",
+                f"        role_quality: {_PANEL_ROLE_QUALITY_VALUES}",
+                "        rationale: \"<one-line>\"",
+                "    blocking_items: []",
+                f"    recommended_action: {_QUALITY_ACTION_VALUES}",
+            ]
+        ),
+        "subregion_integration": _quality_axis_schema(
+            "subregion_integration",
+            rationale="sub-region/global integration summary",
+            evidence="subregion id, log evidence, or visible evidence",
+        ),
+        "component_fidelity": _quality_axis_schema(
+            "component_fidelity",
+            rationale="component fidelity summary",
+            evidence="component audit ids or visible evidence",
+        ),
+        "scientific_plausibility": _quality_axis_schema(
+            "scientific_plausibility",
+            rationale="scientific plausibility summary",
+            evidence="theory guard, briefing invariant, or visible evidence",
+        ),
+        "composition_layout": _quality_axis_schema(
+            "composition_layout",
+            rationale="layout/composition summary",
+            evidence="visible evidence, checker output, or finding id",
+        ),
+        "label_annotation_semantics": _quality_axis_schema(
+            "label_annotation_semantics",
+            rationale="label semantics summary",
+            evidence="label-target audit ids or visible evidence",
+        ),
+        "journal_polish": _quality_axis_schema(
+            "journal_polish",
+            rationale="polish summary",
+            evidence="visible evidence or export-scale issue",
+        ),
+        "reference_fidelity": _quality_axis_schema(
+            "reference_fidelity",
+            rationale="reference fidelity summary",
+            evidence="reference path, panel id, or reference_pack note",
+        ),
+        "publication_readiness": _quality_axis_schema(
+            "publication_readiness",
+            rationale="conservative readiness summary",
+            evidence="axis verdict summary",
+        ),
+    }
+    return "quality_axes:\n" + "\n".join(
+        axis_schema[axis_name] for axis_name in _QUALITY_AXIS_NAMES
+    )
+
+
 def _panel_reference_sections(
     example_dir: Path, spec: dict, png_path: Path, pdf_path: Path
 ) -> tuple[str, str]:
@@ -417,6 +580,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 {_mandatory_audit_checklists()}
 
+{_journal_quality_axes()}
+
 ## Critique rubric
 
 ### A. Physics correctness
@@ -437,11 +602,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.1):
+(YAML front-matter then human-readable Markdown body — schema v1.2):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.1
+schema: figure-agent.critique.v1.2
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -475,6 +640,7 @@ audit_enumeration:
       reference: provided_reference | briefing | reference_pack | not_provided
       severity: BLOCKER | MAJOR | MINOR | NIT
       proposed_action: add | expand | accept_simplification
+{_quality_axes_schema()}
 panels:
   - id: <panel id>
     findings:
@@ -503,6 +669,14 @@ findings:
 Any `structural_defect`, `incomplete`, `BLOCKER`, or `MAJOR` audit item must
 either appear as a normal panel/top-level finding or be explicitly justified as
 `accept_simplification`.
+
+Every `needs_patch` and `block` quality axis must expose a concrete
+`blocking_items` entry and either a normal panel/top-level finding or a
+non-patch `recommended_action` such as `human_review`, `revise_briefing`, or
+`block_release`. For `patch` or `block_release` actions, include the linked
+finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`.
+`publication_readiness.verdict` must not be less severe than any applicable
+upstream quality axis.
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

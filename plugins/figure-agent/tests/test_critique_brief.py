@@ -11,6 +11,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import critique_brief  # noqa: E402
 from critique_brief import generate_for, main  # noqa: E402
 
+QUALITY_AXIS_NAMES = (
+    "message_storyline",
+    "panel_role_coherence",
+    "subregion_integration",
+    "component_fidelity",
+    "scientific_plausibility",
+    "composition_layout",
+    "label_annotation_semantics",
+    "journal_polish",
+    "reference_fidelity",
+    "publication_readiness",
+)
+
+
+def _quality_axes_schema_block(brief: str) -> str:
+    start = brief.index("quality_axes:")
+    end = brief.index("panels:", start)
+    return brief[start:end]
+
 
 def _write_example(tmp_path: Path, *, section6: str | None = None, png: bool = True) -> Path:
     example_dir = tmp_path / "review_demo"
@@ -180,8 +199,26 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.1" in brief
+    assert "schema: figure-agent.critique.v1.2" in brief
     assert "panels:" in brief
+
+
+def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Journal-Grade Quality Axes (host LLM MUST evaluate)" in brief
+    assert "### 1. Message and Storyline" in brief
+    assert "### 2. Panel Role Coherence" in brief
+    assert "### 3. Sub-region Integration" in brief
+    assert "### 4. Component Fidelity" in brief
+    assert "### 5. Scientific Plausibility" in brief
+    assert "### 6. Composition and Layout" in brief
+    assert "### 7. Label and Annotation Semantics" in brief
+    assert "### 8. Journal Polish" in brief
+    assert "### 9. Reference Fidelity" in brief
+    assert "### 10. Publication Readiness" in brief
 
 
 def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
@@ -203,9 +240,26 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.1" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.2" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
+    assert "quality_axes:" in brief
+    quality_axes = _quality_axes_schema_block(brief)
+    for axis_name in QUALITY_AXIS_NAMES:
+        axis_start = quality_axes.index(f"  {axis_name}:")
+        next_axis_starts = [
+            quality_axes.find(f"  {candidate}:", axis_start + 1)
+            for candidate in QUALITY_AXIS_NAMES
+        ]
+        next_axis_starts = [index for index in next_axis_starts if index != -1]
+        axis_end = min(next_axis_starts) if next_axis_starts else len(quality_axes)
+        axis_block = quality_axes[axis_start:axis_end]
+        assert "verdict: pass | needs_patch | needs_human | block | not_applicable" in axis_block
+        assert "confidence: low | medium | high" in axis_block
+        assert (
+            "recommended_action: none | patch | human_review | revise_briefing | "
+            "block_release"
+        ) in axis_block
     assert brief.count("category: structural | physics | label_placement") == 2
 
 

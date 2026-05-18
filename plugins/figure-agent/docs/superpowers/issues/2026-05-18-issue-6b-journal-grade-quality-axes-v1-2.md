@@ -61,6 +61,12 @@ overall figure remains weak.
 - [ ] `blocking_items` is always a list; use `[]` when no blocker exists.
 - [ ] `pass`, `needs_patch`, `needs_human`, and `block` axes require non-empty
   `rationale` and `evidence`.
+- [ ] `needs_patch` and `block` axes require at least one `blocking_items`
+  entry so actionable problems cannot hide in prose only.
+- [ ] `recommended_action` is consistent with `verdict`:
+  `pass`/`not_applicable` use `none`, `needs_patch` uses `patch` or
+  `revise_briefing`, `needs_human` uses `human_review` or `revise_briefing`,
+  and `block` uses `block_release` or `human_review`.
 - [ ] The brief includes force-enumeration prompts for each axis, with explicit
   panel-level and sub-region-level checks where relevant.
 - [ ] The brief states that no single opaque quality score can replace axis
@@ -72,6 +78,8 @@ overall figure remains weak.
   validation before adjudication scaffold.
 - [ ] `publication_readiness.verdict` cannot be less severe than any
   applicable upstream quality axis.
+- [ ] `publication_readiness.verdict` cannot be `not_applicable` when any
+  upstream quality axis is applicable.
 - [ ] The v1.2 schema is designed so a follow-up `/fig_loop.axis_verdicts`
   slice can ingest quality axes without changing compile/export behavior in
   this issue.

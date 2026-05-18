@@ -261,6 +261,83 @@ def _complete_v1_1_audit_yaml() -> str:
     )
 
 
+QUALITY_AXIS_NAMES = (
+    "message_storyline",
+    "panel_role_coherence",
+    "subregion_integration",
+    "component_fidelity",
+    "scientific_plausibility",
+    "composition_layout",
+    "label_annotation_semantics",
+    "journal_polish",
+    "reference_fidelity",
+    "publication_readiness",
+)
+
+
+def _quality_axis_yaml(
+    name: str,
+    *,
+    verdict: str = "pass",
+    confidence: str = "high",
+    recommended_action: str = "none",
+    blocking_items: tuple[str, ...] = (),
+) -> str:
+    blocking_yaml = (
+        "[]"
+        if not blocking_items
+        else "\n" + "".join(f"      - {item}\n" for item in blocking_items).rstrip()
+    )
+    return (
+        f"  {name}:\n"
+        f"    verdict: {verdict}\n"
+        f"    confidence: {confidence}\n"
+        f"    rationale: {name} rationale\n"
+        f"    evidence: {name} evidence\n"
+        f"    blocking_items: {blocking_yaml}\n"
+        f"    recommended_action: {recommended_action}\n"
+    )
+
+
+def _complete_v1_2_quality_axes_yaml(
+    *,
+    axis_overrides: dict[str, str] | None = None,
+) -> str:
+    axis_overrides = axis_overrides or {}
+    parts = ["quality_axes:\n"]
+    for axis_name in QUALITY_AXIS_NAMES:
+        if axis_name in axis_overrides:
+            parts.append(axis_overrides[axis_name])
+            continue
+        if axis_name == "panel_role_coherence":
+            parts.append(
+                "  panel_role_coherence:\n"
+                "    verdict: pass\n"
+                "    confidence: high\n"
+                "    rationale: panel roles are coherent\n"
+                "    evidence: panel A is setup\n"
+                "    panel_roles:\n"
+                "      - panel_id: A\n"
+                "        role: setup\n"
+                "        role_quality: clear\n"
+                "        rationale: panel A introduces the apparatus\n"
+                "    blocking_items: []\n"
+                "    recommended_action: none\n"
+            )
+        elif axis_name == "publication_readiness":
+            parts.append(
+                _quality_axis_yaml(
+                    "publication_readiness",
+                    verdict="pass",
+                    confidence="high",
+                    recommended_action="none",
+                )
+            )
+        else:
+            parts.append(_quality_axis_yaml(axis_name))
+    return "".join(parts)
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -273,6 +350,35 @@ def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
         "    status: open\n"
         "    tex_lines: [10, 20]\n"
         "    observation: needs review\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    return critique
+
+
+def _write_v1_2_critique_with_quality_axes(
+    fig_dir: Path,
+    *,
+    audit_yaml: str | None = None,
+    quality_axes_yaml: str | None = None,
+    findings_yaml: str | None = None,
+) -> Path:
+    critique = fig_dir / "critique.md"
+    findings_yaml = findings_yaml or (
+        "findings:\n"
+        "  - id: C001\n"
+        "    status: open\n"
+        "    tex_lines: [10, 20]\n"
+        "    observation: needs review\n"
+    )
+    critique.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.2\n"
+        "fixture: demo_fig\n"
+        f"{audit_yaml or _complete_v1_1_audit_yaml()}"
+        f"{quality_axes_yaml or _complete_v1_2_quality_axes_yaml()}"
+        f"{findings_yaml}"
         "---\n"
         "# critique\n",
         encoding="utf-8",
@@ -321,6 +427,501 @@ def test_build_adjudication_scaffold_accepts_v1_1_complete_audit(
 
     assert scaffold["source_critique_hash"] == file_sha256(critique)
     assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["C001"]
+
+
+def test_build_adjudication_scaffold_accepts_v1_2_quality_axes(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(fig_dir)
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+    assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["C001"]
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_missing_quality_axis(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        _quality_axis_yaml("journal_polish"),
+        "",
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="journal_polish"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_invalid_verdict(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    verdict: pass\n",
+        "    verdict: excellent\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="verdict"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_invalid_confidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    confidence: high\n",
+        "    confidence: certain\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="confidence"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_invalid_recommended_action(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    recommended_action: none\n",
+        "    recommended_action: auto_fix\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="recommended_action"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_non_list_blocking_items(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    blocking_items: []\n",
+        "    blocking_items: hidden issue\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="blocking_items"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_empty_evidence_for_pass(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    evidence: message_storyline evidence\n",
+        "    evidence: \"\"\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="evidence"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_patch_without_blocking_item(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "composition_layout": _quality_axis_yaml(
+                "composition_layout",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=(),
+            )
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="blocking_items"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_action_conflict(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "scientific_plausibility": _quality_axis_yaml(
+                "scientific_plausibility",
+                verdict="needs_human",
+                recommended_action="patch",
+                blocking_items=("Mechanism requires domain review.",),
+            )
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="recommended_action"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_readiness_less_severe_than_axis(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "journal_polish": _quality_axis_yaml(
+                "journal_polish",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=("Export-scale text is unreadable.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="pass",
+                recommended_action="none",
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="publication_readiness"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_readiness_not_applicable_with_axes(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="not_applicable",
+                recommended_action="none",
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="publication_readiness"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_invalid_panel_role(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "        role: setup\n",
+        "        role: decoration\n",
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="panel_roles"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_empty_panel_roles(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "    panel_roles:\n"
+        "      - panel_id: A\n"
+        "        role: setup\n"
+        "        role_quality: clear\n"
+        "        rationale: panel A introduces the apparatus\n",
+        "    panel_roles: []\n",
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="panel_roles"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_panel_role_without_panel_id(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "      - panel_id: A\n",
+        "      -\n",
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="panel_id"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_panel_role_without_rationale(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
+        "        rationale: panel A introduces the apparatus\n",
+        "",
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="rationale"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_patch_axis_without_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "message_storyline": _quality_axis_yaml(
+                "message_storyline",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("Story bridge is missing.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge is missing.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        quality_axes_yaml=quality_axes_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="findings"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_allows_v1_2_non_patch_axis_without_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "message_storyline": _quality_axis_yaml(
+                "message_storyline",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge needs clearer briefing.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge needs clearer briefing.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        quality_axes_yaml=quality_axes_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["decisions"] == []
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_patch_axis_unlinked_to_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "message_storyline": _quality_axis_yaml(
+                "message_storyline",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("Story bridge is missing.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge is missing.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="message_storyline"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_accepts_v1_2_patch_axis_linked_to_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "message_storyline": _quality_axis_yaml(
+                "message_storyline",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("C001 - Story bridge is missing.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge is missing.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["C001"]
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_near_miss_finding_id_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "message_storyline": _quality_axis_yaml(
+                "message_storyline",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("C0010 - Story bridge is missing.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="revise_briefing",
+                blocking_items=("Story bridge is missing.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="message_storyline"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_block_release_without_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "journal_polish": _quality_axis_yaml(
+                "journal_polish",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=("Export-scale text is unreadable.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=("Export-scale text is unreadable.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        quality_axes_yaml=quality_axes_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="findings"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_2_block_release_unlinked_to_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "journal_polish": _quality_axis_yaml(
+                "journal_polish",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=("Export-scale text is unreadable.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=("C001 - Export-scale text is unreadable.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="journal_polish"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_allows_v1_2_human_review_block_without_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "journal_polish": _quality_axis_yaml(
+                "journal_polish",
+                verdict="block",
+                recommended_action="human_review",
+                blocking_items=("Domain reviewer must approve the simplification.",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="block",
+                recommended_action="human_review",
+                blocking_items=("Domain reviewer must approve the simplification.",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        quality_axes_yaml=quality_axes_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["decisions"] == []
 
 
 def test_build_adjudication_scaffold_rejects_v1_1_missing_audit_block(
