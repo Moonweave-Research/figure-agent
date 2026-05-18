@@ -20,6 +20,13 @@ accepted-mode behavior in this issue.
 - Validate `polished.audit_hash` against `polish/svg_polish_audit.md`.
 - Use the repo's existing `scripts/quality_manifest.py` hash conventions where
   practical; do not invent a second hash format.
+- Compute and validate `base.source_set_hash` from the final-artifact input
+  set, including style lock, coordinate hints, authoring context, reference
+  pack, theory guard, sub-region log, and declared references when present.
+- Validate bounded `polished.edit_classes` values:
+  `label_micro_position`, `leader_line_micro_position`, `stroke_polish`,
+  `icon_detail`, `spacing_balance`, `color_opacity_polish`,
+  `typography_cleanup`, and `export_cleanup`.
 - Preserve unknown future mapping fields on load/write.
 - Detect stale polish when source, generated SVG, export PDF, critique, or
   polished SVG/audit content differs from the manifest hashes.
@@ -34,9 +41,13 @@ accepted-mode behavior in this issue.
 - [ ] manifest can be validated independently of `spec.yaml` opt-in, while
   release relevance is deferred to Issue 7B.
 - [ ] invalid enum values fail.
+- [ ] unknown edit class fails instead of being silently accepted.
 - [ ] malformed YAML fails cleanly.
 - [ ] matching hashes are fresh.
 - [ ] changed source/export/critique/polished SVG hashes are stale.
+- [ ] changed style lock, coordinate hints, authoring context, reference pack,
+  theory guard, sub-region log, or declared reference image makes the manifest
+  stale through `base.source_set_hash`.
 - [ ] changed `svg_polish_audit.md` hash is stale.
 - [ ] unknown future fields survive load/write.
 - [ ] writer emits reloadable YAML.

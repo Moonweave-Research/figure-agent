@@ -15,6 +15,7 @@ golden contracts.
 
 - final-artifact state and kind
 - stale or invalid polish blockers
+- blocked polish state when semantic backport is declared
 - whether semantic backport is required
 - whether human review is needed before final acceptance
 - one recommended next action
@@ -22,7 +23,8 @@ golden contracts.
 ## Stop behavior
 
 - stale or invalid final artifact: status action required
-- semantic backport required: agent action required before polish can be final
+- blocked final artifact with semantic backport required: agent action required
+  before polish can be final
 - uncertain semantic preservation: human review required
 - final artifact fresh but `accepted: false`: manual approval required
 
@@ -32,6 +34,8 @@ golden contracts.
 - [ ] no-polish fixtures keep current loop behavior.
 - [ ] polished-SVG fixtures surface final-artifact state.
 - [ ] stale/invalid polish blocks final acceptance.
+- [ ] `BLOCKED` polish state routes to semantic backport instead of manifest
+  repair.
 - [ ] semantic backport blocks final acceptance.
 - [ ] loop does not edit SVG, source, exports, critique, accepted state, or
   golden contracts.

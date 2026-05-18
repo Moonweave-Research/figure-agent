@@ -27,6 +27,8 @@ The plugin owns:
 - Visual QA gates before manuscript use.
 - Reproducible per-figure folders and provenance.
 - Honest status reporting when examples or exports are stale.
+- The final-artifact contract when a generated export is manually polished for
+  manuscript use.
 
 The plugin does not own:
 
@@ -34,6 +36,7 @@ The plugin does not own:
 - Calling image-generation or vision APIs.
 - Teaching an LLM how to create every figure.
 - Automatic PNG-to-SVG or PNG-to-TikZ reconstruction.
+- Acting as an SVG editor or automatically polishing SVG paths.
 - More orchestration steps whose value depends on today's model weaknesses.
 
 ## Why The Pivot
@@ -91,6 +94,8 @@ Future work should improve this kernel:
    - Font/text policy for SVG and raster outputs.
    - Golden fixtures track accepted exports as reproducibility baselines; ordinary
      generated build/export contents remain ignored.
+   - Optional final-artifact polish should be declared by manifest and hashes,
+     not by editing generated exports in place.
 
 4. **Visual QA**
    - Collision and visual-clash checks that catch real manuscript problems.
@@ -105,6 +110,8 @@ Future work should improve this kernel:
    - Per-figure folder contract.
    - `spec.yaml`, `briefing.md`, `.tex`, build/export status.
    - Clear `fig_status` diagnostics for stale or unreplayable examples.
+   - Provenance for any declared polished SVG final artifact, including base
+     export hashes, polish audit hash, editor/toolchain, and human reviewer.
 
 ## Export Tracking Policy
 

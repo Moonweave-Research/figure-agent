@@ -105,6 +105,15 @@ release semantics unless `spec.yaml` opts in.
 This opt-in prevents an accidental draft SVG or half-written manifest from
 changing acceptance behavior.
 
+Allowed `final_artifact.kind` values:
+
+- `generated_export` — explicit spelling of today's default generated artifact
+  behavior.
+- `polished_svg` — opt into Layer 5.5 polished SVG validation.
+
+If `final_artifact.kind` is absent, status should behave as `generated_export`
+for compatibility and report `final_artifact_state: NONE`.
+
 ## Manifest Schema
 
 Schema name:
@@ -113,6 +122,7 @@ Schema name:
 schema: figure-agent.svg-polish-manifest.v1
 fixture: <name>
 base:
+  source_set_hash: sha256:<hash>
   source_tex_hash: sha256:<hash>
   briefing_hash: sha256:<hash>
   spec_hash: sha256:<hash>
@@ -147,6 +157,8 @@ Required properties:
 - `spec.yaml.final_artifact.manifest` must point to this manifest before the
   polished SVG can become release-relevant.
 - all hashes must use the repo's existing `sha256:<hash>` convention.
+- `base.source_set_hash` must be computed from the final-artifact input set,
+  not only from `<name>.tex`, `briefing.md`, and `spec.yaml`.
 - `polished.path` must point inside `examples/<name>/polish/`.
 - `polished.path` must not point to generated exports, build artifacts,
   accepted exports, another fixture, or a path outside the fixture.
@@ -161,6 +173,38 @@ Required properties:
 
 Unknown future mapping fields may be preserved, but they must not bypass the
 required fields above.
+
+Allowed `polished.edit_classes` values:
+
+- `label_micro_position`
+- `leader_line_micro_position`
+- `stroke_polish`
+- `icon_detail`
+- `spacing_balance`
+- `color_opacity_polish`
+- `typography_cleanup`
+- `export_cleanup`
+
+Any edit that does not fit one of these classes should default to
+`backport_required: true` until a later issue adds a bounded class with tests.
+
+The final-artifact input set should include at least:
+
+- `examples/<name>/<name>.tex`
+- `examples/<name>/briefing.md`
+- `examples/<name>/spec.yaml`
+- `styles/polymer-paper-preamble.sty`
+- `coordinate_hints.yaml`, when present
+- `authoring_contract.md`, when present
+- `authoring_plan.md`, when present
+- `theory_guard.md`, when present
+- `subregion_iteration_log.md`, when present
+- `reference/reference_pack.md`, when present
+- declared figure-level and panel-level reference images, when present
+
+Issue 7A should reuse or mirror `scripts/quality_manifest.py` path sorting and
+repo-relative hash payload conventions so this set does not drift from existing
+critique freshness behavior.
 
 ## Allowed SVG-Only Edits
 
@@ -211,6 +255,7 @@ Future status should expose an explicit final-artifact state:
 | `MISSING` | a polished artifact is declared but required file is absent |
 | `INVALID` | manifest, path, schema, hash, or provenance is malformed |
 | `STALE` | manifest hashes no longer match current source, generated export, critique, or polished SVG |
+| `BLOCKED` | manifest and hashes are valid, but semantic change or backport is declared |
 | `FRESH` | manifest, hashes, provenance, and polished SVG all match |
 
 Hash freshness should be content-based, not mtime-only, and should use the
@@ -221,6 +266,37 @@ content.
 
 `svg_polish_audit.md` should also be freshness-checked by content hash. Without
 that, a human could update the manifest while leaving stale audit prose behind.
+
+## Validation Algorithm
+
+Future validation should follow this order:
+
+1. Read `spec.yaml`.
+2. If `final_artifact.kind` is absent or `generated_export`, return
+   `final_artifact_state: NONE` and keep current generated-export behavior.
+3. If `final_artifact.kind` is not `polished_svg`, return `INVALID`.
+4. Resolve `final_artifact.manifest` relative to the fixture root.
+5. Reject the manifest path if it escapes the fixture, points into `exports/`,
+   points into `build/`, or points outside `polish/`.
+6. Load and validate the manifest schema and required fields.
+7. Reject if `manifest.fixture` differs from the fixture directory name.
+8. Reject if `polished.path` is missing, escapes the fixture, points into
+   generated exports/build artifacts, or does not live under `polish/`.
+9. Recompute the current final-artifact source-set hash, generated export,
+   critique, polished SVG, and audit hashes with the repo's `sha256:<hash>`
+   convention.
+10. Return `STALE` when any recorded hash differs.
+11. Return `INVALID` when `semantic_change_declared` or `backport_required`
+    has a non-boolean value.
+12. Return `BLOCKED` when `semantic_change_declared: true` or
+    `backport_required: true`.
+13. Return `FRESH` only when the manifest is valid, paths are contained,
+    required files exist, hashes match, semantic backport is not required, and
+    provenance fields are present.
+
+Acceptance-mode validation should still fail a `FRESH` polished artifact when
+publication compliance, theory guard, reference pack, golden contract, or
+`accepted: true` gates fail.
 
 ## Command-Facing Behavior
 
@@ -352,12 +428,32 @@ list did not explicitly bind it to `svg_polish_audit.md`.
 
 Finding: changing `/fig_export` to manage polished SVG would create overwrite
 risk and merge semantics the plugin cannot prove. The design keeps export
-generated-only and moves polish validation to status/final-artifact gates. No
-defect remains in this review.
+generated-only and moves polish validation to status/final-artifact gates.
+Defect found and fixed in this hardening pass: the active architecture overview
+did not mention the planned L5.5 layer, so future agents could miss the design.
+The architecture overview now includes a planned Layer 5.5 section.
 
 ### Review 5: Product Direction and Modularity
 
 Finding: a separate SVG tool could be useful later, but the acceptance contract
 must live with `figure-agent` because it depends on source hashes, critique,
 export freshness, golden gates, and publication provenance. The design leaves
-editing capability out of scope. No defect remains in this review.
+editing capability out of scope. Defect found and fixed in this hardening pass:
+the initial schema text did not enumerate `final_artifact.kind` or
+`edit_classes` values. Both are now bounded in the design.
+
+### Review 6: State Machine Completeness
+
+Finding: the first validation algorithm had no state for valid, hash-fresh
+polish that declares semantic change or required backport. Treating that as
+`INVALID` would conflate malformed input with a real but blocked artifact.
+Fix: add `BLOCKED` as a final-artifact state and make loop/accepted-gate issues
+handle it explicitly.
+
+### Review 7: Source-Set Freshness Completeness
+
+Finding: the manifest example tracked `source_tex_hash`, `briefing_hash`, and
+`spec_hash`, but that misses style lock, coordinate hints, reference packs,
+theory guards, sub-region logs, and declared reference images. Fix: add
+`base.source_set_hash` and require Issue 7A to use the repo-relative manifest
+hash convention from `scripts/quality_manifest.py`.

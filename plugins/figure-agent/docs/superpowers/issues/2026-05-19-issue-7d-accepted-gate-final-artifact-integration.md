@@ -32,6 +32,9 @@ For polished-SVG fixtures, accepted-mode validation must require:
 - [ ] polished-SVG fixtures fail accepted-mode validation when manifest is
   missing, invalid, or stale.
 - [ ] polished-SVG fixtures fail when semantic backport is required.
+- [ ] polished-SVG fixtures with `final_artifact_state: BLOCKED` fail
+  accepted-mode validation with a backport-oriented message, not a malformed
+  manifest message.
 - [ ] polished-SVG fixtures fail when reviewer provenance is absent.
 - [ ] `accepted: true` is never set by the checker.
 - [ ] generated exports are never overwritten by polished artifacts.

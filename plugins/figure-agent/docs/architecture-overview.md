@@ -48,6 +48,10 @@ Layer 4: Compile Gates                 (compile.sh: lint -> lualatex -> checks)
 Layer 5: Export                        (PDF / SVG via dvisvgm / TIFF / PNG)
    |
    v
+Layer 5.5: Final Artifact              (planned polished-SVG contract;
+                                        optional, opt-in, no SVG editor)
+   |
+   v
 Layer 6: Validation Gates              (check_golden_artifacts: basic / accepted)
    |
    v
@@ -294,6 +298,43 @@ Two contract layers guard the invariants:
 - **Layer B (opt-in per-fixture):** fixtures declaring `export_pipeline_equivalence: { ae_max: <float> }` in `spec.yaml` are subject to a `magick compare`-based pixel equivalence assertion between `build/<name>.png` (pdftocairo direct) and `exports/<name>.png` (dvisvgm + rsvg-convert). Defaults to `fuzz_pct: 5`. Tested by `tests/test_export_pipeline_equivalence.py`.
 
 Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a measured baseline (run the test once, observe the printed AE fraction, add ~30% margin).
+
+### Layer 5.5 — Final Artifact Contract
+
+**Status**: planned contract, not implemented in command behavior yet.
+**Design**:
+`docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
+
+Layer 5 exports reproducible generated artifacts. Layer 5.5 is the planned
+place for declaring a final manuscript artifact when the generated SVG needs
+manual or outer-agent polish that is not realistic to finish in raw TikZ.
+
+The contract is intentionally narrow:
+
+- TikZ remains the semantic source of truth.
+- `/fig_export` must continue to generate `exports/<name>.svg` and must not
+  overwrite `polish/<name>.polished.svg`.
+- Polished SVG is release-relevant only when `spec.yaml` explicitly opts in:
+
+```yaml
+final_artifact:
+  kind: polished_svg
+  manifest: polish/svg_polish_manifest.yaml
+```
+
+- `polish/svg_polish_manifest.yaml` records generated-export hashes, a
+  repo-relative source-set hash, critique hash, polished SVG hash, audit hash,
+  edit class, toolchain, semantic-change declaration, and reviewer provenance.
+- SVG-only edits are limited to optical presentation changes such as label
+  nudges, stroke polish, spacing balance, and icon cleanup that preserves
+  scientific meaning.
+- Any change to component identity, label meaning, mechanism arrows,
+  material semantics, panel role, storyline, or reference interpretation must
+  be backported to TikZ, briefing, or spec and rerun through compile/export,
+  critique, adjudication, and final-artifact validation.
+
+Until this layer is implemented, `final_ready` remains the Layer 7
+compatibility alias for `release_ready`.
 
 ### Layer 6 — Validation Gates
 

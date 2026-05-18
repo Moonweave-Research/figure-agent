@@ -12,7 +12,8 @@ semantics for fixtures that do not declare polished SVG as the final artifact.
 
 `/fig_status` should report:
 
-- `final_artifact_state`: `NONE`, `MISSING`, `INVALID`, `STALE`, or `FRESH`
+- `final_artifact_state`: `NONE`, `MISSING`, `INVALID`, `STALE`, `BLOCKED`,
+  or `FRESH`
 - `final_artifact_kind`: `generated_export` or `polished_svg`
 - `final_artifact_path`
 - validation notes when the state blocks release
@@ -31,14 +32,21 @@ final_artifact:
 A stray polish manifest without this opt-in may produce an informational note,
 but it must not change readiness semantics.
 
+`final_artifact.kind: generated_export` is an explicit spelling of the current
+default and should behave like no polish opt-in.
+
 ## Acceptance criteria
 
 - [ ] no-polish fixtures report `final_artifact_state: NONE`.
+- [ ] `final_artifact.kind: generated_export` reports generated-export behavior
+  and does not require a polish manifest.
 - [ ] fixtures with no `spec.yaml.final_artifact` keep current readiness even
   if a draft polish manifest exists.
 - [ ] missing declared polished SVG reports `MISSING`.
 - [ ] malformed manifest reports `INVALID`.
 - [ ] stale manifest reports `STALE`.
+- [ ] valid hash-fresh manifest with `semantic_change_declared: true` or
+  `backport_required: true` reports `BLOCKED`.
 - [ ] matching manifest and polished SVG reports `FRESH`.
 - [ ] existing `workflow_ready`, `golden_ready`, `release_ready`, and
   `final_ready` behavior is unchanged unless polished SVG is declared as the
