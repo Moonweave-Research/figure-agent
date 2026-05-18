@@ -176,3 +176,61 @@ adjudication, export, and loop-rerun closeout state without mutating the figure
 or scratch run state. It blocks the final loop-rerun recommendation until prior
 closeout prerequisites are closed and treats tracked golden roll-forward as
 manual approval evidence rather than an auto-executable command.
+
+## Issue 5A Dogfood: Auto-Patch Readiness Gate
+
+Issue 5A deliberately remains read-only. The goal is not to patch figures
+automatically, but to classify whether a single patch handoff is a future
+auto-patch candidate.
+
+Verification on `fig1_overview_v2`:
+
+```bash
+uv run python3 scripts/fig_loop.py fig1_overview_v2 \
+  --goal "Dogfood Issue 5A readiness gate on existing fixture" --json
+```
+
+Observed result:
+
+- `final_stop_reason: status_action_required`
+- `escalation_level: agent_action_required`
+- `patch_handoff_present: false`
+- `auto_patch_eligibility: null`
+- `recommended_next_action: run /fig_compile fig1_overview_v2 to compile the
+  TikZ source.`
+
+This confirms the gate does not invent an auto-patch candidate when no single
+patch handoff exists.
+
+Repeat smoke:
+
+```bash
+uv run python3 scripts/fig_e2e_smoke.py fig1_overview_v2 --repeat 2 \
+  --goal "Dogfood Issue 5A readiness gate smoke"
+```
+
+Observed result:
+
+- `success: true`
+- both repeats reached stable `manual_approval_required`
+- both repeats reported `patch_handoff_present: false`
+- render, critique, and export remained fresh after the first compile/export
+  refresh
+
+Synthetic eligibility scenarios were also run in a temporary repo root so no
+fixture source or artifacts were modified:
+
+- label/overlap finding -> `auto_patch_candidate`, `may_edit: false`
+- mechanism/causal-arrow finding -> `human_review_required`,
+  `may_edit: false`
+- publication-safety/accepted-golden finding -> `human_review_required`,
+  `may_edit: false`
+
+Current judgment:
+
+- Issue 5A is useful as a conservative classifier.
+- It is not sufficient evidence to build Issue 5B auto-editing yet.
+- Before Issue 5B, collect more real `apply` handoff examples and check whether
+  keyword classification is too broad or too narrow.
+- Keep `may_edit: false` until before/after evidence capture, rollback, and
+  patch-closeout verification are first-class runner outputs.
