@@ -2,6 +2,29 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.5.3] - 2026-05-18
+
+Loop-contract release for verify-only figure iteration and safe patch handoff.
+
+### Added
+
+- `/fig_loop` records verify-only loop evidence under `.scratch/fig-loop-runs/`
+  with stop reasons, escalation level, axis verdict evidence, active patch
+  target, and optional single-target patch handoff metadata.
+- `/fig_adjudicate` scaffolds `critique_adjudication.yaml` from `critique.md`
+  findings, hashes the source critique, and keeps unresolved findings visible.
+- `/fig_closeout` reports read-only post-patch closeout state for compile,
+  critique, adjudication, export, and loop rerun freshness.
+- `/fig_e2e_smoke` runs deterministic compile/export/status/loop smoke checks
+  with JSON evidence for repeated usability validation.
+
+### Changed
+
+- Critique freshness now uses hash/rubric/generator metadata when available
+  with mtime fallback for legacy critiques.
+- Human-gate escalation distinguishes routine agent action, manual approval,
+  ambiguous patch selection, and domain review.
+
 ## [0.5.2] - 2026-05-16
 
 Acceptance-gate and critique-context hardening for the reference-conditioned
