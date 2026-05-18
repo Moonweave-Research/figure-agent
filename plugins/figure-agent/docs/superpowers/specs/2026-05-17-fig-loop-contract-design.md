@@ -342,9 +342,25 @@ Acceptance:
 - compile/critique freshness must close after the patch,
 - unresolved findings remain visible.
 
-### Issue 5: Safe Auto-Patch Pilot
+### Issue 5A: Safe Auto-Patch Readiness Gate
 
-Only after Issues 1-4 and at least five dogfood runs.
+Before any safe auto-patch runner exists, `/fig_loop` must classify a single
+patch handoff as `auto_patch_candidate`, `patch_assisted_only`, or
+`human_review_required`. This classification is read-only and must set
+`may_edit: false`.
+
+Acceptance:
+
+- no source or artifact mutation,
+- one selected target only,
+- candidate classes limited to label/style/spacing/clipping/whitespace,
+- mechanism, topology, theory, reference interpretation, accepted/golden, and
+  publication-safety changes blocked,
+- before/after evidence and rollback path listed as required future evidence.
+
+### Issue 5B: Safe Auto-Patch Pilot
+
+Only after Issues 1-4, Issue 5A, and at least five dogfood runs.
 
 Acceptance:
 

@@ -411,6 +411,118 @@ def test_loop_identifies_apply_decision_patch_target(tmp_path: Path) -> None:
     assert "patch_handoff_target: finding C001" in decision
 
 
+def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "label overlaps arrow; adjust label offset and spacing",
+                "patch_target": "panel A label cluster",
+                "evidence": "critique.md C001",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "choose next patch",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "patch_target_recommended"
+    assert iteration["auto_patch_eligibility"] == {
+        "level": "auto_patch_candidate",
+        "target_type": "finding",
+        "target_id": "C001",
+        "allowed_reasons": ["label offset", "text overlap"],
+        "blocked_reasons": [],
+        "required_evidence": [
+            "before compile/export evidence",
+            "after compile/export evidence",
+            "rollback path",
+        ],
+        "may_edit": False,
+    }
+
+
+def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C002",
+                "decision": "apply",
+                "reason": "causal arrow semantics change the physical mechanism",
+                "patch_target": "panel B mechanism arrow",
+                "evidence": "critique.md C002",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "choose next patch",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "patch_target_recommended"
+    assert iteration["patch_handoff"] is not None
+    assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
+    assert iteration["auto_patch_eligibility"]["may_edit"] is False
+    assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
+        "physical mechanism",
+        "causal arrow semantics",
+    ]
+
+
+def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C003",
+                "decision": "apply",
+                "reason": "publication safety depends on accepted golden state",
+                "patch_target": "accepted publication-safety metadata",
+                "evidence": "critique.md C003",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "choose next patch",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["auto_patch_eligibility"]["level"] == "human_review_required"
+    assert iteration["auto_patch_eligibility"]["may_edit"] is False
+    assert iteration["auto_patch_eligibility"]["blocked_reasons"] == [
+        "accepted/golden/export/build state",
+        "publication safety",
+    ]
+
+
 def test_loop_stops_when_multiple_apply_decisions_make_patch_target_ambiguous(
     tmp_path: Path,
 ) -> None:

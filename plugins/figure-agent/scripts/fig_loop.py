@@ -491,6 +491,80 @@ def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_AUTO_PATCH_ALLOWED_TERMS = {
+    "label offset": ("label", "offset"),
+    "text overlap": ("overlap",),
+    "clipping": ("clip",),
+    "whitespace balance": ("whitespace",),
+    "palette/style": ("palette", "style"),
+    "line weight/style": ("line weight", "stroke weight"),
+}
+
+_AUTO_PATCH_BLOCKED_TERMS = {
+    "chemistry topology": ("chemistry", "topology", "molecule", "bond"),
+    "physical mechanism": ("mechanism", "causal", "physics"),
+    "causal arrow semantics": ("arrow semantics", "causal arrow"),
+    "theory guard evidence": ("theory", "guard"),
+    "reference interpretation": ("reference", "interpretation"),
+    "accepted/golden/export/build state": ("accepted", "golden", "export", "build"),
+    "publication safety": ("publication", "safety"),
+    "critique mutation": ("critique.md", "critique mutation"),
+    "broad refactor": ("refactor", "rewrite"),
+}
+
+_AUTO_PATCH_REQUIRED_EVIDENCE = [
+    "before compile/export evidence",
+    "after compile/export evidence",
+    "rollback path",
+]
+
+
+def _auto_patch_eligibility(
+    loop_decision: dict[str, Any],
+    patch_handoff: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not patch_handoff:
+        return None
+
+    haystack = " ".join(
+        str(value)
+        for value in (
+            patch_handoff.get("target_id"),
+            patch_handoff.get("patch_target"),
+            patch_handoff.get("reason"),
+            loop_decision.get("recommended_next_action"),
+        )
+        if value
+    ).lower()
+    allowed = [
+        name
+        for name, terms in _AUTO_PATCH_ALLOWED_TERMS.items()
+        if any(term in haystack for term in terms)
+    ]
+    blocked = [
+        name
+        for name, terms in _AUTO_PATCH_BLOCKED_TERMS.items()
+        if any(term in haystack for term in terms)
+    ]
+
+    if blocked:
+        level = "human_review_required"
+    elif allowed:
+        level = "auto_patch_candidate"
+    else:
+        level = "patch_assisted_only"
+
+    return {
+        "level": level,
+        "target_type": patch_handoff["target_type"],
+        "target_id": patch_handoff["target_id"],
+        "allowed_reasons": allowed,
+        "blocked_reasons": blocked,
+        "required_evidence": list(_AUTO_PATCH_REQUIRED_EVIDENCE),
+        "may_edit": False,
+    }
+
+
 def _patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | None:
     active_patch_target = loop_decision["active_patch_target"]
     if not active_patch_target:
@@ -608,6 +682,7 @@ def run_loop(
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
+    auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
     completed_at = _utc_now()
 
     iteration = {
@@ -618,6 +693,7 @@ def run_loop(
         "stop_reason": loop_decision["stop_reason"],
         "active_patch_target": loop_decision["active_patch_target"],
         "patch_handoff": patch_handoff,
+        "auto_patch_eligibility": auto_patch_eligibility,
         "recommended_next_action": loop_decision["recommended_next_action"],
         "human_gate_status": loop_decision["human_gate_status"],
         **escalation,

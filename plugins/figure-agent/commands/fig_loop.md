@@ -112,6 +112,24 @@ If `patch_handoff` is null, do not infer a broad patch target from prose. Follow
 the `stop_reason` and `recommended_next_action`; human-gated and ambiguous cases
 stay outside patch-assisted automation.
 
+## Auto-Patch Eligibility
+
+When exactly one `patch_handoff` exists, `/fig_loop` also records
+`auto_patch_eligibility` in `iteration_001.json`. This field is advisory and
+read-only; it does not grant edit permission.
+
+- `auto_patch_candidate` means the target appears to be a small label, overlap,
+  clipping, whitespace, palette/style, or line-weight issue.
+- `patch_assisted_only` means the target can be handed to an outer agent or
+  human, but is not classified as safe for future automation.
+- `human_review_required` means the target touches science, mechanism,
+  topology, theory, reference interpretation, accepted/golden state, or
+  publication safety.
+
+In this version, `auto_patch_eligibility.may_edit` is always `false`. The runner
+must not edit figure source, critique output, exports, accepted metadata, or
+golden contracts.
+
 When `stop_reason` is `missing_adjudication`, run:
 
 ```bash
