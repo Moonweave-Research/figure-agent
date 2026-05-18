@@ -249,6 +249,45 @@ def test_loop_records_invalid_adjudication_without_traceback(tmp_path: Path) -> 
     assert iteration["stop_reason"] == "invalid_adjudication"
 
 
+def test_loop_records_duplicate_adjudication_finding_ids_as_invalid(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "dismiss",
+                "reason": "first decision",
+                "patch_target": "",
+                "evidence": "",
+            },
+            {
+                "finding_id": "C001",
+                "decision": "defer",
+                "reason": "duplicate decision",
+                "patch_target": "",
+                "evidence": "",
+            },
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "check duplicate adjudication ids",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["adjudication"]["state"] == "invalid"
+    assert "duplicate finding_id" in iteration["adjudication"]["error"]
+    assert iteration["recommended_next_action"] == "fix critique_adjudication.yaml"
+    assert iteration["stop_reason"] == "invalid_adjudication"
+
+
 def test_loop_identifies_apply_decision_patch_target(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     critique = fixture / "critique.md"

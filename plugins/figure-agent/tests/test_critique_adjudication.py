@@ -89,6 +89,20 @@ def test_missing_decision_required_fields_fail(field: str) -> None:
         validate_adjudication(payload)
 
 
+def test_duplicate_finding_ids_fail() -> None:
+    payload = _valid_payload()
+    payload["decisions"].append(
+        {
+            "finding_id": "C001",
+            "decision": "defer",
+            "reason": "same finding repeated",
+        }
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="duplicate finding_id"):
+        validate_adjudication(payload)
+
+
 def test_invalid_source_critique_hash_prefix_fails() -> None:
     payload = _valid_payload("md5:" + "a" * 32)
 
@@ -101,6 +115,13 @@ def test_malformed_yaml_fails_cleanly(tmp_path: Path) -> None:
     path.write_text("schema: [unterminated\n", encoding="utf-8")
 
     with pytest.raises(CritiqueAdjudicationError, match="invalid YAML"):
+        load_adjudication(path)
+
+
+def test_load_adjudication_fails_cleanly_when_file_is_missing(tmp_path: Path) -> None:
+    path = tmp_path / "critique_adjudication.yaml"
+
+    with pytest.raises(CritiqueAdjudicationError, match="missing adjudication"):
         load_adjudication(path)
 
 

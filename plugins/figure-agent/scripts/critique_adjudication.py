@@ -55,10 +55,16 @@ def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(decisions, list):
         raise CritiqueAdjudicationError("adjudication.decisions must be a list")
 
+    seen_finding_ids: set[str] = set()
     for index, raw_decision in enumerate(decisions):
         decision_label = f"adjudication.decisions[{index}]"
         decision_item = _require_mapping(raw_decision, decision_label)
-        _require_non_empty_string(decision_item, "finding_id", label=decision_label)
+        finding_id = _require_non_empty_string(decision_item, "finding_id", label=decision_label)
+        if finding_id in seen_finding_ids:
+            raise CritiqueAdjudicationError(
+                f"{decision_label}.duplicate finding_id: {finding_id}"
+            )
+        seen_finding_ids.add(finding_id)
         decision_value = _require_non_empty_string(decision_item, "decision", label=decision_label)
         if decision_value not in ALLOWED_DECISIONS:
             allowed = ", ".join(sorted(ALLOWED_DECISIONS))
@@ -75,8 +81,12 @@ def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
 
 def load_adjudication(path: Path) -> dict[str, Any]:
     """Load and validate a critique adjudication YAML file."""
+    if not path.is_file():
+        raise CritiqueAdjudicationError(f"missing adjudication: {path}")
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as exc:
+        raise CritiqueAdjudicationError(f"invalid UTF-8 in {path}: {exc}") from exc
     except yaml.YAMLError as exc:
         raise CritiqueAdjudicationError(f"invalid YAML in {path}: {exc}") from exc
     return validate_adjudication(data)
@@ -95,7 +105,10 @@ def _critique_frontmatter(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise CritiqueAdjudicationError(f"missing critique: {path}")
 
-    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError as exc:
+        raise CritiqueAdjudicationError(f"invalid UTF-8 in {path}: {exc}") from exc
     if not lines or lines[0].strip() != "---":
         raise CritiqueAdjudicationError(f"missing critique frontmatter: {path}")
 
