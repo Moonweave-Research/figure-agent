@@ -522,18 +522,37 @@ def run_loop(
     return run_dir
 
 
-def main() -> int:
+def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
+    manifest_path = run_dir / "run_manifest.json"
+    iteration_path = run_dir / "iteration_001.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
+    return {
+        "run_dir": manifest["run_dir"],
+        "manifest_path": str(manifest_path),
+        "iteration_path": str(iteration_path),
+        "final_stop_reason": manifest["final_stop_reason"],
+        "escalation_level": iteration["escalation_level"],
+        "patch_handoff_present": iteration.get("patch_handoff") is not None,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="fixture name under examples/")
     parser.add_argument("--goal", required=True, help="natural-language loop goal")
     parser.add_argument("--runs-root", type=Path, default=None)
-    args = parser.parse_args()
+    parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    args = parser.parse_args(argv)
 
     try:
         run_dir = run_loop(args.name, args.goal, runs_root=args.runs_root)
     except FigLoopError as exc:
         print(f"fig_loop.py: {exc}", file=sys.stderr)
         return 1
+    if args.json:
+        print(json.dumps(_json_stdout_summary(run_dir), sort_keys=True))
+        return 0
     print(f"fig_loop.py: wrote verify-only run to {run_dir}")
     return 0
 

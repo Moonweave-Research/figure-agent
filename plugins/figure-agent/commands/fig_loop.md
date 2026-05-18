@@ -12,6 +12,25 @@ Run from the plugin root:
 uv run python3 scripts/fig_loop.py <name> --goal "<goal>"
 ```
 
+For automation, emit a small machine-readable summary:
+
+```bash
+uv run python3 scripts/fig_loop.py <name> --goal "<goal>" --json
+```
+
+On success, `--json` keeps the same run artifacts and exit code `0`, but stdout
+becomes one JSON object with:
+
+- `run_dir`
+- `manifest_path`
+- `iteration_path`
+- `final_stop_reason`
+- `escalation_level`
+- `patch_handoff_present`
+
+On preflight failure, the command preserves the existing error contract: exit
+code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
+
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.

@@ -709,3 +709,140 @@ def test_git_mutation_commands_are_rejected() -> None:
         ensure_safe_command(("git", "-C", ".", "commit"))
 
     assert ensure_safe_command(("uv", "run", "pytest")) == ("uv", "run", "pytest")
+
+
+def test_main_json_emits_machine_readable_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    run_dir = tmp_path / "runs" / "loop_demo"
+    run_dir.mkdir(parents=True)
+    _write_json = fig_loop_mod._write_json
+    _write_json(
+        run_dir / "run_manifest.json",
+        {
+            "run_dir": str(run_dir),
+            "final_stop_reason": "status_action_required",
+        },
+    )
+    _write_json(
+        run_dir / "iteration_001.json",
+        {
+            "escalation_level": "agent_action_required",
+            "patch_handoff": None,
+        },
+    )
+
+    def fake_run_loop(name: str, goal: str, *, runs_root: Path | None = None) -> Path:
+        assert name == "loop_demo"
+        assert goal == "inspect json"
+        assert runs_root == tmp_path / "runs"
+        return run_dir
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", fake_run_loop)
+
+    exit_code = fig_loop_mod.main(
+        [
+            "loop_demo",
+            "--goal",
+            "inspect json",
+            "--runs-root",
+            str(tmp_path / "runs"),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert captured.err == ""
+    assert payload == {
+        "run_dir": str(run_dir),
+        "manifest_path": str(run_dir / "run_manifest.json"),
+        "iteration_path": str(run_dir / "iteration_001.json"),
+        "final_stop_reason": "status_action_required",
+        "escalation_level": "agent_action_required",
+        "patch_handoff_present": False,
+    }
+
+
+def test_main_without_json_keeps_legacy_prose_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    run_dir = tmp_path / "runs" / "loop_demo"
+
+    def fake_run_loop(name: str, goal: str, *, runs_root: Path | None = None) -> Path:
+        assert name == "loop_demo"
+        assert goal == "inspect prose"
+        assert runs_root == tmp_path / "runs"
+        return run_dir
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", fake_run_loop)
+
+    exit_code = fig_loop_mod.main(
+        ["loop_demo", "--goal", "inspect prose", "--runs-root", str(tmp_path / "runs")]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out == f"fig_loop.py: wrote verify-only run to {run_dir}\n"
+    assert captured.err == ""
+
+
+def test_main_json_missing_fixture_keeps_existing_error_contract(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run_loop(name: str, goal: str, *, runs_root: Path | None = None) -> Path:
+        raise FigLoopError(f"examples/{name}/ not found")
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", fake_run_loop)
+
+    exit_code = fig_loop_mod.main(["missing", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: examples/missing/ not found\n"
+
+
+def test_main_json_exercises_real_run_loop_summary(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = fig_loop_mod.REPO_ROOT / "examples" / "fig1_overview_v2"
+    if not fixture.is_dir():
+        pytest.skip("fig1_overview_v2 fixture not present")
+
+    exit_code = fig_loop_mod.main(
+        [
+            "fig1_overview_v2",
+            "--goal",
+            "json integration smoke",
+            "--runs-root",
+            str(tmp_path / "runs"),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    run_dir = Path(payload["run_dir"])
+    manifest_path = run_dir / "run_manifest.json"
+    iteration_path = run_dir / "iteration_001.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert captured.err == ""
+    assert payload == {
+        "run_dir": str(run_dir),
+        "manifest_path": str(manifest_path),
+        "iteration_path": str(iteration_path),
+        "final_stop_reason": manifest["final_stop_reason"],
+        "escalation_level": iteration["escalation_level"],
+        "patch_handoff_present": iteration["patch_handoff"] is not None,
+    }
