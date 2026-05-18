@@ -133,6 +133,12 @@ If `patch_handoff` is null, do not infer a broad patch target from prose. Follow
 the `stop_reason` and `recommended_next_action`; human-gated and ambiguous cases
 stay outside patch-assisted automation.
 
+When `critique_state` is `MISSING` or `STALE`, `/fig_loop` reports
+`status_action_required` with an ordinary `/fig_critique <name>` refresh action
+before considering adjudicated human gates or manual golden roll-forward. Human
+review and `--force-golden` approval are only meaningful after the critique
+evidence they depend on is fresh.
+
 ## Auto-Patch Eligibility
 
 `/fig_loop` records `auto_patch_eligibility` in `iteration_001.json` and in

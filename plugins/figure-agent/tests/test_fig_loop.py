@@ -1388,6 +1388,65 @@ def test_loop_missing_or_stale_critique_is_agent_action_required(
     _assert_agent_action_required(iteration)
 
 
+def test_loop_stale_critique_takes_precedence_over_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# stale critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "needs_human",
+                "reason": "domain review belongs to stale critique",
+                "patch_target": "",
+                "evidence": "",
+            }
+        ],
+    )
+    status_result = {
+        "stage": 4,
+        "name": "loop_demo",
+        "checks": [],
+        "next": (
+            "tracked golden artifact is stale and reference-grounded critique is stale; "
+            "run /fig_critique loop_demo, then /fig_export loop_demo --force-golden."
+        ),
+        "notes": ["critique_stale"],
+        "accepted": None,
+        "exports_substate": "FRESH",
+        "render_state": "FRESH",
+        "critique_state": "STALE",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_loop_mod, "infer_stage", lambda _example_dir: status_result)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale critique precedence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["adjudication"]["state"] == "fresh"
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["human_gate_status"] == "not_requested"
+    assert iteration["recommended_next_action"] == (
+        "run /fig_critique loop_demo because critique is stale."
+    )
+    _assert_agent_action_required(iteration)
+
+
 def test_loop_non_golden_stale_export_is_agent_action_required(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

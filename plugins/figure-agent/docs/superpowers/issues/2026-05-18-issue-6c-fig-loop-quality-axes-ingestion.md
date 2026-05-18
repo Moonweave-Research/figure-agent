@@ -51,4 +51,5 @@ Implement read-only ingestion of v1.2 `critique.md` quality axes into existing
 - Malformed or legacy critique frontmatter does not crash `/fig_loop`.
 - `/fig_loop` remains verify-only and does not edit source, critique, export,
   accepted, or golden files.
-
+- Stale or missing critique evidence takes precedence over adjudicated human
+  gates and manual golden roll-forward recommendations.

@@ -137,6 +137,11 @@ def _reference_input_missing(status_result: dict[str, Any]) -> bool:
     return bool(reference_notes.intersection(status_result.get("notes", [])))
 
 
+def _critique_refresh_action(example_dir: Path, critique_state: Any) -> str:
+    state_text = str(critique_state).lower()
+    return f"run /fig_critique {example_dir.name} because critique is {state_text}."
+
+
 def _active_subregion_target(example_dir: Path) -> dict[str, str | None] | None:
     log_path = example_dir / "subregion_iteration_log.md"
     if not log_path.is_file():
@@ -176,6 +181,16 @@ def _loop_decision(
         return {
             "stop_reason": "reference_input_missing",
             "recommended_next_action": "fix declared reference inputs before continuing",
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+    if status_result.get("critique_state") in {"MISSING", "STALE"}:
+        return {
+            "stop_reason": "status_action_required",
+            "recommended_next_action": _critique_refresh_action(
+                example_dir,
+                status_result.get("critique_state"),
+            ),
             "active_patch_target": None,
             "human_gate_status": "not_requested",
         }
