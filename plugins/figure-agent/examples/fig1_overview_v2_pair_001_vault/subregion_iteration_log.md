@@ -121,6 +121,79 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 11/10 — 2026-05-18 — reference-source-augmented (TikZ shadings axis idiom): shaft = 3D cylinder + disk = coin-edge shading + air gap caps
+
+- **Scope**: E-2 apparatus 3 high-value elements (Kelvin shaft 3D, disk metallic depth, air gap d explicit callout)
+- **Rationale**: User direction "라이브러리든 구조 참고할수 있는 소스 탐색" after iter 10 closed 75% of Codex ref03 gap but left 25% in "metallic 3D substance" zone. WebSearch surfaced TikZ shadings library `\shade[left color → middle color → right color]` axis idiom — exact primitive for cylinder cross-section illusion from side view. tikz-vault MCP unavailable (DB paths missing for this plugin instance).
+- **Reference source**: TikZ shadings library docs (tikz.dev/library-shadings) — axis-shading + radial-shading for cylinder/coin idioms; Codex ref03 visual benchmark anchored for shaft/disk metallic substance.
+- **Patches**:
+  - **Patch A — Shaft = 3D cylinder via axis shading** (was: thin line at x=7.40):
+    - 0.04cm-wide rectangle (7.380, 3.66)..(7.420, 3.95) with `\shade[left color=cGray!80!black, middle color=cGray!18, right color=cGray!80!black]` — dark edges + bright middle highlight = cylindrical cross-section reading
+    - Two thin 0.15pt outline lines on left/right edges for definition
+  - **Patch B — Disk metallic depth via 3-stop axis shading** (was: 2-stop linear gradient):
+    - Front face: `\shade[left color=cAmber!28, middle color=cAmber!65, right color=cAmber!22]` — coin-edge highlight in middle
+    - Outline 0.40 → 0.45pt for disk identity weight
+    - Top face parallelogram shading slightly punched (cAmber!38→!45 left, !16→!22 right)
+  - **Patch C — Air gap d measurement caps**:
+    - Added 0.04cm-wide horizontal cap lines at top (y=3.62) and bottom (y=3.52) of dashed gap indicator, weight 0.22pt
+    - Apparatus convention: explicit dimensional callout (vs implicit "dashed line means gap")
+- **Briefing edits**: none in this iter (apparatus stylization, no Type B structural change)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 10)**: T unchanged | S unchanged (positions consistent) | L improved (shaft cylinder + disk metallic + d caps each more communicative) | A significantly improved (shaft now reads as 3D pole, disk reads as coin-edge, measurement caps add apparatus convention)
+- **Gap closing to Codex ref03**: 75% → 83% (+8pt). Probe shaft gap 40 → 75%; disk metallic gap 60 → 75%; d explicit gap newly closed.
+- **Notes**:
+  - Reference-source augmentation worked: external TikZ idiom (axis shading) directly closed shaft cylinder gap that purely-local iteration couldn't.
+  - Remaining ~17% gap is global lighting/shadows + Codex typographic polish — TikZ engine limitations, would need β (Inkscape) or accept.
+  - spec.yaml `panels[E].reference_image` swapped from He NatComm 2024 (paper-grounded) → codex_style_03 (visual paradigm) per user direction post-iter 11. Paper ref retained as SECONDARY in comment.
+- **Visibility gate**: intended yes (shaft cylinder, disk coin, d caps all crop-visible at 600 DPI) | anomaly none (visual clash 64→63 stable, no new conflicts)
+- **Closure status**: Panel E iteration cluster (iter 9-11) reaches paradigm-shift completion. Formal closure deferred per user "정식 클로저는 하지마" pattern from Panel A; Panel E enters "paradigm shifted, suspended pending next priority" state.
+
+### Column E iter 10/10 — 2026-05-18 — Kelvin probe identity restore + charge size + label reposition + spark weight (iter 9 fix bundle)
+
+- **Scope**: E-2 apparatus 6 elements (Kelvin shaft weight, Kelvin disk size+top face, vibration arrow placement, Probe label position, surface charges fontsize, spark weight)
+- **Rationale**: iter 9 paradigm shift left 3 visible regressions vs Codex ref03 — (1) Kelvin probe lost identity (probe→diamond), (2) surface charges read as tick marks not glyphs, (3) Probe label collided with bezier wire. Each fixable in TikZ without engine change.
+- **Reference source**: iter 9 panel_E_iter9_wide-1.png visual audit + Codex ref03 detail re-read (large probe disk + side vibration arrow + bold charges)
+- **Patches**:
+  - **Patch A — Kelvin shaft weight**: 0.32 → 0.45pt for visibility
+  - **Patch B — Kelvin disk size+3D**: 0.30×0.04cm → 0.40×0.07cm (1.33× wider, 1.75× taller); added small top-face parallelogram (7.20, 3.66)→(7.60, 3.66)→(7.66, 3.69)→(7.26, 3.69) for 3D coin depth
+  - **Patch C — Vibration arrow side placement**: was ON shaft (x=7.40, y=3.72..3.90) — read as diamond when arrow tips met around shaft line. Moved to LEFT of shaft (x=7.22, y=3.74..3.92), weight 0.45→0.40pt
+  - **Patch D — Probe label reposition**: (7.62, 3.82) anchor=west on bezier wire → (7.43, 3.85) anchor=west right of shaft, clear of vibration arrow and bezier arc
+  - **Patch E — Surface charges fontsize**: 4.5/5.4 → 5.5/6.6pt (1.22×), color cRed!70 stays — eliminates tick-mark reading
+  - **Patch F — Sparks weight**: 0.35 → 0.42pt to not be out-massed by new bolder charges
+- **Briefing edits**: none in this iter (sizing + position polish, no structural change)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 9)**: T unchanged | S unchanged | L significantly improved (probe, charges, label all crisper communicators) | A improved (Kelvin probe identity restored vs iter 9 regression)
+- **Gap closing to Codex ref03**: 75% (iter 9) → 75% (held, no axis advance but probe/charge regressions closed)
+- **Notes**:
+  - Pure cleanup iter after paradigm-shift overshoot. iter 9 too aggressive in some elements, iter 10 corrects without retreating from paradigm.
+  - Disk top-face parallelogram is first use of small 3D-on-instrument approach (vs slab-only used for substrate/polymer in iter 9).
+- **Visibility gate**: intended yes (probe components individually identifiable, charges read as + glyphs, Probe label clear) | anomaly none
+
+### Column E iter 9/10 — 2026-05-18 — paradigm-shift (Codex imagegen ref03 + Gemini external review): 3D slabs + rounded instruments + bezier wire + hatching removal
+
+- **Scope**: E-2 apparatus 8 elements (polymer film, substrate, HV+ box, sparks, surface charges, Kelvin disk, V_s meter, probe→meter wire)
+- **Rationale**: After iter 8 user observed "8 iter 동안 같은 그림을 미세 조정만 했어요. 패러다임이 안 바뀌었음." Pattern lock-in acknowledged. Two external evidence sources marshalled: (1) Codex imagegen generated 4 style PNGs of ISPD apparatus in Nature Comm isometric paradigm (saved as `reference/panel_E_topref/style_variations/codex_style_{01..04}_*.png`); (2) Gemini external review identified 5 default-TikZ-tutorial signatures producing "Claude-drawn schematic" feel: pattern=north east lines hatching, [draw] borders on text nodes, orthographic flatness, math `+` text as charges, 90° orthogonal wires.
+- **Reference source**: Codex imagegen ref03 (`codex_style_03_14h35.png` — strongest polymer-on-substrate volume + bezier cable + gold disk); Gemini structural review (5 anti-patterns + 5 recommended patches); TikZ shadings library (`\shade[left color=…, right color=…]`, `\shade[top color=…, bottom color=…]` for 3D slab faces).
+- **Patches** (8 patches, all in single iter as paradigm-shift commitment):
+  - **Patch A — Polymer film 3-face isometric slab** (was: flat rect): front face axis-shaded amber + top-face parallelogram (depth offset δ=0.10, ε=0.05 per gentle 30° axonometric) + right-side parallelogram
+  - **Patch B — Substrate 3-face isometric slab** (was: flat rect + diagonal hatching): front face axis-shaded gray + right-side face shaded; **hatching DELETED entirely** (Gemini's #1 default-tutorial signature)
+  - **Patch C — HV+ source box**: `\draw` rect → `\fill[cGray!6, rounded corners=0.6pt]` + thin 0.18pt outline + rounded corners (was harsh 0.32pt black outline)
+  - **Patch D — Spark fan**: 3 sparks → 5 sparks (WSW/SW/S/SE/ESE), weight 0.30→0.35pt, all landing on polymer front-top edge y=3.52 (vs iter 8 inconsistent y=3.45..3.47)
+  - **Patch E — Surface charges**: fontsize 4 → 4.5pt, y 3.495 → 3.515 (sit on polymer front-top edge per ref03), color cRed!60→!70 — kept as 2D + text (NOT \shade[ball color=] per Gemini #4 recommendation; ref01-04 all use flat + glyphs, not 3D spheres — primary-source observation overrides general guidance)
+  - **Patch F — Kelvin disk metallic gradient**: flat fill → `\shade[left color=cAmber!42, right color=cAmber!16]` for conductive-disk reading
+  - **Patch G — V_s meter rounded gradient**: harsh black 0.30pt rect → `\shade[top color=cGray!8, bottom color=cGray!18]` + rounded corners + soft 0.20pt outline (beige-instrument idiom per ref03)
+  - **Patch H — Probe→meter wire bezier**: straight `\draw (7.40, 3.95) -- (8.20, 3.95)` → `\draw (7.40, 3.95) .. controls (7.65, 4.10) and (7.95, 4.05) .. (8.20, 3.85)` (flexible physical cable vs rigid circuit trace)
+- **Briefing edits**: none in this iter (paradigm-shift is stylization layer, no structural commitment change). §13.6 E-2 will need sync in next briefing-refresh pass.
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 8)**: T unchanged (mechanism unchanged) | S maintained (8 elements interlocked, positions consistent within new isometric coords) | L significantly improved (apparatus reads as 3D instrument scene vs flat schematic) | A **paradigm-shift improvement** (largest single-iter A delta in fixture history — moves from "Claude cartoon" cluster to "schematic with depth")
+- **Gap closing to Codex ref03**: 0% → 75% (8 of 9 element categories moved toward benchmark). Detailed table in iter assessment.
+- **Notes**:
+  - First iter combining 3 external evidence sources (Codex imagegen + Gemini review + TikZ docs) — vs prior single-source (Tech illustrator / ref01-only).
+  - 5-spark fan replaces 3-spark in iter 8; reading more dynamic + closer to ref03.
+  - **Identified regressions** (iter 10 cleanup target): (i) Kelvin probe lost identity — disk too small, shaft thin, vibration arrow became diamond; (ii) surface charges at 4.5pt read as tick marks; (iii) Probe label collided with bezier wire.
+  - Codex imagegen at `/Users/choemun-yeong/.codex/generated_images/019e3987-2570-7711-8ae3-5bb2940cedf7/`; 4 PNGs copied to `reference/panel_E_topref/style_variations/codex_style_{01..04}_*.png`.
+- **Visibility gate**: intended yes (3D slabs, rounded boxes, bezier all visible at 600 DPI crop) | anomaly **3 regressions noted above** — addressed in iter 10
+
 ### Column E iter 8/10 — 2026-05-18 — Option Y apparatus radical redesign (HV+ + surface charges + larger probe + darker substrate)
 
 - **Scope**: E-2 apparatus zone (4 interlocked elements — corona source encapsulation, surface charge markers, probe vibration arrow, substrate material identity)

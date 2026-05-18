@@ -19,7 +19,7 @@ panels:
     # No reference; figure-research recommended (highest-priority gap).
   - id: D
     caption: Column D — Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)
-    bbox_pdf_cm: [0.205, 5.926, 5.883, 11.457]
+    bbox_pdf_cm: [0.205, 5.926, 5.883, 11.280]
     reference_image: reference/row2_apparatus/apparatus1_ref04_NatComm2022_tribo_p3-03.png
     # PRIMARY: Wang NatComm 2022 Fig 1 (HANDOFF-adopted). 3-axis audit: theoretical
     # PARTIAL (triboelectric not CvS), structural PASS, storyline PARTIAL.
@@ -28,16 +28,26 @@ panels:
     # breakdown narrative. Full audit: reference/audit_table.md.
   - id: E
     caption: Column E — ISPD-paired evidence (corona+probe apparatus + V_s decay + g(E_t) derived)
-    bbox_pdf_cm: [6.074, 5.926, 12.008, 11.457]
+    bbox_pdf_cm: [6.074, 5.926, 12.008, 11.280]
     reference_image: reference/row2_apparatus/apparatus2_ref01_NatComm2024_surfacecharge_p2-02.png
-    # PRIMARY: He NatComm 2024 Fig 1c (HANDOFF-adopted, full-spectrum match).
-    # 3-axis audit: theoretical PASS, structural PASS, storyline PASS.
-    # Transfer: probe-above-sample geometry, motion-stage labeling, sample-on-
-    # grounded-substrate cross-section, concept-apparatus-result row layout.
-    # Do-not-transfer: photo-aesthetic mixing (Fig 1b), TENG-specific labels.
+    # PRIMARY (iter 15 reverted to He NatComm 2024, 2026-05-18): paper-grounded
+    # side-view apparatus. Reverted from codex_style_03 (isometric) after user
+    # direction "원래 대로 측면에서 본 그림이 나을거 같다" — side-view
+    # structurally better for this apparatus. 3-axis audit: theoretical PASS,
+    # structural PASS, storyline PASS. Transfer: probe-above-sample geometry,
+    # motion-stage labeling, sample-on-grounded-substrate cross-section,
+    # concept-apparatus-result row layout. Do-not-transfer: photo-aesthetic
+    # mixing (Fig 1b), TENG-specific labels.
+    #
+    # SECONDARY (style benchmark, retained for detail-tier reference):
+    #   reference/panel_E_topref/style_variations/codex_style_03_14h35.png
+    # Codex imagegen ref03 — isometric paradigm. Used iter 9-14 as visual
+    # benchmark for detail quality (cylinder shaft, metallic disk, V_s meter
+    # inset screen, etc.) — those details preserved in iter 15 side-view.
+    # Style mismatch (isometric vs side-view) means not suitable as PRIMARY.
   - id: F
     caption: Column F — Mechanical evidence (PSU+fixture apparatus + Maxwell baseline + Coulomb result)
-    bbox_pdf_cm: [12.199, 5.926, 17.878, 11.457]
+    bbox_pdf_cm: [12.199, 5.926, 17.878, 11.280]
     reference_image: reference/row2_apparatus/apparatus3_ref01_NatComm2016_microactuator-2.png
     # PRIMARY: Conrad NatComm 2016 Fig 1 (HANDOFF-adopted, structural anchor).
     # 3-axis audit: theoretical PARTIAL (MEMS not polymer), structural PASS,

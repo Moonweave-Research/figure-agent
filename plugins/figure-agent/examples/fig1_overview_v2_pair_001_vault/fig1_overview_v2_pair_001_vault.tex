@@ -225,8 +225,8 @@
 % 2-line stacked at italic 5.5pt fits the available gap between (S)_x
 % top (y=7.85) and S₈ bottom (y=8.10) without restructuring S₈ position.
 \node[font=\sffamily\fontsize{5}{5.7}\itshape\selectfont, text=cGray!75!black,
-      anchor=center, fill=white, inner sep=1pt, align=center]
-  at (2.50, 8.00) {inverse\\vulcanization};
+      anchor=center, inner sep=1pt, align=center]
+  at (2.50, 8.20) {inverse\\vulcanization};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 \node[labelStrong, anchor=north west, text=cAmber!70!black]
@@ -390,16 +390,16 @@
 % so allowed under briefing schematic rule.
 \draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (13.80, 8.55);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!60!black,
-      anchor=west] at (13.83, 8.55) {vacuum};
+      anchor=west] at (13.95, 8.55) {vacuum};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (13.80, 8.30);
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
-      anchor=west] at (13.83, 8.30) {$E_C$};
+      anchor=west] at (13.95, 8.30) {$E_C$};
 \draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (13.80, 7.85);
 \node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
-      anchor=west] at (13.83, 7.85) {mobility edge};
+      anchor=west] at (13.95, 7.85) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (13.80, 5.30);
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
-      anchor=west] at (13.83, 5.30) {$E_V$};
+      anchor=west] at (13.95, 5.30) {$E_V$};
 
 % R15: Gaussian DOS overlays (between Energy axis and trap lines).
 % ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
@@ -436,7 +436,7 @@
   \draw[cGray!70!black, line width=0.35pt] (10.43, \tickY) -- (10.50, \tickY);
 }
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
-      anchor=south, rotate=90] at (10.36, 6.85) {Energy};
+      anchor=south, rotate=90] at (10.15, 6.85) {Energy};
 
 % --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
 % R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
@@ -473,7 +473,7 @@
 \draw[-{Stealth[length=3pt,width=2.4pt]}, dashed, cBlue!70!black,
       line width=0.50pt] (11.10, 7.55) -- (11.10, 7.82);
 \draw[-{Stealth[length=2.6pt,width=2pt]}, dashed, cRed!70!black,
-      line width=0.35pt] (11.10, 6.20) -- (11.10, 7.82);
+      line width=0.35pt] (11.10, 6.20) .. controls (11.10, 6.60) and (11.85, 6.80) .. (11.85, 7.82);
 
 % Trap depth annotation: E_C → deep band mid (encodes depth scale, no
 % "dominate" overstatement).
@@ -481,10 +481,10 @@
 % match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
 % trap species (color convention §8.6 / §13.9 Binding-1).
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cRed!75!black, line width=0.40pt] (13.55, 8.27) -- (13.55, 5.83);
+      cRed!75!black, line width=0.40pt] (13.70, 8.27) -- (13.70, 5.83);
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cRed!75!black,
-      anchor=east, fill=white, inner sep=0.5pt]
-  at (13.52, 7.00) {$\Delta E_t$};
+      anchor=west, inner sep=0.5pt]
+  at (13.75, 7.00) {$\Delta E_t$};
 
 % R13: Re-add thin BLACK straight leaders (checklist #12 — no arrowhead, no
 % color, 0.30pt). Each LEFT ⊖ → its corresponding RIGHT band left edge.
@@ -577,52 +577,52 @@
 % not "instrument-with-attached-sample."
 % SMU box (LEFT, compact)
 \draw[cGray!75!black, line width=0.30pt]
-  (0.50, 3.30) rectangle (1.30, 3.85);
+  (0.50, 3.15) rectangle (1.30, 3.70);
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (0.65, 3.72) {V};
+  at (0.65, 3.57) {V};
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (0.65, 3.42) {A};
+  at (0.65, 3.27) {A};
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
-  at (1.00, 3.57) {SMU};
+  at (1.00, 3.42) {SMU};
 % v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
 % already carry source-meter identity; rectangle was decorative noise.
 
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
 % Top electrode (single-direction hatched, slightly thicker)
-\fill[cGray!35!white] (1.70, 3.85) rectangle (3.50, 3.95);
+\fill[cGray!35!white] (1.70, 3.70) rectangle (3.50, 3.80);
 \draw[cGray!75!black, line width=0.32pt]
-  (1.70, 3.85) rectangle (3.50, 3.95);
+  (1.70, 3.70) rectangle (3.50, 3.80);
 \foreach \hx in {1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45} {
-  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.95) -- ({\hx-0.03}, 3.86);
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.80) -- ({\hx-0.03}, 3.71);
 }
 % Polymer film (cAmber filled, ENLARGED height)
-\fill[cAmber!28] (1.70, 3.40) rectangle (3.50, 3.85);
+\fill[cAmber!28] (1.70, 3.25) rectangle (3.50, 3.70);
 \draw[cAmber!70!black, line width=0.32pt]
-  (1.70, 3.40) rectangle (3.50, 3.85);
+  (1.70, 3.25) rectangle (3.50, 3.70);
 % Bottom electrode (hatched)
-\fill[cGray!35!white] (1.70, 3.30) rectangle (3.50, 3.40);
+\fill[cGray!35!white] (1.70, 3.15) rectangle (3.50, 3.25);
 \draw[cGray!75!black, line width=0.32pt]
-  (1.70, 3.30) rectangle (3.50, 3.40);
+  (1.70, 3.15) rectangle (3.50, 3.25);
 \foreach \hx in {1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45} {
-  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.40) -- ({\hx-0.03}, 3.31);
+  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.25) -- ({\hx-0.03}, 3.16);
 }
 
 % 2 leads from SMU box to MIM stack
 \draw[cGray!75!black, line width=0.28pt]
-  (1.30, 3.75) -- (1.50, 3.75) -- (1.50, 3.90) -- (1.70, 3.90);
+  (1.30, 3.60) -- (1.50, 3.60) -- (1.50, 3.75) -- (1.70, 3.75);
 \draw[cGray!75!black, line width=0.28pt]
-  (1.30, 3.42) -- (1.50, 3.42) -- (1.50, 3.35) -- (1.70, 3.35);
+  (1.30, 3.27) -- (1.50, 3.27) -- (1.50, 3.20) -- (1.70, 3.20);
 
 % Ground symbol at bottom electrode RIGHT side
-\draw[cGray!75!black, line width=0.28pt] (3.50, 3.35) -- (3.65, 3.35) -- (3.65, 3.21);
-\draw[cGray!75!black, line width=0.30pt] (3.57, 3.21) -- (3.73, 3.21);
-\draw[cGray!75!black, line width=0.25pt] (3.60, 3.18) -- (3.70, 3.18);
-\draw[cGray!75!black, line width=0.22pt] (3.62, 3.15) -- (3.68, 3.15);
+\draw[cGray!75!black, line width=0.28pt] (3.50, 3.20) -- (3.65, 3.20) -- (3.65, 3.06);
+\draw[cGray!75!black, line width=0.30pt] (3.57, 3.06) -- (3.73, 3.06);
+\draw[cGray!75!black, line width=0.25pt] (3.60, 3.03) -- (3.70, 3.03);
+\draw[cGray!75!black, line width=0.22pt] (3.62, 3.00) -- (3.68, 3.00);
 
 % v8.7 critique iter 2: label readability — cAmber on cAmber fill was poor
 % contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (2.60, 3.62) {polymer film};
+  at (2.60, 3.47) {polymer film};
 % v8.7 critique C012 fix: name the MIM architecture so the 3-layer structure
 % is reader-identifiable even though polymer dominates visually. Compact
 % label in apparatus zone top-left, outside the stack to avoid lead-routing.
@@ -650,9 +650,9 @@
 % (reference < primary curves 0.80pt).
 \draw[cGray!85!black, dashed, line width=0.75pt]
   (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
-\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.70);
-\node[labelMute, text=cGray!65!black, anchor=west, fill=white, inner sep=1pt]
-  at (2.70, 0.70) {Debye};
+\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.40);
+\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
+  at (2.70, 0.40) {Debye};
 
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
@@ -681,28 +681,39 @@
 % shows substrate visually dominant. Polymer film stays at 0.07cm thin.
 % Ground bars + polymer-film label repositioned for new substrate bottom y=3.23.
 %
-% Polymer film (TOP, thin) — the layer under measurement
-\fill[cAmber!28] (6.30, 3.45) rectangle (7.85, 3.52);
-\draw[cAmber!70!black, line width=0.30pt]
-  (6.30, 3.45) rectangle (7.85, 3.52);
-% Substrate (BOTTOM, thick) — conductive base for ISPD charge-decay path.
-% Iter 7: bottom edge 3.34 → 3.23 (substrate height 0.11 → 0.22cm).
-% Iter 8: fill cGray!18 → cGray!28 + outline 0.30→0.35pt for material weight
-% (ref01 substrate visually dominant + material identity per Tech illustrator).
-\fill[cGray!28] (6.30, 3.23) rectangle (7.85, 3.45);
-\draw[cGray!75!black, line width=0.35pt]
-  (6.30, 3.23) rectangle (7.85, 3.45);
-% Substrate diagonal hatching (10 lines, extended length for thicker substrate)
-\foreach \hx in {6.40, 6.55, 6.70, 6.85, 7.00, 7.15, 7.30, 7.45, 7.60, 7.75} {
-  \draw[cGray!55!black, line width=0.14pt] (\hx, 3.45) -- ({\hx-0.14}, 3.23);
-}
+% Ground drop shadow — iter 16: shifted down to track new substrate bottom
+% (y=3.15). Strip y=3.11..3.15.
+\shade[top color=cGray!28, bottom color=cGray!2, opacity=0.55]
+  (6.34, 3.11) rectangle (7.89, 3.15);
+
+% Polymer film — iter 16: height 0.07 → 0.15cm (y=3.45..3.60) for visible
+% material layer. Hairline visibility issue resolved. Aspect 22:1 → 10:1.
+\shade[top color=cAmber!38, bottom color=cAmber!20]
+  (6.30, 3.45) rectangle (7.85, 3.60);
+\draw[cAmber!70!black, line width=0.25pt]
+  (6.30, 3.45) rectangle (7.85, 3.60);
+% Polymer top-edge sheen — iter 12: subtle near-white highlight on front-top
+% edge (y=3.52) — film/wax surface catching light. Thin (0.002cm) at low
+% opacity for sheen without breaking material identity.
+\fill[white, opacity=0.45]
+  (6.30, 3.599) rectangle (7.85, 3.601);
+% Disk ambient shadow on polymer — iter 15: parallelogram → thin horizontal
+% band on polymer front-top edge (y=3.51..3.52) under disk hover x range.
+% Side-view side-projection of "disk casts shadow on polymer surface". Slight
+% rightward offset (7.21..7.62) preserves upper-left light convention.
+\fill[black, opacity=0.16] (7.21, 3.590) rectangle (7.62, 3.600);
+% Substrate — iter 16: height 0.22 → 0.30cm (y=3.15..3.45). Aspect 7:1 → 5:1.
+\shade[top color=cGray!42, bottom color=cGray!22]
+  (6.30, 3.15) rectangle (7.85, 3.45);
+\draw[cGray!75!black, line width=0.28pt]
+  (6.30, 3.15) rectangle (7.85, 3.45);
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
 % Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
 % clear thicker substrate bottom (y=3.23).
-\draw[cGray!75!black, line width=0.28pt] (7.85, 3.34) -- (7.95, 3.34) -- (7.95, 3.18);
-\draw[cGray!75!black, line width=0.32pt] (7.88, 3.18) -- (8.02, 3.18);
-\draw[cGray!75!black, line width=0.28pt] (7.90, 3.15) -- (8.00, 3.15);
-\draw[cGray!75!black, line width=0.25pt] (7.92, 3.12) -- (7.98, 3.12);
+\draw[cGray!75!black, line width=0.28pt] (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
+\draw[cGray!75!black, line width=0.32pt] (7.88, 3.10) -- (8.02, 3.10);
+\draw[cGray!75!black, line width=0.28pt] (7.90, 3.07) -- (8.00, 3.07);
+\draw[cGray!75!black, line width=0.25pt] (7.92, 3.04) -- (7.98, 3.04);
 
 % ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
 % Tech illustrator audit: floating "+" cue + no HV identifier = "where does
@@ -710,29 +721,38 @@
 % above needle + wire connection. "Corona" label removed (HV+ + needle +
 % sparks self-identifies as corona discharge per literature convention).
 %
-% HV+ source box (component encapsulation)
-\draw[cGray!75!black, line width=0.32pt] (6.35, 4.05) rectangle (6.75, 4.20);
-\fill[white] (6.36, 4.06) rectangle (6.74, 4.19);
-\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!85!black]
-  at (6.55, 4.125) {HV+};
-% Wire from HV box bottom to needle support ball
-\draw[cGray!75!black, line width=0.32pt] (6.55, 4.05) -- (6.55, 3.95);
-% Vertical electrode stem with sharp triangular tip + discharge spark cue
-\draw[cGray!85!black, line width=0.55pt] (6.55, 3.95) -- (6.55, 3.62);
-\fill[cGray!85!black] (6.55, 3.95) circle (0.04);  % support ball at top
-% Sharp filled triangular tip (downward point) — "needle electrode"
-\fill[cGray!85!black] (6.50, 3.62) -- (6.55, 3.55) -- (6.60, 3.62) -- cycle;
-% 3 short spark/discharge indicators radiating from tip toward sample
-\draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.49, 3.47);  % SW
-\draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.55, 3.45);  % S
-\draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.61, 3.47);  % SE
-% Iter 8: surface charge "+" markers on polymer top — ISPD essence (corona
-% discharge deposits ions on polymer surface, which then decay over time).
-% Per Tech illustrator audit "ISPD's whole point is surface-trapped charge".
+% HV+ source — iter 17 (S1 fix): shifted up 0.05cm (4.05..4.20 → 4.10..4.25).
+% Wire to needle cuff now 0.15cm (was 0.10cm) — reads as "remote source"
+% via wire rather than "directly stacked on needle".
+\shade[top color=cGray!2, bottom color=cGray!18]
+  (6.35, 4.10) rectangle (6.75, 4.25);
+\draw[cGray!55!black, line width=0.18pt]
+  (6.35, 4.10) rectangle (6.75, 4.25);
+\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
+  at (6.55, 4.175) {HV+};
+% Wire from HV box bottom to needle support ball — iter 17: length 0.10 → 0.15cm
+\draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 3.95);
+% Corona needle electrode — iter 16: tip y=3.55 → 3.63 (above new polymer
+% top y=3.60). Wedge geometry preserved, just shifted to land on thicker film.
+\shade[left color=cGray!75!black, right color=cGray!90!black]
+  (6.535, 3.95) -- (6.565, 3.95) -- (6.55, 3.63) -- cycle;
+\draw[cGray!90!black, line width=0.22pt]
+  (6.535, 3.95) -- (6.565, 3.95) -- (6.55, 3.63) -- cycle;
+% Support cuff at top of needle (wire attachment point)
+\fill[cGray!85!black] (6.55, 3.95) circle (0.045);
+% Spark endpoints land on new polymer top edge y=3.60 (was 3.52).
+\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.46, 3.60);  % WSW
+\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.50, 3.60);  % SW
+\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.55, 3.59);  % S
+\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.60, 3.60);  % SE
+\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.64, 3.60);  % ESE
+% Surface charge "+" markers — iter 10: 4.5pt → 5.5pt (1.22×) for crisp
+% glyph reading (iter 9 left them looking like tick marks). Color stays
+% cRed!70!black. 5 markers evenly spaced on polymer front-top edge.
 \foreach \cx in {6.40, 6.70, 7.05, 7.40, 7.70} {
-  \node[font=\sffamily\bfseries\fontsize{4}{4.8}\selectfont,
-        text=cRed!60!black, inner sep=0pt]
-    at (\cx, 3.495) {$+$};
+  \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont,
+        text=cRed!70!black, inner sep=0pt]
+    at (\cx, 3.595) {$+$};
 }
 
 % ----- Kelvin probe (RIGHT, V_s readout) — iter 6 disk-on-shaft redesign -----
@@ -741,53 +761,90 @@
 % on vertical shaft, oscillating VERTICALLY (modulating gap-capacitance for
 % FM-CPD measurement), hovering above sample with explicit non-contact gap.
 %
-% Vertical shaft (support to upper instrument lead — y=3.66 disk top to y=3.95 lead)
-\draw[cGray!75!black, line width=0.32pt] (7.40, 3.95) -- (7.40, 3.66);
-% Disk electrode at shaft bottom — flat horizontal conductive face.
-% Iter 7: fill cGray!50!white → cAmber!18 (subtle metallic tint suggesting
-% conductive Au/Pt electrode rather than generic gray); outline 0.32→0.40pt
-% (slightly bolder for material identity per ref01 metallic instrument conv).
-\fill[cAmber!18] (7.25, 3.62) rectangle (7.55, 3.66);
-\draw[cGray!85!black, line width=0.40pt] (7.25, 3.62) rectangle (7.55, 3.66);
-% Vertical vibration arrow ON shaft — Kelvin-probe modulation signature
-% (vertical oscillation along shaft axis is the defining FM-CPD feature)
-% Iter 8: arrow length 0.12→0.18cm (3.76..3.88 → 3.72..3.90) + weight
-% 0.32→0.45pt for clearer signature presence per Tech illustrator audit.
-\draw[<->, cGray!75!black, line width=0.45pt] (7.40, 3.72) -- (7.40, 3.90);
-% Air gap indicator (vertical dashed line + d label) between disk bottom
-% (y=3.62) and polymer film top (y=3.52). Gap d communicates non-contact
-% measurement geometry (~100-500 μm in real systems).
-\draw[cGray!55!black, dashed, line width=0.18pt] (7.68, 3.62) -- (7.68, 3.52);
+% Vertical shaft — iter 16: bottom y=3.66 → 3.77 (matches new disk top).
+% Width 0.08cm + axis shading preserved.
+\shade[left color=cGray!80!black, middle color=cGray!18,
+       right color=cGray!80!black]
+  (7.36, 3.77) rectangle (7.44, 3.95);
+\draw[cGray!80!black, line width=0.18pt]
+  (7.36, 3.77) -- (7.36, 3.95);
+\draw[cGray!80!black, line width=0.18pt]
+  (7.44, 3.77) -- (7.44, 3.95);
+\fill[white, opacity=0.55] (7.395, 3.77) rectangle (7.405, 3.95);
+% Disk electrode — iter 16: thickness 0.04 → 0.07cm (y=3.70..3.77).
+% Shift up to clear thicker polymer (top y=3.60) + 0.10cm air gap.
+\shade[left color=cAmber!28, middle color=cAmber!65,
+       right color=cAmber!22]
+  (7.20, 3.70) rectangle (7.60, 3.77);
+\draw[cAmber!75!black, line width=0.45pt] (7.20, 3.70) rectangle (7.60, 3.77);
+% Disk front-top edge specular — y=3.768..3.770 (matches new disk top).
+\fill[white, opacity=0.55] (7.21, 3.768) rectangle (7.58, 3.770);
+% Vertical vibration arrow — iter 17 (S6 fix): length 0.12 → 0.16cm
+% (3.80..3.92 → 3.78..3.94). Arrow/shaft ratio 67% → 89%, matching literature
+% convention where vibration cue spans most of shaft length.
+\draw[<->, cGray!75!black, line width=0.40pt] (7.47, 3.78) -- (7.47, 3.94);
+% Air gap indicator — iter 16: top y=3.62 → 3.70 (new disk bottom),
+% bottom y=3.52 → 3.60 (new polymer top). Gap height 0.10cm preserved.
+\draw[cGray!55!black, dashed, line width=0.18pt] (7.72, 3.70) -- (7.72, 3.60);
+\draw[cGray!55!black, line width=0.22pt] (7.70, 3.70) -- (7.74, 3.70);
+\draw[cGray!55!black, line width=0.22pt] (7.70, 3.60) -- (7.74, 3.60);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
-      anchor=west] at (7.70, 3.57) {$d$};
-% "Probe" label — positioned to right of vibration arrow area
+      anchor=west] at (7.74, 3.65) {$d$};
+% "Probe" label — iter 14d (P-E-008 forced fix): shifted further right to
+% (7.51, 3.85). Reason: P-E-003 widened shaft to right edge 7.44; P-E-001
+% placed vibration arrow at x=7.47. Probe label must clear both — x=7.51.
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=west] at (7.62, 3.82) {Probe};
+      anchor=west] at (7.51, 3.85) {Probe};
 
-% ----- V_s meter box (FAR-RIGHT, electrostatic meter) — display cue added -----
-% Slightly larger meter box for waveform display
-\draw[cGray!75!black, line width=0.30pt]
+% ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
+% Layers (in z-order, bottom-up):
+%   (1) Front face — beige metallic gradient + sharp 90° corners
+%   (2) Inset SCREEN frame — recessed darker rectangle for display zone
+%   (3) x/y axes + decay curve inside screen (Codex axis convention preserved)
+%   (4) V_s meter label BELOW screen (inside box bottom)
+%   (5) Bezier cable from probe (drawn before port so port caps it)
+%   (6) Input port circle — small dark socket at left wall, cable entry
+% Right-side and top isometric faces REMOVED per user direction.
+%
+% (1) Front face — beige metal gradient
+\shade[top color=cGray!4, bottom color=cGray!22]
   (8.20, 3.65) rectangle (9.00, 4.05);
-% V_s decay icon inside meter — iter 6 replacement of prior sinusoid
-% (Tech illustrator audit: sine cue was WRONG — V_s is slow exponential
-% decay over seconds, not AC signal). Exponential-decay curve communicates
-% "this instrument reads slow potential decay" semantically correct.
-\draw[cGray!60!black, line width=0.28pt]
-  (8.30, 3.98) .. controls (8.38, 3.95) and (8.50, 3.93) .. (8.60, 3.92)
-              .. controls (8.70, 3.92) and (8.80, 3.92) .. (8.88, 3.92);
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
+\draw[cGray!60!black, line width=0.22pt]
+  (8.20, 3.65) rectangle (9.00, 4.05);
+% (2) Inset SCREEN frame — recessed darker display zone
+\fill[cGray!18, rounded corners=0.4pt] (8.25, 3.83) rectangle (8.95, 4.00);
+\draw[cGray!65!black, line width=0.18pt, rounded corners=0.4pt]
+  (8.25, 3.83) rectangle (8.95, 4.00);
+% (4a) y-axis arrow inside screen (V_s axis, vertical)
+\draw[-{Stealth[length=2pt,width=1.6pt]}, cGray!75!black, line width=0.18pt]
+  (8.30, 3.86) -- (8.30, 3.98);
+% (4b) x-axis arrow inside screen (time axis, horizontal)
+\draw[-{Stealth[length=2pt,width=1.6pt]}, cGray!75!black, line width=0.18pt]
+  (8.30, 3.86) -- (8.92, 3.86);
+% (4c) Decay curve — starts upper-left, exponential decay to lower-right
+\draw[cGray!85!black, line width=0.35pt]
+  (8.32, 3.97) .. controls (8.38, 3.94) and (8.45, 3.90) .. (8.55, 3.88)
+              .. controls (8.65, 3.87) and (8.78, 3.86) .. (8.88, 3.865);
+% (5) V_s meter label — BELOW screen, centered in box-bottom zone
+\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
   at (8.60, 3.74) {$V_s$ meter};
-% Lead from probe support to meter box LEFT side — iter 6: y updated to
-% match new shaft top (3.85 → 3.95)
+% (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
+% from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
+% reads as physical wire going horizontal from probe top then curving down
+% to meter input port (natural gravity-aware path, not aerial arc).
 \draw[cGray!75!black, line width=0.22pt]
-  (7.40, 3.95) -- (8.20, 3.95);
+  (7.40, 3.95) .. controls (7.60, 3.95) and (8.00, 3.85) .. (8.20, 3.85);
+% (7) Input port — small dark socket circle (cable entry on left wall)
+\fill[cGray!85!black] (8.20, 3.85) circle (0.024);
+\fill[cGray!50!black] (8.20, 3.85) circle (0.012);
 
-% Polymer film identification label — below substrate (post-iter7 fix:
-% substrate bottom y=3.23 (was 3.34), label moved from y=3.32→3.20 to stay
-% below thicker substrate. Ground bars now at y=3.12..3.18 (x=7.88..8.02)
-% do not horizontally overlap with label at x=6.73..7.43.
+% Polymer film identification label — iter 17 (S2 fix): repositioned LEFT
+% of polymer band with leader line. Was BELOW substrate (target mismatch —
+% label appeared to point at substrate). Now label at (6.15, 3.525) anchor=east
+% pointing right via leader line to polymer band left edge (6.30, 3.525).
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=north] at (7.075, 3.20) {polymer film};
+      anchor=east] at (6.15, 3.525) {polymer film};
+\draw[cGray!55!black, line width=0.18pt] (6.16, 3.525) -- (6.30, 3.525);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
@@ -831,7 +888,7 @@
 \draw[-{Stealth[length=5pt,width=4pt]}, cGray!75!black, line width=0.55pt]
   (6.95, 1.55) -- (6.95, 1.28);
 \node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
-      text=cGray!75!black, fill=cAmber!8, inner sep=1pt]
+      text=cGray!75!black, inner sep=1pt]
   at (7.05, 1.45) {derive};
 
 % E-6 g(E_t) sub-zone axes
@@ -889,80 +946,46 @@
 %  fixture (y=4.30), bottom lead goes BELOW PSU (y=2.80).
 % PSU box (LEFT)
 \draw[cGray!75!black, line width=0.30pt]
-  (9.85, 3.50) rectangle (10.40, 4.00);
+  (9.85, 3.75) rectangle (10.40, 4.25);
 % v8.7 critique iter 3: "V" → "V_active" — disambiguates from Column D SMU
 % "V" label (different instrument: SMU = source-meter, here PSU = pulsed
 % bias source for mechanical-actuation protocol).
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (10.125, 3.80) {$V_{\mathrm{active}}$};
+  at (10.125, 4.05) {$V_{\mathrm{active}}$};
 % Pulse trace on PSU display
 % v8.7 critique C003 v2 fix: width 0.40 → 0.60pt for clearer print-scale visibility.
 \draw[cGray!75!black, line width=0.60pt]
-  (9.92, 3.60) -- (10.02, 3.60) -- (10.02, 3.72)
-              -- (10.15, 3.72) -- (10.15, 3.60) -- (10.35, 3.60);
-% Neutral fixture (RIGHT 2/3 of zone, enlarged for readability)
-% Neutral clip block at top (Conrad 2016 mount-spacer stipple convention)
-\fill[cGray!50!white] (12.25, 4.10) rectangle (12.65, 4.20);
-\draw[cGray!75!black, line width=0.30pt]
-  (12.25, 4.10) rectangle (12.65, 4.20);
-% Mount-spacer stipple pattern above clip (Conrad 2016 convention — small triangles
-% indicating fixed support)
-\foreach \sx in {12.30, 12.40, 12.50, 12.60} {
-  \draw[cGray!60!black, line width=0.18pt]
-    ({\sx-0.025}, 4.20) -- (\sx, 4.25) -- ({\sx+0.025}, 4.20);
-}
-% Neutral polymer (straight, pale — "before trapping baseline")
-% v8.7 critique C006 fix: opacity 0.6 → 0.75 so apparatus polymer is
-% perceptible as a distinct object that Maxwell arrow acts upon. Still pale
-% relative to result-zone saturated cAmber!22→!42 gradient.
-\fill[cAmber!18, opacity=0.75]
-  (12.40, 4.10) rectangle (12.50, 2.90);
-\draw[cAmber!70!black, line width=0.32pt, opacity=0.75]
-  (12.40, 4.10) rectangle (12.50, 2.90);
-% Neutral electrode (Conrad 2016 cross-section style: cross-hatched)
-% v8.7 critique iter 3: x-aligned with result-zone electrode (x=13.55..13.80)
-% so reader perceives apparatus + result as "same setup, before vs after"
-% rather than two different fixtures.
-\fill[cGray!35!white] (13.55, 2.90) rectangle (13.80, 4.05);
-\draw[cGray!75!black, line width=0.30pt]
-  (13.55, 2.90) rectangle (13.80, 4.05);
-% Cross-hatch pattern (45° + 135° per Conrad convention)
-\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
-  \draw[cGray!60!black, line width=0.15pt] (13.55, \hy) -- (13.67, {\hy+0.10});
-}
-\foreach \hy in {2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95} {
-  \draw[cGray!60!black, line width=0.15pt] (13.67, \hy) -- (13.80, {\hy+0.10});
-}
-% Lead from PSU top to clip (ABOVE fixture top, no polymer crossing)
+  (9.92, 3.85) -- (10.02, 3.85) -- (10.02, 3.97)
+              -- (10.15, 3.97) -- (10.15, 3.85) -- (10.35, 3.85);
+% iter 18 (user-flagged structural repetition fix): TOP CLIP + MOUNT STIPPLE +
+% TOP POLYMER (straight neutral cantilever) REMOVED. Cantilever was drawn
+% TWICE (top straight + bottom bent) — user direction: top = equipment only,
+% bottom = cantilever. Clip + mount + polymer relocated visual narrative to
+% bottom zone (which keeps full apparatus: clip + bent cantilever + Coulomb).
+% iter 19: TOP electrode + cross-hatch REMOVED per user direction
+% — PSU source equipment now connects directly DOWN to the bottom cantilever's
+% electrode (the only electrode in the panel). Maxwell stress is induced at
+% the bottom electrode acting on the cantilever (see Maxwell baseline arrow
+% relocated to bottom zone below). Cleaner narrative: top = source, bottom =
+% cantilever + electrode + both forces.
+% iter 18: TOP lead (PSU→clip) REMOVED — clip was removed in structural
+% repetition cleanup. PSU now connects only via BOTTOM lead to electrode.
+% PSU other terminal is implicit (ground/external, not drawn) for schematic
+% simplicity.
+% Lead from PSU bottom to BOTTOM electrode top — iter 19: rerouted from
+% (top-electrode-bottom) to (bottom-electrode-top). User direction: PSU
+% drives the cantilever's electrode directly, inducing Maxwell stress at
+% the bottom apparatus. Lead traverses inter-zone empty space at y=2.85
+% then drops down to bottom electrode top edge (13.55, 2.60).
 \draw[cGray!75!black, line width=0.28pt]
-  (10.40, 3.90) -- (10.70, 3.90) -- (10.70, 4.30)
-              -- (12.45, 4.30) -- (12.45, 4.20);
-% Lead from PSU bottom to electrode (BELOW PSU, no polymer crossing)
-% v8.7 iter 3: electrode left edge shifted 13.40 → 13.55, lead end updated.
-\draw[cGray!75!black, line width=0.28pt]
-  (10.40, 3.60) -- (10.70, 3.60) -- (10.70, 2.80)
-              -- (13.55, 2.80) -- (13.55, 2.90);
-% "−" polarity indicator near electrode
-\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!85!black]
-  at (13.35, 2.78) {$-$};
+  (10.40, 3.85) -- (10.70, 3.85) -- (10.70, 2.85)
+              -- (13.55, 2.85) -- (13.55, 2.60);
+% "−" polarity label REMOVED (was associated with removed top electrode).
 
-% F-3 Maxwell baseline arrow (light pink dashed, polymer → electrode)
-% v8.6 §8.5 amendment: Maxwell ALLOWED in apparatus zone (baseline cue).
-% At mid-polymer height (y=3.50): "force on polymer toward electrode."
-% v8.7 critique iter 2: opacity 0.75 + cRed!40 was too faint; bumped to
-% cRed!55 solid (no opacity) + line width 0.45pt for clearer baseline cue.
-% Still secondary vs result-zone Coulomb (cRed!80 0.7pt solid bold).
-% v8.7 iter 3: Maxwell arrow end shifted to align with new electrode left edge (13.55)
-\draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
-      line width=0.45pt]
-  (12.55, 3.50) -- (13.50, 3.50);
-% v8.7 critique iter 1: 2-line label stack → 1-line inline "F_Maxwell (baseline)"
-% v8.7 critique C009 fix: anchor flipped south → north so label sits BELOW arrow
-% line (y=3.50) at y=3.45, freeing the polymer-electrode gap for the arrow itself.
-\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=north] at (12.90, 3.45) {$F_{\mathrm{Maxwell}}$ (baseline)};
-% v8.7 critique iter 1: REMOVED duplicate "air gap" label in apparatus zone
-% (kept only the result-zone version to avoid redundant labeling).
+% F-3 Maxwell baseline arrow + label — iter 18 REMOVED. Original arrow
+% required a polymer to "act on"; with top polymer removed in structural
+% repetition fix, the arrow had no source. Maxwell vs Coulomb contrast is
+% now implicit: top equipment generates field, bottom shows Coulomb result.
 
 % F-4 result zone clip + mount
 % v8.7 critique iter 4: clip x-aligned with apparatus-zone clip (12.25..12.65)
@@ -998,10 +1021,10 @@
   \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
         minimum size=1.4mm, line width=0.35pt] at (\cx,\cy) {};
 }
-\draw[cRed!55!black, line width=0.30pt] (12.48, 2.00) -- (12.65, 2.00);
-\node[labelMute, anchor=west, fill=white, inner sep=1pt,
+\draw[cRed!55!black, line width=0.30pt] (12.48, 2.00) -- (12.75, 2.00);
+\node[labelMute, anchor=west, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
-  at (12.65, 2.00) {$q_{tr}$};
+  at (12.75, 2.00) {$q_{tr}$};
 
 % F-7 Coulomb repulsion arrow + 2-line label
 % v8.7 iter 4: arrow base shifted with polymer (was at 11.30, now at 12.00).
@@ -1014,27 +1037,40 @@
 
 % F-8 result zone electrode + ground + air gap
 \shade[left color=cGray!75!black, right color=cGray!40!black]
-  (13.55, 0.30) rectangle (13.80, 2.50);
+  (13.55, 0.40) rectangle (13.80, 2.60);
 \draw[cGray!85!black, line width=0.50pt]
-  (13.55, 0.30) rectangle (13.80, 2.50);
+  (13.55, 0.40) rectangle (13.80, 2.60);
 \draw[white, opacity=0.50, line width=0.35pt]
-  (13.555, 0.35) -- (13.555, 2.45);
-\foreach \ey in {0.60, 1.00, 1.40, 1.80, 2.20} {
+  (13.555, 0.45) -- (13.555, 2.55);
+\foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
   \draw[cGray!75!black, line width=0.28pt]
     (13.80, \ey) -- (13.95, {\ey+0.08});
 }
 \draw[cGray!70!black, fill=cGray!50!black, line width=0.35pt]
-  (13.57, 0.25) -- (13.78, 0.25) -- (13.675, 0.12) -- cycle;
-\draw[cGray!70!black, line width=0.28pt] (13.61, 0.10) -- (13.74, 0.10);
-\draw[cGray!70!black, line width=0.28pt] (13.64, 0.06) -- (13.71, 0.06);
-\node[labelMute, anchor=south, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!85!black] at (13.675, 2.55) {electrode};
+  (13.57, 0.35) -- (13.78, 0.35) -- (13.675, 0.22) -- cycle;
+\draw[cGray!70!black, line width=0.28pt] (13.61, 0.20) -- (13.74, 0.20);
+\draw[cGray!70!black, line width=0.28pt] (13.64, 0.16) -- (13.71, 0.16);
+% "electrode" label — iter 19: moved from (13.675, 2.65) anchor=south
+% (was conflicting with new PSU lead path at y=2.65..2.85) to right of
+% electrode at (13.95, 1.50) anchor=west.
+\node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (13.95, 1.50) {electrode};
+% F-3 (relocated) Maxwell baseline arrow — iter 19: added to bottom zone
+% acting on bent cantilever toward electrode. Dashed, light (cRed!55), 0.45pt
+% — smaller tier vs Coulomb (cRed!80, 0.7pt). User direction: Maxwell stress
+% induced at electrode by PSU is BASELINE, Coulomb (from q_tr) is dominant
+% repulsive force that bends polymer away — Coulomb wins visually.
+\draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
+      line width=0.45pt]
+  (12.20, 1.80) -- (13.50, 1.80);
+\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
+      anchor=north] at (12.85, 1.75) {$F_{\mathrm{Maxwell}}$ (baseline)};
 % v8.7 iter 4: air gap dimension shifted left edge to match new polymer tip
 \draw[<->, cGray!55!black, line width=0.30pt]
   (11.90, 0.55) -- (13.55, 0.55);
-\node[labelMute, anchor=center, fill=cAmber!8, inner sep=1pt,
+\node[labelMute, anchor=north, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (12.725, 0.55) {air gap};
+  at (12.725, 0.50) {air gap};
 
 % ============================================================
 % v8.6 ROW 2 END — legacy 4-panel D/E/F/G content removed in v8.6 restructure.
