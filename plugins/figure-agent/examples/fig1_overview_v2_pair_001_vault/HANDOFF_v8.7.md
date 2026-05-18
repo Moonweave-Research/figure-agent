@@ -205,4 +205,3 @@ uv run python scripts/run_export.py fig1_overview_v2_pair_001_vault --skip-criti
 - Column F PSU pulse trace barely visible at standard print scale — could be enhanced
 
 EOF
-
