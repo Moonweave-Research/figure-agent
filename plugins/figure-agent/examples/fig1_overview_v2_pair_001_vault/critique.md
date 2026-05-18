@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.2
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-18T14:34:41Z
+generated_at: 2026-05-18T14:56:48Z
 generator: critique_brief.py
 generator_version: sha256:42cce984a0aad70de274b9793a5df30941621394667675476a7b4e2047757ba5
 rubric_version: figure-agent.critique-rubric.v1.2
-critique_input_hash: sha256:24a73743084d556f0067914379f48eb80974abdf7660c390fc1e9a8871d0c660
+critique_input_hash: sha256:0a2280e822638da0bff37c843debec48551210c70b49517af3e340d85fc4919c
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -212,4 +212,4 @@ findings: []
 
 # Vision Critique - fig1_overview_v2_pair_001_vault
 
-The rendered figure is visually coherent and the row-2 evidence branches read as three independent probes rather than a causal chain. After fixing briefing heading parsing, the critique brief now includes the intended figure identity and plot-vs-schematic balance from `briefing.md` sections 1 and 3. Under that contract, no patchable visual finding remains in this dogfood critique. The remaining gate is not a critique finding; it is the separate tracked-golden export and acceptance workflow.
+The rendered figure is visually coherent and the row-2 evidence branches read as three independent probes rather than a causal chain. After fixing briefing heading parsing, the critique brief now includes the intended figure identity and plot-vs-schematic balance from `briefing.md` sections 1 and 3. The later acceptance-gate pass moved the Panel A `inverse vulcanization` label left to clear the S8 lower-left vertex, closing the remaining collision-budget defect without changing the figure story. Under that contract, no patchable visual finding remains in this dogfood critique. The remaining gate is not a critique finding; it is the separate tracked-golden export and acceptance workflow.

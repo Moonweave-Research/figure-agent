@@ -72,4 +72,61 @@ notes: |
   Per-panel reference_image: D/E/F adopted per HANDOFF v8.7. Row 1 (A/B/C)
   references are gaps tracked in reference/audit_table.md — figure-research
   recommended before deep iteration on Panel C (HERO, highest priority).
+golden_contract:
+  required_labels:
+    - "Sulfur-rich polymer"
+    - "poly(S-r-DIB) linear copolymer"
+    - "Sulfur content"
+    - "localized traps"
+    - "real space"
+    - "energy diagram"
+    - "poly(S-r-DIB) thin film"
+    - "convergent evidence"
+    - "three independent probes"
+    - "kinetic"
+    - "ISPD"
+    - "mechanical"
+    - "MIM stack"
+    - "polymer film"
+    - "SMU"
+    - "HV"
+    - "Probe"
+    - "Vs meter"
+    - "Vactive"
+    - "I(t)"
+    - "deep-rich"
+    - "shallow-rich"
+    - "Debye"
+    - "g(Et)"
+    - "Coulomb"
+    - "repulsion"
+    - "FMaxwell"
+    - "electrode"
+    - "air gap"
+    - "qtr"
+  source_inventory:
+    panel_letters:
+      pattern: '\\node\[panelLetter\b'
+      min: 6
+    inter_panel_arrows:
+      pattern: '\\draw\[interArrow\]'
+      min: 2
+    row2_spokes:
+      pattern: '\(branchRoot\) --'
+      min: 3
+    shallow_trap_site_loop:
+      pattern: '\\foreach \\site in \{siteS1, siteS2\}'
+      min: 1
+    deep_trap_site_loop:
+      pattern: '\\foreach \\site in \{siteD1, siteD2\}'
+      min: 1
+    energy_trap_lines:
+      pattern: '\\foreach \\tY in'
+      min: 2
+    surface_charge_markers:
+      pattern: '\\foreach \\cx in \{6\.40'
+      min: 1
+    cantilever_charge_markers:
+      pattern: '\\foreach \\cx/\\cy in \{12\.25'
+      min: 1
 accepted: false

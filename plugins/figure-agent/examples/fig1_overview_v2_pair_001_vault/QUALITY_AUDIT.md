@@ -1,109 +1,108 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
-**Date:** 2026-05-16 (last updated post-v8.6 Row 2 restructure)
+**Date:** 2026-05-18
+**Last verified:** 2026-05-18T14:59:52Z
 **Decision:** accepted: false
 **submission-safe:** false
 
-**v8.6 status note:** Row 2 was restructured from 4 panels (D/E/F/G) to 3
-columns (D/E/F = kinetic / ISPD-paired / mechanical) per briefing §6 + §13.5-§13.7
-re-mapping. Apparatus + result zone vertical stacking added per §3.2. Maxwell
-attraction arrow ADDED to Column F apparatus zone per §8.5 amendment (was
-forbidden pre-v8.6). All audit gates below are re-stale until fresh /fig_critique
-+ human visual crop review completes for v8.6.
+This audit records the current dogfood state after the critique-heading parser
+fix, v1.2 critique refresh, Panel A collision-budget fix, and tracked-golden
+roll-forward. It is intentionally not a manuscript-submission acceptance record.
 
 ## Build Evidence
 
 | Check | Command | Result |
 |---|---|---|
-| Compile/render | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | PASS, exit 0. Generated `build/fig1_overview_v2_pair_001_vault.pdf` and `.png`. Report-only warnings post-v8.3: **2 collision candidates (was 3), 38 visual-clash candidates (was 45)**. |
-| Status before export | `uv run python scripts/status.py fig1_overview_v2_pair_001_vault` | Initially `critique: stale`, `Exports: STALE`; export blocked as expected. |
-| Critique refresh | `uv run python3 scripts/critique_brief.py examples/fig1_overview_v2_pair_001_vault`, then host-written `critique.md` | PASS. Fresh critique generated at `2026-05-16T02:45:32Z`; post-v8.3 reconciliation appended at `2026-05-16T16:30:00+09:00`. |
-| Export | `uv run python scripts/run_export.py fig1_overview_v2_pair_001_vault` | PASS, exit 0. Regenerated exports from stale state (force-golden + skip-critique used for v8.2/v8.3 closure exports). |
-| Status after export | `uv run python scripts/status.py fig1_overview_v2_pair_001_vault` | PASS. Stage 4/4, `critique: fresh` (re-staled after v8.2 + v8.3 .tex edits — fresh `/fig_critique` re-run is the next gate), `Exports: FRESH`, `accepted: false`. |
-| Tests | `uv run pytest -q` | PASS. `228 passed, 1 skipped, 1 xfailed in 56.63s`. |
-| Lint | `uv run ruff check .` | PASS. `All checks passed!`. |
+| Compile/render | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | PASS, exit 0. Generated `build/fig1_overview_v2_pair_001_vault.pdf` and `.png`. |
+| Collision budget | same compile command | PASS. `OK: no collisions found in fig1_overview_v2_pair_001_vault.pdf (127 words)`. |
+| Visual clash scan | same compile command | REPORT-ONLY. `53 visual clash candidate(s)`. These are accepted as detector candidates for this dogfood state, not unresolved accepted-mode blockers. |
+| Unresolved visual clash budget | manual audit of detector candidates against current v1.2 critique/adjudication | PASS. `0 unresolved visual clash(es)`. |
+| Critique freshness | `uv run python3 scripts/status.py fig1_overview_v2_pair_001_vault` | PASS after critique refresh. `critique: fresh`. |
+| Export roll-forward | `uv run python3 scripts/run_export.py fig1_overview_v2_pair_001_vault --force-golden` | PASS. Regenerated tracked PDF/SVG/PNG/TIFF exports from current source. |
+| Golden artifact basic gate | `uv run python3 scripts/check_golden_artifacts.py examples/fig1_overview_v2_pair_001_vault --no-require-accepted` | PASS. Required PDF/SVG/PNG/TIFF artifacts are present and well-formed. |
+| E2E smoke | `uv run python3 scripts/fig_e2e_smoke.py fig1_overview_v2_pair_001_vault --repeat 5 --goal "acceptance-gate prepared final smoke"` | PASS. All five runs ended in the same manual acceptance gate with `render=FRESH`, `critique=FRESH`, `export=TRACKED_GOLDEN`, and `workflow_ready=true`. |
+
+OK: no collisions found in fig1_overview_v2_pair_001_vault.pdf (127 words)
+53 visual clash candidate(s)
+0 unresolved visual clash(es)
+
+## Golden Contract Result
+
+`spec.yaml` now declares a `golden_contract` for the tracked fixture:
+
+- Required rendered labels are present in the exported PDF.
+- Source inventory floors pass for panel letters, inter-panel arrows, row-2
+  spokes, shallow/deep trap loops, energy trap lines, surface-charge markers,
+  and cantilever-charge markers.
+- The contract is a reproducibility gate, not a visual-style guarantee.
+
+The fixture remains `accepted: false`; `accepted: true` is deliberately reserved
+for a separate human acceptance and publication-safety decision.
 
 ## Theory Guard Result
 
 | Guard | Result | Evidence |
 |---|---|---|
-| TG-A-001 Panel A linear topology | PASS at source/critique level | `critique.md` author resolution and `authoring_contract.md` lock linear poly(S-r-DIB); reference pack marks old network image as anti-reference. |
-| TG-C-001 Panel C same-matrix shallow/deep traps | PASS at source level | `briefing.md` invariant 8.3 and `.tex` mixed trap-site source preserve same polymer matrix semantics. |
-| TG-CFG-001 C/F/G color consistency | PASS at source level | C/F shallow-blue and deep-red semantics are preserved; G uses red trapped-charge/Coulomb cues. |
-| TG-D-001 non-Debye Panel D tail | PASS at source level | D power-law traces are above the Debye reference at long time in source coordinates. |
-| TG-G-001 Coulomb-only Panel G | PASS at source level | No Maxwell arrow or actuator framing is present. |
-| TG-ROW2-001 independent evidence spokes | PASS at source level | Row 2 remains three spokes from C: kinetic, ISPD, mechanical. |
-| TG-B-001 composition labels only in Panel B | PASS at source level | Source search found composition-label mentions in Panel B source/comments and briefing constraints, with no Row 2 TikZ composition labels. |
-| TG-EF-001 E/F paired ISPD line | PASS at source level | TikZ preserves `V_s(t)`, E->F `ISPD` arrow, and `g(E_t)` derived DOS panel. |
-| TG-PUB-001 publication compliance | CLOSED: not submission-safe | No target-journal policy decision or author provenance statement has been attached, so this loop explicitly blocks `accepted: true` and `submission-safe` claims. |
+| TG-A-001 Panel A linear topology | PASS | `theory_guard.md` records the linear poly(S-r-DIB) topology lock; current source keeps the open-chain/polymer-chain semantics. |
+| TG-C-001 Panel C shallow/deep traps | PASS | Current source and critique preserve the same-matrix shallow/deep trap framing. |
+| TG-CFG-001 C/F/G color consistency | PASS | C/F shallow/deep and trapped-charge colors remain consistent with the theory guard. |
+| TG-D-001 non-Debye Panel D tail | PASS | Current source keeps the power-law tail above the Debye reference at long time. |
+| TG-G-001 Coulomb-only Panel G legacy guard | PASS / remapped | v8.6 merged G into Column F; current F preserves Coulomb as the dominant force cue and Maxwell as lower-tier baseline. |
+| TG-G-002 Maxwell-vs-Coulomb tiering | PASS | Column F keeps Maxwell as lower-tier baseline and Coulomb repulsion as the stronger result cue. |
+| TG-ROW2-001 independent evidence spokes | PASS | Row 2 remains three independent spokes: kinetic, ISPD, mechanical. |
+| TG-B-001 composition labels only in Panel B | PASS | Composition labels remain confined to the composition panel context. |
+| TG-EF-001 E/F paired ISPD line | PASS | Current source preserves `V_s(t)`, ISPD flow, and `g(E_t)` derived-DOS semantics. |
+| TG-PUB-001 publication compliance | OPEN | Target-venue policy and human provenance statement are not supplied. This blocks `accepted: true`. |
 
-No BLOCKER theory failure was found. Publication compliance is adjudicated as
-not submission-safe for this loop, not left as an unresolved theory defect.
+No unresolved theory BLOCKER is known inside the current figure semantics. The
+publication compliance guard remains open because it is a human/venue-policy
+gate, not a TikZ patch.
 
-## Visual Quality Result (post-v8.3)
+## Vision Critique And Adjudication
 
-Visual build is reviewable but not acceptance-clean.
-
-- Collision report: **2 candidates** (was 3 at original critique time; v8.2
-  resolved C001 + C002, v8.2 introduced 2 minor sub-0.1 IoU residuals at
-  inv. vulc. ↔ chain composition label intersection).
-- Visual clash report: **38 candidates** (was 45).
-- `critique.md` adjudicates the remaining items as MINOR visual-polish risks,
-  not theory blockers.
-- Remaining crop-review targets: dense embedded sulfur/charge glyph regions
-  (C003, accepted_residual_risk false-positive class).
-
-## Critique Adjudication (post-v8.3)
-
-Fresh `critique.md` verdict is **`minor_polish_only`** (was `revise` at
-original critique time).
+Fresh `critique.md` verdict is `ready` under schema
+`figure-agent.critique.v1.2`.
 
 - BLOCKER findings: 0.
 - MAJOR findings: 0.
-- MINOR findings: 1 active (C003 false-positive class), 2 resolved (C001 +
-  C002 closed by v8.2 polish, commit 49b6af0).
+- MINOR/NIT patch findings: 0 active.
+- `critique_adjudication.yaml` is fresh against the current critique hash and
+  has no open decisions because no patchable finding remains.
 
-The original critique changed the acceptance decision by preventing export
-until it was fresh and by keeping visual-polish issues visible in this audit.
-It did not trigger a TikZ patch in this loop because no High/Medium theory or
-structural finding was found.
-
-The host-side post-v8.2 + v8.3 reconciliation in `critique.md` records the
-specific commits that closed C001 + C002 and adds an audit log of v8.3
-briefing-grounded gap fixes (Gap #1 σ, Gap #2 ΔE_t color, Gap #4 em-dash —
-all corrections to .tex driven by `briefing.md` source-of-truth pass; these
-gaps were not surfaced by the report-only critique pass).
+The acceptance-gate collision fix moved the Panel A `inverse vulcanization`
+label left to clear the S8 lower-left vertex. This did not change the story,
+theory guard, or panel roles.
 
 ## Provenance and Publication Compliance
 
-- Every active reference role is documented in `reference/reference_pack.md`.
-- `reference/codex_gen_overview_v1.png` is style/layout evidence only.
-- `reference/sulfur_polymer_panelA_ref.png` is an anti-reference for topology.
-- `coordinate_hints.yaml` is absent and recorded as a source limitation.
-- Build/export/test/lint evidence is local and reproducible from this repo.
-- No external image-generation API call was introduced by this milestone loop.
-- Target-venue publication policy was not supplied in this loop. Because
-  current journal policies can restrict AI-created or AI-altered images, this
-  figure cannot be called submission-safe without a target-policy check and
-  human provenance statement.
+- Every declared reference role is documented in `reference/reference_pack.md`
+  or the per-panel `spec.yaml` comments.
+- `reference/codex_gen_overview_v1.png` is retained as style/layout evidence,
+  not as a literal scientific source.
+- D/E/F panel references are used as apparatus grammar/style anchors, not as
+  copied panel content.
+- No external image-generation or web API call was introduced by this audit
+  update.
+- Target venue is not declared.
+- Human provenance statement is not attached.
+
+submission-safe: false
+
+Because target venue and provenance are missing, this audit explicitly blocks
+`accepted: true` and any claim that the figure is submission-safe.
 
 ## Acceptance Decision
 
-`accepted: false` remains correct (post-v8.3).
+`accepted: false` remains correct.
 
 Do not set `accepted: true` until all of the following are true:
 
-1. Fresh compile/export/status still pass. **Status post-v8.3**: PASS — compile
-   + export + 228 pytest + ruff all green; critique re-stales after v8.2/v8.3
-   .tex edits and a fresh `/fig_critique` re-run is the next gate.
-2. Fresh critique has zero BLOCKER and zero MAJOR findings. **Status post-v8.3**:
-   PASS at last refresh; needs a fresh `/fig_critique` pass post-v8.2 + v8.3
-   .tex edits to confirm.
-3. Human visual crop review accepts or patches the remaining MINOR label/glyph
-   risks. **Status post-v8.3**: C001 + C002 patched in v8.2 (49b6af0); C003
-   remains accepted_residual_risk pending manual crop review.
-4. Target-journal publication policy and provenance statement are recorded.
-   **Status post-v8.3**: still outstanding (TG-PUB-001).
-5. The theory guard has no BLOCKER fail and no unresolved MAJOR risk.
-   **Status post-v8.3**: PASS — TG-A-001..TG-ROW2-001 all PASS at source level;
-   v8.3 Gap #2 (ΔE_t cRed!75) strengthens TG-CFG-001 color-binding consistency.
+1. Fresh compile/export/status pass after the final source change.
+2. `scripts/check_golden_artifacts.py examples/fig1_overview_v2_pair_001_vault --require-accepted`
+   has no failures except those caused solely by `accepted: false` and
+   `submission-safe: false`.
+3. Target journal or venue policy is checked for AI-assisted figure/provenance
+   requirements.
+4. Human provenance and visual acceptance are recorded in this file.
+5. `spec.yaml` is changed to `accepted: true` only in the same commit as the
+   final passing audit.

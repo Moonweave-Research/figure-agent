@@ -1,4 +1,4 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:edd783730a462c3525580fa3d21b5a5d54b927e2e5f6c44210ec9b502d326e79
+source_critique_hash: sha256:175a1ef13dbcb8fa42a17d7bb9f3c408c5e58d84d37ae8a099f8a5b1ee9a8cbb
 decisions: []
