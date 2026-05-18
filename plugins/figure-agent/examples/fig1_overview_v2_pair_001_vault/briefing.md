@@ -671,8 +671,8 @@ require a §17 amendment.
 - **E-4** V_s stretched-exp decay curve (cRed!70 0.70pt, smooth bezier 7-9 waypoints). β≈0.8 shape preserved; cartoon illustrative values per Q11. Scaled to fit V_s sub-zone bbox.
 - **E-5** internal ISPD raw→derived inter-arrow (Stealth, 0.35pt cGray!60) connecting V_s sub-zone bottom-right to g(E_t) sub-zone top-left + 'ISPD' label italic 6pt cGray!75 inline. Replaces pre-v8.6 horizontal E→F inter-arrow.
 - **E-6** g(E_t) sub-zone axis arrows Stealth-tipped (cGray!65 0.40pt). Origin around `(4.95, 0.40)`. Tip labels `$g(E_t)$` top-left + `$E_t$` right.
-- **E-7** shallow Gaussian (cBlue!85 border + cBlue!25 fill, 0.70pt). σ≈0.085 per §13.3 (v8.3 spec). Peak position LEFT side of g(E_t) sub-zone.
-- **E-8** deep Gaussian (cRed!85 border + cRed!25 fill, 0.70pt). σ≈0.18, peak 1.86× shallow height per §5 Q4. Peak position RIGHT side of g(E_t) sub-zone.
+- **E-7** shallow Gaussian (cBlue!85 border + cBlue!35 fill, 0.70pt). σ≈0.085 per §13.3 (v8.3 spec). Peak position LEFT side of g(E_t) sub-zone. v8.7 Column-E iter1 (2026-05-18): fill !25 → !35 (+40% saturation).
+- **E-8** deep Gaussian (cRed!85 border + cRed!35 fill, 0.70pt). σ≈0.18, peak 1.86× shallow height per §5 Q4. Peak position RIGHT side of g(E_t) sub-zone. v8.7 Column-E iter1 (2026-05-18): peak y 1.30 → 1.24 to bring ratio from over-shoot 2.0× to 1.87× ≈ Q4 spec; fill !25 → !35 (+40% saturation).
 - **E-9** τ_d double-headed dashed arrow between Gaussian peaks (cRed!70 0.45pt) + `$\tau_d$` label.
 - **E-10** 'Shallow' / 'Deep' base labels at Gaussian feet (cBlue!75 / cRed!75 italic). Closes color binding per §13.9 Binding-1.
 

@@ -767,15 +767,16 @@
   at (8.50, 0.30) {$E_t$};
 
 % E-7 shallow Gaussian + E-8 deep Gaussian (1.86× height per §5 Q4)
-% v8.7 critique iter 4: shallow peak 0.95→0.85 (offset above base 0.45),
-% deep peak 1.20→1.30 (offset above base 0.90); ratio 0.90/0.45 = 2.0×
-% (closer to briefing §5 Q4 spec 1.86× than previous 0.75/0.55 ≈ 1.36×).
-\draw[cBlue!85!black, fill=cBlue!25, line width=0.70pt]
+% Column E iter 1 (2026-05-18) — T5 BLOCKER fix: deep peak y 1.30 → 1.24
+% (height 0.90 → 0.84) so ratio 0.84/0.45 = 1.87× ≈ Q4 spec 1.86× (was
+% 2.0× over-shoot from v8.7 critique iter 4). Fill saturation cBlue!25
+% → !35 + cRed!25 → !35 (+40% perceptible polish per A+B mode lesson).
+\draw[cBlue!85!black, fill=cBlue!35, line width=0.70pt]
   (5.30, 0.40) .. controls (5.55, 0.40) and (5.55, 0.85) .. (5.70, 0.85)
               .. controls (5.85, 0.85) and (5.85, 0.40) .. (6.10, 0.40);
-\draw[cRed!85!black, fill=cRed!25, line width=0.70pt]
-  (6.20, 0.40) .. controls (6.40, 0.40) and (6.40, 1.30) .. (6.80, 1.30)
-              .. controls (7.20, 1.30) and (7.20, 0.40) .. (7.40, 0.40);
+\draw[cRed!85!black, fill=cRed!35, line width=0.70pt]
+  (6.20, 0.40) .. controls (6.40, 0.40) and (6.40, 1.24) .. (6.80, 1.24)
+              .. controls (7.20, 1.24) and (7.20, 0.40) .. (7.40, 0.40);
 
 % E-9 τ_d annotation between peaks (shifted above new deep peak height 1.30)
 \draw[<->, cRed!70!black, dashed, line width=0.45pt]

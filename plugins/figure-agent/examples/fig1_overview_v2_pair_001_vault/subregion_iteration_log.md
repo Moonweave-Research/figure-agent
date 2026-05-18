@@ -121,6 +121,24 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 1/10 — 2026-05-18 — T5 BLOCKER fix + Gaussian saturation
+
+- **Scope**: E-7 + E-8 (Gaussian peaks)
+- **Rationale**: Full Panel E audit identified T5 violation — Gaussian peak ratio = 2.0× (current) ≠ 1.86× (Q4 LOCKED spec). Over-shoot from v8.7 critique iter 4 over-correction (was 1.36× → set 2.0× target instead of 1.86×). Fix priority: T-axis spec drift takes precedence over polish.
+- **Reference source**: He NatComm 2024 Fig 1c (audit_table.md E-ref01 PRIMARY full-spectrum) — but this iter is briefing-spec-sync, not reference-driven.
+- **Patches**:
+  - E-8 deep peak y `1.30 → 1.24` (3 control points): height above base 0.90 → 0.84; new ratio 0.84/0.45 = **1.87× ≈ 1.86× Q4 spec**
+  - E-7 fill `cBlue!25 → cBlue!35` (+40% saturation)
+  - E-8 fill `cRed!25 → cRed!35` (+40% saturation)
+- **Briefing edits (Type A)**: §13.6 E-7/E-8 spec sync — fill saturation + deep peak rationale documented
+- **4-axis scores**: T ✅ (was ❌ T5) | S ✅ | L ✅ | A ✅
+- **Score delta**: T ❌→✅ (BLOCKER T5 cleared, Q4 LOCKED satisfied) | A improved (saturation polish, partial user M2 response)
+- **Notes**:
+  - Audit insight: deep peak height was over-corrected at iter 4 to 2.0× instead of intended 1.86×. Lesson — *always verify* spec values after correction iters.
+  - User M2 "AI feel" partial address — saturation bump. Full M2 resolution needs broader palette polish (multiple iters).
+  - User M1 (apparatus icon-level) + M3 (V_s curve dynamism) NOT addressed this iter — roadmap continues.
+- **Visibility gate**: intended yes (deep clearly taller than shallow with new ratio; fills more visible) | anomaly none
+
 ### Column D iter 1/10 — 2026-05-18 — D-7 Debye reference (FIRST reference-grounded iter)
 
 - **Scope**: D-7 (Debye dashed reference curve)
