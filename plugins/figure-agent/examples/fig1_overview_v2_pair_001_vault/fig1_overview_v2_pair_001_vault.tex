@@ -676,23 +676,31 @@
 %   Meter   → measurement display cue (waveform inside)
 %
 % ----- Sample stack (2-layer): polymer film on substrate -----
+% Column-E iter 7 (2026-05-18): substrate thickness 0.11→0.22cm (2×) per
+% ref01 Checa NatComm 2023 SS-KPFM convention — real thin film on substrate
+% shows substrate visually dominant. Polymer film stays at 0.07cm thin.
+% Ground bars + polymer-film label repositioned for new substrate bottom y=3.23.
+%
 % Polymer film (TOP, thin) — the layer under measurement
 \fill[cAmber!28] (6.30, 3.45) rectangle (7.85, 3.52);
 \draw[cAmber!70!black, line width=0.30pt]
   (6.30, 3.45) rectangle (7.85, 3.52);
-% Substrate (BOTTOM, thicker) — conductive base for ISPD charge-decay path
-\fill[cGray!18] (6.30, 3.34) rectangle (7.85, 3.45);
+% Substrate (BOTTOM, thick) — conductive base for ISPD charge-decay path.
+% Iter 7: bottom edge 3.34 → 3.23 (substrate height 0.11 → 0.22cm).
+\fill[cGray!18] (6.30, 3.23) rectangle (7.85, 3.45);
 \draw[cGray!75!black, line width=0.30pt]
-  (6.30, 3.34) rectangle (7.85, 3.45);
-% Substrate diagonal hatching (sparse — material identification cue)
+  (6.30, 3.23) rectangle (7.85, 3.45);
+% Substrate diagonal hatching (10 lines, extended length for thicker substrate)
 \foreach \hx in {6.40, 6.55, 6.70, 6.85, 7.00, 7.15, 7.30, 7.45, 7.60, 7.75} {
-  \draw[cGray!55!black, line width=0.14pt] (\hx, 3.45) -- ({\hx-0.07}, 3.34);
+  \draw[cGray!55!black, line width=0.14pt] (\hx, 3.45) -- ({\hx-0.14}, 3.23);
 }
-% Sample ground attaches to substrate (right edge, mid-substrate y)
-\draw[cGray!75!black, line width=0.28pt] (7.85, 3.39) -- (7.95, 3.39) -- (7.95, 3.26);
-\draw[cGray!75!black, line width=0.32pt] (7.88, 3.26) -- (8.02, 3.26);
-\draw[cGray!75!black, line width=0.28pt] (7.90, 3.23) -- (8.00, 3.23);
-\draw[cGray!75!black, line width=0.25pt] (7.92, 3.20) -- (7.98, 3.20);
+% Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
+% Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
+% clear thicker substrate bottom (y=3.23).
+\draw[cGray!75!black, line width=0.28pt] (7.85, 3.34) -- (7.95, 3.34) -- (7.95, 3.18);
+\draw[cGray!75!black, line width=0.32pt] (7.88, 3.18) -- (8.02, 3.18);
+\draw[cGray!75!black, line width=0.28pt] (7.90, 3.15) -- (8.00, 3.15);
+\draw[cGray!75!black, line width=0.25pt] (7.92, 3.12) -- (7.98, 3.12);
 
 % ----- Corona needle (LEFT, charging step) -----
 % Vertical electrode stem with sharp triangular tip + discharge spark cue
@@ -720,10 +728,12 @@
 %
 % Vertical shaft (support to upper instrument lead — y=3.66 disk top to y=3.95 lead)
 \draw[cGray!75!black, line width=0.32pt] (7.40, 3.95) -- (7.40, 3.66);
-% Disk electrode at shaft bottom — flat horizontal conductive face,
-% slightly wider than shaft for disk identity
-\fill[cGray!50!white] (7.25, 3.62) rectangle (7.55, 3.66);
-\draw[cGray!75!black, line width=0.32pt] (7.25, 3.62) rectangle (7.55, 3.66);
+% Disk electrode at shaft bottom — flat horizontal conductive face.
+% Iter 7: fill cGray!50!white → cAmber!18 (subtle metallic tint suggesting
+% conductive Au/Pt electrode rather than generic gray); outline 0.32→0.40pt
+% (slightly bolder for material identity per ref01 metallic instrument conv).
+\fill[cAmber!18] (7.25, 3.62) rectangle (7.55, 3.66);
+\draw[cGray!85!black, line width=0.40pt] (7.25, 3.62) rectangle (7.55, 3.66);
 % Vertical vibration arrow ON shaft — Kelvin-probe modulation signature
 % (vertical oscillation along shaft axis is the defining FM-CPD feature)
 \draw[<->, cGray!65!black, line width=0.32pt] (7.40, 3.76) -- (7.40, 3.88);
@@ -755,12 +765,12 @@
 \draw[cGray!75!black, line width=0.22pt]
   (7.40, 3.95) -- (8.20, 3.95);
 
-% Polymer film identification label — below substrate (post-iter2 fix:
-% initial repositioning to above polymer collided with corona/probe area;
-% reverted to below-substrate pattern). Ground at y=3.20..3.26 (x=7.85..)
-% does not horizontally overlap with label at x=7.075.
+% Polymer film identification label — below substrate (post-iter7 fix:
+% substrate bottom y=3.23 (was 3.34), label moved from y=3.32→3.20 to stay
+% below thicker substrate. Ground bars now at y=3.12..3.18 (x=7.88..8.02)
+% do not horizontally overlap with label at x=6.73..7.43.
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=north] at (7.075, 3.32) {polymer film};
+      anchor=north] at (7.075, 3.20) {polymer film};
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical

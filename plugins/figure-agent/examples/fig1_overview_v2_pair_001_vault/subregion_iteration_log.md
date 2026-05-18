@@ -121,6 +121,31 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 7/10 — 2026-05-18 — sample stack realistic ratio + disk metallic tint (ref01 grounded)
+
+- **Scope**: E-2 sample stack thickness + disk electrode material identity (atomic — interlocked via ground positioning + label collision)
+- **Rationale**: Figure-research starting set (4 selected) read; ref01 Checa NatComm 2023 SS-KPFM shows real thin-film-on-substrate cross-section with substrate visually dominant (vs our equal-thickness layers). User "진짜 일러스트하게" + "Claude 그린 느낌" reframed as need for material-realistic representation, not generic schematic.
+- **Reference source**: ref01 Checa NatComm 2023 (apparatus cross-section convention); ref09 NatMater2025 (line-weight hierarchy reference)
+- **Patches**:
+  - **Patch A — Substrate thickness 0.11→0.22cm (2×)**:
+    - Substrate fill rect: (6.30, 3.34)→(7.85, 3.45) becomes (6.30, 3.23)→(7.85, 3.45)
+    - Substrate hatching: 10 lines proportionally extended; slope (\hx, 3.45)→(\hx-0.07, 3.34) becomes (\hx, 3.45)→(\hx-0.14, 3.23) (maintain 1:1.57 slope angle)
+    - Ground tap point: (7.85, 3.39)→(7.85, 3.34) (new substrate mid)
+    - Ground bars: y=3.20/3.23/3.26 → y=3.12/3.15/3.18 (shifted down to clear thicker substrate)
+    - Polymer film label position: (7.075, 3.32) anchor=north → (7.075, 3.20) anchor=north (clears new substrate bottom)
+  - **Patch B — Disk electrode material identity**:
+    - Fill: cGray!50!white → **cAmber!18** (subtle metallic Au/Pt tint)
+    - Outline: cGray!75!black 0.32pt → **cGray!85!black 0.40pt** (bolder material identity)
+- **Briefing edits (Type B, user-authorized)**: §13.6 E-2 sample-stack spec updated (substrate 0.22cm, ref01 convention cite); disk electrode spec updated (cAmber!18 metallic tint, 0.40pt outline)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 6)**: T unchanged (ISPD invariants intact — physical layout of polymer-on-substrate now MORE accurate) | S unchanged (geometry adjustments, structure intact) | L improved (sample now reads as real research sample, not schematic slab) | A significantly improved (substantial M1 "icon→paper-grade" progress via ref01 grounding)
+- **Notes**:
+  - This is the most user-impactful aesthetic iter since iter 2 — sample stack now visually communicates "thin film deposited on substrate" which is the actual physical reality of ISPD measurement samples.
+  - cAmber!18 disk fill subtle enough not to overpower (less than polymer's cAmber!28).
+  - 10 hatch lines at extended length read as denser substrate — visual identity stronger.
+  - Closure NOT declared per user.
+- **Visibility gate**: intended yes (substrate clearly dominant; polymer thin layer on top; disk has metallic tint) | anomaly none (ground bars + label repositioned cleanly without collision)
+
 ### Column E iter 6/10 — 2026-05-18 — Kelvin probe disk-on-shaft + V_s decay icon (Tech illustrator)
 
 - **Scope**: E-2 apparatus zone — Kelvin probe + V_s meter (2 elements, atomic since they're connected via lead)
