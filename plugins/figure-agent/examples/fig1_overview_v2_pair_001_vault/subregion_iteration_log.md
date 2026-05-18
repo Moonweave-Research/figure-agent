@@ -121,6 +121,26 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 2/10 — 2026-05-18 — apparatus comprehensive detail upgrade (M1 paper-grade)
+
+- **Scope**: E-2 apparatus zone (atomic — 4 elements interlocked: corona, sample stack, Kelvin probe, V_s meter)
+- **Rationale**: User M1 complaint "장비 그림 자체가 아직 논문 그림 수준이 아니야, 최고 퀄리티로 그려봐". Audit identified each apparatus element was icon-level (single shape) instead of communicating ISPD measurement mechanism. Structural commitment iter — 4 elements upgraded atomically since they form coherent apparatus narrative.
+- **Reference source**: He NatComm 2024 Fig 1c (audit_table E-ref01 full-spectrum); plus *mechanism-driven* design — each element must visually convey the physical principle it implements.
+- **Patches (atomic, structural commitment)**:
+  - **Corona needle**: V-tip (2 lines) → **sharp filled triangular tip** + **3 spark/discharge indicators** (cRed!55!black 0.30pt) radiating from tip — communicates corona-discharge mechanism (ion emission)
+  - **Sample**: single slab (y=3.40..3.50) → **2-layer stack**: polymer film (cAmber!28, y=3.45..3.52, thin) + **substrate** (cGray!18 with diagonal hatching, y=3.34..3.45, thicker). Ground re-attached to substrate (physically accurate ISPD charge-decay path)
+  - **Kelvin probe**: 0.30×0.10cm → **0.40×0.13cm** + **2 vibration arcs above** (Kelvin-modulation signature, FM-CPD defining feature)
+  - **V_s meter**: empty outlined box → **box with small sinusoidal waveform inside** (cGray!60 0.22pt, ~3 cycles) — measurement-display cue
+  - **Polymer film label**: repositioned (initial attempt above polymer at y=3.54 collided with corona/probe area; reverted to below substrate at y=3.32 anchor=north matching pre-iter2 below-slab pattern)
+- **Briefing edits (Type B, user-authorized "최고 퀄리티")**: §13.6 E-2 sub-section fully rewritten — sample stack 2-layer spec, corona spark cue, probe vibration arcs, meter waveform display, all documented with coordinates + rationale
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 1)**: T unchanged (ISPD invariants intact; physical accuracy *improved* via grounded substrate) | S unchanged (sub-region count maintained, internal structure updated) | L improved (apparatus now communicates *measurement mechanism* not just shape — reader can infer ISPD operating principle from drawing) | A significantly improved (M1 "icon-level" complaint substantial address)
+- **Notes**:
+  - Structural commitment iter exception to ≤2 sub-region rule — 4 apparatus elements interlocked (changing one affects others' geometry); documented per Panel B iter1 precedent.
+  - User M1 substantial address; M2 (palette/AI feel) partial address via iter1 saturation; M3 (V_s curve dynamism) still pending → roadmap iter 3
+  - Closure intentionally NOT declared per user "클로져는 맘대로 하지마"
+- **Visibility gate**: intended yes (each apparatus element now reads as paper-grade scientific drawing with mechanism cue) | anomaly resolved (polymer-film-label collision fixed mid-iter)
+
 ### Column E iter 1/10 — 2026-05-18 — T5 BLOCKER fix + Gaussian saturation
 
 - **Scope**: E-7 + E-8 (Gaussian peaks)
