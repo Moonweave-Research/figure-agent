@@ -19,6 +19,7 @@ __pycache__/
 # To commit a finished export, use `git add -f examples/<name>/exports/<file>`.
 /output/
 /tmp/
+.scratch/
 **/build/*
 **/exports/*
 **/previews/*

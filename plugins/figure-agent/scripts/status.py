@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
+from quality_manifest import critique_hash_freshness, critique_manifest_paths
 from reference_contract import (
     compute_reference_input_failures,
     declared_figure_reference_path,
@@ -96,6 +97,7 @@ RENDER_FRESH = "FRESH"
 ACCEPTANCE_ACCEPTED = "ACCEPTED"
 ACCEPTANCE_NOT_ACCEPTED = "NOT_ACCEPTED"
 ACCEPTANCE_NOT_DECLARED = "NOT_DECLARED"
+_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_",)
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -136,16 +138,7 @@ def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
 
 
 def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
-    paths = list(_source_paths(example_dir, name, spec))
-    ref_path = declared_figure_reference_path(example_dir, spec)
-    if ref_path is not None:
-        paths.append(ref_path)
-    hints_path = example_dir / "coordinate_hints.yaml"
-    if hints_path.exists():
-        paths.append(hints_path)
-    paths.extend(participating_panel_reference_paths(example_dir, spec))
-    paths.extend(_authoring_context_paths(example_dir))
-    return tuple(dict.fromkeys(paths))
+    return critique_manifest_paths(example_dir, name, spec, style_lock_path=STYLE_LOCK_PATH)
 
 
 def compute_critique_state(example_dir: Path, name: str, spec: dict | None = None) -> str:
@@ -167,6 +160,15 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     critique_path = example_dir / "critique.md"
     if not critique_path.is_file():
         return CRITIQUE_MISSING
+    hash_freshness = critique_hash_freshness(
+        critique_path,
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
+    )
+    if hash_freshness is not None:
+        return CRITIQUE_FRESH if hash_freshness else CRITIQUE_STALE
     if _is_stale(_critique_source_paths(example_dir, name, spec), (critique_path,)):
         return CRITIQUE_STALE
     return CRITIQUE_FRESH
@@ -271,9 +273,14 @@ def _workflow_ready(
     render_state: str,
     critique_state: str,
 ) -> bool:
+    blocking_notes = [
+        note
+        for note in notes
+        if not note.startswith(_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES)
+    ]
     return (
         stage == 4
-        and not notes
+        and not blocking_notes
         and render_state == RENDER_FRESH
         and exports_substate in {EXPORT_FRESH, EXPORT_TRACKED_GOLDEN}
         and not _critique_needs_action(critique_state)
@@ -444,7 +451,9 @@ def infer_stage(example_dir: Path) -> dict:
             notes.append("stale_export")
         # Priority: stale_export / partial_export stay above done, but their
         # remediation must include critique when run_export.py will enforce it.
-        if critique_state == CRITIQUE_REFERENCE_MISSING:
+        if "missing_briefing" in notes:
+            next_template = _NEXT_MISSING_BRIEFING
+        elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
         elif is_stale and _critique_needs_action(critique_state):
             if exports_substate == EXPORT_TRACKED_GOLDEN:
@@ -491,7 +500,9 @@ def infer_stage(example_dir: Path) -> dict:
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        if critique_state == CRITIQUE_REFERENCE_MISSING:
+        if "missing_briefing" in notes:
+            next_template = _NEXT_MISSING_BRIEFING
+        elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
         elif _critique_needs_action(critique_state):
             next_template = _NEXT_3_CRITIQUE_REQUIRED
@@ -518,11 +529,14 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
+        next_template = (
+            _NEXT_MISSING_BRIEFING if "missing_briefing" in notes else _NEXT_2
+        )
         return {
             "stage": 2,
             "name": name,
             "checks": checks,
-            "next": _NEXT_2.replace("<name>", name),
+            "next": next_template.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,

@@ -6,6 +6,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import run_export  # noqa: E402
+import status as status_mod  # noqa: E402
+from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _make_reference_fixture(tmp_path: Path) -> Path:
@@ -52,6 +56,33 @@ def _make_missing_reference_fixture(tmp_path: Path) -> Path:
     (fixture / "broken_ref_fig.tex").write_text("% tikz", encoding="utf-8")
     (fixture / "build" / "broken_ref_fig.pdf").write_bytes(b"%PDF")
     return repo
+
+
+def _critique_input_hash(fixture: Path, name: str) -> str:
+    spec = status_mod.parse_spec((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    return input_manifest_hash(
+        status_mod._critique_source_paths(fixture, name, spec),
+        base_dir=REPO_ROOT,
+    )
+
+
+def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -> None:
+    (fixture / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        f"fixture: {name}\n"
+        "generated_at: 2026-05-17T00:00:00Z\n"
+        "generator: critique_brief.py\n"
+        f"generator_version: {file_sha256(REPO_ROOT / 'scripts' / 'critique_brief.py')}\n"
+        "rubric_version: figure-agent.critique-rubric.v1\n"
+        f"critique_input_hash: {critique_input_hash}\n"
+        "verdict: ready\n"
+        "panels: []\n"
+        "findings: []\n"
+        "---\n"
+        "# Vision Critique\n",
+        encoding="utf-8",
+    )
 
 
 def test_run_export_blocks_reference_fixture_without_critique(
@@ -135,4 +166,57 @@ def test_run_export_skip_critique_allows_regenerate(
     captured = capsys.readouterr()
     assert rc == 0
     assert regenerated == [(repo / "examples" / "ref_fig", "ref_fig")]
+    assert "regenerated exports/ for ref_fig" in captured.out
+
+
+def test_run_export_blocks_hash_stale_critique(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    fixture = repo / "examples" / "ref_fig"
+    old_hash = _critique_input_hash(fixture, "ref_fig")
+    _write_hashed_critique(fixture, "ref_fig", old_hash)
+    (fixture / "briefing.md").write_text("changed briefing", encoding="utf-8")
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "critique_stale" in captured.err
+    assert "--skip-critique" in captured.err
+
+
+def test_run_export_skip_critique_allows_hash_stale_regenerate(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    fixture = repo / "examples" / "ref_fig"
+    old_hash = _critique_input_hash(fixture, "ref_fig")
+    _write_hashed_critique(fixture, "ref_fig", old_hash)
+    (fixture / "briefing.md").write_text("changed briefing", encoding="utf-8")
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert regenerated == [(fixture, "ref_fig")]
     assert "regenerated exports/ for ref_fig" in captured.out

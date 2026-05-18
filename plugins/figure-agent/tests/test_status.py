@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
+from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +47,44 @@ def _make_spec(
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
+
+
+def _critique_input_hash(fig_dir: Path, name: str) -> str:
+    spec = status_mod.parse_spec((fig_dir / "spec.yaml").read_text(encoding="utf-8"))
+    return input_manifest_hash(
+        status_mod._critique_source_paths(fig_dir, name, spec),
+        base_dir=REPO_ROOT,
+    )
+
+
+def _write_hashed_critique(
+    fig_dir: Path,
+    name: str,
+    *,
+    critique_input_hash: str | None = None,
+    generator_version: str | None = None,
+    rubric_version: str = "figure-agent.critique-rubric.v1",
+) -> None:
+    generator_version = generator_version or file_sha256(
+        REPO_ROOT / "scripts" / "critique_brief.py"
+    )
+    critique_input_hash = critique_input_hash or _critique_input_hash(fig_dir, name)
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        f"fixture: {name}\n"
+        "generated_at: 2026-05-17T00:00:00Z\n"
+        "generator: critique_brief.py\n"
+        f"generator_version: {generator_version}\n"
+        f"rubric_version: {rubric_version}\n"
+        f"critique_input_hash: {critique_input_hash}\n"
+        "verdict: ready\n"
+        "panels: []\n"
+        "findings: []\n"
+        "---\n"
+        "# Vision Critique\n",
+        encoding="utf-8",
+    )
 
 
 def test_stage_0_missing_directory(tmp_path: Path) -> None:
@@ -92,6 +131,19 @@ def test_stage_2_tex_no_build_pdf(tmp_path: Path) -> None:
     assert result["stage"] == 2
 
 
+def test_stage_2_missing_briefing_does_not_suggest_compile(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "legacy_authored"
+    fig_dir.mkdir()
+    (fig_dir / "legacy_authored.tex").write_text("% tikz", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 2
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "/fig_compile" not in result["next"]
+
+
 def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -111,6 +163,28 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+
+
+def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "legacy_built"
+    fig_dir.mkdir()
+    tex = fig_dir / "legacy_built.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    build_pdf = build_dir / "legacy_built.pdf"
+    build_pdf.write_bytes(b"%PDF")
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    os.utime(tex, (old_time, old_time))
+    os.utime(build_pdf, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "/fig_export" not in result["next"]
 
 
 def test_stage_3_panel_reference_missing_critique_redirects_to_fig_critique(
@@ -194,6 +268,145 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
     assert "critique_stale" in result["notes"]
     assert "/fig_critique" in result["next"]
     assert "before /fig_export" in result["next"]
+
+
+def test_hash_metadata_keeps_matching_critique_fresh_even_when_mtime_is_old(
+    tmp_path: Path,
+) -> None:
+    name = "hash_fresh_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name)
+
+    old_time = time.time() - 100
+    source_time = time.time() - 10
+    os.utime(fig_dir / "critique.md", (old_time, old_time))
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (source_time, source_time))
+    os.utime(build_dir / f"{name}.pdf", (source_time, source_time))
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
+
+
+def test_hash_metadata_marks_critique_stale_when_input_content_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_changed_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    old_hash = _critique_input_hash(fig_dir, name)
+    _write_hashed_critique(fig_dir, name, critique_input_hash=old_hash)
+    (fig_dir / "briefing.md").write_text("changed briefing", encoding="utf-8")
+
+    source_time = time.time() - 100
+    critique_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (source_time, source_time))
+    os.utime(fig_dir / "critique.md", (critique_time, critique_time))
+    os.utime(build_dir / f"{name}.pdf", (critique_time, critique_time))
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_marks_critique_stale_when_rubric_version_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_rubric_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version="figure-agent.critique-rubric.v0",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_marks_critique_stale_when_generator_version_changes(
+    tmp_path: Path,
+) -> None:
+    name = "hash_generator_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        generator_version="sha256:00000000000000000000000000000000",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_malformed_critique_frontmatter_falls_back_to_mtime(
+    tmp_path: Path,
+) -> None:
+    name = "malformed_frontmatter_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        "generator_version: sha256:bad\n"
+        "rubric_version: figure-agent.critique-rubric.v1\n"
+        "critique_input_hash: [unterminated\n"
+        "---\n"
+        "# Vision Critique\n",
+        encoding="utf-8",
+    )
+
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        reference / "golden.png",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(fig_dir / "critique.md", (fresh_time, fresh_time))
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
 
 
 @pytest.mark.parametrize(
@@ -425,6 +638,27 @@ def test_stage_4_all_four_exports_no_note(tmp_path: Path) -> None:
     result = infer_stage(fig_dir)
     assert result["stage"] == 4
     assert "partial_export" not in result["notes"]
+
+
+def test_stage_4_missing_briefing_does_not_report_done(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "legacy_exported"
+    fig_dir.mkdir()
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    (exports_dir / "legacy_exported.pdf").write_bytes(b"%PDF")
+    (exports_dir / "legacy_exported.svg").write_bytes(b"<svg/>")
+    (exports_dir / "legacy_exported.tif").write_bytes(b"TIFF")
+    (exports_dir / "legacy_exported.png").write_bytes(b"\x89PNG")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "done" not in result["next"]
 
 
 def test_stage_2_briefing_newer_than_pdf(tmp_path: Path) -> None:
@@ -730,6 +964,81 @@ def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:
     result = infer_stage(fig_dir)
 
     assert "coordinate_hints_stale" in result["notes"]
+
+
+@pytest.mark.parametrize(
+    ("hint_case", "expected_note"),
+    [
+        ("missing", "coordinate_hints_missing"),
+        ("outdated", "coordinate_hints_outdated"),
+        ("parse_error", "coordinate_hints_parse_error"),
+        ("stale", "coordinate_hints_stale"),
+    ],
+)
+def test_coordinate_hint_notes_do_not_block_workflow_ready(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    hint_case: str,
+    expected_note: str,
+) -> None:
+    from reference_extract import EXTRACTION_VERSION
+
+    name = f"hint_note_ready_{hint_case}"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png", accepted=False)
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    ref_file = reference / "golden.png"
+    ref_file.write_bytes(b"\x89PNG")
+    hints = fig_dir / "coordinate_hints.yaml"
+    if hint_case == "outdated":
+        hints.write_text(
+            "metadata: {extraction_version: '0.1'}\ntext_labels: []\n",
+            encoding="utf-8",
+        )
+    elif hint_case == "parse_error":
+        hints.write_text("this: is: not: valid: yaml:\n  - because\n", encoding="utf-8")
+    elif hint_case == "stale":
+        hints.write_text(
+            f"metadata:\n  extraction_version: '{EXTRACTION_VERSION}'\ntext_labels: []\n",
+            encoding="utf-8",
+        )
+    _make_fresh_exports(fig_dir, name)
+    _write_hashed_critique(fig_dir, name)
+
+    old = time.time() - 100
+    new = time.time() - 5
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        *(path for path in (hints,) if path.exists()),
+    ):
+        os.utime(path, (old, old))
+    for path in (
+        ref_file,
+        fig_dir / "build" / f"{name}.pdf",
+        fig_dir / "exports" / f"{name}.pdf",
+        fig_dir / "exports" / f"{name}.svg",
+        fig_dir / "exports" / f"{name}.tif",
+        fig_dir / "exports" / f"{name}.png",
+        fig_dir / "critique.md",
+    ):
+        os.utime(path, (new, new))
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["render_state"] == "FRESH"
+    assert result["critique_state"] == "FRESH"
+    assert result["export_state"] == "FRESH"
+    assert expected_note in result["notes"]
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert "accepted: true" in result["next"]
 
 
 def test_coordinate_hints_parse_error_when_yaml_malformed(tmp_path: Path) -> None:

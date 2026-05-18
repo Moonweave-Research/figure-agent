@@ -185,7 +185,7 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Briefing edits (Type A)**: §13.5 D-7 weight/tone references — pending (low priority, polish-tier; defer to next iter or batch with D-7b curve labels)
 - **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
 - **Score delta (vs prior post-Nature-compliance state)**: T unchanged (§8.4 LOCKED preserved — Debye still below power-law endpoints at right) | S unchanged (same coords) | L improved (reference role clearer) | A improved (reference comparison anchor confidently visible)
-- **Reference-grounded workflow data point #1**: 
+- **Reference-grounded workflow data point #1**:
   - Patch citation is clear: reference path + transferable aspect named
   - Audit-table do-not-transfer respected (visual weight only, no content)
   - Workflow indistinguishable from reference-free except for Step 2 reference scan step + commit-message reference path
@@ -227,7 +227,7 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **spec.yaml**: Panel B caption updated to clarify 3 representative + paper-full 5
 - **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
 - **Score delta (vs prior state with 4 chains)**: T improved (briefing-narrative coherence: actual 5-sample paper set now properly documented) | S improved (cleaner geometry, 0.90cm spacing) | L improved (3 representative = clearer concept-figure narrative, less crowded) | A improved (breathing room, less visual density)
-- **Notes**: 
+- **Notes**:
   - This is a **structural commitment iter** (Type B briefing edit) — touches 3 sub-regions atomically because they're interlocked (chain count, label count, divider count must match). Deviates from template ≤2 sub-region rule per "structural commitment" exception, documented.
   - Cross-panel sample identity intentionally abstract for concept figure (Panel C/D/E/F do not specify "this is sample X" — concept conveys "trap exists across composition range").
   - 5-sample full data deferred to Fig 2~ (quantitative panels).
