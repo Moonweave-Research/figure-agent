@@ -966,6 +966,81 @@ def test_coordinate_hints_stale_when_reference_newer(tmp_path: Path) -> None:
     assert "coordinate_hints_stale" in result["notes"]
 
 
+@pytest.mark.parametrize(
+    ("hint_case", "expected_note"),
+    [
+        ("missing", "coordinate_hints_missing"),
+        ("outdated", "coordinate_hints_outdated"),
+        ("parse_error", "coordinate_hints_parse_error"),
+        ("stale", "coordinate_hints_stale"),
+    ],
+)
+def test_coordinate_hint_notes_do_not_block_workflow_ready(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    hint_case: str,
+    expected_note: str,
+) -> None:
+    from reference_extract import EXTRACTION_VERSION
+
+    name = f"hint_note_ready_{hint_case}"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png", accepted=False)
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    ref_file = reference / "golden.png"
+    ref_file.write_bytes(b"\x89PNG")
+    hints = fig_dir / "coordinate_hints.yaml"
+    if hint_case == "outdated":
+        hints.write_text(
+            "metadata: {extraction_version: '0.1'}\ntext_labels: []\n",
+            encoding="utf-8",
+        )
+    elif hint_case == "parse_error":
+        hints.write_text("this: is: not: valid: yaml:\n  - because\n", encoding="utf-8")
+    elif hint_case == "stale":
+        hints.write_text(
+            f"metadata:\n  extraction_version: '{EXTRACTION_VERSION}'\ntext_labels: []\n",
+            encoding="utf-8",
+        )
+    _make_fresh_exports(fig_dir, name)
+    _write_hashed_critique(fig_dir, name)
+
+    old = time.time() - 100
+    new = time.time() - 5
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        *(path for path in (hints,) if path.exists()),
+    ):
+        os.utime(path, (old, old))
+    for path in (
+        ref_file,
+        fig_dir / "build" / f"{name}.pdf",
+        fig_dir / "exports" / f"{name}.pdf",
+        fig_dir / "exports" / f"{name}.svg",
+        fig_dir / "exports" / f"{name}.tif",
+        fig_dir / "exports" / f"{name}.png",
+        fig_dir / "critique.md",
+    ):
+        os.utime(path, (new, new))
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = status_mod.infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["render_state"] == "FRESH"
+    assert result["critique_state"] == "FRESH"
+    assert result["export_state"] == "FRESH"
+    assert expected_note in result["notes"]
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is False
+    assert "accepted: true" in result["next"]
+
+
 def test_coordinate_hints_parse_error_when_yaml_malformed(tmp_path: Path) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()

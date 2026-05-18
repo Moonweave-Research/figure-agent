@@ -97,6 +97,7 @@ RENDER_FRESH = "FRESH"
 ACCEPTANCE_ACCEPTED = "ACCEPTED"
 ACCEPTANCE_NOT_ACCEPTED = "NOT_ACCEPTED"
 ACCEPTANCE_NOT_DECLARED = "NOT_DECLARED"
+_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_",)
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -272,9 +273,14 @@ def _workflow_ready(
     render_state: str,
     critique_state: str,
 ) -> bool:
+    blocking_notes = [
+        note
+        for note in notes
+        if not note.startswith(_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES)
+    ]
     return (
         stage == 4
-        and not notes
+        and not blocking_notes
         and render_state == RENDER_FRESH
         and exports_substate in {EXPORT_FRESH, EXPORT_TRACKED_GOLDEN}
         and not _critique_needs_action(critique_state)
