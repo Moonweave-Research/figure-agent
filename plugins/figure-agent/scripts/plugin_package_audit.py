@@ -13,8 +13,10 @@ import sys
 from pathlib import Path
 
 JUNK_DIR_NAMES = {
+    ".claude",
     ".mypy_cache",
     ".pytest_cache",
+    ".ralph",
     ".ruff_cache",
     ".venv",
     "__pycache__",
@@ -24,17 +26,33 @@ JUNK_DIR_NAMES = {
     "figure_agent.egg-info",
 }
 JUNK_FILE_NAMES = {".DS_Store"}
+EMPTY_WRAPPER_DIR_NAMES = {"plugins"}
+
+
+def _is_empty_dir(path: Path) -> bool:
+    return path.is_dir() and not any(path.iterdir())
+
+
+def _is_plugin_root(root: Path) -> bool:
+    return (root / ".claude-plugin" / "plugin.json").is_file()
 
 
 def find_packaging_junk(root: Path) -> list[Path]:
     """Return generated paths that should not live in a plugin cache package."""
     root = root.resolve()
     junk: list[Path] = []
+    root_is_plugin = _is_plugin_root(root)
     for path in root.rglob("*"):
         if path.name in JUNK_FILE_NAMES:
             junk.append(path)
             continue
         if path.is_dir() and path.name in JUNK_DIR_NAMES:
+            junk.append(path)
+            continue
+        if root_is_plugin and path.parent == root and path.name == "plugins":
+            junk.append(path)
+            continue
+        if path.name in EMPTY_WRAPPER_DIR_NAMES and _is_empty_dir(path):
             junk.append(path)
     return sorted(junk, key=lambda item: (len(item.parts), str(item)))
 

@@ -142,3 +142,44 @@ def test_plugin_package_audit_detects_and_removes_generated_junk(tmp_path: Path)
     assert not (plugin_root / "examples" / "demo" / "build").exists()
     assert (plugin_root / "commands" / "fig_status.md").is_file()
     assert (plugin_root / "scripts" / "status.py").is_file()
+
+
+def test_plugin_package_audit_removes_empty_wrapper_dirs(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "figure-agent"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / "commands").mkdir()
+    (plugin_root / "plugins").mkdir()
+    (plugin_root / "commands" / "fig_status.md").write_text("status", encoding="utf-8")
+
+    junk = find_packaging_junk(plugin_root)
+
+    assert plugin_root / "plugins" in junk
+
+    remove_paths(junk)
+
+    assert not (plugin_root / "plugins").exists()
+    assert (plugin_root / "commands" / "fig_status.md").is_file()
+
+
+def test_plugin_package_audit_removes_plugin_root_worktree_metadata(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "figure-agent"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / "commands").mkdir()
+    (plugin_root / ".ralph").mkdir()
+    (plugin_root / ".claude").mkdir()
+    (plugin_root / "plugins" / "figure-agent" / ".ralph").mkdir(parents=True)
+    (plugin_root / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    (plugin_root / "commands" / "fig_status.md").write_text("status", encoding="utf-8")
+
+    junk = find_packaging_junk(plugin_root)
+
+    assert plugin_root / ".ralph" in junk
+    assert plugin_root / ".claude" in junk
+    assert plugin_root / "plugins" in junk
+
+    remove_paths(junk)
+
+    assert not (plugin_root / ".ralph").exists()
+    assert not (plugin_root / ".claude").exists()
+    assert not (plugin_root / "plugins").exists()
+    assert (plugin_root / "commands" / "fig_status.md").is_file()
