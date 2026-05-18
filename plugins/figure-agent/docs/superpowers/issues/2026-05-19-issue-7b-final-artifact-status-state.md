@@ -1,6 +1,6 @@
 # Issue 7B: Final Artifact Status State
 
-**Status:** open
+**Status:** implemented; pending final verification commit
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build
@@ -37,21 +37,35 @@ default and should behave like no polish opt-in.
 
 ## Acceptance criteria
 
-- [ ] no-polish fixtures report `final_artifact_state: NONE`.
-- [ ] `final_artifact.kind: generated_export` reports generated-export behavior
+- [x] no-polish fixtures report `final_artifact_state: NONE`.
+- [x] `final_artifact.kind: generated_export` reports generated-export behavior
   and does not require a polish manifest.
-- [ ] fixtures with no `spec.yaml.final_artifact` keep current readiness even
+- [x] fixtures with no `spec.yaml.final_artifact` keep current readiness even
   if a draft polish manifest exists.
-- [ ] missing declared polished SVG reports `MISSING`.
-- [ ] malformed manifest reports `INVALID`.
-- [ ] stale manifest reports `STALE`.
-- [ ] valid hash-fresh manifest with `semantic_change_declared: true` or
+- [x] missing declared polished SVG reports `MISSING`.
+- [x] malformed manifest reports `INVALID`.
+- [x] stale manifest reports `STALE`.
+- [x] valid hash-fresh manifest with `semantic_change_declared: true` or
   `backport_required: true` reports `BLOCKED`.
-- [ ] matching manifest and polished SVG reports `FRESH`.
-- [ ] existing `workflow_ready`, `golden_ready`, `release_ready`, and
+- [x] matching manifest and polished SVG reports `FRESH`.
+- [x] existing `workflow_ready`, `golden_ready`, `release_ready`, and
   `final_ready` behavior is unchanged unless polished SVG is declared as the
   final artifact.
-- [ ] status output remains read-only.
+- [x] invalid final-artifact config blocks release readiness without blocking
+  workflow readiness.
+- [x] status output remains read-only.
+
+## Implementation
+
+- `scripts/status.py` now reports:
+  - `final_artifact_state`
+  - `final_artifact_kind`
+  - `final_artifact_path`
+- `/fig_status <name>` output includes a `Final artifact:` line.
+- `final_artifact_*` notes are non-blocking for `workflow_ready`, but polished
+  SVG states other than `FRESH` block `release_ready`/`final_ready` when the
+  fixture opts into `polished_svg`.
+- Tests live in `tests/test_status.py`.
 
 ## Out of scope
 

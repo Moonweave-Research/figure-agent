@@ -15,6 +15,11 @@ from reference_contract import (
     declared_figure_reference_path,
     participating_panel_reference_paths,
 )
+from svg_polish_manifest import (
+    SvgPolishManifestError,
+    load_svg_polish_manifest,
+    svg_polish_manifest_is_stale,
+)
 
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
@@ -97,7 +102,15 @@ RENDER_FRESH = "FRESH"
 ACCEPTANCE_ACCEPTED = "ACCEPTED"
 ACCEPTANCE_NOT_ACCEPTED = "NOT_ACCEPTED"
 ACCEPTANCE_NOT_DECLARED = "NOT_DECLARED"
-_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_",)
+FINAL_ARTIFACT_NONE = "NONE"
+FINAL_ARTIFACT_MISSING = "MISSING"
+FINAL_ARTIFACT_INVALID = "INVALID"
+FINAL_ARTIFACT_STALE = "STALE"
+FINAL_ARTIFACT_BLOCKED = "BLOCKED"
+FINAL_ARTIFACT_FRESH = "FRESH"
+FINAL_ARTIFACT_GENERATED_EXPORT = "generated_export"
+FINAL_ARTIFACT_POLISHED_SVG = "polished_svg"
+_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -291,8 +304,131 @@ def _golden_ready(workflow_ready: bool, accepted: bool | None) -> bool:
     return workflow_ready and accepted is True
 
 
-def _release_ready(golden_ready: bool, exports_substate: str) -> bool:
-    return golden_ready and exports_substate == EXPORT_FRESH
+def _release_ready(golden_ready: bool, exports_substate: str, final_artifact: dict) -> bool:
+    if not golden_ready or exports_substate != EXPORT_FRESH:
+        return False
+    if final_artifact["state"] not in {FINAL_ARTIFACT_NONE, FINAL_ARTIFACT_FRESH}:
+        return False
+    if final_artifact["kind"] == FINAL_ARTIFACT_POLISHED_SVG:
+        return final_artifact["state"] == FINAL_ARTIFACT_FRESH
+    return True
+
+
+def _default_final_artifact(name: str) -> dict:
+    return {
+        "state": FINAL_ARTIFACT_NONE,
+        "kind": FINAL_ARTIFACT_GENERATED_EXPORT,
+        "path": f"exports/{name}.svg",
+        "notes": [],
+    }
+
+
+def _resolve_fixture_relative_path(example_dir: Path, relative: str) -> Path | None:
+    if Path(relative).is_absolute():
+        return None
+    root = example_dir.resolve()
+    resolved = (example_dir / relative).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return None
+    return resolved
+
+
+def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
+    final_artifact = spec.get("final_artifact")
+    if final_artifact is None:
+        return _default_final_artifact(name)
+    if not isinstance(final_artifact, dict):
+        result = _default_final_artifact(name)
+        result["state"] = FINAL_ARTIFACT_INVALID
+        result["notes"] = ["final_artifact_invalid"]
+        return result
+
+    kind = final_artifact.get("kind", FINAL_ARTIFACT_GENERATED_EXPORT)
+    if kind in (None, FINAL_ARTIFACT_GENERATED_EXPORT):
+        return _default_final_artifact(name)
+    if kind != FINAL_ARTIFACT_POLISHED_SVG:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": str(kind),
+            "path": "",
+            "notes": ["final_artifact_invalid"],
+        }
+
+    manifest_rel = final_artifact.get("manifest")
+    if not isinstance(manifest_rel, str) or not manifest_rel.strip():
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": "",
+            "notes": ["final_artifact_invalid"],
+        }
+    manifest_path = _resolve_fixture_relative_path(example_dir, manifest_rel.strip())
+    if manifest_path is None:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel.strip(),
+            "notes": ["final_artifact_invalid"],
+        }
+    try:
+        rel_parts = manifest_path.relative_to(example_dir.resolve()).parts
+    except ValueError:
+        rel_parts = ()
+    if not rel_parts or rel_parts[0] != "polish":
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel.strip(),
+            "notes": ["final_artifact_invalid"],
+        }
+    if not manifest_path.is_file():
+        return {
+            "state": FINAL_ARTIFACT_MISSING,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel.strip(),
+            "notes": ["final_artifact_missing"],
+        }
+
+    try:
+        manifest = load_svg_polish_manifest(manifest_path, example_dir=example_dir)
+        if svg_polish_manifest_is_stale(
+            manifest_path,
+            example_dir=example_dir,
+            style_lock_path=STYLE_LOCK_PATH,
+        ):
+            state = FINAL_ARTIFACT_STALE
+            notes = ["final_artifact_stale"]
+        elif (
+            manifest["polished"]["semantic_change_declared"]
+            or manifest["polished"]["backport_required"]
+        ):
+            state = FINAL_ARTIFACT_BLOCKED
+            notes = ["final_artifact_blocked"]
+        else:
+            state = FINAL_ARTIFACT_FRESH
+            notes = []
+        return {
+            "state": state,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest["polished"]["path"],
+            "notes": notes,
+        }
+    except SvgPolishManifestError as exc:
+        message = str(exc).lower()
+        state = FINAL_ARTIFACT_MISSING if "missing" in message else FINAL_ARTIFACT_INVALID
+        note = (
+            "final_artifact_missing"
+            if state == FINAL_ARTIFACT_MISSING
+            else "final_artifact_invalid"
+        )
+        return {
+            "state": state,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel.strip(),
+            "notes": [note],
+        }
 
 
 def _status_vector(
@@ -302,15 +438,20 @@ def _status_vector(
     exports_substate: str,
     render_state: str,
     critique_state: str,
+    final_artifact: dict | None = None,
 ) -> dict:
+    final_artifact = final_artifact or _default_final_artifact("")
     workflow_ready = _workflow_ready(stage, notes, exports_substate, render_state, critique_state)
     golden_ready = _golden_ready(workflow_ready, accepted)
-    release_ready = _release_ready(golden_ready, exports_substate)
+    release_ready = _release_ready(golden_ready, exports_substate, final_artifact)
     return {
         "render_state": render_state,
         "critique_state": critique_state,
         "export_state": exports_substate,
         "acceptance_state": _acceptance_state(accepted),
+        "final_artifact_state": final_artifact["state"],
+        "final_artifact_kind": final_artifact["kind"],
+        "final_artifact_path": final_artifact["path"],
         "workflow_ready": workflow_ready,
         "golden_ready": golden_ready,
         "release_ready": release_ready,
@@ -388,6 +529,7 @@ def infer_stage(example_dir: Path) -> dict:
                 exports_substate,
                 RENDER_NOT_SCAFFOLDED,
                 CRITIQUE_NOT_REQUIRED,
+                _default_final_artifact(name),
             ),
         }
 
@@ -419,6 +561,8 @@ def infer_stage(example_dir: Path) -> dict:
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
     _append_panel_reference_checks(notes, spec, example_dir)
+    final_artifact = _final_artifact_state(example_dir, name, spec)
+    notes.extend(final_artifact["notes"])
 
     if spec_path.exists() and not briefing_path.exists():
         checks.append(("spec_yaml", "present"))
@@ -432,7 +576,13 @@ def infer_stage(example_dir: Path) -> dict:
             "accepted": accepted,
             "exports_substate": exports_substate,
             **_status_vector(
-                1, notes, accepted, exports_substate, render_state, critique_state
+                1,
+                notes,
+                accepted,
+                exports_substate,
+                render_state,
+                critique_state,
+                final_artifact,
             ),
         }
 
@@ -492,7 +642,13 @@ def infer_stage(example_dir: Path) -> dict:
             "accepted": accepted,
             "exports_substate": exports_substate,
             **_status_vector(
-                4, notes, accepted, exports_substate, render_state, critique_state
+                4,
+                notes,
+                accepted,
+                exports_substate,
+                render_state,
+                critique_state,
+                final_artifact,
             ),
         }
 
@@ -517,7 +673,13 @@ def infer_stage(example_dir: Path) -> dict:
             "accepted": accepted,
             "exports_substate": exports_substate,
             **_status_vector(
-                3, notes, accepted, exports_substate, render_state, critique_state
+                3,
+                notes,
+                accepted,
+                exports_substate,
+                render_state,
+                critique_state,
+                final_artifact,
             ),
         }
 
@@ -541,7 +703,13 @@ def infer_stage(example_dir: Path) -> dict:
             "accepted": accepted,
             "exports_substate": exports_substate,
             **_status_vector(
-                2, notes, accepted, exports_substate, render_state, critique_state
+                2,
+                notes,
+                accepted,
+                exports_substate,
+                render_state,
+                critique_state,
+                final_artifact,
             ),
         }
 
@@ -557,7 +725,13 @@ def infer_stage(example_dir: Path) -> dict:
             "accepted": accepted,
             "exports_substate": exports_substate,
             **_status_vector(
-                1, notes, accepted, exports_substate, render_state, critique_state
+                1,
+                notes,
+                accepted,
+                exports_substate,
+                render_state,
+                critique_state,
+                final_artifact,
             ),
         }
 
@@ -571,7 +745,13 @@ def infer_stage(example_dir: Path) -> dict:
         "accepted": accepted,
         "exports_substate": exports_substate,
         **_status_vector(
-            0, [], accepted, exports_substate, render_state, critique_state
+            0,
+            [],
+            accepted,
+            exports_substate,
+            render_state,
+            critique_state,
+            _default_final_artifact(name),
         ),
     }
 
@@ -589,6 +769,13 @@ def _print_single(result: dict) -> None:
     print(f"  Next: {next_hint}")
     if substate := result.get("exports_substate"):
         print(f"  Exports: {substate}")
+    if result.get("final_artifact_state"):
+        print(
+            "  Final artifact: "
+            f"{result.get('final_artifact_kind', '?')} "
+            f"{result.get('final_artifact_state', '?')} "
+            f"{result.get('final_artifact_path', '?')}"
+        )
     final_ready = str(bool(result.get("final_ready"))).lower()
     print(
         "  States: "

@@ -14,6 +14,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import status as status_mod  # noqa: E402
 from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
+from svg_polish_manifest import (  # noqa: E402
+    final_artifact_source_set_hash,
+    write_svg_polish_manifest,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -575,6 +579,274 @@ def _make_fresh_exports(fig_dir: Path, name: str) -> None:
     (exports_dir / f"{name}.svg").write_bytes(b"<svg/>")
     (exports_dir / f"{name}.tif").write_bytes(b"TIFF")
     (exports_dir / f"{name}.png").write_bytes(b"\x89PNG")
+
+
+def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -> None:
+    name = fig_dir.name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=accepted)
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "critique.md").write_text("# critique\n", encoding="utf-8")
+    _make_fresh_exports(fig_dir, name)
+
+
+def _write_final_artifact_spec(fig_dir: Path, kind: str = "polished_svg") -> None:
+    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
+    (fig_dir / "spec.yaml").write_text(
+        existing
+        + "final_artifact:\n"
+        f"  kind: {kind}\n"
+        "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+
+
+def _write_polish_manifest(
+    fig_dir: Path,
+    *,
+    semantic_change_declared: bool = False,
+    backport_required: bool = False,
+) -> None:
+    name = fig_dir.name
+    polish = fig_dir / "polish"
+    polish.mkdir(exist_ok=True)
+    (polish / f"{name}.polished.svg").write_text(
+        "<svg><text>polished</text></svg>\n",
+        encoding="utf-8",
+    )
+    (polish / "svg_polish_audit.md").write_text("# Audit\n", encoding="utf-8")
+    manifest = {
+        "schema": "figure-agent.svg-polish-manifest.v1",
+        "fixture": name,
+        "base": {
+            "source_set_hash": final_artifact_source_set_hash(
+                fig_dir,
+                name,
+                style_lock_path=status_mod.STYLE_LOCK_PATH,
+            ),
+            "source_tex_hash": file_sha256(fig_dir / f"{name}.tex"),
+            "briefing_hash": file_sha256(fig_dir / "briefing.md"),
+            "spec_hash": file_sha256(fig_dir / "spec.yaml"),
+            "generated_svg_hash": file_sha256(fig_dir / "exports" / f"{name}.svg"),
+            "export_pdf_hash": file_sha256(fig_dir / "exports" / f"{name}.pdf"),
+            "critique_hash": file_sha256(fig_dir / "critique.md"),
+        },
+        "polished": {
+            "path": f"polish/{name}.polished.svg",
+            "polished_svg_hash": file_sha256(polish / f"{name}.polished.svg"),
+            "audit_hash": file_sha256(polish / "svg_polish_audit.md"),
+            "editor": "human",
+            "toolchain": [{"name": "Inkscape", "version": "1.4"}],
+            "edit_classes": ["label_micro_position"],
+            "semantic_change_declared": semantic_change_declared,
+            "backport_required": backport_required,
+        },
+        "provenance": {
+            "reviewer": "author",
+            "reviewed_at": "2026-05-19T00:00:00Z",
+            "notes": "visual polish",
+        },
+    }
+    write_svg_polish_manifest(polish / "svg_polish_manifest.yaml", manifest)
+
+
+def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
+    name = fig_dir.name
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+    ):
+        os.utime(path, (old_time, old_time))
+    os.utime(fig_dir / "build" / f"{name}.pdf", (fresh_time, fresh_time))
+    for path in (fig_dir / "exports").iterdir():
+        os.utime(path, (fresh_time, fresh_time))
+
+
+def test_final_artifact_state_none_without_polish_opt_in(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "plain_final"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "NONE"
+    assert result["final_artifact_kind"] == "generated_export"
+    assert result["final_artifact_path"] == "exports/plain_final.svg"
+    assert result["workflow_ready"] is True
+
+
+def test_final_artifact_generated_export_kind_keeps_current_readiness(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "generated_final"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir, kind="generated_export")
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "NONE"
+    assert result["final_artifact_kind"] == "generated_export"
+    assert result["workflow_ready"] is True
+
+
+def test_stray_polish_manifest_without_opt_in_does_not_change_readiness(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "stray_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact" not in ",".join(result["notes"])
+    assert result["workflow_ready"] is True
+
+
+def test_declared_polished_svg_missing_manifest_reports_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "missing_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "MISSING"
+    assert "final_artifact_missing" in result["notes"]
+    assert result["workflow_ready"] is True
+
+
+def test_declared_polished_svg_malformed_manifest_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "invalid_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    polish = fig_dir / "polish"
+    polish.mkdir()
+    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+
+
+def test_invalid_final_artifact_kind_blocks_release(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "invalid_kind_polish"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir, kind="raster_polish")
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_declared_polished_svg_stale_manifest_reports_stale(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "stale_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    (fig_dir / "briefing.md").write_text("changed briefing", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "STALE"
+    assert "final_artifact_stale" in result["notes"]
+
+
+def test_declared_polished_svg_with_backport_reports_blocked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "blocked_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir, backport_required=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "BLOCKED"
+    assert "final_artifact_blocked" in result["notes"]
+
+
+def test_declared_polished_svg_matching_manifest_reports_fresh(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "fresh_polish"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "FRESH"
+    assert result["final_artifact_kind"] == "polished_svg"
+    assert result["final_artifact_path"] == "polish/fresh_polish.polished.svg"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is True
+    assert result["final_ready"] is True
+
+
+def test_declared_polished_svg_stale_blocks_release_not_workflow(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "release_polish"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    (fig_dir / "polish" / "svg_polish_audit.md").write_text("# Audit changed\n", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "STALE"
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
 
 
 def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
@@ -1614,6 +1886,19 @@ def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
         "export=MISSING acceptance=NOT_DECLARED "
         "workflow_ready=false golden_ready=false release_ready=false final_ready=false"
     ) in captured.out
+
+
+def test_print_single_shows_final_artifact_state(tmp_path: Path, capsys) -> None:
+    fixture = tmp_path / "no_exports_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "Final artifact: generated_export NONE exports/no_exports_fig.svg" in captured.out
 
 
 def test_main_resolves_single_name_under_examples(
