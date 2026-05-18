@@ -712,40 +712,48 @@
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
       anchor=south] at (6.55, 4.02) {Corona};
 
-% ----- Kelvin probe (RIGHT, V_s readout) — enlarged + vibration cue -----
-% Probe head: 0.40×0.13cm (was 0.30×0.10), better visibility at print
-\fill[cGray!35!white] (7.20, 3.60) rectangle (7.60, 3.73);
-\draw[cGray!75!black, line width=0.32pt]
-  (7.20, 3.60) rectangle (7.60, 3.73);
-% Probe support stem
-\draw[cGray!75!black, line width=0.22pt]
-  (7.40, 3.73) -- (7.40, 3.85);
-% Vibration indicator: 2 short arcs above probe — Kelvin-probe modulation
-% signature (frequency-mod measurement). Curves above probe top edge.
-\draw[cGray!65!black, line width=0.25pt]
-  (7.26, 3.78) .. controls (7.32, 3.81) and (7.48, 3.81) .. (7.54, 3.78);
-\draw[cGray!65!black, line width=0.20pt]
-  (7.29, 3.80) .. controls (7.33, 3.82) and (7.47, 3.82) .. (7.51, 3.80);
-% "Probe" label
+% ----- Kelvin probe (RIGHT, V_s readout) — iter 6 disk-on-shaft redesign -----
+% Tech-illustrator audit (2026-05-18): prior block+arcs read as "hot plate +
+% RF wireless" rather than Kelvin probe. Real Kelvin probes = disk electrode
+% on vertical shaft, oscillating VERTICALLY (modulating gap-capacitance for
+% FM-CPD measurement), hovering above sample with explicit non-contact gap.
+%
+% Vertical shaft (support to upper instrument lead — y=3.66 disk top to y=3.95 lead)
+\draw[cGray!75!black, line width=0.32pt] (7.40, 3.95) -- (7.40, 3.66);
+% Disk electrode at shaft bottom — flat horizontal conductive face,
+% slightly wider than shaft for disk identity
+\fill[cGray!50!white] (7.25, 3.62) rectangle (7.55, 3.66);
+\draw[cGray!75!black, line width=0.32pt] (7.25, 3.62) rectangle (7.55, 3.66);
+% Vertical vibration arrow ON shaft — Kelvin-probe modulation signature
+% (vertical oscillation along shaft axis is the defining FM-CPD feature)
+\draw[<->, cGray!65!black, line width=0.32pt] (7.40, 3.76) -- (7.40, 3.88);
+% Air gap indicator (vertical dashed line + d label) between disk bottom
+% (y=3.62) and polymer film top (y=3.52). Gap d communicates non-contact
+% measurement geometry (~100-500 μm in real systems).
+\draw[cGray!55!black, dashed, line width=0.18pt] (7.68, 3.62) -- (7.68, 3.52);
+\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
+      anchor=west] at (7.70, 3.57) {$d$};
+% "Probe" label — positioned to right of vibration arrow area
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=west] at (7.62, 3.67) {Probe};
+      anchor=west] at (7.62, 3.82) {Probe};
 
 % ----- V_s meter box (FAR-RIGHT, electrostatic meter) — display cue added -----
 % Slightly larger meter box for waveform display
 \draw[cGray!75!black, line width=0.30pt]
   (8.20, 3.65) rectangle (9.00, 4.05);
-% Small sinusoidal waveform inside upper meter — measurement-display cue
-% (subtle, ~3 cycles, indicates "time-varying signal readout")
-\draw[cGray!60!black, line width=0.22pt]
-  (8.27, 3.93) .. controls (8.30, 3.97) and (8.34, 3.97) .. (8.37, 3.93)
-              .. controls (8.40, 3.89) and (8.44, 3.89) .. (8.47, 3.93)
-              .. controls (8.50, 3.97) and (8.54, 3.97) .. (8.57, 3.93)
-              .. controls (8.60, 3.89) and (8.64, 3.89) .. (8.67, 3.93);
+% V_s decay icon inside meter — iter 6 replacement of prior sinusoid
+% (Tech illustrator audit: sine cue was WRONG — V_s is slow exponential
+% decay over seconds, not AC signal). Exponential-decay curve communicates
+% "this instrument reads slow potential decay" semantically correct.
+\draw[cGray!60!black, line width=0.28pt]
+  (8.30, 3.98) .. controls (8.38, 3.95) and (8.50, 3.93) .. (8.60, 3.92)
+              .. controls (8.70, 3.92) and (8.80, 3.92) .. (8.88, 3.92);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (8.60, 3.74) {$V_s$ meter};
-% Lead from probe support to meter box LEFT side
+% Lead from probe support to meter box LEFT side — iter 6: y updated to
+% match new shaft top (3.85 → 3.95)
 \draw[cGray!75!black, line width=0.22pt]
-  (7.40, 3.85) -- (8.20, 3.85);
+  (7.40, 3.95) -- (8.20, 3.95);
 
 % Polymer film identification label — below substrate (post-iter2 fix:
 % initial repositioning to above polymer collided with corona/probe area;

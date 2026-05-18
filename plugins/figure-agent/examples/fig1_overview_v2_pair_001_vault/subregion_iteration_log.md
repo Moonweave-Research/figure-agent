@@ -121,6 +121,30 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 6/10 — 2026-05-18 — Kelvin probe disk-on-shaft + V_s decay icon (Tech illustrator)
+
+- **Scope**: E-2 apparatus zone — Kelvin probe + V_s meter (2 elements, atomic since they're connected via lead)
+- **Rationale**: Tech illustrator audit (parallel 4-designer pass) most strongly flagged Kelvin probe identity ("reads as hot plate + RF wireless, not Kelvin probe") and V_s meter sinusoid ("wrong cue — V_s is slow exponential decay, not AC sine"). User: "진짜 일러스트하게 가보자" — proper instrument illustration mode.
+- **Reference source**: Tech illustrator audit + He NatComm 2024 Fig 1c (disk-on-shaft probe convention + electrostatic voltmeter labeling)
+- **Patches**:
+  - **Kelvin probe**: horizontal block (7.20..7.60, 3.60..3.73) + arcs above → **disk-on-shaft**:
+    - Vertical shaft (cGray!75 0.32pt) from y=3.95 to 3.66
+    - Disk electrode at bottom (cGray!50!white fill, 7.25..7.55, 3.62..3.66, flat horizontal conductive face)
+    - **Vertical ↕ vibration arrow ON shaft** (cGray!65 0.32pt, y=3.76..3.88) — Kelvin modulation signature
+    - **Air gap indicator** (dashed vertical line cGray!55 0.18pt at x=7.68 + `d` label at (7.70, 3.57)) between disk bottom (y=3.62) and polymer top (y=3.52) — non-contact geometry
+    - Probe label repositioned (7.62, 3.82)
+  - **V_s meter sinusoid → exponential decay icon**: prior 3-cycle sine wave (Tech illustrator: sine is AC cue, wrong for slow V_s decay over seconds) → smooth bezier decay curve from y=3.98 left to y=3.92 plateau right
+  - **Probe-to-meter lead y**: 3.85 → 3.95 to match new shaft top
+- **Briefing edits (Type B, user-authorized "진짜 일러스트하게")**: §13.6 E-2 Kelvin probe + V_s meter specs fully rewritten (disk-on-shaft, vertical vibration, air gap, decay icon, lead y) with iter6 rationale + Tech illustrator audit cite
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 5)**: T unchanged (ISPD invariants — non-contact geometry, modulated capacitance, slow potential decay — now physically + visually accurate) | S unchanged (sub-region structures intact) | L improved (probe now reads as Kelvin probe; meter reads as electrostatic voltmeter via decay icon) | A significantly improved (instrument identity correct per Tech illustrator audit)
+- **Notes**:
+  - This is the most impactful iter for user M1 "icon-level" complaint. Kelvin probe was the WEAKEST element per Tech illustrator audit.
+  - Air gap `d` indicator now visually conveys non-contact measurement (was implicit before).
+  - V_s meter decay icon ↔ V_s sub-zone curve are now semantically linked (same exponential decay form).
+  - Closure NOT declared per user.
+- **Visibility gate**: intended yes (disk-on-shaft + ↕ vibration + air gap d + decay icon all visible at crop) | anomaly none
+
 ### Column E iter 5/10 — 2026-05-18 — proportion adjust (Option A)
 
 - **Scope**: E-3 (V_s axis) + E-4 (V_s curve waypoints) + E-6 (g(E_t) axis) + E-9 (τ_d caliper position)
