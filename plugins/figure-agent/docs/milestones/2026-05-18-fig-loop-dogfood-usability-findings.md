@@ -170,6 +170,13 @@ The P2 axis-evidence gap is now addressed in `/fig_loop` JSON by adding
 `source`, `evidence_path`, and `evaluation_state` to every axis verdict while
 preserving legacy `state` and `verdict`.
 
+Issue 6C further closes the v1.2 quality-axis ingestion gap: when `critique.md`
+is fresh schema `figure-agent.critique.v1.2`, `/fig_loop` now maps
+`quality_axes` into the existing `story_hierarchy`, `reference_fidelity`, and
+`publication_safety` slots. A stale or missing critique now takes precedence
+over stale adjudication handoff, human gates, and golden roll-forward
+recommendations.
+
 The P2 post-patch closeout checklist is now implemented as `/fig_closeout
 <name>` via `scripts/fig_closeout.py`. It reports compile, critique,
 adjudication, export, and loop-rerun closeout state without mutating the figure

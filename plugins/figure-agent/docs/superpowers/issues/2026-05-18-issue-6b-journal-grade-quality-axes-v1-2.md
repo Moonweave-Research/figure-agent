@@ -1,5 +1,7 @@
 # Issue 6B: Journal-Grade Figure Quality Axes v1.2
 
+**Status:** Completed in commit `3e058dd`.
+
 ## What to build
 
 Extend the critique/loop contract so `figure-agent` audits a figure as a
@@ -37,9 +39,9 @@ overall figure remains weak.
 
 ## Acceptance criteria
 
-- [ ] `/fig_critique` brief requires `quality_axes` in schema
+- [x] `/fig_critique` brief requires `quality_axes` in schema
   `figure-agent.critique.v1.2`.
-- [ ] `quality_axes` includes these required axes:
+- [x] `quality_axes` includes these required axes:
   - `message_storyline`
   - `panel_role_coherence`
   - `subregion_integration`
@@ -50,40 +52,40 @@ overall figure remains weak.
   - `journal_polish`
   - `reference_fidelity`
   - `publication_readiness`
-- [ ] Each axis records `verdict`, `confidence`, `rationale`, `evidence`,
+- [x] Each axis records `verdict`, `confidence`, `rationale`, `evidence`,
   `blocking_items`, and `recommended_action`.
-- [ ] Verdict values are bounded:
+- [x] Verdict values are bounded:
   `pass`, `needs_patch`, `needs_human`, `block`, `not_applicable`.
-- [ ] Confidence values are bounded:
+- [x] Confidence values are bounded:
   `low`, `medium`, `high`.
-- [ ] Recommended action values are bounded:
+- [x] Recommended action values are bounded:
   `none`, `patch`, `human_review`, `revise_briefing`, `block_release`.
-- [ ] `blocking_items` is always a list; use `[]` when no blocker exists.
-- [ ] `pass`, `needs_patch`, `needs_human`, and `block` axes require non-empty
+- [x] `blocking_items` is always a list; use `[]` when no blocker exists.
+- [x] `pass`, `needs_patch`, `needs_human`, and `block` axes require non-empty
   `rationale` and `evidence`.
-- [ ] `needs_patch` and `block` axes require at least one `blocking_items`
+- [x] `needs_patch` and `block` axes require at least one `blocking_items`
   entry so actionable problems cannot hide in prose only.
-- [ ] `recommended_action` is consistent with `verdict`:
+- [x] `recommended_action` is consistent with `verdict`:
   `pass`/`not_applicable` use `none`, `needs_patch` uses `patch` or
   `revise_briefing`, `needs_human` uses `human_review` or `revise_briefing`,
   and `block` uses `block_release` or `human_review`.
-- [ ] The brief includes force-enumeration prompts for each axis, with explicit
+- [x] The brief includes force-enumeration prompts for each axis, with explicit
   panel-level and sub-region-level checks where relevant.
-- [ ] The brief states that no single opaque quality score can replace axis
+- [x] The brief states that no single opaque quality score can replace axis
   verdicts.
-- [ ] The brief may compute a compact readiness summary, but raw axis verdicts
+- [x] The brief may compute a compact readiness summary, but raw axis verdicts
   must remain available.
-- [ ] v1 and v1.1 critiques remain legacy-parseable.
-- [ ] v1.2 critiques with missing or malformed `quality_axes` fail controlled
+- [x] v1 and v1.1 critiques remain legacy-parseable.
+- [x] v1.2 critiques with missing or malformed `quality_axes` fail controlled
   validation before adjudication scaffold.
-- [ ] `publication_readiness.verdict` cannot be less severe than any
+- [x] `publication_readiness.verdict` cannot be less severe than any
   applicable upstream quality axis.
-- [ ] `publication_readiness.verdict` cannot be `not_applicable` when any
+- [x] `publication_readiness.verdict` cannot be `not_applicable` when any
   upstream quality axis is applicable.
-- [ ] The v1.2 schema is designed so a follow-up `/fig_loop.axis_verdicts`
+- [x] The v1.2 schema is designed so a follow-up `/fig_loop.axis_verdicts`
   slice can ingest quality axes without changing compile/export behavior in
   this issue.
-- [ ] No hidden auto-editing or auto-acceptance is introduced.
+- [x] No hidden auto-editing or auto-acceptance is introduced.
 
 ## Audit axes
 

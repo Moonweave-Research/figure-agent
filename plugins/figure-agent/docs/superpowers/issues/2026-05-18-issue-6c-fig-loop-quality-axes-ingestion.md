@@ -1,5 +1,7 @@
 # Issue 6C: Fig Loop Quality Axes Ingestion
 
+**Status:** Completed in commits `35819ce` and `d0aa750`.
+
 ## Problem
 
 Issue 6B makes `/fig_critique` emit schema v1.2 with required
@@ -40,16 +42,16 @@ Implement read-only ingestion of v1.2 `critique.md` quality axes into existing
 
 ## Acceptance Criteria
 
-- A v1.2 critique with `quality_axes.message_storyline`,
+- [x] A v1.2 critique with `quality_axes.message_storyline`,
   `panel_role_coherence`, and `composition_layout` updates
   `axis_verdicts.story_hierarchy`.
-- A v1.2 critique with `quality_axes.reference_fidelity` updates
+- [x] A v1.2 critique with `quality_axes.reference_fidelity` updates
   `axis_verdicts.reference_fidelity`, unless reference input is missing.
-- A v1.2 critique with `quality_axes.publication_readiness` updates
+- [x] A v1.2 critique with `quality_axes.publication_readiness` updates
   `axis_verdicts.publication_safety`, while existing human-gate and accepted
   state behavior remains intact.
-- Malformed or legacy critique frontmatter does not crash `/fig_loop`.
-- `/fig_loop` remains verify-only and does not edit source, critique, export,
+- [x] Malformed or legacy critique frontmatter does not crash `/fig_loop`.
+- [x] `/fig_loop` remains verify-only and does not edit source, critique, export,
   accepted, or golden files.
-- Stale or missing critique evidence takes precedence over adjudicated human
+- [x] Stale or missing critique evidence takes precedence over adjudicated human
   gates and manual golden roll-forward recommendations.
