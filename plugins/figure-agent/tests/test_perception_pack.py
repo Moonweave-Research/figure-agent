@@ -42,7 +42,7 @@ def test_perception_pack_writes_locked_outputs_and_schema(monkeypatch) -> None:
     data = yaml.safe_load(extract_path.read_text(encoding="utf-8"))
     assert data["schema_version"] == "0.4.2"
     assert data["source"]["pdf_path"] == "examples/fig1_overview_v2/build/fig1_overview_v2.pdf"
-    # Build PDF predates Panel A final recompile; update after next /fig_compile.
+    # Lock the current fig1_overview_v2 dogfood render contract.
     assert data["source"]["pdf_size_cm"] == pytest.approx([18.08, 11.22], abs=0.02)
     assert data["coordinate_space"] == {
         "pdf_origin": "top_left",
@@ -53,10 +53,10 @@ def test_perception_pack_writes_locked_outputs_and_schema(monkeypatch) -> None:
     assert set(data["counts"]) == {"lines", "curves", "rects", "chars", "endpoints_total"}
 
     assert data["counts"]["lines"] == pytest.approx(41, abs=3)
-    assert data["counts"]["curves"] == pytest.approx(129, abs=3)
+    assert data["counts"]["curves"] == pytest.approx(140, abs=3)
     assert data["counts"]["rects"] == pytest.approx(11, abs=3)
-    assert data["counts"]["chars"] == pytest.approx(271, abs=3)
-    assert data["counts"]["endpoints_total"] == pytest.approx(340, abs=3)
+    assert data["counts"]["chars"] == pytest.approx(304, abs=3)
+    assert data["counts"]["endpoints_total"] == pytest.approx(368, abs=3)
 
     assert set(data["primitives"]["lines"][0]) == {
         "id",

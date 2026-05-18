@@ -1,0 +1,14 @@
+schema: figure-agent.critique-adjudication.v1
+fixture: fig1_overview_v2
+source_critique_hash: sha256:2ab14781c5c5b1de9f390b8dba3dc5b7e103e00e2783435e67e8f924c4bec3b7
+decisions:
+  - finding_id: C001
+    decision: resolved
+    reason: "Panel D now includes the t1-t4 distributed-release sequence above the I(t) plot."
+    patch_target: "examples/fig1_overview_v2/fig1_overview_v2.tex lines 327-397 Panel D"
+    evidence: "Recompiled build PNG shows t1/t2 blue deep-well states and t3/t4 red release states; critique C001 is marked resolved."
+  - finding_id: C002
+    decision: defer
+    reason: "Minor label placement issue; do after the Panel D semantic gap is patched."
+    patch_target: "examples/fig1_overview_v2/fig1_overview_v2.tex lines 540-548 Panel G"
+    evidence: "Rendered build PNG shows Maxwell label crowding, but both force directions are already present."
