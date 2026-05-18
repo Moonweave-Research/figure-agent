@@ -1,7 +1,7 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
 **Date:** 2026-05-18
-**Last verified:** 2026-05-18T14:59:52Z
+**Last verified:** 2026-05-18T15:04:25Z
 **Decision:** accepted: false
 **submission-safe:** false
 
@@ -85,6 +85,43 @@ theory guard, or panel roles.
   update.
 - Target venue is not declared.
 - Human provenance statement is not attached.
+
+### Policy Snapshot
+
+Checked on 2026-05-18 UTC:
+
+- Nature Portfolio / Springer Nature AI policy:
+  `https://www.nature.com/nature-portfolio/editorial-policies/ai`.
+  Policy state relevant to this fixture: generative AI images/videos are not
+  permitted for publication except narrow, clearly labelled cases; use of
+  non-generative ML tools to manipulate, combine, or enhance images/figures must
+  be disclosed in the caption for case-by-case review.
+- ACS Publications AI policy:
+  `https://researcher-resources.acs.org/publish/aipolicy`.
+  Policy state relevant to this fixture: AI tool use must be disclosed; graphics
+  need figure-caption disclosure explaining how the image was created; authors
+  remain responsible for accuracy, attribution, and tool terms.
+- Science-family policy requires a separate final check on the official author
+  guidelines before submission. Secondary summaries indicate explicit editor
+  permission may be needed for AI-generated multimedia, so this fixture must not
+  be marked Science-ready from this audit alone.
+
+### Human Provenance Checklist
+
+Before changing this fixture to `accepted: true`, a human author must record:
+
+1. Target venue and policy URL checked on that date.
+2. Whether any generative AI image/artwork is included in the submitted figure,
+   cover image, graphical abstract, or supporting visual.
+3. Whether any AI-generated image was used only as internal style/layout
+   evidence and is absent from the submitted artifact.
+4. Which tools touched the figure source or visual design, including LLM,
+   image-generation, vector editing, raster editing, or non-generative ML tools.
+5. Proposed disclosure text for figure caption, Methods, Acknowledgements, or
+   cover letter, depending on the target venue.
+6. Human visual acceptance statement: the named author has inspected the final
+   PDF/SVG/PNG/TIFF and takes responsibility for scientific accuracy,
+   provenance, and absence of misleading generated imagery.
 
 submission-safe: false
 
