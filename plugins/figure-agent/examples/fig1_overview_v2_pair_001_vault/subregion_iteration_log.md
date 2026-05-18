@@ -121,6 +121,29 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 5/10 — 2026-05-18 — proportion adjust (Option A)
+
+- **Scope**: E-3 (V_s axis) + E-4 (V_s curve waypoints) + E-6 (g(E_t) axis) + E-9 (τ_d caliper position)
+- **Rationale**: User-driven layout re-review identified 0.60cm whitespace between apparatus content bottom (y=3.20) and V_s zone top (y=2.60). User selected Option A: reclaim 0.40cm whitespace, distribute to V_s (+0.30) and g(E_t) (+0.10) without reducing apparatus detail.
+- **Reference source**: layout analysis, user choice
+- **Patches**:
+  - E-3 V_s axis top: y=2.55 → y=2.85 (+0.30cm, +33% axis height)
+  - E-3 V_s tip label: y=2.30 → y=2.55 (mid-axis proportional)
+  - E-4 V_s curve waypoints: scaled (y-1.65)×1.333+1.65 to use new envelope. Peak (5.10, 2.45)→(5.10, 2.72). Plateau values clamped to y=1.65 (on axis).
+  - E-4 V_s markers: scaled proportionally
+  - E-6 g(E_t) axis top: y=1.35 → y=1.45 (+0.10cm, +11% axis height)
+  - E-6 g(E_t) tip label: y=1.15 → y=1.25
+  - E-9 τ_d caliper: shifted up y=1.35→1.42 (with T-caps 1.39..1.45); label y=1.36→1.43
+- **Briefing edits (Type B, user-authorized)**: §13.6 E-3/E-4/E-6 sub-zone spec sync — axis tops, curve waypoint scaling, tip label positions
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 4)**: T unchanged (Q4 1.86× ratio preserved; Gaussians unchanged this iter) | S improved (cleaner layout, no whitespace waste) | L improved (V_s curve now visually communicates stretched-exp decay dynamics) | A improved (less crowded, more breathing room, M3 partial address even before analytical curve)
+- **Notes**:
+  - User M3 ("그래프 비율") significantly addressed via proportion-only fix — without redrawing curve analytically (iter 7 still planned but lower priority now).
+  - Apparatus detail PRESERVED per user "장비를 여기서 더 줄인다고?" — only zone whitespace reclaimed.
+  - Plateau markers on V_s curve now sit ON axis (no longer dipping below) — visual artifact fixed.
+  - Closure NOT declared per user.
+- **Visibility gate**: intended yes (V_s curve dynamism visible; τ_d caliper has breathing room; apparatus unchanged) | anomaly none
+
 ### Column E iter 4/10 — 2026-05-18 — τ_d caliper + derive arrow polish (4-designer audit response)
 
 - **Scope**: E-9 (τ_d annotation) + E-5 (derive inter-arrow)
