@@ -72,6 +72,30 @@ These are the invariants.
     assert sections[6][1] == "These are the invariants."
 
 
+def test_parse_briefing_accepts_section_symbol_headings():
+    text = """# Briefing
+
+> metadata blockquote should not become section content
+
+---
+
+## §1. Figure identity
+
+This is the author intent body.
+
+## §3. Plot-vs-schematic balance
+
+This is the composition body.
+"""
+    sections = parse_briefing(text)
+
+    assert sections[1] == ("Figure identity", "This is the author intent body.")
+    assert sections[3] == (
+        "Plot-vs-schematic balance",
+        "This is the composition body.",
+    )
+
+
 def test_parse_briefing_strips_html_comments():
     text = """# Title
 

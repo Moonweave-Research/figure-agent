@@ -6,7 +6,7 @@ import re
 
 import yaml
 
-_SECTION_HEADER = re.compile(r"^##\s+(\d+)\.\s+(.+)$", re.MULTILINE)
+_SECTION_HEADER = re.compile(r"^##\s+§?(\d+)\.\s+(.+)$", re.MULTILINE)
 _HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 _BLOCKQUOTE = re.compile(r"^>\s.*$", re.MULTILINE)
 _FOOTER_RULE = re.compile(r"^---\s*$", re.MULTILINE)
