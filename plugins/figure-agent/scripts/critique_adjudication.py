@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 from quality_manifest import file_sha256
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
 ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
 _PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
@@ -88,9 +91,181 @@ def write_adjudication(path: Path, data: dict[str, Any]) -> None:
     )
 
 
+def _critique_frontmatter(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise CritiqueAdjudicationError(f"missing critique: {path}")
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        raise CritiqueAdjudicationError(f"missing critique frontmatter: {path}")
+
+    end_index = next(
+        (index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+        None,
+    )
+    if end_index is None:
+        raise CritiqueAdjudicationError(f"unterminated critique frontmatter: {path}")
+
+    try:
+        data = yaml.safe_load("\n".join(lines[1:end_index])) or {}
+    except yaml.YAMLError as exc:
+        raise CritiqueAdjudicationError(f"invalid YAML in {path}: {exc}") from exc
+    return _require_mapping(data, "critique frontmatter")
+
+
+def _finding_id(finding: dict[str, Any], label: str) -> str:
+    value = finding.get("id")
+    if not isinstance(value, str) or not value.strip():
+        raise CritiqueAdjudicationError(f"{label}.id must be a non-empty string")
+    return value.strip()
+
+
+def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
+    tex_lines = finding.get("tex_lines")
+    if (
+        not isinstance(tex_lines, list)
+        or len(tex_lines) != 2
+        or not all(isinstance(value, int) for value in tex_lines)
+    ):
+        return ""
+    start, end = tex_lines
+    return f"examples/{fixture}/{fixture}.tex lines {start}-{end}"
+
+
+def _findings_from_critique(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+
+    panels = frontmatter.get("panels", [])
+    if panels is None:
+        panels = []
+    if not isinstance(panels, list):
+        raise CritiqueAdjudicationError("critique frontmatter.panels must be a list")
+    for panel_index, raw_panel in enumerate(panels):
+        panel_label = f"critique frontmatter.panels[{panel_index}]"
+        panel = _require_mapping(raw_panel, panel_label)
+        panel_findings = panel.get("findings", [])
+        if panel_findings is None:
+            panel_findings = []
+        if not isinstance(panel_findings, list):
+            raise CritiqueAdjudicationError(f"{panel_label}.findings must be a list")
+        for finding_index, raw_finding in enumerate(panel_findings):
+            finding_label = f"{panel_label}.findings[{finding_index}]"
+            findings.append(_require_mapping(raw_finding, finding_label))
+
+    top_level_findings = frontmatter.get("findings", [])
+    if top_level_findings is None:
+        top_level_findings = []
+    if not isinstance(top_level_findings, list):
+        raise CritiqueAdjudicationError("critique frontmatter.findings must be a list")
+    for finding_index, raw_finding in enumerate(top_level_findings):
+        finding_label = f"critique frontmatter.findings[{finding_index}]"
+        findings.append(_require_mapping(raw_finding, finding_label))
+
+    return findings
+
+
+def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
+    """Build a conservative adjudication scaffold from critique.md frontmatter."""
+    critique_path = example_dir / "critique.md"
+    frontmatter = _critique_frontmatter(critique_path)
+    fixture_value = frontmatter.get("fixture")
+    fixture = (
+        fixture_value.strip()
+        if isinstance(fixture_value, str) and fixture_value.strip()
+        else example_dir.name
+    )
+
+    decisions: list[dict[str, str]] = []
+    for index, finding in enumerate(_findings_from_critique(frontmatter)):
+        label = f"critique finding {index}"
+        finding_id = _finding_id(finding, label)
+        patch_target = _patch_target_from_tex_lines(fixture, finding)
+        status = str(finding.get("status", "")).strip().lower()
+        if status == "resolved":
+            decisions.append(
+                {
+                    "finding_id": finding_id,
+                    "decision": "resolved",
+                    "reason": f"Critique marks {finding_id} as resolved.",
+                    "patch_target": patch_target or f"examples/{fixture}/{fixture}.tex",
+                    "evidence": f"critique.md marks {finding_id} status resolved.",
+                }
+            )
+        else:
+            decisions.append(
+                {
+                    "finding_id": finding_id,
+                    "decision": "needs_human",
+                    "reason": (
+                        f"Review {finding_id} before selecting apply, dismiss, defer, or resolved."
+                    ),
+                    "patch_target": patch_target,
+                    "evidence": f"critique.md finding {finding_id}.",
+                }
+            )
+
+    return validate_adjudication(
+        {
+            "schema": SCHEMA,
+            "fixture": fixture,
+            "source_critique_hash": file_sha256(critique_path),
+            "decisions": decisions,
+        }
+    )
+
+
+def scaffold_adjudication(example_dir: Path, *, force: bool = False) -> Path:
+    """Write critique_adjudication.yaml from critique.md unless it already exists."""
+    path = example_dir / "critique_adjudication.yaml"
+    if path.exists() and not force:
+        raise CritiqueAdjudicationError(f"{path} already exists; pass --force to overwrite")
+    write_adjudication(path, build_adjudication_scaffold(example_dir))
+    return path
+
+
 def adjudication_is_stale(adjudication_path: Path, critique_path: Path) -> bool:
     """Return true when adjudication was made against different critique content."""
     adjudication = load_adjudication(adjudication_path)
     if not critique_path.is_file():
         raise CritiqueAdjudicationError(f"missing critique: {critique_path}")
     return adjudication["source_critique_hash"] != file_sha256(critique_path)
+
+
+def _resolve_example_dir(value: str, repo_root: Path) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    if path.parts and path.parts[0] == "examples":
+        return repo_root / path
+    if len(path.parts) == 1:
+        return repo_root / "examples" / value
+    return path
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    scaffold_parser = subparsers.add_parser(
+        "scaffold",
+        help="create critique_adjudication.yaml from critique.md frontmatter",
+    )
+    scaffold_parser.add_argument("example", help="fixture name, examples/<name>, or path")
+    scaffold_parser.add_argument("--force", action="store_true", help="overwrite an existing file")
+    scaffold_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+
+    args = parser.parse_args(argv)
+    if args.command == "scaffold":
+        example_dir = _resolve_example_dir(args.example, args.repo_root)
+        try:
+            path = scaffold_adjudication(example_dir, force=args.force)
+        except CritiqueAdjudicationError as exc:
+            print(f"critique_adjudication.py: {exc}", file=sys.stderr)
+            return 1
+        print(f"critique_adjudication.py: wrote {path}")
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

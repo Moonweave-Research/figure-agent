@@ -67,4 +67,9 @@ Use `panels: []` when no panel-level reference comparison was available. Keep cr
 
 5. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation is gated on N=5+ dogfood accuracy ≥ 80% per `docs/architecture-v0.2-proposal.md` §7.
 
+For loop work, run `/fig_adjudicate <name>` after writing `critique.md` to
+create `examples/<name>/critique_adjudication.yaml` with the current critique
+hash. Review the generated decisions before marking exactly one finding as
+`apply`.
+
 Cost: 0원 (subscription tokens only). The plugin orchestrates; the host Claude Code main loop reads the PNG and produces the critique. `skills/figure-agent/SKILL.md` policy: delegate vision tasks to the host main loop; never call an external vision API directly.

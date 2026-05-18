@@ -93,3 +93,13 @@ Closeout after any patch:
 If `patch_handoff` is null, do not infer a broad patch target from prose. Follow
 the `stop_reason` and `recommended_next_action`; human-gated and ambiguous cases
 stay outside patch-assisted automation.
+
+When `stop_reason` is `missing_adjudication`, run:
+
+```bash
+uv run python3 scripts/critique_adjudication.py scaffold <name>
+```
+
+Then review `examples/<name>/critique_adjudication.yaml` manually. Leave
+unresolved or domain-sensitive findings as `needs_human`; change exactly one
+safe patch target to `apply` only when the outer agent is allowed to patch it.

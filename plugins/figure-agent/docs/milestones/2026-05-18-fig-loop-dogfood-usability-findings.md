@@ -155,12 +155,17 @@ Proposed Issue:
   are stale or missing.
 - Prefer machine-readable output so outer agents can stop before overclaiming.
 
-## Recommended Next Slice
+## Implemented Follow-up
 
 Do not continue polishing `fig1_overview_v2` as a figure.
 
 The P0 state/readiness fix is now implemented as an optional-note policy for
 `coordinate_hints_*`.
 
-The next implementation slice should add an adjudication scaffold so future
-dogfood passes do not require hand-written `critique_adjudication.yaml`.
+The P1 adjudication scaffold is now implemented as `/fig_adjudicate <name>` via
+`scripts/critique_adjudication.py scaffold <name>`, so future dogfood passes do
+not require hand-written `critique_adjudication.yaml`.
+
+The next implementation slice should address the P2 axis-evidence gap or the
+P2 post-patch closeout checklist, depending on whether the next dogfood run
+needs better audit truth or safer operator handoff first.

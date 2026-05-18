@@ -62,6 +62,8 @@ patch must trace back to the plan rather than to chat-only intent.
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
+/fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
+                         with unresolved findings defaulted to needs_human
 /fig_loop <name> --goal "<goal>"
                          verify-only loop evidence record under .scratch/fig-loop-runs/
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
@@ -108,6 +110,12 @@ under `.scratch/fig-loop-runs/`. It shares `/fig_status` state inference and
 records `critique_adjudication.yaml` as missing, fresh, stale, or invalid when
 present. It does not patch source, compile, export, accept artifacts, or mutate
 git state.
+
+Use `/fig_adjudicate <name>` after `/fig_critique <name>` when
+`critique_adjudication.yaml` is missing or stale. It scaffolds every panel-level
+and top-level critique finding, stamps the current critique hash, and defaults
+unresolved findings to `needs_human` so the loop cannot silently drop reviewer
+findings.
 
 Replaces the v0.1 HALT-then-paste review surface via rename + extend
 (`scripts/review_brief.py` → `scripts/critique_brief.py`,
