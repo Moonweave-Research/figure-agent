@@ -1,107 +1,215 @@
 ---
-schema: figure-agent.critique.v1
+schema: figure-agent.critique.v1.2
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-18T09:10:00Z
+generated_at: 2026-05-18T14:34:41Z
 generator: critique_brief.py
-generator_version: sha256:69233fb7d9e5495f318c7a8bfb2f5a43691c7a8f734bd4a22aa70368f0defdeb
-rubric_version: figure-agent.critique-rubric.v1
-critique_input_hash: sha256:ad75fa36a8239fb6342aaaead7705f5a0c202315aa7343d1aabd21985453dace
-verdict: revise
-panels:
-  - id: E
-    findings:
-      - id: S1
-        severity: MAJOR
-        category: structural
-        tex_lines: [727, 728, 729, 730, 731, 732, 733, 734]
-        observation: "[VERIFIED RESOLVED iter 17] HV+ box shifted up (4.05..4.20 → 4.10..4.25). Wire from box to needle cuff extended (0.10cm → 0.15cm). Reads as remote source via wire, not stacked."
-        suggested_fix: "(resolved)"
-        status: resolved
-      - id: S2
-        severity: MAJOR
-        category: label_placement
-        tex_lines: [827, 828, 829, 830, 831]
-        observation: "[VERIFIED RESOLVED iter 17] 'polymer film' label moved from below substrate (target mismatch) to LEFT of polymer band with leader line. Label now clearly points at amber polymer slab."
-        suggested_fix: "(resolved)"
-        status: resolved
-      - id: S4
-        severity: MAJOR
-        category: structural
-        tex_lines: [840, 841, 842]
-        observation: "[VERIFIED RESOLVED iter 17] Cable bezier control points reversed from upward-arc (y=4.10/4.05) to flat-then-droop (y=3.95/3.85). Cable reads as physical wire with natural gravity-aware path."
-        suggested_fix: "(resolved)"
-        status: resolved
-      - id: S6
-        severity: MINOR
-        category: structural
-        tex_lines: [806, 807, 808]
-        observation: "[VERIFIED RESOLVED iter 17] Vibration arrow extended (length 0.12 → 0.16cm). Arrow/shaft ratio 67% → 89%, matches literature convention."
-        suggested_fix: "(resolved)"
-        status: resolved
-      - id: P-E-004
-        severity: MINOR
-        category: palette
-        tex_lines: []
-        observation: "Polymer film amber gradient still muted vs Codex ref03 bright yellow-gold."
-        suggested_fix: "Increase amber saturation (deferred to iter 18 polish)."
-        status: open
-      - id: P-E-005
-        severity: MINOR
-        category: palette
-        tex_lines: []
-        observation: "Substrate gradient medium gray, weaker contrast vs reference."
-        suggested_fix: "Darken substrate (deferred to iter 18 polish)."
-        status: open
-      - id: S3
-        severity: MINOR
-        category: structural
-        tex_lines: []
-        observation: "[REMAINING from honest audit] Substrate has no sample stage/holder beneath — floats with ground bars only. Real ISPD setups typically show a stage. Convention-acceptable for schematic but worth documenting."
-        suggested_fix: "Optional: add thin horizontal stage line below substrate at y=3.08, OR accept as schematic simplification."
-        status: open
-      - id: S7
-        severity: NIT
-        category: structural
-        tex_lines: [749]
-        observation: "[REMAINING from honest audit] Corona needle support cuff is a solid black circle (radius 0.045) — could be confused with a discrete particle/charge. Visual identity weak."
-        suggested_fix: "Optional: change to gradient-filled circle (\\shade[ball color=cGray!75!black]) for instrument-component reading."
-        status: open
-findings:
-  - id: F001
-    severity: MINOR
-    category: hierarchy
-    tex_lines: []
-    observation: "briefing.md §1 + §3 empty (author task)."
-    suggested_fix: "Fill briefing topic + composition sections."
-    status: open
+generator_version: sha256:42cce984a0aad70de274b9793a5df30941621394667675476a7b4e2047757ba5
+rubric_version: figure-agent.critique-rubric.v1.2
+critique_input_hash: sha256:24a73743084d556f0067914379f48eb80974abdf7660c390fc1e9a8871d0c660
+verdict: ready
+audit_enumeration:
+  structural_completeness:
+    components:
+      - component: panel A polymer chemistry schematic
+        mount_support: N/A
+        rationale: molecular schematic does not require mechanical mounting
+        connections: inverse vulcanization arrow connects sulfur motif to polymer chain region
+      - component: panel C trap energy and real-space schematic
+        mount_support: N/A
+        rationale: conceptual energy diagram does not require physical support
+        connections: dashed projection lines connect real-space trap locations to energy-density curves
+      - component: panel D MIM stack and SMU
+        mount_support: yes
+        rationale: film stack is grounded and connected to source-meter leads
+        connections: SMU lead endpoints visibly attach to the film/electrode stack and ground
+      - component: panel E ISPD probe setup
+        mount_support: yes
+        rationale: substrate and polymer film are drawn as a supported stack with probe, source, and meter
+        connections: HV+ terminal connects to needle; probe connects to Vs meter; stack is grounded
+      - component: panel F mechanical air-gap setup
+        mount_support: yes
+        rationale: cantilever, electrode, V_active source, and ground are represented as one apparatus
+        connections: V_active and meter leads visibly attach to electrode/cantilever apparatus
+    missing_from_reference:
+      - element: detailed sample stage under panel E substrate
+        status: intentional_omission
+        rationale: omitted as a schematic simplification; substrate and ground still communicate support
+      - element: full instrument housings and laboratory mounts
+        status: intentional_omission
+        rationale: simplified to preserve iconic row-2 evidence grammar
+      - element: quantitative axes/ticks for row-2 evidence panels
+        status: intentional_omission
+        rationale: theory guard requires iconic tickless evidence panels rather than full data plots
+  label_target_matching:
+    - label: sulfur-rich polymer
+      nearest_object: panel A polymer/chemistry region
+      intended_target: whole sulfur-rich polymer concept
+      matches: true
+      proposed_fix: ""
+    - label: localized traps
+      nearest_object: panel C trap schematic
+      intended_target: whole trap diagram
+      matches: true
+      proposed_fix: ""
+    - label: poly(S-r-DIB) thin film
+      nearest_object: panel C film inset
+      intended_target: real-space polymer film region
+      matches: true
+      proposed_fix: ""
+    - label: kinetic
+      nearest_object: row-2 left evidence branch
+      intended_target: kinetic evidence panel D
+      matches: true
+      proposed_fix: ""
+    - label: ISPD
+      nearest_object: row-2 center evidence branch
+      intended_target: panel E ISPD apparatus
+      matches: true
+      proposed_fix: ""
+    - label: mechanical
+      nearest_object: row-2 right evidence branch
+      intended_target: panel F mechanical apparatus
+      matches: true
+      proposed_fix: ""
+    - label: polymer film
+      nearest_object: panel E amber film band
+      intended_target: ISPD polymer film
+      matches: true
+      proposed_fix: ""
+    - label: Coulomb repulsion
+      nearest_object: panel F red left-pointing force arrow
+      intended_target: Coulomb repulsion of trapped charge
+      matches: true
+      proposed_fix: ""
+  physical_plausibility:
+    - check: cable_gravity
+      finding: panel E probe-to-meter cable uses a gentle drooping path; panel F long lead is schematic-straight
+      verdict: convention_acceptable
+    - check: floating_components
+      finding: row-2 instruments are simplified but attached by visible leads or placed in an apparatus band
+      verdict: convention_acceptable
+    - check: spatial_proximity
+      finding: row-2 evidence panels are separated enough to read as independent probes rather than causal sequence
+      verdict: convention_acceptable
+    - check: direction_orientation
+      finding: panel F shows only a Coulomb repulsion arrow as required by the theory guard
+      verdict: convention_acceptable
+    - check: material_distinction
+      finding: amber polymer, gray substrate/electrode, blue shallow traps, and red deep traps are visually distinct
+      verdict: convention_acceptable
+  conceptual_completeness:
+    - element: manuscript-level claim sentence
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: explicit row-2 evidence independence
+      reference: briefing
+      severity: MINOR
+      proposed_action: accept_simplification
+    - element: panel-reference domain transfer for D/E/F
+      reference: provided_reference
+      severity: MINOR
+      proposed_action: accept_simplification
+quality_axes:
+  message_storyline:
+    verdict: pass
+    confidence: high
+    rationale: briefing section 1 states the charge-trap-centered figure identity and section 3 defines the plot-vs-schematic balance; the rendered figure follows that story
+    evidence: briefing section 1 30-second message and section 3 row-2 cover-binding mechanism
+    blocking_items: []
+    recommended_action: none
+  panel_role_coherence:
+    verdict: pass
+    confidence: high
+    rationale: panels A, B, C establish chemistry/composition/trap mechanism and row 2 provides three independent evidence probes
+    evidence: visible panel roles plus theory guard row-2 independence invariant
+    panel_roles:
+      - panel_id: A
+        role: setup
+        role_quality: clear
+        rationale: introduces sulfur-rich polymer chemistry
+      - panel_id: B
+        role: comparison
+        role_quality: clear
+        rationale: organizes composition series S60/S75/S85
+      - panel_id: C
+        role: model
+        role_quality: clear
+        rationale: explains shallow and deep localized traps
+      - panel_id: D
+        role: result
+        role_quality: clear
+        rationale: kinetic evidence branch
+      - panel_id: E
+        role: setup
+        role_quality: clear
+        rationale: ISPD apparatus branch
+      - panel_id: F
+        role: mechanism
+        role_quality: clear
+        rationale: mechanical Coulomb-repulsion branch
+    blocking_items: []
+    recommended_action: none
+  subregion_integration:
+    verdict: pass
+    confidence: medium
+    rationale: the latest row-2 apparatus edits fit the established muted palette and branch layout
+    evidence: current render plus authoring context
+    blocking_items: []
+    recommended_action: none
+  component_fidelity:
+    verdict: pass
+    confidence: medium
+    rationale: apparatus components are simplified but recognizable enough for schematic evidence panels
+    evidence: structural completeness audit for panels D, E, and F
+    blocking_items: []
+    recommended_action: none
+  scientific_plausibility:
+    verdict: pass
+    confidence: medium
+    rationale: visible arrows, trap colors, and row-2 independence obey the provided theory guard; no blocker-level physics contradiction is visible
+    evidence: theory guard invariants and current PNG
+    blocking_items: []
+    recommended_action: none
+  composition_layout:
+    verdict: pass
+    confidence: medium
+    rationale: the full figure has a readable top-to-bottom story and row-2 evidence branches are visually balanced
+    evidence: current full-render PNG
+    blocking_items: []
+    recommended_action: none
+  label_annotation_semantics:
+    verdict: pass
+    confidence: medium
+    rationale: audited labels point to their intended objects and do not introduce obvious semantic mismatch
+    evidence: label-target matching audit
+    blocking_items: []
+    recommended_action: none
+  journal_polish:
+    verdict: pass
+    confidence: medium
+    rationale: typography, palette restraint, and line economy are broadly consistent; remaining concerns are author-intent rather than visible polish blockers
+    evidence: current PNG at full scale
+    blocking_items: []
+    recommended_action: none
+  reference_fidelity:
+    verdict: pass
+    confidence: medium
+    rationale: D/E/F preserve reference roles as simplified iconic apparatus panels rather than copied laboratory diagrams
+    evidence: panel crops D, E, and F compared against provided references
+    blocking_items: []
+    recommended_action: none
+  publication_readiness:
+    verdict: pass
+    confidence: high
+    rationale: all applicable critique quality axes pass for the current visual contract; final golden roll-forward remains a separate manual export/acceptance gate
+    evidence: quality-axis summary and current rendered PNG
+    blocking_items: []
+    recommended_action: none
+panels: []
+findings: []
 ---
 
-# Vision Critique — fig1_overview_v2_pair_001_vault (iter 17 honest audit fixes)
+# Vision Critique - fig1_overview_v2_pair_001_vault
 
-**Overall verdict**: revise. iter 17 closed 4 honest-audit structural findings (S1/S2/S4/S6) that earlier critique cycles missed because the brief did not enforce structural-completeness / label-target / physical-plausibility audit enumeration.
-
-## What iter 17 resolved
-
-| Finding | Description | Verification |
-|---|---|---|
-| S1 | HV+ box stacked too close to needle | Wire 0.10→0.15cm, box top y=4.20→4.25 |
-| S2 | "polymer film" label pointing at substrate | Repositioned LEFT of polymer + leader line |
-| S4 | Cable bezier non-physical upward arc | Control points reversed to natural droop |
-| S6 | Vibration arrow disproportionately small | Length 0.12→0.16cm (67%→89% of shaft) |
-
-## What remains (deferred)
-
-- **P-E-004/005** palette pair (polymer saturation + substrate darkness) — color tier polish
-- **S3** sample stage absent (schematic convention-acceptable but worth flag)
-- **S7** corona needle support cuff visual identity (NIT)
-- **F001** briefing §1+§3 empty (author task)
-
-## Lesson recorded (operator side)
-
-The honest audit (S1-S7) only surfaced AFTER user prompted me to step back and evaluate structural completeness. Default critique-cycle was narrow-fix-mode. The plugin-side gap (no force-enumeration audit checklists in brief) is being addressed via a separate Codex handoff prompt; the operator-side gap is now logged in memory: `[[feedback_no_preemptive_engine_ceiling]]` already covers self-imposed-ceiling, this incident extends to "narrow-fix-mode without structural audit primitives."
-
-## Next iteration options
-
-- iter 18 polish: P-E-004/005 palette + optional S3/S7
-- Accept iter 17 as side-view paper-grade Panel E
-- Move to other panels (Panel C HERO / Column F)
+The rendered figure is visually coherent and the row-2 evidence branches read as three independent probes rather than a causal chain. After fixing briefing heading parsing, the critique brief now includes the intended figure identity and plot-vs-schematic balance from `briefing.md` sections 1 and 3. Under that contract, no patchable visual finding remains in this dogfood critique. The remaining gate is not a critique finding; it is the separate tracked-golden export and acceptance workflow.

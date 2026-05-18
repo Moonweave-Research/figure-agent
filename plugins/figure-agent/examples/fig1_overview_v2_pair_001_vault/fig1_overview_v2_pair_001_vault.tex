@@ -544,8 +544,10 @@
   (branchRoot) -- (2.28, 4.30);
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
   (branchRoot) -- (6.975, 4.30);
+% iter 27: spoke 3 tip 12.325 → 12.625 to land on new PSU center
+% (PSU shifted right to 12.20..13.05).
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
-  (branchRoot) -- (11.70, 4.30);
+  (branchRoot) -- (12.625, 4.30);
 
 % Spoke modality labels (mid-spoke, italic small, with cAmber!8 fill punch)
 % v8.6 positions: midpoints recomputed for new spoke endpoints
@@ -721,17 +723,32 @@
 % above needle + wire connection. "Corona" label removed (HV+ + needle +
 % sparks self-identifies as corona discharge per literature convention).
 %
-% HV+ source — iter 17 (S1 fix): shifted up 0.05cm (4.05..4.20 → 4.10..4.25).
-% Wire to needle cuff now 0.15cm (was 0.10cm) — reads as "remote source"
-% via wire rather than "directly stacked on needle".
-\shade[top color=cGray!2, bottom color=cGray!18]
-  (6.35, 4.10) rectangle (6.75, 4.25);
-\draw[cGray!55!black, line width=0.18pt]
-  (6.35, 4.10) rectangle (6.75, 4.25);
-\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
-  at (6.55, 4.175) {HV+};
-% Wire from HV box bottom to needle support ball — iter 17: length 0.10 → 0.15cm
-\draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 3.95);
+% HV+ source — Panel E iter 36: rebalanced internal layout for breathing
+% room (user-flagged 여유감). Display made shorter (4.18..4.27 → 4.20..4.27),
+% label "HV+" 6→5pt + moved to y=4.10 (centered in label zone 4.00..4.20).
+% Box width slightly enlarged 0.55 → 0.65cm for label horizontal margin.
+\shade[top color=cGray!4, bottom color=cGray!22]
+  (6.225, 4.00) rectangle (6.875, 4.30);
+\draw[cGray!60!black, line width=0.22pt]
+  (6.225, 4.00) rectangle (6.875, 4.30);
+% Inset display window — iter 37: nudged up 0.01cm (4.20→4.21) for symmetric
+% gap from box top (4.30 - 4.28 = 0.02cm) and label clearance below.
+\fill[cGray!18] (6.30, 4.21) rectangle (6.80, 4.28);
+\draw[cGray!55!black, line width=0.15pt]
+  (6.30, 4.21) rectangle (6.80, 4.28);
+\draw[cGray!75!black, line width=0.40pt]
+  (6.33, 4.235) -- (6.42, 4.235) -- (6.42, 4.275)
+              -- (6.55, 4.275) -- (6.55, 4.235) -- (6.68, 4.235)
+              -- (6.68, 4.275) -- (6.77, 4.275);
+% HV+ label below display — iter 36: 6→5pt + y 4.075 → 4.10 (label zone center
+% 4.00..4.20, mid y=4.10). Gap from box bottom 4.00 = 0.07cm (was 0.04cm).
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!88!black]
+  at (6.55, 4.10) {HV+};
+% Output terminal (bottom-center, where wire exits)
+\fill[cGray!85!black] (6.55, 4.00) circle (0.022);
+\fill[cGray!50!black] (6.55, 4.00) circle (0.011);
+% Wire from terminal to needle cuff
+\draw[cGray!75!black, line width=0.32pt] (6.55, 4.00) -- (6.55, 3.95);
 % Corona needle electrode — iter 16: tip y=3.55 → 3.63 (above new polymer
 % top y=3.60). Wedge geometry preserved, just shifted to land on thicker film.
 \shade[left color=cGray!75!black, right color=cGray!90!black]
@@ -790,11 +807,10 @@
 \draw[cGray!55!black, line width=0.22pt] (7.70, 3.60) -- (7.74, 3.60);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
       anchor=west] at (7.74, 3.65) {$d$};
-% "Probe" label — iter 14d (P-E-008 forced fix): shifted further right to
-% (7.51, 3.85). Reason: P-E-003 widened shaft to right edge 7.44; P-E-001
-% placed vibration arrow at x=7.47. Probe label must clear both — x=7.51.
+% "Probe" label — iter 34: y nudged 4.00 → 4.05 for breathing room from
+% oscillation arrow top (3.94) and bezier start (3.95).
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=west] at (7.51, 3.85) {Probe};
+      anchor=south] at (7.40, 4.05) {Probe};
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
 % Layers (in z-order, bottom-up):
@@ -808,13 +824,13 @@
 %
 % (1) Front face — beige metal gradient
 \shade[top color=cGray!4, bottom color=cGray!22]
-  (8.20, 3.65) rectangle (9.00, 4.05);
+  (8.20, 3.55) rectangle (9.05, 4.05);
 \draw[cGray!60!black, line width=0.22pt]
-  (8.20, 3.65) rectangle (9.00, 4.05);
+  (8.20, 3.55) rectangle (9.05, 4.05);
 % (2) Inset SCREEN frame — recessed darker display zone
-\fill[cGray!18, rounded corners=0.4pt] (8.25, 3.83) rectangle (8.95, 4.00);
+\fill[cGray!18, rounded corners=0.4pt] (8.25, 3.83) rectangle (9.00, 4.00);
 \draw[cGray!65!black, line width=0.18pt, rounded corners=0.4pt]
-  (8.25, 3.83) rectangle (8.95, 4.00);
+  (8.25, 3.83) rectangle (9.00, 4.00);
 % (4a) y-axis arrow inside screen (V_s axis, vertical)
 \draw[-{Stealth[length=2pt,width=1.6pt]}, cGray!75!black, line width=0.18pt]
   (8.30, 3.86) -- (8.30, 3.98);
@@ -825,9 +841,10 @@
 \draw[cGray!85!black, line width=0.35pt]
   (8.32, 3.97) .. controls (8.38, 3.94) and (8.45, 3.90) .. (8.55, 3.88)
               .. controls (8.65, 3.87) and (8.78, 3.86) .. (8.88, 3.865);
-% (5) V_s meter label — BELOW screen, centered in box-bottom zone
+% (5) V_s meter label — iter 37: y 3.69→3.71 to compensate for subscript "s"
+% baseline (Gemini "perceived vertical center skewed due to descender").
 \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
-  at (8.60, 3.74) {$V_s$ meter};
+  at (8.625, 3.71) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
@@ -944,19 +961,27 @@
 % v8.6 polish: lead routing avoids crossing neutral polymer (was at y=3.45
 %  cutting through polymer y=3.05..4.05). New routing: top lead goes ABOVE
 %  fixture (y=4.30), bottom lead goes BELOW PSU (y=2.80).
-% PSU box (LEFT)
-\draw[cGray!75!black, line width=0.30pt]
-  (9.85, 3.75) rectangle (10.40, 4.25);
-% v8.7 critique iter 3: "V" → "V_active" — disambiguates from Column D SMU
-% "V" label (different instrument: SMU = source-meter, here PSU = pulsed
-% bias source for mechanical-actuation protocol).
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (10.125, 4.05) {$V_{\mathrm{active}}$};
-% Pulse trace on PSU display
-% v8.7 critique C003 v2 fix: width 0.40 → 0.60pt for clearer print-scale visibility.
-\draw[cGray!75!black, line width=0.60pt]
-  (9.92, 3.85) -- (10.02, 3.85) -- (10.02, 3.97)
-              -- (10.15, 3.97) -- (10.15, 3.85) -- (10.35, 3.85);
+% PSU pulsed bias source — iter 27: shifted right 0.30cm to reduce trapped
+% wire space between PSU and electrode (Gemini iter 26 "massive 0.88cm
+% horizontal gap"). New range (12.20, 3.20)..(13.05, 3.85), wire gap 0.58cm.
+\shade[top color=cGray!4, bottom color=cGray!22]
+  (12.20, 3.20) rectangle (13.05, 3.85);
+\draw[cGray!60!black, line width=0.25pt]
+  (12.20, 3.20) rectangle (13.05, 3.85);
+% Inset display window (shifted right with PSU)
+\fill[cGray!18] (12.30, 3.55) rectangle (12.95, 3.78);
+\draw[cGray!55!black, line width=0.18pt]
+  (12.30, 3.55) rectangle (12.95, 3.78);
+% Pulse trace inside display (shifted +0.30)
+\draw[cGray!80!black, line width=0.55pt]
+  (12.35, 3.58) -- (12.48, 3.58) -- (12.48, 3.73)
+              -- (12.70, 3.73) -- (12.70, 3.58) -- (12.90, 3.58);
+% V_active label
+\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
+  at (12.625, 3.36) {$V_{\mathrm{active}}$};
+% Output terminal — iter 27: shifted with PSU (right by 0.30): (12.75) → (13.05).
+\fill[cGray!85!black] (13.05, 3.50) circle (0.028);
+\fill[cGray!50!black] (13.05, 3.50) circle (0.014);
 % iter 18 (user-flagged structural repetition fix): TOP CLIP + MOUNT STIPPLE +
 % TOP POLYMER (straight neutral cantilever) REMOVED. Cantilever was drawn
 % TWICE (top straight + bottom bent) — user direction: top = equipment only,
@@ -972,14 +997,10 @@
 % repetition cleanup. PSU now connects only via BOTTOM lead to electrode.
 % PSU other terminal is implicit (ground/external, not drawn) for schematic
 % simplicity.
-% Lead from PSU bottom to BOTTOM electrode top — iter 19: rerouted from
-% (top-electrode-bottom) to (bottom-electrode-top). User direction: PSU
-% drives the cantilever's electrode directly, inducing Maxwell stress at
-% the bottom apparatus. Lead traverses inter-zone empty space at y=2.85
-% then drops down to bottom electrode top edge (13.55, 2.60).
+% Lead from PSU to electrode — iter 27: wire horizontal length 0.88 → 0.58cm
+% (PSU shifted right). Path: (13.05, 3.50) → (13.63, 3.50) → (13.63, 2.60).
 \draw[cGray!75!black, line width=0.28pt]
-  (10.40, 3.85) -- (10.70, 3.85) -- (10.70, 2.85)
-              -- (13.55, 2.85) -- (13.55, 2.60);
+  (13.05, 3.50) -- (13.63, 3.50) -- (13.63, 2.60);
 % "−" polarity label REMOVED (was associated with removed top electrode).
 
 % F-3 Maxwell baseline arrow + label — iter 18 REMOVED. Original arrow
@@ -1021,35 +1042,45 @@
   \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
         minimum size=1.4mm, line width=0.35pt] at (\cx,\cy) {};
 }
+% q_tr leader — iter 30: REVERTED to simple single-line at top charge (iter
+% 28 state). iter 29 vertical bracket cut through cantilever body + collided
+% with F_Maxwell label. Single leader stays at iter 28 88/100 representation.
 \draw[cRed!55!black, line width=0.30pt] (12.48, 2.00) -- (12.75, 2.00);
 \node[labelMute, anchor=west, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
   at (12.75, 2.00) {$q_{tr}$};
 
-% F-7 Coulomb repulsion arrow + 2-line label
-% v8.7 iter 4: arrow base shifted with polymer (was at 11.30, now at 12.00).
+% F-7 Coulomb repulsion arrow — iter 28: arrow stays shortened (tip 11.10).
+% Labels back to anchor=south east/north east AT arrow tip — extending LEFT
+% from tip puts labels in void but NOT overlapping cantilever (cantilever at
+% x≥12.00). iter 27's anchor=south/north placed labels over cantilever — fatal.
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
-  (12.00, 1.30) -- (10.80, 1.30);
+  (12.00, 1.30) -- (11.10, 1.30);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
-      anchor=south east] at (10.80, 1.35) {Coulomb};
+      anchor=south east] at (11.10, 1.35) {Coulomb};
+% iter 29: repulsion y 1.25 → 1.27 (gap 0.05→0.03) to match Coulomb's tight
+% spacing per Gemini cohesion polish.
 \node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black] at (10.80, 1.25) {repulsion};
+      text=cRed!75!black] at (11.10, 1.27) {repulsion};
 
-% F-8 result zone electrode + ground + air gap
+% F-8 result zone electrode + ground + air gap — iter 25: SLIMMED 0.25 → 0.17cm
+% (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,
+% right edge stays at 13.80 (hatches/label on right unaffected). All internal
+% details + ground triangle shifted accordingly.
 \shade[left color=cGray!75!black, right color=cGray!40!black]
-  (13.55, 0.40) rectangle (13.80, 2.60);
+  (13.63, 0.40) rectangle (13.80, 2.60);
 \draw[cGray!85!black, line width=0.50pt]
-  (13.55, 0.40) rectangle (13.80, 2.60);
+  (13.63, 0.40) rectangle (13.80, 2.60);
 \draw[white, opacity=0.50, line width=0.35pt]
-  (13.555, 0.45) -- (13.555, 2.55);
+  (13.635, 0.45) -- (13.635, 2.55);
 \foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
   \draw[cGray!75!black, line width=0.28pt]
     (13.80, \ey) -- (13.95, {\ey+0.08});
 }
 \draw[cGray!70!black, fill=cGray!50!black, line width=0.35pt]
-  (13.57, 0.35) -- (13.78, 0.35) -- (13.675, 0.22) -- cycle;
-\draw[cGray!70!black, line width=0.28pt] (13.61, 0.20) -- (13.74, 0.20);
-\draw[cGray!70!black, line width=0.28pt] (13.64, 0.16) -- (13.71, 0.16);
+  (13.65, 0.35) -- (13.78, 0.35) -- (13.715, 0.22) -- cycle;
+\draw[cGray!70!black, line width=0.28pt] (13.66, 0.20) -- (13.77, 0.20);
+\draw[cGray!70!black, line width=0.28pt] (13.69, 0.16) -- (13.74, 0.16);
 % "electrode" label — iter 19: moved from (13.675, 2.65) anchor=south
 % (was conflicting with new PSU lead path at y=2.65..2.85) to right of
 % electrode at (13.95, 1.50) anchor=west.
@@ -1060,17 +1091,22 @@
 % — smaller tier vs Coulomb (cRed!80, 0.7pt). User direction: Maxwell stress
 % induced at electrode by PSU is BASELINE, Coulomb (from q_tr) is dominant
 % repulsive force that bends polymer away — Coulomb wins visually.
+% iter 25: arrow start moved 12.20 → 12.34 (was INSIDE cantilever, right
+% edge at y=1.80 is x≈12.32). Now originates FROM cantilever surface.
+% Tip end shifted 13.50 → 13.60 to match new slim electrode left edge 13.63.
 \draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
       line width=0.45pt]
-  (12.20, 1.80) -- (13.50, 1.80);
+  (12.34, 1.80) -- (13.60, 1.80);
+% iter 29: label moved closer to arrow (1.75 → 1.78, gap 0.05→0.02cm) per
+% Gemini "floating slightly low and disconnected".
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=north] at (12.85, 1.75) {$F_{\mathrm{Maxwell}}$ (baseline)};
-% v8.7 iter 4: air gap dimension shifted left edge to match new polymer tip
+      anchor=north] at (12.85, 1.78) {$F_{\mathrm{Maxwell}}$};
+% Air gap arrow — iter 25: right end shifted 13.55 → 13.63 (new electrode left).
 \draw[<->, cGray!55!black, line width=0.30pt]
-  (11.90, 0.55) -- (13.55, 0.55);
+  (11.90, 0.55) -- (13.63, 0.55);
 \node[labelMute, anchor=north, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont]
-  at (12.725, 0.50) {air gap};
+  at (12.765, 0.50) {air gap};
 
 % ============================================================
 % v8.6 ROW 2 END — legacy 4-panel D/E/F/G content removed in v8.6 restructure.
