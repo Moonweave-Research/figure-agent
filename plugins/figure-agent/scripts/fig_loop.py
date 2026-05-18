@@ -492,8 +492,8 @@ def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
 
 
 _AUTO_PATCH_ALLOWED_TERMS = {
-    "label offset": ("label", "offset"),
-    "text overlap": ("overlap",),
+    "label offset": ("label offset", "offset", "move the label", "move label"),
+    "text overlap": ("overlap", "crowding", "crowded", "collision"),
     "clipping": ("clip",),
     "whitespace balance": ("whitespace",),
     "palette/style": ("palette", "style"),

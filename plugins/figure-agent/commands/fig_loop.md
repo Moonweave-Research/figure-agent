@@ -126,6 +126,10 @@ read-only; it does not grant edit permission.
   topology, theory, reference interpretation, accepted/golden state, or
   publication safety.
 
+Generic label wording changes are `patch_assisted_only` unless the finding also
+states a concrete geometry problem such as overlap, clipping, offset, crowding,
+or collision.
+
 In this version, `auto_patch_eligibility.may_edit` is always `false`. The runner
 must not edit figure source, critique output, exports, accepted metadata, or
 golden contracts.

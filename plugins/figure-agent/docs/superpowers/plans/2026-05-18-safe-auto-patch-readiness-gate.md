@@ -60,6 +60,10 @@ Blocked classes:
 - broad refactor
 - more than one target
 
+Non-candidate class:
+
+- generic label wording or copy edits without a concrete geometry defect
+
 Classification outputs:
 
 ```json

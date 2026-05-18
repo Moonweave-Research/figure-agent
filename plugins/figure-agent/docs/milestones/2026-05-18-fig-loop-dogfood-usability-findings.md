@@ -230,6 +230,9 @@ Current judgment:
 
 - Issue 5A is useful as a conservative classifier.
 - It is not sufficient evidence to build Issue 5B auto-editing yet.
+- Generic label wording changes must stay `patch_assisted_only`; only concrete
+  geometry findings such as overlap, clipping, offset, crowding, or collision
+  should enter `auto_patch_candidate`.
 - Before Issue 5B, collect more real `apply` handoff examples and check whether
   keyword classification is too broad or too narrow.
 - Keep `may_edit: false` until before/after evidence capture, rollback, and

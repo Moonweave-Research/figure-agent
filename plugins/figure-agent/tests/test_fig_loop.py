@@ -523,6 +523,47 @@ def test_loop_marks_publication_safety_patch_as_human_review_required(tmp_path: 
     ]
 
 
+def test_loop_does_not_auto_candidate_generic_label_changes(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C004",
+                "decision": "apply",
+                "reason": "label wording should be clearer for readers",
+                "patch_target": "panel C label text",
+                "evidence": "critique.md C004",
+            }
+        ],
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "choose next patch",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["auto_patch_eligibility"] == {
+        "level": "patch_assisted_only",
+        "target_type": "finding",
+        "target_id": "C004",
+        "allowed_reasons": [],
+        "blocked_reasons": [],
+        "required_evidence": [
+            "before compile/export evidence",
+            "after compile/export evidence",
+            "rollback path",
+        ],
+        "may_edit": False,
+    }
+
+
 def test_loop_stops_when_multiple_apply_decisions_make_patch_target_ambiguous(
     tmp_path: Path,
 ) -> None:
