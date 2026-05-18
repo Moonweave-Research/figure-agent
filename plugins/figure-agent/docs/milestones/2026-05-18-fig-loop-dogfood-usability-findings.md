@@ -73,12 +73,13 @@ The run itself succeeded, but machine parsing should not depend on prose.
 Risk: outer agents and CI smoke scripts will repeatedly reinvent fragile regex
 parsers around slash-command output.
 
-Proposed Issue:
+Resolution in this slice:
 
 - Add `--json` to `scripts/fig_loop.py`.
 - Emit at least `run_dir`, `manifest_path`, `iteration_path`,
   `final_stop_reason`, `escalation_level`, and `patch_handoff_present`.
 - Keep existing prose output for humans.
+- Keep preflight failures on the legacy prose stderr contract.
 
 ### P1 - No first-class deterministic E2E smoke command
 
@@ -93,13 +94,17 @@ loop system because every reviewer may run a different sequence.
 
 Risk: "E2E passed" claims will be non-comparable across agents.
 
-Proposed Issue:
+Resolution in this slice:
 
 - Add a deterministic smoke runner, for example `scripts/fig_e2e_smoke.py`.
-- It should run compile, export gate, status, and fig_loop.
-- It should not edit source, critique, acceptance, golden, or exports beyond
+- It runs compile, export gate, status, and fig_loop.
+- It does not edit source, critique, acceptance, golden, or exports beyond
   normal compile/export outputs.
-- It should output one JSON summary per run and support `--repeat N`.
+- It outputs one aggregate JSON summary with per-run command evidence and
+  supports `--repeat N`.
+- It compares stable status/loop outcomes across repeats so command success
+  alone cannot hide drift in stop reason, escalation, readiness, notes, or
+  patch-handoff presence.
 
 ### P1 - Adjudication authoring is raw YAML with no scaffold
 
@@ -157,6 +162,5 @@ Do not continue polishing `fig1_overview_v2` as a figure.
 The P0 state/readiness fix is now implemented as an optional-note policy for
 `coordinate_hints_*`.
 
-The next implementation slice should add `fig_loop --json` and a repeatable E2E
-smoke runner so future dogfood passes test the plugin instead of drifting into
-figure edits.
+The next implementation slice should add an adjudication scaffold so future
+dogfood passes do not require hand-written `critique_adjudication.yaml`.
