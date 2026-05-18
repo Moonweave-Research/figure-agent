@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1). No external API is called; the brief itself is API-free.
+v1.1). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -33,6 +33,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
+_PHYSICAL_CHECK_VALUES = (
+    "cable_gravity | floating_components | spatial_proximity | "
+    "direction_orientation | material_distinction"
+)
 
 
 class CritiqueBriefError(Exception):
@@ -236,6 +240,49 @@ def _format_bbox(values: list[float]) -> str:
     return "[" + ", ".join(f"{value:.3f}" for value in values) + "]"
 
 
+def _mandatory_audit_checklists() -> str:
+    return """## Mandatory Audit Checklists (host LLM MUST enumerate)
+
+The host LLM MUST fill every numbered audit family below in the resulting
+`critique.md` under top-level YAML field `audit_enumeration`. Empty v1.1 audit
+enumeration is invalid. Do not invent literature citations; use bounded
+reference provenance values from the output schema.
+
+### A. Structural Completeness Audit
+For each instrument/component currently drawn in the figure, enumerate:
+1. Component name -> mounting/support visible? (yes/no/N/A + 1-line rationale)
+2. Connections (wires/cables) -- does each connection have BOTH endpoints
+   visibly attached to a defined component?
+3. Per the provided reference context, list 3 standard parts that exist in the
+   real reference-system but are MISSING or weakly represented in the current
+   rendering. For each, declare `intentional_omission` vs `incomplete`.
+
+### B. Label-Target Matching Audit
+For EVERY label/annotation in the figure (enumerate, do not summarize):
+1. Label text -> visually-nearest drawn object.
+2. Is that nearest object the INTENDED label target per briefing/spec/source?
+3. If mismatch: propose ONE concrete fix (relocation coordinate, leader-line
+   addition, OR rename).
+
+### C. Physical Plausibility Audit
+Enumerate at least 5 physical-plausibility checks specific to this figure:
+1. Cables/wires -- do they follow gravity, or are they intentionally schematic?
+2. Floating components -- list any drawn object with no visible support, mount,
+   or frame attachment.
+3. Spatial proximities -- list any two components whose drawn proximity
+   contradicts real-system separation.
+4. Direction/orientation -- list any arrow, modulation cue, or motion indicator
+   whose direction conflicts with the labeled physics.
+5. Material distinction -- verify each labeled material region is visually
+   distinguishable from neighbors.
+
+### D. Conceptual Completeness Audit
+List 3 elements that SHOULD be present per provided reference/briefing context
+but are weakly represented or missing entirely. For each, provide element name,
+bounded reference provenance, severity, and proposed action.
+"""
+
+
 def _panel_reference_sections(
     example_dir: Path, spec: dict, png_path: Path, pdf_path: Path
 ) -> tuple[str, str]:
@@ -368,6 +415,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ```tex
 {numbered_tex}```
 
+{_mandatory_audit_checklists()}
+
 ## Critique rubric
 
 ### A. Physics correctness
@@ -388,11 +437,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1):
+(YAML front-matter then human-readable Markdown body — schema v1.1):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1
+schema: figure-agent.critique.v1.1
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -400,6 +449,32 @@ generator_version: {generator_version}
 rubric_version: {CRITIQUE_RUBRIC_VERSION}
 critique_input_hash: {critique_input_hash}
 verdict: ready | revise | block
+audit_enumeration:
+  structural_completeness:
+    components:
+      - component: <name>
+        mount_support: yes|no|N/A
+        rationale: "<one-line>"
+        connections: "<endpoint audit>"
+    missing_from_reference:
+      - element: <name>
+        status: intentional_omission | incomplete
+        rationale: "<one-line>"
+  label_target_matching:
+    - label: "<text>"
+      nearest_object: "<drawn-object-name>"
+      intended_target: "<from-briefing-or-spec>"
+      matches: true | false
+      proposed_fix: "<concrete or empty if matches=true>"
+  physical_plausibility:
+    - check: {_PHYSICAL_CHECK_VALUES}
+      finding: "<what was observed>"
+      verdict: convention_acceptable | structural_defect
+  conceptual_completeness:
+    - element: <name>
+      reference: provided_reference | briefing | reference_pack | not_provided
+      severity: BLOCKER | MAJOR | MINOR | NIT
+      proposed_action: add | expand | accept_simplification
 panels:
   - id: <panel id>
     findings:
@@ -413,7 +488,7 @@ panels:
 findings:
   - id: C001
     severity: BLOCKER | MAJOR | MINOR | NIT
-    category: physics | label_placement | whitespace | hierarchy | palette | style
+    category: structural | physics | label_placement | whitespace | hierarchy | palette | style
     tex_lines: [<int>, ...]
     observation: "<what is wrong, citing what you see in the PNG>"
     suggested_fix: "<concrete edit to the .tex>"
@@ -424,6 +499,10 @@ findings:
 
 <one-paragraph overall verdict, then per-finding prose discussion>
 ```
+
+Any `structural_defect`, `incomplete`, `BLOCKER`, or `MAJOR` audit item must
+either appear as a normal panel/top-level finding or be explicitly justified as
+`accept_simplification`.
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

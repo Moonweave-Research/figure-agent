@@ -14,25 +14,55 @@ Prerequisites:
 
 Steps:
 
-1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
+1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, mandatory audit checklists, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
 
 2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. The host model inspects the images directly; do not call any external vision API.
 
-3. Apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
+3. Fill the mandatory audit checklists first, then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. Empty `audit_enumeration` blocks are invalid for schema v1.1. Any `structural_defect`, `incomplete`, `BLOCKER`, or `MAJOR` audit item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`. For each finding, identify:
    - `severity`: BLOCKER / MAJOR / MINOR / NIT
-   - `category`: physics / label_placement / whitespace / hierarchy / palette / style
+   - `category`: structural / physics / label_placement / whitespace / hierarchy / palette / style
    - `tex_lines`: the source line numbers that need revision (cite from the line-numbered .tex in the brief)
    - `observation`: what is wrong, citing what is visible in the PNG
    - `suggested_fix`: a concrete edit to `<name>.tex`
 
-4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1):
+4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.1):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1
+schema: figure-agent.critique.v1.1
 fixture: <name>
 generated_at: <ISO-8601 timestamp>
+generator: critique_brief.py
+generator_version: sha256:<generator hash>
+rubric_version: figure-agent.critique-rubric.v1.1
+critique_input_hash: sha256:<input manifest hash>
 verdict: ready | revise | block
+audit_enumeration:
+  structural_completeness:
+    components:
+      - component: <name>
+        mount_support: yes|no|N/A
+        rationale: "<one-line>"
+        connections: "<endpoint audit>"
+    missing_from_reference:
+      - element: <name>
+        status: intentional_omission | incomplete
+        rationale: "<one-line>"
+  label_target_matching:
+    - label: "<text>"
+      nearest_object: "<drawn-object-name>"
+      intended_target: "<from-briefing-or-spec>"
+      matches: true | false
+      proposed_fix: "<concrete or empty if matches=true>"
+  physical_plausibility:
+    - check: cable_gravity | floating_components | spatial_proximity | direction_orientation | material_distinction
+      finding: "<what was observed>"
+      verdict: convention_acceptable | structural_defect
+  conceptual_completeness:
+    - element: <name>
+      reference: provided_reference | briefing | reference_pack | not_provided
+      severity: BLOCKER | MAJOR | MINOR | NIT
+      proposed_action: add | expand | accept_simplification
 panels:
   - id: <panel id>
     findings:
@@ -46,7 +76,7 @@ panels:
 findings:
   - id: C001
     severity: MAJOR
-    category: physics
+    category: structural | physics | label_placement | whitespace | hierarchy | palette | style
     tex_lines: [42, 57]
     observation: "trap depth arrow direction contradicts briefing §6"
     suggested_fix: "reverse arrow and relabel Et axis"
@@ -65,7 +95,7 @@ Use `panels: []` when no panel-level reference comparison was available. Keep cr
 - `revise` — any MAJOR or MINOR findings (or NIT-only)
 - `block` — at least one BLOCKER physics violation that makes the figure unsuitable for manuscript use
 
-5. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation is gated on N=5+ dogfood accuracy ≥ 80% per `docs/architecture-v0.2-proposal.md` §7.
+5. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation remains deferred until the patch-handoff loop has at least 10 real dogfood runs with conservative safety evidence.
 
 For loop work, run `/fig_adjudicate <name>` after writing `critique.md` to
 create `examples/<name>/critique_adjudication.yaml` with the current critique

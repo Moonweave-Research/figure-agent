@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -12,8 +13,13 @@ from quality_manifest import file_sha256
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
+CRITIQUE_SCHEMA_V1 = "figure-agent.critique.v1"
+CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
 ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
 _PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
+_ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
+    {"provided_reference", "briefing", "reference_pack", "not_provided"}
+)
 
 
 class CritiqueAdjudicationError(ValueError):
@@ -24,6 +30,20 @@ def _require_mapping(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise CritiqueAdjudicationError(f"{label} must be a mapping")
     return value
+
+
+def _require_non_empty_list(value: Any, label: str) -> list[Any]:
+    if not isinstance(value, list) or not value:
+        raise CritiqueAdjudicationError(f"{label} must be a non-empty list")
+    return value
+
+
+def _require_mapping_items(value: Any, label: str) -> list[dict[str, Any]]:
+    items = _require_non_empty_list(value, label)
+    mappings: list[dict[str, Any]] = []
+    for index, raw_item in enumerate(items):
+        mappings.append(_require_mapping(raw_item, f"{label}[{index}]"))
+    return mappings
 
 
 def _require_non_empty_string(data: dict[str, Any], key: str, *, label: str) -> str:
@@ -133,6 +153,48 @@ def _finding_id(finding: dict[str, Any], label: str) -> str:
     return value.strip()
 
 
+def _validate_v1_1_audit(frontmatter: dict[str, Any]) -> None:
+    audit = _require_mapping(
+        frontmatter.get("audit_enumeration"),
+        "critique frontmatter.audit_enumeration",
+    )
+    structural = _require_mapping(
+        audit.get("structural_completeness"),
+        "critique frontmatter.audit_enumeration.structural_completeness",
+    )
+    _require_mapping_items(
+        structural.get("components"),
+        "critique frontmatter.audit_enumeration.structural_completeness.components",
+    )
+    _require_mapping_items(
+        structural.get("missing_from_reference"),
+        (
+            "critique frontmatter.audit_enumeration."
+            "structural_completeness.missing_from_reference"
+        ),
+    )
+    _require_mapping_items(
+        audit.get("label_target_matching"),
+        "critique frontmatter.audit_enumeration.label_target_matching",
+    )
+    _require_mapping_items(
+        audit.get("physical_plausibility"),
+        "critique frontmatter.audit_enumeration.physical_plausibility",
+    )
+    conceptual_items = _require_mapping_items(
+        audit.get("conceptual_completeness"),
+        "critique frontmatter.audit_enumeration.conceptual_completeness",
+    )
+    for index, item in enumerate(conceptual_items):
+        reference = item.get("reference")
+        if reference not in _ALLOWED_CONCEPTUAL_REFERENCES:
+            allowed = ", ".join(sorted(_ALLOWED_CONCEPTUAL_REFERENCES))
+            raise CritiqueAdjudicationError(
+                "critique frontmatter.audit_enumeration.conceptual_completeness"
+                f"[{index}].reference must be one of: {allowed}"
+            )
+
+
 def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
     tex_lines = finding.get("tex_lines")
     if (
@@ -181,6 +243,20 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
     """Build a conservative adjudication scaffold from critique.md frontmatter."""
     critique_path = example_dir / "critique.md"
     frontmatter = _critique_frontmatter(critique_path)
+    critique_schema = frontmatter.get("schema")
+    if critique_schema == CRITIQUE_SCHEMA_V1:
+        warnings.warn(
+            (
+                f"{CRITIQUE_SCHEMA_V1} is legacy; v1.1 critiques should include "
+                "audit_enumeration"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    elif critique_schema == CRITIQUE_SCHEMA_V1_1:
+        _validate_v1_1_audit(frontmatter)
+    elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
+        raise CritiqueAdjudicationError(f"unsupported critique schema: {critique_schema}")
     fixture_value = frontmatter.get("fixture")
     fixture = (
         fixture_value.strip()

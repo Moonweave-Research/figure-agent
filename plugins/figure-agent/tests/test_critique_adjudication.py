@@ -230,12 +230,63 @@ def _write_critique_with_findings(fig_dir: Path, fixture: str = "demo_fig") -> P
     return critique
 
 
+def _complete_v1_1_audit_yaml() -> str:
+    return (
+        "audit_enumeration:\n"
+        "  structural_completeness:\n"
+        "    components:\n"
+        "      - component: probe\n"
+        "        mount_support: yes\n"
+        "        rationale: visible shaft mount\n"
+        "        connections: cable endpoint attaches to meter\n"
+        "    missing_from_reference:\n"
+        "      - element: sample stage\n"
+        "        status: incomplete\n"
+        "        rationale: standard support is absent\n"
+        "  label_target_matching:\n"
+        "    - label: polymer film\n"
+        "      nearest_object: polymer band\n"
+        "      intended_target: polymer film\n"
+        "      matches: true\n"
+        "      proposed_fix: \"\"\n"
+        "  physical_plausibility:\n"
+        "    - check: cable_gravity\n"
+        "      finding: cable is schematic-straight consistently\n"
+        "      verdict: convention_acceptable\n"
+        "  conceptual_completeness:\n"
+        "    - element: sample stage\n"
+        "      reference: provided_reference\n"
+        "      severity: MAJOR\n"
+        "      proposed_action: add\n"
+    )
+
+
+def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
+    critique = fig_dir / "critique.md"
+    critique.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.1\n"
+        "fixture: demo_fig\n"
+        f"{audit_yaml}"
+        "findings:\n"
+        "  - id: C001\n"
+        "    status: open\n"
+        "    tex_lines: [10, 20]\n"
+        "    observation: needs review\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    return critique
+
+
 def test_build_adjudication_scaffold_from_critique_frontmatter(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     critique = _write_critique_with_findings(fig_dir)
 
-    scaffold = build_adjudication_scaffold(fig_dir)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        scaffold = build_adjudication_scaffold(fig_dir)
 
     assert scaffold["schema"] == "figure-agent.critique-adjudication.v1"
     assert scaffold["fixture"] == "demo_fig"
@@ -259,6 +310,109 @@ def test_build_adjudication_scaffold_from_critique_frontmatter(tmp_path: Path) -
     assert validate_adjudication(scaffold) == scaffold
 
 
+def test_build_adjudication_scaffold_accepts_v1_1_complete_audit(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_1_critique_with_audit(fig_dir, _complete_v1_1_audit_yaml())
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+    assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["C001"]
+
+
+def test_build_adjudication_scaffold_rejects_v1_1_missing_audit_block(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    audit_yaml = _complete_v1_1_audit_yaml().replace(
+        "  physical_plausibility:\n"
+        "    - check: cable_gravity\n"
+        "      finding: cable is schematic-straight consistently\n"
+        "      verdict: convention_acceptable\n",
+        "",
+    )
+    _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="physical_plausibility"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_1_empty_audit_block(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    audit_yaml = _complete_v1_1_audit_yaml().replace(
+        "  label_target_matching:\n"
+        "    - label: polymer film\n"
+        "      nearest_object: polymer band\n"
+        "      intended_target: polymer film\n"
+        "      matches: true\n"
+        "      proposed_fix: \"\"\n",
+        "  label_target_matching: []\n",
+    )
+    _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="label_target_matching"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_1_malformed_audit_item(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    audit_yaml = _complete_v1_1_audit_yaml().replace(
+        "  physical_plausibility:\n"
+        "    - check: cable_gravity\n"
+        "      finding: cable is schematic-straight consistently\n"
+        "      verdict: convention_acceptable\n",
+        "  physical_plausibility:\n"
+        "    - null\n",
+    )
+    _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="physical_plausibility"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_1_unbounded_reference(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    audit_yaml = _complete_v1_1_audit_yaml().replace(
+        "      reference: provided_reference\n",
+        "      reference: Smith et al. 2025\n",
+    )
+    _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
+
+    with pytest.raises(CritiqueAdjudicationError, match="reference must be one of"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_unsupported_critique_schema(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_1_critique_with_audit(fig_dir, _complete_v1_1_audit_yaml())
+    critique.write_text(
+        critique.read_text(encoding="utf-8").replace(
+            "schema: figure-agent.critique.v1.1",
+            "schema: figure-agent.critique.v9",
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="unsupported critique schema"):
+        build_adjudication_scaffold(fig_dir)
+
+
 def test_build_adjudication_scaffold_includes_panel_findings(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
@@ -280,7 +434,8 @@ def test_build_adjudication_scaffold_includes_panel_findings(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    scaffold = build_adjudication_scaffold(fig_dir)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        scaffold = build_adjudication_scaffold(fig_dir)
 
     assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["P001", "C001"]
     assert scaffold["decisions"][0]["patch_target"] == "examples/demo_fig/demo_fig.tex lines 7-9"
@@ -291,7 +446,8 @@ def test_scaffold_adjudication_writes_reloadable_yaml(tmp_path: Path) -> None:
     fig_dir.mkdir()
     _write_critique_with_findings(fig_dir)
 
-    path = scaffold_adjudication(fig_dir)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        path = scaffold_adjudication(fig_dir)
 
     assert path == fig_dir / "critique_adjudication.yaml"
     loaded = load_adjudication(path)
@@ -319,7 +475,8 @@ def test_scaffold_adjudication_force_overwrites_existing_file(tmp_path: Path) ->
     existing = fig_dir / "critique_adjudication.yaml"
     existing.write_text("replace me\n", encoding="utf-8")
 
-    scaffold_adjudication(fig_dir, force=True)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        scaffold_adjudication(fig_dir, force=True)
 
     assert load_adjudication(existing)["fixture"] == "demo_fig"
 
@@ -360,8 +517,9 @@ def test_build_adjudication_scaffold_rejects_non_list_findings(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    with pytest.raises(CritiqueAdjudicationError, match="findings must be a list"):
-        build_adjudication_scaffold(fig_dir)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        with pytest.raises(CritiqueAdjudicationError, match="findings must be a list"):
+            build_adjudication_scaffold(fig_dir)
 
 
 def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) -> None:
@@ -378,8 +536,9 @@ def test_build_adjudication_scaffold_rejects_finding_without_id(tmp_path: Path) 
         encoding="utf-8",
     )
 
-    with pytest.raises(CritiqueAdjudicationError, match="id must be a non-empty string"):
-        build_adjudication_scaffold(fig_dir)
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        with pytest.raises(CritiqueAdjudicationError, match="id must be a non-empty string"):
+            build_adjudication_scaffold(fig_dir)
 
 
 def test_cli_scaffold_writes_fixture_by_name(
@@ -390,7 +549,8 @@ def test_cli_scaffold_writes_fixture_by_name(
     fig_dir.mkdir(parents=True)
     _write_critique_with_findings(fig_dir)
 
-    exit_code = main(["scaffold", "demo_fig", "--repo-root", str(tmp_path)])
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        exit_code = main(["scaffold", "demo_fig", "--repo-root", str(tmp_path)])
 
     captured = capsys.readouterr()
     assert exit_code == 0

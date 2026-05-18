@@ -258,3 +258,14 @@ Later `/fig_loop` runs can compare the baseline against current allowed-scope
 hashes and the current adjudication decision to record `post_patch_evidence` as
 `resolved`, `unresolved`, `regressed`, or `ambiguous`. This is still read-only;
 it does not patch source or update critique/adjudication files.
+
+## Issue 5A.2 Direction: Dogfood Evidence Matrix
+
+The follow-up checkpoint is recorded in
+`docs/milestones/2026-05-18-fig-loop-dogfood-evidence-matrix.md`.
+
+That matrix covers safe candidate, unresolved, resolved, ambiguous,
+mechanism-blocked, human-gated, and regressed loop states. Its judgment is
+deliberately conservative: the read-only evidence contract is working, but
+Issue 5B still needs at least ten real apply-handoff dogfood runs before any
+source-editing mode is designed.

@@ -110,7 +110,9 @@ def test_critique_brief_embeds_full_tex_source(tmp_path):
     assert "```tex\n" in brief
     for line_number, line in enumerate(tex.splitlines(), start=1):
         assert f"{line_number:4d}: {line}" in brief
-    assert "\n```\n\n## Critique rubric" in brief
+    assert "\n```\n\n## Mandatory Audit Checklists" in brief
+    assert "### D. Conceptual Completeness Audit\n" in brief
+    assert "\n## Critique rubric" in brief
 
 
 def test_critique_brief_uses_example_relative_png_path(tmp_path):
@@ -178,8 +180,20 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1" in brief
+    assert "schema: figure-agent.critique.v1.1" in brief
     assert "panels:" in brief
+
+
+def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Mandatory Audit Checklists (host LLM MUST enumerate)" in brief
+    assert "### A. Structural Completeness Audit" in brief
+    assert "### B. Label-Target Matching Audit" in brief
+    assert "### C. Physical Plausibility Audit" in brief
+    assert "### D. Conceptual Completeness Audit" in brief
 
 
 def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
@@ -189,8 +203,10 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.1" in brief
     assert "critique_input_hash: sha256:" in brief
+    assert "audit_enumeration:" in brief
+    assert brief.count("category: structural | physics | label_placement") == 2
 
 
 def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):

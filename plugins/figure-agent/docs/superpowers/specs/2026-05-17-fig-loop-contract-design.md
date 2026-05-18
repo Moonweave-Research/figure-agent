@@ -80,7 +80,7 @@ autofixer. Each patch must trace to an adjudicated finding or active target.
 
 ### 4.3 `auto-patch-safe`
 
-Deferred until at least five dogfood loop runs show that specific finding
+Deferred until at least ten dogfood loop runs show that specific finding
 classes are reliable. Initial candidate classes:
 
 - label offset adjustments,
@@ -380,9 +380,38 @@ Acceptance:
 - post-patch verdicts are evaluated from allowed-scope hash changes plus the
   current adjudication decision, not from hidden source edits.
 
+### Issue 5A.2: Dogfood Evidence Matrix
+
+Before Issue 5B, the verify-only loop must be exercised across representative
+states and the results must be recorded as evidence, not inferred from unit
+tests alone.
+
+Required states:
+
+- safe label/spacing candidate,
+- unresolved patch attempt,
+- resolved post-patch adjudication,
+- ambiguous multiple-apply selection,
+- mechanism or science-class block,
+- explicit human gate,
+- regressed post-patch state when render freshness is stale.
+- generic label wording remains patch-assisted only,
+- non-label offset remains patch-assisted only,
+- publication-safety changes are blocked.
+
+Acceptance:
+
+- no tracked example source or artifact mutation is required to collect the
+  matrix,
+- every candidate state keeps `may_edit: false`,
+- broad or ambiguous patching remains blocked,
+- human-gated findings stop before handoff,
+- the matrix explicitly states whether it is sufficient for Issue 5B.
+
 ### Issue 5B: Safe Auto-Patch Pilot
 
-Only after Issues 1-4, Issue 5A, Issue 5A.1, and at least five dogfood runs.
+Only after Issues 1-4, Issue 5A, Issue 5A.1, Issue 5A.2, and at least ten real
+apply-handoff dogfood runs.
 
 Acceptance:
 
