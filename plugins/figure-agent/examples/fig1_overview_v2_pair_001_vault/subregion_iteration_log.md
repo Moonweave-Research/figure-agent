@@ -121,6 +121,37 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 8/10 — 2026-05-18 — Option Y apparatus radical redesign (HV+ + surface charges + larger probe + darker substrate)
+
+- **Scope**: E-2 apparatus zone (4 interlocked elements — corona source encapsulation, surface charge markers, probe vibration arrow, substrate material identity)
+- **Rationale**: User-driven Option Y (radical redesign per honest assessment "still cartoon level"). 4-element atomic structural commitment iter — moves toward Tech illustrator + ref01 requirements: component encapsulation, ISPD essence (surface charges), modulation signature visibility, material weight.
+- **Reference source**: Tech illustrator audit (HV indicator missing; vibration too small; surface charges missing); ref01 Checa NatComm 2023 (substrate weight); component encapsulation principle
+- **Patches**:
+  - **Patch A — HV+ source box (component encapsulation)**:
+    - New rectangle (6.35, 4.05) to (6.75, 4.20), cGray!75 0.32pt outline + white fill
+    - "HV+" label bold 5pt cGray!85 inside at (6.55, 4.125)
+    - Wire from box bottom (6.55, 4.05) → needle support ball (6.55, 3.95) — vertical 0.10cm
+    - **"Corona" label REMOVED** (HV+ + needle + sparks self-identifies)
+  - **Patch B — Surface charge "+" markers**:
+    - 5 small "+" symbols at polymer surface y=3.495, x = 6.40 / 6.70 / 7.05 / 7.40 / 7.70 (distributed across polymer width)
+    - Font: bold 4pt cRed!60!black — ISPD trapped charge essence visualized
+  - **Patch C — Probe vibration arrow enlargement**:
+    - Length: 0.12cm → 0.18cm (y range 3.76..3.88 → 3.72..3.90)
+    - Weight: 0.32pt → 0.45pt
+    - Color: cGray!65 → cGray!75 (more confident)
+  - **Patch D — Substrate material weight**:
+    - Fill: cGray!18 → cGray!28 (more saturated, dominant material)
+    - Outline: 0.30pt → 0.35pt
+- **Briefing edits (Type B, user-authorized "Option Y")**: §13.6 E-2 apparatus subsection — HV source box, surface charge marker spec, probe vibration sizing, substrate tone updates (will sync next iter; deferred briefing edit acceptable)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 7)**: T improved (physical accuracy ↑ via explicit HV source + surface charge ISPD essence; substrate dominance reflects real samples) | S unchanged (apparatus elements interlocked, positions consistent) | L significantly improved (apparatus reads as "integrated measurement system" rather than scattered components — encapsulation principle realized) | A significantly improved (Option Y direction substantial — Tech illustrator audit Patch 1-3 of 5 addressed)
+- **Notes**:
+  - Visual clash count 58 → 64 (+6 false positives from new "+" markers; not real collisions)
+  - This is FIRST iter on Option Y radical-redesign path. Iter 9-10 would continue: wire routing curves, scale cues, V_s meter encapsulation upgrade.
+  - Substrate now visually dominant + polymer thin top film clearly visible + ISPD surface charges deposited = "real ISPD sample under measurement" feel.
+  - Closure NOT declared per user.
+- **Visibility gate**: intended yes (HV+ box visible, surface charges 5 visible, vibration arrow clearly perceptible, substrate weight increased) | anomaly none (no overlap; visual clash deltas all from new markers)
+
 ### Column E iter 7/10 — 2026-05-18 — sample stack realistic ratio + disk metallic tint (ref01 grounded)
 
 - **Scope**: E-2 sample stack thickness + disk electrode material identity (atomic — interlocked via ground positioning + label collision)

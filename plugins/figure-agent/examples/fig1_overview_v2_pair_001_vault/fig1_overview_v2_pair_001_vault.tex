@@ -687,8 +687,10 @@
   (6.30, 3.45) rectangle (7.85, 3.52);
 % Substrate (BOTTOM, thick) — conductive base for ISPD charge-decay path.
 % Iter 7: bottom edge 3.34 → 3.23 (substrate height 0.11 → 0.22cm).
-\fill[cGray!18] (6.30, 3.23) rectangle (7.85, 3.45);
-\draw[cGray!75!black, line width=0.30pt]
+% Iter 8: fill cGray!18 → cGray!28 + outline 0.30→0.35pt for material weight
+% (ref01 substrate visually dominant + material identity per Tech illustrator).
+\fill[cGray!28] (6.30, 3.23) rectangle (7.85, 3.45);
+\draw[cGray!75!black, line width=0.35pt]
   (6.30, 3.23) rectangle (7.85, 3.45);
 % Substrate diagonal hatching (10 lines, extended length for thicker substrate)
 \foreach \hx in {6.40, 6.55, 6.70, 6.85, 7.00, 7.15, 7.30, 7.45, 7.60, 7.75} {
@@ -702,23 +704,36 @@
 \draw[cGray!75!black, line width=0.28pt] (7.90, 3.15) -- (8.00, 3.15);
 \draw[cGray!75!black, line width=0.25pt] (7.92, 3.12) -- (7.98, 3.12);
 
-% ----- Corona needle (LEFT, charging step) -----
+% ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
+% Tech illustrator audit: floating "+" cue + no HV identifier = "where does
+% the charging voltage come from?". Replaced with explicit HV+ source box
+% above needle + wire connection. "Corona" label removed (HV+ + needle +
+% sparks self-identifies as corona discharge per literature convention).
+%
+% HV+ source box (component encapsulation)
+\draw[cGray!75!black, line width=0.32pt] (6.35, 4.05) rectangle (6.75, 4.20);
+\fill[white] (6.36, 4.06) rectangle (6.74, 4.19);
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!85!black]
+  at (6.55, 4.125) {HV+};
+% Wire from HV box bottom to needle support ball
+\draw[cGray!75!black, line width=0.32pt] (6.55, 4.05) -- (6.55, 3.95);
 % Vertical electrode stem with sharp triangular tip + discharge spark cue
 \draw[cGray!85!black, line width=0.55pt] (6.55, 3.95) -- (6.55, 3.62);
 \fill[cGray!85!black] (6.55, 3.95) circle (0.04);  % support ball at top
 % Sharp filled triangular tip (downward point) — "needle electrode"
 \fill[cGray!85!black] (6.50, 3.62) -- (6.55, 3.55) -- (6.60, 3.62) -- cycle;
 % 3 short spark/discharge indicators radiating from tip toward sample
-% (light-pink cRed!55 — "ion emission" cue; physically: corona-discharge ions)
 \draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.49, 3.47);  % SW
 \draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.55, 3.45);  % S
 \draw[cRed!55!black, line width=0.30pt] (6.55, 3.53) -- (6.61, 3.47);  % SE
-% "+" polarity cue
-\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!85!black]
-  at (6.32, 3.75) {$+$};
-% "Corona" label above needle
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=south] at (6.55, 4.02) {Corona};
+% Iter 8: surface charge "+" markers on polymer top — ISPD essence (corona
+% discharge deposits ions on polymer surface, which then decay over time).
+% Per Tech illustrator audit "ISPD's whole point is surface-trapped charge".
+\foreach \cx in {6.40, 6.70, 7.05, 7.40, 7.70} {
+  \node[font=\sffamily\bfseries\fontsize{4}{4.8}\selectfont,
+        text=cRed!60!black, inner sep=0pt]
+    at (\cx, 3.495) {$+$};
+}
 
 % ----- Kelvin probe (RIGHT, V_s readout) — iter 6 disk-on-shaft redesign -----
 % Tech-illustrator audit (2026-05-18): prior block+arcs read as "hot plate +
@@ -736,7 +751,9 @@
 \draw[cGray!85!black, line width=0.40pt] (7.25, 3.62) rectangle (7.55, 3.66);
 % Vertical vibration arrow ON shaft — Kelvin-probe modulation signature
 % (vertical oscillation along shaft axis is the defining FM-CPD feature)
-\draw[<->, cGray!65!black, line width=0.32pt] (7.40, 3.76) -- (7.40, 3.88);
+% Iter 8: arrow length 0.12→0.18cm (3.76..3.88 → 3.72..3.90) + weight
+% 0.32→0.45pt for clearer signature presence per Tech illustrator audit.
+\draw[<->, cGray!75!black, line width=0.45pt] (7.40, 3.72) -- (7.40, 3.90);
 % Air gap indicator (vertical dashed line + d label) between disk bottom
 % (y=3.62) and polymer film top (y=3.52). Gap d communicates non-contact
 % measurement geometry (~100-500 μm in real systems).
