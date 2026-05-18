@@ -66,6 +66,8 @@ patch must trace back to the plan rather than to chat-only intent.
                          with unresolved findings defaulted to needs_human
 /fig_loop <name> --goal "<goal>"
                          verify-only loop evidence record under .scratch/fig-loop-runs/
+/fig_closeout <name>    read-only post-patch checklist for compile, critique,
+                         adjudication, export, and loop rerun freshness
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
 ```
@@ -116,6 +118,12 @@ Use `/fig_adjudicate <name>` after `/fig_critique <name>` when
 and top-level critique finding, stamps the current critique hash, and defaults
 unresolved findings to `needs_human` so the loop cannot silently drop reviewer
 findings.
+
+Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
+target. It reports which closeout steps are still stale, missing, blocked, or
+passed without running those steps itself. It withholds the final loop-rerun
+action until prerequisites are closed and keeps golden roll-forward as manual
+approval.
 
 Replaces the v0.1 HALT-then-paste review surface via rename + extend
 (`scripts/review_brief.py` → `scripts/critique_brief.py`,

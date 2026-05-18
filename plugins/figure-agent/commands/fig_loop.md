@@ -102,6 +102,12 @@ Closeout after any patch:
 4. Preserve unresolved findings; do not hide them in `critique.md`.
 5. Run `/fig_loop <name> --goal "<goal>"` again to record the next state.
 
+Use `/fig_closeout <name>` between patching and claiming loop progress when an
+outer agent needs a read-only checklist of missing or stale closeout steps. It
+only recommends the final `/fig_loop` rerun after compile, critique,
+adjudication, and export prerequisites are closed; golden roll-forward remains a
+manual approval checkpoint rather than an auto-executable next action.
+
 If `patch_handoff` is null, do not infer a broad patch target from prose. Follow
 the `stop_reason` and `recommended_next_action`; human-gated and ambiguous cases
 stay outside patch-assisted automation.

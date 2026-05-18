@@ -170,6 +170,9 @@ The P2 axis-evidence gap is now addressed in `/fig_loop` JSON by adding
 `source`, `evidence_path`, and `evaluation_state` to every axis verdict while
 preserving legacy `state` and `verdict`.
 
-The next implementation slice should address the P2 post-patch closeout
-checklist so a patching agent can determine exactly which compile, critique,
-adjudication, export, or loop rerun steps remain stale.
+The P2 post-patch closeout checklist is now implemented as `/fig_closeout
+<name>` via `scripts/fig_closeout.py`. It reports compile, critique,
+adjudication, export, and loop-rerun closeout state without mutating the figure
+or scratch run state. It blocks the final loop-rerun recommendation until prior
+closeout prerequisites are closed and treats tracked golden roll-forward as
+manual approval evidence rather than an auto-executable command.
