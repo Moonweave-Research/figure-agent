@@ -61,6 +61,103 @@ def _write_adjudication(
     )
 
 
+QUALITY_AXIS_NAMES = (
+    "message_storyline",
+    "panel_role_coherence",
+    "subregion_integration",
+    "component_fidelity",
+    "scientific_plausibility",
+    "composition_layout",
+    "label_annotation_semantics",
+    "journal_polish",
+    "reference_fidelity",
+    "publication_readiness",
+)
+
+
+def _quality_axis(
+    axis_name: str,
+    *,
+    verdict: str = "pass",
+    recommended_action: str | None = None,
+    blocking_items: list[str] | None = None,
+) -> dict:
+    if recommended_action is None:
+        recommended_action = {
+            "pass": "none",
+            "not_applicable": "none",
+            "needs_patch": "patch",
+            "needs_human": "human_review",
+            "block": "block_release",
+        }[verdict]
+    axis = {
+        "verdict": verdict,
+        "confidence": "high" if verdict != "not_applicable" else "low",
+        "rationale": "" if verdict == "not_applicable" else f"{axis_name} rationale",
+        "evidence": "" if verdict == "not_applicable" else f"{axis_name} evidence",
+        "blocking_items": blocking_items or [],
+        "recommended_action": recommended_action,
+    }
+    if axis_name == "panel_role_coherence":
+        axis["panel_roles"] = [
+            {
+                "panel_id": "A",
+                "role": "setup",
+                "role_quality": "clear",
+                "rationale": "panel A introduces the setup",
+            }
+        ]
+    return axis
+
+
+def _write_v1_2_critique(
+    fixture: Path,
+    *,
+    axis_overrides: dict[str, dict] | None = None,
+) -> Path:
+    axis_overrides = axis_overrides or {}
+    quality_axes = {
+        axis_name: axis_overrides.get(axis_name, _quality_axis(axis_name))
+        for axis_name in QUALITY_AXIS_NAMES
+    }
+    critique = fixture / "critique.md"
+    critique.write_text(
+        "---\n"
+        + yaml.safe_dump(
+            {
+                "schema": "figure-agent.critique.v1.2",
+                "fixture": fixture.name,
+                "quality_axes": quality_axes,
+            },
+            sort_keys=False,
+        )
+        + "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    return critique
+
+
+def _patch_fresh_status(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 4,
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "FRESH",
+            "acceptance_state": "NOT_DECLARED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": [],
+            "next": "inspect figure state",
+        },
+    )
+
+
 def _assert_agent_action_required(iteration: dict) -> None:
     assert iteration["escalation_level"] == "agent_action_required"
     assert iteration["requires_user_input"] is False
@@ -157,6 +254,211 @@ def test_loop_axis_verdicts_mark_configured_unparsed_axes_not_evaluated(
     assert theory["evidence_path"].endswith("examples/loop_demo/theory_guard.md")
     assert story["evaluation_state"] == "not_evaluated"
     assert story["evidence_path"].endswith("examples/loop_demo/authoring_plan.md")
+
+
+def test_loop_maps_v1_2_quality_axes_to_story_hierarchy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        axis_overrides={
+            "message_storyline": _quality_axis("message_storyline"),
+            "panel_role_coherence": _quality_axis(
+                "panel_role_coherence",
+                verdict="needs_patch",
+                blocking_items=["C001 - panel role is weak"],
+            ),
+            "composition_layout": _quality_axis(
+                "composition_layout",
+                verdict="needs_human",
+                blocking_items=["layout judgment requires domain review"],
+            ),
+            "publication_readiness": _quality_axis(
+                "publication_readiness",
+                verdict="needs_human",
+                recommended_action="human_review",
+                blocking_items=["layout judgment requires domain review"],
+            ),
+        },
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect quality axes",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    story = iteration["axis_verdicts"]["story_hierarchy"]
+    assert story["source"] == "critique.quality_axes"
+    assert story["evidence_path"] == str(critique)
+    assert story["state"] == "needs_human"
+    assert story["verdict"] == "needs_human"
+    assert story["evaluation_state"] == "blocked"
+    assert story["quality_axes"] == [
+        "message_storyline",
+        "panel_role_coherence",
+        "composition_layout",
+    ]
+    assert story["quality_axis_verdicts"] == {
+        "message_storyline": "pass",
+        "panel_role_coherence": "needs_patch",
+        "composition_layout": "needs_human",
+    }
+
+
+def test_loop_maps_v1_2_reference_fidelity_quality_axis(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        axis_overrides={
+            "reference_fidelity": _quality_axis(
+                "reference_fidelity",
+                verdict="needs_patch",
+                blocking_items=["C002 - reference topology is weak"],
+            ),
+            "publication_readiness": _quality_axis(
+                "publication_readiness",
+                verdict="needs_patch",
+                blocking_items=["C002 - reference topology is weak"],
+            ),
+        },
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect reference quality axis",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    reference = iteration["axis_verdicts"]["reference_fidelity"]
+    assert reference["source"] == "critique.quality_axes"
+    assert reference["evidence_path"] == str(critique)
+    assert reference["state"] == "needs_patch"
+    assert reference["verdict"] == "needs_patch"
+    assert reference["evaluation_state"] == "needs_action"
+    assert reference["quality_axes"] == ["reference_fidelity"]
+
+
+def test_loop_keeps_missing_reference_gate_ahead_of_quality_axes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        axis_overrides={
+            "reference_fidelity": _quality_axis("reference_fidelity"),
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 3,
+            "render_state": "FRESH",
+            "critique_state": "REFERENCE_MISSING",
+            "export_state": "FRESH",
+            "acceptance_state": "NOT_DECLARED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": ["critique_reference_missing"],
+            "next": "fix declared reference inputs before continuing",
+        },
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect reference quality gate",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    reference = iteration["axis_verdicts"]["reference_fidelity"]
+    assert iteration["stop_reason"] == "reference_input_missing"
+    assert reference["source"] == "status.notes"
+    assert reference["state"] == ["critique_reference_missing"]
+    assert reference["verdict"] == "blocked"
+    assert reference["evaluation_state"] == "blocked"
+
+
+def test_loop_maps_v1_2_publication_readiness_to_publication_safety(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        axis_overrides={
+            "publication_readiness": _quality_axis(
+                "publication_readiness",
+                verdict="block",
+                recommended_action="block_release",
+                blocking_items=["C003 - publication release is blocked"],
+            ),
+        },
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect publication readiness",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    publication = iteration["axis_verdicts"]["publication_safety"]
+    assert publication["source"] == "critique.quality_axes"
+    assert publication["evidence_path"] == str(critique)
+    assert publication["state"] == "block"
+    assert publication["verdict"] == "block"
+    assert publication["evaluation_state"] == "blocked"
+    assert publication["quality_axes"] == ["publication_readiness"]
+    assert publication["quality_axis_recommended_actions"] == {
+        "publication_readiness": "block_release"
+    }
+
+
+def test_loop_ignores_malformed_quality_axes_without_crashing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.2\n"
+        "quality_axes: [unterminated\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect malformed quality axes",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    story = iteration["axis_verdicts"]["story_hierarchy"]
+    assert story["source"] == "not configured"
+    assert story["evaluation_state"] == "not_configured"
 
 
 def test_loop_records_fresh_adjudication(tmp_path: Path) -> None:

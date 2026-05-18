@@ -56,6 +56,23 @@ In verify-only mode, axes such as `static_visual`, configured `theory`, and
 configured `story_hierarchy` can remain `not_evaluated`; their presence in the
 JSON is an audit slot, not proof that the runner performed those checks.
 
+When `critique.md` is fresh schema `figure-agent.critique.v1.2`,
+`/fig_loop` can populate some existing audit slots from
+`critique.md` frontmatter `quality_axes`:
+
+- `story_hierarchy` uses `message_storyline`, `panel_role_coherence`, and
+  `composition_layout`.
+- `reference_fidelity` uses `reference_fidelity`, unless reference input is
+  missing.
+- `publication_safety` uses `publication_readiness`, unless an explicit
+  adjudication human gate is already required.
+
+These records keep the same `state`, `verdict`, `source`, `evidence_path`, and
+`evaluation_state` fields, and may also include `quality_axes`,
+`quality_axis_verdicts`, `quality_axis_recommended_actions`, and
+`quality_axis_blocking_items`. Legacy, stale, missing, or malformed critique
+frontmatter falls back to the earlier placeholder/status-derived behavior.
+
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
 change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
