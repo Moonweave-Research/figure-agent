@@ -131,6 +131,19 @@ def test_stage_2_tex_no_build_pdf(tmp_path: Path) -> None:
     assert result["stage"] == 2
 
 
+def test_stage_2_missing_briefing_does_not_suggest_compile(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "legacy_authored"
+    fig_dir.mkdir()
+    (fig_dir / "legacy_authored.tex").write_text("% tikz", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 2
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "/fig_compile" not in result["next"]
+
+
 def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -150,6 +163,28 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+
+
+def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "legacy_built"
+    fig_dir.mkdir()
+    tex = fig_dir / "legacy_built.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    build_pdf = build_dir / "legacy_built.pdf"
+    build_pdf.write_bytes(b"%PDF")
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    os.utime(tex, (old_time, old_time))
+    os.utime(build_pdf, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "/fig_export" not in result["next"]
 
 
 def test_stage_3_panel_reference_missing_critique_redirects_to_fig_critique(
@@ -603,6 +638,27 @@ def test_stage_4_all_four_exports_no_note(tmp_path: Path) -> None:
     result = infer_stage(fig_dir)
     assert result["stage"] == 4
     assert "partial_export" not in result["notes"]
+
+
+def test_stage_4_missing_briefing_does_not_report_done(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "legacy_exported"
+    fig_dir.mkdir()
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    (exports_dir / "legacy_exported.pdf").write_bytes(b"%PDF")
+    (exports_dir / "legacy_exported.svg").write_bytes(b"<svg/>")
+    (exports_dir / "legacy_exported.tif").write_bytes(b"TIFF")
+    (exports_dir / "legacy_exported.png").write_bytes(b"\x89PNG")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert "missing_briefing" in result["notes"]
+    assert "briefing.md" in result["next"]
+    assert "done" not in result["next"]
 
 
 def test_stage_2_briefing_newer_than_pdf(tmp_path: Path) -> None:

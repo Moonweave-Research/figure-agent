@@ -445,7 +445,9 @@ def infer_stage(example_dir: Path) -> dict:
             notes.append("stale_export")
         # Priority: stale_export / partial_export stay above done, but their
         # remediation must include critique when run_export.py will enforce it.
-        if critique_state == CRITIQUE_REFERENCE_MISSING:
+        if "missing_briefing" in notes:
+            next_template = _NEXT_MISSING_BRIEFING
+        elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
         elif is_stale and _critique_needs_action(critique_state):
             if exports_substate == EXPORT_TRACKED_GOLDEN:
@@ -492,7 +494,9 @@ def infer_stage(example_dir: Path) -> dict:
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        if critique_state == CRITIQUE_REFERENCE_MISSING:
+        if "missing_briefing" in notes:
+            next_template = _NEXT_MISSING_BRIEFING
+        elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
         elif _critique_needs_action(critique_state):
             next_template = _NEXT_3_CRITIQUE_REQUIRED
@@ -519,11 +523,14 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
+        next_template = (
+            _NEXT_MISSING_BRIEFING if "missing_briefing" in notes else _NEXT_2
+        )
         return {
             "stage": 2,
             "name": name,
             "checks": checks,
-            "next": _NEXT_2.replace("<name>", name),
+            "next": next_template.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
