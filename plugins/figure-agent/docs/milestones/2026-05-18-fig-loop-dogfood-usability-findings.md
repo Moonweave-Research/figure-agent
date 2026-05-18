@@ -166,6 +166,10 @@ The P1 adjudication scaffold is now implemented as `/fig_adjudicate <name>` via
 `scripts/critique_adjudication.py scaffold <name>`, so future dogfood passes do
 not require hand-written `critique_adjudication.yaml`.
 
-The next implementation slice should address the P2 axis-evidence gap or the
-P2 post-patch closeout checklist, depending on whether the next dogfood run
-needs better audit truth or safer operator handoff first.
+The P2 axis-evidence gap is now addressed in `/fig_loop` JSON by adding
+`source`, `evidence_path`, and `evaluation_state` to every axis verdict while
+preserving legacy `state` and `verdict`.
+
+The next implementation slice should address the P2 post-patch closeout
+checklist so a patching agent can determine exactly which compile, critique,
+adjudication, export, or loop rerun steps remain stale.

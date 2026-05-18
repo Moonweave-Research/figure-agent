@@ -109,6 +109,55 @@ def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path)
     assert "status_action_required" in decision
 
 
+def test_loop_axis_verdicts_record_sources_and_evaluation_state(tmp_path: Path) -> None:
+    _make_fixture(tmp_path)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect axis evidence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    for axis, record in iteration["axis_verdicts"].items():
+        assert "source" in record, axis
+        assert "evidence_path" in record, axis
+        assert "evaluation_state" in record, axis
+
+    assert iteration["axis_verdicts"]["render"]["source"] == "status.render_state"
+    assert iteration["axis_verdicts"]["render"]["evaluation_state"] == "needs_action"
+    assert iteration["axis_verdicts"]["static_visual"]["evaluation_state"] == "not_evaluated"
+    assert iteration["axis_verdicts"]["static_visual"]["source"] == "verify-only runner"
+    assert iteration["axis_verdicts"]["adjudication"]["evaluation_state"] == "not_configured"
+    assert iteration["axis_verdicts"]["reference_fidelity"]["evaluation_state"] == "not_configured"
+    assert iteration["axis_verdicts"]["theory"]["evaluation_state"] == "not_configured"
+    assert iteration["axis_verdicts"]["story_hierarchy"]["evaluation_state"] == "not_configured"
+
+
+def test_loop_axis_verdicts_mark_configured_unparsed_axes_not_evaluated(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "theory_guard.md").write_text("# theory\n", encoding="utf-8")
+    (fixture / "authoring_plan.md").write_text("# plan\n", encoding="utf-8")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect configured axis evidence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    theory = iteration["axis_verdicts"]["theory"]
+    story = iteration["axis_verdicts"]["story_hierarchy"]
+    assert theory["evaluation_state"] == "not_evaluated"
+    assert theory["evidence_path"].endswith("examples/loop_demo/theory_guard.md")
+    assert story["evaluation_state"] == "not_evaluated"
+    assert story["evidence_path"].endswith("examples/loop_demo/authoring_plan.md")
+
+
 def test_loop_records_fresh_adjudication(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     critique = fixture / "critique.md"
@@ -462,6 +511,7 @@ def test_loop_stops_on_missing_reference_input(tmp_path: Path) -> None:
     assert manifest["final_stop_reason"] == "reference_input_missing"
     assert iteration["stop_reason"] == "reference_input_missing"
     assert iteration["axis_verdicts"]["reference_fidelity"]["verdict"] == "blocked"
+    assert iteration["axis_verdicts"]["reference_fidelity"]["evaluation_state"] == "blocked"
     _assert_agent_action_required(iteration)
     assert iteration["recommended_next_action"] == (
         "fix declared reference inputs before continuing"
@@ -584,6 +634,8 @@ def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
     assert iteration["stop_reason"] == "missing_adjudication"
     assert iteration["active_patch_target"] is None
     assert iteration["patch_handoff"] is None
+    assert iteration["axis_verdicts"]["adjudication"]["evaluation_state"] == "needs_action"
+    assert iteration["axis_verdicts"]["reference_fidelity"]["evaluation_state"] == "not_evaluated"
     _assert_agent_action_required(iteration)
     assert iteration["recommended_next_action"] == "create critique_adjudication.yaml"
 

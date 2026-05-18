@@ -40,6 +40,18 @@ Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 - `decision.md` — human-readable stop reason, active patch target, and
   recommended next action.
 
+Each `axis_verdicts.<axis>` record keeps the legacy `state` and `verdict`
+fields and also includes:
+
+- `source` — the status field or fixture artifact used for the verdict.
+- `evidence_path` — the backing file path when one exists, otherwise `null`.
+- `evaluation_state` — one of `passed`, `needs_action`, `blocked`,
+  `not_evaluated`, or `not_configured`.
+
+In verify-only mode, axes such as `static_visual`, configured `theory`, and
+configured `story_hierarchy` can remain `not_evaluated`; their presence in the
+JSON is an audit slot, not proof that the runner performed those checks.
+
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
 change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop

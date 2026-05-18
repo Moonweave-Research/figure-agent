@@ -266,50 +266,182 @@ def _axis_verdicts(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
     loop_decision: dict[str, Any],
+    example_dir: Path,
 ) -> dict[str, dict[str, Any]]:
     stop_reason = loop_decision["stop_reason"]
+    theory_path = example_dir / "theory_guard.md"
+    story_path = next(
+        (
+            path
+            for path in (
+                example_dir / "authoring_plan.md",
+                example_dir / "authoring_contract.md",
+                example_dir / "subregion_iteration_log.md",
+            )
+            if path.is_file()
+        ),
+        None,
+    )
+    adjudication_path = example_dir / "critique_adjudication.yaml"
+    critique_path = example_dir / "critique.md"
+    critique_state = status_result.get("critique_state")
+    reference_blocked = stop_reason == "reference_input_missing"
     return {
-        "render": {
-            "state": status_result.get("render_state"),
-            "verdict": "fresh" if status_result.get("render_state") == "FRESH" else "not_ready",
-        },
-        "static_visual": {
-            "state": "not_evaluated",
-            "verdict": "not_evaluated",
-        },
-        "critique": {
-            "state": status_result.get("critique_state"),
-            "verdict": "ready"
-            if status_result.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
-            else "needs_action",
-        },
-        "adjudication": {
-            "state": adjudication["state"],
-            "verdict": _adjudication_verdict(adjudication, stop_reason),
-        },
-        "theory": {
-            "state": "not_evaluated",
-            "verdict": "human_review_not_requested",
-        },
-        "reference_fidelity": {
-            "state": status_result.get("notes", []),
-            "verdict": "blocked" if stop_reason == "reference_input_missing" else "not_blocked",
-        },
-        "story_hierarchy": {
-            "state": "not_evaluated",
-            "verdict": "not_evaluated",
-        },
-        "export": {
-            "state": status_result.get("export_state"),
-            "verdict": "fresh" if status_result.get("export_state") == "FRESH" else "not_ready",
-        },
-        "publication_safety": {
-            "state": status_result.get("acceptance_state"),
-            "verdict": "human_gate"
+        "render": _axis_record(
+            state=status_result.get("render_state"),
+            verdict="fresh" if status_result.get("render_state") == "FRESH" else "not_ready",
+            source="status.render_state",
+            evaluation_state=(
+                "passed" if status_result.get("render_state") == "FRESH" else "needs_action"
+            ),
+        ),
+        "static_visual": _axis_record(
+            state="not_evaluated",
+            verdict="not_evaluated",
+            source="verify-only runner",
+            evaluation_state="not_evaluated",
+        ),
+        "critique": _axis_record(
+            state=critique_state,
+            verdict="ready" if critique_state in {"FRESH", "NOT_REQUIRED"} else "needs_action",
+            source="status.critique_state",
+            evidence_path=critique_path if critique_path.is_file() else None,
+            evaluation_state=_status_axis_evaluation(
+                critique_state,
+                passed_values={"FRESH"},
+                not_configured_values={"NOT_REQUIRED"},
+                blocked_values={"REFERENCE_MISSING"},
+            ),
+        ),
+        "adjudication": _axis_record(
+            state=adjudication["state"],
+            verdict=_adjudication_verdict(adjudication, stop_reason),
+            source="critique_adjudication.yaml",
+            evidence_path=adjudication_path if adjudication_path.is_file() else None,
+            evaluation_state=_adjudication_evaluation_state(
+                adjudication,
+                stop_reason,
+                critique_state,
+            ),
+        ),
+        "theory": _axis_record(
+            state="not_evaluated" if theory_path.is_file() else "not_configured",
+            verdict="human_review_not_requested",
+            source="theory_guard.md" if theory_path.is_file() else "not configured",
+            evidence_path=theory_path if theory_path.is_file() else None,
+            evaluation_state="not_evaluated" if theory_path.is_file() else "not_configured",
+        ),
+        "reference_fidelity": _axis_record(
+            state=status_result.get("notes", []),
+            verdict="blocked" if reference_blocked else "not_blocked",
+            source="status.notes",
+            evaluation_state=_reference_fidelity_evaluation_state(
+                reference_blocked,
+                critique_state,
+            ),
+        ),
+        "story_hierarchy": _axis_record(
+            state="not_evaluated" if story_path else "not_configured",
+            verdict="not_evaluated",
+            source=story_path.name if story_path else "not configured",
+            evidence_path=story_path,
+            evaluation_state="not_evaluated" if story_path else "not_configured",
+        ),
+        "export": _axis_record(
+            state=status_result.get("export_state"),
+            verdict="fresh" if status_result.get("export_state") == "FRESH" else "not_ready",
+            source="status.export_state",
+            evaluation_state=(
+                "passed" if status_result.get("export_state") == "FRESH" else "needs_action"
+            ),
+        ),
+        "publication_safety": _axis_record(
+            state=status_result.get("acceptance_state"),
+            verdict="human_gate"
             if loop_decision["human_gate_status"] == "required"
             else "not_cleared",
-        },
+            source="status.acceptance_state",
+            evidence_path=(
+                example_dir / "QUALITY_AUDIT.md"
+                if (example_dir / "QUALITY_AUDIT.md").is_file()
+                else None
+            ),
+            evaluation_state=_publication_safety_evaluation_state(
+                status_result.get("acceptance_state"),
+                loop_decision["human_gate_status"],
+            ),
+        ),
     }
+
+
+def _axis_record(
+    *,
+    state: Any,
+    verdict: str,
+    source: str,
+    evaluation_state: str,
+    evidence_path: Path | None = None,
+) -> dict[str, Any]:
+    return {
+        "state": state,
+        "verdict": verdict,
+        "source": source,
+        "evidence_path": str(evidence_path) if evidence_path else None,
+        "evaluation_state": evaluation_state,
+    }
+
+
+def _status_axis_evaluation(
+    state: Any,
+    *,
+    passed_values: set[str],
+    not_configured_values: set[str] | None = None,
+    blocked_values: set[str] | None = None,
+) -> str:
+    if state in passed_values:
+        return "passed"
+    if not_configured_values and state in not_configured_values:
+        return "not_configured"
+    if blocked_values and state in blocked_values:
+        return "blocked"
+    return "needs_action"
+
+
+def _adjudication_evaluation_state(
+    adjudication: dict[str, Any],
+    stop_reason: str,
+    critique_state: Any,
+) -> str:
+    if stop_reason in {"patch_target_recommended", "human_gate_required"}:
+        return "needs_action"
+    if adjudication["state"] == "missing" and critique_state != "FRESH":
+        return "not_configured"
+    if adjudication["state"] == "fresh":
+        return "passed"
+    if adjudication["state"] in {"stale", "invalid", "missing"}:
+        return "needs_action"
+    return "not_evaluated"
+
+
+def _reference_fidelity_evaluation_state(reference_blocked: bool, critique_state: Any) -> str:
+    if reference_blocked:
+        return "blocked"
+    if critique_state == "NOT_REQUIRED":
+        return "not_configured"
+    return "not_evaluated"
+
+
+def _publication_safety_evaluation_state(
+    acceptance_state: Any,
+    human_gate_status: str,
+) -> str:
+    if human_gate_status == "required":
+        return "blocked"
+    if acceptance_state == "ACCEPTED":
+        return "passed"
+    if acceptance_state == "NOT_DECLARED":
+        return "not_configured"
+    return "needs_action"
 
 
 def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str:
@@ -473,7 +605,7 @@ def run_loop(
     status_result = infer_stage(example_dir)
     adjudication = _adjudication_state(example_dir)
     loop_decision = _loop_decision(status_result, adjudication, example_dir)
-    axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision)
+    axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
     completed_at = _utc_now()
