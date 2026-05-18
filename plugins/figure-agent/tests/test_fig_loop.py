@@ -524,6 +524,128 @@ def test_loop_records_pre_patch_evidence_baseline_for_patch_handoff(tmp_path: Pa
     }
 
 
+def test_loop_records_resolved_post_patch_evidence_from_previous_baseline(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    tex_path = fixture / "loop_demo.tex"
+    tex_path.write_text("\\documentclass{standalone}\n", encoding="utf-8")
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "label overlaps arrow; adjust label offset",
+                "patch_target": "panel A label cluster",
+                "evidence": "critique.md C001",
+            }
+        ],
+    )
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    baseline_run = run_loop(
+        "loop_demo",
+        "record pre-patch evidence",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+    baseline_iteration_path = baseline_run / "iteration_001.json"
+
+    tex_path.write_text("\\documentclass{standalone}\n% label moved\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "resolved",
+                "reason": "label no longer overlaps arrow",
+                "patch_target": "panel A label cluster",
+                "evidence": "post-patch critique",
+            }
+        ],
+    )
+
+    post_run = run_loop(
+        "loop_demo",
+        "verify post-patch evidence",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    iteration = json.loads((post_run / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["patch_handoff"] is None
+    assert iteration["patch_evidence"] is None
+    assert iteration["post_patch_evidence"] == {
+        "schema": "figure-agent.post-patch-evidence.v1",
+        "baseline_path": str(baseline_iteration_path),
+        "target_type": "finding",
+        "target_id": "C001",
+        "verdict": "resolved",
+        "allowed_edit_scope_changed": True,
+        "changed_allowed_paths": ["examples/loop_demo/loop_demo.tex"],
+        "current_decision": "resolved",
+        "may_edit": False,
+    }
+
+
+def test_loop_records_unresolved_post_patch_evidence_when_target_still_apply(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    tex_path = fixture / "loop_demo.tex"
+    tex_path.write_text("\\documentclass{standalone}\n", encoding="utf-8")
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "label overlaps arrow; adjust label offset",
+                "patch_target": "panel A label cluster",
+                "evidence": "critique.md C001",
+            }
+        ],
+    )
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    baseline_run = run_loop(
+        "loop_demo",
+        "record pre-patch evidence",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    tex_path.write_text("\\documentclass{standalone}\n% attempted move\n", encoding="utf-8")
+
+    post_run = run_loop(
+        "loop_demo",
+        "verify unresolved post-patch evidence",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    iteration = json.loads((post_run / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["patch_handoff"] is not None
+    assert iteration["patch_evidence"] is None
+    assert iteration["post_patch_evidence"] == {
+        "schema": "figure-agent.post-patch-evidence.v1",
+        "baseline_path": str(baseline_run / "iteration_001.json"),
+        "target_type": "finding",
+        "target_id": "C001",
+        "verdict": "unresolved",
+        "allowed_edit_scope_changed": True,
+        "changed_allowed_paths": ["examples/loop_demo/loop_demo.tex"],
+        "current_decision": "apply",
+        "may_edit": False,
+    }
+
+
 def test_loop_marks_mechanism_patch_as_human_review_required(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
     critique = fixture / "critique.md"
@@ -1110,6 +1232,7 @@ def test_main_json_emits_machine_readable_summary(
             "patch_handoff": None,
             "auto_patch_eligibility": None,
             "patch_evidence": None,
+            "post_patch_evidence": None,
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -1146,6 +1269,7 @@ def test_main_json_emits_machine_readable_summary(
         "patch_handoff_present": False,
         "auto_patch_eligibility": None,
         "patch_evidence_present": False,
+        "post_patch_evidence_verdict": None,
         "recommended_next_action": "inspect figure state",
     }
 
@@ -1230,5 +1354,8 @@ def test_main_json_exercises_real_run_loop_summary(
         "patch_handoff_present": iteration["patch_handoff"] is not None,
         "auto_patch_eligibility": iteration["auto_patch_eligibility"],
         "patch_evidence_present": iteration["patch_evidence"] is not None,
+        "post_patch_evidence_verdict": (
+            (iteration["post_patch_evidence"] or {}).get("verdict")
+        ),
         "recommended_next_action": iteration["recommended_next_action"],
     }

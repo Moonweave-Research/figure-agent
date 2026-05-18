@@ -98,6 +98,10 @@ id/type, `phase: pre_patch`, `verdict: not_evaluated`, `may_edit: false`,
 allowed edit-scope hashes, rollback guidance, and the future post-patch verdict
 vocabulary: `resolved`, `unresolved`, `regressed`, or `ambiguous`.
 
+Later `/fig_loop` runs may emit `post_patch_evidence` by comparing current
+allowed-scope hashes and adjudication decisions against the latest baseline.
+This remains a verifier, not an editor.
+
 ## Task 1: Add Safe Candidate Classification
 
 **Files:**

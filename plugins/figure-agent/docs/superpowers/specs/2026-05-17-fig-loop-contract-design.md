@@ -365,13 +365,20 @@ single patch handoff exists. The baseline captures allowed edit-scope hashes,
 target id/type, `may_edit: false`, and the required future verdict vocabulary:
 `resolved`, `unresolved`, `regressed`, or `ambiguous`.
 
+Later `/fig_loop` runs may compare that baseline against the current allowed
+edit-scope hashes and current adjudication decision to emit a read-only
+`post_patch_evidence` verdict. A post-patch verdict run must not also write a
+new `patch_evidence` baseline, because unresolved attempts should not reset the
+comparison point.
+
 Acceptance:
 
 - no source or artifact mutation,
 - `patch_evidence` is nullable when no handoff exists,
 - allowed edit-scope paths are hashed before the outer agent patches,
 - rollback is represented as restoring those paths to the recorded hashes,
-- post-patch verdicts are defined but not yet evaluated by Issue 5A.1.
+- post-patch verdicts are evaluated from allowed-scope hash changes plus the
+  current adjudication decision, not from hidden source edits.
 
 ### Issue 5B: Safe Auto-Patch Pilot
 

@@ -519,6 +519,7 @@ _AUTO_PATCH_REQUIRED_EVIDENCE = [
     "rollback path",
 ]
 _PATCH_EVIDENCE_SCHEMA = "figure-agent.patch-evidence.v1"
+_POST_PATCH_EVIDENCE_SCHEMA = "figure-agent.post-patch-evidence.v1"
 _PATCH_EVIDENCE_VERDICTS = ["resolved", "unresolved", "regressed", "ambiguous"]
 
 
@@ -604,6 +605,93 @@ def _patch_evidence_baseline(
                 "restore allowed_edit_scope paths to the recorded pre_patch sha256 values"
             ),
         },
+    }
+
+
+def _valid_previous_iteration(iteration_path: Path, name: str) -> bool:
+    manifest_path = iteration_path.parent / "run_manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    return (
+        isinstance(manifest, dict)
+        and manifest.get("schema") == "figure-agent.fig-loop-run.v1"
+        and manifest.get("fixture") == name
+        and isinstance(iteration, dict)
+        and isinstance(iteration.get("patch_evidence"), dict)
+        and iteration["patch_evidence"].get("phase") == "pre_patch"
+    )
+
+
+def _latest_patch_evidence_baseline(
+    runs_root: Path,
+    name: str,
+) -> tuple[Path, dict[str, Any]] | None:
+    candidates = [
+        path
+        for path in runs_root.glob(f"*-{name}/iteration_001.json")
+        if _valid_previous_iteration(path, name)
+    ]
+    if not candidates:
+        return None
+    iteration_path = max(candidates, key=lambda path: path.stat().st_mtime)
+    iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
+    return iteration_path, iteration["patch_evidence"]
+
+
+def _decision_for_target(adjudication: dict[str, Any], target_id: str) -> str | None:
+    if adjudication["state"] != "fresh":
+        return None
+    for decision in adjudication.get("decisions", []):
+        if decision.get("finding_id") == target_id:
+            return decision.get("decision")
+    return None
+
+
+def _post_patch_evidence_verdict(
+    repo_root: Path,
+    runs_root: Path,
+    name: str,
+    adjudication: dict[str, Any],
+    status_result: dict[str, Any],
+) -> dict[str, Any] | None:
+    baseline = _latest_patch_evidence_baseline(runs_root, name)
+    if baseline is None:
+        return None
+    baseline_path, patch_evidence = baseline
+    changed_paths = []
+    for item in patch_evidence.get("pre_patch", {}).get("allowed_edit_scope", []):
+        rel_path = item.get("path")
+        if not isinstance(rel_path, str):
+            continue
+        current = _path_evidence(repo_root, rel_path)
+        if current["exists"] != item.get("exists") or current["sha256"] != item.get("sha256"):
+            changed_paths.append(rel_path)
+
+    target_id = str(patch_evidence.get("target_id", ""))
+    current_decision = _decision_for_target(adjudication, target_id)
+    allowed_changed = bool(changed_paths)
+    if status_result.get("render_state") not in {"FRESH", "MISSING"}:
+        verdict = "regressed"
+    elif current_decision == "resolved" and allowed_changed:
+        verdict = "resolved"
+    elif current_decision in {"apply", "defer"} or not allowed_changed:
+        verdict = "unresolved"
+    else:
+        verdict = "ambiguous"
+
+    return {
+        "schema": _POST_PATCH_EVIDENCE_SCHEMA,
+        "baseline_path": str(baseline_path),
+        "target_type": patch_evidence.get("target_type"),
+        "target_id": target_id,
+        "verdict": verdict,
+        "allowed_edit_scope_changed": allowed_changed,
+        "changed_allowed_paths": changed_paths,
+        "current_decision": current_decision,
+        "may_edit": False,
     }
 
 
@@ -725,7 +813,18 @@ def run_loop(
     escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
     auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
-    patch_evidence = _patch_evidence_baseline(repo_root, patch_handoff)
+    post_patch_evidence = _post_patch_evidence_verdict(
+        repo_root,
+        runs_root,
+        name,
+        adjudication,
+        status_result,
+    )
+    patch_evidence = (
+        None
+        if post_patch_evidence is not None
+        else _patch_evidence_baseline(repo_root, patch_handoff)
+    )
     completed_at = _utc_now()
 
     iteration = {
@@ -738,6 +837,7 @@ def run_loop(
         "patch_handoff": patch_handoff,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
+        "post_patch_evidence": post_patch_evidence,
         "recommended_next_action": loop_decision["recommended_next_action"],
         "human_gate_status": loop_decision["human_gate_status"],
         **escalation,
@@ -788,6 +888,9 @@ def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "patch_handoff_present": iteration.get("patch_handoff") is not None,
         "auto_patch_eligibility": iteration.get("auto_patch_eligibility"),
         "patch_evidence_present": iteration.get("patch_evidence") is not None,
+        "post_patch_evidence_verdict": (
+            (iteration.get("post_patch_evidence") or {}).get("verdict")
+        ),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
 

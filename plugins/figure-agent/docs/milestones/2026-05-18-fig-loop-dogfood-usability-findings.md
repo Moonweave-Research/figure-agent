@@ -254,5 +254,7 @@ selects one `patch_handoff`, the run should record:
 - future post-patch verdict vocabulary: `resolved`, `unresolved`, `regressed`,
   or `ambiguous`.
 
-This still does not evaluate the patch outcome. It only creates the baseline
-needed for a later post-patch evidence gate.
+Later `/fig_loop` runs can compare the baseline against current allowed-scope
+hashes and the current adjudication decision to record `post_patch_evidence` as
+`resolved`, `unresolved`, `regressed`, or `ambiguous`. This is still read-only;
+it does not patch source or update critique/adjudication files.

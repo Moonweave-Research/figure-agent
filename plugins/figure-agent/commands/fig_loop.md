@@ -29,6 +29,7 @@ becomes one JSON object with:
 - `patch_handoff_present`
 - `auto_patch_eligibility`
 - `patch_evidence_present`
+- `post_patch_evidence_verdict`
 - `recommended_next_action`
 
 On preflight failure, the command preserves the existing error contract: exit
@@ -153,6 +154,20 @@ When `patch_handoff` is non-null, `/fig_loop` also records `patch_evidence` in
 `patch_evidence` is `null` when no single patch handoff exists. It is not a
 patch executor; it only gives the next loop or closeout step something concrete
 to compare against.
+
+When a later `/fig_loop` run sees a previous pre-patch baseline for the same
+fixture, it records `post_patch_evidence` with a read-only verdict:
+
+- `resolved`
+- `unresolved`
+- `regressed`
+- `ambiguous`
+
+The verdict compares allowed edit-scope hashes against the baseline and checks
+the current adjudication decision for the target id. It still does not edit
+source or artifacts. A run that records `post_patch_evidence` does not also
+write a new `patch_evidence` baseline, so unresolved attempts do not silently
+reset the comparison point.
 
 When `stop_reason` is `missing_adjudication`, run:
 
