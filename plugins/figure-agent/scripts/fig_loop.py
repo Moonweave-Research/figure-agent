@@ -21,6 +21,7 @@ from critique_adjudication import (  # noqa: E402
     adjudication_is_stale,
     load_adjudication,
 )
+from quality_manifest import file_sha256  # noqa: E402
 from status import infer_stage  # noqa: E402
 from subregion_active_set import active_subregion_ids, parse_active_target_rows  # noqa: E402
 
@@ -517,6 +518,8 @@ _AUTO_PATCH_REQUIRED_EVIDENCE = [
     "after compile/export evidence",
     "rollback path",
 ]
+_PATCH_EVIDENCE_SCHEMA = "figure-agent.patch-evidence.v1"
+_PATCH_EVIDENCE_VERDICTS = ["resolved", "unresolved", "regressed", "ambiguous"]
 
 
 def _auto_patch_eligibility(
@@ -562,6 +565,45 @@ def _auto_patch_eligibility(
         "blocked_reasons": blocked,
         "required_evidence": list(_AUTO_PATCH_REQUIRED_EVIDENCE),
         "may_edit": False,
+    }
+
+
+def _path_evidence(repo_root: Path, rel_path: str) -> dict[str, Any]:
+    path = repo_root / rel_path
+    exists = path.is_file()
+    return {
+        "path": rel_path,
+        "exists": exists,
+        "sha256": file_sha256(path) if exists else None,
+    }
+
+
+def _patch_evidence_baseline(
+    repo_root: Path,
+    patch_handoff: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not patch_handoff:
+        return None
+    return {
+        "schema": _PATCH_EVIDENCE_SCHEMA,
+        "phase": "pre_patch",
+        "target_type": patch_handoff["target_type"],
+        "target_id": patch_handoff["target_id"],
+        "verdict": "not_evaluated",
+        "may_edit": False,
+        "pre_patch": {
+            "allowed_edit_scope": [
+                _path_evidence(repo_root, rel_path)
+                for rel_path in patch_handoff["allowed_edit_scope"]
+            ]
+        },
+        "post_patch_required_verdicts": list(_PATCH_EVIDENCE_VERDICTS),
+        "rollback_reference": {
+            "git_commit": _git_value(repo_root, ("rev-parse", "HEAD")),
+            "restore_strategy": (
+                "restore allowed_edit_scope paths to the recorded pre_patch sha256 values"
+            ),
+        },
     }
 
 
@@ -683,6 +725,7 @@ def run_loop(
     escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
     auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
+    patch_evidence = _patch_evidence_baseline(repo_root, patch_handoff)
     completed_at = _utc_now()
 
     iteration = {
@@ -694,6 +737,7 @@ def run_loop(
         "active_patch_target": loop_decision["active_patch_target"],
         "patch_handoff": patch_handoff,
         "auto_patch_eligibility": auto_patch_eligibility,
+        "patch_evidence": patch_evidence,
         "recommended_next_action": loop_decision["recommended_next_action"],
         "human_gate_status": loop_decision["human_gate_status"],
         **escalation,
@@ -743,6 +787,7 @@ def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "escalation_level": iteration["escalation_level"],
         "patch_handoff_present": iteration.get("patch_handoff") is not None,
         "auto_patch_eligibility": iteration.get("auto_patch_eligibility"),
+        "patch_evidence_present": iteration.get("patch_evidence") is not None,
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
 

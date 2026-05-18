@@ -239,3 +239,20 @@ Current judgment:
   keyword classification is too broad or too narrow.
 - Keep `may_edit: false` until before/after evidence capture, rollback, and
   patch-closeout verification are first-class runner outputs.
+
+## Issue 5A.1 Direction: Patch Evidence Baseline
+
+The next pre-5B slice is a read-only patch evidence baseline. When `/fig_loop`
+selects one `patch_handoff`, the run should record:
+
+- target id and type,
+- `phase: pre_patch`,
+- `verdict: not_evaluated`,
+- `may_edit: false`,
+- hashes for every path in `patch_handoff.allowed_edit_scope`,
+- rollback guidance based on those hashes,
+- future post-patch verdict vocabulary: `resolved`, `unresolved`, `regressed`,
+  or `ambiguous`.
+
+This still does not evaluate the patch outcome. It only creates the baseline
+needed for a later post-patch evidence gate.

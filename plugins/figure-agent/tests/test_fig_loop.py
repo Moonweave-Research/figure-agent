@@ -106,6 +106,7 @@ def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path)
     }
     assert iteration["adjudication"]["state"] == "missing"
     assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["patch_evidence"] is None
     assert "status_action_required" in decision
 
 
@@ -452,6 +453,74 @@ def test_loop_marks_label_spacing_patch_as_auto_patch_candidate(tmp_path: Path) 
             "rollback path",
         ],
         "may_edit": False,
+    }
+
+
+def test_loop_records_pre_patch_evidence_baseline_for_patch_handoff(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    tex_path = fixture / "loop_demo.tex"
+    plan_path = fixture / "authoring_plan.md"
+    tex_path.write_text("\\documentclass{standalone}\n", encoding="utf-8")
+    plan_path.write_text("keep label clear of arrow\n", encoding="utf-8")
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "label overlaps arrow; adjust label offset",
+                "patch_target": "panel A label cluster",
+                "evidence": "critique.md C001",
+            }
+        ],
+    )
+    before_files = _fixture_files(fixture)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "record pre-patch evidence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert _fixture_files(fixture) == before_files
+    assert iteration["patch_evidence"] == {
+        "schema": "figure-agent.patch-evidence.v1",
+        "phase": "pre_patch",
+        "target_type": "finding",
+        "target_id": "C001",
+        "verdict": "not_evaluated",
+        "may_edit": False,
+        "pre_patch": {
+            "allowed_edit_scope": [
+                {
+                    "path": "examples/loop_demo/loop_demo.tex",
+                    "exists": True,
+                    "sha256": file_sha256(tex_path),
+                },
+                {
+                    "path": "examples/loop_demo/authoring_plan.md",
+                    "exists": True,
+                    "sha256": file_sha256(plan_path),
+                },
+                {
+                    "path": "examples/loop_demo/subregion_iteration_log.md",
+                    "exists": False,
+                    "sha256": None,
+                },
+            ]
+        },
+        "post_patch_required_verdicts": ["resolved", "unresolved", "regressed", "ambiguous"],
+        "rollback_reference": {
+            "git_commit": None,
+            "restore_strategy": (
+                "restore allowed_edit_scope paths to the recorded pre_patch sha256 values"
+            ),
+        },
     }
 
 
@@ -1040,6 +1109,7 @@ def test_main_json_emits_machine_readable_summary(
             "escalation_level": "agent_action_required",
             "patch_handoff": None,
             "auto_patch_eligibility": None,
+            "patch_evidence": None,
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -1075,6 +1145,7 @@ def test_main_json_emits_machine_readable_summary(
         "escalation_level": "agent_action_required",
         "patch_handoff_present": False,
         "auto_patch_eligibility": None,
+        "patch_evidence_present": False,
         "recommended_next_action": "inspect figure state",
     }
 
@@ -1158,5 +1229,6 @@ def test_main_json_exercises_real_run_loop_summary(
         "escalation_level": iteration["escalation_level"],
         "patch_handoff_present": iteration["patch_handoff"] is not None,
         "auto_patch_eligibility": iteration["auto_patch_eligibility"],
+        "patch_evidence_present": iteration["patch_evidence"] is not None,
         "recommended_next_action": iteration["recommended_next_action"],
     }

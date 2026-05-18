@@ -28,6 +28,7 @@ becomes one JSON object with:
 - `escalation_level`
 - `patch_handoff_present`
 - `auto_patch_eligibility`
+- `patch_evidence_present`
 - `recommended_next_action`
 
 On preflight failure, the command preserves the existing error contract: exit
@@ -136,6 +137,22 @@ crowding, or collision. Generic `offset` and `style` language is not enough.
 In this version, `auto_patch_eligibility.may_edit` is always `false`. The runner
 must not edit figure source, critique output, exports, accepted metadata, or
 golden contracts.
+
+## Patch Evidence Baseline
+
+When `patch_handoff` is non-null, `/fig_loop` also records `patch_evidence` in
+`iteration_001.json`. This is a read-only pre-patch baseline:
+
+- `phase: pre_patch`
+- `verdict: not_evaluated`
+- `may_edit: false`
+- hashes for every path in `patch_handoff.allowed_edit_scope`
+- required future post-patch verdicts: `resolved`, `unresolved`, `regressed`,
+  or `ambiguous`
+
+`patch_evidence` is `null` when no single patch handoff exists. It is not a
+patch executor; it only gives the next loop or closeout step something concrete
+to compare against.
 
 When `stop_reason` is `missing_adjudication`, run:
 

@@ -358,9 +358,24 @@ Acceptance:
   publication-safety changes blocked,
 - before/after evidence and rollback path listed as required future evidence.
 
+### Issue 5A.1: Patch Evidence Baseline
+
+Before Issue 5B, `/fig_loop` must record a read-only pre-patch baseline when a
+single patch handoff exists. The baseline captures allowed edit-scope hashes,
+target id/type, `may_edit: false`, and the required future verdict vocabulary:
+`resolved`, `unresolved`, `regressed`, or `ambiguous`.
+
+Acceptance:
+
+- no source or artifact mutation,
+- `patch_evidence` is nullable when no handoff exists,
+- allowed edit-scope paths are hashed before the outer agent patches,
+- rollback is represented as restoring those paths to the recorded hashes,
+- post-patch verdicts are defined but not yet evaluated by Issue 5A.1.
+
 ### Issue 5B: Safe Auto-Patch Pilot
 
-Only after Issues 1-4, Issue 5A, and at least five dogfood runs.
+Only after Issues 1-4, Issue 5A, Issue 5A.1, and at least five dogfood runs.
 
 Acceptance:
 

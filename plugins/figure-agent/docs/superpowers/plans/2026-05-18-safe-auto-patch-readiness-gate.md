@@ -90,6 +90,14 @@ Classification outputs:
 present and nullable in `iteration_001.json`; it is `null` when there is no
 single patch handoff.
 
+## Follow-up: Patch Evidence Baseline
+
+Before Issue 5B, `/fig_loop` should record `patch_evidence` whenever
+`patch_handoff` is non-null. The baseline is read-only and captures target
+id/type, `phase: pre_patch`, `verdict: not_evaluated`, `may_edit: false`,
+allowed edit-scope hashes, rollback guidance, and the future post-patch verdict
+vocabulary: `resolved`, `unresolved`, `regressed`, or `ambiguous`.
+
 ## Task 1: Add Safe Candidate Classification
 
 **Files:**
