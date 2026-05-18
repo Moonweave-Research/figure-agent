@@ -780,14 +780,16 @@
 }
 
 % E-5 internal raw→derived inter-arrow (vertical, between V_s and g(E_t))
-% v8.7 critique iter 1+2: moved to CENTER + label changed from "ISPD"
-% (redundant with column-top "ISPD" modality label) to "derive" — describes
-% the V_s→g(E_t) inverse-Laplace-like transformation directly.
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.35pt]
-  (6.95, 1.55) -- (6.95, 1.30);
-\node[labelMute, anchor=west, font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+% v8.7 critique iter 1+2: moved to CENTER + label changed from "ISPD" to "derive"
+% Column-E iter 4 (2026-05-18): arrow weight 0.35→0.55pt + larger Stealth tip
+% (5pt×4pt) for stronger inter-zone transformation cue. Label "derive" italic→
+% upright (verb describing transformation, not a math variable — per Typo
+% designer audit ISO 80000-2 convention).
+\draw[-{Stealth[length=5pt,width=4pt]}, cGray!75!black, line width=0.55pt]
+  (6.95, 1.55) -- (6.95, 1.28);
+\node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
       text=cGray!75!black, fill=cAmber!8, inner sep=1pt]
-  at (7.00, 1.42) {derive};
+  at (7.05, 1.45) {derive};
 
 % E-6 g(E_t) sub-zone axes
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
@@ -813,12 +815,18 @@
   (6.20, 0.40) .. controls (6.40, 0.40) and (6.40, 1.24) .. (6.80, 1.24)
               .. controls (7.20, 1.24) and (7.20, 0.40) .. (7.40, 0.40);
 
-% E-9 τ_d annotation between peaks (shifted above new deep peak height 1.30)
-\draw[<->, cRed!70!black, dashed, line width=0.45pt]
-  (5.70, 1.40) -- (6.80, 1.40);
-\node[labelMute, anchor=south, text=cRed!70!black,
-      font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (6.25, 1.42) {$\tau_d$};
+% E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
+% Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
+% (`<- - - ->`, designer-flagged as chartjunk + AI-generic) to caliper-style:
+% solid horizontal bar + T-shaped end-caps at peak x-positions. Convention
+% for "distance between two points" in scientific diagrams. Tone cRed!70→!55
+% (less aggressive, proper annotation tier).
+\draw[cRed!55!black, line width=0.32pt] (5.70, 1.35) -- (6.80, 1.35);
+\draw[cRed!55!black, line width=0.32pt] (5.70, 1.32) -- (5.70, 1.38);  % left T-cap
+\draw[cRed!55!black, line width=0.32pt] (6.80, 1.32) -- (6.80, 1.38);  % right T-cap
+\node[labelMute, anchor=south, text=cRed!55!black,
+      font=\sffamily\fontsize{6}{7.2}\selectfont, fill=cAmber!8, inner sep=1pt]
+  at (6.25, 1.36) {$\tau_d$};
 
 % E-10 base labels
 \node[labelMute, anchor=north, text=cBlue!75!black,

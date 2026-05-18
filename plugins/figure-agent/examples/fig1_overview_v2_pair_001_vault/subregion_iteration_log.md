@@ -121,6 +121,22 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+### Column E iter 4/10 — 2026-05-18 — τ_d caliper + derive arrow polish (4-designer audit response)
+
+- **Scope**: E-9 (τ_d annotation) + E-5 (derive inter-arrow)
+- **Rationale**: 4-designer parallel external audit (sci illustrator + info designer + typo designer + tech illustrator). 3-of-4 designers flagged τ_d `<- - - ->` dashed double-headed arrow as chartjunk / AI-generic; typo designer flagged "derive" italic verb as ISO 80000-2 violation. Roadmap iter 3 (proportions) rejected by user "장비를 여기서 더 줄인다고?"; iter 4 (this) is C tier easiest cleanup.
+- **Reference source**: designer audit findings; briefing-only design
+- **Patches**:
+  - E-9 τ_d: dashed double-headed arrow → **caliper-style** (solid bar cRed!55 0.32pt + 2 T-end-caps at peak x-positions); tone cRed!70→!55 for annotation tier; label fill=cAmber!8 added for visual separation
+  - E-5 derive: arrow weight 0.35→0.55pt + Stealth tip 4pt×3pt→5pt×4pt; label italic→**upright** (verb not variable per ISO 80000-2); position (7.00, 1.42)→(7.05, 1.45) anchor=west
+- **Briefing edits (Type A)**: §13.6 E-5 derive spec (upright label + arrow weight); §13.6 E-9 caliper-style spec (4-designer audit cite)
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score delta (vs iter 2b)**: T unchanged (τ_d still energy-domain only; semantic preserved) | S unchanged (positions adjusted, structures intact) | L improved (τ_d reads as proper "energy separation" not chartjunk; derive arrow more confident) | A improved (designer-flagged AI-generic feel partially addressed)
+- **Notes**:
+  - Roadmap status: iter 3 (proportions) rejected by user. iter 4 done (this). iters 5+6 next (apparatus precision batch A+B). iter 7 (Gaussian width + V_s analytical). iter 8 (math notation cleanup).
+  - Closure NOT declared per user "클로져는 맘대로 하지마".
+- **Visibility gate**: intended yes (caliper τ_d reads as measurement convention; derive arrow + label confident) | anomaly none
+
 ### Column E iter 2/10 — 2026-05-18 — apparatus comprehensive detail upgrade (M1 paper-grade)
 
 - **Scope**: E-2 apparatus zone (atomic — 4 elements interlocked: corona, sample stack, Kelvin probe, V_s meter)
