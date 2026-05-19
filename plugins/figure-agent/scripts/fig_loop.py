@@ -274,6 +274,13 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
+    # Issue 7E: polished-SVG final-artifact states (MISSING / INVALID / STALE /
+    # BLOCKED) reach this branch via workflow_ready=true + final_ready=false.
+    # status.py owns the canonical per-state next-action prose (see
+    # _NEXT_FINAL_ARTIFACT_*), so the loop forwards it through status.next
+    # rather than duplicating the recommendation text here. BLOCKED routes to
+    # semantic backport because status.py emits _NEXT_FINAL_ARTIFACT_BLOCKED
+    # for that state.
     if status_result.get("workflow_ready") and not status_result.get("final_ready", True):
         return {
             "stop_reason": "status_action_required",
@@ -354,11 +361,7 @@ def _quality_axis_summary(
     selected = max(ranked_axes, key=lambda axis: _QUALITY_VERDICT_RANK[axis["verdict"]])
     blocking_items: dict[str, list[str]] = {}
     for axis in axes:
-        items = [
-            item
-            for item in axis["blocking_items"]
-            if isinstance(item, str) and item.strip()
-        ]
+        items = [item for item in axis["blocking_items"] if isinstance(item, str) and item.strip()]
         if items:
             blocking_items[axis["name"]] = items
     return {

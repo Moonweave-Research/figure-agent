@@ -92,6 +92,33 @@ change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
 checkpoint before a human or later automation decides what to patch.
 
+## Final-Artifact Surfacing
+
+When a fixture declares `spec.yaml.final_artifact.kind: polished_svg`,
+`iteration_001.json["status"]` (and the `--json` summary) exposes:
+
+- `final_artifact_state` (`NONE | MISSING | INVALID | STALE | BLOCKED | FRESH`)
+- `final_artifact_kind` (`generated_export | polished_svg`)
+- `final_artifact_path`
+
+`decision.md` mirrors all three on a `final_artifact_state:` line. For any
+non-`FRESH`, non-`NONE` polished-SVG state the loop reports
+`stop_reason: status_action_required` and forwards `/fig_status`'s per-state
+next-action hint through `recommended_next_action`:
+
+| `final_artifact_state` | Loop hands off to                                                                                  |
+|---|---|
+| `MISSING`  | create or restore `polish/<name>.polished.svg`, `svg_polish_manifest.yaml`, and `svg_polish_audit.md` |
+| `INVALID`  | fix `spec.yaml.final_artifact` and the polish manifest schema/hash/provenance                          |
+| `STALE`    | refresh `polish/svg_polish_manifest.yaml` after source/export/critique/polish/audit changes            |
+| `BLOCKED`  | semantic backport to TikZ / briefing / spec, then rerun compile/export/critique and regenerate the manifest |
+| `FRESH`    | no final-artifact block; the loop may emit `verify_only_complete` if other gates close                  |
+| `NONE`     | generated-export fixture (no polished_svg opt-in); existing loop behaviour is unchanged                 |
+
+The loop itself never edits the polished SVG, the manifest, the audit, or
+generated exports — it only surfaces the state and forwards the canonical
+next-action hint emitted by `/fig_status`.
+
 ## Escalation Summary
 
 `iteration_001.json` records:

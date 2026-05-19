@@ -439,11 +439,7 @@ def test_loop_ignores_malformed_quality_axes_without_crashing(
 ) -> None:
     fixture = _make_fixture(tmp_path)
     (fixture / "critique.md").write_text(
-        "---\n"
-        "schema: figure-agent.critique.v1.2\n"
-        "quality_axes: [unterminated\n"
-        "---\n"
-        "# critique\n",
+        "---\nschema: figure-agent.critique.v1.2\nquality_axes: [unterminated\n---\n# critique\n",
         encoding="utf-8",
     )
     _patch_fresh_status(monkeypatch)
@@ -1371,8 +1367,7 @@ def test_loop_final_artifact_not_ready_blocks_verify_only_complete(
     assert iteration["escalation_level"] != "none"
     decision = (run_dir / "decision.md").read_text(encoding="utf-8")
     assert (
-        f"- final_artifact_state: polished_svg {state} "
-        "polish/loop_demo.polished.svg"
+        f"- final_artifact_state: polished_svg {state} polish/loop_demo.polished.svg"
     ) in decision
 
 
@@ -1398,11 +1393,7 @@ def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
         encoding="utf-8",
     )
     (fixture / "critique.md").write_text(
-        "---\n"
-        "schema: figure-agent.critique.v1\n"
-        "fixture: loop_demo\n"
-        "---\n"
-        "# critique\n",
+        "---\nschema: figure-agent.critique.v1\nfixture: loop_demo\n---\n# critique\n",
         encoding="utf-8",
     )
 
@@ -1797,11 +1788,240 @@ def test_main_json_exercises_real_run_loop_summary(
         "patch_handoff_present": iteration["patch_handoff"] is not None,
         "auto_patch_eligibility": iteration["auto_patch_eligibility"],
         "patch_evidence_present": iteration["patch_evidence"] is not None,
-        "post_patch_evidence_verdict": (
-            (iteration["post_patch_evidence"] or {}).get("verdict")
-        ),
+        "post_patch_evidence_verdict": ((iteration["post_patch_evidence"] or {}).get("verdict")),
         "final_artifact_state": iteration["status"]["final_artifact_state"],
         "final_artifact_kind": iteration["status"]["final_artifact_kind"],
         "final_artifact_path": iteration["status"]["final_artifact_path"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
+
+
+# --- Issue 7E: final-artifact loop surfacing ---------------------------------
+
+
+def _patch_status_with_final_artifact(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    final_artifact_state: str,
+    final_artifact_kind: str = "polished_svg",
+    final_artifact_path: str | None = "polish/loop_demo.polished.svg",
+    workflow_ready: bool = True,
+    final_ready: bool = False,
+    acceptance_state: str = "ACCEPTED",
+    critique_state: str = "NOT_REQUIRED",
+    notes: list[str] | None = None,
+    next_hint: str | None = None,
+) -> None:
+    """Inject a synthetic /fig_status vector targeting a final-artifact state.
+
+    Defaults keep the per-fixture render/critique/export gates closed so that
+    _loop_decision reaches the final-artifact branch via workflow_ready=true
+    + final_ready=false. When ``next_hint`` is omitted, the helper resolves to
+    the canonical status.py per-state next-action template
+    (``_NEXT_FINAL_ARTIFACT_*``), mirroring what ``infer_stage()`` would emit
+    for a real fixture in the given final-artifact state.
+    """
+    if next_hint is None:
+        next_hint = _next_hint_for_final_artifact(final_artifact_state, final_artifact_kind)
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 4,
+            "render_state": "FRESH",
+            "critique_state": critique_state,
+            "export_state": "FRESH",
+            "acceptance_state": acceptance_state,
+            "final_artifact_state": final_artifact_state,
+            "final_artifact_kind": final_artifact_kind,
+            "final_artifact_path": final_artifact_path,
+            "workflow_ready": workflow_ready,
+            "golden_ready": workflow_ready,
+            "release_ready": final_ready,
+            "final_ready": final_ready,
+            "notes": notes or [],
+            "next": next_hint,
+        },
+    )
+
+
+def _next_hint_for_final_artifact(final_artifact_state: str, final_artifact_kind: str) -> str:
+    """Mirror status.py's _NEXT_FINAL_ARTIFACT_* templates for synthetic statuses."""
+    import status as status_mod  # noqa: PLC0415
+
+    if final_artifact_kind != "polished_svg":
+        return "inspect figure state"
+    return {
+        "MISSING": status_mod._NEXT_FINAL_ARTIFACT_MISSING,
+        "INVALID": status_mod._NEXT_FINAL_ARTIFACT_INVALID,
+        "STALE": status_mod._NEXT_FINAL_ARTIFACT_STALE,
+        "BLOCKED": status_mod._NEXT_FINAL_ARTIFACT_BLOCKED,
+    }.get(final_artifact_state, "inspect figure state")
+
+
+def test_loop_no_polish_opt_in_keeps_existing_behavior(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """generated_export kind must not trip the new final-artifact branch."""
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(
+        monkeypatch,
+        final_artifact_state="NONE",
+        final_artifact_kind="generated_export",
+        final_artifact_path="exports/loop_demo.svg",
+        final_ready=True,
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "no-polish backward compat",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "verify_only_complete"
+    assert iteration["status"]["final_artifact_kind"] == "generated_export"
+
+
+def test_loop_blocks_verify_only_complete_when_final_artifact_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(monkeypatch, final_artifact_state="MISSING")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "polish missing",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["stop_reason"] != "verify_only_complete"
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "agent_action_required"
+    action = iteration["recommended_next_action"]
+    assert "polish" in action.lower()
+    assert "polish/loop_demo.polished.svg" in action or "polish/svg_polish_manifest.yaml" in action
+    assert "MISSING" in decision
+    assert "polished_svg" in decision
+
+
+def test_loop_blocks_verify_only_complete_when_final_artifact_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(monkeypatch, final_artifact_state="INVALID")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "polish invalid",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "agent_action_required"
+    action = iteration["recommended_next_action"]
+    assert "invalid" in action.lower()
+    assert "manifest" in action.lower() or "spec" in action.lower()
+
+
+def test_loop_blocks_verify_only_complete_when_final_artifact_stale(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(monkeypatch, final_artifact_state="STALE")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "polish stale",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "agent_action_required"
+    action = iteration["recommended_next_action"]
+    assert "stale" in action.lower() or "refresh" in action.lower()
+    assert "manifest" in action.lower()
+
+
+def test_loop_routes_to_semantic_backport_when_final_artifact_blocked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BLOCKED routes to semantic backport, not generic manifest repair."""
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(monkeypatch, final_artifact_state="BLOCKED")
+
+    run_dir = run_loop(
+        "loop_demo",
+        "polish blocked",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["escalation_level"] == "agent_action_required"
+    action = iteration["recommended_next_action"].lower()
+    assert "semantic backport" in action or "backport" in action
+    # Backport target must include source families, not just manifest.
+    assert "tikz" in action or "briefing" in action or "spec" in action
+    # Decision.md must mention BLOCKED so a reviewer sees the state.
+    assert "BLOCKED" in decision
+
+
+def test_loop_surfaces_final_artifact_fresh_in_decision_and_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """FRESH polished SVG must not block verify_only_complete by itself."""
+    _make_fixture(tmp_path)
+    _patch_status_with_final_artifact(
+        monkeypatch,
+        final_artifact_state="FRESH",
+        final_ready=True,
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "polish fresh",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert iteration["stop_reason"] == "verify_only_complete"
+    assert iteration["status"]["final_artifact_state"] == "FRESH"
+    assert iteration["status"]["final_artifact_kind"] == "polished_svg"
+    assert "polished_svg" in decision
+    assert "FRESH" in decision
+
+
+def test_loop_remains_non_mutating_for_final_artifact_states(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Driving the new branches must not mutate the fixture."""
+    fixture = _make_fixture(tmp_path)
+    before = _fixture_files(fixture)
+
+    for state in ("MISSING", "INVALID", "STALE", "BLOCKED", "FRESH"):
+        _patch_status_with_final_artifact(
+            monkeypatch,
+            final_artifact_state=state,
+            final_ready=(state == "FRESH"),
+        )
+        run_loop(
+            "loop_demo",
+            f"non-mutation/{state}",
+            repo_root=tmp_path,
+            runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+        )
+
+    assert _fixture_files(fixture) == before
