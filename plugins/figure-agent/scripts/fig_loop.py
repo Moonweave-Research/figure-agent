@@ -30,6 +30,18 @@ RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
+_JOURNAL_SCORE_KEYS = frozenset(
+    {
+        "storyline",
+        "composition",
+        "component_fidelity",
+        "scientific_plausibility",
+        "label_semantics",
+        "polish",
+        "reference_fidelity",
+        "export_scale_readability",
+    }
+)
 _STORY_QUALITY_AXES = (
     "message_storyline",
     "panel_role_coherence",
@@ -393,6 +405,13 @@ def _quality_axis_record(summary: dict[str, Any], critique_path: Path) -> dict[s
     )
 
 
+def _has_complete_score_block(record: dict[str, Any]) -> bool:
+    if not {"overall_score", "sub_scores", "score_rationale"} <= record.keys():
+        return False
+    sub_scores = record.get("sub_scores")
+    return isinstance(sub_scores, dict) and set(sub_scores) == _JOURNAL_SCORE_KEYS
+
+
 def _journal_grade_assessment(
     example_dir: Path,
     critique_state: Any,
@@ -425,6 +444,8 @@ def _journal_grade_assessment(
         record["evaluation_state"] = "passed"
     record["source"] = "critique.journal_grade_assessment"
     record["evidence_path"] = str(critique_path)
+    if _has_complete_score_block(record):
+        record["score_policy"] = "advisory_fresh_reaudit_not_gate"
     return record
 
 

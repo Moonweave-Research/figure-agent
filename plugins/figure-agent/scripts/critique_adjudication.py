@@ -86,6 +86,19 @@ _JOURNAL_BOTTLENECKS = frozenset(
         "human_policy",
     }
 )
+_JOURNAL_SCORE_KEYS = frozenset(
+    {
+        "storyline",
+        "composition",
+        "component_fidelity",
+        "scientific_plausibility",
+        "label_semantics",
+        "polish",
+        "reference_fidelity",
+        "export_scale_readability",
+    }
+)
+_JOURNAL_SCORE_BLOCK_KEYS = frozenset({"overall_score", "sub_scores", "score_rationale"})
 
 
 class CritiqueAdjudicationError(ValueError):
@@ -96,6 +109,13 @@ def _require_mapping(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise CritiqueAdjudicationError(f"{label} must be a mapping")
     return value
+
+
+def _require_score_value(value: Any, label: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CritiqueAdjudicationError(f"{label} must be a number from 0 to 100")
+    if value < 0 or value > 100:
+        raise CritiqueAdjudicationError(f"{label} must be a number from 0 to 100")
 
 
 def _require_non_empty_list(value: Any, label: str) -> list[Any]:
@@ -385,6 +405,36 @@ def _validate_v1_2_quality_axes(frontmatter: dict[str, Any]) -> dict[str, str]:
     return verdicts
 
 
+def _validate_journal_score_block(assessment: dict[str, Any], label: str) -> None:
+    present = _JOURNAL_SCORE_BLOCK_KEYS & assessment.keys()
+    if not present:
+        return
+    if present != _JOURNAL_SCORE_BLOCK_KEYS:
+        missing = ", ".join(sorted(_JOURNAL_SCORE_BLOCK_KEYS - present))
+        raise CritiqueAdjudicationError(
+            f"{label} score block is incomplete; missing: {missing}"
+        )
+
+    _require_score_value(assessment.get("overall_score"), f"{label}.overall_score")
+    sub_scores = _require_mapping(assessment.get("sub_scores"), f"{label}.sub_scores")
+    keys = set(sub_scores)
+    if keys != _JOURNAL_SCORE_KEYS:
+        missing = ", ".join(sorted(_JOURNAL_SCORE_KEYS - keys))
+        extra = ", ".join(sorted(keys - _JOURNAL_SCORE_KEYS))
+        details = []
+        if missing:
+            details.append(f"missing: {missing}")
+        if extra:
+            details.append(f"extra: {extra}")
+        suffix = f" ({'; '.join(details)})" if details else ""
+        raise CritiqueAdjudicationError(
+            f"{label}.sub_scores must contain exactly the required score keys{suffix}"
+        )
+    for key, value in sub_scores.items():
+        _require_score_value(value, f"{label}.sub_scores.{key}")
+    _require_non_empty_string(assessment, "score_rationale", label=label)
+
+
 def _validate_journal_grade_assessment(
     frontmatter: dict[str, Any],
     quality_verdicts: dict[str, str],
@@ -438,6 +488,7 @@ def _validate_journal_grade_assessment(
         raise CritiqueAdjudicationError(f"{label}.score_is_gateable must be a boolean")
     _require_enum(assessment, "next_quality_bottleneck", _JOURNAL_BOTTLENECKS, label=label)
     _require_non_empty_string(assessment, "rationale", label=label)
+    _validate_journal_score_block(assessment, label)
 
     if benchmark_level == "high_impact_candidate":
         non_passing = {
