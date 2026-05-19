@@ -12,9 +12,11 @@ Run from the plugin root:
 uv run python3 scripts/fig_driver.py <name> --mode review --goal "<goal>" --dry-run
 ```
 
-`--dry-run` is required in Issue 8B. The command never compiles, exports,
+`--dry-run` is required. The command never compiles, exports,
 critiques, patches, polishes, accepts, stages, or commits. It reads
-`status.infer_stage()` and emits one advisory action as JSON.
+`status.infer_stage()`, optionally ingests the latest valid `/fig_loop`
+checkpoint under `.scratch/fig-loop-runs/`, and emits one advisory action as
+JSON.
 
 `/fig_drive` is the recommender. `/fig_loop` is the verify-only checkpoint
 that records evidence after the user/outer agent acts on a recommendation.
@@ -52,7 +54,8 @@ action; `/fig_loop` only logs the resulting state.
 | `stop_boundary`     | string or null        | one of the 9 canonical stop identifiers          |
 | `reason`            | string                | one-line explanation                             |
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
-| `may_execute`       | bool                  | always `false` in Issue 8B                       |
+| `may_execute`       | bool                  | always `false`                                   |
+| `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 
 ### Schema versioning
 
@@ -82,14 +85,28 @@ Eleven canonical action names. The driver returns exactly one per call:
 `run_fig_loop`, `run_export`, `patch_handoff_stop`, `human_gate_stop`,
 `polish_handoff_stop`, `release_blocked`, `complete`.
 
-### Deferred until /fig_loop output ingestion (Issue 8C+)
+### `/fig_loop` output ingestion
 
-The Issue 8B driver does not consume `/fig_loop` output, so it does not emit
-the patch-evidence-driven actions `patch_handoff_stop` and `human_gate_stop`
-or the boundaries `ambiguous_patch_selection`, `patch_handoff_required`,
-`human_gate_required`, `force_golden_required`, and `mode_forbidden_action`.
-They are present in the contract so a later driver (and any executor) keeps a
-stable vocabulary; in the current driver they are unreachable.
+In review mode, after render/critique/adjudication prerequisites are closed,
+`/fig_drive` reads the latest valid verify-only `/fig_loop` run for the same
+fixture. Malformed runs, wrong-fixture runs, and runs older than the current
+source, authoring context, critique, adjudication, publication audit, theory
+guard, subregion log, or build evidence are ignored.
+
+The driver translates loop evidence as follows:
+
+- `patch_target_recommended` or `active_subregion_recommended` with a
+  `patch_handoff` -> `patch_handoff_stop` /
+  `patch_handoff_required`.
+- `ambiguous_patch_selection` -> `patch_handoff_stop` /
+  `ambiguous_patch_selection`.
+- `human_gate_required` or `escalation_level: human_review_required` ->
+  `human_gate_stop` / `human_gate_required`.
+- `status_action_required` with `--force-golden` in the recommendation ->
+  `release_blocked` / `force_golden_required`.
+- `no_actionable_findings` or `verify_only_complete` -> `complete`.
+
+Other loop states stay conservative and return `run_fig_loop`.
 
 ## Forbidden-action identifiers
 

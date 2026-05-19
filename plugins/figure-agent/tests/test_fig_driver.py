@@ -70,6 +70,53 @@ def _run_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str
     return fig_driver.build_driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
 
 
+def _write_loop_run(
+    repo_root: Path,
+    *,
+    name: str = "driver_demo",
+    run_id: str = "20260519-120000-000000-driver_demo",
+    stop_reason: str,
+    escalation_level: str = "none",
+    patch_handoff: dict[str, Any] | None = None,
+    recommended_next_action: str = "inspect figure state",
+    fixture_name: str | None = None,
+) -> Path:
+    run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
+    run_dir.mkdir(parents=True)
+    manifest = {
+        "schema": "figure-agent.fig-loop-run.v1",
+        "fixture": fixture_name or name,
+        "mode": "verify-only",
+        "goal": "loop",
+        "run_dir": str(run_dir),
+        "final_stop_reason": stop_reason,
+        "iterations": ["iteration_001.json"],
+    }
+    iteration = {
+        "iteration": 1,
+        "stop_reason": stop_reason,
+        "escalation_level": escalation_level,
+        "patch_handoff": patch_handoff,
+        "recommended_next_action": recommended_next_action,
+    }
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (run_dir / "iteration_001.json").write_text(json.dumps(iteration), encoding="utf-8")
+    return run_dir
+
+
+def _patch_handoff() -> dict[str, Any]:
+    return {
+        "target_type": "finding",
+        "target_id": "C001",
+        "patch_target": "Panel A label offset",
+        "reason": "label overlaps the device frame",
+        "allowed_edit_scope": ["examples/driver_demo/driver_demo.tex"],
+        "forbidden_edit_scope": ["examples/driver_demo/exports/"],
+        "required_closeout_checks": ["/fig_compile driver_demo"],
+        "unresolved_findings_requirement": "preserve unresolved findings",
+    }
+
+
 # --- CLI + JSON contract -----------------------------------------------------
 
 
@@ -263,6 +310,137 @@ def test_review_mode_fig_loop_goal_is_shell_safe(
         summary["safe_command"]
         == "uv run python3 scripts/fig_loop.py driver_demo --goal 'it'\"'\"'s a goal' --json"
     )
+
+
+def test_review_mode_surfaces_latest_loop_patch_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    run_dir = _write_loop_run(
+        tmp_path,
+        stop_reason="patch_target_recommended",
+        escalation_level="patch_allowed",
+        patch_handoff=_patch_handoff(),
+        recommended_next_action="patch C001: Panel A label offset",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "patch_handoff_stop"
+    assert summary["stop_boundary"] == "patch_handoff_required"
+    assert summary["safe_command"] is None
+    assert summary["loop_checkpoint"]["run_dir"] == str(run_dir)
+    assert summary["loop_checkpoint"]["patch_handoff"]["target_id"] == "C001"
+
+
+def test_review_mode_surfaces_latest_loop_ambiguous_patch_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="ambiguous_patch_selection",
+        escalation_level="ambiguous_patch_selection",
+        recommended_next_action="select exactly one apply decision",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "patch_handoff_stop"
+    assert summary["stop_boundary"] == "ambiguous_patch_selection"
+    assert "select exactly one" in summary["reason"]
+
+
+def test_review_mode_surfaces_latest_loop_human_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        recommended_next_action="human review required for C002",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+
+
+def test_review_mode_completes_after_latest_clean_loop_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="inspect figure state",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+
+
+def test_review_mode_ignores_malformed_or_wrong_fixture_loop_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    malformed = tmp_path / ".scratch" / "fig-loop-runs" / "20260519-malformed-driver_demo"
+    malformed.mkdir(parents=True)
+    (malformed / "run_manifest.json").write_text("{not json", encoding="utf-8")
+    _write_loop_run(
+        tmp_path,
+        run_id="20260519-130000-000000-other_fixture",
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        fixture_name="other_fixture",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert "loop_checkpoint" not in summary
+
+
+def test_review_mode_ignores_loop_checkpoint_older_than_adjudication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    run_dir = _write_loop_run(
+        tmp_path,
+        stop_reason="patch_target_recommended",
+        escalation_level="patch_allowed",
+        patch_handoff=_patch_handoff(),
+    )
+    old_time = time.time() - 100
+    new_time = time.time()
+    os.utime(run_dir / "run_manifest.json", (old_time, old_time))
+    os.utime(run_dir / "iteration_001.json", (old_time, old_time))
+    adjudication = fixture / "critique_adjudication.yaml"
+    adjudication.write_text("schema: figure-agent.critique-adjudication.v1\n", encoding="utf-8")
+    os.utime(adjudication, (new_time, new_time))
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert "loop_checkpoint" not in summary
 
 
 # --- release mode ------------------------------------------------------------

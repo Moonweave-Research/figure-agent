@@ -56,10 +56,7 @@ STOP_REFERENCE_MISSING = "reference_missing"
 STOP_ACCEPTED_OR_FINAL_READY = "accepted_or_final_ready_required"
 STOP_SEMANTIC_BACKPORT = "semantic_backport_required"
 
-# Stop boundaries reserved for a future driver that ingests /fig_loop output
-# (Issue 8C+). The current Issue 8B driver never consumes a fig_loop run, so it
-# cannot detect patch ambiguity, human gates, or force-golden requests; the
-# constants are defined for vocabulary stability and downstream type-checking.
+# Stop boundaries surfaced when the driver ingests the latest /fig_loop output.
 STOP_AMBIGUOUS_PATCH = "ambiguous_patch_selection"
 STOP_PATCH_HANDOFF = "patch_handoff_required"
 STOP_HUMAN_GATE = "human_gate_required"
@@ -139,8 +136,9 @@ def _summary(
     safe_command: str | None,
     stop_boundary: str | None,
     reason: str,
+    loop_checkpoint: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    summary = {
         "schema": SCHEMA,
         "fixture": name,
         "mode": mode,
@@ -153,6 +151,9 @@ def _summary(
         "forbidden_actions": list(_FORBIDDEN_BY_MODE.get(mode, ())),
         "may_execute": False,
     }
+    if loop_checkpoint is not None:
+        summary["loop_checkpoint"] = loop_checkpoint
+    return summary
 
 
 def _status_for(example_dir: Path) -> dict[str, Any]:
@@ -200,6 +201,87 @@ def _export_command(name: str) -> str:
     return f"uv run python3 scripts/run_export.py {name}"
 
 
+def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
+    manifest_path = run_dir / "run_manifest.json"
+    iteration_path = run_dir / "iteration_001.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("schema") != "figure-agent.fig-loop-run.v1"
+        or manifest.get("fixture") != name
+        or not isinstance(iteration, dict)
+    ):
+        return None
+    stop_reason = manifest.get("final_stop_reason") or iteration.get("stop_reason")
+    if not isinstance(stop_reason, str) or not stop_reason:
+        return None
+    return {
+        "run_dir": str(run_dir),
+        "manifest_path": str(manifest_path),
+        "iteration_path": str(iteration_path),
+        "final_stop_reason": stop_reason,
+        "escalation_level": iteration.get("escalation_level"),
+        "patch_handoff": iteration.get("patch_handoff"),
+        "recommended_next_action": iteration.get("recommended_next_action"),
+    }
+
+
+def _loop_checkpoint_is_current(
+    checkpoint: dict[str, Any],
+    *,
+    example_dir: Path,
+    name: str,
+) -> bool:
+    manifest_path = Path(checkpoint["manifest_path"])
+    iteration_path = Path(checkpoint["iteration_path"])
+    try:
+        checkpoint_mtime = max(manifest_path.stat().st_mtime, iteration_path.stat().st_mtime)
+    except OSError:
+        return False
+    evidence_paths = (
+        example_dir / "spec.yaml",
+        example_dir / "briefing.md",
+        example_dir / "authoring_plan.md",
+        example_dir / "authoring_contract.md",
+        example_dir / "subregion_iteration_log.md",
+        example_dir / "theory_guard.md",
+        example_dir / "QUALITY_AUDIT.md",
+        example_dir / f"{name}.tex",
+        example_dir / "critique.md",
+        example_dir / "critique_adjudication.yaml",
+        example_dir / "build" / f"{name}.pdf",
+    )
+    try:
+        return all(
+            not path.is_file() or path.stat().st_mtime <= checkpoint_mtime
+            for path in evidence_paths
+        )
+    except OSError:
+        return False
+
+
+def _latest_loop_checkpoint(repo_root: Path, name: str, example_dir: Path) -> dict[str, Any] | None:
+    runs_root = repo_root / ".scratch" / "fig-loop-runs"
+    if not runs_root.is_dir():
+        return None
+    checkpoints = [
+        checkpoint
+        for run_dir in runs_root.iterdir()
+        if run_dir.is_dir() and (checkpoint := _read_loop_checkpoint(run_dir, name)) is not None
+        and _loop_checkpoint_is_current(checkpoint, example_dir=example_dir, name=name)
+    ]
+    if not checkpoints:
+        return None
+    return max(
+        checkpoints,
+        key=lambda checkpoint: Path(checkpoint["manifest_path"]).stat().st_mtime,
+    )
+
+
 def build_driver_summary(
     name: str,
     *,
@@ -211,7 +293,17 @@ def build_driver_summary(
         raise ValueError(f"unsupported mode: {mode}")
     example_dir = repo_root / "examples" / name
     status = _status_for(example_dir)
-    return _select_action(name, mode=mode, goal=goal, status=status, example_dir=example_dir)
+    loop_checkpoint = (
+        _latest_loop_checkpoint(repo_root, name, example_dir) if mode == "review" else None
+    )
+    return _select_action(
+        name,
+        mode=mode,
+        goal=goal,
+        status=status,
+        example_dir=example_dir,
+        loop_checkpoint=loop_checkpoint,
+    )
 
 
 def _select_action(
@@ -221,6 +313,7 @@ def _select_action(
     goal: str,
     status: dict[str, Any],
     example_dir: Path,
+    loop_checkpoint: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     render = status.get("render_state")
     critique = status.get("critique_state")
@@ -235,6 +328,7 @@ def _select_action(
         safe_command: str | None,
         stop_boundary: str | None,
         reason: str,
+        checkpoint: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         return _summary(
             name=name,
@@ -245,6 +339,7 @@ def _select_action(
             safe_command=safe_command,
             stop_boundary=stop_boundary,
             reason=reason,
+            loop_checkpoint=checkpoint,
         )
 
     # Stage 0/1: source must be scaffolded or authored first.
@@ -315,6 +410,65 @@ def _select_action(
                     "missing or stale; scaffold adjudication next."
                 ),
             )
+        if loop_checkpoint is not None:
+            loop_stop = loop_checkpoint["final_stop_reason"]
+            loop_action = loop_checkpoint.get("recommended_next_action")
+            patch_handoff = loop_checkpoint.get("patch_handoff")
+            escalation = loop_checkpoint.get("escalation_level")
+            if loop_stop in {"patch_target_recommended", "active_subregion_recommended"}:
+                if isinstance(patch_handoff, dict):
+                    target = patch_handoff.get("target_id") or patch_handoff.get("patch_target")
+                    return make(
+                        ACTION_PATCH_HANDOFF_STOP,
+                        safe_command=None,
+                        stop_boundary=STOP_PATCH_HANDOFF,
+                        reason=(
+                            "latest /fig_loop checkpoint requires one patch handoff"
+                            f" for {target}."
+                        ),
+                        checkpoint=loop_checkpoint,
+                    )
+            if loop_stop == "ambiguous_patch_selection":
+                return make(
+                    ACTION_PATCH_HANDOFF_STOP,
+                    safe_command=None,
+                    stop_boundary=STOP_AMBIGUOUS_PATCH,
+                    reason=(
+                        "latest /fig_loop checkpoint is ambiguous: "
+                        f"{loop_action or 'select exactly one patch target'}."
+                    ),
+                    checkpoint=loop_checkpoint,
+                )
+            if loop_stop == "human_gate_required" or escalation == "human_review_required":
+                return make(
+                    ACTION_HUMAN_GATE_STOP,
+                    safe_command=None,
+                    stop_boundary=STOP_HUMAN_GATE,
+                    reason=(
+                        "latest /fig_loop checkpoint requires human review: "
+                        f"{loop_action or 'domain judgment is required'}."
+                    ),
+                    checkpoint=loop_checkpoint,
+                )
+            if loop_stop == "status_action_required" and "--force-golden" in str(loop_action):
+                return make(
+                    ACTION_RELEASE_BLOCKED,
+                    safe_command=None,
+                    stop_boundary=STOP_FORCE_GOLDEN,
+                    reason=(
+                        "latest /fig_loop checkpoint requires explicit golden "
+                        "roll-forward approval."
+                    ),
+                    checkpoint=loop_checkpoint,
+                )
+            if loop_stop in {"no_actionable_findings", "verify_only_complete"}:
+                return make(
+                    ACTION_COMPLETE,
+                    safe_command=None,
+                    stop_boundary=None,
+                    reason="latest /fig_loop checkpoint has no actionable review blocker.",
+                    checkpoint=loop_checkpoint,
+                )
         return make(
             ACTION_RUN_FIG_LOOP,
             safe_command=_fig_loop_command(name, goal),
@@ -401,7 +555,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     args = parser.parse_args(argv)
     if not args.dry_run:
         print(
-            "fig_driver.py: --dry-run is required in Issue 8B",
+            "fig_driver.py: --dry-run is required",
             file=sys.stderr,
         )
         return 2
