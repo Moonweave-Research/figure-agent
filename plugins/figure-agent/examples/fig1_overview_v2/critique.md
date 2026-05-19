@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.2
 fixture: fig1_overview_v2
-generated_at: 2026-05-19T12:11:47Z
+generated_at: 2026-05-19T23:12:46Z
 generator: critique_brief.py
-generator_version: sha256:4a7d64ba5e4ea97628b31038c25e8a38d3a9ddb70eaf7720f581313fabe5245d
+generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
 rubric_version: figure-agent.critique-rubric.v1.2
 critique_input_hash: sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77
 verdict: revise
@@ -249,9 +249,20 @@ journal_grade_assessment:
   blockers: []
   regression_detected: false
   regressions: []
-  score_is_gateable: true
+  score_is_gateable: false
   next_quality_bottleneck: scientific_plausibility
-  rationale: "Fresh re-audit of the current build PNG reads as a recognizable two-row narrative whose story is recoverable but whose execution is visibly draft-level: (1) cross-panel color convention is internally inconsistent (deep=blue/shallow=red in Panel C vs Shallow=blue/Deep=red in the g(E_t) plot — each follows a different briefing clause but they collide visually); (2) the Row 1→Row 2 bridge is weaker than briefing and reference target imply; (3) the compile-time visual-clash checker emitted 45 candidates with several real label-on-geometry collisions. None rise to a physics BLOCKER, but the figure does not yet read as a clean manuscript-ready schematic. Benchmark_level remains gateable against the current critique hash. The next loop target is the color-convention reconciliation in briefing.md before the polish pass, which is why next_quality_bottleneck is scientific_plausibility rather than polish."
+  rationale: "Fresh re-audit of the current build PNG reads as a recognizable two-row narrative whose story is recoverable but whose execution is visibly draft-level: (1) cross-panel color convention is internally inconsistent (deep=blue/shallow=red in Panel C vs Shallow=blue/Deep=red in the g(E_t) plot — each follows a different briefing clause but they collide visually); (2) the Row 1→Row 2 bridge is weaker than briefing and reference target imply; (3) the compile-time visual-clash checker emitted 45 candidates with several real label-on-geometry collisions. None rise to a physics BLOCKER, but the figure does not yet read as a clean manuscript-ready schematic. Benchmark_level stays advisory under Issue 9B (score_is_gateable: false) so the loop continues to gate on quality_axes verdicts and adjudication rather than the numeric score. The next loop target is the color-convention reconciliation in briefing.md before the polish pass, which is why next_quality_bottleneck is scientific_plausibility rather than polish."
+  overall_score: 64
+  sub_scores:
+    storyline: 72
+    composition: 64
+    component_fidelity: 76
+    scientific_plausibility: 56
+    label_semantics: 58
+    polish: 60
+    reference_fidelity: 70
+    export_scale_readability: 66
+  score_rationale: "Numbers describe only the current artifact, not progress. Storyline (72) reflects that the two-row narrative is recoverable but the Row 1 → Row 2 bridge is visibly thin (F002). Composition (64) reflects the 7-panel grid feel — no HERO panel and no cover-style row-2 background wash. Component fidelity (76) is the strongest reading because every briefing-named element (S8 inset, DIB ring, polysulfide chains, S60–S85 chains, distributed-release wells, V_s(t) decay, g(E_t) lobes, cantilever, electrode, q_tr, air gap, Coulomb, Maxwell) is identifiable in the render. Scientific plausibility (56) is the lowest sub-score because of the unresolved cross-panel color-convention contradiction (F001: Panel C uses blue=deep / red=shallow per briefing §3 but g(E_t) uses blue=Shallow / red=Deep per briefing §2). Label semantics (58) reflects 45 visual-clash candidates from check_visual_clash.py with several real label-on-geometry collisions on 'Coulomb', 'Maxwell', 'attraction', 'log', 't', 'I(t)', and minus signs (F003). Polish (60) reflects the draft-level execution: label clash on the Row 2 power-law plot, weak Row 1 → Row 2 bridge, and no cover-binding wash. Reference fidelity (70) reflects panel ordering, color-block placement, and macroscopic-probe geometry following codex_gen_overview_v1.png with only schematic simplifications; it cannot rise higher because the missing cover-binding pattern is a real reference-deviation. Export-scale readability (66) reflects the small label sizes around the distributed-release wells and the ISPD column with no thumbnail / print-scale verification this loop."
 panels: []
 findings:
   - id: F001
@@ -283,4 +294,4 @@ Fresh re-audit of `build/fig1_overview_v2.png` against `briefing.md` and `refere
 
 Three real findings hold the figure at `draft` rather than `solid_manuscript`. The most consequential, **F001 (MAJOR, palette)**, is a cross-panel color-convention inconsistency: Panel C uses blue=deep / red=shallow per briefing §3 Panel C, while the g(E_t) plot uses blue=Shallow / red=Deep per briefing §2 vocabulary. The briefing itself does not reconcile §2 vs §3, so this is a `revise_briefing` rather than a `patch`-against-the-render finding. **F002 (MINOR, hierarchy)** notes that the Row 1 → Row 2 vertical evidence bridge is weaker than the reference target implies; the build reads more as a grid than a continuous cover scene. **F003 (MAJOR, label_placement)** comes from the compile-time visual-clash report (45 candidates), with several real label-on-geometry collisions that would benefit from `\PlotCallout` routing.
 
-For the journal-grade fresh re-audit, the assessment is `draft` with medium confidence and `score_is_gateable: true`. The next loop target is `scientific_plausibility` (the color-convention reconciliation) because that fix lives in `briefing.md` and resolves the upstream contradiction that is leaking into both Panel C and the g(E_t) plot; polishing labels (F003) before fixing the briefing would risk locking in the wrong color convention.
+For the journal-grade fresh re-audit, the assessment is `draft` with medium confidence and `score_is_gateable: false`. The next loop target is `scientific_plausibility` (the color-convention reconciliation) because that fix lives in `briefing.md` and resolves the upstream contradiction that is leaking into both Panel C and the g(E_t) plot; polishing labels (F003) before fixing the briefing would risk locking in the wrong color convention.
