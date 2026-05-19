@@ -41,6 +41,35 @@ refresh `examples/<name>/authoring_plan.md` first, naming the panel/sub-region
 patch order, theory-critical decisions, and human checkpoints. The first TikZ
 patch must trace back to the plan rather than to chat-only intent.
 
+### Driver rule for agents
+
+Unless the user explicitly asks for a specific low-level command, start every
+figure workflow by running `/fig_status <name>` and follow its `Next:` hint.
+Do not choose between compile, critique, export, loop, polish, or release from
+memory. `/fig_status` is the traffic controller.
+
+Use modes mentally:
+
+- `authoring`: stay in `/fig_compile` until render is fresh enough for review.
+  Forbidden: export, critique, adjudication, accepted/golden mutation, SVG
+  polish.
+- `review`: close compile, critique, adjudication, and `/fig_loop` evidence,
+  one patch target at a time. Forbidden: hidden source editing, automatic host
+  critique authoring, final SVG polish, accepted/golden mutation.
+- `release`: check accepted/golden/final artifact readiness. Forbidden:
+  changing `accepted`, forcing golden overwrite, creating polished SVG, hiding
+  unresolved findings.
+- `polish`: start only after generated export is current and the remaining
+  work is visual-only SVG finalization. Forbidden: editing generated
+  `exports/`, treating polish as source repair, setting `accepted: true`,
+  bypassing semantic backport.
+
+`/fig_loop` is a verify-only checkpoint. It records state and patch handoff
+evidence; it does not compile, export, critique, patch, polish, accept, or
+commit. Stop for host LLM critique, missing reference inputs, ambiguous patch
+selection, human gates, accepted/golden promotion, `--force-golden`, semantic
+polish backport, or actions the current mode forbids.
+
 ### Active (quality kernel)
 
 ```

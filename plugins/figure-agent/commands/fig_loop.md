@@ -12,6 +12,17 @@ Run from the plugin root:
 uv run python3 scripts/fig_loop.py <name> --goal "<goal>"
 ```
 
+## When To Use
+
+Use `/fig_loop` after `/fig_status <name>` says the normal compile, critique,
+and (when in scope) adjudication prerequisites are ready enough to record loop
+evidence, or when you need a verify-only patch-handoff decision. It is **not**
+the full end-to-end runner: it will not run compile, critique, export,
+adjudication, SVG polish, accepted/golden checks, or git operations for you.
+If `/fig_status` reports `render_state: STALE`, `critique_state: MISSING |
+STALE`, `export_state: MISSING | STALE`, or any unresolved blocking note,
+return to the command that closes that gate before re-invoking `/fig_loop`.
+
 For automation, emit a small machine-readable summary:
 
 ```bash

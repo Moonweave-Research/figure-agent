@@ -15,6 +15,18 @@ uv run python3 scripts/status.py                   # all figures (one line each)
 uv run python3 scripts/status.py examples/<name>   # one figure (check list + state vector + Next:)
 ```
 
+## Traffic Controller Contract
+
+Agents should treat `/fig_status <name>` as the canonical first check unless
+the user explicitly requested a lower-level command (`/fig_compile`,
+`/fig_critique`, `/fig_adjudicate`, `/fig_loop`, `/fig_export`, `/fig_closeout`).
+The printed `Next:` hint plus the state vector (`render_state`,
+`critique_state`, `export_state`, `acceptance_state`, `workflow_ready`,
+`release_ready`, `final_artifact_state`) is the workflow's authoritative next
+action. Agents must not jump from build to export, critique, loop, polish, or
+release by intuition or memory when `Next:` points elsewhere. Rerun
+`/fig_status <name>` after every completed action to derive the next step.
+
 ## Stages
 
 | Stage | Meaning | Next hint |
