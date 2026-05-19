@@ -1,7 +1,7 @@
 # Issue 9: Journal-Grade Benchmark and Scoring Contract
 
 **Date:** 2026-05-19 KST
-**Status:** open
+**Status:** completed for the v1 advisory fresh re-audit contract on branch `codex/issue-9b-numeric-quality-score-calibration`
 **Type:** AFK for schema/docs/tests, HITL for benchmark calibration policy
 **Depends on:** Issue 6B, Issue 6C, Issue 8D
 
@@ -101,7 +101,8 @@ the previous assessment is stale and cannot gate completion.
   the figure is above ordinary manuscript quality.
 
 `overall_score` is advisory and non-monotonic. It must not override hard
-blockers. A high score with a `block` axis is invalid. A lower score after a
+blockers, `quality_axes`, `benchmark_level`, human gates, freshness gates,
+export/final-artifact gates, or accepted/golden gates. A lower score after a
 patch is a valid outcome when the fresh audit finds a regression.
 
 ## Fresh Re-Audit Rules
@@ -116,11 +117,12 @@ cycle. Previous assessments are historical evidence only.
 - Score and benchmark level may rise or fall between iterations.
 - Regressions must be recorded when the current audit downgrades an axis or
   reveals a new quality problem introduced by a prior fix.
-- `/fig_loop` may gate on the assessment only when `score_is_gateable: true`,
-  `scoring_mode: fresh_reaudit`, and the assessment hash matches the current
-  input state.
+- `/fig_loop` may attach advisory score policy only when
+  `score_is_gateable: true`, `scoring_mode: fresh_reaudit`, the assessment hash
+  matches the current input state, and the score block is complete and
+  well-formed.
 - Stale critique, stale adjudication, stale loop checkpoint, or stale final
-  artifact state invalidates the assessment for completion gating.
+  artifact state prevents the assessment from acting as completion evidence.
 
 ## Audit Coverage
 
@@ -145,50 +147,87 @@ The assessment must explicitly consider:
 `/fig_loop` should surface the assessment in `axis_verdicts` or a sibling
 `journal_grade_assessment` field once present in a fresh v1.2+ critique.
 
-Recommended loop behavior:
+Implemented loop behavior:
 
-- `blocked` -> `stop_reason: status_action_required` or
-  `human_gate_required`, depending on blocker type.
-- `needs_human_art_direction` -> human gate.
-- `draft` -> patch/adjudication path if concrete findings exist; otherwise
-  request a better critique or briefing.
-- `solid_manuscript` -> complete for ordinary manuscript workflow, but not for
-  high-impact polish goals.
-- `high_impact_candidate` -> complete when other workflow/release gates are
-  also closed.
+- `/fig_loop` surfaces the host-authored `journal_grade_assessment` as a
+  sibling field in the iteration JSON.
+- hash mismatch or stale inputs force `score_is_gateable: false` and
+  `evaluation_state: stale`.
+- `blocked` and `needs_human_art_direction` assessments surface as blocked
+  evaluation states.
+- complete numeric score blocks receive
+  `score_policy: advisory_fresh_reaudit_not_gate` only when the assessment is
+  fresh and gateable.
+- stop reason, escalation, compile/export behavior, driver action, accepted
+  state, golden state, and final-artifact state remain controlled by existing
+  gates rather than by numeric score.
 
 The loop must remain verify-only. It must not auto-polish, auto-accept, mutate
 golden artifacts, or decide publication policy.
 
 ## Acceptance Criteria
 
-- [ ] `/fig_critique` brief explains the new benchmark assessment and includes
+- [x] `/fig_critique` brief explains the new benchmark assessment and includes
   the YAML schema.
-- [ ] Validator rejects malformed assessment blocks in fresh critiques that
+- [x] Validator rejects malformed assessment blocks in fresh critiques that
   declare the assessment schema.
-- [ ] Assessment remains optional for legacy critiques.
-- [ ] Assessment declares `scoring_mode: fresh_reaudit`; any other value is
+- [x] Assessment remains optional for legacy critiques.
+- [x] Assessment declares `scoring_mode: fresh_reaudit`; any other value is
   invalid in v1.
-- [ ] Assessment includes an `assessed_artifact_hash` using the repo's existing
+- [x] Assessment includes an `assessed_artifact_hash` using the repo's existing
   `sha256:` convention.
-- [ ] `/fig_loop` gates only on assessments whose hash matches the current
+- [x] `/fig_loop` only attaches advisory score policy to fresh, gateable,
+  well-formed score blocks whose assessment hash matches the current
   input/artifact state.
-- [ ] Assessment cannot report `high_impact_candidate` while any upstream
+- [x] Assessment cannot report `high_impact_candidate` while any upstream
   quality axis is `needs_patch`, `needs_human`, or `block`.
-- [ ] Assessment cannot report `overall_score >= 80` while benchmark level is
-  `draft` or `blocked`.
-- [ ] `overall_score` is documented and tested as non-monotonic; the plugin
+- [x] Assessment can carry a high advisory numeric score with a lower
+  `benchmark_level`, but the score cannot promote the level or bypass gates.
+- [x] `overall_score` is documented and tested as non-monotonic; the plugin
   must allow score decreases after a fresh audit.
-- [ ] Regressions are represented explicitly when a previously passing axis is
+- [x] Regressions are represented explicitly when a previously passing axis is
   downgraded by the current audit.
-- [ ] `export_scale_readability` is represented explicitly, even if first
+- [x] `export_scale_readability` is represented explicitly, even if first
   implementation is host-LLM judged rather than deterministic OCR.
-- [ ] `/fig_loop` surfaces the assessment without changing compile/export
+- [x] `/fig_loop` surfaces the assessment without changing compile/export
   behavior.
-- [ ] `/fig_drive` keeps using `/fig_loop` evidence and does not independently
+- [x] `/fig_drive` keeps using `/fig_loop` evidence and does not independently
   invent quality scores.
-- [ ] Tests cover valid assessment, impossible high-impact state, blocker
+- [x] Tests cover valid assessment, impossible high-impact state, blocker
   precedence, legacy critique compatibility, and loop surfacing.
+
+## Completed Slices
+
+- Issue 9A added the level-only fresh re-audit assessment contract.
+- Issue 9C collected real host-LLM dogfood evidence and unblocked numeric
+  calibration.
+- Issue 9B added optional advisory numeric score fields, strict score-shape
+  validation, and guarded `/fig_loop` surfacing.
+
+## Remaining Calibration Risks
+
+- Real dogfood has not yet exercised `high_impact_candidate`,
+  `needs_human_art_direction`, or `blocked` on real fixtures.
+- Numeric ranges are prompt calibration guidance only; code does not enforce
+  range-to-level thresholds in v1.
+- Future dogfood should check whether host LLMs use the numeric fields
+  consistently across repeated fresh critiques.
+
+## Closeout Review
+
+Issue 9 was closed only after three checks:
+
+1. **Parent contract check.** The parent issue was reconciled with Issues 9A,
+   9B, and 9C. The stale high-score threshold rule was removed because v1
+   scores are advisory and cannot promote benchmark level or bypass gates.
+2. **Implementation coverage check.** Existing tests cover brief emission,
+   validator shape checks, legacy compatibility, invalid high-impact state,
+   stale/non-gateable hash handling, malformed score blocks, human-gate
+   precedence, and score decrease after a fresh regression audit.
+3. **Consumer boundary check.** `/fig_loop` surfaces
+   `journal_grade_assessment` but does not change stop reason, escalation,
+   compile/export behavior, driver action, accepted state, golden state, or
+   final-artifact state from numeric score.
 
 ## Non-Goals
 
@@ -201,19 +240,19 @@ golden artifacts, or decide publication policy.
 - Do not replace `quality_axes`; this is a summary layer over them.
 - Do not make human publication provenance optional.
 
-## Blocked by
+## Dependency Status
 
-- Issue 6B must remain the source of truth for required quality axes.
-- Issue 8D must remain the source of truth for driver routing from loop
-  evidence.
+- Issue 6B remains the source of truth for required quality axes.
+- Issue 6C ingests the quality axes into `/fig_loop`.
+- Issue 8D remains the source of truth for driver routing from loop evidence.
+- Issue 9A, 9B, and 9C close the v1 advisory fresh re-audit contract.
 
 ## Review Questions
 
-- Are the benchmark levels too coarse or too subjective?
-- Should `overall_score` exist in the first implementation, or should Issue 9
-  start with level-only fresh re-audit classification and add numeric scoring
-  after dogfood calibration?
-- Should `export_scale_readability` be host-LLM judged first, or should the
-  first implementation include deterministic 1-column/2-column raster checks?
-- Which goals should treat `solid_manuscript` as complete versus requiring
-  `high_impact_candidate`?
+- Should a future Issue 9D collect numeric-score dogfood evidence across fresh
+  critiques before any UI or driver consumer treats score as more than
+  advisory context?
+- Should `export_scale_readability` remain host-LLM judged, or should a later
+  slice add deterministic 1-column/2-column raster/OCR checks?
+- Which user goals should treat `solid_manuscript` as enough versus requiring
+  `high_impact_candidate` plus human art-direction signoff?
