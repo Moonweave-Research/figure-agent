@@ -740,16 +740,19 @@
   (6.10, 4.10) rectangle (6.95, 4.40);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
   (6.10, 4.10) rectangle (6.95, 4.40);
-% iter 44: bg lightened cGray!85→!70 black (consistent with V_s meter display).
-\fill[cGray!70!black, rounded corners=0.2pt] (6.20, 4.31) rectangle (6.85, 4.38);
+% Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
+% per user "신호 찌그러짐"). New extent 4.22..4.38.
+\fill[cGray!70!black, rounded corners=0.2pt] (6.20, 4.22) rectangle (6.85, 4.38);
 \draw[cGray!85!black, line width=0.12pt, rounded corners=0.2pt]
-  (6.20, 4.31) rectangle (6.85, 4.38);
+  (6.20, 4.22) rectangle (6.85, 4.38);
+% Pulse trace rescaled to taller display (square pulse with 0.10cm vertical).
 \draw[cAmber!90!white, line width=0.45pt]
-  (6.23, 4.335) -- (6.36, 4.335) -- (6.36, 4.375)
-              -- (6.53, 4.375) -- (6.53, 4.335) -- (6.68, 4.335)
-              -- (6.68, 4.375) -- (6.82, 4.375);
+  (6.23, 4.27) -- (6.36, 4.27) -- (6.36, 4.36)
+              -- (6.53, 4.36) -- (6.53, 4.27) -- (6.68, 4.27)
+              -- (6.68, 4.36) -- (6.82, 4.36);
+% HV+ label — y 4.20 → 4.14 (centered in shrunk label zone 4.10..4.22).
 \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!88!black]
-  at (6.55, 4.20) {HV+};
+  at (6.55, 4.14) {HV+};
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body (y 4.10→4.12,
 % was resting ON border stroke "pasted-on look").
 \fill[cGray!85!black] (6.55, 4.12) circle (0.022);
@@ -771,11 +774,11 @@
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.55, 3.60);
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.60, 3.60);
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.65, 3.60);
-% Surface charges — iter 45 (Pri 5a + 10): white "+" 4pt→5pt (visible at print
-% scale), leftmost charge 6.40→6.35 to clear spark WSW tip (was overlapping).
-\foreach \cx in {6.35, 6.70, 7.05, 7.40, 7.70} {
-  \fill[cRed!75!black] (\cx, 3.62) circle (0.045);
-  \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=white,
+% Surface charges — iter 48 (Codex): 5→4 charges (drop leftmost under spark),
+% radius 0.045→0.038 (Codex "shrink").
+\foreach \cx in {6.65, 7.00, 7.35, 7.70} {
+  \fill[cRed!75!black] (\cx, 3.62) circle (0.038);
+  \node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
@@ -802,23 +805,21 @@
   (7.20, 3.80) rectangle (7.60, 3.87);
 \draw[cAmber!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
 \fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
-% Vibration cue — iter 42 (E-2d-iii redesign, Gemini Top 1 fix): replaced
-% Stealth path (was "disastrous hand-drawn squiggle" at small scale) with
-% typographic $\updownarrow$ glyph — clean symmetric Unicode-style icon
-% standard in publication apparatus diagrams.
+% Vibration cue — iter 50: x 7.55→7.62 to clear bezier cable (was sharing
+% x=7.55 with cable control point — visual collision).
 \node[font=\fontsize{9}{10.8}\selectfont, text=cGray!75!black,
-      inner sep=0pt] at (7.55, 3.91) {$\updownarrow$};
-% Air gap d — iter 46 (Pri 9): T-caps equalized + shifted DOWN slightly so top
-% cap no longer crashes into Kelvin disk bottom (3.80). Top cap moved 3.80→3.78.
-\draw[cGray!55!black, dashed, line width=0.18pt] (7.72, 3.78) -- (7.72, 3.62);
-\draw[cGray!55!black, line width=0.22pt] (7.69, 3.78) -- (7.75, 3.78);
-\draw[cGray!55!black, line width=0.22pt] (7.69, 3.62) -- (7.75, 3.62);
+      inner sep=0pt] at (7.62, 3.91) {$\updownarrow$};
+% Air gap d — iter 49 (Codex): shifted right 7.72→7.80 to open probe-d-meter
+% cluster (Codex "probe cluster cramped").
+\draw[cGray!55!black, dashed, line width=0.18pt] (7.80, 3.78) -- (7.80, 3.62);
+\draw[cGray!55!black, line width=0.22pt] (7.77, 3.78) -- (7.83, 3.78);
+\draw[cGray!55!black, line width=0.22pt] (7.77, 3.62) -- (7.83, 3.62);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
-      anchor=west] at (7.75, 3.70) {$d$};
-% "Probe" label — iter 43: removed \itshape (descriptive text, not math var)
-% — Gemini Top 2 fix for inappropriate italicization.
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=south] at (7.40, 4.00) {Probe};
+      anchor=west] at (7.83, 3.70) {$d$};
+% "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
+% cGray!65 (secondary apparatus label tier).
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=south] at (7.34, 4.05) {Probe};
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
 % Layers (in z-order, bottom-up):
@@ -832,44 +833,43 @@
 %
 % (1) Front face — iter 46 (Pri 8 consistency): \shade → matte \fill cGray!22.
 \fill[cGray!22, rounded corners=0.4pt]
-  (8.00, 3.55) rectangle (9.10, 4.05);
+  (8.08, 3.58) rectangle (9.00, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (8.00, 3.55) rectangle (9.10, 4.05);
+  (8.08, 3.58) rectangle (9.00, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
-\fill[cGray!70!black, rounded corners=0.3pt] (8.05, 3.83) rectangle (9.05, 4.00);
+% Display — iter 50: enlarged vertically 0.15→0.22cm (decay curve room).
+\fill[cGray!70!black, rounded corners=0.3pt] (8.12, 3.78) rectangle (8.96, 4.00);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=0.3pt]
-  (8.05, 3.83) rectangle (9.05, 4.00);
+  (8.12, 3.78) rectangle (8.96, 4.00);
+% iter 50: axes + decay rescaled to taller display 3.78..4.00.
 \draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
-  (8.10, 3.86) -- (8.10, 3.98);
+  (8.16, 3.81) -- (8.16, 3.98);
 \draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
-  (8.10, 3.86) -- (8.98, 3.86);
-% Single smooth bezier (no mid-curve kink)
-\draw[cAmber!90!white, line width=0.45pt]
-  (8.12, 3.97) .. controls (8.35, 3.93) and (8.65, 3.87) .. (8.95, 3.86);
-% (5) V_s meter label — iter 43 (Gemini Top 2): $\mathsf{V_s}$ sans-serif math
-% to match "meter" sans-serif text — eliminates serif math + sans text font
-% collision Gemini flagged as "jarring".
-\node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
-  at (8.55, 3.69) {$\mathsf{V_s}$ meter};
+  (8.16, 3.81) -- (8.93, 3.81);
+\draw[cAmber!90!white, line width=0.40pt]
+  (8.18, 3.96) .. controls (8.38, 3.91) and (8.65, 3.84) .. (8.90, 3.82);
+% V_s meter label — iter 50: y 3.70→3.66 (centered in shrunk label zone
+% 3.58..3.78, mid y=3.68).
+\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cGray!88!black]
+  at (8.54, 3.66) {$\mathsf{V_s}$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
 % to meter input port (natural gravity-aware path, not aerial arc).
-% Cable + Input port — iter 45 (Pri 6b): port moved INSIDE meter body
-% (x 8.00→8.04, was resting ON box left edge). Cable extends to new port.
+% Cable + Input port — iter 48 (Codex): box left wall 8.00→8.08, port inside at 8.12.
 \draw[cGray!75!black, line width=0.22pt]
-  (7.40, 3.95) .. controls (7.55, 3.95) and (7.88, 3.85) .. (8.04, 3.85);
-\fill[cGray!85!black] (8.04, 3.85) circle (0.024);
-\fill[cGray!50!black] (8.04, 3.85) circle (0.012);
+  (7.40, 3.95) .. controls (7.55, 3.95) and (7.92, 3.85) .. (8.12, 3.85);
+\fill[cGray!85!black] (8.12, 3.85) circle (0.024);
+\fill[cGray!50!black] (8.12, 3.85) circle (0.012);
 
-% Polymer film label — iter 43: \itshape removed (descriptive, not math var)
-% — Gemini Top 2 typography unification.
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=east] at (6.15, 3.525) {polymer film};
-\draw[cGray!55!black, line width=0.18pt] (6.16, 3.525) -- (6.26, 3.525);
-\fill[cGray!55!black] (6.26, 3.525) circle (0.012);
+% Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
+% (6.15,3.525)→(6.00,3.50). Secondary apparatus annotation tier.
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+      anchor=east] at (6.00, 3.50) {polymer film};
+\draw[cGray!55!black, line width=0.18pt] (6.01, 3.50) -- (6.28, 3.525);
+\fill[cGray!55!black] (6.28, 3.525) circle (0.012);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
@@ -902,7 +902,9 @@
 % E-4-ii markers — iter 47 (Top Defect 2): reduced 5→4 (last asymptote dup
 % removed), smaller (1.2mm→0.9mm), lighter fill (cRed!50→!30 + white tint),
 % thinner outline. Gemini: "markers shouldn't bleed into solid blob".
-\foreach \mx/\my in {5.45/2.32, 5.95/1.96, 6.45/1.78, 7.10/1.65} {
+% E-4-ii markers — iter 48 (Codex): 4→3 (drop final asymptote marker;
+% Codex "cut decay markers from 4 to 2-3").
+\foreach \mx/\my in {5.45/2.32, 5.95/1.96, 6.45/1.78} {
   \node[circle, draw=cRed!85, fill=cRed!25, inner sep=0pt,
         minimum size=0.9mm, line width=0.25pt] at (\mx,\my) {};
 }
@@ -913,11 +915,12 @@
 % (5pt×4pt) for stronger inter-zone transformation cue. Label "derive" italic→
 % upright (verb describing transformation, not a math variable — per Typo
 % designer audit ISO 80000-2 convention).
-\draw[-{Stealth[length=5pt,width=4pt]}, cGray!75!black, line width=0.55pt]
-  (6.95, 1.55) -- (6.95, 1.28);
-\node[labelMute, anchor=west, font=\sffamily\fontsize{6}{7.2}\selectfont,
-      text=cGray!75!black, inner sep=1pt]
-  at (7.05, 1.45) {derive};
+% derive — iter 49 (Codex narrow): font 5.5→5pt, gray !60→!50.
+\draw[-{Stealth[length=3.5pt,width=2.5pt]}, cGray!55!black, line width=0.40pt]
+  (6.90, 1.55) -- (6.90, 1.28);
+\node[labelMute, anchor=west, font=\sffamily\fontsize{5}{6}\selectfont,
+      text=cGray!55!black, inner sep=1pt]
+  at (7.00, 1.45) {derive};
 
 % E-6 g(E_t) sub-zone axes
 % Column-E iter 5: axis top 1.35→1.45 (+0.10cm) — more headroom above
@@ -938,14 +941,14 @@
 % (height 0.90 → 0.84) so ratio 0.84/0.45 = 1.87× ≈ Q4 spec 1.86× (was
 % 2.0× over-shoot from v8.7 critique iter 4). Fill saturation cBlue!25
 % → !35 + cRed!25 → !35 (+40% perceptible polish per A+B mode lesson).
-% iter 47 (Top Defect 1): Gaussian borders cBlue!85!black → cBlue!85 (no black
-% mix) + fill opacity 35→25 (Gemini "20-30% translucent DOS layered elegance").
+% Gaussians — iter 48 (Codex): Deep Gaussian narrowed 6.20..7.40 → 6.28..7.28
+% (Codex "narrow the deep Gaussian"). Peak y 1.24→1.15 (lower for less plush).
 \draw[cBlue!85, fill=cBlue!25, line width=0.55pt]
   (5.30, 0.40) .. controls (5.55, 0.40) and (5.55, 0.85) .. (5.70, 0.85)
               .. controls (5.85, 0.85) and (5.85, 0.40) .. (6.10, 0.40);
 \draw[cRed!85, fill=cRed!25, line width=0.55pt]
-  (6.20, 0.40) .. controls (6.40, 0.40) and (6.40, 1.24) .. (6.80, 1.24)
-              .. controls (7.20, 1.24) and (7.20, 0.40) .. (7.40, 0.40);
+  (6.28, 0.40) .. controls (6.46, 0.40) and (6.46, 1.15) .. (6.78, 1.15)
+              .. controls (7.10, 1.15) and (7.10, 0.40) .. (7.28, 0.40);
 
 % E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
 % Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
@@ -961,15 +964,17 @@
 \draw[cGray!65!black, line width=0.22pt] (5.70, 1.42) -- (6.80, 1.42);
 \draw[cGray!65!black, line width=0.22pt] (5.70, 1.40) -- (5.70, 1.44);
 \draw[cGray!65!black, line width=0.22pt] (6.80, 1.40) -- (6.80, 1.44);
-\node[labelMute, anchor=south, text=cRed!55!black,
-      font=\sffamily\fontsize{6}{7.2}\selectfont, fill=cAmber!8, inner sep=1pt]
+% τ_d label — iter 49 (Codex narrow): 6→5pt + cGray!85→!70 + no fill.
+\node[labelMute, anchor=south, text=cGray!70!black,
+      font=\sffamily\fontsize{5}{6}\selectfont, inner sep=1pt]
   at (6.25, 1.43) {$\tau_d$};
 
-% E-10 base labels
-\node[labelMute, anchor=north, text=cBlue!75!black,
-      font=\sffamily\fontsize{6}{7.2}\selectfont] at (5.70, 0.32) {Shallow};
-\node[labelMute, anchor=north, text=cRed!75!black,
-      font=\sffamily\fontsize{6}{7.2}\selectfont] at (6.80, 0.32) {Deep};
+% E-10 — iter 49 (Codex iter 48 narrow): font 6→5pt + tone 85→70 (Codex
+% "annotations still louder than evidence shapes").
+\node[labelMute, anchor=north, text=cGray!70!black,
+      font=\sffamily\fontsize{5}{6}\selectfont] at (5.70, 0.32) {Shallow};
+\node[labelMute, anchor=north, text=cGray!70!black,
+      font=\sffamily\fontsize{5}{6}\selectfont] at (6.78, 0.32) {Deep};
 
 % =============== Column F — Mechanical =================
 
