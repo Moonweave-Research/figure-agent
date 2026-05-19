@@ -274,6 +274,14 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
+    if status_result.get("workflow_ready") and not status_result.get("final_ready", True):
+        return {
+            "stop_reason": "status_action_required",
+            "recommended_next_action": status_result.get("next", "inspect figure state"),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
+
     if not status_result.get("workflow_ready"):
         return {
             "stop_reason": "status_action_required",
@@ -923,6 +931,12 @@ def _decision_markdown(
             f"- render_state: {status_result.get('render_state')}",
             f"- critique_state: {status_result.get('critique_state')}",
             f"- export_state: {status_result.get('export_state')}",
+            (
+                "- final_artifact_state: "
+                f"{status_result.get('final_artifact_kind', 'generated_export')} "
+                f"{status_result.get('final_artifact_state', 'NONE')} "
+                f"{status_result.get('final_artifact_path', '')}"
+            ),
             f"- adjudication_state: {adjudication['state']}",
             f"- active_patch_target: {active_patch_text}",
             f"- patch_handoff_target: {handoff_text}",
@@ -1040,6 +1054,9 @@ def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "post_patch_evidence_verdict": (
             (iteration.get("post_patch_evidence") or {}).get("verdict")
         ),
+        "final_artifact_state": (iteration.get("status") or {}).get("final_artifact_state"),
+        "final_artifact_kind": (iteration.get("status") or {}).get("final_artifact_kind"),
+        "final_artifact_path": (iteration.get("status") or {}).get("final_artifact_path"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
 

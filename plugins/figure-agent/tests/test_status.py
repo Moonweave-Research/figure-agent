@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 import pytest
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -590,12 +591,27 @@ def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -
     _make_fresh_exports(fig_dir, name)
 
 
-def _write_final_artifact_spec(fig_dir: Path, kind: str = "polished_svg") -> None:
+def _write_final_artifact_spec(
+    fig_dir: Path,
+    kind: str = "polished_svg",
+    *,
+    manifest: str = "polish/svg_polish_manifest.yaml",
+) -> None:
     existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
     (fig_dir / "spec.yaml").write_text(
         existing
         + "final_artifact:\n"
         f"  kind: {kind}\n"
+        f"  manifest: {manifest}\n",
+        encoding="utf-8",
+    )
+
+
+def _append_manifest_only_final_artifact_spec(fig_dir: Path) -> None:
+    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
+    (fig_dir / "spec.yaml").write_text(
+        existing
+        + "final_artifact:\n"
         "  manifest: polish/svg_polish_manifest.yaml\n",
         encoding="utf-8",
     )
@@ -716,6 +732,49 @@ def test_stray_polish_manifest_without_opt_in_does_not_change_readiness(
     assert result["workflow_ready"] is True
 
 
+def test_final_artifact_block_without_kind_keeps_generated_export_behavior(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "manifest_only_final_status"
+    _make_status_ready_fixture(fig_dir)
+    _append_manifest_only_final_artifact_spec(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "NONE"
+    assert result["final_artifact_kind"] == "generated_export"
+    assert "final_artifact" not in ",".join(result["notes"])
+
+
+@pytest.mark.parametrize(
+    "final_artifact_yaml",
+    (
+        "final_artifact: []\n",
+        "final_artifact:\n  kind: polished_svg\n",
+        "final_artifact:\n  kind: polished_svg\n  manifest: ''\n",
+    ),
+)
+def test_invalid_final_artifact_shapes_report_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    final_artifact_yaml: str,
+) -> None:
+    fig_dir = tmp_path / "invalid_final_shape"
+    _make_status_ready_fixture(fig_dir)
+    existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
+    (fig_dir / "spec.yaml").write_text(existing + final_artifact_yaml, encoding="utf-8")
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+
+
 def test_declared_polished_svg_missing_manifest_reports_missing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -730,6 +789,8 @@ def test_declared_polished_svg_missing_manifest_reports_missing(
 
     assert result["final_artifact_state"] == "MISSING"
     assert "final_artifact_missing" in result["notes"]
+    assert result["final_artifact_path"] == "polish/svg_polish_manifest.yaml"
+    assert "final artifact is missing" in result["next"]
     assert result["workflow_ready"] is True
 
 
@@ -750,6 +811,472 @@ def test_declared_polished_svg_malformed_manifest_reports_invalid(
 
     assert result["final_artifact_state"] == "INVALID"
     assert "final_artifact_invalid" in result["notes"]
+    assert "final artifact is invalid" in result["next"]
+
+
+def test_declared_polished_svg_malformed_manifest_reports_invalid_when_path_says_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "invalidMissingName"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    polish = fig_dir / "polish"
+    polish.mkdir()
+    (polish / "svg_polish_manifest.yaml").write_text("schema: [unterminated\n", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "final_artifact_missing" not in result["notes"]
+    assert "final artifact is invalid" in result["next"]
+
+
+def test_declared_polished_svg_rejects_noncanonical_manifest_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "custom_manifest_polish"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir, manifest="polish/custom_manifest.yaml")
+    _write_polish_manifest(fig_dir)
+    custom_manifest = fig_dir / "polish" / "custom_manifest.yaml"
+    (fig_dir / "polish" / "svg_polish_manifest.yaml").rename(custom_manifest)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert result["final_artifact_path"] == "polish/custom_manifest.yaml"
+
+
+def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_spec_final"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_unknown_style_profile_with_malformed_panels_does_not_crash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_style_panels"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "style_profile: unknown-profile\npanels:\n  - not-a-mapping\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "style_profile_unknown" in result["notes"]
+    assert result["stage"] == 4
+    assert result["workflow_ready"] is False
+    assert "style_profile" in result["next"]
+
+
+def test_style_profile_unknown_takes_precedence_over_final_artifact_issue(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_style_missing_final"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    spec = fig_dir / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "style_profile: future-profile\n"
+        + "final_artifact:\n"
+        + "  kind: polished_svg\n"
+        + "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "style_profile_unknown" in result["notes"]
+    assert "final_artifact_missing" in result["notes"]
+    assert "style_profile" in result["next"]
+    assert "final artifact is missing" not in result["next"]
+
+
+def test_legacy_spec_parse_error_does_not_become_final_artifact_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_bbox_legacy"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "name: bad_bbox_legacy\n"
+        "panels:\n"
+        "  - id: A\n"
+        "    bbox_pdf_cm: [1, 1, 0, 0]\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_unrelated_semantic_spec_error_does_not_invalidate_valid_final_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_bbox_with_final"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "name: bad_bbox_with_final\n"
+        "panels:\n"
+        "  - id: A\n"
+        "    bbox_pdf_cm: [1, 1, 0, 0]\n"
+        "final_artifact:\n"
+        "  kind: polished_svg\n"
+        "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "MISSING"
+    assert "final_artifact_missing" in result["notes"]
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_legacy_malformed_yaml_does_not_become_final_artifact_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_legacy"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("accepted: [unterminated\n", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_quoted_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_quoted_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text('"final_artifact": [unterminated\n', encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_single_quoted_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_single_quoted_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("'final_artifact': [unterminated\n", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_indented_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_indented_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("  final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_flow_style_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_flow_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "{final_artifact: {kind: polished_svg, manifest: polish/svg_polish_manifest.yaml}, "
+        "accepted: [unterminated\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_flow_style_later_top_level_final_artifact_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_flow_later_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "{accepted: true, final_artifact: [unterminated\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_yaml_with_nested_final_artifact_does_not_become_final_artifact_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_nested_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "metadata:\n  final_artifact: [unterminated\n",
+        encoding="utf-8",
+    )
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+@pytest.mark.parametrize(
+    "spec_text",
+    (
+        '{note: "mentions final_artifact only in value", accepted: [unterminated\n',
+        "{metadata: {final_artifact: {kind: polished_svg}}, accepted: [unterminated\n",
+        "{metadata:{x:1,final_artifact:{kind:polished_svg}},accepted:[unterminated\n",
+    ),
+)
+def test_malformed_flow_yaml_with_non_root_final_artifact_does_not_become_final_artifact_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    spec_text: str,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_flow_nested_final_artifact"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(spec_text, encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_invalid_utf8_spec_reports_spec_parse_error_without_crashing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_utf8_status"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_bytes(b"accepted: true\n\xff\n")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "fix malformed" in result["next"]
+
+
+@pytest.mark.parametrize(
+    "spec_text",
+    (
+        "# note: final_artifact handled elsewhere\naccepted: [unterminated\n",
+        "not_final_artifact_reason: keep\naccepted: [unterminated\n",
+    ),
+)
+def test_malformed_yaml_with_final_artifact_substring_does_not_become_final_artifact_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    spec_text: str,
+) -> None:
+    fig_dir = tmp_path / "bad_yaml_substring_legacy"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(spec_text, encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    _make_fresh_exports(fig_dir, fig_dir.name)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert "spec_parse_error" in result["notes"]
+    assert result["final_artifact_state"] == "NONE"
+    assert "final_artifact_invalid" not in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_spec_without_tex_routes_to_spec_fix_first(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "bad_spec_unauthored"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 1
+    assert "spec_parse_error" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_spec_with_tex_routes_to_spec_fix_first(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "bad_spec_authored"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 2
+    assert "spec_parse_error" in result["notes"]
+    assert "fix malformed" in result["next"]
+
+
+def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "bad_spec_built"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text("brief", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / f"{fig_dir.name}.pdf").write_bytes(b"%PDF")
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / f"{fig_dir.name}.tex"):
+        os.utime(path, (old_time, old_time))
+    os.utime(build / f"{fig_dir.name}.pdf", (fresh_time, fresh_time))
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "MISSING")
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 3
+    assert "spec_parse_error" in result["notes"]
+    assert "fix malformed" in result["next"]
 
 
 def test_invalid_final_artifact_kind_blocks_release(
@@ -765,6 +1292,8 @@ def test_invalid_final_artifact_kind_blocks_release(
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "final artifact is invalid" in result["next"]
     assert result["workflow_ready"] is True
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
@@ -787,6 +1316,7 @@ def test_declared_polished_svg_stale_manifest_reports_stale(
 
     assert result["final_artifact_state"] == "STALE"
     assert "final_artifact_stale" in result["notes"]
+    assert "exports are stale" in result["next"]
 
 
 def test_declared_polished_svg_with_backport_reports_blocked(
@@ -804,6 +1334,98 @@ def test_declared_polished_svg_with_backport_reports_blocked(
 
     assert result["final_artifact_state"] == "BLOCKED"
     assert "final_artifact_blocked" in result["notes"]
+    assert "semantic backport" in result["next"]
+
+
+@pytest.mark.parametrize(
+    ("state_case", "expected_next_text"),
+    (
+        ("missing", "final artifact is missing"),
+        ("invalid", "final artifact is invalid"),
+        ("stale", "final artifact is stale"),
+        ("blocked", "semantic backport"),
+    ),
+)
+def test_declared_polished_svg_issue_takes_precedence_over_not_accepted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    state_case: str,
+    expected_next_text: str,
+) -> None:
+    fig_dir = tmp_path / f"{state_case}_not_accepted"
+    _make_status_ready_fixture(fig_dir, accepted=False)
+    _write_final_artifact_spec(fig_dir)
+    if state_case == "missing":
+        pass
+    elif state_case == "invalid":
+        polish = fig_dir / "polish"
+        polish.mkdir()
+        (polish / "svg_polish_manifest.yaml").write_text(
+            "schema: [unterminated\n",
+            encoding="utf-8",
+        )
+    elif state_case == "stale":
+        _write_polish_manifest(fig_dir)
+        (fig_dir / "polish" / "svg_polish_audit.md").write_text(
+            "# Audit changed\n",
+            encoding="utf-8",
+        )
+    else:
+        _write_polish_manifest(fig_dir, backport_required=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert expected_next_text in result["next"]
+    assert "accepted: true" not in result["next"]
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    ("polish/missing_polish_input.polished.svg", "polish/svg_polish_audit.md"),
+)
+def test_declared_polished_svg_missing_polish_inputs_report_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    relative_path: str,
+) -> None:
+    fig_dir = tmp_path / "missing_polish_input"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    (fig_dir / relative_path).unlink()
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "MISSING"
+    assert "final_artifact_missing" in result["notes"]
+    assert result["final_artifact_path"] == relative_path
+    assert "final artifact is missing" in result["next"]
+
+
+def test_declared_polished_svg_missing_provenance_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "invalid_polish_provenance"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    manifest = fig_dir / "polish" / "svg_polish_manifest.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    del data["provenance"]["reviewed_at"]
+    manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert "final artifact is invalid" in result["next"]
 
 
 def test_declared_polished_svg_matching_manifest_reports_fresh(
@@ -843,6 +1465,7 @@ def test_declared_polished_svg_stale_blocks_release_not_workflow(
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "STALE"
+    assert "final artifact is stale" in result["next"]
     assert result["workflow_ready"] is True
     assert result["golden_ready"] is True
     assert result["release_ready"] is False

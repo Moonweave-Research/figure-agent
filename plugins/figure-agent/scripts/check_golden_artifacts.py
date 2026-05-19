@@ -11,8 +11,9 @@ Per-fixture contract lives in `spec.yaml` under the `golden_contract` key:
         band_boxes:      { pattern: '\\\\BandBox\\b', min: 2 }
 
 `required_labels` strings are matched against PDF text after normalization
-(lowercase, alphanumeric tokens, symbols replaced). The contract is required
-in `--require-accepted` mode and ignored in basic mode.
+(lowercase, alphanumeric tokens, symbols replaced). Accepted mode is enabled
+by `--require-accepted` or automatically when `spec.yaml` declares the
+`accepted` key. Use `--no-require-accepted` for artifact-shape-only inspection.
 """
 
 from __future__ import annotations
@@ -32,8 +33,19 @@ from PIL import Image
 # the scripts/ directory on sys.path; running it as a CLI does the same.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
+from svg_polish_manifest import (  # noqa: E402
+    FINAL_ARTIFACT_BLOCKED,
+    FINAL_ARTIFACT_FRESH,
+    FINAL_ARTIFACT_INVALID,
+    FINAL_ARTIFACT_MISSING,
+    FINAL_ARTIFACT_NONE,
+    FINAL_ARTIFACT_STALE,
+    SVG_POLISH_MANIFEST_RELATIVE_PATH,
+    compute_final_artifact_state,
+)
 
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
@@ -153,7 +165,10 @@ def png_has_white_opaque_corners(png_path: Path, tolerance: int = 8) -> bool:
 def fixture_is_accepted(spec_path: Path) -> bool:
     if not spec_path.exists():
         return False
-    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    try:
+        data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError):
+        return False
     if not isinstance(data, dict):
         return False
     return data.get("accepted") is True
@@ -168,10 +183,60 @@ def spec_declares_accepted_key(spec_path: Path) -> bool:
     """
     if not spec_path.exists():
         return False
-    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        return False
-    return "accepted" in data
+    return "accepted" in _load_spec_mapping(spec_path)
+
+
+def _load_spec_mapping(spec_path: Path) -> dict:
+    if not spec_path.exists():
+        return {}
+    try:
+        data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"invalid spec.yaml: {exc}") from exc
+    return data if isinstance(data, dict) else {}
+
+
+def _validate_spec_semantics(spec_path: Path) -> None:
+    if not spec_path.exists():
+        return
+    try:
+        parse_spec(spec_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        if str(exc).startswith("invalid spec.yaml:"):
+            raise
+        raise ValueError(f"invalid spec.yaml: {exc}") from exc
+
+
+def _resolve_fixture_relative_path(example_dir: Path, relative: str) -> Path | None:
+    if Path(relative).is_absolute():
+        return None
+    root = example_dir.resolve()
+    resolved = (example_dir / relative).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return None
+    return resolved
+
+
+def final_artifact_gate_failures(example_dir: Path, spec_path: Path) -> list[str]:
+    try:
+        spec = _load_spec_mapping(spec_path)
+    except ValueError as exc:
+        return [f"final artifact invalid: {exc}"]
+
+    state = compute_final_artifact_state(example_dir, example_dir.name, spec)
+    if state["state"] in {FINAL_ARTIFACT_NONE, FINAL_ARTIFACT_FRESH}:
+        return []
+    if state["state"] == FINAL_ARTIFACT_MISSING:
+        return [f"final artifact missing: {state['path']}"]
+    if state["state"] == FINAL_ARTIFACT_STALE:
+        return [f"final artifact stale: refresh {SVG_POLISH_MANIFEST_RELATIVE_PATH}"]
+    if state["state"] == FINAL_ARTIFACT_BLOCKED:
+        return ["final artifact blocked: semantic backport required before acceptance"]
+    if state["state"] == FINAL_ARTIFACT_INVALID:
+        return [f"final artifact invalid: {state['error']}"]
+    return [f"final artifact invalid: unexpected final artifact state {state['state']}"]
 
 
 def required_export_artifact_failures(exports: Path, name: str) -> list[str]:
@@ -257,7 +322,10 @@ def load_golden_contract(spec_path: Path) -> dict | None:
     Validates basic shape; raises ValueError on malformed input."""
     if not spec_path.exists():
         return None
-    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    try:
+        data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"invalid spec.yaml: {exc}") from exc
     if not isinstance(data, dict):
         return None
     contract = data.get("golden_contract")
@@ -402,7 +470,9 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
     return failures
 
 
-def publication_compliance_failures(audit_path: Path) -> list[str]:
+def publication_compliance_failures(
+    audit_path: Path, *, require_disclosure: bool = False
+) -> list[str]:
     if not audit_path.exists():
         return ["missing audit: QUALITY_AUDIT.md"]
 
@@ -412,14 +482,30 @@ def publication_compliance_failures(audit_path: Path) -> list[str]:
         failures.append("missing Provenance and Publication Compliance section in QUALITY_AUDIT.md")
     if not re.search(r"submission-safe(?:\*\*)?:\s*(true|yes)\b", audit_text, re.IGNORECASE):
         failures.append("QUALITY_AUDIT.md does not declare submission-safe: true")
+    if require_disclosure and not re.search(
+        r"disclosure[- ]needed(?:\*\*)?:\s*(true|false|yes|no|none|n/a|not-applicable)\b",
+        audit_text,
+        re.IGNORECASE,
+    ):
+        failures.append("QUALITY_AUDIT.md does not declare disclosure-needed")
     return failures
+
+
+def _requires_final_artifact_disclosure(spec_path: Path) -> bool:
+    try:
+        spec = _load_spec_mapping(spec_path)
+    except ValueError:
+        return False
+    final_artifact = spec.get("final_artifact")
+    return isinstance(final_artifact, dict) and final_artifact.get("kind") == "polished_svg"
 
 
 def _spec_declares_reference_inputs(spec_path: Path) -> bool:
     if not spec_path.exists():
         return False
-    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
+    try:
+        data = _load_spec_mapping(spec_path)
+    except ValueError:
         return False
     if isinstance(data.get("reference_image"), str) and data["reference_image"].strip():
         return True
@@ -458,13 +544,20 @@ def check_example(
     png = exports / f"{name}.png"
     tif = tiff_artifact_path(exports, name)
     failures: list[str] = []
+    try:
+        _load_spec_mapping(spec)
+    except ValueError as exc:
+        return [str(exc)]
 
     # Auto-escalate to accepted mode whenever the fixture's spec.yaml declares
     # the `accepted` key (regardless of true/false). The key's presence is the
     # signal that the fixture is in the golden class; a forgotten CLI flag
     # must not be able to silently bypass the contract.
     if require_accepted is None:
-        require_accepted = spec_declares_accepted_key(spec)
+        try:
+            require_accepted = spec_declares_accepted_key(spec)
+        except ValueError as exc:
+            return [str(exc)]
 
     failures.extend(required_export_artifact_failures(exports, name))
     if failures:
@@ -487,9 +580,16 @@ def check_example(
     # editing this script.
     if require_accepted:
         try:
+            _validate_spec_semantics(spec)
+        except ValueError as exc:
+            return [str(exc)]
+        try:
             contract = load_golden_contract(spec)
         except ValueError as exc:
-            failures.append(f"invalid golden_contract: {exc}")
+            if str(exc).startswith("invalid spec.yaml:"):
+                failures.append(str(exc))
+            else:
+                failures.append(f"invalid golden_contract: {exc}")
             return failures
         if contract is None:
             failures.append(
@@ -510,8 +610,14 @@ def check_example(
         if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, tif, png)):
             failures.append("QUALITY_AUDIT.md is stale or missing")
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
-        failures.extend(publication_compliance_failures(audit))
+        failures.extend(
+            publication_compliance_failures(
+                audit,
+                require_disclosure=_requires_final_artifact_disclosure(spec),
+            )
+        )
         failures.extend(reference_pack_gate_failures(example_dir, spec))
+        failures.extend(final_artifact_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
                 audit,

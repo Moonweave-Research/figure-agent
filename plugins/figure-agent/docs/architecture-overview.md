@@ -301,12 +301,15 @@ Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a m
 
 ### Layer 5.5 — Final Artifact Contract
 
-**Status**: planned contract, not implemented in command behavior yet.
+**Status**: partially implemented command contract. Manifest schema,
+`/fig_status` state, accepted-gate validation, and verify-only `/fig_loop`
+safety are live. Full `/fig_loop` final-artifact surfacing and richer stop
+taxonomy remain planned.
 **Design**:
 `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
 
-Layer 5 exports reproducible generated artifacts. Layer 5.5 is the planned
-place for declaring a final manuscript artifact when the generated SVG needs
+Layer 5 exports reproducible generated artifacts. Layer 5.5 is the place for
+declaring a final manuscript artifact when the generated SVG needs
 manual or outer-agent polish that is not realistic to finish in raw TikZ.
 
 The contract is intentionally narrow:
@@ -332,9 +335,15 @@ final_artifact:
   material semantics, panel role, storyline, or reference interpretation must
   be backported to TikZ, briefing, or spec and rerun through compile/export,
   critique, adjudication, and final-artifact validation.
-
-Until this layer is implemented, `final_ready` remains the Layer 7
-compatibility alias for `release_ready`.
+- `/fig_status` reports `final_artifact_state`, `final_artifact_kind`, and
+  `final_artifact_path`. Polished artifacts can be `MISSING`, `INVALID`,
+  `STALE`, `BLOCKED`, or `FRESH`.
+- In accepted mode, `scripts/check_golden_artifacts.py` requires a fresh,
+  provenance-backed polished SVG only for fixtures that explicitly opt in.
+- `/fig_loop` remains verify-only. It blocks completion when status reports
+  `workflow_ready=true` but `final_ready=false`, and it surfaces the current
+  final-artifact state in its decision output. Full loop-level blocker taxonomy
+  is deferred to Issue 7E.
 
 ### Layer 6 — Validation Gates
 
@@ -346,17 +355,25 @@ compatibility alias for `release_ready`.
 Two `check_golden_artifacts` modes:
 
 - **basic mode** — artifact-shape only: SVG visible-element floor, PNG
-  width floor, opaque-white PNG corners. Always runs.
+  width floor, opaque-white PNG corners. Always runs. Malformed `spec.yaml`
+  still fails before mode-specific checks because the gate cannot safely decide
+  accepted/final-artifact policy from an invalid spec.
 - **`--require-accepted` mode** — driven by `spec.yaml.golden_contract`:
   requires the contract block, validates `accepted: true`, runs
   `required_labels` against pdftotext output, runs `source_inventory`
   regex counts against `<name>.tex`, asserts `QUALITY_AUDIT.md` freshness,
   requires a passing `theory_guard.md` BLOCKER table, requires
   `QUALITY_AUDIT.md` to contain provenance/publication-compliance evidence
-  with `submission-safe: true`, validates `reference/reference_pack.md` when
+  with `submission-safe: true`, requires `disclosure-needed` for polished-SVG
+  final artifacts, validates `reference/reference_pack.md` when
   reference inputs are declared, and applies collision/clash budget thresholds.
   This is the hard gate for ship-blessed fixtures; it is intentionally
   stricter than the Layer 4 compile loop.
+
+If `--require-accepted` / `--no-require-accepted` is omitted, the checker
+auto-escalates to accepted mode whenever `spec.yaml` declares the `accepted`
+key, whether true or false. `--no-require-accepted` is only for ad-hoc artifact
+inspection.
 
 `check_layout_drift.py` is the second Layer 6 gate (also fired from
 `compile.sh`). It is anchor-driven: each `required_labels` entry (str or
@@ -383,17 +400,20 @@ A second golden fixture only needs a `golden_contract` block in its
 `tests/test_status.py`.
 
 `infer_stage(example_dir)` returns `{stage: 0..4, accepted: True/False/None,
-checks, notes, next, workflow_ready, golden_ready, release_ready, final_ready}`
+checks, notes, next, final_artifact_state, final_artifact_kind,
+final_artifact_path, workflow_ready, golden_ready, release_ready, final_ready}`
 from filesystem + `spec.yaml` only — no side effects. Stage line includes
 `(accepted)` or `(not accepted)` marker for fixtures that declare the
 `accepted` key. Notes surface stale / missing / replayability hazards
 (`stale_export`, `reference_image_missing`, `partial_export`,
-`previews_not_directory`, `missing_briefing`).
+`previews_not_directory`, `missing_briefing`, `spec_parse_error`, and
+`final_artifact_*`).
 
 `workflow_ready` means the local render/critique/export loop is closed.
 `golden_ready` additionally requires `accepted: true`. `release_ready` requires
-a content-fresh export state. `final_ready` is kept as a compatibility alias for
-`release_ready`.
+a content-fresh export state and, for polished-SVG fixtures, a fresh
+final-artifact manifest with no semantic-backport blocker. `final_ready` is kept
+as a compatibility alias for `release_ready`.
 
 `status.py` is read-only; it never modifies any file.
 

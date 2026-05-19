@@ -42,7 +42,10 @@ def _normalize_panel(panel: dict, index: int) -> dict:
 
 
 def parse_spec(text: str) -> dict:
-    data = yaml.safe_load(text)
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise ValueError(f"invalid spec.yaml: {exc}") from exc
     if data is None:
         return {"panels": []}
     if not isinstance(data, dict):

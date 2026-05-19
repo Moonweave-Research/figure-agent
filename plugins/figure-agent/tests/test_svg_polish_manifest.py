@@ -38,6 +38,7 @@ def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
         encoding="utf-8",
     )
     (fig_dir / "coordinate_hints.yaml").write_text("metadata: {}\n", encoding="utf-8")
+    (fig_dir / "authoring_contract.md").write_text("# Contract\n", encoding="utf-8")
     (fig_dir / "authoring_plan.md").write_text("# Plan\n", encoding="utf-8")
     (fig_dir / "theory_guard.md").write_text(
         "| ID | severity | claim | method | evidence |\n",
@@ -153,6 +154,18 @@ def test_invalid_polished_path_outside_polish_fails(tmp_path: Path) -> None:
         validate_svg_polish_manifest(payload, example_dir=fig_dir)
 
 
+@pytest.mark.parametrize("relative_path", ("polish/build/demo.svg", "polish/exports/demo.svg"))
+def test_invalid_polished_path_under_build_or_exports_fails(
+    tmp_path: Path, relative_path: str
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    payload = _valid_manifest(fig_dir)
+    payload["polished"]["path"] = relative_path
+
+    with pytest.raises(SvgPolishManifestError, match="build/exports"):
+        validate_svg_polish_manifest(payload, example_dir=fig_dir)
+
+
 def test_invalid_editor_enum_fails(tmp_path: Path) -> None:
     fig_dir = _make_fixture(tmp_path)
     payload = _valid_manifest(fig_dir)
@@ -217,6 +230,7 @@ def test_changed_direct_hash_inputs_are_stale(tmp_path: Path, relative_path: str
     "relative_path",
     (
         "coordinate_hints.yaml",
+        "authoring_contract.md",
         "authoring_plan.md",
         "theory_guard.md",
         "subregion_iteration_log.md",
@@ -271,8 +285,18 @@ def test_invalid_spec_fails_cleanly_during_source_set_hash(tmp_path: Path) -> No
         encoding="utf-8",
     )
 
-    with pytest.raises(SvgPolishManifestError, match="invalid spec.yaml"):
+    with pytest.raises(SvgPolishManifestError, match="invalid spec.yaml") as excinfo:
         final_artifact_source_set_hash(fig_dir, "demo_fig", style_lock_path=fig_dir / "style.sty")
+    assert "invalid spec.yaml: invalid spec.yaml:" not in str(excinfo.value)
+
+
+def test_malformed_yaml_spec_error_is_not_double_wrapped(tmp_path: Path) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    (fig_dir / "spec.yaml").write_text("final_artifact: [unterminated\n", encoding="utf-8")
+
+    with pytest.raises(SvgPolishManifestError, match="invalid spec.yaml") as excinfo:
+        final_artifact_source_set_hash(fig_dir, "demo_fig", style_lock_path=fig_dir / "style.sty")
+    assert "invalid spec.yaml: invalid spec.yaml:" not in str(excinfo.value)
 
 
 def test_unknown_future_fields_survive_load_write(tmp_path: Path) -> None:
@@ -284,12 +308,23 @@ def test_unknown_future_fields_survive_load_write(tmp_path: Path) -> None:
 
     write_svg_polish_manifest(manifest, payload)
     loaded = load_svg_polish_manifest(manifest, example_dir=fig_dir)
-    rewrite = fig_dir / "polish" / "rewritten.yaml"
-    write_svg_polish_manifest(rewrite, loaded)
+    write_svg_polish_manifest(manifest, loaded)
 
-    reloaded = load_svg_polish_manifest(rewrite, example_dir=fig_dir)
+    reloaded = load_svg_polish_manifest(manifest, example_dir=fig_dir)
     assert reloaded["future"]["review_model"] == "human-v2"
     assert reloaded["polished"]["future_detail"] == "kept"
+
+
+def test_noncanonical_manifest_path_fails(tmp_path: Path) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    payload = _valid_manifest(fig_dir)
+    custom = fig_dir / "polish" / "custom_manifest.yaml"
+    custom.write_text("schema: figure-agent.svg-polish-manifest.v1\n", encoding="utf-8")
+
+    with pytest.raises(SvgPolishManifestError, match="svg_polish_manifest.yaml"):
+        load_svg_polish_manifest(custom, example_dir=fig_dir)
+    with pytest.raises(SvgPolishManifestError, match="svg_polish_manifest.yaml"):
+        write_svg_polish_manifest(custom, payload)
 
 
 def test_writer_emits_reloadable_yaml(tmp_path: Path) -> None:

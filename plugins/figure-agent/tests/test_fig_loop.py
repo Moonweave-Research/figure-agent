@@ -1302,6 +1302,80 @@ def test_loop_not_accepted_ready_state_is_manual_approval_required(
     assert iteration["patch_handoff"] is None
 
 
+@pytest.mark.parametrize(
+    ("state", "next_action", "expected_level"),
+    (
+        (
+            "MISSING",
+            "final artifact is missing — create or restore the declared polished SVG.",
+            "agent_action_required",
+        ),
+        (
+            "INVALID",
+            "final artifact is invalid — fix spec.yaml final_artifact.",
+            "agent_action_required",
+        ),
+        (
+            "BLOCKED",
+            "final artifact requires semantic backport — patch TikZ/briefing/spec.",
+            "agent_action_required",
+        ),
+        (
+            "STALE",
+            "final artifact is stale — refresh polish/svg_polish_manifest.yaml.",
+            "agent_action_required",
+        ),
+    ),
+)
+def test_loop_final_artifact_not_ready_blocks_verify_only_complete(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    state: str,
+    next_action: str,
+    expected_level: str,
+) -> None:
+    _make_fixture(tmp_path)
+    status_result = {
+        "stage": 4,
+        "name": "loop_demo",
+        "checks": [],
+        "next": next_action,
+        "notes": [f"final_artifact_{state.lower()}"],
+        "accepted": True,
+        "exports_substate": "FRESH",
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "ACCEPTED",
+        "final_artifact_state": state,
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/loop_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": True,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_loop_mod, "infer_stage", lambda _example_dir: status_result)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect final artifact gate",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["recommended_next_action"] == next_action
+    assert iteration["escalation_level"] == expected_level
+    assert iteration["escalation_level"] != "none"
+    decision = (run_dir / "decision.md").read_text(encoding="utf-8")
+    assert (
+        f"- final_artifact_state: polished_svg {state} "
+        "polish/loop_demo.polished.svg"
+    ) in decision
+
+
 def test_loop_requires_adjudication_before_active_subregion_for_fresh_critique(
     tmp_path: Path,
 ) -> None:
@@ -1594,6 +1668,11 @@ def test_main_json_emits_machine_readable_summary(
             "auto_patch_eligibility": None,
             "patch_evidence": None,
             "post_patch_evidence": None,
+            "status": {
+                "final_artifact_state": "NONE",
+                "final_artifact_kind": "generated_export",
+                "final_artifact_path": "exports/loop_demo.svg",
+            },
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -1631,6 +1710,9 @@ def test_main_json_emits_machine_readable_summary(
         "auto_patch_eligibility": None,
         "patch_evidence_present": False,
         "post_patch_evidence_verdict": None,
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": "exports/loop_demo.svg",
         "recommended_next_action": "inspect figure state",
     }
 
@@ -1718,5 +1800,8 @@ def test_main_json_exercises_real_run_loop_summary(
         "post_patch_evidence_verdict": (
             (iteration["post_patch_evidence"] or {}).get("verdict")
         ),
+        "final_artifact_state": iteration["status"]["final_artifact_state"],
+        "final_artifact_kind": iteration["status"]["final_artifact_kind"],
+        "final_artifact_path": iteration["status"]["final_artifact_path"],
         "recommended_next_action": iteration["recommended_next_action"],
     }

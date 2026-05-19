@@ -16,6 +16,15 @@ from reference_contract import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 SCHEMA = "figure-agent.svg-polish-manifest.v1"
+SVG_POLISH_MANIFEST_RELATIVE_PATH = "polish/svg_polish_manifest.yaml"
+FINAL_ARTIFACT_NONE = "NONE"
+FINAL_ARTIFACT_MISSING = "MISSING"
+FINAL_ARTIFACT_INVALID = "INVALID"
+FINAL_ARTIFACT_STALE = "STALE"
+FINAL_ARTIFACT_BLOCKED = "BLOCKED"
+FINAL_ARTIFACT_FRESH = "FRESH"
+FINAL_ARTIFACT_GENERATED_EXPORT = "generated_export"
+FINAL_ARTIFACT_POLISHED_SVG = "polished_svg"
 ALLOWED_EDITORS = frozenset({"human", "external_tool", "agent_assisted"})
 ALLOWED_EDIT_CLASSES = frozenset(
     {
@@ -81,6 +90,8 @@ def _load_spec(example_dir: Path) -> dict:
     try:
         return parse_spec(spec_path.read_text(encoding="utf-8"))
     except (UnicodeDecodeError, ValueError, yaml.YAMLError) as exc:
+        if str(exc).startswith("invalid spec.yaml:"):
+            raise SvgPolishManifestError(str(exc)) from exc
         raise SvgPolishManifestError(f"invalid spec.yaml: {exc}") from exc
 
 
@@ -215,6 +226,11 @@ def validate_svg_polish_manifest(
 
 def load_svg_polish_manifest(path: Path, *, example_dir: Path) -> dict[str, Any]:
     """Load and validate an SVG polish manifest YAML file."""
+    canonical = (example_dir / SVG_POLISH_MANIFEST_RELATIVE_PATH).resolve()
+    if path.resolve() != canonical:
+        raise SvgPolishManifestError(
+            f"SVG polish manifest path must be {SVG_POLISH_MANIFEST_RELATIVE_PATH}"
+        )
     if not path.is_file():
         raise SvgPolishManifestError(f"missing SVG polish manifest: {path}")
     try:
@@ -229,6 +245,11 @@ def load_svg_polish_manifest(path: Path, *, example_dir: Path) -> dict[str, Any]
 def write_svg_polish_manifest(path: Path, data: dict[str, Any]) -> None:
     """Validate and write an SVG polish manifest YAML file."""
     example_dir = path.parent.parent
+    canonical = (example_dir / SVG_POLISH_MANIFEST_RELATIVE_PATH).resolve()
+    if path.resolve() != canonical:
+        raise SvgPolishManifestError(
+            f"SVG polish manifest path must be {SVG_POLISH_MANIFEST_RELATIVE_PATH}"
+        )
     validated = validate_svg_polish_manifest(data, example_dir=example_dir)
     path.write_text(
         yaml.safe_dump(validated, sort_keys=False, allow_unicode=False),
@@ -287,3 +308,170 @@ def svg_polish_manifest_is_stale(
         if data[section][key] != expected[(section, key)]:
             return True
     return False
+
+
+def _default_final_artifact_state(name: str) -> dict[str, Any]:
+    return {
+        "state": FINAL_ARTIFACT_NONE,
+        "kind": FINAL_ARTIFACT_GENERATED_EXPORT,
+        "path": f"exports/{name}.svg",
+        "notes": [],
+        "error": "",
+    }
+
+
+def _relative_or_text(example_dir: Path, value: str) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        return value
+    try:
+        return str(path.resolve().relative_to(example_dir.resolve()))
+    except ValueError:
+        return value
+
+
+def _manifest_error_state(message: str) -> str:
+    if message.startswith(("missing SVG polish input:", "missing SVG polish manifest:")):
+        return FINAL_ARTIFACT_MISSING
+    return FINAL_ARTIFACT_INVALID
+
+
+def _missing_input_path(example_dir: Path, message: str, fallback: str) -> str:
+    prefix = "missing SVG polish input: "
+    if not message.startswith(prefix):
+        return fallback
+    return _relative_or_text(example_dir, message.removeprefix(prefix))
+
+
+def compute_final_artifact_state(
+    example_dir: Path,
+    name: str,
+    spec: dict[str, Any],
+    *,
+    style_lock_path: Path = STYLE_LOCK_PATH,
+    base_dir: Path = REPO_ROOT,
+    spec_parse_error: bool = False,
+) -> dict[str, Any]:
+    """Return the authoritative final-artifact state for status and gates."""
+    if spec_parse_error:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_GENERATED_EXPORT,
+            "path": f"exports/{name}.svg",
+            "notes": ["final_artifact_invalid"],
+            "error": "invalid spec.yaml",
+        }
+
+    final_artifact = spec.get("final_artifact")
+    if final_artifact is None:
+        return _default_final_artifact_state(name)
+    if not isinstance(final_artifact, dict):
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_GENERATED_EXPORT,
+            "path": f"exports/{name}.svg",
+            "notes": ["final_artifact_invalid"],
+            "error": "spec.yaml final_artifact must be a mapping",
+        }
+
+    kind = final_artifact.get("kind", FINAL_ARTIFACT_GENERATED_EXPORT)
+    if kind in (None, FINAL_ARTIFACT_GENERATED_EXPORT):
+        return _default_final_artifact_state(name)
+    if kind != FINAL_ARTIFACT_POLISHED_SVG:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": str(kind),
+            "path": "",
+            "notes": ["final_artifact_invalid"],
+            "error": f"unsupported final_artifact.kind {kind!r}",
+        }
+
+    manifest_rel = final_artifact.get("manifest")
+    if not isinstance(manifest_rel, str) or not manifest_rel.strip():
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": "",
+            "notes": ["final_artifact_invalid"],
+            "error": "final_artifact.manifest must be a non-empty string",
+        }
+    manifest_rel = manifest_rel.strip()
+    if manifest_rel != SVG_POLISH_MANIFEST_RELATIVE_PATH:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel,
+            "notes": ["final_artifact_invalid"],
+            "error": f"final_artifact.manifest must be {SVG_POLISH_MANIFEST_RELATIVE_PATH}",
+        }
+
+    manifest_path = (example_dir / manifest_rel).resolve()
+    if not manifest_path.is_file():
+        return {
+            "state": FINAL_ARTIFACT_MISSING,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel,
+            "notes": ["final_artifact_missing"],
+            "error": f"missing SVG polish manifest: {manifest_path}",
+        }
+
+    try:
+        manifest = load_svg_polish_manifest(manifest_path, example_dir=example_dir)
+    except SvgPolishManifestError as exc:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": manifest_rel,
+            "notes": ["final_artifact_invalid"],
+            "error": str(exc),
+        }
+
+    polished_path = manifest["polished"]["path"]
+    try:
+        stale = svg_polish_manifest_is_stale(
+            manifest_path,
+            example_dir=example_dir,
+            style_lock_path=style_lock_path,
+            base_dir=base_dir,
+        )
+    except SvgPolishManifestError as exc:
+        message = str(exc)
+        state = _manifest_error_state(message)
+        note = (
+            "final_artifact_missing"
+            if state == FINAL_ARTIFACT_MISSING
+            else "final_artifact_invalid"
+        )
+        return {
+            "state": state,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": _missing_input_path(example_dir, message, polished_path),
+            "notes": [note],
+            "error": message,
+        }
+
+    if stale:
+        return {
+            "state": FINAL_ARTIFACT_STALE,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": polished_path,
+            "notes": ["final_artifact_stale"],
+            "error": "",
+        }
+    if manifest["polished"]["semantic_change_declared"] or manifest["polished"][
+        "backport_required"
+    ]:
+        return {
+            "state": FINAL_ARTIFACT_BLOCKED,
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": polished_path,
+            "notes": ["final_artifact_blocked"],
+            "error": "semantic backport required before acceptance",
+        }
+    return {
+        "state": FINAL_ARTIFACT_FRESH,
+        "kind": FINAL_ARTIFACT_POLISHED_SVG,
+        "path": polished_path,
+        "notes": [],
+        "error": "",
+    }

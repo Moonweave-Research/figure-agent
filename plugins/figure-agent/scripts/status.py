@@ -16,9 +16,10 @@ from reference_contract import (
     participating_panel_reference_paths,
 )
 from svg_polish_manifest import (
-    SvgPolishManifestError,
-    load_svg_polish_manifest,
-    svg_polish_manifest_is_stale,
+    FINAL_ARTIFACT_FRESH,
+    FINAL_ARTIFACT_NONE,
+    FINAL_ARTIFACT_POLISHED_SVG,
+    compute_final_artifact_state,
 )
 
 # Shared build/export freshness source set. /fig_critique adds panel references
@@ -85,6 +86,26 @@ _NEXT_REFERENCE_MISSING = (
     "fix declared reference inputs in spec.yaml or add the missing files before continuing."
 )
 _NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
+_NEXT_SPEC_PARSE_ERROR = "fix malformed examples/<name>/spec.yaml before continuing."
+_NEXT_STYLE_PROFILE_UNKNOWN = (
+    "fix unknown style_profile in examples/<name>/spec.yaml before continuing."
+)
+_NEXT_FINAL_ARTIFACT_MISSING = (
+    "final artifact is missing — create or restore the declared polished SVG, audit,"
+    " and polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
+)
+_NEXT_FINAL_ARTIFACT_INVALID = (
+    "final artifact is invalid — fix spec.yaml final_artifact and"
+    " polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
+)
+_NEXT_FINAL_ARTIFACT_STALE = (
+    "final artifact is stale — refresh polish/svg_polish_manifest.yaml after"
+    " source/export/critique/polish changes, then rerun /fig_status <name>."
+)
+_NEXT_FINAL_ARTIFACT_BLOCKED = (
+    "final artifact requires semantic backport — patch TikZ/briefing/spec,"
+    " rerun compile/export/critique as needed, then recreate the polish manifest."
+)
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 CRITIQUE_NOT_REQUIRED = "NOT_REQUIRED"
@@ -102,15 +123,8 @@ RENDER_FRESH = "FRESH"
 ACCEPTANCE_ACCEPTED = "ACCEPTED"
 ACCEPTANCE_NOT_ACCEPTED = "NOT_ACCEPTED"
 ACCEPTANCE_NOT_DECLARED = "NOT_DECLARED"
-FINAL_ARTIFACT_NONE = "NONE"
-FINAL_ARTIFACT_MISSING = "MISSING"
-FINAL_ARTIFACT_INVALID = "INVALID"
-FINAL_ARTIFACT_STALE = "STALE"
-FINAL_ARTIFACT_BLOCKED = "BLOCKED"
-FINAL_ARTIFACT_FRESH = "FRESH"
-FINAL_ARTIFACT_GENERATED_EXPORT = "generated_export"
-FINAL_ARTIFACT_POLISHED_SVG = "polished_svg"
 _NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
+_SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -315,120 +329,38 @@ def _release_ready(golden_ready: bool, exports_substate: str, final_artifact: di
 
 
 def _default_final_artifact(name: str) -> dict:
-    return {
-        "state": FINAL_ARTIFACT_NONE,
-        "kind": FINAL_ARTIFACT_GENERATED_EXPORT,
-        "path": f"exports/{name}.svg",
-        "notes": [],
-    }
-
-
-def _resolve_fixture_relative_path(example_dir: Path, relative: str) -> Path | None:
-    if Path(relative).is_absolute():
-        return None
-    root = example_dir.resolve()
-    resolved = (example_dir / relative).resolve()
-    try:
-        resolved.relative_to(root)
-    except ValueError:
-        return None
-    return resolved
+    return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
 
 
 def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
-    final_artifact = spec.get("final_artifact")
-    if final_artifact is None:
-        return _default_final_artifact(name)
-    if not isinstance(final_artifact, dict):
-        result = _default_final_artifact(name)
-        result["state"] = FINAL_ARTIFACT_INVALID
-        result["notes"] = ["final_artifact_invalid"]
-        return result
+    return compute_final_artifact_state(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
+        spec_parse_error=bool(spec.get(_SPEC_PARSE_ERROR_KEY)),
+    )
 
-    kind = final_artifact.get("kind", FINAL_ARTIFACT_GENERATED_EXPORT)
-    if kind in (None, FINAL_ARTIFACT_GENERATED_EXPORT):
-        return _default_final_artifact(name)
-    if kind != FINAL_ARTIFACT_POLISHED_SVG:
-        return {
-            "state": FINAL_ARTIFACT_INVALID,
-            "kind": str(kind),
-            "path": "",
-            "notes": ["final_artifact_invalid"],
-        }
 
-    manifest_rel = final_artifact.get("manifest")
-    if not isinstance(manifest_rel, str) or not manifest_rel.strip():
-        return {
-            "state": FINAL_ARTIFACT_INVALID,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": "",
-            "notes": ["final_artifact_invalid"],
-        }
-    manifest_path = _resolve_fixture_relative_path(example_dir, manifest_rel.strip())
-    if manifest_path is None:
-        return {
-            "state": FINAL_ARTIFACT_INVALID,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": manifest_rel.strip(),
-            "notes": ["final_artifact_invalid"],
-        }
-    try:
-        rel_parts = manifest_path.relative_to(example_dir.resolve()).parts
-    except ValueError:
-        rel_parts = ()
-    if not rel_parts or rel_parts[0] != "polish":
-        return {
-            "state": FINAL_ARTIFACT_INVALID,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": manifest_rel.strip(),
-            "notes": ["final_artifact_invalid"],
-        }
-    if not manifest_path.is_file():
-        return {
-            "state": FINAL_ARTIFACT_MISSING,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": manifest_rel.strip(),
-            "notes": ["final_artifact_missing"],
-        }
+def _final_artifact_next_template(final_artifact: dict) -> str | None:
+    state = final_artifact["state"]
+    if state == "MISSING":
+        return _NEXT_FINAL_ARTIFACT_MISSING
+    if state == "INVALID":
+        return _NEXT_FINAL_ARTIFACT_INVALID
+    if state == "STALE":
+        return _NEXT_FINAL_ARTIFACT_STALE
+    if state == "BLOCKED":
+        return _NEXT_FINAL_ARTIFACT_BLOCKED
+    return None
 
-    try:
-        manifest = load_svg_polish_manifest(manifest_path, example_dir=example_dir)
-        if svg_polish_manifest_is_stale(
-            manifest_path,
-            example_dir=example_dir,
-            style_lock_path=STYLE_LOCK_PATH,
-        ):
-            state = FINAL_ARTIFACT_STALE
-            notes = ["final_artifact_stale"]
-        elif (
-            manifest["polished"]["semantic_change_declared"]
-            or manifest["polished"]["backport_required"]
-        ):
-            state = FINAL_ARTIFACT_BLOCKED
-            notes = ["final_artifact_blocked"]
-        else:
-            state = FINAL_ARTIFACT_FRESH
-            notes = []
-        return {
-            "state": state,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": manifest["polished"]["path"],
-            "notes": notes,
-        }
-    except SvgPolishManifestError as exc:
-        message = str(exc).lower()
-        state = FINAL_ARTIFACT_MISSING if "missing" in message else FINAL_ARTIFACT_INVALID
-        note = (
-            "final_artifact_missing"
-            if state == FINAL_ARTIFACT_MISSING
-            else "final_artifact_invalid"
-        )
-        return {
-            "state": state,
-            "kind": FINAL_ARTIFACT_POLISHED_SVG,
-            "path": manifest_rel.strip(),
-            "notes": [note],
-        }
+
+def _spec_next_template(notes: list[str]) -> str | None:
+    if "spec_parse_error" in notes:
+        return _NEXT_SPEC_PARSE_ERROR
+    if "style_profile_unknown" in notes:
+        return _NEXT_STYLE_PROFILE_UNKNOWN
+    return None
 
 
 def _status_vector(
@@ -510,6 +442,78 @@ def _append_panel_reference_checks(notes: list[str], spec: dict, example_dir: Pa
             return  # one note is enough; caller can see spec.yaml for details
 
 
+def _safe_raw_spec_mapping(raw: object) -> dict:
+    if not isinstance(raw, dict):
+        return {"panels": []}
+    spec = dict(raw)
+    panels = spec.get("panels", [])
+    if isinstance(panels, list):
+        spec["panels"] = [panel for panel in panels if isinstance(panel, dict)]
+    else:
+        spec["panels"] = []
+    return spec
+
+
+def _has_top_level_final_artifact_key(text: str) -> bool:
+    if text.lstrip().startswith("{"):
+        return _flow_mapping_has_top_level_key(text, "final_artifact")
+
+    lines = [
+        line
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    if not lines:
+        return False
+    root_indent = min(len(line) - len(line.lstrip(" ")) for line in lines)
+    for line in lines:
+        indent = len(line) - len(line.lstrip(" "))
+        stripped = line.strip()
+        if indent == root_indent and (
+            stripped.startswith("final_artifact:")
+            or stripped.startswith("'final_artifact':")
+            or stripped.startswith('"final_artifact":')
+        ):
+            return True
+    return False
+
+
+def _flow_mapping_has_top_level_key(text: str, key: str) -> bool:
+    compact = "".join(text.split())
+    if not compact.startswith("{"):
+        return False
+    depth = 0
+    token_start = 1
+    in_quote = ""
+    escape = False
+    for index, char in enumerate(compact):
+        if in_quote:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == in_quote:
+                in_quote = ""
+            continue
+        if char in {"'", '"'}:
+            in_quote = char
+            continue
+        if char in "{[":
+            depth += 1
+            continue
+        if char in "}]":
+            depth -= 1
+            continue
+        if char == "," and depth == 1:
+            token_start = index + 1
+            continue
+        if char == ":" and depth == 1:
+            candidate = compact[token_start:index].strip("'\" ")
+            if candidate == key:
+                return True
+    return False
+
+
 def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
@@ -546,13 +550,25 @@ def infer_stage(example_dir: Path) -> dict:
     spec: dict = {}
     if spec_path.exists():
         try:
-            spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-        except ValueError:
-            notes.append("style_profile_unknown")
+            spec_text = spec_path.read_text(encoding="utf-8")
+            spec = parse_spec(spec_text)
+        except (UnicodeDecodeError, ValueError) as exc:
             import yaml as _yaml  # noqa: PLC0415
 
-            raw = _yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-            spec = raw if isinstance(raw, dict) else {}
+            try:
+                raw = _yaml.safe_load(spec_text)
+            except (NameError, _yaml.YAMLError):
+                notes.append("spec_parse_error")
+                spec = {"panels": []}
+                if "spec_text" in locals() and _has_top_level_final_artifact_key(spec_text):
+                    spec[_SPEC_PARSE_ERROR_KEY] = True
+            else:
+                if "style_profile" in str(exc):
+                    notes.append("style_profile_unknown")
+                else:
+                    notes.append("spec_parse_error")
+                if raw is not None:
+                    spec = _safe_raw_spec_mapping(raw)
 
     accepted = _resolve_accepted(spec)
     sources = _source_paths(example_dir, name, spec)
@@ -571,7 +587,7 @@ def infer_stage(example_dir: Path) -> dict:
             "stage": 1,
             "name": name,
             "checks": checks,
-            "next": _NEXT_MISSING_BRIEFING.replace("<name>", name),
+            "next": (_spec_next_template(notes) or _NEXT_MISSING_BRIEFING).replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -601,7 +617,10 @@ def infer_stage(example_dir: Path) -> dict:
             notes.append("stale_export")
         # Priority: stale_export / partial_export stay above done, but their
         # remediation must include critique when run_export.py will enforce it.
-        if "missing_briefing" in notes:
+        spec_next_template = _spec_next_template(notes)
+        if spec_next_template is not None:
+            next_template = spec_next_template
+        elif "missing_briefing" in notes:
             next_template = _NEXT_MISSING_BRIEFING
         elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
@@ -629,6 +648,8 @@ def infer_stage(example_dir: Path) -> dict:
             next_template = _NEXT_4_PARTIAL
         elif _critique_needs_action(critique_state):
             next_template = _NEXT_4_CRITIQUE_REQUIRED
+        elif _final_artifact_next_template(final_artifact) is not None:
+            next_template = _final_artifact_next_template(final_artifact)
         elif accepted is False:
             next_template = _NEXT_4_NOT_ACCEPTED
         else:
@@ -656,7 +677,10 @@ def infer_stage(example_dir: Path) -> dict:
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        if "missing_briefing" in notes:
+        spec_next_template = _spec_next_template(notes)
+        if spec_next_template is not None:
+            next_template = spec_next_template
+        elif "missing_briefing" in notes:
             next_template = _NEXT_MISSING_BRIEFING
         elif critique_state == CRITIQUE_REFERENCE_MISSING:
             next_template = _NEXT_REFERENCE_MISSING
@@ -691,9 +715,13 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
-        next_template = (
-            _NEXT_MISSING_BRIEFING if "missing_briefing" in notes else _NEXT_2
-        )
+        spec_next_template = _spec_next_template(notes)
+        if spec_next_template is not None:
+            next_template = spec_next_template
+        else:
+            next_template = (
+                _NEXT_MISSING_BRIEFING if "missing_briefing" in notes else _NEXT_2
+            )
         return {
             "stage": 2,
             "name": name,
@@ -716,11 +744,12 @@ def infer_stage(example_dir: Path) -> dict:
     # Stage 1: spec.yaml exists, no .tex authored yet
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
+        next_template = _spec_next_template(notes) or _NEXT_1
         return {
             "stage": 1,
             "name": name,
             "checks": checks,
-            "next": _NEXT_1.replace("<name>", name),
+            "next": next_template.replace("<name>", name),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
