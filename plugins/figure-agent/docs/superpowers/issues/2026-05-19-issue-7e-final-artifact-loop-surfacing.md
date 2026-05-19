@@ -1,6 +1,6 @@
 # Issue 7E: Final Artifact Loop Surfacing
 
-**Status:** open
+**Status:** completed in commit `e593453`.
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build

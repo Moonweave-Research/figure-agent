@@ -25,9 +25,9 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
     return fixture
 
 
-def _fixture_files(fixture: Path) -> dict[str, str]:
+def _fixture_files(fixture: Path) -> dict[str, bytes]:
     return {
-        str(path.relative_to(fixture)): path.read_text(encoding="utf-8")
+        str(path.relative_to(fixture)): path.read_bytes()
         for path in sorted(fixture.rglob("*"))
         if path.is_file()
     }
@@ -1970,9 +1970,9 @@ def test_loop_routes_to_semantic_backport_when_final_artifact_blocked(
     assert iteration["stop_reason"] == "status_action_required"
     assert iteration["escalation_level"] == "agent_action_required"
     action = iteration["recommended_next_action"].lower()
-    assert "semantic backport" in action or "backport" in action
+    assert "semantic backport" in action
     # Backport target must include source families, not just manifest.
-    assert "tikz" in action or "briefing" in action or "spec" in action
+    assert "tikz" in action and "briefing" in action and "spec" in action
     # Decision.md must mention BLOCKED so a reviewer sees the state.
     assert "BLOCKED" in decision
 
