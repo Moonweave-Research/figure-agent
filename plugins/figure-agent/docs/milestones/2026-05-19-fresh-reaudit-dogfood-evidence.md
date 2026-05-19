@@ -2,7 +2,7 @@
 
 **Date opened:** 2026-05-19 KST
 **Parent issue:** `docs/superpowers/issues/2026-05-19-issue-9c-fresh-reaudit-dogfood-evidence.md`
-**Status:** in progress (2/5 fixtures recorded)
+**Status:** in progress (3/5 fixtures recorded; 1 critique-not-required blocker)
 
 This milestone collects host-LLM `journal_grade_assessment` evidence on real
 fixtures so the level-only fresh re-audit rubric can be evaluated against
@@ -82,8 +82,43 @@ Constraints (per Issue 9C):
   - `/fig_loop` ingestion preserved every field. `/fig_driver` correctly held the workflow at `release_blocked` — same pattern as Run 1, indicating the `force_golden_required` stop boundary is orthogonal to the fresh re-audit assessment regardless of fixture.
   - Cross-run signal worth noting: two fixtures, both `solid_manuscript` + `polish` bottleneck. If runs 3–5 also land on `solid_manuscript`, the level rubric is at risk of collapsing to a single value in practice and the `too_coarse` failure mode becomes a real concern.
 
+### Run 3 — `smoke_trap_demo` (critique-not-required blocker)
+
+- **fixture name:** `smoke_trap_demo`
+- **command sequence actually used:**
+  ```bash
+  uv run python3 scripts/fig_driver.py smoke_trap_demo --mode review --goal "dogfood 9A fresh re-audit" --dry-run
+  # driver returned action: run_compile (render STALE), safe_command: bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
+  bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
+  uv run python3 scripts/fig_driver.py smoke_trap_demo --mode review --goal "dogfood 9A fresh re-audit" --dry-run
+  # driver returned action: run_fig_loop (critique NOT_REQUIRED — spec.yaml declares no reference_image), safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'dogfood 9A fresh re-audit' --json
+  uv run python3 scripts/fig_loop.py smoke_trap_demo --goal "dogfood 9A fresh re-audit" --json
+  uv run python3 scripts/fig_driver.py smoke_trap_demo --mode review --goal "dogfood 9A fresh re-audit" --dry-run
+  ```
+  `critique_adjudication.py scaffold` was NOT run for this fixture because no critique was produced; scaffolding without a critique would be a fabricated artifact.
+- **critique schema:** none (no critique.md written; no critique.md present in the fixture directory at any point)
+- **why critique was not produced:** `examples/smoke_trap_demo/spec.yaml` declares no `reference_image` and no `panels[].reference_image`. The driver therefore reports `critique_state: NOT_REQUIRED` rather than `STALE`, and `/fig_critique` has no reference-grounding to bind to. Per Issue 9C "If a fixture cannot produce a v1.2 critique because it lacks required visual or reference inputs, record the blocker instead of substituting a synthetic case," this run is recorded as a blocker rather than an invented critique.
+- **`critique_input_hash`:** N/A (no critique)
+- **`journal_grade_assessment.assessed_artifact_hash`:** N/A (no assessment)
+- **`score_is_gateable`:** N/A
+- **`benchmark_level`:** N/A
+- **`confidence`:** N/A
+- **`next_quality_bottleneck`:** N/A
+- **`regression_detected`:** N/A
+- **`regressions`:** N/A
+- **`/fig_loop` `stop_reason`:** `status_action_required`
+- **`/fig_loop` surfaced `journal_grade_assessment.evaluation_state`:** N/A (`journal_grade_assessment` is `null` in the iteration record because the critique source is `NOT_REQUIRED` — confirmed at `.scratch/fig-loop-runs/20260519-114125-424872-smoke_trap_demo/iteration_001.json`)
+- **`/fig_loop` `escalation_level`:** `agent_action_required` (distinct from runs 1–2 which were `manual_approval_required`; this fixture has no golden contract gate, so the export stale-state is an agent-actionable signal rather than a human gate)
+- **`/fig_driver` next action after loop ingestion:** `action: run_fig_loop`, `safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'dogfood 9A fresh re-audit' --json`, `stop_boundary: null`. The driver does NOT escalate to `release_blocked` for this fixture because `acceptance_state: NOT_DECLARED` (no `golden_contract`), so the only structural blocker is the stale export that `/fig_export` would close in a separate workflow surface.
+- **reviewer verdict:** `invalid` (for the journal-grade fresh re-audit purpose of Issue 9C — no `journal_grade_assessment` field could be exercised against this fixture)
+- **short rationale:**
+  - The fixture is a smoke-test placeholder (`selected_preview: dummy_v1.png` in spec.yaml; `selection_notes` describe it as a band-diagram cartoon stub). It deliberately does not carry the reference grounding that `/fig_critique` v1.2 needs, so the journal-grade fresh re-audit rubric cannot be evaluated here.
+  - Marking the run `useful` or `too_coarse` would mis-claim that a journal_grade_assessment was produced; marking it `confusing` would suggest a host-LLM failure mode that does not apply. `invalid` is the honest reading: the assessment field was not produced, so the rubric cannot be tested against this run, and the fixture is not a counter-example against the rubric either.
+  - The blocker is structural (fixture contract gap), not a defect in the v1.2 critique pipeline or the journal_grade_assessment design. If Issue 9C requires N≥5 v1.2 critique-grounded fixtures, this run does not count toward that quorum; a substitute fixture from the remaining queue is needed.
+
 ## Open Items
 
-- Runs 3–5 not yet executed. Next fixture queue from Issue 9C: `smoke_trap_demo`, `fig3_trapping_concept`, `fig5_floating_clip_mechanism`.
-- Watchlist for run 3+: does any fixture land at `draft`, `high_impact_candidate`, `needs_human_art_direction`, or `blocked`? If runs 3–5 also resolve to `solid_manuscript` + `polish`, surface a follow-up note on whether the level set is calibrated against this fixture population.
-- Note for the cross-run pattern: a fresh `journal_grade_assessment` does NOT clear the orthogonal `force_golden_required` stop boundary. Confirmed in 2/2 runs so far.
+- Runs 4–5 not yet executed against the published queue (`fig3_trapping_concept`, `fig5_floating_clip_mechanism`).
+- Quorum gap: 2 valid v1.2 critique-grounded runs vs. the Issue 9C minimum of 5. If the remaining queue also lacks reference grounding, Issue 9C will need either fixture-grounding work or an Issue 9C exception note for sub-N=5 evidence acceptance — recorded here so the gap is visible.
+- Watchlist (carryover from Run 2): does any fixture land at `draft`, `high_impact_candidate`, `needs_human_art_direction`, or `blocked`? Two `solid_manuscript` + `polish` outcomes so far; level coverage remains narrow.
+- Note for the cross-run pattern: a fresh `journal_grade_assessment` does NOT clear the orthogonal `force_golden_required` stop boundary (Runs 1–2). For fixtures without a `golden_contract` (Run 3), the driver lands on `agent_action_required` for stale exports rather than `manual_approval_required` — the gate set is fixture-shape dependent.
