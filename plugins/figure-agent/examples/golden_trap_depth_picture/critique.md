@@ -1,143 +1,248 @@
 ---
-schema: figure-agent.critique.v1
+schema: figure-agent.critique.v1.2
 fixture: golden_trap_depth_picture
-generated_at: 2026-05-04T08:57:43Z
-iteration: 10 (post polymer schematic redraw)
-verdict: revise
-grounding:
-  - briefing.md §7 Author intent + Snippets used (now lists A1 polymer_chain + A2 log_plot)
-  - build/golden_trap_depth_picture.png rendered after PlotCallout adoption and Row 3 polymer redraw
-  - reference image (golden_target_001.png) — pre-A1/A2 baseline; build improves on it
-  - prior critique iter 8 for deep-dominant DOS and band-edge context
-findings:
-  - id: C001
-    severity: NIT
-    category: hierarchy
-    tex_lines: [52, 53, 54]
-    observation: "Row 1 power-law plot scope shift unchanged at (3.15, 6.15). PGFPlots axis box (3.6 x 2.6 cm) is larger than the prior hand-rolled axis (2.75 x 2.02 cm), so the plot extends ~0.6 cm further right and ~0.4 cm taller than before. Visible as Discharge plot moving slightly right relative to row label column. No collision; falls within row separator headroom."
-    suggested_fix: "Optional: shift Row 1 power-law scope from (3.15,6.15) to (2.85,5.95) to recenter visually with label column. Current placement compiles cleanly; cosmetic only."
-    status: open
-  - id: C004
-    severity: MAJOR
-    category: visual_gate_policy
-    tex_lines: [69, 95, 98, 103]
-    observation: "The missing safe-label primitive is now closed by `\\PlotCallout`, and the slope/τ labels in Row 1 dogfood it. The visual-clash checker still reports 38 candidates elsewhere in the figure, so the remaining issue is accepted-artifact policy and source-defect cleanup, not a missing annotation macro."
-    suggested_fix: "Do not mark accepted=true. Keep `/fig_compile` report-only for iteration, use `FIGURE_AGENT_STRICT=1` for manuscript/CI checks, and keep `check_golden_artifacts.py --require-accepted` as the golden hard gate until the unresolved visual-clash budget reaches 0."
-    status: open
-inherited_open:
-  - "Reference 'Discharge' label at (0.468, 0.075) — the original placement was *outside* the box on top. PGFPlots `title` puts it *inside* the box at the top. Drift 0.127 reported by /fig_compile is therefore intended — the new placement matches paper-figure convention better than the reference. Not a regression."
-closed_findings:
-  - "G001 (BLOCKER, polymer chains '지렁이'): CLOSED in iter 5 by A1 polymer_chain.snippet.tex, then refined in iter 10 from raw chemfig-like structure to curated schematic TikZ after visual review."
-  - "G004 (MAJOR, log axis tick logic): CLOSED by A2 PGFPlots loglogaxis. Tick labels now standard `10^k` format from PGFPlots default, minor grid auto-rendered, function evaluation real (power-law t^{-0.7} straight line + Debye exp(-t/τ) knee both visible)."
-  - "FN001-class (Debye curve geometric inaccuracy in iter 4): CLOSED. Debye plot now uses log-spaced explicit coordinates approximating exp(-t/τ=30); replaces the hand-rolled Bézier that did not match true exponential decay shape."
-  - "C002 (NIT, slope label tight): CLOSED in iter 7. Label moved to (axis cs:1.2e0, 8e-4) with white backing; visual clash no longer reports `slope`."
-  - "C003 (NIT, tau_d label crowding): PARTIALLY CLOSED in iter 7. Label moved from (30, 3e-4) to (70, 8e-4) with white backing; remaining subscript `d` visual-clash warning is treated as part of C004 policy/gate work."
-  - "B1 (MAJOR, Debye inline label clipping): CLOSED after Claude visual review. Label moved from (axis cs:9e1, 2e-1) to the lower-left empty plot region at (axis cs:3e-3, 1e-2) so `exp(-t/τ)` remains inside the plot area and off the curve."
-  - "G002 (MAJOR, lobe dominance): CLOSED in iter 8 after author correction. The prior briefing/review text had the ratio backwards; deep lobe, not shallow lobe, is the intended dominant g(E_t) component. Row 2 and the right-side distribution now render deep visibly larger than shallow."
-  - "B2-class (right energy-band encoding): CLOSED in iter 8 for this fixture. CB/VB are now line-style band edges with compact labels, not gray filled boxes."
-  - "Snippet encapsulation gap (safe plot annotation): CLOSED in iter 9. `\\PlotCallout` was added to `polymer-paper-preamble.sty`, documented in `docs/macros/plot-callout.md`, counted by lint/source inventory, and used for slope + `\\tau_d` labels."
-  - "L4.5 label-placement blind spot: CLOSED in iter 9 at rubric level. `docs/critique-evaluation-rubric-v1.md` now requires `label_placement.text_on_line`, `label_placement.label_clipped`, and `label_placement.annotation_crosses_data` checks."
-  - "Visual WARN force policy: CLOSED in iter 9 at operating-policy level. `/fig_compile` remains report-only for reviewable builds; `FIGURE_AGENT_STRICT=1` and `check_golden_artifacts.py --require-accepted` are documented as the hard-gate paths."
+generated_at: 2026-05-19T11:32:38Z
+generator: critique_brief.py
+generator_version: sha256:4a7d64ba5e4ea97628b31038c25e8a38d3a9ddb70eaf7720f581313fabe5245d
+rubric_version: figure-agent.critique-rubric.v1.2
+critique_input_hash: sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba
+verdict: ready
+audit_enumeration:
+  structural_completeness:
+    components:
+      - component: Row 1 Experiment block — instrument icon + power-law plot + Debye reference plot
+        mount_support: "N/A"
+        rationale: explanatory schematic; no physical apparatus to mount
+        connections: instrument-icon to power-law plot via Row 1 baseline; power-law plot to Debye reference via row alignment; Debye plot exit arrow lands on the right-side teal brace
+      - component: Row 2 Mathematical interpretation block — Σ=∫ icon + I(t)∝t^-n → n → Debye → τ_d → g(E_t) → shallow/deep lobes
+        mount_support: "N/A"
+        rationale: causal-arrow chain of mathematical transforms
+        connections: Σ=∫ icon → I(t)∝t^-n via row arrow; I(t)∝t^-n → n; Debye → τ_d downward; g(E_t) symbol → shallow + deep lobes; trailing arrow exits to teal brace
+      - component: Row 3 Molecular origin block — three polymer chains + S markers + S-rich dashed highlight + localized-traps inset
+        mount_support: "N/A"
+        rationale: chemical-structure schematic; sulfur side groups annotated on backbone
+        connections: 3 parallel chains aligned horizontally; S markers attached to backbone vertices; S-rich dashed box brackets the middle stretch with denser S markers; localized-traps inset captioned with chemical-origin / physical-origin sub-labels; row 3 exit arrow lands on the teal brace
+      - component: Right-side converged trap-depth picture — CB/VB band edges + scattered shallow/deep markers + Energy axis + E_t + g(E_t) shallow/deep lobes
+        mount_support: "N/A"
+        rationale: energy diagram; shallow markers near CB, deep markers near VB
+        connections: teal brace receives 3 row exit arrows; CB above VB; E_t labelled between bands; right-side g(E_t) lobes mirror shallow/deep cluster positions on the Energy axis
+    missing_from_reference:
+      - element: prototype apparatus / chamber housings
+        status: intentional_omission
+        rationale: figure is a converged-interpretation schematic, not an apparatus diagram
+      - element: numeric tick values beyond decade markers
+        status: intentional_omission
+        rationale: log-log plots show 10^-3/10^0/10^3 decade ticks only; intermediate values are not load-bearing
+      - element: full polymer-chain atom-level chemistry
+        status: intentional_omission
+        rationale: skeletal-backbone + sulfur-marker abstraction is the briefing-mandated depiction level
+  label_target_matching:
+    - label: "Experiment"
+      nearest_object: Row 1 row label beneath the instrument icon
+      intended_target: Row 1 row identity (golden_contract.required_labels)
+      matches: true
+      proposed_fix: ""
+    - label: "Mathematical interpretation"
+      nearest_object: Row 2 row label
+      intended_target: Row 2 row identity
+      matches: true
+      proposed_fix: ""
+    - label: "Molecular origin"
+      nearest_object: Row 3 row label
+      intended_target: Row 3 row identity
+      matches: true
+      proposed_fix: ""
+    - label: "I(t)∝t^-n / slope = -n"
+      nearest_object: Row 1 power-law plot and its slope callout
+      intended_target: power-law identification with slope reference
+      matches: true
+      proposed_fix: ""
+    - label: "Discharge (Debye reference)"
+      nearest_object: Row 1 Debye plot top label, placed OUTSIDE the plot box
+      intended_target: Debye-reference plot identity; briefing semantic_assertion "Row 1 evidence box title is outside the box"
+      matches: true
+      proposed_fix: ""
+    - label: "Debye exp(-t/τ) / τ_d"
+      nearest_object: Debye reference plot inline label and callout
+      intended_target: Debye decay annotation + characteristic time callout
+      matches: true
+      proposed_fix: ""
+    - label: "I(t)∝t^-n → n → Debye exp(-t/τ) → τ_d → g(E_t) → shallow / deep"
+      nearest_object: Row 2 causal chain
+      intended_target: Row 2 mathematical-flow narrative
+      matches: true
+      proposed_fix: ""
+    - label: "S-rich segments"
+      nearest_object: Row 3 dashed-box highlight on middle of chain stack
+      intended_target: chain-density annotation; briefing must_depict S-rich segments visually distinct
+      matches: true
+      proposed_fix: ""
+    - label: "localized traps"
+      nearest_object: Row 3 dashed-inset callout near trap markers
+      intended_target: trap-marker location label
+      matches: true
+      proposed_fix: ""
+    - label: "chemical origin / physical origin"
+      nearest_object: captions under the localized-traps inset
+      intended_target: dual-origin attribution per briefing
+      matches: true
+      proposed_fix: ""
+    - label: "converged trap-depth picture"
+      nearest_object: top of right-side band diagram, in teal
+      intended_target: right-side panel identity (golden_contract.required_labels)
+      matches: true
+      proposed_fix: ""
+    - label: "CB / VB / Energy / E_t"
+      nearest_object: right-side band diagram axis labels
+      intended_target: band edge + energy-axis annotations
+      matches: true
+      proposed_fix: ""
+    - label: "shallow / deep"
+      nearest_object: right-side g(E_t) lobes (amber=shallow, purple=deep)
+      intended_target: trap-depth lobe identities; briefing must_depict deep dominates shallow
+      matches: true
+      proposed_fix: ""
+  physical_plausibility:
+    - check: cable_gravity
+      finding: no cables drawn; schematic does not include leads
+      verdict: convention_acceptable
+    - check: floating_components
+      finding: every label/arrow is anchored to a row or to the teal brace; no element floats unattached
+      verdict: convention_acceptable
+    - check: spatial_proximity
+      finding: row exit arrows terminate cleanly on the teal brace; lobes sit adjacent to their cluster source
+      verdict: convention_acceptable
+    - check: direction_orientation
+      finding: E_t monotonic vertical between CB and VB; row-flow runs left-to-right then converges right; arrow chain in Row 2 flows left-to-right
+      verdict: convention_acceptable
+    - check: material_distinction
+      finding: polymer backbone and S side groups are visually distinct (amber S on dark backbone); shallow (amber) vs deep (purple/blue-red) palette holds across the figure
+      verdict: convention_acceptable
+  conceptual_completeness:
+    - element: three-row evidence convergence to the right-side trap-depth picture
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: deep lobe dominance vs shallow lobe
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: skeletal polymer-chain backbone with discrete vertices
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: Row 1 evidence box title placed outside the box top
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+quality_axes:
+  message_storyline:
+    verdict: pass
+    confidence: high
+    rationale: three left-side narrative rows (Experiment / Mathematical interpretation / Molecular origin) converge into a single right-side trap-depth picture via the teal brace, and the read path is unambiguous
+    evidence: row exit arrows lands on a teal brace that feeds the right-side band-edge + g(E_t) diagram; visible "converged trap-depth picture" title on the right
+    blocking_items: []
+    recommended_action: none
+  panel_role_coherence:
+    verdict: pass
+    confidence: high
+    rationale: each row has a clear distinct role and they are visibly separated by thin gray horizontal rules
+    evidence: panel role audit below; row 1 evidence, row 2 transforms, row 3 chemistry, right-side synthesis
+    panel_roles:
+      - panel_id: row1
+        role: result
+        role_quality: clear
+        rationale: empirical evidence row — power-law plot + Debye reference plot
+      - panel_id: row2
+        role: model
+        role_quality: clear
+        rationale: mathematical-interpretation chain reducing data to a trap-depth distribution
+      - panel_id: row3
+        role: mechanism
+        role_quality: clear
+        rationale: molecular-origin row tying the trap landscape to sulfur-rich segments and chemistry/physics dual-origin
+      - panel_id: right
+        role: model
+        role_quality: clear
+        rationale: synthesis / convergence panel — band-edge picture plus g(E_t) shallow/deep lobes
+    blocking_items: []
+    recommended_action: none
+  subregion_integration:
+    verdict: pass
+    confidence: high
+    rationale: row separators + teal brace + exit arrows visibly bind the three left-side rows to the right-side endpoint; Row 2 chain shows internal sub-region integration via the in-row causal arrows
+    evidence: thin gray separators at the row boundaries; teal brace as convergence anchor
+    blocking_items: []
+    recommended_action: none
+  component_fidelity:
+    verdict: pass
+    confidence: medium
+    rationale: every component named in briefing.md is identifiable in the render; polymer chain depiction is skeletal-vertex rather than full atom-level but explicitly accepted per briefing
+    evidence: structural_completeness components audit
+    blocking_items: []
+    recommended_action: none
+  scientific_plausibility:
+    verdict: pass
+    confidence: high
+    rationale: all five physics invariants from briefing hold in the render — CB > VB, E_t between bands, shallow closer to CB, two distinct g(E_t) lobes, right-side acts as convergence endpoint
+    evidence: visible CB line above VB line, E_t label between, amber shallow markers near CB and purple deep markers near VB, two-lobe g(E_t)
+    blocking_items: []
+    recommended_action: none
+  composition_layout:
+    verdict: pass
+    confidence: high
+    rationale: three-row × right-side landscape composition reads cleanly without overlap; row separators preserve clear lanes; teal brace centers the convergence
+    evidence: current render PNG; gray row separators at y=5.65 and y=3.45
+    blocking_items: []
+    recommended_action: none
+  label_annotation_semantics:
+    verdict: pass
+    confidence: high
+    rationale: all audited labels resolve to their intended targets; PlotCallout primitives provide white-backed leader-lines so labels do not cross plot geometry; "Discharge (Debye reference)" placed outside the plot box per briefing semantic_assertion
+    evidence: label_target_matching audit; PlotCallout adoption documented in source comments and observed in the render
+    blocking_items: []
+    recommended_action: none
+  journal_polish:
+    verdict: pass
+    confidence: medium
+    rationale: typography is consistent across rows (sffamily, ~7-8pt body, larger teal title); palette is restrained (gray rows + teal accents + amber/blue-red shallow-deep); residual polish ceiling is the modest visual weight of Row 3 polymer chains relative to Row 1 plots and the right-side diagram, which keeps the figure feeling like an explanatory schematic rather than a hero cover image
+    evidence: current render PNG; reference target PNG for style anchor
+    blocking_items: []
+    recommended_action: none
+  reference_fidelity:
+    verdict: pass
+    confidence: high
+    rationale: layout, row composition, callout placement, brace direction, and band-edge structure faithfully reproduce reference/golden_target_001.png; intentional deviations (functional PGFPlots curves replacing Bézier; skeletal monomer-vertex polymer chains replacing wavy lines) are briefing-mandated improvements not drift
+    evidence: side-by-side comparison of build PNG and reference PNG; briefing §7 must_depict clauses
+    blocking_items: []
+    recommended_action: none
+  publication_readiness:
+    verdict: pass
+    confidence: medium
+    rationale: every applicable upstream axis passes; release sign-off (accepted flag and golden roll-forward) remains a separate gate
+    evidence: upstream axis verdicts
+    blocking_items: []
+    recommended_action: none
+journal_grade_assessment:
+  schema: figure-agent.journal-grade-assessment.v1
+  scoring_mode: fresh_reaudit
+  assessed_artifact_hash: sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba
+  benchmark_level: solid_manuscript
+  confidence: medium
+  blockers: []
+  regression_detected: false
+  regressions: []
+  score_is_gateable: true
+  next_quality_bottleneck: polish
+  rationale: "Fresh re-audit of the current build PNG against the briefing semantic assertions and the reference target. Every physics invariant (CB above VB, E_t between, shallow near CB, two-lobe g(E_t), right-side convergence) and every briefing must_depict clause (monomer-level polymer chain texture, deep lobe dominance, S-rich-segment density distinction, Row 1 title outside box) is observable as honored. Reference fidelity is high — layout, callout structure, and brace direction match the target while functional PGFPlots curves and skeletal polymer-chain rendering improve on the reference's hand-drawn version. The figure does not promote to high_impact_candidate because the visual register is intentionally explanatory-schematic rather than hero-cover: rows feel utilitarian rather than visually striking, Row 3 polymer chains carry less visual mass than Row 1 plots and the right-side diagram, and the teal accent is single-purpose rather than threaded through the figure. Next polish lever is the visual-weight balance between rows and the polymer-chain rendering richness."
+panels: []
+findings: []
 ---
 
-# Vision Critique — golden_trap_depth_picture (iter 10, polymer schematic redraw)
+# Vision Critique — golden_trap_depth_picture
 
-**Verdict: REVISE for release.** A1/A2 integration compiles and improves the
-semantic authoring surface, iter 8 closes the previously inverted lobe ratio,
-and iter 10 improves the molecular row by replacing the raw chemfig-like chain
-with a cleaner schematic TikZ macro. This fixture is still not accepted for
-manuscript/release because L6/L8 artifact gates remain open.
+Fresh re-audit of `build/golden_trap_depth_picture.png` against `briefing.md` and `reference/golden_target_001.png`. The figure is a three-row landscape schematic that converges into a right-side trap-depth picture. Row 1 holds the empirical evidence (an instrument icon, a log-log power-law plot of `I(t)∝t^{-n}` with a slope=-n callout, and a Debye-reference plot whose title `Discharge (Debye reference)` is placed outside the box top, with an inline `Debye exp(-t/τ)` label and a `τ_d` callout); Row 2 holds the mathematical-interpretation chain (Σ=∫ icon → `I(t)∝t^{-n}` → `n` → `Debye exp(-t/τ)` → `τ_d` → `g(E_t)` → small shallow / larger deep lobes); Row 3 holds the molecular-origin chemistry (three parallel skeletal-backbone polymer chains with amber sulfur side groups, a dashed `S-rich segments` highlight on the middle stretch, and a `localized traps` inset captioned with `chemical origin` and `physical origin` sub-labels). Three exit arrows from each row land on a teal brace that anchors the right-side `converged trap-depth picture` showing a CB band edge above a VB band edge, an `Energy` vertical axis with `E_t` labelled between, scattered shallow markers near CB and deep markers near VB, and a right-side `g(E_t)` plot whose deep (purple) lobe is visibly larger than the shallow (amber) lobe.
 
-A2 PGFPlots `log_plot` integration into Row 1 closes G004 (MAJOR) and
-FN001-class (Debye curve shape). Iter 9 also fixes the macro/system gap behind
-the Row 1 label collisions: slope and `\tau_d` now use `\PlotCallout`, a
-white-backed leader-label primitive, instead of bare inline nodes placed
-directly on the plotted geometry.
+Under the v1.2 quality-axis pass, every applicable axis is `pass` at medium-to-high confidence. The physics invariants from briefing.md (CB > VB; E_t interior; shallow nearer CB; two distinct g(E_t) lobes; right-side as convergence endpoint) are visibly honored. The briefing must_depict clauses (monomer-level texture on Row 3 chains, deep lobe ≈2-3× shallow, S-rich-segment density distinction inside vs outside the dashed highlight, Row 1 title outside the box) are observable, and the briefing must_avoid items (featureless waves; floating arrows; energy axis not spanning CB→VB; asymmetric continuation; redundant g(E_t) labels) are not present in the render. Reference fidelity is high: where the build deviates from `reference/golden_target_001.png` (functional PGFPlots log-log curves replacing the reference's hand-drawn Bézier, and skeletal-backbone polymer chains replacing the reference's wavier lines), the deviations are briefing-mandated improvements rather than drift.
 
-Comparing the current build to `reference/golden_target_001.png`:
-
-- **Reference Row 1 (pre-A2 state)**: tick labels positioned by hand `\foreach`
-  loops, axes drawn as raw `\draw` lines, power-law as a single straight
-  `\draw[cBlue] (0.18,2.25) -- (2.62,0.48)` with no actual functional meaning,
-  Debye as a `\draw .. controls` Bézier that does not match true exp(-t/τ).
-- **Current build (v0.3 A2 + PlotCallout)**: PGFPlots `loglogaxis` with
-  `paper loglog` style key. Power-law is explicit log-spaced coordinates of
-  c·t^{-0.7}
-  (slope -0.7 visible across full 6-decade x range, 5-decade y range). Debye
-  is log-spaced coordinates of exp(-t/30) showing the canonical plateau →
-  knee → drop-off shape. Minor grids and `10^k` tick labels rendered by
-  PGFPlots default behavior. Inline explanatory labels with known line-contact
-  risk use `\PlotCallout`.
-
-Why this matters:
-
-- **Function evaluation grounding** (the real A2 motivation, not G004
-  tick crowding): downstream critique iterations can now ask "is the curve
-  the right *shape*?" instead of "is the line approximately diagonal?".
-  A2 closes the gap that made the reference image's Debye curve
-  geometrically wrong (Bézier handle artifact).
-- **Style Lock unified**: Row 1 plots, plot callouts, and Row 3 polymer chains
-  now share preamble/snippet-level style declarations (`paper loglog` for axes,
-  `plotCallout*` styles for annotation leaders, and `\PolymerChain` for
-  monomer-resolved S-rich chains). A future plot or chain edit cannot drift
-  visually without explicitly overriding the style.
-
-## Per-finding discussion
-
-**C001 — Row 1 plot box larger than prior hand-rolled axis (NIT).**
-PGFPlots `paper loglog={3.6cm}{2.6cm}` includes tick labels and axis labels
-inside the bounding box, so the *data area* is ~2.5 × 2.0 cm while the *box
-extent* is 3.6 × 2.6. Old hand-rolled axes used 2.75 × 2.02 for the data
-area only. Net visual change: Row 1 plots extend further right and slightly
-upward into row 1 headroom. Row 1/2 separator at y=5.65 still has clearance.
-
-**C002 — slope label tight against reference L (NIT, closed).** Label moved
-from a bare node to `\PlotCallout[text=cBlue, anchor=north west]`, pointing at
-the slope reference corner from `(axis cs:1.2e0, 8e-4)`. The label is no longer
-drawn as free-floating text on the dashed guide.
-
-**C003 — tau_d label crowded near bottom axis (NIT, closed for Row 1).**
-Label moved from a bare node to `\PlotCallout[text=cGray, anchor=south west]`,
-pointing at the dashed `\tau_d` marker from `(axis cs:7e1, 8e-4)`. The
-remaining `d` warning is part of the global visual-clash candidate pool, not a
-visible label-on-line defect after manual PNG review.
-
-**C004 — accepted visual gate still open (MAJOR).** `check_visual_clash.py`
-still reports 38 candidates after the Row 1 PlotCallout fix and Row 3 redraw.
-Some are expected
-false positives from legitimate labels on filled icons or compact S markers, but
-accepted-mode golden artifacts must not treat that ambiguity as a pass. The
-engineering surface is now explicit: `/fig_compile` emits reviewable artifacts,
-`FIGURE_AGENT_STRICT=1` gives a strict compile loop, and
-`check_golden_artifacts.py --require-accepted` is the ship gate.
-
-**G002 — lobe dominance semantics (MAJOR, closed in iter 8).** The earlier
-briefing text said the shallow lobe should be 2×–3× taller than deep. That was
-the wrong source-of-truth. The corrected intent is deep-dominant: shallow traps
-remain closer to CB, deep traps remain closer to VB, but the lower-energy deep
-component carries the larger g(E_t) lobe. The fixture now encodes that in both
-Row 2 and the right-side distribution.
-
-**B2-class — right band encoding (closed for fixture).** The previous right-side
-CB/VB rendering read as gray boxes rather than band edges. Iter 8 replaces those
-with line-style CB/VB band edges and compact labels while preserving the vertical
-Energy axis and interior E_t divider. This fixture intentionally uses the
-lower-level `\BandBox`, `\TrapLevel`, and `\BellCurve` primitives instead of
-forcing the current `\BandDiagram` composite, because that composite still has
-known model gaps for this exact right-panel layout.
-
-## What this critique does NOT address
-
-- **C004 (MAJOR, accepted visual gate)**: still open; this fixture remains
-  `accepted: false`.
-- Discharge title drift 0.127 (vs reference): intended — title moved from
-  outside-top to inside-top via PGFPlots `title` key, which is the
-  paper-figure convention. Reference image was the inferior spec here.
-
-## Next gate
-
-A1 polymer_chain + A2 log_plot + `\PlotCallout`: integrated and rendered. This
-branch should land the macro/test/documentation hardening plus the Row 3
-schematic redraw. A follow-up visual polish pass should reduce the remaining 13
-unresolved visual-clash source defects before `accepted: true` is even
-considered.
+For the journal-grade fresh re-audit, the figure is recorded as `solid_manuscript` rather than `high_impact_candidate`. The visual register is intentionally explanatory-schematic, not cover-style: row separators give the figure a worksheet feel, the teal accent is single-purpose rather than threaded through the figure as a hero color, and Row 3 polymer chains carry less visual mass than Row 1 plots or the right-side diagram. The figure is a strong manuscript schematic but does not read above ordinary manuscript quality from a fresh-audit eye. `next_quality_bottleneck: polish` so the next loop target is the visual-weight balance between rows and the polymer-chain rendering richness — not a progress score against earlier iterations.
