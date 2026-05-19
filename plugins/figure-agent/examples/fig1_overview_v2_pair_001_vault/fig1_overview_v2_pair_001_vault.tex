@@ -653,16 +653,23 @@
 % (reference < primary curves 0.80pt).
 \draw[cGray!85!black, dashed, line width=0.75pt]
   (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
-\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.40);
-\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
-  at (2.70, 0.40) {Debye};
+% iter 51: Debye label was baseline-on-axis (y=0.40 = axis y) — Gemini Defect
+% (re-review) HIGH. Leader endpoint shortened to y=0.42 so it stays above
+% axis line; label anchor=north west at y=0.38 sits cleanly below axis.
+\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.42);
+\node[labelMute, text=cGray!65!black, anchor=north west, inner sep=1pt]
+  at (2.70, 0.38) {Debye};
 
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
-% D-7b curve ID labels
-\node[labelMute, anchor=south, text=cRed!75!black] at (2.20, 1.75) {deep-rich};
-\node[labelMute, anchor=south, text=cBlue!75!black] at (2.50, 1.05) {shallow-rich};
+% D-7b curve ID labels — iter 51: add fill=white to break the curve under
+% each label (Gemini Defect 1: HIGH label-on-line clash on deep-rich /
+% shallow-rich at curve y-positions 1.77 / 1.09).
+\node[labelMute, anchor=south, text=cRed!75!black,
+      fill=white, inner sep=1pt] at (2.20, 1.75) {deep-rich};
+\node[labelMute, anchor=south, text=cBlue!75!black,
+      fill=white, inner sep=1pt] at (2.50, 1.05) {shallow-rich};
 
 % =============== Column E — ISPD-paired =================
 
@@ -852,8 +859,13 @@
   (8.18, 3.96) .. controls (8.38, 3.91) and (8.65, 3.84) .. (8.90, 3.82);
 % V_s meter label — iter 50: y 3.70→3.66 (centered in shrunk label zone
 % 3.58..3.78, mid y=3.68).
+% iter 51: thin space between V_s and meter (Gemini Defect 3 MEDIUM: subscript
+% s kerning against "m" — `\,` inserts a 3mu thin space).
+% iter 51 fix-up: unify font (V was math-sans `$\mathsf{V_s}$` while "meter"
+% was text-sans-bold; mismatch flagged by Gemini re-review #4). New form uses
+% text V (inherits surrounding bold-sans) + math-mode subscript only.
 \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cGray!88!black]
-  at (8.54, 3.66) {$\mathsf{V_s}$ meter};
+  at (8.54, 3.66) {V$_{\mathsf{s}}$\,meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
@@ -881,9 +893,11 @@
   (4.95, 1.65) -- (4.95, 2.85);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
   (4.95, 1.65) -- (8.55, 1.65);
+% iter 51: x 4.83→4.73 (Gemini Defect 2 HIGH: rotated label right-edge
+% touching axis line at x=4.95). 0.10cm clearance.
 \node[labelMute, rotate=90, anchor=center,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (4.83, 2.55) {$V_s(t)$};
+  at (4.73, 2.55) {$V_s(t)$};
 \node[labelMute, anchor=north,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
   at (8.50, 1.55) {$t$};
@@ -929,9 +943,10 @@
   (4.95, 0.40) -- (4.95, 1.45);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
   (4.95, 0.40) -- (8.55, 0.40);
+% iter 51: x 4.83→4.73 mirror to V_s(t) fix (Gemini Defect 2 HIGH).
 \node[labelMute, rotate=90, anchor=center,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (4.83, 1.25) {$g(E_t)$};
+  at (4.73, 1.25) {$g(E_t)$};
 \node[labelMute, anchor=north,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
   at (8.50, 0.30) {$E_t$};
@@ -1066,7 +1081,10 @@
 % q_tr leader — iter 30: REVERTED to simple single-line at top charge (iter
 % 28 state). iter 29 vertical bracket cut through cantilever body + collided
 % with F_Maxwell label. Single leader stays at iter 28 88/100 representation.
-\draw[cRed!55!black, line width=0.30pt] (12.48, 2.00) -- (12.75, 2.00);
+% iter 51 fix-up: start 12.48 → 12.32 (= marker right edge: marker at x=12.25
+% with size 1.4mm = 0.07cm radius). Eliminates 0.16cm float between marker
+% and leader (Gemini Defect 3 MEDIUM disconnection).
+\draw[cRed!55!black, line width=0.30pt] (12.32, 2.00) -- (12.75, 2.00);
 \node[labelMute, anchor=west, inner sep=1pt,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!70!black]
   at (12.75, 2.00) {$q_{tr}$};
@@ -1120,8 +1138,11 @@
   (12.34, 1.80) -- (13.60, 1.80);
 % iter 29: label moved closer to arrow (1.75 → 1.78, gap 0.05→0.02cm) per
 % Gemini "floating slightly low and disconnected".
+% iter 51: y 1.78 → 1.72 — capital F top was crossing dashed-line stroke
+% (line y=1.80, 0.45pt thickness extends ±0.025; old gap 0.02cm < stroke).
+% New gap 0.08cm clears the stroke + slight breathing room.
 \node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
-      anchor=north] at (12.85, 1.78) {$F_{\mathrm{Maxwell}}$};
+      anchor=north] at (12.85, 1.72) {$F_{\mathrm{Maxwell}}$};
 % Air gap arrow — iter 25: right end shifted 13.55 → 13.63 (new electrode left).
 \draw[<->, cGray!55!black, line width=0.30pt]
   (11.90, 0.55) -- (13.63, 0.55);

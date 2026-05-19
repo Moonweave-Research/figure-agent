@@ -246,8 +246,20 @@ iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = C
 | 39 | 05-19 | E-2a-i, E-2e-i | icons bigger (user "셋업 도식 너무 작음") — widths +30% | 75 |
 | 40 | 05-19 | E-2a-iv,v,vi, E-2c, E-2d-i,ii, E-2f | corona/probe lift + charge style upgrade | 88 |
 | 41 | 05-19 | E-2d-iii, E-2d-iv | vibration arrow shift right + Probe label closer | 92 (lenient) / 45 (brutal) |
+| 42-50 | 05-19 | Panel E + Column F apparatus polish | journal-grade Codex/Gemini loop (covered in commits 7c13f34, 19abb97, 63d45ab) | Codex 82 (iter 50) |
+| 51 | 05-19 | **Row 2** D/E/F: cross-panel typography sweep | Gemini brutal Row 2 review → 5 patches | 42 → 68 → re-score pending |
 
-**Cumulative outcome**: 45/100 absolute Nature-grade. 10 specific defects identified for iter 42+ targeting.
+**Cumulative outcome (iter 41)**: 45/100 absolute Nature-grade. 10 specific defects identified for iter 42+ targeting.
+
+**Cumulative outcome (iter 51)**: Row 2 (D/E/F) batch fix targeting cross-panel typography clash:
+- D-7b deep-rich / shallow-rich labels: `fill=white, inner sep=1pt` to break power-law curves under text (Gemini HIGH Defect 1).
+- D-7a Debye label: moved from baseline-on-axis (y=0.40) to anchor=north west at y=0.38, leader endpoint y=0.42; clears x-axis line cleanly (Gemini HIGH re-review).
+- E-3 V_s(t) / E-6 g(E_t) rotated y-axis labels: x 4.83 → 4.73 (0.10cm left) clearing axis line at x=4.95 (Gemini HIGH Defect 2).
+- E-2e V_s meter wordmark: math V → text V with `\,` thin space + math subscript only — unifies bold-sans family across "V_s" and "meter" (Gemini MEDIUM #3 + re-review #4).
+- F-3 F_Maxwell label: anchor=north y 1.78 → 1.72 — capital F top no longer overlaps dashed-stroke at y=1.80±0.025 (lint warn dark 0.155 → 0.116, +0.08cm clearance).
+- Falsified Gemini claims (verified via source inspection, not patched): F-6 q_tr leader is solid not dashed; HV+ label sits in light lower-half of box, separate from upper waveform display zone.
+- Visual clash candidates: compile 54 → 49 → 48 (-6 net).
+- Score trajectory: iter 50 (Codex 82) → iter 51-1st (Gemini 42 brutal, 4 HIGH defects) → iter 51-2nd (Gemini 68/100) → iter 51-3rd pending.
 
 ### Panel E iter 12-40 — 2026-05-18 to 2026-05-19 — consolidated retroactive log
 
