@@ -21,11 +21,12 @@ review, export state, final-artifact state, accepted state, or golden state.
 
 ## Result Summary
 
-- Total attempted fixtures: 3
-- Valid numeric score runs: 3
+- Total attempted fixtures: 4
+- Valid numeric score runs: 4
 - Runs without complete score block: 0
 - Open validation or ingestion defects: 0
 - Validation footguns caught and fixed during run: 1
+- Host prose/frontmatter consistency footguns caught and fixed during review: 2
 - Safety defects: 0
 
 ## Evidence Rows
@@ -145,6 +146,36 @@ Rows should use this structure:
 - **/fig_driver stop_boundary:** `human_gate_required`
 - **reviewer verdict:** `useful`
 - **rationale:** The score block is complete and validates through `critique_adjudication.py scaffold` (3 decisions for F001/F002/F003 all defaulted to `needs_human`) and through `fig_loop.py` ingestion. `overall_score: 64` broadly agrees with `benchmark_level: draft` and sits 14 points below Run 1's solid_manuscript (78) and 22 points below Run 2's golden (86), which is the kind of fixture-vs-fixture separation Issue 9D is testing for. Sub-scores distinguish at least four meaningful quality dimensions: scientific_plausibility (56) is the lowest because of F001's cross-panel color-convention contradiction, label_semantics (58) is next because of F003's 45 clash candidates, and component_fidelity (76) reads highest because every briefing-named element is identifiable in the render. `next_quality_bottleneck: scientific_plausibility` is concrete (it points specifically to the F001 briefing-level color reconciliation as the upstream fix that must precede polish — matching the prior critique's diagnosis). Critically, the score did not bypass any non-score gate: the driver's `action: human_gate_stop` and `stop_boundary: human_gate_required` came from the `needs_human` adjudication of F001 (a MAJOR palette finding flagged via `quality_axes.scientific_plausibility.blocking_items` and `publication_readiness.blocking_items`), not from `overall_score: 64`. Acceptance, golden, and final-artifact gates all stayed at `NOT_ACCEPTED` / `false` / `NONE`. Together with Run 1 (`human_gate_required` driven by panel-level NIT adjudication) and Run 2 (`force_golden_required` driven by tracked-golden roll-forward), Run 3 reaffirms that `human_gate_required` is preserved even at a much lower overall_score (64 vs 78) and with a much more severe upstream verdict (`publication_readiness: needs_patch` vs `pass`). No regression vs the prior re-audit; the three findings F001/F002/F003 are byte-identical to the prior critique because the rendered artifact is byte-identical.
+
+### Run 4: `n3_trial_01_trap_depth`
+
+- **commands used:**
+  1. `uv run python3 scripts/fig_driver.py n3_trial_01_trap_depth --mode review --goal "dogfood 9D numeric score evidence" --dry-run` (returned `safe_command: /fig_critique n3_trial_01_trap_depth`, `stop_boundary: host_llm_critique_required`; status shows `acceptance_state: NOT_DECLARED` and `export_state: MISSING` — this fixture is a non-golden trial and has never been promoted, so the gate path is `human_gate_required` rather than `force_golden_required`)
+  2. `uv run python3 scripts/critique_brief.py examples/n3_trial_01_trap_depth` (generated brief; current `critique_input_hash` = `sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01` — unchanged from prior run because the rendered artifact is byte-identical; only the generator version moved)
+  3. host `/fig_critique n3_trial_01_trap_depth` (host Claude main loop read `build/n3_trial_01_trap_depth.png` and `reference/codex_gen_v1.png`, then refreshed `examples/n3_trial_01_trap_depth/critique.md` to the current generator version while preserving prior fresh-re-audit findings F001 BLOCKER + F003 MAJOR and attaching the complete Issue 9B numeric score block; prior critique had only the qualitative score block — `score_is_gateable: true` without `overall_score` / `sub_scores` / `score_rationale`)
+  4. `uv run python3 scripts/critique_adjudication.py scaffold n3_trial_01_trap_depth --force` (succeeded on first attempt; 2 decisions, both `needs_human` for F001 and F003)
+  5. `uv run python3 scripts/fig_loop.py n3_trial_01_trap_depth --goal "dogfood 9D numeric score evidence" --json` (ingested the `journal_grade_assessment` block; after correcting the markdown-body `score_is_gateable` prose to match the frontmatter, the verified loop checkpoint is `.scratch/fig-loop-runs/20260519-235533-912864-n3_trial_01_trap_depth/iteration_001.json`)
+  6. `uv run python3 scripts/fig_driver.py n3_trial_01_trap_depth --mode review --goal "dogfood 9D numeric score evidence" --dry-run` (final action `human_gate_stop`)
+- **critique source:** newly generated
+- **critique schema:** `figure-agent.critique.v1.2`
+- **critique_input_hash:** `sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01`
+- **assessed_artifact_hash:** `sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01`
+- **benchmark_level:** `draft`
+- **overall_score:** `60`
+- **sub_scores:** `{storyline: 76, composition: 70, component_fidelity: 46, scientific_plausibility: 88, label_semantics: 56, polish: 56, reference_fidelity: 52, export_scale_readability: 68}`
+- **score_rationale:** "Numbers describe only the current artifact, not progress. Storyline (76) reflects that the three-numbered-cards → teal Convergence brace → right-side trap-depth picture flow is unambiguous despite Row 3's structural gap. Composition (70) reflects clean card layout, right-side CB/E_t/VB energy axis with paired shallow/deep g(E_t) lobes, and the explicit teal Convergence brace. Component fidelity (46) is the lowest sub-score because Row 3 polymer chain is rendered as a single featureless wavy line with no monomer-level texture and no visible sulfur side groups (F001 BLOCKER); the chemical/physical-origin sub-boxes are present but isolated from the chain. Scientific plausibility (88) reads high because the right-side energy diagram honors CB > E_t > VB ordering, paired shallow/deep g(E_t) lobes, and the Row 2 equation τ_d = τ₀ exp(E_t / k_B T) is sign-consistent. Label semantics (56) reflects 26 visual-clash candidates from check_visual_clash.py with near_miss / text_on_path warnings around 'VB', 'S', 'sulfur', '(polarizability,', and 'g(Et' (F003). Polish (56) reflects the draft-level Row 3 rendering and the residual label clash. Reference fidelity (52) is low because reference/codex_gen_v1.png shows monomer-textured polymer chains with explicit sulfur side groups across Row 3, and the build renders a featureless wave instead — a real structural deviation, not a briefing-mandated simplification. Export-scale readability (68) reflects the small sulfur side label and the chemical-origin / physical-origin sub-box text without thumbnail / print-scale verification this loop."
+- **score_policy from /fig_loop:** `absent` (`scripts/fig_loop.py:467` only emits `score_policy: advisory_fresh_reaudit_not_gate` when the host opts in with `score_is_gateable: true`; this run keeps the score advisory per the Issue 9B safe default)
+- **score_is_gateable:** `false` (downgraded from the prior critique's `true`; this run honors the Issue 9D safe default that hosts should not opt scores into the gate path without separate review)
+- **evaluation_state:** `stale` (loop wrapper marks the score block stale because `score_is_gateable: false` keeps the score advisory-only, as designed by Issue 9B)
+- **next_quality_bottleneck:** `component_fidelity`
+- **regression_detected:** `false`
+- **regressions:** `[]`
+- **/fig_loop stop_reason:** `human_gate_required`
+- **/fig_loop escalation_level:** `human_review_required`
+- **/fig_driver final action:** `human_gate_stop`
+- **/fig_driver stop_boundary:** `human_gate_required`
+- **reviewer verdict:** `useful`
+- **rationale:** The score block is complete and validates through `critique_adjudication.py scaffold` (2 decisions for F001/F003 both defaulted to `needs_human`) and through `fig_loop.py` ingestion. `overall_score: 60` broadly agrees with `benchmark_level: draft` and sits 4 points below Run 3's same-tier draft figure (64) and well below Run 1 (78) and Run 2 (86), preserving fixture-vs-fixture separation across four runs. Sub-scores distinguish at least four meaningful quality dimensions: component_fidelity (46) is the lowest because the Row 3 polymer chain is featureless (F001 BLOCKER), scientific_plausibility (88) is the highest because the right-side energy diagram physics is clean, and the reference_fidelity (52) vs scientific_plausibility (88) split (36-point spread) correctly localizes the next-quality lever to the structural Row 3 rendering rather than to the right-side energy diagram. `next_quality_bottleneck: component_fidelity` is concrete and actionable — it names the specific A1 `polymer_chain.snippet.tex` pattern (already shipped on `golden_trap_depth_picture`) as the upstream fix that closes the same gap. Critically, the score did not bypass any non-score gate: the driver's `action: human_gate_stop` and `stop_boundary: human_gate_required` came from the F001 BLOCKER + F003 MAJOR adjudication, not from `overall_score: 60`. Acceptance and final-artifact gates stayed at `NOT_DECLARED` / `NONE` (this fixture has never been promoted). Together with Runs 1–3, Run 4 demonstrates that `human_gate_required` is preserved across the full draft-to-solid_manuscript-ready quality range (overall_score 60 / 64 / 78) and that score-orthogonality holds independently against both `force_golden_required` (Run 2) and `human_gate_required` (Runs 1, 3, 4). No regression vs the prior re-audit; the two findings F001/F003 are byte-identical to the prior critique because the rendered artifact is byte-identical.
 
 ## Final Judgment
 

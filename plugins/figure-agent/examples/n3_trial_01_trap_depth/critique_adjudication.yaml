@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: n3_trial_01_trap_depth
-source_critique_hash: sha256:2283ccdf964d2dcc85987b1720f53a071241cd3f0771742ced86a2a76800cef0
+source_critique_hash: sha256:6c93e9fe0c122f58d0d327709c1226b88de5a3f1d86e7e9c54558e156f040a8d
 decisions:
 - finding_id: F001
   decision: needs_human
