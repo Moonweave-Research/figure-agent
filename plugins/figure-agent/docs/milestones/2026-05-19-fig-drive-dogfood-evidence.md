@@ -43,32 +43,36 @@ Verdict rubric (from plan §"Apply the verdict rubric"):
 - **defect** — action violates Issue 8B contract, suggests a forbidden
   command, or fails to stop at a required boundary.
 
-`workflow_ready` and `release_ready` were `false` for every cell in this
-dogfood pass; the columns are omitted from the table to keep widths
-manageable and noted inline where they matter for the verdict.
+Each row captures all nine fields required by Issue 8C "Capture": action,
+stop_boundary, safe_command, render_state, critique_state, export_state,
+final_artifact_state, workflow_ready (`WR`), release_ready (`RR`), reason.
+The `Status` column is a single slash-separated tuple
+`render / critique / export / final_artifact (state/kind) / WR=… / RR=…`.
+A trailing `Note` column expands the verdict basis where the row's `reason`
+is shared with other rows.
 
-| Fixture | Mode | Action | Stop boundary | safe_command | Render | Critique | Export | Final artifact | Verdict | Note |
-|---|---|---|---|---|---|---|---|---|---|---|
-| fig1_overview_v2_pair_001_vault | authoring | run_compile | — | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | STALE | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | render STALE; authoring mode escalates to compile before any downstream gate. |
-| fig1_overview_v2_pair_001_vault | review | run_compile | — | same as above | STALE | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | render gate fires first; critique gate (`STALE`) waits behind compile per spec state machine. |
-| fig1_overview_v2_pair_001_vault | release | run_compile | — | same as above | STALE | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | release also blocked behind render; TRACKED_GOLDEN export is irrelevant until source/build is fresh. |
-| fig1_overview_v2_pair_001_vault | polish | run_compile | — | same as above | STALE | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | polish handoff must wait for fresh render even though the fixture is a golden. |
-| golden_trap_depth_picture | authoring | complete | — | `null` | FRESH | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | authoring mode terminates once render is FRESH; critique staleness is review-mode work. |
-| golden_trap_depth_picture | review | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | render FRESH → critique gate fires; host LLM must refresh `critique.md`. |
-| golden_trap_depth_picture | release | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | release blocked behind critique (Issue 8A run_critique allowed in release per amended table). |
-| golden_trap_depth_picture | polish | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH | STALE | TRACKED_GOLDEN | NONE/generated_export | correct | polish must close critique before promotion; driver does not skip the gate even though final_artifact_kind is `generated_export` only. |
-| smoke_trap_demo | authoring | run_compile | — | `bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex` | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | render gate fires regardless of stale export status. |
-| smoke_trap_demo | review | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | same. |
-| smoke_trap_demo | release | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | same. |
-| smoke_trap_demo | polish | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | same. |
-| fig3_trapping_concept | authoring | run_compile | — | `bash scripts/compile.sh examples/fig3_trapping_concept/fig3_trapping_concept.tex` | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | same pattern as smoke_trap_demo; export freshness is downstream. |
-| fig3_trapping_concept | review | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | render gate first. |
-| fig3_trapping_concept | release | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | render gate first. |
-| fig3_trapping_concept | polish | run_compile | — | same as above | STALE | NOT_REQUIRED | FRESH | NONE/generated_export | correct | render gate first. |
-| fig5_floating_clip_mechanism | authoring | run_compile | — | `bash scripts/compile.sh examples/fig5_floating_clip_mechanism/fig5_floating_clip_mechanism.tex` | STALE | NOT_REQUIRED | MISSING | NONE/generated_export | correct | render STALE → compile gate; export MISSING is downstream of render. |
-| fig5_floating_clip_mechanism | review | run_compile | — | same as above | STALE | NOT_REQUIRED | MISSING | NONE/generated_export | correct | render gate first. |
-| fig5_floating_clip_mechanism | release | run_compile | — | same as above | STALE | NOT_REQUIRED | MISSING | NONE/generated_export | correct | render gate first; export MISSING gate waits behind it. |
-| fig5_floating_clip_mechanism | polish | run_compile | — | same as above | STALE | NOT_REQUIRED | MISSING | NONE/generated_export | correct | render gate first; export MISSING gate waits behind it. |
+| Fixture | Mode | Action | Stop boundary | safe_command | Status (render / critique / export / final / WR / RR) | Reason | Verdict | Note |
+|---|---|---|---|---|---|---|---|---|
+| fig1_overview_v2_pair_001_vault | authoring | run_compile | — | `bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` | STALE / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render STALE; authoring mode escalates to compile before any downstream gate. |
+| fig1_overview_v2_pair_001_vault | review | run_compile | — | same as above | STALE / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate fires first; critique gate (STALE) waits behind compile per spec state machine. |
+| fig1_overview_v2_pair_001_vault | release | run_compile | — | same as above | STALE / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | release also blocked behind render; TRACKED_GOLDEN export is irrelevant until source/build is fresh. |
+| fig1_overview_v2_pair_001_vault | polish | run_compile | — | same as above | STALE / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | polish handoff must wait for fresh render even though the fixture is a golden. |
+| golden_trap_depth_picture | authoring | complete | — | `null` | FRESH / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | render_state is FRESH; authoring mode does not advance to critique, export, loop, or polish | correct | authoring mode terminates once render is FRESH; critique staleness is review-mode work. |
+| golden_trap_depth_picture | review | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | reference-grounded critique is missing or stale; host Claude must run /fig_critique to refresh critique.md | correct | render FRESH → critique gate fires; host LLM must refresh `critique.md`. |
+| golden_trap_depth_picture | release | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | reference-grounded critique is missing or stale; host Claude must run /fig_critique to refresh critique.md | correct | release blocked behind critique (Issue 8A run_critique allowed in release per amended table). |
+| golden_trap_depth_picture | polish | run_critique | host_llm_critique_required | `/fig_critique golden_trap_depth_picture` | FRESH / STALE / TRACKED_GOLDEN / NONE/generated_export / WR=false / RR=false | reference-grounded critique is missing or stale; host Claude must run /fig_critique to refresh critique.md | correct | polish must close critique before promotion; driver does not skip the gate even though final_artifact_kind is `generated_export` only. |
+| smoke_trap_demo | authoring | run_compile | — | `bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex` | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate fires regardless of stale export status. |
+| smoke_trap_demo | review | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | same. |
+| smoke_trap_demo | release | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | same. |
+| smoke_trap_demo | polish | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | same. |
+| fig3_trapping_concept | authoring | run_compile | — | `bash scripts/compile.sh examples/fig3_trapping_concept/fig3_trapping_concept.tex` | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | same pattern as smoke_trap_demo; export freshness is downstream. |
+| fig3_trapping_concept | review | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first. |
+| fig3_trapping_concept | release | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first. |
+| fig3_trapping_concept | polish | run_compile | — | same as above | STALE / NOT_REQUIRED / FRESH / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first. |
+| fig5_floating_clip_mechanism | authoring | run_compile | — | `bash scripts/compile.sh examples/fig5_floating_clip_mechanism/fig5_floating_clip_mechanism.tex` | STALE / NOT_REQUIRED / MISSING / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render STALE → compile gate; export MISSING is downstream of render. |
+| fig5_floating_clip_mechanism | review | run_compile | — | same as above | STALE / NOT_REQUIRED / MISSING / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first. |
+| fig5_floating_clip_mechanism | release | run_compile | — | same as above | STALE / NOT_REQUIRED / MISSING / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first; export MISSING gate waits behind it. |
+| fig5_floating_clip_mechanism | polish | run_compile | — | same as above | STALE / NOT_REQUIRED / MISSING / NONE/generated_export / WR=false / RR=false | render is not fresh; run /fig_compile to refresh build PDF | correct | render gate first; export MISSING gate waits behind it. |
 
 `forbidden_actions` was inspected per cell against `_FORBIDDEN_BY_MODE`; no
 cell returned an action that simultaneously appeared in the same response's
