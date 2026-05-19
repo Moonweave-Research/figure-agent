@@ -1,6 +1,6 @@
 # Issue 7D: Accepted Gate Final Artifact Integration
 
-**Status:** implemented; pending final verification commit
+**Status:** completed in commit `89ad2a1`.
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build

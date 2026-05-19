@@ -1,6 +1,6 @@
 # Issue 7C: SVG Polish Audit and Handoff
 
-**Status:** implemented; pending final verification commit
+**Status:** completed in commit `bc3fd26`.
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build

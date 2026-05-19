@@ -1,6 +1,6 @@
 # Issue 7A: SVG Polish Manifest Schema
 
-**Status:** implemented; pending final verification commit
+**Status:** completed in commits `2daa9e8`, `89ad2a1`.
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build

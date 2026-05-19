@@ -1,6 +1,6 @@
 # Issue 7B: Final Artifact Status State
 
-**Status:** implemented; pending final verification commit
+**Status:** completed in commits `832d72d`, `89ad2a1`.
 **Design:** `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`
 
 ## What to build
