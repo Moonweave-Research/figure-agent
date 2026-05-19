@@ -2,7 +2,7 @@
 
 **Date opened:** 2026-05-19 KST
 **Parent issue:** `docs/superpowers/issues/2026-05-19-issue-9c-fresh-reaudit-dogfood-evidence.md`
-**Status:** queue closed (5/5 fixtures attempted; 2 valid v1.2 runs + 3 critique-not-required blockers; Issue 9C N=5 quorum NOT met)
+**Status:** N=5 quorum MET (5 valid v1.2 critique-grounded runs after substitute pass; 3 published-queue blockers retained as honest evidence; Issue 9B unblocked)
 
 This milestone collects host-LLM `journal_grade_assessment` evidence on real
 fixtures so the level-only fresh re-audit rubric can be evaluated against
@@ -206,8 +206,150 @@ Constraints (per Issue 9C):
   - Gate set is fixture-shape dependent: golden-contract fixtures end at `manual_approval_required`; non-golden fixtures end at `agent_action_required`. Surface this in Issue 9B numeric scoring so the score-gate logic does not assume a single escalation shape.
   - Critique-not-required fixtures still produce `/fig_loop` iteration records with `journal_grade_assessment: null`. Downstream consumers must handle the null cleanly; do not assume every fixture has an assessment.
 
+## Substitute Pass (fixtures with declared reference grounding, 2026-05-19 PM)
+
+Three real fixtures in `examples/` already declared `reference_image` and had not yet been run in the dogfood pass. Picking these substitutes preserves Issue 9C's measurement intent (real failure modes, not synthetic cases) and does not require fixture-authoring work.
+
+### Run S1 — `fig1_overview_v2` (valid v1.2 substitute)
+
+- **fixture name:** `fig1_overview_v2`
+- **eligibility:** `examples/fig1_overview_v2/spec.yaml` declares `reference_image: reference/codex_gen_overview_v1.png`; reference file present and fresh.
+- **command sequence actually used:**
+  ```bash
+  uv run python3 scripts/fig_driver.py fig1_overview_v2 --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_compile (render STALE, critique STALE)
+  bash scripts/compile.sh examples/fig1_overview_v2/fig1_overview_v2.tex
+  uv run python3 scripts/fig_driver.py fig1_overview_v2 --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_critique, safe_command: /fig_critique fig1_overview_v2
+  /fig_critique fig1_overview_v2                                                       # host vision writes v1.2 critique.md
+  uv run python3 scripts/critique_adjudication.py scaffold fig1_overview_v2 --force
+  uv run python3 scripts/fig_loop.py fig1_overview_v2 --goal "dogfood 9A fresh re-audit substitute" --json
+  uv run python3 scripts/fig_driver.py fig1_overview_v2 --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  ```
+- **critique schema:** `figure-agent.critique.v1.2`
+- **`critique_input_hash`:** `sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77`
+- **`journal_grade_assessment.assessed_artifact_hash`:** `sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77` (matches)
+- **`score_is_gateable`:** `true`
+- **`benchmark_level`:** `draft`
+- **`confidence`:** `medium`
+- **`next_quality_bottleneck`:** `scientific_plausibility`
+- **`regression_detected`:** `false`
+- **`regressions`:** `[]`
+- **`/fig_loop` `stop_reason`:** `human_gate_required`
+- **`/fig_loop` `escalation_level`:** `human_review_required`
+- **`/fig_loop` surfaced `journal_grade_assessment.evaluation_state`:** `passed` (per `.scratch/fig-loop-runs/20260519-121347-875399-fig1_overview_v2/iteration_001.json`)
+- **`/fig_driver` next action after loop ingestion:** `action: human_gate_stop`, `safe_command: null`, `stop_boundary: human_gate_required`, `recommended_next_action: "human review required for F001"`.
+- **reviewer verdict:** `useful`
+- **rationale for verdict:**
+  - All audit blocks + 10 quality_axes filled; `journal_grade_assessment` is fresh and gateable.
+  - **First non-`solid_manuscript` level produced.** This is the critical rubric-falsification evidence Issue 9C needs: the level set is not collapsed to a single value. Three real findings (F001 MAJOR cross-panel palette inconsistency between briefing §2 and §3, F002 MINOR Row 1→Row 2 bridge weak, F003 MAJOR 45 visual-clash candidates) drove the assessment to `draft`.
+  - `next_quality_bottleneck: scientific_plausibility` is correct: the color-convention bug lives in `briefing.md` rather than the .tex, so polishing labels (F003) before resolving F001 would lock in the wrong convention. The level-only rubric correctly identifies the upstream lever.
+  - New gate shape observed: `human_review_required` / `human_gate_required` / `human_gate_stop`. This is a third escalation shape (alongside `manual_approval_required` for Runs 1–2 and `agent_action_required` for Runs 3–5 / S3). The fresh-re-audit assessment did not auto-clear this gate; the driver correctly held at `human_gate_stop` until the F001 adjudication is reviewed.
+- **counts toward valid quorum:** yes.
+
+### Run S2 — `n3_trial_01_trap_depth` (valid v1.2 substitute)
+
+- **fixture name:** `n3_trial_01_trap_depth`
+- **eligibility:** `examples/n3_trial_01_trap_depth/spec.yaml` declares `reference_image: reference/codex_gen_v1.png`; reference file present.
+- **command sequence actually used:**
+  ```bash
+  uv run python3 scripts/fig_driver.py n3_trial_01_trap_depth --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_compile
+  bash scripts/compile.sh examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex
+  uv run python3 scripts/fig_driver.py n3_trial_01_trap_depth --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_critique, safe_command: /fig_critique n3_trial_01_trap_depth
+  /fig_critique n3_trial_01_trap_depth                                                 # host vision writes v1.2 critique.md (replacing prior v1 critique)
+  uv run python3 scripts/critique_adjudication.py scaffold n3_trial_01_trap_depth --force
+  uv run python3 scripts/fig_loop.py n3_trial_01_trap_depth --goal "dogfood 9A fresh re-audit substitute" --json
+  uv run python3 scripts/fig_driver.py n3_trial_01_trap_depth --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  ```
+- **critique schema:** `figure-agent.critique.v1.2`
+- **`critique_input_hash`:** `sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01`
+- **`journal_grade_assessment.assessed_artifact_hash`:** `sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01` (matches)
+- **`score_is_gateable`:** `true`
+- **`benchmark_level`:** `draft`
+- **`confidence`:** `high`
+- **`next_quality_bottleneck`:** `component_fidelity`
+- **`regression_detected`:** `false`
+- **`regressions`:** `[]`
+- **`/fig_loop` `stop_reason`:** `human_gate_required`
+- **`/fig_loop` `escalation_level`:** `human_review_required`
+- **`/fig_loop` surfaced `journal_grade_assessment.evaluation_state`:** `passed` (per `.scratch/fig-loop-runs/20260519-121708-842425-n3_trial_01_trap_depth/iteration_001.json`)
+- **`/fig_driver` next action after loop ingestion:** `action: human_gate_stop`, `stop_boundary: human_gate_required`, `recommended_next_action: "human review required for F001"`.
+- **reviewer verdict:** `useful`
+- **rationale for verdict:**
+  - Second `draft`-level assessment, on a different fixture, with a *different* `next_quality_bottleneck` (`component_fidelity` rather than `scientific_plausibility`). The rubric distinguishes between two real failure modes — color-convention upstream defect (S1) vs polymer-chain rendering defect (S2) — using only the level + bottleneck pair.
+  - **BLOCKER finding F001 (Row 3 polymer chain is a featureless wavy line) is the same anti-pattern that sibling fixture `golden_trap_depth_picture` recorded as G001 BLOCKER in its v0.2 baseline.** The host-LLM critique caught the same defect that the prior adjudication framework caught — independent verification of the rubric's blocker-detection signal.
+  - `score_is_gateable: true` despite a BLOCKER finding because severity gating is finding-level, not assessment-level. The level rubric correctly treats BLOCKER as "fix this before promotion" rather than "field is invalid".
+- **counts toward valid quorum:** yes.
+
+### Run S3 — `n3_trial_02_actuation_sequence` (valid v1.2 substitute)
+
+- **fixture name:** `n3_trial_02_actuation_sequence`
+- **eligibility:** `examples/n3_trial_02_actuation_sequence/spec.yaml` declares `reference_image: reference/codex_gen_v1.png`; reference file present; no prior critique on disk.
+- **command sequence actually used:**
+  ```bash
+  uv run python3 scripts/fig_driver.py n3_trial_02_actuation_sequence --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_compile (render STALE, critique MISSING)
+  bash scripts/compile.sh examples/n3_trial_02_actuation_sequence/n3_trial_02_actuation_sequence.tex
+  uv run python3 scripts/fig_driver.py n3_trial_02_actuation_sequence --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  # action: run_critique, safe_command: /fig_critique n3_trial_02_actuation_sequence
+  /fig_critique n3_trial_02_actuation_sequence                                         # host vision writes v1.2 critique.md from scratch (no prior file)
+  uv run python3 scripts/critique_adjudication.py scaffold n3_trial_02_actuation_sequence --force
+  uv run python3 scripts/fig_loop.py n3_trial_02_actuation_sequence --goal "dogfood 9A fresh re-audit substitute" --json
+  uv run python3 scripts/fig_driver.py n3_trial_02_actuation_sequence --mode review --goal "dogfood 9A fresh re-audit substitute" --dry-run
+  ```
+- **critique schema:** `figure-agent.critique.v1.2`
+- **`critique_input_hash`:** `sha256:89c9593862f8997911462db8107621623e25f504e55aecd88e68ea9d882fe7ae`
+- **`journal_grade_assessment.assessed_artifact_hash`:** `sha256:89c9593862f8997911462db8107621623e25f504e55aecd88e68ea9d882fe7ae` (matches)
+- **`score_is_gateable`:** `true`
+- **`benchmark_level`:** `solid_manuscript`
+- **`confidence`:** `medium`
+- **`next_quality_bottleneck`:** `polish`
+- **`regression_detected`:** `false`
+- **`regressions`:** `[]`
+- **`/fig_loop` `stop_reason`:** `status_action_required`
+- **`/fig_loop` `escalation_level`:** `agent_action_required`
+- **`/fig_loop` surfaced `journal_grade_assessment.evaluation_state`:** `passed` (per `.scratch/fig-loop-runs/20260519-121948-905577-n3_trial_02_actuation_sequence/iteration_001.json`)
+- **`/fig_driver` next action after loop ingestion:** `action: run_fig_loop`, `safe_command: uv run python3 scripts/fig_loop.py n3_trial_02_actuation_sequence --goal 'dogfood 9A fresh re-audit substitute' --json`, `stop_boundary: null`.
+- **reviewer verdict:** `useful`
+- **rationale for verdict:**
+  - Clean three-phase actuation sequence (Charge Injection / Coulomb Repulsion / Relaxation) with all physics invariants honored and reference fidelity high; the v1.2 critique surfaces zero findings.
+  - All upstream axes `pass`, yet host did NOT auto-promote to `high_impact_candidate`. Rationale names two concrete polish levers (e^- charge-rendering style and explicit phase index), so the level rubric correctly identifies that "all pass" does not equal "above ordinary manuscript quality".
+  - This is the **third `solid_manuscript`** outcome but with the highest visual fidelity of the three solid_manuscript runs — confirms the level can absorb non-trivial quality variation without auto-promoting and without falsely escalating to higher levels.
+- **counts toward valid quorum:** yes.
+
+## Issue 9C Final Quorum Judgment (after substitute pass, 2026-05-19 PM)
+
+- **Total attempted fixtures:** 8 (5 published queue + 3 substitutes).
+- **Valid v1.2 critique-grounded runs:** **5** (`fig1_overview_v2_pair_001_vault`, `golden_trap_depth_picture`, `fig1_overview_v2`, `n3_trial_01_trap_depth`, `n3_trial_02_actuation_sequence`). **N=5 quorum MET.**
+- **Invalid / blocker runs (critique-not-required):** 3 (`smoke_trap_demo`, `fig3_trapping_concept`, `fig5_floating_clip_mechanism`) — retained as honest evidence of fixture-contract gaps rather than substituted-away.
+- **Issue 9B status:** **UNBLOCKED.** The Issue 9C Acceptance Criteria minimum of "at least five real fixture runs are recorded" with valid v1.2 evidence is now satisfied (5/5), and every valid run records both a fresh-gateable journal_grade_assessment outcome and a captured `/fig_loop` ingestion + `/fig_driver` next-action.
+- **Numeric scoring (Issue 9B) can proceed** with the following calibration evidence pulled from these 5 runs:
+  - Level coverage observed: `draft` (2) + `solid_manuscript` (3). Levels not yet exercised on real fixtures: `high_impact_candidate`, `needs_human_art_direction`, `blocked`.
+  - Bottleneck coverage observed: `polish` (3), `scientific_plausibility` (1), `component_fidelity` (1). Bottlenecks not yet exercised: `storyline`, `composition`, `label_semantics`, `reference_fidelity`, `export_scale_readability`, `human_policy`.
+  - Score-is-gateable rate: 5/5 = 100%. Every valid critique had `assessed_artifact_hash == critique_input_hash`.
+  - Regression-detection rate: 0/5. No fixture had a prior gateable assessment to regress against; this should be re-checked after Issue 9B numeric scoring adds a comparable score history.
+- **Rubric falsifiability evidence:**
+  - Two `draft` outcomes on distinct fixtures with distinct bottlenecks (S1 → `scientific_plausibility`, S2 → `component_fidelity`) confirm the level set is not collapsed and the bottleneck enum distinguishes structurally different failure modes.
+  - Three `solid_manuscript` outcomes on distinct fixtures all rationalized their non-promotion to `high_impact_candidate` against concrete polish ceilings — the "above ordinary manuscript quality" guard is functioning.
+  - BLOCKER finding in S2 was the same anti-pattern as sibling fixture `golden_trap_depth_picture`'s recorded G001 — independent verification of the rubric's blocker detection.
+- **Pattern-level findings for Issue 9B/9D:**
+  - **Three distinct end-state shapes** observed: `force_golden_required` (Runs 1–2, golden-contract fixtures with stale export), `agent_action_required` (Runs 3–5, S3 — non-golden fixtures with stale/missing export), and `human_gate_required` (S1, S2 — fixtures whose adjudication still has `needs_human` decisions on real findings). Issue 9B numeric scoring must not assume a single escalation shape.
+  - The fresh `journal_grade_assessment` field is orthogonal to every one of those gates. A passing assessment does not unblock golden roll-forward, export refresh, or adjudication-pending human review.
+  - Critique-not-required fixtures still produce loop iteration records with `journal_grade_assessment: null`. Downstream Issue 9B consumers must handle the null cleanly.
+- **Recommended Issue 9C Acceptance Criteria status:**
+  - [x] At least five real fixture runs are recorded.
+  - [x] Each recorded run uses a host-authored v1.2 `critique.md` (5 valid) or records why v1.2 critique could not be produced (3 blockers, honestly documented above).
+  - [x] Every valid run records a fresh/gateable `journal_grade_assessment` outcome.
+  - [x] `/fig_loop` ingestion behavior captured for every valid run.
+  - [x] `/fig_driver` next action after loop ingestion captured for every valid run.
+  - [x] Every run has a reviewer verdict.
+  - [/] Validation/ingestion defects: none surfaced during these 8 runs. No follow-up issue needed yet.
+  - [x] Issue 9B remains deferred per Issue 9C control — and is now positioned to be opened with the calibration evidence above.
+
 ## Open Items
 
-- **PRIMARY:** decide between the three follow-up options above before opening Issue 9B. Recommendation: option (1) substitute fixtures.
-- Watchlist: level-set width remains untested. Even with two more reference-grounded runs, the rubric will only be falsifiable if at least one run lands outside `solid_manuscript`.
-- Cross-run pattern (still useful): gate set is fixture-shape dependent. Two distinct end states observed (`force_golden_required` for Runs 1–2; `agent_action_required` for Runs 3–5).
+- **For Issue 9B:** plan numeric scoring with awareness that `high_impact_candidate`, `needs_human_art_direction`, and `blocked` have not yet been exercised on real fixtures; calibration should not anchor on the 5 currently-recorded levels alone.
+- **For Issue 9D (or follow-up):** decide whether to add reference grounding to the 3 published-queue blockers (`smoke_trap_demo`, `fig3_trapping_concept`, `fig5_floating_clip_mechanism`) so the journal_grade_assessment surface can exercise them, or accept them as critique-not-required by-design. Recorded blockers above are sufficient evidence for either decision.
+- Cross-run pattern (carryover, now confirmed 3-way): gate set is fixture-shape dependent. Three distinct end states observed.

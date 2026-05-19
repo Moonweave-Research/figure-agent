@@ -1,10 +1,10 @@
 # Issue 9C: Fresh Re-Audit Dogfood Evidence
 
 **Date:** 2026-05-19 KST
-**Status:** open
+**Status:** completed in milestone `docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md`.
 **Parent:** Issue 9
 **Depends on:** Issue 9A
-**Blocks:** Issue 9B
+**Unblocks:** Issue 9B
 **Type:** HITL
 
 ## Problem
@@ -24,6 +24,25 @@ treating the score as cumulative progress.
 Collect at least five real v1.2 critique/loop observations that show whether
 level-only `journal_grade_assessment` is sufficient, confusing, or too coarse
 before implementing any numeric `overall_score` or `sub_scores`.
+
+## Result
+
+The original five-fixture queue produced two valid v1.2 critique-grounded runs
+and three critique-not-required blockers. A substitute pass found three
+additional existing fixtures that already declared `reference_image` and did
+not require spec or reference authoring. Final evidence:
+
+- 8 total attempted fixtures.
+- 5 valid v1.2 critique-grounded runs.
+- 3 critique-not-required blockers retained as honest evidence.
+- Observed levels: `draft` (2) and `solid_manuscript` (3).
+- Observed gate shapes: `force_golden_required`, `human_gate_required`, and
+  `agent_action_required`.
+
+Issue 9B numeric calibration may proceed, but it must not assume a single
+escalation shape and must not overfit to the five observed levels; no real
+fixture has yet exercised `high_impact_candidate`,
+`needs_human_art_direction`, or `blocked`.
 
 ## Required Fixtures
 
@@ -140,19 +159,19 @@ Constraints:
 
 ## Acceptance Criteria
 
-- [ ] At least five real fixture runs are recorded.
-- [ ] Each recorded run uses a host-authored v1.2 `critique.md` or records why
+- [x] At least five real fixture runs are recorded.
+- [x] Each recorded run uses a host-authored v1.2 `critique.md` or records why
   v1.2 critique could not be produced.
-- [ ] Every valid run records a fresh/gateable or stale/non-gateable
+- [x] Every valid run records a fresh/gateable or stale/non-gateable
   `journal_grade_assessment` outcome.
-- [ ] `/fig_loop` ingestion behavior is captured for every valid run.
-- [ ] `/fig_driver` next action after loop ingestion is captured for every
+- [x] `/fig_loop` ingestion behavior is captured for every valid run.
+- [x] `/fig_driver` next action after loop ingestion is captured for every
   valid run.
-- [ ] Every run has reviewer verdict `useful`, `too_coarse`, `confusing`, or
+- [x] Every run has reviewer verdict `useful`, `too_coarse`, `confusing`, or
   `invalid`.
-- [ ] Any validation or ingestion defect is either fixed with tests or recorded
+- [x] Any validation or ingestion defect is either fixed with tests or recorded
   as a follow-up issue.
-- [ ] Issue 9B remains deferred unless evidence shows level-only assessment is
+- [x] Issue 9B remains deferred unless evidence shows level-only assessment is
   insufficient and numeric scoring has a concrete calibration policy.
 
 ## Verification
