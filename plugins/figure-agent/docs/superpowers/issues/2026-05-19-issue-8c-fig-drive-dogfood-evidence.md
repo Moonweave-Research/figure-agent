@@ -1,6 +1,6 @@
 # Issue 8C: Fig Drive Dogfood Evidence
 
-**Status:** implemented; pending final commit.
+**Status:** completed in commits `b1fce92`, `fbb57b0`.
 **Predecessor:** `docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md`
 **Evidence:** `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
 
@@ -86,4 +86,3 @@ Capture:
 - Patching figures.
 - SVG polish implementation.
 - Changing accepted/golden semantics.
-
