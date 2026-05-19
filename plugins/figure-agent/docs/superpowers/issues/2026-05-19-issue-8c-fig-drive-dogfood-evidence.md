@@ -1,7 +1,8 @@
 # Issue 8C: Fig Drive Dogfood Evidence
 
-**Status:** open
+**Status:** implemented; pending final commit.
 **Predecessor:** `docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md`
+**Evidence:** `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
 
 ## Problem
 

@@ -1,6 +1,6 @@
 # Issue 8A: Figure Driver Protocol
 
-**Status:** open
+**Status:** completed in commits `5a6d65b`, `9a01b99`.
 **Design:** `docs/superpowers/specs/2026-05-19-figure-driver-orchestration-design.md`
 
 ## Problem

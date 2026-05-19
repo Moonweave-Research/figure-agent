@@ -1,6 +1,6 @@
 # Issue 8B: Dry-Run Figure Driver
 
-**Status:** open
+**Status:** completed in commits `c0453aa`, `38f3b89`.
 **Design:** `docs/superpowers/specs/2026-05-19-figure-driver-orchestration-design.md`
 **Predecessor:** `docs/superpowers/issues/2026-05-19-issue-8a-figure-driver-protocol.md`
 
