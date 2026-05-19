@@ -163,6 +163,46 @@ Each sub-element is independently editable and has its own coordinate cluster.
 - **E-2f-ii** T-caps (top + bottom horizontal stubs)
 - **E-2f-iii** "d" label (italic math, position to right)
 
+### E-3 — V_s decay sub-zone axes (4 sub-elements)
+- **E-3-i** Y-axis arrow vertical (4.95, 1.65)→(4.95, 2.85)
+- **E-3-ii** X-axis arrow horizontal (4.95, 1.65)→(8.55, 1.65)
+- **E-3-iii** $V_s(t)$ label rotated 90° at axis tick
+- **E-3-iv** $t$ label at x-axis end
+
+### E-4 — V_s decay curve + waypoint markers (3 sub-elements)
+- **E-4-i** Stretched-exponential curve (9 plot coords smoothed)
+- **E-4-ii** 5 circular waypoint markers along curve
+- **E-4-iii** Visual stretched-exp asymptote behavior
+
+### E-5 — derive inter-arrow (3 sub-elements)
+- **E-5-i** Vertical arrow with Stealth tip (6.95, 1.55)→(6.95, 1.28)
+- **E-5-ii** "derive" label text + fill background
+- **E-5-iii** Arrow weight + tip size relative to inter-zone hierarchy
+
+### E-6 — g(E_t) sub-zone axes (4 sub-elements)
+- **E-6-i** Y-axis arrow vertical (4.95, 0.40)→(4.95, 1.45)
+- **E-6-ii** X-axis arrow horizontal (4.95, 0.40)→(8.55, 0.40)
+- **E-6-iii** $g(E_t)$ label rotated 90°
+- **E-6-iv** $E_t$ label at x-axis end
+
+### E-7 — Shallow Gaussian (cBlue) (2 sub-elements)
+- **E-7-i** Filled Gaussian curve (cBlue!35 fill + cBlue!85 outline)
+- **E-7-ii** Position + height (T5 BLOCKER: deep/shallow ratio 1.86)
+
+### E-8 — Deep Gaussian (cRed) (2 sub-elements)
+- **E-8-i** Filled Gaussian curve (cRed!35 fill + cRed!85 outline)
+- **E-8-ii** Position + height (height 0.84, ratio 1.87× shallow per Q4)
+
+### E-9 — τ_d caliper annotation (3 sub-elements)
+- **E-9-i** Horizontal bar between Gaussian peak x positions
+- **E-9-ii** T-shaped end caps
+- **E-9-iii** $\tau_d$ label (italic math) above bar
+
+### E-10 — "Shallow" + "Deep" + "Debye" semantic labels (3 sub-elements)
+- **E-10-i** "Shallow" label below shallow Gaussian
+- **E-10-ii** "Deep" label below deep Gaussian
+- **E-10-iii** Optional "Debye" reference line label (if present)
+
 ## Gemini brutal audit 2026-05-19 (iter 41 verdict: 45/100, not 92)
 
 Lenient Gemini (incremental scoring) gave 92; brutal absolute Nature-grade scoring gave 45.
