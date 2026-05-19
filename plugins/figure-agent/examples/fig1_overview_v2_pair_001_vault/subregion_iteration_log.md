@@ -121,6 +121,122 @@ Loop driven by `iteration_prompt_template.md` (2026-05-17). Target: Nature-grade
 - **Visibility gate**: intended yes (cluster separation visible at crop) | anomaly none (no new overlap; check_visual_clash count dropped)
 - **Closure status**: iter 6 verification required for new closure (2-consecutive 4-axis ✅ rule, this is first ✅ after reopen)
 
+## Column E E-2 Sub-region Definition (granular, expanded 2026-05-19 per Gemini brutal audit)
+
+Panel E apparatus zone E-2 broken into named sub-elements for fine-grained iter tracking.
+Each sub-element is independently editable and has its own coordinate cluster.
+
+### E-2a — Corona source assembly (6 sub-elements)
+- **E-2a-i** HV+ box body (gradient front face, outline, rounded corners)
+- **E-2a-ii** HV+ display (dark inset rectangle + pulse trace inside)
+- **E-2a-iii** HV+ label "HV+" (typography + position)
+- **E-2a-iv** Wire + output terminal cuff (anchor circle on box bottom + wire segment)
+- **E-2a-v** Needle wedge (filled tapered triangle + outline + tip apex)
+- **E-2a-vi** Spark fan (5 sparks from needle tip to polymer top)
+
+### E-2b — Sample stack (4 sub-elements)
+- **E-2b-i** Polymer film slab (amber gradient + outline)
+- **E-2b-ii** Substrate slab (gray gradient + outline)
+- **E-2b-iii** Ground wire + bars + ground symbol (vertical conn + 3 horizontal bars)
+- **E-2b-iv** "polymer film" leader line + label (italic + horizontal stub)
+
+### E-2c — Surface charges (3 sub-elements)
+- **E-2c-i** Red filled circles (5×, radius 0.045)
+- **E-2c-ii** White "+" overlay glyphs (inside circles)
+- **E-2c-iii** Charge-spark spatial relation (leftmost charge vs spark fan overlap)
+
+### E-2d — Kelvin probe (4 sub-elements)
+- **E-2d-i** Shaft (axis-shaded vertical cylinder + edge outlines + specular highlight)
+- **E-2d-ii** Disk (front face axis-shaded + outline + top-edge specular)
+- **E-2d-iii** Vibration arrow (↕ Stealth-tipped double arrow + position relative to shaft)
+- **E-2d-iv** "Probe" label (italic + position + association with assembly)
+
+### E-2e — V_s meter (5 sub-elements)
+- **E-2e-i** Meter box body (gradient front face + rounded corners + outline)
+- **E-2e-ii** Display inset (dark rectangle + axis arrows + glowing decay curve)
+- **E-2e-iii** "V_s meter" label (typography mix: $V_s$ math + "meter" text)
+- **E-2e-iv** Cable bezier (probe shaft top → meter input port path)
+- **E-2e-v** Input port (small dark circle at box left wall)
+
+### E-2f — Air gap d indicator (3 sub-elements)
+- **E-2f-i** Vertical dashed line (top to bottom of gap)
+- **E-2f-ii** T-caps (top + bottom horizontal stubs)
+- **E-2f-iii** "d" label (italic math, position to right)
+
+## Gemini brutal audit 2026-05-19 (iter 41 verdict: 45/100, not 92)
+
+Lenient Gemini (incremental scoring) gave 92; brutal absolute Nature-grade scoring gave 45.
+
+### Defect priority (ranked):
+
+| Pri | Sub-element | Defect | Fix direction |
+|---|---|---|---|
+| 1 | E-2d-iii | Vibration arrow "disastrous hand-drawn squiggle" — Stealth tips create messy double-cone | Redesign as clean curved bezier pair OR symmetric "≬" oscillation icon |
+| 2 | E-2e-iii, E-2d-iv, E-2b-iv, E-2f-iii | Font mixing/italicization: $V_s$ math serif + "meter" bold sans jarring; "polymer film" italicized inappropriately; "Probe" italic inconsistent | Standardize: math vars only italic, text labels regular sans-serif, uniform weight |
+| 3 | E-2e-ii | Decay curve "kink" in bezier; axis arrowheads clunky/oversized; dark bg too heavy vs panel palette | Smooth bezier, scale arrowheads down, lighten background |
+| 4 | E-2a-vi | Sparks "rigid solid red spikes" — too geometric/harsh | Soften: opacity gradient, dashed, OR conical glow-field |
+| 5 | E-2c-ii, E-2b-iii | Line weight inconsistency: white "+" too thin (will disappear at print); ground symbol lines too thin/sparse | Bump white "+" stroke, thicken ground bars |
+| 6 | E-2a-iv, E-2e-v | Anchor circles (HV+ cuff, V_s input port) rest ON border strokes → "pasted-on" look | Move circles inside box body OR add port socket geometry |
+| 7 | E-2b-iv | "polymer film" leader line touches polymer edge directly — no padding | Add 1-2pt gap OR terminate with anchor dot |
+| 8 | E-2a-i | HV+ box gradient "harsh PowerPoint linear" | Multi-stop subtler shading OR matte finish |
+| 9 | E-2f-ii | T-caps asymmetric; top cap "crashes into probe" | Equalize cap widths, shift top cap down |
+| 10 | E-2c-iii | Leftmost charge overlaps spark fan tip — visual mess | Reposition charge OR adjust spark endpoints |
+
+## Iter 12-40 retroactive log (consolidated)
+
+iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = Column F (not Panel E). iter 31-40 = Gemini-driven journal-grade aesthetic push. Summarized below per sub-region.
+
+| Iter | Date | Sub-region(s) | Goal | Gemini score |
+|------|------|---|---|---|
+| 12 | 05-18 | E-2b, E-2d | drop shadow + specular highlight + light direction | n/a |
+| 13 | 05-18 | E-2e | V_s meter Codex-grade rebuild (inset screen + axes + label + port) | n/a |
+| 14a | 05-18 | E-2a, E-2e | top-face missing fix (user-identified) | n/a |
+| 14d | 05-18 | E-2a, E-2d | MAJOR audit fixes (vibration loc, corona wedge, shaft thickness, Probe label) | n/a |
+| 15 | 05-18 | E-2a, E-2b, E-2d, E-2e | side-view pivot (3D faces removed, all details preserved) | n/a |
+| 16 | 05-18 | E-2b, E-2d | proportion+readability fix (polymer 0.07→0.15cm, substrate +36%, disk +75%) | n/a |
+| 17 | 05-18 | E-2a, E-2b, E-2d, E-2e | honest audit fixes (S1 HV+ proximity, S2 polymer label leader, S4 cable droop, S6 vibration) | n/a |
+| 31 | 05-18 | E-2a-i,ii,iii | HV+ instrument upgrade (mirror Panel F PSU style) | 50/100 |
+| 32 | 05-18 | E-2d-iv, E-2e-iii | Probe label reposition + V_s meter spacing | 65 |
+| 33 | 05-18 | E-2d-iv, E-2e-iii | Probe above shaft (clear bezier) + V_s label revert | 85 |
+| 34 | 05-18 | E-2e-iii | V_s font 5.5pt shrink | 82 (regression) |
+| 35 | 05-18 | E-2e-i,iii | box widen + 6pt font restore | 88 |
+| 36 | 05-18 | E-2a-i, E-2e-i | breathing room (user 여유감) — taller boxes + label centered | 92 |
+| 37 | 05-18 | E-2a, E-2e | micro polish (V_s subscript baseline + display nudge) | 96 |
+| 38 | 05-19 | E-2a-ii, E-2e-ii | journal-grade reset 30→65: rounded corners + dark glass display + glowing amber traces | 65 (absolute) |
+| 39 | 05-19 | E-2a-i, E-2e-i | icons bigger (user "셋업 도식 너무 작음") — widths +30% | 75 |
+| 40 | 05-19 | E-2a-iv,v,vi, E-2c, E-2d-i,ii, E-2f | corona/probe lift + charge style upgrade | 88 |
+| 41 | 05-19 | E-2d-iii, E-2d-iv | vibration arrow shift right + Probe label closer | 92 (lenient) / 45 (brutal) |
+
+**Cumulative outcome**: 45/100 absolute Nature-grade. 10 specific defects identified for iter 42+ targeting.
+
+### Panel E iter 12-40 — 2026-05-18 to 2026-05-19 — consolidated retroactive log
+
+iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = Column F (not Panel E). iter 31-40 = Gemini-driven journal-grade aesthetic push. Summarized below per sub-region.
+
+| Iter | Date | Sub-region(s) | Goal | Gemini score |
+|------|------|---|---|---|
+| 12 | 05-18 | E-2b, E-2d | drop shadow + specular highlight + light direction | n/a |
+| 13 | 05-18 | E-2e | V_s meter Codex-grade rebuild (inset screen + axes + label + port) | n/a |
+| 14a | 05-18 | E-2a, E-2e | top-face missing fix (user-identified) | n/a |
+| 14d | 05-18 | E-2a, E-2d | MAJOR audit fixes (vibration loc, corona wedge, shaft thickness, Probe label) | n/a |
+| 15 | 05-18 | E-2a, E-2b, E-2d, E-2e | side-view pivot (3D faces removed, all details preserved) | n/a |
+| 16 | 05-18 | E-2b, E-2d | proportion+readability fix (polymer 0.07→0.15cm, substrate +36%, disk +75%) | n/a |
+| 17 | 05-18 | E-2a, E-2b, E-2d, E-2e | honest audit fixes (S1 HV+ proximity, S2 polymer label leader, S4 cable droop, S6 vibration) | n/a |
+| 31 | 05-18 | E-2a | HV+ instrument upgrade (mirror Panel F PSU style) | 50/100 |
+| 32 | 05-18 | E-2d, E-2e | Probe label reposition + V_s meter spacing | 65 |
+| 33 | 05-18 | E-2d, E-2e | Probe above shaft (clear bezier) + V_s label revert | 85 |
+| 34 | 05-18 | E-2e | V_s font 5.5pt shrink | 82 (regression) |
+| 35 | 05-18 | E-2e | box widen + 6pt font restore | 88 |
+| 36 | 05-18 | E-2a, E-2e | breathing room (user 여유감) — taller boxes + label centered | 92 |
+| 37 | 05-18 | E-2a, E-2e | micro polish (V_s subscript baseline + display nudge) | 96 |
+| 38 | 05-19 | E-2a, E-2e | journal-grade reset 30→65: rounded corners + dark glass display + glowing amber traces (oscilloscope aesthetic) | 65 (absolute) |
+| 39 | 05-19 | E-2a, E-2e | icons bigger (user "셋업 도식 너무 작음") — widths +30% | 75 |
+| 40 | 05-19 | E-2a, E-2c, E-2d, E-2f | corona/probe lift away from sample (touching → 0.13cm + 0.20cm gaps) + charge style upgrade (deposited particle) | 88 |
+
+**Cumulative outcome**: iter 12 → 40 closed major journal-grade aesthetic gaps in 14 iterations (incremental scoring 30→96 baseline; absolute Nature-grade 30→88).
+
+**Active sub-regions for iter 41+**: E-2d (vibration arrow ↕ visibility), E-2d (Probe label reposition closer to disk), E-2e (cable bezier tangency).
+
 ### Column E iter 11/10 — 2026-05-18 — reference-source-augmented (TikZ shadings axis idiom): shaft = 3D cylinder + disk = coin-edge shading + air gap caps
 
 - **Scope**: E-2 apparatus 3 high-value elements (Kelvin shaft 3D, disk metallic depth, air gap d explicit callout)

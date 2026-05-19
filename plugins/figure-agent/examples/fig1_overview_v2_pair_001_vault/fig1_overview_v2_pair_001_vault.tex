@@ -542,8 +542,9 @@
 %   spoke 3: mechanical  → Column F top center (11.70, 4.30)
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
   (branchRoot) -- (2.28, 4.30);
+% iter 40: ISPD spoke tip lifted 4.30→4.50 to clear lifted HV+ box top (4.40).
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
-  (branchRoot) -- (6.975, 4.30);
+  (branchRoot) -- (6.975, 4.50);
 % iter 27: spoke 3 tip 12.325 → 12.625 to land on new PSU center
 % (PSU shifted right to 12.20..13.05).
 \draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
@@ -712,10 +713,11 @@
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
 % Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
 % clear thicker substrate bottom (y=3.23).
-\draw[cGray!75!black, line width=0.28pt] (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
-\draw[cGray!75!black, line width=0.32pt] (7.88, 3.10) -- (8.02, 3.10);
-\draw[cGray!75!black, line width=0.28pt] (7.90, 3.07) -- (8.00, 3.07);
-\draw[cGray!75!black, line width=0.25pt] (7.92, 3.04) -- (7.98, 3.04);
+% Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print visibility.
+\draw[cGray!75!black, line width=0.35pt] (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
+\draw[cGray!75!black, line width=0.42pt] (7.88, 3.10) -- (8.02, 3.10);
+\draw[cGray!75!black, line width=0.36pt] (7.90, 3.07) -- (8.00, 3.07);
+\draw[cGray!75!black, line width=0.32pt] (7.92, 3.04) -- (7.98, 3.04);
 
 % ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
 % Tech illustrator audit: floating "+" cue + no HV identifier = "where does
@@ -730,49 +732,51 @@
 % iter 38 (Step 1: journal-grade instrument redesign): rounded corners +
 % darker premium body + dark glass display + glowing pulse trace (cAmber on
 % cGray!85!black background — oscilloscope aesthetic, replaces "icon in box").
-\shade[top color=cGray!12, bottom color=cGray!28, rounded corners=0.4pt]
-  (6.225, 4.00) rectangle (6.875, 4.30);
+% iter 40: HV+ box lifted 0.10cm to accommodate longer wire + lifted needle
+% (user "corona too close to sample"). Box 4.00..4.30 → 4.10..4.40.
+% HV+ body — iter 46 (Pri 8): \shade → \fill matte solid (was "harsh PowerPoint
+% linear gradient" per Gemini). Subtler premium instrument finish.
+\fill[cGray!22, rounded corners=0.4pt]
+  (6.10, 4.10) rectangle (6.95, 4.40);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (6.225, 4.00) rectangle (6.875, 4.30);
-% Dark glass display
-\fill[cGray!85!black, rounded corners=0.2pt] (6.30, 4.21) rectangle (6.80, 4.28);
-\draw[cGray!95!black, line width=0.12pt, rounded corners=0.2pt]
-  (6.30, 4.21) rectangle (6.80, 4.28);
-% Glowing pulse trace (bright cAmber on dark)
+  (6.10, 4.10) rectangle (6.95, 4.40);
+% iter 44: bg lightened cGray!85→!70 black (consistent with V_s meter display).
+\fill[cGray!70!black, rounded corners=0.2pt] (6.20, 4.31) rectangle (6.85, 4.38);
+\draw[cGray!85!black, line width=0.12pt, rounded corners=0.2pt]
+  (6.20, 4.31) rectangle (6.85, 4.38);
 \draw[cAmber!90!white, line width=0.45pt]
-  (6.33, 4.235) -- (6.42, 4.235) -- (6.42, 4.275)
-              -- (6.55, 4.275) -- (6.55, 4.235) -- (6.68, 4.235)
-              -- (6.68, 4.275) -- (6.77, 4.275);
-% HV+ label below display — iter 36: 6→5pt + y 4.075 → 4.10 (label zone center
-% 4.00..4.20, mid y=4.10). Gap from box bottom 4.00 = 0.07cm (was 0.04cm).
+  (6.23, 4.335) -- (6.36, 4.335) -- (6.36, 4.375)
+              -- (6.53, 4.375) -- (6.53, 4.335) -- (6.68, 4.335)
+              -- (6.68, 4.375) -- (6.82, 4.375);
 \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!88!black]
-  at (6.55, 4.10) {HV+};
-% Output terminal (bottom-center, where wire exits)
-\fill[cGray!85!black] (6.55, 4.00) circle (0.022);
-\fill[cGray!50!black] (6.55, 4.00) circle (0.011);
-% Wire from terminal to needle cuff
-\draw[cGray!75!black, line width=0.32pt] (6.55, 4.00) -- (6.55, 3.95);
-% Corona needle electrode — iter 16: tip y=3.55 → 3.63 (above new polymer
-% top y=3.60). Wedge geometry preserved, just shifted to land on thicker film.
+  at (6.55, 4.20) {HV+};
+% Output terminal — iter 45 (Pri 6a): moved INSIDE box body (y 4.10→4.12,
+% was resting ON border stroke "pasted-on look").
+\fill[cGray!85!black] (6.55, 4.12) circle (0.022);
+\fill[cGray!50!black] (6.55, 4.12) circle (0.011);
+% Wire from terminal (now inside box at 4.12) to needle cuff at 4.05.
+\draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 4.05);
+% Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
+% cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
+% Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
 \shade[left color=cGray!75!black, right color=cGray!90!black]
-  (6.535, 3.95) -- (6.565, 3.95) -- (6.55, 3.63) -- cycle;
+  (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
 \draw[cGray!90!black, line width=0.22pt]
-  (6.535, 3.95) -- (6.565, 3.95) -- (6.55, 3.63) -- cycle;
-% Support cuff at top of needle (wire attachment point)
-\fill[cGray!85!black] (6.55, 3.95) circle (0.045);
-% Spark endpoints land on new polymer top edge y=3.60 (was 3.52).
-\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.46, 3.60);  % WSW
-\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.50, 3.60);  % SW
-\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.55, 3.59);  % S
-\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.60, 3.60);  % SE
-\draw[cRed!65!black, line width=0.42pt] (6.55, 3.63) -- (6.64, 3.60);  % ESE
-% Surface charge "+" markers — iter 10: 4.5pt → 5.5pt (1.22×) for crisp
-% glyph reading (iter 9 left them looking like tick marks). Color stays
-% cRed!70!black. 5 markers evenly spaced on polymer front-top edge.
-\foreach \cx in {6.40, 6.70, 7.05, 7.40, 7.70} {
-  \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont,
-        text=cRed!70!black, inner sep=0pt]
-    at (\cx, 3.595) {$+$};
+  (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
+\fill[cGray!85!black] (6.55, 4.05) circle (0.045);
+% Sparks — iter 45 (Pri 4): softened from rigid solid spikes to subtle corona
+% discharge feel: opacity 0.6 + thinner 0.35pt + lighter cRed!55.
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.45, 3.60);
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.50, 3.60);
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.55, 3.60);
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.60, 3.60);
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.65, 3.60);
+% Surface charges — iter 45 (Pri 5a + 10): white "+" 4pt→5pt (visible at print
+% scale), leftmost charge 6.40→6.35 to clear spark WSW tip (was overlapping).
+\foreach \cx in {6.35, 6.70, 7.05, 7.40, 7.70} {
+  \fill[cRed!75!black] (\cx, 3.62) circle (0.045);
+  \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=white,
+        inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
 % ----- Kelvin probe (RIGHT, V_s readout) — iter 6 disk-on-shaft redesign -----
@@ -781,39 +785,40 @@
 % on vertical shaft, oscillating VERTICALLY (modulating gap-capacitance for
 % FM-CPD measurement), hovering above sample with explicit non-contact gap.
 %
-% Vertical shaft — iter 16: bottom y=3.66 → 3.77 (matches new disk top).
-% Width 0.08cm + axis shading preserved.
+% Vertical shaft — iter 40: bottom 3.77→3.87 (matches lifted disk top). Top
+% stays 3.95 (cable bezier start). Shaft length 0.18→0.08cm — shorter.
 \shade[left color=cGray!80!black, middle color=cGray!18,
        right color=cGray!80!black]
-  (7.36, 3.77) rectangle (7.44, 3.95);
+  (7.36, 3.87) rectangle (7.44, 3.95);
 \draw[cGray!80!black, line width=0.18pt]
-  (7.36, 3.77) -- (7.36, 3.95);
+  (7.36, 3.87) -- (7.36, 3.95);
 \draw[cGray!80!black, line width=0.18pt]
-  (7.44, 3.77) -- (7.44, 3.95);
-\fill[white, opacity=0.55] (7.395, 3.77) rectangle (7.405, 3.95);
-% Disk electrode — iter 16: thickness 0.04 → 0.07cm (y=3.70..3.77).
-% Shift up to clear thicker polymer (top y=3.60) + 0.10cm air gap.
+  (7.44, 3.87) -- (7.44, 3.95);
+\fill[white, opacity=0.55] (7.395, 3.87) rectangle (7.405, 3.95);
+% Disk electrode — iter 40: lifted 0.10cm (3.70..3.77 → 3.80..3.87) per user
+% "probe too close to sample". Air gap from polymer (3.60) now 0.20cm (was 0.10).
 \shade[left color=cAmber!28, middle color=cAmber!65,
        right color=cAmber!22]
-  (7.20, 3.70) rectangle (7.60, 3.77);
-\draw[cAmber!75!black, line width=0.45pt] (7.20, 3.70) rectangle (7.60, 3.77);
-% Disk front-top edge specular — y=3.768..3.770 (matches new disk top).
-\fill[white, opacity=0.55] (7.21, 3.768) rectangle (7.58, 3.770);
-% Vertical vibration arrow — iter 17 (S6 fix): length 0.12 → 0.16cm
-% (3.80..3.92 → 3.78..3.94). Arrow/shaft ratio 67% → 89%, matching literature
-% convention where vibration cue spans most of shaft length.
-\draw[<->, cGray!75!black, line width=0.40pt] (7.47, 3.78) -- (7.47, 3.94);
-% Air gap indicator — iter 16: top y=3.62 → 3.70 (new disk bottom),
-% bottom y=3.52 → 3.60 (new polymer top). Gap height 0.10cm preserved.
-\draw[cGray!55!black, dashed, line width=0.18pt] (7.72, 3.70) -- (7.72, 3.60);
-\draw[cGray!55!black, line width=0.22pt] (7.70, 3.70) -- (7.74, 3.70);
-\draw[cGray!55!black, line width=0.22pt] (7.70, 3.60) -- (7.74, 3.60);
+  (7.20, 3.80) rectangle (7.60, 3.87);
+\draw[cAmber!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
+\fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
+% Vibration cue — iter 42 (E-2d-iii redesign, Gemini Top 1 fix): replaced
+% Stealth path (was "disastrous hand-drawn squiggle" at small scale) with
+% typographic $\updownarrow$ glyph — clean symmetric Unicode-style icon
+% standard in publication apparatus diagrams.
+\node[font=\fontsize{9}{10.8}\selectfont, text=cGray!75!black,
+      inner sep=0pt] at (7.55, 3.91) {$\updownarrow$};
+% Air gap d — iter 46 (Pri 9): T-caps equalized + shifted DOWN slightly so top
+% cap no longer crashes into Kelvin disk bottom (3.80). Top cap moved 3.80→3.78.
+\draw[cGray!55!black, dashed, line width=0.18pt] (7.72, 3.78) -- (7.72, 3.62);
+\draw[cGray!55!black, line width=0.22pt] (7.69, 3.78) -- (7.75, 3.78);
+\draw[cGray!55!black, line width=0.22pt] (7.69, 3.62) -- (7.75, 3.62);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
-      anchor=west] at (7.74, 3.65) {$d$};
-% "Probe" label — iter 34: y nudged 4.00 → 4.05 for breathing room from
-% oscillation arrow top (3.94) and bezier start (3.95).
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
-      anchor=south] at (7.40, 4.05) {Probe};
+      anchor=west] at (7.75, 3.70) {$d$};
+% "Probe" label — iter 43: removed \itshape (descriptive text, not math var)
+% — Gemini Top 2 fix for inappropriate italicization.
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      anchor=south] at (7.40, 4.00) {Probe};
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
 % Layers (in z-order, bottom-up):
@@ -825,46 +830,46 @@
 %   (6) Input port circle — small dark socket at left wall, cable entry
 % Right-side and top isometric faces REMOVED per user direction.
 %
-% (1) Front face — iter 38 Step 1: darker premium gradient + rounded corners.
-\shade[top color=cGray!12, bottom color=cGray!28, rounded corners=0.4pt]
-  (8.20, 3.55) rectangle (9.05, 4.05);
+% (1) Front face — iter 46 (Pri 8 consistency): \shade → matte \fill cGray!22.
+\fill[cGray!22, rounded corners=0.4pt]
+  (8.00, 3.55) rectangle (9.10, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (8.20, 3.55) rectangle (9.05, 4.05);
+  (8.00, 3.55) rectangle (9.10, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
-\fill[cGray!85!black, rounded corners=0.3pt] (8.25, 3.83) rectangle (9.00, 4.00);
-\draw[cGray!95!black, line width=0.15pt, rounded corners=0.3pt]
-  (8.25, 3.83) rectangle (9.00, 4.00);
-% (4a) y-axis arrow — light cGray on dark screen
-\draw[-{Stealth[length=2pt,width=1.6pt]}, cGray!30!white, line width=0.20pt]
-  (8.30, 3.86) -- (8.30, 3.98);
-% (4b) x-axis arrow — light cGray on dark screen
-\draw[-{Stealth[length=2pt,width=1.6pt]}, cGray!30!white, line width=0.20pt]
-  (8.30, 3.86) -- (8.92, 3.86);
-% (4c) Glowing decay curve — bright cAmber trace on dark glass (oscilloscope)
+% iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
+% smaller (2pt→1.5pt), decay curve single-bezier (no kink).
+\fill[cGray!70!black, rounded corners=0.3pt] (8.05, 3.83) rectangle (9.05, 4.00);
+\draw[cGray!85!black, line width=0.15pt, rounded corners=0.3pt]
+  (8.05, 3.83) rectangle (9.05, 4.00);
+\draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
+  (8.10, 3.86) -- (8.10, 3.98);
+\draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
+  (8.10, 3.86) -- (8.98, 3.86);
+% Single smooth bezier (no mid-curve kink)
 \draw[cAmber!90!white, line width=0.45pt]
-  (8.32, 3.97) .. controls (8.38, 3.94) and (8.45, 3.90) .. (8.55, 3.88)
-              .. controls (8.65, 3.87) and (8.78, 3.86) .. (8.88, 3.865);
-% (5) V_s meter label — iter 37: y 3.69→3.71 to compensate for subscript "s"
-% baseline (Gemini "perceived vertical center skewed due to descender").
+  (8.12, 3.97) .. controls (8.35, 3.93) and (8.65, 3.87) .. (8.95, 3.86);
+% (5) V_s meter label — iter 43 (Gemini Top 2): $\mathsf{V_s}$ sans-serif math
+% to match "meter" sans-serif text — eliminates serif math + sans text font
+% collision Gemini flagged as "jarring".
 \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont, text=cGray!88!black]
-  at (8.625, 3.71) {$V_s$ meter};
+  at (8.55, 3.69) {$\mathsf{V_s}$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
 % to meter input port (natural gravity-aware path, not aerial arc).
+% Cable + Input port — iter 45 (Pri 6b): port moved INSIDE meter body
+% (x 8.00→8.04, was resting ON box left edge). Cable extends to new port.
 \draw[cGray!75!black, line width=0.22pt]
-  (7.40, 3.95) .. controls (7.60, 3.95) and (8.00, 3.85) .. (8.20, 3.85);
-% (7) Input port — small dark socket circle (cable entry on left wall)
-\fill[cGray!85!black] (8.20, 3.85) circle (0.024);
-\fill[cGray!50!black] (8.20, 3.85) circle (0.012);
+  (7.40, 3.95) .. controls (7.55, 3.95) and (7.88, 3.85) .. (8.04, 3.85);
+\fill[cGray!85!black] (8.04, 3.85) circle (0.024);
+\fill[cGray!50!black] (8.04, 3.85) circle (0.012);
 
-% Polymer film identification label — iter 17 (S2 fix): repositioned LEFT
-% of polymer band with leader line. Was BELOW substrate (target mismatch —
-% label appeared to point at substrate). Now label at (6.15, 3.525) anchor=east
-% pointing right via leader line to polymer band left edge (6.30, 3.525).
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black,
+% Polymer film label — iter 43: \itshape removed (descriptive, not math var)
+% — Gemini Top 2 typography unification.
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
       anchor=east] at (6.15, 3.525) {polymer film};
-\draw[cGray!55!black, line width=0.18pt] (6.16, 3.525) -- (6.30, 3.525);
+\draw[cGray!55!black, line width=0.18pt] (6.16, 3.525) -- (6.26, 3.525);
+\fill[cGray!55!black] (6.26, 3.525) circle (0.012);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
