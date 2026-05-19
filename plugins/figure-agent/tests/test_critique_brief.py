@@ -221,6 +221,23 @@ def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
     assert "### 10. Publication Readiness" in brief
 
 
+def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Journal-Grade Fresh Re-Audit Assessment" in brief
+    assert "journal_grade_assessment:" in brief
+    assert "schema: figure-agent.journal-grade-assessment.v1" in brief
+    assert "scoring_mode: fresh_reaudit" in brief
+    assert "assessed_artifact_hash: " in brief
+    assert (
+        "benchmark_level: draft | solid_manuscript | high_impact_candidate | "
+        "needs_human_art_direction | blocked"
+    ) in brief
+    assert "### 10. Publication Readiness" in brief
+
+
 def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

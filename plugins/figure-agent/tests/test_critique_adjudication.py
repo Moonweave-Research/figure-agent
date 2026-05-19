@@ -338,6 +338,29 @@ def _complete_v1_2_quality_axes_yaml(
     return "".join(parts)
 
 
+def _journal_assessment_yaml(
+    *,
+    assessed_hash: str = "sha256:" + "a" * 64,
+    level: str = "solid_manuscript",
+    scoring_mode: str = "fresh_reaudit",
+    gateable: str = "true",
+) -> str:
+    return (
+        "journal_grade_assessment:\n"
+        "  schema: figure-agent.journal-grade-assessment.v1\n"
+        f"  scoring_mode: {scoring_mode}\n"
+        f"  assessed_artifact_hash: {assessed_hash}\n"
+        f"  benchmark_level: {level}\n"
+        "  confidence: high\n"
+        "  blockers: []\n"
+        "  regression_detected: false\n"
+        "  regressions: []\n"
+        f"  score_is_gateable: {gateable}\n"
+        "  next_quality_bottleneck: polish\n"
+        "  rationale: current artifact is manuscript-ready but not high-impact\n"
+    )
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -362,6 +385,8 @@ def _write_v1_2_critique_with_quality_axes(
     *,
     audit_yaml: str | None = None,
     quality_axes_yaml: str | None = None,
+    critique_input_hash: str | None = None,
+    journal_assessment_yaml: str | None = None,
     findings_yaml: str | None = None,
 ) -> Path:
     critique = fig_dir / "critique.md"
@@ -372,12 +397,17 @@ def _write_v1_2_critique_with_quality_axes(
         "    tex_lines: [10, 20]\n"
         "    observation: needs review\n"
     )
+    critique_hash_yaml = (
+        f"critique_input_hash: {critique_input_hash}\n" if critique_input_hash else ""
+    )
     critique.write_text(
         "---\n"
         "schema: figure-agent.critique.v1.2\n"
         "fixture: demo_fig\n"
+        f"{critique_hash_yaml}"
         f"{audit_yaml or _complete_v1_1_audit_yaml()}"
         f"{quality_axes_yaml or _complete_v1_2_quality_axes_yaml()}"
+        f"{journal_assessment_yaml or ''}"
         f"{findings_yaml}"
         "---\n"
         "# critique\n",
@@ -440,6 +470,95 @@ def test_build_adjudication_scaffold_accepts_v1_2_quality_axes(
 
     assert scaffold["source_critique_hash"] == file_sha256(critique)
     assert [decision["finding_id"] for decision in scaffold["decisions"]] == ["C001"]
+
+
+def test_build_adjudication_scaffold_accepts_v1_2_fresh_reaudit_assessment(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_invalid_assessment_scoring_mode(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(
+            assessed_hash=critique_hash,
+            scoring_mode="cumulative_progress",
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="scoring_mode"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_gateable_assessment_hash_mismatch(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash="sha256:" + "a" * 64,
+        journal_assessment_yaml=_journal_assessment_yaml(
+            assessed_hash="sha256:" + "b" * 64,
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="assessed_artifact_hash"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_high_impact_with_upstream_patch(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "journal_polish": _quality_axis_yaml(
+                "journal_polish",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("C001 - export-scale polish still weak",),
+            ),
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_patch",
+                recommended_action="patch",
+                blocking_items=("C001 - export-scale polish still weak",),
+            ),
+        }
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        quality_axes_yaml=quality_axes_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(
+            assessed_hash=critique_hash,
+            level="high_impact_candidate",
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="high_impact_candidate"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_build_adjudication_scaffold_rejects_v1_2_missing_quality_axis(

@@ -68,6 +68,24 @@ _QUALITY_ACTIONS_BY_VERDICT = {
     "needs_human": frozenset({"human_review", "revise_briefing"}),
     "block": frozenset({"block_release", "human_review"}),
 }
+_JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
+_JOURNAL_SCORING_MODE = "fresh_reaudit"
+_JOURNAL_BENCHMARK_LEVELS = frozenset(
+    {"draft", "solid_manuscript", "high_impact_candidate", "needs_human_art_direction", "blocked"}
+)
+_JOURNAL_BOTTLENECKS = frozenset(
+    {
+        "storyline",
+        "composition",
+        "component_fidelity",
+        "scientific_plausibility",
+        "label_semantics",
+        "polish",
+        "reference_fidelity",
+        "export_scale_readability",
+        "human_policy",
+    }
+)
 
 
 class CritiqueAdjudicationError(ValueError):
@@ -133,6 +151,11 @@ def _validate_hash(value: str) -> None:
         raise CritiqueAdjudicationError(
             "adjudication.source_critique_hash must be a sha256-prefixed string"
         )
+
+
+def _validate_sha256_string(value: str, label: str) -> None:
+    if not value.startswith("sha256:") or len(value) <= len("sha256:"):
+        raise CritiqueAdjudicationError(f"{label} must be a sha256-prefixed string")
 
 
 def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
@@ -323,7 +346,7 @@ def _validate_panel_roles(axis: dict[str, Any], axis_label: str) -> None:
         _require_non_empty_string(role_item, "rationale", label=role_label)
 
 
-def _validate_v1_2_quality_axes(frontmatter: dict[str, Any]) -> None:
+def _validate_v1_2_quality_axes(frontmatter: dict[str, Any]) -> dict[str, str]:
     quality_axes = _require_mapping(
         frontmatter.get("quality_axes"),
         "critique frontmatter.quality_axes",
@@ -359,6 +382,82 @@ def _validate_v1_2_quality_axes(frontmatter: dict[str, Any]) -> None:
                 "critique frontmatter.quality_axes.publication_readiness.verdict "
                 "is less severe than an applicable upstream quality axis"
             )
+    return verdicts
+
+
+def _validate_journal_grade_assessment(
+    frontmatter: dict[str, Any],
+    quality_verdicts: dict[str, str],
+) -> None:
+    raw_assessment = frontmatter.get("journal_grade_assessment")
+    if raw_assessment is None:
+        return
+    assessment = _require_mapping(
+        raw_assessment,
+        "critique frontmatter.journal_grade_assessment",
+    )
+    label = "critique frontmatter.journal_grade_assessment"
+    schema = assessment.get("schema")
+    if schema != _JOURNAL_ASSESSMENT_SCHEMA:
+        raise CritiqueAdjudicationError(f"{label}.schema must be {_JOURNAL_ASSESSMENT_SCHEMA}")
+    scoring_mode = _require_string_value(assessment, "scoring_mode", label=label)
+    if scoring_mode != _JOURNAL_SCORING_MODE:
+        raise CritiqueAdjudicationError(
+            f"{label}.scoring_mode must be {_JOURNAL_SCORING_MODE}"
+        )
+    assessed_hash = _require_non_empty_string(
+        assessment,
+        "assessed_artifact_hash",
+        label=label,
+    )
+    _validate_sha256_string(assessed_hash, f"{label}.assessed_artifact_hash")
+    benchmark_level = _require_enum(
+        assessment,
+        "benchmark_level",
+        _JOURNAL_BENCHMARK_LEVELS,
+        label=label,
+    )
+    _require_enum(assessment, "confidence", _QUALITY_CONFIDENCES, label=label)
+    blockers = _require_list(assessment.get("blockers"), f"{label}.blockers")
+    for index, blocker in enumerate(blockers):
+        if not isinstance(blocker, str) or not blocker.strip():
+            raise CritiqueAdjudicationError(f"{label}.blockers[{index}] must be a string")
+    regression_detected = assessment.get("regression_detected")
+    if not isinstance(regression_detected, bool):
+        raise CritiqueAdjudicationError(f"{label}.regression_detected must be a boolean")
+    regressions = _require_list(assessment.get("regressions"), f"{label}.regressions")
+    for index, raw_regression in enumerate(regressions):
+        regression_label = f"{label}.regressions[{index}]"
+        regression = _require_mapping(raw_regression, regression_label)
+        _require_non_empty_string(regression, "axis", label=regression_label)
+        _require_non_empty_string(regression, "previous_state", label=regression_label)
+        _require_non_empty_string(regression, "current_state", label=regression_label)
+        _require_non_empty_string(regression, "reason", label=regression_label)
+    score_is_gateable = assessment.get("score_is_gateable")
+    if not isinstance(score_is_gateable, bool):
+        raise CritiqueAdjudicationError(f"{label}.score_is_gateable must be a boolean")
+    _require_enum(assessment, "next_quality_bottleneck", _JOURNAL_BOTTLENECKS, label=label)
+    _require_non_empty_string(assessment, "rationale", label=label)
+
+    if benchmark_level == "high_impact_candidate":
+        non_passing = {
+            axis_name: verdict
+            for axis_name, verdict in quality_verdicts.items()
+            if verdict not in {"pass", "not_applicable"}
+        }
+        if non_passing:
+            axes = ", ".join(sorted(non_passing))
+            raise CritiqueAdjudicationError(
+                f"{label}.benchmark_level high_impact_candidate requires passing "
+                f"upstream quality axes; non-passing axes: {axes}"
+            )
+
+    critique_input_hash = frontmatter.get("critique_input_hash")
+    if score_is_gateable and assessed_hash != critique_input_hash:
+        raise CritiqueAdjudicationError(
+            f"{label}.assessed_artifact_hash must match critique_input_hash "
+            "when score_is_gateable is true"
+        )
 
 
 def _validate_v1_2_audit_to_finding(frontmatter: dict[str, Any]) -> None:
@@ -475,7 +574,8 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
         _validate_v1_1_audit(frontmatter)
     elif critique_schema == CRITIQUE_SCHEMA_V1_2:
         _validate_v1_1_audit(frontmatter)
-        _validate_v1_2_quality_axes(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        _validate_journal_grade_assessment(frontmatter, quality_verdicts)
         _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
         raise CritiqueAdjudicationError(f"unsupported critique schema: {critique_schema}")

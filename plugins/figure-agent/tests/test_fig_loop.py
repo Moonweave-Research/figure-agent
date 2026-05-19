@@ -114,6 +114,8 @@ def _write_v1_2_critique(
     fixture: Path,
     *,
     axis_overrides: dict[str, dict] | None = None,
+    journal_assessment: dict | None = None,
+    critique_input_hash: str | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -121,21 +123,44 @@ def _write_v1_2_critique(
         for axis_name in QUALITY_AXIS_NAMES
     }
     critique = fixture / "critique.md"
+    frontmatter = {
+        "schema": "figure-agent.critique.v1.2",
+        "fixture": fixture.name,
+        "quality_axes": quality_axes,
+    }
+    if critique_input_hash:
+        frontmatter["critique_input_hash"] = critique_input_hash
+    if journal_assessment:
+        frontmatter["journal_grade_assessment"] = journal_assessment
     critique.write_text(
         "---\n"
-        + yaml.safe_dump(
-            {
-                "schema": "figure-agent.critique.v1.2",
-                "fixture": fixture.name,
-                "quality_axes": quality_axes,
-            },
-            sort_keys=False,
-        )
+        + yaml.safe_dump(frontmatter, sort_keys=False)
         + "---\n"
         "# critique\n",
         encoding="utf-8",
     )
     return critique
+
+
+def _journal_assessment(
+    assessed_hash: str,
+    *,
+    level: str = "solid_manuscript",
+    gateable: bool = True,
+) -> dict:
+    return {
+        "schema": "figure-agent.journal-grade-assessment.v1",
+        "scoring_mode": "fresh_reaudit",
+        "assessed_artifact_hash": assessed_hash,
+        "benchmark_level": level,
+        "confidence": "high",
+        "blockers": [],
+        "regression_detected": False,
+        "regressions": [],
+        "score_is_gateable": gateable,
+        "next_quality_bottleneck": "polish",
+        "rationale": "current artifact quality level",
+    }
 
 
 def _patch_fresh_status(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -431,6 +456,59 @@ def test_loop_maps_v1_2_publication_readiness_to_publication_safety(
     assert publication["quality_axis_recommended_actions"] == {
         "publication_readiness": "block_release"
     }
+
+
+def test_loop_surfaces_fresh_reaudit_journal_grade_assessment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash=critique_hash,
+        journal_assessment=_journal_assessment(critique_hash, level="solid_manuscript"),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect journal-grade assessment",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment = iteration["journal_grade_assessment"]
+    assert assessment["benchmark_level"] == "solid_manuscript"
+    assert assessment["scoring_mode"] == "fresh_reaudit"
+    assert assessment["score_is_gateable"] is True
+    assert assessment["evaluation_state"] == "passed"
+
+
+def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash="sha256:" + "a" * 64,
+        journal_assessment=_journal_assessment("sha256:" + "b" * 64),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale journal-grade assessment",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment = iteration["journal_grade_assessment"]
+    assert assessment["score_is_gateable"] is False
+    assert assessment["evaluation_state"] == "stale"
 
 
 def test_loop_ignores_malformed_quality_axes_without_crashing(

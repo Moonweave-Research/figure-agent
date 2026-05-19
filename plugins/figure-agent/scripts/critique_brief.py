@@ -363,6 +363,23 @@ applicable upstream quality axis.
 """
 
 
+def _journal_grade_assessment() -> str:
+    return """## Journal-Grade Fresh Re-Audit Assessment
+
+After completing `quality_axes`, classify the current rendered/exported figure
+under top-level YAML field `journal_grade_assessment`. This is not a progress
+score. Re-audit the current artifact from scratch: earlier pass states can be
+downgraded when a later patch introduces a new layout, story, label, or polish
+regression.
+
+Use `high_impact_candidate` only when all applicable upstream `quality_axes`
+are passing, no human gate is required, and the current artifact reads above
+ordinary manuscript quality. Use `needs_human_art_direction` when the remaining
+decision is taste, story framing, target-journal fit, policy, or visual
+direction that should not be decided by automation.
+"""
+
+
 def _quality_axis_schema(axis_name: str, *, evidence: str, rationale: str) -> str:
     return "\n".join(
         [
@@ -443,6 +460,32 @@ def _quality_axes_schema() -> str:
     }
     return "quality_axes:\n" + "\n".join(
         axis_schema[axis_name] for axis_name in _QUALITY_AXIS_NAMES
+    )
+
+
+def _journal_grade_assessment_schema(critique_input_hash: str) -> str:
+    return "\n".join(
+        [
+            "journal_grade_assessment:",
+            "  schema: figure-agent.journal-grade-assessment.v1",
+            "  scoring_mode: fresh_reaudit",
+            f"  assessed_artifact_hash: {critique_input_hash}",
+            (
+                "  benchmark_level: draft | solid_manuscript | "
+                "high_impact_candidate | needs_human_art_direction | blocked"
+            ),
+            f"  confidence: {_QUALITY_CONFIDENCE_VALUES}",
+            "  blockers: []",
+            "  regression_detected: true | false",
+            "  regressions: []",
+            "  score_is_gateable: true | false",
+            (
+                "  next_quality_bottleneck: storyline | composition | "
+                "component_fidelity | scientific_plausibility | label_semantics | "
+                "polish | reference_fidelity | export_scale_readability | human_policy"
+            ),
+            '  rationale: "<current artifact-only quality rationale>"',
+        ]
     )
 
 
@@ -582,6 +625,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 {_journal_quality_axes()}
 
+{_journal_grade_assessment()}
+
 ## Critique rubric
 
 ### A. Physics correctness
@@ -641,6 +686,7 @@ audit_enumeration:
       severity: BLOCKER | MAJOR | MINOR | NIT
       proposed_action: add | expand | accept_simplification
 {_quality_axes_schema()}
+{_journal_grade_assessment_schema(critique_input_hash)}
 panels:
   - id: <panel id>
     findings:

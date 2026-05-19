@@ -29,6 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
+JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 _STORY_QUALITY_AXES = (
     "message_storyline",
     "panel_role_coherence",
@@ -390,6 +391,41 @@ def _quality_axis_record(summary: dict[str, Any], critique_path: Path) -> dict[s
         quality_axis_recommended_actions=summary["recommended_actions"],
         quality_axis_blocking_items=summary["blocking_items"],
     )
+
+
+def _journal_grade_assessment(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    if critique_state != "FRESH":
+        return None
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_2:
+        return None
+    assessment = frontmatter.get("journal_grade_assessment")
+    if not isinstance(assessment, dict):
+        return None
+    record = dict(assessment)
+    gateable = (
+        record.get("schema") == JOURNAL_ASSESSMENT_SCHEMA
+        and record.get("scoring_mode") == "fresh_reaudit"
+        and isinstance(record.get("assessed_artifact_hash"), str)
+        and record.get("assessed_artifact_hash") == frontmatter.get("critique_input_hash")
+        and record.get("score_is_gateable") is True
+    )
+    record["score_is_gateable"] = gateable
+    if not gateable:
+        record["evaluation_state"] = "stale"
+    elif record.get("benchmark_level") in {"blocked", "needs_human_art_direction"}:
+        record["evaluation_state"] = "blocked"
+    else:
+        record["evaluation_state"] = "passed"
+    record["source"] = "critique.journal_grade_assessment"
+    record["evidence_path"] = str(critique_path)
+    return record
 
 
 def _axis_verdicts(
@@ -978,6 +1014,10 @@ def run_loop(
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = _escalation_summary(loop_decision)
     patch_handoff = _patch_handoff(name, loop_decision)
+    journal_grade_assessment = _journal_grade_assessment(
+        example_dir,
+        status_result.get("critique_state"),
+    )
     auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
     post_patch_evidence = _post_patch_evidence_verdict(
         repo_root,
@@ -1001,6 +1041,7 @@ def run_loop(
         "stop_reason": loop_decision["stop_reason"],
         "active_patch_target": loop_decision["active_patch_target"],
         "patch_handoff": patch_handoff,
+        "journal_grade_assessment": journal_grade_assessment,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,

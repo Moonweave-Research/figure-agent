@@ -65,7 +65,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 
 ---
 
-## Current state (v0.5.5)
+## Current state (v0.5.6)
 
 | Area | What's working |
 |---|---|
