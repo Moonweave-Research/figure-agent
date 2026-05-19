@@ -4,7 +4,7 @@
 
 **Goal:** Add optional advisory numeric score fields to `journal_grade_assessment`, validate their shape, and surface them in `/fig_loop` without changing any release, export, accepted, final-artifact, or human-gate behavior.
 
-**Architecture:** Keep the current v1.2 critique schema and `figure-agent.journal-grade-assessment.v1` assessment schema. Numeric fields are optional additions inside `journal_grade_assessment`; if present they are all-or-nothing and advisory-only. `critique_adjudication.py` owns validation, `critique_brief.py` owns host prompt/schema emission, and `fig_loop.py` only surfaces validated-looking score fields with an explicit non-gate policy marker.
+**Architecture:** Keep the current v1.2 critique schema and `figure-agent.journal-grade-assessment.v1` assessment schema. Numeric fields are optional additions inside `journal_grade_assessment`; if present they are all-or-nothing and advisory-only. `critique_adjudication.py` owns validation, `critique_brief.py` owns host prompt/schema emission, and `fig_loop.py` only surfaces fresh gateable score fields with an explicit non-gate policy marker.
 
 **Tech Stack:** Python stdlib, PyYAML, pytest, ruff, existing figure-agent command scripts.
 
@@ -529,7 +529,7 @@ def _has_complete_score_block(record: dict[str, Any]) -> bool:
 After setting `evidence_path`, add:
 
 ```python
-    if _has_complete_score_block(record):
+    if gateable and _has_complete_score_block(record):
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
 ```
 

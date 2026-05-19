@@ -565,6 +565,38 @@ def test_loop_surfaces_advisory_score_block(
     assert iteration["stop_reason"] == "status_action_required"
 
 
+def test_loop_does_not_mark_malformed_score_block_as_advisory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    assessment = _journal_assessment(
+        critique_hash,
+        with_scores=True,
+        overall_score=101,
+    )
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash=critique_hash,
+        journal_assessment=assessment,
+    )
+    _write_adjudication(fixture, file_sha256(fixture / "critique.md"))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect malformed score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment_record = iteration["journal_grade_assessment"]
+    assert assessment_record["overall_score"] == 101
+    assert "score_policy" not in assessment_record
+
+
 def test_loop_marks_high_score_stale_when_assessment_hash_mismatches(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -593,6 +625,7 @@ def test_loop_marks_high_score_stale_when_assessment_hash_mismatches(
     assert assessment["overall_score"] == 99
     assert assessment["score_is_gateable"] is False
     assert assessment["evaluation_state"] == "stale"
+    assert "score_policy" not in assessment
 
 
 def test_loop_high_score_does_not_override_human_gate(

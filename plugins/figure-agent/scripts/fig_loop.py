@@ -405,11 +405,30 @@ def _quality_axis_record(summary: dict[str, Any], critique_path: Path) -> dict[s
     )
 
 
+def _is_score_value(value: Any) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and 0 <= value <= 100
+    )
+
+
 def _has_complete_score_block(record: dict[str, Any]) -> bool:
     if not {"overall_score", "sub_scores", "score_rationale"} <= record.keys():
         return False
+    if not _is_score_value(record.get("overall_score")):
+        return False
+    if (
+        not isinstance(record.get("score_rationale"), str)
+        or not record["score_rationale"].strip()
+    ):
+        return False
     sub_scores = record.get("sub_scores")
-    return isinstance(sub_scores, dict) and set(sub_scores) == _JOURNAL_SCORE_KEYS
+    return (
+        isinstance(sub_scores, dict)
+        and set(sub_scores) == _JOURNAL_SCORE_KEYS
+        and all(_is_score_value(value) for value in sub_scores.values())
+    )
 
 
 def _journal_grade_assessment(
@@ -444,7 +463,7 @@ def _journal_grade_assessment(
         record["evaluation_state"] = "passed"
     record["source"] = "critique.journal_grade_assessment"
     record["evidence_path"] = str(critique_path)
-    if _has_complete_score_block(record):
+    if gateable and _has_complete_score_block(record):
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
     return record
 

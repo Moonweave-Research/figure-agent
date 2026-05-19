@@ -1,7 +1,7 @@
 # Issue 9B: Numeric Quality Score Calibration
 
 **Date:** 2026-05-19 KST
-**Status:** implemented as advisory-only numeric score contract; verification passed on branch `codex/issue-9b-numeric-quality-score-calibration`
+**Status:** implemented as advisory-only numeric score contract on branch `codex/issue-9b-numeric-quality-score-calibration`
 **Parent:** Issue 9
 **Type:** HITL
 
@@ -17,12 +17,12 @@ when a later patch introduces a new defect or damages visual balance.
 
 ## Acceptance criteria
 
-- [ ] At least 5 real loop runs show that level-only assessment is useful but
+- [x] At least 5 real loop runs show that level-only assessment is useful but
   insufficient.
-- [ ] Score calibration policy is documented before implementation.
-- [ ] Scores cannot override blocker precedence.
-- [ ] Scores are not cumulative progress meters.
-- [ ] Tests cover score decrease after regression.
+- [x] Score calibration policy is documented before implementation.
+- [x] Scores cannot override blocker precedence.
+- [x] Scores are not cumulative progress meters.
+- [x] Tests cover score decrease after regression.
 
 ## Preconditions
 

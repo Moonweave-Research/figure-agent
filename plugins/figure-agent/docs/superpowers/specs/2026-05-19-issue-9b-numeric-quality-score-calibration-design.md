@@ -174,7 +174,9 @@ score surfacing when the assessment is present:
 ```
 
 If the assessment is absent, malformed, stale, or non-gateable, current null or
-stale behavior remains. `fig_loop` must not create synthetic scores.
+stale behavior remains. `fig_loop` must not create synthetic scores, and it
+must attach `score_policy: advisory_fresh_reaudit_not_gate` only to complete
+score blocks from fresh gateable assessments.
 
 ## Gate Precedence
 
@@ -228,7 +230,9 @@ Add focused tests before implementation:
    - valid score block is surfaced unchanged with
      `score_policy: advisory_fresh_reaudit_not_gate`;
    - stale hash forces `score_is_gateable: false` and `evaluation_state:
-     stale`, even if `overall_score` is high;
+     stale`, even if `overall_score` is high, and does not attach
+     `score_policy`;
+   - malformed score blocks do not receive `score_policy`;
    - human-gated adjudication still stops at `human_gate_required` even when
      `overall_score` is high;
    - missing assessment remains `None`.
@@ -260,9 +264,9 @@ claude plugin validate ../../.claude-plugin/marketplace.json
    future fields otherwise preserved by existing frontmatter behavior.
 
 3. **Loop surfacing.**
-   Add `score_policy` only when score block is present and the assessment is
-   parsed. Do not modify stop reason, escalation, driver action, status, export,
-   accepted, or final-artifact behavior.
+   Add `score_policy` only when the score block is complete and the assessment
+   is fresh/gateable. Do not modify stop reason, escalation, driver action,
+   status, export, accepted, or final-artifact behavior.
 
 4. **Documentation closeout.**
    Update Issue 9B status and record that numeric scores are advisory-only in
