@@ -1,4 +1,16 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:635f44664d78d83bf65e0330a79f6712998ec8ad6e9542c9cecbd062698a0d93
-decisions: []
+source_critique_hash: sha256:80b0eb457c0fb79b9c010f423e53e9d20709e10100a00e291edf16968695b803
+decisions:
+- finding_id: P001
+  decision: needs_human
+  reason: Review P001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+    lines 670-672
+  evidence: critique.md finding P001.
+- finding_id: P002
+  decision: needs_human
+  reason: Review P002 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+    lines 937-985
+  evidence: critique.md finding P002.
