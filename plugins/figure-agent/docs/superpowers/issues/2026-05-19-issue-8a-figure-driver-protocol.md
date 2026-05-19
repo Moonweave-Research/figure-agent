@@ -154,10 +154,10 @@ agents"; pytest matrix in
 |-------------------------|----------------------------------------------------------------------------------------------------|-------------------------------|
 | `create_or_fix_source`  | stage `0` (directory missing) or `1` (`render_state: NOT_AUTHORED`)                                 | authoring, review             |
 | `run_compile`           | `render_state: MISSING | STALE`                                                                     | authoring, review, polish     |
-| `run_critique`          | `critique_state: MISSING | STALE` and `render_state: FRESH`                                         | review                        |
+| `run_critique`          | `critique_state: MISSING | STALE | REFERENCE_MISSING` and `render_state: FRESH`                     | review, release, polish       |
 | `run_adjudicate`        | `critique_state: FRESH` and adjudication missing/stale                                              | review                        |
 | `run_fig_loop`          | `render_state: FRESH`, `critique_state: FRESH | NOT_REQUIRED`, no patch ambiguity                   | review                        |
-| `run_export`            | `export_state: MISSING | STALE`, `render_state: FRESH`, `critique_state: FRESH | NOT_REQUIRED`      | review, release, polish       |
+| `run_export`            | `export_state: MISSING | STALE`, `render_state: FRESH`, `critique_state: FRESH | NOT_REQUIRED`      | release, polish               |
 | `patch_handoff_stop`    | `/fig_loop` emitted a single non-null `patch_handoff`                                               | review                        |
 | `human_gate_stop`       | `escalation_level: human_review_required` or `ambiguous_patch_selection`                            | review, release               |
 | `polish_handoff_stop`   | mode `polish` and `final_artifact_state: NONE | MISSING` while generated export is `FRESH`          | polish                        |

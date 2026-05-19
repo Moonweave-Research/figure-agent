@@ -5,12 +5,26 @@ recommended next action as JSON. The driver never writes under
 `examples/<name>/`, `build/`, `exports/`, `polish/`, `.scratch/`, or git.
 
 Schema: figure-agent.driver.v1.
+
+The ``forbidden_actions`` field in the JSON output draws from two stable
+identifier namespaces:
+
+* the 11 canonical action names below (``ACTION_*`` constants), and
+* operational mutation identifiers (``FORBIDDEN_*`` constants) that
+  document mutations the driver itself never performs and that no
+  downstream executor should perform without an explicit mode/issue
+  authorization.
+
+Consumers must treat both namespaces as flat opaque strings and ignore any
+unknown top-level field; the ``v1`` schema suffix only changes on
+incompatible removal or rename of a documented field.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
@@ -39,13 +53,29 @@ ACTION_COMPLETE = "complete"
 # Stop-boundary identifiers (Issue 8A contract).
 STOP_HOST_LLM_CRITIQUE = "host_llm_critique_required"
 STOP_REFERENCE_MISSING = "reference_missing"
+STOP_ACCEPTED_OR_FINAL_READY = "accepted_or_final_ready_required"
+STOP_SEMANTIC_BACKPORT = "semantic_backport_required"
+
+# Stop boundaries reserved for a future driver that ingests /fig_loop output
+# (Issue 8C+). The current Issue 8B driver never consumes a fig_loop run, so it
+# cannot detect patch ambiguity, human gates, or force-golden requests; the
+# constants are defined for vocabulary stability and downstream type-checking.
 STOP_AMBIGUOUS_PATCH = "ambiguous_patch_selection"
 STOP_PATCH_HANDOFF = "patch_handoff_required"
 STOP_HUMAN_GATE = "human_gate_required"
-STOP_ACCEPTED_OR_FINAL_READY = "accepted_or_final_ready_required"
 STOP_FORCE_GOLDEN = "force_golden_required"
-STOP_SEMANTIC_BACKPORT = "semantic_backport_required"
 STOP_MODE_FORBIDDEN = "mode_forbidden_action"
+
+# Operational mutation identifiers used in ``forbidden_actions``. These are
+# stable strings the driver pins so downstream executors can recognise them
+# alongside the 11 canonical actions.
+FORBIDDEN_EDIT_SOURCE = "edit_source"
+FORBIDDEN_EDIT_SOURCE_OUTSIDE_PATCH = "edit_source_outside_patch_handoff"
+FORBIDDEN_EDIT_GENERATED_EXPORT = "edit_generated_export"
+FORBIDDEN_EDIT_POLISHED_SVG = "edit_polished_svg"
+FORBIDDEN_SET_ACCEPTED = "set_accepted"
+FORBIDDEN_FORCE_GOLDEN = "force_golden"
+FORBIDDEN_BYPASS_SEMANTIC_BACKPORT = "bypass_semantic_backport"
 
 _STATUS_COMPACT_KEYS = (
     "stage",
@@ -74,24 +104,23 @@ _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
         ACTION_RELEASE_BLOCKED,
     ],
     "review": [
-        "edit_source_outside_patch_handoff",
-        "set_accepted",
-        "force_golden",
-        "edit_generated_export",
-        "edit_polished_svg",
+        FORBIDDEN_EDIT_SOURCE_OUTSIDE_PATCH,
+        FORBIDDEN_SET_ACCEPTED,
+        FORBIDDEN_FORCE_GOLDEN,
+        FORBIDDEN_EDIT_GENERATED_EXPORT,
+        FORBIDDEN_EDIT_POLISHED_SVG,
     ],
     "release": [
-        "edit_source",
-        "set_accepted",
-        "force_golden",
-        "edit_polished_svg",
-        ACTION_RUN_CRITIQUE,
+        FORBIDDEN_EDIT_SOURCE,
+        FORBIDDEN_SET_ACCEPTED,
+        FORBIDDEN_FORCE_GOLDEN,
+        FORBIDDEN_EDIT_POLISHED_SVG,
     ],
     "polish": [
-        "edit_source",
-        "edit_generated_export",
-        "set_accepted",
-        "bypass_semantic_backport",
+        FORBIDDEN_EDIT_SOURCE,
+        FORBIDDEN_EDIT_GENERATED_EXPORT,
+        FORBIDDEN_SET_ACCEPTED,
+        FORBIDDEN_BYPASS_SEMANTIC_BACKPORT,
     ],
 }
 
@@ -138,16 +167,17 @@ def _adjudication_needs_action(example_dir: Path, status: dict[str, Any]) -> boo
     critique_path = example_dir / "critique.md"
     if not adjudication_path.is_file():
         return True
-    try:
-        from critique_adjudication import (  # noqa: PLC0415
-            adjudication_is_stale,
-            load_adjudication,
-        )
+    from critique_adjudication import (  # noqa: PLC0415
+        CritiqueAdjudicationError,
+        adjudication_is_stale,
+        load_adjudication,
+    )
 
+    try:
         load_adjudication(adjudication_path)
-        return adjudication_is_stale(adjudication_path, critique_path)
-    except Exception:
+    except (CritiqueAdjudicationError, OSError):
         return True
+    return adjudication_is_stale(adjudication_path, critique_path)
 
 
 def _compile_command(name: str) -> str:
@@ -163,7 +193,7 @@ def _adjudicate_command(name: str) -> str:
 
 
 def _fig_loop_command(name: str, goal: str) -> str:
-    return f"uv run python3 scripts/fig_loop.py {name} --goal '{goal}' --json"
+    return f"uv run python3 scripts/fig_loop.py {name} --goal {shlex.quote(goal)} --json"
 
 
 def _export_command(name: str) -> str:

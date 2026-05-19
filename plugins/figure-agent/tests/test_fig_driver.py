@@ -244,9 +244,25 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal 'review' --json"
+        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
     )
     assert summary["stop_boundary"] is None
+
+
+def test_review_mode_fig_loop_goal_is_shell_safe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="review", goal="it's a goal", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert (
+        summary["safe_command"]
+        == "uv run python3 scripts/fig_loop.py driver_demo --goal 'it'\"'\"'s a goal' --json"
+    )
 
 
 # --- release mode ------------------------------------------------------------
@@ -317,6 +333,97 @@ def test_polish_mode_reports_semantic_backport_required_for_blocked_final_artifa
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] == "semantic_backport_required"
+
+
+def test_polish_mode_completes_when_polished_svg_is_fresh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "FRESH",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+
+
+# --- stage 0 / 1 -------------------------------------------------------------
+
+
+def test_create_or_fix_source_when_directory_missing(tmp_path: Path) -> None:
+    (tmp_path / "examples").mkdir()
+
+    summary = _run_driver("driver_demo", mode="review", goal="scaffold", repo_root=tmp_path)
+
+    assert summary["action"] == "create_or_fix_source"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] is None
+
+
+def test_create_or_fix_source_when_tex_missing(tmp_path: Path) -> None:
+    fixture = tmp_path / "examples" / "driver_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: driver_demo\npanels: []\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+
+    summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
+
+    assert summary["action"] == "create_or_fix_source"
+
+
+# --- release-mode critique recommendation (Review 1 HIGH regression test) ----
+
+
+def test_release_mode_recommends_critique_without_self_contradicting_forbidden_list(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Release mode hitting MISSING critique must not forbid the action it returns."""
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": ["critique_missing"],
+        "render_state": "FRESH",
+        "critique_state": "MISSING",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "run_critique"
+    assert summary["stop_boundary"] == "host_llm_critique_required"
+    assert summary["safe_command"] == "/fig_critique driver_demo"
+    assert summary["action"] not in summary["forbidden_actions"]
 
 
 # --- no-mutation guarantee ---------------------------------------------------

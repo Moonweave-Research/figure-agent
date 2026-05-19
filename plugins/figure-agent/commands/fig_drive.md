@@ -16,6 +16,11 @@ uv run python3 scripts/fig_driver.py <name> --mode review --goal "<goal>" --dry-
 critiques, patches, polishes, accepts, stages, or commits. It reads
 `status.infer_stage()` and emits one advisory action as JSON.
 
+`/fig_drive` is the recommender. `/fig_loop` is the verify-only checkpoint
+that records evidence after the user/outer agent acts on a recommendation.
+Neither command executes the recommendation — the driver never runs any
+action; `/fig_loop` only logs the resulting state.
+
 ## Modes
 
 - `authoring` — source/build loop. Recommends `run_compile` when render is
@@ -46,14 +51,67 @@ critiques, patches, polishes, accepts, stages, or commits. It reads
 | `safe_command`      | string or null        | concrete shell/slash command, or `null`          |
 | `stop_boundary`     | string or null        | one of the 9 canonical stop identifiers          |
 | `reason`            | string                | one-line explanation                             |
-| `forbidden_actions` | list of strings       | identifiers disallowed by the selected mode      |
+| `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
 | `may_execute`       | bool                  | always `false` in Issue 8B                       |
 
+### Schema versioning
+
+The `schema` field is a stable contract identifier. Consumers MUST ignore any
+unknown top-level field so additive changes within `v1` are backward
+compatible; the `vN` suffix changes only on incompatible removal or rename of
+a documented field.
+
+### `safe_command` conventions
+
+When `safe_command` is non-null it falls into one of two namespaces:
+
+- **shell** (`uv run python3 ...`, `bash scripts/...`) — runnable by a generic
+  shell or `subprocess.run`.
+- **slash** (`/fig_critique <name>`, etc.) — requires a Claude host loop
+  (e.g. `/fig_critique` invokes host vision); a non-Claude executor must
+  delegate these to the host.
+
+In both cases the goal substring is shell-quoted via `shlex.quote`, so a goal
+containing spaces or single quotes is safe to copy-paste.
+
 ## Action vocabulary
+
+Eleven canonical action names. The driver returns exactly one per call:
 
 `create_or_fix_source`, `run_compile`, `run_critique`, `run_adjudicate`,
 `run_fig_loop`, `run_export`, `patch_handoff_stop`, `human_gate_stop`,
 `polish_handoff_stop`, `release_blocked`, `complete`.
+
+### Deferred until /fig_loop output ingestion (Issue 8C+)
+
+The Issue 8B driver does not consume `/fig_loop` output, so it does not emit
+the patch-evidence-driven actions `patch_handoff_stop` and `human_gate_stop`
+or the boundaries `ambiguous_patch_selection`, `patch_handoff_required`,
+`human_gate_required`, `force_golden_required`, and `mode_forbidden_action`.
+They are present in the contract so a later driver (and any executor) keeps a
+stable vocabulary; in the current driver they are unreachable.
+
+## Forbidden-action identifiers
+
+`forbidden_actions` is a flat list of stable strings drawn from two
+namespaces. Consumers should treat both as opaque identifiers.
+
+**Action-vocabulary subset** (in `authoring` mode): `run_critique`,
+`run_adjudicate`, `run_export`, `run_fig_loop`, `polish_handoff_stop`,
+`release_blocked` — these are canonical action names the driver itself would
+never recommend in that mode.
+
+**Mutation namespace** (`review` / `release` / `polish` modes):
+
+- `edit_source` — source `.tex` / briefing / spec edits.
+- `edit_source_outside_patch_handoff` — review mode allows source edits only
+  inside a `/fig_loop` `patch_handoff.allowed_edit_scope`.
+- `edit_generated_export` — direct edits to `exports/`.
+- `edit_polished_svg` — direct edits to `polish/<name>.polished.svg`.
+- `set_accepted` — flipping `spec.yaml.accepted` to `true`.
+- `force_golden` — `--force-golden` golden roll-forward.
+- `bypass_semantic_backport` — promoting polished SVG when the manifest
+  declares `backport_required` or `semantic_change_declared`.
 
 ## Stop-boundary identifiers
 
