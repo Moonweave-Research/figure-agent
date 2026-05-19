@@ -1,4 +1,4 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: golden_trap_depth_picture
-source_critique_hash: sha256:551a2539deac704c92678e4da298d7b67ebeb29e3a444cf5ba2c248de0c85921
+source_critique_hash: sha256:2c9f767fb80156130238d8d9d01cf5eaf30b518a3cd942151919e6549144ab24
 decisions: []

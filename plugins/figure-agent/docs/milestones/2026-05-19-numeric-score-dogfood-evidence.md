@@ -21,8 +21,8 @@ review, export state, final-artifact state, accepted state, or golden state.
 
 ## Result Summary
 
-- Total attempted fixtures: 1
-- Valid numeric score runs: 1
+- Total attempted fixtures: 2
+- Valid numeric score runs: 2
 - Runs without complete score block: 0
 - Open validation or ingestion defects: 0
 - Validation footguns caught and fixed during run: 1
@@ -85,6 +85,36 @@ Rows should use this structure:
 - **/fig_driver stop_boundary:** `human_gate_required`
 - **reviewer verdict:** `useful`
 - **rationale:** The score block is complete (all eight sub-scores present), validates through `critique_adjudication.py scaffold` and `fig_loop.py` ingestion, and `overall_score: 78` broadly agrees with `benchmark_level: solid_manuscript`. Sub-scores distinguish at least four meaningful quality dimensions: polish (70) sits 22 points below scientific_plausibility (92), and storyline (88) sits 18 points above polish; the spread points concretely to the D label-on-line density and the E τ_d/derive sub-zone clustering. `next_quality_bottleneck: polish` is concrete (cites two specific findings P001/P002) and matches the prose rationale. Most importantly, the score did not bypass any non-score gate: `score_is_gateable: false` cleanly kept the loop on `human_gate_required` for the two NIT findings, and the driver's final action `human_gate_stop` and stop boundary `human_gate_required` came from the `needs_human` adjudication of P001/P002 rather than from the numeric score. Acceptance, golden, and export gates all stayed at `NOT_ACCEPTED` / `TRACKED_GOLDEN` / `NONE` throughout. The one validation defect (duplicate panel finding id `P001` across panels D and E) was caught by `critique_adjudication.py scaffold` and fixed in-loop by retitling panel E's finding to `P002` before any downstream step relied on the duplicate; it is recorded here as a recurring authoring footgun for cross-panel finding-id uniqueness rather than a score-block defect.
+
+### Run 2: `golden_trap_depth_picture`
+
+- **commands used:**
+  1. `uv run python3 scripts/fig_driver.py golden_trap_depth_picture --mode review --goal "dogfood 9D numeric score evidence" --dry-run` (returned `safe_command: /fig_critique golden_trap_depth_picture`, `stop_boundary: host_llm_critique_required`; critique was STALE because the previous critique was authored under generator_version `4a7d64ba...` while the current generator is `b48de8a1...`)
+  2. `uv run python3 scripts/critique_brief.py examples/golden_trap_depth_picture` (generated brief; current `critique_input_hash` = `sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba` — unchanged from prior run because the rendered artifact is byte-identical; only the generator version moved)
+  3. host `/fig_critique golden_trap_depth_picture` (host Claude main loop read `build/golden_trap_depth_picture.png` and `reference/golden_target_001.png`, then wrote `examples/golden_trap_depth_picture/critique.md` at schema v1.2 with full `audit_enumeration`, `quality_axes`, and a fresh `journal_grade_assessment` numeric score block; prior critique had only the qualitative score block — `score_is_gateable: true` without `overall_score` / `sub_scores` / `score_rationale` — so this run is the first to attach the complete Issue 9B score block to this fixture)
+  4. `uv run python3 scripts/critique_adjudication.py scaffold golden_trap_depth_picture --force` (succeeded on first attempt because `verdict: ready` with empty panel and top-level findings produced `decision_count: 0`; the Run 1 cross-panel `P001` footgun did not recur)
+  5. `uv run python3 scripts/fig_loop.py golden_trap_depth_picture --goal "dogfood 9D numeric score evidence" --json` (ingested the `journal_grade_assessment` block; loop checkpoint at `.scratch/fig-loop-runs/20260519-135234-541083-golden_trap_depth_picture/iteration_001.json`)
+  6. `uv run python3 scripts/fig_driver.py golden_trap_depth_picture --mode review --goal "dogfood 9D numeric score evidence" --dry-run` (final action `release_blocked`)
+- **critique source:** newly generated
+- **critique schema:** `figure-agent.critique.v1.2`
+- **critique_input_hash:** `sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba`
+- **assessed_artifact_hash:** `sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba`
+- **benchmark_level:** `solid_manuscript`
+- **overall_score:** `86`
+- **sub_scores:** `{storyline: 90, composition: 84, component_fidelity: 90, scientific_plausibility: 94, label_semantics: 86, polish: 78, reference_fidelity: 92, export_scale_readability: 82}`
+- **score_rationale:** "Numbers describe only the current artifact, not progress. Storyline (90) is high because three left-side rows converge to one right-side picture through the teal brace and the read path is unambiguous. Composition (84) reflects clean 4-column landscape with thin gray row separators; the right-side energy diagram still carries the densest visual region (CB/VB lines, scattered shallow/deep markers, vertical Energy axis, E_t label, lobe pair all packed against a single vertical axis). Component fidelity (90) reflects every briefing-named element being identifiable in the render. Scientific plausibility (94) is the highest sub-score because all five physics invariants hold cleanly. Label semantics (86) reflects PlotCallout-anchored leader lines with white backing, including 'Discharge (Debye reference)' placed outside the plot box per briefing semantic_assertion. Polish (78) is the lowest sub-score because the visual register is intentionally explanatory-schematic — rows feel utilitarian, teal accent is single-purpose, and Row 3 polymer chains carry lower visual mass than Row 1 plots or the right-side diagram. Reference fidelity (92) reflects close layout and callout-structure match to reference/golden_target_001.png with only briefing-mandated functional deviations (PGFPlots curves, skeletal polymer chains). Export-scale readability (82) reflects 5.2pt tiny labels for chemical/physical-origin sub-captions still being readable at PNG scale, though this loop did not verify thumbnail / print-scale legibility."
+- **score_policy from /fig_loop:** `absent` (`scripts/fig_loop.py:467` only emits `score_policy: advisory_fresh_reaudit_not_gate` when the host opts in with `score_is_gateable: true`; this run keeps the score advisory per the Issue 9B safe default)
+- **score_is_gateable:** `false`
+- **evaluation_state:** `stale` (loop wrapper marks the score block stale because `score_is_gateable: false` keeps the score advisory-only, as designed by Issue 9B)
+- **next_quality_bottleneck:** `polish`
+- **regression_detected:** `false`
+- **regressions:** `[]`
+- **/fig_loop stop_reason:** `status_action_required`
+- **/fig_loop escalation_level:** `manual_approval_required`
+- **/fig_driver final action:** `release_blocked`
+- **/fig_driver stop_boundary:** `force_golden_required`
+- **reviewer verdict:** `useful`
+- **rationale:** The score block is complete and validates through `critique_adjudication.py scaffold` (0 decisions because the figure had no findings, `verdict: ready`) and through `fig_loop.py` ingestion (assessed_artifact_hash matches critique_input_hash; loop surfaces `evaluation_state: stale` exactly because the host kept `score_is_gateable: false`, matching the safe Issue 9B default). `overall_score: 86` broadly agrees with `benchmark_level: solid_manuscript` — the score is comfortably above the Run 1 figure (78) and consistent with a golden-target-matched, physics-invariant-clean schematic that intentionally stays in explanatory-schematic register rather than promoting to `high_impact_candidate`. Sub-scores separate four meaningful dimensions: scientific_plausibility (94) is highest because every physics invariant from briefing.md holds, polish (78) is lowest because Row 3 polymer chains carry lower visual mass than Row 1 plots and the right-side diagram, and reference_fidelity (92) reads above polish because the build matches the golden target while only deviating in briefing-mandated ways. `next_quality_bottleneck: polish` is concrete (it points to the visual-weight balance lever and the polymer-chain rendering richness). Critically, this run satisfies the Issue 9D acceptance bullet that score must not bypass a non-score gate: the driver's final action is `release_blocked` and the stop_boundary is `force_golden_required` (driven by tracked-golden roll-forward needing manual approval), not by the numeric score. Acceptance, golden, final-artifact, and export gates all stayed at `NOT_ACCEPTED` / `TRACKED_GOLDEN` / `NONE` / `false`. Together with Run 1's `human_gate_required` stop boundary, the two runs demonstrate score-orthogonality against two distinct non-score gates.
 
 ## Final Judgment
 
