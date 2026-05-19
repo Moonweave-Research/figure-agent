@@ -50,7 +50,8 @@ memory. `/fig_status` is the traffic controller.
 
 Use modes mentally:
 
-- `authoring`: stay in `/fig_compile` until render is fresh enough for review.
+- `authoring`: source edits and `/fig_compile`; rerun `/fig_status <name>`
+  between compiles to confirm `render_state: FRESH` before promoting work.
   Forbidden: export, critique, adjudication, accepted/golden mutation, SVG
   polish.
 - `review`: close compile, critique, adjudication, and `/fig_loop` evidence,
@@ -160,7 +161,7 @@ Replaces the v0.1 HALT-then-paste review surface via rename + extend
 redaction, preview-selection pipeline, and selected-preview stage gate were
 deleted in PR #8a + #8b. See `docs/architecture-v0.2-proposal.md`.
 
-**Status query** (not a workflow step): /fig_status <name> — infers stage plus render/critique/export/acceptance/final_ready state from filesystem + spec.yaml; with no arg, summarizes all figures.
+**Status check** (canonical first step — see Driver rule for agents above): /fig_status <name> — infers stage plus render/critique/export/acceptance/final_ready state from filesystem + spec.yaml; with no arg, summarizes all figures. It is read-only (no persistent state written), but it is the workflow entry point, not a passive query.
 
 ## Per-figure folder convention
 

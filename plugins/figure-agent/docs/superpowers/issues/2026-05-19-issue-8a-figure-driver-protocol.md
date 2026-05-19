@@ -136,12 +136,53 @@ Dry-run output should be JSON-compatible and include:
   been dogfooded.
 - Deferred: `scripts/fig_driver.py`, `commands/fig_drive.md`, and
   `tests/test_fig_driver.py` remain deferred to a later issue after the docs
-  contract is dogfooded. The action-name vocabulary in the plan
-  (`create_or_fix_source`, `run_compile`, `run_critique`, `run_export`,
-  `run_adjudicate`, `run_fig_loop`, `patch_handoff_stop`, `human_gate_stop`,
-  `polish_handoff_stop`, `release_blocked`, `complete`) plus the per-mode
-  allowed/forbidden lists in `skills/figure-agent/SKILL.md` are the contract a
-  later worker should implement as dry-run/read-only JSON, with the test
-  matrix in `docs/superpowers/plans/2026-05-19-figure-driver-protocol.md`
-  Task 2B.
+  contract is dogfooded.
+
+### Future-implementer contract
+
+A later worker building dry-run `/fig_drive` should treat the following as
+contract. Sources are: state-machine sketch in
+`docs/superpowers/specs/2026-05-19-figure-driver-orchestration-design.md`
+§"Driver State Machine" and §"Required Stop Boundaries"; per-mode
+allowed/forbidden lists in `skills/figure-agent/SKILL.md` §"Driver rule for
+agents"; pytest matrix in
+`docs/superpowers/plans/2026-05-19-figure-driver-protocol.md` Task 2B.
+
+**Action vocabulary and triggers** (mode-permitting):
+
+| Action name             | Trigger (from `/fig_status` vector)                                                                | Allowed in modes              |
+|-------------------------|----------------------------------------------------------------------------------------------------|-------------------------------|
+| `create_or_fix_source`  | stage `0` (directory missing) or `1` (`render_state: NOT_AUTHORED`)                                 | authoring, review             |
+| `run_compile`           | `render_state: MISSING | STALE`                                                                     | authoring, review, polish     |
+| `run_critique`          | `critique_state: MISSING | STALE` and `render_state: FRESH`                                         | review                        |
+| `run_adjudicate`        | `critique_state: FRESH` and adjudication missing/stale                                              | review                        |
+| `run_fig_loop`          | `render_state: FRESH`, `critique_state: FRESH | NOT_REQUIRED`, no patch ambiguity                   | review                        |
+| `run_export`            | `export_state: MISSING | STALE`, `render_state: FRESH`, `critique_state: FRESH | NOT_REQUIRED`      | review, release, polish       |
+| `patch_handoff_stop`    | `/fig_loop` emitted a single non-null `patch_handoff`                                               | review                        |
+| `human_gate_stop`       | `escalation_level: human_review_required` or `ambiguous_patch_selection`                            | review, release               |
+| `polish_handoff_stop`   | mode `polish` and `final_artifact_state: NONE | MISSING` while generated export is `FRESH`          | polish                        |
+| `release_blocked`       | mode `release` and `release_ready: false`                                                           | release                       |
+| `complete`              | mode `authoring`: `render_state: FRESH`; review: `workflow_ready: true`; release: `release_ready: true`; polish: `final_artifact_state: FRESH` | all |
+
+**Stop-boundary identifier set** (canonical strings the pytest matrix asserts):
+
+| Identifier                          | Raised when                                                                |
+|-------------------------------------|----------------------------------------------------------------------------|
+| `host_llm_critique_required`        | `critique_state: MISSING | STALE` and host-orchestrated vision step needed |
+| `reference_missing`                 | `critique_state: REFERENCE_MISSING` or panel reference image missing       |
+| `ambiguous_patch_selection`         | more than one actionable patch target in `/fig_loop` output                |
+| `patch_handoff_required`            | exactly one non-null `patch_handoff` and outer agent must execute the patch |
+| `human_gate_required`               | adjudication or escalation demands domain review                           |
+| `accepted_or_final_ready_required`  | mode `release` and `release_ready: false` or `accepted: false`             |
+| `force_golden_required`             | golden roll-forward needed (`--force-golden`)                              |
+| `semantic_backport_required`        | SVG polish manifest declares `backport_required: true`                     |
+| `mode_forbidden_action`             | next state-machine action is disallowed by the selected mode               |
+
+**Forbidden-action JSON shape**: `summary["forbidden_actions"]` is a list of
+action-name strings drawn from the action vocabulary above, not free text.
+Example for mode `polish`: `["run_critique_authoring", "edit_source",
+"set_accepted", "edit_generated_export"]`. The exact polish-mode forbidden
+list is the SKILL.md §"Driver rule for agents" `polish` bullet rendered as
+identifiers; a later worker may add identifier strings as needed but must
+keep them stable once published.
 
