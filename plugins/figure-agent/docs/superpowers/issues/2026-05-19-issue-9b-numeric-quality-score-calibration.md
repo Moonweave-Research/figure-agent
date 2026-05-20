@@ -1,7 +1,7 @@
 # Issue 9B: Numeric Quality Score Calibration
 
 **Date:** 2026-05-19 KST
-**Status:** implemented as advisory-only numeric score contract on branch `codex/issue-9b-numeric-quality-score-calibration`
+**Status:** completed as advisory-only numeric score contract on `main`
 **Parent:** Issue 9
 **Type:** HITL
 

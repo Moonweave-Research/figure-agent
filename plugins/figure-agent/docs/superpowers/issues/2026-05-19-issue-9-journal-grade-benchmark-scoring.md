@@ -1,7 +1,7 @@
 # Issue 9: Journal-Grade Benchmark and Scoring Contract
 
 **Date:** 2026-05-19 KST
-**Status:** completed for the v1 advisory fresh re-audit contract on branch `codex/issue-9b-numeric-quality-score-calibration`
+**Status:** completed for the v1 advisory fresh re-audit contract on `main`
 **Type:** AFK for schema/docs/tests, HITL for benchmark calibration policy
 **Depends on:** Issue 6B, Issue 6C, Issue 8D
 
@@ -203,6 +203,8 @@ golden artifacts, or decide publication policy.
   calibration.
 - Issue 9B added optional advisory numeric score fields, strict score-shape
   validation, and guarded `/fig_loop` surfacing.
+- Issue 9D collected five real numeric-score dogfood runs and confirmed the
+  advisory score block was useful without bypassing non-score gates.
 
 ## Remaining Calibration Risks
 
@@ -210,7 +212,7 @@ golden artifacts, or decide publication policy.
   `needs_human_art_direction`, or `blocked` on real fixtures.
 - Numeric ranges are prompt calibration guidance only; code does not enforce
   range-to-level thresholds in v1.
-- Future dogfood should check whether host LLMs use the numeric fields
+- Further dogfood should check whether host LLMs use the numeric fields
   consistently across repeated fresh critiques.
 
 ## Closeout Review
@@ -245,13 +247,14 @@ Issue 9 was closed only after three checks:
 - Issue 6B remains the source of truth for required quality axes.
 - Issue 6C ingests the quality axes into `/fig_loop`.
 - Issue 8D remains the source of truth for driver routing from loop evidence.
-- Issue 9A, 9B, and 9C close the v1 advisory fresh re-audit contract.
+- Issue 9A, 9B, 9C, and 9D close the v1 advisory fresh re-audit and numeric
+  dogfood contract.
 
 ## Review Questions
 
-- Should a future Issue 9D collect numeric-score dogfood evidence across fresh
-  critiques before any UI or driver consumer treats score as more than
-  advisory context?
+- Should a future follow-up collect repeated numeric-score dogfood evidence
+  across the same fixtures before any UI or driver consumer treats score as
+  more than advisory context?
 - Should `export_scale_readability` remain host-LLM judged, or should a later
   slice add deterministic 1-column/2-column raster/OCR checks?
 - Which user goals should treat `solid_manuscript` as enough versus requiring
