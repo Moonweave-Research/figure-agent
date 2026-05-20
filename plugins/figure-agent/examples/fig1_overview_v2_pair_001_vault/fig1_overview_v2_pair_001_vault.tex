@@ -827,10 +827,11 @@
 % apparatus annotation tier). Bold was inconsistent across E apparatus labels.
 \node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (6.55, 4.14) {HV+};
-% Output terminal — iter 45 (Pri 6a): moved INSIDE box body (y 4.10→4.12,
-% was resting ON border stroke "pasted-on look").
-\fill[cGray!85!black] (6.55, 4.12) circle (0.022);
-\fill[cGray!50!black] (6.55, 4.12) circle (0.011);
+% Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
+% iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
+% cGray!85 → !70 (less aggressive black dot at print scale).
+\fill[cGray!70!black] (6.55, 4.12) circle (0.018);
+\fill[cGray!40!black] (6.55, 4.12) circle (0.009);
 % Wire from terminal (now inside box at 4.12) to needle cuff at 4.05.
 \draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 4.05);
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
@@ -840,7 +841,9 @@
   (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
 \draw[cGray!90!black, line width=0.22pt]
   (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
-\fill[cGray!85!black] (6.55, 4.05) circle (0.045);
+% iter E13: cuff radius 0.045 → 0.025 + tone cGray!85 → !65 (was dominant
+% black dot reading as "button"; now subtle support indicator).
+\fill[cGray!65!black] (6.55, 4.05) circle (0.025);
 % Sparks — iter E1: 5 → 3 rays (wide-angle ±22° rays removed to clean
 % chaotic fan pattern). Remaining ±10° + 0° give clear "ion emission" cue
 % without visual clutter. opacity 0.65 + thin 0.35pt softness retained.
@@ -900,7 +903,8 @@
 % "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
 % cGray!65 (secondary apparatus label tier).
 \node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
-      anchor=south] at (7.34, 4.05) {Probe};
+      anchor=south] at (7.34, 4.10) {Probe};
+% iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
 % Layers (in z-order, bottom-up):
