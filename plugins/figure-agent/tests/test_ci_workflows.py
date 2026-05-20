@@ -36,6 +36,15 @@ def test_full_render_workflow_owns_heavy_system_dependencies() -> None:
     assert "uv run pytest -q" in workflow
 
 
+def test_full_render_workflow_has_timeout_guardrails() -> None:
+    workflow = (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "timeout-minutes: 20" in workflow
+    assert "Install system dependencies\n        timeout-minutes: 12" in workflow
+
+
 def test_render_pytest_marker_is_registered() -> None:
     pyproject = (PLUGIN_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
