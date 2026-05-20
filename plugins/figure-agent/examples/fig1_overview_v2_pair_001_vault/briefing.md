@@ -367,7 +367,7 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 - Quantitative force values (e.g., "F_Coulomb = 12 nN") → FORBIDDEN; Fig 1 is qualitative.
 8.6 Panel C ↔ Panel F color-consistent (bimodal: blue Shallow / red Deep).
 8.7 **Branching arrow physics constraint**: 3 spoke from C **must** match the 3 evidence lines in design.md §3.2 (kinetic / ISPD / mechanical). No new evidence line, no missing line. Spoke 순서 + label은 measurement modality, NOT causation chain — physics는 *3 independent measurements of same trap*, *not* causation chain D→...→G.
-8.8 Composition labels (S60 / S70 / S75 / S80 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("shallow-rich" / "deep-rich" / "low n" / "high n"). Numbers 60/70/75/80/85 refer to wt% S per planning/sulfur_sample_selection_policy.md (5 samples in paper; **Panel B shows 3 representative: S60/S75/S85** = endpoints + middle, concept-figure visual clarity per v8.7 iter1 user-confirmed restructure). Full 5-sample dataset belongs to Fig 2~ (quantitative panels). Drawn chain atom counts (10/18/24 in B-1) is artistic correlate only.
+8.8 Composition labels (S60 / S70 / S75 / S80 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("**low n**" / "**high n**" — 2026-05-20 framework rewrite; 이전 "shallow-rich" / "deep-rich" 명명은 depolarization-framework 오인 산물, **DEPRECATED**). Numbers 60/70/75/80/85 refer to wt% S per planning/sulfur_sample_selection_policy.md (5 samples in paper; **Panel B shows 3 representative: S60/S75/S85** = endpoints + middle, concept-figure visual clarity per v8.7 iter1 user-confirmed restructure). Full 5-sample dataset belongs to Fig 2~ (quantitative panels). Drawn chain atom counts (10/18/24 in B-1) is artistic correlate only.
 
 ---
 
@@ -892,7 +892,7 @@ breaks.
 8. **Composition labels** (§8.8): sample names S60/S70/S75/S80/S85 (5 samples in paper) only in
    composition-variable panels (Fig 1 Panel B + Fig 4 composition sweep);
    forbidden on result panels (Fig 1 Row 2 + Fig 2/3 plots = concept labels
-   like "deep-rich" / "shallow-rich" / "low n" only).
+   like "high n" / "low n" only — 2026-05-20 rewrite from deprecated "deep-rich" / "shallow-rich").
 
 **Inheritance protocol**:
 - Each new figure's briefing must include a `§-cross-figure-check` section

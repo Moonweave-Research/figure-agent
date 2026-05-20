@@ -629,10 +629,11 @@
   \draw[cGray!60!black, line width=0.16pt] (\hx, 3.25) -- ({\hx-0.03}, 3.16);
 }
 
-% 2 leads from SMU box to MIM stack
-\draw[cGray!75!black, line width=0.28pt]
+% 2 leads from SMU box to MIM stack — iter 64 illustration polish:
+% rounded corners=1pt for soft elbow turns vs sharp 90° engineering elbows.
+\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
   (1.30, 3.60) -- (1.50, 3.60) -- (1.50, 3.75) -- (1.70, 3.75);
-\draw[cGray!75!black, line width=0.28pt]
+\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
   (1.30, 3.27) -- (1.50, 3.27) -- (1.50, 3.20) -- (1.70, 3.20);
 % iter 53: contact dots at lead-electrode junctions (Gemini MEDIUM
 % "unfinished circuit schematic"). Radius 0.018cm = 0.5pt, cGray!75!black.
@@ -641,11 +642,10 @@
 \fill[cGray!75!black] (3.50, 3.20) circle (0.020);
 
 % Ground symbol at bottom electrode RIGHT side
-% iter 53b: horizontal segment lengthened 0.15→0.20cm + ground bars shifted
-% accordingly (Gemini "ground lead cramped compared to SMU side leads").
-% SMU leads have 0.20cm horizontal segment; now ground matches that breathing
-% room.
-\draw[cGray!75!black, line width=0.28pt] (3.50, 3.20) -- (3.70, 3.20) -- (3.70, 3.06);
+% iter 53b: horizontal segment lengthened 0.15→0.20cm + ground bars shifted.
+% iter 64: rounded corners=1pt on lead bend (matches SMU lead style).
+\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
+  (3.50, 3.20) -- (3.70, 3.20) -- (3.70, 3.06);
 \draw[cGray!75!black, line width=0.30pt] (3.62, 3.06) -- (3.78, 3.06);
 \draw[cGray!75!black, line width=0.25pt] (3.65, 3.03) -- (3.75, 3.03);
 \draw[cGray!75!black, line width=0.22pt] (3.67, 3.00) -- (3.73, 3.00);
@@ -680,13 +680,13 @@
 %   Prior coords (0.65,2.40→3.85,1.10) + (0.65,1.90→3.85,0.50) were locked
 %   to wrong depolarization framework; absorption-current rewrite swaps the
 %   physical interpretation: high n = strong trap = steep.
-% iter 56: RED line width 0.80 → 0.90pt (primary narrative tier per briefing
-% line-weight hierarchy: primary 0.9pt = narrative paths). Sulfur polymer is
-% paper hero = narrative line. BLUE stays 0.80pt (control = annotation tier).
-% iter 60 illustration polish: line cap=round (soft endpoints vs default butt).
+% iter 56: RED 0.80 → 0.90pt (primary narrative tier). iter 60: line cap=round.
+% iter 64: BLUE cBlue!80 → cBlue!55 (desaturate control sample) to reinforce
+% RED hero visual hierarchy. Per user honest audit "BLUE too prominent for
+% secondary role".
 \draw[cRed!80!black, line width=0.90pt, line cap=round]
   (0.65, 2.30) -- (3.85, 0.55);
-\draw[cBlue!80!black, line width=0.80pt, line cap=round]
+\draw[cBlue!55!black, line width=0.80pt, line cap=round]
   (0.65, 2.30) -- (3.85, 1.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
@@ -711,14 +711,12 @@
   node[pos=0.92, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
   {Debye};
 
-% D-4 main equation label — iter 62: moved to plot interior far-right (3.00, 2.40)
-% to clear "low n" label region. iter 63: \mathsf trial REVERTED — caused
-% inconsistency with Panel E/F math labels ($V_s(t)$, $g(E_t)$, $\tau_d$,
-% $F_{\mathrm{Maxwell}}$) all using default Computer Modern serif italic.
-% Figure-wide math convention = serif italic; text labels = sans-serif. Mixed
-% register is journal-standard.
-\node[labelStrong, anchor=west] at (3.00, 2.40)
-  {$I(t)\!\sim\!t^{-n}$};
+% D-4 main equation label — iter 64 reverted to upper-left (0.55, 2.75)
+% per user honest audit: upper-left is reading-order convention ("equation
+% = mental model first"); iter 62 upper-right move was creative but added
+% reader cognitive cost. Math style = default serif italic (figure-wide
+% convention, matches Panel E/F math labels).
+\node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
 % D-7b curve ID labels — 2026-05-20 framework rewrite + iter 55 interleave:
 %   high n (RED, sulfur) at pos=0.55 (RIGHT of midpoint)
@@ -728,7 +726,7 @@
   node[pos=0.55, labelMute, text=cRed!75!black, sloped, above=3pt]
   {high $n$};
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
-  node[pos=0.40, labelMute, text=cBlue!75!black, sloped, above=4pt]
+  node[pos=0.40, labelMute, text=cBlue!50!black, sloped, above=4pt]
   {low $n$};
 
 % =============== Column E — ISPD-paired =================

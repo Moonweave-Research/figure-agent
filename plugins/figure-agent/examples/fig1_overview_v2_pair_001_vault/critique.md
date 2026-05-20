@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T03:00:18Z
+generated_at: 2026-05-20T03:13:22Z
 generator: critique_brief.py
 generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:b5851892d2da1b2df983731cffa2f36a36d7ac31aa8f60226eed0a58784730a3
+critique_input_hash: sha256:a0da09f271eaacf96c1ca0c8d3e764f90ee792e61aca095afa3f9b61c3e2133f
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -25,7 +25,7 @@ audit_enumeration:
       - component: panel D MIM stack + SMU + I(t)~t^{-n} log-log plot (iter 53 polish)
         mount_support: "yes"
         rationale: polymer film between hatched top + bottom electrodes; explicit ground triangle on right contact; contact dots at 3 lead-electrode junctions added iter 53
-        connections: SMU box (centered SMU/V/A typography iter 53) drives top + bottom electrodes via 2 leads with junction dots; ground exits bottom electrode right side with extended horizontal segment iter 53; result-zone log-log plot below carries deep-rich (red, less-steep), shallow-rich (blue, steeper) power-law lines, dashed Debye reference (truncated y=0.56 iter 53) ending below both power-laws per briefing 8.4
+        connections: SMU box (centered SMU/V/A typography iter 53, rounded corners iter 61) drives top + bottom electrodes via 2 leads with rounded-corner elbows (iter 64) + junction dots; ground exits bottom electrode right side via rounded-corner lead (iter 64); result-zone log-log plot below carries high-n (RED 0.9pt, sulfur paper hero, steep), low-n (BLUE 0.8pt desaturated cBlue!55, control, flat) absorption-current power-law lines per Schweidler 1907 framework, dashed Debye reference (bezier 0.65pt asymptotic shape iter 57, sloped label iter 58) ending below both power-laws per briefing 8.4
       - component: panel E ISPD apparatus (HV+ corona + Probe + V_s meter + polymer/substrate) + V_s(t) decay + bimodal g(E_t)
         mount_support: "yes"
         rationale: polymer film rides on grounded substrate slab (side-view per iter 15 pivot); corona needle and Kelvin probe disk sit above
@@ -236,7 +236,7 @@ audit_enumeration:
       finding: panel E Kelvin probe disk above polymer surface with explicit d air-gap annotation (non-contact measurement geometry); panel F cantilever between fixed clip top and electrode bottom with labeled air-gap caliper; panel D leads exit SMU box and connect to electrode mid-edge (junction dots iter 53)
       verdict: convention_acceptable
     - check: direction_orientation
-      finding: panel F Coulomb arrow points LEFT (away from electrode, polymer bending direction); F_Maxwell dashed arrow points RIGHT (toward electrode, attractive baseline) — per briefing section 13.7 deliberate visual contrast with Coulomb dominant; panel D power-law slopes preserve anti-chain semantic (deep-rich less-steep = smaller n per briefing section 8.7)
+      finding: panel F Coulomb arrow points LEFT (away from electrode, polymer bending direction); F_Maxwell dashed arrow points RIGHT (toward electrode, attractive baseline) — per briefing section 13.7 deliberate visual contrast with Coulomb dominant; panel D power-law slopes per CvS absorption framework (high-n RED steep = sulfur trap-rich, low-n BLUE flat = control trap-poor; briefing section 8.4 + 8.7 cross-panel convergence)
       verdict: convention_acceptable
     - check: material_distinction
       finding: polymer (cAmber!28 fill + cAmber!70 outline, consistent across D/E/F panels), metal electrodes (cGray hatched on D, dark on F), conductive substrate (cGray!18 fill + diagonal hatching on E), instrument boxes (cGray!22-35 with rounded corners on E, simple rect on D/F)
@@ -254,7 +254,7 @@ audit_enumeration:
       reference: briefing
       severity: NIT
       proposed_action: accept_simplification
-    - element: anti-chain semantic (deep-rich = less-steep = smaller n)
+    - element: anti-chain semantic (high-n = steep = sulfur trap-rich vs low-n = flat = control, absorption-current framework)
       reference: briefing
       severity: NIT
       proposed_action: accept_simplification
@@ -329,7 +329,7 @@ quality_axes:
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: all 30+ labels match their intended targets (label-target audit above); semantic associations clear via color-match (deep-rich red, shallow-rich blue, Debye gray) + adjacency + leader lines where needed
+    rationale: all 30+ labels match their intended targets (label-target audit above); semantic associations clear via color-match (high-n RED, low-n desaturated BLUE, Debye gray) + adjacency + sloped path-attached convention for D-7 curve IDs
     evidence: D-7b sloped labels along power-law curves (journal convention iter 52d); D-7a Debye color-match gray adjacent to dashed curve endpoint (iter 52d + lift iter 53); F q_tr leader from marker right edge (iter 51); F_Maxwell label below dashed stroke (iter 51)
     blocking_items: []
     recommended_action: none
