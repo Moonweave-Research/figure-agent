@@ -407,8 +407,8 @@ In step 3, add:
 
 ```markdown
 High-zoom crop findings must be represented as normal panel/top-level findings
-in schema v1.3. Use the closed-set crop terms in `observation` until
-`micro_defects` schema v1.4 exists.
+for the 12A evidence-only slice. Issue 12B supersedes this with first-class
+`micro_defects` schema evidence.
 ```
 
 - [ ] **Step 2: Validate docs**

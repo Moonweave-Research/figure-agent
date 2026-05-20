@@ -87,8 +87,9 @@ These records keep the same `state`, `verdict`, `source`, `evidence_path`, and
 `quality_axis_blocking_items`. Legacy, stale, missing, or malformed critique
 frontmatter falls back to the earlier placeholder/status-derived behavior.
 
-When `critique.md` is fresh schema `figure-agent.critique.v1.3`, `/fig_loop`
-also surfaces `top_tier_audit_summary` in both `iteration_001.json` and the
+When `critique.md` is fresh schema `figure-agent.critique.v1.3` or
+`figure-agent.critique.v1.4`, `/fig_loop` also surfaces
+`top_tier_audit_summary` in both `iteration_001.json` and the
 `--json` summary. The summary reports slot count, verdict counts,
 `weak_or_failed_slots`, `blocking_high_impact_slots`,
 `blocking_high_impact_count`, `worst_verdict`, and the source critique path.

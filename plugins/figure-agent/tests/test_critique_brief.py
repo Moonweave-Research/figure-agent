@@ -199,7 +199,7 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.3" in brief
+    assert "schema: figure-agent.critique.v1.4" in brief
     assert "panels:" in brief
 
 
@@ -346,7 +346,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.3" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.4" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -369,14 +369,27 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_3_top_tier_schema(tmp_path):
+def test_critique_brief_output_format_uses_v1_4_micro_defect_schema(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.3" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.3" in brief
+    assert "schema: figure-agent.critique.v1.4" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.4" in brief
     assert "top_tier_audit:" in brief
+    assert "micro_defects:" in brief
+    for kind in (
+        "line_crosses_label",
+        "wire_crosses_label",
+        "arrow_tip_fused",
+        "label_target_detached",
+        "floating_semantic_cue",
+        "drawing_order_suspect",
+        "print_scale_unreadable",
+    ):
+        assert kind in brief
+    assert "linked_finding_id: \"<P001/C001 or empty when accept_simplification>\"" in brief
+    assert "status: open | resolved | accept_simplification" in brief
 
 
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):

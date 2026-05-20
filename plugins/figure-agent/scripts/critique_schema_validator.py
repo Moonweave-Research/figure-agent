@@ -450,6 +450,45 @@ def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]
     return verdicts
 
 
+def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_list(
+        frontmatter.get("micro_defects"),
+        "critique frontmatter.micro_defects",
+    )
+    findings = critique_findings(frontmatter)
+    finding_ids = {
+        critique_finding_id(finding, f"critique finding {index}")
+        for index, finding in enumerate(findings)
+    }
+    unlinked_items: list[str] = []
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.micro_defects[{index}]"
+        item = require_mapping(raw_item, label)
+        micro_defect_id = _require_non_empty_string(item, "id", label=label)
+        crop_path = _require_non_empty_string(item, "crop", label=label)
+        if not crop_path.startswith("examples/") or "/build/audit_crops/" not in crop_path:
+            raise CritiqueContractError(
+                f"{label}.crop must point to examples/<name>/build/audit_crops/*.png"
+            )
+        _require_enum(item, "kind", vocab.MICRO_DEFECT_KINDS, label=label)
+        severity = _require_enum(item, "severity", vocab.FINDING_SEVERITIES, label=label)
+        _require_non_empty_string(item, "observation", label=label)
+        linked_finding_id = _require_string_value(item, "linked_finding_id", label=label)
+        status = _require_enum(item, "status", vocab.MICRO_DEFECT_STATUSES, label=label)
+        if (
+            severity in {"BLOCKER", "MAJOR"}
+            and status != "accept_simplification"
+            and linked_finding_id not in finding_ids
+        ):
+            unlinked_items.append(micro_defect_id)
+    if unlinked_items:
+        items = ", ".join(unlinked_items)
+        raise CritiqueContractError(
+            "critique frontmatter.micro_defects BLOCKER/MAJOR items must "
+            f"reference linked_finding_id or use accept_simplification: {items}"
+        )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -473,6 +512,13 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_1_audit(frontmatter)
         quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
         top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_4:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
         _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
         _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):

@@ -111,16 +111,19 @@ def _write_critique(
     fig_dir: Path,
     *,
     findings_yaml: str,
+    schema: str = "figure-agent.critique.v1.3",
+    micro_defects_yaml: str = "",
     top_tier_yaml: str | None = None,
 ) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.3\n"
+        f"schema: {schema}\n"
         "fixture: demo_fig\n"
         f"{_audit_enumeration_yaml()}"
         f"{_quality_axes_yaml()}"
         f"{top_tier_yaml or _top_tier_yaml()}"
+        f"{micro_defects_yaml}"
         f"{findings_yaml}"
         "---\n"
         "# critique\n",
@@ -144,6 +147,55 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_accepts_valid_v1_4_micro_defect_critique(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: line_crosses_label\n"
+            "    severity: MAJOR\n"
+            "    observation: line_crosses_label is visible in the crop\n"
+            "    linked_finding_id: C001\n"
+            "    status: open\n"
+        ),
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: line_crosses_label in high-zoom crop\n"
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_reports_missing_v1_4_micro_defects(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: ordinary finding\n"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "micro_defects" in violations[0].message
 
 
 def test_lint_critique_uses_public_adjudication_api_only() -> None:

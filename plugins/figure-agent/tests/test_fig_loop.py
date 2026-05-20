@@ -120,6 +120,7 @@ def _write_v1_2_critique(
     journal_assessment: dict | None = None,
     critique_input_hash: str | None = None,
     top_tier_audit: dict | None = None,
+    micro_defects: list[dict] | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -138,6 +139,8 @@ def _write_v1_2_critique(
         frontmatter["journal_grade_assessment"] = journal_assessment
     if top_tier_audit:
         frontmatter["top_tier_audit"] = top_tier_audit
+    if micro_defects is not None:
+        frontmatter["micro_defects"] = micro_defects
     critique.write_text(
         "---\n"
         + yaml.safe_dump(frontmatter, sort_keys=False)
@@ -580,6 +583,45 @@ def test_loop_surfaces_v1_3_quality_axes_and_journal_grade_assessment(
     assert publication["state"] == "needs_patch"
     assert assessment["benchmark_level"] == "solid_manuscript"
     assert assessment["evaluation_state"] == "passed"
+
+
+def test_loop_surfaces_v1_4_quality_axes_journal_grade_and_top_tier(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.4",
+        critique_input_hash=critique_hash,
+        axis_overrides={
+            "publication_readiness": _quality_axis(
+                "publication_readiness",
+                verdict="needs_patch",
+                blocking_items=["C001 - polish ceiling"],
+            ),
+        },
+        journal_assessment=_journal_assessment(critique_hash, level="solid_manuscript"),
+        top_tier_audit=_top_tier_audit(),
+        micro_defects=[],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect v1.4 critique ingestion",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    publication = iteration["axis_verdicts"]["publication_safety"]
+    assert publication["source"] == "critique.quality_axes"
+    assert publication["evidence_path"] == str(critique)
+    assert publication["state"] == "needs_patch"
+    assert iteration["journal_grade_assessment"]["evaluation_state"] == "passed"
+    assert iteration["top_tier_audit_summary"]["source"] == "critique.top_tier_audit"
 
 
 def test_loop_surfaces_v1_3_top_tier_audit_summary(

@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.3). No external API is called; the brief itself is API-free.
+v1.4). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -42,6 +42,12 @@ _MICRO_DEFECT_CHECKS = (
     "label_target_detached",
     "floating_semantic_cue",
     "drawing_order_suspect",
+    "print_scale_unreadable",
+)
+_MICRO_DEFECT_KIND_SCHEMA = (
+    "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
+    "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
+    "print_scale_unreadable"
 )
 
 
@@ -435,11 +441,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.2):
+(YAML front-matter then human-readable Markdown body — schema v1.4):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.3
+schema: figure-agent.critique.v1.4
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -526,6 +532,14 @@ top_tier_audit:
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
 {brief_sections.journal_grade_assessment_schema(critique_input_hash)}
+micro_defects:
+  - id: M001
+    crop: examples/{name}/build/audit_crops/<crop>.png
+    kind: {_MICRO_DEFECT_KIND_SCHEMA}
+    severity: BLOCKER | MAJOR | MINOR | NIT
+    observation: "<visible micro-defect from a High-Zoom Visual Audit Crop>"
+    linked_finding_id: "<P001/C001 or empty when accept_simplification>"
+    status: open | resolved | accept_simplification
 panels:
   - id: <panel id>
     findings:
@@ -569,6 +583,12 @@ non-patch `recommended_action` such as `human_review`, `revise_briefing`, or
 finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`.
 `publication_readiness.verdict` must not be less severe than any applicable
 upstream quality axis.
+
+Every High-Zoom Visual Audit Crop must be inspected before finalizing
+`critique.md`. Record visible crop-scale defects in `micro_defects`. Every
+`BLOCKER` or `MAJOR` micro-defect must either link to a normal panel/top-level
+finding via `linked_finding_id` or use `status: accept_simplification` with a
+clear observation explaining why the crop-scale issue is acceptable.
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

@@ -6,7 +6,9 @@ CRITIQUE_SCHEMA_V1 = "figure-agent.critique.v1"
 CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
 CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
+CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
 
+FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
     {"provided_reference", "briefing", "reference_pack", "not_provided"}
 )
@@ -102,3 +104,16 @@ TOP_TIER_AUDIT_KEYS = (
     "aesthetic_coherence",
 )
 TOP_TIER_AUDIT_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
+
+MICRO_DEFECT_KINDS = frozenset(
+    {
+        "line_crosses_label",
+        "wire_crosses_label",
+        "arrow_tip_fused",
+        "label_target_detached",
+        "floating_semantic_cue",
+        "drawing_order_suspect",
+        "print_scale_unreadable",
+    }
+)
+MICRO_DEFECT_STATUSES = frozenset({"open", "resolved", "accept_simplification"})

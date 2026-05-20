@@ -10,7 +10,10 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_1,
     CRITIQUE_SCHEMA_V1_2,
     CRITIQUE_SCHEMA_V1_3,
+    CRITIQUE_SCHEMA_V1_4,
     JOURNAL_SCORE_KEYS,
+    MICRO_DEFECT_KINDS,
+    MICRO_DEFECT_STATUSES,
     QUALITY_AXIS_NAMES,
     TOP_TIER_AUDIT_KEYS,
 )
@@ -21,6 +24,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_1 == "figure-agent.critique.v1.1"
     assert CRITIQUE_SCHEMA_V1_2 == "figure-agent.critique.v1.2"
     assert CRITIQUE_SCHEMA_V1_3 == "figure-agent.critique.v1.3"
+    assert CRITIQUE_SCHEMA_V1_4 == "figure-agent.critique.v1.4"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
@@ -60,3 +64,15 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
         "accessibility_color_robustness",
         "aesthetic_coherence",
     )
+    assert MICRO_DEFECT_KINDS == frozenset(
+        {
+            "line_crosses_label",
+            "wire_crosses_label",
+            "arrow_tip_fused",
+            "label_target_detached",
+            "floating_semantic_cue",
+            "drawing_order_suspect",
+            "print_scale_unreadable",
+        }
+    )
+    assert MICRO_DEFECT_STATUSES == frozenset({"open", "resolved", "accept_simplification"})

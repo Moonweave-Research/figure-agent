@@ -8,11 +8,11 @@
 
 Real figure dogfood on `fig1_overview_v2_pair_001_vault` exposed a gap between
 the plugin's current audit contract and the defects that decide whether a
-figure is actually publication-ready. The v1.3 critique contract now asks for
-journal-grade axes, top-tier audit slots, and numeric advisory scoring, but the
-vision input is still too coarse for micro-defects such as line-through-label,
-arrow-tip fusion, floating semantic arrows, source-order layering mistakes, and
-print-scale readability failures.
+figure is actually publication-ready. The v1.4 critique contract now asks for
+journal-grade axes, top-tier audit slots, numeric advisory scoring, high-zoom
+audit crops, and first-class micro-defects, but follow-up automation is still
+needed for static drawing-order checks, print-scale gates, and metadata-sync
+ergonomics.
 
 This means a loop can look contract-complete while the user still has to catch
 critical defects from screenshots. That is the wrong boundary for a figure
@@ -22,11 +22,11 @@ agent.
 
 | Area | Observed defect | Current repo truth |
 |---|---|---|
-| Host vision zoom | Standard full-render and panel-crop reads missed sub-mm line crossings and arrow artifacts. | `/fig_critique` reads `build/<name>.png` and optional panel crops, but no high-zoom visual audit crop pack exists. |
+| Host vision zoom | Standard full-render and panel-crop reads missed sub-mm line crossings and arrow artifacts. | Issue 12A adds deterministic high-zoom audit crops under `build/audit_crops/`. |
 | Visual clash | `check_visual_clash.py` produced many report-only candidates while missing actual line-through-label cases. | The detector is text-bbox plus local pixel statistics; it is not a semantic micro-defect detector. |
 | Drawing order | Adding a white fill did not help when later `\draw` paths rendered over the label. | No source-order lint exists for label-background protection. |
 | Arrow-tip print behavior | Short `<->` arrow segments fused into diamond-like marks at print scale. | No print-scale arrow-tip recognizability gate exists. |
-| Semantic anchoring | Vibration arrows could float away from the oscillating element. | Existing quality axes ask for label/arrow semantics, but no visual audit crop or closed-set micro-defect enum forces this check. |
+| Semantic anchoring | Vibration arrows could float away from the oscillating element. | Issue 12B adds the v1.4 `micro_defects` contract with closed-set crop-scale defect kinds. |
 | Hash/sync overhead | Generator/rubric/input/adjudication hashes require repeated manual refresh during active plugin development. | Freshness is correct but ergonomically expensive; no one-shot sync command exists. |
 | Iteration logging | Sub-region loop progress was easy to omit or name inconsistently. | `subregion_iteration_log.md` is parsed when present, but no closeout helper appends or normalizes iteration rows. |
 
@@ -34,19 +34,16 @@ agent.
 
 The current plugin has:
 
-- v1.3 critique prompt/schema/rubric surfaces.
+- v1.4 critique prompt/schema/rubric surfaces.
 - `/fig_loop` ingestion of quality axes and top-tier summary.
 - `subregion_iteration_log.md` active-target parsing.
 - panel-level reference crop generation when `panels[].reference_image` and
   `panels[].bbox_pdf_cm` are both declared.
+- high-zoom full-render and panel-crop audit crops.
+- `micro_defects` validation for crop-scale issues.
 
 The current plugin does not have:
 
-- automatic high-zoom crop generation;
-- active sub-region image crops as first-class critique inputs;
-- quadrant audit crops that are validated as evidence inputs rather than true
-  semantic sub-regions;
-- micro-defect categories below panel/top-level findings;
 - drawing-order or arrow-tip lint;
 - print-scale audit images;
 - one-shot critique/adjudication metadata sync;
@@ -72,16 +69,16 @@ that makes crop findings first-class schema evidence.
 
 Acceptance criteria:
 
-- [ ] A new script/helper creates deterministic high-zoom crop files under
+- [x] A new script/helper creates deterministic high-zoom crop files under
   `examples/<name>/build/audit_crops/`.
-- [ ] `/fig_critique` brief lists the crop paths in a dedicated section.
-- [ ] The section contains closed-set checks for line-through-label,
+- [x] `/fig_critique` brief lists the crop paths in a dedicated section.
+- [x] The section contains closed-set checks for line-through-label,
   arrow-tip-fusion, floating-arrow, label-target-detachment, and source-order
   suspicion.
-- [ ] Existing fixtures without panel references still receive full-render
+- [x] Existing fixtures without panel references still receive full-render
   quadrant crops.
-- [ ] No source, export, accepted, golden, or critique files are mutated.
-- [ ] Tests prove crop file creation, brief inclusion, and backwards-compatible
+- [x] No source, export, accepted, golden, or critique files are mutated.
+- [x] Tests prove crop file creation, brief inclusion, and backwards-compatible
   behavior.
 
 ### Issue 12B: Micro-Defect Schema v1.4
@@ -94,16 +91,16 @@ being squeezed into broad categories such as `label_placement` or `style`.
 
 Acceptance criteria:
 
-- [ ] Brief output advances to `figure-agent.critique.v1.4` only after 12A
+- [x] Brief output advances to `figure-agent.critique.v1.4` only after 12A
   produces stable crop inputs.
-- [ ] `micro_defects` contains closed-set defect kinds:
+- [x] `micro_defects` contains closed-set defect kinds:
   `line_crosses_label`, `wire_crosses_label`, `arrow_tip_fused`,
   `label_target_detached`, `floating_semantic_cue`, `drawing_order_suspect`,
   `print_scale_unreadable`.
-- [ ] Validator rejects missing or malformed v1.4 micro-defect blocks.
-- [ ] Any open `BLOCKER` or `MAJOR` micro-defect must link to a normal finding
+- [x] Validator rejects missing or malformed v1.4 micro-defect blocks.
+- [x] Any open `BLOCKER` or `MAJOR` micro-defect must link to a normal finding
   or explicit `accept_simplification`.
-- [ ] v1.3 critiques remain scaffoldable as legacy.
+- [x] v1.3 critiques remain scaffoldable as legacy.
 
 ### Issue 12C: Drawing-Order and Arrow-Tip Lints
 

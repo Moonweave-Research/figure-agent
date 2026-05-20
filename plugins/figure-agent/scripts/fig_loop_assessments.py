@@ -9,7 +9,11 @@ from quality_manifest import yaml_frontmatter
 
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
 CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
-CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset({CRITIQUE_SCHEMA_V1_2, CRITIQUE_SCHEMA_V1_3})
+CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
+CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
+    {CRITIQUE_SCHEMA_V1_2, CRITIQUE_SCHEMA_V1_3, CRITIQUE_SCHEMA_V1_4}
+)
+CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset({CRITIQUE_SCHEMA_V1_3, CRITIQUE_SCHEMA_V1_4})
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -100,7 +104,7 @@ def top_tier_audit_summary(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_3:
+    if frontmatter.get("schema") not in CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT:
         return None
     top_tier_audit = frontmatter.get("top_tier_audit")
     if not isinstance(top_tier_audit, dict):

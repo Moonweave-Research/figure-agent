@@ -18,23 +18,23 @@ Steps:
 
 2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. If the brief contains `## High-Zoom Visual Audit Crops`, also Read every listed crop before writing `critique.md`. These are original-pixel attention crops; inspect each one separately for the closed-set micro-defects named in the brief. Do not treat a clean full-render view as proof that high-zoom crops are clean. The host model inspects the images directly; do not call any external vision API.
 
-3. Fill the mandatory audit checklists first, then fill `quality_axes` for every journal-grade audit axis, then fill `top_tier_audit`, then fill `journal_grade_assessment`. Do not collapse the axes into a single score. `publication_readiness` must be at least as severe as the most severe applicable upstream axis. Empty `audit_enumeration` blocks are invalid for schema v1.3, empty or malformed `quality_axes` blocks are invalid for schema v1.3, and missing/empty `top_tier_audit` slots are invalid for schema v1.3. Any `structural_defect`, `incomplete`, `BLOCKER`, `MAJOR`, `needs_patch`, or `block` item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`, `human_review`, `revise_briefing`, or `block_release`. High-zoom crop findings must be represented as normal panel/top-level findings in schema v1.3; use the closed-set crop terms in `observation` until `micro_defects` schema v1.4 exists. Any `top_tier_audit.fail`, `top_tier_audit.needs_human`, or high-impact-blocking `top_tier_audit.weak` item must either become a normal panel/top-level finding that explicitly mentions `top_tier_audit.<slot_key>`, be represented in `quality_axes.blocking_items` with that same `top_tier_audit.<slot_key>` reference and a human/revise/block action, or be justified in `concrete_fix` as `accept_simplification`. For `patch` or `block_release` quality-axis actions, include the linked finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`. Then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
+3. Fill the mandatory audit checklists first, then fill `quality_axes` for every journal-grade audit axis, then fill `top_tier_audit`, then fill `journal_grade_assessment`, then fill `micro_defects` from the High-Zoom Visual Audit Crops. Do not collapse the axes into a single score. `publication_readiness` must be at least as severe as the most severe applicable upstream axis. Empty `audit_enumeration` blocks are invalid for schema v1.4, empty or malformed `quality_axes` blocks are invalid for schema v1.4, missing/empty `top_tier_audit` slots are invalid for schema v1.4, and missing/malformed `micro_defects` is invalid for schema v1.4. Any `structural_defect`, `incomplete`, `BLOCKER`, `MAJOR`, `needs_patch`, or `block` item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`, `human_review`, `revise_briefing`, or `block_release`. Any `micro_defects` item with `severity: BLOCKER` or `severity: MAJOR` must either link to a normal panel/top-level finding through `linked_finding_id` or use `status: accept_simplification`. Any `top_tier_audit.fail`, `top_tier_audit.needs_human`, or high-impact-blocking `top_tier_audit.weak` item must either become a normal panel/top-level finding that explicitly mentions `top_tier_audit.<slot_key>`, be represented in `quality_axes.blocking_items` with that same `top_tier_audit.<slot_key>` reference and a human/revise/block action, or be justified in `concrete_fix` as `accept_simplification`. For `patch` or `block_release` quality-axis actions, include the linked finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`. Then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
    - `severity`: BLOCKER / MAJOR / MINOR / NIT
    - `category`: structural / physics / label_placement / whitespace / hierarchy / palette / style
    - `tex_lines`: the source line numbers that need revision (cite from the line-numbered .tex in the brief)
    - `observation`: what is wrong, citing what is visible in the PNG
    - `suggested_fix`: a concrete edit to `<name>.tex`
 
-4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.3):
+4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.4):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.3
+schema: figure-agent.critique.v1.4
 fixture: <name>
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
 generator_version: sha256:<generator hash>
-rubric_version: figure-agent.critique-rubric.v1.3
+rubric_version: figure-agent.critique-rubric.v1.4
 critique_input_hash: sha256:<input manifest hash>
 verdict: ready | revise | block
 audit_enumeration:
@@ -213,6 +213,14 @@ journal_grade_assessment:
     reference_fidelity: 0-100
     export_scale_readability: 0-100
   score_rationale: "<why these numbers describe only the current artifact>"
+micro_defects:
+  - id: M001
+    crop: examples/<name>/build/audit_crops/<crop>.png
+    kind: line_crosses_label | wire_crosses_label | arrow_tip_fused | label_target_detached | floating_semantic_cue | drawing_order_suspect | print_scale_unreadable
+    severity: BLOCKER | MAJOR | MINOR | NIT
+    observation: "<visible micro-defect from a High-Zoom Visual Audit Crop>"
+    linked_finding_id: "<P001/C001 or empty when accept_simplification>"
+    status: open | resolved | accept_simplification
 panels:
   - id: <panel id>
     findings:

@@ -69,6 +69,7 @@ def _write_hashed_critique(
     critique_input_hash: str | None = None,
     generator_version: str | None = None,
     rubric_version: str = CRITIQUE_RUBRIC_VERSION,
+    schema: str = "figure-agent.critique.v1.2",
 ) -> None:
     generator_version = generator_version or file_sha256(
         REPO_ROOT / "scripts" / "critique_brief.py"
@@ -76,7 +77,7 @@ def _write_hashed_critique(
     critique_input_hash = critique_input_hash or _critique_input_hash(fig_dir, name)
     (fig_dir / "critique.md").write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.2\n"
+        f"schema: {schema}\n"
         f"fixture: {name}\n"
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"
@@ -404,6 +405,22 @@ def test_hash_metadata_keeps_matching_critique_fresh_even_when_mtime_is_old(
     ):
         os.utime(path, (source_time, source_time))
     os.utime(build_dir / f"{name}.pdf", (source_time, source_time))
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
+
+
+def test_hash_metadata_marks_current_v1_4_critique_fresh(
+    tmp_path: Path,
+) -> None:
+    name = "hash_v14_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(fig_dir, name, schema="figure-agent.critique.v1.4")
 
     assert compute_critique_state(fig_dir, name) == "FRESH"
 

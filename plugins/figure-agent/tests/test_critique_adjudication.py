@@ -437,6 +437,19 @@ def _complete_v1_3_top_tier_audit_yaml() -> str:
     return "\n".join(lines) + "\n"
 
 
+def _micro_defects_yaml(*, linked_finding_id: str = "C001", status: str = "open") -> str:
+    return (
+        "micro_defects:\n"
+        "  - id: M001\n"
+        "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+        "    kind: wire_crosses_label\n"
+        "    severity: MAJOR\n"
+        "    observation: wire_crosses_label visible across the trap label\n"
+        f"    linked_finding_id: \"{linked_finding_id}\"\n"
+        f"    status: {status}\n"
+    )
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -596,6 +609,116 @@ def test_build_adjudication_scaffold_accepts_v1_3_top_tier_audit(
         fig_dir,
         critique_schema="figure-agent.critique.v1.3",
         extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml(),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_4_micro_defects(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + _micro_defects_yaml(),
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: wire_crosses_label caused by lead crossing the label\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_4_empty_micro_defects(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_v1_4_missing_micro_defects(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml(),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="micro_defects"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_4_invalid_micro_defect_kind(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + _micro_defects_yaml().replace("kind: wire_crosses_label", "kind: vague")
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="kind"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_4_major_micro_defect_without_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + _micro_defects_yaml(linked_finding_id="")
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="linked_finding_id"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_accepts_v1_4_major_micro_defect_simplification(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + _micro_defects_yaml(linked_finding_id="", status="accept_simplification")
+        ),
+        findings_yaml="findings: []\n",
     )
 
     scaffold = build_adjudication_scaffold(fig_dir)
