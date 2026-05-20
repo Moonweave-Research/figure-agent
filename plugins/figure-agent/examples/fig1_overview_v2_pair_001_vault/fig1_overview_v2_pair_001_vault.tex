@@ -552,15 +552,23 @@
 
 % Spoke modality labels (mid-spoke, italic small, with cAmber!8 fill punch)
 % v8.6 positions: midpoints recomputed for new spoke endpoints
+% iter 53: spoke modality labels — removed fill=cAmber!8 (Gemini Panel D
+% MEDIUM: "harsh rectangular crop on background wave vectors"). Italic gray
+% text reads clearly on background; the punch fill was decorative noise.
+% iter 53b: y +0.07cm so baseline clears the 0.9pt-thick spoke arrows
+% (Gemini "baseline extremely close to spoke arrow shaft"):
+%   kinetic 4.55 → 4.62  (spoke 1 at x=4.55 is y≈4.57; new baseline +0.05cm above)
+%   ISPD    4.50 → 4.56  (spoke 2 endpoint at y=4.50; +0.06cm clears arrow tip)
+%   mech    4.55 → 4.62  (spoke 3 at x=9.40 is y≈4.61; new baseline +0.01cm above)
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (4.55, 4.55) {kinetic};
+      anchor=south, inner sep=1pt]
+  at (4.55, 4.62) {kinetic};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (6.975, 4.50) {ISPD};
+      anchor=south, inner sep=1pt]
+  at (6.975, 4.56) {ISPD};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, inner sep=1pt]
-  at (9.40, 4.55) {mechanical};
+      anchor=south, inner sep=1pt]
+  at (9.40, 4.62) {mechanical};
 
 % ============================================================
 % v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
@@ -579,14 +587,20 @@
 % becomes the visual hero — apparatus zone communicates "sample-under-test"
 % not "instrument-with-attached-sample."
 % SMU box (LEFT, compact)
+% iter 53 redesign (Gemini MEDIUM: V/A flush-left detached from SMU label).
+% Consolidated to centered grid: "SMU" italic upper-half, "V / A" with
+% middle-dot separator lower-half — both centered in box x-axis. Reads as
+% unified instrument identity ("SMU" = name, "V/A" = dual function) instead
+% of scattered glyphs.
 \draw[cGray!75!black, line width=0.30pt]
   (0.50, 3.15) rectangle (1.30, 3.70);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (0.65, 3.57) {V};
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
-  at (0.65, 3.27) {A};
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!75!black]
-  at (1.00, 3.42) {SMU};
+% iter 53b: y nudges for vertical-symmetry around box mid (3.425):
+%   SMU 3.55 → 3.51 (0.085cm above mid)
+%   V/A 3.30 → 3.34 (0.085cm below mid) — symmetric balance.
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
+      anchor=center] at (0.90, 3.51) {SMU};
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+      anchor=center] at (0.90, 3.34) {V\,/\,A};
 % v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
 % already carry source-meter identity; rectangle was decorative noise.
 
@@ -615,12 +629,21 @@
   (1.30, 3.60) -- (1.50, 3.60) -- (1.50, 3.75) -- (1.70, 3.75);
 \draw[cGray!75!black, line width=0.28pt]
   (1.30, 3.27) -- (1.50, 3.27) -- (1.50, 3.20) -- (1.70, 3.20);
+% iter 53: contact dots at lead-electrode junctions (Gemini MEDIUM
+% "unfinished circuit schematic"). Radius 0.018cm = 0.5pt, cGray!75!black.
+\fill[cGray!75!black] (1.70, 3.75) circle (0.020);
+\fill[cGray!75!black] (1.70, 3.20) circle (0.020);
+\fill[cGray!75!black] (3.50, 3.20) circle (0.020);
 
 % Ground symbol at bottom electrode RIGHT side
-\draw[cGray!75!black, line width=0.28pt] (3.50, 3.20) -- (3.65, 3.20) -- (3.65, 3.06);
-\draw[cGray!75!black, line width=0.30pt] (3.57, 3.06) -- (3.73, 3.06);
-\draw[cGray!75!black, line width=0.25pt] (3.60, 3.03) -- (3.70, 3.03);
-\draw[cGray!75!black, line width=0.22pt] (3.62, 3.00) -- (3.68, 3.00);
+% iter 53b: horizontal segment lengthened 0.15→0.20cm + ground bars shifted
+% accordingly (Gemini "ground lead cramped compared to SMU side leads").
+% SMU leads have 0.20cm horizontal segment; now ground matches that breathing
+% room.
+\draw[cGray!75!black, line width=0.28pt] (3.50, 3.20) -- (3.70, 3.20) -- (3.70, 3.06);
+\draw[cGray!75!black, line width=0.30pt] (3.62, 3.06) -- (3.78, 3.06);
+\draw[cGray!75!black, line width=0.25pt] (3.65, 3.03) -- (3.75, 3.03);
+\draw[cGray!75!black, line width=0.22pt] (3.67, 3.00) -- (3.73, 3.00);
 
 % v8.7 critique iter 2: label readability — cAmber on cAmber fill was poor
 % contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
@@ -651,17 +674,17 @@
 % 2022 Fig 1 (audit_table.md D-ref04 transferable: reference-curve styling).
 % Width 0.75pt stays under mechanism-tier 1.0pt — correct hierarchy preserved
 % (reference < primary curves 0.80pt).
+% iter 53: Debye curve endpoint y 0.50 → 0.56 (Gemini HIGH "abrupt termination
+% directly onto x-axis"). New gap to axis (0.40): 0.16cm = ~4.5pt, comfortably
+% above Gemini's 2pt minimum and visually clear of axis line.
 \draw[cGray!85!black, dashed, line width=0.75pt]
-  (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
-% iter 52d: Debye label moved INSIDE plot (just above x-axis, right of dashed
-% curve endpoint) so it no longer reads as x-tick AND leader doesn't cross
-% axis (Gemini iter 52c HIGH: axis-crossing leader looked like "curve crashing
-% through axis"). At y=0.45 anchor=west the label fits in narrow strip above
-% axis (y=0.40) without colliding with shallow-rich curve (y at x=2.60..3.10
-% is 1.04..0.82, label top at ~0.70 stays clear). Color-matched gray to
-% dashed curve, no leader needed (adjacency + color = unambiguous identifier).
+  (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.56);
+% iter 53: Debye label y 0.45 → 0.55 (Gemini HIGH "too close to x-axis"). +0.10cm
+% (~3pt) up. At anchor=west (2.60, 0.55), text top ~0.73. shallow-rich curve at
+% x=2.60..3.10 spans y=1.05..0.83 — label top stays ≥0.10cm clear at worst x.
+% Adjacent to truncated dashed endpoint (2.55, 0.56) → eye traces curve to label.
 \node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
-  at (2.60, 0.45) {Debye};
+  at (2.60, 0.55) {Debye};
 
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};

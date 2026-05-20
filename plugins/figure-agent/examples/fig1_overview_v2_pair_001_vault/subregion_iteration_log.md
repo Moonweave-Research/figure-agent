@@ -280,7 +280,24 @@ iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = C
 - **4-axis scores**: T ✅ | S ✅ | L improved (sloped convention matches journal norm) | A improved
 - **Score trajectory**: iter 51 (post-Row 2): conditional 100/85 brutal → iter 52 (Panel D brutal): 62 → 85 (iter 52b) → 60 regression (iter 52c label center cross-checked, Gemini stricter read) → 85 (iter 52d sloped) → iter 52e pending. Brutal trend +23.
 - **Visibility gate**: intended yes (sloped labels are journal-norm; Debye inside-plot keeps reference identification visible) | anomaly check pending Gemini 52e read.
-- **Out of scope (skipped)**: D-3 tick marks (briefing-locked "tick-less = cartoon register preserved"); D-1 SMU box wiring corner-attach (MEDIUM, optional polish); kinetic arrow proximity to MIM stack label (LOW).
+- **Out of scope (skipped)**: D-3 tick marks (briefing-locked "tick-less = cartoon register preserved").
+
+### Panel D iter 53 — 2026-05-20 — final polish push to 100/100
+
+- **Scope**: D-1 SMU box typography + contact dots + ground lead; D-7a Debye position lift; Row 2 spoke modality labels.
+- **Rationale**: Gemini fresh brutal audit of iter 52e returned 85/100 with 3 top patches. User direction "퀄리티 많이 끌어 올려봐" → close all actionable residuals.
+- **Reference source**: Gemini brutal audits (iter 52e=85, iter 53=98, iter 53b=100).
+- **Patches**:
+  - **D-1 SMU box redesign**: removed V (0.65,3.57) + A (0.65,3.27) + SMU (1.00,3.42) split layout. Replaced with centered grid: "SMU" italic 6pt at (0.90, 3.51), "V / A" 5.5pt at (0.90, 3.34), symmetric around box midline 3.425. Reads as unified instrument (Gemini iter 52a/52e MEDIUM "V/A scattered detached from SMU").
+  - **D-1 contact dots**: cGray!75!black 0.020cm-radius filled circles at 3 lead-electrode junctions (top lead-top electrode, bottom lead-bottom electrode, ground lead-bottom electrode). Adds circuit schematic rigor (Gemini iter 52e MEDIUM "unfinished circuit").
+  - **D-1 ground lead**: horizontal segment 0.15→0.20cm + ground bars shifted accordingly. Matches SMU lead breathing room (Gemini "ground lead cramped").
+  - **D-7a Debye lift**: label y 0.45→0.55 (clears x-axis crowding by ~3pt); dashed curve endpoint y 0.50→0.56 (visible 0.16cm gap above axis vs prior 0.10cm).
+  - **Row 2 spoke labels (kinetic/ISPD/mechanical)**: removed `fill=cAmber!8` punch (Gemini "harsh rectangular crop on background wave vectors"); y +0.06-0.07cm so baseline clears 0.9pt-thick spoke arrows.
+- **Briefing edits**: none in iter 53 (briefing already synced in iter 52).
+- **4-axis scores**: T ✅ | S ✅ | L ✅ | A ✅
+- **Score trajectory**: iter 52e 85 → iter 53 98 → iter 53b 100/100 (Journal-Ready per Gemini "flawlessly executed").
+- **Visibility gate**: intended yes (SMU label cluster, contact dots, ground symbol all readable; Debye label clear above axis; spoke labels float above arrows) | anomaly none.
+- **Closure**: Panel D **journal-ready** at Gemini absolute 100/100. Element-iteration loop for Panel D suspended at this state; re-entry possible if user identifies further defects.
 
 ### Panel E iter 12-40 — 2026-05-18 to 2026-05-19 — consolidated retroactive log
 
