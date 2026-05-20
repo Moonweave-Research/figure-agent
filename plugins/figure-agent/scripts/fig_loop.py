@@ -34,6 +34,7 @@ from fig_loop_decision import (  # noqa: E402
 )
 from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
+from fig_loop_markdown import decision_markdown as build_decision_markdown  # noqa: E402
 from fig_loop_patch_evidence import (  # noqa: E402
     patch_evidence_baseline,
     post_patch_evidence_verdict,
@@ -107,60 +108,6 @@ def _adjudication_state(example_dir: Path) -> dict[str, Any]:
         "decisions": adjudication.get("decisions", []),
         "source_critique_hash": adjudication["source_critique_hash"],
     }
-
-
-def _decision_markdown(
-    *,
-    name: str,
-    goal: str,
-    status_result: dict[str, Any],
-    adjudication: dict[str, Any],
-    loop_decision: dict[str, Any],
-    escalation: dict[str, Any],
-    patch_handoff: dict[str, Any] | None,
-) -> str:
-    notes = status_result.get("notes", [])
-    notes_text = ", ".join(notes) if notes else "(none)"
-    active_patch_target = loop_decision["active_patch_target"]
-    if active_patch_target:
-        finding_id = active_patch_target["finding_id"]
-        patch_target = active_patch_target["patch_target"]
-        active_patch_text = f"{finding_id} -> {patch_target}" if finding_id else str(patch_target)
-    else:
-        active_patch_text = "(none)"
-    if patch_handoff:
-        handoff_text = f"{patch_handoff['target_type']} {patch_handoff['target_id']}"
-    else:
-        handoff_text = "(none)"
-    return "\n".join(
-        [
-            f"# Fig Loop Decision: {name}",
-            "",
-            f"- mode: {MODE}",
-            f"- goal: {goal}",
-            f"- stop_reason: {loop_decision['stop_reason']}",
-            f"- escalation_level: {escalation['escalation_level']}",
-            f"- stage: {status_result.get('stage')}/4",
-            f"- render_state: {status_result.get('render_state')}",
-            f"- critique_state: {status_result.get('critique_state')}",
-            f"- export_state: {status_result.get('export_state')}",
-            (
-                "- final_artifact_state: "
-                f"{status_result.get('final_artifact_kind', 'generated_export')} "
-                f"{status_result.get('final_artifact_state', 'NONE')} "
-                f"{status_result.get('final_artifact_path', '')}"
-            ),
-            f"- adjudication_state: {adjudication['state']}",
-            f"- active_patch_target: {active_patch_text}",
-            f"- patch_handoff_target: {handoff_text}",
-            f"- notes: {notes_text}",
-            f"- recommended_next_action: {loop_decision['recommended_next_action']}",
-            "",
-            "Verify-only mode records loop evidence only. It does not patch source, "
-            "compile outputs, export artifacts, or acceptance state.",
-            "",
-        ]
-    )
 
 
 def run_loop(
@@ -250,7 +197,7 @@ def run_loop(
     write_json(run_dir / "iteration_001.json", iteration)
     write_json(run_dir / "run_manifest.json", manifest)
     (run_dir / "decision.md").write_text(
-        _decision_markdown(
+        build_decision_markdown(
             name=name,
             goal=goal,
             status_result=status_result,
