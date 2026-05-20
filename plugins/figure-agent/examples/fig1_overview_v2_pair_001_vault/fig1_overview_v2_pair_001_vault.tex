@@ -552,22 +552,19 @@
 
 % Spoke modality labels (mid-spoke, italic small, with cAmber!8 fill punch)
 % v8.6 positions: midpoints recomputed for new spoke endpoints
-% iter 53: spoke modality labels — removed fill=cAmber!8 (Gemini Panel D
-% MEDIUM: "harsh rectangular crop on background wave vectors"). Italic gray
-% text reads clearly on background; the punch fill was decorative noise.
-% iter 53b: y +0.07cm so baseline clears the 0.9pt-thick spoke arrows
-% (Gemini "baseline extremely close to spoke arrow shaft"):
-%   kinetic 4.55 → 4.62  (spoke 1 at x=4.55 is y≈4.57; new baseline +0.05cm above)
-%   ISPD    4.50 → 4.56  (spoke 2 endpoint at y=4.50; +0.06cm clears arrow tip)
-%   mech    4.55 → 4.62  (spoke 3 at x=9.40 is y≈4.61; new baseline +0.01cm above)
+% iter 53: removed fill=cAmber!8 (Gemini Panel D MEDIUM). iter 53b: y +0.07cm
+% to clear spoke arrows. iter E14 (user-flagged): without fill, the 0.9pt-
+% thick spoke arrow lines visibly cross THROUGH label letters at high zoom.
+% Restored fill with reduced opacity (cAmber!8 with fill opacity=0.85) —
+% breaks arrow under label while letting background waves still flow.
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, inner sep=1pt]
+      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
   at (4.55, 4.62) {kinetic};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, inner sep=1pt]
+      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
   at (6.975, 4.56) {ISPD};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, inner sep=1pt]
+      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
   at (9.40, 4.62) {mechanical};
 
 % ============================================================
@@ -822,11 +819,6 @@
   (6.23, 4.27) -- (6.36, 4.27) -- (6.36, 4.36)
               -- (6.53, 4.36) -- (6.53, 4.27) -- (6.68, 4.27)
               -- (6.68, 4.36) -- (6.82, 4.36);
-% HV+ label — y 4.20 → 4.14 (centered in shrunk label zone 4.10..4.22).
-% iter E2: weight unified to plain 5pt cGray!65 (match Probe + polymer film
-% apparatus annotation tier). Bold was inconsistent across E apparatus labels.
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black]
-  at (6.55, 4.14) {HV+};
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
 % iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
 % cGray!85 → !70 (less aggressive black dot at print scale).
@@ -834,6 +826,13 @@
 \fill[cGray!40!black] (6.55, 4.12) circle (0.009);
 % Wire from terminal (now inside box at 4.12) to needle cuff at 4.05.
 \draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 4.05);
+% HV+ label — y 4.20 → 4.14. iter E2 plain weight. iter E14 (user-flagged):
+% terminal → cuff wire at x=6.55, y=4.05..4.10 was crossing through label
+% letters. fill=cGray!22 matching box body masks wire. iter E14b: reordered
+% to draw AFTER wire (label was being drawn first → wire visible on top).
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
+      fill=cGray!22, inner sep=0.5pt]
+  at (6.55, 4.14) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
