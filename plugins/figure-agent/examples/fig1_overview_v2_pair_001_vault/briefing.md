@@ -668,6 +668,8 @@ require a §17 amendment.
 
 ### §13.6 Column E — ISPD-paired evidence (v8.6 restructure, 10 sub-regions)
 
+**Cross-panel narrative attribution (2026-05-20 framework rewrite)**: Panel E shows **the sulfur polymer's** internal trap landscape — Panel D (D-5/D-6) establishes 황고분자 > control via cross-sample high-n vs low-n comparison; Panel E then drills into the sulfur sample's bimodal g(E_t) DOS (deep-trap-dominant, 1.86× shallow); Panel F shows the macroscopic mechanical consequence on the same sulfur cantilever. Reading sequence: D = comparison establishes hero → E = hero's trap landscape → F = hero's mechanical manifestation. Control polymer g(E_t) is NOT drawn (would clutter; Panel D already established 황 vs control).
+
 **Column bbox**: x=4.65..9.30, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + V_s sub-zone y=1.50..2.60 + g(E_t) sub-zone y=0.20..1.40 + mini-gap y=2.65..2.80.
 
 **Reading order**: (1) ISPD spoke 진입 (column top, x≈6.975) → (2) **E-2 apparatus icon** (corona ▽ + Kelvin probe ▭ + thin-film slab) "비접촉 표면 전위 측정" → (3) E-3 V_s sub-zone axis + **E-4 V_s decay curve** (raw measurement) → (4) **E-5 internal raw→derived inter-arrow** "이제 derive 함" → (5) E-6 g(E_t) sub-zone axis + **E-7 shallow Gaussian** (좌, 파랑, 낮음) → (6) **E-8 deep Gaussian** (우, 빨강, 1.86× 높음, "deep dominant") → (7) **E-9 τ_d annotation** → (8) E-10 Shallow/Deep base labels.
@@ -690,6 +692,8 @@ require a §17 amendment.
 - **E-10** 'Shallow' / 'Deep' base labels at Gaussian feet (cBlue!75 / cRed!75 italic). Closes color binding per §13.9 Binding-1.
 
 ### §13.7 Column F — Mechanical evidence (v8.6 restructure, supersedes Panel G; 8 sub-regions)
+
+**Cross-panel narrative attribution (2026-05-20 framework rewrite)**: Panel F shows **the sulfur polymer cantilever's** macroscopic response — third leg of the convergent-evidence triad (after D = kinetic CvS sample comparison establishing hero, E = hero's bimodal trap DOS). The bent cantilever, q_tr charge markers, and Coulomb-dominant arrow all depict the sulfur polymer (paper hero) under bias; control polymer mechanical response is NOT drawn (paper claim is "황고분자가 큰 bending", control would be flat/small — not the visual story). The Maxwell-vs-Coulomb force contrast within Panel F is intra-sample (same sulfur cantilever, two competing force terms).
 
 **Column bbox**: x=9.45..13.95, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + mini-gap y=2.65..2.80 + result zone y=0.20..2.60.
 

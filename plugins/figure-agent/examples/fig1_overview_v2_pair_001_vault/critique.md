@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T03:13:22Z
+generated_at: 2026-05-20T03:25:00Z
 generator: critique_brief.py
-generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
+generator_version: sha256:f36a781b25b0dda0b5cb83c4c75953fa77b22e62be39734d1bbdd5a2e1946124
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:a0da09f271eaacf96c1ca0c8d3e764f90ee792e61aca095afa3f9b61c3e2133f
+critique_input_hash: sha256:4d52e3cb28cc915454a317001dbdb47f8bbb3a9554281be287e2fa71c2557bc8
 verdict: ready
 audit_enumeration:
   structural_completeness:

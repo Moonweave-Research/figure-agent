@@ -1,37 +1,81 @@
 # Fig 1 Caption — fig1_overview_v2_pair_001_vault
 
-> Companion text for the figure file `fig1_overview_v2_pair_001_vault.pdf`. Drafted per briefing §13.6 E-4 Q12 LOCKED — figure caption must carry ISPD abbreviation first-use expansion.
+> Companion text for the figure file `fig1_overview_v2_pair_001_vault.pdf`.
+> v8.6 6-panel structure (A..F) + 2026-05-20 CvS absorption-current framework rewrite reflected.
+> Drafted 2026-05-20.
 
 ---
 
-## Short caption (≤30 words, table of contents / abstract-figure use)
+## Short caption (≤30 words — table of contents / abstract-figure use)
 
-**Charge-trap landscape in poly(S-r-DIB) sulfur polymer**, manifested through three independent probes — power-law kinetics, Iso-thermal Surface Potential Decay (ISPD), and macroscopic Coulomb bending — that converge on the same bimodal (shallow + deep) trap distribution.
+**Convergent evidence for deep charge trapping in inverse-vulcanized poly(S-r-DIB).** Three independent probes — Curie–von Schweidler kinetics, isothermal surface-potential decay (ISPD), and Coulomb-driven cantilever bending — converge on a bimodal, deep-dominant trap landscape that distinguishes the sulfur polymer from conventional dielectric controls.
 
 ---
 
-## Full caption (~150–200 words, journal body)
+## Full caption (~250 words — journal body)
 
-**Figure 1. Charge-trap landscape in inverse-vulcanized poly(S-r-DIB) sulfur polymer, probed by three independent observables that converge on a single bimodal trap distribution.**
-**(A)** Linear poly(S-r-DIB) primary microstructure formed by inverse vulcanization of S₈ (top right) with 1,3-diisopropenylbenzene (DIB). Each DIB ring bears two gem-dimethyl quaternary carbons connecting polysulfide segments, yielding a linear (non-crosslinked) random copolymer.
-**(B)** Composition sampling across four sulfur weight fractions — S₆₀ / S₇₀ / S₇₅ / S₈₅ (60/70/75/85 wt% S samples).
-**(C)** Localized-trap landscape in the bulk poly(S-r-DIB) thin film. *Left:* real-space view showing mixed-depth trap sites embedded in the polymer matrix. *Right:* energy-level diagram with continuous Gaussian density-of-states overlays — narrow shallow (blue) near the mobility edge and broader deep (red) farther below — connected to the real-space sites by color-matched leaders (Δ*E*_t marks the depth scalar; arrows indicate Boltzmann thermal release).
-**(D–G)** Three independent probes of the same trap landscape: **(D)** kinetic current decay following the Curie–von Schweidler power-law *I*(*t*) ∝ *t*⁻ⁿ, lying above the Debye reference at long times; **(E–F)** Iso-thermal Surface Potential Decay (ISPD): raw *V*_s(*t*) (stretched-exponential decay, **E**) and its derived density-of-states *g*(*E*_t) (bimodal, **F**) with characteristic time-constant separation τ_d; **(G)** macroscopic floating-clip Coulomb probe — trapped charges *q*_tr induce repulsive bending of the cantilever toward the grounded electrode, with Δ*x* = displacement.
+**Figure 1 | Convergent evidence that sulfur-rich poly(S-r-DIB) hosts a deep-trap-dominant charge-trapping landscape and that this landscape drives macroscopic actuation.**
+
+**a**, Identity of the parent material: linear poly(S-r-DIB) random copolymer formed by inverse vulcanization of elemental sulfur (S₈ ring, inset) with 1,3-diisopropenylbenzene (DIB); polysulfide segments are joined by DIB rings into a non-crosslinked linear chain.
+
+**b**, Three representative copolymer compositions across the paper's S60–S85 wt% range (S60 / S75 / S85), illustrating the variable polysulfide-to-DIB ratio.
+
+**c**, Conceptual model of the trap landscape (hero panel). *Left:* real-space cross-section of a poly(S-r-DIB) thin film with shallow (blue) and deep (red) charge-trap sites distributed throughout the matrix. *Right:* corresponding bimodal density of trap states *g*(*E*_t) on the energy axis between the vacuum level, mobility edge, valence band *E*_V and conduction band *E*_C; the deep-trap level lies Δ*E*_t below the mobility edge. Color-matched leaders link real-space sites to their energy-axis counterparts.
+
+**d–f**, Three independent measurement modalities convergently probe the same trap landscape.
+
+**d**, *Kinetic.* Absorption transient *I*(*t*) under a constant DC bias applied across a metal–insulator–metal (MIM) stack (source-measure unit, SMU). On a log-log plot of current against time, the sulfur polymer exhibits a steep Curie–von Schweidler power law *I*(*t*) ∝ *t*⁻ⁿ with a **high** *n* (red, paper hero), reflecting continued trap filling that suppresses the current well beyond the initial dielectric polarization. A conventional dielectric control (e.g., polyimide) yields a **low** *n* (blue), indicating negligible trap accumulation. Both responses lie above the single-relaxation Debye exponential (dashed) at long times — the universal non-Debye signature of trap-controlled dielectric response.
+
+**e**, *Spectroscopic.* Iso-thermal surface-potential decay (ISPD) on the same sulfur polymer: a corona discharge (HV⁺) deposits surface charge onto the polymer-on-grounded-substrate stack, and a non-contact vibrating Kelvin probe reads the slow *V*_s(*t*) decay (top sub-panel). Inversion of the stretched-exponential decay yields the bimodal trap energy distribution *g*(*E*_t) (bottom sub-panel), in which the deep Gaussian peak is approximately 1.86× the shallow peak height (separation τ_d).
+
+**f**, *Mechanical.* A poly(S-r-DIB) cantilever clamped opposite a biased planar electrode (*V*_active) accumulates trapped charges *q*_tr on its surface. The resulting Coulomb repulsion (bold red arrow) drives the cantilever away from the electrode, dominating over the baseline Maxwell-stress attraction *F*_Maxwell (dashed thin arrow toward the electrode). The macroscopic deflection is the direct mechanical manifestation of the same trap landscape probed in **d** and **e**.
+
+Quantitative analysis of the *n* exponent across the full S60–S85 composition series, the bimodal *g*(*E*_t) shape parameters and τ_d, and the time-resolved deflection Δ*x*(*t*)/τ_relax appears in Figs. 3 and 5.
 
 ---
 
 ## Annotation notes (for journal house-style)
 
-- **ISPD** first-use expanded in this caption (Iso-thermal Surface Potential Decay).
-- **CvS** is not abbreviated in caption (full name "Curie–von Schweidler" used once).
-- **DIB** acronym is paired with full chemical name "1,3-diisopropenylbenzene" at first use in caption.
-- Symbol conventions: trap sites and energy-level markers are polarity-neutral filled circles (●). The ⊕/⊖ notation is reserved for paper Methods / SI where carrier polarity is committed (see briefing §8.1 + Q6 closure).
-- "Bimodal trap distribution" wording is consistent with paper claim (briefing §1 Q22 LOCKED — "the same trap" refers to the *bimodal trap landscape*, not a single species).
+- **ISPD** first-use expanded in caption: "isothermal surface-potential decay (ISPD)".
+- **CvS** not abbreviated in caption (full name "Curie–von Schweidler" used twice).
+- **DIB** acronym paired with full chemical name "1,3-diisopropenylbenzene" at first use.
+- **MIM** first-use expanded: "metal–insulator–metal (MIM) stack".
+- **SMU** first-use expanded: "source-measure unit (SMU)".
+- "Bimodal trap distribution" wording consistent with paper claim (briefing §1 Q22 LOCKED — "same trap" refers to the bimodal landscape, not a single species).
+- "high *n*" / "low *n*" naming (no "deep-rich/shallow-rich" — deprecated 2026-05-20). Math *n* in italic per Nature math convention.
+- Color binding §13.9 Binding-1: blue = shallow, red = deep. Used consistently across panels c (real-space + energy diagram), e (Gaussians), f (q_tr markers).
+
+---
 
 ## Cross-reference (paper text linkage)
 
-- Mechanism framework / 7-phase floating-clip protocol → Methods §M.x.
-- Quantitative *n* exponent values across S₆₀–S₈₅ → Fig 3.
-- Quantitative shallow/deep peak ratio and σ → Fig 3.
-- Quantitative Δ*x*(*t*) / τ_relax extraction → Fig 5.
-- Mechanism contrast with prior art (Watanabe & Hirai 1999, 2004; Tamura et al. 2021) → Discussion §D.x (references.md Section 3.5).
+- Mechanism framework / floating-clip Coulomb protocol → Methods §M.x.
+- Quantitative *n* exponent values across S60–S85 + control polymers (PI / PDMS / PET) → **Fig 3**.
+- Quantitative shallow/deep Gaussian fits + τ_d → **Fig 3**.
+- Quantitative Δ*x*(*t*) / τ_relax extraction → **Fig 5**.
+- CvS theory framework (Curie 1889 / von Schweidler 1907 / Jonscher 1977) → Introduction + Methods references.
+- ISPD method foundations (Li *et al.* 2015, Han *et al.* 2018, Conrad *et al.* 2016 cross-section idiom) → Methods + Discussion.
+- Sulfur polymer mechanism contrast with electret / triboelectric / dielectric-elastomer prior art → Discussion §D.x.
+
+---
+
+## Caption ↔ figure consistency audit (2026-05-20)
+
+| Caption claim | Figure element | Verified |
+|---|---|---|
+| "S60 / S75 / S85" Panel **b** | spec.yaml §13.4 B-2 sample names | ✅ |
+| "high *n* (red) / low *n* (blue)" Panel **d** | .tex D-7b sloped labels + cRed!80 / cBlue!55 | ✅ |
+| "above the single-relaxation Debye reference at long times" Panel **d** | Debye bezier ends at y=0.45, RED/BLUE end at y=0.55 / y=1.50 — Debye below both | ✅ |
+| "deep peak ~1.86× shallow" Panel **e** | briefing §5 Q4 + §13.6 E-8 | ✅ |
+| "Coulomb dominates over F_Maxwell" Panel **f** | .tex F-7 cRed!80 0.7pt bold vs F-3 cRed!55 dashed 0.45pt thin | ✅ |
+| "sulfur polymer" hero attribution **e/f** | briefing §13.6 + §13.7 attribution lines (added 2026-05-20) | ✅ |
+| ΔE_t depth scalar Panel **c** | .tex Panel C R3 + briefing §13.3 | ✅ |
+
+No caption ↔ figure inconsistencies detected at this draft level.
+
+## Open items for paper-text iteration
+
+- Sample composition note: paper sweeps S60–S85 in 5 wt%-steps (S60/S70/S75/S80/S85), Panel **b** shows 3 representative; Methods/SI must clarify full set.
+- Control polymer choice for Panel **d**: caption uses "polyimide (PI)" as example; user's actual data has PI + PDMS + PET measured. Final caption should pick which control(s) to highlight or use generic "conventional dielectric control".
+- Direction of *q*_tr polarity Panel **f**: caption presently does not commit to electron-vs-hole; if Methods commits, caption should match (briefing §8.1 Q6 closure).
+- Δ*E*_t in Panel **c**: caption mentions "deep-trap level lies Δ*E*_t below the mobility edge" — Methods §M.x should give the operative definition (Boltzmann release energy, trap depth from CBM, etc.).
