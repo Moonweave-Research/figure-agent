@@ -5,7 +5,7 @@ generated_at: 2026-05-20T04:18:37Z
 generator: critique_brief.py
 generator_version: sha256:f36a781b25b0dda0b5cb83c4c75953fa77b22e62be39734d1bbdd5a2e1946124
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:3c0ee060fca020eb0c0ea0a13165f1c99dacff70920da4aa81ad963f896c3742
+critique_input_hash: sha256:9cb0481ec59f74498adf232e071ed68cb9c8f05b14bacf74d76bace9adb663ae
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -160,11 +160,9 @@ audit_enumeration:
       intended_target: panel E-2e meter identity (iter 51 unified font)
       matches: true
       proposed_fix: ""
-    - label: "d"
-      nearest_object: panel E probe-polymer air gap T-bar
-      intended_target: non-contact gap annotation
-      matches: true
-      proposed_fix: ""
+    # "d" air-gap annotation REMOVED iter E12 (2026-05-20) per user audit.
+    # Non-contact geometry self-conveyed by probe-hover; quantitative gap
+    # in Methods/SI, not cartoon Fig 1.
     - label: "V_s(t)"
       nearest_object: panel E decay y-axis
       intended_target: panel E-3 y-axis label (iter 51 x 4.83 to 4.73 to clear axis)
