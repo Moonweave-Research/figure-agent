@@ -40,10 +40,7 @@ from fig_loop_axis_records import (  # noqa: E402
     status_axis_evaluation,
 )
 from fig_loop_decision import (  # noqa: E402
-    critique_refresh_action,
-    decisions_with_value,
-    first_decision,
-    reference_input_missing,
+    loop_decision as build_loop_decision,
 )
 from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
@@ -57,7 +54,6 @@ from fig_loop_quality_axes import (  # noqa: E402
     quality_axis_summary,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
-from fig_loop_subregion import active_subregion_target  # noqa: E402
 from quality_manifest import yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
 
@@ -126,147 +122,6 @@ def _adjudication_state(example_dir: Path) -> dict[str, Any]:
         "decision_count": len(adjudication.get("decisions", [])),
         "decisions": adjudication.get("decisions", []),
         "source_critique_hash": adjudication["source_critique_hash"],
-    }
-
-
-def _loop_decision(
-    status_result: dict[str, Any],
-    adjudication: dict[str, Any],
-    example_dir: Path,
-) -> dict[str, Any]:
-    if reference_input_missing(status_result):
-        return {
-            "stop_reason": "reference_input_missing",
-            "recommended_next_action": "fix declared reference inputs before continuing",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-    if status_result.get("critique_state") in {"MISSING", "STALE"}:
-        return {
-            "stop_reason": "status_action_required",
-            "recommended_next_action": critique_refresh_action(
-                example_dir,
-                status_result.get("critique_state"),
-            ),
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-    if adjudication["state"] == "stale":
-        return {
-            "stop_reason": "stale_adjudication",
-            "recommended_next_action": "review or refresh critique_adjudication.yaml",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-    if adjudication["state"] == "invalid":
-        return {
-            "stop_reason": "invalid_adjudication",
-            "recommended_next_action": "fix critique_adjudication.yaml",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    human_decision = first_decision(adjudication, "needs_human")
-    if human_decision:
-        finding_id = human_decision["finding_id"]
-        return {
-            "stop_reason": "human_gate_required",
-            "recommended_next_action": f"human review required for {finding_id}",
-            "active_patch_target": None,
-            "human_gate_status": "required",
-        }
-
-    apply_decisions = decisions_with_value(adjudication, "apply")
-    if len(apply_decisions) > 1:
-        return {
-            "stop_reason": "ambiguous_patch_selection",
-            "recommended_next_action": (
-                "select exactly one apply decision in critique_adjudication.yaml"
-            ),
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-    if len(apply_decisions) == 1:
-        apply_decision = apply_decisions[0]
-        finding_id = apply_decision["finding_id"]
-        patch_target = apply_decision["patch_target"]
-        return {
-            "stop_reason": "patch_target_recommended",
-            "recommended_next_action": f"patch {finding_id}: {patch_target}",
-            "active_patch_target": {
-                "finding_id": finding_id,
-                "patch_target": patch_target,
-                "reason": apply_decision["reason"],
-            },
-            "human_gate_status": "not_requested",
-        }
-
-    if adjudication["state"] == "missing" and (status_result.get("critique_state") == "FRESH"):
-        return {
-            "stop_reason": "missing_adjudication",
-            "recommended_next_action": "create critique_adjudication.yaml",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    active_subregion = active_subregion_target(example_dir)
-    if active_subregion:
-        return {
-            "stop_reason": "active_subregion_recommended",
-            "recommended_next_action": (
-                f"patch active sub-region: {active_subregion['patch_target']}"
-            ),
-            "active_patch_target": active_subregion,
-            "human_gate_status": "not_requested",
-        }
-
-    if (
-        status_result.get("workflow_ready")
-        and status_result.get("acceptance_state") == "NOT_ACCEPTED"
-    ):
-        return {
-            "stop_reason": "status_action_required",
-            "recommended_next_action": status_result.get("next", "inspect figure state"),
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    # Issue 7E: polished-SVG final-artifact states (MISSING / INVALID / STALE /
-    # BLOCKED) reach this branch via workflow_ready=true + final_ready=false.
-    # status.py owns the canonical per-state next-action prose (see
-    # _NEXT_FINAL_ARTIFACT_*), so the loop forwards it through status.next
-    # rather than duplicating the recommendation text here. BLOCKED routes to
-    # semantic backport because status.py emits _NEXT_FINAL_ARTIFACT_BLOCKED
-    # for that state.
-    if status_result.get("workflow_ready") and not status_result.get("final_ready", True):
-        return {
-            "stop_reason": "status_action_required",
-            "recommended_next_action": status_result.get("next", "inspect figure state"),
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    if not status_result.get("workflow_ready"):
-        return {
-            "stop_reason": "status_action_required",
-            "recommended_next_action": status_result.get("next", "inspect figure state"),
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    if adjudication["state"] == "fresh" and adjudication.get("decisions"):
-        return {
-            "stop_reason": "no_actionable_findings",
-            "recommended_next_action": "no actionable adjudicated findings remain",
-            "active_patch_target": None,
-            "human_gate_status": "not_requested",
-        }
-
-    return {
-        "stop_reason": "verify_only_complete",
-        "recommended_next_action": status_result.get("next", "inspect figure state"),
-        "active_patch_target": None,
-        "human_gate_status": "not_requested",
     }
 
 
@@ -498,7 +353,7 @@ def run_loop(
 
     status_result = infer_stage(example_dir)
     adjudication = _adjudication_state(example_dir)
-    loop_decision = _loop_decision(status_result, adjudication, example_dir)
+    loop_decision = build_loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
     patch_handoff = build_patch_handoff(name, loop_decision)
