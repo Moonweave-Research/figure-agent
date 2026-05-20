@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.2
 fixture: golden_trap_depth_picture
-generated_at: 2026-05-19T11:32:38Z
+generated_at: 2026-05-19T13:49:54Z
 generator: critique_brief.py
-generator_version: sha256:4a7d64ba5e4ea97628b31038c25e8a38d3a9ddb70eaf7720f581313fabe5245d
+generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
 rubric_version: figure-agent.critique-rubric.v1.2
 critique_input_hash: sha256:a794641f2a9dd36468d704e2e7de8ca22e17bf6c3e1c9900bebe20aab9f04fba
 verdict: ready
@@ -232,9 +232,20 @@ journal_grade_assessment:
   blockers: []
   regression_detected: false
   regressions: []
-  score_is_gateable: true
+  score_is_gateable: false
   next_quality_bottleneck: polish
   rationale: "Fresh re-audit of the current build PNG against the briefing semantic assertions and the reference target. Every physics invariant (CB above VB, E_t between, shallow near CB, two-lobe g(E_t), right-side convergence) and every briefing must_depict clause (monomer-level polymer chain texture, deep lobe dominance, S-rich-segment density distinction, Row 1 title outside box) is observable as honored. Reference fidelity is high — layout, callout structure, and brace direction match the target while functional PGFPlots curves and skeletal polymer-chain rendering improve on the reference's hand-drawn version. The figure does not promote to high_impact_candidate because the visual register is intentionally explanatory-schematic rather than hero-cover: rows feel utilitarian rather than visually striking, Row 3 polymer chains carry less visual mass than Row 1 plots and the right-side diagram, and the teal accent is single-purpose rather than threaded through the figure. Next polish lever is the visual-weight balance between rows and the polymer-chain rendering richness."
+  overall_score: 86
+  sub_scores:
+    storyline: 90
+    composition: 84
+    component_fidelity: 90
+    scientific_plausibility: 94
+    label_semantics: 86
+    polish: 78
+    reference_fidelity: 92
+    export_scale_readability: 82
+  score_rationale: "Numbers describe only the current artifact, not progress. Storyline (90) is high because three left-side rows converge to one right-side picture through the teal brace and the read path is unambiguous. Composition (84) reflects clean 4-column landscape with thin gray row separators; the right-side energy diagram still carries the densest visual region (CB/VB lines, scattered shallow/deep markers, vertical Energy axis, E_t label, lobe pair all packed against a single vertical axis). Component fidelity (90) reflects every briefing-named element being identifiable in the render. Scientific plausibility (94) is the highest sub-score because all five physics invariants hold cleanly. Label semantics (86) reflects PlotCallout-anchored leader lines with white backing, including 'Discharge (Debye reference)' placed outside the plot box per briefing semantic_assertion. Polish (78) is the lowest sub-score because the visual register is intentionally explanatory-schematic — rows feel utilitarian, teal accent is single-purpose, and Row 3 polymer chains carry lower visual mass than Row 1 plots or the right-side diagram. Reference fidelity (92) reflects close layout and callout-structure match to reference/golden_target_001.png with only briefing-mandated functional deviations (PGFPlots curves, skeletal polymer chains). Export-scale readability (82) reflects 5.2pt tiny labels for chemical/physical-origin sub-captions still being readable at PNG scale, though this loop did not verify thumbnail / print-scale legibility."
 panels: []
 findings: []
 ---
@@ -246,3 +257,7 @@ Fresh re-audit of `build/golden_trap_depth_picture.png` against `briefing.md` an
 Under the v1.2 quality-axis pass, every applicable axis is `pass` at medium-to-high confidence. The physics invariants from briefing.md (CB > VB; E_t interior; shallow nearer CB; two distinct g(E_t) lobes; right-side as convergence endpoint) are visibly honored. The briefing must_depict clauses (monomer-level texture on Row 3 chains, deep lobe ≈2-3× shallow, S-rich-segment density distinction inside vs outside the dashed highlight, Row 1 title outside the box) are observable, and the briefing must_avoid items (featureless waves; floating arrows; energy axis not spanning CB→VB; asymmetric continuation; redundant g(E_t) labels) are not present in the render. Reference fidelity is high: where the build deviates from `reference/golden_target_001.png` (functional PGFPlots log-log curves replacing the reference's hand-drawn Bézier, and skeletal-backbone polymer chains replacing the reference's wavier lines), the deviations are briefing-mandated improvements rather than drift.
 
 For the journal-grade fresh re-audit, the figure is recorded as `solid_manuscript` rather than `high_impact_candidate`. The visual register is intentionally explanatory-schematic, not cover-style: row separators give the figure a worksheet feel, the teal accent is single-purpose rather than threaded through the figure as a hero color, and Row 3 polymer chains carry less visual mass than Row 1 plots or the right-side diagram. The figure is a strong manuscript schematic but does not read above ordinary manuscript quality from a fresh-audit eye. `next_quality_bottleneck: polish` so the next loop target is the visual-weight balance between rows and the polymer-chain rendering richness — not a progress score against earlier iterations.
+
+## Score block notes (Issue 9B advisory contract)
+
+`overall_score: 86` and the sub-scores are advisory only. `score_is_gateable: false` because Issue 9B keeps host-authored scores out of the release/gate path by default; this run does not opt the score in as gateable. The sub-score spread (94 scientific_plausibility ↔ 78 polish, a 16-point band) localizes the next-quality lever to polish (visual-weight balance + polymer-chain rendering richness) without claiming a journal acceptance probability or downgrading any non-score gate (acceptance, golden roll-forward, export, human review).

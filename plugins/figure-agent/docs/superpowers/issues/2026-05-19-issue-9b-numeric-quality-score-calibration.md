@@ -1,7 +1,7 @@
 # Issue 9B: Numeric Quality Score Calibration
 
 **Date:** 2026-05-19 KST
-**Status:** deferred
+**Status:** implemented as advisory-only numeric score contract on branch `codex/issue-9b-numeric-quality-score-calibration`
 **Parent:** Issue 9
 **Type:** HITL
 
@@ -17,18 +17,29 @@ when a later patch introduces a new defect or damages visual balance.
 
 ## Acceptance criteria
 
-- [ ] At least 5 real loop runs show that level-only assessment is useful but
+- [x] At least 5 real loop runs show that level-only assessment is useful but
   insufficient.
-- [ ] Score calibration policy is documented before implementation.
-- [ ] Scores cannot override blocker precedence.
-- [ ] Scores are not cumulative progress meters.
-- [ ] Tests cover score decrease after regression.
+- [x] Score calibration policy is documented before implementation.
+- [x] Scores cannot override blocker precedence.
+- [x] Scores are not cumulative progress meters.
+- [x] Tests cover score decrease after regression.
 
-## Blocked by
+## Preconditions
 
-- Issue 9A.
-- Issue 9C fresh re-audit dogfood evidence.
-- Human calibration decision after dogfood evidence.
+- [x] Issue 9A implemented.
+- [x] Issue 9C reached N=5 valid v1.2 critique-grounded runs.
+- [x] Human calibration decision: proceed with advisory-only scores, no score-driven gates.
+
+## Implementation Policy
+
+- Numeric scores are optional v1.2 `journal_grade_assessment` fields.
+- If any score field appears, `overall_score`, complete `sub_scores`, and
+  `score_rationale` are required.
+- Scores are fresh re-audit diagnostics, not cumulative progress meters.
+- Scores may decrease after a patch.
+- Scores cannot override `quality_axes`, `benchmark_level`, stale/freshness
+  gates, human gates, export gates, final-artifact gates, or accepted/golden
+  gates.
 
 ## Out of scope
 

@@ -377,6 +377,16 @@ are passing, no human gate is required, and the current artifact reads above
 ordinary manuscript quality. Use `needs_human_art_direction` when the remaining
 decision is taste, story framing, target-journal fit, policy, or visual
 direction that should not be decided by automation.
+
+Scores are advisory fresh re-audit diagnostics. They are optional but
+recommended when the current artifact can be scored with concrete visual,
+briefing, reference, or theory-guard evidence. Scores are not cumulative progress
+meters. A later loop may score lower if a patch introduces a new
+defect or makes an old defect visible. Scores cannot override blockers, human
+gates, stale exports, final-artifact gates, accepted/golden gates,
+`quality_axes` verdicts, or `benchmark_level`. Do not invent journal acceptance
+probabilities. If you emit any numeric score, emit the complete
+`overall_score`, `sub_scores`, and `score_rationale` block.
 """
 
 
@@ -485,6 +495,17 @@ def _journal_grade_assessment_schema(critique_input_hash: str) -> str:
                 "polish | reference_fidelity | export_scale_readability | human_policy"
             ),
             '  rationale: "<current artifact-only quality rationale>"',
+            "  overall_score: 0-100",
+            "  sub_scores:",
+            "    storyline: 0-100",
+            "    composition: 0-100",
+            "    component_fidelity: 0-100",
+            "    scientific_plausibility: 0-100",
+            "    label_semantics: 0-100",
+            "    polish: 0-100",
+            "    reference_fidelity: 0-100",
+            "    export_scale_readability: 0-100",
+            '  score_rationale: "<why these numbers describe only the current artifact>"',
         ]
     )
 

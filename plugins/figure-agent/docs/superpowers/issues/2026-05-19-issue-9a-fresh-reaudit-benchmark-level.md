@@ -33,17 +33,17 @@ levels become stale when critique inputs change.
 
 ## Acceptance criteria
 
-- [ ] `/fig_critique` brief includes the level-only assessment schema.
-- [ ] v1.2 critique validation accepts a valid assessment block.
-- [ ] v1.2 critique validation rejects invalid `scoring_mode`.
-- [ ] v1.2 critique validation rejects non-`sha256:` `assessed_artifact_hash`.
-- [ ] v1.2 critique validation rejects `high_impact_candidate` when any
+- [x] `/fig_critique` brief includes the level-only assessment schema.
+- [x] v1.2 critique validation accepts a valid assessment block.
+- [x] v1.2 critique validation rejects invalid `scoring_mode`.
+- [x] v1.2 critique validation rejects non-`sha256:` `assessed_artifact_hash`.
+- [x] v1.2 critique validation rejects `high_impact_candidate` when any
   upstream quality axis is not `pass` or `not_applicable`.
-- [ ] v1.2 critique validation rejects `score_is_gateable: true` when
+- [x] v1.2 critique validation rejects `score_is_gateable: true` when
   `assessed_artifact_hash` does not match `critique_input_hash`.
-- [ ] v1 and v1.1 critiques remain legacy-compatible.
-- [ ] `/fig_loop` surfaces a valid fresh assessment in its JSON iteration.
-- [ ] `/fig_loop` does not mark a stale or malformed assessment as gateable.
+- [x] v1 and v1.1 critiques remain legacy-compatible.
+- [x] `/fig_loop` surfaces a valid fresh assessment in its JSON iteration.
+- [x] `/fig_loop` does not mark a stale or malformed assessment as gateable.
 
 ## Blocked by
 

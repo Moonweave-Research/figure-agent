@@ -238,6 +238,38 @@ def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
     assert "### 10. Publication Readiness" in brief
 
 
+def test_critique_brief_includes_advisory_numeric_score_schema(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "overall_score: 0-100" in brief
+    assert "sub_scores:" in brief
+    assert "storyline: 0-100" in brief
+    assert "composition: 0-100" in brief
+    assert "component_fidelity: 0-100" in brief
+    assert "scientific_plausibility: 0-100" in brief
+    assert "label_semantics: 0-100" in brief
+    assert "polish: 0-100" in brief
+    assert "reference_fidelity: 0-100" in brief
+    assert "export_scale_readability: 0-100" in brief
+    assert 'score_rationale: "<why these numbers describe only the current artifact>"' in brief
+
+
+def test_critique_brief_states_numeric_scores_are_advisory_not_gates(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "Scores are advisory fresh re-audit diagnostics" in brief
+    assert "not cumulative progress" in brief
+    assert "cannot override blockers" in brief
+    assert "human" in brief
+    assert "gates" in brief
+    assert "stale exports" in brief
+    assert "Do not invent journal acceptance" in brief
+
+
 def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

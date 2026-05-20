@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.2
 fixture: n3_trial_02_actuation_sequence
-generated_at: 2026-05-19T12:18:35Z
+generated_at: 2026-05-19T23:58:38Z
 generator: critique_brief.py
-generator_version: sha256:4a7d64ba5e4ea97628b31038c25e8a38d3a9ddb70eaf7720f581313fabe5245d
+generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
 rubric_version: figure-agent.critique-rubric.v1.2
 critique_input_hash: sha256:89c9593862f8997911462db8107621623e25f504e55aecd88e68ea9d882fe7ae
 verdict: ready
@@ -198,9 +198,20 @@ journal_grade_assessment:
   blockers: []
   regression_detected: false
   regressions: []
-  score_is_gateable: true
+  score_is_gateable: false
   next_quality_bottleneck: polish
-  rationale: "Fresh re-audit of the current build PNG against briefing.md and reference/codex_gen_v1.png shows a clean three-phase actuation sequence: Charge Injection (+V applied) → Coulomb Repulsion (-V applied) → Relaxation (Open circuit). All physics invariants are honored — charge-injection arrows go polymer→electrode under +V, Coulomb arrows go polymer→away-from-electrode under -V, and the relaxation panel shows a dashed prev.-position reference plus a curved return arrow. Reference fidelity is high; the 'Coulomb > Maxwell' pill gives the mechanism claim appropriate visual weight. Benchmark_level remains solid_manuscript rather than high_impact_candidate because the visual register is functional 3-panel-sequence rather than hero-cover: the e^- text annotations sit on the polymer body without dedicated charge-cluster glyphs, and the time-sequence read path relies on left-to-right convention rather than an explicit time axis or numbered phases. Score is gateable against the current critique hash. Next polish lever is the e^- charge-rendering style and an explicit phase index (1/2/3 or t1/t2/t3) for unambiguous reading order."
+  rationale: "Fresh re-audit of the current build PNG against briefing.md and reference/codex_gen_v1.png shows a clean three-phase actuation sequence: Charge Injection (+V applied) → Coulomb Repulsion (-V applied) → Relaxation (Open circuit). All physics invariants are honored — charge-injection arrows go polymer→electrode under +V, Coulomb arrows go polymer→away-from-electrode under -V, and the relaxation panel shows a dashed prev.-position reference plus a curved return arrow. Reference fidelity is high; the 'Coulomb > Maxwell' pill gives the mechanism claim appropriate visual weight. Benchmark_level remains solid_manuscript rather than high_impact_candidate because the visual register is functional 3-panel-sequence rather than hero-cover: the e^- text annotations sit on the polymer body without dedicated charge-cluster glyphs, and the time-sequence read path relies on left-to-right convention rather than an explicit time axis or numbered phases. Per the Issue 9D safe default, score_is_gateable is false so the score stays advisory. Next polish lever is the e^- charge-rendering style and an explicit phase index (1/2/3 or t1/t2/t3) for unambiguous reading order."
+  overall_score: 82
+  sub_scores:
+    storyline: 90
+    composition: 80
+    component_fidelity: 86
+    scientific_plausibility: 92
+    label_semantics: 84
+    polish: 74
+    reference_fidelity: 88
+    export_scale_readability: 80
+  score_rationale: "Numbers describe only the current artifact, not progress. Storyline (90) is high because the three-phase actuation read path is unambiguous left-to-right (Charge Injection → Coulomb Repulsion → Relaxation) with matching voltage subtitles (+V applied / -V applied / Open circuit). Composition (80) reflects the clean 3-panel grid with consistent clip/polymer/electrode/voltage-source geometry; no HERO panel and no explicit time axis hold it back from a higher score. Component fidelity (86) reflects every briefing-named element being clearly identifiable across all three panels (contact clip, S-rich polymer, electrode, voltage label, e^- annotations, force arrows, prev.-position dashed reference, return arrow). Scientific plausibility (92) is the highest sub-score because every physics invariant holds: charge-injection arrows point polymer→electrode under +V, Coulomb arrows point polymer→away-from-electrode under -V (with the 'Coulomb > Maxwell' pill giving the mechanism claim visual weight), the polymer bends in the Coulomb direction, and the relaxation panel correctly shows the polymer returning toward its straight position with a dashed previous-bent reference. Label semantics (84) reflects clean label-target binding across panels with no clash candidates flagged in this loop. Polish (74) is the lowest sub-score because the e^- charge annotations sit as plain text on the polymer body rather than dedicated charge-cluster glyphs, and the time-sequence ordering relies on left-to-right convention rather than an explicit phase index. Reference fidelity (88) reflects a close 3-phase layout match to reference/codex_gen_v1.png including the 'Coulomb > Maxwell' pill and the dashed prev.-position reference; build deviations are scale (build is taller per panel) rather than topology. Export-scale readability (80) reflects readable Nature-style typography and the explicit panel-title bold headers, though thumbnail / print-scale verification was not run this loop."
 panels: []
 findings: []
 ---
@@ -211,4 +222,4 @@ Fresh re-audit of `build/n3_trial_02_actuation_sequence.png` against `briefing.m
 
 Under the v1.2 quality-axis pass, every applicable axis is `pass` at medium-to-high confidence. The phase physics is consistent across panels (arrow directions agree with bend directions; floating-electrode state in panels 2 and 3 is labeled; the "Coulomb > Maxwell" pill captures the mechanism claim). The visual-clash checker reported 9 candidates at compile time — the lowest of any substitute run, suggesting label placement is largely under control. Reference fidelity is high: the build reproduces the reference's panel order, polymer-bend directions, arrow color convention, and the Coulomb-vs-Maxwell callout.
 
-For the journal-grade fresh re-audit, the assessment is `solid_manuscript` with medium confidence and `score_is_gateable: true`. The figure is not promoted to `high_impact_candidate` because the visual register is a functional three-panel sequence rather than a hero-cover composition — the e^- text annotations sit on the polymer body without dedicated charge-cluster glyphs, and the time-sequence read path relies on convention rather than an explicit time axis or numbered phase index. `next_quality_bottleneck: polish` points at those two concrete polish levers (charge-rendering style and explicit phase index) for the next loop.
+For the journal-grade fresh re-audit, the assessment is `solid_manuscript` with medium confidence and `score_is_gateable: false`. The figure is not promoted to `high_impact_candidate` because the visual register is a functional three-panel sequence rather than a hero-cover composition — the e^- text annotations sit on the polymer body without dedicated charge-cluster glyphs, and the time-sequence read path relies on convention rather than an explicit time axis or numbered phase index. `next_quality_bottleneck: polish` points at those two concrete polish levers (charge-rendering style and explicit phase index) for the next loop.

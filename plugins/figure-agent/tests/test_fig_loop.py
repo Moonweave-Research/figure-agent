@@ -147,8 +147,10 @@ def _journal_assessment(
     *,
     level: str = "solid_manuscript",
     gateable: bool = True,
+    with_scores: bool = False,
+    overall_score: int = 72,
 ) -> dict:
-    return {
+    assessment = {
         "schema": "figure-agent.journal-grade-assessment.v1",
         "scoring_mode": "fresh_reaudit",
         "assessed_artifact_hash": assessed_hash,
@@ -161,6 +163,24 @@ def _journal_assessment(
         "next_quality_bottleneck": "polish",
         "rationale": "current artifact quality level",
     }
+    if with_scores:
+        assessment.update(
+            {
+                "overall_score": overall_score,
+                "sub_scores": {
+                    "storyline": 78,
+                    "composition": 70,
+                    "component_fidelity": 55,
+                    "scientific_plausibility": 82,
+                    "label_semantics": 76,
+                    "polish": 64,
+                    "reference_fidelity": 80,
+                    "export_scale_readability": 68,
+                },
+                "score_rationale": "current artifact only",
+            }
+        )
+    return assessment
 
 
 def _patch_fresh_status(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -509,6 +529,146 @@ def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
     assessment = iteration["journal_grade_assessment"]
     assert assessment["score_is_gateable"] is False
     assert assessment["evaluation_state"] == "stale"
+
+
+def test_loop_surfaces_advisory_score_block(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash=critique_hash,
+        journal_assessment=_journal_assessment(
+            critique_hash,
+            with_scores=True,
+            overall_score=72,
+        ),
+    )
+    _write_adjudication(fixture, file_sha256(fixture / "critique.md"))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment = iteration["journal_grade_assessment"]
+    assert assessment["overall_score"] == 72
+    assert assessment["sub_scores"]["component_fidelity"] == 55
+    assert assessment["score_rationale"] == "current artifact only"
+    assert assessment["score_policy"] == "advisory_fresh_reaudit_not_gate"
+    assert iteration["stop_reason"] == "status_action_required"
+
+
+def test_loop_does_not_mark_malformed_score_block_as_advisory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    assessment = _journal_assessment(
+        critique_hash,
+        with_scores=True,
+        overall_score=101,
+    )
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash=critique_hash,
+        journal_assessment=assessment,
+    )
+    _write_adjudication(fixture, file_sha256(fixture / "critique.md"))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect malformed score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment_record = iteration["journal_grade_assessment"]
+    assert assessment_record["overall_score"] == 101
+    assert "score_policy" not in assessment_record
+
+
+def test_loop_marks_high_score_stale_when_assessment_hash_mismatches(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash="sha256:" + "a" * 64,
+        journal_assessment=_journal_assessment(
+            "sha256:" + "b" * 64,
+            with_scores=True,
+            overall_score=99,
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assessment = iteration["journal_grade_assessment"]
+    assert assessment["overall_score"] == 99
+    assert assessment["score_is_gateable"] is False
+    assert assessment["evaluation_state"] == "stale"
+    assert "score_policy" not in assessment
+
+
+def test_loop_high_score_does_not_override_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique(
+        fixture,
+        critique_input_hash=critique_hash,
+        journal_assessment=_journal_assessment(
+            critique_hash,
+            with_scores=True,
+            overall_score=96,
+        ),
+    )
+    _write_adjudication(
+        fixture,
+        file_sha256(fixture / "critique.md"),
+        decisions=[
+            {
+                "finding_id": "C001",
+                "decision": "needs_human",
+                "reason": "domain decision",
+                "patch_target": "",
+                "evidence": "human note",
+            }
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect human gate score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["journal_grade_assessment"]["overall_score"] == 96
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["escalation_level"] == "human_review_required"
 
 
 def test_loop_ignores_malformed_quality_axes_without_crashing(

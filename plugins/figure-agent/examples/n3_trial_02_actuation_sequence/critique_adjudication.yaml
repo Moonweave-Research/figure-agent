@@ -1,4 +1,4 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: n3_trial_02_actuation_sequence
-source_critique_hash: sha256:641d1e0c94ba33440866f95d4e8b6016de6b33d1a6d670472c5d96f9a71148fb
+source_critique_hash: sha256:19d52ed1577ac636c45dea41ac479c4ebc6a1af273fd5d3b202ab9024dc66467
 decisions: []

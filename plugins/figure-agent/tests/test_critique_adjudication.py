@@ -361,6 +361,22 @@ def _journal_assessment_yaml(
     )
 
 
+def _score_block_yaml(*, overall_score: float = 72) -> str:
+    return (
+        f"  overall_score: {overall_score}\n"
+        "  sub_scores:\n"
+        "    storyline: 78\n"
+        "    composition: 70\n"
+        "    component_fidelity: 55\n"
+        "    scientific_plausibility: 82\n"
+        "    label_semantics: 76\n"
+        "    polish: 64\n"
+        "    reference_fidelity: 80\n"
+        "    export_scale_readability: 68\n"
+        '  score_rationale: "current artifact only; not a progress score"\n'
+    )
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -482,6 +498,208 @@ def test_build_adjudication_scaffold_accepts_v1_2_fresh_reaudit_assessment(
         fig_dir,
         critique_input_hash=critique_hash,
         journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_2_journal_score_block(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=(
+            _journal_assessment_yaml(assessed_hash=critique_hash) + _score_block_yaml()
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_out_of_range_overall_score(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=(
+            _journal_assessment_yaml(assessed_hash=critique_hash)
+            + _score_block_yaml(overall_score=101)
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="overall_score"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_out_of_range_sub_score(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    score_yaml = _score_block_yaml().replace("    polish: 64\n", "    polish: -1\n")
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
+        + score_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="sub_scores.polish"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_boolean_score(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    score_yaml = _score_block_yaml().replace("  overall_score: 72\n", "  overall_score: true\n")
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
+        + score_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="overall_score"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_empty_score_rationale(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    score_yaml = _score_block_yaml().replace(
+        '  score_rationale: "current artifact only; not a progress score"\n',
+        '  score_rationale: ""\n',
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
+        + score_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="score_rationale"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_partial_score_block(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=(
+            _journal_assessment_yaml(assessed_hash=critique_hash) + "  overall_score: 72\n"
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="score block"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_missing_sub_score_key(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    score_yaml = _score_block_yaml().replace("    polish: 64\n", "")
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
+        + score_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="sub_scores"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_extra_sub_score_key(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    score_yaml = _score_block_yaml().replace(
+        "    export_scale_readability: 68\n",
+        "    export_scale_readability: 68\n    typography: 90\n",
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
+        + score_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="sub_scores"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_allows_high_score_without_level_promotion(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=(
+            _journal_assessment_yaml(assessed_hash=critique_hash, level="draft")
+            + _score_block_yaml(overall_score=95)
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_allows_lower_score_after_regression(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    assessment_yaml = _journal_assessment_yaml(
+        assessed_hash=critique_hash,
+        level="draft",
+    ).replace(
+        "  regression_detected: false\n"
+        "  regressions: []\n",
+        "  regression_detected: true\n"
+        "  regressions:\n"
+        "    - axis: polish\n"
+        '      previous_state: "72"\n'
+        '      current_state: "58"\n'
+        '      reason: "patch made label balance worse"\n',
+    )
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=assessment_yaml + _score_block_yaml(overall_score=58),
     )
 
     scaffold = build_adjudication_scaffold(fig_dir)

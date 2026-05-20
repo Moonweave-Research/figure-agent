@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.2
 fixture: n3_trial_01_trap_depth
-generated_at: 2026-05-19T12:15:27Z
+generated_at: 2026-05-19T23:52:07Z
 generator: critique_brief.py
-generator_version: sha256:4a7d64ba5e4ea97628b31038c25e8a38d3a9ddb70eaf7720f581313fabe5245d
+generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
 rubric_version: figure-agent.critique-rubric.v1.2
 critique_input_hash: sha256:fdf8612825c2b1aae34fed682a1db8f20299e854c9d40b9b769f3a3cb4a2df01
 verdict: revise
@@ -241,9 +241,20 @@ journal_grade_assessment:
   blockers: []
   regression_detected: false
   regressions: []
-  score_is_gateable: true
+  score_is_gateable: false
   next_quality_bottleneck: component_fidelity
-  rationale: "Fresh re-audit of the current build PNG reveals a recognizable three-rows-converging-to-a-trap-depth-picture composition, but Row 3 polymer chain is rendered as a featureless wavy line with no monomer-level texture or visible sulfur side groups — this is the same anti-pattern that the sibling fixture golden_trap_depth_picture's v0.2 baseline adjudication recorded as a BLOCKER. The figure's right-side energy diagram is clean and scientifically plausible (CB above VB, E_t mid-gap, shallow near CB, deep near VB), and the equation in Row 2 (τ_d = τ₀ exp(E_t/k_B T)) is sign-consistent. The structural defect in Row 3 lives in component_fidelity rather than scientific_plausibility because the physics holds even with the simplified polymer-chain rendering; the next loop target is to rewire Row 3 to use the A1 polymer_chain.snippet.tex pattern that closed the same gap on golden_trap_depth_picture. Benchmark_level is draft because at least four upstream axes are needs_patch; the score is gateable against the current critique hash."
+  rationale: "Fresh re-audit of the current build PNG reveals a recognizable three-rows-converging-to-a-trap-depth-picture composition, but Row 3 polymer chain is rendered as a featureless wavy line with no monomer-level texture or visible sulfur side groups — this is the same anti-pattern that the sibling fixture golden_trap_depth_picture's v0.2 baseline adjudication recorded as a BLOCKER. The figure's right-side energy diagram is clean and scientifically plausible (CB above VB, E_t mid-gap, shallow near CB, deep near VB), and the equation in Row 2 (τ_d = τ₀ exp(E_t/k_B T)) is sign-consistent. The structural defect in Row 3 lives in component_fidelity rather than scientific_plausibility because the physics holds even with the simplified polymer-chain rendering; the next loop target is to rewire Row 3 to use the A1 polymer_chain.snippet.tex pattern that closed the same gap on golden_trap_depth_picture. Benchmark_level is draft because at least four upstream axes are needs_patch; per the Issue 9D safe default, score_is_gateable is false so the loop continues to gate on the F001 BLOCKER adjudication rather than the numeric score."
+  overall_score: 60
+  sub_scores:
+    storyline: 76
+    composition: 70
+    component_fidelity: 46
+    scientific_plausibility: 88
+    label_semantics: 56
+    polish: 56
+    reference_fidelity: 52
+    export_scale_readability: 68
+  score_rationale: "Numbers describe only the current artifact, not progress. Storyline (76) reflects that the three-numbered-cards → teal Convergence brace → right-side trap-depth picture flow is unambiguous despite Row 3's structural gap. Composition (70) reflects clean card layout, right-side CB/E_t/VB energy axis with paired shallow/deep g(E_t) lobes, and the explicit teal Convergence brace. Component fidelity (46) is the lowest sub-score because Row 3 polymer chain is rendered as a single featureless wavy line with no monomer-level texture and no visible sulfur side groups (F001 BLOCKER); the chemical/physical-origin sub-boxes are present but isolated from the chain. Scientific plausibility (88) reads high because the right-side energy diagram honors CB > E_t > VB ordering, paired shallow/deep g(E_t) lobes, and the Row 2 equation τ_d = τ₀ exp(E_t / k_B T) is sign-consistent. Label semantics (56) reflects 26 visual-clash candidates from check_visual_clash.py with near_miss / text_on_path warnings around 'VB', 'S', 'sulfur', '(polarizability,', and 'g(Et' (F003). Polish (56) reflects the draft-level Row 3 rendering and the residual label clash. Reference fidelity (52) is low because reference/codex_gen_v1.png shows monomer-textured polymer chains with explicit sulfur side groups across Row 3, and the build renders a featureless wave instead — a real structural deviation, not a briefing-mandated simplification. Export-scale readability (68) reflects the small sulfur side label and the chemical-origin / physical-origin sub-box text without thumbnail / print-scale verification this loop."
 panels: []
 findings:
   - id: F001
@@ -268,4 +279,4 @@ Fresh re-audit of `build/n3_trial_01_trap_depth.png` against `briefing.md` and `
 
 The figure has one structural BLOCKER finding **F001**: Row 3's polymer chain is a featureless wavy line with no monomer-level texture and no sulfur side groups. This is the exact "featureless waves" anti-pattern that sibling fixture `golden_trap_depth_picture` recorded as G001 BLOCKER in its v0.2 baseline adjudication and that was later closed by the A1 `polymer_chain.snippet.tex` rewrite. The fix path is well-trodden; this is a `patch` rather than a `revise_briefing`. **F003 (MAJOR, label_placement)** captures the 26 visual-clash candidates emitted by `scripts/check_visual_clash.py` at compile time. The figure's physics axes pass cleanly — `scientific_plausibility` is honored (CB above VB, E_t between, shallow near CB, deep near VB, Arrhenius equation sign-consistent), and `subregion_integration` reads through the convergence column. The verdict is `revise` rather than `block` because the BLOCKER is structural rather than a physics violation: the figure's story remains recoverable from the labels and the right-side panel even with Row 3's missing texture.
 
-For the journal-grade fresh re-audit, the assessment is `draft` with high confidence and `score_is_gateable: true`. The next loop target is `component_fidelity` because closing F001 by porting the A1 polymer_chain snippet pattern is the largest single quality lift available; F003 polish should come after the Row 3 rewrite to avoid throwing away polish work on a region that is about to be replaced.
+For the journal-grade fresh re-audit, the assessment is `draft` with high confidence and `score_is_gateable: false`. The next loop target is `component_fidelity` because closing F001 by porting the A1 polymer_chain snippet pattern is the largest single quality lift available; F003 polish should come after the Row 3 rewrite to avoid throwing away polish work on a region that is about to be replaced.
