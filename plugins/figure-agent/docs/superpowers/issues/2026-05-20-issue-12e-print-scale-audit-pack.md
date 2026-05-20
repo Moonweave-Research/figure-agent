@@ -30,6 +30,9 @@ and `publication_readiness`; it is not an export or acceptance mutation.
   `build/audit_crops/`.
 - Print-scale items share the 12A audit-pack plumbing but are listed in a
   separate brief section from original-pixel high-zoom quadrant crops.
+- Print-scale metadata declares `scale_basis=fixed_width_proxy` and
+  `target_width_px` so the host does not mistake these reduced-width audit
+  images for DPI-derived physical print simulations.
 - The brief requires host inspection before passing `journal_polish` or
   `publication_readiness`; this remains evidence-only and does not mutate
   exports or acceptance state.
@@ -40,9 +43,9 @@ and `publication_readiness`; it is not an export or acceptance mutation.
   -> 40 passed.
 - `uv run ruff check scripts/critique_zoom_crops.py scripts/critique_brief.py tests/test_critique_zoom_crops.py tests/test_critique_brief.py`
   -> all checks passed.
-- `uv run python3 scripts/critique_brief.py examples/fig1_overview_v2_pair_001_vault | rg 'Print-Scale Audit Images|print_178mm|print_thumbnail|print_scale_unreadable|journal_polish|publication_readiness'`
+- `uv run python3 scripts/critique_brief.py examples/fig1_overview_v2_pair_001_vault | rg 'Print-Scale Audit Images|print_178mm|print_thumbnail|print_scale_unreadable|journal_polish|publication_readiness|basis=fixed_width_proxy|target_width_px'`
   -> emitted the print-scale section, both audit image paths, and both required
-  quality-axis names.
+  quality-axis names with proxy metadata.
 - `uv run pytest -q` -> 746 passed, 1 skipped, 1 xfailed, 5 legacy
   deprecation warnings.
 - `uv run ruff check .` -> all checks passed.

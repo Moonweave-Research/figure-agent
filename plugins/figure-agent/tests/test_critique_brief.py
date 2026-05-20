@@ -315,6 +315,10 @@ def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
     assert "## Print-Scale Audit Images" in brief
     assert "`examples/review_demo/build/audit_crops/print_178mm.png`" in brief
     assert "`examples/review_demo/build/audit_crops/print_thumbnail.png`" in brief
+    assert "basis=fixed_width_proxy" in brief
+    assert "target_width_px=1000" in brief
+    assert "target_width_px=360" in brief
+    assert "proxy evidence" in brief
     assert "journal_polish" in brief
     assert "publication_readiness" in brief
     assert "print_scale_unreadable" in brief

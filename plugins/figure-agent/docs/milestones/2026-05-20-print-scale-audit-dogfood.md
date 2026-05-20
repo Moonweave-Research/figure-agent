@@ -33,6 +33,8 @@ the evidence and prompt contract that a host critique must use.
    - `## Print-Scale Audit Images` emitted.
    - `print_178mm.png` emitted with `scale=178mm_equivalent size_px=[1000, 624]`.
    - `print_thumbnail.png` emitted with `scale=thumbnail size_px=[360, 225]`.
+   - Both print-scale entries declare `basis=fixed_width_proxy` and
+     `target_width_px`, making the reduced-width proxy explicit.
    - The brief requires inspecting reduced-scale images before setting
      `journal_polish` or `publication_readiness` to `pass`.
    - The print-scale section tells the host to record reduction failures as
@@ -68,7 +70,8 @@ to feed `micro_defects`.
 
 ## Remaining Risk
 
-`print_178mm` is a deterministic fixed-width proxy, not a physical DPI-derived
-journal-scale simulation. That is acceptable for Issue 12E evidence generation,
-but later calibration work should decide whether the proxy should become a
-true export-width or DPI-aware transform.
+`print_178mm` is now explicitly labeled as deterministic fixed-width proxy
+evidence, not a physical DPI-derived journal-scale simulation. That is
+acceptable for Issue 12E evidence generation, but later calibration work should
+decide whether an additional true export-width or DPI-aware transform is worth
+adding.

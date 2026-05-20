@@ -347,6 +347,9 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
         "`journal_polish` or `publication_readiness` to `pass`.",
         "Use them to check label readability, arrow-tip recognizability, line-weight "
         "survival, and dense-region legibility at manuscript scale.",
+        "These are proxy evidence images: `scale_basis=fixed_width_proxy` means "
+        "the image is a deterministic reduced-width readability check, not a "
+        "DPI-derived physical print simulation.",
         "If reduction hides text, fuses arrow tips, or makes a dense region "
         "ambiguous, record it as `micro_defects.kind: print_scale_unreadable`.",
         "",
@@ -357,6 +360,7 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
         lines.append(
             f"- `{_example_relative_path(example_dir, item_path)}` "
             f"scale={item['scale_label']} size_px={item['size_px']} "
+            f"basis={item['scale_basis']} target_width_px={item['target_width_px']} "
             f"from `{_example_relative_path(example_dir, source_path)}`"
         )
     return "\n" + "\n".join(lines) + "\n"

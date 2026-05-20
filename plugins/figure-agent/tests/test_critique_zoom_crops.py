@@ -48,6 +48,12 @@ def test_build_zoom_crop_pack_creates_print_scale_audit_images(tmp_path: Path) -
         "178mm_equivalent",
         "thumbnail",
     ]
+    assert [item["scale_basis"] for item in print_items] == [
+        "fixed_width_proxy",
+        "fixed_width_proxy",
+    ]
+    assert [item["target_width_px"] for item in print_items] == [1000, 360]
+    assert [item["upscaled"] for item in print_items] == [False, False]
     for item in print_items:
         path = example_dir / item["path"]
         assert path.is_file()
@@ -67,6 +73,7 @@ def test_build_zoom_crop_pack_keeps_small_print_scale_images_at_original_width(
 
     print_items = [item for item in crops if item["kind"] == "print_scale"]
     assert [item["size_px"] for item in print_items] == [[300, 200], [300, 200]]
+    assert [item["upscaled"] for item in print_items] == [False, False]
 
 
 def test_build_zoom_crop_pack_print_scale_size_is_deterministic_for_nonsquare_render(
