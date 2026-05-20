@@ -13,6 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
+)
+from critique_contract import (  # noqa: E402
+    CritiqueContractError,
     critique_finding_id,
     critique_findings,
     load_critique_frontmatter,
@@ -49,7 +52,7 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     critique_path = example_dir / "critique.md"
     try:
         frontmatter = load_critique_frontmatter(critique_path)
-    except CritiqueAdjudicationError as exc:
+    except CritiqueContractError as exc:
         return [
             CritiqueLintViolation(
                 severity="blocker",
@@ -60,7 +63,7 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
 
     try:
         violations = _duplicate_finding_id_violations(frontmatter)
-    except CritiqueAdjudicationError as exc:
+    except CritiqueContractError as exc:
         return [
             CritiqueLintViolation(
                 severity="blocker",

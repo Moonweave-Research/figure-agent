@@ -10,6 +10,13 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from critique_contract import (  # noqa: E402
+    CritiqueContractError,
+    critique_finding_id,
+    critique_findings,
+    load_critique_frontmatter,
+    require_mapping,
+)
 from quality_manifest import file_sha256
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -115,14 +122,8 @@ _TOP_TIER_AUDIT_KEYS = (
 _TOP_TIER_AUDIT_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
 
 
-class CritiqueAdjudicationError(ValueError):
-    """Expected user-facing error for malformed critique adjudication files."""
-
-
-def _require_mapping(value: Any, label: str) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise CritiqueAdjudicationError(f"{label} must be a mapping")
-    return value
+CritiqueAdjudicationError = CritiqueContractError
+_require_mapping = require_mapping
 
 
 def _require_score_value(value: Any, label: str) -> None:
@@ -253,46 +254,8 @@ def write_adjudication(path: Path, data: dict[str, Any]) -> None:
     )
 
 
-def _critique_frontmatter(path: Path) -> dict[str, Any]:
-    if not path.is_file():
-        raise CritiqueAdjudicationError(f"missing critique: {path}")
-
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError as exc:
-        raise CritiqueAdjudicationError(f"invalid UTF-8 in {path}: {exc}") from exc
-    if not lines or lines[0].strip() != "---":
-        raise CritiqueAdjudicationError(f"missing critique frontmatter: {path}")
-
-    end_index = next(
-        (index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
-        None,
-    )
-    if end_index is None:
-        raise CritiqueAdjudicationError(f"unterminated critique frontmatter: {path}")
-
-    try:
-        data = yaml.safe_load("\n".join(lines[1:end_index])) or {}
-    except yaml.YAMLError as exc:
-        raise CritiqueAdjudicationError(f"invalid YAML in {path}: {exc}") from exc
-    return _require_mapping(data, "critique frontmatter")
-
-
-def load_critique_frontmatter(path: Path) -> dict[str, Any]:
-    """Load critique.md YAML frontmatter for linting and adjudication tooling."""
-    return _critique_frontmatter(path)
-
-
-def _finding_id(finding: dict[str, Any], label: str) -> str:
-    value = finding.get("id")
-    if not isinstance(value, str) or not value.strip():
-        raise CritiqueAdjudicationError(f"{label}.id must be a non-empty string")
-    return value.strip()
-
-
-def critique_finding_id(finding: dict[str, Any], label: str) -> str:
-    """Return a validated critique finding id."""
-    return _finding_id(finding, label)
+_critique_frontmatter = load_critique_frontmatter
+_finding_id = critique_finding_id
 
 
 def _validate_v1_1_audit(frontmatter: dict[str, Any]) -> None:
@@ -684,41 +647,7 @@ def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
     return f"examples/{fixture}/{fixture}.tex lines {start}-{end}"
 
 
-def _findings_from_critique(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
-    findings: list[dict[str, Any]] = []
-
-    panels = frontmatter.get("panels", [])
-    if panels is None:
-        panels = []
-    if not isinstance(panels, list):
-        raise CritiqueAdjudicationError("critique frontmatter.panels must be a list")
-    for panel_index, raw_panel in enumerate(panels):
-        panel_label = f"critique frontmatter.panels[{panel_index}]"
-        panel = _require_mapping(raw_panel, panel_label)
-        panel_findings = panel.get("findings", [])
-        if panel_findings is None:
-            panel_findings = []
-        if not isinstance(panel_findings, list):
-            raise CritiqueAdjudicationError(f"{panel_label}.findings must be a list")
-        for finding_index, raw_finding in enumerate(panel_findings):
-            finding_label = f"{panel_label}.findings[{finding_index}]"
-            findings.append(_require_mapping(raw_finding, finding_label))
-
-    top_level_findings = frontmatter.get("findings", [])
-    if top_level_findings is None:
-        top_level_findings = []
-    if not isinstance(top_level_findings, list):
-        raise CritiqueAdjudicationError("critique frontmatter.findings must be a list")
-    for finding_index, raw_finding in enumerate(top_level_findings):
-        finding_label = f"critique frontmatter.findings[{finding_index}]"
-        findings.append(_require_mapping(raw_finding, finding_label))
-
-    return findings
-
-
-def critique_findings(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return panel-level and top-level critique findings in adjudication order."""
-    return _findings_from_critique(frontmatter)
+_findings_from_critique = critique_findings
 
 
 def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:

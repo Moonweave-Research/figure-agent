@@ -150,12 +150,30 @@ def test_lint_critique_uses_public_adjudication_api_only() -> None:
     source = Path(critique_lint.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)
     private_imports: list[str] = []
+    adjudication_reader_imports: list[str] = []
+    contract_imports: set[str] = set()
     for node in ast.walk(tree):
-        if not isinstance(node, ast.ImportFrom) or node.module != "critique_adjudication":
+        if not isinstance(node, ast.ImportFrom):
             continue
-        private_imports.extend(alias.name for alias in node.names if alias.name.startswith("_"))
+        if node.module == "critique_adjudication":
+            private_imports.extend(alias.name for alias in node.names if alias.name.startswith("_"))
+            adjudication_reader_imports.extend(
+                alias.name
+                for alias in node.names
+                if alias.name
+                in {"critique_finding_id", "critique_findings", "load_critique_frontmatter"}
+            )
+        if node.module == "critique_contract":
+            contract_imports.update(alias.name for alias in node.names)
 
     assert private_imports == []
+    assert adjudication_reader_imports == []
+    assert {
+        "CritiqueContractError",
+        "critique_finding_id",
+        "critique_findings",
+        "load_critique_frontmatter",
+    } <= contract_imports
 
 
 def test_lint_critique_reports_duplicate_finding_ids(tmp_path: Path) -> None:
