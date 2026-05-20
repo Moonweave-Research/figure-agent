@@ -30,6 +30,7 @@ from fig_loop_assessments import (
 from fig_loop_assessments import (
     top_tier_audit_summary as build_top_tier_audit_summary,
 )
+from fig_loop_auto_patch import auto_patch_eligibility as build_auto_patch_eligibility  # noqa: E402
 from fig_loop_axis_records import (  # noqa: E402
     adjudication_evaluation_state,
     adjudication_verdict,
@@ -456,81 +457,9 @@ def _axis_verdicts(
     }
 
 
-_AUTO_PATCH_ALLOWED_TERMS = {
-    "label offset": ("label offset", "offset label", "move the label", "move label"),
-    "text overlap": ("overlap", "crowding", "crowded", "collision"),
-    "clipping": ("clip",),
-    "whitespace balance": ("whitespace",),
-    "palette/style": ("palette violation", "style violation"),
-    "line weight/style": ("line weight", "stroke weight"),
-}
-
-_AUTO_PATCH_BLOCKED_TERMS = {
-    "chemistry topology": ("chemistry", "topology", "molecule", "bond"),
-    "physical mechanism": ("mechanism", "causal", "physics"),
-    "causal arrow semantics": ("arrow semantics", "causal arrow"),
-    "theory guard evidence": ("theory", "guard"),
-    "reference interpretation": ("reference", "interpretation"),
-    "accepted/golden/export/build state": ("accepted", "golden", "export", "build"),
-    "publication safety": ("publication", "safety"),
-    "critique mutation": ("critique.md", "critique mutation"),
-    "broad refactor": ("refactor", "rewrite"),
-}
-
-_AUTO_PATCH_REQUIRED_EVIDENCE = [
-    "before compile/export evidence",
-    "after compile/export evidence",
-    "rollback path",
-]
 _PATCH_EVIDENCE_SCHEMA = "figure-agent.patch-evidence.v1"
 _POST_PATCH_EVIDENCE_SCHEMA = "figure-agent.post-patch-evidence.v1"
 _PATCH_EVIDENCE_VERDICTS = ["resolved", "unresolved", "regressed", "ambiguous"]
-
-
-def _auto_patch_eligibility(
-    loop_decision: dict[str, Any],
-    patch_handoff: dict[str, Any] | None,
-) -> dict[str, Any] | None:
-    if not patch_handoff:
-        return None
-
-    haystack = " ".join(
-        str(value)
-        for value in (
-            patch_handoff.get("target_id"),
-            patch_handoff.get("patch_target"),
-            patch_handoff.get("reason"),
-            loop_decision.get("recommended_next_action"),
-        )
-        if value
-    ).lower()
-    allowed = [
-        name
-        for name, terms in _AUTO_PATCH_ALLOWED_TERMS.items()
-        if any(term in haystack for term in terms)
-    ]
-    blocked = [
-        name
-        for name, terms in _AUTO_PATCH_BLOCKED_TERMS.items()
-        if any(term in haystack for term in terms)
-    ]
-
-    if blocked:
-        level = "human_review_required"
-    elif allowed:
-        level = "auto_patch_candidate"
-    else:
-        level = "patch_assisted_only"
-
-    return {
-        "level": level,
-        "target_type": patch_handoff["target_type"],
-        "target_id": patch_handoff["target_id"],
-        "allowed_reasons": allowed,
-        "blocked_reasons": blocked,
-        "required_evidence": list(_AUTO_PATCH_REQUIRED_EVIDENCE),
-        "may_edit": False,
-    }
 
 
 def _path_evidence(repo_root: Path, rel_path: str) -> dict[str, Any]:
@@ -746,7 +675,7 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
-    auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
+    auto_patch_eligibility = build_auto_patch_eligibility(loop_decision, patch_handoff)
     post_patch_evidence = _post_patch_evidence_verdict(
         repo_root,
         runs_root,
