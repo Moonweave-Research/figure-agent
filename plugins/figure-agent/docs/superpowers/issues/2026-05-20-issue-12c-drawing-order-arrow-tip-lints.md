@@ -1,7 +1,7 @@
 # Issue 12C: Drawing-Order and Arrow-Tip Lints
 
 **Date:** 2026-05-20 KST
-**Status:** implemented in working tree; pending review/verification/commit
+**Status:** completed in commit `f551bc3`
 **Type:** AFK report-only lint slice
 **Parent:** `2026-05-20-issue-12-critical-visual-audit-gaps.md`
 

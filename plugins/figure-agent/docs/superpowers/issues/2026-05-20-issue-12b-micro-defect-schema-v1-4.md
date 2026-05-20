@@ -1,7 +1,7 @@
 # Issue 12B: Micro-Defect Schema v1.4
 
 **Date:** 2026-05-20 KST
-**Status:** completed in commit pending
+**Status:** completed in commit `d21e395`
 **Type:** AFK schema/docs/tests
 **Parent:** `2026-05-20-issue-12-critical-visual-audit-gaps.md`
 **Blocked by:** Issue 12A
