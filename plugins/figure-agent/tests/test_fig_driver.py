@@ -79,6 +79,7 @@ def _write_loop_run(
     escalation_level: str = "none",
     patch_handoff: dict[str, Any] | None = None,
     recommended_next_action: str = "inspect figure state",
+    top_tier_audit_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -99,6 +100,8 @@ def _write_loop_run(
         "patch_handoff": patch_handoff,
         "recommended_next_action": recommended_next_action,
     }
+    if top_tier_audit_summary is not None:
+        iteration["top_tier_audit_summary"] = top_tier_audit_summary
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     (run_dir / "iteration_001.json").write_text(json.dumps(iteration), encoding="utf-8")
     return run_dir
@@ -385,6 +388,86 @@ def test_review_mode_completes_after_latest_clean_loop_checkpoint(
         tmp_path,
         stop_reason="verify_only_complete",
         recommended_next_action="inspect figure state",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+
+
+def test_review_mode_surfaces_top_tier_audit_blockers_from_latest_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    audit_summary = {
+        "schema": "figure-agent.top-tier-audit-summary.v1",
+        "worst_verdict": "needs_human",
+        "verdict_counts": {"pass": 7, "weak": 2, "fail": 1, "needs_human": 1},
+        "blocking_high_impact_count": 1,
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="status_action_required",
+        escalation_level="agent_action_required",
+        recommended_next_action="run /fig_export driver_demo",
+        top_tier_audit_summary=audit_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+    assert "top-tier audit" in summary["reason"]
+    assert summary["loop_checkpoint"]["top_tier_audit_summary"] == audit_summary
+
+
+def test_review_mode_top_tier_blocker_takes_priority_over_force_golden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="status_action_required",
+        escalation_level="manual_approval_required",
+        recommended_next_action="run /fig_export driver_demo --force-golden",
+        top_tier_audit_summary={
+            "schema": "figure-agent.top-tier-audit-summary.v1",
+            "worst_verdict": "fail",
+            "verdict_counts": {"pass": 8, "weak": 1, "fail": 1, "needs_human": 0},
+            "blocking_high_impact_count": 0,
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+
+
+def test_review_mode_does_not_block_on_nonblocking_top_tier_audit_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="inspect figure state",
+        top_tier_audit_summary={
+            "schema": "figure-agent.top-tier-audit-summary.v1",
+            "worst_verdict": "weak",
+            "verdict_counts": {"pass": 8, "weak": 2, "fail": 0, "needs_human": 0},
+            "blocking_high_impact_count": 0,
+        },
     )
 
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)

@@ -102,6 +102,10 @@ The driver translates loop evidence as follows:
   `ambiguous_patch_selection`.
 - `human_gate_required` or `escalation_level: human_review_required` ->
   `human_gate_stop` / `human_gate_required`.
+- `top_tier_audit_summary` with any `fail`, `needs_human`, or positive
+  `blocking_high_impact_count` -> `human_gate_stop` /
+  `human_gate_required`. This takes priority over export or golden
+  roll-forward recommendations; weak-only summaries do not block.
 - `status_action_required` with `--force-golden` in the recommendation ->
   `release_blocked` / `force_golden_required`.
 - `no_actionable_findings` or `verify_only_complete` -> `complete`.

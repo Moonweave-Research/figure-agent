@@ -181,6 +181,27 @@ def _adjudication_needs_action(example_dir: Path, status: dict[str, Any]) -> boo
     return adjudication_is_stale(adjudication_path, critique_path)
 
 
+def _positive_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _top_tier_audit_requires_human_gate(summary: Any) -> bool:
+    if not isinstance(summary, dict):
+        return False
+    verdict_counts = summary.get("verdict_counts")
+    return (
+        _positive_int(summary.get("blocking_high_impact_count"))
+        or summary.get("worst_verdict") in {"fail", "needs_human"}
+        or (
+            isinstance(verdict_counts, dict)
+            and (
+                _positive_int(verdict_counts.get("fail"))
+                or _positive_int(verdict_counts.get("needs_human"))
+            )
+        )
+    )
+
+
 def _compile_command(name: str) -> str:
     return f"bash scripts/compile.sh examples/{name}/{name}.tex"
 
@@ -219,7 +240,7 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
     stop_reason = manifest.get("final_stop_reason") or iteration.get("stop_reason")
     if not isinstance(stop_reason, str) or not stop_reason:
         return None
-    return {
+    checkpoint = {
         "run_dir": str(run_dir),
         "manifest_path": str(manifest_path),
         "iteration_path": str(iteration_path),
@@ -228,6 +249,10 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
         "patch_handoff": iteration.get("patch_handoff"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    top_tier_summary = iteration.get("top_tier_audit_summary")
+    if isinstance(top_tier_summary, dict):
+        checkpoint["top_tier_audit_summary"] = top_tier_summary
+    return checkpoint
 
 
 def _loop_checkpoint_is_current(
@@ -447,6 +472,19 @@ def _select_action(
                     reason=(
                         "latest /fig_loop checkpoint requires human review: "
                         f"{loop_action or 'domain judgment is required'}."
+                    ),
+                    checkpoint=loop_checkpoint,
+                )
+            top_tier_summary = loop_checkpoint.get("top_tier_audit_summary")
+            if _top_tier_audit_requires_human_gate(top_tier_summary):
+                return make(
+                    ACTION_HUMAN_GATE_STOP,
+                    safe_command=None,
+                    stop_boundary=STOP_HUMAN_GATE,
+                    reason=(
+                        "latest /fig_loop checkpoint reports top-tier audit "
+                        "blockers; resolve fail/needs_human or blocking "
+                        "high-impact items before export or release."
                     ),
                     checkpoint=loop_checkpoint,
                 )
