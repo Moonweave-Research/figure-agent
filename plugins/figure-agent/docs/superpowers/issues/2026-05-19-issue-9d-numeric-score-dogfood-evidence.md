@@ -1,7 +1,7 @@
 # Issue 9D: Numeric Score Dogfood Evidence
 
 **Date:** 2026-05-19 KST
-**Status:** open
+**Status:** completed in commits `e03c476`, `6d4514c`, `d04f209`, `1575e97`, `61de74f`, `bef4b23`.
 **Parent:** Issue 9
 **Depends on:** Issue 9B
 **Type:** HITL evidence
@@ -134,20 +134,20 @@ assessment.
 
 ## Acceptance Criteria
 
-- [ ] At least five real fixture runs are recorded.
-- [ ] Every valid run includes a complete numeric score block or records why the
+- [x] At least five real fixture runs are recorded.
+- [x] Every valid run includes a complete numeric score block or records why the
   host did not produce one.
-- [ ] Every valid score block passes `critique_adjudication.py scaffold`.
-- [ ] Every valid run records `/fig_loop` score surfacing and `/fig_driver`
+- [x] Every valid score block passes `critique_adjudication.py scaffold`.
+- [x] Every valid run records `/fig_loop` score surfacing and `/fig_driver`
   follow-up action.
-- [ ] At least one run demonstrates that score does not bypass a non-score gate
+- [x] At least one run demonstrates that score does not bypass a non-score gate
   such as `force_golden_required`, `human_gate_required`, or
   `agent_action_required`.
-- [ ] Every run has reviewer verdict `useful`, `too_flat`, `contradictory`,
+- [x] Every run has reviewer verdict `useful`, `too_flat`, `contradictory`,
   `unsafe`, or `invalid`.
-- [ ] Any validation, ingestion, or safety defect is either fixed with tests or
+- [x] Any validation, ingestion, or safety defect is either fixed with tests or
   recorded as a follow-up issue.
-- [ ] No source patch, golden export, accepted state, or publication provenance
+- [x] No source patch, golden export, accepted state, or publication provenance
   state is mutated solely for score dogfood.
 
 ## Verification

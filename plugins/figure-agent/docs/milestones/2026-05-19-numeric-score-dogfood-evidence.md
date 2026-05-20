@@ -1,7 +1,7 @@
 # Numeric Score Dogfood Evidence (Issue 9D)
 
 **Date opened:** 2026-05-19 KST
-**Status:** open
+**Status:** complete; Issue 9D evidence collected and closed in commit `bef4b23`.
 
 This milestone records real host-LLM `/fig_critique` runs after Issue 9B added
 optional advisory numeric score fields to `journal_grade_assessment`.
