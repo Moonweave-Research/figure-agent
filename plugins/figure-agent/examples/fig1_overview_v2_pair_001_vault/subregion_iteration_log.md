@@ -259,7 +259,11 @@ iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = C
 - F-3 F_Maxwell label: anchor=north y 1.78 → 1.72 — capital F top no longer overlaps dashed-stroke at y=1.80±0.025 (lint warn dark 0.155 → 0.116, +0.08cm clearance).
 - Falsified Gemini claims (verified via source inspection, not patched): F-6 q_tr leader is solid not dashed; HV+ label sits in light lower-half of box, separate from upper waveform display zone.
 - Visual clash candidates: compile 54 → 49 → 48 (-6 net).
-- Score trajectory: iter 50 (Codex 82) → iter 51-1st (Gemini 42 brutal, 4 HIGH defects) → iter 51-2nd (Gemini 68/100) → iter 51-3rd pending.
+- Score trajectory: iter 50 (Codex 82) → iter 51-1st (Gemini 42 brutal, 4 HIGH defects) → iter 51-2nd (Gemini 68/100) → iter 51-3rd (Gemini 85, 3 residual: F-2/F-3 out-of-scope per iter 18-19, F-6 q_tr disconnection actionable) → iter 51-4th: F-6 q_tr leader 12.48 → 12.32 (= marker right edge), Gemini 100/100 *with F-2/F-3 explicitly skipped*. Caveat: 100 is conditional on accepting iter 18-19 apparatus simplification; absolute brutal ceiling is ~85.
+- Out-of-scope design decisions confirmed (NOT regressions):
+  - F-2 apparatus zone top-clip + neutral polymer + cross-hatched top electrode REMOVED in iter 18-19 per structural-repetition cleanup (source comments line 1032-1035).
+  - F-3 Maxwell baseline arrow REMOVED from top zone (iter 18) and RE-ADDED in bottom result zone (iter 19) per user "Coulomb wins visually" narrative call (source comments line 1042-1045, 1110-1124).
+  - Gemini's HANDOFF_v8.7 §8.5 citation reflects pre-iter-18 spec; current design intentionally diverges.
 
 ### Panel E iter 12-40 — 2026-05-18 to 2026-05-19 — consolidated retroactive log
 
