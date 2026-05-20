@@ -1,13 +1,13 @@
 # Issue: Fig1 Publication Provenance Gate
 
 **Date:** 2026-05-19 KST
-**Status:** open
+**Status:** open; current technical recheck failed on 2026-05-20 KST
 **Fixture:** `examples/fig1_overview_v2_pair_001_vault`
 
 ## Problem
 
-`fig1_overview_v2_pair_001_vault` now passes the technical dogfood gates needed
-before final human acceptance:
+`fig1_overview_v2_pair_001_vault` previously passed the technical dogfood gates
+needed before final human acceptance:
 
 - render fresh
 - critique fresh
@@ -15,9 +15,35 @@ before final human acceptance:
 - golden basic artifact gate passing
 - accepted-mode failures reduced to `accepted: true` and `submission-safe: true`
 
-The remaining blocker is not a TikZ or plugin defect. It is a publication
-provenance decision: the target venue is not declared and no human author has
-recorded provenance/disclosure responsibility.
+That is no longer the current repo truth after later fig1 source iterations.
+The remaining blocker is still partly a publication provenance decision, but a
+fresh technical recheck now also fails accepted-mode gates.
+
+## Current Recheck — 2026-05-20 KST
+
+Commands run from `plugins/figure-agent`:
+
+```bash
+uv run python3 scripts/status.py fig1_overview_v2_pair_001_vault
+uv run python3 scripts/check_golden_artifacts.py examples/fig1_overview_v2_pair_001_vault --require-accepted
+```
+
+Observed state:
+
+- `status.py`: render `FRESH`, critique `FRESH`, export `TRACKED_GOLDEN`,
+  acceptance `NOT_ACCEPTED`, workflow/golden/release/final readiness all false.
+- Next action: tracked golden artifact is stale; intentional roll-forward
+  requires `/fig_export fig1_overview_v2_pair_001_vault --force-golden`.
+- Accepted-mode gate failures:
+  - fixture is not marked `accepted: true`;
+  - rendered PDF labels missing: `high n`, `low n`;
+  - source inventory too low: `surface_charge_markers 0 < 1`;
+  - `QUALITY_AUDIT.md` is stale or missing;
+  - `QUALITY_AUDIT.md` does not declare `submission-safe: true`.
+
+Therefore the issue is not ready for a pure provenance closeout. It needs a
+technical rebaseline or source/golden/audit update before the human publication
+gate can be cleanly evaluated.
 
 ## Policy Snapshot
 
@@ -61,7 +87,8 @@ Checked on 2026-05-18 UTC:
 
 ## Acceptance Path
 
-Only after the human inputs above are recorded:
+Only after the technical recheck above is resolved and the human inputs above
+are recorded:
 
 1. Update `QUALITY_AUDIT.md`:
    - target venue
