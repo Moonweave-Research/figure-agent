@@ -1,0 +1,69 @@
+name: figure-agent full render tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  full-render:
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'full-render')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: plugins/figure-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install system dependencies
+        timeout-minutes: 30
+        run: |
+          sudo apt-get update
+          # Pre-accept the Microsoft Core Fonts EULA so the installer is non-interactive.
+          # Required for polymer-paper-preamble.sty's `\setmainfont{Arial}` lookup.
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" \
+            | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            dvisvgm \
+            imagemagick \
+            librsvg2-bin \
+            poppler-utils \
+            qpdf \
+            tesseract-ocr \
+            texlive-fonts-extra \
+            texlive-latex-extra \
+            texlive-luatex \
+            texlive-pictures \
+            ttf-mscorefonts-installer
+          # Refresh the font cache so fontspec/lualatex can find Arial by name.
+          sudo fc-cache -f
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Pre-build smoke fixture (required by stage-assertion test)
+        run: |
+          bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
+          uv run python3 scripts/run_export.py smoke_trap_demo
+
+      - name: Run tests
+        run: uv run pytest -q

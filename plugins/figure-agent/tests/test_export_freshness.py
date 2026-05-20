@@ -25,6 +25,8 @@ from export_freshness import (  # noqa: E402
     compute_export_state,
 )
 
+pytestmark = pytest.mark.render
+
 
 def _scaffold_minimal_fixture(root: Path, name: str, body: str = "hello") -> Path:
     """Create a fixture dir with a minimal compiled PDF in build/."""

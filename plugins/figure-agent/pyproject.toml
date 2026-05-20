@@ -20,6 +20,9 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "render: requires TeX/render/OCR system tools",
+]
 
 [tool.setuptools]
 packages = []
