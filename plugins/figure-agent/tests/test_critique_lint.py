@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import sys
 from pathlib import Path
 
@@ -143,6 +144,18 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_uses_public_adjudication_api_only() -> None:
+    source = Path(critique_lint.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    private_imports: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or node.module != "critique_adjudication":
+            continue
+        private_imports.extend(alias.name for alias in node.names if alias.name.startswith("_"))
+
+    assert private_imports == []
 
 
 def test_lint_critique_reports_duplicate_finding_ids(tmp_path: Path) -> None:

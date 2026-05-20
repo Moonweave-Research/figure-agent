@@ -12,10 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
-    _critique_frontmatter,
-    _finding_id,
-    _findings_from_critique,
     build_adjudication_scaffold,
+    critique_finding_id,
+    critique_findings,
+    load_critique_frontmatter,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -31,8 +31,8 @@ class CritiqueLintViolation:
 def _duplicate_finding_id_violations(frontmatter: dict[str, Any]) -> list[CritiqueLintViolation]:
     seen: set[str] = set()
     violations: list[CritiqueLintViolation] = []
-    for index, finding in enumerate(_findings_from_critique(frontmatter)):
-        finding_id = _finding_id(finding, f"critique finding {index}")
+    for index, finding in enumerate(critique_findings(frontmatter)):
+        finding_id = critique_finding_id(finding, f"critique finding {index}")
         if finding_id in seen:
             violations.append(
                 CritiqueLintViolation(
@@ -48,7 +48,7 @@ def _duplicate_finding_id_violations(frontmatter: dict[str, Any]) -> list[Critiq
 def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     critique_path = example_dir / "critique.md"
     try:
-        frontmatter = _critique_frontmatter(critique_path)
+        frontmatter = load_critique_frontmatter(critique_path)
     except CritiqueAdjudicationError as exc:
         return [
             CritiqueLintViolation(

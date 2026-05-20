@@ -11,7 +11,10 @@ from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     adjudication_is_stale,
     build_adjudication_scaffold,
+    critique_finding_id,
+    critique_findings,
     load_adjudication,
+    load_critique_frontmatter,
     main,
     scaffold_adjudication,
     validate_adjudication,
@@ -45,6 +48,36 @@ def test_valid_adjudication_loads_successfully(tmp_path: Path) -> None:
 
     assert data["fixture"] == "demo_fig"
     assert data["decisions"][0]["finding_id"] == "C001"
+
+
+def test_public_critique_reader_loads_frontmatter_and_findings(tmp_path: Path) -> None:
+    critique_path = tmp_path / "critique.md"
+    critique_path.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        "fixture: demo_fig\n"
+        "panels:\n"
+        "  - id: A\n"
+        "    findings:\n"
+        "      - id: P001\n"
+        "        status: open\n"
+        "findings:\n"
+        "  - id: C001\n"
+        "    status: resolved\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+
+    frontmatter = load_critique_frontmatter(critique_path)
+    findings = critique_findings(frontmatter)
+    finding_ids = [
+        critique_finding_id(finding, f"critique finding {index}")
+        for index, finding in enumerate(findings)
+    ]
+
+    assert frontmatter["fixture"] == "demo_fig"
+    assert finding_ids == ["P001", "C001"]
 
 
 def test_invalid_schema_fails() -> None:

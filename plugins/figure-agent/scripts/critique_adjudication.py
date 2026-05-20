@@ -278,11 +278,21 @@ def _critique_frontmatter(path: Path) -> dict[str, Any]:
     return _require_mapping(data, "critique frontmatter")
 
 
+def load_critique_frontmatter(path: Path) -> dict[str, Any]:
+    """Load critique.md YAML frontmatter for linting and adjudication tooling."""
+    return _critique_frontmatter(path)
+
+
 def _finding_id(finding: dict[str, Any], label: str) -> str:
     value = finding.get("id")
     if not isinstance(value, str) or not value.strip():
         raise CritiqueAdjudicationError(f"{label}.id must be a non-empty string")
     return value.strip()
+
+
+def critique_finding_id(finding: dict[str, Any], label: str) -> str:
+    """Return a validated critique finding id."""
+    return _finding_id(finding, label)
 
 
 def _validate_v1_1_audit(frontmatter: dict[str, Any]) -> None:
@@ -704,6 +714,11 @@ def _findings_from_critique(frontmatter: dict[str, Any]) -> list[dict[str, Any]]
         findings.append(_require_mapping(raw_finding, finding_label))
 
     return findings
+
+
+def critique_findings(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return panel-level and top-level critique findings in adjudication order."""
+    return _findings_from_critique(frontmatter)
 
 
 def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
