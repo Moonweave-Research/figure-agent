@@ -312,7 +312,33 @@ def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
     assert "original-pixel attention crops" in brief
     assert "line_crosses_label" in brief
     assert "arrow_tip_fused" in brief
+    assert "## Print-Scale Audit Images" in brief
+    assert "`examples/review_demo/build/audit_crops/print_178mm.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/print_thumbnail.png`" in brief
+    assert "journal_polish" in brief
+    assert "publication_readiness" in brief
+    assert "print_scale_unreadable" in brief
     assert (example_dir / "build" / "audit_crops" / "full_q1.png").is_file()
+    assert (example_dir / "build" / "audit_crops" / "print_178mm.png").is_file()
+
+
+def test_critique_brief_keeps_print_scale_images_out_of_high_zoom_section(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir)
+
+    brief = generate_for(example_dir)
+
+    high_zoom_section = brief.split("## High-Zoom Visual Audit Crops", 1)[1].split(
+        "## Print-Scale Audit Images", 1
+    )[0]
+    assert "print_178mm.png" not in high_zoom_section
+    assert "print_thumbnail.png" not in high_zoom_section
+    assert "print_scale_unreadable" not in high_zoom_section
+
+    print_scale_section = brief.split("## Print-Scale Audit Images", 1)[1].split(
+        "## Author intent", 1
+    )[0]
+    assert "print_scale_unreadable" in print_scale_section
 
 
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
@@ -389,6 +415,9 @@ def test_critique_brief_output_format_uses_v1_4_micro_defect_schema(tmp_path):
     ):
         assert kind in brief
     assert "linked_finding_id: \"<P001/C001 or empty when accept_simplification>\"" in brief
+    assert (
+        'observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"'
+    ) in brief
     assert "status: open | resolved | accept_simplification" in brief
 
 

@@ -35,14 +35,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
-_MICRO_DEFECT_CHECKS = (
+_HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
     "line_crosses_label",
     "wire_crosses_label",
     "arrow_tip_fused",
     "label_target_detached",
     "floating_semantic_cue",
     "drawing_order_suspect",
-    "print_scale_unreadable",
 )
 _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
@@ -314,6 +313,7 @@ def _panel_reference_sections(
 
 
 def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
+    crops = [crop for crop in crops if crop.get("kind") == "zoom_crop"]
     if not crops:
         return ""
     lines = [
@@ -322,7 +322,7 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
         "These are original-pixel attention crops; the zoom effect comes from inspecting "
         "each crop separately instead of only the full render.",
         "For each crop, check these closed-set micro-defects: "
-        + ", ".join(_MICRO_DEFECT_CHECKS)
+        + ", ".join(_HIGH_ZOOM_MICRO_DEFECT_CHECKS)
         + ".",
         "",
     ]
@@ -333,6 +333,31 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
             f"- `{_example_relative_path(example_dir, crop_path)}` "
             f"from `{_example_relative_path(example_dir, source_path)}` "
             f"bbox_px={crop['bbox_px']}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
+    print_items = [crop for crop in crops if crop.get("kind") == "print_scale"]
+    if not print_items:
+        return ""
+    lines = [
+        "## Print-Scale Audit Images",
+        "Host LLM MUST inspect these reduced-scale images before setting "
+        "`journal_polish` or `publication_readiness` to `pass`.",
+        "Use them to check label readability, arrow-tip recognizability, line-weight "
+        "survival, and dense-region legibility at manuscript scale.",
+        "If reduction hides text, fuses arrow tips, or makes a dense region "
+        "ambiguous, record it as `micro_defects.kind: print_scale_unreadable`.",
+        "",
+    ]
+    for item in print_items:
+        item_path = example_dir / item["path"]
+        source_path = example_dir / item["source_path"]
+        lines.append(
+            f"- `{_example_relative_path(example_dir, item_path)}` "
+            f"scale={item['scale_label']} size_px={item['size_px']} "
+            f"from `{_example_relative_path(example_dir, source_path)}`"
         )
     return "\n" + "\n".join(lines) + "\n"
 
@@ -391,6 +416,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
     zoom_crops = build_zoom_crop_pack(example_dir, png_path, panel_crop_paths=panel_crop_paths)
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
+    print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -401,6 +427,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 **Render to inspect:** `{render_path}`
 {render_read_note}{image_context_sections}
 {zoom_audit_section}
+{print_scale_audit_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -537,7 +564,7 @@ micro_defects:
     crop: examples/{name}/build/audit_crops/<crop>.png
     kind: {_MICRO_DEFECT_KIND_SCHEMA}
     severity: BLOCKER | MAJOR | MINOR | NIT
-    observation: "<visible micro-defect from a High-Zoom Visual Audit Crop>"
+    observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
     status: open | resolved | accept_simplification
 panels:
@@ -584,11 +611,12 @@ finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`.
 `publication_readiness.verdict` must not be less severe than any applicable
 upstream quality axis.
 
-Every High-Zoom Visual Audit Crop must be inspected before finalizing
-`critique.md`. Record visible crop-scale defects in `micro_defects`. Every
-`BLOCKER` or `MAJOR` micro-defect must either link to a normal panel/top-level
-finding via `linked_finding_id` or use `status: accept_simplification` with a
-clear observation explaining why the crop-scale issue is acceptable.
+Every High-Zoom Visual Audit Crop and Print-Scale Audit Image must be inspected
+before finalizing `critique.md`. Record visible crop-scale and reduction-scale
+defects in `micro_defects`. Every `BLOCKER` or `MAJOR` micro-defect must either
+link to a normal panel/top-level finding via `linked_finding_id` or use
+`status: accept_simplification` with a clear observation explaining why the
+crop-scale or print-scale issue is acceptable.
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

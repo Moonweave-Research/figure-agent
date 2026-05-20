@@ -1,7 +1,7 @@
 # Issue 12: Critical Visual Audit Gaps From Real Dogfood
 
 **Date:** 2026-05-20 KST
-**Status:** open
+**Status:** implemented and verified
 **Type:** parent issue / implementation backlog
 
 ## Problem
@@ -10,13 +10,13 @@ Real figure dogfood on `fig1_overview_v2_pair_001_vault` exposed a gap between
 the plugin's current audit contract and the defects that decide whether a
 figure is actually publication-ready. The v1.4 critique contract now asks for
 journal-grade axes, top-tier audit slots, numeric advisory scoring, high-zoom
-audit crops, and first-class micro-defects, but follow-up automation is still
-needed for static drawing-order checks, print-scale gates, and metadata-sync
-ergonomics.
+audit crops, and first-class micro-defects. Issue 12 extends that contract with
+static drawing-order checks, short-arrow checks, print-scale audit images, and
+freshness-safe critique adjudication sync.
 
-This means a loop can look contract-complete while the user still has to catch
-critical defects from screenshots. That is the wrong boundary for a figure
-agent.
+The remaining risk is not that the loop lacks these audit surfaces; it is that
+real dogfood must still prove the host LLM consistently uses them without user
+screenshot intervention.
 
 ## Evidence From Dogfood
 
@@ -24,10 +24,10 @@ agent.
 |---|---|---|
 | Host vision zoom | Standard full-render and panel-crop reads missed sub-mm line crossings and arrow artifacts. | Issue 12A adds deterministic high-zoom audit crops under `build/audit_crops/`. |
 | Visual clash | `check_visual_clash.py` produced many report-only candidates while missing actual line-through-label cases. | The detector is text-bbox plus local pixel statistics; it is not a semantic micro-defect detector. |
-| Drawing order | Adding a white fill did not help when later `\draw` paths rendered over the label. | No source-order lint exists for label-background protection. |
-| Arrow-tip print behavior | Short `<->` arrow segments fused into diamond-like marks at print scale. | No print-scale arrow-tip recognizability gate exists. |
+| Drawing order | Adding a white fill did not help when later `\draw` paths rendered over the label. | Issue 12C adds report-only label fill/source-order linting. |
+| Arrow-tip print behavior | Short `<->` arrow segments fused into diamond-like marks at print scale. | Issue 12C adds report-only short double-arrow linting; Issue 12E adds print-scale audit images. |
 | Semantic anchoring | Vibration arrows could float away from the oscillating element. | Issue 12B adds the v1.4 `micro_defects` contract with closed-set crop-scale defect kinds. |
-| Hash/sync overhead | Generator/rubric/input/adjudication hashes require repeated manual refresh during active plugin development. | Freshness is correct but ergonomically expensive; no one-shot sync command exists. |
+| Hash/sync overhead | Generator/rubric/input/adjudication hashes require repeated manual refresh during active plugin development. | Issue 12D adds a freshness-safe adjudication sync helper. |
 | Iteration logging | Sub-region loop progress was easy to omit or name inconsistently. | `subregion_iteration_log.md` is parsed when present, but no closeout helper appends or normalizes iteration rows. |
 
 ## Current Architecture Boundary
@@ -40,13 +40,13 @@ The current plugin has:
 - panel-level reference crop generation when `panels[].reference_image` and
   `panels[].bbox_pdf_cm` are both declared.
 - high-zoom full-render and panel-crop audit crops.
+- print-scale audit images for 178 mm equivalent and thumbnail inspection.
 - `micro_defects` validation for crop-scale issues.
+- report-only drawing-order and short double-arrow TikZ lints.
+- freshness-safe critique adjudication sync.
 
-The current plugin does not have:
+The current plugin still does not have:
 
-- drawing-order or arrow-tip lint;
-- print-scale audit images;
-- one-shot critique/adjudication metadata sync;
 - conflict mediation for concurrent Codex/Claude edits.
 
 ## Issue Breakdown
@@ -113,14 +113,14 @@ arrow segments whose tips can fuse at print scale.
 
 Acceptance criteria:
 
-- [ ] A lint detects suspicious `fill=white` or `fill=<color>` label/node lines
+- [x] A lint detects suspicious `fill=white` or `fill=<color>` label/node lines
   followed by nearby drawing commands in the same local block.
-- [ ] A lint detects short `<->`, `Stealth-Stealth`, or equivalent
+- [x] A lint detects short `<->`, `Stealth-Stealth`, or equivalent
   double-headed arrow segments below a conservative length threshold when the
   line has visible arrow tips.
-- [ ] Lints are report-only by default and can be surfaced in `/fig_compile`
+- [x] Lints are report-only by default and can be surfaced in `/fig_compile`
   output without blocking existing fixtures.
-- [ ] Tests include true-positive and false-positive examples.
+- [x] Tests include true-positive and false-positive examples.
 
 ### Issue 12D: Critique Metadata Sync Helper
 
@@ -149,12 +149,12 @@ are assessed at manuscript scale rather than only at screen scale.
 
 Acceptance criteria:
 
-- [ ] Render-derived audit images include at least 178 mm equivalent and one
+- [x] Render-derived audit images include at least 178 mm equivalent and one
   conservative thumbnail scale.
-- [ ] The brief requires the host LLM to inspect print-scale crops before
+- [x] The brief requires the host LLM to inspect print-scale crops before
   setting `journal_polish` or `publication_readiness` to `pass`.
-- [ ] Report-only metadata records the audit image paths and scale labels.
-- [ ] No export or accepted artifact is mutated.
+- [x] Report-only metadata records the audit image paths and scale labels.
+- [x] No export or accepted artifact is mutated.
 
 ## Priority
 

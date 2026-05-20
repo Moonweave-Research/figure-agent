@@ -7,6 +7,11 @@ from typing import Any
 
 from PIL import Image
 
+PRINT_SCALE_TARGETS = (
+    ("print_178mm", "178mm_equivalent", 1000),
+    ("print_thumbnail", "thumbnail", 360),
+)
+
 
 def _safe_stem(value: str) -> str:
     safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in value)
@@ -47,6 +52,7 @@ def _write_quadrants(
             crops.append(
                 {
                     "id": crop_id,
+                    "kind": "zoom_crop",
                     "source": source_label,
                     "path": _relative_to_example(example_dir, output_path),
                     "source_path": _relative_to_example(example_dir, source_path),
@@ -54,6 +60,40 @@ def _write_quadrants(
                 }
             )
     return crops
+
+
+def _scaled_size(width: int, height: int, target_width: int) -> tuple[int, int]:
+    output_width = max(1, min(width, target_width))
+    output_height = max(1, round(height * (output_width / width)))
+    return output_width, output_height
+
+
+def _write_print_scale_images(
+    *,
+    source_path: Path,
+    output_dir: Path,
+    example_dir: Path,
+) -> list[dict[str, Any]]:
+    audits: list[dict[str, Any]] = []
+    with Image.open(source_path) as image:
+        width, height = image.size
+        resampling = getattr(Image, "Resampling", Image).LANCZOS
+        for audit_id, scale_label, target_width in PRINT_SCALE_TARGETS:
+            output_size = _scaled_size(width, height, target_width)
+            output_path = output_dir / f"{audit_id}.png"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            image.resize(output_size, resampling).save(output_path)
+            audits.append(
+                {
+                    "id": audit_id,
+                    "kind": "print_scale",
+                    "scale_label": scale_label,
+                    "path": _relative_to_example(example_dir, output_path),
+                    "source_path": _relative_to_example(example_dir, source_path),
+                    "size_px": list(output_size),
+                }
+            )
+    return audits
 
 
 def build_zoom_crop_pack(
@@ -69,6 +109,13 @@ def build_zoom_crop_pack(
         id_prefix="full",
         source_label="full_render",
         example_dir=example_dir,
+    )
+    crops.extend(
+        _write_print_scale_images(
+            source_path=render_path,
+            output_dir=output_dir,
+            example_dir=example_dir,
+        )
     )
     for panel_crop_path in panel_crop_paths:
         try:
