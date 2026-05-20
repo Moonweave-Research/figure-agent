@@ -2,11 +2,6 @@
 # Convert SVG to PNG at 600 dpi for raster export.
 set -euo pipefail
 
-if ! command -v rsvg-convert >/dev/null 2>&1; then
-  echo "Error: rsvg-convert not found. Install via: brew install librsvg" >&2
-  exit 127
-fi
-
 if [[ $# -lt 2 ]]; then
   echo "Usage: $(basename "$0") <input.svg> <output.png>" >&2
   exit 1
@@ -24,6 +19,11 @@ fi
 if [[ "$2" != *.png ]]; then
   echo "Error: output path must end with .png, got: $2" >&2
   exit 1
+fi
+
+if ! command -v rsvg-convert >/dev/null 2>&1; then
+  echo "Error: rsvg-convert not found. Install via: brew install librsvg" >&2
+  exit 127
 fi
 
 rsvg-convert -b white -d 600 -p 600 -f png -o "$2" "$1"
