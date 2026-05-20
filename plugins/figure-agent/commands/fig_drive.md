@@ -54,6 +54,7 @@ action; `/fig_loop` only logs the resulting state.
 | `stop_boundary`     | string or null        | one of the 9 canonical stop identifiers          |
 | `reason`            | string                | one-line explanation                             |
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
+| `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 
@@ -111,6 +112,16 @@ The driver translates loop evidence as follows:
 - `no_actionable_findings` or `verify_only_complete` -> `complete`.
 
 Other loop states stay conservative and return `run_fig_loop`.
+
+## Workspace Warnings
+
+`workspace_warnings` is an additive advisory field. The driver reads
+`git status --porcelain --untracked-files=no` and reports tracked dirty paths
+as `tracked_worktree_dirty: ...`. This is a conflict-mediation hint for
+parallel Codex/Claude work: it tells the next executor to inspect existing
+tracked edits before patching the same files. It does not include ignored build
+artifacts, does not block recommendations, and does not stage, revert, or edit
+anything.
 
 ## Forbidden-action identifiers
 

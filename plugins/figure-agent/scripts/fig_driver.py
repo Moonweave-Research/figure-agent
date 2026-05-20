@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -136,6 +137,7 @@ def _summary(
     safe_command: str | None,
     stop_boundary: str | None,
     reason: str,
+    workspace_warnings: list[str] | None = None,
     loop_checkpoint: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary = {
@@ -149,6 +151,7 @@ def _summary(
         "stop_boundary": stop_boundary,
         "reason": reason,
         "forbidden_actions": list(_FORBIDDEN_BY_MODE.get(mode, ())),
+        "workspace_warnings": list(workspace_warnings or ()),
         "may_execute": False,
     }
     if loop_checkpoint is not None:
@@ -159,6 +162,35 @@ def _summary(
 def _status_for(example_dir: Path) -> dict[str, Any]:
     """Thin wrapper to keep tests monkeypatch-friendly."""
     return infer_stage(example_dir)
+
+
+def _workspace_warnings(repo_root: Path) -> list[str]:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return []
+    if result.returncode != 0:
+        return []
+    dirty_paths = []
+    for line in result.stdout.splitlines():
+        if len(line) < 4:
+            continue
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        if path:
+            dirty_paths.append(path)
+    if not dirty_paths:
+        return []
+    preview = ", ".join(dirty_paths[:5])
+    suffix = "" if len(dirty_paths) <= 5 else f", +{len(dirty_paths) - 5} more"
+    return [f"tracked_worktree_dirty: {preview}{suffix}"]
 
 
 def _adjudication_needs_action(example_dir: Path, status: dict[str, Any]) -> bool:
@@ -318,6 +350,7 @@ def build_driver_summary(
         raise ValueError(f"unsupported mode: {mode}")
     example_dir = repo_root / "examples" / name
     status = _status_for(example_dir)
+    workspace_warnings = _workspace_warnings(repo_root)
     loop_checkpoint = (
         _latest_loop_checkpoint(repo_root, name, example_dir) if mode == "review" else None
     )
@@ -327,6 +360,7 @@ def build_driver_summary(
         goal=goal,
         status=status,
         example_dir=example_dir,
+        workspace_warnings=workspace_warnings,
         loop_checkpoint=loop_checkpoint,
     )
 
@@ -338,6 +372,7 @@ def _select_action(
     goal: str,
     status: dict[str, Any],
     example_dir: Path,
+    workspace_warnings: list[str] | None = None,
     loop_checkpoint: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     render = status.get("render_state")
@@ -364,6 +399,7 @@ def _select_action(
             safe_command=safe_command,
             stop_boundary=stop_boundary,
             reason=reason,
+            workspace_warnings=workspace_warnings,
             loop_checkpoint=checkpoint,
         )
 

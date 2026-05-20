@@ -44,10 +44,12 @@ The current plugin has:
 - `micro_defects` validation for crop-scale issues.
 - report-only drawing-order and short double-arrow TikZ lints.
 - freshness-safe critique adjudication sync.
+- `/fig_drive` tracked-worktree warnings for parallel Codex/Claude handoff
+  awareness.
 
 The current plugin still does not have:
 
-- conflict mediation for concurrent Codex/Claude edits.
+- hard locking or automatic merge mediation for concurrent Codex/Claude edits.
 
 ## Issue Breakdown
 

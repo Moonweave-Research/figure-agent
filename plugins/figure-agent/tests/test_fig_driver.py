@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -162,8 +163,42 @@ def test_main_emits_json_summary_in_dry_run(
     assert payload["may_execute"] is False
     assert isinstance(payload["status"], dict)
     assert isinstance(payload["forbidden_actions"], list)
+    assert isinstance(payload["workspace_warnings"], list)
     for key in ("action", "safe_command", "stop_boundary", "reason"):
         assert key in payload
+
+
+def test_driver_summary_surfaces_workspace_warnings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    monkeypatch.setattr(
+        fig_driver,
+        "_workspace_warnings",
+        lambda _repo_root: ["tracked_worktree_dirty: plugins/figure-agent/scripts/foo.py"],
+        raising=False,
+    )
+
+    summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
+
+    assert summary["workspace_warnings"] == [
+        "tracked_worktree_dirty: plugins/figure-agent/scripts/foo.py"
+    ]
+
+
+def test_workspace_warnings_report_tracked_dirty_paths(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    tracked = tmp_path / "plugins" / "figure-agent" / "scripts" / "foo.py"
+    tracked.parent.mkdir(parents=True)
+    tracked.write_text("before\n", encoding="utf-8")
+    subprocess.run(["git", "add", str(tracked.relative_to(tmp_path))], cwd=tmp_path, check=True)
+    tracked.write_text("after\n", encoding="utf-8")
+
+    warnings = fig_driver._workspace_warnings(tmp_path)
+
+    assert warnings == [
+        "tracked_worktree_dirty: plugins/figure-agent/scripts/foo.py"
+    ]
 
 
 def test_unsupported_mode_fails_cleanly(tmp_path: Path) -> None:
