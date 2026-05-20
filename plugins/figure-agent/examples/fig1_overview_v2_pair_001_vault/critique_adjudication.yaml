@@ -1,22 +1,29 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:7e7d57a4d526bdbe82c99a7db75795171005a5ddf3ee444baaa937aacea27a52
+source_critique_hash: sha256:b4d995c1a3a6f3a1366d48ce577bc92d877fadeb09822247f6ea6d423133c50f
 decisions:
-- finding_id: D001
-  decision: defer
-  reason: Spoke-label fill removal (iter 53) was a deliberate trade-off — chose background continuity over label punch per Gemini MEDIUM resolution. Desktop-scale legibility currently fine; print-scale 178mm test required before any fill restoration. Patch is parametric (fill=cAmber!8 with fill opacity=0.5) and easily reverted if print test fails.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-    lines 555-563
-  evidence: critique.md finding D001.
-- finding_id: E001
-  decision: defer
-  reason: Inline "d" at 5pt exactly meets Nature minimum; geometry (0.10cm vertical gap between Kelvin probe disk and polymer top) does not admit a larger inline label without restructuring apparatus zone widths. Defer to print-scale legibility test; widen-zone alternative is a Type-B structural change.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-    lines 824-860
-  evidence: critique.md finding E001.
-- finding_id: F001
-  decision: dismiss
-  reason: Faint interior parallel stroke on bent cantilever is the natural seam of the \shade[top color=cAmber!22, bottom color=cAmber!42] polymer-strip gradient fill — intentional polymer-strip visualization per iter 5-7 fixture polish (briefing section 13.7 polymer thickness cue). Will disappear at journal print scale. Not a defect.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-    lines 1061-1066
-  evidence: critique.md finding F001.
+- finding_id: P001
+  decision: needs_human
+  reason: Review P001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding P001.
+- finding_id: P002
+  decision: needs_human
+  reason: Review P002 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding P002.
+- finding_id: P003
+  decision: needs_human
+  reason: Review P003 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding P003.
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C001.
+- finding_id: C002
+  decision: needs_human
+  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C002.
