@@ -1,7 +1,7 @@
 # Auto Adjudication Policy Design
 
 **Date:** 2026-05-20 KST
-**Status:** proposed for review
+**Status:** implemented and verified
 **Related:** Issue 13
 
 ## Problem
