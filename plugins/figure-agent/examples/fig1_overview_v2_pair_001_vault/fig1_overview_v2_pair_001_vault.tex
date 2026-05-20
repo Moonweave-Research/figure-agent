@@ -888,10 +888,13 @@
   (7.20, 3.80) rectangle (7.60, 3.87);
 \draw[cGray!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
 \fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
-% Vibration cue — iter E11 + E12: attached LEFT of new longer shaft (3.87..4.05).
-% Arrow spans shaft mid-region for clear "this assembly vibrates vertically".
-\draw[<->, cGray!75!black, line width=0.32pt]
-  (7.32, 3.90) -- (7.32, 4.03);
+% Vibration cue — iter E11+E12+E15: TikZ \draw[<->] default Stealth tips
+% at this small length (0.13cm) fused into "diamond/cross" pattern at print
+% scale (user audit: "십자가/cross"). Replaced with unicode \updownarrow
+% glyph at 7pt — proper typography character (sharp Y-shape arrowheads vs
+% filled-triangle TikZ tips). Centered at shaft midpoint (7.32, 3.96).
+\node[font=\fontsize{7}{8.4}\selectfont, text=cGray!75!black,
+      inner sep=0pt] at (7.32, 3.96) {$\updownarrow$};
 % Air gap d — iter E12 (user-flagged): REMOVED. Reasons:
 %   1) Position was 0.20cm RIGHT of disk right edge (x=7.80 vs disk 7.20-7.60),
 %      visually off-axis from the gap being measured.
