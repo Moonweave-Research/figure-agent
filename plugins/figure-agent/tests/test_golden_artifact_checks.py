@@ -627,6 +627,22 @@ def test_require_accepted_mode_requires_publication_compliance(
     assert "QUALITY_AUDIT.md does not declare disclosure-needed" not in failures
 
 
+def test_publication_compliance_failures_preserve_legacy_messages(tmp_path: Path) -> None:
+    audit = tmp_path / "QUALITY_AUDIT.md"
+    audit.write_text("# Quality Audit\n\nsubmission-safe: false\n", encoding="utf-8")
+
+    failures = golden_checks.publication_compliance_failures(
+        audit,
+        require_disclosure=True,
+    )
+
+    assert failures == [
+        "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md",
+        "QUALITY_AUDIT.md does not declare submission-safe: true",
+        "QUALITY_AUDIT.md does not declare disclosure-needed",
+    ]
+
+
 def test_require_accepted_mode_includes_tiff_in_audit_freshness(
     tmp_path: Path, monkeypatch
 ) -> None:
