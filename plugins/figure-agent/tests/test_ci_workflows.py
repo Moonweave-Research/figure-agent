@@ -41,8 +41,8 @@ def test_full_render_workflow_has_timeout_guardrails() -> None:
         encoding="utf-8"
     )
 
-    assert "timeout-minutes: 45" in workflow
-    assert "Install system dependencies\n        timeout-minutes: 30" in workflow
+    assert "timeout-minutes: 20" in workflow
+    assert "Install system dependencies\n        timeout-minutes: 12" in workflow
 
 
 def test_render_pytest_marker_is_registered() -> None:
