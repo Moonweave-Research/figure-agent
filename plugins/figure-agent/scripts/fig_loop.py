@@ -57,9 +57,9 @@ from fig_loop_quality_axes import (  # noqa: E402
     quality_axis_summary,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from fig_loop_subregion import active_subregion_target  # noqa: E402
 from quality_manifest import yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
-from subregion_active_set import active_subregion_ids, parse_active_target_rows  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
@@ -126,21 +126,6 @@ def _adjudication_state(example_dir: Path) -> dict[str, Any]:
         "decision_count": len(adjudication.get("decisions", [])),
         "decisions": adjudication.get("decisions", []),
         "source_critique_hash": adjudication["source_critique_hash"],
-    }
-
-
-def _active_subregion_target(example_dir: Path) -> dict[str, str | None] | None:
-    log_path = example_dir / "subregion_iteration_log.md"
-    if not log_path.is_file():
-        return None
-    rows = parse_active_target_rows(log_path.read_text(encoding="utf-8"))
-    active_ids = active_subregion_ids(rows)
-    if not active_ids:
-        return None
-    return {
-        "finding_id": None,
-        "patch_target": active_ids[0],
-        "reason": "active sub-region target",
     }
 
 
@@ -224,7 +209,7 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
-    active_subregion = _active_subregion_target(example_dir)
+    active_subregion = active_subregion_target(example_dir)
     if active_subregion:
         return {
             "stop_reason": "active_subregion_recommended",
