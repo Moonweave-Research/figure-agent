@@ -663,9 +663,20 @@
 \node[labelMute, anchor=east, rotate=90] at (0.35, 2.45) {$\log I$};
 \node[labelMute, anchor=north] at (4.10, 0.30) {$\log t$};
 
-% D-5 deep-rich + D-6 shallow-rich power-law curves (briefing §13.5)
-\draw[cRed!80!black, line width=0.80pt] (0.65, 2.40) -- (3.85, 1.10);
-\draw[cBlue!80!black, line width=0.80pt] (0.65, 1.90) -- (3.85, 0.50);
+% D-5 high-n (sulfur, paper hero) + D-6 low-n (control) power-law curves
+% 2026-05-20 framework rewrite (briefing §8.4 + §13.5):
+%   CvS absorption current I(t)~t^-n under constant V.
+%   Both curves start at same y_0 = 2.30 (initial dielectric polarization
+%   order-of-magnitude match — cartoon simplification).
+%   D-5 RED = sulfur polymer, n_real ≈ 0.85 (paper-data 260504_sulfur_rh25),
+%     visual n ≈ 0.55 (cartoon-compressed) — STEEP, trap-rich, ends low.
+%   D-6 BLUE = control polymer (PI), n_real ≈ 0.55-0.60, visual n ≈ 0.25 —
+%     LESS STEEP, trap-poor, current persists.
+%   Prior coords (0.65,2.40→3.85,1.10) + (0.65,1.90→3.85,0.50) were locked
+%   to wrong depolarization framework; absorption-current rewrite swaps the
+%   physical interpretation: high n = strong trap = steep.
+\draw[cRed!80!black, line width=0.80pt] (0.65, 2.30) -- (3.85, 0.55);
+\draw[cBlue!80!black, line width=0.80pt] (0.65, 2.30) -- (3.85, 1.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
 % Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
@@ -689,23 +700,18 @@
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
-% D-7b curve ID labels — iter 52d: switched from anchor=south/center to
-% `sloped` path-attached label (TikZ journal convention). Labels rotate to
-% match curve slope and sit `above=2pt` perpendicular to curve — guaranteed
-% non-overlap with the line they label (Gemini Panel D iter 52b/c HIGH:
-% horizontal labels visually touched blue curve despite 0.15-0.18cm math
-% clearance). Path is `draw=none` since the actual curves D-5/D-6 are drawn
-% separately above with their own line widths.
-\path[draw=none] (0.65, 2.40) -- (3.85, 1.10)
+% D-7b curve ID labels — 2026-05-20 framework rewrite (briefing §8.4 + §13.5):
+%   "deep-rich/shallow-rich" depolarization-framework naming → "high n / low n"
+%   absorption-current framework. Paths updated to new D-5/D-6 curve coords.
+%   `sloped` path-attached convention (iter 52d) retained for journal style.
+%   RED = high n (sulfur polymer paper hero, steep, trap-rich).
+%   BLUE = low n (control polymer, flat, trap-poor).
+\path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
   node[midway, labelMute, text=cRed!75!black, sloped, above=3pt]
-  {deep-rich};
-% iter 52e: shallow-rich perpendicular offset above=2pt → above=4pt (Gemini
-% MEDIUM: dashed Debye crossed underneath letters at original 2pt offset).
-% Increased separation pushes label clear of Debye descent zone without
-% needing fill=white mask (which would break the parallel blue solid curve).
-\path[draw=none] (0.65, 1.90) -- (3.85, 0.50)
+  {high $n$};
+\path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
   node[midway, labelMute, text=cBlue!75!black, sloped, above=4pt]
-  {shallow-rich};
+  {low $n$};
 
 % =============== Column E — ISPD-paired =================
 

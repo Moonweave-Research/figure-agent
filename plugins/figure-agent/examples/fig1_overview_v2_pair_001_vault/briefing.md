@@ -270,7 +270,7 @@ Total ~9s for Row 1 (A 1s + B 1s + C 5s + transitions 1.6s + descend 0.5s).
 
 **Reader confusion signals** (다음 dogfood에서 monitor):
 - "왜 G 화살표만 빨간색?" → §8.5 LOCKED 인지 부족; G-6 Coulomb arrow label 분리 필요
-- "D의 두 선이 같은 sample이야?" → D-5 'deep-rich' / 'shallow-rich' 라벨이 다른 sample이지 같은 sample 아님 명확화 필요 (briefing §8.8 sample composition)
+- "D의 두 선이 같은 sample이야?" → D-5 'high n' (sulfur polymer) / D-6 'low n' (control, e.g., PI) **다른 sample** — paper hero claim 의 cross-sample comparison (§8.4 framework + 실측 데이터 260504_sulfur_rh25 + 260429_PI_control).
 - "왜 E와 F만 가까이 붙어있어?" → §6 paired ISPD 명시; spoke-ISPD가 vertical인 이유는 E↔F 쌍 결속
 
 ---
@@ -303,7 +303,7 @@ Result: Panel C *시각적 hero*; Row 2는 *3 columns of evidence*로 평등 분
 
 | Column | ID label | Narrative role | Apparatus zone (top) | Result zone (bottom) |
 |---|---|---|---|---|
-| 1 | **D** (retained letter for caption continuity) | Kinetic evidence | current-source ⊙ + 2 probes + thin-film slab | I(t)~t⁻ⁿ power-law plot (deep-rich red + shallow-rich blue + Debye dashed reference) |
+| 1 | **D** (retained letter for caption continuity) | Kinetic evidence | MIM stack + SMU + ground | I(t)~t⁻ⁿ absorption-current plot (high-n red sulfur + low-n blue control + Debye dashed reference) |
 | 2 | **E** (retained letter; ISPD-paired internal split via short arrow) | ISPD-paired evidence | corona needle ▽ + Kelvin probe ▭ + thin-film slab | V_s(t) decay (top sub-zone) + g(E_t) bimodal Gaussian (bottom sub-zone) — stacked within column |
 | 3 | **F** (was G; letter renamed to maintain alphabetical Row 2 flow) | Mechanical evidence | Power supply (V_active source) + 2 leads + neutral cantilever fixture + electrode (rest state) + **Maxwell attraction baseline** (light pink, polymer→electrode direction) | Bent cantilever (active state) + 3 q_tr ● markers (deep red) + **Coulomb repulsion** (bold red, electrode-away direction) — Coulomb WINS against Maxwell baseline |
 
@@ -339,7 +339,18 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 8.1 Deep traps = **lower energy** (deeper wells); shallow traps = higher energy. **Carrier polarity**: figure는 polarity-neutral filled-dot (●) marker 사용 (v8); ⊖/⊕ 표기는 lit convention상 electron/hole 각각 자동 imply하므로 deferred to paper experimental data. poly(S-r-DIB) charge-trap physics는 published primary source 없음 (Q6 lit-check 2026-05-16; Nicolai 2012 NMat 의 conjugated polymer analog에서는 electron trap dominant). 논문 데이터 확정 시 ●→⊖ (electron) 또는 ⊕ (hole) 또는 둘 다 upgrade 가능.
 8.2 Color convention: **shallow = blue, deep = red.** Consistent across Panel C, F, G. **Color-blindness redundancy** (Q10 확인 2026-05-16): color 외 position + size 동시 encoding — shallow는 mobility edge 근처 (높이 위), deep는 멀리 (낮은 위치); F-3 deep Gaussian이 F-2 shallow 대비 1.86× tall. 적록 색맹 (~6-8%) reader도 position + size로 shallow ↔ deep 식별 가능 (triple-encoding). Shape 차이 도입 (e.g., ●/◆)은 scope 밖 — color convention 충분.
 8.3 Panel C representation: **hybrid split-half**. LEFT = polymer matrix with mixed-depth ● sites (NOT spatially segregated — same polymer contains both kinds). RIGHT = trap-level energy diagram with E_C / mobility edge / E_V references + shallow + deep horizontal trap-level structures + escape arrows + ΔE_t^d depth annotation. Dashed gray leaders bind LEFT sites to RIGHT energy levels.
-8.4 Power-law I(t) ~ t⁻ⁿ lies **above Debye reference** at long times (non-Debye tail). Cannot be below. **Physical basis LOCKED (Q19)**: Curie–von Schweidler (CvS) law (Curie 1889 / von Schweidler 1907), Jonscher universal dielectric response (Jonscher 1977). CvS power-law tail이 Debye exponential보다 long-t에서 항상 위 = 정의적 (non-exponential ≡ slower decay). 본 paper Fig 3에서 CvS n exponent 정량.
+8.4 **CvS absorption-current framework (LOCKED, paper-data-grounded 2026-05-20)**: I(t) ~ t⁻ⁿ measured under **constant DC voltage** (absorption current, Schweidler 1907 original framing — NOT depolarization). Sample 간 n 차이는 **trap accumulation rate**:
+- **황고분자 (paper hero, "trap-rich")**: n ≈ 0.85 (S60-S75 range 0.65-0.95) → steep I(t) decay = 유전분극 이후에도 trap이 계속 쌓이며 I 지속 감소 (R 증가).
+- **PI control**: n ≈ 0.55-0.60 → less steep = 약한 trap accumulation.
+- **PDMS control (예상)**: n ≈ 0-0.2 → nearly flat = trap 거의 없음, 초기 polarization 후 I 평탄.
+
+**n 클수록 trap capability 강함** (within this sample set; corroborated by ISPD g(E_t) bimodal + mechanical bending). **Hero claim**: 황고분자가 기존 절연/유전 폴리머 대비 trap 성능 우월 = 3-line convergent evidence 의 첫째 line.
+
+**Reference curve = Debye exponential** (single-relaxation, Jonscher universal dielectric response framework 1977): I(t) ~ exp(-t/τ). Power-law tail은 항상 Debye보다 long-t 에서 위 = 정의적 (heavy-tail vs exponential).
+
+**실측 데이터 출처**: `/Users/choemun-yeong/workspace/ResearchOS/02_Surfur_Polymer/저항 측정/260504_sulfur_rh25/results/data/selected_samples.csv` (k=19 rolling median + rlm MM-estimator fit, R²>0.99). 본 paper Fig 3에서 CvS n exponent + ISPD trap distribution 정량.
+
+**Reviewer challenge 대비**: (a) trap vs Maxwell-Wagner vs dipolar 분리 → ISPD g(E_t) discrete distribution evidence; (b) Jonscher universality 일반화 challenge → 본 sample set 내 n 차이 정량 강조 + 3-line convergence; (c) fair control → sulfur-poor copolymer 비교 추가 권장.
 8.5 Column F (was Panel G — mechanical evidence column post-v8.6): Cantilever clip on **TOP**, polymer hanging down. **v8.6 Maxwell-vs-Coulomb contrast amendment (formerly "Maxwell forbidden" pre-v8.6):**
 
 - **Apparatus zone (top of column, rest state):** Maxwell attraction arrow ALLOWED — depicted as light pink (`cRed!35!white`, dashed, thin 0.40pt) arrow pointing FROM neutral polymer TOWARD electrode. Label: "F_Maxwell (image/induced attraction, baseline)" italic 5.5pt cGray. Polymer is rendered in *pale* tone (cAmber!18..30, opacity 0.6) and *undeflected* (straight, no bend) to signal "neutral, no trapped charges yet." This zone establishes the *attractive baseline* — what would happen if there were NO trapped charges. Power supply + electrode + neutral fixture set up the field, Maxwell attraction is the unavoidable consequence.
@@ -638,7 +649,7 @@ require a §17 amendment.
 
 **Column bbox**: x=0.05..4.50, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + mini-gap y=2.65..2.80 + result zone y=0.20..2.60.
 
-**Reading order**: (1) kinetic spoke 진입 (column top, x≈2.28) → (2) **D-2 apparatus icon** (current-source ⊙ + 2 leads + thin-film slab) "이 측정은 bias 인가 + I 측정" → (3) **D-4 equation label** `I(t)~t⁻ⁿ` (mental model) → (4) **D-5 deep-rich red curve** (위, less-steep) → (5) **D-6 shallow-rich blue curve** (아래, steeper) → (6) **D-3 Debye dashed** 우하단 (둘 다보다 아래 = non-Debye 증명) → (7) D-7 curve ID labels.
+**Reading order (2026-05-20 framework rewrite)**: (1) kinetic spoke 진입 (column top, x≈2.28) → (2) **D-2 MIM stack apparatus** (SMU + polymer film + ground) "constant V 인가 + I 측정" → (3) **D-4 equation label** `I(t)~t⁻ⁿ` (mental model) → (4) **D-5 high-n red curve** (sulfur polymer, **steeper**, n ≈ 0.85, ends lower right) "trap 계속 쌓임 → I 지속 감소" → (5) **D-6 low-n blue curve** (control polymer, **less steep**, n ≈ 0.55, ends upper right) "trap 거의 없어 I 평탄" → (6) **D-3 Debye dashed reference** (single-relaxation exponential, 둘 다보다 long-t 에서 아래) → (7) D-7 curve ID labels (high n / low n).
 
 - **D-1** column-frame: implicit bbox boundary (no visible stroke, just coordinate anchor). 3-spoke endpoint lands at column top center `(2.28, 4.25)`. **Role**: column-level layout anchor; replaces pre-v8.6 individual Panel D bbox.
 - **D-2** apparatus zone — kinetic-measurement scene at column-top, generic-instrument SYNTHESIS per v8.7 (no direct OA reference for transient I-t rig — Wang Nat Commun 2022 Fig 1e equivalent-circuit framing partial-mined). Layout: SMU box (LEFT) + MIM sample stack (CENTER) + ground symbol (BOTTOM). Mono cGray!75!black 0.30pt stroke. Width ~3.5cm × height ~1.30cm.
@@ -649,10 +660,11 @@ require a §17 amendment.
   - **Role**: apparatus zone hero — visualizes "transient I-t = SMU drives V across MIM stack, measures I(t)" with standard EE convention. Replaces v8.6 simple `current-source ⊙ + slab` per user 2026-05-17 directive (Nature Comm publication grade).
 - **D-3** result-zone axis arrows Stealth-tipped (cGray!65 0.40pt). Origin shifted from pre-v8.6 (0.55, 0.45) to fit new column bbox; new origin `(0.45, 0.40)`. Tip labels `\log I` (rotated at y=2.55) / `\log t` (at x ~4.20, y=0.30). **Role**: log-log frame compresses power-law to straight lines; tick-less = cartoon register preserved.
 - **D-4** main equation label `$I(t)\sim t^{-n}$` at column-result top, around `(0.55, 2.70)`, labelStrong. **Role**: mental-model anchor; reader reads curves as "I~t^-n family with different n values."
-- **D-5** deep-rich power-law line (cRed!80 0.80pt) from `(0.65, 2.40)` to `(3.85, 1.10)`. Less-steep = smaller n = deep trap dominant = longer retention. *iter 52 doc-sync: prior briefing coords `(0.55, 2.45)→(3.20, 1.05)` were pre-v8.7; updated to current source.*
-- **D-6** shallow-rich power-law line (cBlue!80 0.80pt) from `(0.65, 1.90)` to `(3.85, 0.50)`. Steeper = larger n = shallow trap dominant. *iter 52 doc-sync.*
-- **D-7a** Debye dashed reference (cGray!85!black 0.75pt, bezier) ending at `(2.55, 0.50)`. **Ends clearly below both power-law tails** per §8.4. Label `Debye` (labelMute, cGray!65!black) placed BELOW x-axis at `(2.75, 0.32)` anchor=north west with **Stealth-tipped arrow leader** pointing up-left toward dashed-curve endpoint (color-matched gray, 0.32pt). *iter 52 fix: prior `(2.70, 0.40)` baseline-on-axis position read as x-tick (Gemini Panel D HIGH); plot-internal placements collided with shallow-rich descent — arrow leader from external label is the journal-grade compromise.*
-- **D-7b** curve-ID labels: 'deep-rich' (cRed!75!black) at `(2.20, 1.95)` anchor=south, above red curve in whitespace; 'shallow-rich' (cBlue!75!black) at `(2.50, 1.30)` anchor=south, in gap between curves. **No fill** (labels in whitespace, never breaking primary data strokes). *iter 52 fix: prior iter 51 `fill=white` masking was Nature cardinal sin (severing primary data lines — Gemini Panel D HIGH).*
+- **D-5** **high-n** power-law line (cRed!80 0.80pt, **sulfur polymer paper hero**) from `(0.65, 2.30)` to `(3.85, 0.55)`. **Steep** slope (visual n ≈ 0.55; conceptual n ≈ 0.85 from real data — cartoon-compressed for figure scale). Physical meaning: constant V 인가 후 trap이 지속적으로 채워지며 I 가파르게 감소 → "trap-rich" / strong trap capability. *2026-05-20 framework rewrite: 이전 "deep-rich less-steep (0.65,2.40)→(3.85,1.10)" 매핑은 잘못된 depolarization framework 가정 결과; absorption-current 해석에서는 high n = steeper.*
+- **D-6** **low-n** power-law line (cBlue!80 0.80pt, **control polymer**, e.g., PI) from `(0.65, 2.30)` to `(3.85, 1.50)`. **Less steep** (visual n ≈ 0.25; conceptual n ≈ 0.55-0.60 PI / ≈ 0-0.2 PDMS). Physical meaning: trap 거의 없어 초기 polarization 후 I 평탄. *2026-05-20: 이전 "shallow-rich steeper" 매핑 폐기.*
+- **Both curves start at same y_0 = 2.30** (initial dielectric polarization current 동일 order — cartoon simplification; 실제 측정에서는 sample geometry 의해 다소 다름).
+- **D-7a** Debye dashed reference (cGray!85!black 0.75pt, bezier) ending at `(2.55, 0.56)`. **Ends below both power-law tails** per §8.4 (heavy-tail vs single-relaxation exponential). Label `Debye` (labelMute, cGray!65!black) at `(2.60, 0.55)` anchor=west, INSIDE plot, just above x-axis (iter 52d + iter 53 lift). No leader (color-match + adjacency = unambiguous identifier).
+- **D-7b** curve-ID labels (**high-n / low-n naming, 2026-05-20**): sloped path-attached convention — 'high n' (cRed!75!black) along D-5 red curve `above=3pt`; 'low n' (cBlue!75!black) along D-6 blue curve `above=4pt`. **No fill** (Nature cardinal sin guard — never break primary data strokes). 이전 'deep-rich/shallow-rich' 명명은 framework 오인 산물 — 폐기.
 
 ### §13.6 Column E — ISPD-paired evidence (v8.6 restructure, 10 sub-regions)
 
@@ -719,8 +731,8 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 - **Visual cue**: ISPD label이 E와 F 사이 (x=7.00, y=2.35); spoke 자체도 E↔F boundary (x=6.95)로 끝남
 
 **Binding-4 D↔F kinetic↔density coupling** [implicit, label-driven]
-- **Endpoints**: D-5 ('deep-rich' / 'shallow-rich' curve labels) ↔ F-3/F-2 (deep Gaussian dominant / shallow Gaussian smaller)
-- **Mechanism**: D의 less-steep 'deep-rich' line (smaller n) ↔ F의 taller 'Deep' Gaussian (higher density). 두 panel 모두 "deep trap dominant" 동일 sample 합의
+- **Endpoints (2026-05-20 framework rewrite)**: D-5 ('high n' = sulfur polymer) ↔ E의 Deep Gaussian dominant (1.86× taller than Shallow) ↔ F의 bent cantilever Coulomb dominance. **세 modality 모두 황고분자 trap-rich evidence**.
+- **Mechanism**: D의 steeper 'high n' line (large n) ↔ E의 deep-trap-heavy bimodal g(E_t) ↔ F의 큰 cantilever bending. 세 panel 모두 "황고분자 trap capability 강함" 으로 convergent. Control polymer 비교: D의 'low n' (flat) ↔ E의 shallow-only DOS (if measured) ↔ F의 작은 bending.
 - **Anti-confusion**: 두 panel이 다른 domain (time-power vs energy-density)이지만 same sample → 같은 trap 분포가 D의 n과 F의 peak height 둘 다 결정
 
 **Row 1 internal bindings (A → B → C 좌→우 zoom-progression):**
@@ -745,7 +757,7 @@ Sub-region들이 panel 단위 enumeration이지만 figure narrative는 panel↔p
 | C ↔ F | color | shallow blue / deep red | §8.6 |
 | C ↔ G | charge | ● markers cRed | §8.5 + §8.6 |
 | E ↔ F | derivation | ISPD inter-arrow | §6 |
-| D ↔ F | kinetic-density | deep-rich ↔ deep peak | §8.7 (anti-chain) |
+| D ↔ E ↔ F | trap-capability convergence | sulfur high-n CvS ↔ deep-trap-dominant g(E_t) ↔ Coulomb-dominant bending | §8.4 + §8.7 (anti-chain) |
 | **Row 1 internal** | | | |
 | A ↔ B | chain identity | shared zigSChain macro | §13.2 B-1 |
 | A-3 ↔ B | composition tag | (S)_x generic ↔ wt% specific (S60..S85) | §8.8 + Q1 |

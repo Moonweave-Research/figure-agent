@@ -1,11 +1,11 @@
 ---
-schema: figure-agent.critique.v1.2
+schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T01:12:15Z
+generated_at: 2026-05-20T02:25:58Z
 generator: critique_brief.py
-generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
-rubric_version: figure-agent.critique-rubric.v1.2
-critique_input_hash: sha256:22bc35d80fd7afceca99c1867638aed266c837618025785b33f210399562c0ff
+generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
+rubric_version: figure-agent.critique-rubric.v1.3
+critique_input_hash: sha256:661f360880550e3fb948412d6d78b6c98a9f9a9417f222d08151b7046d35ba67
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -130,14 +130,14 @@ audit_enumeration:
       intended_target: panel D-3 x-axis label
       matches: true
       proposed_fix: ""
-    - label: "deep-rich"
-      nearest_object: panel D red power-law line
-      intended_target: panel D-5 / D-7b curve ID (sloped label iter 52)
+    - label: "high n"
+      nearest_object: panel D red power-law line (sulfur polymer, steeper)
+      intended_target: panel D-5 / D-7b curve ID — sulfur polymer paper hero (n ≈ 0.85 measured; cartoon-compressed visual slope). 2026-05-20 framework rewrite from prior "deep-rich" depolarization-framework naming.
       matches: true
       proposed_fix: ""
-    - label: "shallow-rich"
-      nearest_object: panel D blue power-law line
-      intended_target: panel D-6 / D-7b curve ID (sloped label iter 52)
+    - label: "low n"
+      nearest_object: panel D blue power-law line (control polymer, flatter)
+      intended_target: panel D-6 / D-7b curve ID — control polymer e.g. PI (n ≈ 0.55-0.60 measured). 2026-05-20 framework rewrite from prior "shallow-rich".
       matches: true
       proposed_fix: ""
     - label: "Debye"
@@ -301,8 +301,8 @@ quality_axes:
   subregion_integration:
     verdict: pass
     confidence: high
-    rationale: per-panel sub-region linkages visible and semantically coherent
-    evidence: Panel D apparatus to result via I(t)~t^-n anchor; Panel E apparatus to V_s decay to g(E_t) via derive arrow + tau_d caliper; Panel F apparatus to bent cantilever to Coulomb force; cross-panel D-F endpoints connect deep-rich curve (less-steep) to Deep Gaussian peak (taller) per briefing section 8.7 anti-chain consistency
+    rationale: per-panel sub-region linkages visible and semantically coherent; cross-panel convergence on sulfur-polymer hero claim
+    evidence: Panel D apparatus to result via I(t)~t^-n anchor; Panel E apparatus to V_s decay to g(E_t) via derive arrow + tau_d caliper; Panel F apparatus to bent cantilever to Coulomb force; cross-panel D-E-F convergence — sulfur high-n CvS (Panel D) ↔ deep-trap-dominant g(E_t) (Panel E) ↔ Coulomb-dominant cantilever bending (Panel F) — all three independent modalities point to "황고분자 trap capability 우월" hero claim per briefing section 8.7 (2026-05-20 framework rewrite)
     blocking_items: []
     recommended_action: none
   component_fidelity:
@@ -315,8 +315,8 @@ quality_axes:
   scientific_plausibility:
     verdict: pass
     confidence: high
-    rationale: Curie-von Schweidler power-law slopes preserve briefing section 8.4 requirement; bimodal Gaussian DOS with deep-trap dominant shape preserves section 6.1 paper finding; force-contrast (Coulomb dominant vs Maxwell baseline) preserves section 13.7 polymer-physics narrative
-    evidence: deep-rich slope -0.406 vs shallow-rich slope -0.4375 (deep-rich less-steep = smaller n, anti-chain section 8.7 OK); Debye dashed curve ends at (2.55, 0.56) BELOW both power-law tails (long-t section 8.4 OK); Panel E Deep Gaussian 1.86x Shallow Gaussian peak height (section 6.1 deep dominant OK)
+    rationale: CvS absorption-current framework (Schweidler 1907) — paper-data-grounded 2026-05-20 framework rewrite — preserves briefing section 8.4 sample-comparison narrative; sulfur polymer paper hero (high n) shows strong trap accumulation under constant DC voltage; bimodal Gaussian DOS with deep-trap dominant shape (panel E section 6.1); Coulomb-dominant mechanical bending (panel F section 13.7). 3-line convergent evidence consistent.
+    evidence: Panel D high-n RED slope ≈ -0.55 (cartoon-compressed visual; real n ≈ 0.85 from `260504_sulfur_rh25/results/data/selected_samples.csv`) vs low-n BLUE slope ≈ -0.25 (real n ≈ 0.55-0.60 PI control from `260429_PI_control/results/data/selected_samples.csv`); curves start at same y_0 = 2.30 (initial polarization order-match); Debye dashed reference ends y=0.56 below both power-laws at long t (heavy-tail vs single-relaxation Jonscher universal response); Panel E Deep Gaussian 1.86x Shallow Gaussian peak height (section 6.1 deep dominant); Panel F Coulomb bold > F_Maxwell dashed = trap-driven bending wins baseline.
     blocking_items: []
     recommended_action: none
   composition_layout:
@@ -387,15 +387,15 @@ findings: []
 
 # Vision Critique — fig1_overview_v2_pair_001_vault
 
-Overall verdict: **ready**. Iteration 53 polish of Panel D (sloped path-attached curve labels, inside-plot Debye position, SMU box redesign with centered SMU/V/A typography + lead-electrode contact dots, ground-lead breathing room, spoke-modality label fill removal + arrow clearance) closes the last journal-polish gaps surfaced by the iter 50-52 brutal sweeps. The figure now passes all four mandatory audit checklists and all ten journal-grade quality axes at confidence high (5/10) or medium (5/10), with zero BLOCKER and zero MAJOR findings. The only residuals are three NIT-level polish observations documented under `panels:` — none of them justifies an additional patch ahead of acceptance/golden roll-forward.
+Overall verdict: **ready**. **2026-05-20 framework rewrite** of Panel D applied: prior "deep-rich (less-steep) / shallow-rich (steeper)" naming was based on a *depolarization-current* interpretation; the paper's actual measurement is *absorption current under constant DC voltage* (Schweidler 1907 original). The correct framing is **high-n (RED, sulfur polymer paper hero, steeper) / low-n (BLUE, control polymer, flatter)** — n large ↔ strong trap accumulation, n small ↔ trap-poor. Panel D curve coordinates swapped accordingly (D-5 RED to (3.85, 0.55), D-6 BLUE to (3.85, 1.50), both starting at y=2.30). Iteration 53 polish remains valid (sloped path-attached labels, inside-plot Debye position, SMU box centered grid, contact dots, ground-lead breathing room, spoke-modality clearance).
 
-Key journal-level claims supported by the rendered figure:
+Key journal-level claims supported by the rendered figure (post-rewrite):
 
-- **Curie-von Schweidler non-Debye proof (briefing section 8.4)** — Panel D power-law lines (deep-rich red, shallow-rich blue) terminate well above the dashed Debye reference (which descends to y=0.56 just above x-axis y=0.40 with 0.16 cm clearance), so the long-t inequality `I_powerlaw > I_Debye` is visually unambiguous.
-- **Anti-chain semantic (briefing section 8.7)** — Panel D red curve slope (-0.406) is shallower than blue curve slope (-0.4375), so deep-rich = less-steep = smaller n is preserved; cross-panel D to F endpoint mapping (deep-rich curve to Deep Gaussian) is internally consistent.
-- **Bimodal Gaussian DOS with deep dominant (briefing section 6.1)** — Panel E pink Deep Gaussian renders 1.86x the height of blue Shallow Gaussian, matching the paper's `g(E_t)` interpretation.
-- **Coulomb-dominant mechanical manifestation (briefing section 13.7)** — Panel F bold red Coulomb arrow visually outweighs the dashed F_Maxwell baseline; cantilever bends away from the electrode in the Coulomb direction.
-- **Iconic cartoon register (briefing sections 13.5/13.6/13.7)** — all three Row 2 result plots remain tickless with axis arrows only; numerical axis values are intentionally absent so the figure does not poach Fig 2~ quantitative territory.
+- **CvS absorption-current sample comparison (briefing section 8.4 rewritten 2026-05-20)** — Panel D high-n RED (sulfur polymer paper hero, cartoon visual slope ≈ -0.55, real measured n ≈ 0.85 from `260504_sulfur_rh25`) descends steeply, communicating "trap continues accumulating under constant V, current keeps decreasing"; low-n BLUE (control, e.g., PI, real n ≈ 0.55-0.60 from `260429_PI_control`) descends less steeply, communicating "weak trap, current persists". Both above Debye dashed reference at long t (heavy-tail vs single-relaxation exponential).
+- **3-line convergent evidence (briefing section 8.7 cross-panel)** — Panel D high-n curve (sulfur, steep) ↔ Panel E deep-trap-dominant g(E_t) Deep Gaussian 1.86× Shallow ↔ Panel F Coulomb-dominant cantilever bending. All three independent modalities converge on the hero claim "황고분자 trap capability 우월".
+- **Bimodal Gaussian DOS with deep dominant (briefing section 6.1)** — Panel E pink Deep Gaussian renders 1.86x the height of blue Shallow Gaussian.
+- **Coulomb-dominant mechanical manifestation (briefing section 13.7)** — Panel F bold red Coulomb arrow visually outweighs the dashed F_Maxwell baseline.
+- **Iconic cartoon register (briefing sections 13.5/13.6/13.7)** — all three Row 2 result plots remain tickless with axis arrows only.
 
 Per-finding discussion:
 
