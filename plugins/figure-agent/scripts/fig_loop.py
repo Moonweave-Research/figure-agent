@@ -41,13 +41,17 @@ from fig_loop_axis_records import (  # noqa: E402
 )
 from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
+from fig_loop_patch_evidence import (  # noqa: E402
+    patch_evidence_baseline,
+    path_evidence,
+)
 from fig_loop_quality_axes import (  # noqa: E402
     STORY_QUALITY_AXES,
     quality_axis_record,
     quality_axis_summary,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
-from quality_manifest import file_sha256, yaml_frontmatter  # noqa: E402
+from quality_manifest import yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
 from subregion_active_set import active_subregion_ids, parse_active_target_rows  # noqa: E402
 
@@ -457,48 +461,7 @@ def _axis_verdicts(
     }
 
 
-_PATCH_EVIDENCE_SCHEMA = "figure-agent.patch-evidence.v1"
 _POST_PATCH_EVIDENCE_SCHEMA = "figure-agent.post-patch-evidence.v1"
-_PATCH_EVIDENCE_VERDICTS = ["resolved", "unresolved", "regressed", "ambiguous"]
-
-
-def _path_evidence(repo_root: Path, rel_path: str) -> dict[str, Any]:
-    path = repo_root / rel_path
-    exists = path.is_file()
-    return {
-        "path": rel_path,
-        "exists": exists,
-        "sha256": file_sha256(path) if exists else None,
-    }
-
-
-def _patch_evidence_baseline(
-    repo_root: Path,
-    patch_handoff: dict[str, Any] | None,
-) -> dict[str, Any] | None:
-    if not patch_handoff:
-        return None
-    return {
-        "schema": _PATCH_EVIDENCE_SCHEMA,
-        "phase": "pre_patch",
-        "target_type": patch_handoff["target_type"],
-        "target_id": patch_handoff["target_id"],
-        "verdict": "not_evaluated",
-        "may_edit": False,
-        "pre_patch": {
-            "allowed_edit_scope": [
-                _path_evidence(repo_root, rel_path)
-                for rel_path in patch_handoff["allowed_edit_scope"]
-            ]
-        },
-        "post_patch_required_verdicts": list(_PATCH_EVIDENCE_VERDICTS),
-        "rollback_reference": {
-            "git_commit": _git_value(repo_root, ("rev-parse", "HEAD")),
-            "restore_strategy": (
-                "restore allowed_edit_scope paths to the recorded pre_patch sha256 values"
-            ),
-        },
-    }
 
 
 def _valid_previous_iteration(iteration_path: Path, name: str) -> bool:
@@ -559,7 +522,7 @@ def _post_patch_evidence_verdict(
         rel_path = item.get("path")
         if not isinstance(rel_path, str):
             continue
-        current = _path_evidence(repo_root, rel_path)
+        current = path_evidence(repo_root, rel_path)
         if current["exists"] != item.get("exists") or current["sha256"] != item.get("sha256"):
             changed_paths.append(rel_path)
 
@@ -686,7 +649,11 @@ def run_loop(
     patch_evidence = (
         None
         if post_patch_evidence is not None
-        else _patch_evidence_baseline(repo_root, patch_handoff)
+        else patch_evidence_baseline(
+            repo_root,
+            patch_handoff,
+            git_commit=lambda: _git_value(repo_root, ("rev-parse", "HEAD")),
+        )
     )
     completed_at = _utc_now()
 
