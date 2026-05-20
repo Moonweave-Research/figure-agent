@@ -1,10 +1,10 @@
-# High-Zoom Subregion Audit Pack Implementation Plan
+# High-Zoom Visual Audit Crop Pack Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add deterministic high-zoom audit crops to `/fig_critique` so host-LLM review sees micro-defects that are missed in full-render and standard panel-crop views.
+**Goal:** Add deterministic high-zoom visual audit crops to `/fig_critique` so host-LLM review sees micro-defects that are missed in full-render and standard panel-crop views.
 
-**Architecture:** Keep `/fig_critique` host-LLM-only. Add a small image-crop helper that writes ephemeral PNG crops under `build/audit_crops/`, then make `critique_brief.py` list those crops and force a closed-set micro-visual audit. Do not change status, loop, export, accepted, golden, or final-artifact behavior.
+**Architecture:** Keep `/fig_critique` host-LLM-only. Add a small image-crop helper that writes ephemeral PNG crops under `build/audit_crops/`, then make `critique_brief.py` list those crops and require a closed-set micro-visual audit in the host prompt. These crops are visual attention crops, not semantic sub-regions or patch targets. Do not change status, loop, export, accepted, golden, or final-artifact behavior.
 
 **Tech Stack:** Python 3.12, Pillow, pytest, ruff, Claude plugin validation.
 

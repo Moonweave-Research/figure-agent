@@ -22,11 +22,11 @@ agent.
 
 | Area | Observed defect | Current repo truth |
 |---|---|---|
-| Host vision zoom | Standard full-render and panel-crop reads missed sub-mm line crossings and arrow artifacts. | `/fig_critique` reads `build/<name>.png` and optional panel crops, but no high-zoom sub-region crop pack exists. |
+| Host vision zoom | Standard full-render and panel-crop reads missed sub-mm line crossings and arrow artifacts. | `/fig_critique` reads `build/<name>.png` and optional panel crops, but no high-zoom visual audit crop pack exists. |
 | Visual clash | `check_visual_clash.py` produced many report-only candidates while missing actual line-through-label cases. | The detector is text-bbox plus local pixel statistics; it is not a semantic micro-defect detector. |
 | Drawing order | Adding a white fill did not help when later `\draw` paths rendered over the label. | No source-order lint exists for label-background protection. |
 | Arrow-tip print behavior | Short `<->` arrow segments fused into diamond-like marks at print scale. | No print-scale arrow-tip recognizability gate exists. |
-| Semantic anchoring | Vibration arrows could float away from the oscillating element. | Existing quality axes ask for label/arrow semantics, but no sub-region crop or closed-set micro-defect enum forces this check. |
+| Semantic anchoring | Vibration arrows could float away from the oscillating element. | Existing quality axes ask for label/arrow semantics, but no visual audit crop or closed-set micro-defect enum forces this check. |
 | Hash/sync overhead | Generator/rubric/input/adjudication hashes require repeated manual refresh during active plugin development. | Freshness is correct but ergonomically expensive; no one-shot sync command exists. |
 | Iteration logging | Sub-region loop progress was easy to omit or name inconsistently. | `subregion_iteration_log.md` is parsed when present, but no closeout helper appends or normalizes iteration rows. |
 
@@ -43,7 +43,9 @@ The current plugin has:
 The current plugin does not have:
 
 - automatic high-zoom crop generation;
-- sub-region image crops as first-class critique inputs;
+- active sub-region image crops as first-class critique inputs;
+- quadrant audit crops that are validated as evidence inputs rather than true
+  semantic sub-regions;
 - micro-defect categories below panel/top-level findings;
 - drawing-order or arrow-tip lint;
 - print-scale audit images;
@@ -52,15 +54,21 @@ The current plugin does not have:
 
 ## Issue Breakdown
 
-### Issue 12A: High-Zoom Subregion Audit Pack
+### Issue 12A: High-Zoom Visual Audit Crop Pack
 
 **Type:** AFK
 **Blocked by:** None
 
-Create a deterministic crop pack for `/fig_critique` that generates high-zoom
-2x2 quadrant crops for the full render and for every panel crop already produced
-by `critique_brief.py`. The brief must list these crops and instruct the host
-LLM to inspect them for micro-defects before declaring a critique ready.
+Create a deterministic crop pack for `/fig_critique` that generates 2x2 visual
+audit crops for the full render and for every panel crop already produced by
+`critique_brief.py`. These crops are an attention/zoom evidence layer, not the
+repo's semantic sub-region model. The brief must list the crops and instruct
+the host LLM to inspect them for micro-defects before declaring a critique
+ready.
+
+This slice does not by itself prove the host used the crops. It adds evidence
+plumbing and command-facing obligations; Issue 12B is the enforcement slice
+that makes crop findings first-class schema evidence.
 
 Acceptance criteria:
 
@@ -168,4 +176,3 @@ Acceptance criteria:
 - Automatic accepted/golden/export mutation.
 - SVG polish implementation.
 - Declaring a figure publication-ready from deterministic checks alone.
-

@@ -76,7 +76,7 @@ CB, VB, E_t
         encoding="utf-8",
     )
     if png:
-        (build_dir / "review_demo.png").write_bytes(b"png")
+        Image.new("RGB", (120, 80), "white").save(build_dir / "review_demo.png")
     return example_dir
 
 
@@ -298,6 +298,45 @@ def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
     assert "### B. Label-Target Matching Audit" in brief
     assert "### C. Physical Plausibility Audit" in brief
     assert "### D. Conceptual Completeness Audit" in brief
+
+
+def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir)
+
+    brief = generate_for(example_dir)
+
+    assert "## High-Zoom Visual Audit Crops" in brief
+    assert "`examples/review_demo/build/audit_crops/full_q1.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/full_q4.png`" in brief
+    assert "original-pixel attention crops" in brief
+    assert "line_crosses_label" in brief
+    assert "arrow_tip_fused" in brief
+    assert (example_dir / "build" / "audit_crops" / "full_q1.png").is_file()
+
+
+def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    ref_dir = example_dir / "reference"
+    ref_dir.mkdir()
+    Image.new("RGB", (80, 40), "white").save(ref_dir / "panel_a.png")
+    (example_dir / "spec.yaml").write_text(
+        "name: review_demo\n"
+        "panels:\n"
+        "  - id: A\n"
+        "    caption: demo panel\n"
+        "    reference_image: reference/panel_a.png\n"
+        "    bbox_pdf_cm: [0, 0, 3.5, 1.75]\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    _write_real_render_pair(example_dir)
+
+    brief = generate_for(example_dir)
+
+    assert "`examples/review_demo/build/panel_crops/A.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/panel_A_q1.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/panel_A_q4.png`" in brief
 
 
 def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):

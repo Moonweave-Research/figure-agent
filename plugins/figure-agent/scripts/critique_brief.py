@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
+from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
 from PIL import Image
 from quality_manifest import (
@@ -34,6 +35,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
+_MICRO_DEFECT_CHECKS = (
+    "line_crosses_label",
+    "wire_crosses_label",
+    "arrow_tip_fused",
+    "label_target_detached",
+    "floating_semantic_cue",
+    "drawing_order_suspect",
+)
 
 
 class CritiqueBriefError(Exception):
@@ -239,9 +248,10 @@ def _format_bbox(values: list[float]) -> str:
 
 def _panel_reference_sections(
     example_dir: Path, spec: dict, png_path: Path, pdf_path: Path
-) -> tuple[str, str]:
+) -> tuple[str, str, tuple[Path, ...]]:
     contexts: list[str] = []
     warnings: list[str] = []
+    panel_crop_paths: list[Path] = []
     for index, panel in enumerate(spec.get("panels", [])):
         ref_path = _panel_reference_path(example_dir, panel)
         if ref_path is None:
@@ -273,6 +283,7 @@ def _panel_reference_sections(
             _crop_panel_png(png_path, pdf_path, bbox, crop_path)
         except CritiqueBriefError as exc:
             raise CritiqueBriefError(f"panel `{panel_id}` crop failed: {exc}") from exc
+        panel_crop_paths.append(crop_path)
 
         contexts.append(
             "\n".join(
@@ -293,7 +304,31 @@ def _panel_reference_sections(
     context_section = ""
     if contexts:
         context_section = "\n\n## Per-panel reference contexts\n" + "\n\n".join(contexts)
-    return warning_section, context_section
+    return warning_section, context_section, tuple(panel_crop_paths)
+
+
+def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
+    if not crops:
+        return ""
+    lines = [
+        "## High-Zoom Visual Audit Crops",
+        "Host LLM MUST inspect these crops before finalizing `critique.md`.",
+        "These are original-pixel attention crops; the zoom effect comes from inspecting "
+        "each crop separately instead of only the full render.",
+        "For each crop, check these closed-set micro-defects: "
+        + ", ".join(_MICRO_DEFECT_CHECKS)
+        + ".",
+        "",
+    ]
+    for crop in crops:
+        crop_path = example_dir / crop["path"]
+        source_path = example_dir / crop["source_path"]
+        lines.append(
+            f"- `{_example_relative_path(example_dir, crop_path)}` "
+            f"from `{_example_relative_path(example_dir, source_path)}` "
+            f"bbox_px={crop['bbox_px']}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
 
 
 def generate_for(example_dir: Path) -> str:
@@ -344,10 +379,12 @@ def generate_for(example_dir: Path) -> str:
 **Reference image (for drift detection):** `{ref_path}`
 (If the current render differs from reference, cite both in findings.
 Use reference image as a tiebreaker in case of conflicting interpretations.)"""
-    panel_warning_section, panel_context_section = _panel_reference_sections(
+    panel_warning_section, panel_context_section, panel_crop_paths = _panel_reference_sections(
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
+    zoom_crops = build_zoom_crop_pack(example_dir, png_path, panel_crop_paths=panel_crop_paths)
+    zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -357,6 +394,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 **Render to inspect:** `{render_path}`
 {render_read_note}{image_context_sections}
+{zoom_audit_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
