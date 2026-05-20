@@ -238,7 +238,7 @@ findings:
 <one-paragraph overall verdict, then per-finding prose discussion>
 ```
 
-5. Before handing off to adjudication, run:
+5. Before handing off to adjudication or loop work, run:
 
 ```bash
 uv run python3 scripts/critique_lint.py <name>
@@ -256,7 +256,7 @@ Use `panels: []` when no panel-level reference comparison was available. Keep cr
 - `revise` — any MAJOR or MINOR findings (or NIT-only)
 - `block` — at least one BLOCKER physics violation that makes the figure unsuitable for manuscript use
 
-5. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation remains deferred until the patch-handoff loop has at least 10 real dogfood runs with conservative safety evidence.
+6. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation remains deferred until the patch-handoff loop has at least 10 real dogfood runs with conservative safety evidence.
 
 For loop work, run `/fig_adjudicate <name>` after writing `critique.md` to
 create `examples/<name>/critique_adjudication.yaml` with the current critique

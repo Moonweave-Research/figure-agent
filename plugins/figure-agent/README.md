@@ -24,13 +24,15 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 
 ---
 
-## The six commands
+## Core commands
 
 ```
 /fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
 /fig_extract  (optional) reference PNG -> OCR + palette clusters + optional vtracer structural hints
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
 /fig_critique Have host Claude read the build PNG and write critique.md
+/fig_adjudicate Scaffold critique_adjudication.yaml after critique lint passes
+/fig_loop     Record a verify-only loop checkpoint
 /fig_export   Export final PDF / SVG / TIFF / PNG
 /fig_status   "Where am I?" — read-only stage check
 ```
@@ -56,8 +58,13 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 # 5. Get vision feedback. Host Claude reads the build PNG.
 /fig_critique fig3_trap_concept   # writes critique.md
 
-# 6. Iterate: edit .tex (often one line at a time), re-compile, re-critique.
-#    When the critique looks clean, export.
+# 6. For loop work, lint critique.md, scaffold adjudication, then record state.
+uv run python3 scripts/critique_lint.py fig3_trap_concept
+/fig_adjudicate fig3_trap_concept
+/fig_loop fig3_trap_concept --goal "resolve the next safe critique target"
+
+# 7. Iterate: edit .tex (often one line at a time), re-compile, re-critique.
+#    When the critique and loop state look clean, export.
 /fig_export fig3_trap_concept
 ```
 

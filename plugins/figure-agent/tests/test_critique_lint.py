@@ -170,6 +170,26 @@ def test_lint_critique_reports_duplicate_finding_ids(tmp_path: Path) -> None:
     assert "P001" in violations[0].message
 
 
+def test_lint_critique_reports_malformed_finding_ids_without_traceback(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - status: open\n"
+            "    observation: missing id\n"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "id must be a non-empty string" in violations[0].message
+
+
 def test_lint_critique_reports_contract_validation_errors(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
@@ -211,3 +231,25 @@ def test_lint_critique_cli_returns_nonzero_for_violations(
     captured = capsys.readouterr()
     assert result == 1
     assert "duplicate_finding_id" in captured.out
+
+
+def test_lint_critique_cli_reports_malformed_findings_without_traceback(
+    tmp_path: Path, capsys
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - status: open\n"
+            "    observation: missing id\n"
+        ),
+    )
+
+    result = critique_lint.main([str(fig_dir)])
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert "critique_contract" in captured.out
+    assert "Traceback" not in captured.err

@@ -58,7 +58,16 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
             )
         ]
 
-    violations = _duplicate_finding_id_violations(frontmatter)
+    try:
+        violations = _duplicate_finding_id_violations(frontmatter)
+    except CritiqueAdjudicationError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
     if violations:
         return violations
 

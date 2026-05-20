@@ -93,7 +93,8 @@ polish backport, or actions the current mode forbids.
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
 /fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
-                         with unresolved findings defaulted to needs_human
+                         after `uv run python3 scripts/critique_lint.py <name>`;
+                         unresolved findings default to needs_human
 /fig_loop <name> --goal "<goal>"
                          verify-only loop evidence record under .scratch/fig-loop-runs/
 /fig_closeout <name>    read-only post-patch checklist for compile, critique,
@@ -143,9 +144,12 @@ records `critique_adjudication.yaml` as missing, fresh, stale, or invalid when
 present. It does not patch source, compile, export, accept artifacts, or mutate
 git state.
 
-Use `/fig_adjudicate <name>` after `/fig_critique <name>` when
-`critique_adjudication.yaml` is missing or stale. It scaffolds every panel-level
-and top-level critique finding, stamps the current critique hash, and defaults
+Use `uv run python3 scripts/critique_lint.py <name>` after `/fig_critique
+<name>` and before `/fig_adjudicate <name>` when `critique_adjudication.yaml`
+is missing or stale. The lint preflight catches duplicate finding ids,
+malformed critique frontmatter, and missing top-tier finding links before they
+become loop state. `/fig_adjudicate` then scaffolds every panel-level and
+top-level critique finding, stamps the current critique hash, and defaults
 unresolved findings to `needs_human` so the loop cannot silently drop reviewer
 findings.
 

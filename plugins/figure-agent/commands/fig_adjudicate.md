@@ -9,6 +9,14 @@ Create a conservative adjudication scaffold for one figure.
 Run from the plugin root:
 
 ```bash
+uv run python3 scripts/critique_lint.py <name>
+```
+
+Stop and repair `critique.md` if lint returns non-zero. The lint preflight
+catches duplicate finding ids, malformed critique frontmatter, and missing
+top-tier finding links before the scaffold can become loop state.
+
+```bash
 uv run python3 scripts/critique_adjudication.py scaffold <name>
 ```
 
