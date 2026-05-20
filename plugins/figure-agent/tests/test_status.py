@@ -2459,6 +2459,57 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
     assert result["golden_ready"] is False
     assert result["release_ready"] is False
     assert result["final_ready"] is False
+    assert result["publication_gate_state"] == "HUMAN_ACCEPTANCE_REQUIRED"
+    assert result["publication_gate_failures"][0]["code"] == "missing_quality_audit"
+
+
+def test_infer_stage_publication_gate_not_applicable_without_acceptance_declaration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["publication_gate_state"] == "NOT_APPLICABLE"
+    assert result["publication_gate_failures"] == []
+
+
+def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomplete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    (fig_dir / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "human-visual-acceptance: true\n"
+        "submission-safe: false\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "ACCEPTED"
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is True
+    assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
+    assert result["publication_gate_failures"] == [
+        {
+            "code": "missing_submission_safe_true",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "QUALITY_AUDIT.md does not declare submission-safe: true",
+            "required_action": (
+                "Human reviewer must decide submission safety and write an explicit value."
+            ),
+        }
+    ]
 
 
 def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(

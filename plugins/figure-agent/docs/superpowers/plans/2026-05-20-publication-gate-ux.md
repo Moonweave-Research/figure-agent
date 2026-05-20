@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add typed publication-gate failure records and a conservative `QUALITY_AUDIT.md` scaffold while preserving current accepted-gate behavior.
+**Goal:** Add typed publication-gate failure records, a conservative `QUALITY_AUDIT.md` scaffold, and status/driver surfacing while preserving accepted-gate mutation safety.
 
 **Architecture:** Add `scripts/publication_gate.py` as the focused model/scaffold module. Keep `check_golden_artifacts.py` as the accepted-gate orchestrator and convert typed records back to legacy strings so existing callers do not change.
 
@@ -54,3 +54,30 @@
 - [ ] Mark acceptance criteria complete after verification.
 - [ ] Run targeted tests, full tests, ruff, diff check, and plugin validation.
 - [ ] Commit the slice.
+
+## Task 5: Status Publication Gate Surfacing
+
+**Files:**
+- Modify: `plugins/figure-agent/scripts/publication_gate.py`
+- Modify: `plugins/figure-agent/scripts/status.py`
+- Modify: `plugins/figure-agent/tests/test_status.py`
+
+- [x] Add a publication-gate summary helper with stable states.
+- [x] Expose `publication_gate_state` and `publication_gate_failures` from
+  `infer_stage()`.
+- [x] Keep `release_ready` semantics backward-compatible and expose
+  publication/provenance judgment separately.
+- [x] Test not-accepted and incomplete-provenance fixtures.
+
+## Task 6: Release Driver Publication Gate Reason
+
+**Files:**
+- Modify: `plugins/figure-agent/scripts/fig_driver.py`
+- Modify: `plugins/figure-agent/tests/test_fig_driver.py`
+
+- [x] Include publication gate fields in compact driver status.
+- [x] Block release mode on `HUMAN_ACCEPTANCE_REQUIRED` and
+  `PROVENANCE_REQUIRED`.
+- [x] Preserve `accepted_or_final_ready_required` as the stop boundary.
+- [x] Test that the release-blocked reason includes the first blocker code and
+  action.

@@ -15,6 +15,47 @@ class PublicationGateFailure(NamedTuple):
     required_action: str
 
 
+PUBLICATION_GATE_NOT_APPLICABLE = "NOT_APPLICABLE"
+PUBLICATION_GATE_PASS = "PASS"
+PUBLICATION_GATE_HUMAN_ACCEPTANCE_REQUIRED = "HUMAN_ACCEPTANCE_REQUIRED"
+PUBLICATION_GATE_PROVENANCE_REQUIRED = "PROVENANCE_REQUIRED"
+
+
+def publication_gate_failure_dicts(
+    records: list[PublicationGateFailure],
+) -> list[dict[str, str]]:
+    return [record._asdict() for record in records]
+
+
+def publication_gate_summary(
+    audit_path: Path,
+    *,
+    accepted: bool | None,
+    require_disclosure: bool = False,
+) -> dict[str, object]:
+    if accepted is None:
+        return {
+            "publication_gate_state": PUBLICATION_GATE_NOT_APPLICABLE,
+            "publication_gate_failures": [],
+        }
+
+    records = publication_compliance_failure_records(
+        audit_path,
+        require_disclosure=require_disclosure,
+    )
+    if accepted is False:
+        state = PUBLICATION_GATE_HUMAN_ACCEPTANCE_REQUIRED
+    elif records:
+        state = PUBLICATION_GATE_PROVENANCE_REQUIRED
+    else:
+        state = PUBLICATION_GATE_PASS
+
+    return {
+        "publication_gate_state": state,
+        "publication_gate_failures": publication_gate_failure_dicts(records),
+    }
+
+
 def publication_compliance_failure_records(
     audit_path: Path,
     *,

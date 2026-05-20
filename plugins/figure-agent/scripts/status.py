@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
+from publication_gate import publication_gate_summary
 from quality_manifest import critique_hash_freshness, critique_manifest_paths
 from reference_contract import (
     compute_reference_input_failures,
@@ -371,8 +372,13 @@ def _status_vector(
     render_state: str,
     critique_state: str,
     final_artifact: dict | None = None,
+    publication_gate: dict | None = None,
 ) -> dict:
     final_artifact = final_artifact or _default_final_artifact("")
+    publication_gate = publication_gate or {
+        "publication_gate_state": "NOT_APPLICABLE",
+        "publication_gate_failures": [],
+    }
     workflow_ready = _workflow_ready(stage, notes, exports_substate, render_state, critique_state)
     golden_ready = _golden_ready(workflow_ready, accepted)
     release_ready = _release_ready(golden_ready, exports_substate, final_artifact)
@@ -388,6 +394,7 @@ def _status_vector(
         "golden_ready": golden_ready,
         "release_ready": release_ready,
         "final_ready": release_ready,
+        **publication_gate,
     }
 
 
@@ -571,6 +578,10 @@ def infer_stage(example_dir: Path) -> dict:
                     spec = _safe_raw_spec_mapping(raw)
 
     accepted = _resolve_accepted(spec)
+    publication_gate = publication_gate_summary(
+        example_dir / "QUALITY_AUDIT.md",
+        accepted=accepted,
+    )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
     render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
@@ -599,6 +610,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -670,6 +682,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -704,6 +717,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -738,6 +752,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -761,6 +776,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -781,6 +797,7 @@ def infer_stage(example_dir: Path) -> dict:
             render_state,
             critique_state,
             _default_final_artifact(name),
+            publication_gate,
         ),
     }
 

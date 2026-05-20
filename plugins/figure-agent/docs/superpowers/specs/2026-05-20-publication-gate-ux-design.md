@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-20 KST
 **Status:** implemented and verified
-**Related:** Issue 14A/14B, `2026-05-19-fig1-publication-provenance-gate.md`
+**Related:** Issue 14A/14B/14C/14D, `2026-05-19-fig1-publication-provenance-gate.md`
 
 ## Problem
 
@@ -16,29 +16,34 @@ technical work and human-only decisions are mixed together.
 
 ## Goal
 
-Create a first slice that separates publication-gate failures into typed
-records and provides a safe `QUALITY_AUDIT.md` scaffold. The slice must improve
-handoff clarity without accepting, exporting, or marking any figure
-submission-safe.
+Separate publication-gate failures into typed records, provide a safe
+`QUALITY_AUDIT.md` scaffold, and surface the resulting publication gate in
+status/driver outputs. The slice must improve handoff clarity without
+accepting, exporting, or marking any figure submission-safe.
 
 ## Non-Goals
 
 - Do not set `accepted: true`.
 - Do not write `submission-safe: true` by default.
 - Do not run `--force-golden`.
-- Do not change `/fig_status`, `/fig_loop`, or `/fig_driver` behavior in this
-  first slice.
+- Do not change `/fig_loop` behavior.
+- Do not make `release_ready` depend on target-journal or provenance judgment;
+  expose that as a separate publication gate surface.
 - Do not decide target-journal policy automatically.
 
 ## Architecture
 
-Add a small `scripts/publication_gate.py` module. It owns typed failure records
-and the publication-audit scaffold text. `check_golden_artifacts.py` keeps its
-existing string-returning public API, but delegates publication-compliance
-classification to the new module and converts records back to messages.
+Add a small `scripts/publication_gate.py` module. It owns typed failure records,
+publication-gate state, and the publication-audit scaffold text.
+`check_golden_artifacts.py` keeps its existing string-returning public API, but
+delegates publication-compliance classification to the new module and converts
+records back to messages.
 
-This keeps the current accepted gate backward-compatible while creating a
-stable structured surface for later `/fig_status` and `/fig_driver` work.
+`/fig_status` adds `publication_gate_state` and
+`publication_gate_failures`. `/fig_driver --mode release` uses those fields to
+explain publication/provenance blockers before reporting a generic release
+blocker, while preserving the existing `accepted_or_final_ready_required`
+boundary.
 
 ## Failure Model
 
@@ -68,6 +73,15 @@ Allowed actors:
 - `agent`
 - `human`
 - `manual_command`
+
+Publication gate states:
+
+- `NOT_APPLICABLE`: `accepted` is not declared in `spec.yaml`.
+- `PASS`: `accepted: true` and no publication-compliance failure records.
+- `HUMAN_ACCEPTANCE_REQUIRED`: `accepted: false`; a human must explicitly
+  decide acceptance/provenance before release.
+- `PROVENANCE_REQUIRED`: `accepted: true`, but `QUALITY_AUDIT.md` is missing or
+  incomplete.
 
 ## Publication Compliance Rules
 
@@ -105,8 +119,12 @@ Required properties:
 - scaffold content contains required fields and conservative defaults;
 - scaffold refuses to overwrite unless forced;
 - `check_example(require_accepted=True)` still reports publication failures.
+- `/fig_status` exposes `publication_gate_state` and typed
+  `publication_gate_failures`.
+- `/fig_driver --mode release` includes the first publication-gate blocker in
+  its `reason` and compact status.
 
 ## Deferred
 
-Later slices may expose these records in `/fig_status`, `/fig_driver --mode
-release`, and fig1 dogfood reports.
+Later slices may add target-journal-specific policy checks and fig1 dogfood
+reports.
