@@ -21,6 +21,7 @@ from critique_adjudication import (  # noqa: E402
     adjudication_is_stale,
     load_adjudication,
 )
+from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256, yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
 from subregion_active_set import active_subregion_ids, parse_active_target_rows  # noqa: E402
@@ -104,21 +105,6 @@ def _run_id(name: str) -> str:
     timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")
     safe_name = "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
     return f"{timestamp}-{safe_name}"
-
-
-def _json_default(value: Any) -> Any:
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, tuple):
-        return list(value)
-    raise TypeError(f"{type(value).__name__} is not JSON serializable")
-
-
-def _write_json(path: Path, data: dict[str, Any]) -> None:
-    path.write_text(
-        json.dumps(data, indent=2, sort_keys=True, default=_json_default) + "\n",
-        encoding="utf-8",
-    )
 
 
 def _adjudication_state(example_dir: Path) -> dict[str, Any]:
@@ -1161,8 +1147,8 @@ def run_loop(
         "command_results": [],
     }
 
-    _write_json(run_dir / "iteration_001.json", iteration)
-    _write_json(run_dir / "run_manifest.json", manifest)
+    write_json(run_dir / "iteration_001.json", iteration)
+    write_json(run_dir / "run_manifest.json", manifest)
     (run_dir / "decision.md").write_text(
         _decision_markdown(
             name=name,
@@ -1176,31 +1162,6 @@ def run_loop(
         encoding="utf-8",
     )
     return run_dir
-
-
-def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
-    manifest_path = run_dir / "run_manifest.json"
-    iteration_path = run_dir / "iteration_001.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
-    return {
-        "run_dir": manifest["run_dir"],
-        "manifest_path": str(manifest_path),
-        "iteration_path": str(iteration_path),
-        "final_stop_reason": manifest["final_stop_reason"],
-        "escalation_level": iteration["escalation_level"],
-        "patch_handoff_present": iteration.get("patch_handoff") is not None,
-        "auto_patch_eligibility": iteration.get("auto_patch_eligibility"),
-        "patch_evidence_present": iteration.get("patch_evidence") is not None,
-        "post_patch_evidence_verdict": (
-            (iteration.get("post_patch_evidence") or {}).get("verdict")
-        ),
-        "final_artifact_state": (iteration.get("status") or {}).get("final_artifact_state"),
-        "final_artifact_kind": (iteration.get("status") or {}).get("final_artifact_kind"),
-        "final_artifact_path": (iteration.get("status") or {}).get("final_artifact_path"),
-        "top_tier_audit_summary": iteration.get("top_tier_audit_summary"),
-        "recommended_next_action": iteration.get("recommended_next_action"),
-    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1217,7 +1178,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"fig_loop.py: {exc}", file=sys.stderr)
         return 1
     if args.json:
-        print(json.dumps(_json_stdout_summary(run_dir), sort_keys=True))
+        print(json.dumps(json_stdout_summary(run_dir), sort_keys=True))
         return 0
     print(f"fig_loop.py: wrote verify-only run to {run_dir}")
     return 0

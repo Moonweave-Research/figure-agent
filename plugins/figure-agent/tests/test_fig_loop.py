@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_loop as fig_loop_mod  # noqa: E402
 from fig_loop import FigLoopError, _escalation_summary, ensure_safe_command, run_loop  # noqa: E402
+from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 
@@ -642,7 +643,7 @@ def test_loop_surfaces_v1_3_top_tier_audit_summary(
         "reduction_print_readability",
     ]
     assert summary["worst_verdict"] == "fail"
-    stdout_summary = fig_loop_mod._json_stdout_summary(run_dir)
+    stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["top_tier_audit_summary"] == summary
 
 
@@ -2021,15 +2022,14 @@ def test_main_json_emits_machine_readable_summary(
 ) -> None:
     run_dir = tmp_path / "runs" / "loop_demo"
     run_dir.mkdir(parents=True)
-    _write_json = fig_loop_mod._write_json
-    _write_json(
+    write_json(
         run_dir / "run_manifest.json",
         {
             "run_dir": str(run_dir),
             "final_stop_reason": "status_action_required",
         },
     )
-    _write_json(
+    write_json(
         run_dir / "iteration_001.json",
         {
             "escalation_level": "agent_action_required",
