@@ -357,12 +357,13 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   composition_layout:
-    verdict: pass
+    verdict: needs_patch
     confidence: medium
-    rationale: "Row 1 + Row 2 read as one continuous cover scene with Panel C HERO at 1.5x width and Row 2 cover-binding wash. Panel D/E/F each have apparatus-zone (top) + result-zone (bottom) without hard panel borders. Panel B 'Sulfur content, wt%' axis label and Row 2 caption stack closely below Row 1 baseline - readable but tight."
-    evidence: "Background washes lines 351 (Row 1 wash) and 516-522 (Row 2 wash + chain hints); spoke caption at (7.00, 4.92) clears Row 1 baseline by 0.13 cm. Panel B axis label at y=5.62 + spoke caption at y=4.92 separated by 0.70 cm vertical band."
-    blocking_items: []
-    recommended_action: none
+    rationale: "Row 1 + Row 2 read as one continuous cover scene with Panel C HERO at 1.5x width. External NC-grade reviewer (2026-05-20) flagged that the Row 2 cover-scene continuity actively WORKS AGAINST the parallel-evidence message: the shared background wash + continuous chain-hint waves + tight column adjacency invite a left-to-right causal reading (d -> e -> f) despite the divergent-spoke geometry. The caption is the only guardrail and is too weak to overcome reading habit."
+    evidence: "Background washes lines 351 (Row 1 wash) and 516-522 (Row 2 wash + chain hints); spoke endpoints at (2.28, 4.30) kinetic, (6.975, 4.50) ISPD, (12.625, 4.30) mechanical share a single visual band; column boundaries currently invisible. Linked finding C006."
+    blocking_items:
+      - "C006 - top_tier_audit.reader_misinterpretation_risk Row 2 parallel-stress guard"
+    recommended_action: patch
   label_annotation_semantics:
     verdict: pass
     confidence: medium
@@ -372,28 +373,35 @@ quality_axes:
     recommended_action: none
   journal_polish:
     verdict: needs_patch
-    confidence: medium
-    rationale: "At print_178mm proxy scale most labels survive, but a few small-tier annotations (5-5.5pt) compress toward the readability floor. At thumbnail (360 px) scale several annotation labels become illegible - acceptable for sub-thumbnail use but worth recording. Typography hierarchy / palette economy / line-weight tiers are coherent."
-    evidence: "print_178mm.png inspection shows all major labels and panel letters legible; print_thumbnail.png shows 'derive', 'F_Maxwell', 'repulsion', 'poly(S-r-DIB) thin film', 'inverse vulcanization', 'V_s meter' losing legibility. Brief Print-Scale Audit Images section + scale_basis=fixed_width_proxy (proxy only, not DPI-derived)."
+    confidence: high
+    rationale: "External NC-grade reviewer (2026-05-20) escalated three polish blockers: (i) 5-5.5pt italic-mute annotations drop below NC minimum 6pt under common reduction conditions; (ii) Panel D MIM electrode hatching density is moire-risk at 300-600 dpi print; (iii) Panel F Maxwell-vs-Coulomb red-on-red encoding lacks accessibility robustness. Typography hierarchy / palette economy / line-weight tiers are otherwise coherent."
+    evidence: "print_178mm.png inspection shows 5-5.5pt at readability floor; print_thumbnail.png shows 'derive', 'F_Maxwell', 'repulsion', 'poly(S-r-DIB) thin film', 'inverse vulcanization', 'V_s meter' losing legibility. TikZ lines 611-613, 625-627 carry 18 hatch lines at 0.10 cm spacing for MIM stack. TikZ lines 1218-1227 carry Maxwell cRed!55 0.45pt dashed vs Coulomb cRed!80 0.7pt solid - red-on-red only."
     blocking_items:
-      - "C001 - thumbnail-scale annotation legibility"
+      - "C001 - thumbnail-scale annotation legibility, top_tier_audit.reduction_print_readability"
+      - "C004 - top_tier_audit.accessibility_color_robustness Maxwell red-on-red"
+      - "C005 - top_tier_audit.reduction_print_readability MIM hatch moire"
     recommended_action: patch
   reference_fidelity:
     verdict: needs_human
-    confidence: medium
-    rationale: "Figure-level reference (codex_gen_overview_v1.png) carries style/layout only - not content authority per authoring_contract; current render preserves 2-row continuous cover-scene proportion. Per-panel reference comparison was available only for Panels D/E/F, where reference figures are real apparatus photographs/schematics (NatComm tribo, NatComm surfacecharge, NatComm microactuator). The intentional design abstraction (iconic-cartoon apparatus + result zone) deliberately departs from the photographic detail of references - topology and mechanism cues are preserved (MIM stack, corona+probe+sample, clip+cantilever+electrode+air gap), but stylistic fidelity to the physical-photo references is by design lower. Human review needed on whether iconic-cartoon abstraction level is appropriate per target journal."
-    evidence: "Authoring Contract Forbidden Transfers section + Reference Roles table; Panel D MIM matches NatComm 2022 tribo electrode-stack convention iconified; Panel E corona+sample+probe geometry matches NatComm 2024 surfacecharge Fig 1 iconified; Panel F clip+cantilever+electrode matches NatComm 2016 microactuator Fig 1 (NED schematic) iconified."
+    confidence: high
+    rationale: "External NC-grade reviewer (2026-05-20) escalated reference-fidelity into a target-journal convention conflict: NC original-research Figure 1 convention requires representative measured data + minimal qualitative ticks integrated with conceptual model. Current figure preserves topology and mechanism cues from NatComm 2022 / 2024 / 2016 references but deliberately strips the data-rich register per briefing 4 'Fig 3 territory avoidance' - this is now in direct tension with NC submission convention. Per-panel reference comparison was available only for Panels D/E/F (apparatus photographs/schematics)."
+    evidence: "Authoring Contract Forbidden Transfers section + Reference Roles table; briefing 4 explicit anti-tick rule conflicts with external NC reviewer expectation. Linked findings C002 (target-journal art-direction) and C003 (briefing-vs-NC data representation conflict)."
     blocking_items:
       - "C002 - top_tier_audit.target_journal_fit human art-direction"
-    recommended_action: human_review
+      - "C003 - top_tier_audit.target_journal_fit briefing vs NC data convention conflict, revise_briefing"
+    recommended_action: revise_briefing
   publication_readiness:
     verdict: needs_human
-    confidence: medium
-    rationale: "Conservatively gated by reference_fidelity needs_human (most severe upstream) and journal_polish needs_patch. Theory guard BLOCKERs all pass; storyline + role coherence + scientific plausibility all pass; figure is suitable for manuscript-grade dogfood but final journal-acceptance gate requires target-journal art-direction confirmation."
-    evidence: "reference_fidelity needs_human (target-journal art-direction); journal_polish needs_patch (thumbnail legibility). Briefing 13 v9.7 framing locks accepted=false until policy review."
+    confidence: high
+    rationale: "Conservatively gated by reference_fidelity needs_human (most severe upstream), journal_polish needs_patch (3 escalated polish items), and composition_layout needs_patch (parallel-stress guard). Theory guard BLOCKERs all pass; storyline + role coherence + scientific plausibility + component fidelity + label semantics + sub-region integration all pass; figure is below NC original-research Figure 1 bar per external reviewer until briefing-vs-target convention is resolved."
+    evidence: "External NC-grade review verdict 'Solid Manuscript, ~78/100 - not submission-ready for NC Figure 1'. reference_fidelity revise_briefing (data-convention conflict); journal_polish patch (thumbnail + hatch + accessibility); composition_layout patch (parallel-stress). Briefing 13 v9.7 framing locks accepted=false until policy review."
     blocking_items:
       - "C001 - thumbnail print-scale legibility"
-      - "C002 - reference_fidelity human review"
+      - "C002 - target-journal art-direction human review"
+      - "C003 - briefing vs NC data convention conflict (revise_briefing)"
+      - "C004 - Maxwell red-on-red accessibility patch"
+      - "C005 - MIM hatch moire patch"
+      - "C006 - Row 2 parallel-stress guard patch"
     recommended_action: human_review
 top_tier_audit:
   first_glance_message:
@@ -402,9 +410,9 @@ top_tier_audit:
     concrete_fix: "accept_simplification - hero-panel hierarchy + row-2 caption already carry the central claim."
     blocks_high_impact: false
   target_journal_fit:
-    verdict: needs_human
-    finding: "Target journal unspecified in spec.yaml; rendered against generic high-impact materials cover/schematic standard. Iconic-cartoon Row 2 register departs deliberately from typical photographic/CAD apparatus illustration that some journals expect for instrument figures."
-    concrete_fix: "Confirm target-journal policy on schematic abstraction level + AI/illustration policy before declaring submission-safe."
+    verdict: fail
+    finding: "External NC-grade reviewer (2026-05-20) explicitly assessed against Nature Communications and judged the figure 'Solid Manuscript, ~78/100 - not submission-ready for NC Figure 1.' The cover-scene iconic-cartoon Row 2 register reads as graphical-abstract / review-paper level rather than as an original-research Figure 1, because NC Figure 1 convention combines conceptual model with representative measured data (ticks + values + scatter markers) - currently absent. Linked finding C003 carries the data-representation tension and the briefing conflict."
+    concrete_fix: "Either (a) revise briefing 4 to allow minimal qualitative ticks + 2-3 representative scatter points in Panels D/E/F result zones (revise_briefing path), or (b) commit to cover-figure / graphical-abstract role and explicitly downgrade the manuscript Figure 1 ambition (briefing intent preservation path)."
     blocks_high_impact: true
   novelty_claim_support:
     verdict: pass
@@ -427,20 +435,20 @@ top_tier_audit:
     concrete_fix: "accept_simplification - grammar already normalized."
     blocks_high_impact: false
   reader_misinterpretation_risk:
-    verdict: weak
-    finding: "A careful reader could read Row 2 3-spoke geometry as a temporal/causal chain (C -> D -> E -> F) rather than 3 parallel evidence lines, despite the divergent-arrow geometry. Caption 'three independent probes' guards this, but the temptation to read left-to-right linearly persists when modality labels are read separately from the caption."
-    concrete_fix: "accept_simplification - briefing 8.7 already documents this trade-off and caption is the chosen guardrail."
-    blocks_high_impact: false
+    verdict: fail
+    finding: "External NC-grade reviewer (2026-05-20) flagged top_tier_audit.reader_misinterpretation_risk: left-to-right reading habit makes d -> e -> f read as a temporal/causal chain rather than 3 parallel independent evidence lines, even with the divergent spoke geometry and Row 2 caption. Briefing 8.7 acknowledges this trade-off and treats caption as the guardrail, but the external reviewer argues that visual independence between columns needs reinforcement beyond the caption."
+    concrete_fix: "Add thin vertical column dividers (cGray!20, 0.10pt, densely dotted) or low-opacity panel-region tints at the d/e and e/f boundaries; alternatively reduce visual continuity of the Row 2 background wave hint between columns. Linked finding C006 carries the patch direction."
+    blocks_high_impact: true
   reduction_print_readability:
-    verdict: weak
-    finding: "At print_178mm proxy the figure is mostly legible. At thumbnail (360 px wide) several 5-5.5pt annotations ('derive', 'F_Maxwell', 'repulsion', 'V_s meter', 'inverse vulcanization', 'poly(S-r-DIB) thin film') lose legibility. Main storyline labels (Coulomb / shallow / deep / panel letters / Row 2 caption) survive at thumbnail."
-    concrete_fix: "accept_simplification - sub-thumbnail legibility loss is acceptable for the cover-figure / graphical-abstract role; main claim cues survive."
-    blocks_high_impact: false
+    verdict: fail
+    finding: "External NC-grade reviewer (2026-05-20) flagged top_tier_audit.reduction_print_readability: at 178 mm proxy the 5-5.5pt annotations sit at the readability floor (turning illegible under common reduction conditions like web/mobile/PDF multi-view), and the dense 0.16pt diagonal hatching on Panel D MIM electrodes risks moire interference at 300-600 dpi print. NC author-guidelines recommend >= 6pt minimum across all reduction conditions."
+    concrete_fix: "Bump 5-5.5pt italic-mute annotations ('derive', 'F_Maxwell', 'repulsion', 'V_s meter', 'inverse vulcanization', 'poly(S-r-DIB) thin film') to >= 6pt and widen MIM hatch spacing 1.5x (0.10 cm -> 0.15 cm). Linked findings C001 (annotation legibility) and C005 (hatch moire)."
+    blocks_high_impact: true
   accessibility_color_robustness:
-    verdict: weak
-    finding: "Blue/red shallow/deep encoding is dual-encoded via labels ('shallow' / 'deep' / 'high n' / 'low n') and shapes (small vs large Gaussians; line position). Grayscale conversion preserves storyline. The Maxwell-vs-Coulomb red-vs-red contrast distinguishes by line weight + dashed/solid only, not by color - this is the weakest accessibility channel."
-    concrete_fix: "accept_simplification - dashed/solid + line-weight tiering is the chosen Maxwell/Coulomb encoding per TG-G-002; alternative would over-broaden the red palette."
-    blocks_high_impact: false
+    verdict: fail
+    finding: "External NC-grade reviewer (2026-05-20) flagged top_tier_audit.accessibility_color_robustness: Panel F Maxwell-vs-Coulomb force pair uses red-vs-red contrast distinguished only by line weight (0.45pt vs 0.7pt), saturation (cRed!55 vs cRed!80), and dashed/solid pattern. For red-deficient readers and at print/grayscale reduction the asymmetry weakens; the dominance of Coulomb over Maxwell baseline is not robust across accessibility channels."
+    concrete_fix: "Convert Maxwell baseline arrow to a neutral gray family (cGray!55!black, dashed, 0.45pt) so the encoding distinguishes by hue family (red = active result, gray = baseline reference) rather than red-on-red variation. Linked finding C004 carries the patch direction. This would also require Theory Guard TG-G-002 amendment since current spec locks Maxwell to cRed!55!white."
+    blocks_high_impact: true
   aesthetic_coherence:
     verdict: pass
     finding: "Detail level decreases gracefully from chemistry (Panel A) -> iconic apparatus (Row 2) -> iconic plot cartoons (D/E/F result zones). Line-weight 3-tier (primary 0.9pt / annotation 0.7pt / secondary 0.55pt) holds across panels."
@@ -450,25 +458,49 @@ journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
   assessed_artifact_hash: sha256:f01ab860d18edcfd2d6ce7231a0b4615cc324c5c140ecf9ff8c4bd0a7ba695eb
-  benchmark_level: solid_manuscript
-  confidence: medium
+  benchmark_level: needs_human_art_direction
+  confidence: high
   blockers: []
-  regression_detected: false
-  regressions: []
+  regression_detected: true
+  regressions:
+    - axis: top_tier_audit.target_journal_fit
+      previous_state: needs_human
+      current_state: fail
+      reason: "external NC-grade reviewer 2026-05-20 explicit NC bar"
+    - axis: top_tier_audit.reader_misinterpretation_risk
+      previous_state: weak
+      current_state: fail
+      reason: "external reviewer reinforced left-to-right causal misread"
+    - axis: top_tier_audit.reduction_print_readability
+      previous_state: weak
+      current_state: fail
+      reason: "external reviewer added MIM hatch moire to thumbnail legibility"
+    - axis: top_tier_audit.accessibility_color_robustness
+      previous_state: weak
+      current_state: fail
+      reason: "external reviewer escalated Maxwell red-on-red"
+    - axis: quality_axes.composition_layout
+      previous_state: pass
+      current_state: needs_patch
+      reason: "parallel-stress guard now required"
+    - axis: quality_axes.reference_fidelity
+      previous_state: human_review
+      current_state: revise_briefing
+      reason: "briefing vs NC data convention conflict"
   score_is_gateable: false
   next_quality_bottleneck: human_policy
-  rationale: "Theory-guard BLOCKERs all pass; quality axes pass storyline/roles/component/science/composition/labels. Two needs_patch / needs_human axes (journal_polish thumbnail legibility, reference_fidelity target-journal policy) keep the artifact below high-impact-candidate. Suitable for solid-manuscript inclusion; the remaining gap is target-journal art-direction + sub-thumbnail polish, not scientific or structural correctness."
-  overall_score: 78
+  rationale: "Theory-guard BLOCKERs all pass; storyline + role coherence + scientific plausibility + component fidelity + label semantics + sub-region integration all pass. External NC-grade reviewer (2026-05-20) escalated 5 polish/perception/data-convention items (C001-C006) that collectively block NC Figure 1 ambition until human art-direction decides between (a) revise briefing 4 to allow minimal ticks + scatter (NC research-figure register) or (b) preserve briefing intent and downgrade ambition to cover-figure / graphical-abstract register. Remaining gap is target-journal art-direction + accessibility patch + parallel-stress guard, not scientific or structural correctness."
+  overall_score: 68
   sub_scores:
-    storyline: 86
-    composition: 80
-    component_fidelity: 84
+    storyline: 84
+    composition: 70
+    component_fidelity: 80
     scientific_plausibility: 88
-    label_semantics: 82
-    polish: 72
-    reference_fidelity: 70
-    export_scale_readability: 70
-  score_rationale: "Numbers describe only the current artifact at the current input hash. Storyline and scientific plausibility lead because all theory-guard BLOCKERs pass and the 30-second message resolves without caption help. Polish + reference_fidelity + export-scale lag because thumbnail-scale 5-5.5pt annotations are marginal and target-journal art-direction is unresolved. Not a progress meter and not a journal acceptance probability."
+    label_semantics: 78
+    polish: 60
+    reference_fidelity: 58
+    export_scale_readability: 58
+  score_rationale: "Numbers describe only the current artifact at the current input hash. Storyline + scientific plausibility lead because all theory-guard BLOCKERs pass. Polish + reference_fidelity + export-scale lag because external NC reviewer escalated thumbnail legibility, MIM hatch moire, Maxwell-Coulomb accessibility, and NC data-convention conflict. composition drops with the new parallel-stress finding. Not a progress meter and not a journal acceptance probability."
 micro_defects:
   - id: M001
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/print_thumbnail.png
@@ -542,18 +574,46 @@ panels:
         status: open
 findings:
   - id: C001
-    severity: MINOR
+    severity: MAJOR
     category: style
-    tex_lines: [185, 482, 502, 506, 600, 602, 666, 945, 1017, 1067, 1071, 1226]
-    observation: "Thumbnail-scale annotation legibility (top_tier_audit.reduction_print_readability + journal_polish): 5-5.5pt italic-mute labels ('derive', 'F_Maxwell', 'repulsion', 'V_s meter', 'inverse vulcanization', 'poly(S-r-DIB) thin film') drop below readability at 360 px thumbnail proxy. Acceptable for 178 mm full-width print; flagged here for awareness when figure is reused as graphical abstract or social-media share asset where sub-thumbnail rendering is common."
-    suggested_fix: "If sub-thumbnail use becomes a hard requirement, bump 5pt annotations to 6pt + reduce decorative apparatus-label count (collapse 'Probe' + 'V_s meter' + 'HV+' into a single instrument-cluster label or move them to caption). Otherwise accept_simplification."
+    tex_lines: [185, 227, 482, 502, 506, 600, 602, 666, 945, 1017, 1066, 1071, 1226]
+    observation: "Annotation legibility at NC reduction conditions (top_tier_audit.reduction_print_readability + journal_polish): external NC-grade reviewer escalated this from MINOR/accept_simplification to MAJOR. 5-5.5pt italic-mute labels ('derive', 'F_Maxwell', 'repulsion', 'V_s meter', 'inverse vulcanization', 'poly(S-r-DIB) thin film', 'tau_d', 'd ~ 1 um') sit at the readability floor under 178 mm print proxy and lose legibility at 360 px thumbnail proxy. NC author-guidelines effectively require >= 6pt minimum across all common reduction conditions (print/web/mobile/PDF multi-view)."
+    suggested_fix: "Bump all 5-5.5pt annotations to >= 6pt (8 sites identified in tex_lines). Where label count is high (Panel E HV+ / Probe / V_s meter cluster), collapse to a single 'corona ISPD setup' cluster label and demote individual instrument identifiers to caption. Re-render print_178mm.png and print_thumbnail.png to verify all annotations survive thumbnail proxy before re-evaluation."
     status: open
   - id: C002
-    severity: MINOR
+    severity: MAJOR
     category: style
     tex_lines: []
-    observation: "Target-journal fit (top_tier_audit.target_journal_fit): spec.yaml does not declare a target journal; the figure is rendered against a generic high-impact schematic standard. Iconic-cartoon Row 2 register is a deliberate art-direction choice that some journals prefer for graphical abstracts but that others might want replaced with photographic/CAD apparatus illustration."
-    suggested_fix: "human_review - confirm target-journal cover/abstract policy before declaring submission-safe. No source edit needed if iconic-cartoon register is accepted; otherwise commission per-panel apparatus illustration upgrade."
+    observation: "Target-journal fit (top_tier_audit.target_journal_fit): spec.yaml does not declare a target journal, but external NC-grade reviewer (2026-05-20) explicitly evaluated against Nature Communications Figure 1 standard. The cover-scene iconic-cartoon Row 2 register is judged below NC original-research Figure 1 convention and reads instead as graphical-abstract / review-paper register."
+    suggested_fix: "human_review - confirm whether target journal is NC (or a journal with similar Figure 1 convention) before declaring submission-safe. If yes, pair with C003 briefing revision. If figure is intended as cover-art / graphical-abstract instead, formally downgrade Figure 1 ambition and accept current register."
+    status: open
+  - id: C003
+    severity: MAJOR
+    category: style
+    tex_lines: [666, 705, 972, 983, 1024, 1034, 1043, 1046]
+    observation: "Data-representation convention conflict (top_tier_audit.target_journal_fit + reference_fidelity): external NC-grade reviewer (2026-05-20) judged Row 2 (Panels D/E/F) plots as 'too cartoon-like' for NC research Figure 1. Current axes are tick-free, no numeric scale, and curves are smooth concept-only beziers (high-n / low-n / Debye / V_s decay / shallow+deep Gaussians). The reviewer's NC convention asks for representative measured-data scatter points overlaid on or replacing the concept curves, plus 2-3 qualitative ticks/values per axis to anchor real-measurement credibility. This directly conflicts with briefing 4 'Fig 3 territory avoidance' which explicitly forbids ticks and quantitative cues on Row 2 to keep Fig 3 distinct."
+    suggested_fix: "revise_briefing required. Two paths: (a) Amend briefing 4 to allow minimal qualitative ticks (e.g. 2 unlabeled tick positions per axis) + a small representative-data scatter on top of each concept curve, preserving Fig 3 distinction by quantization not by tick-absence; or (b) preserve current briefing intent and re-scope the figure as graphical-abstract / cover-art rather than NC original-research Figure 1. Source edits only after user picks a path."
+    status: open
+  - id: C004
+    severity: MAJOR
+    category: palette
+    tex_lines: [1218, 1226]
+    observation: "Maxwell vs Coulomb red-on-red accessibility (top_tier_audit.accessibility_color_robustness + journal_polish): Panel F encodes Maxwell baseline (cRed!55!black dashed 0.45pt) vs Coulomb result (cRed!80!black solid 0.7pt) using only line weight + saturation + dashed/solid. External NC-grade reviewer (2026-05-20) judged this insufficient for red-deficient readers and for print/grayscale reduction. The intended 'Coulomb wins against Maxwell baseline' message degrades at low contrast."
+    suggested_fix: "Convert Maxwell baseline to neutral gray family (cGray!55!black, dashed, 0.45pt) and keep Coulomb in red (cRed!80!black, solid, 0.7pt). The contrast then encodes by hue family (red = active result, gray = baseline reference) which survives red-deficient vision and grayscale reduction. Requires Theory Guard TG-G-002 amendment because current spec locks Maxwell to cRed!55 - revise_briefing companion edit on theory_guard.md."
+    status: open
+  - id: C005
+    severity: MINOR
+    category: style
+    tex_lines: [611, 612, 613, 625, 626, 627]
+    observation: "MIM electrode cross-hatching density risk (top_tier_audit.reduction_print_readability + journal_polish): Panel D MIM top + bottom electrodes carry 18 diagonal hatch lines at 0.10 cm spacing, line width 0.16pt. At 300-600 dpi print this dense parallel-line pattern risks moire interference; at web-screen rendering it can read as muddy gray block rather than as hatched conductor. External NC-grade reviewer (2026-05-20) flagged this as ink-bleed / moire concern."
+    suggested_fix: "Widen hatch spacing 1.5x (0.10 -> 0.15 cm, reducing line count 18 -> 12) and bump hatch line width 0.16 -> 0.22pt for cleaner edge survival. Optional: replace cross-hatching with a single gradient fill + thin outline for both top and bottom electrodes, matching the Panel E substrate convention."
+    status: open
+  - id: C006
+    severity: MAJOR
+    category: hierarchy
+    tex_lines: [516, 517, 518, 519, 520, 521, 522, 543, 547, 550]
+    observation: "Row 2 parallel-evidence guard insufficient (top_tier_audit.reader_misinterpretation_risk + composition_layout): external NC-grade reviewer (2026-05-20) flagged that left-to-right reading habit overrides the divergent-spoke geometry. The Row 2 cover-binding wash + continuous wavy chain hints + tight column adjacency actively pull the eye into a d -> e -> f causal sequence. Briefing 8.7 caption 'three independent probes' is the only guardrail and is too weak."
+    suggested_fix: "Add thin vertical column dividers (cGray!20, 0.10pt, densely dotted) at column boundaries x = 4.55 (D/E) and x = 9.35 (E/F) spanning y = 0.20..4.30, OR break the chain-hint wavy lines at column boundaries (current waves at y = 1.20 / 2.50 / 3.80 run continuously across the full figure width). Either edit visually decouples columns without losing cover-scene cohesion entirely. Optional reinforcement: increase divergent spoke angle separation at branchRoot so kinetic / ISPD / mechanical fan out more steeply."
     status: open
 ---
 
@@ -561,8 +621,12 @@ findings:
 
 The current render reads as one continuous cover-figure scene with Panel C as a clear 1.5x HERO and Row 2 as a 3-spoke convergent-evidence band, consistent with briefing v8.6 + v9.7 framing. All Theory Guard BLOCKER invariants pass: Panel A linear poly(S-r-DIB) topology (TG-A-001), Panel C mixed shallow/deep trap coexistence (TG-C-001), shallow=blue / deep=red / Coulomb-charge=red color convention (TG-CFG-001), Panel D power-law tails above Debye reference (TG-D-001), Panel F result-zone Coulomb dominance (TG-G-001) with Maxwell baseline encoded by lower line-weight + dashed style (TG-G-002), and Row 2 three-independent-spoke geometry (TG-ROW2-001). No structural or physics finding requires source edits.
 
-Verdict is `revise` rather than `ready` only because two MINOR style findings remain: (C001) thumbnail-scale annotation legibility - 5-5.5pt italic-mute labels drop below readability at 360 px proxy width while staying legible at 178 mm proxy, which matters only if the figure is reused as a thumbnail/graphical-abstract asset; and (C002) target-journal fit - the spec carries no target-journal field, so the iconic-cartoon Row 2 register is rendered against a generic high-impact standard and should pass through human art-direction review before final acceptance. The journal_grade_assessment lands at `solid_manuscript` accordingly, with `next_quality_bottleneck: human_policy` reflecting that the residual delta to high-impact-candidate is policy + sub-thumbnail polish, not scientific or structural correctness.
+This critique was re-audited against an explicit external NC-grade reviewer pass (2026-05-20) that judged the figure 'Solid Manuscript, ~78/100 - not submission-ready for Nature Communications Figure 1.' Five reviewer points are now incorporated as MAJOR/MINOR findings (C001-C006). The prior critique's `accept_simplification` stance on thumbnail legibility, parallel-stress, and accessibility was downgraded after the external reviewer reinforced these as active NC-bar blockers rather than acceptable design trade-offs. Verdict remains `revise` (no BLOCKER physics violation), but `journal_grade_assessment.benchmark_level` is now `needs_human_art_direction` with regression_detected=true.
 
-Panel-level findings P001/P002/P003 record the deliberate iconic-cartoon abstraction relative to the NatComm 2022 / 2024 / 2016 apparatus references; in every case the mechanism cues are preserved and only the photographic register is intentionally simplified per briefing 3.2 cover-scene convention. All four high-zoom micro_defects (M003 row-2 wave behind spoke labels, M004 high-n vs Debye proximity, M005 Maxwell tip vs electrode, M006 electrode label past wash) resolve as `accept_simplification` because the apparent proximities are optical-zoom artifacts or intended design choices, not defects in the rendered figure. The two print-scale micro_defects carry the print-scale story: M001 (thumbnail) links to C001 as the patchable item, M002 (178mm proxy) stays accept_simplification because 178mm proxy legibility is at the design floor by design.
+The central tension surfaced by the external reviewer is between briefing 4 (iconic-cartoon Row 2 register, ticks forbidden, 'Fig 3 territory avoidance') and NC original-research Figure 1 convention (representative measured data + 2-3 qualitative ticks). C003 captures this directly and requires a `revise_briefing` decision before any source edit: either (a) amend briefing 4 to allow minimal qualitative ticks + scatter, preserving Fig 3 distinction by quantization rather than by tick-absence, or (b) preserve current briefing intent and re-scope the figure as graphical-abstract / cover-art rather than NC Figure 1. C002 (target-journal fit) carries the same human-art-direction question at the spec level.
 
-No `verdict: block` is warranted; no `verdict: ready` either. Adjudication should focus C001 + C002 as either patch-or-defer decisions, and treat P001/P002/P003 plus micro_defects M002-M006 as accept_simplification confirmations of existing design intent.
+C001 (thumbnail legibility) and C005 (MIM hatch moire) are direct patches under top_tier_audit.reduction_print_readability: bump 5-5.5pt annotations to >= 6pt and widen MIM hatch spacing 1.5x. C004 (Maxwell red-on-red accessibility) needs a Theory Guard TG-G-002 amendment to allow Maxwell baseline in neutral gray so the encoding survives red-deficient vision and grayscale reduction. C006 (Row 2 parallel-stress guard) recommends thin vertical column dividers or breaking the Row 2 chain-hint wave at column boundaries so left-to-right causal misread is structurally guarded rather than caption-guarded.
+
+Panel-level findings P001/P002/P003 record the deliberate iconic-cartoon abstraction relative to the NatComm 2022 / 2024 / 2016 apparatus references; in every case the mechanism cues are preserved and only the photographic register is intentionally simplified per briefing 3.2 cover-scene convention. The external reviewer separately recommended elevating these to 2.5D / 3D soft-gradient renders for NC-grade polish; this is captured under the broader target_journal_fit / reference_fidelity blocking discussion in C002 + C003 rather than as a separate finding because it is the same art-direction decision. All four high-zoom micro_defects (M003 row-2 wave behind spoke labels, M004 high-n vs Debye proximity, M005 Maxwell tip vs electrode, M006 electrode label past wash) remain `accept_simplification` because they are optical-zoom artifacts or intended design choices. The two print-scale micro_defects: M001 (thumbnail) links to C001 + C005 as patchable; M002 (178mm proxy) stays accept_simplification because the 178mm proxy floor is at design intent.
+
+Adjudication should focus on C003 (briefing-vs-NC convention) as the gating decision, with C001/C004/C005/C006 as concrete patches that can land once the briefing path is resolved. C002 closes once target journal is declared in spec.yaml. P001/P002/P003 and M002-M006 remain accept_simplification confirmations of existing design intent.
