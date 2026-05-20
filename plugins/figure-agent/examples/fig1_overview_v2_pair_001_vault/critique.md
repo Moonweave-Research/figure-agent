@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T02:43:49Z
+generated_at: 2026-05-20T03:00:18Z
 generator: critique_brief.py
 generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:69da0ab929c3c683d0de2a7020d4fb20abd1be1d9414a0ca6c20288d43e08d61
+critique_input_hash: sha256:b5851892d2da1b2df983731cffa2f36a36d7ac31aa8f60226eed0a58784730a3
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -387,7 +387,7 @@ findings: []
 
 # Vision Critique — fig1_overview_v2_pair_001_vault
 
-Overall verdict: **ready**. **2026-05-20 framework rewrite + iter 54-58 critical loop applied to Panel D**: prior "deep-rich (less-steep) / shallow-rich (steeper)" depolarization naming → "high n (RED, sulfur paper hero, steep) / low n (BLUE, control, flat)" absorption-current framework (Schweidler 1907). iter 54-58 polish: (54) Debye bezier now starts at same y as solid curves, descends faster — eliminates dashed/solid crossing; (55) high-n / low-n labels interleaved (pos=0.55 / 0.40) — no vertical stacking; (56) RED line width 0.80 → 0.90pt — primary narrative tier per briefing line-weight hierarchy; (57) Debye bezier extended to (3.40, 0.45) — full-width asymptotic exp shape; (58) Debye label switched to sloped path-attached — convention symmetric with high-n / low-n. Iteration 53 base polish remains valid (SMU box centered grid, contact dots, ground-lead breathing, spoke-modality clearance).
+Overall verdict: **ready**. Framework: **CvS absorption-current (Schweidler 1907) — sulfur hero high-n vs control low-n**, paper-data-grounded. Panel D iter 54-63 progression: structural correctness (iter 54-58) + illustration-register polish (iter 59-63). iter 59 polymer-film solid → gradient (cAmber!22→!42) for cross-panel depth consistency with F cantilever. iter 60 curves `line cap=round` + Debye 0.75→0.65pt (3-tier hierarchy clearer: primary RED 0.9pt > annotation BLUE 0.8pt > reference dashed 0.65pt). iter 61 SMU box `rounded corners=1pt` for cartoon-panel softening. iter 62 equation `I(t)~t^-n` moved from upper-left "title above plot" position to upper-right plot interior (3.00, 2.40) — annotation-inside-plot feel without label cluster. iter 63 \mathsf trial reverted (figure-wide math = serif italic convention).
 
 Key journal-level claims supported by the rendered figure (post-rewrite):
 

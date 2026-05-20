@@ -592,7 +592,9 @@
 % middle-dot separator lower-half — both centered in box x-axis. Reads as
 % unified instrument identity ("SMU" = name, "V/A" = dual function) instead
 % of scattered glyphs.
-\draw[cGray!75!black, line width=0.30pt]
+% iter 61 illustration polish: rounded corners=1pt — soft cartoon-panel feel
+% vs sharp 90° engineering-box edges.
+\draw[cGray!75!black, line width=0.30pt, rounded corners=1pt]
   (0.50, 3.15) rectangle (1.30, 3.70);
 % iter 53b: y nudges for vertical-symmetry around box mid (3.425):
 %   SMU 3.55 → 3.51 (0.085cm above mid)
@@ -612,8 +614,11 @@
 \foreach \hx in {1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45} {
   \draw[cGray!60!black, line width=0.16pt] (\hx, 3.80) -- ({\hx-0.03}, 3.71);
 }
-% Polymer film (cAmber filled, ENLARGED height)
-\fill[cAmber!28] (1.70, 3.25) rectangle (3.50, 3.70);
+% Polymer film — iter 59 illustration polish: solid \fill → \shade gradient
+% (matches Panel F cantilever convention cAmber!22→cAmber!42 top-to-bottom).
+% Subtle depth cue, cross-panel polymer material identity consistency.
+\shade[top color=cAmber!22, bottom color=cAmber!42]
+  (1.70, 3.25) rectangle (3.50, 3.70);
 \draw[cAmber!70!black, line width=0.32pt]
   (1.70, 3.25) rectangle (3.50, 3.70);
 % Bottom electrode (hatched)
@@ -678,8 +683,11 @@
 % iter 56: RED line width 0.80 → 0.90pt (primary narrative tier per briefing
 % line-weight hierarchy: primary 0.9pt = narrative paths). Sulfur polymer is
 % paper hero = narrative line. BLUE stays 0.80pt (control = annotation tier).
-\draw[cRed!80!black, line width=0.90pt] (0.65, 2.30) -- (3.85, 0.55);
-\draw[cBlue!80!black, line width=0.80pt] (0.65, 2.30) -- (3.85, 1.50);
+% iter 60 illustration polish: line cap=round (soft endpoints vs default butt).
+\draw[cRed!80!black, line width=0.90pt, line cap=round]
+  (0.65, 2.30) -- (3.85, 0.55);
+\draw[cBlue!80!black, line width=0.80pt, line cap=round]
+  (0.65, 2.30) -- (3.85, 1.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
 % Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
@@ -695,14 +703,22 @@
 % iter 58: Label switched from horizontal anchor=west to sloped path-attached
 % along same bezier (pos=0.92 near endpoint) for visual convention symmetry
 % with high n / low n D-7b labels. above=4pt perpendicular offset above curve.
-\draw[cGray!85!black, dashed, line width=0.75pt]
+% iter 60: Debye dash thinner (0.75 → 0.65pt) — reference tier clearly
+% below annotation tier; line cap=round for smooth dash endcaps.
+\draw[cGray!85!black, dashed, line width=0.65pt, line cap=round]
   (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45);
 \path[draw=none] (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45)
   node[pos=0.92, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
   {Debye};
 
-% D-4 main equation label
-\node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
+% D-4 main equation label — iter 62: moved to plot interior far-right (3.00, 2.40)
+% to clear "low n" label region. iter 63: \mathsf trial REVERTED — caused
+% inconsistency with Panel E/F math labels ($V_s(t)$, $g(E_t)$, $\tau_d$,
+% $F_{\mathrm{Maxwell}}$) all using default Computer Modern serif italic.
+% Figure-wide math convention = serif italic; text labels = sans-serif. Mixed
+% register is journal-standard.
+\node[labelStrong, anchor=west] at (3.00, 2.40)
+  {$I(t)\!\sim\!t^{-n}$};
 
 % D-7b curve ID labels — 2026-05-20 framework rewrite + iter 55 interleave:
 %   high n (RED, sulfur) at pos=0.55 (RIGHT of midpoint)
