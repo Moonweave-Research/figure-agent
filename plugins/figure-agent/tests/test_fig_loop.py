@@ -10,7 +10,8 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_loop as fig_loop_mod  # noqa: E402
-from fig_loop import FigLoopError, _escalation_summary, ensure_safe_command, run_loop  # noqa: E402
+from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
+from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -928,7 +929,7 @@ def test_loop_force_golden_status_action_is_manual_approval_required(
         "to roll forward run /fig_export loop_demo --force-golden."
     )
 
-    escalation = _escalation_summary(data)
+    escalation = escalation_summary(data)
     assert escalation["escalation_level"] == "manual_approval_required"
     assert escalation["requires_user_input"] is True
     assert escalation["requires_domain_review"] is False

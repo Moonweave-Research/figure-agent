@@ -38,6 +38,7 @@ from fig_loop_axis_records import (  # noqa: E402
     reference_fidelity_evaluation_state,
     status_axis_evaluation,
 )
+from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
 from fig_loop_quality_axes import (  # noqa: E402
     STORY_QUALITY_AXES,
@@ -455,39 +456,6 @@ def _axis_verdicts(
     }
 
 
-def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
-    stop_reason = loop_decision["stop_reason"]
-    recommended = loop_decision.get("recommended_next_action", "")
-    if stop_reason == "human_gate_required":
-        level = "human_review_required"
-    elif stop_reason in {"patch_target_recommended", "active_subregion_recommended"}:
-        level = "patch_allowed"
-    elif stop_reason == "ambiguous_patch_selection":
-        level = "ambiguous_patch_selection"
-    elif stop_reason == "status_action_required" and "--force-golden" in recommended:
-        level = "manual_approval_required"
-    elif stop_reason == "status_action_required" and "accepted: true" in recommended:
-        level = "manual_approval_required"
-    elif stop_reason in {
-        "status_action_required",
-        "missing_adjudication",
-        "stale_adjudication",
-        "invalid_adjudication",
-        "reference_input_missing",
-    }:
-        level = "agent_action_required"
-    elif stop_reason == "no_actionable_findings":
-        level = "none"
-    else:
-        level = "none"
-
-    return {
-        "escalation_level": level,
-        "requires_user_input": level in {"manual_approval_required", "human_review_required"},
-        "requires_domain_review": level == "human_review_required",
-    }
-
-
 _AUTO_PATCH_ALLOWED_TERMS = {
     "label offset": ("label offset", "offset label", "move the label", "move label"),
     "text overlap": ("overlap", "crowding", "crowded", "collision"),
@@ -768,7 +736,7 @@ def run_loop(
     adjudication = _adjudication_state(example_dir)
     loop_decision = _loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
-    escalation = _escalation_summary(loop_decision)
+    escalation = escalation_summary(loop_decision)
     patch_handoff = build_patch_handoff(name, loop_decision)
     journal_grade_assessment = build_journal_grade_assessment(
         example_dir,
