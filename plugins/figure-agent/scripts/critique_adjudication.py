@@ -9,6 +9,7 @@ import warnings
 from pathlib import Path
 from typing import Any
 
+import critique_schema_vocab as vocab
 import yaml
 from critique_contract import (  # noqa: E402
     CritiqueContractError,
@@ -21,105 +22,29 @@ from quality_manifest import file_sha256
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
-CRITIQUE_SCHEMA_V1 = "figure-agent.critique.v1"
-CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
-CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
-CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
+CRITIQUE_SCHEMA_V1 = vocab.CRITIQUE_SCHEMA_V1
+CRITIQUE_SCHEMA_V1_1 = vocab.CRITIQUE_SCHEMA_V1_1
+CRITIQUE_SCHEMA_V1_2 = vocab.CRITIQUE_SCHEMA_V1_2
+CRITIQUE_SCHEMA_V1_3 = vocab.CRITIQUE_SCHEMA_V1_3
 ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
 _PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
-_ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
-    {"provided_reference", "briefing", "reference_pack", "not_provided"}
-)
-_QUALITY_AXIS_NAMES = (
-    "message_storyline",
-    "panel_role_coherence",
-    "subregion_integration",
-    "component_fidelity",
-    "scientific_plausibility",
-    "composition_layout",
-    "label_annotation_semantics",
-    "journal_polish",
-    "reference_fidelity",
-    "publication_readiness",
-)
-_QUALITY_VERDICTS = frozenset(
-    {"pass", "needs_patch", "needs_human", "block", "not_applicable"}
-)
-_QUALITY_CONFIDENCES = frozenset({"low", "medium", "high"})
-_QUALITY_ACTIONS = frozenset(
-    {"none", "patch", "human_review", "revise_briefing", "block_release"}
-)
-_PANEL_ROLES = frozenset(
-    {
-        "setup",
-        "mechanism",
-        "result",
-        "comparison",
-        "control",
-        "zoom",
-        "model",
-        "workflow",
-        "context",
-    }
-)
-_PANEL_ROLE_QUALITIES = frozenset({"clear", "weak", "missing", "redundant"})
-_QUALITY_SEVERITY_RANK = {
-    "pass": 0,
-    "needs_patch": 1,
-    "needs_human": 2,
-    "block": 3,
-}
-_QUALITY_ACTIONS_BY_VERDICT = {
-    "pass": frozenset({"none"}),
-    "not_applicable": frozenset({"none"}),
-    "needs_patch": frozenset({"patch", "revise_briefing"}),
-    "needs_human": frozenset({"human_review", "revise_briefing"}),
-    "block": frozenset({"block_release", "human_review"}),
-}
-_JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
-_JOURNAL_SCORING_MODE = "fresh_reaudit"
-_JOURNAL_BENCHMARK_LEVELS = frozenset(
-    {"draft", "solid_manuscript", "high_impact_candidate", "needs_human_art_direction", "blocked"}
-)
-_JOURNAL_BOTTLENECKS = frozenset(
-    {
-        "storyline",
-        "composition",
-        "component_fidelity",
-        "scientific_plausibility",
-        "label_semantics",
-        "polish",
-        "reference_fidelity",
-        "export_scale_readability",
-        "human_policy",
-    }
-)
-_JOURNAL_SCORE_KEYS = frozenset(
-    {
-        "storyline",
-        "composition",
-        "component_fidelity",
-        "scientific_plausibility",
-        "label_semantics",
-        "polish",
-        "reference_fidelity",
-        "export_scale_readability",
-    }
-)
-_JOURNAL_SCORE_BLOCK_KEYS = frozenset({"overall_score", "sub_scores", "score_rationale"})
-_TOP_TIER_AUDIT_KEYS = (
-    "first_glance_message",
-    "target_journal_fit",
-    "novelty_claim_support",
-    "figure_caption_coupling",
-    "visual_economy",
-    "cross_panel_semantic_grammar",
-    "reader_misinterpretation_risk",
-    "reduction_print_readability",
-    "accessibility_color_robustness",
-    "aesthetic_coherence",
-)
-_TOP_TIER_AUDIT_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
+_ALLOWED_CONCEPTUAL_REFERENCES = vocab.ALLOWED_CONCEPTUAL_REFERENCES
+_QUALITY_AXIS_NAMES = vocab.QUALITY_AXIS_NAMES
+_QUALITY_VERDICTS = vocab.QUALITY_VERDICTS
+_QUALITY_CONFIDENCES = vocab.QUALITY_CONFIDENCES
+_QUALITY_ACTIONS = vocab.QUALITY_ACTIONS
+_PANEL_ROLES = vocab.PANEL_ROLES
+_PANEL_ROLE_QUALITIES = vocab.PANEL_ROLE_QUALITIES
+_QUALITY_SEVERITY_RANK = vocab.QUALITY_SEVERITY_RANK
+_QUALITY_ACTIONS_BY_VERDICT = vocab.QUALITY_ACTIONS_BY_VERDICT
+_JOURNAL_ASSESSMENT_SCHEMA = vocab.JOURNAL_ASSESSMENT_SCHEMA
+_JOURNAL_SCORING_MODE = vocab.JOURNAL_SCORING_MODE
+_JOURNAL_BENCHMARK_LEVELS = vocab.JOURNAL_BENCHMARK_LEVELS
+_JOURNAL_BOTTLENECKS = vocab.JOURNAL_BOTTLENECKS
+_JOURNAL_SCORE_KEYS = vocab.JOURNAL_SCORE_KEYS
+_JOURNAL_SCORE_BLOCK_KEYS = vocab.JOURNAL_SCORE_BLOCK_KEYS
+_TOP_TIER_AUDIT_KEYS = vocab.TOP_TIER_AUDIT_KEYS
+_TOP_TIER_AUDIT_VERDICTS = vocab.TOP_TIER_AUDIT_VERDICTS
 
 
 CritiqueAdjudicationError = CritiqueContractError
