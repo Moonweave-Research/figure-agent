@@ -627,6 +627,22 @@ def test_require_accepted_mode_requires_publication_compliance(
     assert "QUALITY_AUDIT.md does not declare disclosure-needed" not in failures
 
 
+def test_publication_compliance_failures_preserve_legacy_messages(tmp_path: Path) -> None:
+    audit = tmp_path / "QUALITY_AUDIT.md"
+    audit.write_text("# Quality Audit\n\nsubmission-safe: false\n", encoding="utf-8")
+
+    failures = golden_checks.publication_compliance_failures(
+        audit,
+        require_disclosure=True,
+    )
+
+    assert failures == [
+        "missing Provenance and Publication Compliance section in QUALITY_AUDIT.md",
+        "QUALITY_AUDIT.md does not declare submission-safe: true",
+        "QUALITY_AUDIT.md does not declare disclosure-needed",
+    ]
+
+
 def test_require_accepted_mode_includes_tiff_in_audit_freshness(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -1122,13 +1138,29 @@ def test_audit_is_fresh_requires_audit_newer_than_sources(tmp_path: Path) -> Non
     assert audit_is_fresh(fixture, (source,))
 
 
-def test_require_accepted_mode_rejects_unaccepted_current_fixture() -> None:
-    fixture = Path(__file__).resolve().parents[1] / "examples" / "golden_trap_depth_picture"
+def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "unacceptedCheckerDebt"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    spec = fixture / "spec.yaml"
+    spec.write_text(spec.read_text(encoding="utf-8").replace("accepted: true", "accepted: false"))
+    (fixture / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "**submission-safe:** true\n\n"
+        "OK: no collisions found\n"
+        "52 visual clash candidate(s)\n"
+        "13 unresolved visual clash(es)\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    _mark_quality_audit_fresh(fixture)
 
     failures = check_example(
         fixture,
-        min_svg_elements=80,
-        min_png_width=1600,
+        min_svg_elements=40,
+        min_png_width=1000,
         require_accepted=True,
         max_collisions=0,
         max_visual_clashes=0,

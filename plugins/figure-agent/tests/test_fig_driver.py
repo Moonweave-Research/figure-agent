@@ -578,6 +578,93 @@ def test_release_mode_reports_release_blocked_without_mutation(
     assert summary["safe_command"] is None
 
 
+def test_release_mode_surfaces_publication_gate_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+        "publication_gate_state": "HUMAN_ACCEPTANCE_REQUIRED",
+        "publication_gate_failures": [
+            {
+                "code": "missing_quality_audit",
+                "category": "quality_audit_stale",
+                "actor": "agent",
+                "message": "missing audit: QUALITY_AUDIT.md",
+                "required_action": "create QUALITY_AUDIT.md from the publication audit scaffold",
+            }
+        ],
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "publication gate" in summary["reason"]
+    assert "missing_quality_audit" in summary["reason"]
+    assert ".. Driver" not in summary["reason"]
+    assert summary["status"]["publication_gate_state"] == "HUMAN_ACCEPTANCE_REQUIRED"
+    assert summary["status"]["publication_gate_failures"][0]["actor"] == "agent"
+
+
+def test_release_mode_publication_gate_blocks_even_when_release_ready_is_true(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": True,
+        "release_ready": True,
+        "final_ready": True,
+        "publication_gate_state": "PROVENANCE_REQUIRED",
+        "publication_gate_failures": [
+            {
+                "code": "missing_submission_safe_true",
+                "category": "publication_provenance",
+                "actor": "human",
+                "message": "QUALITY_AUDIT.md does not declare submission-safe: true",
+                "required_action": "Human reviewer must decide submission safety.",
+            }
+        ],
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "missing_submission_safe_true" in summary["reason"]
+    assert ".. Driver" not in summary["reason"]
+
+
 # --- polish mode -------------------------------------------------------------
 
 

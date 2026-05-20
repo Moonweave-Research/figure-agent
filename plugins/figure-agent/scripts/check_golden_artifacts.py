@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
+from publication_gate import publication_compliance_failure_records  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     FINAL_ARTIFACT_BLOCKED,
@@ -473,22 +474,13 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
 def publication_compliance_failures(
     audit_path: Path, *, require_disclosure: bool = False
 ) -> list[str]:
-    if not audit_path.exists():
-        return ["missing audit: QUALITY_AUDIT.md"]
-
-    audit_text = audit_path.read_text(encoding="utf-8")
-    failures: list[str] = []
-    if "Provenance and Publication Compliance" not in audit_text:
-        failures.append("missing Provenance and Publication Compliance section in QUALITY_AUDIT.md")
-    if not re.search(r"submission-safe(?:\*\*)?:\s*(true|yes)\b", audit_text, re.IGNORECASE):
-        failures.append("QUALITY_AUDIT.md does not declare submission-safe: true")
-    if require_disclosure and not re.search(
-        r"disclosure[- ]needed(?:\*\*)?:\s*(true|false|yes|no|none|n/a|not-applicable)\b",
-        audit_text,
-        re.IGNORECASE,
-    ):
-        failures.append("QUALITY_AUDIT.md does not declare disclosure-needed")
-    return failures
+    return [
+        record.message
+        for record in publication_compliance_failure_records(
+            audit_path,
+            require_disclosure=require_disclosure,
+        )
+    ]
 
 
 def _requires_final_artifact_disclosure(spec_path: Path) -> bool:

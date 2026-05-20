@@ -90,6 +90,8 @@ _STATUS_COMPACT_KEYS = (
     "golden_ready",
     "release_ready",
     "final_ready",
+    "publication_gate_state",
+    "publication_gate_failures",
 )
 
 _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
@@ -231,6 +233,33 @@ def _top_tier_audit_requires_human_gate(summary: Any) -> bool:
                 or _positive_int(verdict_counts.get("needs_human"))
             )
         )
+    )
+
+
+def _publication_gate_blocks_release(status: dict[str, Any]) -> bool:
+    return status.get("publication_gate_state") in {
+        "HUMAN_ACCEPTANCE_REQUIRED",
+        "PROVENANCE_REQUIRED",
+    }
+
+
+def _publication_gate_block_reason(status: dict[str, Any]) -> str:
+    state = status.get("publication_gate_state")
+    failures = status.get("publication_gate_failures")
+    if isinstance(failures, list) and failures:
+        first = failures[0]
+        if isinstance(first, dict):
+            code = first.get("code", "unknown_publication_gate_failure")
+            action = str(
+                first.get("required_action", "resolve the publication gate manually")
+            ).rstrip(".")
+            return (
+                f"publication gate is {state}; first blocker {code}: {action}. "
+                "Driver will not set accepted, force golden state, or mutate provenance."
+            )
+    return (
+        f"publication gate is {state}; resolve human acceptance/provenance manually. "
+        "Driver will not set accepted, force golden state, or mutate provenance."
     )
 
 
@@ -563,6 +592,13 @@ def _select_action(
                     "exports are missing or stale; run /fig_export before "
                     "release readiness can be evaluated."
                 ),
+            )
+        if _publication_gate_blocks_release(status):
+            return make(
+                ACTION_RELEASE_BLOCKED,
+                safe_command=None,
+                stop_boundary=STOP_ACCEPTED_OR_FINAL_READY,
+                reason=_publication_gate_block_reason(status),
             )
         if release_ready:
             return make(

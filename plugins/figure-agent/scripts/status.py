@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
+from publication_gate import publication_gate_summary
 from quality_manifest import critique_hash_freshness, critique_manifest_paths
 from reference_contract import (
     compute_reference_input_failures,
@@ -328,6 +329,14 @@ def _release_ready(golden_ready: bool, exports_substate: str, final_artifact: di
     return True
 
 
+def _requires_publication_disclosure(spec: dict) -> bool:
+    final_artifact = spec.get("final_artifact") if spec else None
+    return (
+        isinstance(final_artifact, dict)
+        and final_artifact.get("kind") == FINAL_ARTIFACT_POLISHED_SVG
+    )
+
+
 def _default_final_artifact(name: str) -> dict:
     return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
 
@@ -371,8 +380,13 @@ def _status_vector(
     render_state: str,
     critique_state: str,
     final_artifact: dict | None = None,
+    publication_gate: dict | None = None,
 ) -> dict:
     final_artifact = final_artifact or _default_final_artifact("")
+    publication_gate = publication_gate or {
+        "publication_gate_state": "NOT_APPLICABLE",
+        "publication_gate_failures": [],
+    }
     workflow_ready = _workflow_ready(stage, notes, exports_substate, render_state, critique_state)
     golden_ready = _golden_ready(workflow_ready, accepted)
     release_ready = _release_ready(golden_ready, exports_substate, final_artifact)
@@ -388,6 +402,7 @@ def _status_vector(
         "golden_ready": golden_ready,
         "release_ready": release_ready,
         "final_ready": release_ready,
+        **publication_gate,
     }
 
 
@@ -571,6 +586,11 @@ def infer_stage(example_dir: Path) -> dict:
                     spec = _safe_raw_spec_mapping(raw)
 
     accepted = _resolve_accepted(spec)
+    publication_gate = publication_gate_summary(
+        example_dir / "QUALITY_AUDIT.md",
+        accepted=accepted,
+        require_disclosure=_requires_publication_disclosure(spec),
+    )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
     render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
@@ -599,6 +619,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -670,6 +691,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -704,6 +726,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -738,6 +761,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -761,6 +785,7 @@ def infer_stage(example_dir: Path) -> dict:
                 render_state,
                 critique_state,
                 final_artifact,
+                publication_gate,
             ),
         }
 
@@ -781,6 +806,7 @@ def infer_stage(example_dir: Path) -> dict:
             render_state,
             critique_state,
             _default_final_artifact(name),
+            publication_gate,
         ),
     }
 
@@ -817,6 +843,17 @@ def _print_single(result: dict) -> None:
         f"release_ready={str(bool(result.get('release_ready'))).lower()} "
         f"final_ready={final_ready}"
     )
+    publication_gate_state = result.get("publication_gate_state")
+    if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
+        print(f"  Publication gate: {publication_gate_state}")
+        failures = result.get("publication_gate_failures")
+        if isinstance(failures, list) and failures:
+            first = failures[0]
+            if isinstance(first, dict):
+                print(
+                    "  Publication blocker: "
+                    f"{first.get('code', '?')} — {first.get('required_action', '?')}"
+                )
     if notes:
         print(f"  Notes: {', '.join(notes)}")
 
@@ -836,6 +873,9 @@ def main() -> int:
                 f"{result['name']}  stage {result['stage']}/4{marker}"
                 f"  exports: {exports}  ready: {ready}"
             )
+            publication_gate_state = result.get("publication_gate_state")
+            if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
+                line = f"{line}  publication: {publication_gate_state}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)

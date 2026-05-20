@@ -2313,6 +2313,38 @@ def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkey
     assert "goldenfig  stage 4/4 (not accepted)" in captured.out
 
 
+def test_no_arg_summary_shows_publication_gate_state(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    fig = examples_dir / "goldenfig"
+    _make_status_ready_fixture(fig, accepted=True)
+    (fig / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: false\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig)
+    monkeypatch.chdir(tmp_path)
+
+    import status as status_mod
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    old_argv = sys.argv
+    sys.argv = ["status.py"]
+    try:
+        status_mod.main()
+    finally:
+        sys.argv = old_argv
+
+    captured = capsys.readouterr()
+    assert "goldenfig  stage 4/4 (accepted)" in captured.out
+    assert "ready: true" in captured.out
+    assert "publication: PROVENANCE_REQUIRED" in captured.out
+
+
 def test_real_golden_fixture_is_not_accepted() -> None:
     fixture = REPO_ROOT / "examples" / "golden_trap_depth_picture"
     if not fixture.exists():
@@ -2459,6 +2491,91 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
     assert result["golden_ready"] is False
     assert result["release_ready"] is False
     assert result["final_ready"] is False
+    assert result["publication_gate_state"] == "HUMAN_ACCEPTANCE_REQUIRED"
+    assert result["publication_gate_failures"][0]["code"] == "missing_quality_audit"
+
+
+def test_infer_stage_publication_gate_not_applicable_without_acceptance_declaration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["publication_gate_state"] == "NOT_APPLICABLE"
+    assert result["publication_gate_failures"] == []
+
+
+def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomplete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    (fig_dir / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "human-visual-acceptance: true\n"
+        "submission-safe: false\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["acceptance_state"] == "ACCEPTED"
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is True
+    assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
+    assert result["publication_gate_failures"] == [
+        {
+            "code": "missing_submission_safe_true",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "QUALITY_AUDIT.md does not declare submission-safe: true",
+            "required_action": (
+                "Human reviewer must decide submission safety and write an explicit value."
+            ),
+        }
+    ]
+
+
+def test_infer_stage_requires_disclosure_for_polished_svg_publication_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "polishedfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    (fig_dir / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_kind"] == "polished_svg"
+    assert result["final_artifact_state"] == "FRESH"
+    assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
+    assert result["publication_gate_failures"] == [
+        {
+            "code": "missing_disclosure_needed",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "QUALITY_AUDIT.md does not declare disclosure-needed",
+            "required_action": (
+                "Human reviewer must declare whether publication disclosure is needed."
+            ),
+        }
+    ]
 
 
 def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
@@ -2526,6 +2643,24 @@ def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
         "export=MISSING acceptance=NOT_DECLARED "
         "workflow_ready=false golden_ready=false release_ready=false final_ready=false"
     ) in captured.out
+
+
+def test_print_single_shows_publication_gate_state_and_first_blocker(
+    tmp_path: Path, capsys
+) -> None:
+    fixture = tmp_path / "goldenfig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture, accepted=False)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+
+    assert "Publication gate: HUMAN_ACCEPTANCE_REQUIRED" in captured.out
+    assert "missing_quality_audit" in captured.out
+    assert "create QUALITY_AUDIT.md from the publication audit scaffold" in captured.out
 
 
 def test_print_single_shows_final_artifact_state(tmp_path: Path, capsys) -> None:
