@@ -45,6 +45,29 @@ Therefore the issue is not ready for a pure provenance closeout. It needs a
 technical rebaseline or source/golden/audit update before the human publication
 gate can be cleanly evaluated.
 
+## Recheck After Issue 13 — 2026-05-20 KST
+
+Commands rerun from `plugins/figure-agent` after the auto-adjudication policy
+landed on `main`:
+
+```bash
+uv run python3 scripts/status.py fig1_overview_v2_pair_001_vault
+uv run python3 scripts/check_golden_artifacts.py examples/fig1_overview_v2_pair_001_vault --require-accepted
+```
+
+Result is unchanged:
+
+- `status.py`: render `FRESH`, critique `FRESH`, export `TRACKED_GOLDEN`,
+  acceptance `NOT_ACCEPTED`, workflow/golden/release/final readiness all false.
+- Next action remains `/fig_export fig1_overview_v2_pair_001_vault --force-golden`.
+- Accepted-mode gate still fails on `accepted: true`, rendered labels `high n`
+  and `low n`, `surface_charge_markers`, stale/missing `QUALITY_AUDIT.md`, and
+  missing `submission-safe: true`.
+
+Conclusion: Issue 13 reduces adjudication friction but does not unblock this
+publication provenance gate. This issue still requires technical rebaseline
+plus human provenance inputs.
+
 ## Policy Snapshot
 
 Checked on 2026-05-18 UTC:
