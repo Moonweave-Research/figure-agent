@@ -26,6 +26,20 @@ To intentionally replace an existing adjudication file:
 uv run python3 scripts/critique_adjudication.py scaffold <name> --force
 ```
 
+To refresh only the adjudication hash after a freshly regenerated critique:
+
+```bash
+uv run python3 scripts/critique_adjudication.py sync <name>
+```
+
+`sync` first verifies that `critique.md` is already fresh against the current
+`critique_input_hash`, `generator_version`, and `rubric_version`. It refuses
+stale critique metadata and tells you to rerun `/fig_critique <name>` instead.
+When the existing adjudication has the same finding ids, it preserves the
+decisions and updates only `source_critique_hash`. If finding ids changed, use
+`scaffold <name> --force` after reviewing that a new decision scaffold is
+appropriate.
+
 The script reads `examples/<name>/critique.md`, parses YAML frontmatter
 findings from both `panels[].findings` and top-level `findings`, and writes
 `examples/<name>/critique_adjudication.yaml` with the current

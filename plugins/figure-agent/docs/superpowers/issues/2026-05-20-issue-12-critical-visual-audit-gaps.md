@@ -131,12 +131,12 @@ Reduce manual hash churn without weakening freshness semantics.
 
 Acceptance criteria:
 
-- [ ] A one-shot command refreshes `critique_adjudication.yaml` from the current
+- [x] A one-shot command refreshes `critique_adjudication.yaml` from the current
   `critique.md` hash.
-- [ ] The command refuses to mark a stale `critique.md` fresh when
+- [x] The command refuses to mark a stale `critique.md` fresh when
   `critique_input_hash`, `generator_version`, or `rubric_version` mismatch.
-- [ ] The command prints the exact reason when a host re-critique is required.
-- [ ] No command silently edits `critique.md` content or invents host-vision
+- [x] The command prints the exact reason when a host re-critique is required.
+- [x] No command silently edits `critique.md` content or invents host-vision
   judgments.
 
 ### Issue 12E: Print-Scale Audit Pack

@@ -16,7 +16,19 @@ from critique_contract import (  # noqa: E402
     require_mapping,
 )
 from critique_schema_validator import validate_critique_schema  # noqa: E402
-from quality_manifest import file_sha256
+from inputs import parse_spec  # noqa: E402
+from quality_manifest import (  # noqa: E402
+    CRITIQUE_RUBRIC_VERSION,
+    compute_critique_input_hash,
+    critique_generator_version,
+    file_sha256,
+    yaml_frontmatter,
+)
+from reference_contract import (  # noqa: E402
+    compute_reference_input_failures,
+    declared_figure_reference_path,
+    participating_panel_reference_paths,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
@@ -190,6 +202,113 @@ def adjudication_is_stale(adjudication_path: Path, critique_path: Path) -> bool:
     return adjudication["source_critique_hash"] != file_sha256(critique_path)
 
 
+def _critique_metadata_mismatches(
+    example_dir: Path,
+    *,
+    repo_root: Path,
+) -> list[str]:
+    name = example_dir.name
+    critique_path = example_dir / "critique.md"
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return ["missing spec.yaml; cannot determine critique freshness"]
+    spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    reference_failures = compute_reference_input_failures(example_dir, spec)
+    if reference_failures:
+        return [
+            "critique_state=REFERENCE_MISSING; fix reference inputs before "
+            f"/fig_critique {name}"
+        ]
+    has_reference = (
+        declared_figure_reference_path(example_dir, spec) is not None
+        or bool(participating_panel_reference_paths(example_dir, spec))
+    )
+    if not has_reference:
+        return [f"critique_state=NOT_REQUIRED; no /fig_critique {name} sync needed"]
+    if not critique_path.is_file():
+        return [f"critique_state=MISSING; run /fig_critique {name}"]
+
+    metadata = yaml_frontmatter(critique_path)
+    generator_path = repo_root / "scripts" / "critique_brief.py"
+    expected = {
+        "critique_input_hash": compute_critique_input_hash(
+            example_dir,
+            name,
+            spec,
+            style_lock_path=repo_root / "styles" / "polymer-paper-preamble.sty",
+            base_dir=repo_root,
+        ),
+        "generator_version": critique_generator_version(generator_path),
+        "rubric_version": CRITIQUE_RUBRIC_VERSION,
+    }
+    mismatches: list[str] = []
+    for key, expected_value in expected.items():
+        actual = metadata.get(key)
+        if not isinstance(actual, str) or not actual.strip():
+            mismatches.append(f"{key} missing; run /fig_critique {name}")
+        elif actual.strip() != expected_value:
+            mismatches.append(f"{key} mismatch; run /fig_critique {name}")
+    return mismatches
+
+
+def _decision_ids(adjudication: dict[str, Any]) -> list[str]:
+    return [
+        str(decision.get("finding_id", "")).strip()
+        for decision in adjudication.get("decisions", [])
+        if isinstance(decision, dict)
+    ]
+
+
+def _decision_sync_shape(adjudication: dict[str, Any]) -> list[dict[str, str]]:
+    shape: list[dict[str, str]] = []
+    for raw_decision in adjudication.get("decisions", []):
+        if not isinstance(raw_decision, dict):
+            continue
+        decision = str(raw_decision.get("decision", "")).strip()
+        shape.append(
+            {
+                "finding_id": str(raw_decision.get("finding_id", "")).strip(),
+                "resolved_state": "resolved" if decision == "resolved" else "not_resolved",
+            }
+        )
+    return shape
+
+
+def sync_adjudication(
+    example_dir: Path,
+    *,
+    force: bool = False,
+    repo_root: Path = REPO_ROOT,
+) -> Path:
+    """Refresh adjudication hash only when critique.md is already fresh."""
+    mismatches = _critique_metadata_mismatches(example_dir, repo_root=repo_root)
+    if mismatches:
+        raise CritiqueAdjudicationError("; ".join(mismatches))
+
+    path = example_dir / "critique_adjudication.yaml"
+    scaffold = build_adjudication_scaffold(example_dir)
+    if force or not path.exists():
+        write_adjudication(path, scaffold)
+        return path
+
+    existing = load_adjudication(path)
+    existing_ids = _decision_ids(existing)
+    scaffold_ids = _decision_ids(scaffold)
+    if existing_ids != scaffold_ids:
+        raise CritiqueAdjudicationError(
+            "adjudication finding ids differ from critique.md; run "
+            f"critique_adjudication.py scaffold {example_dir.name} --force"
+        )
+    if _decision_sync_shape(existing) != _decision_sync_shape(scaffold):
+        raise CritiqueAdjudicationError(
+            "adjudication decisions differ from current critique scaffold; run "
+            f"critique_adjudication.py scaffold {example_dir.name} --force"
+        )
+    existing["source_critique_hash"] = scaffold["source_critique_hash"]
+    write_adjudication(path, existing)
+    return path
+
+
 def _resolve_example_dir(value: str, repo_root: Path) -> Path:
     path = Path(value)
     if path.is_absolute():
@@ -213,6 +332,14 @@ def main(argv: list[str] | None = None) -> int:
     scaffold_parser.add_argument("--force", action="store_true", help="overwrite an existing file")
     scaffold_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
 
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="refresh critique_adjudication.yaml hash after a fresh critique",
+    )
+    sync_parser.add_argument("example", help="fixture name, examples/<name>, or path")
+    sync_parser.add_argument("--force", action="store_true", help="recreate the scaffold")
+    sync_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+
     args = parser.parse_args(argv)
     if args.command == "scaffold":
         example_dir = _resolve_example_dir(args.example, args.repo_root)
@@ -222,6 +349,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"critique_adjudication.py: {exc}", file=sys.stderr)
             return 1
         print(f"critique_adjudication.py: wrote {path}")
+        return 0
+    if args.command == "sync":
+        example_dir = _resolve_example_dir(args.example, args.repo_root)
+        try:
+            path = sync_adjudication(example_dir, force=args.force, repo_root=args.repo_root)
+        except CritiqueAdjudicationError as exc:
+            print(f"critique_adjudication.py: {exc}", file=sys.stderr)
+            return 1
+        print(f"critique_adjudication.py: synced {path}")
         return 0
     return 1
 
