@@ -3,23 +3,27 @@ fixture: fig1_overview_v2_pair_001_vault
 source_critique_hash: sha256:b4d995c1a3a6f3a1366d48ce577bc92d877fadeb09822247f6ea6d423133c50f
 decisions:
 - finding_id: P001
-  decision: needs_human
-  reason: Review P001 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: 'AUTO_DISMISS_ACCEPTED_SIMPLIFICATION: critique marks this routine style
+    finding as an accepted schematic simplification.'
   patch_target: ''
   evidence: critique.md finding P001.
 - finding_id: P002
-  decision: needs_human
-  reason: Review P002 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: 'AUTO_DISMISS_ACCEPTED_SIMPLIFICATION: critique marks this routine style
+    finding as an accepted schematic simplification.'
   patch_target: ''
   evidence: critique.md finding P002.
 - finding_id: P003
-  decision: needs_human
-  reason: Review P003 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: 'AUTO_DISMISS_ACCEPTED_SIMPLIFICATION: critique marks this routine style
+    finding as an accepted schematic simplification.'
   patch_target: ''
   evidence: critique.md finding P003.
 - finding_id: C001
-  decision: needs_human
-  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  decision: defer
+  reason: 'AUTO_DEFER_NON_GATEABLE_THUMBNAIL_POLISH: non-submission-scale polish is
+    not gateable for this critique.'
   patch_target: ''
   evidence: critique.md finding C001.
 - finding_id: C002

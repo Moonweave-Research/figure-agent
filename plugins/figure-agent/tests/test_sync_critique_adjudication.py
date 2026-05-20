@@ -51,6 +51,9 @@ def _write_fresh_critique(
     generator_version: str | None = None,
     critique_input_hash: str | None = None,
     finding_status: str = "open",
+    finding_severity: str | None = None,
+    finding_category: str | None = None,
+    suggested_fix: str | None = None,
 ) -> Path:
     spec = parse_spec((example / "spec.yaml").read_text(encoding="utf-8"))
     generator_path = repo / "scripts" / "critique_brief.py"
@@ -63,6 +66,9 @@ def _write_fresh_critique(
         base_dir=repo,
     )
     generator_version = generator_version or file_sha256(generator_path)
+    severity_yaml = f"    severity: {finding_severity}\n" if finding_severity else ""
+    category_yaml = f"    category: {finding_category}\n" if finding_category else ""
+    suggested_fix_yaml = f"    suggested_fix: {suggested_fix}\n" if suggested_fix else ""
     critique = example / "critique.md"
     critique.write_text(
         "---\n"
@@ -75,8 +81,11 @@ def _write_fresh_critique(
         "findings:\n"
         "  - id: C001\n"
         f"    status: {finding_status}\n"
+        f"{severity_yaml}"
+        f"{category_yaml}"
         "    tex_lines: [10, 20]\n"
         "    observation: label needs review\n"
+        f"{suggested_fix_yaml}"
         "---\n"
         "# critique\n",
         encoding="utf-8",
@@ -194,6 +203,38 @@ def test_sync_adjudication_force_recreates_changed_finding_ids(tmp_path: Path) -
     updated = load_adjudication(example / "critique_adjudication.yaml")
     assert updated["source_critique_hash"] == file_sha256(critique)
     assert [decision["finding_id"] for decision in updated["decisions"]] == ["C001"]
+
+
+def test_sync_adjudication_cli_supports_conservative_policy(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_fresh_critique(
+        repo,
+        example,
+        finding_severity="MINOR",
+        finding_category="style",
+        suggested_fix="accept_simplification - no edit required",
+    )
+
+    exit_code = main(
+        [
+            "sync",
+            "demo_fig",
+            "--force",
+            "--policy",
+            "conservative-v1",
+            "--repo-root",
+            str(repo),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "synced" in captured.out
+    adjudication = load_adjudication(example / "critique_adjudication.yaml")
+    assert adjudication["decisions"][0]["decision"] == "dismiss"
 
 
 def test_sync_adjudication_refuses_same_id_shape_change_without_force(tmp_path: Path) -> None:

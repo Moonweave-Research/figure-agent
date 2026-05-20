@@ -1,7 +1,7 @@
 # Issue 13: Auto Adjudication Policy
 
 **Date:** 2026-05-20 KST
-**Status:** proposed
+**Status:** implemented and verified
 **Spec:** `../specs/2026-05-20-auto-adjudication-policy-design.md`
 
 ## Problem
@@ -23,23 +23,28 @@ questions remain `needs_human`.
 
 ## Acceptance Criteria
 
-- [ ] Default scaffold behavior remains unchanged without `--policy`.
-- [ ] `--policy conservative-v1` is supported by `scaffold` and `sync`.
-- [ ] Policy auto-dismisses `MINOR`/`NIT` style-like findings whose observation
+- [x] Default scaffold behavior remains unchanged without `--policy`.
+- [x] `--policy conservative-v1` is supported by `scaffold` and `sync`.
+- [x] Policy auto-dismisses `MINOR`/`NIT` style-like findings whose observation
   or suggested fix explicitly says `accept_simplification`.
-- [ ] Policy auto-defers non-gateable thumbnail-only readability/polish
+- [x] Policy auto-defers non-gateable thumbnail-only readability/polish
   findings.
-- [ ] Policy may auto-apply at most one safe `NIT` local style/label/whitespace
+- [x] Policy may auto-apply at most one safe `NIT` local style/label/whitespace
   finding with a concrete two-int `tex_lines` range.
-- [ ] Policy keeps `BLOCKER`, `MAJOR`, `physics`, `structural`,
+- [x] Policy keeps `BLOCKER`, `MAJOR`, `physics`, `structural`,
   target-journal, high-impact, reference-interpretation, accepted/golden/export,
   final-artifact, and semantic-backport questions as `needs_human`.
-- [ ] Automatic decisions include a rule id in `reason`.
-- [ ] `apply` decisions include non-empty `patch_target` and `evidence`.
-- [ ] Policy output validates under the existing
+- [x] Automatic decisions include a rule id in `reason`.
+- [x] `apply` decisions include non-empty `patch_target` and `evidence`.
+- [x] Policy output validates under the existing
   `figure-agent.critique-adjudication.v1` schema.
-- [ ] `/fig_loop` behavior remains unchanged and consumes policy-produced
+- [x] `/fig_loop` behavior remains unchanged and consumes policy-produced
   adjudication normally.
+
+## Dogfood
+
+Recorded in
+`../../milestones/2026-05-20-auto-adjudication-policy-dogfood.md`.
 
 ## Out of Scope
 

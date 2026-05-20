@@ -93,13 +93,19 @@ Any finding remains `needs_human` when any of these are true:
 - severity is `BLOCKER` or `MAJOR`;
 - category is `physics` or `structural`;
 - observation or suggested fix mentions `target_journal_fit`,
-  `human_review`, `human_policy`, `publication safety`, `mechanism`,
-  `topology`, `reference interpretation`, `accepted`, `golden`, `export`,
-  `final artifact`, `semantic backport`, or `Theory Guard`;
+  `human_review`, `human_policy`, `publication safety`, unresolved mechanism
+  or topology changes/conflicts, `reference interpretation`, `accepted`,
+  `golden`, `export`, `final artifact`, `semantic backport`, or a Theory Guard
+  violation;
 - the finding links to a top-tier audit item with verdict `needs_human` or
   `fail`;
 - applying the suggested fix would add/remove a scientific claim or change the
   figure's semantic model.
+
+Mentions such as "mechanism cues are preserved", "topology is preserved", or
+"Theory Guard forbids a transfer and the current iconification is chosen" are
+not human-protected by themselves when the finding is a `MINOR`/`NIT` style
+finding whose suggested action is explicitly `accept_simplification`.
 
 Rule id: `HUMAN_CORE_SEMANTIC_OR_POLICY`.
 

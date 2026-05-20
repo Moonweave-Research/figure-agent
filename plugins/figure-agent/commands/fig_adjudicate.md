@@ -26,6 +26,18 @@ To intentionally replace an existing adjudication file:
 uv run python3 scripts/critique_adjudication.py scaffold <name> --force
 ```
 
+To opt into deterministic policy-assisted adjudication:
+
+```bash
+uv run python3 scripts/critique_adjudication.py scaffold <name> --force --policy conservative-v1
+```
+
+`conservative-v1` can auto-dismiss accepted simplifications, auto-defer
+non-gateable thumbnail polish, and select at most one safe `NIT` local style
+finding as `apply`. It does not auto-resolve physics, structural,
+target-journal, high-impact, accepted/golden/export, final-artifact, or
+semantic-backport questions.
+
 To refresh only the adjudication hash after a freshly regenerated critique:
 
 ```bash
@@ -49,6 +61,11 @@ Default decisions are conservative:
 
 - findings marked `status: resolved` in `critique.md` become `decision: resolved`;
 - all other findings become `decision: needs_human`.
+
+This default stays unchanged unless `--policy conservative-v1` is passed.
+Policy-assisted decisions still validate under the same
+`figure-agent.critique-adjudication.v1` schema and remain visible to
+`/fig_loop`.
 
 It refuses to overwrite an existing `critique_adjudication.yaml` unless
 `--force` is passed. It does not edit `<name>.tex`, `critique.md`, exports,

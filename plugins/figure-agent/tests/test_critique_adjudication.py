@@ -655,6 +655,275 @@ def test_build_adjudication_scaffold_accepts_v1_4_empty_micro_defects(
     assert scaffold["source_critique_hash"] == file_sha256(critique)
 
 
+def test_policy_default_scaffold_remains_conservative(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "panels:\n"
+            "  - id: D\n"
+            "    findings:\n"
+            "      - id: P001\n"
+            "        severity: MINOR\n"
+            "        category: style\n"
+            "        status: open\n"
+            "        tex_lines: [10, 20]\n"
+            "        observation: Iconic abstraction is intentional.\n"
+            "        suggested_fix: accept_simplification - no edit required.\n"
+            "findings: []\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["decisions"][0]["decision"] == "needs_human"
+
+
+def test_policy_auto_dismisses_accepted_simplification_style_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "panels:\n"
+            "  - id: D\n"
+            "    findings:\n"
+            "      - id: P001\n"
+            "        severity: MINOR\n"
+            "        category: style\n"
+            "        status: open\n"
+            "        tex_lines: [10, 20]\n"
+            "        observation: Iconic abstraction is intentional.\n"
+            "        suggested_fix: accept_simplification - no edit required.\n"
+            "findings: []\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "dismiss"
+    assert scaffold["decisions"][0]["patch_target"] == ""
+    assert scaffold["decisions"][0]["reason"].startswith(
+        "AUTO_DISMISS_ACCEPTED_SIMPLIFICATION:"
+    )
+    assert "critique.md finding P001" in scaffold["decisions"][0]["evidence"]
+
+
+def test_policy_auto_dismisses_style_simplification_with_preserved_mechanism_rationale(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: P001\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: []\n"
+            "    observation: mechanism cues are preserved in the iconic abstraction\n"
+            "    suggested_fix: accept_simplification - no edit required\n"
+            "  - id: P002\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: []\n"
+            "    observation: Theory Guard forbids transferring actuator framing\n"
+            "    suggested_fix: accept_simplification - current iconification is chosen\n"
+            "  - id: P003\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: []\n"
+            "    observation: curve topology is preserved in iconic cartoon form\n"
+            "    suggested_fix: accept_simplification - topology cues survive\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    decisions = {item["finding_id"]: item["decision"] for item in scaffold["decisions"]}
+    assert decisions == {"P001": "dismiss", "P002": "dismiss", "P003": "dismiss"}
+
+
+def test_policy_auto_defers_non_gateable_thumbnail_polish(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=(
+            _journal_assessment_yaml(assessed_hash=critique_hash, gateable="false")
+            + _score_block_yaml()
+        ),
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + _micro_defects_yaml(linked_finding_id="C001")
+            .replace("kind: wire_crosses_label", "kind: print_scale_unreadable")
+            .replace("severity: MAJOR", "severity: MINOR")
+        ),
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: thumbnail-only readability weak for social-media reuse\n"
+            "    suggested_fix: defer until thumbnail reuse becomes a requirement\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "defer"
+    assert scaffold["decisions"][0]["reason"].startswith(
+        "AUTO_DEFER_NON_GATEABLE_THUMBNAIL_POLISH:"
+    )
+
+
+def test_policy_auto_defer_wins_over_thumbnail_accept_simplification(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        critique_input_hash=critique_hash,
+        journal_assessment_yaml=_journal_assessment_yaml(
+            assessed_hash=critique_hash,
+            gateable="false",
+        ),
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: thumbnail-only labels drop below readability\n"
+            "    suggested_fix: defer for social-media use; otherwise accept_simplification\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "defer"
+
+
+def test_policy_preserves_target_journal_fit_as_needs_human(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C002\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: []\n"
+            "    observation: top_tier_audit.target_journal_fit needs art direction\n"
+            "    suggested_fix: human_review - confirm target-journal fit\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "needs_human"
+    assert scaffold["decisions"][0]["reason"] == (
+        "Review C002 before selecting apply, dismiss, defer, or resolved."
+    )
+
+
+@pytest.mark.parametrize(
+    ("severity", "category"),
+    (("BLOCKER", "style"), ("MAJOR", "style"), ("MINOR", "physics"), ("MINOR", "structural")),
+)
+def test_policy_keeps_core_findings_human(
+    tmp_path: Path,
+    severity: str,
+    category: str,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            f"    severity: {severity}\n"
+            f"    category: {category}\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: accept_simplification is mentioned but this is protected\n"
+            "    suggested_fix: accept_simplification should not bypass protection\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "needs_human"
+
+
+def test_policy_auto_applies_at_most_one_safe_nit_style_patch(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: NIT\n"
+            "    category: label_placement\n"
+            "    status: open\n"
+            "    tex_lines: [10, 12]\n"
+            "    observation: label offset is slightly crowded\n"
+            "    suggested_fix: move label by 0.05 cm to improve spacing\n"
+            "  - id: C002\n"
+            "    severity: NIT\n"
+            "    category: whitespace\n"
+            "    status: open\n"
+            "    tex_lines: [20, 22]\n"
+            "    observation: whitespace spacing can be adjusted locally\n"
+            "    suggested_fix: move spacer by 0.05 cm\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    decisions = {item["finding_id"]: item for item in scaffold["decisions"]}
+    assert decisions["C001"]["decision"] == "apply"
+    assert decisions["C001"]["patch_target"] == "examples/demo_fig/demo_fig.tex lines 10-12"
+    assert decisions["C001"]["reason"].startswith(
+        "AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH:"
+    )
+    assert decisions["C002"]["decision"] == "defer"
+    assert decisions["C002"]["reason"].startswith("AUTO_DEFER_APPLY_LIMIT_ONE_TARGET:")
+
+
 def test_build_adjudication_scaffold_rejects_v1_4_missing_micro_defects(
     tmp_path: Path,
 ) -> None:
@@ -1987,6 +2256,46 @@ def test_cli_scaffold_writes_fixture_by_name(
     assert "wrote" in captured.out
     assert captured.err == ""
     assert load_adjudication(fig_dir / "critique_adjudication.yaml")["fixture"] == "demo_fig"
+
+
+def test_cli_scaffold_supports_conservative_policy(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = tmp_path / "examples" / "demo_fig"
+    fig_dir.mkdir(parents=True)
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MINOR\n"
+            "    category: style\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: Iconic simplification is acceptable.\n"
+            "    suggested_fix: accept_simplification - no source edit required.\n"
+        ),
+    )
+
+    exit_code = main(
+        [
+            "scaffold",
+            "demo_fig",
+            "--force",
+            "--policy",
+            "conservative-v1",
+            "--repo-root",
+            str(tmp_path),
+        ]
+    )
+
+    assert exit_code == 0
+    assert "wrote" in capsys.readouterr().out
+    adjudication = load_adjudication(fig_dir / "critique_adjudication.yaml")
+    assert adjudication["decisions"][0]["decision"] == "dismiss"
 
 
 def test_cli_scaffold_reports_controlled_error(

@@ -134,7 +134,199 @@ def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
 _findings_from_critique = critique_findings
 
 
-def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
+POLICY_CONSERVATIVE_V1 = "conservative-v1"
+POLICY_CHOICES = frozenset({POLICY_CONSERVATIVE_V1})
+
+_AUTO_CATEGORIES = frozenset(
+    {"style", "palette", "whitespace", "hierarchy", "label_placement"}
+)
+_HUMAN_CATEGORIES = frozenset({"physics", "structural"})
+_HUMAN_TERMS = (
+    "target_journal_fit",
+    "human_review",
+    "human_policy",
+    "publication safety",
+    "mechanism change",
+    "change mechanism",
+    "changes mechanism",
+    "mechanism conflict",
+    "mechanism unresolved",
+    "mechanism incorrect",
+    "topology change",
+    "change topology",
+    "topology conflict",
+    "topology unresolved",
+    "topology incorrect",
+    "reference interpretation",
+    "accepted",
+    "golden",
+    "export",
+    "final artifact",
+    "semantic backport",
+    "theory guard violation",
+    "violates theory guard",
+)
+
+
+def _finding_text(finding: dict[str, Any]) -> str:
+    return " ".join(
+        str(finding.get(key, ""))
+        for key in ("observation", "suggested_fix", "category", "severity")
+    ).lower()
+
+
+def _finding_by_id(frontmatter: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    findings: dict[str, dict[str, Any]] = {}
+    for index, finding in enumerate(_findings_from_critique(frontmatter)):
+        findings[_finding_id(finding, f"critique finding {index}")] = finding
+    return findings
+
+
+def _is_human_protected(finding: dict[str, Any]) -> bool:
+    severity = str(finding.get("severity", "")).strip().upper()
+    category = str(finding.get("category", "")).strip().lower()
+    text = _finding_text(finding)
+    if severity in {"BLOCKER", "MAJOR"}:
+        return True
+    if category in _HUMAN_CATEGORIES:
+        return True
+    return any(term in text for term in _HUMAN_TERMS)
+
+
+def _has_two_int_tex_lines(finding: dict[str, Any]) -> bool:
+    tex_lines = finding.get("tex_lines")
+    return (
+        isinstance(tex_lines, list)
+        and len(tex_lines) == 2
+        and all(isinstance(value, int) and not isinstance(value, bool) for value in tex_lines)
+    )
+
+
+def _policy_decision_for(
+    *,
+    decision: dict[str, str],
+    finding: dict[str, Any],
+    apply_available: bool,
+    score_is_gateable: bool | None,
+) -> tuple[dict[str, str], bool]:
+    if decision["decision"] == "resolved" or _is_human_protected(finding):
+        return decision, apply_available
+
+    severity = str(finding.get("severity", "")).strip().upper()
+    category = str(finding.get("category", "")).strip().lower()
+    text = _finding_text(finding)
+    finding_id = decision["finding_id"]
+
+    if (
+        severity in {"NIT", "MINOR"}
+        and score_is_gateable is not True
+        and any(term in text for term in ("thumbnail", "social-media", "non-submission-scale"))
+    ):
+        return {
+            **decision,
+            "decision": "defer",
+            "reason": (
+                "AUTO_DEFER_NON_GATEABLE_THUMBNAIL_POLISH: non-submission-scale "
+                "polish is not gateable for this critique."
+            ),
+            "patch_target": "",
+            "evidence": f"critique.md finding {finding_id}.",
+        }, apply_available
+
+    if (
+        severity in {"NIT", "MINOR"}
+        and category in _AUTO_CATEGORIES
+        and "accept_simplification" in text
+    ):
+        return {
+            **decision,
+            "decision": "dismiss",
+            "reason": (
+                "AUTO_DISMISS_ACCEPTED_SIMPLIFICATION: critique marks this "
+                "routine style finding as an accepted schematic simplification."
+            ),
+            "patch_target": "",
+            "evidence": f"critique.md finding {finding_id}.",
+        }, apply_available
+
+    if (
+        apply_available
+        and severity == "NIT"
+        and category in _AUTO_CATEGORIES
+        and _has_two_int_tex_lines(finding)
+        and decision.get("patch_target")
+        and any(term in text for term in ("move", "offset", "spacing", "label", "whitespace"))
+    ):
+        return {
+            **decision,
+            "decision": "apply",
+            "reason": (
+                "AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH: single local NIT style "
+                "patch target selected by conservative policy."
+            ),
+            "evidence": f"critique.md finding {finding_id}.",
+        }, False
+
+    if (
+        not apply_available
+        and severity == "NIT"
+        and category in _AUTO_CATEGORIES
+        and _has_two_int_tex_lines(finding)
+        and decision.get("patch_target")
+        and any(term in text for term in ("move", "offset", "spacing", "label", "whitespace"))
+    ):
+        return {
+            **decision,
+            "decision": "defer",
+            "reason": (
+                "AUTO_DEFER_APPLY_LIMIT_ONE_TARGET: another safe NIT style "
+                "finding was already selected for apply in this scaffold."
+            ),
+            "patch_target": "",
+            "evidence": f"critique.md finding {finding_id}.",
+        }, apply_available
+
+    return decision, apply_available
+
+
+def apply_adjudication_policy(
+    scaffold: dict[str, Any],
+    frontmatter: dict[str, Any],
+    *,
+    policy: str | None,
+) -> dict[str, Any]:
+    if policy is None:
+        return scaffold
+    if policy != POLICY_CONSERVATIVE_V1:
+        raise CritiqueAdjudicationError(f"unknown adjudication policy: {policy}")
+
+    findings = _finding_by_id(frontmatter)
+    assessment = frontmatter.get("journal_grade_assessment")
+    score_is_gateable = (
+        assessment.get("score_is_gateable") if isinstance(assessment, dict) else None
+    )
+    apply_available = True
+    decisions: list[dict[str, str]] = []
+    for decision in scaffold["decisions"]:
+        finding = findings.get(decision["finding_id"])
+        if not isinstance(finding, dict):
+            decisions.append(decision)
+            continue
+        updated, apply_available = _policy_decision_for(
+            decision=decision,
+            finding=finding,
+            apply_available=apply_available,
+            score_is_gateable=score_is_gateable,
+        )
+        decisions.append(updated)
+    return validate_adjudication({**scaffold, "decisions": decisions})
+
+
+def build_adjudication_scaffold(
+    example_dir: Path,
+    *,
+    policy: str | None = None,
+) -> dict[str, Any]:
     """Build a conservative adjudication scaffold from critique.md frontmatter."""
     critique_path = example_dir / "critique.md"
     frontmatter = _critique_frontmatter(critique_path)
@@ -175,7 +367,7 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
                 }
             )
 
-    return validate_adjudication(
+    scaffold = validate_adjudication(
         {
             "schema": SCHEMA,
             "fixture": fixture,
@@ -183,14 +375,20 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
             "decisions": decisions,
         }
     )
+    return apply_adjudication_policy(scaffold, frontmatter, policy=policy)
 
 
-def scaffold_adjudication(example_dir: Path, *, force: bool = False) -> Path:
+def scaffold_adjudication(
+    example_dir: Path,
+    *,
+    force: bool = False,
+    policy: str | None = None,
+) -> Path:
     """Write critique_adjudication.yaml from critique.md unless it already exists."""
     path = example_dir / "critique_adjudication.yaml"
     if path.exists() and not force:
         raise CritiqueAdjudicationError(f"{path} already exists; pass --force to overwrite")
-    write_adjudication(path, build_adjudication_scaffold(example_dir))
+    write_adjudication(path, build_adjudication_scaffold(example_dir, policy=policy))
     return path
 
 
@@ -278,6 +476,7 @@ def sync_adjudication(
     example_dir: Path,
     *,
     force: bool = False,
+    policy: str | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> Path:
     """Refresh adjudication hash only when critique.md is already fresh."""
@@ -286,7 +485,7 @@ def sync_adjudication(
         raise CritiqueAdjudicationError("; ".join(mismatches))
 
     path = example_dir / "critique_adjudication.yaml"
-    scaffold = build_adjudication_scaffold(example_dir)
+    scaffold = build_adjudication_scaffold(example_dir, policy=policy)
     if force or not path.exists():
         write_adjudication(path, scaffold)
         return path
@@ -330,6 +529,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     scaffold_parser.add_argument("example", help="fixture name, examples/<name>, or path")
     scaffold_parser.add_argument("--force", action="store_true", help="overwrite an existing file")
+    scaffold_parser.add_argument("--policy", choices=sorted(POLICY_CHOICES))
     scaffold_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
 
     sync_parser = subparsers.add_parser(
@@ -338,13 +538,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     sync_parser.add_argument("example", help="fixture name, examples/<name>, or path")
     sync_parser.add_argument("--force", action="store_true", help="recreate the scaffold")
+    sync_parser.add_argument("--policy", choices=sorted(POLICY_CHOICES))
     sync_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
 
     args = parser.parse_args(argv)
     if args.command == "scaffold":
         example_dir = _resolve_example_dir(args.example, args.repo_root)
         try:
-            path = scaffold_adjudication(example_dir, force=args.force)
+            path = scaffold_adjudication(example_dir, force=args.force, policy=args.policy)
         except CritiqueAdjudicationError as exc:
             print(f"critique_adjudication.py: {exc}", file=sys.stderr)
             return 1
@@ -353,7 +554,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sync":
         example_dir = _resolve_example_dir(args.example, args.repo_root)
         try:
-            path = sync_adjudication(example_dir, force=args.force, repo_root=args.repo_root)
+            path = sync_adjudication(
+                example_dir,
+                force=args.force,
+                policy=args.policy,
+                repo_root=args.repo_root,
+            )
         except CritiqueAdjudicationError as exc:
             print(f"critique_adjudication.py: {exc}", file=sys.stderr)
             return 1
