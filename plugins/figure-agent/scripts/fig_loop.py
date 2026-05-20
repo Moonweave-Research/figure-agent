@@ -12,19 +12,14 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from critique_adjudication import (  # noqa: E402
-    CritiqueAdjudicationError,
-    adjudication_is_stale,
-    load_adjudication,
-)
-from fig_loop_assessments import (
+from fig_loop_adjudication import adjudication_state as build_adjudication_state  # noqa: E402
+from fig_loop_assessments import (  # noqa: E402
     journal_grade_assessment as build_journal_grade_assessment,
 )
-from fig_loop_assessments import (
+from fig_loop_assessments import (  # noqa: E402
     top_tier_audit_summary as build_top_tier_audit_summary,
 )
 from fig_loop_auto_patch import auto_patch_eligibility as build_auto_patch_eligibility  # noqa: E402
@@ -86,30 +81,6 @@ def _run_id(name: str) -> str:
     return f"{timestamp}-{safe_name}"
 
 
-def _adjudication_state(example_dir: Path) -> dict[str, Any]:
-    critique_path = example_dir / "critique.md"
-    adjudication_path = example_dir / "critique_adjudication.yaml"
-    if not adjudication_path.is_file():
-        return {"state": "missing", "path": str(adjudication_path), "decision_count": 0}
-    try:
-        adjudication = load_adjudication(adjudication_path)
-        stale = adjudication_is_stale(adjudication_path, critique_path)
-    except CritiqueAdjudicationError as exc:
-        return {
-            "state": "invalid",
-            "path": str(adjudication_path),
-            "decision_count": 0,
-            "error": str(exc),
-        }
-    return {
-        "state": "stale" if stale else "fresh",
-        "path": str(adjudication_path),
-        "decision_count": len(adjudication.get("decisions", [])),
-        "decisions": adjudication.get("decisions", []),
-        "source_critique_hash": adjudication["source_critique_hash"],
-    }
-
-
 def run_loop(
     name: str,
     goal: str,
@@ -130,7 +101,7 @@ def run_loop(
     (run_dir / "command_logs").mkdir()
 
     status_result = infer_stage(example_dir)
-    adjudication = _adjudication_state(example_dir)
+    adjudication = build_adjudication_state(example_dir)
     loop_decision = build_loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
