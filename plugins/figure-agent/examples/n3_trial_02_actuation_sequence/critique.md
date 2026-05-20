@@ -1,10 +1,10 @@
 ---
-schema: figure-agent.critique.v1.2
+schema: figure-agent.critique.v1.3
 fixture: n3_trial_02_actuation_sequence
-generated_at: 2026-05-19T23:58:38Z
+generated_at: 2026-05-20T02:26:19Z
 generator: critique_brief.py
-generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
-rubric_version: figure-agent.critique-rubric.v1.2
+generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
+rubric_version: figure-agent.critique-rubric.v1.3
 critique_input_hash: sha256:89c9593862f8997911462db8107621623e25f504e55aecd88e68ea9d882fe7ae
 verdict: ready
 audit_enumeration:
@@ -189,6 +189,57 @@ quality_axes:
     evidence: upstream axis verdicts
     blocking_items: []
     recommended_action: none
+top_tier_audit:
+  first_glance_message:
+    verdict: pass
+    finding: "3s: three actuation states are immediately visible; 10s: the reader sees +V injection, -V Coulomb repulsion, and open-circuit relaxation; 30s: force direction and voltage state are clear."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  target_journal_fit:
+    verdict: weak
+    finding: "The figure fits a manuscript methods/mechanism schematic, but the three-card grid is too utilitarian for a high-impact hero figure."
+    concrete_fix: "Add a subtle phase index or continuous time-arrow treatment if this becomes a main-figure hero panel."
+    blocks_high_impact: false
+  novelty_claim_support:
+    verdict: pass
+    finding: "The visual directly supports the core claim that trapped charge makes Coulomb repulsion dominate Maxwell attraction during the inverted-bias phase."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  figure_caption_coupling:
+    verdict: pass
+    finding: "The figure is understandable without a long caption because voltage states, phase titles, force arrow directions, and relaxation reference are all visible."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  visual_economy:
+    verdict: pass
+    finding: "Most marks are necessary and repeated geometry across the three panels reduces explanation cost."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  cross_panel_semantic_grammar:
+    verdict: pass
+    finding: "Panel titles, voltage labels, polymer/electrode geometry, red injection arrows, teal repulsion/relaxation arrows, and gray reference marks keep stable meaning across the sequence."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  reader_misinterpretation_risk:
+    verdict: weak
+    finding: "The main possible misread is that Panel 2 and Panel 3 electrodes are both simply floating states rather than different electrical conditions, but -V versus 0 V labels mostly prevent it."
+    concrete_fix: "If reused as a standalone figure, add a small phase index or time arrow across the panel bottoms."
+    blocks_high_impact: false
+  reduction_print_readability:
+    verdict: pass
+    finding: "Large titles, voltage labels, and force arrows should survive reduction; the smallest e^- labels are redundant with black charge dots."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  accessibility_color_robustness:
+    verdict: pass
+    finding: "Injection and repulsion/relaxation are redundantly encoded by arrow direction, voltage state, and panel title, not color alone."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
+  aesthetic_coherence:
+    verdict: weak
+    finding: "The panel system is coherent but visually plain: identical gray cards and large titles make it read like a workflow diagram more than a polished Nature-style mechanism panel."
+    concrete_fix: "Introduce a subtle shared time axis or reduce card-border dominance if this figure is promoted beyond a methods schematic."
+    blocks_high_impact: false
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit

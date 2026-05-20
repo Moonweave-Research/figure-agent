@@ -1,10 +1,10 @@
 ---
-schema: figure-agent.critique.v1.2
+schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2
-generated_at: 2026-05-19T23:12:46Z
+generated_at: 2026-05-20T02:24:59Z
 generator: critique_brief.py
-generator_version: sha256:b48de8a13bf399122e4e5bf28f37d5623b16cac6566bcd42e7c92cfa7d18bbf6
-rubric_version: figure-agent.critique-rubric.v1.2
+generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
+rubric_version: figure-agent.critique-rubric.v1.3
 critique_input_hash: sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77
 verdict: revise
 audit_enumeration:
@@ -240,6 +240,57 @@ quality_axes:
       - "F002 - Row 1 to Row 2 bridge weaker than briefing and reference imply"
       - "F003 - 45 visual-clash candidates surfaced at compile time; several are real label-on-geometry collisions"
     recommended_action: patch
+top_tier_audit:
+  first_glance_message:
+    verdict: weak
+    finding: "3s: sulfur-rich polymer, trap depth, and Coulomb/Maxwell are visible; 10s: the viewer sees a material-to-DOS-to-cantilever story; 30s: the story is recoverable but requires resolving the color convention and the Row 1 to Row 2 bridge."
+    concrete_fix: "Strengthen the Row 1 to Row 2 evidence bridge after resolving the shallow/deep color convention."
+    blocks_high_impact: true
+  target_journal_fit:
+    verdict: fail
+    finding: "The fixture reads as a draft manuscript schematic rather than a top-tier journal figure because the grid-like composition, color contradiction, and label collisions prevent a premium single-glance read."
+    concrete_fix: "Fix F001 and F003 first, then add the Row 2 binding wash/bridge from F002 before judging art direction."
+    blocks_high_impact: true
+  novelty_claim_support:
+    verdict: weak
+    finding: "The central novelty is present, but the visual hierarchy gives equal weight to chemistry, kinetic decay, trap DOS, and cantilever mechanics without clearly declaring which claim is primary."
+    concrete_fix: "After F001, make the trap DOS or cantilever mechanism the dominant endpoint rather than leaving every sub-region at similar visual weight."
+    blocks_high_impact: true
+  figure_caption_coupling:
+    verdict: weak
+    finding: "The figure currently needs caption/briefing context to explain why the shallow/deep color convention changes between Panel C and g(E_t)."
+    concrete_fix: "Resolve or explicitly annotate the color convention so the caption does not have to rescue the reader."
+    blocks_high_impact: true
+  visual_economy:
+    verdict: weak
+    finding: "Most marks are scientifically purposeful, but the crowded lower row and label-on-geometry collisions increase explanation cost."
+    concrete_fix: "Route the affected text through PlotCallout or move labels into whitespace as described in F003."
+    blocks_high_impact: true
+  cross_panel_semantic_grammar:
+    verdict: fail
+    finding: "The same blue/red grammar encodes opposite shallow/deep meanings across Panel C and the g(E_t) plot."
+    concrete_fix: "Implement F001: choose one shallow/deep palette convention across the full figure or revise the briefing to justify the split."
+    blocks_high_impact: true
+  reader_misinterpretation_risk:
+    verdict: fail
+    finding: "A careful reader can incorrectly infer that blue means both deep and shallow depending on where they look, which changes the scientific interpretation."
+    concrete_fix: "Resolve F001 before any polish pass."
+    blocks_high_impact: true
+  reduction_print_readability:
+    verdict: weak
+    finding: "The large labels survive, but bottom-row plot labels and the Coulomb/Maxwell area will degrade first under thumbnail or print reduction because they sit close to geometry."
+    concrete_fix: "Address F003 and rerun visual-clash checks at export scale."
+    blocks_high_impact: false
+  accessibility_color_robustness:
+    verdict: fail
+    finding: "Color is not only an accessibility risk but a semantic contradiction: redundant text labels exist, yet color still carries conflicting shallow/deep meaning."
+    concrete_fix: "Fix F001 and preserve redundant labels/shape encodings after recoloring."
+    blocks_high_impact: true
+  aesthetic_coherence:
+    verdict: weak
+    finding: "The figure has coherent typography and palette families, but the top-left chemistry, top-right trap pictographs, bottom plots, and right cantilever scene still feel like separate tiles."
+    concrete_fix: "Use F002's bridge/background treatment to bind the subregions after semantic fixes."
+    blocks_high_impact: true
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
