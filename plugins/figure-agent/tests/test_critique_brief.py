@@ -199,7 +199,7 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.2" in brief
+    assert "schema: figure-agent.critique.v1.3" in brief
     assert "panels:" in brief
 
 
@@ -219,6 +219,24 @@ def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
     assert "### 8. Journal Polish" in brief
     assert "### 9. Reference Fidelity" in brief
     assert "### 10. Publication Readiness" in brief
+
+
+def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Top-Tier Journal Figure Audit (host LLM MUST enumerate)" in brief
+    assert "### 1. First-Glance Message" in brief
+    assert "### 2. Target-Journal Fit" in brief
+    assert "### 3. Novelty and Claim Support" in brief
+    assert "### 4. Figure-Caption Coupling" in brief
+    assert "### 5. Visual Economy" in brief
+    assert "### 6. Cross-Panel Semantic Grammar" in brief
+    assert "### 7. Reader Misinterpretation Risk" in brief
+    assert "### 8. Reduction / Print Readability" in brief
+    assert "### 9. Accessibility and Color Robustness" in brief
+    assert "### 10. Aesthetic Coherence" in brief
 
 
 def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
@@ -289,7 +307,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.2" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.3" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -310,6 +328,16 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
             "block_release"
         ) in axis_block
     assert brief.count("category: structural | physics | label_placement") == 2
+
+
+def test_critique_brief_output_format_uses_v1_3_top_tier_schema(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "schema: figure-agent.critique.v1.3" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.3" in brief
+    assert "top_tier_audit:" in brief
 
 
 def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):

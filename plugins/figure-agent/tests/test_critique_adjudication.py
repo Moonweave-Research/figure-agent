@@ -377,6 +377,33 @@ def _score_block_yaml(*, overall_score: float = 72) -> str:
     )
 
 
+def _complete_v1_3_top_tier_audit_yaml() -> str:
+    keys = (
+        "first_glance_message",
+        "target_journal_fit",
+        "novelty_claim_support",
+        "figure_caption_coupling",
+        "visual_economy",
+        "cross_panel_semantic_grammar",
+        "reader_misinterpretation_risk",
+        "reduction_print_readability",
+        "accessibility_color_robustness",
+        "aesthetic_coherence",
+    )
+    lines = ["top_tier_audit:"]
+    for key in keys:
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    finding: {key} is acceptable for the current artifact",
+                "    concrete_fix: accept_simplification",
+                "    blocks_high_impact: false",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -399,10 +426,12 @@ def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
 def _write_v1_2_critique_with_quality_axes(
     fig_dir: Path,
     *,
+    critique_schema: str = "figure-agent.critique.v1.2",
     audit_yaml: str | None = None,
     quality_axes_yaml: str | None = None,
     critique_input_hash: str | None = None,
     journal_assessment_yaml: str | None = None,
+    extra_frontmatter_yaml: str = "",
     findings_yaml: str | None = None,
 ) -> Path:
     critique = fig_dir / "critique.md"
@@ -418,11 +447,12 @@ def _write_v1_2_critique_with_quality_axes(
     )
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1.2\n"
+        f"schema: {critique_schema}\n"
         "fixture: demo_fig\n"
         f"{critique_hash_yaml}"
         f"{audit_yaml or _complete_v1_1_audit_yaml()}"
         f"{quality_axes_yaml or _complete_v1_2_quality_axes_yaml()}"
+        f"{extra_frontmatter_yaml}"
         f"{journal_assessment_yaml or ''}"
         f"{findings_yaml}"
         "---\n"
@@ -522,6 +552,122 @@ def test_build_adjudication_scaffold_accepts_v1_2_journal_score_block(
     scaffold = build_adjudication_scaffold(fig_dir)
 
     assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_3_top_tier_audit(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml(),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_missing_top_tier_audit(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="top_tier_audit"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_invalid_top_tier_verdict(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
+        "    verdict: pass\n",
+        "    verdict: perfect\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="verdict"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_empty_top_tier_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
+        "    finding: first_glance_message is acceptable for the current artifact\n",
+        "    finding: \"\"\n",
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="finding"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_without_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = (
+        _complete_v1_3_top_tier_audit_yaml()
+        .replace("    verdict: pass\n", "    verdict: fail\n", 1)
+        .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="top_tier_audit"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_high_impact_with_weak_top_tier(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    top_tier_yaml = (
+        _complete_v1_3_top_tier_audit_yaml()
+        .replace("    verdict: pass\n", "    verdict: weak\n", 1)
+        .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        critique_input_hash=critique_hash,
+        extra_frontmatter_yaml=top_tier_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(
+            assessed_hash=critique_hash,
+            level="high_impact_candidate",
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="high_impact_candidate"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_build_adjudication_scaffold_rejects_out_of_range_overall_score(

@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import run_export  # noqa: E402
 import status as status_mod  # noqa: E402
-from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
+from quality_manifest import CRITIQUE_RUBRIC_VERSION, file_sha256, input_manifest_hash  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,7 +74,7 @@ def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"
         f"generator_version: {file_sha256(REPO_ROOT / 'scripts' / 'critique_brief.py')}\n"
-        "rubric_version: figure-agent.critique-rubric.v1.2\n"
+        f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
         f"critique_input_hash: {critique_input_hash}\n"
         "verdict: ready\n"
         "audit_enumeration:\n"

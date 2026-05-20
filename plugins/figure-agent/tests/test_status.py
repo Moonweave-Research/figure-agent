@@ -13,7 +13,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
-from quality_manifest import file_sha256, input_manifest_hash  # noqa: E402
+from quality_manifest import CRITIQUE_RUBRIC_VERSION, file_sha256, input_manifest_hash  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
@@ -68,7 +68,7 @@ def _write_hashed_critique(
     *,
     critique_input_hash: str | None = None,
     generator_version: str | None = None,
-    rubric_version: str = "figure-agent.critique-rubric.v1.2",
+    rubric_version: str = CRITIQUE_RUBRIC_VERSION,
 ) -> None:
     generator_version = generator_version or file_sha256(
         REPO_ROOT / "scripts" / "critique_brief.py"

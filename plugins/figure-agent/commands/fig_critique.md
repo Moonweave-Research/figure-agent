@@ -14,27 +14,27 @@ Prerequisites:
 
 Steps:
 
-1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, mandatory audit checklists, journal-grade quality axes, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
+1. Run `uv run python3 scripts/critique_brief.py examples/<name>` to obtain the brief. The script verifies the build PNG is fresh against render sources (`<name>.tex`, `briefing.md`, `spec.yaml`, `polymer-paper-preamble.sty`); reference images, `coordinate_hints.yaml`, and authoring context are critique inputs and do not require a recompile by themselves. It then emits the briefing context, optional reference-conditioned authoring context, the line-numbered TikZ source, mandatory audit checklists, journal-grade quality axes, top-tier journal figure audit, journal-grade fresh re-audit assessment, and the severity/category rubric. If `spec.yaml.panels[]` declares both `reference_image` and `bbox_pdf_cm`, the brief also lists panel crop/reference image pairs for panel-grounded critique; if either field is missing, it emits a WARN and skips that panel comparison. If a participating reference path is missing (`spec.yaml.reference_image`, or panel `reference_image` with `bbox_pdf_cm`), STOP and fix the path or add the file before critique/export.
 
 2. Use the **Read** tool on `examples/<name>/build/<name>.png` to load the rendered figure into the conversation. If the brief contains `## Per-panel reference contexts`, also Read every listed panel build crop and panel reference image. The host model inspects the images directly; do not call any external vision API.
 
-3. Fill the mandatory audit checklists first, then fill `quality_axes` for every journal-grade audit axis. Do not collapse the axes into a single score. `publication_readiness` must be at least as severe as the most severe applicable upstream axis. Empty `audit_enumeration` blocks are invalid for schema v1.2, and empty or malformed `quality_axes` blocks are invalid for schema v1.2. Any `structural_defect`, `incomplete`, `BLOCKER`, `MAJOR`, `needs_patch`, or `block` audit item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`, `human_review`, `revise_briefing`, or `block_release`. For `patch` or `block_release` quality-axis actions, include the linked finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`. Then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
+3. Fill the mandatory audit checklists first, then fill `quality_axes` for every journal-grade audit axis, then fill `top_tier_audit`, then fill `journal_grade_assessment`. Do not collapse the axes into a single score. `publication_readiness` must be at least as severe as the most severe applicable upstream axis. Empty `audit_enumeration` blocks are invalid for schema v1.3, empty or malformed `quality_axes` blocks are invalid for schema v1.3, and missing/empty `top_tier_audit` slots are invalid for schema v1.3. Any `structural_defect`, `incomplete`, `BLOCKER`, `MAJOR`, `needs_patch`, `block`, `top_tier_audit.fail`, or high-impact-blocking `top_tier_audit.weak` item must either become a normal panel/top-level finding or be explicitly justified as `accept_simplification`, `human_review`, `revise_briefing`, or `block_release`. For `patch` or `block_release` quality-axis actions, include the linked finding id in the relevant `blocking_items` entry, e.g. `C001 - <reason>`. Then apply the rubric from the brief — Sections A (physics correctness) and B (aesthetic placement) — and produce structured findings. For each finding, identify:
    - `severity`: BLOCKER / MAJOR / MINOR / NIT
    - `category`: structural / physics / label_placement / whitespace / hierarchy / palette / style
    - `tex_lines`: the source line numbers that need revision (cite from the line-numbered .tex in the brief)
    - `observation`: what is wrong, citing what is visible in the PNG
    - `suggested_fix`: a concrete edit to `<name>.tex`
 
-4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.2):
+4. Use the **Write** tool to create `examples/<name>/critique.md` with this exact format (YAML front-matter then Markdown body — schema v1.3):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.2
+schema: figure-agent.critique.v1.3
 fixture: <name>
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
 generator_version: sha256:<generator hash>
-rubric_version: figure-agent.critique-rubric.v1.2
+rubric_version: figure-agent.critique-rubric.v1.3
 critique_input_hash: sha256:<input manifest hash>
 verdict: ready | revise | block
 audit_enumeration:
@@ -139,6 +139,80 @@ quality_axes:
     evidence: "<axis verdict summary>"
     blocking_items: []
     recommended_action: none | patch | human_review | revise_briefing | block_release
+top_tier_audit:
+  first_glance_message:
+    verdict: pass | weak | fail | needs_human
+    finding: "<what a reader understands in 3/10/30 seconds>"
+    concrete_fix: "<specific figure edit or accept_simplification>"
+    blocks_high_impact: true | false
+  target_journal_fit:
+    verdict: pass | weak | fail | needs_human
+    finding: "<fit to target journal or generic high-impact schematic standard>"
+    concrete_fix: "<specific edit or human art-direction question>"
+    blocks_high_impact: true | false
+  novelty_claim_support:
+    verdict: pass | weak | fail | needs_human
+    finding: "<whether the visual supports the manuscript's central claim>"
+    concrete_fix: "<specific edit or claim-figure alignment question>"
+    blocks_high_impact: true | false
+  figure_caption_coupling:
+    verdict: pass | weak | fail | needs_human
+    finding: "<whether caption and figure share the right explanatory burden>"
+    concrete_fix: "<specific figure or caption-side recommendation>"
+    blocks_high_impact: true | false
+  visual_economy:
+    verdict: pass | weak | fail | needs_human
+    finding: "<unnecessary ink, redundant marks, or missing explanatory marks>"
+    concrete_fix: "<delete, simplify, or emphasize one concrete element>"
+    blocks_high_impact: true | false
+  cross_panel_semantic_grammar:
+    verdict: pass | weak | fail | needs_human
+    finding: "<color, arrow, shape, texture, and label grammar across panels>"
+    concrete_fix: "<one grammar normalization edit>"
+    blocks_high_impact: true | false
+  reader_misinterpretation_risk:
+    verdict: pass | weak | fail | needs_human
+    finding: "<most likely wrong interpretation by a qualified reader>"
+    concrete_fix: "<specific guardrail label, spacing, or visual cue>"
+    blocks_high_impact: true | false
+  reduction_print_readability:
+    verdict: pass | weak | fail | needs_human
+    finding: "<1-column, 2-column, thumbnail, grayscale, or print weakness>"
+    concrete_fix: "<specific scale/contrast/typography edit>"
+    blocks_high_impact: true | false
+  accessibility_color_robustness:
+    verdict: pass | weak | fail | needs_human
+    finding: "<colorblind/grayscale/contrast/texture redundancy assessment>"
+    concrete_fix: "<specific redundant encoding or contrast edit>"
+    blocks_high_impact: true | false
+  aesthetic_coherence:
+    verdict: pass | weak | fail | needs_human
+    finding: "<style authority across line weights, detail level, depth cues>"
+    concrete_fix: "<specific style-normalization edit>"
+    blocks_high_impact: true | false
+journal_grade_assessment:
+  schema: figure-agent.journal-grade-assessment.v1
+  scoring_mode: fresh_reaudit
+  assessed_artifact_hash: sha256:<input manifest hash>
+  benchmark_level: draft | solid_manuscript | high_impact_candidate | needs_human_art_direction | blocked
+  confidence: low | medium | high
+  blockers: []
+  regression_detected: true | false
+  regressions: []
+  score_is_gateable: true | false
+  next_quality_bottleneck: storyline | composition | component_fidelity | scientific_plausibility | label_semantics | polish | reference_fidelity | export_scale_readability | human_policy
+  rationale: "<current artifact-only quality rationale>"
+  overall_score: 0-100
+  sub_scores:
+    storyline: 0-100
+    composition: 0-100
+    component_fidelity: 0-100
+    scientific_plausibility: 0-100
+    label_semantics: 0-100
+    polish: 0-100
+    reference_fidelity: 0-100
+    export_scale_readability: 0-100
+  score_rationale: "<why these numbers describe only the current artifact>"
 panels:
   - id: <panel id>
     findings:

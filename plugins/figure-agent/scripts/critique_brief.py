@@ -390,6 +390,63 @@ probabilities. If you emit any numeric score, emit the complete
 """
 
 
+def _top_tier_journal_audit() -> str:
+    return """## Top-Tier Journal Figure Audit (host LLM MUST enumerate)
+
+Before assigning `journal_grade_assessment`, enumerate the top-tier figure
+review below under top-level YAML field `top_tier_audit`. These are not
+decorative prompts. Each slot must name the concrete current-artifact weakness
+or explain why the current artifact passes. If target journal is unknown, use a
+generic high-impact schematic standard and mark target-specific art-direction
+questions as `needs_human`.
+
+### 1. First-Glance Message
+State what a qualified reader understands after 3 seconds, 10 seconds, and
+30 seconds. Flag when the central claim is not visible without reading the full
+caption.
+
+### 2. Target-Journal Fit
+Assess whether the figure fits the intended journal's schematic density,
+typography, panel count, graphical-abstract flavor, and visual ambition. If the
+target journal is not provided, assess against a generic high-impact materials
+schematic standard.
+
+### 3. Novelty and Claim Support
+Assess whether the visual hierarchy supports the manuscript's central novelty
+claim rather than merely showing components correctly.
+
+### 4. Figure-Caption Coupling
+Assess whether the figure carries the right explanatory burden: neither
+overloaded with caption text nor too dependent on a future caption to be
+understood.
+
+### 5. Visual Economy
+List removable ink, redundant marks, weak decorative texture, or missing marks
+whose addition would reduce explanation cost.
+
+### 6. Cross-Panel Semantic Grammar
+Audit color, arrow, line, texture, icon, label, and material grammar across
+panels. Same visual grammar should mean the same scientific role.
+
+### 7. Reader Misinterpretation Risk
+Name the most likely wrong interpretation a careful reader could make from the
+current geometry, proximity, arrows, labels, or simplifications.
+
+### 8. Reduction / Print Readability
+Assess 1-column, 2-column, thumbnail, grayscale, projector, and print
+readability. Flag labels, line weights, or contrast that fail under reduction.
+
+### 9. Accessibility and Color Robustness
+Assess colorblind safety, grayscale distinction, contrast, and redundant
+encoding through shape, texture, line style, or labels.
+
+### 10. Aesthetic Coherence
+Assess whether the figure has one coherent visual authority: consistent detail
+level, line-weight economy, depth cues, icon style, material rendering, and
+typographic hierarchy.
+"""
+
+
 def _quality_axis_schema(axis_name: str, *, evidence: str, rationale: str) -> str:
     return "\n".join(
         [
@@ -646,6 +703,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 {_journal_quality_axes()}
 
+{_top_tier_journal_audit()}
+
 {_journal_grade_assessment()}
 
 ## Critique rubric
@@ -672,7 +731,7 @@ Write findings to `examples/{name}/critique.md` with this exact structure
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.2
+schema: figure-agent.critique.v1.3
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -707,6 +766,57 @@ audit_enumeration:
       severity: BLOCKER | MAJOR | MINOR | NIT
       proposed_action: add | expand | accept_simplification
 {_quality_axes_schema()}
+top_tier_audit:
+  first_glance_message:
+    verdict: pass | weak | fail | needs_human
+    finding: "<what a reader understands in 3/10/30 seconds>"
+    concrete_fix: "<specific figure edit or accept_simplification>"
+    blocks_high_impact: true | false
+  target_journal_fit:
+    verdict: pass | weak | fail | needs_human
+    finding: "<fit to target journal or generic high-impact schematic standard>"
+    concrete_fix: "<specific edit or human art-direction question>"
+    blocks_high_impact: true | false
+  novelty_claim_support:
+    verdict: pass | weak | fail | needs_human
+    finding: "<whether the visual supports the manuscript's central claim>"
+    concrete_fix: "<specific edit or claim-figure alignment question>"
+    blocks_high_impact: true | false
+  figure_caption_coupling:
+    verdict: pass | weak | fail | needs_human
+    finding: "<whether caption and figure share the right explanatory burden>"
+    concrete_fix: "<specific figure or caption-side recommendation>"
+    blocks_high_impact: true | false
+  visual_economy:
+    verdict: pass | weak | fail | needs_human
+    finding: "<unnecessary ink, redundant marks, or missing explanatory marks>"
+    concrete_fix: "<delete, simplify, or emphasize one concrete element>"
+    blocks_high_impact: true | false
+  cross_panel_semantic_grammar:
+    verdict: pass | weak | fail | needs_human
+    finding: "<color, arrow, shape, texture, and label grammar across panels>"
+    concrete_fix: "<one grammar normalization edit>"
+    blocks_high_impact: true | false
+  reader_misinterpretation_risk:
+    verdict: pass | weak | fail | needs_human
+    finding: "<most likely wrong interpretation by a qualified reader>"
+    concrete_fix: "<specific guardrail label, spacing, or visual cue>"
+    blocks_high_impact: true | false
+  reduction_print_readability:
+    verdict: pass | weak | fail | needs_human
+    finding: "<1-column, 2-column, thumbnail, grayscale, or print weakness>"
+    concrete_fix: "<specific scale/contrast/typography edit>"
+    blocks_high_impact: true | false
+  accessibility_color_robustness:
+    verdict: pass | weak | fail | needs_human
+    finding: "<colorblind/grayscale/contrast/texture redundancy assessment>"
+    concrete_fix: "<specific redundant encoding or contrast edit>"
+    blocks_high_impact: true | false
+  aesthetic_coherence:
+    verdict: pass | weak | fail | needs_human
+    finding: "<style authority across line weights, detail level, depth cues>"
+    concrete_fix: "<specific style-normalization edit>"
+    blocks_high_impact: true | false
 {_journal_grade_assessment_schema(critique_input_hash)}
 panels:
   - id: <panel id>

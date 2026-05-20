@@ -70,7 +70,7 @@ In verify-only mode, axes such as `static_visual`, configured `theory`, and
 configured `story_hierarchy` can remain `not_evaluated`; their presence in the
 JSON is an audit slot, not proof that the runner performed those checks.
 
-When `critique.md` is fresh schema `figure-agent.critique.v1.2`,
+When `critique.md` is fresh schema `figure-agent.critique.v1.2` or newer,
 `/fig_loop` can populate some existing audit slots from
 `critique.md` frontmatter `quality_axes`:
 

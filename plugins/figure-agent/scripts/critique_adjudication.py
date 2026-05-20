@@ -17,6 +17,7 @@ SCHEMA = "figure-agent.critique-adjudication.v1"
 CRITIQUE_SCHEMA_V1 = "figure-agent.critique.v1"
 CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
+CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
 ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
 _PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
 _ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -99,6 +100,19 @@ _JOURNAL_SCORE_KEYS = frozenset(
     }
 )
 _JOURNAL_SCORE_BLOCK_KEYS = frozenset({"overall_score", "sub_scores", "score_rationale"})
+_TOP_TIER_AUDIT_KEYS = (
+    "first_glance_message",
+    "target_journal_fit",
+    "novelty_claim_support",
+    "figure_caption_coupling",
+    "visual_economy",
+    "cross_panel_semantic_grammar",
+    "reader_misinterpretation_risk",
+    "reduction_print_readability",
+    "accessibility_color_robustness",
+    "aesthetic_coherence",
+)
+_TOP_TIER_AUDIT_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
 
 
 class CritiqueAdjudicationError(ValueError):
@@ -438,6 +452,7 @@ def _validate_journal_score_block(assessment: dict[str, Any], label: str) -> Non
 def _validate_journal_grade_assessment(
     frontmatter: dict[str, Any],
     quality_verdicts: dict[str, str],
+    top_tier_verdicts: dict[str, str] | None = None,
 ) -> None:
     raw_assessment = frontmatter.get("journal_grade_assessment")
     if raw_assessment is None:
@@ -502,6 +517,17 @@ def _validate_journal_grade_assessment(
                 f"{label}.benchmark_level high_impact_candidate requires passing "
                 f"upstream quality axes; non-passing axes: {axes}"
             )
+        non_passing_top_tier = {
+            audit_name: verdict
+            for audit_name, verdict in (top_tier_verdicts or {}).items()
+            if verdict != "pass"
+        }
+        if non_passing_top_tier:
+            audits = ", ".join(sorted(non_passing_top_tier))
+            raise CritiqueAdjudicationError(
+                f"{label}.benchmark_level high_impact_candidate requires passing "
+                f"top_tier_audit slots; non-passing slots: {audits}"
+            )
 
     critique_input_hash = frontmatter.get("critique_input_hash")
     if score_is_gateable and assessed_hash != critique_input_hash:
@@ -561,6 +587,34 @@ def _validate_v1_2_audit_to_finding(frontmatter: dict[str, Any]) -> None:
             "critique frontmatter.quality_axes must include at least one "
             f"panel/top-level findings item for patch or block_release axis: {axes}"
         )
+
+
+def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]:
+    top_tier_audit = _require_mapping(
+        frontmatter.get("top_tier_audit"),
+        "critique frontmatter.top_tier_audit",
+    )
+    findings = _findings_from_critique(frontmatter)
+    blocking_without_finding: list[str] = []
+    verdicts: dict[str, str] = {}
+    for key in _TOP_TIER_AUDIT_KEYS:
+        label = f"critique frontmatter.top_tier_audit.{key}"
+        item = _require_mapping(top_tier_audit.get(key), label)
+        verdict = _require_enum(item, "verdict", _TOP_TIER_AUDIT_VERDICTS, label=label)
+        verdicts[key] = verdict
+        _require_non_empty_string(item, "finding", label=label)
+        _require_non_empty_string(item, "concrete_fix", label=label)
+        if not isinstance(item.get("blocks_high_impact"), bool):
+            raise CritiqueAdjudicationError(f"{label}.blocks_high_impact must be a boolean")
+        if verdict == "fail" or item["blocks_high_impact"]:
+            blocking_without_finding.append(key)
+    if blocking_without_finding and not findings:
+        slots = ", ".join(blocking_without_finding)
+        raise CritiqueAdjudicationError(
+            "critique frontmatter.top_tier_audit requires at least one "
+            f"panel/top-level finding for blocking slots: {slots}"
+        )
+    return verdicts
 
 
 def _patch_target_from_tex_lines(fixture: str, finding: dict[str, Any]) -> str:
@@ -627,6 +681,12 @@ def build_adjudication_scaffold(example_dir: Path) -> dict[str, Any]:
         _validate_v1_1_audit(frontmatter)
         quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
         _validate_journal_grade_assessment(frontmatter, quality_verdicts)
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == CRITIQUE_SCHEMA_V1_3:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
         _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
         raise CritiqueAdjudicationError(f"unsupported critique schema: {critique_schema}")
