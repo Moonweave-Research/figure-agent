@@ -39,6 +39,12 @@ from fig_loop_axis_records import (  # noqa: E402
     reference_fidelity_evaluation_state,
     status_axis_evaluation,
 )
+from fig_loop_decision import (  # noqa: E402
+    critique_refresh_action,
+    decisions_with_value,
+    first_decision,
+    reference_input_missing,
+)
 from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
 from fig_loop_patch_evidence import (  # noqa: E402
@@ -123,20 +129,6 @@ def _adjudication_state(example_dir: Path) -> dict[str, Any]:
     }
 
 
-def _reference_input_missing(status_result: dict[str, Any]) -> bool:
-    reference_notes = {
-        "critique_reference_missing",
-        "reference_image_missing",
-        "panel_reference_image_missing",
-    }
-    return bool(reference_notes.intersection(status_result.get("notes", [])))
-
-
-def _critique_refresh_action(example_dir: Path, critique_state: Any) -> str:
-    state_text = str(critique_state).lower()
-    return f"run /fig_critique {example_dir.name} because critique is {state_text}."
-
-
 def _active_subregion_target(example_dir: Path) -> dict[str, str | None] | None:
     log_path = example_dir / "subregion_iteration_log.md"
     if not log_path.is_file():
@@ -152,27 +144,12 @@ def _active_subregion_target(example_dir: Path) -> dict[str, str | None] | None:
     }
 
 
-def _first_decision(adjudication: dict[str, Any], decision: str) -> dict[str, Any] | None:
-    if adjudication["state"] != "fresh":
-        return None
-    for item in adjudication.get("decisions", []):
-        if item.get("decision") == decision:
-            return item
-    return None
-
-
-def _decisions_with_value(adjudication: dict[str, Any], decision: str) -> list[dict[str, Any]]:
-    if adjudication["state"] != "fresh":
-        return []
-    return [item for item in adjudication.get("decisions", []) if item.get("decision") == decision]
-
-
 def _loop_decision(
     status_result: dict[str, Any],
     adjudication: dict[str, Any],
     example_dir: Path,
 ) -> dict[str, Any]:
-    if _reference_input_missing(status_result):
+    if reference_input_missing(status_result):
         return {
             "stop_reason": "reference_input_missing",
             "recommended_next_action": "fix declared reference inputs before continuing",
@@ -182,7 +159,7 @@ def _loop_decision(
     if status_result.get("critique_state") in {"MISSING", "STALE"}:
         return {
             "stop_reason": "status_action_required",
-            "recommended_next_action": _critique_refresh_action(
+            "recommended_next_action": critique_refresh_action(
                 example_dir,
                 status_result.get("critique_state"),
             ),
@@ -204,7 +181,7 @@ def _loop_decision(
             "human_gate_status": "not_requested",
         }
 
-    human_decision = _first_decision(adjudication, "needs_human")
+    human_decision = first_decision(adjudication, "needs_human")
     if human_decision:
         finding_id = human_decision["finding_id"]
         return {
@@ -214,7 +191,7 @@ def _loop_decision(
             "human_gate_status": "required",
         }
 
-    apply_decisions = _decisions_with_value(adjudication, "apply")
+    apply_decisions = decisions_with_value(adjudication, "apply")
     if len(apply_decisions) > 1:
         return {
             "stop_reason": "ambiguous_patch_selection",
