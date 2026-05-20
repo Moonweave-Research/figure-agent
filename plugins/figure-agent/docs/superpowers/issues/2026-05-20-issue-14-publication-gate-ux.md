@@ -46,6 +46,10 @@ of work remains.
   accepted, and undeclared fixtures.
 - [x] `/fig_status` exposes typed publication-gate failure records without
   requiring callers to parse strings.
+- [x] `/fig_status` no-argument summaries include publication-gate state when
+  release/provenance gates apply.
+- [x] `/fig_status` requires disclosure-needed for declared polished SVG final
+  artifacts, matching the accepted-gate checker.
 - [x] `/fig_driver --mode release` includes publication-gate state and the first
   blocker code/action in its release-blocked reason.
 - [x] `/fig_driver --mode release` remains dry-run and non-mutating.

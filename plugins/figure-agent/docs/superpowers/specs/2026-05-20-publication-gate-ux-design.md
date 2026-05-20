@@ -94,6 +94,11 @@ The first structured rules mirror existing behavior:
 - missing `disclosure-needed` when disclosure is required ->
   `publication_provenance`, actor `human`
 
+`/fig_status` uses the same disclosure-required rule as the accepted gate:
+declared `final_artifact.kind: polished_svg` requires the
+`disclosure-needed` field because the release candidate includes final
+human-edited SVG provenance.
+
 The string messages must remain exactly compatible with current tests.
 
 ## QUALITY_AUDIT Scaffold

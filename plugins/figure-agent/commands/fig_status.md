@@ -81,7 +81,14 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
   `actor`, `message`, and `required_action`. The single-figure printed output
   shows the first blocker as `Publication blocker:` when present.
 
-The no-argument summary includes `ready: true|false`, which follows `release_ready`.
+For polished SVG final artifacts, `publication_gate_state` also enforces the
+publication disclosure field because the submitted artifact may include human
+SVG edits beyond generated TikZ exports.
+
+The no-argument summary includes `ready: true|false`, which follows
+`release_ready`, and appends `publication: <state>` when the publication gate
+is applicable. Treat `ready: true` plus `publication: PROVENANCE_REQUIRED` as
+artifact-ready but not submission-ready.
 
 Notes that may appear:
 

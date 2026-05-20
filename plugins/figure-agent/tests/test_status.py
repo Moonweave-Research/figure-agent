@@ -2313,6 +2313,38 @@ def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkey
     assert "goldenfig  stage 4/4 (not accepted)" in captured.out
 
 
+def test_no_arg_summary_shows_publication_gate_state(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    fig = examples_dir / "goldenfig"
+    _make_status_ready_fixture(fig, accepted=True)
+    (fig / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: false\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig)
+    monkeypatch.chdir(tmp_path)
+
+    import status as status_mod
+
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    old_argv = sys.argv
+    sys.argv = ["status.py"]
+    try:
+        status_mod.main()
+    finally:
+        sys.argv = old_argv
+
+    captured = capsys.readouterr()
+    assert "goldenfig  stage 4/4 (accepted)" in captured.out
+    assert "ready: true" in captured.out
+    assert "publication: PROVENANCE_REQUIRED" in captured.out
+
+
 def test_real_golden_fixture_is_not_accepted() -> None:
     fixture = REPO_ROOT / "examples" / "golden_trap_depth_picture"
     if not fixture.exists():
@@ -2507,6 +2539,40 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
             "message": "QUALITY_AUDIT.md does not declare submission-safe: true",
             "required_action": (
                 "Human reviewer must decide submission safety and write an explicit value."
+            ),
+        }
+    ]
+
+
+def test_infer_stage_requires_disclosure_for_polished_svg_publication_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "polishedfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    (fig_dir / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_kind"] == "polished_svg"
+    assert result["final_artifact_state"] == "FRESH"
+    assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
+    assert result["publication_gate_failures"] == [
+        {
+            "code": "missing_disclosure_needed",
+            "category": "publication_provenance",
+            "actor": "human",
+            "message": "QUALITY_AUDIT.md does not declare disclosure-needed",
+            "required_action": (
+                "Human reviewer must declare whether publication disclosure is needed."
             ),
         }
     ]

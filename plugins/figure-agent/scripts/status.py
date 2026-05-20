@@ -329,6 +329,14 @@ def _release_ready(golden_ready: bool, exports_substate: str, final_artifact: di
     return True
 
 
+def _requires_publication_disclosure(spec: dict) -> bool:
+    final_artifact = spec.get("final_artifact") if spec else None
+    return (
+        isinstance(final_artifact, dict)
+        and final_artifact.get("kind") == FINAL_ARTIFACT_POLISHED_SVG
+    )
+
+
 def _default_final_artifact(name: str) -> dict:
     return compute_final_artifact_state(example_dir=Path("."), name=name, spec={})
 
@@ -581,6 +589,7 @@ def infer_stage(example_dir: Path) -> dict:
     publication_gate = publication_gate_summary(
         example_dir / "QUALITY_AUDIT.md",
         accepted=accepted,
+        require_disclosure=_requires_publication_disclosure(spec),
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
@@ -864,6 +873,9 @@ def main() -> int:
                 f"{result['name']}  stage {result['stage']}/4{marker}"
                 f"  exports: {exports}  ready: {ready}"
             )
+            publication_gate_state = result.get("publication_gate_state")
+            if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
+                line = f"{line}  publication: {publication_gate_state}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)
