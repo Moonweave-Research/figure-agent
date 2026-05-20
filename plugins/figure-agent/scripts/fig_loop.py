@@ -21,6 +21,14 @@ from critique_adjudication import (  # noqa: E402
     adjudication_is_stale,
     load_adjudication,
 )
+from fig_loop_axis_records import (  # noqa: E402
+    adjudication_evaluation_state,
+    adjudication_verdict,
+    axis_record,
+    publication_safety_evaluation_state,
+    reference_fidelity_evaluation_state,
+    status_axis_evaluation,
+)
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256, yaml_frontmatter  # noqa: E402
@@ -383,7 +391,7 @@ def _quality_axis_summary(
 
 def _quality_axis_record(summary: dict[str, Any], critique_path: Path) -> dict[str, Any]:
     verdict = summary["verdict"]
-    return _axis_record(
+    return axis_record(
         state=verdict,
         verdict=verdict,
         source="critique.quality_axes",
@@ -536,11 +544,11 @@ def _axis_verdicts(
     reference_quality = _quality_axis_summary(quality_axes, ("reference_fidelity",))
     publication_quality = _quality_axis_summary(quality_axes, ("publication_readiness",))
     if reference_blocked:
-        reference_record = _axis_record(
+        reference_record = axis_record(
             state=status_result.get("notes", []),
             verdict="blocked",
             source="status.notes",
-            evaluation_state=_reference_fidelity_evaluation_state(
+            evaluation_state=reference_fidelity_evaluation_state(
                 reference_blocked,
                 critique_state,
             ),
@@ -548,11 +556,11 @@ def _axis_verdicts(
     elif reference_quality:
         reference_record = _quality_axis_record(reference_quality, critique_path)
     else:
-        reference_record = _axis_record(
+        reference_record = axis_record(
             state=status_result.get("notes", []),
             verdict="not_blocked",
             source="status.notes",
-            evaluation_state=_reference_fidelity_evaluation_state(
+            evaluation_state=reference_fidelity_evaluation_state(
                 reference_blocked,
                 critique_state,
             ),
@@ -561,7 +569,7 @@ def _axis_verdicts(
     if story_quality:
         story_record = _quality_axis_record(story_quality, critique_path)
     else:
-        story_record = _axis_record(
+        story_record = axis_record(
             state="not_evaluated" if story_path else "not_configured",
             verdict="not_evaluated",
             source=story_path.name if story_path else "not configured",
@@ -572,7 +580,7 @@ def _axis_verdicts(
     if loop_decision["human_gate_status"] != "required" and publication_quality:
         publication_record = _quality_axis_record(publication_quality, critique_path)
     else:
-        publication_record = _axis_record(
+        publication_record = axis_record(
             state=status_result.get("acceptance_state"),
             verdict="human_gate"
             if loop_decision["human_gate_status"] == "required"
@@ -583,13 +591,13 @@ def _axis_verdicts(
                 if (example_dir / "QUALITY_AUDIT.md").is_file()
                 else None
             ),
-            evaluation_state=_publication_safety_evaluation_state(
+            evaluation_state=publication_safety_evaluation_state(
                 status_result.get("acceptance_state"),
                 loop_decision["human_gate_status"],
             ),
         )
     return {
-        "render": _axis_record(
+        "render": axis_record(
             state=status_result.get("render_state"),
             verdict="fresh" if status_result.get("render_state") == "FRESH" else "not_ready",
             source="status.render_state",
@@ -597,36 +605,36 @@ def _axis_verdicts(
                 "passed" if status_result.get("render_state") == "FRESH" else "needs_action"
             ),
         ),
-        "static_visual": _axis_record(
+        "static_visual": axis_record(
             state="not_evaluated",
             verdict="not_evaluated",
             source="verify-only runner",
             evaluation_state="not_evaluated",
         ),
-        "critique": _axis_record(
+        "critique": axis_record(
             state=critique_state,
             verdict="ready" if critique_state in {"FRESH", "NOT_REQUIRED"} else "needs_action",
             source="status.critique_state",
             evidence_path=critique_path if critique_path.is_file() else None,
-            evaluation_state=_status_axis_evaluation(
+            evaluation_state=status_axis_evaluation(
                 critique_state,
                 passed_values={"FRESH"},
                 not_configured_values={"NOT_REQUIRED"},
                 blocked_values={"REFERENCE_MISSING"},
             ),
         ),
-        "adjudication": _axis_record(
+        "adjudication": axis_record(
             state=adjudication["state"],
-            verdict=_adjudication_verdict(adjudication, stop_reason),
+            verdict=adjudication_verdict(adjudication, stop_reason),
             source="critique_adjudication.yaml",
             evidence_path=adjudication_path if adjudication_path.is_file() else None,
-            evaluation_state=_adjudication_evaluation_state(
+            evaluation_state=adjudication_evaluation_state(
                 adjudication,
                 stop_reason,
                 critique_state,
             ),
         ),
-        "theory": _axis_record(
+        "theory": axis_record(
             state="not_evaluated" if theory_path.is_file() else "not_configured",
             verdict="human_review_not_requested",
             source="theory_guard.md" if theory_path.is_file() else "not configured",
@@ -635,7 +643,7 @@ def _axis_verdicts(
         ),
         "reference_fidelity": reference_record,
         "story_hierarchy": story_record,
-        "export": _axis_record(
+        "export": axis_record(
             state=status_result.get("export_state"),
             verdict="fresh" if status_result.get("export_state") == "FRESH" else "not_ready",
             source="status.export_state",
@@ -645,93 +653,6 @@ def _axis_verdicts(
         ),
         "publication_safety": publication_record,
     }
-
-
-def _axis_record(
-    *,
-    state: Any,
-    verdict: str,
-    source: str,
-    evaluation_state: str,
-    evidence_path: Path | None = None,
-    **metadata: Any,
-) -> dict[str, Any]:
-    record = {
-        "state": state,
-        "verdict": verdict,
-        "source": source,
-        "evidence_path": str(evidence_path) if evidence_path else None,
-        "evaluation_state": evaluation_state,
-    }
-    record.update(metadata)
-    return record
-
-
-def _status_axis_evaluation(
-    state: Any,
-    *,
-    passed_values: set[str],
-    not_configured_values: set[str] | None = None,
-    blocked_values: set[str] | None = None,
-) -> str:
-    if state in passed_values:
-        return "passed"
-    if not_configured_values and state in not_configured_values:
-        return "not_configured"
-    if blocked_values and state in blocked_values:
-        return "blocked"
-    return "needs_action"
-
-
-def _adjudication_evaluation_state(
-    adjudication: dict[str, Any],
-    stop_reason: str,
-    critique_state: Any,
-) -> str:
-    if stop_reason in {"patch_target_recommended", "human_gate_required"}:
-        return "needs_action"
-    if adjudication["state"] == "missing" and critique_state != "FRESH":
-        return "not_configured"
-    if adjudication["state"] == "fresh":
-        return "passed"
-    if adjudication["state"] in {"stale", "invalid", "missing"}:
-        return "needs_action"
-    return "not_evaluated"
-
-
-def _reference_fidelity_evaluation_state(reference_blocked: bool, critique_state: Any) -> str:
-    if reference_blocked:
-        return "blocked"
-    if critique_state == "NOT_REQUIRED":
-        return "not_configured"
-    return "not_evaluated"
-
-
-def _publication_safety_evaluation_state(
-    acceptance_state: Any,
-    human_gate_status: str,
-) -> str:
-    if human_gate_status == "required":
-        return "blocked"
-    if acceptance_state == "ACCEPTED":
-        return "passed"
-    if acceptance_state == "NOT_DECLARED":
-        return "not_configured"
-    return "needs_action"
-
-
-def _adjudication_verdict(adjudication: dict[str, Any], stop_reason: str) -> str:
-    if stop_reason == "patch_target_recommended":
-        return "actionable"
-    if stop_reason == "human_gate_required":
-        return "human_gate"
-    if adjudication["state"] in {"stale", "invalid", "missing"}:
-        return adjudication["state"]
-    if stop_reason == "no_actionable_findings" or (
-        adjudication["state"] == "fresh" and adjudication.get("decisions")
-    ):
-        return "complete"
-    return "not_actionable"
 
 
 def _escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
