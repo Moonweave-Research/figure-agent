@@ -113,9 +113,11 @@ def _quality_axis(
 def _write_v1_2_critique(
     fixture: Path,
     *,
+    schema: str = "figure-agent.critique.v1.2",
     axis_overrides: dict[str, dict] | None = None,
     journal_assessment: dict | None = None,
     critique_input_hash: str | None = None,
+    top_tier_audit: dict | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -124,7 +126,7 @@ def _write_v1_2_critique(
     }
     critique = fixture / "critique.md"
     frontmatter = {
-        "schema": "figure-agent.critique.v1.2",
+        "schema": schema,
         "fixture": fixture.name,
         "quality_axes": quality_axes,
     }
@@ -132,6 +134,8 @@ def _write_v1_2_critique(
         frontmatter["critique_input_hash"] = critique_input_hash
     if journal_assessment:
         frontmatter["journal_grade_assessment"] = journal_assessment
+    if top_tier_audit:
+        frontmatter["top_tier_audit"] = top_tier_audit
     critique.write_text(
         "---\n"
         + yaml.safe_dump(frontmatter, sort_keys=False)
@@ -140,6 +144,37 @@ def _write_v1_2_critique(
         encoding="utf-8",
     )
     return critique
+
+
+def _top_tier_audit(
+    *,
+    overrides: dict[str, dict] | None = None,
+) -> dict:
+    overrides = overrides or {}
+    keys = (
+        "first_glance_message",
+        "target_journal_fit",
+        "novelty_claim_support",
+        "figure_caption_coupling",
+        "visual_economy",
+        "cross_panel_semantic_grammar",
+        "reader_misinterpretation_risk",
+        "reduction_print_readability",
+        "accessibility_color_robustness",
+        "aesthetic_coherence",
+    )
+    return {
+        key: overrides.get(
+            key,
+            {
+                "verdict": "pass",
+                "finding": f"{key} passes",
+                "concrete_fix": "accept_simplification",
+                "blocks_high_impact": False,
+            },
+        )
+        for key in keys
+    }
 
 
 def _journal_assessment(
@@ -504,6 +539,111 @@ def test_loop_surfaces_fresh_reaudit_journal_grade_assessment(
     assert assessment["scoring_mode"] == "fresh_reaudit"
     assert assessment["score_is_gateable"] is True
     assert assessment["evaluation_state"] == "passed"
+
+
+def test_loop_surfaces_v1_3_quality_axes_and_journal_grade_assessment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.3",
+        critique_input_hash=critique_hash,
+        axis_overrides={
+            "publication_readiness": _quality_axis(
+                "publication_readiness",
+                verdict="needs_patch",
+                blocking_items=["C001 - polish ceiling"],
+            ),
+        },
+        journal_assessment=_journal_assessment(critique_hash, level="solid_manuscript"),
+        top_tier_audit=_top_tier_audit(),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect v1.3 critique ingestion",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    publication = iteration["axis_verdicts"]["publication_safety"]
+    assessment = iteration["journal_grade_assessment"]
+    assert publication["source"] == "critique.quality_axes"
+    assert publication["evidence_path"] == str(critique)
+    assert publication["state"] == "needs_patch"
+    assert assessment["benchmark_level"] == "solid_manuscript"
+    assert assessment["evaluation_state"] == "passed"
+
+
+def test_loop_surfaces_v1_3_top_tier_audit_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.3",
+        top_tier_audit=_top_tier_audit(
+            overrides={
+                "target_journal_fit": {
+                    "verdict": "weak",
+                    "finding": "not a high-impact hero figure",
+                    "concrete_fix": "increase visual ambition",
+                    "blocks_high_impact": True,
+                },
+                "cross_panel_semantic_grammar": {
+                    "verdict": "fail",
+                    "finding": "same color means two concepts",
+                    "concrete_fix": "normalize palette",
+                    "blocks_high_impact": True,
+                },
+                "reduction_print_readability": {
+                    "verdict": "needs_human",
+                    "finding": "print scale was not verified",
+                    "concrete_fix": "review one-column export",
+                    "blocks_high_impact": False,
+                },
+            }
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect top-tier audit",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["top_tier_audit_summary"]
+    assert summary["source"] == "critique.top_tier_audit"
+    assert summary["evidence_path"] == str(critique)
+    assert summary["slot_count"] == 10
+    assert summary["verdict_counts"] == {
+        "pass": 7,
+        "weak": 1,
+        "fail": 1,
+        "needs_human": 1,
+    }
+    assert summary["blocking_high_impact_count"] == 2
+    assert summary["blocking_high_impact_slots"] == [
+        "target_journal_fit",
+        "cross_panel_semantic_grammar",
+    ]
+    assert summary["weak_or_failed_slots"] == [
+        "target_journal_fit",
+        "cross_panel_semantic_grammar",
+        "reduction_print_readability",
+    ]
+    assert summary["worst_verdict"] == "fail"
+    stdout_summary = fig_loop_mod._json_stdout_summary(run_dir)
+    assert stdout_summary["top_tier_audit_summary"] == summary
 
 
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
@@ -1902,6 +2042,7 @@ def test_main_json_emits_machine_readable_summary(
                 "final_artifact_kind": "generated_export",
                 "final_artifact_path": "exports/loop_demo.svg",
             },
+            "top_tier_audit_summary": None,
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -1942,6 +2083,7 @@ def test_main_json_emits_machine_readable_summary(
         "final_artifact_state": "NONE",
         "final_artifact_kind": "generated_export",
         "final_artifact_path": "exports/loop_demo.svg",
+        "top_tier_audit_summary": None,
         "recommended_next_action": "inspect figure state",
     }
 
@@ -2030,6 +2172,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "final_artifact_state": iteration["status"]["final_artifact_state"],
         "final_artifact_kind": iteration["status"]["final_artifact_kind"],
         "final_artifact_path": iteration["status"]["final_artifact_path"],
+        "top_tier_audit_summary": iteration["top_tier_audit_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
 

@@ -87,6 +87,14 @@ These records keep the same `state`, `verdict`, `source`, `evidence_path`, and
 `quality_axis_blocking_items`. Legacy, stale, missing, or malformed critique
 frontmatter falls back to the earlier placeholder/status-derived behavior.
 
+When `critique.md` is fresh schema `figure-agent.critique.v1.3`, `/fig_loop`
+also surfaces `top_tier_audit_summary` in both `iteration_001.json` and the
+`--json` summary. The summary reports slot count, verdict counts,
+`weak_or_failed_slots`, `blocking_high_impact_slots`,
+`blocking_high_impact_count`, `worst_verdict`, and the source critique path.
+This is a read-only visibility surface; it does not make score or top-tier
+audit prose release-gating by itself.
+
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
 change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop

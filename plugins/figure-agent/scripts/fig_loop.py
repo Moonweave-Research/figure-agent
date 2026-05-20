@@ -29,6 +29,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
+CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
+_CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset({CRITIQUE_SCHEMA_V1_2, CRITIQUE_SCHEMA_V1_3})
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 _JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -61,6 +63,8 @@ _QUALITY_EVALUATION_STATE = {
     "needs_human": "blocked",
     "block": "blocked",
 }
+_TOP_TIER_VERDICTS = ("pass", "weak", "needs_human", "fail")
+_TOP_TIER_VERDICT_RANK = {verdict: index for index, verdict in enumerate(_TOP_TIER_VERDICTS)}
 _GIT_MUTATIONS = frozenset(
     {"add", "commit", "reset", "checkout", "clean", "push", "merge", "rebase"}
 )
@@ -333,7 +337,7 @@ def _quality_axes_frontmatter(example_dir: Path, critique_state: Any) -> dict[st
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_2:
+    if frontmatter.get("schema") not in _CRITIQUE_SCHEMAS_WITH_QUALITY_AXES:
         return None
     quality_axes = frontmatter.get("quality_axes")
     return quality_axes if isinstance(quality_axes, dict) else None
@@ -441,7 +445,7 @@ def _journal_grade_assessment(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_2:
+    if frontmatter.get("schema") not in _CRITIQUE_SCHEMAS_WITH_QUALITY_AXES:
         return None
     assessment = frontmatter.get("journal_grade_assessment")
     if not isinstance(assessment, dict):
@@ -466,6 +470,54 @@ def _journal_grade_assessment(
     if gateable and _has_complete_score_block(record):
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
     return record
+
+
+def _top_tier_audit_summary(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    if critique_state != "FRESH":
+        return None
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_3:
+        return None
+    top_tier_audit = frontmatter.get("top_tier_audit")
+    if not isinstance(top_tier_audit, dict):
+        return None
+
+    verdict_counts = dict.fromkeys(_TOP_TIER_VERDICTS, 0)
+    weak_or_failed_slots: list[str] = []
+    blocking_high_impact_slots: list[str] = []
+    valid_verdicts: list[str] = []
+    for slot_name, slot in top_tier_audit.items():
+        if not isinstance(slot_name, str) or not isinstance(slot, dict):
+            continue
+        verdict = slot.get("verdict")
+        if not isinstance(verdict, str) or verdict not in _TOP_TIER_VERDICT_RANK:
+            continue
+        verdict_counts[verdict] += 1
+        valid_verdicts.append(verdict)
+        if verdict != "pass":
+            weak_or_failed_slots.append(slot_name)
+        if slot.get("blocks_high_impact") is True:
+            blocking_high_impact_slots.append(slot_name)
+
+    if not valid_verdicts:
+        return None
+    worst_verdict = max(valid_verdicts, key=lambda verdict: _TOP_TIER_VERDICT_RANK[verdict])
+    return {
+        "source": "critique.top_tier_audit",
+        "evidence_path": str(critique_path),
+        "slot_count": len(valid_verdicts),
+        "verdict_counts": verdict_counts,
+        "blocking_high_impact_count": len(blocking_high_impact_slots),
+        "blocking_high_impact_slots": blocking_high_impact_slots,
+        "weak_or_failed_slots": weak_or_failed_slots,
+        "worst_verdict": worst_verdict,
+    }
 
 
 def _axis_verdicts(
@@ -1058,6 +1110,10 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
+    top_tier_audit_summary = _top_tier_audit_summary(
+        example_dir,
+        status_result.get("critique_state"),
+    )
     auto_patch_eligibility = _auto_patch_eligibility(loop_decision, patch_handoff)
     post_patch_evidence = _post_patch_evidence_verdict(
         repo_root,
@@ -1082,6 +1138,7 @@ def run_loop(
         "active_patch_target": loop_decision["active_patch_target"],
         "patch_handoff": patch_handoff,
         "journal_grade_assessment": journal_grade_assessment,
+        "top_tier_audit_summary": top_tier_audit_summary,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,
@@ -1141,6 +1198,7 @@ def _json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "final_artifact_state": (iteration.get("status") or {}).get("final_artifact_state"),
         "final_artifact_kind": (iteration.get("status") or {}).get("final_artifact_kind"),
         "final_artifact_path": (iteration.get("status") or {}).get("final_artifact_path"),
+        "top_tier_audit_summary": iteration.get("top_tier_audit_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
 
