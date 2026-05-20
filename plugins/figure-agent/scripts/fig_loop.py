@@ -30,6 +30,11 @@ from fig_loop_axis_records import (  # noqa: E402
     status_axis_evaluation,
 )
 from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
+from fig_loop_quality_axes import (  # noqa: E402
+    STORY_QUALITY_AXES,
+    quality_axis_record,
+    quality_axis_summary,
+)
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256, yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
@@ -54,25 +59,6 @@ _JOURNAL_SCORE_KEYS = frozenset(
         "export_scale_readability",
     }
 )
-_STORY_QUALITY_AXES = (
-    "message_storyline",
-    "panel_role_coherence",
-    "composition_layout",
-)
-_QUALITY_VERDICT_RANK = {
-    "not_applicable": -1,
-    "pass": 0,
-    "needs_patch": 1,
-    "needs_human": 2,
-    "block": 3,
-}
-_QUALITY_EVALUATION_STATE = {
-    "not_applicable": "not_configured",
-    "pass": "passed",
-    "needs_patch": "needs_action",
-    "needs_human": "blocked",
-    "block": "blocked",
-}
 _TOP_TIER_VERDICTS = ("pass", "weak", "needs_human", "fail")
 _TOP_TIER_VERDICT_RANK = {verdict: index for index, verdict in enumerate(_TOP_TIER_VERDICTS)}
 _GIT_MUTATIONS = frozenset(
@@ -338,72 +324,6 @@ def _quality_axes_frontmatter(example_dir: Path, critique_state: Any) -> dict[st
     return quality_axes if isinstance(quality_axes, dict) else None
 
 
-def _quality_axis(quality_axes: dict[str, Any], axis_name: str) -> dict[str, Any] | None:
-    axis = quality_axes.get(axis_name)
-    if not isinstance(axis, dict):
-        return None
-    verdict = axis.get("verdict")
-    if not isinstance(verdict, str) or verdict not in _QUALITY_VERDICT_RANK:
-        return None
-    recommended_action = axis.get("recommended_action")
-    blocking_items = axis.get("blocking_items")
-    return {
-        "name": axis_name,
-        "verdict": verdict,
-        "recommended_action": recommended_action if isinstance(recommended_action, str) else None,
-        "blocking_items": blocking_items if isinstance(blocking_items, list) else [],
-    }
-
-
-def _quality_axis_summary(
-    quality_axes: dict[str, Any] | None,
-    axis_names: tuple[str, ...],
-) -> dict[str, Any] | None:
-    if not quality_axes:
-        return None
-    axes = [
-        axis
-        for axis_name in axis_names
-        if (axis := _quality_axis(quality_axes, axis_name)) is not None
-    ]
-    if not axes:
-        return None
-    applicable_axes = [axis for axis in axes if axis["verdict"] != "not_applicable"]
-    ranked_axes = applicable_axes or axes
-    selected = max(ranked_axes, key=lambda axis: _QUALITY_VERDICT_RANK[axis["verdict"]])
-    blocking_items: dict[str, list[str]] = {}
-    for axis in axes:
-        items = [item for item in axis["blocking_items"] if isinstance(item, str) and item.strip()]
-        if items:
-            blocking_items[axis["name"]] = items
-    return {
-        "verdict": selected["verdict"],
-        "axis_names": [axis["name"] for axis in axes],
-        "axis_verdicts": {axis["name"]: axis["verdict"] for axis in axes},
-        "recommended_actions": {
-            axis["name"]: axis["recommended_action"]
-            for axis in axes
-            if axis["recommended_action"] is not None
-        },
-        "blocking_items": blocking_items,
-    }
-
-
-def _quality_axis_record(summary: dict[str, Any], critique_path: Path) -> dict[str, Any]:
-    verdict = summary["verdict"]
-    return axis_record(
-        state=verdict,
-        verdict=verdict,
-        source="critique.quality_axes",
-        evidence_path=critique_path,
-        evaluation_state=_QUALITY_EVALUATION_STATE[verdict],
-        quality_axes=summary["axis_names"],
-        quality_axis_verdicts=summary["axis_verdicts"],
-        quality_axis_recommended_actions=summary["recommended_actions"],
-        quality_axis_blocking_items=summary["blocking_items"],
-    )
-
-
 def _is_score_value(value: Any) -> bool:
     return (
         not isinstance(value, bool)
@@ -540,9 +460,9 @@ def _axis_verdicts(
     critique_state = status_result.get("critique_state")
     reference_blocked = stop_reason == "reference_input_missing"
     quality_axes = _quality_axes_frontmatter(example_dir, critique_state)
-    story_quality = _quality_axis_summary(quality_axes, _STORY_QUALITY_AXES)
-    reference_quality = _quality_axis_summary(quality_axes, ("reference_fidelity",))
-    publication_quality = _quality_axis_summary(quality_axes, ("publication_readiness",))
+    story_quality = quality_axis_summary(quality_axes, STORY_QUALITY_AXES)
+    reference_quality = quality_axis_summary(quality_axes, ("reference_fidelity",))
+    publication_quality = quality_axis_summary(quality_axes, ("publication_readiness",))
     if reference_blocked:
         reference_record = axis_record(
             state=status_result.get("notes", []),
@@ -554,7 +474,7 @@ def _axis_verdicts(
             ),
         )
     elif reference_quality:
-        reference_record = _quality_axis_record(reference_quality, critique_path)
+        reference_record = quality_axis_record(reference_quality, critique_path)
     else:
         reference_record = axis_record(
             state=status_result.get("notes", []),
@@ -567,7 +487,7 @@ def _axis_verdicts(
         )
 
     if story_quality:
-        story_record = _quality_axis_record(story_quality, critique_path)
+        story_record = quality_axis_record(story_quality, critique_path)
     else:
         story_record = axis_record(
             state="not_evaluated" if story_path else "not_configured",
@@ -578,7 +498,7 @@ def _axis_verdicts(
         )
 
     if loop_decision["human_gate_status"] != "required" and publication_quality:
-        publication_record = _quality_axis_record(publication_quality, critique_path)
+        publication_record = quality_axis_record(publication_quality, critique_path)
     else:
         publication_record = axis_record(
             state=status_result.get("acceptance_state"),
