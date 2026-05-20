@@ -882,10 +882,13 @@
   (7.20, 3.80) rectangle (7.60, 3.87);
 \draw[cGray!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
 \fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
-% Vibration cue — iter 50: x 7.55→7.62 to clear bezier cable (was sharing
-% x=7.55 with cable control point — visual collision).
-\node[font=\fontsize{9}{10.8}\selectfont, text=cGray!75!black,
-      inner sep=0pt] at (7.62, 3.91) {$\updownarrow$};
+% Vibration cue — iter E11 (user-flagged): \updownarrow at (7.62, 3.91) was
+% floating 0.18-0.26cm RIGHT of probe shaft — disconnected from oscillating
+% element. Replaced with TikZ default `<->` double-arrow attached LEFT of
+% shaft (x=7.32), y 3.84..4.00 (0.16cm tall — Stealth tips have breathing
+% room, no longer overlap as filled-star artifact).
+\draw[<->, cGray!75!black, line width=0.32pt]
+  (7.32, 3.84) -- (7.32, 4.00);
 % Air gap d — iter 49 (Codex): shifted right. iter E6: line weights bumped
 % (0.18→0.22pt dashed, 0.22→0.28pt T-bars) + T-bar width 0.06→0.10cm for
 % better print-scale legibility of air-gap dimension annotation.
