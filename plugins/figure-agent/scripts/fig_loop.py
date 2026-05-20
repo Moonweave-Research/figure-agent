@@ -21,6 +21,7 @@ from critique_adjudication import (  # noqa: E402
     adjudication_is_stale,
     load_adjudication,
 )
+from fig_loop_handoff import patch_handoff as build_patch_handoff  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256, yaml_frontmatter  # noqa: E402
 from status import infer_stage  # noqa: E402
@@ -969,50 +970,6 @@ def _post_patch_evidence_verdict(
     }
 
 
-def _patch_handoff(name: str, loop_decision: dict[str, Any]) -> dict[str, Any] | None:
-    active_patch_target = loop_decision["active_patch_target"]
-    if not active_patch_target:
-        return None
-
-    finding_id = active_patch_target.get("finding_id")
-    patch_target = active_patch_target["patch_target"]
-    target_type = "finding" if finding_id else "subregion"
-    target_id = finding_id if finding_id else patch_target
-    example_prefix = f"examples/{name}"
-    return {
-        "target_type": target_type,
-        "target_id": target_id,
-        "patch_target": patch_target,
-        "reason": active_patch_target["reason"],
-        "allowed_edit_scope": [
-            f"{example_prefix}/{name}.tex",
-            f"{example_prefix}/authoring_plan.md",
-            f"{example_prefix}/subregion_iteration_log.md",
-        ],
-        "forbidden_edit_scope": [
-            "accepted",
-            "golden_contract",
-            f"{example_prefix}/exports/",
-            f"{example_prefix}/build/",
-            f"{example_prefix}/critique.md",
-            "unrelated examples",
-            "broad refactors",
-            "multiple findings in one patch",
-        ],
-        "required_closeout_checks": [
-            f"/fig_compile {name}",
-            f"/fig_critique {name} when critique freshness requires it",
-            f"update or recreate {example_prefix}/critique_adjudication.yaml",
-            "preserve unresolved findings",
-            f"/fig_loop {name} --goal <same goal or next goal>",
-        ],
-        "unresolved_findings_requirement": (
-            "Do not delete, rewrite, or hide unresolved critique findings; record only the"
-            " selected target decision in critique_adjudication.yaml."
-        ),
-    }
-
-
 def _decision_markdown(
     *,
     name: str,
@@ -1091,7 +1048,7 @@ def run_loop(
     loop_decision = _loop_decision(status_result, adjudication, example_dir)
     axis_verdicts = _axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = _escalation_summary(loop_decision)
-    patch_handoff = _patch_handoff(name, loop_decision)
+    patch_handoff = build_patch_handoff(name, loop_decision)
     journal_grade_assessment = _journal_grade_assessment(
         example_dir,
         status_result.get("critique_state"),
