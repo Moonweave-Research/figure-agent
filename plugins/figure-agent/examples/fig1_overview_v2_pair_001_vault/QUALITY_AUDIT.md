@@ -1,13 +1,11 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
-**Date:** 2026-05-18
-**Last verified:** 2026-05-18T15:04:25Z
+**Date:** 2026-05-20
+**Last verified:** 2026-05-20T13:00:00Z
 **Decision:** accepted: false
 **submission-safe:** false
 
-This audit records the current dogfood state after the critique-heading parser
-fix, v1.2 critique refresh, Panel A collision-budget fix, and tracked-golden
-roll-forward. It is intentionally not a manuscript-submission acceptance record.
+This audit records the current state after the full NC-grade visual polish sequence (C001–C006, Option A data credibility patches, Panel C DOS Gaussian strength boost). All six MAJOR/MINOR findings from the external NC reviewer are resolved. The `accepted: false` gate remains a human provenance and venue-policy decision, not a TikZ patch.
 
 ## Build Evidence
 
@@ -60,14 +58,18 @@ gate, not a TikZ patch.
 
 ## Vision Critique And Adjudication
 
-Fresh `critique.md` verdict is `ready` under schema
-`figure-agent.critique.v1.2`.
+Fresh `critique.md` verdict remains `revise` under schema
+`figure-agent.critique.v1.4`.
 
 - BLOCKER findings: 0.
-- MAJOR findings: 0.
-- MINOR/NIT patch findings: 0 active.
-- `critique_adjudication.yaml` is fresh against the current critique hash and
-  has no open decisions because no patchable finding remains.
+- Open top-tier audit failures: 4 (`target_journal_fit`,
+  `reader_misinterpretation_risk`, `reduction_print_readability`,
+  `accessibility_color_robustness`).
+- Patch findings C001-C006 are marked resolved after the current source edits,
+  but panel/reference abstraction findings P001-P003 still require human
+  art-direction review.
+- `critique_adjudication.yaml` must stay fresh against the current critique
+  hash before this fixture can proceed through `/fig_loop`.
 
 The acceptance-gate collision fix moved the Panel A `inverse vulcanization`
 label left to clear the S8 lower-left vertex. This did not change the story,

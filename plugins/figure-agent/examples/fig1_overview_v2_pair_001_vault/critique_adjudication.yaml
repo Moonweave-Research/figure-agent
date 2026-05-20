@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:5772021edd0aa6cbb6927f881a59c2d54af3fb858809bf58c2767344f207a3fc
+source_critique_hash: sha256:11d17b35b1e83b0bb5de8a2d48f416aec5a8dfa7ed870853ba596caba0c88f28
 decisions:
 - finding_id: P001
   decision: needs_human
@@ -18,33 +18,33 @@ decisions:
   patch_target: ''
   evidence: critique.md finding P003.
 - finding_id: C001
-  decision: needs_human
-  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C001.
+  decision: resolved
+  reason: Critique marks C001 as resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md marks C001 status resolved.
 - finding_id: C002
-  decision: needs_human
-  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C002.
+  decision: resolved
+  reason: Critique marks C002 as resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md marks C002 status resolved.
 - finding_id: C003
-  decision: needs_human
-  reason: Review C003 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C003.
+  decision: resolved
+  reason: Critique marks C003 as resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md marks C003 status resolved.
 - finding_id: C004
-  decision: needs_human
-  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
+  decision: resolved
+  reason: Critique marks C004 as resolved.
   patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
     lines 1218-1226
-  evidence: critique.md finding C004.
+  evidence: critique.md marks C004 status resolved.
 - finding_id: C005
-  decision: needs_human
-  reason: Review C005 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C005.
+  decision: resolved
+  reason: Critique marks C005 as resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md marks C005 status resolved.
 - finding_id: C006
-  decision: needs_human
-  reason: Review C006 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C006.
+  decision: resolved
+  reason: Critique marks C006 as resolved.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md marks C006 status resolved.
