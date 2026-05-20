@@ -48,7 +48,7 @@ Total ~14s for full read. Panel C dwell = single longest stop.
 
 - **Plot panel (D / E / F)**: *iconic cartoon*.
   - Axis frame **제거** (axis arrow + minimal label만)
-  - Tick 수치 **없음** (Fig 3 영역 침범 회피)
+  - Tick 수치 **없음** (다만 NC Figure 1 데이터 재현성 감각 구현을 위해, 패널 D/E/F 각각에 정량적 숫자 라벨이 배제된 2~3개의 미세 눈금선(Tick marks) 및 곡선 상의 대표 측정 데이터 산포도(Scatter points, 3~4점 수준) 추가는 허용하여 Fig 3의 본격적 정량 플롯 영역 침범을 회피하면서 신뢰성 보강)
   - Curve shape 자체가 message
   - Plot이 *icon-sized*: reader가 *plot처럼 분석*하지 않게
 - **Schematic panel (A / C / G)**: scene dominant. Detail density 비례적으로 높음.
@@ -375,7 +375,7 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 
 - **Plot grid feel** (4 panel axis-box equally spaced) — anti-goal of M2.
 - **Axis frame** on D / E / F (axis arrow + minimal label만 허용).
-- **Tick 수치 라벨** on Row 2 plot panel (Fig 3 영역 침범).
+- **Tick 수치 라벨** on Row 2 plot panel (Fig 3 영역 침범. 단, 수치 라벨이 없는 순수 Tick marks와 소규모 scatter 포인트 추가는 제외).
 - **Composition-specific labels** (S60 / S85 등) on Row 2 plot panel.
 - **Hard panel border** on Row 2 (M2 cover overlay).
 - **More than 7 hues** total.

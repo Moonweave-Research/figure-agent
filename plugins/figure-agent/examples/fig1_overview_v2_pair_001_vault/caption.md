@@ -28,7 +28,7 @@
 
 **e**, *Spectroscopic.* Iso-thermal surface-potential decay (ISPD) on the same sulfur polymer: a corona discharge (HV⁺) deposits surface charge onto the polymer-on-grounded-substrate stack, and a non-contact vibrating Kelvin probe reads the slow *V*_s(*t*) decay (top sub-panel). Inversion of the stretched-exponential decay yields the bimodal trap energy distribution *g*(*E*_t) (bottom sub-panel), in which the deep Gaussian peak is approximately 1.86× the shallow peak height (separation τ_d).
 
-**f**, *Mechanical.* A poly(S-r-DIB) cantilever clamped opposite a biased planar electrode (*V*_active) accumulates trapped charges *q*_tr on its surface. The resulting Coulomb repulsion (bold red arrow) drives the cantilever away from the electrode, dominating over the baseline Maxwell-stress attraction *F*_Maxwell (dashed thin arrow toward the electrode). The macroscopic deflection is the direct mechanical manifestation of the same trap landscape probed in **d** and **e**.
+**f**, *Mechanical.* A poly(S-r-DIB) cantilever clamped opposite a biased planar electrode (*V*_active) accumulates trapped charges *q*_tr on its surface. The resulting Coulomb repulsion (bold red arrow) drives the cantilever away from the electrode, dominating over the baseline Maxwell-stress attraction *F*_Maxwell (gray dashed arrow toward the electrode). Encoding by hue — red for the active Coulomb result, gray for the passive Maxwell baseline — ensures the hierarchy survives red-deficient vision and grayscale print. The macroscopic deflection is the direct mechanical manifestation of the same trap landscape probed in **d** and **e**.
 
 Quantitative analysis of the *n* exponent across the full S60–S85 composition series, the bimodal *g*(*E*_t) shape parameters and τ_d, and the time-resolved deflection Δ*x*(*t*)/τ_relax appears in Figs. 3 and 5.
 
@@ -67,7 +67,7 @@ Quantitative analysis of the *n* exponent across the full S60–S85 composition 
 | "high *n* (red) / low *n* (blue)" Panel **d** | .tex D-7b sloped labels + cRed!80 / cBlue!55 | ✅ |
 | "above the single-relaxation Debye reference at long times" Panel **d** | Debye bezier ends at y=0.45, RED/BLUE end at y=0.55 / y=1.50 — Debye below both | ✅ |
 | "deep peak ~1.86× shallow" Panel **e** | briefing §5 Q4 + §13.6 E-8 | ✅ |
-| "Coulomb dominates over F_Maxwell" Panel **f** | .tex F-7 cRed!80 0.7pt bold vs F-3 cRed!55 dashed 0.45pt thin | ✅ |
+| "Coulomb dominates over F_Maxwell" Panel **f** | .tex F-7 cRed!80 0.7pt bold vs F-3 cGray!55 dashed 0.45pt gray (C004 accessibility patch) | ✅ |
 | "sulfur polymer" hero attribution **e/f** | briefing §13.6 + §13.7 attribution lines (added 2026-05-20) | ✅ |
 | ΔE_t depth scalar Panel **c** | .tex Panel C R3 + briefing §13.3 | ✅ |
 

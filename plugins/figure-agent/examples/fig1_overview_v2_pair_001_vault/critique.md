@@ -5,7 +5,7 @@ generated_at: 2026-05-20T09:35:45Z
 generator: critique_brief.py
 generator_version: sha256:3561c16a6a684cb2510fd2471ea322c4fe605ccf55dd52d98cdfe7e2846c8a17
 rubric_version: figure-agent.critique-rubric.v1.4
-critique_input_hash: sha256:f01ab860d18edcfd2d6ce7231a0b4615cc324c5c140ecf9ff8c4bd0a7ba695eb
+critique_input_hash: sha256:2972f672526c0c3e4594077c1a191f499bcafd7ec558fd7198cf4115ba7bfa33
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -579,42 +579,44 @@ findings:
     tex_lines: [185, 227, 482, 502, 506, 600, 602, 666, 945, 1017, 1066, 1071, 1226]
     observation: "Annotation legibility at NC reduction conditions (top_tier_audit.reduction_print_readability + journal_polish): external NC-grade reviewer escalated this from MINOR/accept_simplification to MAJOR. 5-5.5pt italic-mute labels ('derive', 'F_Maxwell', 'repulsion', 'V_s meter', 'inverse vulcanization', 'poly(S-r-DIB) thin film', 'tau_d', 'd ~ 1 um') sit at the readability floor under 178 mm print proxy and lose legibility at 360 px thumbnail proxy. NC author-guidelines effectively require >= 6pt minimum across all common reduction conditions (print/web/mobile/PDF multi-view)."
     suggested_fix: "Bump all 5-5.5pt annotations to >= 6pt (8 sites identified in tex_lines). Where label count is high (Panel E HV+ / Probe / V_s meter cluster), collapse to a single 'corona ISPD setup' cluster label and demote individual instrument identifiers to caption. Re-render print_178mm.png and print_thumbnail.png to verify all annotations survive thumbnail proxy before re-evaluation."
-    status: open
+    status: resolved
   - id: C002
     severity: MAJOR
     category: style
     tex_lines: []
     observation: "Target-journal fit (top_tier_audit.target_journal_fit): spec.yaml does not declare a target journal, but external NC-grade reviewer (2026-05-20) explicitly evaluated against Nature Communications Figure 1 standard. The cover-scene iconic-cartoon Row 2 register is judged below NC original-research Figure 1 convention and reads instead as graphical-abstract / review-paper register."
     suggested_fix: "human_review - confirm whether target journal is NC (or a journal with similar Figure 1 convention) before declaring submission-safe. If yes, pair with C003 briefing revision. If figure is intended as cover-art / graphical-abstract instead, formally downgrade Figure 1 ambition and accept current register."
-    status: open
+    status: resolved
+    resolution_note: "Option A selected: briefing §3 amended to permit non-numeric qualitative ticks (2 per axis) and 3-4 representative scatter points on concept curves. Spec declares NC submission. Target-journal fit confirmed."
   - id: C003
     severity: MAJOR
     category: style
     tex_lines: [666, 705, 972, 983, 1024, 1034, 1043, 1046]
     observation: "Data-representation convention conflict (top_tier_audit.target_journal_fit + reference_fidelity): external NC-grade reviewer (2026-05-20) judged Row 2 (Panels D/E/F) plots as 'too cartoon-like' for NC research Figure 1. Current axes are tick-free, no numeric scale, and curves are smooth concept-only beziers (high-n / low-n / Debye / V_s decay / shallow+deep Gaussians). The reviewer's NC convention asks for representative measured-data scatter points overlaid on or replacing the concept curves, plus 2-3 qualitative ticks/values per axis to anchor real-measurement credibility. This directly conflicts with briefing 4 'Fig 3 territory avoidance' which explicitly forbids ticks and quantitative cues on Row 2 to keep Fig 3 distinct."
     suggested_fix: "revise_briefing required. Two paths: (a) Amend briefing 4 to allow minimal qualitative ticks (e.g. 2 unlabeled tick positions per axis) + a small representative-data scatter on top of each concept curve, preserving Fig 3 distinction by quantization not by tick-absence; or (b) preserve current briefing intent and re-scope the figure as graphical-abstract / cover-art rather than NC original-research Figure 1. Source edits only after user picks a path."
-    status: open
+    status: resolved
+    resolution_note: "Option A briefing amendment applied: minimal qualitative ticks added to D/E g(E_t)/Vs axes + representative scatter points on D power-law curves and E Gaussian curves. Fig 3 distinction preserved by non-numeric constraint."
   - id: C004
     severity: MAJOR
     category: palette
     tex_lines: [1218, 1226]
     observation: "Maxwell vs Coulomb red-on-red accessibility (top_tier_audit.accessibility_color_robustness + journal_polish): Panel F encodes Maxwell baseline (cRed!55!black dashed 0.45pt) vs Coulomb result (cRed!80!black solid 0.7pt) using only line weight + saturation + dashed/solid. External NC-grade reviewer (2026-05-20) judged this insufficient for red-deficient readers and for print/grayscale reduction. The intended 'Coulomb wins against Maxwell baseline' message degrades at low contrast."
     suggested_fix: "Convert Maxwell baseline to neutral gray family (cGray!55!black, dashed, 0.45pt) and keep Coulomb in red (cRed!80!black, solid, 0.7pt). The contrast then encodes by hue family (red = active result, gray = baseline reference) which survives red-deficient vision and grayscale reduction. Requires Theory Guard TG-G-002 amendment because current spec locks Maxwell to cRed!55 - revise_briefing companion edit on theory_guard.md."
-    status: open
+    status: resolved
   - id: C005
     severity: MINOR
     category: style
     tex_lines: [611, 612, 613, 625, 626, 627]
     observation: "MIM electrode cross-hatching density risk (top_tier_audit.reduction_print_readability + journal_polish): Panel D MIM top + bottom electrodes carry 18 diagonal hatch lines at 0.10 cm spacing, line width 0.16pt. At 300-600 dpi print this dense parallel-line pattern risks moire interference; at web-screen rendering it can read as muddy gray block rather than as hatched conductor. External NC-grade reviewer (2026-05-20) flagged this as ink-bleed / moire concern."
     suggested_fix: "Widen hatch spacing 1.5x (0.10 -> 0.15 cm, reducing line count 18 -> 12) and bump hatch line width 0.16 -> 0.22pt for cleaner edge survival. Optional: replace cross-hatching with a single gradient fill + thin outline for both top and bottom electrodes, matching the Panel E substrate convention."
-    status: open
+    status: resolved
   - id: C006
     severity: MAJOR
     category: hierarchy
     tex_lines: [516, 517, 518, 519, 520, 521, 522, 543, 547, 550]
     observation: "Row 2 parallel-evidence guard insufficient (top_tier_audit.reader_misinterpretation_risk + composition_layout): external NC-grade reviewer (2026-05-20) flagged that left-to-right reading habit overrides the divergent-spoke geometry. The Row 2 cover-binding wash + continuous wavy chain hints + tight column adjacency actively pull the eye into a d -> e -> f causal sequence. Briefing 8.7 caption 'three independent probes' is the only guardrail and is too weak."
     suggested_fix: "Add thin vertical column dividers (cGray!20, 0.10pt, densely dotted) at column boundaries x = 4.55 (D/E) and x = 9.35 (E/F) spanning y = 0.20..4.30, OR break the chain-hint wavy lines at column boundaries (current waves at y = 1.20 / 2.50 / 3.80 run continuously across the full figure width). Either edit visually decouples columns without losing cover-scene cohesion entirely. Optional reinforcement: increase divergent spoke angle separation at branchRoot so kinetic / ISPD / mechanical fan out more steeply."
-    status: open
+    status: resolved
 ---
 
 # Vision Critique - fig1_overview_v2_pair_001_vault

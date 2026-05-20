@@ -224,7 +224,7 @@
 % text; "inv. vulc." is idiosyncratic and was undefined in caption.md.
 % iter 38 acceptance-gate fix: x 2.50 -> 2.23 to clear the S8 lower-left
 % vertex S while preserving the arrow-path association.
-\node[font=\sffamily\fontsize{5}{5.7}\itshape\selectfont, text=cGray!75!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\itshape\selectfont, text=cGray!75!black,
       anchor=center, inner sep=1pt, align=center]
   at (2.23, 8.20) {inverse\\vulcanization};
 
@@ -355,7 +355,7 @@
 \coordinate (siteD2) at (9.25, 6.40);
 
 % Sheet caption below rectangle
-\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont,
+\node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
       text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
 
 % C-L6 (v8.5 NEW): thin-film thickness anchor per briefing §13.3 C-L6.
@@ -367,7 +367,7 @@
 % "this rectangle is a real micron-thick spin-coat film, not an abstract box."
 \draw[{Stealth[length=2pt,width=1.5pt]}-{Stealth[length=2pt,width=1.5pt]},
       cGray!65!black, line width=0.28pt] (7.42, 6.28) -- (7.42, 7.62);
-\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!70!black,
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!70!black,
       anchor=south, rotate=90] at (7.36, 6.95) {$d \approx 1\,\mu$m};
 % R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
 % reads through better.
@@ -389,16 +389,16 @@
 % convention. Vacuum is a *reference level*, not a quantitative measurement,
 % so allowed under briefing schematic rule.
 \draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (13.80, 8.55);
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!60!black,
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
       anchor=west] at (13.95, 8.55) {vacuum};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (13.80, 8.30);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (13.95, 8.30) {$E_C$};
 \draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (13.80, 7.85);
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
       anchor=west] at (13.95, 7.85) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (13.80, 5.30);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (13.95, 5.30) {$E_V$};
 
 % R15: Gaussian DOS overlays (between Energy axis and trap lines).
@@ -412,18 +412,21 @@
 % v8.7 critique C001 fix: horizontal scale 0.28/0.32 → 0.45/0.55 + opacity
 % 0.55 → 0.70 so the bell shape registers at 178mm print scale as a visible
 % Gaussian distribution (Q8 narrative "continuous DOS, not 2-level traps").
-\fill[cBlue!18, opacity=0.70]
+% Polish iter: shallow opacity 0.70 → 0.85 + stroke 0.50 → 0.60pt;
+%              deep    opacity 0.70 → 0.80 + stroke 0.55 → 0.65pt.
+% Both Gaussians now read clearly at 300 dpi without washing into each other.
+\fill[cBlue!22, opacity=0.85]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
-\draw[cBlue!75!black, line width=0.50pt]
+\draw[cBlue!80!black, line width=0.60pt]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!18, opacity=0.70]
+\fill[cRed!22, opacity=0.80]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
-\draw[cRed!75!black, line width=0.55pt]
+\draw[cRed!80!black, line width=0.65pt]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
 
@@ -433,7 +436,7 @@
 % omitted per briefing §4 "Eₜ 정확 수치 라벨 (정량은 Fig 3)" — schematic axis only.
 \draw[cGray!70!black, line width=0.45pt] (10.50, 5.20) -- (10.50, 8.45);
 \foreach \tickY in {8.30, 7.85, 7.49, 6.05, 5.30} {
-  \draw[cGray!70!black, line width=0.35pt] (10.43, \tickY) -- (10.50, \tickY);
+  \draw[cGray!70!black, line width=0.45pt] (10.43, \tickY) -- (10.50, \tickY);
 }
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
       anchor=south, rotate=90] at (10.15, 6.85) {Energy};
@@ -442,11 +445,12 @@
 % R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
 % Both shallow & deep show distribution via 2 stacked levels per category.
 % v7 polish #7: trap line weight 0.80→1.00pt (mechanism tier per §10 3-tier)
+% Polish iter: 1.00→1.10pt + line cap=round for crisp manicured termination.
 \foreach \tY in {7.55, 7.35} {
-  \draw[cBlue!80!black, line width=1.00pt] (10.95, \tY) -- (11.55, \tY);
+  \draw[cBlue!80!black, line width=1.10pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
 }
 \foreach \tY in {6.20, 5.85} {
-  \draw[cRed!80!black, line width=1.00pt] (10.95, \tY) -- (11.55, \tY);
+  \draw[cRed!80!black, line width=1.10pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
 % v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
@@ -481,8 +485,9 @@
 % match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
 % trap species (color convention §8.6 / §13.9 Binding-1).
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cRed!75!black, line width=0.40pt] (13.70, 8.27) -- (13.70, 5.83);
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cRed!75!black,
+      cRed!80!black, line width=0.45pt] (13.70, 8.27) -- (13.70, 5.83);
+% Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!80!black,
       anchor=west, inner sep=0.5pt]
   at (13.75, 7.00) {$\Delta E_t$};
 
@@ -520,6 +525,11 @@
   {(0.10, 2.50) (2.50, 2.65) (5.00, 2.45) (7.50, 2.60) (10.00, 2.40) (12.50, 2.60) (13.90, 2.50)};
 \draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
   {(0.10, 3.80) (2.50, 3.65) (5.00, 3.85) (7.50, 3.70) (10.00, 3.80) (12.50, 3.65) (13.90, 3.75)};
+
+% Vertical dotted column dividers for parallel evidence separation
+\draw[cGray!45!white, line width=0.35pt, densely dotted] (4.55, 0.20) -- (4.55, 4.30);
+\draw[cGray!45!white, line width=0.35pt, densely dotted] (9.35, 0.20) -- (9.35, 4.30);
+
 
 % ============================================================
 % Convergent evidence — 3-spoke branching C → Row 2
@@ -608,8 +618,8 @@
 \fill[cGray!35!white] (1.70, 3.70) rectangle (3.50, 3.80);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.70) rectangle (3.50, 3.80);
-\foreach \hx in {1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45} {
-  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.80) -- ({\hx-0.03}, 3.71);
+\foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
+  \draw[cGray!60!black, line width=0.22pt] (\hx, 3.80) -- ({\hx-0.03}, 3.71);
 }
 % Polymer film — iter 59 illustration polish: solid \fill → \shade gradient
 % (matches Panel F cantilever convention cAmber!22→cAmber!42 top-to-bottom).
@@ -622,8 +632,8 @@
 \fill[cGray!35!white] (1.70, 3.15) rectangle (3.50, 3.25);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.15) rectangle (3.50, 3.25);
-\foreach \hx in {1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45} {
-  \draw[cGray!60!black, line width=0.16pt] (\hx, 3.25) -- ({\hx-0.03}, 3.16);
+\foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
+  \draw[cGray!60!black, line width=0.22pt] (\hx, 3.25) -- ({\hx-0.03}, 3.16);
 }
 
 % 2 leads from SMU box to MIM stack — iter 64 illustration polish:
@@ -649,19 +659,23 @@
 
 % v8.7 critique iter 2: label readability — cAmber on cAmber fill was poor
 % contrast; switched to cGray!75!black for higher contrast against cAmber!28 fill.
-\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black]
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
   at (2.60, 3.47) {polymer film};
 % v8.7 critique C012 fix: name the MIM architecture so the 3-layer structure
 % is reader-identifiable even though polymer dominates visually. Compact
 % label in apparatus zone top-left, outside the stack to avoid lead-routing.
-\node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!65!black,
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
       anchor=north west] at (0.10, 4.20) {MIM stack};
 
-% D-3 result zone axes (Stealth tipped, no ticks)
+% D-3 result zone axes (Stealth tipped, minimal qualitative ticks)
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
   (0.45, 0.40) -- (0.45, 2.60);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.50pt]
   (0.45, 0.40) -- (4.20, 0.40);
+\draw[cGray!65!black, line width=0.45pt] (0.45, 1.10) -- (0.52, 1.10);
+\draw[cGray!65!black, line width=0.45pt] (0.45, 1.80) -- (0.52, 1.80);
+\draw[cGray!65!black, line width=0.45pt] (1.70, 0.40) -- (1.70, 0.47);
+\draw[cGray!65!black, line width=0.45pt] (3.10, 0.40) -- (3.10, 0.47);
 \node[labelMute, anchor=east, rotate=90] at (0.35, 2.45) {$\log I$};
 \node[labelMute, anchor=north] at (4.10, 0.30) {$\log t$};
 
@@ -685,6 +699,17 @@
   (0.65, 2.30) -- (3.85, 0.55);
 \draw[cBlue!55!black, line width=0.80pt, line cap=round]
   (0.65, 2.30) -- (3.85, 1.50);
+
+% Representative measured-data scatter points
+\fill[cRed!85!black] (1.20, 2.00) circle (0.04);
+\fill[cRed!85!black] (2.00, 1.56) circle (0.04);
+\fill[cRed!85!black] (2.80, 1.12) circle (0.04);
+\fill[cRed!85!black] (3.60, 0.69) circle (0.04);
+
+\fill[cBlue!60!black] (1.20, 2.16) circle (0.035);
+\fill[cBlue!60!black] (2.00, 1.96) circle (0.035);
+\fill[cBlue!60!black] (2.80, 1.76) circle (0.035);
+\fill[cBlue!60!black] (3.60, 1.56) circle (0.035);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
 % Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
@@ -830,7 +855,7 @@
 % terminal → cuff wire at x=6.55, y=4.05..4.10 was crossing through label
 % letters. fill=cGray!22 matching box body masks wire. iter E14b: reordered
 % to draw AFTER wire (label was being drawn first → wire visible on top).
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       fill=cGray!22, inner sep=0.5pt]
   at (6.55, 4.14) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
@@ -904,7 +929,7 @@
 % Briefing §13.6 reference to "d label" superseded by this iter.
 % "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
 % cGray!65 (secondary apparatus label tier).
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
       anchor=south] at (7.34, 4.10) {Probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
@@ -942,7 +967,7 @@
 % iter 51: thin space between V_s and meter. iter E2: weight unified to plain
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black]
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
   at (8.54, 3.66) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
@@ -958,7 +983,7 @@
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (6.15,3.525)→(6.00,3.50). Secondary apparatus annotation tier.
-\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
       anchor=east] at (6.00, 3.50) {polymer film};
 \draw[cGray!55!black, line width=0.18pt] (6.01, 3.50) -- (6.28, 3.525);
 \fill[cGray!55!black] (6.28, 3.525) circle (0.012);
@@ -973,6 +998,10 @@
   (4.95, 1.65) -- (4.95, 2.85);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
   (4.95, 1.65) -- (8.55, 1.65);
+\draw[cGray!65!black, line width=0.40pt] (4.95, 2.05) -- (5.02, 2.05);
+\draw[cGray!65!black, line width=0.40pt] (4.95, 2.45) -- (5.02, 2.45);
+\draw[cGray!65!black, line width=0.40pt] (6.15, 1.65) -- (6.15, 1.72);
+\draw[cGray!65!black, line width=0.40pt] (7.35, 1.65) -- (7.35, 1.72);
 % iter 51: x 4.83→4.73 (Gemini Defect 2 HIGH: rotated label right-edge
 % touching axis line at x=4.95). 0.10cm clearance.
 \node[labelMute, rotate=90, anchor=center,
@@ -1014,7 +1043,7 @@
 % derive — iter 49 (Codex narrow): font 5.5→5pt, gray !60→!50.
 \draw[-{Stealth[length=3.5pt,width=2.5pt]}, cGray!55!black, line width=0.40pt]
   (6.90, 1.55) -- (6.90, 1.28);
-\node[labelMute, anchor=west, font=\sffamily\fontsize{5}{6}\selectfont,
+\node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cGray!55!black, inner sep=1pt]
   at (7.00, 1.45) {derive};
 
@@ -1025,6 +1054,12 @@
   (4.95, 0.40) -- (4.95, 1.45);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
   (4.95, 0.40) -- (8.55, 0.40);
+% Option-A qualitative ticks (C003 resolution): non-numeric tick strokes only,
+% no label nodes — visual anchors without Fig 3 quantitative overlap.
+\draw[cGray!65!black, line width=0.40pt] (4.95, 0.75) -- (5.02, 0.75);
+\draw[cGray!65!black, line width=0.40pt] (4.95, 1.10) -- (5.02, 1.10);
+\draw[cGray!65!black, line width=0.40pt] (6.15, 0.40) -- (6.15, 0.47);
+\draw[cGray!65!black, line width=0.40pt] (7.35, 0.40) -- (7.35, 0.47);
 % iter 51: x 4.83→4.73 mirror to V_s(t) fix (Gemini Defect 2 HIGH).
 \node[labelMute, rotate=90, anchor=center,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
@@ -1047,6 +1082,17 @@
   (6.28, 0.40) .. controls (6.46, 0.40) and (6.46, 1.15) .. (6.78, 1.15)
               .. controls (7.10, 1.15) and (7.10, 0.40) .. (7.28, 0.40);
 
+% Option-A representative scatter points on Gaussians (C003 resolution):
+% 3 pts on shallow (blue) Gaussian, 3 pts on deep (red) Gaussian.
+% Strictly positioned on Bezier curve — supports measured-data credibility
+% cue without introducing numeric axis labels.
+\fill[cBlue!85!black] (5.55, 0.65) circle (0.04);
+\fill[cBlue!85!black] (5.70, 0.85) circle (0.04);
+\fill[cBlue!85!black] (5.85, 0.65) circle (0.04);
+\fill[cRed!85!black] (6.55, 0.80) circle (0.04);
+\fill[cRed!85!black] (6.78, 1.15) circle (0.04);
+\fill[cRed!85!black] (7.01, 0.80) circle (0.04);
+
 % E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
 % Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
 % (`<- - - ->`, designer-flagged as chartjunk + AI-generic) to caliper-style:
@@ -1063,15 +1109,15 @@
 \draw[cGray!65!black, line width=0.22pt] (6.80, 1.40) -- (6.80, 1.44);
 % τ_d label — iter 49 (Codex narrow): 6→5pt + cGray!85→!70 + no fill.
 \node[labelMute, anchor=south, text=cGray!70!black,
-      font=\sffamily\fontsize{5}{6}\selectfont, inner sep=1pt]
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont, inner sep=1pt]
   at (6.25, 1.43) {$\tau_d$};
 
 % E-10 — iter 49 (Codex iter 48 narrow): font 6→5pt + tone 85→70 (Codex
 % "annotations still louder than evidence shapes").
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{5}{6}\selectfont] at (5.70, 0.32) {Shallow};
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (5.70, 0.32) {Shallow};
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{5}{6}\selectfont] at (6.78, 0.32) {Deep};
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (6.78, 0.32) {Deep};
 
 % =============== Column F — Mechanical =================
 
@@ -1215,7 +1261,7 @@
 % iter 25: arrow start moved 12.20 → 12.34 (was INSIDE cantilever, right
 % edge at y=1.80 is x≈12.32). Now originates FROM cantilever surface.
 % Tip end shifted 13.50 → 13.60 to match new slim electrode left edge 13.63.
-\draw[-{Stealth[length=4pt,width=3pt]}, cRed!55!black, dashed,
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!55!black, dashed,
       line width=0.45pt]
   (12.34, 1.80) -- (13.60, 1.80);
 % iter 29: label moved closer to arrow (1.75 → 1.78, gap 0.05→0.02cm) per
@@ -1223,7 +1269,7 @@
 % iter 51: y 1.78 → 1.72 — capital F top was crossing dashed-line stroke
 % (line y=1.80, 0.45pt thickness extends ±0.025; old gap 0.02cm < stroke).
 % New gap 0.08cm clears the stroke + slight breathing room.
-\node[font=\sffamily\itshape\fontsize{5.5}{6.6}\selectfont, text=cRed!55!black,
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
       anchor=north] at (12.85, 1.72) {$F_{\mathrm{Maxwell}}$};
 % Air gap arrow — iter 25: right end shifted 13.55 → 13.63 (new electrode left).
 \draw[<->, cGray!55!black, line width=0.30pt]
