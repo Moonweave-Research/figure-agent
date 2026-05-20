@@ -754,9 +754,10 @@
 \shade[top color=cGray!28, bottom color=cGray!2, opacity=0.55]
   (6.34, 3.11) rectangle (7.89, 3.15);
 
-% Polymer film — iter 16: height 0.07 → 0.15cm (y=3.45..3.60) for visible
-% material layer. Hairline visibility issue resolved. Aspect 22:1 → 10:1.
-\shade[top color=cAmber!38, bottom color=cAmber!20]
+% Polymer film — iter 16: height 0.07 → 0.15cm. iter E5: gradient saturation
+% bumped cAmber!38→50 top, cAmber!20→28 bottom for clearer polymer-vs-substrate
+% contrast (substrate cGray!18 light, polymer was under-saturated for visibility).
+\shade[top color=cAmber!50, bottom color=cAmber!28]
   (6.30, 3.45) rectangle (7.85, 3.60);
 \draw[cAmber!70!black, line width=0.25pt]
   (6.30, 3.45) rectangle (7.85, 3.60);
@@ -771,15 +772,21 @@
 % rightward offset (7.21..7.62) preserves upper-left light convention.
 \fill[black, opacity=0.16] (7.21, 3.590) rectangle (7.62, 3.600);
 % Substrate — iter 16: height 0.22 → 0.30cm (y=3.15..3.45). Aspect 7:1 → 5:1.
-\shade[top color=cGray!42, bottom color=cGray!22]
+% iter E10: substrate gradient cGray!42→!22 → cGray!50→!25 (slight darken
+% for "metallic conductive substrate" feel — substrate is ground-attached
+% conductive base, deserves slightly more material weight than light gray).
+\shade[top color=cGray!50, bottom color=cGray!25]
   (6.30, 3.15) rectangle (7.85, 3.45);
 \draw[cGray!75!black, line width=0.28pt]
   (6.30, 3.15) rectangle (7.85, 3.45);
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
 % Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
 % clear thicker substrate bottom (y=3.23).
-% Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print visibility.
-\draw[cGray!75!black, line width=0.35pt] (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
+% Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print.
+% iter E8: rounded corners=1pt on lead bend (matches Panel D iter 64 SMU
+% lead convention; cross-panel illustration-register consistency).
+\draw[cGray!75!black, line width=0.35pt, rounded corners=1pt]
+  (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
 \draw[cGray!75!black, line width=0.42pt] (7.88, 3.10) -- (8.02, 3.10);
 \draw[cGray!75!black, line width=0.36pt] (7.90, 3.07) -- (8.00, 3.07);
 \draw[cGray!75!black, line width=0.32pt] (7.92, 3.04) -- (7.98, 3.04);
@@ -816,7 +823,9 @@
               -- (6.53, 4.36) -- (6.53, 4.27) -- (6.68, 4.27)
               -- (6.68, 4.36) -- (6.82, 4.36);
 % HV+ label — y 4.20 → 4.14 (centered in shrunk label zone 4.10..4.22).
-\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=cGray!88!black]
+% iter E2: weight unified to plain 5pt cGray!65 (match Probe + polymer film
+% apparatus annotation tier). Bold was inconsistent across E apparatus labels.
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black]
   at (6.55, 4.14) {HV+};
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body (y 4.10→4.12,
 % was resting ON border stroke "pasted-on look").
@@ -832,18 +841,18 @@
 \draw[cGray!90!black, line width=0.22pt]
   (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
 \fill[cGray!85!black] (6.55, 4.05) circle (0.045);
-% Sparks — iter 45 (Pri 4): softened from rigid solid spikes to subtle corona
-% discharge feel: opacity 0.6 + thinner 0.35pt + lighter cRed!55.
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.45, 3.60);
+% Sparks — iter E1: 5 → 3 rays (wide-angle ±22° rays removed to clean
+% chaotic fan pattern). Remaining ±10° + 0° give clear "ion emission" cue
+% without visual clutter. opacity 0.65 + thin 0.35pt softness retained.
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.50, 3.60);
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.55, 3.60);
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.60, 3.60);
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.65, 3.60);
-% Surface charges — iter 48 (Codex): 5→4 charges (drop leftmost under spark),
-% radius 0.045→0.038 (Codex "shrink").
+% Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
+% font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
+% aggressive; charges read as red dots without legible polarity at small scale.
 \foreach \cx in {6.65, 7.00, 7.35, 7.70} {
-  \fill[cRed!75!black] (\cx, 3.62) circle (0.038);
-  \node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
+  \fill[cRed!75!black] (\cx, 3.62) circle (0.045);
+  \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
@@ -863,24 +872,28 @@
 \draw[cGray!80!black, line width=0.18pt]
   (7.44, 3.87) -- (7.44, 3.95);
 \fill[white, opacity=0.55] (7.395, 3.87) rectangle (7.405, 3.95);
-% Disk electrode — iter 40: lifted 0.10cm (3.70..3.77 → 3.80..3.87) per user
-% "probe too close to sample". Air gap from polymer (3.60) now 0.20cm (was 0.10).
-\shade[left color=cAmber!28, middle color=cAmber!65,
-       right color=cAmber!22]
+% Disk electrode — iter 40: lifted 0.10cm. iter E3: gradient cAmber → cGray
+% (silver/metal vs polymer color confusion). Kelvin probe disk = metal
+% electrode; sharing cAmber with polymer film read as "same material" at
+% glance. New gradient cGray!30 → cGray!55 → cGray!28 mimics polished metal
+% disk cross-section. Outline darker cGray for definition.
+\shade[left color=cGray!30, middle color=cGray!55,
+       right color=cGray!28]
   (7.20, 3.80) rectangle (7.60, 3.87);
-\draw[cAmber!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
+\draw[cGray!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
 \fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
 % Vibration cue — iter 50: x 7.55→7.62 to clear bezier cable (was sharing
 % x=7.55 with cable control point — visual collision).
 \node[font=\fontsize{9}{10.8}\selectfont, text=cGray!75!black,
       inner sep=0pt] at (7.62, 3.91) {$\updownarrow$};
-% Air gap d — iter 49 (Codex): shifted right 7.72→7.80 to open probe-d-meter
-% cluster (Codex "probe cluster cramped").
-\draw[cGray!55!black, dashed, line width=0.18pt] (7.80, 3.78) -- (7.80, 3.62);
-\draw[cGray!55!black, line width=0.22pt] (7.77, 3.78) -- (7.83, 3.78);
-\draw[cGray!55!black, line width=0.22pt] (7.77, 3.62) -- (7.83, 3.62);
+% Air gap d — iter 49 (Codex): shifted right. iter E6: line weights bumped
+% (0.18→0.22pt dashed, 0.22→0.28pt T-bars) + T-bar width 0.06→0.10cm for
+% better print-scale legibility of air-gap dimension annotation.
+\draw[cGray!55!black, dashed, line width=0.22pt] (7.80, 3.78) -- (7.80, 3.62);
+\draw[cGray!55!black, line width=0.28pt] (7.75, 3.78) -- (7.85, 3.78);
+\draw[cGray!55!black, line width=0.28pt] (7.75, 3.62) -- (7.85, 3.62);
 \node[font=\sffamily\itshape\fontsize{5}{6}\selectfont, text=cGray!55!black,
-      anchor=west] at (7.83, 3.70) {$d$};
+      anchor=west] at (7.85, 3.70) {$d$};
 % "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
 % cGray!65 (secondary apparatus label tier).
 \node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!65!black,
@@ -917,19 +930,20 @@
   (8.18, 3.96) .. controls (8.38, 3.91) and (8.65, 3.84) .. (8.90, 3.82);
 % V_s meter label — iter 50: y 3.70→3.66 (centered in shrunk label zone
 % 3.58..3.78, mid y=3.68).
-% iter 51: thin space between V_s and meter (Gemini Defect 3 MEDIUM: subscript
-% s kerning against "m" — `\,` inserts a 3mu thin space).
-% iter 51 fix-up: unify font (V was math-sans `$\mathsf{V_s}$` while "meter"
-% was text-sans-bold; mismatch flagged by Gemini re-review #4). New form uses
-% text V (inherits surrounding bold-sans) + math-mode subscript only.
-\node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cGray!88!black]
-  at (8.54, 3.66) {V$_{\mathsf{s}}$\,meter};
+% iter 51: thin space between V_s and meter. iter E2: weight unified to plain
+% 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
+% size was outlier among E apparatus labels.
+\node[font=\sffamily\fontsize{5}{6}\selectfont, text=cGray!75!black]
+  at (8.54, 3.66) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
 % to meter input port (natural gravity-aware path, not aerial arc).
 % Cable + Input port — iter 48 (Codex): box left wall 8.00→8.08, port inside at 8.12.
-\draw[cGray!75!black, line width=0.22pt]
+% iter E9: cable line width 0.22 → 0.30pt for clearer wire identification.
+% Previous 0.22pt read as "axis tier"; 0.30pt = annotation tier, matches
+% Panel D/F lead conventions (0.28-0.32pt) for cross-panel cable rhythm.
+\draw[cGray!75!black, line width=0.30pt]
   (7.40, 3.95) .. controls (7.55, 3.95) and (7.92, 3.85) .. (8.12, 3.85);
 \fill[cGray!85!black] (8.12, 3.85) circle (0.024);
 \fill[cGray!50!black] (8.12, 3.85) circle (0.012);
@@ -976,9 +990,11 @@
 % thinner outline. Gemini: "markers shouldn't bleed into solid blob".
 % E-4-ii markers — iter 48 (Codex): 4→3 (drop final asymptote marker;
 % Codex "cut decay markers from 4 to 2-3").
+% iter E4: marker size 0.9 → 1.0mm + fill cRed!25 → cRed!35 (subtle uptick
+% for data-sampling presence without bleeding into decay curve "blob").
 \foreach \mx/\my in {5.45/2.32, 5.95/1.96, 6.45/1.78} {
-  \node[circle, draw=cRed!85, fill=cRed!25, inner sep=0pt,
-        minimum size=0.9mm, line width=0.25pt] at (\mx,\my) {};
+  \node[circle, draw=cRed!85, fill=cRed!35, inner sep=0pt,
+        minimum size=1.0mm, line width=0.28pt] at (\mx,\my) {};
 }
 
 % E-5 internal raw→derived inter-arrow (vertical, between V_s and g(E_t))

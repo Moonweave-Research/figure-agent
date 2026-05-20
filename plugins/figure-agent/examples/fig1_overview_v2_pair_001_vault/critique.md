@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T03:25:00Z
+generated_at: 2026-05-20T04:18:37Z
 generator: critique_brief.py
 generator_version: sha256:f36a781b25b0dda0b5cb83c4c75953fa77b22e62be39734d1bbdd5a2e1946124
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:4d52e3cb28cc915454a317001dbdb47f8bbb3a9554281be287e2fa71c2557bc8
+critique_input_hash: sha256:47df1420f72564e9643fe78c569e04212f41af45613a114bd6ecb864dc91cade
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -387,7 +387,7 @@ findings: []
 
 # Vision Critique — fig1_overview_v2_pair_001_vault
 
-Overall verdict: **ready**. Framework: **CvS absorption-current (Schweidler 1907) — sulfur hero high-n vs control low-n**, paper-data-grounded. Panel D iter 54-63 progression: structural correctness (iter 54-58) + illustration-register polish (iter 59-63). iter 59 polymer-film solid → gradient (cAmber!22→!42) for cross-panel depth consistency with F cantilever. iter 60 curves `line cap=round` + Debye 0.75→0.65pt (3-tier hierarchy clearer: primary RED 0.9pt > annotation BLUE 0.8pt > reference dashed 0.65pt). iter 61 SMU box `rounded corners=1pt` for cartoon-panel softening. iter 62 equation `I(t)~t^-n` moved from upper-left "title above plot" position to upper-right plot interior (3.00, 2.40) — annotation-inside-plot feel without label cluster. iter 63 \mathsf trial reverted (figure-wide math = serif italic convention).
+Overall verdict: **ready**. Framework: **CvS absorption-current (Schweidler 1907) — sulfur hero high-n vs control low-n**, paper-data-grounded. Panel D iter 54-64 closed. Panel E iter E1-E10 critical polish loop (2026-05-20 evening): (E1) Corona sparks 5→3 rays — clutter clean; (E2) HV+ / V_s meter labels unified to plain 5pt cGray!75 — typography tier match with Probe / polymer film; (E3) Kelvin probe disk gradient amber→gray — metal vs polymer color disambiguation; (E4) V_s decay markers 0.9→1.0mm + fill cRed!25→!35 — data-sampling visibility; (E5) polymer film gradient saturation up — substrate contrast; (E6) 'd' air-gap T-bars thicker + wider — print-scale legibility; (E7) surface charges radius 0.038→0.045 + "+" symbol 4.5→5.5pt — polarity legibility; (E8) ground lead rounded corners=1pt — Panel D iter 64 cross-panel cable convention; (E9) probe-meter cable 0.22→0.30pt — wire identification; (E10) substrate gradient cGray!42→50, !22→25 — metallic conductive base feel.
 
 Key journal-level claims supported by the rendered figure (post-rewrite):
 

@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:277365db215b45bb49b78a7991ede8829b3486ff5096562d2934d50413f69857
+source_critique_hash: sha256:5c87a5e5c8840c0bc9d7ea81c785559ad927f619a76a9d7f28772d70cd2c42be
 decisions:
 - finding_id: D001
   decision: defer
