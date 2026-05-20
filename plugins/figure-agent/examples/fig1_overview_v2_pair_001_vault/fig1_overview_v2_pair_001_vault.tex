@@ -653,23 +653,36 @@
 % (reference < primary curves 0.80pt).
 \draw[cGray!85!black, dashed, line width=0.75pt]
   (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.50);
-% iter 51: Debye label was baseline-on-axis (y=0.40 = axis y) — Gemini Defect
-% (re-review) HIGH. Leader endpoint shortened to y=0.42 so it stays above
-% axis line; label anchor=north west at y=0.38 sits cleanly below axis.
-\draw[cGray!55!black, line width=0.30pt] (2.50, 0.55) -- (2.70, 0.42);
-\node[labelMute, text=cGray!65!black, anchor=north west, inner sep=1pt]
-  at (2.70, 0.38) {Debye};
+% iter 52d: Debye label moved INSIDE plot (just above x-axis, right of dashed
+% curve endpoint) so it no longer reads as x-tick AND leader doesn't cross
+% axis (Gemini iter 52c HIGH: axis-crossing leader looked like "curve crashing
+% through axis"). At y=0.45 anchor=west the label fits in narrow strip above
+% axis (y=0.40) without colliding with shallow-rich curve (y at x=2.60..3.10
+% is 1.04..0.82, label top at ~0.70 stays clear). Color-matched gray to
+% dashed curve, no leader needed (adjacency + color = unambiguous identifier).
+\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
+  at (2.60, 0.45) {Debye};
 
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
-% D-7b curve ID labels — iter 51: add fill=white to break the curve under
-% each label (Gemini Defect 1: HIGH label-on-line clash on deep-rich /
-% shallow-rich at curve y-positions 1.77 / 1.09).
-\node[labelMute, anchor=south, text=cRed!75!black,
-      fill=white, inner sep=1pt] at (2.20, 1.75) {deep-rich};
-\node[labelMute, anchor=south, text=cBlue!75!black,
-      fill=white, inner sep=1pt] at (2.50, 1.05) {shallow-rich};
+% D-7b curve ID labels — iter 52d: switched from anchor=south/center to
+% `sloped` path-attached label (TikZ journal convention). Labels rotate to
+% match curve slope and sit `above=2pt` perpendicular to curve — guaranteed
+% non-overlap with the line they label (Gemini Panel D iter 52b/c HIGH:
+% horizontal labels visually touched blue curve despite 0.15-0.18cm math
+% clearance). Path is `draw=none` since the actual curves D-5/D-6 are drawn
+% separately above with their own line widths.
+\path[draw=none] (0.65, 2.40) -- (3.85, 1.10)
+  node[midway, labelMute, text=cRed!75!black, sloped, above=3pt]
+  {deep-rich};
+% iter 52e: shallow-rich perpendicular offset above=2pt → above=4pt (Gemini
+% MEDIUM: dashed Debye crossed underneath letters at original 2pt offset).
+% Increased separation pushes label clear of Debye descent zone without
+% needing fill=white mask (which would break the parallel blue solid curve).
+\path[draw=none] (0.65, 1.90) -- (3.85, 0.50)
+  node[midway, labelMute, text=cBlue!75!black, sloped, above=4pt]
+  {shallow-rich};
 
 % =============== Column E — ISPD-paired =================
 

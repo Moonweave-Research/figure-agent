@@ -265,6 +265,23 @@ iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = C
   - F-3 Maxwell baseline arrow REMOVED from top zone (iter 18) and RE-ADDED in bottom result zone (iter 19) per user "Coulomb wins visually" narrative call (source comments line 1042-1045, 1110-1124).
   - Gemini's HANDOFF_v8.7 §8.5 citation reflects pre-iter-18 spec; current design intentionally diverges.
 
+### Panel D iter 52 — 2026-05-20 — Gemini Panel D-focused brutal sweep + sloped-label adoption
+
+- **Scope**: Panel D D-7a (Debye) + D-7b (deep-rich/shallow-rich) — typography around log-log plot
+- **Rationale**: User picked Panel D as least-iterated Row 2 panel post-iter 51. Brutal Gemini review of Panel D crop revealed iter 51's `fill=white` curve-break was itself the dominant defect (Nature cardinal sin: never sever primary data strokes).
+- **Reference source**: Gemini absolute brutal review (62/100 baseline → 85 sloped path-attached labels).
+- **Patches**:
+  - D-7a: Debye label moved INSIDE plot at (2.60, 0.45) anchor=west (just above x-axis, right of dashed-curve endpoint). Removed arrow leader; color-match gray + adjacency is enough. *Iter 52c failure with inside-plot position at (2.78, 0.62) collided with shallow-rich descent — moved closer to axis.*
+  - D-7b: switched from horizontal `\node[anchor=south/center]` to **sloped path-attached** convention. `\path[draw=none] ... node[midway, sloped, above=Npt]`. deep-rich above=3pt; shallow-rich above=4pt (more clearance from Debye descent zone). Removed all `fill=white` masking (iter 51's curve-break regression closed).
+- **Briefing edits** (user-permitted, applied):
+  - §13.5 D-5/D-6 coords drift updated: `(0.55, 2.45)→(3.20, 1.05)` → current `(0.65, 2.40)→(3.85, 1.10)` (deep-rich), and shallow-rich mirrored.
+  - §13.5 D-7a Debye position + leader convention documented (arrow leader iter 52b was intermediate state, iter 52d/e inside-plot final).
+  - §13.5 D-7b documented as "sloped path-attached, no fill" — locked against future white-mask reversion (Nature cardinal sin guard).
+- **4-axis scores**: T ✅ | S ✅ | L improved (sloped convention matches journal norm) | A improved
+- **Score trajectory**: iter 51 (post-Row 2): conditional 100/85 brutal → iter 52 (Panel D brutal): 62 → 85 (iter 52b) → 60 regression (iter 52c label center cross-checked, Gemini stricter read) → 85 (iter 52d sloped) → iter 52e pending. Brutal trend +23.
+- **Visibility gate**: intended yes (sloped labels are journal-norm; Debye inside-plot keeps reference identification visible) | anomaly check pending Gemini 52e read.
+- **Out of scope (skipped)**: D-3 tick marks (briefing-locked "tick-less = cartoon register preserved"); D-1 SMU box wiring corner-attach (MEDIUM, optional polish); kinetic arrow proximity to MIM stack label (LOW).
+
 ### Panel E iter 12-40 — 2026-05-18 to 2026-05-19 — consolidated retroactive log
 
 iter 12-17 covered in handoff/critique entries (not in this log). iter 18-19 = Column F (not Panel E). iter 31-40 = Gemini-driven journal-grade aesthetic push. Summarized below per sub-region.
