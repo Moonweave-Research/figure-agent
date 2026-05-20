@@ -630,7 +630,15 @@ def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_without_find
     fig_dir.mkdir()
     top_tier_yaml = (
         _complete_v1_3_top_tier_audit_yaml()
-        .replace("    verdict: pass\n", "    verdict: fail\n", 1)
+        .replace(
+            "    verdict: pass\n"
+            "    finding: first_glance_message is acceptable for the current artifact\n"
+            "    concrete_fix: accept_simplification\n",
+            "    verdict: fail\n"
+            "    finding: first-glance message is absent\n"
+            "    concrete_fix: add a dominant first-glance claim cue\n",
+            1,
+        )
         .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
     )
     _write_v1_2_critique_with_quality_axes(
@@ -642,6 +650,188 @@ def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_without_find
 
     with pytest.raises(CritiqueAdjudicationError, match="top_tier_audit"):
         build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_needs_human_top_tier_without_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
+        "    verdict: pass\n"
+        "    finding: first_glance_message is acceptable for the current artifact\n"
+        "    concrete_fix: accept_simplification\n",
+        "    verdict: needs_human\n"
+        "    finding: first-glance message needs target-journal art direction\n"
+        "    concrete_fix: ask human to choose the intended first-glance message\n",
+        1,
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="first_glance_message"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_weak_blocker_without_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = (
+        _complete_v1_3_top_tier_audit_yaml()
+        .replace(
+            "    verdict: pass\n"
+            "    finding: first_glance_message is acceptable for the current artifact\n"
+            "    concrete_fix: accept_simplification\n",
+            "    verdict: weak\n"
+            "    finding: first-glance message is visible but not high-impact\n"
+            "    concrete_fix: strengthen the first-glance visual hierarchy\n",
+            1,
+        )
+        .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="first_glance_message"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_rejects_v1_3_blocking_top_tier_with_unrelated_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = (
+        _complete_v1_3_top_tier_audit_yaml()
+        .replace(
+            "    verdict: pass\n"
+            "    finding: first_glance_message is acceptable for the current artifact\n"
+            "    concrete_fix: accept_simplification\n",
+            "    verdict: fail\n"
+            "    finding: first-glance message is absent\n"
+            "    concrete_fix: add a dominant first-glance claim cue\n",
+            1,
+        )
+        .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C999\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: unrelated label offset needs review\n"
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="first_glance_message"):
+        build_adjudication_scaffold(fig_dir)
+
+
+def test_build_adjudication_scaffold_accepts_v1_3_top_tier_linked_finding(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = (
+        _complete_v1_3_top_tier_audit_yaml()
+        .replace("    verdict: pass\n", "    verdict: fail\n", 1)
+        .replace("    blocks_high_impact: false\n", "    blocks_high_impact: true\n", 1)
+    )
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: top_tier_audit.first_glance_message fails because the "
+            "main claim is invisible\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_3_top_tier_quality_axis_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
+        "    verdict: pass\n",
+        "    verdict: needs_human\n",
+        1,
+    )
+    quality_axes_yaml = _complete_v1_2_quality_axes_yaml(
+        axis_overrides={
+            "publication_readiness": _quality_axis_yaml(
+                "publication_readiness",
+                verdict="needs_human",
+                recommended_action="human_review",
+                blocking_items=(
+                    "top_tier_audit.first_glance_message needs target-journal decision",
+                ),
+            )
+        }
+    )
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        quality_axes_yaml=quality_axes_yaml,
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_3_accept_simplification_link_exception(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
+        "    verdict: pass\n"
+        "    finding: first_glance_message is acceptable for the current artifact\n"
+        "    concrete_fix: accept_simplification\n"
+        "    blocks_high_impact: false\n",
+        "    verdict: needs_human\n"
+        "    finding: first-glance story depends on target-journal art direction\n"
+        "    concrete_fix: \"accept_simplification: keep current schematic until target "
+        "journal is known\"\n"
+        "    blocks_high_impact: false\n",
+        1,
+    )
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.3",
+        extra_frontmatter_yaml=top_tier_yaml,
+        findings_yaml="findings: []\n",
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
 
 
 def test_build_adjudication_scaffold_rejects_v1_3_high_impact_with_weak_top_tier(

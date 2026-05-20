@@ -1,7 +1,7 @@
 # Top-Tier Critique Audit v1.3 Design
 
 **Date:** 2026-05-20 KST
-**Status:** design ready for implementation
+**Status:** implemented on main; link-rule hardening verified
 **Parent:** Issue 10
 
 ## Problem
@@ -123,9 +123,11 @@ Every v1.3 critique must include all ten keys. Empty strings are invalid.
 Any `fail` item, any `weak` item with `blocks_high_impact: true`, or any
 `needs_human` item must either:
 
-- appear as a normal panel/top-level finding, or
+- appear as a normal panel/top-level finding that explicitly mentions
+  `top_tier_audit.<slot_key>` or the slot key, or
 - be explicitly represented in `quality_axes` as `needs_human`,
-  `revise_briefing`, or `block_release`, or
+  `revise_briefing`, or `block_release`, with `blocking_items` that explicitly
+  mention `top_tier_audit.<slot_key>` or the slot key, or
 - be justified in `concrete_fix` as `accept_simplification`.
 
 This keeps the new audit from becoming prose-only decoration.
@@ -140,8 +142,10 @@ This keeps the new audit from becoming prose-only decoration.
   `figure-agent.critique-rubric.v1.3`.
 - `scripts/status.py` critique freshness naturally marks older v1.2 critiques
   stale by rubric mismatch when hash metadata is present.
-- `/fig_loop`, `/fig_drive`, `/fig_export`, accepted, golden, and final artifact
-  behavior remain unchanged.
+- This Issue 10 hardening slice does not add new `/fig_loop`, `/fig_drive`,
+  `/fig_export`, accepted, golden, or final artifact behavior. Current main may
+  already surface v1.3 summaries through later completed issues; those existing
+  integrations are treated as repo truth, not new scope here.
 
 ## Tests
 
@@ -153,6 +157,11 @@ Add focused tests for:
 - missing top-tier audit block fails controlled validation;
 - empty top-tier audit item fails controlled validation;
 - invalid top-tier verdict fails controlled validation;
+- `needs_human` top-tier items without a linked finding, linked quality axis,
+  or `accept_simplification` fail controlled validation;
+- unrelated findings do not satisfy a top-tier link;
+- linked findings and linked quality-axis blocking items do satisfy the link
+  rule;
 - v1.2 critique remains accepted as legacy/current-compatible input.
 
 ## Review Risks
@@ -163,4 +172,3 @@ Add focused tests for:
   schematic standard and mark target-specific decisions as `needs_human`.
 - If no caption exists, `figure_caption_coupling` should evaluate whether the
   figure is over- or under-dependent on a future caption, not fail by default.
-

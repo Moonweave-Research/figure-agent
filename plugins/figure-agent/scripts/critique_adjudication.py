@@ -589,13 +589,47 @@ def _validate_v1_2_audit_to_finding(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _text_mentions_top_tier_slot(value: Any, key: str) -> bool:
+    needle = f"top_tier_audit.{key}"
+    if isinstance(value, str):
+        return needle in value or key in value
+    if isinstance(value, list):
+        return any(_text_mentions_top_tier_slot(item, key) for item in value)
+    if isinstance(value, dict):
+        return any(_text_mentions_top_tier_slot(item, key) for item in value.values())
+    return False
+
+
+def _quality_axes_link_top_tier_slot(frontmatter: dict[str, Any], key: str) -> bool:
+    quality_axes = _require_mapping(
+        frontmatter.get("quality_axes"),
+        "critique frontmatter.quality_axes",
+    )
+    for axis_name in _QUALITY_AXIS_NAMES:
+        axis = _require_mapping(
+            quality_axes.get(axis_name),
+            f"critique frontmatter.quality_axes.{axis_name}",
+        )
+        verdict = str(axis.get("verdict", "")).strip()
+        action = str(axis.get("recommended_action", "")).strip()
+        if verdict != "needs_human" and action not in {"revise_briefing", "block_release"}:
+            continue
+        if _text_mentions_top_tier_slot(axis.get("blocking_items"), key):
+            return True
+    return False
+
+
+def _findings_link_top_tier_slot(findings: list[dict[str, Any]], key: str) -> bool:
+    return any(_text_mentions_top_tier_slot(finding, key) for finding in findings)
+
+
 def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]:
     top_tier_audit = _require_mapping(
         frontmatter.get("top_tier_audit"),
         "critique frontmatter.top_tier_audit",
     )
     findings = _findings_from_critique(frontmatter)
-    blocking_without_finding: list[str] = []
+    unlinked_items: list[str] = []
     verdicts: dict[str, str] = {}
     for key in _TOP_TIER_AUDIT_KEYS:
         label = f"critique frontmatter.top_tier_audit.{key}"
@@ -603,16 +637,27 @@ def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]
         verdict = _require_enum(item, "verdict", _TOP_TIER_AUDIT_VERDICTS, label=label)
         verdicts[key] = verdict
         _require_non_empty_string(item, "finding", label=label)
-        _require_non_empty_string(item, "concrete_fix", label=label)
+        concrete_fix = _require_non_empty_string(item, "concrete_fix", label=label)
         if not isinstance(item.get("blocks_high_impact"), bool):
             raise CritiqueAdjudicationError(f"{label}.blocks_high_impact must be a boolean")
-        if verdict == "fail" or item["blocks_high_impact"]:
-            blocking_without_finding.append(key)
-    if blocking_without_finding and not findings:
-        slots = ", ".join(blocking_without_finding)
+        requires_link = (
+            verdict == "fail"
+            or verdict == "needs_human"
+            or (verdict == "weak" and item["blocks_high_impact"])
+        )
+        if (
+            requires_link
+            and "accept_simplification" not in concrete_fix
+            and not _findings_link_top_tier_slot(findings, key)
+            and not _quality_axes_link_top_tier_slot(frontmatter, key)
+        ):
+            unlinked_items.append(key)
+    if unlinked_items:
+        slots = ", ".join(unlinked_items)
         raise CritiqueAdjudicationError(
-            "critique frontmatter.top_tier_audit requires at least one "
-            f"panel/top-level finding for blocking slots: {slots}"
+            "critique frontmatter.top_tier_audit requires linked "
+            "panel/top-level findings, quality_axes blocking_items, or "
+            f"accept_simplification for slots: {slots}"
         )
     return verdicts
 

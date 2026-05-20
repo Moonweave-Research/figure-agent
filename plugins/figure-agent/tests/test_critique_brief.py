@@ -340,6 +340,15 @@ def test_critique_brief_output_format_uses_v1_3_top_tier_schema(tmp_path):
     assert "top_tier_audit:" in brief
 
 
+def test_critique_brief_explains_top_tier_link_rule(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "top_tier_audit.<slot_key>" in brief
+    assert "accept_simplification" in brief
+
+
 def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
     """spec.yaml reference_image declaration must take precedence over directory scan."""
     example_dir = _write_example(tmp_path, section6="- invariant")

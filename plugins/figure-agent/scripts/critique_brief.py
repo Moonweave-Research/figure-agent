@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.2). No external API is called; the brief itself is API-free.
+v1.3). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -399,6 +399,13 @@ decorative prompts. Each slot must name the concrete current-artifact weakness
 or explain why the current artifact passes. If target journal is unknown, use a
 generic high-impact schematic standard and mark target-specific art-direction
 questions as `needs_human`.
+
+Link rule: any `fail`, any `needs_human`, or any `weak` slot with
+`blocks_high_impact: true` must be tied to downstream review evidence. Either
+write a normal panel/top-level finding whose text explicitly mentions
+`top_tier_audit.<slot_key>`, represent it in `quality_axes.blocking_items`
+with the same `top_tier_audit.<slot_key>` reference and a human/revise/block
+action, or justify the slot's `concrete_fix` with `accept_simplification`.
 
 ### 1. First-Glance Message
 State what a qualified reader understands after 3 seconds, 10 seconds, and
@@ -846,6 +853,13 @@ findings:
 Any `structural_defect`, `incomplete`, `BLOCKER`, or `MAJOR` audit item must
 either appear as a normal panel/top-level finding or be explicitly justified as
 `accept_simplification`.
+
+Any `fail`, `needs_human`, or `weak` plus `blocks_high_impact: true`
+`top_tier_audit` item must either appear as a normal panel/top-level finding
+that explicitly mentions `top_tier_audit.<slot_key>`, be represented in
+`quality_axes.blocking_items` with that same `top_tier_audit.<slot_key>`
+reference plus a human/revise/block action, or be justified in `concrete_fix`
+as `accept_simplification`.
 
 Every `needs_patch` and `block` quality axis must expose a concrete
 `blocking_items` entry and either a normal panel/top-level finding or a
