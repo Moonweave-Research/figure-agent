@@ -1,7 +1,7 @@
 # Issue 12D: Critique Metadata Sync Helper
 
 **Date:** 2026-05-20 KST
-**Status:** implemented in working tree; pending review/verification/commit
+**Status:** completed in commit `3b7ae13`; policy sync extended in `52481fb`
 **Type:** AFK workflow ergonomics
 **Parent:** `2026-05-20-issue-12-critical-visual-audit-gaps.md`
 
