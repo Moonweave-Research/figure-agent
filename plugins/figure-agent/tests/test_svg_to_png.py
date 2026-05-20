@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -26,6 +27,7 @@ def test_svg_to_png_rejects_output_without_png_suffix(tmp_path):
     result = subprocess.run(
         ["bash", str(SCRIPT), str(svg), str(no_ext_output)],
         capture_output=True,
+        env={**os.environ, "PATH": "/usr/bin:/bin"},
         text=True,
     )
     assert result.returncode != 0

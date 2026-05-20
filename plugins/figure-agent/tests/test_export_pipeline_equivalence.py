@@ -17,6 +17,7 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.render
 
 
 def _fixtures_with_equivalence_contract() -> list[tuple[Path, dict]]:

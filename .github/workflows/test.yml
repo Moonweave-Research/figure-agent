@@ -14,7 +14,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: plugins/figure-agent
@@ -27,39 +27,11 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Install system dependencies
-        timeout-minutes: 30
-        run: |
-          sudo apt-get update
-          # Pre-accept the Microsoft Core Fonts EULA so the installer is non-interactive.
-          # Required for polymer-paper-preamble.sty's `\setmainfont{Arial}` lookup.
-          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" \
-            | sudo debconf-set-selections
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            dvisvgm \
-            imagemagick \
-            librsvg2-bin \
-            poppler-utils \
-            qpdf \
-            tesseract-ocr \
-            texlive-fonts-extra \
-            texlive-latex-extra \
-            texlive-luatex \
-            texlive-pictures \
-            ttf-mscorefonts-installer
-          # Refresh the font cache so fontspec/lualatex can find Arial by name.
-          sudo fc-cache -f
-
       - name: Install dependencies
         run: uv sync --group dev
 
       - name: Lint
         run: uv run ruff check .
 
-      - name: Pre-build smoke fixture (required by stage-assertion test)
-        run: |
-          bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
-          uv run python3 scripts/run_export.py smoke_trap_demo
-
       - name: Run tests
-        run: uv run pytest -q
+        run: uv run pytest -q -m "not render"

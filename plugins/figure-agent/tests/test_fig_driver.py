@@ -60,7 +60,7 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
     (exports / f"{name}.png").write_bytes(b"\x89PNG")
     (exports / f"{name}.tif").write_bytes(b"TIFF")
     old_time = time.time() - 100
-    fresh_time = time.time() - 10
+    fresh_time = time.time() + 10
     for path in (fixture / "spec.yaml", fixture / "briefing.md", fixture / f"{name}.tex"):
         os.utime(path, (old_time, old_time))
     for path in [build / f"{name}.pdf", *exports.iterdir()]:
@@ -103,8 +103,13 @@ def _write_loop_run(
     }
     if top_tier_audit_summary is not None:
         iteration["top_tier_audit_summary"] = top_tier_audit_summary
-    (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    (run_dir / "iteration_001.json").write_text(json.dumps(iteration), encoding="utf-8")
+    manifest_path = run_dir / "run_manifest.json"
+    iteration_path = run_dir / "iteration_001.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    iteration_path.write_text(json.dumps(iteration), encoding="utf-8")
+    checkpoint_time = time.time() + 20
+    os.utime(manifest_path, (checkpoint_time, checkpoint_time))
+    os.utime(iteration_path, (checkpoint_time, checkpoint_time))
     return run_dir
 
 

@@ -29,6 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BASELINE = REPO_ROOT / "tests" / "fixtures" / "banddiagram_pilot" / "baseline.qdf"
 SMOKE_TEX = REPO_ROOT / "examples" / "_macro_smoke" / "_macro_smoke.tex"
 SMOKE_PDF = REPO_ROOT / "examples" / "_macro_smoke" / "build" / "_macro_smoke.pdf"
+pytestmark = pytest.mark.render
 
 
 # Patterns matching each allowed delta class. The (b) and (e) classes

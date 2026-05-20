@@ -13,11 +13,6 @@
 
 set -euo pipefail
 
-if ! command -v dvisvgm >/dev/null 2>&1; then
-  echo "Error: dvisvgm not found. Install via TeX Live or 'brew install dvisvgm'." >&2
-  exit 127
-fi
-
 if [[ $# -lt 2 ]]; then
   echo "Usage: $(basename "$0") <input.pdf> <output.svg>" >&2
   exit 1
@@ -37,6 +32,11 @@ fi
 if [[ "$SVG_OUTPUT" != *.svg ]]; then
   echo "Error: output path must end with .svg, got: $SVG_OUTPUT" >&2
   exit 1
+fi
+
+if ! command -v dvisvgm >/dev/null 2>&1; then
+  echo "Error: dvisvgm not found. Install via TeX Live or 'brew install dvisvgm'." >&2
+  exit 127
 fi
 
 # --pdf: take a PDF as input (requires mutool or compatible Ghostscript)

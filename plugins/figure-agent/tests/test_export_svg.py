@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -24,6 +25,7 @@ def test_export_svg_rejects_output_without_svg_suffix(tmp_path: Path) -> None:
     result = subprocess.run(
         ["bash", str(SCRIPT), str(pdf), str(no_ext_output)],
         capture_output=True,
+        env={**os.environ, "PATH": "/usr/bin:/bin"},
         text=True,
     )
     assert result.returncode != 0
