@@ -834,6 +834,17 @@ def _print_single(result: dict) -> None:
         f"release_ready={str(bool(result.get('release_ready'))).lower()} "
         f"final_ready={final_ready}"
     )
+    publication_gate_state = result.get("publication_gate_state")
+    if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
+        print(f"  Publication gate: {publication_gate_state}")
+        failures = result.get("publication_gate_failures")
+        if isinstance(failures, list) and failures:
+            first = failures[0]
+            if isinstance(first, dict):
+                print(
+                    "  Publication blocker: "
+                    f"{first.get('code', '?')} — {first.get('required_action', '?')}"
+                )
     if notes:
         print(f"  Notes: {', '.join(notes)}")
 

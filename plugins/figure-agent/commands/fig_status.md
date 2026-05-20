@@ -22,10 +22,12 @@ the user explicitly requested a lower-level command (`/fig_compile`,
 `/fig_critique`, `/fig_adjudicate`, `/fig_loop`, `/fig_export`, `/fig_closeout`).
 The printed `Next:` hint plus the state vector (`render_state`,
 `critique_state`, `export_state`, `acceptance_state`, `workflow_ready`,
-`release_ready`, `final_artifact_state`) is the workflow's authoritative next
-action. Agents must not jump from build to export, critique, loop, polish, or
-release by intuition or memory when `Next:` points elsewhere. Rerun
-`/fig_status <name>` after every completed action to derive the next step.
+`release_ready`, `final_artifact_state`, `publication_gate_state`) is the
+workflow's authoritative next action. Agents must not jump from build to
+export, critique, loop, polish, release, or acceptance/provenance promotion by
+intuition or memory when `Next:` or `Publication gate:` points elsewhere.
+Rerun `/fig_status <name>` after every completed action to derive the next
+step.
 
 ## Stages
 
@@ -71,6 +73,13 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `final_artifact_path`: current generated export or declared polished artifact path.
 - `release_ready`: `true` when `golden_ready` is true, the export state is content-fresh (`FRESH`, not merely `TRACKED_GOLDEN`), and any declared polished SVG final artifact is fresh and unblocked.
 - `final_ready`: compatibility alias for `release_ready`.
+- `publication_gate_state`: `NOT_APPLICABLE`, `PASS`,
+  `HUMAN_ACCEPTANCE_REQUIRED`, or `PROVENANCE_REQUIRED`. This is separate from
+  `release_ready`: target-journal/provenance decisions remain explicit human
+  gates even when render/export/final-artifact state is otherwise ready.
+- `publication_gate_failures`: typed blocker records with `code`, `category`,
+  `actor`, `message`, and `required_action`. The single-figure printed output
+  shows the first blocker as `Publication blocker:` when present.
 
 The no-argument summary includes `ready: true|false`, which follows `release_ready`.
 

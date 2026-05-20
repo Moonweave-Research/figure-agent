@@ -2579,6 +2579,24 @@ def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
     ) in captured.out
 
 
+def test_print_single_shows_publication_gate_state_and_first_blocker(
+    tmp_path: Path, capsys
+) -> None:
+    fixture = tmp_path / "goldenfig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture, accepted=False)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+
+    assert "Publication gate: HUMAN_ACCEPTANCE_REQUIRED" in captured.out
+    assert "missing_quality_audit" in captured.out
+    assert "create QUALITY_AUDIT.md from the publication audit scaffold" in captured.out
+
+
 def test_print_single_shows_final_artifact_state(tmp_path: Path, capsys) -> None:
     fixture = tmp_path / "no_exports_fig"
     fixture.mkdir(parents=True)

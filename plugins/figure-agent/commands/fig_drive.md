@@ -58,6 +58,14 @@ action; `/fig_loop` only logs the resulting state.
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 
+The compact `status` object includes publication-gate fields when available:
+`publication_gate_state` and `publication_gate_failures`. In release mode,
+`HUMAN_ACCEPTANCE_REQUIRED` or `PROVENANCE_REQUIRED` produces
+`action: release_blocked` with `stop_boundary:
+accepted_or_final_ready_required`; the `reason` names the first blocker code
+and required action. The driver remains dry-run and never sets `accepted`,
+writes `QUALITY_AUDIT.md`, forces golden state, or mutates provenance.
+
 ### Schema versioning
 
 The `schema` field is a stable contract identifier. Consumers MUST ignore any
