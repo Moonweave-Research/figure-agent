@@ -618,6 +618,7 @@ def test_release_mode_surfaces_publication_gate_blocker(
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert "publication gate" in summary["reason"]
     assert "missing_quality_audit" in summary["reason"]
+    assert ".. Driver" not in summary["reason"]
     assert summary["status"]["publication_gate_state"] == "HUMAN_ACCEPTANCE_REQUIRED"
     assert summary["status"]["publication_gate_failures"][0]["actor"] == "agent"
 
@@ -661,6 +662,7 @@ def test_release_mode_publication_gate_blocks_even_when_release_ready_is_true(
     assert summary["action"] == "release_blocked"
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert "missing_submission_safe_true" in summary["reason"]
+    assert ".. Driver" not in summary["reason"]
 
 
 # --- polish mode -------------------------------------------------------------

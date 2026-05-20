@@ -250,7 +250,9 @@ def _publication_gate_block_reason(status: dict[str, Any]) -> str:
         first = failures[0]
         if isinstance(first, dict):
             code = first.get("code", "unknown_publication_gate_failure")
-            action = first.get("required_action", "resolve the publication gate manually")
+            action = str(
+                first.get("required_action", "resolve the publication gate manually")
+            ).rstrip(".")
             return (
                 f"publication gate is {state}; first blocker {code}: {action}. "
                 "Driver will not set accepted, force golden state, or mutate provenance."
