@@ -1,7 +1,7 @@
 # Issue 12C: Drawing-Order and Arrow-Tip Lints
 
 **Date:** 2026-05-20 KST
-**Status:** open
+**Status:** implemented in working tree; pending review/verification/commit
 **Type:** AFK report-only lint slice
 **Parent:** `2026-05-20-issue-12-critical-visual-audit-gaps.md`
 
@@ -16,18 +16,26 @@ Add deterministic report-only lints for two dogfood failure modes:
 
 ## Acceptance Criteria
 
-- [ ] A source-order lint reports suspicious filled label/node lines followed
+- [x] A source-order lint reports suspicious filled label/node lines followed
   by local drawing commands that may overpaint the protected label.
-- [ ] A short-arrow lint reports double-headed arrow segments below a
+- [x] A short-arrow lint reports double-headed arrow segments below a
   conservative threshold.
-- [ ] Both lints are report-only by default.
-- [ ] `/fig_compile` may surface the warnings, but existing fixtures are not
+- [x] Both lints are report-only by default.
+- [x] `/fig_compile` may surface the warnings, but existing fixtures are not
   blocked in this slice.
-- [ ] Tests include true positives and false positives.
-- [ ] The lint output includes file path, line number, lint code, and one-line
+- [x] Tests include true positives and false positives.
+- [x] The lint output includes file path, line number, lint code, and one-line
   remediation guidance.
+
+## Implementation Notes
+
+- Implemented as WARN-tier `lint_tex.py` checks so `/fig_compile` surfaces the
+  warnings without changing compile exit behavior.
+- `label_fill_source_order` warns when a filled non-empty node is followed by a
+  local draw/path command within a conservative lookahead window.
+- `short_double_arrow` warns when a straight `<->`, `<=>`, `Stealth-Stealth`,
+  or `Latex-Latex` segment is shorter than the conservative threshold.
 
 ## Blocked By
 
 None - can start immediately.
-

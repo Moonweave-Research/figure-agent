@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from lint_tex import lint, parse_palette  # noqa: E402
+from lint_tex import lint, main, parse_palette  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -321,3 +321,141 @@ def test_thin_stroke_dot_decimal_form(tmp_path: Path) -> None:
     violations = lint(tex)
     ts_violations = [v for v in violations if v.category == "thin_stroke"]
     assert len(ts_violations) == 1
+
+
+def test_filled_label_before_later_draw_emits_source_order_warn(tmp_path: Path) -> None:
+    tex = _write(
+        tmp_path,
+        "\n".join(
+            [
+                r"\node[fill=white, inner sep=1pt] at (0,0) {d};",
+                r"\draw[cBlue] (-0.4,0) -- (0.4,0);",
+            ]
+        )
+        + "\n",
+    )
+
+    violations = lint(tex)
+    source_order = [v for v in violations if v.category == "label_fill_source_order"]
+
+    assert len(source_order) == 1
+    assert source_order[0].line == 1
+    assert source_order[0].severity == "warn"
+    assert "move protected label after later draw commands" in source_order[0].message
+
+
+def test_filled_shape_without_text_avoids_source_order_warn(tmp_path: Path) -> None:
+    tex = _write(
+        tmp_path,
+        "\n".join(
+            [
+                r"\node[fill=white] at (0,0) {};",
+                r"\draw[cBlue] (-0.4,0) -- (0.4,0);",
+            ]
+        )
+        + "\n",
+    )
+
+    assert not any(v.category == "label_fill_source_order" for v in lint(tex))
+
+
+def test_filled_label_after_draw_avoids_source_order_warn(tmp_path: Path) -> None:
+    tex = _write(
+        tmp_path,
+        "\n".join(
+            [
+                r"\draw[cBlue] (-0.4,0) -- (0.4,0);",
+                r"\node[fill=white, inner sep=1pt] at (0,0) {d};",
+            ]
+        )
+        + "\n",
+    )
+
+    assert not any(v.category == "label_fill_source_order" for v in lint(tex))
+
+
+def test_non_painting_path_node_after_filled_label_avoids_source_order_warn(
+    tmp_path: Path,
+) -> None:
+    tex = _write(
+        tmp_path,
+        "\n".join(
+            [
+                r"\node[fill=white, inner sep=1pt] at (0,0) {d};",
+                r"\path (0,0) node[above] {annotation};",
+            ]
+        )
+        + "\n",
+    )
+
+    assert not any(v.category == "label_fill_source_order" for v in lint(tex))
+
+
+def test_filldraw_after_filled_label_emits_source_order_warn(tmp_path: Path) -> None:
+    tex = _write(
+        tmp_path,
+        "\n".join(
+            [
+                r"\node[fill=white, inner sep=1pt] at (0,0) {d};",
+                r"\filldraw[cBlue] (-0.4,0) rectangle (0.4,0.2);",
+            ]
+        )
+        + "\n",
+    )
+
+    assert any(v.category == "label_fill_source_order" for v in lint(tex))
+
+
+def test_short_double_arrow_emits_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[<->, >=Stealth] (0,0) -- (0.18,0);" + "\n")
+
+    violations = lint(tex)
+    arrow_warns = [v for v in violations if v.category == "short_double_arrow"]
+
+    assert len(arrow_warns) == 1
+    assert arrow_warns[0].severity == "warn"
+    assert "short double-headed arrow" in arrow_warns[0].message
+
+
+def test_long_double_arrow_avoids_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[<->, >=Stealth] (0,0) -- (1.2,0);" + "\n")
+
+    assert not any(v.category == "short_double_arrow" for v in lint(tex))
+
+
+def test_double_arrow_at_threshold_avoids_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[<->, >=Stealth] (0,0) -- (0.35,0);" + "\n")
+
+    assert not any(v.category == "short_double_arrow" for v in lint(tex))
+
+
+def test_stealth_stealth_short_arrow_emits_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[Stealth-Stealth] (0,0) -- (0.18,0);" + "\n")
+
+    assert any(v.category == "short_double_arrow" for v in lint(tex))
+
+
+def test_latex_latex_short_arrow_emits_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[Latex-Latex] (0,0) -- (0.18,0);" + "\n")
+
+    assert any(v.category == "short_double_arrow" for v in lint(tex))
+
+
+def test_single_arrow_avoids_short_double_arrow_warn(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw[->, >=Stealth] (0,0) -- (0.18,0);" + "\n")
+
+    assert not any(v.category == "short_double_arrow" for v in lint(tex))
+
+
+def test_warn_lint_cli_outputs_path_line_code_and_remediation(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    tex = _write(tmp_path, r"\draw[<->, >=Stealth] (0,0) -- (0.18,0);" + "\n")
+    monkeypatch.setattr(sys, "argv", ["lint_tex.py", str(tex)])
+
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert f"{tex}:1: WARN: short_double_arrow:" in captured.out
+    assert "lengthen it or use a single semantic cue" in captured.out

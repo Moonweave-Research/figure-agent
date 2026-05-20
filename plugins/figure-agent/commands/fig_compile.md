@@ -24,6 +24,9 @@ Steps:
 2. Pre-compile lint: `scripts/compile.sh` runs `scripts/lint_tex.py` first. BLOCKER-tier
    Style Lock checks (`\definecolor`, `\setmainfont`/`\setsansfont`/`\setmonofont`, raw hex,
    non-palette TikZ colors). On any violation, abort before lualatex; `build/` is untouched.
+   WARN-tier lints are report-only and include thin strokes, missing flagship macros,
+   filled labels that may be overpainted by later draw/path commands, and short
+   double-headed arrows whose tips may fuse at manuscript scale.
 3. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
 4. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
 5. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.

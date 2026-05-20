@@ -22,7 +22,7 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   exit 1
 fi
 
-echo 'Lint: BLOCKER-tier Style Lock check...' >&2
+echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 uv run python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
 
 # Opt-in strict mode: when FIGURE_AGENT_STRICT=1, propagate --strict to the

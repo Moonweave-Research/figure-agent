@@ -49,12 +49,23 @@ _RE_KEY_VALUE = re.compile(r"^\s*(fill|draw|text|color)\s*=\s*\{?([!\w]+)\}?\s*$
 _RE_BARE_TOKEN = re.compile(r"^\s*([A-Za-z][A-Za-z0-9]*)\s*$")
 _RE_COLOR_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 _RE_PALETTE_TOKEN = re.compile(r"\\definecolor\{([A-Za-z][A-Za-z0-9]*)\}")
+_RE_NODE_COMMAND = re.compile(r"\\node\b")
+_RE_FILL_OPTION = re.compile(r"(?:^|,)\s*fill\s*=")
+_RE_EMPTY_NODE_TEXT = re.compile(r"\{\s*\}\s*;?\s*$")
+_RE_DRAW_OVERPAINT_COMMAND = re.compile(r"\\(?:draw|filldraw|fill|shade|shadedraw)\b")
+_RE_DOUBLE_ARROW_OPTION = re.compile(r"(<->|<=>|Stealth\s*-\s*Stealth|Latex\s*-\s*Latex)")
+_RE_STRAIGHT_SEGMENT = re.compile(
+    r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*--\s*"
+    r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)"
+)
 
 # WARN tier constants.
 # flagship_macros_unused fires once per file iff zero calls to any flagship
 # macro; coverage-based heuristics are v0.2.
 # thin_stroke fires per-occurrence on `line width=Xpt` where X<0.25;
 # mm/cm units are v0.1 out of scope.
+LABEL_FILL_LOOKAHEAD_LINES = 8
+SHORT_DOUBLE_ARROW_THRESHOLD = 0.35
 FLAGSHIP_MACROS: frozenset[str] = frozenset(
     {
         "\\IsoBlock",
@@ -148,6 +159,36 @@ def _check_color_segments(
     return out
 
 
+def _has_label_text(stripped: str) -> bool:
+    return not _RE_EMPTY_NODE_TEXT.search(stripped)
+
+
+def _is_filled_label_line(stripped: str) -> bool:
+    has_fill_option = any(
+        _RE_FILL_OPTION.search(match.group(1)) for match in _RE_OPTION_BLOCK.finditer(stripped)
+    )
+    return bool(
+        _RE_NODE_COMMAND.search(stripped)
+        and has_fill_option
+        and _has_label_text(stripped)
+    )
+
+
+def _has_later_overpaint_command(stripped_lines: list[str], line_index: int) -> bool:
+    window = stripped_lines[line_index + 1 : line_index + 1 + LABEL_FILL_LOOKAHEAD_LINES]
+    return any(_RE_DRAW_OVERPAINT_COMMAND.search(line) for line in window)
+
+
+def _short_double_arrow_length(stripped: str) -> float | None:
+    if not _RE_DOUBLE_ARROW_OPTION.search(stripped):
+        return None
+    segment_match = _RE_STRAIGHT_SEGMENT.search(stripped)
+    if not segment_match:
+        return None
+    x1, y1, x2, y2 = (float(value) for value in segment_match.groups())
+    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+
 def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
     if palette is None:
         palette = parse_palette()
@@ -235,6 +276,39 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                         severity="warn",
                     )
                 )
+
+        arrow_length = _short_double_arrow_length(stripped)
+        if arrow_length is not None and arrow_length < SHORT_DOUBLE_ARROW_THRESHOLD:
+            violations.append(
+                Violation(
+                    line=line_num,
+                    category="short_double_arrow",
+                    snippet=snippet,
+                    message=(
+                        f"short double-headed arrow ({arrow_length:.2f} units) may fuse at "
+                        "print scale; lengthen it or use a single semantic cue"
+                    ),
+                    severity="warn",
+                )
+            )
+
+    for line_index, stripped in enumerate(stripped_lines):
+        if _is_filled_label_line(stripped) and _has_later_overpaint_command(
+            stripped_lines,
+            line_index,
+        ):
+            violations.append(
+                Violation(
+                    line=line_index + 1,
+                    category="label_fill_source_order",
+                    snippet=raw_lines[line_index].rstrip()[:80],
+                    message=(
+                        "filled label may be overpainted by later draw/path commands; "
+                        "move protected label after later draw commands"
+                    ),
+                    severity="warn",
+                )
+            )
 
     # flagship_macros_unused WARN: fires once per file iff zero calls to any
     # flagship macro. Scanned over comment-stripped text so commented-out
