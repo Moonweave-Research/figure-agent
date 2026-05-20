@@ -675,7 +675,10 @@
 %   Prior coords (0.65,2.40→3.85,1.10) + (0.65,1.90→3.85,0.50) were locked
 %   to wrong depolarization framework; absorption-current rewrite swaps the
 %   physical interpretation: high n = strong trap = steep.
-\draw[cRed!80!black, line width=0.80pt] (0.65, 2.30) -- (3.85, 0.55);
+% iter 56: RED line width 0.80 → 0.90pt (primary narrative tier per briefing
+% line-weight hierarchy: primary 0.9pt = narrative paths). Sulfur polymer is
+% paper hero = narrative line. BLUE stays 0.80pt (control = annotation tier).
+\draw[cRed!80!black, line width=0.90pt] (0.65, 2.30) -- (3.85, 0.55);
 \draw[cBlue!80!black, line width=0.80pt] (0.65, 2.30) -- (3.85, 1.50);
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
@@ -688,29 +691,28 @@
 % iter 53: Debye curve endpoint y 0.50 → 0.56 (Gemini HIGH "abrupt termination
 % directly onto x-axis"). New gap to axis (0.40): 0.16cm = ~4.5pt, comfortably
 % above Gemini's 2pt minimum and visually clear of axis line.
+% iter 57: Debye bezier extended to (3.40, 0.45) — asymptotic exp shape.
+% iter 58: Label switched from horizontal anchor=west to sloped path-attached
+% along same bezier (pos=0.92 near endpoint) for visual convention symmetry
+% with high n / low n D-7b labels. above=4pt perpendicular offset above curve.
 \draw[cGray!85!black, dashed, line width=0.75pt]
-  (0.75, 2.45) .. controls (1.15, 2.30) and (1.55, 1.05) .. (2.55, 0.56);
-% iter 53: Debye label y 0.45 → 0.55 (Gemini HIGH "too close to x-axis"). +0.10cm
-% (~3pt) up. At anchor=west (2.60, 0.55), text top ~0.73. shallow-rich curve at
-% x=2.60..3.10 spans y=1.05..0.83 — label top stays ≥0.10cm clear at worst x.
-% Adjacent to truncated dashed endpoint (2.55, 0.56) → eye traces curve to label.
-\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
-  at (2.60, 0.55) {Debye};
+  (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45);
+\path[draw=none] (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45)
+  node[pos=0.92, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
+  {Debye};
 
 % D-4 main equation label
 \node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
 
-% D-7b curve ID labels — 2026-05-20 framework rewrite (briefing §8.4 + §13.5):
-%   "deep-rich/shallow-rich" depolarization-framework naming → "high n / low n"
-%   absorption-current framework. Paths updated to new D-5/D-6 curve coords.
-%   `sloped` path-attached convention (iter 52d) retained for journal style.
-%   RED = high n (sulfur polymer paper hero, steep, trap-rich).
-%   BLUE = low n (control polymer, flat, trap-poor).
+% D-7b curve ID labels — 2026-05-20 framework rewrite + iter 55 interleave:
+%   high n (RED, sulfur) at pos=0.55 (RIGHT of midpoint)
+%   low n (BLUE, control) at pos=0.40 (LEFT of midpoint)
+%   prevents vertical stacking at same x (iter 54 audit: labels cluttered).
 \path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
-  node[midway, labelMute, text=cRed!75!black, sloped, above=3pt]
+  node[pos=0.55, labelMute, text=cRed!75!black, sloped, above=3pt]
   {high $n$};
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
-  node[midway, labelMute, text=cBlue!75!black, sloped, above=4pt]
+  node[pos=0.40, labelMute, text=cBlue!75!black, sloped, above=4pt]
   {low $n$};
 
 % =============== Column E — ISPD-paired =================

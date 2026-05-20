@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.3
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-20T02:25:58Z
+generated_at: 2026-05-20T02:43:49Z
 generator: critique_brief.py
 generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
 rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:661f360880550e3fb948412d6d78b6c98a9f9a9417f222d08151b7046d35ba67
+critique_input_hash: sha256:69da0ab929c3c683d0de2a7020d4fb20abd1be1d9414a0ca6c20288d43e08d61
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -387,7 +387,7 @@ findings: []
 
 # Vision Critique — fig1_overview_v2_pair_001_vault
 
-Overall verdict: **ready**. **2026-05-20 framework rewrite** of Panel D applied: prior "deep-rich (less-steep) / shallow-rich (steeper)" naming was based on a *depolarization-current* interpretation; the paper's actual measurement is *absorption current under constant DC voltage* (Schweidler 1907 original). The correct framing is **high-n (RED, sulfur polymer paper hero, steeper) / low-n (BLUE, control polymer, flatter)** — n large ↔ strong trap accumulation, n small ↔ trap-poor. Panel D curve coordinates swapped accordingly (D-5 RED to (3.85, 0.55), D-6 BLUE to (3.85, 1.50), both starting at y=2.30). Iteration 53 polish remains valid (sloped path-attached labels, inside-plot Debye position, SMU box centered grid, contact dots, ground-lead breathing room, spoke-modality clearance).
+Overall verdict: **ready**. **2026-05-20 framework rewrite + iter 54-58 critical loop applied to Panel D**: prior "deep-rich (less-steep) / shallow-rich (steeper)" depolarization naming → "high n (RED, sulfur paper hero, steep) / low n (BLUE, control, flat)" absorption-current framework (Schweidler 1907). iter 54-58 polish: (54) Debye bezier now starts at same y as solid curves, descends faster — eliminates dashed/solid crossing; (55) high-n / low-n labels interleaved (pos=0.55 / 0.40) — no vertical stacking; (56) RED line width 0.80 → 0.90pt — primary narrative tier per briefing line-weight hierarchy; (57) Debye bezier extended to (3.40, 0.45) — full-width asymptotic exp shape; (58) Debye label switched to sloped path-attached — convention symmetric with high-n / low-n. Iteration 53 base polish remains valid (SMU box centered grid, contact dots, ground-lead breathing, spoke-modality clearance).
 
 Key journal-level claims supported by the rendered figure (post-rewrite):
 
