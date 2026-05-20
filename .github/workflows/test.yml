@@ -14,7 +14,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: plugins/figure-agent
@@ -28,7 +28,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install system dependencies
-        timeout-minutes: 15
+        timeout-minutes: 30
         run: |
           sudo apt-get update
           # Pre-accept the Microsoft Core Fonts EULA so the installer is non-interactive.
