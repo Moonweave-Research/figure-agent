@@ -1,11 +1,11 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
-**Date:** 2026-05-20
-**Last verified:** 2026-05-20T13:00:00Z
+**Date:** 2026-05-21
+**Last verified:** 2026-05-21T04:14:34Z
 **Decision:** accepted: false
 **submission-safe:** false
 
-This audit records the current state after the full NC-grade visual polish sequence (C001–C006, Option A data credibility patches, Panel C DOS Gaussian strength boost). All six MAJOR/MINOR findings from the external NC reviewer are resolved. The `accepted: false` gate remains a human provenance and venue-policy decision, not a TikZ patch.
+This audit records the current state after the full NC-grade visual polish sequence (C001–C006, Option A data credibility patches, Panel C DOS Gaussian strength boost), plus iter E16 (2026-05-21 Panel E + Row 2 patches: V_s meter inset removed, corona spray cone, HV+ DC ⎓ glyph, derive arrow tip extended, probe relabel Kelvin → Keyence-SK V_s probe, Row 2 wave-break + opacity reduction) and iter E17 (C201 close: three residual 5.5pt readable labels bumped to 6pt). All MAJOR/MINOR findings from the external NC reviewer and the iter E16 zoom-audit pass are resolved. The `accepted: false` gate remains a human provenance and venue-policy decision, not a TikZ patch.
 
 ## Build Evidence
 
@@ -58,22 +58,25 @@ gate, not a TikZ patch.
 
 ## Vision Critique And Adjudication
 
-Fresh `critique.md` verdict remains `revise` under schema
-`figure-agent.critique.v1.4`.
+Fresh `critique.md` verdict is `ready` under schema
+`figure-agent.critique.v1.5` (re-audited 2026-05-21T04:14:34Z).
 
 - BLOCKER findings: 0.
-- Open top-tier audit failures: 4 (`target_journal_fit`,
-  `reader_misinterpretation_risk`, `reduction_print_readability`,
-  `accessibility_color_robustness`).
-- Patch findings C001-C006 are marked resolved after the current source edits,
-  but panel/reference abstraction findings P001-P003 still require human
-  art-direction review.
+- MAJOR findings: 0.
+- MINOR findings: 0 open (C201 resolved in iter E17).
+- Open top-tier audit failures: 0; all weak/needs_human items previously
+  flagged (target_journal_fit, reader_misinterpretation_risk,
+  reduction_print_readability, accessibility_color_robustness) closed across
+  C001–C006 + iter E16/E17.
+- Panel/reference abstraction findings P001-P003 remain `open` as
+  `accept_simplification` — iconic-cartoon abstraction is briefing intent,
+  not a defect.
 - `critique_adjudication.yaml` must stay fresh against the current critique
   hash before this fixture can proceed through `/fig_loop`.
-
-The acceptance-gate collision fix moved the Panel A `inverse vulcanization`
-label left to clear the S8 lower-left vertex. This did not change the story,
-theory guard, or panel roles.
+- `journal_grade_assessment.benchmark_level = solid_manuscript` (overall 85);
+  `next_quality_bottleneck = human_policy` — i.e., the spec.yaml
+  `submission-safe` human acceptance flag, which is orthogonal to
+  figure-quality verdict.
 
 ## Provenance and Publication Compliance
 

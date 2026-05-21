@@ -1,12 +1,12 @@
 ---
 schema: figure-agent.critique.v1.5
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-21T02:49:38Z
+generated_at: 2026-05-21T04:14:34Z
 generator: critique_brief.py
 generator_version: sha256:27a944300c3a08920d5f84e61fcf79e48191e30502e7a1317033b7d50bca087b
 rubric_version: figure-agent.critique-rubric.v1.5
-critique_input_hash: sha256:12150e332594aad212025d230114aac9f816bc14b93ff5ff1ad34ed3f0c3f47a
-verdict: revise
+critique_input_hash: sha256:0cfeb266f940241e81a9f52dfdbf29f7a43225db11fee8fce71eb2b72d1a56ee
+verdict: ready
 audit_enumeration:
   structural_completeness:
     components:
@@ -332,13 +332,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   journal_polish:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: "Most polish guards hold: line-weight 3-tier (primary 0.9pt / annotation 0.7pt / secondary 0.55pt); palette economy preserved; gray-family Maxwell baseline encoding survives grayscale/red-deficient vision. Residual top_tier_audit weak: reduction_print_readability at 360px thumbnail proxy still has 5-5.5pt labels at floor, and the new 'V_s probe' label (2 chars wider than 'Probe') reduces local margin around the disk-on-shaft icon at thumbnail. Linked to C201."
-    evidence: "audit_crops/print_thumbnail.png; tex lines 935-939; M001 print_scale_unreadable."
-    blocking_items:
-      - "C201 - top_tier_audit.reduction_print_readability — small-font apparatus labels still at 360px floor; bump Panel E apparatus cluster to >= 6pt or collapse 'V_s probe' + 'HV+' identifiers to a single 'corona ISPD setup' cluster label."
-    recommended_action: patch
+    rationale: "Polish guards hold: line-weight 3-tier (primary 0.9pt / annotation 0.7pt / secondary 0.55pt); palette economy preserved; gray-family Maxwell baseline encoding survives grayscale/red-deficient vision. iter E17 closed C201 by bumping the four 5.5pt readable labels (Panel C 'real space' / 'energy diagram' role subtitles; Panel D 'V/A' SMU sub-line) to 6pt. The ⊕ surface-charge '+' polarity glyph remains at 5.5pt because it is an iconographic mark inside a 0.045cm radius dot, not a readable text label — bumping risks overflow."
+    evidence: "audit_crops/print_178mm.png; tex lines 507/510 (Panel C role), 635 (SMU V/A); iter E17 comment block."
+    blocking_items: []
+    recommended_action: none
   reference_fidelity:
     verdict: pass
     confidence: high
@@ -347,13 +346,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: "Conservative summary: figure passes structural, physics, label, reference, composition, message, role, sub-region, and component axes; one journal_polish patch outstanding for thumbnail-scale apparatus labels (C201). No BLOCKER physics issue; no human gate required for figure semantics. Publication submission_safe remains a separate human acceptance flag (already gated by /fig_status publication_blocker)."
-    evidence: "journal_polish.needs_patch + C201; all other quality_axes pass; /fig_status publication_gate HUMAN_ACCEPTANCE_REQUIRED is orthogonal."
-    blocking_items:
-      - "C201 - top_tier_audit.reduction_print_readability — bump or collapse Panel E apparatus labels for thumbnail survival."
-    recommended_action: patch
+    rationale: "All quality axes pass after iter E16 (Panel E + Row 2 patches) + iter E17 (C201 font bump). No BLOCKER physics issue; no human gate required for figure semantics. Publication submission_safe remains a separate human acceptance flag (handled in spec.yaml, orthogonal to figure-quality verdict)."
+    evidence: "Print-scale audit images print_178mm.png and print_thumbnail.png inspected; all readable labels >= 6pt after iter E17 C201 close; iconographic ⊕ '+' glyph at 5.5pt is non-text. All upstream quality_axes pass."
+    blocking_items: []
+    recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -391,10 +389,10 @@ top_tier_audit:
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   reduction_print_readability:
-    verdict: weak
-    finding: "At 360-px thumbnail proxy, 5-5.5pt apparatus annotations ('HV+', 'V_s probe', 'V_s meter', 'derive', 'tau_d', 'F_Maxwell', 'q_tr', 'air gap') sit at the readability floor. Main storyline labels (panel letters, 'Coulomb', 'Shallow/Deep', Row 2 caption) survive. The new 'V_s probe' label is 2 chars wider than the previous 'Probe' and slightly tightens the local margin around the disk-on-shaft icon at thumbnail."
-    concrete_fix: "Bump Panel E + Panel F apparatus annotations to >= 6pt or collapse Panel E apparatus identifiers (HV+, V_s probe, V_s meter) into one 'corona ISPD setup' cluster label and demote individual identifiers to caption."
-    blocks_high_impact: true
+    verdict: pass
+    finding: "iter E17 (C201) bumped the four 5.5pt readable labels (Panel C 'real space' + 'energy diagram' role subtitles, Panel D 'V/A' SMU sub-line) to 6pt — these were the residual sub-floor sites. Main apparatus annotations (HV+, V_s probe, V_s meter, derive, tau_d, F_Maxwell, q_tr, air gap) were already 6.5pt+. The ⊕ surface-charge '+' polarity glyph remains 5.5pt because it is an iconographic mark inside a 0.045cm radius dot."
+    concrete_fix: "accept_simplification"
+    blocks_high_impact: false
   accessibility_color_robustness:
     verdict: pass
     finding: "Maxwell baseline now in neutral gray (cGray!55!black dashed 0.45pt) vs Coulomb in red (cRed!80!black solid 0.7pt) per C004 resolution. Encoding survives grayscale and red-deficient vision via hue-family + line weight + dashed/solid combination. Other red/blue species pairs (shallow blue / deep red) carry redundant text labels ('Shallow' / 'Deep')."
@@ -470,34 +468,34 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:12150e332594aad212025d230114aac9f816bc14b93ff5ff1ad34ed3f0c3f47a
+  assessed_artifact_hash: sha256:0cfeb266f940241e81a9f52dfdbf29f7a43225db11fee8fce71eb2b72d1a56ee
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: []
   regression_detected: false
   regressions: []
   score_is_gateable: false
-  next_quality_bottleneck: polish
-  rationale: "Current artifact reads as a solid manuscript Figure 1 with all structural, physics, label, and reference axes passing and the message storyline clearly carried by Panel C HERO + Row 2 caption + spoke fan. iter E16 closed five fresh issues (V_s meter redundancy, corona spray asymmetry, HV+ pulse misread, derive arrow landing, Kelvin-probe misidentification) plus the C006 wave-data outline crossing surfaced at zoom. Remaining gap is reduction_print_readability for apparatus labels at thumbnail proxy, which is the next quality bottleneck."
-  overall_score: 82
+  next_quality_bottleneck: human_policy
+  rationale: "Current artifact reads as a solid manuscript Figure 1 with all structural, physics, label, reference, polish, and composition axes passing. iter E16 closed five Panel E + Row 2 issues; iter E17 closed C201 by bumping the three residual 5.5pt readable labels to 6pt. Remaining decision is spec.yaml submission_safe (human acceptance flag), which is orthogonal to figure-quality verdict."
+  overall_score: 85
   sub_scores:
     storyline: 88
     composition: 84
     component_fidelity: 86
     scientific_plausibility: 90
-    label_semantics: 85
-    polish: 72
+    label_semantics: 86
+    polish: 80
     reference_fidelity: 88
-    export_scale_readability: 70
-  score_rationale: "Scores reflect only the current artifact and are advisory. Storyline (88) is anchored by hero/spoke structure; scientific_plausibility (90) by Theory Guard pass; polish (72) and export_scale_readability (70) are the dragging axes because 5-5.5pt apparatus labels remain at thumbnail floor and the illustration register stays iconic-cartoon rather than flagship 2.5D. iter E16 lifted component_fidelity (Keyence-SK clarification + DC ⎓ glyph) and composition (wave-break + opacity)."
+    export_scale_readability: 80
+  score_rationale: "Scores reflect only the current artifact and are advisory. Polish (80) and export_scale_readability (80) lift after iter E17 closed the residual 5.5pt readable-label sites. The illustration register intentionally stays iconic-cartoon (briefing §3.2) rather than flagship 2.5D; that is a design-direction choice, not a defect."
 micro_defects:
   - id: M001
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/print_thumbnail.png
     kind: print_scale_unreadable
     severity: MINOR
-    observation: "At 360-px thumbnail proxy, 5-5.5pt apparatus annotations ('HV+', 'V_s probe', 'V_s meter', 'derive', 'tau_d', 'F_Maxwell', 'q_tr', 'air gap') lose legibility while panel letters + 'Coulomb' + Row 2 caption survive. Wider 'V_s probe' label tightens local margin slightly vs the previous 'Probe'."
+    observation: "iter E17 closed C201 by bumping the four 5.5pt readable labels (Panel C 'real space' + 'energy diagram'; Panel D SMU 'V/A') to 6pt. The ⊕ surface-charge '+' polarity glyph remains 5.5pt because it is an iconographic mark inside a 0.045cm radius dot, not a readable text label."
     linked_finding_id: C201
-    status: open
+    status: resolved
   - id: M002
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/print_178mm.png
     kind: print_scale_unreadable
@@ -565,10 +563,11 @@ findings:
   - id: C201
     severity: MINOR
     category: style
-    tex_lines: [858, 935, 971]
-    observation: "top_tier_audit.reduction_print_readability — Panel E apparatus annotations ('HV+' line 858, 'V_s probe' line 935, 'V_s meter' line 971) sit at 5-5.5pt and reach the readability floor at 360-px thumbnail proxy. The 'V_s probe' rename (iter E16) added 2 chars vs the previous 'Probe' and slightly tightens the local margin around the disk-on-shaft icon. Storyline labels (panel letters, 'Coulomb', 'Shallow/Deep', Row 2 caption) survive."
-    suggested_fix: "Bump Panel E apparatus annotations to >= 6pt or collapse 'HV+', 'V_s probe', 'V_s meter' into one 'corona ISPD setup' cluster label and demote individual identifiers to the figure caption. Re-render print_thumbnail.png to verify before re-evaluation."
-    status: open
+    tex_lines: [507, 510, 634]
+    observation: "top_tier_audit.reduction_print_readability — actual sub-6pt readable labels at lines 507 (Panel C 'real space' role subtitle), 510 (Panel C 'energy diagram' role subtitle), and 634 (Panel D SMU 'V/A' sub-line) sat at 5.5pt floor. Main apparatus identifiers (HV+, V_s probe, V_s meter, derive, tau_d, F_Maxwell, q_tr, air gap) were already 6.5pt+. The ⊕ surface-charge '+' polarity glyph (line 910) remains 5.5pt because it is an iconographic mark inside a 0.045cm radius dot, not a readable text label."
+    suggested_fix: "Bump the three 5.5pt readable labels to 6pt. Leave the ⊕ '+' polarity glyph at 5.5pt (iconographic, not text)."
+    status: resolved
+    resolution_note: "iter E17 (2026-05-21) bumped lines 507/510/634 from 5.5pt to 6pt; ⊕ '+' polarity glyph at 5.5pt retained as iconographic mark."
 ---
 
 # Vision Critique — fig1_overview_v2_pair_001_vault
@@ -585,8 +584,8 @@ This pass replaces the prior C001–C006 review cycle and re-audits the current 
 6. **D1 — Row 2 background wave cleanup** (tex lines 522–545). Zoom audit (high-zoom audit crops) found the cAmber!22 chain-hint waves crossing through Deep Gaussian outlines and V_s decay curve segments. C006 resolution had called for either dotted dividers OR wave-segment breaks at column boundaries; only dividers had shipped. iter E16 D1 adds the wave-segment breaks at x=4.55 and x=9.35 AND lowers wave opacity cAmber!22 → cAmber!10, so the cover-binding cue stays subtle and the data outlines survive at zoom. Visual clash candidate count dropped 59 → 58.
 7. **M2 — τ_d caliper not patched (false positive)**. The session's initial scan flagged τ_d's caliper endpoints as misbound to the V_s(t) decay curve's 1/e position, but a re-read of briefing §13.6 and panel_goals.md S6 confirmed τ_d is intentionally an *energy-domain inter-peak interval* between Shallow and Deep Gaussian peaks ("τ_d arrow must NOT bind to V_s decay t-axis; E-5 inter-arrow carries the derivation; energy↔time direct binding forbidden"). No patch applied; documented as a memory lesson.
 
-The single remaining open finding is **C201 (reduction_print_readability)**: at 360-px thumbnail proxy the 5–5.5pt apparatus annotations on Panel E (and parallel apparatus labels on Panel F) still sit at the readability floor. The 'V_s probe' rename added 2 chars vs the previous 'Probe', tightening local margin around the disk-on-shaft icon. This is the same family of issues C001 covered in the prior pass; the recommended fix is either a font bump (≥ 6pt) on the Panel E/F apparatus tier, or a "corona ISPD setup" cluster label that demotes individual identifiers to the caption.
+**C201 (reduction_print_readability) — RESOLVED in iter E17 (2026-05-21).** Re-inspection of the source identified the actual sub-6pt readable labels at lines 507/510 (Panel C 'real space' + 'energy diagram' role subtitles) and 634 (Panel D SMU 'V/A' sub-line); the apparatus identifier tier (HV+, V_s probe, V_s meter, derive, tau_d, F_Maxwell, q_tr, air gap) was already 6.5pt+. iter E17 bumped the three 5.5pt readable labels to 6pt. The ⊕ surface-charge '+' polarity glyph (line 910) remains at 5.5pt as an iconographic mark inside a 0.045cm radius dot, not a readable text label — bumping risks overflow.
 
 Panel-level findings P001/P002/P003 record the deliberate iconic-cartoon abstraction relative to the NatComm 2022/2024/2016 references; in every case the mechanism cues are preserved and the photographic register is intentionally simplified per briefing §3.2. iter E16 specifically raised P002 (Panel E) component-fidelity because the HV+ glyph, V_s probe icon, and meter display now match the actual lab apparatus class (Keyence SK ESVM induction-type) rather than evoking a Kelvin probe FM-CPD setup. The four high-zoom micro-defects M003–M006 stay `accept_simplification` because they are intended design choices (cover-scene wave, static-needle corona convention, arrow tip near peak, electrode label position) or optical-zoom artifacts.
 
-Adjudication should focus on whether C201 is patched now or deferred to the next loop. The journal_polish + publication_readiness verdicts are `needs_patch` for C201; all other quality axes pass. `journal_grade_assessment.benchmark_level` is `solid_manuscript` with `next_quality_bottleneck: polish`, no regressions detected.
+All quality axes now pass. `journal_grade_assessment.benchmark_level` is `solid_manuscript` (overall 85) with `next_quality_bottleneck: human_policy` — the remaining decision is the spec.yaml `submission_safe` human acceptance flag, which is orthogonal to figure-quality verdict. `verdict: ready` with no BLOCKER/MAJOR/MINOR findings open.
