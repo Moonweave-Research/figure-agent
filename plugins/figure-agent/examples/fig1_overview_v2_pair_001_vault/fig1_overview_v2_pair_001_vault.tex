@@ -519,12 +519,35 @@
 %  underneath Panels D/E/F/G, opacity ~0.15 effective)
 % ============================================================
 \fill[cAmber!8, rounded corners=2mm] (-0.05, 0.05) rectangle (14.05, 4.55);
-\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 1.20) (2.50, 1.05) (5.00, 1.30) (7.50, 1.10) (10.00, 1.25) (12.50, 1.05) (13.90, 1.20)};
-\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 2.50) (2.50, 2.65) (5.00, 2.45) (7.50, 2.60) (10.00, 2.40) (12.50, 2.60) (13.90, 2.50)};
-\draw[cAmber!22, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 3.80) (2.50, 3.65) (5.00, 3.85) (7.50, 3.70) (10.00, 3.80) (12.50, 3.65) (13.90, 3.75)};
+% iter E16 (zoom-audit D1, 2026-05-21): 3 continuous waves broken into 3
+% segments each at column dividers x=4.55 and x=9.35. At print scale the
+% waves were faint cover-binding cue; at high zoom they were visibly
+% crossing g(E_t) Gaussian outlines (wave 1) and V_s decay curve (wave 2),
+% breaking data shape outlines. C006 resolution called for either dividers
+% OR wave breaks — dividers shipped earlier, wave breaks land here. Each
+% segment leaves a ~0.20cm gap centered on the divider so the dotted lines
+% read as the active separation cue.
+% Wave 1 (y≈1.20):
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 1.20) (2.50, 1.05) (4.45, 1.26)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(4.65, 1.27) (5.00, 1.30) (7.50, 1.10) (9.25, 1.21)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(9.45, 1.23) (10.00, 1.25) (12.50, 1.05) (13.90, 1.20)};
+% Wave 2 (y≈2.50):
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 2.50) (2.50, 2.65) (4.45, 2.51)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(4.65, 2.49) (5.00, 2.45) (7.50, 2.60) (9.25, 2.45)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(9.45, 2.43) (10.00, 2.40) (12.50, 2.60) (13.90, 2.50)};
+% Wave 3 (y≈3.80):
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(0.10, 3.80) (2.50, 3.65) (4.45, 3.81)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(4.65, 3.83) (5.00, 3.85) (7.50, 3.70) (9.25, 3.78)};
+\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
+  {(9.45, 3.79) (10.00, 3.80) (12.50, 3.65) (13.90, 3.75)};
 
 % Vertical dotted column dividers for parallel evidence separation
 \draw[cGray!45!white, line width=0.35pt, densely dotted] (4.55, 0.20) -- (4.55, 4.30);
@@ -839,11 +862,11 @@
 \fill[cGray!70!black, rounded corners=0.2pt] (6.20, 4.22) rectangle (6.85, 4.38);
 \draw[cGray!85!black, line width=0.12pt, rounded corners=0.2pt]
   (6.20, 4.22) rectangle (6.85, 4.38);
-% Pulse trace rescaled to taller display (square pulse with 0.10cm vertical).
-\draw[cAmber!90!white, line width=0.45pt]
-  (6.23, 4.27) -- (6.36, 4.27) -- (6.36, 4.36)
-              -- (6.53, 4.36) -- (6.53, 4.27) -- (6.68, 4.27)
-              -- (6.68, 4.36) -- (6.82, 4.36);
+% iter E16 (M1 Panel E critical review): square-wave pulse trace read as
+% "pulse generator". Corona discharge is DC HV. Replaced with the standard
+% DC-source schematic glyph (⎓: long bar above, short bar below).
+\draw[cAmber!90!white, line width=0.35pt] (6.28, 4.34) -- (6.78, 4.34);
+\draw[cAmber!90!white, line width=0.35pt] (6.40, 4.28) -- (6.66, 4.28);
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
 % iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
 % cGray!85 → !70 (less aggressive black dot at print scale).
@@ -868,12 +891,15 @@
 % iter E13: cuff radius 0.045 → 0.025 + tone cGray!85 → !65 (was dominant
 % black dot reading as "button"; now subtle support indicator).
 \fill[cGray!65!black] (6.55, 4.05) circle (0.025);
-% Sparks — iter E1: 5 → 3 rays (wide-angle ±22° rays removed to clean
-% chaotic fan pattern). Remaining ±10° + 0° give clear "ion emission" cue
-% without visual clutter. opacity 0.65 + thin 0.35pt softness retained.
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.50, 3.60);
+% Sparks — iter E1: 5 → 3 rays. iter E16 (H3 Panel E critical review): 3 narrow
+% rays read as "needle only charges the leftmost ⊕"; corona discharge actually
+% covers a broad ionization region. Replaced with a semi-transparent cone +
+% retained center spine ray for the "ion emission" cue. Cone spans the polymer
+% width directly under the needle (x 6.35..6.95); downstream ⊕ at x≥7.00
+% represent accumulated surface charge from earlier scan steps, not the
+% current discharge instant.
+\fill[cRed!22, opacity=0.55] (6.55, 3.73) -- (6.35, 3.60) -- (6.95, 3.60) -- cycle;
 \draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.55, 3.60);
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.60, 3.60);
 % Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
@@ -883,11 +909,14 @@
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
-% ----- Kelvin probe (RIGHT, V_s readout) — iter 6 disk-on-shaft redesign -----
-% Tech-illustrator audit (2026-05-18): prior block+arcs read as "hot plate +
-% RF wireless" rather than Kelvin probe. Real Kelvin probes = disk electrode
-% on vertical shaft, oscillating VERTICALLY (modulating gap-capacitance for
-% FM-CPD measurement), hovering above sample with explicit non-contact gap.
+% ----- Surface voltmeter probe (RIGHT, V_s readout) — iter 6 disk-on-shaft -----
+% iter E16 (2026-05-21, user clarification): the lab apparatus is a Keyence
+% SK-series electrostatic surface voltmeter (induction-type, NON-oscillating
+% probe), NOT a Kelvin probe (FM-CPD). Earlier comments tying the icon to
+% Kelvin-probe gap-capacitance modulation are inaccurate; the disk-on-shaft
+% sketch is retained as a generic non-contact probe abstraction, but the
+% vertical-oscillation cue and the "Probe" label have been revised so they
+% no longer evoke KPFM convention.
 %
 % Vertical shaft — iter E12 (user-flagged): shaft length 0.08 → 0.18cm
 % (top 3.95 → 4.05). Real Kelvin probes have shaft significantly longer
@@ -913,13 +942,10 @@
   (7.20, 3.80) rectangle (7.60, 3.87);
 \draw[cGray!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
 \fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
-% Vibration cue — iter E11+E12+E15: TikZ \draw[<->] default Stealth tips
-% at this small length (0.13cm) fused into "diamond/cross" pattern at print
-% scale (user audit: "십자가/cross"). Replaced with unicode \updownarrow
-% glyph at 7pt — proper typography character (sharp Y-shape arrowheads vs
-% filled-triangle TikZ tips). Centered at shaft midpoint (7.32, 3.96).
-\node[font=\fontsize{7}{8.4}\selectfont, text=cGray!75!black,
-      inner sep=0pt] at (7.32, 3.96) {$\updownarrow$};
+% iter E16 (2026-05-21, user clarification): vertical-oscillation glyph
+% removed. Keyence SK-series surface voltmeter uses induction sensing, not
+% a vibrating tip — the ↕ cue evoked Kelvin-probe FM-CPD modulation and
+% misidentified the apparatus.
 % Air gap d — iter E12 (user-flagged): REMOVED. Reasons:
 %   1) Position was 0.20cm RIGHT of disk right edge (x=7.80 vs disk 7.20-7.60),
 %      visually off-axis from the gap being measured.
@@ -929,8 +955,11 @@
 % Briefing §13.6 reference to "d label" superseded by this iter.
 % "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
 % cGray!65 (secondary apparatus label tier).
+% iter E16 (2026-05-21, user clarification): label "Probe" → "$V_s$ probe"
+% — pairs with the right-hand "$V_s$ meter" as sensor↔readout, and avoids
+% the Kelvin-probe reading the bare "Probe" + ↕ pair was producing.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=south] at (7.34, 4.10) {Probe};
+      anchor=south] at (7.34, 4.10) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
@@ -960,8 +989,9 @@
   (8.16, 3.81) -- (8.16, 3.98);
 \draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
   (8.16, 3.81) -- (8.93, 3.81);
-\draw[cAmber!90!white, line width=0.40pt]
-  (8.18, 3.96) .. controls (8.38, 3.91) and (8.65, 3.84) .. (8.90, 3.82);
+% iter E16 (H1 Panel E critical review): in-meter decay trace removed —
+% same V_s(t) is plotted in sub-zone below; inset duplicated the signal.
+% Screen now reads as "scope ready", with the real measurement deferred to E-3/E-4.
 % V_s meter label — iter 50: y 3.70→3.66 (centered in shrunk label zone
 % 3.58..3.78, mid y=3.68).
 % iter 51: thin space between V_s and meter. iter E2: weight unified to plain
@@ -1041,8 +1071,12 @@
 % upright (verb describing transformation, not a math variable — per Typo
 % designer audit ISO 80000-2 convention).
 % derive — iter 49 (Codex narrow): font 5.5→5pt, gray !60→!50.
+% iter E16 (M3 Panel E critical review): tip y 1.28 → 1.18 — arrow used to
+% stop in the inter-zone gap above g(E_t) zone; now penetrates into the
+% distribution area, landing just above the Deep peak top (y=1.15). Visual
+% flow now clearly enters the energy domain, matching deep-dominant framing.
 \draw[-{Stealth[length=3.5pt,width=2.5pt]}, cGray!55!black, line width=0.40pt]
-  (6.90, 1.55) -- (6.90, 1.28);
+  (6.90, 1.55) -- (6.90, 1.18);
 \node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cGray!55!black, inner sep=1pt]
   at (7.00, 1.45) {derive};
