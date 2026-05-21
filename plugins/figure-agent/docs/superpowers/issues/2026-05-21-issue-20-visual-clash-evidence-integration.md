@@ -1,7 +1,7 @@
 # Issue 20: Visual Clash Evidence Integration
 
 **Date:** 2026-05-21 KST
-**Status:** implemented; pending final verification
+**Status:** completed on main through Issues 20A-D and follow-up Issues 21A-C
 **Type:** QA evidence pipeline hardening
 **Spec:** `../specs/2026-05-21-visual-clash-evidence-integration-design.md`
 
