@@ -1,7 +1,7 @@
 # Issue 21B: Historical Visual Clash Regression Dogfood
 
 **Date:** 2026-05-21 KST
-**Status:** host-vision handoff prepared; dogfood pending
+**Status:** completed
 **Type:** dogfood evidence / regression protocol
 **Depends on:** Issue 20 visual clash evidence integration; Issue 21A visual clash candidate accounting
 
@@ -69,11 +69,11 @@ without mutating the canonical figure source or accepted/golden state.
   candidate ids.
 - [x] The generated brief lists the candidate ids and high-zoom crops required
   for host review.
-- [ ] A dogfood `/fig_critique` pass produces schema v1.7+ critique output.
-- [ ] `critique_lint.py` passes only when all candidates are accounted.
-- [ ] The historical overflow shape is either classified with the intended new
+- [x] A dogfood `/fig_critique` pass produces schema v1.7+ critique output.
+- [x] `critique_lint.py` passes only when all candidates are accounted.
+- [x] The historical overflow shape is either classified with the intended new
   micro-defect kind or explicitly justified as absent from the artifact.
-- [ ] The evidence document states whether the plugin contract is sufficient or
+- [x] The evidence document states whether the plugin contract is sufficient or
   whether another code slice is needed.
 
 ## Review Questions
