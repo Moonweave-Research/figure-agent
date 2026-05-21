@@ -1,0 +1,116 @@
+fixtures:
+  - fixture: golden_trap_depth_picture
+    controlled_export_state: TRACKED_GOLDEN
+    status:
+      stage: 4
+      render_state: FRESH
+      critique_state: STALE
+      export_state: TRACKED_GOLDEN
+      acceptance_state: NOT_ACCEPTED
+      final_artifact_state: NONE
+      final_artifact_kind: generated_export
+      workflow_ready: false
+      golden_ready: false
+      release_ready: false
+      final_ready: false
+      publication_gate_state: HUMAN_ACCEPTANCE_REQUIRED
+    driver:
+      authoring:
+        action: complete
+        safe_command:
+        stop_boundary:
+      review:
+        action: run_critique
+        safe_command: /fig_critique golden_trap_depth_picture
+        stop_boundary: host_llm_critique_required
+      release:
+        action: run_critique
+        safe_command: /fig_critique golden_trap_depth_picture
+        stop_boundary: host_llm_critique_required
+
+  - fixture: smoke_trap_demo
+    controlled_export_state: FRESH
+    status:
+      stage: 4
+      render_state: FRESH
+      critique_state: NOT_REQUIRED
+      export_state: FRESH
+      acceptance_state: NOT_DECLARED
+      final_artifact_state: NONE
+      final_artifact_kind: generated_export
+      workflow_ready: true
+      golden_ready: false
+      release_ready: false
+      final_ready: false
+      publication_gate_state: NOT_APPLICABLE
+    driver:
+      review:
+        action: run_fig_loop
+        safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'contract matrix' --json
+        stop_boundary:
+      release:
+        action: release_blocked
+        safe_command:
+        stop_boundary: accepted_or_final_ready_required
+      polish:
+        action: polish_handoff_stop
+        safe_command:
+        stop_boundary:
+
+  - fixture: fig5_floating_clip_mechanism
+    controlled_export_state: MISSING
+    status:
+      stage: 3
+      render_state: FRESH
+      critique_state: NOT_REQUIRED
+      export_state: MISSING
+      acceptance_state: NOT_ACCEPTED
+      final_artifact_state: NONE
+      final_artifact_kind: generated_export
+      workflow_ready: false
+      golden_ready: false
+      release_ready: false
+      final_ready: false
+      publication_gate_state: HUMAN_ACCEPTANCE_REQUIRED
+    driver:
+      authoring:
+        action: complete
+        safe_command:
+        stop_boundary:
+      release:
+        action: run_export
+        safe_command: uv run python3 scripts/run_export.py fig5_floating_clip_mechanism
+        stop_boundary:
+      polish:
+        action: run_export
+        safe_command: uv run python3 scripts/run_export.py fig5_floating_clip_mechanism
+        stop_boundary:
+
+  - fixture: n3_trial_01_trap_depth
+    controlled_export_state: MISSING
+    status:
+      stage: 3
+      render_state: FRESH
+      critique_state: STALE
+      export_state: MISSING
+      acceptance_state: NOT_DECLARED
+      final_artifact_state: NONE
+      final_artifact_kind: generated_export
+      workflow_ready: false
+      golden_ready: false
+      release_ready: false
+      final_ready: false
+      publication_gate_state: NOT_APPLICABLE
+    driver:
+      review:
+        action: run_critique
+        safe_command: /fig_critique n3_trial_01_trap_depth
+        stop_boundary: host_llm_critique_required
+      release:
+        action: run_critique
+        safe_command: /fig_critique n3_trial_01_trap_depth
+        stop_boundary: host_llm_critique_required
+      polish:
+        action: run_critique
+        safe_command: /fig_critique n3_trial_01_trap_depth
+        stop_boundary: host_llm_critique_required
