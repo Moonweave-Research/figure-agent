@@ -11,6 +11,9 @@ PRINT_SCALE_EVIDENCE_TOKENS = (
     "print_178mm",
     "print_thumbnail",
 )
+SCHEMAS_WITH_PRINT_SCALE_EVIDENCE = frozenset(
+    {"figure-agent.critique.v1.4", "figure-agent.critique.v1.5"}
+)
 
 
 @dataclass(frozen=True)
@@ -31,7 +34,7 @@ def _text_mentions_print_scale_evidence(value: Any) -> bool:
 
 
 def critique_evidence_violations(frontmatter: dict[str, Any]) -> list[CritiqueEvidenceViolation]:
-    if frontmatter.get("schema") != "figure-agent.critique.v1.4":
+    if frontmatter.get("schema") not in SCHEMAS_WITH_PRINT_SCALE_EVIDENCE:
         return []
     quality_axes = frontmatter.get("quality_axes")
     if not isinstance(quality_axes, dict):

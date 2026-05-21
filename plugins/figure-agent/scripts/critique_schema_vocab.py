@@ -7,6 +7,7 @@ CRITIQUE_SCHEMA_V1_1 = "figure-agent.critique.v1.1"
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
 CRITIQUE_SCHEMA_V1_3 = "figure-agent.critique.v1.3"
 CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
+CRITIQUE_SCHEMA_V1_5 = "figure-agent.critique.v1.5"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -104,6 +105,28 @@ TOP_TIER_AUDIT_KEYS = (
     "aesthetic_coherence",
 )
 TOP_TIER_AUDIT_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
+
+EDITORIAL_AUDIT_KEYS = (
+    "hero_focus",
+    "narrative_choreography",
+    "illustration_readiness",
+    "abstraction_consistency",
+    "reference_class_fit",
+    "visual_identity",
+    "claim_payload_fit",
+    "aesthetic_risk",
+    "tikz_vs_svg_polish_trigger",
+    "human_art_direction_gate",
+)
+EDITORIAL_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
+EDITORIAL_POLISH_PATHS = frozenset(
+    {
+        "continue_tikz",
+        "ready_for_svg_polish",
+        "needs_human_art_direction",
+        "semantic_backport_required",
+    }
+)
 
 MICRO_DEFECT_KINDS = frozenset(
     {

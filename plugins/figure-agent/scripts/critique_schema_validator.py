@@ -241,6 +241,7 @@ def _validate_journal_grade_assessment(
     frontmatter: dict[str, Any],
     quality_verdicts: dict[str, str],
     top_tier_verdicts: dict[str, str] | None = None,
+    editorial_verdicts: dict[str, str] | None = None,
 ) -> None:
     raw_assessment = frontmatter.get("journal_grade_assessment")
     if raw_assessment is None:
@@ -316,6 +317,17 @@ def _validate_journal_grade_assessment(
                 f"{label}.benchmark_level high_impact_candidate requires passing "
                 f"top_tier_audit slots; non-passing slots: {audits}"
             )
+        non_passing_editorial = {
+            audit_name: verdict
+            for audit_name, verdict in (editorial_verdicts or {}).items()
+            if verdict != "pass"
+        }
+        if non_passing_editorial:
+            audits = ", ".join(sorted(non_passing_editorial))
+            raise CritiqueContractError(
+                f"{label}.benchmark_level high_impact_candidate requires passing "
+                f"editorial_art_direction slots; non-passing slots: {audits}"
+            )
 
     critique_input_hash = frontmatter.get("critique_input_hash")
     if score_is_gateable and assessed_hash != critique_input_hash:
@@ -388,6 +400,17 @@ def _text_mentions_top_tier_slot(value: Any, key: str) -> bool:
     return False
 
 
+def _text_mentions_editorial_slot(value: Any, key: str) -> bool:
+    needle = f"editorial_art_direction.{key}"
+    if isinstance(value, str):
+        return needle in value or key in value
+    if isinstance(value, list):
+        return any(_text_mentions_editorial_slot(item, key) for item in value)
+    if isinstance(value, dict):
+        return any(_text_mentions_editorial_slot(item, key) for item in value.values())
+    return False
+
+
 def _quality_axes_link_top_tier_slot(frontmatter: dict[str, Any], key: str) -> bool:
     quality_axes = require_mapping(
         frontmatter.get("quality_axes"),
@@ -407,8 +430,31 @@ def _quality_axes_link_top_tier_slot(frontmatter: dict[str, Any], key: str) -> b
     return False
 
 
+def _quality_axes_link_editorial_slot(frontmatter: dict[str, Any], key: str) -> bool:
+    quality_axes = require_mapping(
+        frontmatter.get("quality_axes"),
+        "critique frontmatter.quality_axes",
+    )
+    for axis_name in vocab.QUALITY_AXIS_NAMES:
+        axis = require_mapping(
+            quality_axes.get(axis_name),
+            f"critique frontmatter.quality_axes.{axis_name}",
+        )
+        verdict = str(axis.get("verdict", "")).strip()
+        action = str(axis.get("recommended_action", "")).strip()
+        if verdict != "needs_human" and action not in {"revise_briefing", "block_release"}:
+            continue
+        if _text_mentions_editorial_slot(axis.get("blocking_items"), key):
+            return True
+    return False
+
+
 def _findings_link_top_tier_slot(findings: list[dict[str, Any]], key: str) -> bool:
     return any(_text_mentions_top_tier_slot(finding, key) for finding in findings)
+
+
+def _findings_link_editorial_slot(findings: list[dict[str, Any]], key: str) -> bool:
+    return any(_text_mentions_editorial_slot(finding, key) for finding in findings)
 
 
 def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]:
@@ -445,6 +491,55 @@ def _validate_v1_3_top_tier_audit(frontmatter: dict[str, Any]) -> dict[str, str]
         raise CritiqueContractError(
             "critique frontmatter.top_tier_audit requires linked "
             "panel/top-level findings, quality_axes blocking_items, or "
+            f"accept_simplification for slots: {slots}"
+        )
+    return verdicts
+
+
+def _validate_v1_5_editorial_art_direction(frontmatter: dict[str, Any]) -> dict[str, str]:
+    editorial = require_mapping(
+        frontmatter.get("editorial_art_direction"),
+        "critique frontmatter.editorial_art_direction",
+    )
+    findings = critique_findings(frontmatter)
+    unlinked_items: list[str] = []
+    verdicts: dict[str, str] = {}
+    for key in vocab.EDITORIAL_AUDIT_KEYS:
+        label = f"critique frontmatter.editorial_art_direction.{key}"
+        item = require_mapping(editorial.get(key), label)
+        verdict = _require_enum(item, "verdict", vocab.EDITORIAL_VERDICTS, label=label)
+        verdicts[key] = verdict
+        _require_non_empty_string(item, "evidence", label=label)
+        _require_non_empty_string(item, "rationale", label=label)
+        concrete_fix = _require_non_empty_string(item, "concrete_fix", label=label)
+        if not isinstance(item.get("blocks_high_impact"), bool):
+            raise CritiqueContractError(f"{label}.blocks_high_impact must be a boolean")
+        if key == "tikz_vs_svg_polish_trigger":
+            _require_enum(
+                item,
+                "recommended_path",
+                vocab.EDITORIAL_POLISH_PATHS,
+                label=label,
+            )
+
+        requires_link = (
+            verdict == "fail"
+            or verdict == "needs_human"
+            or (verdict == "weak" and item["blocks_high_impact"])
+        )
+        allow_simplification = verdict != "needs_human" and "accept_simplification" in concrete_fix
+        if (
+            requires_link
+            and not allow_simplification
+            and not _findings_link_editorial_slot(findings, key)
+            and not _quality_axes_link_editorial_slot(frontmatter, key)
+        ):
+            unlinked_items.append(key)
+    if unlinked_items:
+        slots = ", ".join(unlinked_items)
+        raise CritiqueContractError(
+            "critique frontmatter.editorial_art_direction requires linked "
+            "panel/top-level findings, quality_axes blocking_items, or allowed "
             f"accept_simplification for slots: {slots}"
         )
     return verdicts
@@ -520,6 +615,19 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
         _validate_v1_4_micro_defects(frontmatter)
         _validate_journal_grade_assessment(frontmatter, quality_verdicts, top_tier_verdicts)
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_5:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+        )
         _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
         raise CritiqueContractError(f"unsupported critique schema: {critique_schema}")

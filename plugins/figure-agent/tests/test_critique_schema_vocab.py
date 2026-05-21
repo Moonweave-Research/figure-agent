@@ -11,6 +11,10 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_2,
     CRITIQUE_SCHEMA_V1_3,
     CRITIQUE_SCHEMA_V1_4,
+    CRITIQUE_SCHEMA_V1_5,
+    EDITORIAL_AUDIT_KEYS,
+    EDITORIAL_POLISH_PATHS,
+    EDITORIAL_VERDICTS,
     JOURNAL_SCORE_KEYS,
     MICRO_DEFECT_KINDS,
     MICRO_DEFECT_STATUSES,
@@ -25,6 +29,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_2 == "figure-agent.critique.v1.2"
     assert CRITIQUE_SCHEMA_V1_3 == "figure-agent.critique.v1.3"
     assert CRITIQUE_SCHEMA_V1_4 == "figure-agent.critique.v1.4"
+    assert CRITIQUE_SCHEMA_V1_5 == "figure-agent.critique.v1.5"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
@@ -76,3 +81,27 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
         }
     )
     assert MICRO_DEFECT_STATUSES == frozenset({"open", "resolved", "accept_simplification"})
+
+
+def test_editorial_art_direction_vocab_is_canonical() -> None:
+    assert EDITORIAL_AUDIT_KEYS == (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    assert EDITORIAL_VERDICTS == frozenset({"pass", "weak", "fail", "needs_human"})
+    assert EDITORIAL_POLISH_PATHS == frozenset(
+        {
+            "continue_tikz",
+            "ready_for_svg_polish",
+            "needs_human_art_direction",
+            "semantic_backport_required",
+        }
+    )

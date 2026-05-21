@@ -127,6 +127,38 @@ def _top_tier_yaml(*, first_verdict: str = "pass", first_fix: str = "accept_simp
     return "\n".join(lines) + "\n"
 
 
+def _editorial_yaml(*, hero_verdict: str = "pass", hero_fix: str = "accept_simplification") -> str:
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    lines = ["editorial_art_direction:"]
+    for key in keys:
+        verdict = hero_verdict if key == "hero_focus" else "pass"
+        fix = hero_fix if key == "hero_focus" else "accept_simplification"
+        lines.extend(
+            [
+                f"  {key}:",
+                f"    verdict: {verdict}",
+                f"    evidence: {key} evidence",
+                f"    rationale: {key} rationale",
+                f"    concrete_fix: {_quote_yaml_string(fix)}",
+                "    blocks_high_impact: false",
+            ]
+        )
+        if key == "tikz_vs_svg_polish_trigger":
+            lines.append("    recommended_path: continue_tikz")
+    return "\n".join(lines) + "\n"
+
+
 def _write_critique(
     fig_dir: Path,
     *,
@@ -134,6 +166,7 @@ def _write_critique(
     schema: str = "figure-agent.critique.v1.3",
     micro_defects_yaml: str = "",
     top_tier_yaml: str | None = None,
+    editorial_yaml: str = "",
     journal_polish_evidence: str | None = None,
     publication_readiness_evidence: str | None = None,
 ) -> Path:
@@ -150,6 +183,7 @@ def _write_critique(
         f"{quality_axes}"
         f"{top_tier_yaml or _top_tier_yaml()}"
         f"{micro_defects_yaml}"
+        f"{editorial_yaml}"
         f"{findings_yaml}"
         "---\n"
         "# critique\n",
@@ -205,6 +239,73 @@ def test_lint_critique_accepts_valid_v1_4_micro_defect_critique(tmp_path: Path) 
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_accepts_valid_v1_5_editorial_art_direction(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_reports_v1_5_passed_polish_without_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "audit_evidence",
+        "audit_evidence",
+    ]
+    assert "journal_polish" in violations[0].message
+    assert "publication_readiness" in violations[1].message
+
+
+def test_lint_critique_reports_v1_5_needs_human_editorial_without_link(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(
+            hero_verdict="needs_human",
+            hero_fix="accept_simplification: leave hero focus unresolved",
+        ),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "hero_focus" in violations[0].message
 
 
 def test_lint_critique_reports_missing_v1_4_micro_defects(tmp_path: Path) -> None:

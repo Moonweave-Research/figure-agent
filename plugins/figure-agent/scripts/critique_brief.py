@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.4). No external API is called; the brief itself is API-free.
+v1.5). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -450,6 +450,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 
 {brief_sections.top_tier_journal_audit()}
 
+{brief_sections.editorial_art_direction_audit()}
+
 {brief_sections.journal_grade_assessment()}
 
 ## Critique rubric
@@ -472,11 +474,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.4):
+(YAML front-matter then human-readable Markdown body — schema v1.5):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.4
+schema: figure-agent.critique.v1.5
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -562,6 +564,7 @@ top_tier_audit:
     finding: "<style authority across line weights, detail level, depth cues>"
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
+{brief_sections.editorial_art_direction_schema()}
 {brief_sections.journal_grade_assessment_schema(critique_input_hash)}
 micro_defects:
   - id: M001
@@ -606,6 +609,15 @@ that explicitly mentions `top_tier_audit.<slot_key>`, be represented in
 `quality_axes.blocking_items` with that same `top_tier_audit.<slot_key>`
 reference plus a human/revise/block action, or be justified in `concrete_fix`
 as `accept_simplification`.
+
+Any `needs_human` `editorial_art_direction` item must either appear as a normal
+panel/top-level finding that explicitly mentions
+`editorial_art_direction.<slot_key>` or be represented in
+`quality_axes.blocking_items` with that same reference plus a human/revise/block
+action. `needs_human` editorial slots cannot use `accept_simplification` to
+bypass human visibility. Any `fail` or `weak` plus `blocks_high_impact: true`
+editorial item follows the same link paths, or may use `accept_simplification`
+only when the weakness is intentional.
 
 Every `needs_patch` and `block` quality axis must expose a concrete
 `blocking_items` entry and either a normal panel/top-level finding or a

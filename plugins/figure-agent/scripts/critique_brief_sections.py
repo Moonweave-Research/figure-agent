@@ -57,7 +57,7 @@ Enumerate at least 5 physical-plausibility checks specific to this figure:
 List 3 elements that SHOULD be present per provided reference/briefing context
 but are weakly represented or missing entirely. For each, provide element name,
 bounded reference provenance, severity, and proposed action.
-"""
+    """
 
 
 def journal_quality_axes() -> str:
@@ -212,6 +212,74 @@ typographic hierarchy.
 """
 
 
+def editorial_art_direction_audit() -> str:
+    return """## Editorial Art-Direction Audit (host LLM MUST evaluate)
+
+After completing `top_tier_audit`, evaluate every editorial art-direction slot
+below under top-level YAML field `editorial_art_direction`. This block is about
+illustration register, narrative force, and the TikZ-vs-SVG polish boundary. It
+does not authorize source edits or SVG edits.
+
+Link rule: any `needs_human` slot must be tied to downstream review evidence.
+Write a normal panel/top-level finding whose text explicitly mentions
+`editorial_art_direction.<slot_key>`, or represent it in
+`quality_axes.blocking_items` with the same `editorial_art_direction.<slot_key>`
+reference and a human/revise/block action. needs_human editorial slots cannot
+use accept_simplification to bypass human visibility. For `fail` or `weak` plus
+`blocks_high_impact: true`, the same link paths are valid, or
+`concrete_fix` may use `accept_simplification` only when the weakness is an
+intentional simplification.
+
+### 1. Hero Focus
+Name the hero object, hero panel, or central visual claim. Flag weak/fail if
+the reader has no obvious first fixation or every panel has equal weight.
+
+### 2. Narrative Choreography
+Assess whether the figure flows through problem, mechanism, evidence, and
+implication, or whether it reads as assembled fragments.
+
+### 3. Illustration Readiness
+Assess whether the artifact reads as editorial illustration rather than a plain
+schematic. Consider depth cues, material rendering, dimensionality,
+highlight/shadow discipline, and target-journal register.
+
+### 4. Abstraction Consistency
+Assess whether icon, cartoon, pseudo-3D, data-plot, and diagram registers are
+intentionally mixed and visually controlled.
+
+### 5. Reference-Class Fit
+Classify the current artifact and target class, e.g.
+`nature_communications_mechanism_schematic`, `nature_materials_main_schematic`,
+`science_conceptual_mechanism`, `graphical_abstract`, `cover_candidate`, or
+`ordinary_manuscript_schematic`.
+
+### 6. Visual Identity
+Assess whether the figure has a memorable visual motif: color grammar,
+material texture, charge glyph, energy landscape, trap motif, arrow grammar, or
+another coherent visual language.
+
+### 7. Claim Payload Fit
+Assess whether the manuscript's central claim receives the most visual weight.
+Flag weak/fail if correct components are present but the novelty is secondary.
+
+### 8. Aesthetic Risk
+Name concrete signs of amateurism or non-editorial rendering: clip-art feeling,
+inconsistent stroke weights, awkward gradients, overdecorated backgrounds,
+mismatched icons, crowded text, weak whitespace, or accidental color choices.
+
+### 9. TikZ-vs-SVG Polish Trigger
+Decide whether the remaining gap should stay in TikZ or move to controlled SVG
+polish. This slot must include `recommended_path` with one of:
+`continue_tikz`, `ready_for_svg_polish`, `needs_human_art_direction`, or
+`semantic_backport_required`.
+
+### 10. Human Art-Direction Gate
+State whether a human should choose target-journal style, hero-panel priority,
+cover-style ambition, SVG polish scope, or schematic-vs-dimensional register
+before the next loop.
+"""
+
+
 def _quality_axis_schema(axis_name: str, *, evidence: str, rationale: str) -> str:
     return "\n".join(
         [
@@ -293,6 +361,27 @@ def quality_axes_schema() -> str:
     return "quality_axes:\n" + "\n".join(
         axis_schema[axis_name] for axis_name in vocab.QUALITY_AXIS_NAMES
     )
+
+
+def editorial_art_direction_schema() -> str:
+    lines = ["editorial_art_direction:"]
+    for key in vocab.EDITORIAL_AUDIT_KEYS:
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass | weak | fail | needs_human",
+                '    evidence: "<specific current-artifact evidence>"',
+                '    rationale: "<why this matters for target-journal illustration quality>"',
+                '    concrete_fix: "<specific edit, polish handoff, or accept_simplification>"',
+                "    blocks_high_impact: true | false",
+            ]
+        )
+        if key == "tikz_vs_svg_polish_trigger":
+            lines.append(
+                "    recommended_path: continue_tikz | ready_for_svg_polish | "
+                "needs_human_art_direction | semantic_backport_required"
+            )
+    return "\n".join(lines)
 
 
 def journal_grade_assessment_schema(critique_input_hash: str) -> str:

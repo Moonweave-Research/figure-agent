@@ -1,7 +1,7 @@
 # Editorial Art-Direction Audit Design
 
 **Date:** 2026-05-21 KST
-**Status:** design ready for implementation planning
+**Status:** implemented in working tree
 **Related issue:** Issue 16A
 **Follows:** critique schema v1.4, top-tier audit v1.3, micro-defect audit v1.4, final-artifact SVG polish contract
 
@@ -81,12 +81,14 @@ schema: figure-agent.critique.v1.5
 rubric_version: figure-agent.critique-rubric.v1.5
 ```
 
-v1.0-v1.4 critiques remain legacy-compatible under existing rules. Existing
-tracked examples must not be force-migrated by this slice.
+v1.0-v1.4 critiques remain legacy-parseable under existing rules. Existing
+tracked examples must not be force-migrated by this slice; they may become
+freshness-stale after the v1.5 rubric/generator bump and should be refreshed
+only through normal `/fig_critique` runs.
 
 ## Editorial Slot Shape
 
-Each slot should use the same shape:
+Each slot must use the same shape:
 
 ```yaml
 <slot_key>:
@@ -95,6 +97,18 @@ Each slot should use the same shape:
   rationale: "<why this matters for target-journal illustration quality>"
   concrete_fix: "<specific edit, polish handoff, or accept_simplification>"
   blocks_high_impact: true | false
+```
+
+`tikz_vs_svg_polish_trigger` has one additional machine-readable field:
+
+```yaml
+tikz_vs_svg_polish_trigger:
+  verdict: pass | weak | fail | needs_human
+  evidence: "<specific current-artifact evidence>"
+  rationale: "<why this matters for target-journal illustration quality>"
+  concrete_fix: "<specific edit, polish handoff, or accept_simplification>"
+  blocks_high_impact: true | false
+  recommended_path: continue_tikz | ready_for_svg_polish | needs_human_art_direction | semantic_backport_required
 ```
 
 Required semantics:
@@ -176,10 +190,8 @@ that feel accidental rather than designed.
 ### tikz_vs_svg_polish_trigger
 
 Decides whether the remaining gap should stay in TikZ or move to controlled
-SVG polish.
-
-Allowed `concrete_fix` intent values should be expressed in prose but map to
-one of these meanings:
+SVG polish. This slot must include `recommended_path` so Issue 16B can consume
+the result without prose parsing. Allowed values:
 
 - `continue_tikz`: source-level semantic repair is still needed.
 - `ready_for_svg_polish`: source/export are semantically adequate and the
@@ -202,15 +214,18 @@ whether an illustration should remain schematic or become more dimensional.
 ## Link Rule
 
 Any `fail`, any `needs_human`, or any `weak` slot with
-`blocks_high_impact: true` must be represented downstream. At least one of the
-following must be true:
+`blocks_high_impact: true` must be represented downstream.
+
+For `needs_human`, at least one of the following must be true:
 
 1. a normal panel/top-level finding explicitly mentions
    `editorial_art_direction.<slot_key>`;
 2. a `quality_axes.*.blocking_items` entry explicitly mentions
    `editorial_art_direction.<slot_key>` with a human/revise/block action;
-3. the slot's `concrete_fix` contains `accept_simplification` and explains why
-   the weakness is intentional.
+
+For `fail` or `weak` plus `blocks_high_impact: true`, the two downstream-link
+paths above are valid, or the slot's `concrete_fix` may contain
+`accept_simplification` only when it explains why the weakness is intentional.
 
 This mirrors the existing `top_tier_audit` link rule and prevents decorative
 audit prose from bypassing adjudication and loop state.
@@ -236,10 +251,16 @@ critiques when:
 - `verdict` is outside `pass | weak | fail | needs_human`;
 - `evidence`, `rationale`, or `concrete_fix` is missing or empty;
 - `blocks_high_impact` is not boolean;
+- `tikz_vs_svg_polish_trigger.recommended_path` is missing or outside the
+  allowed enum;
 - any blocking slot violates the link rule.
 
 Legacy v1.0-v1.4 critiques should remain parseable under current compatibility
-rules.
+rules. This does not mean existing v1.4 critique files stay fresh after the
+rubric/generator version changes. Freshness remains metadata-based: after
+Issue 16A lands, existing tracked critiques may become `STALE` and should be
+refreshed by the next `/fig_critique` run, not force-migrated in bulk by this
+slice.
 
 ## Journal Assessment Interaction
 
@@ -271,9 +292,13 @@ Issue 16A is complete when:
 2. The output schema documents `figure-agent.critique.v1.5`.
 3. The validator rejects missing, malformed, or unlinked editorial audit slots.
 4. `high_impact_candidate` cannot pass with non-passing editorial slots.
-5. Legacy critiques remain compatible.
-6. Tests cover valid v1.5, missing block, invalid verdict, missing evidence,
-   link-rule failure, high-impact promotion blocking, and legacy v1.4 parsing.
+5. Legacy critiques remain parseable without bulk migration.
+6. `tikz_vs_svg_polish_trigger` has a validated `recommended_path`.
+7. `needs_human` editorial slots cannot be hidden behind
+   `accept_simplification`.
+8. Tests cover valid v1.5, missing block, invalid verdict, missing evidence,
+   invalid `recommended_path`, link-rule failure, high-impact promotion
+   blocking, and legacy v1.4 parsing.
 
 ## Follow-Up: Issue 16B
 

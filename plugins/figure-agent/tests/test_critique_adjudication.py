@@ -469,6 +469,36 @@ def _micro_defects_yaml(*, linked_finding_id: str = "C001", status: str = "open"
     )
 
 
+def _complete_v1_5_editorial_art_direction_yaml() -> str:
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    lines = ["editorial_art_direction:"]
+    for key in keys:
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    evidence: {key} evidence from current artifact",
+                f"    rationale: {key} supports editorial quality",
+                '    concrete_fix: "accept_simplification: current treatment is intentional"',
+                "    blocks_high_impact: false",
+            ]
+        )
+        if key == "tikz_vs_svg_polish_trigger":
+            lines.append("    recommended_path: continue_tikz")
+    return "\n".join(lines) + "\n"
+
+
 def _write_v1_1_critique_with_audit(fig_dir: Path, audit_yaml: str) -> Path:
     critique = fig_dir / "critique.md"
     critique.write_text(
@@ -672,6 +702,47 @@ def test_build_adjudication_scaffold_accepts_v1_4_empty_micro_defects(
     scaffold = build_adjudication_scaffold(fig_dir)
 
     assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_accepts_v1_5_editorial_art_direction(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    critique = _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.5",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + "micro_defects: []\n"
+            + _complete_v1_5_editorial_art_direction_yaml()
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir)
+
+    assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_v1_5_missing_polish_recommended_path(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    editorial_yaml = _complete_v1_5_editorial_art_direction_yaml().replace(
+        "    recommended_path: continue_tikz\n",
+        "",
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.5",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n" + editorial_yaml
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="recommended_path"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_build_adjudication_scaffold_rejects_v1_4_missing_print_scale_evidence(

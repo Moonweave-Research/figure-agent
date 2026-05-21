@@ -55,6 +55,19 @@ TOP_TIER_AUDIT_KEYS = (
     "aesthetic_coherence",
 )
 
+EDITORIAL_AUDIT_KEYS = (
+    "hero_focus",
+    "narrative_choreography",
+    "illustration_readiness",
+    "abstraction_consistency",
+    "reference_class_fit",
+    "visual_identity",
+    "claim_payload_fit",
+    "aesthetic_risk",
+    "tikz_vs_svg_polish_trigger",
+    "human_art_direction_gate",
+)
+
 
 def _quality_axis(axis_name: str) -> dict:
     axis = {
@@ -75,6 +88,19 @@ def _quality_axis(axis_name: str) -> dict:
             }
         ]
     return axis
+
+
+def _editorial_audit_slot(slot_name: str) -> dict:
+    slot = {
+        "verdict": "pass",
+        "evidence": f"{slot_name} visual evidence",
+        "rationale": f"{slot_name} supports the editorial target",
+        "concrete_fix": "accept_simplification: current artifact is intentional",
+        "blocks_high_impact": False,
+    }
+    if slot_name == "tikz_vs_svg_polish_trigger":
+        slot["recommended_path"] = "continue_tikz"
+    return slot
 
 
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
@@ -109,7 +135,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
             }
         ],
     }
-    if schema == vocab.CRITIQUE_SCHEMA_V1_4:
+    if schema in {vocab.CRITIQUE_SCHEMA_V1_4, "figure-agent.critique.v1.5"}:
         frontmatter["micro_defects"] = [
             {
                 "id": "M001",
@@ -121,6 +147,10 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "status": "open",
             }
         ]
+    if schema == "figure-agent.critique.v1.5":
+        frontmatter["editorial_art_direction"] = {
+            key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
+        }
     return frontmatter
 
 
@@ -206,3 +236,103 @@ def test_validate_critique_schema_accepts_v1_4_empty_micro_defect_list() -> None
     frontmatter["findings"] = []
 
     validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_5_editorial_art_direction() -> None:
+    validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.5"))
+
+
+def test_validate_critique_schema_rejects_v1_5_missing_editorial_art_direction() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter.pop("editorial_art_direction")
+
+    with pytest.raises(CritiqueContractError, match="editorial_art_direction"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_invalid_editorial_verdict() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["hero_focus"]["verdict"] = "excellent"
+
+    with pytest.raises(CritiqueContractError, match="hero_focus.verdict"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_empty_editorial_evidence() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["hero_focus"]["evidence"] = ""
+
+    with pytest.raises(CritiqueContractError, match="hero_focus.evidence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_non_boolean_blocks_high_impact() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["hero_focus"]["blocks_high_impact"] = "false"
+
+    with pytest.raises(CritiqueContractError, match="hero_focus.blocks_high_impact"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_invalid_polish_recommended_path() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"][
+        "recommended_path"
+    ] = "guess_from_prose"
+
+    with pytest.raises(CritiqueContractError, match="recommended_path"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_needs_human_accept_simplification_bypass() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["hero_focus"] = {
+        "verdict": "needs_human",
+        "evidence": "target journal is unspecified",
+        "rationale": "human art direction must choose the hero panel",
+        "concrete_fix": "accept_simplification: leave hero focus as-is",
+        "blocks_high_impact": False,
+    }
+    frontmatter["findings"] = []
+    frontmatter["micro_defects"] = []
+
+    with pytest.raises(CritiqueContractError, match="hero_focus"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_5_fail_with_intentional_simplification() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["editorial_art_direction"]["visual_identity"] = {
+        "verdict": "fail",
+        "evidence": "visual identity is intentionally plain for this methods figure",
+        "rationale": "the visual register cannot support high-impact promotion",
+        "concrete_fix": "accept_simplification: methods-only schematic, not a hero illustration",
+        "blocks_high_impact": True,
+    }
+    frontmatter["findings"] = []
+    frontmatter["micro_defects"] = []
+
+    validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_5_high_impact_with_weak_editorial_slot() -> None:
+    critique_hash = "sha256:" + "a" * 64
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
+    frontmatter["critique_input_hash"] = critique_hash
+    frontmatter["editorial_art_direction"]["aesthetic_risk"]["verdict"] = "weak"
+    frontmatter["journal_grade_assessment"] = {
+        "schema": "figure-agent.journal-grade-assessment.v1",
+        "scoring_mode": "fresh_reaudit",
+        "assessed_artifact_hash": critique_hash,
+        "benchmark_level": "high_impact_candidate",
+        "confidence": "high",
+        "blockers": [],
+        "regression_detected": False,
+        "regressions": [],
+        "score_is_gateable": True,
+        "next_quality_bottleneck": "polish",
+        "rationale": "claims high-impact quality",
+    }
+
+    with pytest.raises(CritiqueContractError, match="high_impact_candidate"):
+        validate_critique_schema(frontmatter)

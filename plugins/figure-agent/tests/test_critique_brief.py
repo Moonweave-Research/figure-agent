@@ -199,7 +199,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.4" in brief
+    assert "schema: figure-agent.critique.v1.5" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.5" in brief
     assert "panels:" in brief
 
 
@@ -237,6 +238,28 @@ def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
     assert "### 8. Reduction / Print Readability" in brief
     assert "### 9. Accessibility and Color Robustness" in brief
     assert "### 10. Aesthetic Coherence" in brief
+
+
+def test_critique_brief_includes_editorial_art_direction_audit(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Editorial Art-Direction Audit (host LLM MUST evaluate)" in brief
+    assert "### 1. Hero Focus" in brief
+    assert "### 2. Narrative Choreography" in brief
+    assert "### 3. Illustration Readiness" in brief
+    assert "### 4. Abstraction Consistency" in brief
+    assert "### 5. Reference-Class Fit" in brief
+    assert "### 6. Visual Identity" in brief
+    assert "### 7. Claim Payload Fit" in brief
+    assert "### 8. Aesthetic Risk" in brief
+    assert "### 9. TikZ-vs-SVG Polish Trigger" in brief
+    assert "### 10. Human Art-Direction Gate" in brief
+    assert "editorial_art_direction:" in brief
+    assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
+    assert "needs_human editorial slots cannot" in brief
+    assert "use accept_simplification to bypass human visibility" in brief
 
 
 def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
@@ -376,7 +399,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.4" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.5" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -399,14 +422,16 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_4_micro_defect_schema(tmp_path):
+def test_critique_brief_output_format_uses_v1_5_editorial_and_micro_defect_schema(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.4" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.4" in brief
+    assert "schema: figure-agent.critique.v1.5" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.5" in brief
     assert "top_tier_audit:" in brief
+    assert "editorial_art_direction:" in brief
+    assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
     assert "micro_defects:" in brief
     for kind in (
         "line_crosses_label",

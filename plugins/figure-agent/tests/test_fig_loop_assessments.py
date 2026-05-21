@@ -122,6 +122,36 @@ def test_journal_grade_assessment_accepts_v1_4_quality_axes_schema(
     assert assessment["evaluation_state"] == "passed"
 
 
+def test_journal_grade_assessment_accepts_v1_5_editorial_schema(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.5",
+            "critique_input_hash": critique_hash,
+            "journal_grade_assessment": {
+                "schema": JOURNAL_ASSESSMENT_SCHEMA,
+                "scoring_mode": "fresh_reaudit",
+                "assessed_artifact_hash": critique_hash,
+                "score_is_gateable": True,
+                "benchmark_level": "solid_manuscript",
+                "overall_score": 82,
+                "sub_scores": _valid_scores(),
+                "score_rationale": "solid but not high impact",
+            },
+        },
+    )
+
+    assessment = journal_grade_assessment(example_dir, "FRESH")
+
+    assert assessment is not None
+    assert assessment["evaluation_state"] == "passed"
+
+
 def test_top_tier_audit_summary_counts_valid_slots_and_worst_verdict(tmp_path: Path) -> None:
     example_dir = tmp_path / "loop_demo"
     example_dir.mkdir()
@@ -191,6 +221,29 @@ def test_top_tier_audit_summary_accepts_v1_4_schema(tmp_path: Path) -> None:
     assert summary is not None
     assert summary["worst_verdict"] == "needs_human"
     assert summary["blocking_high_impact_slots"] == ["reduction_print_readability"]
+
+
+def test_top_tier_audit_summary_accepts_v1_5_editorial_schema(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.5",
+            "top_tier_audit": {
+                "aesthetic_coherence": {
+                    "verdict": "weak",
+                    "blocks_high_impact": True,
+                },
+            },
+        },
+    )
+
+    summary = top_tier_audit_summary(example_dir, "FRESH")
+
+    assert summary is not None
+    assert summary["worst_verdict"] == "weak"
+    assert summary["blocking_high_impact_slots"] == ["aesthetic_coherence"]
 
 
 def test_top_tier_audit_summary_ignores_legacy_or_empty_audit(tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
 # Issue 16: Editorial Illustration Quality Roadmap
 
 **Date:** 2026-05-21 KST
-**Status:** proposed
+**Status:** in progress
 **Type:** parent issue / implementation backlog
 **Primary spec:** `../specs/2026-05-21-editorial-art-direction-audit-design.md`
 
@@ -23,7 +23,7 @@ figure has a clear art-direction diagnosis.
 
 ### Issue 16A: Editorial Art-Direction Audit v1.5
 
-**Status:** proposed
+**Status:** implemented in working tree
 
 Add `editorial_art_direction` to the critique contract. This forces host
 critique to evaluate hero focus, visual narrative, illustration readiness,
