@@ -1,0 +1,155 @@
+cases:
+  - id: stale_critique_blocks_loop
+    fixture: golden_trap_depth_picture
+    goal: contract matrix
+    expected:
+      manifest:
+        final_stop_reason: status_action_required
+      iteration:
+        stop_reason: status_action_required
+        recommended_next_action: run /fig_critique golden_trap_depth_picture because critique is stale.
+        human_gate_status: not_requested
+        escalation_level: agent_action_required
+        patch_handoff_present: false
+        active_patch_target:
+      status:
+        stage: 4
+        critique_state: STALE
+        workflow_ready: false
+      adjudication:
+        state: fresh
+        decision_count: 0
+      stdout:
+        final_stop_reason: status_action_required
+        escalation_level: agent_action_required
+        patch_handoff_present: false
+        recommended_next_action: run /fig_critique golden_trap_depth_picture because critique is stale.
+
+  - id: reference_missing_preempts_critique
+    fixture: golden_trap_depth_picture
+    goal: contract matrix
+    remove_paths:
+      - reference/golden_target_001.png
+    expected:
+      manifest:
+        final_stop_reason: reference_input_missing
+      iteration:
+        stop_reason: reference_input_missing
+        recommended_next_action: fix declared reference inputs before continuing
+        human_gate_status: not_requested
+        escalation_level: agent_action_required
+        patch_handoff_present: false
+        active_patch_target:
+      status:
+        stage: 4
+        critique_state: REFERENCE_MISSING
+        workflow_ready: false
+      adjudication:
+        state: fresh
+        decision_count: 0
+      stdout:
+        final_stop_reason: reference_input_missing
+        escalation_level: agent_action_required
+        patch_handoff_present: false
+        recommended_next_action: fix declared reference inputs before continuing
+
+  - id: human_gate_from_fresh_adjudication
+    fixture: n3_trial_01_trap_depth
+    goal: contract matrix
+    status_overrides:
+      critique_state: FRESH
+    expected:
+      manifest:
+        final_stop_reason: human_gate_required
+      iteration:
+        stop_reason: human_gate_required
+        recommended_next_action: human review required for F001
+        human_gate_status: required
+        escalation_level: human_review_required
+        patch_handoff_present: false
+        active_patch_target:
+      status:
+        stage: 3
+        critique_state: FRESH
+      adjudication:
+        state: fresh
+        decision_count: 2
+      stdout:
+        final_stop_reason: human_gate_required
+        escalation_level: human_review_required
+        patch_handoff_present: false
+        recommended_next_action: human review required for F001
+
+  - id: single_apply_creates_patch_handoff
+    fixture: n3_trial_01_trap_depth
+    goal: contract matrix
+    status_overrides:
+      critique_state: FRESH
+    adjudication_decisions:
+      - finding_id: F001
+        decision: apply
+        reason: Patch one target.
+        patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex:row3
+        evidence: test evidence
+    expected:
+      manifest:
+        final_stop_reason: patch_target_recommended
+      iteration:
+        stop_reason: patch_target_recommended
+        recommended_next_action: "patch F001: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex:row3"
+        human_gate_status: not_requested
+        escalation_level: patch_allowed
+        patch_handoff_present: true
+        active_patch_target:
+          finding_id: F001
+          patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex:row3
+          reason: Patch one target.
+      status:
+        stage: 3
+        critique_state: FRESH
+      adjudication:
+        state: fresh
+        decision_count: 1
+      stdout:
+        final_stop_reason: patch_target_recommended
+        escalation_level: patch_allowed
+        patch_handoff_present: true
+        recommended_next_action: "patch F001: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex:row3"
+
+  - id: ambiguous_apply_blocks_handoff
+    fixture: n3_trial_01_trap_depth
+    goal: contract matrix
+    status_overrides:
+      critique_state: FRESH
+    adjudication_decisions:
+      - finding_id: F001
+        decision: apply
+        reason: Patch target 1.
+        patch_target: target 1
+        evidence: test evidence
+      - finding_id: F003
+        decision: apply
+        reason: Patch target 2.
+        patch_target: target 2
+        evidence: test evidence
+    expected:
+      manifest:
+        final_stop_reason: ambiguous_patch_selection
+      iteration:
+        stop_reason: ambiguous_patch_selection
+        recommended_next_action: select exactly one apply decision in critique_adjudication.yaml
+        human_gate_status: not_requested
+        escalation_level: ambiguous_patch_selection
+        patch_handoff_present: false
+        active_patch_target:
+      status:
+        stage: 3
+        critique_state: FRESH
+      adjudication:
+        state: fresh
+        decision_count: 2
+      stdout:
+        final_stop_reason: ambiguous_patch_selection
+        escalation_level: ambiguous_patch_selection
+        patch_handoff_present: false
+        recommended_next_action: select exactly one apply decision in critique_adjudication.yaml
