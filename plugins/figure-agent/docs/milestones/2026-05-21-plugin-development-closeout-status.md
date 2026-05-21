@@ -1,21 +1,51 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-05-21 KST
-**Status:** superseded by post-closeout critical review; see Issue 22
+**Status:** current release-smoke pass after Issue 22E
 
 ## Bottom Line
 
 The current plugin-development chain for loop orchestration, top-tier critique
 rubrics, visual-clash evidence, high-zoom audit crops, numeric advisory scoring,
-SVG-polish surfacing, and publication/export gating is mostly complete for
-regular dogfood use, but a later three-agent review found several critical
-contract-wiring gaps. See
+SVG-polish surfacing, and publication/export gating is complete enough for
+regular dogfood use on current `main`. The later post-closeout critical review
+has been resolved through Issue 22E; see
 `docs/superpowers/issues/2026-05-21-issue-22-post-closeout-critical-contract-hardening.md`.
 
 This does not mean the plugin can certify final Nature/Science-level artwork by
 itself. It means the plugin now exposes the right deterministic gates,
 host-vision audit inputs, lint contracts, and stop boundaries so real figure
 work can proceed without the previous silent-loop and visual-clash blind spots.
+
+## Release-Smoke Result — 2026-05-21 KST
+
+Commands run from `plugins/figure-agent` on current `main`:
+
+```bash
+uv run pytest -q
+uv run ruff check .
+claude plugin validate .claude-plugin/plugin.json
+claude plugin validate .
+claude plugin validate ../../.claude-plugin/marketplace.json
+uv run python3 scripts/status.py fig1_overview_v2_pair_001_vault --json
+uv run python3 scripts/fig_driver.py fig1_overview_v2_pair_001_vault --mode review --goal smoke --dry-run
+uv run python3 scripts/fig_driver.py golden_trap_depth_picture --mode release --goal smoke --dry-run
+uv run python3 scripts/fig_driver.py smoke_trap_demo --mode authoring --goal smoke --dry-run
+```
+
+Results:
+
+- Full test suite: `923 passed, 1 skipped, 1 xfailed`.
+- Ruff: clean.
+- Claude plugin validation: manifest, plugin directory, and marketplace all
+  pass.
+- Driver smoke: all sampled fixtures returned valid `figure-agent.driver.v1`
+  JSON with `may_execute: false` and a single safe next action.
+- Current sampled fixtures are artifact-stale on `main`; this is not a plugin
+  core failure. The driver correctly routes them to `/fig_compile` first.
+- `fig1_overview_v2_pair_001_vault` still carries human publication provenance
+  blockers and stale critique/export state. That remains a fixture closeout
+  problem, not a core plugin contract blocker.
 
 ## Closed Critical Tracks
 
@@ -37,6 +67,9 @@ work can proceed without the previous silent-loop and visual-clash blind spots.
   `check_visual_clash_budget.py`; ordinary PR CI stays fast and non-rendering.
 - Final artifact/polish routing: polished SVG is surfaced as a final-artifact
   state, but SVG editing remains explicit human/external-tool work.
+- Release gate binding: release mode now consumes the latest current
+  `/fig_loop` checkpoint and will not close release while adjudication, patch
+  handoff, or human-gated loop blockers remain unresolved.
 
 ## Not A Remaining Blocker
 
@@ -80,5 +113,7 @@ For new real figure work, start with:
 6. Use `/fig_export` only after render and critique state are fresh enough for
    release/export work.
 
-At this point, further plugin development should prioritize Issue 22's concrete
-contract-wiring gaps before returning to purely speculative broadening.
+At this point, core plugin development can pause unless a new dogfood run finds
+a concrete contract failure. The next live work should be fixture-specific:
+refresh stale renders/critiques/exports, then resolve the human publication
+provenance gate for the target figure.
