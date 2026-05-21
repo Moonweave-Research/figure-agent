@@ -1,7 +1,7 @@
 # Issue 20: Visual Clash Evidence Integration
 
 **Date:** 2026-05-21 KST
-**Status:** planned
+**Status:** in progress; Issue 20A implemented
 **Type:** QA evidence pipeline hardening
 **Spec:** `../specs/2026-05-21-visual-clash-evidence-integration-design.md`
 
@@ -20,7 +20,7 @@ boxes, and critique schema vocabulary must name the observed defect classes.
 
 ### Issue 20A: Micro-Defect Kind Extension
 
-**Status:** planned
+**Status:** implemented
 
 Add critique schema v1.6 and extend `micro_defects[].kind` with:
 
@@ -29,12 +29,12 @@ Add critique schema v1.6 and extend `micro_defects[].kind` with:
 
 Acceptance criteria:
 
-- [ ] Schema vocabulary exposes v1.6 and both new kinds.
-- [ ] Validator accepts the new kinds under v1.6.
-- [ ] Validator/lint still rejects unknown kinds.
-- [ ] `BLOCKER`/`MAJOR` new-kind micro-defects require a linked finding or
+- [x] Schema vocabulary exposes v1.6 and both new kinds.
+- [x] Validator accepts the new kinds under v1.6.
+- [x] Validator/lint still rejects unknown kinds.
+- [x] `BLOCKER`/`MAJOR` new-kind micro-defects require a linked finding or
   `accept_simplification`.
-- [ ] `/fig_critique` command and brief rubric describe concrete examples.
+- [x] `/fig_critique` command and brief rubric describe concrete examples.
 
 ### Issue 20B: Instrument/Sub-Quadrant Audit Crops
 
@@ -88,4 +88,3 @@ Acceptance criteria:
 - No external vision API.
 - No heuristic instrument detection in this slice.
 - No removal or rename of existing micro-defect kinds.
-

@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.5). No external API is called; the brief itself is API-free.
+v1.6). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -42,11 +42,14 @@ _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
     "label_target_detached",
     "floating_semantic_cue",
     "drawing_order_suspect",
+    "label_backdrop_overflows_outline",
+    "label_glyph_overlaps_internal_drawing",
 )
 _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
     "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
-    "print_scale_unreadable"
+    "print_scale_unreadable | label_backdrop_overflows_outline | "
+    "label_glyph_overlaps_internal_drawing"
 )
 
 
@@ -474,11 +477,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.5):
+(YAML front-matter then human-readable Markdown body — schema v1.6):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.5
+schema: figure-agent.critique.v1.6
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py

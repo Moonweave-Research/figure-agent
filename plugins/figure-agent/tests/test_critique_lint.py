@@ -259,6 +259,38 @@ def test_lint_critique_accepts_valid_v1_5_editorial_art_direction(tmp_path: Path
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_unlinked_v1_6_instrument_label_micro_defect(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.6",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MAJOR\n"
+            "    observation: HV+ backdrop extends below the instrument outline\n"
+            "    linked_finding_id: \"\"\n"
+            "    status: open\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "linked_finding_id" in violations[0].message
+
+
 def test_lint_critique_reports_v1_5_passed_polish_without_print_scale_evidence(
     tmp_path: Path,
 ) -> None:

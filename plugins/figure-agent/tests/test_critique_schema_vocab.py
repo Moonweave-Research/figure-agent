@@ -12,6 +12,7 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_3,
     CRITIQUE_SCHEMA_V1_4,
     CRITIQUE_SCHEMA_V1_5,
+    CRITIQUE_SCHEMA_V1_6,
     EDITORIAL_AUDIT_KEYS,
     EDITORIAL_POLISH_PATHS,
     EDITORIAL_VERDICTS,
@@ -30,6 +31,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_3 == "figure-agent.critique.v1.3"
     assert CRITIQUE_SCHEMA_V1_4 == "figure-agent.critique.v1.4"
     assert CRITIQUE_SCHEMA_V1_5 == "figure-agent.critique.v1.5"
+    assert CRITIQUE_SCHEMA_V1_6 == "figure-agent.critique.v1.6"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
@@ -78,6 +80,8 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
             "floating_semantic_cue",
             "drawing_order_suspect",
             "print_scale_unreadable",
+            "label_backdrop_overflows_outline",
+            "label_glyph_overlaps_internal_drawing",
         }
     )
     assert MICRO_DEFECT_STATUSES == frozenset({"open", "resolved", "accept_simplification"})
