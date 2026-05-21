@@ -12,7 +12,12 @@ PRINT_SCALE_EVIDENCE_TOKENS = (
     "print_thumbnail",
 )
 SCHEMAS_WITH_PRINT_SCALE_EVIDENCE = frozenset(
-    {"figure-agent.critique.v1.4", "figure-agent.critique.v1.5"}
+    {
+        "figure-agent.critique.v1.4",
+        "figure-agent.critique.v1.5",
+        "figure-agent.critique.v1.6",
+        "figure-agent.critique.v1.7",
+    }
 )
 
 

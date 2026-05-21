@@ -187,6 +187,36 @@ def test_journal_grade_assessment_accepts_v1_5_editorial_schema(
     assert assessment["evaluation_state"] == "passed"
 
 
+def test_journal_grade_assessment_accepts_v1_7_visual_clash_schema(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.7",
+            "critique_input_hash": critique_hash,
+            "journal_grade_assessment": {
+                "schema": JOURNAL_ASSESSMENT_SCHEMA,
+                "scoring_mode": "fresh_reaudit",
+                "assessed_artifact_hash": critique_hash,
+                "score_is_gateable": True,
+                "benchmark_level": "solid_manuscript",
+                "overall_score": 82,
+                "sub_scores": _valid_scores(),
+                "score_rationale": "solid but not high impact",
+            },
+        },
+    )
+
+    assessment = journal_grade_assessment(example_dir, "FRESH")
+
+    assert assessment is not None
+    assert assessment["evaluation_state"] == "passed"
+
+
 def test_top_tier_audit_summary_counts_valid_slots_and_worst_verdict(tmp_path: Path) -> None:
     example_dir = tmp_path / "loop_demo"
     example_dir.mkdir()
@@ -281,6 +311,29 @@ def test_top_tier_audit_summary_accepts_v1_5_editorial_schema(tmp_path: Path) ->
     assert summary["blocking_high_impact_slots"] == ["aesthetic_coherence"]
 
 
+def test_top_tier_audit_summary_accepts_v1_7_visual_clash_schema(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.7",
+            "top_tier_audit": {
+                "reader_misinterpretation_risk": {
+                    "verdict": "fail",
+                    "blocks_high_impact": True,
+                },
+            },
+        },
+    )
+
+    summary = top_tier_audit_summary(example_dir, "FRESH")
+
+    assert summary is not None
+    assert summary["worst_verdict"] == "fail"
+    assert summary["blocking_high_impact_slots"] == ["reader_misinterpretation_risk"]
+
+
 def test_top_tier_audit_summary_ignores_legacy_or_empty_audit(tmp_path: Path) -> None:
     example_dir = tmp_path / "loop_demo"
     example_dir.mkdir()
@@ -337,6 +390,29 @@ def test_editorial_art_direction_summary_extracts_polish_trigger(
         "polish_trigger_verdict": "pass",
         "human_art_direction_gate_verdict": "needs_human",
     }
+
+
+def test_editorial_art_direction_summary_accepts_v1_7_visual_clash_schema(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.7",
+            "editorial_art_direction": _editorial_art_direction(
+                trigger_path="ready_for_svg_polish",
+                overrides={"human_art_direction_gate": {"verdict": "needs_human"}},
+            ),
+        },
+    )
+
+    summary = editorial_art_direction_summary(example_dir, "FRESH")
+
+    assert summary is not None
+    assert summary["worst_verdict"] == "needs_human"
+    assert summary["human_art_direction_gate_verdict"] == "needs_human"
 
 
 def test_editorial_art_direction_summary_ignores_legacy_or_stale(

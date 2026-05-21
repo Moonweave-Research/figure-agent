@@ -1,14 +1,16 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-05-21 KST
-**Status:** current critical plugin-development chain closed on `main`
+**Status:** superseded by post-closeout critical review; see Issue 22
 
 ## Bottom Line
 
 The current plugin-development chain for loop orchestration, top-tier critique
 rubrics, visual-clash evidence, high-zoom audit crops, numeric advisory scoring,
-SVG-polish surfacing, and publication/export gating is complete enough for
-regular dogfood use.
+SVG-polish surfacing, and publication/export gating is mostly complete for
+regular dogfood use, but a later three-agent review found several critical
+contract-wiring gaps. See
+`docs/superpowers/issues/2026-05-21-issue-22-post-closeout-critical-contract-hardening.md`.
 
 This does not mean the plugin can certify final Nature/Science-level artwork by
 itself. It means the plugin now exposes the right deterministic gates,
@@ -78,5 +80,5 @@ For new real figure work, start with:
 6. Use `/fig_export` only after render and critique state are fresh enough for
    release/export work.
 
-At this point, further plugin development should be driven by real dogfood
-failures, not by speculative broadening.
+At this point, further plugin development should prioritize Issue 22's concrete
+contract-wiring gaps before returning to purely speculative broadening.

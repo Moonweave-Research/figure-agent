@@ -79,6 +79,9 @@ def critique_manifest_paths(
     hints_path = example_dir / "coordinate_hints.yaml"
     if hints_path.exists():
         paths.append(hints_path)
+    visual_clash_path = example_dir / "build" / "visual_clash.json"
+    if visual_clash_path.exists():
+        paths.append(visual_clash_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
