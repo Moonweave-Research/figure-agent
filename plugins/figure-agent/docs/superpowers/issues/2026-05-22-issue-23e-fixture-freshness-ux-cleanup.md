@@ -43,6 +43,64 @@ freshness work with plugin core failures.
   stale render plus stale critique, tracked golden plus stale critique,
   release-ready false because of publication gate, and critique not required.
 
+## Implementation Contract
+
+Add a read-only explanation layer derived from the existing status vector. This
+must not change stage inference, readiness booleans, stop boundaries, or driver
+action ordering.
+
+The shared explanation should make three buckets explicit:
+
+1. `plugin_state` — whether the plugin can continue deterministically or is
+   waiting on host/human/manual decisions.
+2. `fixture_freshness` — stale or missing render, critique, export, tracked
+   golden, final artifact, or reference inputs.
+3. `human_blockers` — accepted/golden roll-forward, publication provenance, or
+   human review gates that the plugin must not mutate.
+
+Expose the explanation as structured data from `status.infer_stage()` so both
+`/fig_status` and `/fig_driver --dry-run` can use the same source of truth. The
+minimal public shape is:
+
+```yaml
+status_explanation:
+  summary: "<one-line human-readable state>"
+  first_blocker:
+    code: <stable_code>
+    category: plugin_state | fixture_freshness | human_blocker
+    message: "<what is blocking>"
+    next_command: "<slash or shell command, if deterministic>"
+    manual: true | false
+  buckets:
+    plugin_state:
+      - code: <stable_code>
+        message: "<plain explanation>"
+    fixture_freshness: []
+    human_blockers: []
+```
+
+Stable codes should be intentionally small and tied to current contracts, for
+example: `render_stale`, `critique_stale`, `critique_missing`,
+`critique_reference_missing`, `export_stale`, `export_tracked_golden`,
+`publication_gate_required`, `not_accepted`, and `critique_not_required`.
+
+`/fig_status` should print this as a short "Explanation" block after `States`.
+`/fig_driver --dry-run` should include the compact explanation object in JSON
+and, when possible, include the first blocker code in `reason` without implying
+that the driver will execute the command.
+
+## Design Checks
+
+- The explanation is derived from existing fields only; no filesystem scan is
+  added outside `infer_stage()`.
+- No existing key is removed or renamed.
+- Existing `next` remains the canonical human command hint.
+- `critique_not_required` is an explicit non-blocking explanation, not a prompt
+  to fabricate a critique.
+- Tracked golden remains manual: `--force-golden` may be named, but no driver
+  action executes it or places it in a safe command unless an existing contract
+  already allows that.
+
 ## Suggested Files
 
 - `scripts/status.py`
