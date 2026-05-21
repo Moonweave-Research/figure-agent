@@ -1,7 +1,7 @@
 # Issue 16: Editorial Illustration Quality Roadmap
 
 **Date:** 2026-05-21 KST
-**Status:** implemented through Issue 16B
+**Status:** implemented through Issue 16C
 **Type:** parent issue / implementation backlog
 **Primary spec:** `../specs/2026-05-21-editorial-art-direction-audit-design.md`
 
@@ -49,6 +49,16 @@ The goal is to distinguish:
 
 See `2026-05-21-issue-16b-svg-polish-trigger-routing.md` for the concrete
 loop summary and driver routing contract.
+
+### Issue 16C: Editorial Driver Policy Extraction
+
+**Status:** implemented
+
+Extract the Issue 16B editorial routing rules into `scripts/fig_driver_editorial.py`
+so `fig_driver.py` stays a command-facing controller instead of accumulating
+another embedded policy layer.
+
+See `2026-05-21-issue-16c-editorial-driver-policy-extraction.md`.
 
 ## Non-Goals
 

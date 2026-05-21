@@ -33,6 +33,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver_closeout as closeout_mod  # noqa: E402
+import fig_driver_editorial as editorial_mod  # noqa: E402
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -241,25 +242,6 @@ def _top_tier_audit_requires_human_gate(summary: Any) -> bool:
     )
 
 
-def _editorial_art_direction_requires_human_gate(summary: Any) -> bool:
-    if not isinstance(summary, dict):
-        return False
-    verdict_counts = summary.get("verdict_counts")
-    return (
-        summary.get("polish_recommended_path") == "needs_human_art_direction"
-        or _positive_int(summary.get("blocking_high_impact_count"))
-        or summary.get("worst_verdict") in {"fail", "needs_human"}
-        or summary.get("human_art_direction_gate_verdict") in {"fail", "needs_human"}
-        or (
-            isinstance(verdict_counts, dict)
-            and (
-                _positive_int(verdict_counts.get("fail"))
-                or _positive_int(verdict_counts.get("needs_human"))
-            )
-        )
-    )
-
-
 def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
     loop_stop = loop_checkpoint["final_stop_reason"]
     loop_action = loop_checkpoint.get("recommended_next_action")
@@ -310,7 +292,7 @@ def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
             ),
         }
     editorial_summary = loop_checkpoint.get("editorial_art_direction_summary")
-    if _editorial_art_direction_requires_human_gate(editorial_summary):
+    if editorial_mod.editorial_review_requires_human_gate(editorial_summary):
         return {
             "action": ACTION_HUMAN_GATE_STOP,
             "safe_command": None,
@@ -739,9 +721,14 @@ def _select_action(
         )
     if loop_checkpoint is not None:
         editorial_summary = loop_checkpoint.get("editorial_art_direction_summary")
-        if isinstance(editorial_summary, dict):
-            polish_path = editorial_summary.get("polish_recommended_path")
-            if polish_path == "semantic_backport_required":
+        polish_route = editorial_mod.editorial_polish_route(editorial_summary)
+        if polish_route is not None:
+            polish_path = (
+                editorial_summary.get("polish_recommended_path")
+                if isinstance(editorial_summary, dict)
+                else None
+            )
+            if polish_route == editorial_mod.ROUTE_SEMANTIC_BACKPORT:
                 return make(
                     ACTION_POLISH_HANDOFF_STOP,
                     safe_command=None,
@@ -753,7 +740,7 @@ def _select_action(
                     ),
                     checkpoint=loop_checkpoint,
                 )
-            if _editorial_art_direction_requires_human_gate(editorial_summary):
+            if polish_route == editorial_mod.ROUTE_HUMAN_GATE:
                 return make(
                     ACTION_HUMAN_GATE_STOP,
                     safe_command=None,
@@ -766,7 +753,7 @@ def _select_action(
                     ),
                     checkpoint=loop_checkpoint,
                 )
-            if polish_path == "continue_tikz":
+            if polish_route == editorial_mod.ROUTE_RUN_LOOP:
                 return make(
                     ACTION_RUN_FIG_LOOP,
                     safe_command=_fig_loop_command(name, goal),
@@ -778,7 +765,7 @@ def _select_action(
                     ),
                     checkpoint=loop_checkpoint,
                 )
-            if polish_path == "ready_for_svg_polish":
+            if polish_route == editorial_mod.ROUTE_READY_FOR_SVG_POLISH:
                 return make(
                     ACTION_POLISH_HANDOFF_STOP,
                     safe_command=None,

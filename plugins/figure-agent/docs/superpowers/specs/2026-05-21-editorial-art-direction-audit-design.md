@@ -1,8 +1,8 @@
 # Editorial Art-Direction Audit Design
 
 **Date:** 2026-05-21 KST
-**Status:** implemented in working tree
-**Related issue:** Issue 16A
+**Status:** implemented through Issue 16C
+**Related issues:** Issue 16A, Issue 16B, Issue 16C
 **Follows:** critique schema v1.4, top-tier audit v1.3, micro-defect audit v1.4, final-artifact SVG polish contract
 
 ## Purpose
@@ -20,9 +20,11 @@ audit surface that asks whether the current artifact has a clear hero focus,
 visual narrative, illustration register, coherent abstraction level, and a
 credible path to SVG polish when TikZ has reached its practical ceiling.
 
-Issue 16A adds that audit surface to the critique contract. It does not add
-auto-editing, SVG editing, release approval, accepted/golden mutation, or
-polish routing. Those are separate issues.
+Issue 16A adds that audit surface to the critique contract. Issue 16B surfaces
+the resulting polish trigger through `/fig_loop` and `/fig_drive --mode polish`.
+Issue 16C keeps that routing policy in a focused helper module. None of these
+issues add auto-editing, SVG editing, release approval, accepted/golden
+mutation, or hidden polish automation.
 
 ## Current Repo Truth
 
@@ -74,7 +76,7 @@ This block is separate from `top_tier_audit` for three reasons:
 
 ## Schema Version
 
-Issue 16A should bump the critique schema to:
+Issue 16A bumps the critique schema to:
 
 ```yaml
 schema: figure-agent.critique.v1.5
@@ -201,8 +203,8 @@ the result without prose parsing. Allowed values:
 - `semantic_backport_required`: SVG polish would change scientific meaning
   unless TikZ/briefing/critique are updated first.
 
-Issue 16A records this judgment only. Issue 16B may route it through
-`/fig_loop` and `/fig_drive`.
+Issue 16A records this judgment. Issue 16B routes it through `/fig_loop` and
+`/fig_drive --mode polish` without adding mutation.
 
 ### human_art_direction_gate
 
@@ -278,7 +280,7 @@ Numeric scores remain advisory and must not override editorial blockers.
 ## Non-Goals
 
 - No SVG editing.
-- No `/fig_loop` or `/fig_drive` routing changes.
+- No hidden `/fig_loop` or `/fig_drive` mutation.
 - No auto-patch behavior.
 - No accepted/golden/final-artifact mutation.
 - No migration of existing example critiques.
@@ -302,6 +304,7 @@ Issue 16A is complete when:
 
 ## Follow-Up: Issue 16B
 
-Issue 16B should consume `editorial_art_direction.tikz_vs_svg_polish_trigger`
-inside `/fig_loop` and `/fig_drive --mode polish`. It should not be implemented
-in Issue 16A.
+Issue 16B consumes `editorial_art_direction.tikz_vs_svg_polish_trigger` inside
+`/fig_loop` and `/fig_drive --mode polish`. Issue 16C extracts the driver-side
+policy into `scripts/fig_driver_editorial.py` so future editorial routing
+changes have a focused module and tests.
