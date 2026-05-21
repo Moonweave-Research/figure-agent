@@ -22,6 +22,12 @@ from critique_contract import (  # noqa: E402
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+PRINT_SCALE_EVIDENCE_TOKENS = (
+    "print-scale",
+    "print_scale",
+    "print_178mm",
+    "print_thumbnail",
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +51,43 @@ def _duplicate_finding_id_violations(frontmatter: dict[str, Any]) -> list[Critiq
                 )
             )
         seen.add(finding_id)
+    return violations
+
+
+def _text_mentions_print_scale_evidence(value: Any) -> bool:
+    if isinstance(value, str):
+        lowered = value.lower()
+        return any(token in lowered for token in PRINT_SCALE_EVIDENCE_TOKENS)
+    if isinstance(value, list):
+        return any(_text_mentions_print_scale_evidence(item) for item in value)
+    if isinstance(value, dict):
+        return any(_text_mentions_print_scale_evidence(item) for item in value.values())
+    return False
+
+
+def _audit_evidence_violations(frontmatter: dict[str, Any]) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") != "figure-agent.critique.v1.4":
+        return []
+    quality_axes = frontmatter.get("quality_axes")
+    if not isinstance(quality_axes, dict):
+        return []
+    violations: list[CritiqueLintViolation] = []
+    for axis_name in ("journal_polish", "publication_readiness"):
+        axis = quality_axes.get(axis_name)
+        if not isinstance(axis, dict) or axis.get("verdict") != "pass":
+            continue
+        if _text_mentions_print_scale_evidence(axis.get("evidence")):
+            continue
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="audit_evidence",
+                message=(
+                    f"{axis_name} verdict is pass but evidence does not name "
+                    "print-scale audit evidence"
+                ),
+            )
+        )
     return violations
 
 
@@ -84,6 +127,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
                 message=str(exc),
             )
         )
+    if violations:
+        return violations
+    violations.extend(_audit_evidence_violations(frontmatter))
     return violations
 
 

@@ -51,12 +51,13 @@ action; `/fig_loop` only logs the resulting state.
 | `status`            | object                | compact `/fig_status` vector                     |
 | `action`            | string                | one of the 11 canonical action names             |
 | `safe_command`      | string or null        | concrete shell/slash command, or `null`          |
-| `stop_boundary`     | string or null        | one of the 9 canonical stop identifiers          |
+| `stop_boundary`     | string or null        | one of the 10 canonical stop identifiers         |
 | `reason`            | string                | one-line explanation                             |
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
 | `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
+| `closeout`          | object or absent      | compact `/fig_closeout` evidence when incomplete closeout drives the recommendation |
 
 The compact `status` object includes publication-gate fields when available:
 `publication_gate_state` and `publication_gate_failures`. In release mode,
@@ -97,10 +98,17 @@ Eleven canonical action names. The driver returns exactly one per call:
 ### `/fig_loop` output ingestion
 
 In review mode, after render/critique/adjudication prerequisites are closed,
-`/fig_drive` reads the latest valid verify-only `/fig_loop` run for the same
-fixture. Malformed runs, wrong-fixture runs, and runs older than the current
-source, authoring context, critique, adjudication, publication audit, theory
-guard, subregion log, or build evidence are ignored.
+`/fig_drive` first checks read-only `/fig_closeout` evidence. If closeout is
+incomplete, the driver returns the closeout boundary before recommending a new
+loop checkpoint. For example, stale export closeout maps to `run_export`, stale
+loop-rerun closeout maps to `run_fig_loop`, and tracked golden roll-forward
+stays blocked behind manual approval. The driver never runs closeout or its
+next action.
+
+When closeout does not block, `/fig_drive` reads the latest valid verify-only
+`/fig_loop` run for the same fixture. Malformed runs, wrong-fixture runs, and
+runs older than the current source, authoring context, critique, adjudication,
+publication audit, theory guard, subregion log, or build evidence are ignored.
 
 The driver translates loop evidence as follows:
 
@@ -169,6 +177,8 @@ any other command. Identifiers:
 - `force_golden_required` — golden roll-forward needs `--force-golden`.
 - `semantic_backport_required` — polish manifest declares semantic backport.
 - `mode_forbidden_action` — next state-machine action is disallowed by mode.
+- `closeout_required` — post-patch compile/critique/adjudication/export/loop
+  closeout is incomplete; inspect the `closeout` object before proceeding.
 
 ## Examples
 

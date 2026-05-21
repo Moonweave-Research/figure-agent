@@ -183,6 +183,31 @@ If `patch_handoff` is null, do not infer a broad patch target from prose. Follow
 the `stop_reason` and `recommended_next_action`; human-gated and ambiguous cases
 stay outside patch-assisted automation.
 
+### Optional Bounded Patch Executor
+
+`/fig_loop` itself remains verify-only. The only mutating pilot surface is the
+explicit, diff-driven executor:
+
+```bash
+uv run python3 scripts/fig_loop_patch_executor.py <name> --patch-file <path> --apply
+```
+
+This executor does not generate edits from prose. It applies one prepared
+unified diff only when the latest `/fig_loop` record has:
+
+- one `patch_handoff` with `target_type: finding`
+- one fresh adjudication decision with `decision: apply` for the same target
+- `auto_patch_eligibility.level: auto_patch_candidate`
+- non-empty `allowed_reasons` and no `blocked_reasons`
+- exactly one changed path, and that path is inside
+  `patch_handoff.allowed_edit_scope`
+
+It refuses accepted, golden, export, build, `critique.md`, final-artifact, broad
+refactor, sub-region, multi-target, human-gated, and malformed patch cases. Any
+successful executor run writes `patch_apply_NNN.json` into the latest loop run
+directory and leaves `closeout_required: true`; run `/fig_closeout <name>` next
+before claiming progress.
+
 When `critique_state` is `MISSING` or `STALE`, `/fig_loop` reports
 `status_action_required` with an ordinary `/fig_critique <name>` refresh action
 before considering adjudicated human gates or manual golden roll-forward. Human

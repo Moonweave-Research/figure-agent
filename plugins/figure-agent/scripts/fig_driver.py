@@ -32,6 +32,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fig_driver_closeout as closeout_mod  # noqa: E402
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -63,6 +64,7 @@ STOP_PATCH_HANDOFF = "patch_handoff_required"
 STOP_HUMAN_GATE = "human_gate_required"
 STOP_FORCE_GOLDEN = "force_golden_required"
 STOP_MODE_FORBIDDEN = "mode_forbidden_action"
+STOP_CLOSEOUT = "closeout_required"
 
 # Operational mutation identifiers used in ``forbidden_actions``. These are
 # stable strings the driver pins so downstream executors can recognise them
@@ -141,6 +143,7 @@ def _summary(
     reason: str,
     workspace_warnings: list[str] | None = None,
     loop_checkpoint: dict[str, Any] | None = None,
+    closeout: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary = {
         "schema": SCHEMA,
@@ -158,6 +161,8 @@ def _summary(
     }
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
+    if closeout is not None:
+        summary["closeout"] = closeout
     return summary
 
 
@@ -383,6 +388,7 @@ def build_driver_summary(
     loop_checkpoint = (
         _latest_loop_checkpoint(repo_root, name, example_dir) if mode == "review" else None
     )
+    closeout = closeout_mod.closeout_report(name, repo_root=repo_root) if mode == "review" else None
     return _select_action(
         name,
         mode=mode,
@@ -391,6 +397,7 @@ def build_driver_summary(
         example_dir=example_dir,
         workspace_warnings=workspace_warnings,
         loop_checkpoint=loop_checkpoint,
+        closeout=closeout,
     )
 
 
@@ -403,6 +410,7 @@ def _select_action(
     example_dir: Path,
     workspace_warnings: list[str] | None = None,
     loop_checkpoint: dict[str, Any] | None = None,
+    closeout: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     render = status.get("render_state")
     critique = status.get("critique_state")
@@ -418,6 +426,7 @@ def _select_action(
         stop_boundary: str | None,
         reason: str,
         checkpoint: dict[str, Any] | None = None,
+        closeout_report: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         return _summary(
             name=name,
@@ -430,6 +439,7 @@ def _select_action(
             reason=reason,
             workspace_warnings=workspace_warnings,
             loop_checkpoint=checkpoint,
+            closeout=closeout_report,
         )
 
     # Stage 0/1: source must be scaffolded or authored first.
@@ -499,6 +509,31 @@ def _select_action(
                     "critique.md is fresh but critique_adjudication.yaml is "
                     "missing or stale; scaffold adjudication next."
                 ),
+            )
+        closeout_result = closeout_mod.closeout_recommendation(closeout)
+        if closeout_result is not None:
+            if closeout_result.kind == "export":
+                action = ACTION_RUN_EXPORT
+                safe_command = _export_command(name)
+                stop_boundary = STOP_CLOSEOUT
+            elif closeout_result.kind == "force_golden":
+                action = ACTION_RELEASE_BLOCKED
+                safe_command = None
+                stop_boundary = STOP_FORCE_GOLDEN
+            elif closeout_result.kind == "blocked":
+                action = ACTION_HUMAN_GATE_STOP
+                safe_command = None
+                stop_boundary = STOP_CLOSEOUT
+            else:
+                action = ACTION_RUN_FIG_LOOP
+                safe_command = _fig_loop_command(name, goal)
+                stop_boundary = STOP_CLOSEOUT
+            return make(
+                action,
+                safe_command=safe_command,
+                stop_boundary=stop_boundary,
+                reason=closeout_result.reason,
+                closeout_report=closeout_mod.compact_closeout(closeout or {}),
             )
         if loop_checkpoint is not None:
             loop_stop = loop_checkpoint["final_stop_reason"]

@@ -339,6 +339,172 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     assert summary["stop_boundary"] is None
 
 
+def test_review_mode_uses_closeout_next_action_before_rerunning_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": '/fig_loop driver_demo --goal "<goal>"',
+            "blocking_step_ids": ["loop_rerun"],
+            "steps": [
+                {
+                    "id": "loop_rerun",
+                    "state": "needs_action",
+                    "command": '/fig_loop driver_demo --goal "<goal>"',
+                }
+            ],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert (
+        summary["safe_command"]
+        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+    )
+    assert summary["stop_boundary"] == "closeout_required"
+    assert summary["closeout"]["blocking_step_ids"] == ["loop_rerun"]
+    assert "closeout is incomplete" in summary["reason"]
+
+
+def test_review_mode_uses_closeout_export_action_before_rerunning_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": "/fig_export driver_demo",
+            "blocking_step_ids": ["export"],
+            "steps": [
+                {"id": "export", "state": "needs_action", "command": "/fig_export driver_demo"}
+            ],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_export"
+    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["stop_boundary"] == "closeout_required"
+    assert summary["closeout"]["next_action"] == "/fig_export driver_demo"
+
+
+def test_review_mode_detects_real_closeout_export_gap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    (fixture / "exports" / "driver_demo.png").unlink()
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_export"
+    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["stop_boundary"] == "closeout_required"
+    assert summary["closeout"]["blocking_step_ids"] == ["export", "loop_rerun"]
+
+
+def test_review_mode_closeout_keeps_tracked_golden_manual(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": "tracked golden export requires deliberate manual approval",
+            "blocking_step_ids": ["export"],
+            "steps": [
+                {
+                    "id": "export",
+                    "state": "blocked",
+                    "command": None,
+                    "evidence": {"approval_command": "/fig_export driver_demo --force-golden"},
+                }
+            ],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "force_golden_required"
+    assert "--force-golden" not in json.dumps(summary["safe_command"])
+    assert summary["closeout"]["blocking_step_ids"] == ["export"]
+
+
+def test_review_mode_closeout_unknown_next_action_stops_without_guessing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": "critique_adjudication.yaml is invalid: bad yaml",
+            "blocking_step_ids": ["adjudication"],
+            "steps": [
+                {
+                    "id": "adjudication",
+                    "state": "needs_action",
+                    "command": None,
+                    "reason": "critique_adjudication.yaml is invalid: bad yaml",
+                }
+            ],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "closeout_required"
+    assert "bad yaml" in summary["reason"]
+
+
+def test_review_mode_ignores_complete_closeout_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": True,
+            "next_action": "closeout complete",
+            "blocking_step_ids": [],
+            "steps": [],
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert "closeout" not in summary
+
+
 def test_review_mode_fig_loop_goal_is_shell_safe(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
