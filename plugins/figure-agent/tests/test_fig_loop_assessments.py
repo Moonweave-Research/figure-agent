@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from fig_loop_assessments import (  # noqa: E402
     JOURNAL_ASSESSMENT_SCHEMA,
     JOURNAL_SCORE_KEYS,
+    editorial_art_direction_summary,
     journal_grade_assessment,
     top_tier_audit_summary,
 )
@@ -24,6 +25,40 @@ def _write_critique(path: Path, frontmatter: dict[str, object]) -> None:
 
 def _valid_scores() -> dict[str, int]:
     return {key: 80 for key in JOURNAL_SCORE_KEYS}
+
+
+def _editorial_art_direction(
+    *,
+    trigger_path: str = "ready_for_svg_polish",
+    overrides: dict[str, dict[str, object]] | None = None,
+) -> dict[str, dict[str, object]]:
+    overrides = overrides or {}
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    slots = {
+        key: {
+            "verdict": "pass",
+            "evidence": f"{key} evidence",
+            "rationale": f"{key} rationale",
+            "concrete_fix": "none",
+            "blocks_high_impact": False,
+        }
+        for key in keys
+    }
+    slots["tikz_vs_svg_polish_trigger"]["recommended_path"] = trigger_path
+    for key, value in overrides.items():
+        slots[key].update(value)
+    return slots
 
 
 def test_journal_grade_assessment_returns_none_without_fresh_critique(tmp_path: Path) -> None:
@@ -258,3 +293,72 @@ def test_top_tier_audit_summary_ignores_legacy_or_empty_audit(tmp_path: Path) ->
     )
 
     assert top_tier_audit_summary(example_dir, "FRESH") is None
+
+
+def test_editorial_art_direction_summary_extracts_polish_trigger(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.5",
+            "editorial_art_direction": _editorial_art_direction(
+                trigger_path="ready_for_svg_polish",
+                overrides={
+                    "hero_focus": {
+                        "verdict": "weak",
+                        "blocks_high_impact": True,
+                    },
+                    "human_art_direction_gate": {"verdict": "needs_human"},
+                },
+            ),
+        },
+    )
+
+    summary = editorial_art_direction_summary(example_dir, "FRESH")
+
+    assert summary == {
+        "source": "critique.editorial_art_direction",
+        "evidence_path": str(example_dir / "critique.md"),
+        "slot_count": 10,
+        "verdict_counts": {
+            "pass": 8,
+            "weak": 1,
+            "needs_human": 1,
+            "fail": 0,
+        },
+        "blocking_high_impact_count": 1,
+        "blocking_high_impact_slots": ["hero_focus"],
+        "weak_or_failed_slots": ["hero_focus", "human_art_direction_gate"],
+        "worst_verdict": "needs_human",
+        "polish_recommended_path": "ready_for_svg_polish",
+        "polish_trigger_verdict": "pass",
+        "human_art_direction_gate_verdict": "needs_human",
+    }
+
+
+def test_editorial_art_direction_summary_ignores_legacy_or_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.4",
+            "editorial_art_direction": _editorial_art_direction(),
+        },
+    )
+
+    assert editorial_art_direction_summary(example_dir, "FRESH") is None
+
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.5",
+            "editorial_art_direction": _editorial_art_direction(),
+        },
+    )
+    assert editorial_art_direction_summary(example_dir, "STALE") is None

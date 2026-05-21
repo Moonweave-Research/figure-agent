@@ -81,6 +81,7 @@ def _write_loop_run(
     patch_handoff: dict[str, Any] | None = None,
     recommended_next_action: str = "inspect figure state",
     top_tier_audit_summary: dict[str, Any] | None = None,
+    editorial_art_direction_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -103,6 +104,8 @@ def _write_loop_run(
     }
     if top_tier_audit_summary is not None:
         iteration["top_tier_audit_summary"] = top_tier_audit_summary
+    if editorial_art_direction_summary is not None:
+        iteration["editorial_art_direction_summary"] = editorial_art_direction_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -717,6 +720,34 @@ def test_review_mode_does_not_block_on_nonblocking_top_tier_audit_summary(
     assert summary["safe_command"] is None
 
 
+def test_review_mode_surfaces_editorial_human_gate_from_latest_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "needs_human",
+        "verdict_counts": {"pass": 9, "weak": 0, "fail": 0, "needs_human": 1},
+        "blocking_high_impact_count": 0,
+        "polish_recommended_path": "needs_human_art_direction",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+    assert "editorial art-direction" in summary["reason"]
+    assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
+
+
 def test_review_mode_ignores_malformed_or_wrong_fixture_loop_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -891,6 +922,126 @@ def test_polish_mode_stops_for_polish_handoff_when_export_current(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
+
+
+def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "pass",
+        "polish_recommended_path": "ready_for_svg_polish",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["stop_boundary"] is None
+    assert "ready_for_svg_polish" in summary["reason"]
+    assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
+
+
+def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "weak",
+            "polish_recommended_path": "continue_tikz",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+    )
+    assert summary["stop_boundary"] == "mode_forbidden_action"
+    assert "continue_tikz" in summary["reason"]
+
+
+def test_polish_mode_routes_editorial_human_gate_to_human_stop(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "needs_human",
+            "polish_recommended_path": "needs_human_art_direction",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "needs_human_art_direction" in summary["reason"]
+
+
+def test_polish_mode_blocks_ready_path_when_editorial_slots_need_human(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "needs_human",
+            "verdict_counts": {"pass": 9, "weak": 0, "fail": 0, "needs_human": 1},
+            "blocking_high_impact_count": 0,
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "editorial art-direction" in summary["reason"]
+
+
+def test_polish_mode_routes_editorial_semantic_backport_to_boundary(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "fail",
+            "polish_recommended_path": "semantic_backport_required",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "semantic_backport_required"
+    assert "semantic_backport_required" in summary["reason"]
 
 
 def test_polish_mode_reports_semantic_backport_required_for_blocked_final_artifact(

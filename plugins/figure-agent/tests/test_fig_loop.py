@@ -120,6 +120,7 @@ def _write_v1_2_critique(
     journal_assessment: dict | None = None,
     critique_input_hash: str | None = None,
     top_tier_audit: dict | None = None,
+    editorial_art_direction: dict | None = None,
     micro_defects: list[dict] | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
@@ -139,6 +140,8 @@ def _write_v1_2_critique(
         frontmatter["journal_grade_assessment"] = journal_assessment
     if top_tier_audit:
         frontmatter["top_tier_audit"] = top_tier_audit
+    if editorial_art_direction:
+        frontmatter["editorial_art_direction"] = editorial_art_direction
     if micro_defects is not None:
         frontmatter["micro_defects"] = micro_defects
     critique.write_text(
@@ -180,6 +183,41 @@ def _top_tier_audit(
         )
         for key in keys
     }
+
+
+def _editorial_art_direction(
+    *,
+    trigger_path: str = "ready_for_svg_polish",
+    overrides: dict[str, dict] | None = None,
+) -> dict:
+    overrides = overrides or {}
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    slots = {
+        key: overrides.get(
+            key,
+            {
+                "verdict": "pass",
+                "evidence": f"{key} evidence",
+                "rationale": f"{key} rationale",
+                "concrete_fix": "none",
+                "blocks_high_impact": False,
+            },
+        )
+        for key in keys
+    }
+    slots["tikz_vs_svg_polish_trigger"]["recommended_path"] = trigger_path
+    return slots
 
 
 def _journal_assessment(
@@ -688,6 +726,49 @@ def test_loop_surfaces_v1_3_top_tier_audit_summary(
     assert summary["worst_verdict"] == "fail"
     stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["top_tier_audit_summary"] == summary
+
+
+def test_loop_surfaces_v1_5_editorial_art_direction_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.5",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(
+            trigger_path="semantic_backport_required",
+            overrides={
+                "claim_payload_fit": {
+                    "verdict": "fail",
+                    "evidence": "novel mechanism is visually secondary",
+                    "rationale": "central claim must carry the figure",
+                    "concrete_fix": "semantic backport the source before SVG polish",
+                    "blocks_high_impact": True,
+                }
+            },
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect editorial art direction",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["editorial_art_direction_summary"]
+    assert summary["source"] == "critique.editorial_art_direction"
+    assert summary["evidence_path"] == str(critique)
+    assert summary["worst_verdict"] == "fail"
+    assert summary["blocking_high_impact_slots"] == ["claim_payload_fit"]
+    assert summary["polish_recommended_path"] == "semantic_backport_required"
+    assert summary["polish_trigger_verdict"] == "pass"
+    stdout_summary = json_stdout_summary(run_dir)
+    assert stdout_summary["editorial_art_direction_summary"] == summary
 
 
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
@@ -2125,10 +2206,11 @@ def test_main_json_emits_machine_readable_summary(
         "post_patch_evidence_verdict": None,
         "final_artifact_state": "NONE",
         "final_artifact_kind": "generated_export",
-        "final_artifact_path": "exports/loop_demo.svg",
-        "top_tier_audit_summary": None,
-        "recommended_next_action": "inspect figure state",
-    }
+            "final_artifact_path": "exports/loop_demo.svg",
+            "top_tier_audit_summary": None,
+            "editorial_art_direction_summary": None,
+            "recommended_next_action": "inspect figure state",
+        }
 
 
 def test_main_without_json_keeps_legacy_prose_output(
@@ -2216,6 +2298,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "final_artifact_kind": iteration["status"]["final_artifact_kind"],
         "final_artifact_path": iteration["status"]["final_artifact_path"],
         "top_tier_audit_summary": iteration["top_tier_audit_summary"],
+        "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
 

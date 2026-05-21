@@ -1,7 +1,7 @@
 # Issue 16: Editorial Illustration Quality Roadmap
 
 **Date:** 2026-05-21 KST
-**Status:** in progress
+**Status:** implemented through Issue 16B
 **Type:** parent issue / implementation backlog
 **Primary spec:** `../specs/2026-05-21-editorial-art-direction-audit-design.md`
 
@@ -23,7 +23,7 @@ figure has a clear art-direction diagnosis.
 
 ### Issue 16A: Editorial Art-Direction Audit v1.5
 
-**Status:** implemented in working tree
+**Status:** implemented in `a9368e9`
 
 Add `editorial_art_direction` to the critique contract. This forces host
 critique to evaluate hero focus, visual narrative, illustration readiness,
@@ -34,7 +34,7 @@ No SVG routing or mutation is included in 16A.
 
 ### Issue 16B: SVG Polish Trigger Routing
 
-**Status:** future
+**Status:** implemented
 
 After 16A lands and is dogfooded, teach `/fig_loop` and
 `/fig_drive --mode polish` to consume
@@ -46,6 +46,9 @@ The goal is to distinguish:
 - ready for controlled SVG polish;
 - needs human art direction;
 - semantic backport required before polish can count.
+
+See `2026-05-21-issue-16b-svg-polish-trigger-routing.md` for the concrete
+loop summary and driver routing contract.
 
 ## Non-Goals
 

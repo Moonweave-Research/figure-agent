@@ -51,6 +51,9 @@ def test_json_stdout_summary_reads_manifest_and_iteration_contract(tmp_path: Pat
                 "final_artifact_path": "examples/loop_demo/final.svg",
             },
             "top_tier_audit_summary": {"evaluation_state": "passed"},
+            "editorial_art_direction_summary": {
+                "polish_recommended_path": "ready_for_svg_polish"
+            },
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -69,5 +72,8 @@ def test_json_stdout_summary_reads_manifest_and_iteration_contract(tmp_path: Pat
         "final_artifact_kind": "polished_svg",
         "final_artifact_path": "examples/loop_demo/final.svg",
         "top_tier_audit_summary": {"evaluation_state": "passed"},
+        "editorial_art_direction_summary": {
+            "polish_recommended_path": "ready_for_svg_polish"
+        },
         "recommended_next_action": "inspect figure state",
     }

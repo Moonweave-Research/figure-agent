@@ -123,11 +123,34 @@ The driver translates loop evidence as follows:
   `blocking_high_impact_count` -> `human_gate_stop` /
   `human_gate_required`. This takes priority over export or golden
   roll-forward recommendations; weak-only summaries do not block.
+- `editorial_art_direction_summary` with `fail`, `needs_human`,
+  `needs_human_art_direction`, or positive `blocking_high_impact_count` ->
+  `human_gate_stop` / `human_gate_required`. This keeps target-journal
+  art-direction choices visible before export, polish, or release.
 - `status_action_required` with `--force-golden` in the recommendation ->
   `release_blocked` / `force_golden_required`.
 - `no_actionable_findings` or `verify_only_complete` -> `complete`.
 
 Other loop states stay conservative and return `run_fig_loop`.
+
+In `--mode polish`, the driver also reads the latest current `/fig_loop`
+checkpoint after compile, critique, export, and final-artifact hard gates are
+closed. If that checkpoint includes `editorial_art_direction_summary`, the
+driver routes `polish_recommended_path` as follows:
+
+| `polish_recommended_path` | Driver action | Stop boundary |
+|---|---|---|
+| `continue_tikz` | `run_fig_loop` | `mode_forbidden_action` |
+| `ready_for_svg_polish` | `polish_handoff_stop` | `null` |
+| `needs_human_art_direction` | `human_gate_stop` | `human_gate_required` |
+| `semantic_backport_required` | `polish_handoff_stop` | `semantic_backport_required` |
+
+The driver still never edits source, exports, polished SVGs, accepted state, or
+golden state. `continue_tikz` means polish mode is the wrong next executor; run
+the review loop and patch source through the normal `/fig_loop` handoff
+boundary. If the summary says `ready_for_svg_polish` but another editorial slot
+still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
+wins over polish handoff.
 
 ## Workspace Warnings
 

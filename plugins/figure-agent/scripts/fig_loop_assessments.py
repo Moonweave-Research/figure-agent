@@ -17,6 +17,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
     {CRITIQUE_SCHEMA_V1_3, CRITIQUE_SCHEMA_V1_4, CRITIQUE_SCHEMA_V1_5}
 )
+CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset({CRITIQUE_SCHEMA_V1_5})
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -32,6 +33,14 @@ JOURNAL_SCORE_KEYS = frozenset(
 )
 TOP_TIER_VERDICTS = ("pass", "weak", "needs_human", "fail")
 TOP_TIER_VERDICT_RANK = {verdict: index for index, verdict in enumerate(TOP_TIER_VERDICTS)}
+EDITORIAL_POLISH_PATHS = frozenset(
+    {
+        "continue_tikz",
+        "ready_for_svg_polish",
+        "needs_human_art_direction",
+        "semantic_backport_required",
+    }
+)
 
 
 def is_score_value(value: Any) -> bool:
@@ -142,4 +151,65 @@ def top_tier_audit_summary(
         "blocking_high_impact_slots": blocking_high_impact_slots,
         "weak_or_failed_slots": weak_or_failed_slots,
         "worst_verdict": worst_verdict,
+    }
+
+
+def editorial_art_direction_summary(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    if critique_state != "FRESH":
+        return None
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") not in CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION:
+        return None
+    editorial = frontmatter.get("editorial_art_direction")
+    if not isinstance(editorial, dict):
+        return None
+
+    verdict_counts = dict.fromkeys(TOP_TIER_VERDICTS, 0)
+    weak_or_failed_slots: list[str] = []
+    blocking_high_impact_slots: list[str] = []
+    valid_verdicts: list[str] = []
+    polish_recommended_path: str | None = None
+    polish_trigger_verdict: str | None = None
+    human_gate_verdict: str | None = None
+    for slot_name, slot in editorial.items():
+        if not isinstance(slot_name, str) or not isinstance(slot, dict):
+            continue
+        verdict = slot.get("verdict")
+        if not isinstance(verdict, str) or verdict not in TOP_TIER_VERDICT_RANK:
+            continue
+        verdict_counts[verdict] += 1
+        valid_verdicts.append(verdict)
+        if verdict != "pass":
+            weak_or_failed_slots.append(slot_name)
+        if slot.get("blocks_high_impact") is True:
+            blocking_high_impact_slots.append(slot_name)
+        if slot_name == "tikz_vs_svg_polish_trigger":
+            recommended_path = slot.get("recommended_path")
+            if isinstance(recommended_path, str) and recommended_path in EDITORIAL_POLISH_PATHS:
+                polish_recommended_path = recommended_path
+            polish_trigger_verdict = verdict
+        elif slot_name == "human_art_direction_gate":
+            human_gate_verdict = verdict
+
+    if not valid_verdicts or polish_recommended_path is None:
+        return None
+    worst_verdict = max(valid_verdicts, key=lambda verdict: TOP_TIER_VERDICT_RANK[verdict])
+    return {
+        "source": "critique.editorial_art_direction",
+        "evidence_path": str(critique_path),
+        "slot_count": len(valid_verdicts),
+        "verdict_counts": verdict_counts,
+        "blocking_high_impact_count": len(blocking_high_impact_slots),
+        "blocking_high_impact_slots": blocking_high_impact_slots,
+        "weak_or_failed_slots": weak_or_failed_slots,
+        "worst_verdict": worst_verdict,
+        "polish_recommended_path": polish_recommended_path,
+        "polish_trigger_verdict": polish_trigger_verdict,
+        "human_art_direction_gate_verdict": human_gate_verdict,
     }
