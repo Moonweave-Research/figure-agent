@@ -15,6 +15,7 @@ from critique_contract import (  # noqa: E402
     load_critique_frontmatter,
     require_mapping,
 )
+from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 from critique_schema_validator import validate_critique_schema  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from quality_manifest import (  # noqa: E402
@@ -331,6 +332,10 @@ def build_adjudication_scaffold(
     critique_path = example_dir / "critique.md"
     frontmatter = _critique_frontmatter(critique_path)
     validate_critique_schema(frontmatter)
+    evidence_violations = critique_evidence_violations(frontmatter)
+    if evidence_violations:
+        messages = "; ".join(violation.message for violation in evidence_violations)
+        raise CritiqueAdjudicationError(messages)
     fixture_value = frontmatter.get("fixture")
     fixture = (
         fixture_value.strip()

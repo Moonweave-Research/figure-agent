@@ -264,7 +264,13 @@ Use `panels: []` when no panel-level reference comparison was available. Keep cr
 - `revise` — any MAJOR or MINOR findings (or NIT-only)
 - `block` — at least one BLOCKER physics violation that makes the figure unsuitable for manuscript use
 
-6. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do not stage patches; do not re-compile. The author reads `critique.md`, decides which findings to apply, and edits manually. Auto-apply automation remains deferred until the patch-handoff loop has at least 10 real dogfood runs with conservative safety evidence.
+6. **STOP.** Critique is **report-only**. Do not auto-edit `<name>.tex`; do
+not stage patches; do not re-compile. The author or outer agent reads
+`critique.md`, runs `/fig_adjudicate <name>`, and decides which findings to
+apply. `/fig_critique` never mutates source files. Any later patch-assisted
+mutation must go through `/fig_loop` handoff plus the explicit bounded diff
+executor documented in `/fig_loop`; generated auto-edits from critique prose
+remain deferred until separately specified and dogfooded.
 
 For loop work, run `/fig_adjudicate <name>` after writing `critique.md` to
 create `examples/<name>/critique_adjudication.yaml` with the current critique

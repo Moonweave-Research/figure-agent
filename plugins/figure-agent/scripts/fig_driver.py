@@ -241,6 +241,58 @@ def _top_tier_audit_requires_human_gate(summary: Any) -> bool:
     )
 
 
+def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
+    loop_stop = loop_checkpoint["final_stop_reason"]
+    loop_action = loop_checkpoint.get("recommended_next_action")
+    patch_handoff = loop_checkpoint.get("patch_handoff")
+    escalation = loop_checkpoint.get("escalation_level")
+    if loop_stop in {"patch_target_recommended", "active_subregion_recommended"}:
+        if isinstance(patch_handoff, dict):
+            target = patch_handoff.get("target_id") or patch_handoff.get("patch_target")
+            return {
+                "action": ACTION_PATCH_HANDOFF_STOP,
+                "safe_command": None,
+                "stop_boundary": STOP_PATCH_HANDOFF,
+                "reason": (
+                    "latest /fig_loop checkpoint requires one patch handoff"
+                    f" for {target}."
+                ),
+            }
+    if loop_stop == "ambiguous_patch_selection":
+        return {
+            "action": ACTION_PATCH_HANDOFF_STOP,
+            "safe_command": None,
+            "stop_boundary": STOP_AMBIGUOUS_PATCH,
+            "reason": (
+                "latest /fig_loop checkpoint is ambiguous: "
+                f"{loop_action or 'select exactly one patch target'}."
+            ),
+        }
+    if loop_stop == "human_gate_required" or escalation == "human_review_required":
+        return {
+            "action": ACTION_HUMAN_GATE_STOP,
+            "safe_command": None,
+            "stop_boundary": STOP_HUMAN_GATE,
+            "reason": (
+                "latest /fig_loop checkpoint requires human review: "
+                f"{loop_action or 'domain judgment is required'}."
+            ),
+        }
+    top_tier_summary = loop_checkpoint.get("top_tier_audit_summary")
+    if _top_tier_audit_requires_human_gate(top_tier_summary):
+        return {
+            "action": ACTION_HUMAN_GATE_STOP,
+            "safe_command": None,
+            "stop_boundary": STOP_HUMAN_GATE,
+            "reason": (
+                "latest /fig_loop checkpoint reports top-tier audit "
+                "blockers; resolve fail/needs_human or blocking "
+                "high-impact items before export or release."
+            ),
+        }
+    return None
+
+
 def _publication_gate_blocks_release(status: dict[str, Any]) -> bool:
     return status.get("publication_gate_state") in {
         "HUMAN_ACCEPTANCE_REQUIRED",
@@ -510,6 +562,16 @@ def _select_action(
                     "missing or stale; scaffold adjudication next."
                 ),
             )
+        if loop_checkpoint is not None:
+            loop_blocker = _loop_checkpoint_review_blocker(loop_checkpoint)
+            if loop_blocker is not None:
+                return make(
+                    loop_blocker["action"],
+                    safe_command=loop_blocker["safe_command"],
+                    stop_boundary=loop_blocker["stop_boundary"],
+                    reason=loop_blocker["reason"],
+                    checkpoint=loop_checkpoint,
+                )
         closeout_result = closeout_mod.closeout_recommendation(closeout)
         if closeout_result is not None:
             if closeout_result.kind == "export":
@@ -536,58 +598,17 @@ def _select_action(
                 closeout_report=closeout_mod.compact_closeout(closeout or {}),
             )
         if loop_checkpoint is not None:
+            loop_blocker = _loop_checkpoint_review_blocker(loop_checkpoint)
+            if loop_blocker is not None:
+                return make(
+                    loop_blocker["action"],
+                    safe_command=loop_blocker["safe_command"],
+                    stop_boundary=loop_blocker["stop_boundary"],
+                    reason=loop_blocker["reason"],
+                    checkpoint=loop_checkpoint,
+                )
             loop_stop = loop_checkpoint["final_stop_reason"]
             loop_action = loop_checkpoint.get("recommended_next_action")
-            patch_handoff = loop_checkpoint.get("patch_handoff")
-            escalation = loop_checkpoint.get("escalation_level")
-            if loop_stop in {"patch_target_recommended", "active_subregion_recommended"}:
-                if isinstance(patch_handoff, dict):
-                    target = patch_handoff.get("target_id") or patch_handoff.get("patch_target")
-                    return make(
-                        ACTION_PATCH_HANDOFF_STOP,
-                        safe_command=None,
-                        stop_boundary=STOP_PATCH_HANDOFF,
-                        reason=(
-                            "latest /fig_loop checkpoint requires one patch handoff"
-                            f" for {target}."
-                        ),
-                        checkpoint=loop_checkpoint,
-                    )
-            if loop_stop == "ambiguous_patch_selection":
-                return make(
-                    ACTION_PATCH_HANDOFF_STOP,
-                    safe_command=None,
-                    stop_boundary=STOP_AMBIGUOUS_PATCH,
-                    reason=(
-                        "latest /fig_loop checkpoint is ambiguous: "
-                        f"{loop_action or 'select exactly one patch target'}."
-                    ),
-                    checkpoint=loop_checkpoint,
-                )
-            if loop_stop == "human_gate_required" or escalation == "human_review_required":
-                return make(
-                    ACTION_HUMAN_GATE_STOP,
-                    safe_command=None,
-                    stop_boundary=STOP_HUMAN_GATE,
-                    reason=(
-                        "latest /fig_loop checkpoint requires human review: "
-                        f"{loop_action or 'domain judgment is required'}."
-                    ),
-                    checkpoint=loop_checkpoint,
-                )
-            top_tier_summary = loop_checkpoint.get("top_tier_audit_summary")
-            if _top_tier_audit_requires_human_gate(top_tier_summary):
-                return make(
-                    ACTION_HUMAN_GATE_STOP,
-                    safe_command=None,
-                    stop_boundary=STOP_HUMAN_GATE,
-                    reason=(
-                        "latest /fig_loop checkpoint reports top-tier audit "
-                        "blockers; resolve fail/needs_human or blocking "
-                        "high-impact items before export or release."
-                    ),
-                    checkpoint=loop_checkpoint,
-                )
             if loop_stop == "status_action_required" and "--force-golden" in str(loop_action):
                 return make(
                     ACTION_RELEASE_BLOCKED,

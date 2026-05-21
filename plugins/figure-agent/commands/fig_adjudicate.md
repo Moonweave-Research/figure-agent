@@ -15,6 +15,9 @@ uv run python3 scripts/critique_lint.py <name>
 Stop and repair `critique.md` if lint returns non-zero. The lint preflight
 catches duplicate finding ids, malformed critique frontmatter, and missing
 top-tier finding links before the scaffold can become loop state.
+The scaffold command enforces the same critique contract again, so a skipped
+or stale lint run cannot promote malformed critique evidence into
+`critique_adjudication.yaml`.
 
 ```bash
 uv run python3 scripts/critique_adjudication.py scaffold <name>

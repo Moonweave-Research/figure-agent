@@ -46,6 +46,11 @@ before running `/usr/bin/patch --dry-run`. Only after dry-run succeeds does it
 apply the patch and write `patch_apply_001.json` evidence into the latest loop
 run directory.
 
+Post-review hardening added git-style diff compatibility for `a/`/`b/`
+headers and new-file patches such as `/dev/null` to
+`b/examples/<name>/subregion_iteration_log.md`, while preserving the same
+single-path allowed-scope and forbidden-path checks.
+
 ## Verification
 
 ```bash

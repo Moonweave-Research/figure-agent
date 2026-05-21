@@ -308,6 +308,10 @@ QUALITY_AXIS_NAMES = (
 )
 
 
+def _quote_yaml_string(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 def _quality_axis_yaml(
     name: str,
     *,
@@ -315,6 +319,7 @@ def _quality_axis_yaml(
     confidence: str = "high",
     recommended_action: str = "none",
     blocking_items: tuple[str, ...] = (),
+    evidence: str | None = None,
 ) -> str:
     blocking_yaml = (
         "[]"
@@ -326,7 +331,7 @@ def _quality_axis_yaml(
         f"    verdict: {verdict}\n"
         f"    confidence: {confidence}\n"
         f"    rationale: {name} rationale\n"
-        f"    evidence: {name} evidence\n"
+        f"    evidence: {_quote_yaml_string(evidence or f'{name} evidence')}\n"
         f"    blocking_items: {blocking_yaml}\n"
         f"    recommended_action: {recommended_action}\n"
     )
@@ -335,6 +340,7 @@ def _quality_axis_yaml(
 def _complete_v1_2_quality_axes_yaml(
     *,
     axis_overrides: dict[str, str] | None = None,
+    print_scale_evidence: bool = True,
 ) -> str:
     axis_overrides = axis_overrides or {}
     parts = ["quality_axes:\n"]
@@ -358,14 +364,27 @@ def _complete_v1_2_quality_axes_yaml(
                 "    recommended_action: none\n"
             )
         elif axis_name == "publication_readiness":
+            evidence = (
+                "publication readiness includes print-scale evidence from print_178mm.png"
+                if print_scale_evidence
+                else None
+            )
             parts.append(
                 _quality_axis_yaml(
                     "publication_readiness",
                     verdict="pass",
                     confidence="high",
                     recommended_action="none",
+                    evidence=evidence,
                 )
             )
+        elif axis_name == "journal_polish":
+            evidence = (
+                "print-scale audit: print_178mm.png and print_thumbnail.png pass"
+                if print_scale_evidence
+                else None
+            )
+            parts.append(_quality_axis_yaml(axis_name, evidence=evidence))
         else:
             parts.append(_quality_axis_yaml(axis_name))
     return "".join(parts)
@@ -653,6 +672,23 @@ def test_build_adjudication_scaffold_accepts_v1_4_empty_micro_defects(
     scaffold = build_adjudication_scaffold(fig_dir)
 
     assert scaffold["source_critique_hash"] == file_sha256(critique)
+
+
+def test_build_adjudication_scaffold_rejects_v1_4_missing_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.4",
+        quality_axes_yaml=_complete_v1_2_quality_axes_yaml(print_scale_evidence=False),
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml="findings: []\n",
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="print-scale audit evidence"):
+        build_adjudication_scaffold(fig_dir)
 
 
 def test_policy_default_scaffold_remains_conservative(tmp_path: Path) -> None:
@@ -1546,7 +1582,10 @@ def test_build_adjudication_scaffold_rejects_v1_2_missing_quality_axis(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
-        _quality_axis_yaml("journal_polish"),
+        _quality_axis_yaml(
+            "journal_polish",
+            evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        ),
         "",
     )
     _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
@@ -1625,7 +1664,7 @@ def test_build_adjudication_scaffold_rejects_v1_2_empty_evidence_for_pass(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
-        "    evidence: message_storyline evidence\n",
+        "    evidence: \"message_storyline evidence\"\n",
         "    evidence: \"\"\n",
         1,
     )

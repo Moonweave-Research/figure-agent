@@ -45,9 +45,16 @@ No additional refactor is needed after Issues 15A and 15C.
 - The public driver and loop contracts remain additive: existing fields keep
   their meaning, while closeout and patch-apply evidence are opt-in/additive.
 
-Given those boundaries, a behavior-preserving extraction would add risk without
-removing current coupling. Revisit this issue only if future work starts adding
-more policy branches directly to `fig_driver.py`, `fig_loop.py`, or `status.py`.
+Post-review hardening found one boundary defect: `/fig_drive --mode review`
+could let closeout/export recommendations hide a pending `/fig_loop`
+patch-handoff checkpoint. The fix keeps `fig_driver.py` as the controller but
+extracts loop-blocker routing into `_loop_checkpoint_review_blocker()`, so
+patch/human/top-tier blockers are checked once and can take priority over
+closeout without duplicating state-machine branches.
+
+Given those boundaries, no broader behavior-preserving extraction is needed
+right now. Revisit this issue only if future work starts adding more policy
+branches directly to `fig_driver.py`, `fig_loop.py`, or `status.py`.
 
 ## Verification
 

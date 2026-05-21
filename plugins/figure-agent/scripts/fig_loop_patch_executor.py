@@ -110,13 +110,16 @@ def _normalized_header_pair(
     old_path: str | None,
     new_path: str | None,
 ) -> tuple[str | None, str | None]:
-    if (
-        isinstance(old_path, str)
-        and isinstance(new_path, str)
-        and old_path.startswith("a/")
-        and new_path.startswith("b/")
-    ):
-        return old_path[2:], new_path[2:]
+    old_uses_git_prefix = old_path is None or (
+        isinstance(old_path, str) and old_path.startswith("a/")
+    )
+    new_uses_git_prefix = new_path is None or (
+        isinstance(new_path, str) and new_path.startswith("b/")
+    )
+    if old_uses_git_prefix and new_uses_git_prefix:
+        normalized_old = old_path[2:] if isinstance(old_path, str) else None
+        normalized_new = new_path[2:] if isinstance(new_path, str) else None
+        return normalized_old, normalized_new
     return old_path, new_path
 
 
@@ -162,10 +165,8 @@ def _patch_strip_level(patch_path: Path) -> int:
             old_path = _diff_path(line[4:])
             new_path = _diff_path(next_line[4:])
             if (
-                isinstance(old_path, str)
-                and isinstance(new_path, str)
-                and old_path.startswith("a/")
-                and new_path.startswith("b/")
+                (isinstance(old_path, str) and old_path.startswith("a/"))
+                or (isinstance(new_path, str) and new_path.startswith("b/"))
             ):
                 return 1
             return 0

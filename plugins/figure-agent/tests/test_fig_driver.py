@@ -544,6 +544,40 @@ def test_review_mode_surfaces_latest_loop_patch_handoff(
     assert summary["loop_checkpoint"]["patch_handoff"]["target_id"] == "C001"
 
 
+def test_review_mode_patch_handoff_takes_priority_over_closeout_export_gap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    monkeypatch.setattr(
+        fig_driver.closeout_mod,
+        "closeout_report",
+        lambda _name, repo_root: {
+            "closeout_complete": False,
+            "next_action": "/fig_export driver_demo",
+            "blocking_step_ids": ["export"],
+            "steps": [
+                {"id": "export", "state": "needs_action", "command": "/fig_export driver_demo"}
+            ],
+        },
+    )
+    _write_loop_run(
+        tmp_path,
+        stop_reason="patch_target_recommended",
+        escalation_level="patch_allowed",
+        patch_handoff=_patch_handoff(),
+        recommended_next_action="patch C001 before export closeout",
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "patch_handoff_stop"
+    assert summary["stop_boundary"] == "patch_handoff_required"
+    assert summary["safe_command"] is None
+    assert "closeout" not in summary
+
+
 def test_review_mode_surfaces_latest_loop_ambiguous_patch_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

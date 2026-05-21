@@ -36,9 +36,15 @@ whether a figure is good.
 
 The first three checks are enforced by the existing v1.4 schema validator that
 `critique_lint.py` already invokes through the public adjudication scaffold
-API. This slice adds the missing linter-only evidence completeness check:
-passing `journal_polish` or `publication_readiness` must name print-scale
-evidence such as `print-scale`, `print_178mm`, or `print_thumbnail`.
+API. This slice adds the missing evidence completeness check: passing
+`journal_polish` or `publication_readiness` must name print-scale evidence
+such as `print-scale`, `print_178mm`, or `print_thumbnail`.
+
+Post-review hardening extracted that check into
+`scripts/critique_evidence_lint.py` and wired it into
+`critique_adjudication.py scaffold` plus `/fig_loop` adjudication-state
+ingestion. A skipped lint run can no longer promote a v1.4 critique with
+missing print-scale evidence into fresh loop state.
 
 ## Verification
 

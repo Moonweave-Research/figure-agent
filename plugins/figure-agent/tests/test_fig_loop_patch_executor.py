@@ -153,10 +153,31 @@ def _git_style_patch(old: str = "Old Label", new: str = "New Label") -> str:
     )
 
 
+def _git_style_new_file_patch() -> str:
+    return (
+        "diff --git a/examples/loop_demo/subregion_iteration_log.md "
+        "b/examples/loop_demo/subregion_iteration_log.md\n"
+        "new file mode 100644\n"
+        "index 0000000..1111111\n"
+        "--- /dev/null\n"
+        "+++ b/examples/loop_demo/subregion_iteration_log.md\n"
+        "@@ -0,0 +1 @@\n"
+        "+iter C001 patched\n"
+    )
+
+
 def test_changed_paths_normalizes_git_style_ab_prefixes(tmp_path: Path) -> None:
     patch_path = _patch_file(tmp_path, _git_style_patch())
 
     assert changed_paths_from_unified_diff(patch_path) == ["examples/loop_demo/loop_demo.tex"]
+
+
+def test_changed_paths_normalizes_git_style_new_file_prefix(tmp_path: Path) -> None:
+    patch_path = _patch_file(tmp_path, _git_style_new_file_patch())
+
+    assert changed_paths_from_unified_diff(patch_path) == [
+        "examples/loop_demo/subregion_iteration_log.md"
+    ]
 
 
 def test_changed_paths_ignores_removed_content_that_looks_like_header(tmp_path: Path) -> None:
@@ -228,6 +249,23 @@ def test_executor_applies_git_style_patch_with_ab_prefixes(tmp_path: Path) -> No
     assert report["changed_paths"] == ["examples/loop_demo/loop_demo.tex"]
     tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
     assert tex_path.read_text(encoding="utf-8") == "\\node at (0,0) {New Label};\n"
+
+
+def test_executor_applies_git_style_new_file_patch_with_b_prefix(tmp_path: Path) -> None:
+    repo_root, runs_root, _patch_path = _ready_repo(tmp_path)
+    patch_path = _patch_file(repo_root, _git_style_new_file_patch())
+
+    report = apply_patch_file(
+        "loop_demo",
+        repo_root=repo_root,
+        runs_root=runs_root,
+        patch_path=patch_path,
+        apply=True,
+    )
+
+    assert report["changed_paths"] == ["examples/loop_demo/subregion_iteration_log.md"]
+    log_path = repo_root / "examples" / "loop_demo" / "subregion_iteration_log.md"
+    assert log_path.read_text(encoding="utf-8") == "iter C001 patched\n"
 
 
 def test_executor_refuses_without_explicit_apply_and_does_not_mutate(tmp_path: Path) -> None:

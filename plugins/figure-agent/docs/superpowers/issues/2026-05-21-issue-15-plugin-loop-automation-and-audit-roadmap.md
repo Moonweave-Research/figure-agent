@@ -1,7 +1,7 @@
 # Issue 15: Plugin Loop Automation and Audit Hardening Roadmap
 
 **Date:** 2026-05-21 KST
-**Status:** proposed
+**Status:** implemented; post-review hardening applied
 **Type:** parent issue / implementation backlog
 **Spec:** `../specs/2026-05-21-plugin-loop-automation-audit-design.md`
 
@@ -36,16 +36,24 @@ Implemented and verified surfaces:
 - publication and final-artifact gates.
 - CI split into fast tests and full-render tests with timeout guardrails.
 
-Open architecture risk:
+Post-review hardening applied:
 
-- `/fig_drive` and `/fig_closeout` are adjacent but not unified. A user can
-  still run the right command family in the wrong order.
-- `critique_lint.py` validates schema and duplicate ids, but does not yet
-  enforce complete evidence use for every required audit surface.
-- auto-patch eligibility exists, but no executor should be added before the
-  driver and audit contract can prove the current boundary.
-- `fig_driver.py` and `status.py` are large state-machine files; new work
-  should extract helper modules instead of growing them further.
+- `/fig_drive --mode review` now ingests closeout and loop checkpoints together
+  so a pending patch/human loop blocker is not hidden by export closeout.
+- v1.4 print-scale evidence checks now live in a shared helper used by
+  `critique_lint.py`, `critique_adjudication.py scaffold`, and
+  `/fig_loop` adjudication-state ingestion.
+- `fig_loop_patch_executor.py` accepts both plain unified diffs and git-style
+  `a/`/`b/` diffs, including new-file patches under allowed scope.
+- `fig_driver.py` still owns action selection, but loop-blocker routing is
+  factored into a helper instead of duplicated across closeout boundaries.
+
+Remaining architecture risk:
+
+- Future audit surfaces beyond the v1.4 print-scale evidence rule still need
+  explicit shared enforcement before loop state can rely on them.
+- `fig_driver.py` and `status.py` remain large state-machine files; future work
+  should continue extracting helper modules instead of growing them further.
 
 ## Issue Breakdown
 
