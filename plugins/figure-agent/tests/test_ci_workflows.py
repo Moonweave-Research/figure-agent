@@ -46,18 +46,20 @@ def test_full_render_workflow_has_timeout_guardrails() -> None:
 
 
 def test_workflows_use_node24_ready_action_versions() -> None:
-    workflows = [
-        (REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8"),
-        (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(
-            encoding="utf-8"
-        ),
-    ]
+    fast_workflow = (REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(
+        encoding="utf-8"
+    )
+    full_render_workflow = (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(
+        encoding="utf-8"
+    )
 
-    for workflow in workflows:
+    for workflow in (fast_workflow, full_render_workflow):
         assert "actions/checkout@v4" not in workflow
         assert "astral-sh/setup-uv@v4" not in workflow
         assert "actions/checkout@v5" in workflow
         assert "astral-sh/setup-uv@v8.1.0" in workflow
+    assert "cache-suffix: fast-tests" in fast_workflow
+    assert "cache-suffix: full-render" in full_render_workflow
 
 
 def test_render_pytest_marker_is_registered() -> None:
