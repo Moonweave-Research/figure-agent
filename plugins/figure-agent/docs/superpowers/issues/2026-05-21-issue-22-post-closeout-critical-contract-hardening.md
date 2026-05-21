@@ -1,7 +1,7 @@
 # Issue 22: Post-Closeout Critical Contract Hardening
 
 **Date:** 2026-05-21 KST
-**Status:** implemented for Issues 22A-D; Issue 22E remains planned
+**Status:** implemented through Issue 22E
 **Type:** critical review follow-up
 
 ## Problem
@@ -17,8 +17,8 @@ contract was stronger than several consumers and gates:
   in the critique freshness hash.
 - print-scale evidence lint applied only to v1.4/v1.5 even though v1.7 still
   requires journal-polish and publication-readiness evidence.
-- release readiness still needs a separate design for binding unresolved
-  critique/adjudication blockers into release mode.
+- release readiness needed a separate binding so unresolved loop checkpoint
+  blockers could not be bypassed by accepted/golden/export-ready state.
 
 ## Issue 22A: v1.7 Loop Consumer Wiring
 
@@ -76,14 +76,28 @@ Acceptance:
 
 ## Issue 22E: Release Gate Binding
 
-**Status:** planned
+**Status:** implemented
 
-Release mode still needs one explicit gate that binds unresolved
-critique/adjudication/loop blockers into release readiness. This should be a
-separate design slice because it affects status semantics, driver release mode,
-accepted/golden workflows, and existing human-approval boundaries.
+Release mode now loads the latest current `/fig_loop` checkpoint and applies
+the same loop-blocker interpretation used by review/polish before declaring a
+release loop complete. A release-ready fixture is still stopped when the latest
+checkpoint requires human review, top-tier/editorial art-direction resolution,
+ambiguous patch selection, or a single patch handoff.
 
-Non-goals for Issues 22A-D:
+Acceptance:
+
+- [x] release mode stops on a latest human-gated loop checkpoint even when
+  `release_ready` is already true.
+- [x] release mode stops on a latest patch-handoff loop checkpoint even when
+  `release_ready` is already true.
+- [x] release mode requires fresh adjudication before completion when
+  `critique_state` is `FRESH`.
+- [x] release mode still completes when the latest checkpoint is clean and
+  includes that checkpoint in the JSON evidence.
+- [x] export freshness remains the first release prerequisite; missing/stale
+  exports still route to `/fig_export` before release blockers are evaluated.
+
+Non-goals for Issue 22:
 
 - Do not change accepted/golden semantics.
 - Do not make `--skip-critique` disappear.

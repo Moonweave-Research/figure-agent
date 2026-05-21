@@ -348,7 +348,7 @@ def build_driver_summary(
     workspace_warnings = _workspace_warnings(repo_root)
     loop_checkpoint = (
         checkpoint_mod.latest_loop_checkpoint(repo_root, name, example_dir)
-        if mode in {"review", "polish"}
+        if mode in {"review", "release", "polish"}
         else None
     )
     closeout = closeout_mod.closeout_report(name, repo_root=repo_root) if mode == "review" else None
@@ -560,6 +560,26 @@ def _select_action(
                     "release readiness can be evaluated."
                 ),
             )
+        if critique == "FRESH" and _adjudication_needs_action(example_dir, status):
+            return make(
+                ACTION_RUN_ADJUDICATE,
+                safe_command=command_mod.adjudicate_command(name),
+                stop_boundary=None,
+                reason=(
+                    "critique.md is fresh but critique_adjudication.yaml is "
+                    "missing or stale; scaffold adjudication before release."
+                ),
+            )
+        if loop_checkpoint is not None:
+            loop_blocker = _loop_checkpoint_review_blocker(loop_checkpoint)
+            if loop_blocker is not None:
+                return make(
+                    loop_blocker["action"],
+                    safe_command=loop_blocker["safe_command"],
+                    stop_boundary=loop_blocker["stop_boundary"],
+                    reason=loop_blocker["reason"],
+                    checkpoint=loop_checkpoint,
+                )
         if _publication_gate_blocks_release(status):
             return make(
                 ACTION_RELEASE_BLOCKED,
@@ -573,6 +593,7 @@ def _select_action(
                 safe_command=None,
                 stop_boundary=None,
                 reason="release_ready is true; release loop is closed.",
+                checkpoint=loop_checkpoint,
             )
         return make(
             ACTION_RELEASE_BLOCKED,

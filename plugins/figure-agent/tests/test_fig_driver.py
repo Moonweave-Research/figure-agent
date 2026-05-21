@@ -129,6 +129,27 @@ def _patch_handoff() -> dict[str, Any]:
     }
 
 
+def _release_ready_status(name: str = "driver_demo") -> dict[str, Any]:
+    return {
+        "stage": 4,
+        "name": name,
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": True,
+        "release_ready": True,
+        "final_ready": True,
+        "publication_gate_state": "OK",
+        "publication_gate_failures": [],
+    }
+
+
 # --- CLI + JSON contract -----------------------------------------------------
 
 
@@ -638,6 +659,7 @@ def test_review_mode_completes_after_latest_clean_loop_checkpoint(
     assert summary["action"] == "complete"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] is None
+    assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
 
 
 def test_review_mode_surfaces_top_tier_audit_blockers_from_latest_loop(
@@ -899,6 +921,92 @@ def test_release_mode_publication_gate_blocks_even_when_release_ready_is_true(
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert "missing_submission_safe_true" in summary["reason"]
     assert ".. Driver" not in summary["reason"]
+
+
+def test_release_mode_requires_adjudication_before_completion(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    release_ready_status = _release_ready_status()
+    release_ready_status["critique_state"] = "FRESH"
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: release_ready_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "run_adjudicate"
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+    )
+    assert summary["stop_boundary"] is None
+    assert "critique_adjudication.yaml is missing or stale" in summary["reason"]
+    assert summary["action"] not in summary["forbidden_actions"]
+
+
+def test_release_mode_surfaces_latest_loop_human_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    _write_loop_run(
+        tmp_path,
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        recommended_next_action="human review required for C002",
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "human review required for C002" in summary["reason"]
+    assert summary["loop_checkpoint"]["final_stop_reason"] == "human_gate_required"
+
+
+def test_release_mode_surfaces_latest_loop_patch_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    _write_loop_run(
+        tmp_path,
+        stop_reason="patch_target_recommended",
+        escalation_level="patch_allowed",
+        patch_handoff=_patch_handoff(),
+        recommended_next_action="patch C001",
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "patch_handoff_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "patch_handoff_required"
+    assert "C001" in summary["reason"]
+    assert summary["loop_checkpoint"]["patch_handoff"]["target_id"] == "C001"
+
+
+def test_release_mode_completes_after_latest_clean_loop_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        escalation_level="none",
+        recommended_next_action="release is ready",
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+    assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
 
 
 # --- polish mode -------------------------------------------------------------
