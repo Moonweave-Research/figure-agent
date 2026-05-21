@@ -1,7 +1,7 @@
 # Issue 21B: Historical Visual Clash Regression Dogfood
 
 **Date:** 2026-05-21 KST
-**Status:** preflight captured; host-vision dogfood pending
+**Status:** host-vision handoff prepared; dogfood pending
 **Type:** dogfood evidence / regression protocol
 **Depends on:** Issue 20 visual clash evidence integration; Issue 21A visual clash candidate accounting
 

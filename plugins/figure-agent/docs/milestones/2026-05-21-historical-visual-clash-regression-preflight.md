@@ -78,3 +78,57 @@ step is to run `/fig_critique` on the scratch artifact and verify that:
 If the host critique passes lint but weakly marks all candidates
 `accept_simplification`, the next code issue should lint rationale quality for
 visual-clash-linked micro-defects.
+
+## Host-Vision Handoff Prompt
+
+Use this prompt in Claude after checking out PR #28 or the branch
+`codex/historical-visual-clash-regression`.
+
+```markdown
+# Task: Complete Issue 21B host-vision dogfood on scratch artifact
+
+Repository:
+- `/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]`
+- Plugin root: `plugins/figure-agent`
+
+Source of truth:
+- `plugins/figure-agent/docs/superpowers/issues/2026-05-21-issue-21b-historical-visual-clash-regression-dogfood.md`
+- `plugins/figure-agent/docs/milestones/2026-05-21-historical-visual-clash-regression-preflight.md`
+
+Scratch fixture:
+- `.scratch/issue-21b/preflight-20260521-212042/fig1_visual_clash_regression`
+
+Important:
+- Do not edit canonical `plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/*.tex`.
+- Do not mutate accepted/golden/export state.
+- Ignore the copied old `critique.md` unless you move it aside; it is schema v1.5 and must not be treated as fresh evidence.
+
+Steps:
+1. From `plugins/figure-agent`, regenerate the brief if needed:
+   `uv run python3 scripts/critique_brief.py ../../.scratch/issue-21b/preflight-20260521-212042/fig1_visual_clash_regression`
+2. Read the scratch render and audit assets:
+   - `.scratch/issue-21b/preflight-20260521-212042/fig1_visual_clash_regression/build/fig1_overview_v2_pair_001_vault.png`
+   - all listed `build/panel_crops/*`
+   - all listed `build/audit_crops/*`, especially Panel E crops
+   - `build/visual_clash.json`
+3. Write a new schema v1.7+ `critique.md` for the scratch fixture.
+4. In `micro_defects`, account for every `VC###` candidate exactly once using `visual_clash_ref`.
+5. Pay special attention to:
+   - `VC050 text_on_path HV+`
+   - `VC057 text_on_fill V`
+   - other `V` candidates around the meter/probe area
+6. Classify the historical shape if present:
+   - `label_backdrop_overflows_outline` for HV+ backdrop/box overflow
+   - `label_glyph_overlaps_internal_drawing` for V_s meter same-box display/glyph collision
+   If absent, explicitly justify absence in the relevant `micro_defects[].observation`.
+7. Run:
+   `uv run python3 scripts/critique_lint.py ../../.scratch/issue-21b/preflight-20260521-212042/fig1_visual_clash_regression`
+8. Append results to the milestone:
+   - whether lint passed
+   - how `VC050` was classified
+   - how `VC057` / meter-area `V` candidates were classified
+   - whether another code issue is needed
+
+Completion condition:
+- Do not mark Issue 21B complete unless the host-written critique passes lint and the milestone records the semantic classification outcome.
+```
