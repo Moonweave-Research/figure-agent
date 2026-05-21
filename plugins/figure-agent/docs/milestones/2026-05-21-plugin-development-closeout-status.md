@@ -88,18 +88,19 @@ Results:
 These are useful future improvements, but they are not required before using
 the plugin for real figure work:
 
-1. Deterministic historical regression harness:
-   generate a disposable fixture that recreates the `HV+`/`V_s` geometry and
-   proves the structured lint path rejects weak or missing critique accounting.
-2. Structured `accept_simplification_reason` field:
-   replace the current natural-language rationale heuristic with an enum plus
-   explanation in a future schema version if host prose becomes inconsistent.
-3. CI ergonomics:
-   periodically run full-render on pull requests with a label or scheduled
-   workflow, while keeping normal PR feedback fast.
-4. Documentation cleanup:
-   normalize stale unchecked bullets in old completed issues if they become
-   confusing during handoff.
+The current prioritized list is tracked in
+`docs/superpowers/issues/2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`.
+In order:
+
+1. visual-clash bbox-centered zoom crops;
+2. crop-read accountability;
+3. reference-calibrated critique packs;
+4. reference-calibrated advisory scoring;
+5. fixture freshness UX cleanup.
+
+Lower-priority backlog remains: deterministic historical regression harness,
+structured `accept_simplification_reason`, CI ergonomics, SVG polish handoff
+expansion, and external second-opinion vision checks.
 
 ## Practical Use Guidance
 
