@@ -29,6 +29,8 @@ Dogfood showed two practical facts:
      host LLM must inspect.
    - Directly addresses the observed failure mode: the LLM sees defects only
      when zoomed into the exact local region.
+   - Also defines the stable crop-pack manifest and freshness contract that
+     later crop-accounting lint depends on.
 
 2. **Issue 23B: Crop-Read Accountability**
    - Requires the critique output to account for every zoom, print-scale, and
@@ -90,7 +92,9 @@ Issue 23 is complete when:
 
 - visual-clash candidates produce local zoom crops and those crops are included
   in the critique brief;
-- critique output must account for all required crops;
+- a deterministic crop-pack manifest exists and participates in critique
+  freshness;
+- critique output must account for all required crops from that manifest;
 - a fixture can declare a reference-calibration pack;
 - the host critique uses that pack to judge target-journal fit and top-tier
   ambition;

@@ -16,6 +16,11 @@ crops.
 The crop layer should be report-only. It must not change source, accepted,
 golden, export, or critique state by itself.
 
+This slice must also define a stable crop-pack manifest, because later
+crop-accountability lint needs a deterministic list of required crops. Do not
+make later lint infer required crops by globbing files from `build/audit_crops/`;
+stale files would make that contract unreliable.
+
 ## Current Context
 
 Already implemented:
@@ -41,24 +46,34 @@ Missing:
   bounds.
 - [ ] Tiny candidates are upscaled to a readable minimum width.
 - [ ] Crop ordering is deterministic by candidate id.
+- [ ] Crop generation writes a deterministic manifest, for example
+  `build/audit_crops/manifest.json`, listing every required crop id, path,
+  source, source candidate id when applicable, bbox, and generated size.
+- [ ] The crop manifest, not filesystem globbing, is the future source of truth
+  for crop-read accountability.
+- [ ] The crop manifest participates in critique freshness, or the rubric /
+  generator version changes in a way that makes existing critiques stale when
+  the required crop contract changes.
 - [ ] `/fig_critique` brief lists every visual-clash crop under the existing
   high-zoom or visual-clash section.
 - [ ] Missing or malformed `visual_clash.json` degrades gracefully to the
   current behavior.
-- [ ] Tests cover crop generation, bbox clamping, deterministic naming, and
-  brief inclusion.
+- [ ] Tests cover crop generation, bbox clamping, deterministic naming,
+  manifest contents, freshness impact, and brief inclusion.
 
 ## Suggested Files
 
 - `scripts/critique_zoom_crops.py`
 - `scripts/critique_brief.py`
+- `scripts/quality_manifest.py`
 - `tests/test_critique_zoom_crops.py`
 - `tests/test_critique_brief.py`
+- `tests/test_quality_manifest.py`
 
 ## Verification
 
 ```bash
-uv run pytest -q tests/test_critique_zoom_crops.py tests/test_critique_brief.py
+uv run pytest -q tests/test_critique_zoom_crops.py tests/test_critique_brief.py tests/test_quality_manifest.py
 uv run pytest -q
 uv run ruff check .
 git diff --check

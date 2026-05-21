@@ -43,10 +43,21 @@ journal_grade_assessment:
 Exact names can change, but the assessment must preserve the idea that scores
 cite the reference pack rather than generic taste.
 
+Expected schema policy:
+
+- If Issue 23B already introduced `figure-agent.critique.v1.8`, extend that
+  schema only when the v1.8 contract already includes reference-calibration
+  scoring hooks.
+- Otherwise introduce the next critique schema version and matching rubric
+  version.
+- Do not mutate v1.7 score semantics in place.
+
 ## Acceptance Criteria
 
 - [ ] `/fig_critique` brief explains how to score against a reference pack when
   one exists.
+- [ ] Reference-calibrated scoring is introduced through an explicit schema /
+  rubric version policy.
 - [ ] Validator accepts complete reference-calibration scoring metadata.
 - [ ] Validator rejects partial reference-calibration scoring metadata.
 - [ ] `fig_loop` surfaces compact reference-calibration score metadata.

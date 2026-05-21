@@ -4,7 +4,7 @@
 **Status:** planned
 **Type:** critique evidence completeness hardening
 **Parent:** `2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`
-**Blocked by:** Issue 23A
+**Blocked by:** Issue 23A crop-pack manifest
 
 ## What to build
 
@@ -15,6 +15,10 @@ or uncertainty.
 
 This closes the gap where the brief can provide crops but the host critique can
 silently ignore them.
+
+This slice must consume the crop-pack manifest produced by Issue 23A. Do not
+derive the required crop list from loose files under `build/audit_crops/`,
+because stale crop files can survive between builds.
 
 ## Proposed Output Contract
 
@@ -40,12 +44,26 @@ preserve these semantics:
 - uncertain verdicts remain visible to `/fig_loop`;
 - empty or missing crop-accounting output is invalid when required crops exist.
 
+Expected schema policy:
+
+- Introduce a new critique schema, expected to be
+  `figure-agent.critique.v1.8`.
+- Introduce the matching rubric version, expected to be
+  `figure-agent.critique-rubric.v1.8`.
+- Keep v1.7 and older critiques parseable through the existing legacy paths;
+  do not mutate v1.7 in place.
+
 ## Acceptance Criteria
 
 - [ ] `/fig_critique` brief requires a crop accountability block.
+- [ ] New crop-accountability requirements are gated behind a new critique
+  schema/rubric version rather than in-place mutation of v1.7.
 - [ ] Validator/lint rejects missing crop-accounting output when required crops
   exist.
-- [ ] Validator/lint rejects crop ids not present in the generated crop pack.
+- [ ] Validator/lint rejects crop ids not present in the Issue 23A crop-pack
+  manifest.
+- [ ] Validator/lint rejects missing crop ids from the Issue 23A crop-pack
+  manifest.
 - [ ] `defect` crop verdicts require a linked `micro_defects[].id`.
 - [ ] `uncertain` crop verdicts are surfaced as not silently passing.
 - [ ] Legacy critiques without crop accountability remain parseable only under

@@ -57,6 +57,9 @@ human-authorable, and deterministic.
 - [ ] Missing pack is allowed and preserves current behavior.
 - [ ] Pack content is included in critique input hashing so pack edits make old
   critiques stale.
+- [ ] If pack semantics change the required critique output contract, the
+  implementation bumps the rubric version rather than silently changing prompt
+  meaning under the same version.
 - [ ] Tests cover valid pack, missing pack, malformed pack, brief inclusion, and
   freshness impact.
 

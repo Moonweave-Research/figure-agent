@@ -114,7 +114,9 @@ For new real figure work, start with:
 6. Use `/fig_export` only after render and critique state are fresh enough for
    release/export work.
 
-At this point, core plugin development can pause unless a new dogfood run finds
-a concrete contract failure. The next live work should be fixture-specific:
-refresh stale renders/critiques/exports, then resolve the human publication
-provenance gate for the target figure.
+At this point, the core plugin release is usable. If continuing plugin
+hardening, start with Issue 23A because dogfood showed that host-vision critique
+needs bbox-centered zoom crops to reliably see small geometry defects. If not
+continuing plugin hardening, the next live work is fixture-specific: refresh
+stale renders/critiques/exports, then resolve the human publication provenance
+gate for the target figure.
