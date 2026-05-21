@@ -21,6 +21,8 @@ driver still select the expected public next action?
   contract expectations.
 - Add `tests/test_real_fixture_state_contracts.py` to:
   - copy each real fixture into a temporary repo;
+  - materialize minimal build/export placeholders declared by the contract
+    YAML, avoiding dependence on local untracked artifacts;
   - normalize mtimes so source/build/export freshness is deterministic;
   - stub only volatile external state:
     - export freshness substate;

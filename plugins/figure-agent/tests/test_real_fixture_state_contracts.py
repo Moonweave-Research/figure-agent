@@ -35,8 +35,29 @@ def _copy_fixture_to_repo(tmp_path: Path, fixture_name: str) -> tuple[Path, Path
     source = REPO_ROOT / "examples" / fixture_name
     assert source.is_dir(), f"missing real fixture: {source}"
     fixture = examples_dir / fixture_name
-    shutil.copytree(source, fixture)
+    shutil.copytree(source, fixture, ignore=shutil.ignore_patterns("build", "exports"))
     return repo_root, fixture
+
+
+def _materialize_controlled_artifacts(
+    fixture: Path,
+    fixture_name: str,
+    contract: dict[str, Any],
+) -> None:
+    artifacts = contract.get("artifacts", {})
+    assert isinstance(artifacts, dict)
+    if artifacts.get("build_pdf"):
+        build_pdf = fixture / "build" / f"{fixture_name}.pdf"
+        build_pdf.parent.mkdir(parents=True, exist_ok=True)
+        build_pdf.write_bytes(b"%PDF-1.4\n% controlled test artifact\n")
+
+    exports = artifacts.get("exports", [])
+    assert isinstance(exports, list)
+    for ext in exports:
+        assert isinstance(ext, str)
+        export_path = fixture / "exports" / f"{fixture_name}.{ext}"
+        export_path.parent.mkdir(parents=True, exist_ok=True)
+        export_path.write_bytes(b"controlled test artifact\n")
 
 
 def _set_tree_mtime(root: Path, timestamp: float) -> None:
@@ -72,6 +93,7 @@ def test_real_fixture_status_contract_matrix(
 ) -> None:
     fixture_name = contract["fixture"]
     repo_root, fixture = _copy_fixture_to_repo(tmp_path, fixture_name)
+    _materialize_controlled_artifacts(fixture, fixture_name, contract)
     _normalize_fixture_mtimes(fixture, fixture_name)
     style_lock = tmp_path / "polymer-paper-preamble.sty"
     style_lock.write_text("% stable style lock\n", encoding="utf-8")

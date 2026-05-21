@@ -52,6 +52,8 @@ Acceptance criteria:
 - [x] Contract cases live in `tests/real_fixture_state_contracts.yaml`.
 - [x] Test copies fixtures into `tmp_path` and does not mutate checked-in
   examples.
+- [x] Test materializes minimal build/export placeholders in `tmp_path` so the
+  contract does not depend on local untracked artifacts.
 - [x] Test normalizes mtimes and stubs export freshness/checkpoint/closeout
   volatility.
 - [x] Public `/fig_status` fields are asserted for each case.

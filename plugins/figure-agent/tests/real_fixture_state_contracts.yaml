@@ -1,5 +1,8 @@
 fixtures:
   - fixture: golden_trap_depth_picture
+    artifacts:
+      build_pdf: true
+      exports: [pdf, svg, tif, png]
     controlled_export_state: TRACKED_GOLDEN
     status:
       stage: 4
@@ -29,6 +32,9 @@ fixtures:
         stop_boundary: host_llm_critique_required
 
   - fixture: smoke_trap_demo
+    artifacts:
+      build_pdf: true
+      exports: [pdf, svg, tif, png]
     controlled_export_state: FRESH
     status:
       stage: 4
@@ -58,6 +64,8 @@ fixtures:
         stop_boundary:
 
   - fixture: fig5_floating_clip_mechanism
+    artifacts:
+      build_pdf: true
     controlled_export_state: MISSING
     status:
       stage: 3
@@ -87,6 +95,8 @@ fixtures:
         stop_boundary:
 
   - fixture: n3_trial_01_trap_depth
+    artifacts:
+      build_pdf: true
     controlled_export_state: MISSING
     status:
       stage: 3
