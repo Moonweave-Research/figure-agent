@@ -383,7 +383,7 @@ def _format_metric(metric: object) -> str:
     return ", ".join(parts)
 
 
-def _candidate_sort_key(candidate: dict) -> tuple[str, str, list[int]]:
+def _candidate_sort_key(candidate: dict) -> tuple[str, str, str, list[int]]:
     bbox = candidate.get("bbox_px")
     bbox_key = bbox if isinstance(bbox, list) else []
     return (
