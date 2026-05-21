@@ -1,7 +1,7 @@
 # Issue 23B: Crop-Read Accountability
 
 **Date:** 2026-05-22 KST
-**Status:** planned
+**Status:** completed in commit `ebb1eff`
 **Type:** critique evidence completeness hardening
 **Parent:** `2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`
 **Blocked by:** Issue 23A crop-pack manifest

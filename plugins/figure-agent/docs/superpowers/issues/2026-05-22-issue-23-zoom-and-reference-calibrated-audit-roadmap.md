@@ -1,7 +1,7 @@
 # Issue 23: Zoom and Reference-Calibrated Audit Roadmap
 
 **Date:** 2026-05-22 KST
-**Status:** planned
+**Status:** 23A-C completed; 23D-E open
 **Type:** post-closeout audit-quality hardening
 
 ## Problem
@@ -25,6 +25,7 @@ Dogfood showed two practical facts:
 ## Priority Order
 
 1. **Issue 23A: Visual-Clash BBox-Centered Crops**
+   - Completed in commit `112e766`.
    - Highest priority. Converts every `VC###` candidate into an image crop the
      host LLM must inspect.
    - Directly addresses the observed failure mode: the LLM sees defects only
@@ -33,12 +34,14 @@ Dogfood showed two practical facts:
      later crop-accounting lint depends on.
 
 2. **Issue 23B: Crop-Read Accountability**
+   - Completed in commit `ebb1eff`.
    - Requires the critique output to account for every zoom, print-scale, and
      visual-clash crop.
    - Prevents "crop was provided but not actually reviewed" from becoming a
      silent failure.
 
 3. **Issue 23C: Reference-Calibrated Critique Pack**
+   - Completed in commit `e725c6c`.
    - Adds an optional fixture-level `critique_reference_pack.yaml`.
    - Makes target journal, reference class, exemplar traits, must-match traits,
      and must-avoid traits explicit critique inputs.

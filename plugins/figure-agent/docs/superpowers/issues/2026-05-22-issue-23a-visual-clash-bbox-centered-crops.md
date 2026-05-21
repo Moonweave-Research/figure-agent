@@ -1,7 +1,7 @@
 # Issue 23A: Visual-Clash BBox-Centered Crops
 
 **Date:** 2026-05-22 KST
-**Status:** planned
+**Status:** completed in commit `112e766`
 **Type:** audit visibility hardening
 **Parent:** `2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`
 
