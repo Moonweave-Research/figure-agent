@@ -498,6 +498,7 @@ def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schem
     assert (
         'observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"'
     ) in brief
+    assert "visual-clash-linked `accept_simplification`" in brief
     assert "status: open | resolved | accept_simplification" in brief
 
 

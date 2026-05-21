@@ -25,6 +25,21 @@ from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
+_VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
+_VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
+    "false positive",
+    "not ",
+    "intentional",
+    "acceptable because",
+    "separate",
+    "distinct",
+    "outside",
+    "axis",
+    "legend",
+    "background",
+    "decorative",
+    "convention",
+)
 
 
 @dataclass(frozen=True)
@@ -136,6 +151,52 @@ def _micro_defect_visual_clash_refs(frontmatter: dict[str, Any]) -> list[str]:
     return refs
 
 
+def _visual_clash_accept_simplification_violations(
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    raw_items = frontmatter.get("micro_defects")
+    if not isinstance(raw_items, list):
+        return []
+    violations: list[CritiqueLintViolation] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        visual_clash_ref = raw_item.get("visual_clash_ref")
+        if (
+            raw_item.get("status") != "accept_simplification"
+            or not isinstance(visual_clash_ref, str)
+            or not visual_clash_ref.strip()
+        ):
+            continue
+        defect_id = raw_item.get("id")
+        observation = raw_item.get("observation")
+        if not isinstance(observation, str):
+            observation = ""
+        normalized_observation = " ".join(observation.split())
+        rationale = normalized_observation.lower()
+        has_concrete_length = (
+            len(normalized_observation) >= _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS
+        )
+        names_candidate = visual_clash_ref.strip() in normalized_observation
+        gives_non_defect_reason = any(
+            marker in rationale for marker in _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS
+        )
+        if has_concrete_length and names_candidate and gives_non_defect_reason:
+            continue
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="visual_clash_accept_simplification",
+                message=(
+                    "visual-clash-linked accept_simplification requires a concrete "
+                    "observation naming the candidate id and explaining why it is "
+                    f"not a defect: {visual_clash_ref.strip()} ({defect_id})"
+                ),
+            )
+        )
+    return violations
+
+
 def _visual_clash_accounting_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
@@ -170,7 +231,7 @@ def _visual_clash_accounting_violations(
         ]
     missing = [candidate_id for candidate_id in candidate_ids if candidate_id not in accounted]
     if not missing:
-        return []
+        return _visual_clash_accept_simplification_violations(frontmatter)
     return [
         CritiqueLintViolation(
             severity="blocker",

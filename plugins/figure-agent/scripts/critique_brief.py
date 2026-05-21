@@ -717,6 +717,9 @@ defects in `micro_defects`. Every `BLOCKER` or `MAJOR` micro-defect must either
 link to a normal panel/top-level finding via `linked_finding_id` or use
 `status: accept_simplification` with a clear observation explaining why the
 crop-scale or print-scale issue is acceptable.
+For every visual-clash-linked `accept_simplification`, the `observation` must
+name the `VC###` id and explain the concrete geometry/context reason it is not
+a defect; do not write vague phrases such as "acceptable after review".
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

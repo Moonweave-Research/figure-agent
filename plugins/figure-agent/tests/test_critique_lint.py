@@ -381,9 +381,81 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
             "    crop: examples/demo_fig/build/audit_crops/panel_E_s02.png\n"
             "    kind: label_glyph_overlaps_internal_drawing\n"
             "    severity: NIT\n"
-            "    observation: VC002 is acceptable after review\n"
+            "    observation: >-\n"
+            "      VC002 is a false positive: the glyph is a separate axis label,\n"
+            "      not an internal instrument-box drawing, and the contact is outside\n"
+            "      the apparatus.\n"
             "    linked_finding_id: \"\"\n"
             "    visual_clash_ref: VC002\n"
+            "    status: accept_simplification\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: NIT\n"
+            "    observation: acceptable after review\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: accept_simplification\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "visual_clash_accept_simplification"
+    ]
+    assert "VC001" in violations[0].message
+
+
+def test_lint_critique_accepts_concrete_visual_clash_accept_simplification_rationale(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: NIT\n"
+            "    observation: >-\n"
+            "      VC001 is a false positive: the label belongs to a separate axis annotation,\n"
+            "      not the instrument box, and the apparent contact is outside the apparatus.\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
         editorial_yaml=_editorial_yaml(),
