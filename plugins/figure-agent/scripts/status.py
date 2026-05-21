@@ -18,6 +18,7 @@ from reference_contract import (
     declared_figure_reference_path,
     participating_panel_reference_paths,
 )
+from status_explanation import build_status_explanation
 from svg_polish_manifest import (
     FINAL_ARTIFACT_POLISHED_SVG,
     compute_final_artifact_state,
@@ -243,6 +244,11 @@ def _status_vector(
     )
 
 
+def _with_status_explanation(result: dict) -> dict:
+    result["status_explanation"] = build_status_explanation(result)
+    return result
+
+
 def _append_reference_image_check(
     checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
 ) -> None:
@@ -370,7 +376,7 @@ def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
     if not example_dir.exists() or not example_dir.is_dir():
-        return {
+        return _with_status_explanation({
             "stage": 0,
             "name": name,
             "checks": [],
@@ -393,7 +399,7 @@ def infer_stage(example_dir: Path) -> dict:
                 CRITIQUE_NOT_REQUIRED,
                 _default_final_artifact(name),
             ),
-        }
+        })
 
     spec_path = example_dir / "spec.yaml"
     tex_path = example_dir / f"{name}.tex"
@@ -446,7 +452,7 @@ def infer_stage(example_dir: Path) -> dict:
     if spec_path.exists() and not briefing_path.exists():
         checks.append(("spec_yaml", "present"))
         checks.append(("briefing_md", "missing"))
-        return {
+        return _with_status_explanation({
             "stage": 1,
             "name": name,
             "checks": checks,
@@ -470,7 +476,7 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        }
+        })
 
     # Stage 4: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
@@ -500,7 +506,7 @@ def infer_stage(example_dir: Path) -> dict:
             final_artifact=final_artifact,
             accepted=accepted,
         )
-        return {
+        return _with_status_explanation({
             "stage": 4,
             "name": name,
             "checks": checks,
@@ -518,13 +524,13 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        }
+        })
 
     # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        return {
+        return _with_status_explanation({
             "stage": 3,
             "name": name,
             "checks": checks,
@@ -548,7 +554,7 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        }
+        })
 
     # Stage 2: tex exists AND (no build pdf OR pdf stale relative to source set)
     if tex_path.exists():
@@ -558,7 +564,7 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
-        return {
+        return _with_status_explanation({
             "stage": 2,
             "name": name,
             "checks": checks,
@@ -582,12 +588,12 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        }
+        })
 
     # Stage 1: spec.yaml exists, no .tex authored yet
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
-        return {
+        return _with_status_explanation({
             "stage": 1,
             "name": name,
             "checks": checks,
@@ -611,10 +617,10 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        }
+        })
 
     # Stage 0 fallback (directory exists but no spec.yaml)
-    return {
+    return _with_status_explanation({
         "stage": 0,
         "name": name,
         "checks": [],
@@ -638,7 +644,7 @@ def infer_stage(example_dir: Path) -> dict:
             _default_final_artifact(name),
             publication_gate,
         ),
-    }
+    })
 
 
 def _print_single(result: dict) -> None:
@@ -673,6 +679,17 @@ def _print_single(result: dict) -> None:
         f"release_ready={str(bool(result.get('release_ready'))).lower()} "
         f"final_ready={final_ready}"
     )
+    explanation = result.get("status_explanation")
+    if isinstance(explanation, dict):
+        first_blocker = explanation.get("first_blocker")
+        if isinstance(first_blocker, dict):
+            code = first_blocker.get("code", "?")
+            message = first_blocker.get("message", "?")
+            command = first_blocker.get("next_command")
+            manual = first_blocker.get("manual")
+            suffix = " manual=true" if manual else ""
+            command_text = f" next={command}" if command else ""
+            print(f"  Explanation: {code} — {message}{command_text}{suffix}")
     publication_gate_state = result.get("publication_gate_state")
     if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
         print(f"  Publication gate: {publication_gate_state}")

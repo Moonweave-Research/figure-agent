@@ -147,6 +147,13 @@ def _summary(
     loop_checkpoint: dict[str, Any] | None = None,
     closeout: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    status_explanation = status.get("status_explanation")
+    if isinstance(status_explanation, dict):
+        first_blocker = status_explanation.get("first_blocker")
+        if isinstance(first_blocker, dict):
+            code = first_blocker.get("code")
+            if isinstance(code, str) and code not in {"", "none"}:
+                reason = f"{reason} first blocker {code}."
     summary = {
         "schema": SCHEMA,
         "fixture": name,
@@ -161,6 +168,8 @@ def _summary(
         "workspace_warnings": list(workspace_warnings or ()),
         "may_execute": False,
     }
+    if isinstance(status_explanation, dict):
+        summary["status_explanation"] = status_explanation
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
     if closeout is not None:

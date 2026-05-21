@@ -197,6 +197,48 @@ def test_main_emits_json_summary_in_dry_run(
         assert key in payload
 
 
+def test_driver_summary_includes_status_explanation_and_first_blocker_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "export_state": "MISSING",
+            "release_ready": False,
+            "status_explanation": {
+                "summary": "exports are missing.",
+                "first_blocker": {
+                    "code": "export_missing",
+                    "category": "fixture_freshness",
+                    "message": "exports are missing.",
+                    "next_command": "/fig_export driver_demo",
+                    "manual": False,
+                },
+                "buckets": {
+                    "plugin_state": [],
+                    "fixture_freshness": [
+                        {
+                            "code": "export_missing",
+                            "category": "fixture_freshness",
+                            "message": "exports are missing.",
+                            "next_command": "/fig_export driver_demo",
+                            "manual": False,
+                        }
+                    ],
+                    "human_blockers": [],
+                },
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
+    assert "first blocker export_missing" in summary["reason"]
+    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+
+
 def test_driver_summary_surfaces_workspace_warnings(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
