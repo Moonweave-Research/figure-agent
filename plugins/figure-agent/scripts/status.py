@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import status_next_policy
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
 from inputs import parse_spec
 from publication_gate import publication_gate_summary
@@ -27,86 +28,6 @@ from svg_polish_manifest import (
 # for crop/reference comparisons, but status should not require a rebuild for
 # critique-only panel-reference edits.
 STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
-
-_NEXT_0 = "run /fig_new <name> to create the figure scaffold."
-_NEXT_1 = (
-    "author examples/<name>/<name>.tex from briefing.md"
-    " (cp styles/tex_template.tex to start), then /fig_compile <name>."
-)
-_NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
-# Stage 3: prefer /fig_export unless reference grounding makes critique required.
-_NEXT_3 = "run /fig_critique <name> for vision review (optional), then /fig_export <name>."
-_NEXT_3_CRITIQUE_REQUIRED = (
-    "run /fig_critique <name> before /fig_export <name>"
-    " because reference-grounded critique is missing or stale."
-)
-_NEXT_4 = (
-    "done — outputs in examples/<name>/exports/."
-    " To revise, edit <name>.tex and re-run /fig_compile then /fig_export."
-)
-_NEXT_4_STALE = "exports are stale — re-run /fig_compile <name> then /fig_export <name>."
-_NEXT_4_EXPORT_STALE = "exports are stale or incomplete — re-run /fig_export <name>."
-_NEXT_4_STALE_CRITIQUE_REQUIRED = (
-    "exports are stale — re-run /fig_compile <name>, then /fig_critique <name>,"
-    " then /fig_export <name>."
-)
-_NEXT_4_EXPORT_STALE_CRITIQUE_REQUIRED = (
-    "exports are stale or incomplete — run /fig_critique <name>,"
-    " then /fig_export <name>."
-)
-_NEXT_4_TRACKED_STALE = (
-    "tracked golden artifact is intentionally stale;"
-    " to roll forward run /fig_export <name> --force-golden."
-)
-_NEXT_4_TRACKED_STALE_CRITIQUE_REQUIRED = (
-    "tracked golden artifact is stale and reference-grounded critique is missing or stale;"
-    " run /fig_compile <name>, then /fig_critique <name>,"
-    " then /fig_export <name> --force-golden."
-)
-_NEXT_4_TRACKED_EXPORT_STALE_CRITIQUE_REQUIRED = (
-    "tracked golden artifact is stale and reference-grounded critique is missing or stale;"
-    " run /fig_critique <name>, then /fig_export <name> --force-golden."
-)
-_NEXT_4_TRACKED_PARTIAL = (
-    "tracked golden exports are incomplete;"
-    " to roll forward missing artifacts run /fig_export <name> --force-golden."
-)
-_NEXT_4_PARTIAL = (
-    "exports are incomplete — re-run /fig_export <name> to generate the"
-    " missing PDF/SVG/TIFF/PNG artifacts."
-)
-_NEXT_4_NOT_ACCEPTED = (
-    "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
-    " defects, then set accepted: true in spec.yaml."
-)
-_NEXT_4_CRITIQUE_REQUIRED = (
-    "run /fig_critique <name> before treating exports as final;"
-    " if no edits are needed, existing exports can remain in place."
-)
-_NEXT_REFERENCE_MISSING = (
-    "fix declared reference inputs in spec.yaml or add the missing files before continuing."
-)
-_NEXT_MISSING_BRIEFING = "complete examples/<name>/briefing.md before continuing."
-_NEXT_SPEC_PARSE_ERROR = "fix malformed examples/<name>/spec.yaml before continuing."
-_NEXT_STYLE_PROFILE_UNKNOWN = (
-    "fix unknown style_profile in examples/<name>/spec.yaml before continuing."
-)
-_NEXT_FINAL_ARTIFACT_MISSING = (
-    "final artifact is missing — create or restore the declared polished SVG, audit,"
-    " and polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
-)
-_NEXT_FINAL_ARTIFACT_INVALID = (
-    "final artifact is invalid — fix spec.yaml final_artifact and"
-    " polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
-)
-_NEXT_FINAL_ARTIFACT_STALE = (
-    "final artifact is stale — refresh polish/svg_polish_manifest.yaml after"
-    " source/export/critique/polish changes, then rerun /fig_status <name>."
-)
-_NEXT_FINAL_ARTIFACT_BLOCKED = (
-    "final artifact requires semantic backport — patch TikZ/briefing/spec,"
-    " rerun compile/export/critique as needed, then recreate the polish manifest."
-)
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 CRITIQUE_NOT_REQUIRED = "NOT_REQUIRED"
@@ -200,10 +121,6 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     if _is_stale(_critique_source_paths(example_dir, name, spec), (critique_path,)):
         return CRITIQUE_STALE
     return CRITIQUE_FRESH
-
-
-def _critique_needs_action(state: str) -> bool:
-    return state in {CRITIQUE_MISSING, CRITIQUE_STALE, CRITIQUE_REFERENCE_MISSING}
 
 
 def _append_critique_check(
@@ -311,7 +228,7 @@ def _workflow_ready(
         and not blocking_notes
         and render_state == RENDER_FRESH
         and exports_substate in {EXPORT_FRESH, EXPORT_TRACKED_GOLDEN}
-        and not _critique_needs_action(critique_state)
+        and not status_next_policy.critique_needs_action(critique_state)
     )
 
 
@@ -349,27 +266,6 @@ def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
         style_lock_path=STYLE_LOCK_PATH,
         spec_parse_error=bool(spec.get(_SPEC_PARSE_ERROR_KEY)),
     )
-
-
-def _final_artifact_next_template(final_artifact: dict) -> str | None:
-    state = final_artifact["state"]
-    if state == "MISSING":
-        return _NEXT_FINAL_ARTIFACT_MISSING
-    if state == "INVALID":
-        return _NEXT_FINAL_ARTIFACT_INVALID
-    if state == "STALE":
-        return _NEXT_FINAL_ARTIFACT_STALE
-    if state == "BLOCKED":
-        return _NEXT_FINAL_ARTIFACT_BLOCKED
-    return None
-
-
-def _spec_next_template(notes: list[str]) -> str | None:
-    if "spec_parse_error" in notes:
-        return _NEXT_SPEC_PARSE_ERROR
-    if "style_profile_unknown" in notes:
-        return _NEXT_STYLE_PROFILE_UNKNOWN
-    return None
 
 
 def _status_vector(
@@ -537,7 +433,13 @@ def infer_stage(example_dir: Path) -> dict:
             "stage": 0,
             "name": name,
             "checks": [],
-            "next": _NEXT_0.replace("<name>", name),
+            "next": status_next_policy.select_next_hint(
+                stage=0,
+                name=name,
+                notes=[],
+                critique_state=CRITIQUE_NOT_REQUIRED,
+                exports_substate=exports_substate,
+            ),
             "notes": [],
             "accepted": None,
             "exports_substate": exports_substate,
@@ -607,7 +509,13 @@ def infer_stage(example_dir: Path) -> dict:
             "stage": 1,
             "name": name,
             "checks": checks,
-            "next": (_spec_next_template(notes) or _NEXT_MISSING_BRIEFING).replace("<name>", name),
+            "next": status_next_policy.select_next_hint(
+                stage=1,
+                name=name,
+                notes=notes,
+                critique_state=critique_state,
+                exports_substate=exports_substate,
+            ),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -638,48 +546,24 @@ def infer_stage(example_dir: Path) -> dict:
             notes.append("stale_export")
         # Priority: stale_export / partial_export stay above done, but their
         # remediation must include critique when run_export.py will enforce it.
-        spec_next_template = _spec_next_template(notes)
-        if spec_next_template is not None:
-            next_template = spec_next_template
-        elif "missing_briefing" in notes:
-            next_template = _NEXT_MISSING_BRIEFING
-        elif critique_state == CRITIQUE_REFERENCE_MISSING:
-            next_template = _NEXT_REFERENCE_MISSING
-        elif is_stale and _critique_needs_action(critique_state):
-            if exports_substate == EXPORT_TRACKED_GOLDEN:
-                if render_state == RENDER_FRESH:
-                    next_template = _NEXT_4_TRACKED_EXPORT_STALE_CRITIQUE_REQUIRED
-                else:
-                    next_template = _NEXT_4_TRACKED_STALE_CRITIQUE_REQUIRED
-            elif source_stale and render_state != RENDER_FRESH:
-                next_template = _NEXT_4_STALE_CRITIQUE_REQUIRED
-            else:
-                next_template = _NEXT_4_EXPORT_STALE_CRITIQUE_REQUIRED
-        elif is_stale and exports_substate == EXPORT_TRACKED_GOLDEN:
-            next_template = _NEXT_4_TRACKED_STALE
-        elif source_stale and render_state != RENDER_FRESH:
-            next_template = _NEXT_4_STALE
-        elif export_content_stale:
-            next_template = _NEXT_4_EXPORT_STALE
-        elif source_stale:
-            next_template = _NEXT_4_EXPORT_STALE
-        elif partial and exports_substate == EXPORT_TRACKED_GOLDEN:
-            next_template = _NEXT_4_TRACKED_PARTIAL
-        elif partial:
-            next_template = _NEXT_4_PARTIAL
-        elif _critique_needs_action(critique_state):
-            next_template = _NEXT_4_CRITIQUE_REQUIRED
-        elif _final_artifact_next_template(final_artifact) is not None:
-            next_template = _final_artifact_next_template(final_artifact)
-        elif accepted is False:
-            next_template = _NEXT_4_NOT_ACCEPTED
-        else:
-            next_template = _NEXT_4
+        next_hint = status_next_policy.select_next_hint(
+            stage=4,
+            name=name,
+            notes=notes,
+            critique_state=critique_state,
+            exports_substate=exports_substate,
+            source_stale=source_stale,
+            export_content_stale=export_content_stale,
+            render_state=render_state,
+            partial=partial,
+            final_artifact=final_artifact,
+            accepted=accepted,
+        )
         return {
             "stage": 4,
             "name": name,
             "checks": checks,
-            "next": next_template.replace("<name>", name),
+            "next": next_hint,
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -699,22 +583,17 @@ def infer_stage(example_dir: Path) -> dict:
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        spec_next_template = _spec_next_template(notes)
-        if spec_next_template is not None:
-            next_template = spec_next_template
-        elif "missing_briefing" in notes:
-            next_template = _NEXT_MISSING_BRIEFING
-        elif critique_state == CRITIQUE_REFERENCE_MISSING:
-            next_template = _NEXT_REFERENCE_MISSING
-        elif _critique_needs_action(critique_state):
-            next_template = _NEXT_3_CRITIQUE_REQUIRED
-        else:
-            next_template = _NEXT_3
         return {
             "stage": 3,
             "name": name,
             "checks": checks,
-            "next": next_template.replace("<name>", name),
+            "next": status_next_policy.select_next_hint(
+                stage=3,
+                name=name,
+                notes=notes,
+                critique_state=critique_state,
+                exports_substate=exports_substate,
+            ),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -738,18 +617,17 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
-        spec_next_template = _spec_next_template(notes)
-        if spec_next_template is not None:
-            next_template = spec_next_template
-        else:
-            next_template = (
-                _NEXT_MISSING_BRIEFING if "missing_briefing" in notes else _NEXT_2
-            )
         return {
             "stage": 2,
             "name": name,
             "checks": checks,
-            "next": next_template.replace("<name>", name),
+            "next": status_next_policy.select_next_hint(
+                stage=2,
+                name=name,
+                notes=notes,
+                critique_state=critique_state,
+                exports_substate=exports_substate,
+            ),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -768,12 +646,17 @@ def infer_stage(example_dir: Path) -> dict:
     # Stage 1: spec.yaml exists, no .tex authored yet
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
-        next_template = _spec_next_template(notes) or _NEXT_1
         return {
             "stage": 1,
             "name": name,
             "checks": checks,
-            "next": next_template.replace("<name>", name),
+            "next": status_next_policy.select_next_hint(
+                stage=1,
+                name=name,
+                notes=notes,
+                critique_state=critique_state,
+                exports_substate=exports_substate,
+            ),
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
@@ -794,7 +677,13 @@ def infer_stage(example_dir: Path) -> dict:
         "stage": 0,
         "name": name,
         "checks": [],
-        "next": _NEXT_0.replace("<name>", name),
+        "next": status_next_policy.select_next_hint(
+            stage=0,
+            name=name,
+            notes=[],
+            critique_state=CRITIQUE_NOT_REQUIRED,
+            exports_substate=exports_substate,
+        ),
         "notes": [],
         "accepted": accepted,
         "exports_substate": exports_substate,

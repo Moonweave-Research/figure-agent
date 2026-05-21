@@ -1,7 +1,7 @@
 # Issue 17: Driver and Status State-Machine Refactor
 
 **Date:** 2026-05-21 KST
-**Status:** in progress through Issue 17B
+**Status:** in progress through Issue 17C
 **Type:** parent issue / architecture hardening
 
 ## Problem
@@ -75,13 +75,23 @@ Acceptance criteria:
 
 ### Issue 17C: Status Next-Hint Policy Extraction
 
-**Status:** future
+**Status:** implemented
 
 Extract the stage-specific `next` selection logic from `status.py` into a
 helper module that accepts the already-computed state vector plus freshness
 substates. This is higher-risk than 17A because it touches many stage branches,
 so it should happen only after adding focused regression tests for next-hint
 precedence.
+
+Acceptance criteria:
+
+- [x] New module exposes pure `select_next_hint(...)` policy.
+- [x] `status.py` delegates command-facing `next` hint selection to the module.
+- [x] Focused tests cover stage 1-4 precedence, including stale critique,
+  tracked-golden, final-artifact, accepted, missing-briefing, malformed-spec,
+  and missing-reference cases.
+- [x] Existing `tests/test_status.py` still pass.
+- [x] No public `/fig_status` stage, note, gate, or `next` wording changes.
 
 ### Issue 17D: Status Final/Publication Gate Adapter Boundary Review
 

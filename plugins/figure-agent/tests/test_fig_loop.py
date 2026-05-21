@@ -2324,9 +2324,9 @@ def _patch_status_with_final_artifact(
     Defaults keep the per-fixture render/critique/export gates closed so that
     _loop_decision reaches the final-artifact branch via workflow_ready=true
     + final_ready=false. When ``next_hint`` is omitted, the helper resolves to
-    the canonical status.py per-state next-action template
-    (``_NEXT_FINAL_ARTIFACT_*``), mirroring what ``infer_stage()`` would emit
-    for a real fixture in the given final-artifact state.
+    the canonical status_next_policy.py per-state next-action template,
+    mirroring what ``infer_stage()`` would emit for a real fixture in the given
+    final-artifact state.
     """
     if next_hint is None:
         next_hint = _next_hint_for_final_artifact(final_artifact_state, final_artifact_kind)
@@ -2353,17 +2353,23 @@ def _patch_status_with_final_artifact(
 
 
 def _next_hint_for_final_artifact(final_artifact_state: str, final_artifact_kind: str) -> str:
-    """Mirror status.py's _NEXT_FINAL_ARTIFACT_* templates for synthetic statuses."""
-    import status as status_mod  # noqa: PLC0415
+    """Mirror status_next_policy.py's final-artifact hints for synthetic statuses."""
+    from export_freshness import EXPORT_FRESH  # noqa: PLC0415
+    from status_next_policy import select_next_hint  # noqa: PLC0415
 
     if final_artifact_kind != "polished_svg":
         return "inspect figure state"
-    return {
-        "MISSING": status_mod._NEXT_FINAL_ARTIFACT_MISSING,
-        "INVALID": status_mod._NEXT_FINAL_ARTIFACT_INVALID,
-        "STALE": status_mod._NEXT_FINAL_ARTIFACT_STALE,
-        "BLOCKED": status_mod._NEXT_FINAL_ARTIFACT_BLOCKED,
-    }.get(final_artifact_state, "inspect figure state")
+    if final_artifact_state not in {"MISSING", "INVALID", "STALE", "BLOCKED"}:
+        return "inspect figure state"
+    return select_next_hint(
+        stage=4,
+        name="loop_demo",
+        notes=[],
+        critique_state="NOT_REQUIRED",
+        exports_substate=EXPORT_FRESH,
+        final_artifact={"state": final_artifact_state},
+        accepted=True,
+    )
 
 
 def test_loop_no_polish_opt_in_keeps_existing_behavior(
