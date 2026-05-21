@@ -106,6 +106,20 @@ def _diff_path(value: str) -> str | None:
     return path
 
 
+def _normalized_header_pair(
+    old_path: str | None,
+    new_path: str | None,
+) -> tuple[str | None, str | None]:
+    if (
+        isinstance(old_path, str)
+        and isinstance(new_path, str)
+        and old_path.startswith("a/")
+        and new_path.startswith("b/")
+    ):
+        return old_path[2:], new_path[2:]
+    return old_path, new_path
+
+
 def changed_paths_from_unified_diff(patch_path: Path) -> list[str]:
     try:
         lines = patch_path.read_text(encoding="utf-8").splitlines()
@@ -118,12 +132,14 @@ def changed_paths_from_unified_diff(patch_path: Path) -> list[str]:
         line = lines[index]
         next_line = lines[index + 1] if index + 1 < len(lines) else ""
         if line.startswith("--- ") and next_line.startswith("+++ "):
-            parsed = _diff_path(line[4:])
-            if parsed:
-                old_paths.append(parsed)
-            parsed = _diff_path(next_line[4:])
-            if parsed:
-                new_paths.append(parsed)
+            old_path, new_path = _normalized_header_pair(
+                _diff_path(line[4:]),
+                _diff_path(next_line[4:]),
+            )
+            if old_path:
+                old_paths.append(old_path)
+            if new_path:
+                new_paths.append(new_path)
             index += 2
             continue
         index += 1
@@ -131,6 +147,30 @@ def changed_paths_from_unified_diff(patch_path: Path) -> list[str]:
     if not paths:
         raise PatchExecutorError("patch file must be a unified diff with file headers")
     return paths
+
+
+def _patch_strip_level(patch_path: Path) -> int:
+    try:
+        lines = patch_path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise PatchExecutorError(f"cannot read patch file: {patch_path}") from exc
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        next_line = lines[index + 1] if index + 1 < len(lines) else ""
+        if line.startswith("--- ") and next_line.startswith("+++ "):
+            old_path = _diff_path(line[4:])
+            new_path = _diff_path(next_line[4:])
+            if (
+                isinstance(old_path, str)
+                and isinstance(new_path, str)
+                and old_path.startswith("a/")
+                and new_path.startswith("b/")
+            ):
+                return 1
+            return 0
+        index += 1
+    return 0
 
 
 def _is_forbidden_path(rel_path: str) -> bool:
@@ -171,12 +211,12 @@ def _allowed_scope_evidence(repo_root: Path, patch_handoff: dict[str, Any]) -> l
     return [path_evidence(repo_root, rel_path) for rel_path in allowed if isinstance(rel_path, str)]
 
 
-def _run_patch(repo_root: Path, patch_path: Path, *, dry_run: bool) -> None:
+def _run_patch(repo_root: Path, patch_path: Path, *, dry_run: bool, strip_level: int) -> None:
     command = [
         "/usr/bin/patch",
         "--forward",
         "--batch",
-        "--strip=0",
+        f"--strip={strip_level}",
         "--input",
         str(patch_path),
     ]
@@ -217,8 +257,9 @@ def apply_patch_file(
     changed_paths = changed_paths_from_unified_diff(patch_path)
     changed_path = _validate_patch_scope(changed_paths, patch_handoff)
     pre_patch = _allowed_scope_evidence(repo_root, patch_handoff)
-    _run_patch(repo_root, patch_path, dry_run=True)
-    _run_patch(repo_root, patch_path, dry_run=False)
+    strip_level = _patch_strip_level(patch_path)
+    _run_patch(repo_root, patch_path, dry_run=True, strip_level=strip_level)
+    _run_patch(repo_root, patch_path, dry_run=False, strip_level=strip_level)
     post_patch = _allowed_scope_evidence(repo_root, patch_handoff)
 
     report = {

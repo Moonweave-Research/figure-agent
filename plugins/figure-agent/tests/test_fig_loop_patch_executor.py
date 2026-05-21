@@ -141,6 +141,24 @@ def _single_file_patch(old: str = "Old Label", new: str = "New Label") -> str:
     )
 
 
+def _git_style_patch(old: str = "Old Label", new: str = "New Label") -> str:
+    return (
+        "diff --git a/examples/loop_demo/loop_demo.tex b/examples/loop_demo/loop_demo.tex\n"
+        "index 1111111..2222222 100644\n"
+        "--- a/examples/loop_demo/loop_demo.tex\n"
+        "+++ b/examples/loop_demo/loop_demo.tex\n"
+        "@@ -1 +1 @@\n"
+        f"-\\node at (0,0) {{{old}}};\n"
+        f"+\\node at (0,0) {{{new}}};\n"
+    )
+
+
+def test_changed_paths_normalizes_git_style_ab_prefixes(tmp_path: Path) -> None:
+    patch_path = _patch_file(tmp_path, _git_style_patch())
+
+    assert changed_paths_from_unified_diff(patch_path) == ["examples/loop_demo/loop_demo.tex"]
+
+
 def test_changed_paths_ignores_removed_content_that_looks_like_header(tmp_path: Path) -> None:
     patch_path = _patch_file(
         tmp_path,
@@ -193,6 +211,23 @@ def test_executor_applies_one_allowed_patch_and_writes_closeout_evidence(
     assert report["next_action"] == "/fig_closeout loop_demo"
     evidence_path = runs_root / "20260521T000000Z-loop_demo" / "patch_apply_001.json"
     assert json.loads(evidence_path.read_text(encoding="utf-8")) == report
+
+
+def test_executor_applies_git_style_patch_with_ab_prefixes(tmp_path: Path) -> None:
+    repo_root, runs_root, _patch_path = _ready_repo(tmp_path)
+    patch_path = _patch_file(repo_root, _git_style_patch())
+
+    report = apply_patch_file(
+        "loop_demo",
+        repo_root=repo_root,
+        runs_root=runs_root,
+        patch_path=patch_path,
+        apply=True,
+    )
+
+    assert report["changed_paths"] == ["examples/loop_demo/loop_demo.tex"]
+    tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
+    assert tex_path.read_text(encoding="utf-8") == "\\node at (0,0) {New Label};\n"
 
 
 def test_executor_refuses_without_explicit_apply_and_does_not_mutate(tmp_path: Path) -> None:
