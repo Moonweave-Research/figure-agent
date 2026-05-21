@@ -99,6 +99,7 @@ Acceptance criteria:
 ### Issue 15C: Bounded Auto-Patch Executor Pilot
 
 **Type:** AFK, but gated behind 15A and 15B
+**Status:** implemented and verified
 **Blocked by:** Issue 15A, Issue 15B
 
 Add an opt-in pilot executor for exactly one local, safe patch target selected
@@ -108,16 +109,16 @@ with mandatory closeout.
 
 Acceptance criteria:
 
-- [ ] Default behavior remains non-mutating.
-- [ ] Executor requires explicit opt-in flag and a single `apply` target.
-- [ ] Executor refuses science, structure, physics, reference interpretation,
+- [x] Default behavior remains non-mutating.
+- [x] Executor requires explicit opt-in flag and a single `apply` target.
+- [x] Executor refuses science, structure, physics, reference interpretation,
   target-journal, accepted, golden, export, final-artifact, and semantic
   backport findings.
-- [ ] Executor writes only within `patch_handoff.allowed_edit_scope`.
-- [ ] Executor records before/after evidence and a rollback path.
-- [ ] Executor runs or requires `/fig_closeout` after the edit and does not
+- [x] Executor writes only within `patch_handoff.allowed_edit_scope`.
+- [x] Executor records before/after evidence and a rollback path.
+- [x] Executor runs or requires `/fig_closeout` after the edit and does not
   claim completion while closeout is incomplete.
-- [ ] Tests prove refusal paths are more numerous than success paths.
+- [x] Tests prove refusal paths are more numerous than success paths.
 
 ### Issue 15D: Orchestration Boundary Refactor
 
