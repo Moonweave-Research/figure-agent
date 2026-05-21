@@ -1,7 +1,8 @@
 # Issue: Fig1 Publication Provenance Gate
 
 **Date:** 2026-05-19 KST
-**Status:** open; current technical recheck failed on 2026-05-20 KST
+**Status:** blocked on fixture-specific technical rebaseline and human
+publication decision; not a general plugin implementation issue
 **Fixture:** `examples/fig1_overview_v2_pair_001_vault`
 
 ## Problem
@@ -18,6 +19,20 @@ needed before final human acceptance:
 That is no longer the current repo truth after later fig1 source iterations.
 The remaining blocker is still partly a publication provenance decision, but a
 fresh technical recheck now also fails accepted-mode gates.
+
+## Plugin Triage — 2026-05-21 KST
+
+The general plugin-side publication gate UX is already implemented through
+Issue 14. A narrow parser bug found during follow-up triage is tracked
+separately as Issue 19: Markdown-bolded audit fields such as
+`**submission-safe:** true` must be parsed the same way as plain
+`submission-safe: true`.
+
+This fixture issue remains blocked after that plugin-side fix. Closing it still
+requires a human provenance decision plus any fixture-specific technical
+rebaseline needed for `fig1_overview_v2_pair_001_vault`. Agents must not set
+`accepted: true`, force golden roll-forward, or declare `submission-safe: true`
+from plugin automation alone.
 
 ## Current Recheck — 2026-05-20 KST
 

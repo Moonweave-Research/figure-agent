@@ -21,6 +21,15 @@ PUBLICATION_GATE_HUMAN_ACCEPTANCE_REQUIRED = "HUMAN_ACCEPTANCE_REQUIRED"
 PUBLICATION_GATE_PROVENANCE_REQUIRED = "PROVENANCE_REQUIRED"
 
 
+def _has_field_value(audit_text: str, field: str, values: tuple[str, ...]) -> bool:
+    value_pattern = "|".join(re.escape(value) for value in values)
+    pattern = (
+        rf"^\s*(?:[-*]\s*)?(?:\*\*)?{re.escape(field)}(?:\*\*)?\s*:"
+        rf"\s*(?:\*\*)?\s*(?:{value_pattern})(?:\*\*)?\s*$"
+    )
+    return re.search(pattern, audit_text, re.IGNORECASE | re.MULTILINE) is not None
+
+
 def publication_gate_failure_dicts(
     records: list[PublicationGateFailure],
 ) -> list[dict[str, str]]:
@@ -87,7 +96,7 @@ def publication_compliance_failure_records(
                 ),
             )
         )
-    if not re.search(r"submission-safe(?:\*\*)?:\s*(true|yes)\b", audit_text, re.IGNORECASE):
+    if not _has_field_value(audit_text, "submission-safe", ("true", "yes")):
         records.append(
             PublicationGateFailure(
                 code="missing_submission_safe_true",
@@ -99,10 +108,10 @@ def publication_compliance_failure_records(
                 ),
             )
         )
-    if require_disclosure and not re.search(
-        r"disclosure[- ]needed(?:\*\*)?:\s*(true|false|yes|no|none|n/a|not-applicable)\b",
+    if require_disclosure and not _has_field_value(
         audit_text,
-        re.IGNORECASE,
+        "disclosure-needed",
+        ("true", "false", "yes", "no", "none", "n/a", "not-applicable"),
     ):
         records.append(
             PublicationGateFailure(
