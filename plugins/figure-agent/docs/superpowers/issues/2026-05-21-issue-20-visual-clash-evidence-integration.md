@@ -47,26 +47,26 @@ Add a second high-zoom crop layer:
 
 Acceptance criteria:
 
-- [ ] Crop pack preserves existing full-render quadrants and print-scale images.
-- [ ] Instrument crop paths are deterministic and fixture-relative.
-- [ ] 4x4 fallback paths are deterministic.
-- [ ] Brief lists the new crops in High-Zoom Visual Audit Crops.
+- [x] Crop pack preserves existing full-render quadrants and print-scale images.
+- [x] Instrument crop paths are deterministic and fixture-relative.
+- [x] 4x4 fallback paths are deterministic.
+- [x] Brief lists the new crops in High-Zoom Visual Audit Crops.
 
 ### Issue 20C: Visual Clash JSON + Brief Ingestion
 
-**Status:** planned
+**Status:** implemented
 
 Serialize `check_visual_clash.py` candidates into
 `build/visual_clash.json` and require `/fig_critique` to account for them.
 
 Acceptance criteria:
 
-- [ ] `check_visual_clash.py --json-out <path>` writes the documented JSON.
-- [ ] `compile.sh` writes `build/visual_clash.json` on every successful
+- [x] `check_visual_clash.py --json-output <path>` writes the documented JSON.
+- [x] `compile.sh` writes `build/visual_clash.json` on every successful
   visual-clash check.
-- [ ] `critique_brief.py` emits
+- [x] `critique_brief.py` emits
   `## Visual Clash Candidates (from check_visual_clash.py)` when JSON exists.
-- [ ] Candidate ordering is deterministic.
+- [x] Candidate ordering is deterministic.
 
 ### Issue 20D: Visual Clash Budget Guardrail
 

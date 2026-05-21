@@ -58,7 +58,10 @@ rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" \
+  "${STRICT_ARGS[@]}" \
+  --json-output "${BUILD_DIR}/visual_clash.json" \
+  "$PDF_OUT"
 if [[ -f "coordinate_hints.yaml" ]]; then
   uv run python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi

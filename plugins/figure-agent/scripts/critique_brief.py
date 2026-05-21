@@ -12,6 +12,7 @@ Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -369,6 +370,74 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _format_metric(metric: object) -> str:
+    if not isinstance(metric, dict) or not metric:
+        return "(none)"
+    parts: list[str] = []
+    for key in sorted(metric):
+        value = metric[key]
+        if isinstance(value, int | float):
+            parts.append(f"{key}={value:g}")
+        else:
+            parts.append(f"{key}={value}")
+    return ", ".join(parts)
+
+
+def _candidate_sort_key(candidate: dict) -> tuple[str, str, list[int]]:
+    bbox = candidate.get("bbox_px")
+    bbox_key = bbox if isinstance(bbox, list) else []
+    return (
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+        bbox_key,
+    )
+
+
+def _visual_clash_candidates_section(example_dir: Path) -> str:
+    report_path = example_dir / "build" / "visual_clash.json"
+    if not report_path.is_file():
+        return ""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return (
+            "\n## Visual Clash Candidates (from check_visual_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` is malformed JSON: {exc}\n"
+        )
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return (
+            "\n## Visual Clash Candidates (from check_visual_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
+        )
+    total = report.get("total", len(candidates))
+    lines = [
+        "## Visual Clash Candidates (from check_visual_clash.py)",
+        "Host LLM MUST review each candidate. For each, either link to a new/existing "
+        "`micro_defects` entry or explicitly justify `status: accept_simplification`.",
+        "Use `label_backdrop_overflows_outline` when a label fill/backdrop protrudes "
+        "past its enclosing instrument-box outline.",
+        "Use `label_glyph_overlaps_internal_drawing` when a label glyph or backdrop "
+        "collides with an internal mark inside the same box.",
+        f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
+        f"- Total candidates from JSON: {total}",
+        "",
+    ]
+    for candidate in sorted(
+        (item for item in candidates if isinstance(item, dict)),
+        key=_candidate_sort_key,
+    ):
+        bbox = candidate.get("bbox_px")
+        tex_lines = candidate.get("tex_lines")
+        tex_display = tex_lines if isinstance(tex_lines, list) else "null"
+        lines.append(
+            f"- kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
+            f"bbox_px={bbox} metric={_format_metric(candidate.get('metric'))} "
+            f"tex_lines={tex_display}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def generate_for(example_dir: Path) -> str:
     """Compose the reviewer brief for one `examples/<name>` directory."""
     if not example_dir.is_dir():
@@ -430,6 +499,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     )
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
+    visual_clash_section = _visual_clash_candidates_section(example_dir)
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -441,6 +511,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {render_read_note}{image_context_sections}
 {zoom_audit_section}
 {print_scale_audit_section}
+{visual_clash_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}

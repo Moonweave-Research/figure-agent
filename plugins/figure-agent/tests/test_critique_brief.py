@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -366,6 +367,49 @@ def test_critique_brief_keeps_print_scale_images_out_of_high_zoom_section(tmp_pa
         "## Author intent", 1
     )[0]
     assert "print_scale_unreadable" in print_scale_section
+
+
+def test_critique_brief_includes_visual_clash_candidates(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir)
+    (example_dir / "build" / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "fixture": "review_demo",
+                "render_pdf": "build/review_demo.pdf",
+                "candidates": [
+                    {
+                        "kind": "text_on_path",
+                        "text": "HV+",
+                        "bbox_px": [1750, 1409, 1871, 1466],
+                        "metric": {"dark": 0.041, "edge": 0.006},
+                        "tex_lines": None,
+                    },
+                    {
+                        "kind": "near_miss",
+                        "text": "A",
+                        "bbox_px": [1, 2, 3, 4],
+                        "metric": {"dark": 0.02, "edge": 0.005},
+                        "tex_lines": [10],
+                    }
+                ],
+                "total": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Visual Clash Candidates (from check_visual_clash.py)" in brief
+    assert "Host LLM MUST review each candidate" in brief
+    assert "`text_on_path`" in brief
+    assert "`HV+`" in brief
+    assert "bbox_px=[1750, 1409, 1871, 1466]" in brief
+    assert "metric=dark=0.041, edge=0.006" in brief
+    assert brief.index("kind=`near_miss`") < brief.index("kind=`text_on_path`")
+    assert "label_backdrop_overflows_outline" in brief
+    assert "label_glyph_overlaps_internal_drawing" in brief
 
 
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
