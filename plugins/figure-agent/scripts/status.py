@@ -8,7 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import status_next_policy
-from export_freshness import EXPORT_FRESH, EXPORT_STALE, EXPORT_TRACKED_GOLDEN, compute_export_state
+import status_readiness_policy
+from export_freshness import EXPORT_STALE, compute_export_state
 from inputs import parse_spec
 from publication_gate import publication_gate_summary
 from quality_manifest import critique_hash_freshness, critique_manifest_paths
@@ -18,8 +19,6 @@ from reference_contract import (
     participating_panel_reference_paths,
 )
 from svg_polish_manifest import (
-    FINAL_ARTIFACT_FRESH,
-    FINAL_ARTIFACT_NONE,
     FINAL_ARTIFACT_POLISHED_SVG,
     compute_final_artifact_state,
 )
@@ -42,10 +41,6 @@ RENDER_MISSING = "MISSING"
 RENDER_STALE = "STALE"
 RENDER_FRESH = "FRESH"
 
-ACCEPTANCE_ACCEPTED = "ACCEPTED"
-ACCEPTANCE_NOT_ACCEPTED = "NOT_ACCEPTED"
-ACCEPTANCE_NOT_DECLARED = "NOT_DECLARED"
-_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 
 
@@ -185,14 +180,6 @@ def _accepted_marker(accepted: bool | None) -> str:
     return ""
 
 
-def _acceptance_state(accepted: bool | None) -> str:
-    if accepted is True:
-        return ACCEPTANCE_ACCEPTED
-    if accepted is False:
-        return ACCEPTANCE_NOT_ACCEPTED
-    return ACCEPTANCE_NOT_DECLARED
-
-
 def _compute_render_state(
     example_dir: Path,
     spec_path: Path,
@@ -209,41 +196,6 @@ def _compute_render_state(
     if _is_stale(sources, (build_pdf,)):
         return RENDER_STALE
     return RENDER_FRESH
-
-
-def _workflow_ready(
-    stage: int,
-    notes: list[str],
-    exports_substate: str,
-    render_state: str,
-    critique_state: str,
-) -> bool:
-    blocking_notes = [
-        note
-        for note in notes
-        if not note.startswith(_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES)
-    ]
-    return (
-        stage == 4
-        and not blocking_notes
-        and render_state == RENDER_FRESH
-        and exports_substate in {EXPORT_FRESH, EXPORT_TRACKED_GOLDEN}
-        and not status_next_policy.critique_needs_action(critique_state)
-    )
-
-
-def _golden_ready(workflow_ready: bool, accepted: bool | None) -> bool:
-    return workflow_ready and accepted is True
-
-
-def _release_ready(golden_ready: bool, exports_substate: str, final_artifact: dict) -> bool:
-    if not golden_ready or exports_substate != EXPORT_FRESH:
-        return False
-    if final_artifact["state"] not in {FINAL_ARTIFACT_NONE, FINAL_ARTIFACT_FRESH}:
-        return False
-    if final_artifact["kind"] == FINAL_ARTIFACT_POLISHED_SVG:
-        return final_artifact["state"] == FINAL_ARTIFACT_FRESH
-    return True
 
 
 def _requires_publication_disclosure(spec: dict) -> bool:
@@ -279,27 +231,16 @@ def _status_vector(
     publication_gate: dict | None = None,
 ) -> dict:
     final_artifact = final_artifact or _default_final_artifact("")
-    publication_gate = publication_gate or {
-        "publication_gate_state": "NOT_APPLICABLE",
-        "publication_gate_failures": [],
-    }
-    workflow_ready = _workflow_ready(stage, notes, exports_substate, render_state, critique_state)
-    golden_ready = _golden_ready(workflow_ready, accepted)
-    release_ready = _release_ready(golden_ready, exports_substate, final_artifact)
-    return {
-        "render_state": render_state,
-        "critique_state": critique_state,
-        "export_state": exports_substate,
-        "acceptance_state": _acceptance_state(accepted),
-        "final_artifact_state": final_artifact["state"],
-        "final_artifact_kind": final_artifact["kind"],
-        "final_artifact_path": final_artifact["path"],
-        "workflow_ready": workflow_ready,
-        "golden_ready": golden_ready,
-        "release_ready": release_ready,
-        "final_ready": release_ready,
-        **publication_gate,
-    }
+    return status_readiness_policy.build_status_vector(
+        stage=stage,
+        notes=notes,
+        accepted=accepted,
+        exports_substate=exports_substate,
+        render_state=render_state,
+        critique_state=critique_state,
+        final_artifact=final_artifact,
+        publication_gate=publication_gate,
+    )
 
 
 def _append_reference_image_check(
