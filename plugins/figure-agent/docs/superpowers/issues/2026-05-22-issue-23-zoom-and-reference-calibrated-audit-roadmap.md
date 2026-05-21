@@ -1,7 +1,7 @@
 # Issue 23: Zoom and Reference-Calibrated Audit Roadmap
 
 **Date:** 2026-05-22 KST
-**Status:** 23A-C completed; 23D-E open
+**Status:** 23A-C and 23E completed; 23D open
 **Type:** post-closeout audit-quality hardening
 
 ## Problem
@@ -52,6 +52,7 @@ Dogfood showed two practical facts:
      acceptance, or human gates.
 
 5. **Issue 23E: Fixture Freshness UX Cleanup**
+   - Completed in commit `7898ee8`.
    - Improves status/driver explanations for stale render, critique, export,
      tracked golden, and publication provenance states.
    - Reduces user confusion when the plugin core is healthy but the fixture

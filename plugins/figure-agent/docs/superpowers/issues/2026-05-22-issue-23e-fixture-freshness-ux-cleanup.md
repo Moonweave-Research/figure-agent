@@ -1,7 +1,7 @@
 # Issue 23E: Fixture Freshness UX Cleanup
 
 **Date:** 2026-05-22 KST
-**Status:** planned
+**Status:** completed in commit `7898ee8`
 **Type:** workflow usability hardening
 **Parent:** `2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`
 
@@ -30,16 +30,16 @@ freshness work with plugin core failures.
 
 ## Acceptance Criteria
 
-- [ ] `/fig_status` plain text clearly separates plugin state, fixture artifact
+- [x] `/fig_status` plain text clearly separates plugin state, fixture artifact
   freshness, and human publication/provenance blockers.
-- [ ] `/fig_driver --dry-run` reason text names the first blocker and the next
+- [x] `/fig_driver --dry-run` reason text names the first blocker and the next
   command without implying hidden execution.
-- [ ] Tracked golden state explains whether `--force-golden` is required and
+- [x] Tracked golden state explains whether `--force-golden` is required and
   why it is manual.
-- [ ] Missing/stale critique states explain whether `/fig_critique` is required
+- [x] Missing/stale critique states explain whether `/fig_critique` is required
   or optional.
-- [ ] Publication gate messages clearly identify human-only decisions.
-- [ ] Tests cover representative mixed states:
+- [x] Publication gate messages clearly identify human-only decisions.
+- [x] Tests cover representative mixed states:
   stale render plus stale critique, tracked golden plus stale critique,
   release-ready false because of publication gate, and critique not required.
 
