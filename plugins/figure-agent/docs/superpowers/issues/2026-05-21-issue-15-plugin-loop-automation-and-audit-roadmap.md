@@ -61,15 +61,17 @@ run compile, critique, adjudication, export, or loop commands itself.
 
 Acceptance criteria:
 
-- [ ] `/fig_drive --mode review` can include closeout summary fields from
+- [x] `/fig_drive --mode review` can include closeout summary fields from
   `fig_closeout.compute_closeout()`.
-- [ ] When closeout is incomplete, the driver returns one canonical action and
+- [x] When closeout is incomplete, the driver returns one canonical action and
   reason instead of falling through to ambiguous `run_fig_loop`.
-- [ ] Golden roll-forward remains manual; `--force-golden` is never emitted as
+- [x] Golden roll-forward remains manual; `--force-golden` is never emitted as
   an automatic safe command.
-- [ ] Tests cover stale compile, stale critique, missing adjudication, stale
-  adjudication, export blocked by tracked golden, and complete closeout.
-- [ ] Existing `figure-agent.driver.v1` consumers remain backward compatible.
+- [x] Tests cover closeout-driven export, loop rerun, tracked golden manual
+  approval, complete closeout pass-through, and real closeout export gaps.
+  Compile, critique, and adjudication closeout primitives remain covered in
+  `tests/test_fig_closeout.py`.
+- [x] Existing `figure-agent.driver.v1` consumers remain backward compatible.
 
 ### Issue 15B: Audit Evidence Completeness Linter
 
