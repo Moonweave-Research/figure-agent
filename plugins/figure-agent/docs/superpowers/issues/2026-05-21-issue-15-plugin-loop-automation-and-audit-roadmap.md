@@ -123,6 +123,7 @@ Acceptance criteria:
 ### Issue 15D: Orchestration Boundary Refactor
 
 **Type:** AFK
+**Status:** completed as no-code boundary review
 **Blocked by:** Issue 15A
 
 Keep the codebase maintainable while adding loop automation. Extract new
@@ -131,14 +132,14 @@ adding another policy layer directly inside `fig_driver.py` or `status.py`.
 
 Acceptance criteria:
 
-- [ ] New Issue 15A/15C logic lives in focused modules with narrow public
+- [x] New Issue 15A/15C logic lives in focused modules with narrow public
   functions.
-- [ ] `fig_driver.py` remains the CLI/controller, not the owner of every
+- [x] `fig_driver.py` remains the CLI/controller, not the owner of every
   policy detail.
-- [ ] `status.py` remains the canonical state reader; it does not absorb
+- [x] `status.py` remains the canonical state reader; it does not absorb
   patch-executor or audit-lint policy.
-- [ ] Existing tests continue to pass without broad fixture rewrites.
-- [ ] The refactor is behavior-preserving except for the explicitly tested
+- [x] Existing tests continue to pass without broad fixture rewrites.
+- [x] The refactor is behavior-preserving except for the explicitly tested
   Issue 15A/15C surfaces.
 
 ## Priority
