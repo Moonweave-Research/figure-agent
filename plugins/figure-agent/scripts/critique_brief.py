@@ -317,7 +317,11 @@ def _panel_reference_sections(
 
 
 def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
-    crops = [crop for crop in crops if crop.get("kind") == "zoom_crop"]
+    crops = [
+        crop
+        for crop in crops
+        if crop.get("kind") in {"zoom_crop", "visual_clash_crop"}
+    ]
     if not crops:
         return ""
     lines = [
@@ -333,11 +337,14 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
     for crop in crops:
         crop_path = example_dir / crop["path"]
         source_path = example_dir / crop["source_path"]
-        lines.append(
+        crop_line = (
             f"- `{_example_relative_path(example_dir, crop_path)}` "
             f"from `{_example_relative_path(example_dir, source_path)}` "
             f"bbox_px={crop['bbox_px']}"
         )
+        if crop.get("kind") == "visual_clash_crop":
+            crop_line += f" visual_clash_ref=`{crop.get('visual_clash_ref', '')}`"
+        lines.append(crop_line)
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -412,6 +419,7 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
             f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
         )
     total = report.get("total", len(candidates))
+    crop_by_ref = _visual_clash_crop_paths_by_ref(example_dir)
     lines = [
         "## Visual Clash Candidates (from check_visual_clash.py)",
         "Host LLM MUST review each candidate. For each, either link to a new/existing "
@@ -432,13 +440,38 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
         bbox = candidate.get("bbox_px")
         tex_lines = candidate.get("tex_lines")
         tex_display = tex_lines if isinstance(tex_lines, list) else "null"
+        candidate_id = str(candidate.get("id", ""))
+        crop_path = crop_by_ref.get(candidate_id)
+        crop_display = f" crop=`{crop_path}`" if crop_path else ""
         lines.append(
-            f"- id=`{candidate.get('id', '')}` "
+            f"- id=`{candidate_id}` "
             f"kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
             f"bbox_px={bbox} metric={_format_metric(candidate.get('metric'))} "
-            f"tex_lines={tex_display}"
+            f"tex_lines={tex_display}{crop_display}"
         )
     return "\n" + "\n".join(lines) + "\n"
+
+
+def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if not manifest_path.is_file():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    crops = manifest.get("crops")
+    if not isinstance(crops, list):
+        return {}
+    result: dict[str, str] = {}
+    for crop in crops:
+        if not isinstance(crop, dict) or crop.get("kind") != "visual_clash_crop":
+            continue
+        visual_clash_ref = crop.get("visual_clash_ref")
+        path = crop.get("path")
+        if isinstance(visual_clash_ref, str) and isinstance(path, str):
+            result[visual_clash_ref] = path
+    return result
 
 
 def generate_for(example_dir: Path) -> str:
@@ -474,14 +507,6 @@ def generate_for(example_dir: Path) -> str:
     render_path = _example_relative_path(example_dir, png_path)
     ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
-    generator_version = critique_generator_version(Path(__file__))
-    critique_input_hash = compute_critique_input_hash(
-        example_dir,
-        name,
-        spec,
-        style_lock_path=STYLE_LOCK_PATH,
-    )
-
     ref_section = ""
     if ref_path:
         ref_section = f"""
@@ -499,6 +524,13 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         panel_crop_paths=panel_crop_paths,
         spec=spec,
         pdf_page_size_cm=_pdf_page_size_cm(pdf_path) if panel_crop_paths else None,
+    )
+    generator_version = critique_generator_version(Path(__file__))
+    critique_input_hash = compute_critique_input_hash(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
     )
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)

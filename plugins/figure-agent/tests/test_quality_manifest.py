@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from quality_manifest import input_manifest_hash  # noqa: E402
+from quality_manifest import critique_manifest_paths, input_manifest_hash  # noqa: E402
 
 
 def test_input_manifest_hash_changes_when_file_content_changes(tmp_path: Path) -> None:
@@ -30,3 +30,30 @@ def test_input_manifest_hash_is_stable_for_path_order(tmp_path: Path) -> None:
     assert input_manifest_hash((first, second), base_dir=tmp_path) == input_manifest_hash(
         (second, first), base_dir=tmp_path
     )
+
+
+def test_critique_manifest_includes_audit_crop_manifest_when_present(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True)
+    manifest_path.write_text('{"schema":"figure-agent.audit-crop-manifest.v1"}\n')
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    manifest_path.write_text('{"schema":"figure-agent.audit-crop-manifest.v1","n":1}\n')
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert manifest_path in paths
+    assert before != after

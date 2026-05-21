@@ -371,7 +371,7 @@ def test_critique_brief_keeps_print_scale_images_out_of_high_zoom_section(tmp_pa
 
 def test_critique_brief_includes_visual_clash_candidates(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
-    _write_real_render_pair(example_dir)
+    _write_real_render_pair(example_dir, size=(2000, 1600))
     (example_dir / "build" / "visual_clash.json").write_text(
         json.dumps(
             {
@@ -414,6 +414,9 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
     assert brief.index("id=`VC001`") < brief.index("id=`VC002`")
     assert "label_backdrop_overflows_outline" in brief
     assert "label_glyph_overlaps_internal_drawing" in brief
+    assert "`examples/review_demo/build/audit_crops/visual_clash/VC001_A.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/visual_clash/VC002_HV.png`" in brief
+    assert "crop=`build/audit_crops/visual_clash/VC001_A.png`" in brief
 
 
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):

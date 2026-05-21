@@ -82,6 +82,9 @@ def critique_manifest_paths(
     visual_clash_path = example_dir / "build" / "visual_clash.json"
     if visual_clash_path.exists():
         paths.append(visual_clash_path)
+    audit_crop_manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if audit_crop_manifest_path.exists():
+        paths.append(audit_crop_manifest_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))

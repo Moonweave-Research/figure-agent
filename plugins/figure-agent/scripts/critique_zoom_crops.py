@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
 
 from PIL import Image
+
+CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
+VISUAL_CLASH_CROP_MIN_WIDTH_PX = 600
 
 PRINT_SCALE_TARGETS = (
     ("print_178mm", "178mm_equivalent", 1000),
@@ -143,6 +147,125 @@ def _valid_bbox_cm(value: Any) -> list[float] | None:
     return bbox
 
 
+def _valid_bbox_px(value: Any) -> list[int] | None:
+    if not isinstance(value, list) or len(value) != 4:
+        return None
+    try:
+        bbox = [int(round(float(item))) for item in value]
+    except (TypeError, ValueError):
+        return None
+    x0, y0, x1, y1 = bbox
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return bbox
+
+
+def _clamp_bbox_px(bbox: list[int], *, width: int, height: int) -> list[int] | None:
+    x0, y0, x1, y1 = bbox
+    clamped = [max(0, x0), max(0, y0), min(width, x1), min(height, y1)]
+    if clamped[2] <= clamped[0] or clamped[3] <= clamped[1]:
+        return None
+    return clamped
+
+
+def _visual_clash_sort_key(candidate: dict[str, Any]) -> tuple[str, str, str, list[int]]:
+    bbox = candidate.get("bbox_px")
+    bbox_key = bbox if isinstance(bbox, list) else []
+    return (
+        str(candidate.get("id") or ""),
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+        bbox_key,
+    )
+
+
+def _load_visual_clash_candidates(example_dir: Path) -> list[dict[str, Any]]:
+    report_path = example_dir / "build" / "visual_clash.json"
+    if not report_path.is_file():
+        return []
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    return sorted(
+        (candidate for candidate in candidates if isinstance(candidate, dict)),
+        key=_visual_clash_sort_key,
+    )
+
+
+def _visual_clash_crop_id(candidate: dict[str, Any], index: int) -> str:
+    candidate_id = str(candidate.get("id") or f"VC{index:03d}")
+    label = str(candidate.get("text") or candidate.get("kind") or "candidate")
+    return f"{_safe_stem(candidate_id)}_{_safe_stem(label)}"
+
+
+def _write_visual_clash_crops(
+    *,
+    source_path: Path,
+    output_dir: Path,
+    example_dir: Path,
+) -> list[dict[str, Any]]:
+    candidates = _load_visual_clash_candidates(example_dir)
+    if not candidates:
+        return []
+
+    crops: list[dict[str, Any]] = []
+    with Image.open(source_path) as image:
+        width, height = image.size
+        resampling = getattr(Image, "Resampling", Image).LANCZOS
+        for index, candidate in enumerate(candidates, start=1):
+            bbox_px = _valid_bbox_px(candidate.get("bbox_px"))
+            if bbox_px is None:
+                continue
+            target_bbox_px = _clamp_bbox_px(bbox_px, width=width, height=height)
+            if target_bbox_px is None:
+                continue
+            pad_x = max(1, round((bbox_px[2] - bbox_px[0]) / 2))
+            pad_y = max(1, round((bbox_px[3] - bbox_px[1]) / 2))
+            x0, y0, x1, y1 = target_bbox_px
+            crop_box = [
+                max(0, x0 - pad_x),
+                max(0, y0 - pad_y),
+                min(width, x1 + pad_x),
+                min(height, y1 + pad_y),
+            ]
+            if crop_box[2] <= crop_box[0] or crop_box[3] <= crop_box[1]:
+                continue
+            crop_id = _visual_clash_crop_id(candidate, index)
+            output_path = output_dir / "visual_clash" / f"{crop_id}.png"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            crop = image.crop(tuple(crop_box))
+            upscaled = crop.width < VISUAL_CLASH_CROP_MIN_WIDTH_PX
+            if upscaled:
+                output_height = max(
+                    1,
+                    round(crop.height * (VISUAL_CLASH_CROP_MIN_WIDTH_PX / crop.width)),
+                )
+                crop = crop.resize((VISUAL_CLASH_CROP_MIN_WIDTH_PX, output_height), resampling)
+            crop.save(output_path)
+            clash_ref = str(candidate.get("id") or f"VC{index:03d}")
+            crops.append(
+                {
+                    "id": crop_id,
+                    "kind": "visual_clash_crop",
+                    "source": f"visual_clash:{clash_ref}",
+                    "path": _relative_to_example(example_dir, output_path),
+                    "source_path": _relative_to_example(example_dir, source_path),
+                    "bbox_px": crop_box,
+                    "target_bbox_px": target_bbox_px,
+                    "size_px": [crop.width, crop.height],
+                    "upscaled": upscaled,
+                    "visual_clash_ref": clash_ref,
+                    "visual_clash_kind": str(candidate.get("kind") or ""),
+                    "visual_clash_text": str(candidate.get("text") or ""),
+                }
+            )
+    return crops
+
+
 def _write_instrument_crops(
     *,
     render_path: Path,
@@ -238,6 +361,28 @@ def _write_print_scale_images(
     return audits
 
 
+def _write_crop_manifest(
+    *,
+    example_dir: Path,
+    render_path: Path,
+    crops: list[dict[str, Any]],
+) -> None:
+    output_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_crops = sorted(crops, key=lambda item: str(item.get("id") or ""))
+    payload = {
+        "schema": CROP_MANIFEST_SCHEMA,
+        "fixture": example_dir.name,
+        "render_path": _relative_to_example(example_dir, render_path),
+        "required_crop_ids": [str(item.get("id") or "") for item in manifest_crops],
+        "crops": manifest_crops,
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def build_zoom_crop_pack(
     example_dir: Path,
     render_path: Path,
@@ -257,6 +402,13 @@ def build_zoom_crop_pack(
     )
     crops.extend(
         _write_print_scale_images(
+            source_path=render_path,
+            output_dir=output_dir,
+            example_dir=example_dir,
+        )
+    )
+    crops.extend(
+        _write_visual_clash_crops(
             source_path=render_path,
             output_dir=output_dir,
             example_dir=example_dir,
@@ -302,4 +454,5 @@ def build_zoom_crop_pack(
                     example_dir=example_dir,
                 )
             )
+    _write_crop_manifest(example_dir=example_dir, render_path=render_path, crops=crops)
     return crops
