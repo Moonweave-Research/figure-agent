@@ -9,6 +9,7 @@ panels:
   - id: right
     caption: Converged trap-depth picture
 style_profile: polymer-default
+visual_clash_cap: 38
 selected_preview: null
 reference_image: reference/golden_target_001.png
 accepted: false

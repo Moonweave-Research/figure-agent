@@ -58,6 +58,7 @@ panels:
     # dropletelectret) deferred until F's Maxwell-stress visualization needs
     # reinforcement (v8.8+).
 style_profile: polymer-paper
+visual_clash_cap: 59
 notes: |
   pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
   D/E/F (3 columns, each split apparatus zone top + result zone bottom).

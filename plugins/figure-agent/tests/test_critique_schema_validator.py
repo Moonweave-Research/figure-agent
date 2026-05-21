@@ -135,7 +135,11 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
             }
         ],
     }
-    if schema in {vocab.CRITIQUE_SCHEMA_V1_4, "figure-agent.critique.v1.5"}:
+    if schema in {
+        vocab.CRITIQUE_SCHEMA_V1_4,
+        "figure-agent.critique.v1.5",
+        "figure-agent.critique.v1.6",
+    }:
         frontmatter["micro_defects"] = [
             {
                 "id": "M001",
@@ -147,7 +151,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "status": "open",
             }
         ]
-    if schema == "figure-agent.critique.v1.5":
+    if schema in {"figure-agent.critique.v1.5", "figure-agent.critique.v1.6"}:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
         }
@@ -240,6 +244,28 @@ def test_validate_critique_schema_accepts_v1_4_empty_micro_defect_list() -> None
 
 def test_validate_critique_schema_accepts_v1_5_editorial_art_direction() -> None:
     validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.5"))
+
+
+def test_validate_critique_schema_accepts_v1_6_instrument_label_micro_defects() -> None:
+    for kind in (
+        "label_backdrop_overflows_outline",
+        "label_glyph_overlaps_internal_drawing",
+    ):
+        frontmatter = _valid_frontmatter("figure-agent.critique.v1.6")
+        frontmatter["micro_defects"][0]["kind"] = kind
+        frontmatter["micro_defects"][0]["observation"] = f"{kind} is visible"
+
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_6_major_new_kind_without_link() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.6")
+    frontmatter["micro_defects"][0]["kind"] = "label_backdrop_overflows_outline"
+    frontmatter["micro_defects"][0]["linked_finding_id"] = ""
+    frontmatter["findings"] = []
+
+    with pytest.raises(CritiqueContractError, match="linked_finding_id"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_5_missing_editorial_art_direction() -> None:

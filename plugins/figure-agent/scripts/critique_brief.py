@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.5). No external API is called; the brief itself is API-free.
+v1.6). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -12,6 +12,7 @@ Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -42,11 +43,14 @@ _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
     "label_target_detached",
     "floating_semantic_cue",
     "drawing_order_suspect",
+    "label_backdrop_overflows_outline",
+    "label_glyph_overlaps_internal_drawing",
 )
 _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
     "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
-    "print_scale_unreadable"
+    "print_scale_unreadable | label_backdrop_overflows_outline | "
+    "label_glyph_overlaps_internal_drawing"
 )
 
 
@@ -366,6 +370,74 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _format_metric(metric: object) -> str:
+    if not isinstance(metric, dict) or not metric:
+        return "(none)"
+    parts: list[str] = []
+    for key in sorted(metric):
+        value = metric[key]
+        if isinstance(value, int | float):
+            parts.append(f"{key}={value:g}")
+        else:
+            parts.append(f"{key}={value}")
+    return ", ".join(parts)
+
+
+def _candidate_sort_key(candidate: dict) -> tuple[str, str, list[int]]:
+    bbox = candidate.get("bbox_px")
+    bbox_key = bbox if isinstance(bbox, list) else []
+    return (
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+        bbox_key,
+    )
+
+
+def _visual_clash_candidates_section(example_dir: Path) -> str:
+    report_path = example_dir / "build" / "visual_clash.json"
+    if not report_path.is_file():
+        return ""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return (
+            "\n## Visual Clash Candidates (from check_visual_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` is malformed JSON: {exc}\n"
+        )
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return (
+            "\n## Visual Clash Candidates (from check_visual_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
+        )
+    total = report.get("total", len(candidates))
+    lines = [
+        "## Visual Clash Candidates (from check_visual_clash.py)",
+        "Host LLM MUST review each candidate. For each, either link to a new/existing "
+        "`micro_defects` entry or explicitly justify `status: accept_simplification`.",
+        "Use `label_backdrop_overflows_outline` when a label fill/backdrop protrudes "
+        "past its enclosing instrument-box outline.",
+        "Use `label_glyph_overlaps_internal_drawing` when a label glyph or backdrop "
+        "collides with an internal mark inside the same box.",
+        f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
+        f"- Total candidates from JSON: {total}",
+        "",
+    ]
+    for candidate in sorted(
+        (item for item in candidates if isinstance(item, dict)),
+        key=_candidate_sort_key,
+    ):
+        bbox = candidate.get("bbox_px")
+        tex_lines = candidate.get("tex_lines")
+        tex_display = tex_lines if isinstance(tex_lines, list) else "null"
+        lines.append(
+            f"- kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
+            f"bbox_px={bbox} metric={_format_metric(candidate.get('metric'))} "
+            f"tex_lines={tex_display}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def generate_for(example_dir: Path) -> str:
     """Compose the reviewer brief for one `examples/<name>` directory."""
     if not example_dir.is_dir():
@@ -418,9 +490,16 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
-    zoom_crops = build_zoom_crop_pack(example_dir, png_path, panel_crop_paths=panel_crop_paths)
+    zoom_crops = build_zoom_crop_pack(
+        example_dir,
+        png_path,
+        panel_crop_paths=panel_crop_paths,
+        spec=spec,
+        pdf_page_size_cm=_pdf_page_size_cm(pdf_path) if panel_crop_paths else None,
+    )
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
+    visual_clash_section = _visual_clash_candidates_section(example_dir)
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -432,6 +511,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {render_read_note}{image_context_sections}
 {zoom_audit_section}
 {print_scale_audit_section}
+{visual_clash_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -474,11 +554,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.5):
+(YAML front-matter then human-readable Markdown body — schema v1.6):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.5
+schema: figure-agent.critique.v1.6
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py

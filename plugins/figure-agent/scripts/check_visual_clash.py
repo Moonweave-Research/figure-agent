@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 import re
 import subprocess
 import tempfile
@@ -392,6 +393,53 @@ def write_overlay(image: Image.Image, issues: list[VisualIssue], output_path: Pa
     marked.save(output_path)
 
 
+def _metric_from_detail(detail: str) -> dict[str, float]:
+    metrics: dict[str, float] = {}
+    for key, value in re.findall(r"\b([A-Za-z_][A-Za-z0-9_]*)=([-+]?\d+(?:\.\d+)?)", detail):
+        metrics[key] = float(value)
+    return metrics
+
+
+def _render_pdf_field(pdf_path: Path) -> str:
+    if pdf_path.parent.name == "build":
+        return str(Path("build") / pdf_path.name)
+    return str(pdf_path)
+
+
+def _fixture_name(pdf_path: Path) -> str:
+    if pdf_path.parent.name == "build":
+        return pdf_path.parent.parent.name
+    return pdf_path.stem
+
+
+def visual_clash_payload(pdf_path: Path, issues: list[VisualIssue]) -> dict:
+    """Return the stable machine-readable visual-clash report."""
+    candidates = [
+        {
+            "kind": issue.kind,
+            "text": issue.text,
+            "bbox_px": list(issue.bbox),
+            "metric": _metric_from_detail(issue.detail),
+            "tex_lines": None,
+        }
+        for issue in issues
+    ]
+    return {
+        "fixture": _fixture_name(pdf_path),
+        "render_pdf": _render_pdf_field(pdf_path),
+        "candidates": candidates,
+        "total": len(candidates),
+    }
+
+
+def write_visual_clash_json(pdf_path: Path, issues: list[VisualIssue], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(visual_clash_payload(pdf_path, issues), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Render-based visual clash detector for compiled TikZ PDFs"
@@ -421,6 +469,11 @@ def main() -> int:
         default=False,
         help="exit 1 when any unsuppressed clash candidate remains (default: report-only)",
     )
+    parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="write machine-readable visual clash candidates to this JSON path",
+    )
     args = parser.parse_args()
 
     if not args.pdf.exists():
@@ -435,10 +488,14 @@ def main() -> int:
             issues,
             load_known_false_positive_patterns(),
         )
+    if args.json_output:
+        write_visual_clash_json(args.pdf, issues, args.json_output)
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")
     if not issues:
         print("OK: no visual clash candidates found")
+        if args.json_output:
+            print(f"visual clash JSON: {args.json_output}")
         if args.overlay:
             write_overlay(image, issues, args.overlay)
             print(f"overlay: {args.overlay}")
@@ -446,10 +503,13 @@ def main() -> int:
             print(f"{suppressed_count} suppressed (use --no-ignore-known-fp to see all)")
         return 0
 
-    for issue in issues:
-        x1, y1, x2, y2 = issue.bbox
-        print(f'WARN {issue.kind}: "{issue.text}" [{x1},{y1},{x2},{y2}] {issue.detail}')
-    print(f"\n{len(issues)} visual clash candidate(s)")
+    if args.json_output:
+        print(f"WARN visual_clash: candidates serialized to {args.json_output}")
+    else:
+        for issue in issues:
+            x1, y1, x2, y2 = issue.bbox
+            print(f'WARN {issue.kind}: "{issue.text}" [{x1},{y1},{x2},{y2}] {issue.detail}')
+        print(f"\n{len(issues)} visual clash candidate(s)")
 
     if args.overlay:
         write_overlay(image, issues, args.overlay)

@@ -5,6 +5,7 @@ panels:
   - id: b
     caption: Sulfur Polymer — deep trap states in bandgap
 style_profile: polymer-default
+visual_clash_cap: 14
 # Original preview (chatgpt_b01.png) not present in current previews/.
 # selection_notes below preserves the historical decision record.
 selected_preview: null
