@@ -8,6 +8,7 @@ panels:
     caption: Geometry + force diagram (Phase D snapshot)
     bbox_pdf_cm: [0.141, 3.700, 17.878, 9.200]
 style_profile: polymer-paper
+visual_clash_cap: 41
 notes: |
   Mechanism schematic for paper Fig 5 — covers sub-panel A (mechanism) only.
   Sub-panels B (stills), C (Δθ time-trace), D (t₅₀ extraction) belong in

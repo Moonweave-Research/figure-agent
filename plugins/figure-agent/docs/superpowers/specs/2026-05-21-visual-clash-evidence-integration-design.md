@@ -70,7 +70,7 @@ non-magic, this slice does not guess apparatus boxes from pixels.
 
 ### 20C: Visual clash JSON as critique input
 
-`check_visual_clash.py` will support `--json-out <path>` and emit
+`check_visual_clash.py` will support `--json-output <path>` and emit
 `build/visual_clash.json` from `compile.sh` after every successful PDF render.
 The JSON shape is:
 
@@ -144,4 +144,3 @@ claude plugin validate .claude-plugin/plugin.json
 claude plugin validate .
 claude plugin validate ../../.claude-plugin/marketplace.json
 ```
-

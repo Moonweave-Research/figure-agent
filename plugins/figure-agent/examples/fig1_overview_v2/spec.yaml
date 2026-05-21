@@ -6,6 +6,7 @@ panels:
     caption: poly(S-r-DIB) primary microstructure
     bbox_pdf_cm: [0.141, 0.141, 4.591, 5.227]
 style_profile: polymer-paper
+visual_clash_cap: 45
 notes: |
   Fresh start from codex_gen_overview_v1.png reference (2026-05-08).
   2-row, 7-panel layout. Row 1: linear primary microstructure → chain length → localized traps.

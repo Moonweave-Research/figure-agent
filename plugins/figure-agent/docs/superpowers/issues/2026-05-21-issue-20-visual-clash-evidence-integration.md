@@ -1,7 +1,7 @@
 # Issue 20: Visual Clash Evidence Integration
 
 **Date:** 2026-05-21 KST
-**Status:** in progress; Issues 20A and 20B implemented
+**Status:** implemented; pending final verification
 **Type:** QA evidence pipeline hardening
 **Spec:** `../specs/2026-05-21-visual-clash-evidence-integration-design.md`
 
@@ -70,16 +70,16 @@ Acceptance criteria:
 
 ### Issue 20D: Visual Clash Budget Guardrail
 
-**Status:** planned
+**Status:** implemented
 
 Add CI-facing enforcement for `spec.yaml.visual_clash_cap`, defaulting to 0.
 
 Acceptance criteria:
 
-- [ ] Budget checker reads `build/visual_clash.json`.
-- [ ] Missing `visual_clash_cap` defaults to 0.
-- [ ] Cap exceedance fails with a controlled message.
-- [ ] Local authoring remains report-only unless strict/budget mode is invoked.
+- [x] Budget checker reads `build/visual_clash.json`.
+- [x] Missing `visual_clash_cap` defaults to 0.
+- [x] Cap exceedance fails with a controlled message.
+- [x] Local authoring remains report-only unless strict/budget mode is invoked.
 
 ## Non-Goals
 

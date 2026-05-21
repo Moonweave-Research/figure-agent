@@ -2,4 +2,5 @@ name: n3_trial_02_actuation_sequence
 title: "Polymer actuation sequence — Charge Injection / Coulomb Repulsion / Relaxation (N=3 trial #2)"
 reference_image: reference/codex_gen_v1.png
 style_profile: polymer-paper
+visual_clash_cap: 9
 notes: "N=3 trial. Mechanism-sequence schematic. PNG from Codex image-gen (B-style prompt). Briefing authored from PNG-only inspection by isolated subagent."

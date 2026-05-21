@@ -62,9 +62,21 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
-      - name: Pre-build smoke fixture (required by stage-assertion test)
+      - name: Compile fixtures and check visual clash budgets
+        timeout-minutes: 12
         run: |
-          bash scripts/compile.sh examples/smoke_trap_demo/smoke_trap_demo.tex
+          for spec in examples/*/spec.yaml; do
+            fixture="$(dirname "$spec")"
+            name="$(basename "$fixture")"
+            tex="$fixture/$name.tex"
+            if [[ -f "$tex" ]]; then
+              bash scripts/compile.sh "$tex"
+            fi
+          done
+          uv run python3 scripts/check_visual_clash_budget.py examples
+
+      - name: Pre-build smoke export (required by stage-assertion test)
+        run: |
           uv run python3 scripts/run_export.py smoke_trap_demo
 
       - name: Run tests
