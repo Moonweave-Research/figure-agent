@@ -57,6 +57,37 @@ def test_publication_compliance_records_accept_complete_audit(tmp_path: Path) ->
     assert publication_compliance_failure_records(audit, require_disclosure=True) == []
 
 
+def test_publication_compliance_records_accept_markdown_bold_fields(tmp_path: Path) -> None:
+    audit = tmp_path / "QUALITY_AUDIT.md"
+    audit.write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "**submission-safe:** true\n"
+        "**disclosure-needed:** no\n",
+        encoding="utf-8",
+    )
+
+    assert publication_compliance_failure_records(audit, require_disclosure=True) == []
+
+
+def test_publication_compliance_records_reject_partial_truthy_values(tmp_path: Path) -> None:
+    audit = tmp_path / "QUALITY_AUDIT.md"
+    audit.write_text(
+        "# Quality Audit\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true-ish\n"
+        "disclosure-needed: not-applicable-ish\n",
+        encoding="utf-8",
+    )
+
+    records = publication_compliance_failure_records(audit, require_disclosure=True)
+
+    assert [record.code for record in records] == [
+        "missing_submission_safe_true",
+        "missing_disclosure_needed",
+    ]
+
+
 def test_publication_audit_scaffold_uses_conservative_defaults() -> None:
     text = publication_audit_scaffold_text("demo_fig")
 
