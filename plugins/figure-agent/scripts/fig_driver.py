@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -34,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
+import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
 from status import infer_stage  # noqa: E402
 
@@ -334,26 +334,6 @@ def _publication_gate_block_reason(status: dict[str, Any]) -> str:
     )
 
 
-def _compile_command(name: str) -> str:
-    return f"bash scripts/compile.sh examples/{name}/{name}.tex"
-
-
-def _critique_command(name: str) -> str:
-    return f"/fig_critique {name}"
-
-
-def _adjudicate_command(name: str) -> str:
-    return f"uv run python3 scripts/critique_adjudication.py scaffold {name}"
-
-
-def _fig_loop_command(name: str, goal: str) -> str:
-    return f"uv run python3 scripts/fig_loop.py {name} --goal {shlex.quote(goal)} --json"
-
-
-def _export_command(name: str) -> str:
-    return f"uv run python3 scripts/run_export.py {name}"
-
-
 def build_driver_summary(
     name: str,
     *,
@@ -441,7 +421,7 @@ def _select_action(
     if render in ("MISSING", "STALE"):
         return make(
             ACTION_RUN_COMPILE,
-            safe_command=_compile_command(name),
+            safe_command=command_mod.compile_command(name),
             stop_boundary=None,
             reason="render is not fresh; run /fig_compile to refresh build PDF.",
         )
@@ -474,7 +454,7 @@ def _select_action(
     if critique in ("MISSING", "STALE"):
         return make(
             ACTION_RUN_CRITIQUE,
-            safe_command=_critique_command(name),
+            safe_command=command_mod.critique_command(name),
             stop_boundary=STOP_HOST_LLM_CRITIQUE,
             reason=(
                 "reference-grounded critique is missing or stale; host Claude "
@@ -486,7 +466,7 @@ def _select_action(
         if critique == "FRESH" and _adjudication_needs_action(example_dir, status):
             return make(
                 ACTION_RUN_ADJUDICATE,
-                safe_command=_adjudicate_command(name),
+                safe_command=command_mod.adjudicate_command(name),
                 stop_boundary=None,
                 reason=(
                     "critique.md is fresh but critique_adjudication.yaml is "
@@ -507,7 +487,7 @@ def _select_action(
         if closeout_result is not None:
             if closeout_result.kind == "export":
                 action = ACTION_RUN_EXPORT
-                safe_command = _export_command(name)
+                safe_command = command_mod.export_command(name)
                 stop_boundary = STOP_CLOSEOUT
             elif closeout_result.kind == "force_golden":
                 action = ACTION_RELEASE_BLOCKED
@@ -519,7 +499,7 @@ def _select_action(
                 stop_boundary = STOP_CLOSEOUT
             else:
                 action = ACTION_RUN_FIG_LOOP
-                safe_command = _fig_loop_command(name, goal)
+                safe_command = command_mod.fig_loop_command(name, goal)
                 stop_boundary = STOP_CLOSEOUT
             return make(
                 action,
@@ -561,7 +541,7 @@ def _select_action(
                 )
         return make(
             ACTION_RUN_FIG_LOOP,
-            safe_command=_fig_loop_command(name, goal),
+            safe_command=command_mod.fig_loop_command(name, goal),
             stop_boundary=None,
             reason=(
                 "render and critique prerequisites are closed; record a "
@@ -573,7 +553,7 @@ def _select_action(
         if export in ("MISSING", "STALE"):
             return make(
                 ACTION_RUN_EXPORT,
-                safe_command=_export_command(name),
+                safe_command=command_mod.export_command(name),
                 stop_boundary=None,
                 reason=(
                     "exports are missing or stale; run /fig_export before "
@@ -608,7 +588,7 @@ def _select_action(
     if export in ("MISSING", "STALE"):
         return make(
             ACTION_RUN_EXPORT,
-            safe_command=_export_command(name),
+            safe_command=command_mod.export_command(name),
             stop_boundary=None,
             reason=(
                 "generated export is not current; refresh /fig_export before "
@@ -669,7 +649,7 @@ def _select_action(
             if polish_route == editorial_mod.ROUTE_RUN_LOOP:
                 return make(
                     ACTION_RUN_FIG_LOOP,
-                    safe_command=_fig_loop_command(name, goal),
+                    safe_command=command_mod.fig_loop_command(name, goal),
                     stop_boundary=STOP_MODE_FORBIDDEN,
                     reason=(
                         "latest /fig_loop editorial art-direction summary "

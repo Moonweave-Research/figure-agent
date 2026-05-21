@@ -1,7 +1,7 @@
 # Issue 17: Driver and Status State-Machine Refactor
 
 **Date:** 2026-05-21 KST
-**Status:** in progress through Issue 17A
+**Status:** in progress through Issue 17B
 **Type:** parent issue / architecture hardening
 
 ## Problem
@@ -58,11 +58,20 @@ Acceptance criteria:
 
 ### Issue 17B: Driver Command Text Adapter
 
-**Status:** future
+**Status:** implemented
 
 Move safe command construction (`/fig_critique`, compile, adjudicate,
 `/fig_loop`, export) into a tiny helper module. This reduces duplicated command
 format knowledge and keeps shell quoting tests local to that module.
+
+Acceptance criteria:
+
+- [x] New module exposes command string helpers for compile, critique,
+  adjudication scaffold, fig_loop, and export.
+- [x] `fig_loop` goal shell quoting is covered by focused tests.
+- [x] `fig_driver.py` delegates safe-command text construction to the module.
+- [x] Existing `tests/test_fig_driver.py` still pass.
+- [x] No public driver action, stop-boundary, or JSON field changes.
 
 ### Issue 17C: Status Next-Hint Policy Extraction
 
