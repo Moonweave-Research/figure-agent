@@ -84,15 +84,16 @@ not judge the artistic quality of a figure.
 
 Acceptance criteria:
 
-- [ ] v1.4 critiques must include non-empty `micro_defects`.
-- [ ] Any open `BLOCKER`/`MAJOR` micro-defect must link to a normal finding.
-- [ ] Any failed or `needs_human` `top_tier_audit` slot with
+- [x] v1.4 critiques must include `micro_defects` as a present list. Empty is
+  allowed when no micro-defects are found.
+- [x] Any open `BLOCKER`/`MAJOR` micro-defect must link to a normal finding.
+- [x] Any failed or `needs_human` `top_tier_audit` slot with
   `blocks_high_impact: true` must appear in a normal finding or in
   `quality_axes.*.blocking_items`.
-- [ ] `journal_polish` and `publication_readiness` cannot pass unless the
+- [x] `journal_polish` and `publication_readiness` cannot pass unless the
   critique records print-scale evidence.
-- [ ] The linter emits controlled, actionable errors and does not mutate files.
-- [ ] Legacy v1.0-v1.3 critiques remain parseable under existing compatibility
+- [x] The linter emits controlled, actionable errors and does not mutate files.
+- [x] Legacy v1.0-v1.3 critiques remain parseable under existing compatibility
   rules.
 
 ### Issue 15C: Bounded Auto-Patch Executor Pilot

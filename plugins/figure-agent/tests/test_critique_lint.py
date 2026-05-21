@@ -35,7 +35,16 @@ TOP_TIER_KEYS = (
 )
 
 
-def _quality_axis_yaml(name: str) -> str:
+def _quote_yaml_string(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _quality_axis_yaml(
+    name: str,
+    *,
+    evidence: str | None = None,
+    verdict: str = "pass",
+) -> str:
     extra = ""
     if name == "panel_role_coherence":
         extra = (
@@ -47,18 +56,29 @@ def _quality_axis_yaml(name: str) -> str:
         )
     return (
         f"  {name}:\n"
-        "    verdict: pass\n"
+        f"    verdict: {verdict}\n"
         "    confidence: high\n"
         f"    rationale: {name} passes\n"
-        f"    evidence: {name} evidence\n"
+        f"    evidence: {_quote_yaml_string(evidence or f'{name} evidence')}\n"
         f"{extra}"
         "    blocking_items: []\n"
         "    recommended_action: none\n"
     )
 
 
-def _quality_axes_yaml() -> str:
-    return "quality_axes:\n" + "".join(_quality_axis_yaml(name) for name in QUALITY_AXIS_NAMES)
+def _quality_axes_yaml(
+    *,
+    journal_polish_evidence: str | None = None,
+    publication_readiness_evidence: str | None = None,
+) -> str:
+    evidence_by_axis = {
+        "journal_polish": journal_polish_evidence,
+        "publication_readiness": publication_readiness_evidence,
+    }
+    return "quality_axes:\n" + "".join(
+        _quality_axis_yaml(name, evidence=evidence_by_axis.get(name))
+        for name in QUALITY_AXIS_NAMES
+    )
 
 
 def _audit_enumeration_yaml() -> str:
@@ -114,14 +134,20 @@ def _write_critique(
     schema: str = "figure-agent.critique.v1.3",
     micro_defects_yaml: str = "",
     top_tier_yaml: str | None = None,
+    journal_polish_evidence: str | None = None,
+    publication_readiness_evidence: str | None = None,
 ) -> Path:
     critique = fig_dir / "critique.md"
+    quality_axes = _quality_axes_yaml(
+        journal_polish_evidence=journal_polish_evidence,
+        publication_readiness_evidence=publication_readiness_evidence,
+    )
     critique.write_text(
         "---\n"
         f"schema: {schema}\n"
         "fixture: demo_fig\n"
         f"{_audit_enumeration_yaml()}"
-        f"{_quality_axes_yaml()}"
+        f"{quality_axes}"
         f"{top_tier_yaml or _top_tier_yaml()}"
         f"{micro_defects_yaml}"
         f"{findings_yaml}"
@@ -155,6 +181,10 @@ def test_lint_critique_accepts_valid_v1_4_micro_defect_critique(tmp_path: Path) 
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.4",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
         micro_defects_yaml=(
             "micro_defects:\n"
             "  - id: M001\n"
@@ -196,6 +226,48 @@ def test_lint_critique_reports_missing_v1_4_micro_defects(tmp_path: Path) -> Non
 
     assert [violation.category for violation in violations] == ["critique_contract"]
     assert "micro_defects" in violations[0].message
+
+
+def test_lint_critique_reports_passed_polish_without_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        micro_defects_yaml="micro_defects: []\n",
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "audit_evidence",
+        "audit_evidence",
+    ]
+    assert "journal_polish" in violations[0].message
+    assert "print-scale" in violations[0].message
+    assert "publication_readiness" in violations[1].message
+
+
+def test_lint_critique_accepts_passed_polish_with_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        micro_defects_yaml="micro_defects: []\n",
+        findings_yaml="findings: []\n",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
 
 
 def test_lint_critique_uses_public_adjudication_api_only() -> None:

@@ -1,7 +1,7 @@
 # Issue 15B: Audit Evidence Completeness Linter
 
 **Date:** 2026-05-21 KST
-**Status:** proposed
+**Status:** implemented and verified
 **Parent:** Issue 15
 **Spec:** `../specs/2026-05-21-plugin-loop-automation-audit-design.md`
 
@@ -21,15 +21,24 @@ whether a figure is good.
 
 ## Acceptance Criteria
 
-- [ ] v1.4 critiques require `micro_defects` to be a present list.
-- [ ] Open `BLOCKER`/`MAJOR` micro-defects must link to a normal finding or
+- [x] v1.4 critiques require `micro_defects` to be a present list. Empty is
+  allowed when no micro-defects are found.
+- [x] Open `BLOCKER`/`MAJOR` micro-defects must link to a normal finding or
   explicitly use `accept_simplification` only where the schema allows it.
-- [ ] Failed or `needs_human` top-tier slots with `blocks_high_impact: true`
+- [x] Failed or `needs_human` top-tier slots with `blocks_high_impact: true`
   must be represented in `findings` or `quality_axes.*.blocking_items`.
-- [ ] `journal_polish: pass` and `publication_readiness: pass` require
+- [x] `journal_polish: pass` and `publication_readiness: pass` require
   evidence text that names print-scale audit evidence.
-- [ ] Errors are deterministic and actionable.
-- [ ] Legacy critique schemas remain compatible.
+- [x] Errors are deterministic and actionable.
+- [x] Legacy critique schemas remain compatible.
+
+## Implementation Notes
+
+The first three checks are enforced by the existing v1.4 schema validator that
+`critique_lint.py` already invokes through the public adjudication scaffold
+API. This slice adds the missing linter-only evidence completeness check:
+passing `journal_polish` or `publication_readiness` must name print-scale
+evidence such as `print-scale`, `print_178mm`, or `print_thumbnail`.
 
 ## Verification
 
