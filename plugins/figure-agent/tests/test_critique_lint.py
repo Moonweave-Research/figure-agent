@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import sys
 from pathlib import Path
 
@@ -192,6 +193,34 @@ def _write_critique(
     return critique
 
 
+def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
+    report = fig_dir / "build" / "visual_clash.json"
+    report.parent.mkdir(parents=True)
+    report.write_text(
+        json.dumps(
+            {
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_on_path",
+                        "text": f"label {candidate_id}",
+                        "bbox_px": [index, index + 1, index + 2, index + 3],
+                        "metric": {"dark": 0.04},
+                        "tex_lines": None,
+                    }
+                    for index, candidate_id in enumerate(candidate_ids, start=1)
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
 def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
@@ -289,6 +318,186 @@ def test_lint_critique_rejects_unlinked_v1_6_instrument_label_micro_defect(
 
     assert [violation.category for violation in violations] == ["critique_contract"]
     assert "linked_finding_id" in violations[0].message
+
+
+def test_lint_critique_rejects_unaccounted_v1_7_visual_clash_candidate(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001", "VC002"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 label backdrop candidate remains visible\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["visual_clash_accounting"]
+    assert "VC002" in violations[0].message
+
+
+def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_accounted(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001", "VC002"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 label backdrop candidate remains visible\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+            "  - id: M002\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s02.png\n"
+            "    kind: label_glyph_overlaps_internal_drawing\n"
+            "    severity: NIT\n"
+            "    observation: VC002 is acceptable after review\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC002\n"
+            "    status: accept_simplification\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_duplicate_v1_7_visual_clash_candidate_refs(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 first accounting\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+            "  - id: M002\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s02.png\n"
+            "    kind: label_glyph_overlaps_internal_drawing\n"
+            "    severity: NIT\n"
+            "    observation: VC001 duplicate accounting\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: accept_simplification\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["visual_clash_accounting"]
+    assert "duplicate visual_clash_ref" in violations[0].message
+    assert "VC001" in violations[0].message
+
+
+def test_lint_critique_rejects_unknown_v1_7_visual_clash_candidate_ref(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s01.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MINOR\n"
+            "    observation: VC001 candidate remains visible\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+            "  - id: M002\n"
+            "    crop: examples/demo_fig/build/audit_crops/panel_E_s02.png\n"
+            "    kind: label_glyph_overlaps_internal_drawing\n"
+            "    severity: NIT\n"
+            "    observation: typo candidate id should not pass\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: VC999\n"
+            "    status: accept_simplification\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["visual_clash_accounting"]
+    assert "unknown visual_clash_ref" in violations[0].message
+    assert "VC999" in violations[0].message
+
+
+def test_lint_critique_keeps_v1_6_visual_clash_accounting_legacy_compatible(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.6",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
 
 
 def test_lint_critique_reports_v1_5_passed_polish_without_print_scale_evidence(

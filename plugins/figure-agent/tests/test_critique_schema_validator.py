@@ -139,6 +139,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         vocab.CRITIQUE_SCHEMA_V1_4,
         "figure-agent.critique.v1.5",
         "figure-agent.critique.v1.6",
+        "figure-agent.critique.v1.7",
     }:
         frontmatter["micro_defects"] = [
             {
@@ -151,7 +152,11 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "status": "open",
             }
         ]
-    if schema in {"figure-agent.critique.v1.5", "figure-agent.critique.v1.6"}:
+    if schema in {
+        "figure-agent.critique.v1.5",
+        "figure-agent.critique.v1.6",
+        "figure-agent.critique.v1.7",
+    }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
         }
@@ -256,6 +261,13 @@ def test_validate_critique_schema_accepts_v1_6_instrument_label_micro_defects() 
         frontmatter["micro_defects"][0]["observation"] = f"{kind} is visible"
 
         validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_7_visual_clash_ref_field() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.7")
+    frontmatter["micro_defects"][0]["visual_clash_ref"] = "VC001"
+
+    validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_6_major_new_kind_without_link() -> None:

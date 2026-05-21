@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.6). No external API is called; the brief itself is API-free.
+v1.7). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -383,10 +383,11 @@ def _format_metric(metric: object) -> str:
     return ", ".join(parts)
 
 
-def _candidate_sort_key(candidate: dict) -> tuple[str, str, list[int]]:
+def _candidate_sort_key(candidate: dict) -> tuple[str, str, str, list[int]]:
     bbox = candidate.get("bbox_px")
     bbox_key = bbox if isinstance(bbox, list) else []
     return (
+        str(candidate.get("id") or ""),
         str(candidate.get("kind") or ""),
         str(candidate.get("text") or ""),
         bbox_key,
@@ -414,7 +415,8 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
     lines = [
         "## Visual Clash Candidates (from check_visual_clash.py)",
         "Host LLM MUST review each candidate. For each, either link to a new/existing "
-        "`micro_defects` entry or explicitly justify `status: accept_simplification`.",
+        "`micro_defects` entry via `visual_clash_ref` or explicitly justify "
+        "`status: accept_simplification`.",
         "Use `label_backdrop_overflows_outline` when a label fill/backdrop protrudes "
         "past its enclosing instrument-box outline.",
         "Use `label_glyph_overlaps_internal_drawing` when a label glyph or backdrop "
@@ -431,7 +433,8 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
         tex_lines = candidate.get("tex_lines")
         tex_display = tex_lines if isinstance(tex_lines, list) else "null"
         lines.append(
-            f"- kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
+            f"- id=`{candidate.get('id', '')}` "
+            f"kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
             f"bbox_px={bbox} metric={_format_metric(candidate.get('metric'))} "
             f"tex_lines={tex_display}"
         )
@@ -554,11 +557,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.6):
+(YAML front-matter then human-readable Markdown body — schema v1.7):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.6
+schema: figure-agent.critique.v1.7
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -653,6 +656,7 @@ micro_defects:
     severity: BLOCKER | MAJOR | MINOR | NIT
     observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
+    visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
     status: open | resolved | accept_simplification
 panels:
   - id: <panel id>

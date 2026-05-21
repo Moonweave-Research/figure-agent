@@ -416,13 +416,14 @@ def visual_clash_payload(pdf_path: Path, issues: list[VisualIssue]) -> dict:
     """Return the stable machine-readable visual-clash report."""
     candidates = [
         {
+            "id": f"VC{index:03d}",
             "kind": issue.kind,
             "text": issue.text,
             "bbox_px": list(issue.bbox),
             "metric": _metric_from_detail(issue.detail),
             "tex_lines": None,
         }
-        for issue in issues
+        for index, issue in enumerate(issues, start=1)
     ]
     return {
         "fixture": _fixture_name(pdf_path),

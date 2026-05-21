@@ -153,13 +153,16 @@ top-level critique finding, stamps the current critique hash, and defaults
 unresolved findings to `needs_human` so the loop cannot silently drop reviewer
 findings.
 
-For schema v1.6 critiques, treat intra-instrument label failures as named
+For schema v1.7 critiques, treat intra-instrument label failures as named
 micro-defects rather than generic polish comments: use
 `label_backdrop_overflows_outline` when a label fill/backdrop protrudes outside
 its enclosing box, and `label_glyph_overlaps_internal_drawing` when a label or
 backdrop crosses an internal display, axis, needle, or separator in the same
 box. `BLOCKER` and `MAJOR` instances must link to a normal finding or be
-explicitly marked `accept_simplification`.
+explicitly marked `accept_simplification`. When the brief lists Visual Clash
+Candidates, every `VC###` id must appear in exactly one
+`micro_defects[].visual_clash_ref` entry; accepted candidates still need an
+explicit `accept_simplification` rationale.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or
