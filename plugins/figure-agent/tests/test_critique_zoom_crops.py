@@ -109,6 +109,71 @@ def test_build_zoom_crop_pack_adds_panel_quadrants(tmp_path: Path) -> None:
     assert not any(item["id"].startswith("panel_A") for item in print_items)
 
 
+def test_build_zoom_crop_pack_adds_panel_subquadrants_without_instruments(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    panel = example_dir / "build" / "panel_crops" / "E.png"
+    _write_png(render)
+    _write_png(panel, size=(160, 120))
+
+    crops = build_zoom_crop_pack(
+        example_dir,
+        render,
+        panel_crop_paths=(panel,),
+        spec={"panels": [{"id": "E"}]},
+    )
+
+    ids = [item["id"] for item in crops]
+    assert "panel_E_q1" in ids
+    assert "panel_E_q4" in ids
+    assert "panel_E_s01" in ids
+    assert "panel_E_s16" in ids
+    subcrop = next(item for item in crops if item["id"] == "panel_E_s16")
+    assert subcrop["bbox_px"] == [120, 90, 160, 120]
+    assert (example_dir / "build" / "audit_crops" / "panel_E_s16.png").is_file()
+
+
+def test_build_zoom_crop_pack_adds_declared_instrument_crops(tmp_path: Path) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    panel = example_dir / "build" / "panel_crops" / "E.png"
+    _write_png(render, size=(1000, 500))
+    _write_png(panel, size=(160, 120))
+
+    crops = build_zoom_crop_pack(
+        example_dir,
+        render,
+        panel_crop_paths=(panel,),
+        spec={
+            "panels": [
+                {
+                    "id": "E",
+                    "instruments": [
+                        {
+                            "name": "HV+ box",
+                            "bbox_pdf_cm": [6.10, 4.05, 6.95, 4.45],
+                        }
+                    ],
+                }
+            ]
+        },
+        pdf_page_size_cm=(10.0, 5.0),
+    )
+
+    ids = [item["id"] for item in crops]
+    assert "panel_E_instr_HV_box" in ids
+    assert "panel_E_s01" not in ids
+    crop = next(item for item in crops if item["id"] == "panel_E_instr_HV_box")
+    assert crop["bbox_px"] == [610, 405, 695, 445]
+    assert crop["source"] == "panel:E:instrument:HV+ box"
+    assert crop["upscaled"] is True
+    assert crop["size_px"][0] == 600
+    with Image.open(example_dir / crop["path"]) as image:
+        assert image.width == 600
+
+
 def test_build_zoom_crop_pack_rejects_non_fixture_relative_panel_crop(tmp_path: Path) -> None:
     example_dir = tmp_path / "examples" / "demo"
     render = example_dir / "build" / "demo.png"

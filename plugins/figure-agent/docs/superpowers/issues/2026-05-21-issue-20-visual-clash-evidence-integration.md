@@ -1,7 +1,7 @@
 # Issue 20: Visual Clash Evidence Integration
 
 **Date:** 2026-05-21 KST
-**Status:** in progress; Issue 20A implemented
+**Status:** in progress; Issues 20A and 20B implemented
 **Type:** QA evidence pipeline hardening
 **Spec:** `../specs/2026-05-21-visual-clash-evidence-integration-design.md`
 
@@ -38,7 +38,7 @@ Acceptance criteria:
 
 ### Issue 20B: Instrument/Sub-Quadrant Audit Crops
 
-**Status:** planned
+**Status:** implemented
 
 Add a second high-zoom crop layer:
 

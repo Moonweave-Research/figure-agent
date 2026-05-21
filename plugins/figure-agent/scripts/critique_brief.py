@@ -421,7 +421,13 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
-    zoom_crops = build_zoom_crop_pack(example_dir, png_path, panel_crop_paths=panel_crop_paths)
+    zoom_crops = build_zoom_crop_pack(
+        example_dir,
+        png_path,
+        panel_crop_paths=panel_crop_paths,
+        spec=spec,
+        pdf_page_size_cm=_pdf_page_size_cm(pdf_path) if panel_crop_paths else None,
+    )
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     authoring_context_section = _optional_authoring_context(example_dir)
