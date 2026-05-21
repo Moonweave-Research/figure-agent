@@ -894,3 +894,67 @@ def test_critique_brief_includes_subregion_active_set(tmp_path):
     assert "### Sub-region Active Set" in brief
     assert "- Active targets: G-2, G-7" in brief
     assert "- Observed patch units: G-2, G-7" in brief
+
+
+def test_critique_brief_includes_reference_calibrated_pack(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "critique_reference_pack.yaml").write_text(
+        """
+schema: figure-agent.critique-reference-pack.v1
+fixture: review_demo
+target_journal: Nature Materials
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: target journal exemplar set
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: each panel reads as one connected mechanism story
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: dense apparatus boxes without visual hierarchy
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Would this pass a first-glance Nature Materials mechanism read?
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference-Calibrated Top-Tier Comparison" in brief
+    assert "Target journal: Nature Materials" in brief
+    assert "Visual ambition: high_impact_candidate" in brief
+    assert "T001" in brief
+    assert "each panel reads as one connected mechanism story" in brief
+    assert "A001" in brief
+    assert "dense apparatus boxes without visual hierarchy" in brief
+    assert "Q001" in brief
+    assert "Would this pass a first-glance Nature Materials mechanism read?" in brief
+
+
+def test_critique_brief_omits_reference_calibrated_pack_when_missing(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference-Calibrated Top-Tier Comparison" not in brief
+
+
+def test_critique_brief_reports_malformed_reference_calibration_pack(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "critique_reference_pack.yaml").write_text("schema: [", encoding="utf-8")
+
+    try:
+        generate_for(example_dir)
+    except critique_brief.CritiqueBriefError as exc:
+        assert "critique_reference_pack.yaml" in str(exc)
+    else:
+        raise AssertionError("expected CritiqueBriefError")

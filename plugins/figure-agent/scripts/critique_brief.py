@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
+from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
 from PIL import Image
@@ -377,6 +378,39 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _reference_calibration_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    lines = [
+        "## Reference-Calibrated Top-Tier Comparison",
+        "Host LLM MUST use this pack to calibrate journal-level critique. Evaluate every "
+        "must-match trait, must-avoid trait, and calibration question below.",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Reference class: {pack['reference_class']}",
+        f"- Visual ambition: {pack['visual_ambition']}",
+        "",
+        "### Comparison References",
+    ]
+    for item in pack.get("comparison_references", []):
+        lines.append(
+            f"- {item['id']}: source={item['source']} role={item['role']} "
+            f"citation/path={item['path_or_citation']}"
+        )
+    lines.append("")
+    lines.append("### Must-Match Traits")
+    for item in pack.get("must_match_traits", []):
+        lines.append(f"- {item['id']} -> {item['reference_id']}: {item['trait']}")
+    lines.append("")
+    lines.append("### Must-Avoid Traits")
+    for item in pack.get("must_avoid_traits", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['trait']}")
+    lines.append("")
+    lines.append("### Calibration Questions")
+    for item in pack.get("calibration_questions", []):
+        lines.append(f"- {item['id']}: {item['question']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _format_metric(metric: object) -> str:
     if not isinstance(metric, dict) or not metric:
         return "(none)"
@@ -507,6 +541,10 @@ def generate_for(example_dir: Path) -> str:
     render_path = _example_relative_path(example_dir, png_path)
     ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
+    try:
+        reference_calibration_pack = load_optional_reference_pack(example_dir)
+    except CritiqueReferencePackError as exc:
+        raise CritiqueBriefError(f"critique_reference_pack.yaml invalid: {exc}") from exc
     ref_section = ""
     if ref_path:
         ref_section = f"""
@@ -535,6 +573,9 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     visual_clash_section = _visual_clash_candidates_section(example_dir)
+    reference_calibration_section = _reference_calibration_section(
+        reference_calibration_pack
+    )
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -547,6 +588,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {zoom_audit_section}
 {print_scale_audit_section}
 {visual_clash_section}
+{reference_calibration_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}

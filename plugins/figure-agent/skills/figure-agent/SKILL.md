@@ -166,6 +166,10 @@ explicit `accept_simplification` rationale.
 The critique must also fill `crop_audit_log` with exactly one entry for every
 `build/audit_crops/manifest.json.required_crop_ids` item; uncertain crop
 verdicts must remain explicit rather than being treated as pass.
+When `critique_reference_pack.yaml` exists, `/fig_critique` uses it as the
+project-specific top-tier calibration source and includes its target journal,
+reference class, must-match traits, must-avoid traits, and calibration
+questions in the brief.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or
