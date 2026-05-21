@@ -75,6 +75,7 @@ def test_check_visual_clash_json_payload_uses_machine_readable_metrics(tmp_path:
         "render_pdf": "build/demo_fixture.pdf",
         "candidates": [
             {
+                "id": "VC001",
                 "kind": "text_on_path",
                 "text": "HV+",
                 "bbox_px": [1750, 1409, 1871, 1466],
@@ -112,7 +113,9 @@ def test_check_visual_clash_writes_json_output_without_count_banner(
     assert check_visual_clash.main() == 0
     captured = capsys.readouterr()
     assert "visual clash candidate(s)" not in captured.out
-    assert json.loads(output.read_text(encoding="utf-8"))["candidates"][0]["text"] == "V"
+    candidate = json.loads(output.read_text(encoding="utf-8"))["candidates"][0]
+    assert candidate["id"] == "VC001"
+    assert candidate["text"] == "V"
 
 
 def test_compile_strict_flag_is_documented_in_script() -> None:

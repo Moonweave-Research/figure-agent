@@ -13,6 +13,7 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_4,
     CRITIQUE_SCHEMA_V1_5,
     CRITIQUE_SCHEMA_V1_6,
+    CRITIQUE_SCHEMA_V1_7,
     EDITORIAL_AUDIT_KEYS,
     EDITORIAL_POLISH_PATHS,
     EDITORIAL_VERDICTS,
@@ -32,6 +33,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_4 == "figure-agent.critique.v1.4"
     assert CRITIQUE_SCHEMA_V1_5 == "figure-agent.critique.v1.5"
     assert CRITIQUE_SCHEMA_V1_6 == "figure-agent.critique.v1.6"
+    assert CRITIQUE_SCHEMA_V1_7 == "figure-agent.critique.v1.7"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:

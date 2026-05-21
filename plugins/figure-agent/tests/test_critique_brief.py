@@ -200,8 +200,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.6" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.6" in brief
+    assert "schema: figure-agent.critique.v1.7" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
     assert "panels:" in brief
 
 
@@ -379,6 +379,7 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
                 "render_pdf": "build/review_demo.pdf",
                 "candidates": [
                     {
+                        "id": "VC002",
                         "kind": "text_on_path",
                         "text": "HV+",
                         "bbox_px": [1750, 1409, 1871, 1466],
@@ -386,6 +387,7 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
                         "tex_lines": None,
                     },
                     {
+                        "id": "VC001",
                         "kind": "near_miss",
                         "text": "A",
                         "bbox_px": [1, 2, 3, 4],
@@ -403,11 +405,13 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
 
     assert "## Visual Clash Candidates (from check_visual_clash.py)" in brief
     assert "Host LLM MUST review each candidate" in brief
+    assert "`VC001`" in brief
+    assert "`VC002`" in brief
     assert "`text_on_path`" in brief
     assert "`HV+`" in brief
     assert "bbox_px=[1750, 1409, 1871, 1466]" in brief
     assert "metric=dark=0.041, edge=0.006" in brief
-    assert brief.index("kind=`near_miss`") < brief.index("kind=`text_on_path`")
+    assert brief.index("id=`VC001`") < brief.index("id=`VC002`")
     assert "label_backdrop_overflows_outline" in brief
     assert "label_glyph_overlaps_internal_drawing" in brief
 
@@ -443,7 +447,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.6" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -466,13 +470,13 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_6_editorial_and_micro_defect_schema(tmp_path):
+def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schema(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.6" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.6" in brief
+    assert "schema: figure-agent.critique.v1.7" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
@@ -490,6 +494,7 @@ def test_critique_brief_output_format_uses_v1_6_editorial_and_micro_defect_schem
     ):
         assert kind in brief
     assert "linked_finding_id: \"<P001/C001 or empty when accept_simplification>\"" in brief
+    assert 'visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"' in brief
     assert (
         'observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"'
     ) in brief
