@@ -595,6 +595,29 @@ def test_lint_critique_reports_v1_5_passed_polish_without_print_scale_evidence(
     assert "publication_readiness" in violations[1].message
 
 
+def test_lint_critique_reports_v1_7_passed_polish_without_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "audit_evidence",
+        "audit_evidence",
+    ]
+    assert "journal_polish" in violations[0].message
+    assert "publication_readiness" in violations[1].message
+
+
 def test_lint_critique_reports_v1_5_needs_human_editorial_without_link(
     tmp_path: Path,
 ) -> None:

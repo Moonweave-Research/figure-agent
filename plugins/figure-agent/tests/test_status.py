@@ -200,6 +200,36 @@ def test_stage_0_missing_directory(tmp_path: Path) -> None:
     assert result["stage"] == 0
 
 
+def test_hash_fresh_critique_becomes_stale_when_visual_clash_report_changes(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "ref_fig"
+    fig_dir.mkdir()
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "build").mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    (fig_dir / "ref_fig.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    visual_clash = fig_dir / "build" / "visual_clash.json"
+    visual_clash.write_text(
+        '{"fixture":"ref_fig","render_pdf":"build/ref_fig.pdf","candidates":[],"total":0}\n',
+        encoding="utf-8",
+    )
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.7")
+
+    assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_FRESH
+
+    visual_clash.write_text(
+        (
+            '{"fixture":"ref_fig","render_pdf":"build/ref_fig.pdf",'
+            '"candidates":[{"id":"VC001"}],"total":1}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_STALE
+
+
 def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()

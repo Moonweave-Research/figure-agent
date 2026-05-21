@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from critique_lint import lint_critique  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
     EXPORT_TRACKED_GOLDEN,
@@ -26,6 +27,7 @@ from export_freshness import (  # noqa: E402
 )
 from reference_contract import compute_reference_input_failures  # noqa: E402
 from status import (  # noqa: E402
+    CRITIQUE_FRESH,
     CRITIQUE_MISSING,
     CRITIQUE_REFERENCE_MISSING,
     CRITIQUE_STALE,
@@ -102,6 +104,17 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
+        if critique_state == CRITIQUE_FRESH:
+            critique_violations = lint_critique(example_dir)
+            if critique_violations:
+                first_violation = critique_violations[0]
+                print(
+                    "run_export.py: critique_invalid for "
+                    f"{args.name}: {first_violation.category}: {first_violation.message}; "
+                    "fix critique.md or pass --skip-critique to override.",
+                    file=sys.stderr,
+                )
+                return 1
 
     state = compute_export_state(example_dir, args.name)
 

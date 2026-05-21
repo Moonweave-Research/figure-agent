@@ -298,6 +298,45 @@ def test_run_export_blocks_hash_stale_critique(
     assert "--skip-critique" in captured.err
 
 
+def test_run_export_blocks_hash_fresh_but_invalid_critique(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    fixture = repo / "examples" / "ref_fig"
+    critique_hash = _critique_input_hash(fixture, "ref_fig")
+    (fixture / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.7\n"
+        "fixture: ref_fig\n"
+        "generated_at: 2026-05-17T00:00:00Z\n"
+        "generator: critique_brief.py\n"
+        f"generator_version: {file_sha256(REPO_ROOT / 'scripts' / 'critique_brief.py')}\n"
+        f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
+        f"critique_input_hash: {critique_hash}\n"
+        "verdict: ready\n"
+        "---\n"
+        "# malformed critique\n",
+        encoding="utf-8",
+    )
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "critique_invalid" in captured.err
+    assert "critique_contract" in captured.err
+
+
 def test_run_export_skip_critique_allows_hash_stale_regenerate(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
