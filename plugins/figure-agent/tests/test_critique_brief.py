@@ -200,8 +200,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.7" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "schema: figure-agent.critique.v1.8" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
     assert "panels:" in brief
 
 
@@ -450,7 +450,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -473,13 +473,15 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schema(tmp_path):
+def test_critique_brief_output_format_uses_v1_8_crop_editorial_and_micro_defect_schema(
+    tmp_path,
+):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.7" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "schema: figure-agent.critique.v1.8" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
@@ -503,6 +505,10 @@ def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schem
     ) in brief
     assert "visual-clash-linked `accept_simplification`" in brief
     assert "status: open | resolved | accept_simplification" in brief
+    assert "crop_audit_log:" in brief
+    assert "crop_id: <crop id from build/audit_crops/manifest.json>" in brief
+    assert "verdict: defect | no_defect | uncertain" in brief
+    assert "linked_micro_defect_id: \"<M001 when verdict=defect or empty>\"" in brief
 
 
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):

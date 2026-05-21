@@ -13,6 +13,7 @@ CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
 CRITIQUE_SCHEMA_V1_5 = "figure-agent.critique.v1.5"
 CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
 CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
+CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -21,6 +22,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_5,
         CRITIQUE_SCHEMA_V1_6,
         CRITIQUE_SCHEMA_V1_7,
+        CRITIQUE_SCHEMA_V1_8,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -30,11 +32,18 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_5,
         CRITIQUE_SCHEMA_V1_6,
         CRITIQUE_SCHEMA_V1_7,
+        CRITIQUE_SCHEMA_V1_8,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
-    {CRITIQUE_SCHEMA_V1_5, CRITIQUE_SCHEMA_V1_6, CRITIQUE_SCHEMA_V1_7}
+    {
+        CRITIQUE_SCHEMA_V1_5,
+        CRITIQUE_SCHEMA_V1_6,
+        CRITIQUE_SCHEMA_V1_7,
+        CRITIQUE_SCHEMA_V1_8,
+    }
 )
+CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset({CRITIQUE_SCHEMA_V1_8})
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -229,4 +238,52 @@ def editorial_art_direction_summary(
         "polish_recommended_path": polish_recommended_path,
         "polish_trigger_verdict": polish_trigger_verdict,
         "human_art_direction_gate_verdict": human_gate_verdict,
+    }
+
+
+def crop_audit_summary(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    if critique_state != "FRESH":
+        return None
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") not in CRITIQUE_SCHEMAS_WITH_CROP_AUDIT:
+        return None
+    raw_items = frontmatter.get("crop_audit_log")
+    if not isinstance(raw_items, list):
+        return None
+
+    verdict_counts = {"defect": 0, "no_defect": 0, "uncertain": 0}
+    defect_crop_ids: list[str] = []
+    uncertain_crop_ids: list[str] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        verdict = raw_item.get("verdict")
+        crop_id = raw_item.get("crop_id")
+        if not isinstance(verdict, str) or verdict not in verdict_counts:
+            continue
+        if not isinstance(crop_id, str) or not crop_id.strip():
+            continue
+        verdict_counts[verdict] += 1
+        if verdict == "defect":
+            defect_crop_ids.append(crop_id)
+        elif verdict == "uncertain":
+            uncertain_crop_ids.append(crop_id)
+
+    crop_count = sum(verdict_counts.values())
+    if crop_count == 0:
+        return None
+    return {
+        "source": "critique.crop_audit_log",
+        "evidence_path": str(critique_path),
+        "crop_count": crop_count,
+        "verdict_counts": verdict_counts,
+        "defect_crop_ids": defect_crop_ids,
+        "uncertain_crop_ids": uncertain_crop_ids,
+        "evaluation_state": "needs_action" if uncertain_crop_ids else "passed",
     }

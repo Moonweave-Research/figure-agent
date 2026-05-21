@@ -122,6 +122,7 @@ def _write_v1_2_critique(
     top_tier_audit: dict | None = None,
     editorial_art_direction: dict | None = None,
     micro_defects: list[dict] | None = None,
+    crop_audit_log: list[dict] | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -144,6 +145,8 @@ def _write_v1_2_critique(
         frontmatter["editorial_art_direction"] = editorial_art_direction
     if micro_defects is not None:
         frontmatter["micro_defects"] = micro_defects
+    if crop_audit_log is not None:
+        frontmatter["crop_audit_log"] = crop_audit_log
     critique.write_text(
         "---\n"
         + yaml.safe_dump(frontmatter, sort_keys=False)
@@ -769,6 +772,57 @@ def test_loop_surfaces_v1_5_editorial_art_direction_summary(
     assert summary["polish_trigger_verdict"] == "pass"
     stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["editorial_art_direction_summary"] == summary
+
+
+def test_loop_surfaces_v1_8_crop_audit_uncertain_verdicts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.8",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(),
+        micro_defects=[],
+        crop_audit_log=[
+            {
+                "crop_id": "full_q1",
+                "path": "build/audit_crops/full_q1.png",
+                "source": "full_render",
+                "inspected": True,
+                "verdict": "no_defect",
+                "linked_micro_defect_id": "",
+                "rationale": "full crop inspected",
+            },
+            {
+                "crop_id": "VC001_A",
+                "path": "build/audit_crops/visual_clash/VC001_A.png",
+                "source": "visual_clash:VC001",
+                "inspected": True,
+                "verdict": "uncertain",
+                "linked_micro_defect_id": "",
+                "rationale": "needs another local read",
+            },
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect crop accountability",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["crop_audit_summary"]
+    assert summary["source"] == "critique.crop_audit_log"
+    assert summary["evidence_path"] == str(critique)
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["uncertain_crop_ids"] == ["VC001_A"]
+    stdout_summary = json_stdout_summary(run_dir)
+    assert stdout_summary["crop_audit_summary"] == summary
 
 
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
@@ -2167,6 +2221,7 @@ def test_main_json_emits_machine_readable_summary(
                 "final_artifact_path": "exports/loop_demo.svg",
             },
             "top_tier_audit_summary": None,
+            "crop_audit_summary": None,
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -2209,6 +2264,7 @@ def test_main_json_emits_machine_readable_summary(
             "final_artifact_path": "exports/loop_demo.svg",
             "top_tier_audit_summary": None,
             "editorial_art_direction_summary": None,
+            "crop_audit_summary": None,
             "recommended_next_action": "inspect figure state",
         }
 
@@ -2299,6 +2355,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "final_artifact_path": iteration["status"]["final_artifact_path"],
         "top_tier_audit_summary": iteration["top_tier_audit_summary"],
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
+        "crop_audit_summary": iteration["crop_audit_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
 

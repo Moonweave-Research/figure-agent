@@ -584,6 +584,47 @@ def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_non_empty_list(
+        frontmatter.get("crop_audit_log"),
+        "critique frontmatter.crop_audit_log",
+    )
+    micro_defect_ids = {
+        str(item.get("id")).strip()
+        for item in frontmatter.get("micro_defects", [])
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and item.get("id").strip()
+    }
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.crop_audit_log[{index}]"
+        item = require_mapping(raw_item, label)
+        _require_non_empty_string(item, "crop_id", label=label)
+        path = _require_non_empty_string(item, "path", label=label)
+        if not path.startswith("build/audit_crops/"):
+            raise CritiqueContractError(f"{label}.path must point to build/audit_crops/*.png")
+        _require_non_empty_string(item, "source", label=label)
+        if item.get("inspected") is not True:
+            raise CritiqueContractError(f"{label}.inspected must be true")
+        verdict = _require_enum(item, "verdict", vocab.CROP_AUDIT_VERDICTS, label=label)
+        linked_micro_defect_id = _require_string_value(
+            item,
+            "linked_micro_defect_id",
+            label=label,
+        )
+        _require_non_empty_string(item, "rationale", label=label)
+        if verdict != "defect":
+            continue
+        if not linked_micro_defect_id:
+            raise CritiqueContractError(
+                f"{label}.linked_micro_defect_id must be set when verdict is defect"
+            )
+        if linked_micro_defect_id not in micro_defect_ids:
+            raise CritiqueContractError(
+                f"{label}.linked_micro_defect_id must reference micro_defects[].id"
+            )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -648,6 +689,20 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
         _validate_v1_4_micro_defects(frontmatter)
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_8:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
         _validate_journal_grade_assessment(
             frontmatter,
             quality_verdicts,

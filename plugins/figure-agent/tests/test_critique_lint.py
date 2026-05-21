@@ -166,6 +166,7 @@ def _write_critique(
     findings_yaml: str,
     schema: str = "figure-agent.critique.v1.3",
     micro_defects_yaml: str = "",
+    crop_audit_log_yaml: str = "",
     top_tier_yaml: str | None = None,
     editorial_yaml: str = "",
     journal_polish_evidence: str | None = None,
@@ -184,6 +185,7 @@ def _write_critique(
         f"{quality_axes}"
         f"{top_tier_yaml or _top_tier_yaml()}"
         f"{micro_defects_yaml}"
+        f"{crop_audit_log_yaml}"
         f"{editorial_yaml}"
         f"{findings_yaml}"
         "---\n"
@@ -221,6 +223,61 @@ def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...])
     return report
 
 
+def _write_crop_manifest(fig_dir: Path, *, crop_ids: tuple[str, ...]) -> Path:
+    manifest = fig_dir / "build" / "audit_crops" / "manifest.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.audit-crop-manifest.v1",
+                "fixture": fig_dir.name,
+                "render_path": f"build/{fig_dir.name}.png",
+                "required_crop_ids": list(crop_ids),
+                "crops": [
+                    {
+                        "id": crop_id,
+                        "kind": "zoom_crop",
+                        "source": "full_render",
+                        "path": f"build/audit_crops/{crop_id}.png",
+                        "source_path": f"build/{fig_dir.name}.png",
+                        "bbox_px": [0, 0, 10, 10],
+                    }
+                    for crop_id in crop_ids
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return manifest
+
+
+def _crop_audit_log_yaml(
+    *,
+    first_crop_id: str = "full_q1",
+    second_crop_id: str = "VC001_A",
+    second_verdict: str = "defect",
+    second_link: str = "M001",
+) -> str:
+    return (
+        "crop_audit_log:\n"
+        f"  - crop_id: {first_crop_id}\n"
+        f"    path: build/audit_crops/{first_crop_id}.png\n"
+        "    source: full_render\n"
+        "    inspected: true\n"
+        "    verdict: no_defect\n"
+        "    linked_micro_defect_id: ''\n"
+        "    rationale: full crop inspected with no defect\n"
+        f"  - crop_id: {second_crop_id}\n"
+        f"    path: build/audit_crops/visual_clash/{second_crop_id}.png\n"
+        "    source: visual_clash:VC001\n"
+        "    inspected: true\n"
+        f"    verdict: {second_verdict}\n"
+        f"    linked_micro_defect_id: {second_link!r}\n"
+        "    rationale: visual clash crop inspected\n"
+    )
+
+
 def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
@@ -232,6 +289,150 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
             "    status: open\n"
             "    tex_lines: [10, 20]\n"
             "    observation: ordinary finding\n"
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_accepts_complete_v1_8_crop_accounting(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.8",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MAJOR\n"
+            "    category: label_placement\n"
+            "    tex_lines: [10]\n"
+            "    observation: linked visual clash defect\n"
+            "    suggested_fix: fix the label\n"
+            "    status: open\n"
+            "panels: []\n"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MAJOR\n"
+            "    observation: label backdrop overflows in VC001_A crop\n"
+            "    linked_finding_id: C001\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.8",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "crop_audit_log" in violations[0].message
+
+
+def test_lint_critique_rejects_v1_8_unknown_crop_id(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.8",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_crop_audit_log_yaml(
+            first_crop_id="unknown_q9",
+            second_verdict="no_defect",
+            second_link="",
+        ),
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["crop_audit_accounting"]
+    assert "unknown crop_audit_log crop_id entries: unknown_q9" in violations[0].message
+
+
+def test_lint_critique_rejects_v1_8_missing_required_crop_id(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.8",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["crop_audit_accounting"]
+    assert "missing required crop_audit_log entries: VC001_A" in violations[0].message
+
+
+def test_lint_critique_keeps_v1_7_legacy_parseable_without_crop_audit_log(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
         ),
     )
 

@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from fig_loop_assessments import (  # noqa: E402
     JOURNAL_ASSESSMENT_SCHEMA,
     JOURNAL_SCORE_KEYS,
+    crop_audit_summary,
     editorial_art_direction_summary,
     journal_grade_assessment,
     top_tier_audit_summary,
@@ -215,6 +216,55 @@ def test_journal_grade_assessment_accepts_v1_7_visual_clash_schema(
 
     assert assessment is not None
     assert assessment["evaluation_state"] == "passed"
+
+
+def test_crop_audit_summary_surfaces_uncertain_v1_8_crops(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.8",
+            "crop_audit_log": [
+                {
+                    "crop_id": "full_q1",
+                    "verdict": "no_defect",
+                    "rationale": "full crop inspected",
+                },
+                {
+                    "crop_id": "VC001_A",
+                    "verdict": "uncertain",
+                    "rationale": "local geometry remains ambiguous",
+                },
+            ],
+        },
+    )
+
+    summary = crop_audit_summary(example_dir, "FRESH")
+
+    assert summary == {
+        "source": "critique.crop_audit_log",
+        "evidence_path": str(example_dir / "critique.md"),
+        "crop_count": 2,
+        "verdict_counts": {"defect": 0, "no_defect": 1, "uncertain": 1},
+        "defect_crop_ids": [],
+        "uncertain_crop_ids": ["VC001_A"],
+        "evaluation_state": "needs_action",
+    }
+
+
+def test_crop_audit_summary_ignores_legacy_v1_7(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.7",
+            "crop_audit_log": [{"crop_id": "full_q1", "verdict": "uncertain"}],
+        },
+    )
+
+    assert crop_audit_summary(example_dir, "FRESH") is None
 
 
 def test_top_tier_audit_summary_counts_valid_slots_and_worst_verdict(tmp_path: Path) -> None:
