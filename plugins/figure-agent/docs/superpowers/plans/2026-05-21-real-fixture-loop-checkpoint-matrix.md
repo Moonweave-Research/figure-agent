@@ -94,7 +94,7 @@ the public checkpoint fields in `run_manifest.json`, `iteration_001.json`, and
 **Files:**
 - All files above.
 
-- [ ] **Step 1: Run focused verification**
+- [x] **Step 1: Run focused verification**
 
   ```bash
   cd plugins/figure-agent
@@ -102,7 +102,7 @@ the public checkpoint fields in `run_manifest.json`, `iteration_001.json`, and
   uv run pytest -q tests/test_real_fixture_state_contracts.py tests/test_real_fixture_loop_contracts.py tests/test_fig_loop.py tests/test_fig_driver.py
   ```
 
-- [ ] **Step 2: Run CI-equivalent verification**
+- [x] **Step 2: Run CI-equivalent verification**
 
   ```bash
   cd plugins/figure-agent
@@ -112,7 +112,7 @@ the public checkpoint fields in `run_manifest.json`, `iteration_001.json`, and
   git diff --check
   ```
 
-- [ ] **Step 3: Run full local verification before PR update**
+- [x] **Step 3: Run full local verification before PR update**
 
   ```bash
   cd plugins/figure-agent
@@ -122,7 +122,7 @@ the public checkpoint fields in `run_manifest.json`, `iteration_001.json`, and
   claude plugin validate ../../.claude-plugin/marketplace.json
   ```
 
-- [ ] **Step 4: Commit and open a stacked PR**
+- [x] **Step 4: Commit and open a stacked PR**
 
   Stack on `codex/real-fixture-state-matrix`, because Issue 18B reuses the
   18A state matrix helpers and fixture controls.

@@ -1,7 +1,7 @@
 # Issue 18: Real-Fixture State Contract Matrix
 
 **Date:** 2026-05-21 KST
-**Status:** implemented through Issue 18B
+**Status:** implemented through Issue 18C
 **Type:** public contract hardening / regression coverage
 
 ## Problem
@@ -95,6 +95,25 @@ Non-goals for 18B:
 - No source patching.
 - No golden or accepted mutation.
 
+### Issue 18C: Shared Real-Fixture Test Harness
+
+**Status:** implemented
+
+Issue 18A and 18B initially duplicated fixture-copy, artifact placeholder, mtime
+normalization, YAML loading, and style-lock setup helpers. That duplication
+created a future drift risk: the same CI clean-checkout artifact bug could be
+fixed in one matrix and missed in the other.
+
+Acceptance criteria:
+
+- [x] Shared helper module lives in
+  `tests/real_fixture_contract_helpers.py`.
+- [x] State/driver and loop checkpoint matrix tests both use the helper.
+- [x] Helper keeps real fixture copies isolated under `tmp_path`.
+- [x] Helper ignores local `build/` and `exports/` artifacts, then materializes
+  only YAML-declared placeholders.
+- [x] No production behavior changes.
+
 ## Non-Goals
 
 - No changes to `/fig_status`, `/fig_drive`, `/fig_loop`, compile, export, or
@@ -118,5 +137,12 @@ For Issue 18B:
 - `uv run pytest -q tests/test_real_fixture_loop_contracts.py`
 - `uv run pytest -q tests/test_real_fixture_state_contracts.py tests/test_real_fixture_loop_contracts.py tests/test_fig_loop.py tests/test_fig_driver.py`
 - `uv run pytest -q -m "not render"`
+- `uv run ruff check .`
+- `git diff --check`
+
+For Issue 18C:
+
+- `uv run pytest -q tests/test_real_fixture_state_contracts.py tests/test_real_fixture_loop_contracts.py`
+- `uv run pytest -q tests/test_real_fixture_state_contracts.py tests/test_real_fixture_loop_contracts.py tests/test_fig_loop.py tests/test_fig_driver.py`
 - `uv run ruff check .`
 - `git diff --check`
