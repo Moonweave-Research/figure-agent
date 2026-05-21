@@ -1,7 +1,7 @@
 # Issue 17: Driver and Status State-Machine Refactor
 
 **Date:** 2026-05-21 KST
-**Status:** in progress through Issue 17C
+**Status:** implemented through Issue 17D
 **Type:** parent issue / architecture hardening
 
 ## Problem
@@ -95,11 +95,31 @@ Acceptance criteria:
 
 ### Issue 17D: Status Final/Publication Gate Adapter Boundary Review
 
-**Status:** future
+**Status:** implemented
 
 Review whether final-artifact and publication-gate computations should stay as
 adapters called by `status.py`, or whether the status vector builder needs a
 smaller interface for these release surfaces.
+
+Review result:
+
+- `svg_polish_manifest.py` remains the correct owner for final-artifact state.
+- `publication_gate.py` remains the correct owner for provenance/compliance
+  checks.
+- The readiness truth table was the real remaining mixed policy inside
+  `status.py`, so it was extracted to `status_readiness_policy.py`.
+
+Acceptance criteria:
+
+- [x] New module exposes pure `build_status_vector(...)` readiness policy.
+- [x] `status.py` delegates workflow/golden/release/final readiness vector
+  construction to the module.
+- [x] Focused tests cover nonblocking coordinate/final-artifact notes,
+  spec-parse blockers, tracked-golden release blocking, polished-SVG release
+  requirements, and publication-gate field preservation.
+- [x] Existing `tests/test_status.py` and `tests/test_fig_loop.py` still pass.
+- [x] No public `/fig_status` field, readiness semantic, final-artifact schema,
+  or publication-gate semantic changes.
 
 ## Non-Goals
 
