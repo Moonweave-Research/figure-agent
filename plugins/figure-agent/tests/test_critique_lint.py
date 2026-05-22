@@ -5,6 +5,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import critique_lint  # noqa: E402
@@ -197,7 +199,7 @@ def _write_critique(
 
 def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
     report = fig_dir / "build" / "visual_clash.json"
-    report.parent.mkdir(parents=True)
+    report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(
         json.dumps(
             {
@@ -299,6 +301,7 @@ def test_lint_critique_accepts_complete_v1_8_crop_accounting(tmp_path: Path) -> 
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.8",
@@ -388,6 +391,7 @@ def test_lint_critique_rejects_v1_9_crop_audit_log_without_manifest(
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.9",
@@ -420,6 +424,7 @@ def test_lint_critique_rejects_v1_8_unknown_crop_id(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.8",
@@ -447,6 +452,7 @@ def test_lint_critique_rejects_v1_8_missing_required_crop_id(tmp_path: Path) -> 
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.8",
@@ -481,6 +487,7 @@ def test_lint_critique_keeps_v1_7_legacy_parseable_without_crop_audit_log(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.7",
@@ -654,6 +661,86 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_v1_7_when_visual_clash_report_is_missing(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["visual_clash_accounting"]
+    assert "missing build/visual_clash.json" in violations[0].message
+
+
+@pytest.mark.parametrize("schema", ["figure-agent.critique.v1.8", "figure-agent.critique.v1.9"])
+def test_lint_critique_rejects_current_schema_when_visual_clash_report_is_missing(
+    tmp_path: Path,
+    schema: str,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema=schema,
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["visual_clash_accounting"]
+    assert "missing build/visual_clash.json" in violations[0].message
+
+
+def test_lint_critique_accepts_v1_7_when_visual_clash_report_has_no_candidates(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.7",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
 def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale(
     tmp_path: Path,
 ) -> None:
@@ -815,6 +902,26 @@ def test_lint_critique_keeps_v1_6_visual_clash_accounting_legacy_compatible(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.6",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_keeps_v1_6_missing_visual_clash_report_legacy_compatible(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.6",

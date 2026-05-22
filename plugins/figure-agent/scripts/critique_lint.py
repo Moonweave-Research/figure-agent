@@ -90,7 +90,13 @@ def _audit_evidence_violations(frontmatter: dict[str, Any]) -> list[CritiqueLint
 
 def _visual_clash_candidate_ids(report_path: Path) -> tuple[list[str], list[CritiqueLintViolation]]:
     if not report_path.is_file():
-        return [], []
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="visual_clash_accounting",
+                message="missing build/visual_clash.json for visual_clash_ref validation",
+            )
+        ]
     try:
         report = json.loads(report_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
