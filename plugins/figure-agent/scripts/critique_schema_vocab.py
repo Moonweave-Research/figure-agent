@@ -12,6 +12,7 @@ CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
 CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
 CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
+CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -147,4 +148,28 @@ MICRO_DEFECT_KINDS = frozenset(
     }
 )
 MICRO_DEFECT_STATUSES = frozenset({"open", "resolved", "accept_simplification"})
+MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS = frozenset(
+    {
+        "false_positive",
+        "intentional_schematic",
+        "outside_target_region",
+        "convention_acceptable",
+        "decorative_background",
+    }
+)
+MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS = 40
+MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS = (
+    "false positive",
+    "not ",
+    "intentional",
+    "acceptable because",
+    "separate",
+    "distinct",
+    "outside",
+    "axis",
+    "legend",
+    "background",
+    "decorative",
+    "convention",
+)
 CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})

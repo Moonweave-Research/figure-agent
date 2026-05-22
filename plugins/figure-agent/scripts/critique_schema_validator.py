@@ -621,6 +621,49 @@ def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _validate_v1_10_accept_simplification(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_list(
+        frontmatter.get("micro_defects"),
+        "critique frontmatter.micro_defects",
+    )
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.micro_defects[{index}]"
+        item = require_mapping(raw_item, label)
+        if item.get("status") != "accept_simplification":
+            continue
+        _require_enum(
+            item,
+            "accept_simplification_reason",
+            vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
+            label=label,
+        )
+        rationale = _require_non_empty_string(
+            item,
+            "accept_simplification_rationale",
+            label=label,
+        )
+        visual_clash_ref = item.get("visual_clash_ref")
+        if not isinstance(visual_clash_ref, str) or not visual_clash_ref.strip():
+            continue
+        normalized_rationale = " ".join(rationale.split())
+        lowered_rationale = normalized_rationale.lower()
+        if (
+            len(normalized_rationale)
+            >= vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
+            and visual_clash_ref.strip() in normalized_rationale
+            and any(
+                marker in lowered_rationale
+                for marker in vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
+            )
+        ):
+            continue
+        raise CritiqueContractError(
+            f"{label}.accept_simplification_rationale must be concrete, name "
+            "the visual_clash_ref candidate id, and explain the non-defect "
+            "geometry/context"
+        )
+
+
 def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_non_empty_list(
         frontmatter.get("crop_audit_log"),
@@ -752,6 +795,22 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
         top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
         _validate_v1_4_micro_defects(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_10:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_journal_grade_assessment(

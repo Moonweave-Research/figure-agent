@@ -56,6 +56,7 @@ action; `/fig_loop` only logs the resulting state.
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
 | `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
 | `status_explanation` | object or absent     | shared `/fig_status` explanation of first blocker and state buckets |
+| `audit_evidence`    | object or absent      | shared `/fig_status` audit-evidence summary with compact blockers and next action |
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 | `closeout`          | object or absent      | compact `/fig_closeout` evidence when incomplete closeout drives the recommendation |
@@ -75,6 +76,13 @@ caller can distinguish fixture freshness blockers (`render_stale`,
 (`export_tracked_golden`, `publication_gate_required`, `not_accepted`) without
 guessing from the raw state vector. This is explanatory only; it does not make
 `safe_command` executable and does not change the selected action.
+
+When present, `audit_evidence` is also copied from `/fig_status` without
+recomputing state. Actionable states (`missing_input`, `stale_or_mismatched`,
+`needs_action`) are appended to `reason` with the summary's compact blocker
+context. This keeps visual-clash/crop-accounting blockers visible to an outer
+executor without changing the driver's action vocabulary, dry-run guarantee, or
+selected command.
 
 ### Schema versioning
 

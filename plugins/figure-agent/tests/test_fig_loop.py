@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import fig_loop as fig_loop_mod  # noqa: E402
 from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
 from fig_loop_escalation import escalation_summary  # noqa: E402
+from fig_loop_markdown import decision_markdown  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -2288,6 +2289,12 @@ def test_main_json_emits_machine_readable_summary(
             },
             "top_tier_audit_summary": None,
             "crop_audit_summary": None,
+            "audit_evidence": {
+                "evaluation_state": "missing_input",
+                "blocking_items": ["build/visual_clash.json"],
+                "next_action": "/fig_compile loop_demo",
+                "reason": "missing build/visual_clash.json",
+            },
             "recommended_next_action": "inspect figure state",
         },
     )
@@ -2331,6 +2338,12 @@ def test_main_json_emits_machine_readable_summary(
             "top_tier_audit_summary": None,
             "editorial_art_direction_summary": None,
             "crop_audit_summary": None,
+            "audit_evidence": {
+                "evaluation_state": "missing_input",
+                "blocking_items": ["build/visual_clash.json"],
+                "next_action": "/fig_compile loop_demo",
+                "reason": "missing build/visual_clash.json",
+            },
             "journal_grade_assessment": None,
             "recommended_next_action": "inspect figure state",
         }
@@ -2359,6 +2372,41 @@ def test_main_without_json_keeps_legacy_prose_output(
     assert exit_code == 0
     assert captured.out == f"fig_loop.py: wrote verify-only run to {run_dir}\n"
     assert captured.err == ""
+
+
+def test_decision_markdown_surfaces_actionable_audit_evidence() -> None:
+    decision = decision_markdown(
+        name="loop_demo",
+        goal="inspect audit evidence",
+        status_result={
+            "stage": 3,
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "MISSING",
+            "final_artifact_kind": "generated_export",
+            "final_artifact_state": "NONE",
+            "final_artifact_path": "exports/loop_demo.svg",
+            "notes": [],
+            "audit_evidence": {
+                "evaluation_state": "needs_action",
+                "blocking_items": ["VC050", "full_q1"],
+                "next_action": "/fig_critique loop_demo",
+                "reason": "visual-clash candidates are not fully accounted",
+            },
+        },
+        adjudication={"state": "fresh"},
+        loop_decision={
+            "stop_reason": "status_action_required",
+            "active_patch_target": None,
+            "recommended_next_action": "/fig_critique loop_demo",
+        },
+        escalation={"escalation_level": "agent_action_required"},
+        patch_handoff=None,
+    )
+
+    assert "- audit_evidence_state: needs_action" in decision
+    assert "- audit_evidence_blocking: VC050, full_q1" in decision
+    assert "- audit_evidence_next: /fig_critique loop_demo" in decision
 
 
 def test_main_json_missing_fixture_keeps_existing_error_contract(
@@ -2423,6 +2471,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "top_tier_audit_summary": iteration["top_tier_audit_summary"],
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "crop_audit_summary": iteration["crop_audit_summary"],
+        "audit_evidence": iteration["audit_evidence"],
         "journal_grade_assessment": iteration["journal_grade_assessment"],
         "recommended_next_action": iteration["recommended_next_action"],
     }

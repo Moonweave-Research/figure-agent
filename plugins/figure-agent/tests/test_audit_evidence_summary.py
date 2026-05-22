@@ -1,0 +1,343 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+from audit_evidence_summary import summarize_audit_evidence  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
+
+
+def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fig_dir / "build" / "visual_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_on_path",
+                        "text": f"label {candidate_id}",
+                        "bbox_px": [1, 2, 3, 4],
+                        "metric": {"dark": 0.04},
+                        "tex_lines": None,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_crop_manifest(fig_dir: Path, crop_ids: tuple[str, ...]) -> None:
+    crop_entries = []
+    for crop_id in crop_ids:
+        crop_path = fig_dir / "build" / "audit_crops" / f"{crop_id}.png"
+        crop_path.parent.mkdir(parents=True, exist_ok=True)
+        crop_path.write_bytes(f"crop:{crop_id}\n".encode())
+        crop_entries.append(
+            {
+                "id": crop_id,
+                "kind": "zoom_crop",
+                "source": "full_render",
+                "path": f"build/audit_crops/{crop_id}.png",
+                "source_path": f"build/{fig_dir.name}.png",
+                "bbox_px": [0, 0, 10, 10],
+                "sha256": file_sha256(crop_path),
+            }
+        )
+    manifest = fig_dir / "build" / "audit_crops" / "manifest.json"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.audit-crop-manifest.v1",
+                "fixture": fig_dir.name,
+                "render_path": f"build/{fig_dir.name}.png",
+                "required_crop_ids": list(crop_ids),
+                "crops": crop_entries,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _micro_defect_yaml(
+    *,
+    visual_clash_ref: str = "VC001",
+    status: str = "accept_simplification",
+    structured: bool = True,
+) -> str:
+    fields = (
+        "  - id: M001\n"
+        "    crop: examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png\n"
+        "    kind: line_crosses_label\n"
+        "    severity: NIT\n"
+        f"    observation: {visual_clash_ref} is accepted as a detector false positive\n"
+        "    linked_finding_id: \"\"\n"
+        f"    visual_clash_ref: {visual_clash_ref}\n"
+        f"    status: {status}\n"
+    )
+    if structured:
+        fields += (
+            "    accept_simplification_reason: false_positive\n"
+            "    accept_simplification_rationale: VC001 marks texture, not a defect.\n"
+        )
+    return "micro_defects:\n" + fields
+
+
+def _crop_audit_log_yaml(
+    *,
+    verdict: str = "no_defect",
+    crop_id: str = "full_q1",
+) -> str:
+    linked = "M001" if verdict == "defect" else ""
+    return (
+        "crop_audit_log:\n"
+        f"  - crop_id: {crop_id}\n"
+        f"    path: build/audit_crops/{crop_id}.png\n"
+        "    source: full_render\n"
+        "    inspected: true\n"
+        f"    verdict: {verdict}\n"
+        f"    linked_micro_defect_id: \"{linked}\"\n"
+        f"    rationale: {crop_id} was inspected\n"
+    )
+
+
+def _write_critique(
+    fig_dir: Path,
+    *,
+    schema: str = "figure-agent.critique.v1.10",
+    micro_defects_yaml: str | None = None,
+    crop_audit_log_yaml: str | None = None,
+) -> None:
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        f"schema: {schema}\n"
+        f"fixture: {fig_dir.name}\n"
+        f"{micro_defects_yaml if micro_defects_yaml is not None else _micro_defect_yaml()}"
+        f"{crop_audit_log_yaml if crop_audit_log_yaml is not None else _crop_audit_log_yaml()}"
+        "findings: []\n"
+        "panels: []\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+
+
+def test_summary_reports_legacy_schema_without_current_audit_blocker(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.6",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml="",
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "legacy"
+    assert summary["blocking_items"] == []
+    assert summary["critique_schema"] == "figure-agent.critique.v1.6"
+
+
+def test_summary_reports_missing_visual_clash_report_for_current_schema(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/visual_clash.json"]
+    assert summary["next_action"] == "/fig_compile demo_fig"
+
+
+def test_summary_reports_malformed_visual_clash_report(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+    report = fig_dir / "build" / "visual_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text("{", encoding="utf-8")
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/visual_clash.json"]
+    assert "malformed" in summary["reason"]
+
+
+def test_summary_reports_passed_accounting_counts(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["visual_clash"]["candidate_count"] == 1
+    assert summary["visual_clash"]["accounted_count"] == 1
+    assert summary["crop_audit"]["verdict_counts"] == {
+        "defect": 0,
+        "no_defect": 1,
+        "uncertain": 0,
+    }
+    assert summary["blocking_items"] == []
+
+
+def test_summary_reports_unaccounted_visual_clash_candidate(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001", "VC002"))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["VC002"]
+    assert summary["visual_clash"]["missing_refs"] == ["VC002"]
+
+
+def test_summary_reports_uncertain_crop_ids(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, crop_audit_log_yaml=_crop_audit_log_yaml(verdict="uncertain"))
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["full_q1"]
+    assert summary["crop_audit"]["uncertain_crop_ids"] == ["full_q1"]
+    assert summary["next_action"] == "human_review: reread uncertain audit crops"
+
+
+def test_summary_reports_missing_crop_manifest(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/audit_crops/manifest.json"]
+
+
+def test_summary_reports_malformed_crop_manifest(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    manifest = fig_dir / "build" / "audit_crops" / "manifest.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["crops"] = {}
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/audit_crops/manifest.json"]
+    assert "malformed" in summary["reason"]
+
+
+def test_summary_reports_crop_hash_mismatch(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    (fig_dir / "build" / "audit_crops" / "full_q1.png").write_bytes(b"changed\n")
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "stale_or_mismatched"
+    assert summary["blocking_items"] == ["full_q1"]
+
+
+def test_summary_reports_crop_manifest_path_traversal(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    manifest = fig_dir / "build" / "audit_crops" / "manifest.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["crops"][0]["path"] = "build/audit_crops/../outside.png"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "stale_or_mismatched"
+    assert summary["blocking_items"] == ["full_q1"]
+
+
+def test_summary_reports_missing_required_crop_audit_log_entry(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1", "full_q2"))
+    _write_critique(fig_dir, crop_audit_log_yaml=_crop_audit_log_yaml(crop_id="full_q1"))
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["full_q2"]
+    assert "crop_audit_log" in summary["reason"]
+
+
+def test_summary_counts_duplicate_visual_clash_refs_once(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    duplicate_refs = (
+        "micro_defects:\n"
+        "  - id: M001\n"
+        "    kind: line_crosses_label\n"
+        "    severity: NIT\n"
+        "    observation: first accounting\n"
+        "    linked_finding_id: \"\"\n"
+        "    visual_clash_ref: VC001\n"
+        "    status: accept_simplification\n"
+        "    accept_simplification_reason: false_positive\n"
+        "    accept_simplification_rationale: VC001 is texture, not a defect.\n"
+        "  - id: M002\n"
+        "    kind: line_crosses_label\n"
+        "    severity: NIT\n"
+        "    observation: duplicate accounting\n"
+        "    linked_finding_id: \"\"\n"
+        "    visual_clash_ref: VC001\n"
+        "    status: accept_simplification\n"
+        "    accept_simplification_reason: false_positive\n"
+        "    accept_simplification_rationale: VC001 is still texture, not a defect.\n"
+    )
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, micro_defects_yaml=duplicate_refs)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["visual_clash"]["candidate_count"] == 1
+    assert summary["visual_clash"]["accounted_count"] == 1
+
+
+def test_summary_reports_v1_10_accept_simplification_gap(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, micro_defects_yaml=_micro_defect_yaml(structured=False))
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["VC001"]
+    assert "accept_simplification_reason" in summary["reason"]

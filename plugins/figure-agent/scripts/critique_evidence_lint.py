@@ -19,6 +19,7 @@ SCHEMAS_WITH_PRINT_SCALE_EVIDENCE = frozenset(
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
     }
 )
 

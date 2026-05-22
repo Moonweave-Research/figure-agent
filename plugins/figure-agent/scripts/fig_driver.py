@@ -154,6 +154,12 @@ def _summary(
             code = first_blocker.get("code")
             if isinstance(code, str) and code not in {"", "none"}:
                 reason = f"{reason} first blocker {code}."
+    audit_evidence = status.get("audit_evidence")
+    if isinstance(audit_evidence, dict):
+        audit_state = audit_evidence.get("evaluation_state")
+        audit_reason = audit_evidence.get("reason")
+        if audit_state in {"needs_action", "missing_input", "stale_or_mismatched"}:
+            reason = f"{reason} audit evidence {audit_state}: {audit_reason}."
     summary = {
         "schema": SCHEMA,
         "fixture": name,
@@ -170,6 +176,8 @@ def _summary(
     }
     if isinstance(status_explanation, dict):
         summary["status_explanation"] = status_explanation
+    if isinstance(audit_evidence, dict):
+        summary["audit_evidence"] = audit_evidence
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
     if closeout is not None:
@@ -252,6 +260,35 @@ def _top_tier_audit_requires_human_gate(summary: Any) -> bool:
     )
 
 
+def _crop_audit_uncertain_ids(summary: Any) -> list[str]:
+    if not isinstance(summary, dict):
+        return []
+    if summary.get("evaluation_state") != "needs_action":
+        return []
+    crop_ids = summary.get("uncertain_crop_ids")
+    if not isinstance(crop_ids, list):
+        return []
+    return [crop_id.strip() for crop_id in crop_ids if isinstance(crop_id, str) and crop_id.strip()]
+
+
+def _crop_audit_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
+    uncertain_crop_ids = _crop_audit_uncertain_ids(loop_checkpoint.get("crop_audit_summary"))
+    if not uncertain_crop_ids:
+        return None
+    preview = ", ".join(uncertain_crop_ids[:5])
+    suffix = "" if len(uncertain_crop_ids) <= 5 else f", +{len(uncertain_crop_ids) - 5} more"
+    return {
+        "action": ACTION_HUMAN_GATE_STOP,
+        "safe_command": None,
+        "stop_boundary": STOP_HUMAN_GATE,
+        "reason": (
+            "latest /fig_loop checkpoint reports uncertain crop audit "
+            f"verdicts for {preview}{suffix}; reread those crops or "
+            "request human review before export, polish, or release."
+        ),
+    }
+
+
 def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
     loop_stop = loop_checkpoint["final_stop_reason"]
     loop_action = loop_checkpoint.get("recommended_next_action")
@@ -289,6 +326,9 @@ def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
                 f"{loop_action or 'domain judgment is required'}."
             ),
         }
+    crop_audit_blocker = _crop_audit_review_blocker(loop_checkpoint)
+    if crop_audit_blocker is not None:
+        return crop_audit_blocker
     top_tier_summary = loop_checkpoint.get("top_tier_audit_summary")
     if _top_tier_audit_requires_human_gate(top_tier_summary):
         return {
@@ -625,6 +665,16 @@ def _select_action(
                 "starting SVG polish handoff."
             ),
         )
+    if loop_checkpoint is not None:
+        crop_audit_blocker = _crop_audit_review_blocker(loop_checkpoint)
+        if crop_audit_blocker is not None:
+            return make(
+                crop_audit_blocker["action"],
+                safe_command=crop_audit_blocker["safe_command"],
+                stop_boundary=crop_audit_blocker["stop_boundary"],
+                reason=crop_audit_blocker["reason"],
+                checkpoint=loop_checkpoint,
+            )
     if final_state == "BLOCKED":
         return make(
             ACTION_POLISH_HANDOFF_STOP,

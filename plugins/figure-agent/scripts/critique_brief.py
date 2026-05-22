@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.9). No external API is called; the brief itself is API-free.
+v1.10). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -645,11 +645,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.9):
+(YAML front-matter then human-readable Markdown body — schema v1.10):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.9
+schema: figure-agent.critique.v1.10
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -749,6 +749,8 @@ micro_defects:
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
     visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
     status: open | resolved | accept_simplification
+    accept_simplification_reason: "<required enum when status=accept_simplification>"
+    accept_simplification_rationale: "<required when status=accept_simplification>"
 crop_audit_log:
   - crop_id: <crop id from build/audit_crops/manifest.json>
     path: build/audit_crops/<crop>.png
@@ -821,8 +823,13 @@ exactly once in `crop_audit_log`. Use `verdict: uncertain` when the crop remains
 ambiguous; do not silently treat uncertainty as pass. Use `verdict: defect` only
 when `linked_micro_defect_id` names the corresponding `micro_defects[].id`.
 For every visual-clash-linked `accept_simplification`, the `observation` must
-name the `VC###` id and explain the concrete geometry/context reason it is not
-a defect; do not write vague phrases such as "acceptable after review".
+name the `VC###` id. For every `micro_defects` item with
+`status: accept_simplification`, `accept_simplification_reason` must be one of
+`false_positive`, `intentional_schematic`, `outside_target_region`,
+`convention_acceptable`, or `decorative_background`, and
+`accept_simplification_rationale` must explain the concrete geometry/context
+reason it is not a defect; do not write vague phrases such as "acceptable after
+review".
 
 Use `panels: []` when no panel has both `reference_image` and `bbox_pdf_cm`.
 Keep figure-level findings in top-level `findings:`; do not move them under panels.

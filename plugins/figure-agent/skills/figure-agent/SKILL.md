@@ -162,7 +162,11 @@ box. `BLOCKER` and `MAJOR` instances must link to a normal finding or be
 explicitly marked `accept_simplification`. When the brief lists Visual Clash
 Candidates, every `VC###` id must appear in exactly one
 `micro_defects[].visual_clash_ref` entry; accepted candidates still need an
-explicit `accept_simplification` rationale.
+explicit `accept_simplification` rationale. For schema v1.10+ critiques, every
+accepted visual-clash candidate must also set `accept_simplification_reason` to
+one of `false_positive`, `intentional_schematic`, `outside_target_region`,
+`convention_acceptable`, or `decorative_background`, plus a non-empty
+`accept_simplification_rationale`.
 The critique must also fill `crop_audit_log` with exactly one entry for every
 `build/audit_crops/manifest.json.required_crop_ids` item; uncertain crop
 verdicts must remain explicit rather than being treated as pass.

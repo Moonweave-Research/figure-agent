@@ -16,11 +16,13 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_7,
     CRITIQUE_SCHEMA_V1_8,
     CRITIQUE_SCHEMA_V1_9,
+    CRITIQUE_SCHEMA_V1_10,
     CROP_AUDIT_VERDICTS,
     EDITORIAL_AUDIT_KEYS,
     EDITORIAL_POLISH_PATHS,
     EDITORIAL_VERDICTS,
     JOURNAL_SCORE_KEYS,
+    MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
     MICRO_DEFECT_KINDS,
     MICRO_DEFECT_STATUSES,
     QUALITY_AXIS_NAMES,
@@ -39,6 +41,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_7 == "figure-agent.critique.v1.7"
     assert CRITIQUE_SCHEMA_V1_8 == "figure-agent.critique.v1.8"
     assert CRITIQUE_SCHEMA_V1_9 == "figure-agent.critique.v1.9"
+    assert CRITIQUE_SCHEMA_V1_10 == "figure-agent.critique.v1.10"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
@@ -92,6 +95,15 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
         }
     )
     assert MICRO_DEFECT_STATUSES == frozenset({"open", "resolved", "accept_simplification"})
+    assert MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS == frozenset(
+        {
+            "false_positive",
+            "intentional_schematic",
+            "outside_target_region",
+            "convention_acceptable",
+            "decorative_background",
+        }
+    )
     assert CROP_AUDIT_VERDICTS == frozenset({"defect", "no_defect", "uncertain"})
 
 

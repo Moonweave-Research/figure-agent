@@ -42,6 +42,15 @@ fixture freshness work from human-only publication decisions:
 `Explanation:` is derived from the same state vector as `Next:`. It is a
 readability layer, not a separate readiness rule.
 
+Single-figure output also prints `Audit evidence:` when a critique exists or
+the audit-evidence model can classify the fixture. This line is read-only and
+does not change stage, `Next:`, or readiness. It summarizes whether
+visual-clash reports, audit-crop manifests, crop-read accounting, and
+structured accept-simplification rationale are present and accounted. Actionable
+states include `missing_input`, `stale_or_mismatched`, and `needs_action`; the
+line includes compact blocker ids such as `build/visual_clash.json`, `VC050`,
+or `full_q1` plus the next command or human-review instruction.
+
 ## Stages
 
 | Stage | Meaning | Next hint |
@@ -96,6 +105,10 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `status_explanation`: structured explanation with `summary`,
   `first_blocker`, and buckets for `plugin_state`, `fixture_freshness`, and
   `human_blockers`. `/fig_driver --dry-run` reuses this same object.
+- `audit_evidence`: structured read-only summary with `evaluation_state`,
+  `blocking_items`, `next_action`, visual-clash accounting counts, and
+  crop-audit verdict counts. This is an operator UX layer over existing audit
+  artifacts, not a new release gate.
 
 For polished SVG final artifacts, `publication_gate_state` also enforces the
 publication disclosure field because the submitted artifact may include human
@@ -104,7 +117,9 @@ SVG edits beyond generated TikZ exports.
 The no-argument summary includes `ready: true|false`, which follows
 `release_ready`, and appends `publication: <state>` when the publication gate
 is applicable. Treat `ready: true` plus `publication: PROVENANCE_REQUIRED` as
-artifact-ready but not submission-ready.
+artifact-ready but not submission-ready. It also appends `audit: <state>` for
+actionable audit-evidence states so an operator can spot missing or stale audit
+inputs without opening every fixture.
 
 Notes that may appear:
 

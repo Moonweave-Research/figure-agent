@@ -82,6 +82,7 @@ def _write_loop_run(
     recommended_next_action: str = "inspect figure state",
     top_tier_audit_summary: dict[str, Any] | None = None,
     editorial_art_direction_summary: dict[str, Any] | None = None,
+    crop_audit_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -106,6 +107,8 @@ def _write_loop_run(
         iteration["top_tier_audit_summary"] = top_tier_audit_summary
     if editorial_art_direction_summary is not None:
         iteration["editorial_art_direction_summary"] = editorial_art_direction_summary
+    if crop_audit_summary is not None:
+        iteration["crop_audit_summary"] = crop_audit_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -237,6 +240,38 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
     assert "first blocker export_missing" in summary["reason"]
     assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+
+
+def test_driver_summary_includes_actionable_audit_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "release_ready": False,
+            "critique_state": "FRESH",
+            "audit_evidence": {
+                "schema": "figure-agent.audit-evidence-summary.v1",
+                "fixture": "driver_demo",
+                "critique_schema": "figure-agent.critique.v1.10",
+                "evaluation_state": "needs_action",
+                "blocking_items": ["VC050"],
+                "next_action": "/fig_critique driver_demo",
+                "reason": "visual-clash candidates are not fully accounted",
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["audit_evidence"]["evaluation_state"] == "needs_action"
+    assert summary["audit_evidence"]["blocking_items"] == ["VC050"]
+    assert "audit evidence needs_action" in summary["reason"]
+    assert summary["action"] == "run_fig_loop"
 
 
 def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
@@ -719,6 +754,64 @@ def test_review_mode_completes_after_latest_clean_loop_checkpoint(
     assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
 
 
+def test_review_mode_surfaces_uncertain_crop_audit_from_latest_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    crop_audit_summary = {
+        "source": "critique.crop_audit_log",
+        "crop_count": 2,
+        "verdict_counts": {"defect": 0, "no_defect": 1, "uncertain": 1},
+        "defect_crop_ids": [],
+        "uncertain_crop_ids": ["VC001_A"],
+        "evaluation_state": "needs_action",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="inspect figure state",
+        crop_audit_summary=crop_audit_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+    assert "uncertain crop audit" in summary["reason"]
+    assert "VC001_A" in summary["reason"]
+    assert summary["loop_checkpoint"]["crop_audit_summary"] == crop_audit_summary
+
+
+def test_review_mode_does_not_block_on_passed_crop_audit_from_latest_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="inspect figure state",
+        crop_audit_summary={
+            "source": "critique.crop_audit_log",
+            "crop_count": 2,
+            "verdict_counts": {"defect": 0, "no_defect": 2, "uncertain": 0},
+            "defect_crop_ids": [],
+            "uncertain_crop_ids": [],
+            "evaluation_state": "passed",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+
+
 def test_review_mode_surfaces_top_tier_audit_blockers_from_latest_loop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1066,6 +1159,34 @@ def test_release_mode_surfaces_latest_loop_human_gate(
     assert summary["loop_checkpoint"]["final_stop_reason"] == "human_gate_required"
 
 
+def test_release_mode_surfaces_uncertain_crop_audit_from_latest_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        escalation_level="none",
+        crop_audit_summary={
+            "source": "critique.crop_audit_log",
+            "crop_count": 1,
+            "verdict_counts": {"defect": 0, "no_defect": 0, "uncertain": 1},
+            "defect_crop_ids": [],
+            "uncertain_crop_ids": ["VC009_B"],
+            "evaluation_state": "needs_action",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "VC009_B" in summary["reason"]
+
+
 def test_release_mode_surfaces_latest_loop_patch_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1203,6 +1324,32 @@ def test_polish_mode_routes_editorial_human_gate_to_human_stop(
     assert summary["safe_command"] is None
     assert summary["stop_boundary"] == "human_gate_required"
     assert "needs_human_art_direction" in summary["reason"]
+
+
+def test_polish_mode_surfaces_uncertain_crop_audit_from_latest_loop(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        crop_audit_summary={
+            "source": "critique.crop_audit_log",
+            "crop_count": 1,
+            "verdict_counts": {"defect": 0, "no_defect": 0, "uncertain": 1},
+            "defect_crop_ids": [],
+            "uncertain_crop_ids": ["print_178mm"],
+            "evaluation_state": "needs_action",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "print_178mm" in summary["reason"]
 
 
 def test_polish_mode_blocks_ready_path_when_editorial_slots_need_human(

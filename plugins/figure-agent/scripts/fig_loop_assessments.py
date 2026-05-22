@@ -15,6 +15,7 @@ CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
 CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
 CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
+CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -25,6 +26,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
+        CRITIQUE_SCHEMA_V1_10,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -36,6 +38,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
+        CRITIQUE_SCHEMA_V1_10,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -45,9 +48,12 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
+        CRITIQUE_SCHEMA_V1_10,
     }
 )
-CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset({CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9})
+CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
+    {CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10}
+)
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -150,7 +156,7 @@ def journal_grade_assessment(
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
     calibration_summary = (
         reference_calibration_summary(record)
-        if frontmatter.get("schema") == CRITIQUE_SCHEMA_V1_9
+        if frontmatter.get("schema") in {CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10}
         else None
     )
     if calibration_summary is not None:
