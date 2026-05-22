@@ -383,13 +383,18 @@
 % and hole trap possible; ⊖ would over-imply electron-only per Nicolai 2012
 % / Haneef 2020 convention). Solid filled circle = "trap site identity",
 % charge sign semantic deferred to paper experimental data.
+% Designer iter 10 (2026-05-22): trap dots upgraded from flat \fill circles
+% to ball-shaded spheres (TikZ ball color shading). NC main-text Fig 1 idiom
+% — key trap-site markers read as 3D dots with built-in specular highlight
+% + edge darkening, lifting them out of the flat polymer-film background.
+% Sphere radius matches the previous minimum-size 1.4mm / 1.5mm.
 \foreach \site in {siteS1, siteS2} {
-  \node[circle, draw=cBlue!85!black, fill=cBlue!75!black, inner sep=0pt,
-        minimum size=1.4mm, line width=0.32pt] at (\site) {};
+  \shade[ball color=cBlue!70!black] (\site) circle (0.07);
+  \draw[cBlue!95!black, line width=0.20pt] (\site) circle (0.07);
 }
 \foreach \site in {siteD1, siteD2} {
-  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
-        minimum size=1.5mm, line width=0.38pt] at (\site) {};
+  \shade[ball color=cRed!70!black] (\site) circle (0.075);
+  \draw[cRed!95!black, line width=0.22pt] (\site) circle (0.075);
 }
 
 % --- RIGHT half: energy diagram references + Vacuum level (R15) ---
@@ -753,15 +758,16 @@
   (0.65, 2.30) -- (3.85, 1.50);
 
 % Representative measured-data scatter points
-\fill[cRed!85!black] (1.20, 2.00) circle (0.04);
-\fill[cRed!85!black] (2.00, 1.56) circle (0.04);
-\fill[cRed!85!black] (2.80, 1.12) circle (0.04);
-\fill[cRed!85!black] (3.60, 0.69) circle (0.04);
-
-\fill[cBlue!60!black] (1.20, 2.16) circle (0.035);
-\fill[cBlue!60!black] (2.00, 1.96) circle (0.035);
-\fill[cBlue!60!black] (2.80, 1.76) circle (0.035);
-\fill[cBlue!60!black] (3.60, 1.56) circle (0.035);
+% Iter 10: power-law markers upgraded to ball-shaded spheres (NC convention
+% for primary data points). Red for high-n curve, blue for low-n curve.
+\foreach \mx/\my in {1.20/2.00, 2.00/1.56, 2.80/1.12, 3.60/0.69} {
+  \shade[ball color=cRed!75!black] (\mx, \my) circle (0.045);
+  \draw[cRed!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
+\foreach \mx/\my in {1.20/2.16, 2.00/1.96, 2.80/1.76, 3.60/1.56} {
+  \shade[ball color=cBlue!65!black] (\mx, \my) circle (0.040);
+  \draw[cBlue!95!black, line width=0.16pt] (\mx, \my) circle (0.040);
+}
 
 % D-7a Debye dashed reference (ends below both power-law tails per §8.4)
 % Column D iter 1 (2026-05-18, reference-grounded pilot): weight 0.55 → 0.75pt
@@ -950,7 +956,7 @@
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
 \foreach \cx in {6.25, 6.60, 6.95, 7.30} {
-  \fill[cRed!75!black] (\cx, 3.62) circle (0.045);
+  \shade[ball color=cRed!70!black] (\cx, 3.62) circle (0.045);
   \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
@@ -1174,12 +1180,17 @@
 % 3 pts on shallow (blue) Gaussian, 3 pts on deep (red) Gaussian.
 % Strictly positioned on Bezier curve — supports measured-data credibility
 % cue without introducing numeric axis labels.
-\fill[cBlue!85!black] (5.75, 0.65) circle (0.04);
-\fill[cBlue!85!black] (5.9, 0.85) circle (0.04);
-\fill[cBlue!85!black] (6.05, 0.65) circle (0.04);
-\fill[cRed!85!black] (6.75, 0.8) circle (0.04);
-\fill[cRed!85!black] (6.98, 1.15) circle (0.04);
-\fill[cRed!85!black] (7.21, 0.8) circle (0.04);
+% Iter 10: Gaussian DOS markers upgraded to ball-shaded spheres for the
+% representative-scatter cue, matching Panel D power-law + Panel C trap-site
+% sphere idiom.
+\foreach \mx/\my in {5.75/0.65, 5.9/0.85, 6.05/0.65} {
+  \shade[ball color=cBlue!70!black] (\mx, \my) circle (0.045);
+  \draw[cBlue!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
+\foreach \mx/\my in {6.75/0.8, 6.98/1.15, 7.21/0.8} {
+  \shade[ball color=cRed!70!black] (\mx, \my) circle (0.045);
+  \draw[cRed!95!black, line width=0.18pt] (\mx, \my) circle (0.045);
+}
 
 % E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
 % Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
@@ -1290,9 +1301,11 @@
   (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
+% Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
+% trap dots + Panel E surface ⊕ charges aesthetic).
 \foreach \cx/\cy in {11.85/2.00, 11.75/1.55, 11.60/1.10} {
-  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
-        minimum size=1.4mm, line width=0.35pt] at (\cx,\cy) {};
+  \shade[ball color=cRed!70!black] (\cx, \cy) circle (0.07);
+  \draw[cRed!95!black, line width=0.22pt] (\cx, \cy) circle (0.07);
 }
 % q_tr leader — iter 30: REVERTED to simple single-line at top charge (iter
 % 28 state). iter 29 vertical bracket cut through cantilever body + collided
