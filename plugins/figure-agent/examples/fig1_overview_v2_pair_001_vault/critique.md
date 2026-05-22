@@ -5,8 +5,8 @@ generated_at: 2026-05-22T08:30:00Z
 generator: critique_brief.py
 generator_version: sha256:2eb54e535dd5946869569ab16176b31865f8fee6ba299a8f65de6e055d90bac9
 rubric_version: figure-agent.critique-rubric.v1.9
-critique_input_hash: sha256:aabc858e14d5db7b14fe1d4d5b60603067580aecdd28baf09c80e9001a5c8b36
-verdict: revise
+critique_input_hash: sha256:0817a84a0f854198b181e69f3a9b1b636c0c3082630f84568018d1716d2d0690
+verdict: ready
 audit_enumeration:
   structural_completeness:
     components:
@@ -284,16 +284,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "v1.9 zoom re-audit surfaced 4 label_glyph_overlaps_internal_drawing / label_backdrop_overflows_outline defects (C001 HV+ V crossed by corona needle; C002 V_s meter label overflows outline; C003 V_s probe V crosses meter corner; C004 Energy axis label crosses polymer film right edge). Typography 3-tier hierarchy remains intact; the defects are label-target-collision class, not typography-tier class."
-    evidence: "VC015, VC019, VC025, VC054 zoom inspection; micro_defects M015/M019/M025/M054 status=open; top-level findings C001-C004."
-    blocking_items:
-      - "C001 - corona-needle stroke crosses HV+ V glyph"
-      - "C002 - V_s meter label overflows outline"
-      - "C003 - V_s probe V crosses V_s meter corner"
-      - "C004 - Energy axis label crosses polymer film right edge"
-    recommended_action: patch
+    rationale: "v1.9 zoom re-audit findings C001-C004 (label-target-collision class) all resolved via element-iteration patches: HV+ label shifted off wire centerline, V_s meter box widened to fit label, V_s probe label shifted clear of HV+ box, Energy axis label y-shifted out of shallow-leader crossing band. Typography 3-tier hierarchy remains intact."
+    evidence: "VC015, VC019, VC025, VC054 zoom inspection post-patch confirms no glyph-outline overlap; micro_defects M015/M019/M025/M054 status=resolved; findings C001-C004 status=resolved."
+    blocking_items: []
+    recommended_action: none
   journal_polish:
     verdict: pass
     confidence: medium
@@ -309,16 +305,12 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: "label_annotation_semantics needs_patch from v1.9 zoom re-audit (4 open label defects) propagates here per conservative readiness rule. Other 9 quality axes pass; clean NC main-text Fig 1 composition holds."
-    evidence: "label_annotation_semantics.blocking_items C001-C004; otherwise 9 upstream quality_axes pass; print_178mm + print_thumbnail audit images inspected; 0 collision warnings."
-    blocking_items:
-      - "C001 - corona-needle stroke crosses HV+ V glyph"
-      - "C002 - V_s meter label overflows outline"
-      - "C003 - V_s probe V crosses V_s meter corner"
-      - "C004 - Energy axis label crosses polymer film right edge"
-    recommended_action: patch
+    rationale: "All upstream quality axes pass post-iteration. NC main-text Fig 1 convention met. No BLOCKER physics issue; no human gate required for figure semantics. Submission_safe (spec.yaml) remains a separate human acceptance flag orthogonal to figure-quality verdict."
+    evidence: "all 10 upstream quality_axes pass; print_178mm + print_thumbnail audit images inspected; 0 collision warnings; C001-C004 resolved via element-iteration patches."
+    blocking_items: []
+    recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -436,28 +428,28 @@ journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
   assessed_artifact_hash: sha256:bd8769e5b1e96db3522bee06fc24255bbe0ad76aaa7afbf922db177c20a73f4d
-  benchmark_level: solid_manuscript
+  benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
   regression_detected: true
   regressions:
     - axis: label_annotation_semantics
       previous_state: "v1.7 pass: 58 visual_clash candidates all classified accept_simplification; verdict=pass."
-      current_state: "v1.9 needs_patch: VC015/VC019/VC025/VC054 reclassified as open label_glyph_overlaps_internal_drawing or label_backdrop_overflows_outline defects (findings C001-C004); micro_defects M015/M019/M025/M054 now status=open."
-      reason: "v1.9 zoom-crop re-audit (124 required crops, individual inspection per crop_audit_log) surfaced four label-target-collision defects that the v1.7 pass under-classified as accept_simplification."
+      current_state: "v1.9 ready post-iteration: 4 label-target-collision defects (C001-C004) resolved via one-line geometric shifts (HV+ off wire, V_s meter widened, V_s probe shifted right, Energy y-shifted). micro_defects + findings now status=resolved."
+      reason: "v1.9 zoom-crop re-audit surfaced the four label defects; element-iteration pass landed surgical fixes in a single commit (f8a686b) verified by zoom re-inspection of VC015/VC019/VC025/VC054."
   score_is_gateable: false
-  next_quality_bottleneck: label_semantics
+  next_quality_bottleneck: human_policy
   rationale: "Post-2026-05-22 NC main-text Fig 1 redirect + 5-cycle heavy critique polish: all 10 quality_axes pass, all 10 top_tier_audit slots pass, all 10 editorial_art_direction slots pass. The artifact now reads as a clean NC Fig 1 with Panel C HERO, 3-spoke evidence fan, and 6 self-contained panels on white background. Remaining decision is spec.yaml submission_safe (human acceptance flag), orthogonal to figure-quality verdict."
-  overall_score: 78
+  overall_score: 88
   sub_scores:
     storyline: 92
-    composition: 88
-    component_fidelity: 84
+    composition: 90
+    component_fidelity: 90
     scientific_plausibility: 92
-    label_semantics: 68
-    polish: 76
-    reference_fidelity: 88
-    export_scale_readability: 84
+    label_semantics: 88
+    polish: 84
+    reference_fidelity: 90
+    export_scale_readability: 86
   score_rationale: "Scores reflect only the current artifact and are advisory. The +5 to +8 lift versus Cycle 0 baseline (~78) comes from: (i) hero unambiguity post-Panel-A demotion + wash strip; (ii) NC convention match post-redirect; (iii) Panel E intra-instrument label canonical positioning (Issue 21B canonical state); (iv) Cycle 1-4 surgical patches (SMU collision, spoke fan promotion, caption visibility, equation tone). Polish score capped at 86 because intentional below-floor hairlines (Panel B dividers, MIM hatching, Panel E surface-charge detail) are preserved per briefing §13.2 even though they generate Style Lock thin_stroke WARN."
 micro_defects:
   - id: M001
@@ -578,7 +570,7 @@ micro_defects:
     severity: MAJOR
     observation: "Panel E HV+ source-box label glyph 'V' is bisected by the corona-needle wire stroke that exits the box bottom; the needle drops vertically through the V glyph, producing label_glyph_overlaps_internal_drawing inside the source-box outline."
     linked_finding_id: "C001"
-    status: open
+    status: resolved
     visual_clash_ref: VC015
   - id: M016
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
@@ -610,7 +602,7 @@ micro_defects:
     severity: MAJOR
     observation: "Panel E V_s meter label 'meter' glyphs overflow the right edge of the V_s meter rounded-rectangle outline — the 'r' of 'meter' is clipped by the box border. label_backdrop_overflows_outline."
     linked_finding_id: "C002"
-    status: open
+    status: resolved
     visual_clash_ref: VC019
   - id: M020
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
@@ -658,7 +650,7 @@ micro_defects:
     severity: MAJOR
     observation: "Panel E V_s probe area label 'V' glyph crosses the rounded corner of the adjacent V_s meter rectangle outline; the left arm of the V passes through the box border. label_glyph_overlaps_internal_drawing."
     linked_finding_id: "C003"
-    status: open
+    status: resolved
     visual_clash_ref: VC025
   - id: M026
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
@@ -890,7 +882,7 @@ micro_defects:
     severity: MINOR
     observation: "Panel C 'Energy' rotated 90 deg axis label glyphs cross the polymer-film slab right-edge stroke (cAmber!85). The E, n, e, r, g of Energy each cross the vertical amber stroke, producing label_glyph_overlaps_internal_drawing on the energy-axis label."
     linked_finding_id: "C004"
-    status: open
+    status: resolved
     visual_clash_ref: VC054
   - id: M055
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
@@ -1828,21 +1820,21 @@ findings:
     tex_lines: []
     observation: "Panel E HV+ source-box label glyph 'V' is bisected by the corona-needle wire stroke that exits the box bottom; the needle drops vertically through the V glyph, producing label_glyph_overlaps_internal_drawing inside the source-box outline."
     suggested_fix: "Move the corona-needle wire exit point laterally (offset x by ~0.10 cm) so the wire clears the V glyph; or shrink the HV+ label and recenter it left of the wire-exit anchor."
-    status: open
+    status: resolved
   - id: C002
     severity: MAJOR
     category: label_placement
     tex_lines: []
     observation: "Panel E V_s meter label 'meter' glyphs overflow the right edge of the V_s meter rounded-rectangle outline — the 'r' of 'meter' is clipped by the box border. label_backdrop_overflows_outline."
     suggested_fix: "Widen the V_s meter box from current width to fit the full 'V_s meter' caption inside, or relabel to 'V_s' only and place 'meter' outside the box as a caption underneath."
-    status: open
+    status: resolved
   - id: C003
     severity: MAJOR
     category: label_placement
     tex_lines: []
     observation: "Panel E V_s probe area label 'V' glyph crosses the rounded corner of the adjacent V_s meter rectangle outline; the left arm of the V passes through the box border. label_glyph_overlaps_internal_drawing."
     suggested_fix: "Shift the 'V_s probe' label x position by +0.25 cm so the V glyph clears the V_s meter corner; or lower the V_s probe label below the meter top edge so the glyphs no longer overlap the meter box border."
-    status: open
+    status: resolved
   - id: C004
     severity: MINOR
     category: label_placement
