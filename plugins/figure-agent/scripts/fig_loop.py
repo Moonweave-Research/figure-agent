@@ -150,6 +150,7 @@ def run_loop(
     iteration = {
         "iteration": 1,
         "status": status_result,
+        "audit_evidence": status_result.get("audit_evidence"),
         "axis_verdicts": axis_verdicts,
         "adjudication": adjudication,
         "stop_reason": loop_decision["stop_reason"],

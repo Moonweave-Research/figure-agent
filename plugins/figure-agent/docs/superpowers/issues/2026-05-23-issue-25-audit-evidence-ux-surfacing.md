@@ -1,7 +1,7 @@
 # Issue 25: Audit Evidence UX Surfacing
 
 **Date:** 2026-05-23 KST
-**Status:** 25A-C implemented; 25D open
+**Status:** 25A-D implemented
 **Type:** post-Issue-24 usability and operator-readiness hardening
 
 ## Problem
@@ -73,6 +73,7 @@ surface existing audit state in a more usable form.
    - Must keep current action vocabulary backward compatible.
 
 4. **Issue 25D: `/fig_loop` Operator Closeout**
+   - Implemented in this branch.
    - When loop stops on audit evidence, print a compact closeout:
      - what was inspected;
      - what remains uncertain or malformed;
@@ -147,3 +148,12 @@ structured accept-simplification, or actual figure content.
 - Actionable audit evidence states append context to `reason`.
 - The driver action vocabulary, dry-run guarantee, and selected command remain
   unchanged.
+
+## Issue 25D Implementation Notes
+
+- `iteration_001.json` now stores top-level `audit_evidence` copied from
+  `/fig_status`.
+- `/fig_loop --json` includes `audit_evidence` in stdout summary.
+- `decision.md` prints audit-evidence state, compact blockers, and next action.
+- `/fig_loop` remains verify-only and does not mutate critique, adjudication,
+  source, export, accepted, or golden state.

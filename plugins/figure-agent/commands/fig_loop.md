@@ -44,6 +44,7 @@ becomes one JSON object with:
 - `auto_patch_eligibility`
 - `patch_evidence_present`
 - `post_patch_evidence_verdict`
+- `audit_evidence`
 - `recommended_next_action`
 
 On preflight failure, the command preserves the existing error contract: exit
@@ -52,11 +53,13 @@ code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
-- `iteration_001.json` — `/fig_status`-equivalent state, per-axis verdicts,
-  `critique_adjudication.yaml` status, stop reason, active patch target,
-  `patch_handoff`, escalation summary, and recommended next action.
-- `decision.md` — human-readable stop reason, active patch target, and
+- `iteration_001.json` — `/fig_status`-equivalent state, audit-evidence
+  summary, per-axis verdicts, `critique_adjudication.yaml` status, stop
+  reason, active patch target, `patch_handoff`, escalation summary, and
   recommended next action.
+- `decision.md` — human-readable stop reason, active patch target, and
+  recommended next action. It also mirrors audit-evidence state, compact
+  blockers, and next action so operators do not need to dig through raw JSON.
 
 Each `axis_verdicts.<axis>` record keeps the legacy `state` and `verdict`
 fields and also includes:

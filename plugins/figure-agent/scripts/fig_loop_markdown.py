@@ -30,6 +30,19 @@ def decision_markdown(
         handoff_text = f"{patch_handoff['target_type']} {patch_handoff['target_id']}"
     else:
         handoff_text = "(none)"
+    audit_evidence = status_result.get("audit_evidence")
+    if isinstance(audit_evidence, dict):
+        audit_state = str(audit_evidence.get("evaluation_state", "?"))
+        audit_blocking = audit_evidence.get("blocking_items")
+        if isinstance(audit_blocking, list) and audit_blocking:
+            audit_blocking_text = ", ".join(str(item) for item in audit_blocking[:8])
+        else:
+            audit_blocking_text = "(none)"
+        audit_next = str(audit_evidence.get("next_action") or "(none)")
+    else:
+        audit_state = "not_applicable"
+        audit_blocking_text = "(none)"
+        audit_next = "(none)"
     return "\n".join(
         [
             f"# Fig Loop Decision: {name}",
@@ -49,6 +62,9 @@ def decision_markdown(
                 f"{status_result.get('final_artifact_path', '')}"
             ),
             f"- adjudication_state: {adjudication['state']}",
+            f"- audit_evidence_state: {audit_state}",
+            f"- audit_evidence_blocking: {audit_blocking_text}",
+            f"- audit_evidence_next: {audit_next}",
             f"- active_patch_target: {active_patch_text}",
             f"- patch_handoff_target: {handoff_text}",
             f"- notes: {notes_text}",
