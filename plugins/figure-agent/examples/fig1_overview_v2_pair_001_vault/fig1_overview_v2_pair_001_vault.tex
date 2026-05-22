@@ -507,12 +507,18 @@
 % v8.3 audit closure: arrow + label color cGray!70!black → cRed!75!black to
 % match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
 % trap species (color convention §8.6 / §13.9 Binding-1).
+% Designer iter 8: arrow x 12.85 -> 13.40 (past mobility edge label tail
+% at x~13.38). At x=12.85 the vertical caliper passed through the 'l' of
+% 'mobility' at y=7.85, a real label-glyph-crossing defect visible at zoom
+% even though visual_clash did not flag it. Delta E_t label moves to the
+% right of the arrow (anchor=west at x=13.42, tail at ~13.82). Row 2 outer
+% box right edge widens 13.30 -> 13.85 to contain both.
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cRed!80!black, line width=0.45pt] (12.85, 8.27) -- (12.85, 5.83);
+      cRed!80!black, line width=0.45pt] (13.40, 8.27) -- (13.40, 5.83);
 % Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!80!black,
       anchor=west, inner sep=0.5pt]
-  at (12.90, 7.00) {$\Delta E_t$};
+  at (13.42, 7.00) {$\Delta E_t$};
 
 % R13: Re-add thin BLACK straight leaders (checklist #12 — no arrowhead, no
 % color, 0.30pt). Each LEFT ⊖ → its corresponding RIGHT band left edge.
@@ -627,7 +633,7 @@
 % content so panel-letter typography sits on top of the box top edge per
 % NC corner-perch convention.
 \draw[cGray!30, line width=0.35pt, rounded corners=2pt]
-  (0.05, 0.10) rectangle (13.30, 4.50);
+  (0.05, 0.10) rectangle (13.85, 4.50);
 \draw[cGray!30, line width=0.35pt] (4.62, 0.10) -- (4.62, 4.50);
 \draw[cGray!30, line width=0.35pt] (9.47, 0.10) -- (9.47, 4.50);
 
