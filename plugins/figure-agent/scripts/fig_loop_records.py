@@ -27,7 +27,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
     iteration_path = run_dir / "iteration_001.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
-    return {
+    summary = {
         "run_dir": manifest["run_dir"],
         "manifest_path": str(manifest_path),
         "iteration_path": str(iteration_path),
@@ -50,3 +50,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "crop_audit_summary": iteration.get("crop_audit_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    audit_evidence = iteration.get("audit_evidence")
+    if audit_evidence is not None:
+        summary["audit_evidence"] = audit_evidence
+    return summary
