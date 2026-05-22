@@ -22,7 +22,11 @@ from critique_contract import (  # noqa: E402
     load_critique_frontmatter,
 )
 from critique_evidence_lint import critique_evidence_violations  # noqa: E402
-from critique_schema_vocab import MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS  # noqa: E402
+from critique_schema_vocab import (  # noqa: E402
+    MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS,
+    MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS,
+    MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
+)
 from quality_manifest import file_sha256  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -41,21 +45,8 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset({"figure-agent.critique.v1.10"})
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
-_VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
-    "false positive",
-    "not ",
-    "intentional",
-    "acceptable because",
-    "separate",
-    "distinct",
-    "outside",
-    "axis",
-    "legend",
-    "background",
-    "decorative",
-    "convention",
-)
-_STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = 40
+_VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
+_STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",

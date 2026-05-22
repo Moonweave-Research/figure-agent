@@ -157,4 +157,19 @@ MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS = frozenset(
         "decorative_background",
     }
 )
+MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS = 40
+MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS = (
+    "false positive",
+    "not ",
+    "intentional",
+    "acceptable because",
+    "separate",
+    "distinct",
+    "outside",
+    "axis",
+    "legend",
+    "background",
+    "decorative",
+    "convention",
+)
 CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})
