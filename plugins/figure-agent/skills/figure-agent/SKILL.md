@@ -160,8 +160,12 @@ its enclosing box, and `label_glyph_overlaps_internal_drawing` when a label or
 backdrop crosses an internal display, axis, needle, or separator in the same
 box. Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, and
 `label_overflows_row_box` for declared text-boundary candidates from
-`build/text_boundary_clash.json`. `BLOCKER` and `MAJOR` instances must link to
-a normal finding or be explicitly marked `accept_simplification`. When the brief lists Visual Clash
+`build/text_boundary_clash.json`. Author or refresh verbose
+`spec.yaml.text_boundary_checks` from `spec.yaml.text_boundary_layout` with
+`uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write`
+after adding row boxes, column rules, horizontal rules, or forbidden internal
+rectangles. `BLOCKER` and `MAJOR` instances must link to a normal finding or
+be explicitly marked `accept_simplification`. When the brief lists Visual Clash
 Candidates, every `VC###` id must appear in exactly one
 `micro_defects[].visual_clash_ref` entry; accepted candidates still need an
 explicit `accept_simplification` rationale. When the brief lists Text Boundary

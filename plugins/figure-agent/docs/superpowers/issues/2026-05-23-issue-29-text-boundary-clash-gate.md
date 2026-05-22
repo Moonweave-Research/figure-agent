@@ -1,6 +1,6 @@
 # Issue 29 — Text Boundary Clash Gate
 
-Status: implemented; pending commit
+Status: completed in `efb0803` / PR #42
 
 ## Problem
 

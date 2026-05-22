@@ -27,9 +27,16 @@ Steps:
    WARN-tier lints are report-only and include thin strokes, missing flagship macros,
    filled labels that may be overpainted by later draw/path commands, and short
    double-headed arrows whose tips may fuse at manuscript scale.
-3. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
-4. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
-5. Run `uv run python3 scripts/check_visual_clash.py` on `examples/<name>/build/<name>.pdf`.
+3. If the fixture declares `spec.yaml.text_boundary_layout`, refresh the
+   generated checker contract before compiling:
+   `uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write`.
+   The helper only rewrites `spec.yaml.text_boundary_checks`; `compile.sh`
+   consumes `text_boundary_checks`, not the author-facing layout block.
+4. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
+5. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
+6. Run `uv run python3 scripts/check_visual_clash.py` and
+   `uv run python3 scripts/check_text_boundary_clash.py` on
+   `examples/<name>/build/<name>.pdf`.
    - Default mode is report-only: collision/clash findings print WARN output
      and the checker exits 0.
    - Strict mode is opt-in: with `FIGURE_AGENT_STRICT=1`, `compile.sh`
@@ -38,13 +45,13 @@ Steps:
      Fixtures declaring `golden_contract` are gated by
      `scripts/check_golden_artifacts.py --require-accepted`, which enforces
      unresolved collision/clash budgets and rejects `accepted: false`.
-6. (Optional) Run `uv run python3 scripts/check_layout_drift.py examples/<name>` —
+7. (Optional) Run `uv run python3 scripts/check_layout_drift.py examples/<name>` —
    only when `examples/<name>/coordinate_hints.yaml` exists. Reports per-label
    drift between the reference PNG OCR positions and the build PDF text
    positions, anchored on `spec.yaml.golden_contract.required_labels`.
    Report-only by default; `--strict` (or `FIGURE_AGENT_STRICT=1`) makes
    matched-but-drifted labels exit non-zero.
-7. `scripts/compile.sh` always runs `scripts/perception_pack.py <name>` after
+8. `scripts/compile.sh` always runs `scripts/perception_pack.py <name>` after
    successful render and checks. It writes:
    - `examples/<name>/build/perception/extract.yaml`
    - `examples/<name>/build/perception/overlay.png`
@@ -52,16 +59,18 @@ Steps:
    This step requires `pdfplumber` and fails hard if the dependency is missing.
    The pack is descriptive only: raw PDF primitives plus endpoint overlay, not
    a topology judgment or automatic critique.
-8. Report:
+9. Report:
    - Compile success/fail
    - Collision report (count, severity)
    - Visual clash report (WARN list, NOT blocking)
+   - Text boundary clash report when `spec.yaml.text_boundary_checks` exists
+     (`build/text_boundary_clash.json`, WARN list, NOT blocking)
    - Layout drift report when emitted (per-label drift / uncovered counts,
      aspect-ratio header)
    - Perception pack paths when generated
    After review of compile + clash reports, run `/fig_critique <name>` for the
    host-orchestrated vision critique before exporting.
-9. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
+10. Style Lock: confirm `\usepackage{polymer-paper-preamble}` is loaded in .tex.
    If missing, warn user but do not auto-inject.
 
 Human-gated by default. Reports inform during iteration; do not block on WARN
