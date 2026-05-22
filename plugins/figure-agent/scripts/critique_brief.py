@@ -52,7 +52,8 @@ _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
     "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
     "print_scale_unreadable | label_backdrop_overflows_outline | "
-    "label_glyph_overlaps_internal_drawing"
+    "label_glyph_overlaps_internal_drawing | label_crosses_panel_boundary | "
+    "label_crosses_column_rule | label_overflows_row_box"
 )
 
 
@@ -500,6 +501,63 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _text_boundary_candidate_sort_key(candidate: dict) -> tuple[str, str, str, str]:
+    return (
+        str(candidate.get("id") or ""),
+        str(candidate.get("boundary_id") or ""),
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+    )
+
+
+def _text_boundary_clash_candidates_section(example_dir: Path) -> str:
+    report_path = example_dir / "build" / "text_boundary_clash.json"
+    if not report_path.is_file():
+        return ""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return (
+            "\n## Text Boundary Clash Candidates (from check_text_boundary_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` is malformed JSON: {exc}\n"
+        )
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return (
+            "\n## Text Boundary Clash Candidates (from check_text_boundary_clash.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
+        )
+    if not candidates:
+        return ""
+    total = report.get("total", len(candidates))
+    lines = [
+        "## Text Boundary Clash Candidates (from check_text_boundary_clash.py)",
+        "Host LLM MUST review each text-boundary candidate. For each, either link "
+        "to a new/existing `micro_defects` entry via `text_boundary_ref` or "
+        "explicitly justify `status: accept_simplification`.",
+        "Use `label_crosses_column_rule` for text crossing panel column rules.",
+        "Use `label_crosses_panel_boundary` for text crossing panel or row boundary lines.",
+        "Use `label_overflows_row_box` for text outside a containing row/panel box.",
+        f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
+        f"- Total candidates from JSON: {total}",
+        "",
+    ]
+    for candidate in sorted(
+        (item for item in candidates if isinstance(item, dict)),
+        key=_text_boundary_candidate_sort_key,
+    ):
+        lines.append(
+            f"- id=`{candidate.get('id', '')}` "
+            f"kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
+            f"boundary_id=`{candidate.get('boundary_id', '')}` "
+            f"boundary_role=`{candidate.get('boundary_role', '')}` "
+            f"bbox_pt={candidate.get('bbox_pt')} "
+            f"boundary_pt={candidate.get('boundary_pt')} "
+            f"clearance_pt={candidate.get('clearance_pt')}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if not manifest_path.is_file():
@@ -587,6 +645,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     visual_clash_section = _visual_clash_candidates_section(example_dir)
+    text_boundary_clash_section = _text_boundary_clash_candidates_section(example_dir)
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
@@ -602,6 +661,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {zoom_audit_section}
 {print_scale_audit_section}
 {visual_clash_section}
+{text_boundary_clash_section}
 {reference_calibration_section}
 
 ## Author intent (from briefing.md)
@@ -748,6 +808,7 @@ micro_defects:
     observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
     visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
+    text_boundary_ref: "<TB001 or empty when not from text_boundary_clash.json>"
     status: open | resolved | accept_simplification
     accept_simplification_reason: "<required enum when status=accept_simplification>"
     accept_simplification_rationale: "<required when status=accept_simplification>"

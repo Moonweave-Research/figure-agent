@@ -158,11 +158,15 @@ micro-defects rather than generic polish comments: use
 `label_backdrop_overflows_outline` when a label fill/backdrop protrudes outside
 its enclosing box, and `label_glyph_overlaps_internal_drawing` when a label or
 backdrop crosses an internal display, axis, needle, or separator in the same
-box. `BLOCKER` and `MAJOR` instances must link to a normal finding or be
-explicitly marked `accept_simplification`. When the brief lists Visual Clash
+box. Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, and
+`label_overflows_row_box` for declared text-boundary candidates from
+`build/text_boundary_clash.json`. `BLOCKER` and `MAJOR` instances must link to
+a normal finding or be explicitly marked `accept_simplification`. When the brief lists Visual Clash
 Candidates, every `VC###` id must appear in exactly one
 `micro_defects[].visual_clash_ref` entry; accepted candidates still need an
-explicit `accept_simplification` rationale. For schema v1.10+ critiques, every
+explicit `accept_simplification` rationale. When the brief lists Text Boundary
+Clash Candidates, every `TB###` id must appear in exactly one
+`micro_defects[].text_boundary_ref` entry. For schema v1.10+ critiques, every
 accepted visual-clash candidate must also set `accept_simplification_reason` to
 one of `false_positive`, `intentional_schematic`, `outside_target_region`,
 `convention_acceptable`, or `decorative_background`, plus a non-empty
