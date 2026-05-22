@@ -1046,7 +1046,11 @@
 % with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
 % meter box left x=8.08).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=south] at (7.1, 4.1) {$V_s$ probe};
+% Iter 17: pdftotext bbox showed V_s probe label glyph top at TikZ y=4.56,
+% 0.06 cm above the Row 2 box outline (y=4.50). Shifted anchor y 4.10 →
+% 4.00 so glyph top lands at ~4.46 with a clear 0.04 cm margin from box
+% top. Label bottom moves to y≈4.18, still 0.13 cm above probe shaft top.
+      anchor=south] at (7.1, 4.0) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
@@ -1105,10 +1109,17 @@
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
+% Iter 17 (2026-05-23): label was anchor=east at (5.60, 3.50) so the
+% rendered text extended from TikZ x≈4.12 to 5.35 — crossing the D/E
+% column rule (x=4.62) by 0.50 cm into Panel D's airspace. Flipped to
+% anchor=west at (4.72, 3.50) so the label stays inside Panel E box left
+% margin with 0.10 cm clearance from the column rule. Leader updated to
+% point from the new label east edge (5.95) over to the slab top-left
+% corner (5.90, 3.55) — short SW-ward leader pointing at the slab.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=east] at (5.6, 3.5) {polymer film};
-\draw[cGray!55!black, line width=0.18pt] (5.61, 3.5) -- (5.88, 3.525);
-\fill[cGray!55!black] (5.88, 3.525) circle (0.012);
+      anchor=west] at (4.72, 3.5) {polymer film};
+\draw[cGray!55!black, line width=0.18pt] (5.95, 3.5) -- (5.90, 3.55);
+\fill[cGray!55!black] (5.90, 3.55) circle (0.012);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
@@ -1360,14 +1371,21 @@
 % Labels back to anchor=south east/north east AT arrow tip — extending LEFT
 % from tip puts labels in void but NOT overlapping cantilever (cantilever at
 % x≥12.00). iter 27's anchor=south/north placed labels over cantilever — fatal.
+% Iter 17: Coulomb label cluster (arrow + 'Coulomb' + 'repulsion') shifted
+% +0.15 cm right because 'Coulomb' label tail extended to TikZ x=9.38 — 0.09
+% cm past the E/F column rule (x=9.47) into Panel E airspace. New anchor x
+% =10.85 keeps the label cluster aligned to the leftward force arrow and
+% gives 0.06 cm clearance from the column rule. Arrow tail moves to x=11.75
+% which still reads as 'on cantilever' (cantilever right edge at this y is
+% around x=11.70).
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
-  (11.6, 1.3) -- (10.7, 1.3);
+  (11.75, 1.3) -- (10.85, 1.3);
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
-      anchor=south east] at (10.7, 1.35) {Coulomb};
+      anchor=south east] at (10.85, 1.35) {Coulomb};
 % iter 29: repulsion y 1.25 → 1.27 (gap 0.05→0.03) to match Coulomb's tight
 % spacing per Gemini cohesion polish.
 \node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black] at (10.7, 1.27) {repulsion};
+      text=cRed!75!black] at (10.85, 1.27) {repulsion};
 
 % F-8 result zone electrode + ground + air gap — iter 25: SLIMMED 0.25 → 0.17cm
 % (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,

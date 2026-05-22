@@ -5,7 +5,7 @@ generated_at: 2026-05-22T08:30:00Z
 generator: critique_brief.py
 generator_version: sha256:2eb54e535dd5946869569ab16176b31865f8fee6ba299a8f65de6e055d90bac9
 rubric_version: figure-agent.critique-rubric.v1.9
-critique_input_hash: sha256:1c38a9e3c9700150d906763ef24682ff448f04db8c7f7125c0a48c8620993d7f
+critique_input_hash: sha256:b5f22a43afa6463fb25922d541488f3048aab8c0c6ed8fd8f6c966c3586278c0
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -581,18 +581,18 @@ micro_defects:
     status: accept_simplification
     visual_clash_ref: VC016
   - id: M017
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_V.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_f.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC017 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC017 'f' text_on_path candidate inspected at zoom: Visual clash candidate text='f' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC017
   - id: M018
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_f.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_V.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC018 'f' text_on_path candidate inspected at zoom: Visual clash candidate text='f' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC018 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC018
@@ -600,7 +600,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_film.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC019 'film' near_miss candidate inspected at zoom: Visual clash candidate text='film' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC019 'film' text_on_path candidate inspected at zoom: Visual clash candidate text='film' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC019
@@ -608,7 +608,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_film.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC020 'film' text_on_fill candidate inspected at zoom: Visual clash candidate text='film' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC020 'film' near_miss candidate inspected at zoom: Visual clash candidate text='film' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC020
