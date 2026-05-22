@@ -960,9 +960,15 @@
 % convention (apparatus label sits above its source box, no fill backdrop).
 % Result: centered HV+ caption above a clean source box, all wire/terminal
 % geometry untouched.
+% Iter 18: caption was OUTSIDE Panel E box (sitting in inter-row band at
+% y=4.42..4.60, above box top y=4.50). Brought INSIDE — anchor=east at
+% (5.55, 4.25) — sits in Panel E left-margin airspace just LEFT of the
+% HV+ source box (which has left edge at x=5.70), at y=4.25 which is mid-
+% height of the source box. Free zone (polymer-film label now inside slab
+% below; no conflict).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=south]
-  at (6.125, 4.42) {HV+};
+      anchor=east]
+  at (5.55, 4.25) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
@@ -1109,17 +1115,16 @@
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
-% Iter 17 (2026-05-23): label was anchor=east at (5.60, 3.50) so the
-% rendered text extended from TikZ x≈4.12 to 5.35 — crossing the D/E
-% column rule (x=4.62) by 0.50 cm into Panel D's airspace. Flipped to
-% anchor=west at (4.72, 3.50) so the label stays inside Panel E box left
-% margin with 0.10 cm clearance from the column rule. Leader updated to
-% point from the new label east edge (5.95) over to the slab top-left
-% corner (5.90, 3.55) — short SW-ward leader pointing at the slab.
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=west] at (4.72, 3.5) {polymer film};
-\draw[cGray!55!black, line width=0.18pt] (5.95, 3.5) -- (5.90, 3.55);
-\fill[cGray!55!black] (5.90, 3.55) circle (0.012);
+% Iter 18 (2026-05-23): user feedback — iter 17 anchor=west(4.72) placed
+% the label so its tail 'film' word's last letter ended at TikZ x=5.95
+% which crossed into the polymer slab (slab left x=5.90), making the 'm'
+% sit on the cAmber gradient. Moved the label INSIDE the slab itself at
+% slab x-center (6.675, 3.50) anchor=center — matches Panel D MIM 'polymer
+% film' italic-on-slab convention. Leader + connector dot removed since
+% label now sits on the labeled object.
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!65!black,
+      anchor=center] at (6.675, 3.525) {polymer film};
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
