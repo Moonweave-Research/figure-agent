@@ -35,8 +35,8 @@
   %   primary 0.9pt — narrative paths (interArrow, snake chain, well curves, polymer outline).
   %   secondary 0.55pt — axes, spines, faint reference lines.
   %   annotation 0.7pt — schematic outlines that are not narrative (DIB ring, S8, polymer strip).
-  interArrow/.style={-{Stealth[length=7pt,width=5pt]}, cGray!55!black,
-                     line width=0.9pt},
+  interArrow/.style={-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black,
+                     line width=0.7pt},
   rowBridgeArrow/.style={-{Stealth[length=10pt,width=7pt]}, cGray!70!black,
                          line width=1.6pt},
   % Figure-wide Nature compliance (2026-05-17): max text size 7pt for
@@ -874,6 +874,13 @@
 % conductive base, deserves slightly more material weight than light gray).
 \shade[top color=cGray!50, bottom color=cGray!25]
   (5.9, 3.15) rectangle (7.45, 3.45);
+% Iter 12: subtle horizontal striations on substrate (suggesting polished
+% metal / ITO conductor surface, briefing §13.6 ref01 Checa NatComm 2023).
+% Two thin lines at low opacity — barely visible, adds material weight
+% without competing with sample-charges or label leader.
+\foreach \sy in {3.22, 3.30, 3.38} {
+  \draw[white, opacity=0.25, line width=0.18pt] (5.95, \sy) -- (7.40, \sy);
+}
 \draw[cGray!75!black, line width=0.28pt]
   (5.9, 3.15) rectangle (7.45, 3.45);
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
