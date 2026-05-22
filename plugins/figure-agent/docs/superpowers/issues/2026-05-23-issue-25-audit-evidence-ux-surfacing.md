@@ -1,7 +1,7 @@
 # Issue 25: Audit Evidence UX Surfacing
 
 **Date:** 2026-05-23 KST
-**Status:** 25A-B implemented; 25C-D open
+**Status:** 25A-C implemented; 25D open
 **Type:** post-Issue-24 usability and operator-readiness hardening
 
 ## Problem
@@ -66,6 +66,7 @@ surface existing audit state in a more usable form.
    - Must not change existing public state enums.
 
 3. **Issue 25C: `/fig_drive` Next-Action Explanation**
+   - Implemented in this branch.
    - Include the audit evidence summary in driver JSON when it influences
      `safe_command`, `stop_boundary`, or `reason`.
    - Driver remains dry-run and non-mutating.
@@ -138,3 +139,11 @@ structured accept-simplification, or actual figure content.
   state, reason, compact blockers, and next action.
 - No-argument `/fig_status` appends `audit: <state>` only for actionable states.
 - Existing stage/state enums and `Next:` selection are unchanged.
+
+## Issue 25C Implementation Notes
+
+- `/fig_drive --dry-run` copies `audit_evidence` from `/fig_status` as an
+  additive top-level JSON field.
+- Actionable audit evidence states append context to `reason`.
+- The driver action vocabulary, dry-run guarantee, and selected command remain
+  unchanged.
