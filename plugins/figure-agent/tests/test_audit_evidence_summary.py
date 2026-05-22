@@ -35,6 +35,39 @@ def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) ->
         + "\n",
         encoding="utf-8",
     )
+    if not (fig_dir / "build" / "text_boundary_clash.json").exists():
+        _write_text_boundary_clash_report(fig_dir, ())
+
+
+def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fig_dir / "build" / "text_boundary_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "spec.yaml:text_boundary_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_crosses_vertical_boundary",
+                        "text": f"label {candidate_id}",
+                        "boundary_id": "de_column_rule",
+                        "boundary_role": "column_rule",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
+                        "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_crop_manifest(fig_dir: Path, crop_ids: tuple[str, ...]) -> None:
@@ -74,6 +107,7 @@ def _write_crop_manifest(fig_dir: Path, crop_ids: tuple[str, ...]) -> None:
 def _micro_defect_yaml(
     *,
     visual_clash_ref: str = "VC001",
+    text_boundary_ref: str = "",
     status: str = "accept_simplification",
     structured: bool = True,
 ) -> str:
@@ -85,6 +119,7 @@ def _micro_defect_yaml(
         f"    observation: {visual_clash_ref} is accepted as a detector false positive\n"
         "    linked_finding_id: \"\"\n"
         f"    visual_clash_ref: {visual_clash_ref}\n"
+        f"    text_boundary_ref: {text_boundary_ref!r}\n"
         f"    status: {status}\n"
     )
     if structured:
@@ -165,6 +200,22 @@ def test_summary_reports_missing_visual_clash_report_for_current_schema(
     assert summary["next_action"] == "/fig_compile demo_fig"
 
 
+def test_summary_reports_missing_text_boundary_report_for_current_schema(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    (fig_dir / "build" / "text_boundary_clash.json").unlink()
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/text_boundary_clash.json"]
+    assert summary["next_action"] == "/fig_compile demo_fig"
+
+
 def test_summary_reports_malformed_visual_clash_report(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     _write_crop_manifest(fig_dir, ("full_q1",))
@@ -210,6 +261,21 @@ def test_summary_reports_unaccounted_visual_clash_candidate(tmp_path: Path) -> N
     assert summary["evaluation_state"] == "needs_action"
     assert summary["blocking_items"] == ["VC002"]
     assert summary["visual_clash"]["missing_refs"] == ["VC002"]
+
+
+def test_summary_reports_unaccounted_text_boundary_candidate(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_text_boundary_clash_report(fig_dir, ("TB001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["TB001"]
+    assert summary["text_boundary"]["candidate_count"] == 1
+    assert summary["text_boundary"]["missing_refs"] == ["TB001"]
 
 
 def test_summary_reports_uncertain_crop_ids(tmp_path: Path) -> None:

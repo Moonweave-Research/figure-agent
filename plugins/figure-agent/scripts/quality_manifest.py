@@ -82,6 +82,9 @@ def critique_manifest_paths(
     visual_clash_path = example_dir / "build" / "visual_clash.json"
     if visual_clash_path.exists():
         paths.append(visual_clash_path)
+    text_boundary_clash_path = example_dir / "build" / "text_boundary_clash.json"
+    if text_boundary_clash_path.exists():
+        paths.append(text_boundary_clash_path)
     audit_crop_manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if audit_crop_manifest_path.exists():
         paths.append(audit_crop_manifest_path)

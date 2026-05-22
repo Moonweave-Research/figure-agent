@@ -44,6 +44,39 @@ def _write_visual_clash_report(fixture: Path, candidate_ids: tuple[str, ...]) ->
         + "\n",
         encoding="utf-8",
     )
+    _write_text_boundary_clash_report(fixture, ())
+
+
+def _write_text_boundary_clash_report(fixture: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fixture / "build" / "text_boundary_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": fixture.name,
+                "render_pdf": f"build/{fixture.name}.pdf",
+                "source": "spec.yaml:text_boundary_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_crosses_vertical_boundary",
+                        "text": candidate_id,
+                        "boundary_id": "column_rule",
+                        "boundary_role": "column_rule",
+                        "bbox_pt": [10.0, 20.0, 30.0, 40.0],
+                        "boundary_pt": {"x": 20.0, "y_range": [0.0, 50.0]},
+                        "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_crop_manifest(fixture: Path, crop_id: str = "full_q1") -> Path:

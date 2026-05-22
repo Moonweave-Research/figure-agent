@@ -92,6 +92,9 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
             "print_scale_unreadable",
             "label_backdrop_overflows_outline",
             "label_glyph_overlaps_internal_drawing",
+            "label_crosses_panel_boundary",
+            "label_crosses_column_rule",
+            "label_overflows_row_box",
         }
     )
     assert MICRO_DEFECT_STATUSES == frozenset({"open", "resolved", "accept_simplification"})

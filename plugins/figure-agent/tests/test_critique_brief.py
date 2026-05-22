@@ -419,6 +419,58 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
     assert "crop=`build/audit_crops/visual_clash/VC001_A.png`" in brief
 
 
+def test_critique_brief_includes_text_boundary_clash_candidates(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir, size=(2000, 1600))
+    (example_dir / "build" / "text_boundary_clash.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": "review_demo",
+                "render_pdf": "build/review_demo.pdf",
+                "source": "spec.yaml:text_boundary_checks",
+                "candidates": [
+                    {
+                        "id": "TB002",
+                        "kind": "text_outside_rect",
+                        "text": "film",
+                        "boundary_id": "row2_box",
+                        "boundary_role": "row_box",
+                        "bbox_pt": [20.0, 68.0, 50.0, 75.0],
+                        "boundary_pt": {"bbox": [0.0, 0.0, 144.0, 72.0]},
+                        "clearance_pt": 0.0,
+                    },
+                    {
+                        "id": "TB001",
+                        "kind": "text_crosses_vertical_boundary",
+                        "text": "polymer",
+                        "boundary_id": "de_column_rule",
+                        "boundary_role": "column_rule",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
+                        "clearance_pt": 0.5,
+                    },
+                ],
+                "total": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Text Boundary Clash Candidates (from check_text_boundary_clash.py)" in brief
+    assert "Host LLM MUST review each text-boundary candidate" in brief
+    assert "`text_boundary_ref`" in brief
+    assert "`TB001`" in brief
+    assert "`TB002`" in brief
+    assert "boundary_id=`de_column_rule`" in brief
+    assert "boundary_role=`column_rule`" in brief
+    assert "label_crosses_column_rule" in brief
+    assert "label_overflows_row_box" in brief
+    assert brief.index("id=`TB001`") < brief.index("id=`TB002`")
+
+
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"

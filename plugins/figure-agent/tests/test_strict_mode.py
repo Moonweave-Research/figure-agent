@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import check_collisions  # noqa: E402
+import check_text_boundary_clash  # noqa: E402
 import check_visual_clash  # noqa: E402
 
 GOLDEN_PDF = (
@@ -126,3 +127,44 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "--strict" in compile_sh
     assert "--json-output" in compile_sh
     assert "visual_clash.json" in compile_sh
+    assert "check_text_boundary_clash.py" in compile_sh
+    assert "text_boundary_clash.json" in compile_sh
+
+
+def test_check_text_boundary_clash_default_exits_zero_with_report(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    fixture = tmp_path / "demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    pdf = build / "demo.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n")
+    (fixture / "spec.yaml").write_text(
+        "name: demo\n"
+        "text_boundary_checks:\n"
+        "  - id: de_column_rule\n"
+        "    kind: vertical_line\n"
+        "    role: column_rule\n"
+        "    x_pdf_cm: 2.54\n"
+        "    y_range_pdf_cm: [0.0, 5.08]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        check_text_boundary_clash,
+        "extract_pdf_words_and_page",
+        lambda _pdf: (
+            [{"text": "polymer", "xmin": 70.0, "ymin": 20.0, "xmax": 75.0, "ymax": 30.0}],
+            (200.0, 200.0),
+        ),
+    )
+    output = build / "text_boundary_clash.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_text_boundary_clash.py", str(pdf), "--json-output", str(output)],
+    )
+
+    assert check_text_boundary_clash.main() == 0
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["candidates"][0]["id"] == "TB001"
