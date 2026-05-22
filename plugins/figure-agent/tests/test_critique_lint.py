@@ -223,6 +223,40 @@ def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...])
         + "\n",
         encoding="utf-8",
     )
+    if not (fig_dir / "build" / "text_boundary_clash.json").exists():
+        _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    return report
+
+
+def _write_text_boundary_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
+    report = fig_dir / "build" / "text_boundary_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "spec.yaml:text_boundary_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_crosses_vertical_boundary",
+                        "text": f"label {candidate_id}",
+                        "boundary_id": "de_column_rule",
+                        "boundary_role": "column_rule",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
+                        "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return report
 
 
@@ -984,6 +1018,120 @@ def test_lint_critique_accepts_v1_7_when_visual_clash_report_has_no_candidates(
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_missing_text_boundary_ref_when_report_has_candidates(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=("TB001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["text_boundary_accounting"]
+    assert "missing: TB001" in violations[0].message
+
+
+def test_lint_critique_rejects_current_schema_when_text_boundary_report_is_missing(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    (fig_dir / "build" / "text_boundary_clash.json").unlink()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["text_boundary_accounting"]
+    assert "missing build/text_boundary_clash.json" in violations[0].message
+
+
+def test_lint_critique_accepts_text_boundary_ref_accounting(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=("TB001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_crosses_column_rule\n"
+            "    severity: MINOR\n"
+            "    observation: TB001 shows label crossing the declared column rule\n"
+            "    linked_finding_id: ''\n"
+            "    visual_clash_ref: ''\n"
+            "    text_boundary_ref: TB001\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
     )
 
     assert critique_lint.lint_critique(fig_dir) == []

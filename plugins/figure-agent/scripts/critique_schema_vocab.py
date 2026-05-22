@@ -145,6 +145,9 @@ MICRO_DEFECT_KINDS = frozenset(
         "print_scale_unreadable",
         "label_backdrop_overflows_outline",
         "label_glyph_overlaps_internal_drawing",
+        "label_crosses_panel_boundary",
+        "label_crosses_column_rule",
+        "label_overflows_row_box",
     }
 )
 MICRO_DEFECT_STATUSES = frozenset({"open", "resolved", "accept_simplification"})

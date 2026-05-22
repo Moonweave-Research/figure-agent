@@ -59,6 +59,39 @@ def test_critique_manifest_includes_audit_crop_manifest_when_present(
     assert before != after
 
 
+def test_critique_manifest_includes_text_boundary_report_when_present(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    report_path = example_dir / "build" / "text_boundary_clash.json"
+    report_path.parent.mkdir(parents=True)
+    report_path.write_text(
+        '{"schema":"figure-agent.text-boundary-clash.v1","total":0}\n',
+        encoding="utf-8",
+    )
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    report_path.write_text(
+        '{"schema":"figure-agent.text-boundary-clash.v1","total":1}\n',
+        encoding="utf-8",
+    )
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert report_path in paths
+    assert before != after
+
+
 def test_critique_manifest_includes_critique_reference_pack_when_present(
     tmp_path: Path,
 ) -> None:

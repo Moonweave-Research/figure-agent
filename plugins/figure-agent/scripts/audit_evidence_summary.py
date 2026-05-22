@@ -9,6 +9,7 @@ from typing import Any
 from critique_lint import (
     CROP_AUDIT_ACCOUNTING_SCHEMAS,
     STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS,
+    TEXT_BOUNDARY_ACCOUNTING_SCHEMAS,
     VISUAL_CLASH_ACCOUNTING_SCHEMAS,
 )
 from critique_schema_vocab import MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS
@@ -37,6 +38,13 @@ def _base_summary(example_dir: Path, critique_schema: str | None) -> dict[str, A
         "next_action": "",
         "reason": "audit evidence is not applicable",
         "visual_clash": {
+            "present": False,
+            "candidate_count": 0,
+            "accounted_count": 0,
+            "missing_refs": [],
+            "unknown_refs": [],
+        },
+        "text_boundary": {
             "present": False,
             "candidate_count": 0,
             "accounted_count": 0,
@@ -101,6 +109,26 @@ def _visual_clash_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str 
     return ids, None
 
 
+def _text_boundary_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str | None]:
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return [], "malformed"
+    ids: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            return [], "malformed"
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            return [], "malformed"
+        candidate_id = candidate_id.strip()
+        if candidate_id in seen:
+            return [], "malformed"
+        seen.add(candidate_id)
+        ids.append(candidate_id)
+    return ids, None
+
+
 def _micro_defects(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
     raw_items = frontmatter.get("micro_defects")
     if not isinstance(raw_items, list):
@@ -112,6 +140,15 @@ def _visual_clash_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: list[str] = []
     for item in _micro_defects(frontmatter):
         ref = item.get("visual_clash_ref")
+        if isinstance(ref, str) and ref.strip():
+            refs.append(ref.strip())
+    return refs
+
+
+def _text_boundary_refs(frontmatter: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in _micro_defects(frontmatter):
+        ref = item.get("text_boundary_ref")
         if isinstance(ref, str) and ref.strip():
             refs.append(ref.strip())
     return refs
@@ -293,6 +330,45 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
         "unknown_refs": unknown_refs,
     }
 
+    text_missing_refs: list[str] = []
+    text_unknown_refs: list[str] = []
+    if critique_schema in TEXT_BOUNDARY_ACCOUNTING_SCHEMAS:
+        text_report, text_error = _load_json(example_dir / "build" / "text_boundary_clash.json")
+        if text_error is not None:
+            reason = "missing build/text_boundary_clash.json"
+            if text_error == "malformed":
+                reason = "malformed build/text_boundary_clash.json"
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/text_boundary_clash.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason=reason,
+            )
+        text_candidate_ids, text_candidate_error = _text_boundary_candidate_ids(text_report or {})
+        if text_candidate_error is not None:
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/text_boundary_clash.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason="malformed build/text_boundary_clash.json candidates",
+            )
+        text_refs = _text_boundary_refs(frontmatter)
+        text_candidate_id_set = set(text_candidate_ids)
+        text_ref_set = set(text_refs)
+        text_missing_refs = [
+            candidate_id for candidate_id in text_candidate_ids if candidate_id not in text_refs
+        ]
+        text_unknown_refs = sorted(ref for ref in text_ref_set if ref not in text_candidate_id_set)
+        summary["text_boundary"] = {
+            "present": True,
+            "candidate_count": len(text_candidate_ids),
+            "accounted_count": len(text_ref_set & text_candidate_id_set),
+            "missing_refs": text_missing_refs,
+            "unknown_refs": text_unknown_refs,
+        }
+
     if critique_schema in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
         manifest, manifest_error = _load_json(manifest_path)
@@ -369,6 +445,15 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             blocking_items=blocking_items,
             next_action=f"/fig_critique {example_dir.name}",
             reason="visual-clash candidates are not fully accounted in micro_defects",
+        )
+    if text_missing_refs or text_unknown_refs:
+        blocking_items = text_missing_refs + text_unknown_refs
+        return _finish(
+            summary,
+            state="needs_action",
+            blocking_items=blocking_items,
+            next_action=f"/fig_critique {example_dir.name}",
+            reason="text-boundary candidates are not fully accounted in micro_defects",
         )
     if accept_gaps:
         return _finish(
