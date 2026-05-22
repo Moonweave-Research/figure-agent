@@ -1151,9 +1151,15 @@
 % Codex "cut decay markers from 4 to 2-3").
 % iter E4: marker size 0.9 → 1.0mm + fill cRed!25 → cRed!35 (subtle uptick
 % for data-sampling presence without bleeding into decay curve "blob").
+% Iter 14: V_s(t) decay markers converted from flat light \fill circles
+% to ball-shaded spheres with a LIGHTER ball color (cRed!45 vs cRed!70 used
+% on primary data markers). Preserves the iter 47/48 design intent — these
+% markers stay lighter than Panel D log-log + Gaussian DOS spheres to read
+% as 'raw decay sampling' rather than 'extracted/processed datapoint' — but
+% adopts the figure-wide 3D-sphere idiom for visual consistency.
 \foreach \mx/\my in {5.45/2.32, 5.95/1.96, 6.45/1.78} {
-  \node[circle, draw=cRed!85, fill=cRed!35, inner sep=0pt,
-        minimum size=1.0mm, line width=0.28pt] at (\mx,\my) {};
+  \shade[ball color=cRed!45] (\mx, \my) circle (0.05);
+  \draw[cRed!75!black, line width=0.18pt] (\mx, \my) circle (0.05);
 }
 
 % E-5 internal raw→derived inter-arrow (vertical, between V_s and g(E_t))
