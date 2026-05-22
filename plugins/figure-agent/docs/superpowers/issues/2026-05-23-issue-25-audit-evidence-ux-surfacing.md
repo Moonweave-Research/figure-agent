@@ -1,7 +1,7 @@
 # Issue 25: Audit Evidence UX Surfacing
 
 **Date:** 2026-05-23 KST
-**Status:** planned
+**Status:** 25A implemented; 25B-D open
 **Type:** post-Issue-24 usability and operator-readiness hardening
 
 ## Problem
@@ -36,6 +36,7 @@ surface existing audit state in a more usable form.
 ## Priority Order
 
 1. **Issue 25A: Audit Evidence Summary Model**
+   - Implemented in this branch.
    - Define a small shared model for audit-evidence status.
    - Inputs:
      - `build/visual_clash.json` presence/count;
@@ -90,16 +91,20 @@ output until the model is stable.
 
 ### Required Behavior
 
-- Read only fixture-local files.
-- Return controlled states for missing/malformed `visual_clash.json`.
-- Return controlled states for missing/malformed `build/audit_crops/manifest.json`.
-- Count visual-clash candidates and accounted `micro_defects[].visual_clash_ref`.
-- Count `crop_audit_log` verdicts and list uncertain crop ids.
-- Detect v1.10 accepted visual-clash candidates missing structured reason or
+- [x] Read only fixture-local files.
+- [x] Return controlled states for missing/malformed `visual_clash.json`.
+- [x] Return controlled states for missing/malformed `build/audit_crops/manifest.json`.
+- [x] Count visual-clash candidates and accounted `micro_defects[].visual_clash_ref`.
+- [x] Count duplicate visual-clash refs once in the compact summary.
+- [x] Count `crop_audit_log` verdicts and list uncertain crop ids.
+- [x] Detect missing required `crop_audit_log` entries from manifest ids.
+- [x] Reject stale/mismatched crop manifest paths that are absolute, escaping,
+  outside `build/audit_crops`, or not PNG files.
+- [x] Detect v1.10 accepted visual-clash candidates missing structured reason or
   rationale by reusing existing lint semantics where possible.
-- Preserve legacy compatibility: older schemas may report `legacy`, not
+- [x] Preserve legacy compatibility: older schemas may report `legacy`, not
   blocker, unless existing lint already blocks them.
-- Avoid generated artifact mutation.
+- [x] Avoid generated artifact mutation.
 
 ### Verification
 
