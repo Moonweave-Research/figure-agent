@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:d38462638212055106fefe025408e16e57f6eaf19aa931cdcda2cafc43a96da2
+source_critique_hash: sha256:f5a1671cf4bef4784a330417a7a59c68613d08a2c53618e75741bf3fb9434735
 decisions:
 - finding_id: P001
   decision: needs_human

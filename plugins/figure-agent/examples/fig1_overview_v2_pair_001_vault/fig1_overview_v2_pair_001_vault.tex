@@ -1115,17 +1115,18 @@
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
-% Iter 19 (2026-05-23): polymer film label REMOVED from Panel E entirely.
-% Sequence of attempts: (iter 17) left-margin with leader → text crossed
-% D/E column rule; (iter 18) inside slab → ⊕ surface charges competed for
-% the 0.15 cm slab vertical space; (iter 19a) below substrate as Panel-C
-% style caption → spatially disconnected from slab, looked like a V_s(t)
-% plot subtitle instead. Self-identifying material wins: cAmber gradient
-% slab + gray substrate stack + 4 surface ⊕ charges already reads as
-% 'polymer film on conductor' per figure-wide cAmber=polymer convention
-% (Panel A chain bond, Panel C film, Panel D MIM polymer film, Panel F
-% cantilever all use the same cAmber identity). No label needed in this
-% iconic-cartoon register.
+% Iter 20 (2026-05-23): cross-panel consistency restored — Panel C uses
+% 'poly(S-r-DIB) thin film' and Panel D uses 'polymer film'; Panel E with
+% no label was inconsistent and made the slab identity invisible to readers
+% scanning the figure briefly. Compromise: short 'polymer' label (no
+% 'film' — saves 0.54 cm vs full 'polymer film') anchored in the Panel E
+% left margin at (4.72, 3.50), italic 6.5pt, with a tiny leader pointing
+% to the slab top-left corner. cAmber slab color + ⊕ surface charges
+% carry the 'film' (thin layer) part implicitly.
+\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!65!black, anchor=west] at (4.72, 3.5) {polymer};
+\draw[cGray!55!black, line width=0.18pt] (5.45, 3.5) -- (5.88, 3.55);
+\fill[cGray!55!black] (5.88, 3.55) circle (0.012);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
