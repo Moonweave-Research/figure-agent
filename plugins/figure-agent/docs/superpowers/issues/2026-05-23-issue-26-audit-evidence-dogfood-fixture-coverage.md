@@ -1,7 +1,7 @@
 # Issue 26: Audit Evidence Dogfood Fixture Coverage
 
 **Date:** 2026-05-23 KST
-**Status:** planned
+**Status:** implemented
 **Type:** plugin QA coverage
 
 ## Problem
@@ -79,3 +79,27 @@ or add a small tracked `examples/_audit_evidence_smoke` fixture. Test-only
 fixtures avoid committing pseudo-build artifacts; a tracked smoke example makes
 manual dogfood easier. The implementation should choose the least misleading
 option.
+
+## Implementation Notes
+
+Implemented as test-only generated fixtures in
+`tests/test_audit_evidence_dogfood.py`.
+
+This avoids committing pseudo-build artifacts under `examples/` while still
+exercising command-facing code paths:
+
+- `status.infer_stage(fixture)`
+- `fig_driver.build_driver_summary(..., repo_root=tmp_path)`
+- `fig_loop.run_loop(..., repo_root=tmp_path, runs_root=tmp_path / "runs")`
+- `fig_loop_records.json_stdout_summary(run_dir)`
+- `decision.md`
+
+Covered states:
+
+- `missing_input` with missing `build/visual_clash.json`
+- `needs_action` with unaccounted `VC050`
+- `stale_or_mismatched` with stale crop hash for `full_q1`
+- `passed` with complete visual-clash and crop-audit accounting
+
+No real manuscript examples, source figures, exports, accepted state, or golden
+state are touched.
