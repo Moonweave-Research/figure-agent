@@ -29,6 +29,19 @@ intuition or memory when `Next:` or `Publication gate:` points elsewhere.
 Rerun `/fig_status <name>` after every completed action to derive the next
 step.
 
+Single-figure output also prints an `Explanation:` line. This line separates
+fixture freshness work from human-only publication decisions:
+
+- `fixture_freshness` blockers mean an artifact is missing or stale, such as
+  `render_stale`, `critique_stale`, or `export_missing`.
+- `human_blocker` blockers mean the plugin must stop for accepted/golden
+  roll-forward, publication provenance, or human acceptance.
+- `plugin_state` entries such as `critique_not_required` are informational and
+  do not ask the agent to fabricate a critique.
+
+`Explanation:` is derived from the same state vector as `Next:`. It is a
+readability layer, not a separate readiness rule.
+
 ## Stages
 
 | Stage | Meaning | Next hint |
@@ -80,6 +93,9 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `publication_gate_failures`: typed blocker records with `code`, `category`,
   `actor`, `message`, and `required_action`. The single-figure printed output
   shows the first blocker as `Publication blocker:` when present.
+- `status_explanation`: structured explanation with `summary`,
+  `first_blocker`, and buckets for `plugin_state`, `fixture_freshness`, and
+  `human_blockers`. `/fig_driver --dry-run` reuses this same object.
 
 For polished SVG final artifacts, `publication_gate_state` also enforces the
 publication disclosure field because the submitted artifact may include human

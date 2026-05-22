@@ -42,9 +42,11 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "final_artifact_state": (iteration.get("status") or {}).get("final_artifact_state"),
         "final_artifact_kind": (iteration.get("status") or {}).get("final_artifact_kind"),
         "final_artifact_path": (iteration.get("status") or {}).get("final_artifact_path"),
+        "journal_grade_assessment": iteration.get("journal_grade_assessment"),
         "top_tier_audit_summary": iteration.get("top_tier_audit_summary"),
         "editorial_art_direction_summary": iteration.get(
             "editorial_art_direction_summary"
         ),
+        "crop_audit_summary": iteration.get("crop_audit_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }

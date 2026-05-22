@@ -10,6 +10,8 @@ CRITIQUE_SCHEMA_V1_4 = "figure-agent.critique.v1.4"
 CRITIQUE_SCHEMA_V1_5 = "figure-agent.critique.v1.5"
 CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
 CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
+CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
+CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -93,6 +95,7 @@ JOURNAL_SCORE_KEYS = frozenset(
     }
 )
 JOURNAL_SCORE_BLOCK_KEYS = frozenset({"overall_score", "sub_scores", "score_rationale"})
+JOURNAL_REFERENCE_SCORE_BASIS = frozenset({"current_artifact_vs_pack"})
 
 TOP_TIER_AUDIT_KEYS = (
     "first_glance_message",
@@ -144,3 +147,4 @@ MICRO_DEFECT_KINDS = frozenset(
     }
 )
 MICRO_DEFECT_STATUSES = frozenset({"open", "resolved", "accept_simplification"})
+CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})

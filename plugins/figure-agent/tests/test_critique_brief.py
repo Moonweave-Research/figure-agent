@@ -200,8 +200,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.7" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "schema: figure-agent.critique.v1.9" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "panels:" in brief
 
 
@@ -371,7 +371,7 @@ def test_critique_brief_keeps_print_scale_images_out_of_high_zoom_section(tmp_pa
 
 def test_critique_brief_includes_visual_clash_candidates(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
-    _write_real_render_pair(example_dir)
+    _write_real_render_pair(example_dir, size=(2000, 1600))
     (example_dir / "build" / "visual_clash.json").write_text(
         json.dumps(
             {
@@ -414,6 +414,9 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
     assert brief.index("id=`VC001`") < brief.index("id=`VC002`")
     assert "label_backdrop_overflows_outline" in brief
     assert "label_glyph_overlaps_internal_drawing" in brief
+    assert "`examples/review_demo/build/audit_crops/visual_clash/VC001_A.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/visual_clash/VC002_HV.png`" in brief
+    assert "crop=`build/audit_crops/visual_clash/VC001_A.png`" in brief
 
 
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
@@ -447,7 +450,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -470,13 +473,15 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schema(tmp_path):
+def test_critique_brief_output_format_uses_v1_9_crop_editorial_and_micro_defect_schema(
+    tmp_path,
+):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.7" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.7" in brief
+    assert "schema: figure-agent.critique.v1.9" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
@@ -500,6 +505,10 @@ def test_critique_brief_output_format_uses_v1_7_editorial_and_micro_defect_schem
     ) in brief
     assert "visual-clash-linked `accept_simplification`" in brief
     assert "status: open | resolved | accept_simplification" in brief
+    assert "crop_audit_log:" in brief
+    assert "crop_id: <crop id from build/audit_crops/manifest.json>" in brief
+    assert "verdict: defect | no_defect | uncertain" in brief
+    assert "linked_micro_defect_id: \"<M001 when verdict=defect or empty>\"" in brief
 
 
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):
@@ -885,3 +894,74 @@ def test_critique_brief_includes_subregion_active_set(tmp_path):
     assert "### Sub-region Active Set" in brief
     assert "- Active targets: G-2, G-7" in brief
     assert "- Observed patch units: G-2, G-7" in brief
+
+
+def test_critique_brief_includes_reference_calibrated_pack(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "critique_reference_pack.yaml").write_text(
+        """
+schema: figure-agent.critique-reference-pack.v1
+fixture: review_demo
+target_journal: Nature Materials
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: target journal exemplar set
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: each panel reads as one connected mechanism story
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: dense apparatus boxes without visual hierarchy
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Would this pass a first-glance Nature Materials mechanism read?
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference-Calibrated Top-Tier Comparison" in brief
+    assert "Target journal: Nature Materials" in brief
+    assert "Visual ambition: high_impact_candidate" in brief
+    assert "T001" in brief
+    assert "each panel reads as one connected mechanism story" in brief
+    assert "A001" in brief
+    assert "dense apparatus boxes without visual hierarchy" in brief
+    assert "Q001" in brief
+    assert "Would this pass a first-glance Nature Materials mechanism read?" in brief
+    assert "reference_calibration:" in brief
+    assert "reference_pack_hash: sha256:" in brief
+    assert "reference_class: mechanism_schematic" in brief
+    assert "visual_ambition: high_impact_candidate" in brief
+    assert "score_basis: current_artifact_vs_pack" in brief
+    assert "limiting_reference_traits:" in brief
+    assert "scores cite the reference pack" in brief
+
+
+def test_critique_brief_omits_reference_calibrated_pack_when_missing(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference-Calibrated Top-Tier Comparison" not in brief
+
+
+def test_critique_brief_reports_malformed_reference_calibration_pack(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "critique_reference_pack.yaml").write_text("schema: [", encoding="utf-8")
+
+    try:
+        generate_for(example_dir)
+    except critique_brief.CritiqueBriefError as exc:
+        assert "critique_reference_pack.yaml" in str(exc)
+    else:
+        raise AssertionError("expected CritiqueBriefError")

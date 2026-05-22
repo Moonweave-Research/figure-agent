@@ -17,12 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fig_loop_adjudication import adjudication_state as build_adjudication_state  # noqa: E402
 from fig_loop_assessments import (  # noqa: E402
+    crop_audit_summary as build_crop_audit_summary,
+)
+from fig_loop_assessments import (
     editorial_art_direction_summary as build_editorial_art_direction_summary,
 )
-from fig_loop_assessments import (  # noqa: E402
+from fig_loop_assessments import (
     journal_grade_assessment as build_journal_grade_assessment,
 )
-from fig_loop_assessments import (  # noqa: E402
+from fig_loop_assessments import (
     top_tier_audit_summary as build_top_tier_audit_summary,
 )
 from fig_loop_auto_patch import auto_patch_eligibility as build_auto_patch_eligibility  # noqa: E402
@@ -121,6 +124,10 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
+    crop_audit_summary = build_crop_audit_summary(
+        example_dir,
+        status_result.get("critique_state"),
+    )
     auto_patch_eligibility = build_auto_patch_eligibility(loop_decision, patch_handoff)
     post_patch_evidence = post_patch_evidence_verdict(
         repo_root,
@@ -151,6 +158,7 @@ def run_loop(
         "journal_grade_assessment": journal_grade_assessment,
         "top_tier_audit_summary": top_tier_audit_summary,
         "editorial_art_direction_summary": editorial_art_direction_summary,
+        "crop_audit_summary": crop_audit_summary,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,

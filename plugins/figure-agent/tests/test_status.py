@@ -2706,6 +2706,140 @@ def test_print_single_shows_final_artifact_state(tmp_path: Path, capsys) -> None
     assert "Final artifact: generated_export NONE exports/no_exports_fig.svg" in captured.out
 
 
+def test_status_explanation_separates_stale_render_and_stale_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "ref_fig"
+    fig_dir.mkdir()
+    (fig_dir / "reference").mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    tex = fig_dir / "ref_fig.tex"
+    tex.write_text("% tikz changed\n", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    build_pdf = build / "ref_fig.pdf"
+    build_pdf.write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, "ref_fig", schema="figure-agent.critique.v1.8")
+    tex.write_text("% tikz changed after critique\n", encoding="utf-8")
+
+    old_time = time.time() - 100
+    new_time = time.time()
+    os.utime(build_pdf, (old_time, old_time))
+    os.utime(tex, (new_time, new_time))
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert explanation["first_blocker"]["code"] == "render_stale"
+    assert explanation["first_blocker"]["category"] == "fixture_freshness"
+    freshness_codes = {
+        item["code"] for item in explanation["buckets"]["fixture_freshness"]
+    }
+    assert {"render_stale", "critique_stale"} <= freshness_codes
+    assert explanation["buckets"]["human_blockers"] == []
+
+
+def test_status_explanation_separates_tracked_golden_and_stale_critique(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    _make_spec(fig_dir, reference_image="reference/ref.png", accepted=True)
+    _write_hashed_critique(fig_dir, "goldenfig", schema="figure-agent.critique.v1.8")
+    (fig_dir / "build" / "visual_clash.json").write_text(
+        '{"fixture":"goldenfig","render_pdf":"build/goldenfig.pdf",'
+        '"candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(
+        status_mod,
+        "compute_export_state",
+        lambda _example, _name: "TRACKED_GOLDEN",
+    )
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert explanation["first_blocker"]["code"] == "critique_stale"
+    freshness_codes = {
+        item["code"] for item in explanation["buckets"]["fixture_freshness"]
+    }
+    human_codes = {item["code"] for item in explanation["buckets"]["human_blockers"]}
+    assert "critique_stale" in freshness_codes
+    assert "export_tracked_golden" in human_codes
+    assert "--force-golden" in explanation["buckets"]["human_blockers"][0]["next_command"]
+
+
+def test_status_explanation_marks_critique_not_required_as_non_blocking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "plainfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
+    assert "critique_not_required" in plugin_codes
+    assert explanation["first_blocker"]["code"] != "critique_not_required"
+    assert result["critique_state"] == "NOT_REQUIRED"
+
+
+def test_status_explanation_prioritizes_not_authored_before_missing_export(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert explanation["first_blocker"]["code"] == "source_not_authored"
+    assert explanation["first_blocker"]["next_command"] is None
+
+
+def test_status_explanation_surfaces_publication_gate_as_human_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "pubfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert explanation["first_blocker"]["code"] == "publication_gate_required"
+    assert explanation["first_blocker"]["category"] == "human_blocker"
+    assert explanation["first_blocker"]["manual"] is True
+    assert explanation["buckets"]["fixture_freshness"] == []
+
+
+def test_print_single_shows_status_explanation_block(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "myfig.tex").write_text("% tikz", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+    status_mod._print_single(result)
+
+    captured = capsys.readouterr()
+    assert "Explanation:" in captured.out
+    assert "render_missing" in captured.out
+    assert "/fig_compile myfig" in captured.out
+
+
 def test_main_resolves_single_name_under_examples(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:

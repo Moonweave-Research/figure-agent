@@ -55,6 +55,7 @@ action; `/fig_loop` only logs the resulting state.
 | `reason`            | string                | one-line explanation                             |
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
 | `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
+| `status_explanation` | object or absent     | shared `/fig_status` explanation of first blocker and state buckets |
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 | `closeout`          | object or absent      | compact `/fig_closeout` evidence when incomplete closeout drives the recommendation |
@@ -66,6 +67,14 @@ The compact `status` object includes publication-gate fields when available:
 accepted_or_final_ready_required`; the `reason` names the first blocker code
 and required action. The driver remains dry-run and never sets `accepted`,
 writes `QUALITY_AUDIT.md`, forces golden state, or mutates provenance.
+
+When present, `status_explanation` is copied from `/fig_status` without
+recomputing state. Its `first_blocker.code` is appended to `reason` so a
+caller can distinguish fixture freshness blockers (`render_stale`,
+`critique_stale`, `export_missing`) from human-only blockers
+(`export_tracked_golden`, `publication_gate_required`, `not_accepted`) without
+guessing from the raw state vector. This is explanatory only; it does not make
+`safe_command` executable and does not change the selected action.
 
 ### Schema versioning
 

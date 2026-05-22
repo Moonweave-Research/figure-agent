@@ -75,5 +75,7 @@ def test_json_stdout_summary_reads_manifest_and_iteration_contract(tmp_path: Pat
         "editorial_art_direction_summary": {
             "polish_recommended_path": "ready_for_svg_polish"
         },
+        "crop_audit_summary": None,
+        "journal_grade_assessment": None,
         "recommended_next_action": "inspect figure state",
     }

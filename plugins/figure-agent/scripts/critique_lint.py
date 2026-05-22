@@ -25,6 +25,17 @@ from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
+CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
+VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
+    {
+        "figure-agent.critique.v1.7",
+        "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
+    }
+)
+CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
+    {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9"}
+)
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
     "false positive",
@@ -201,7 +212,7 @@ def _visual_clash_accounting_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
 ) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") != VISUAL_CLASH_ACCOUNTING_SCHEMA:
+    if frontmatter.get("schema") not in VISUAL_CLASH_ACCOUNTING_SCHEMAS:
         return []
     candidate_ids, violations = _visual_clash_candidate_ids(
         example_dir / "build" / "visual_clash.json"
@@ -242,6 +253,132 @@ def _visual_clash_accounting_violations(
             ),
         )
     ]
+
+
+def _crop_manifest_required_ids(
+    manifest_path: Path,
+) -> tuple[list[str], list[CritiqueLintViolation]]:
+    if not manifest_path.is_file():
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message="missing build/audit_crops/manifest.json for crop_audit_log validation",
+            )
+        ]
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=f"malformed build/audit_crops/manifest.json: {exc}",
+            )
+        ]
+    required = manifest.get("required_crop_ids")
+    if not isinstance(required, list):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message="build/audit_crops/manifest.json required_crop_ids must be a list",
+            )
+        ]
+    ids: list[str] = []
+    for index, crop_id in enumerate(required):
+        if not isinstance(crop_id, str) or not crop_id.strip():
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=(
+                        "build/audit_crops/manifest.json "
+                        f"required_crop_ids[{index}] must be a non-empty string"
+                    ),
+                )
+            ]
+        ids.append(crop_id.strip())
+    return ids, []
+
+
+def _crop_audit_log_items(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_items = frontmatter.get("crop_audit_log")
+    if not isinstance(raw_items, list):
+        return []
+    return [item for item in raw_items if isinstance(item, dict)]
+
+
+def _crop_audit_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") not in CROP_AUDIT_ACCOUNTING_SCHEMAS:
+        return []
+    required_ids, violations = _crop_manifest_required_ids(
+        example_dir / "build" / "audit_crops" / "manifest.json"
+    )
+    if violations or not required_ids:
+        return violations
+
+    items = _crop_audit_log_items(frontmatter)
+    crop_ids = [
+        item["crop_id"].strip()
+        for item in items
+        if isinstance(item.get("crop_id"), str) and item["crop_id"].strip()
+    ]
+    duplicate_ids = sorted({crop_id for crop_id in crop_ids if crop_ids.count(crop_id) > 1})
+    if duplicate_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=f"duplicate crop_audit_log crop_id entries: {', '.join(duplicate_ids)}",
+            )
+        ]
+    required_set = set(required_ids)
+    unknown_ids = sorted(crop_id for crop_id in crop_ids if crop_id not in required_set)
+    if unknown_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=f"unknown crop_audit_log crop_id entries: {', '.join(unknown_ids)}",
+            )
+        ]
+    missing = [crop_id for crop_id in required_ids if crop_id not in crop_ids]
+    if missing:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=f"missing required crop_audit_log entries: {', '.join(missing)}",
+            )
+        ]
+
+    micro_defect_ids = {
+        item.get("id")
+        for item in frontmatter.get("micro_defects", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    unlinked_defect_crops = [
+        str(item.get("crop_id"))
+        for item in items
+        if item.get("verdict") == "defect"
+        and item.get("linked_micro_defect_id") not in micro_defect_ids
+    ]
+    if unlinked_defect_crops:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=(
+                    "defect crop_audit_log entries must link to micro_defects[].id: "
+                    + ", ".join(unlinked_defect_crops)
+                ),
+            )
+        ]
+    return []
 
 
 def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
@@ -288,6 +425,7 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
     violations.extend(_audit_evidence_violations(frontmatter))
     violations.extend(_visual_clash_accounting_violations(example_dir, frontmatter))
+    violations.extend(_crop_audit_accounting_violations(example_dir, frontmatter))
     return violations
 
 

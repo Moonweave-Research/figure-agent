@@ -237,11 +237,46 @@ def _validate_journal_score_block(assessment: dict[str, Any], label: str) -> Non
     _require_non_empty_string(assessment, "score_rationale", label=label)
 
 
+def _validate_reference_calibration(assessment: dict[str, Any], label: str) -> None:
+    raw_calibration = assessment.get("reference_calibration")
+    if raw_calibration is None:
+        return
+    calibration = require_mapping(raw_calibration, f"{label}.reference_calibration")
+    calibration_label = f"{label}.reference_calibration"
+    pack_hash = _require_non_empty_string(
+        calibration,
+        "reference_pack_hash",
+        label=calibration_label,
+    )
+    _validate_sha256_string(pack_hash, f"{calibration_label}.reference_pack_hash")
+    _require_non_empty_string(calibration, "reference_class", label=calibration_label)
+    _require_non_empty_string(calibration, "visual_ambition", label=calibration_label)
+    _require_enum(
+        calibration,
+        "score_basis",
+        vocab.JOURNAL_REFERENCE_SCORE_BASIS,
+        label=calibration_label,
+    )
+    traits = _require_list(
+        calibration.get("limiting_reference_traits"),
+        f"{calibration_label}.limiting_reference_traits",
+    )
+    for index, trait in enumerate(traits):
+        if not isinstance(trait, str) or not trait.strip():
+            raise CritiqueContractError(
+                f"{calibration_label}.limiting_reference_traits[{index}] "
+                "must be a non-empty string"
+            )
+    _require_non_empty_string(calibration, "rationale", label=calibration_label)
+
+
 def _validate_journal_grade_assessment(
     frontmatter: dict[str, Any],
     quality_verdicts: dict[str, str],
     top_tier_verdicts: dict[str, str] | None = None,
     editorial_verdicts: dict[str, str] | None = None,
+    *,
+    allow_reference_calibration: bool = False,
 ) -> None:
     raw_assessment = frontmatter.get("journal_grade_assessment")
     if raw_assessment is None:
@@ -293,6 +328,8 @@ def _validate_journal_grade_assessment(
     _require_enum(assessment, "next_quality_bottleneck", vocab.JOURNAL_BOTTLENECKS, label=label)
     _require_non_empty_string(assessment, "rationale", label=label)
     _validate_journal_score_block(assessment, label)
+    if allow_reference_calibration:
+        _validate_reference_calibration(assessment, label)
 
     if benchmark_level == "high_impact_candidate":
         non_passing = {
@@ -584,6 +621,47 @@ def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_non_empty_list(
+        frontmatter.get("crop_audit_log"),
+        "critique frontmatter.crop_audit_log",
+    )
+    micro_defect_ids = {
+        str(item.get("id")).strip()
+        for item in frontmatter.get("micro_defects", [])
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and item.get("id").strip()
+    }
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.crop_audit_log[{index}]"
+        item = require_mapping(raw_item, label)
+        _require_non_empty_string(item, "crop_id", label=label)
+        path = _require_non_empty_string(item, "path", label=label)
+        if not path.startswith("build/audit_crops/"):
+            raise CritiqueContractError(f"{label}.path must point to build/audit_crops/*.png")
+        _require_non_empty_string(item, "source", label=label)
+        if item.get("inspected") is not True:
+            raise CritiqueContractError(f"{label}.inspected must be true")
+        verdict = _require_enum(item, "verdict", vocab.CROP_AUDIT_VERDICTS, label=label)
+        linked_micro_defect_id = _require_string_value(
+            item,
+            "linked_micro_defect_id",
+            label=label,
+        )
+        _require_non_empty_string(item, "rationale", label=label)
+        if verdict != "defect":
+            continue
+        if not linked_micro_defect_id:
+            raise CritiqueContractError(
+                f"{label}.linked_micro_defect_id must be set when verdict is defect"
+            )
+        if linked_micro_defect_id not in micro_defect_ids:
+            raise CritiqueContractError(
+                f"{label}.linked_micro_defect_id must reference micro_defects[].id"
+            )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -653,6 +731,35 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
             quality_verdicts,
             top_tier_verdicts,
             editorial_verdicts,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_8:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_9:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
         )
         _validate_v1_2_audit_to_finding(frontmatter)
     elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):

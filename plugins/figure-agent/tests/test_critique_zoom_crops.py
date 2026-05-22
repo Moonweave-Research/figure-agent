@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -172,6 +173,90 @@ def test_build_zoom_crop_pack_adds_declared_instrument_crops(tmp_path: Path) -> 
     assert crop["size_px"][0] == 600
     with Image.open(example_dir / crop["path"]) as image:
         assert image.width == 600
+
+
+def test_build_zoom_crop_pack_adds_visual_clash_crops_and_manifest(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render, size=(120, 80))
+    (example_dir / "build" / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "fixture": "demo",
+                "render_pdf": "build/demo.pdf",
+                "candidates": [
+                    {
+                        "id": "VC002",
+                        "kind": "text_on_path",
+                        "text": "HV+",
+                        "bbox_px": [90, 70, 150, 120],
+                        "metric": {"dark": 0.041},
+                        "tex_lines": None,
+                    },
+                    {
+                        "id": "VC001",
+                        "kind": "text_on_fill",
+                        "text": "A",
+                        "bbox_px": [10, 10, 12, 12],
+                        "metric": {"luma_std": 27.4},
+                        "tex_lines": [20],
+                    },
+                ],
+                "total": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    crops = build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
+
+    visual_clash_crops = [
+        item for item in crops if item["kind"] == "visual_clash_crop"
+    ]
+    assert [item["id"] for item in visual_clash_crops] == ["VC001_A", "VC002_HV"]
+    assert all(
+        item["path"].startswith("build/audit_crops/visual_clash/")
+        for item in visual_clash_crops
+    )
+    assert all((example_dir / item["path"]).is_file() for item in visual_clash_crops)
+    assert visual_clash_crops[0]["visual_clash_ref"] == "VC001"
+    assert visual_clash_crops[0]["source"] == "visual_clash:VC001"
+    assert visual_clash_crops[0]["target_bbox_px"] == [10, 10, 12, 12]
+    assert visual_clash_crops[0]["upscaled"] is True
+    assert visual_clash_crops[0]["size_px"][0] == 600
+    assert visual_clash_crops[1]["bbox_px"] == [60, 45, 120, 80]
+    assert visual_clash_crops[1]["target_bbox_px"] == [90, 70, 120, 80]
+
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["schema"] == "figure-agent.audit-crop-manifest.v1"
+    assert manifest["fixture"] == "demo"
+    assert manifest["render_path"] == "build/demo.png"
+    assert manifest["required_crop_ids"] == sorted(
+        item["id"] for item in manifest["crops"]
+    )
+    manifest_visual = [
+        item for item in manifest["crops"] if item["kind"] == "visual_clash_crop"
+    ]
+    assert [item["visual_clash_ref"] for item in manifest_visual] == ["VC001", "VC002"]
+
+
+def test_build_zoom_crop_pack_ignores_malformed_visual_clash_json(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render, size=(120, 80))
+    (example_dir / "build" / "visual_clash.json").write_text("{", encoding="utf-8")
+
+    crops = build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
+
+    assert not any(item["kind"] == "visual_clash_crop" for item in crops)
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert not any(item["kind"] == "visual_clash_crop" for item in manifest["crops"])
 
 
 def test_build_zoom_crop_pack_rejects_non_fixture_relative_panel_crop(tmp_path: Path) -> None:

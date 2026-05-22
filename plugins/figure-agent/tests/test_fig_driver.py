@@ -197,6 +197,63 @@ def test_main_emits_json_summary_in_dry_run(
         assert key in payload
 
 
+def test_driver_summary_includes_status_explanation_and_first_blocker_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "export_state": "MISSING",
+            "release_ready": False,
+            "status_explanation": {
+                "summary": "exports are missing.",
+                "first_blocker": {
+                    "code": "export_missing",
+                    "category": "fixture_freshness",
+                    "message": "exports are missing.",
+                    "next_command": "/fig_export driver_demo",
+                    "manual": False,
+                },
+                "buckets": {
+                    "plugin_state": [],
+                    "fixture_freshness": [
+                        {
+                            "code": "export_missing",
+                            "category": "fixture_freshness",
+                            "message": "exports are missing.",
+                            "next_command": "/fig_export driver_demo",
+                            "manual": False,
+                        }
+                    ],
+                    "human_blockers": [],
+                },
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
+    assert "first blocker export_missing" in summary["reason"]
+    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+
+
+def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
+    tmp_path: Path,
+) -> None:
+    fixture = tmp_path / "examples" / "driver_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: driver_demo\npanels: []\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+
+    summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
+
+    assert summary["action"] == "create_or_fix_source"
+    assert summary["status_explanation"]["first_blocker"]["code"] == "source_not_authored"
+    assert "first blocker export_missing" not in summary["reason"]
+
+
 def test_driver_summary_surfaces_workspace_warnings(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -834,6 +891,50 @@ def test_release_mode_reports_release_blocked_without_mutation(
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert summary["may_execute"] is False
     assert summary["safe_command"] is None
+
+
+def test_release_mode_ignores_reference_calibrated_score_for_gate_selection(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    status = _release_ready_status()
+    status.update(
+        {
+            "acceptance_state": "NOT_ACCEPTED",
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+    loop_checkpoint = {
+        "final_stop_reason": "verify_only_complete",
+        "journal_grade_assessment": {
+            "overall_score": 99,
+            "score_is_gateable": True,
+            "score_policy": "advisory_fresh_reaudit_not_gate",
+            "reference_calibration_summary": {
+                "reference_pack_hash": "sha256:" + "b" * 64,
+                "reference_class": "mechanism_schematic",
+                "visual_ambition": "high_impact_candidate",
+                "score_basis": "current_artifact_vs_pack",
+                "limiting_reference_trait_count": 1,
+            },
+        },
+    }
+
+    summary = fig_driver._select_action(
+        "driver_demo",
+        mode="release",
+        goal="release",
+        status=status,
+        example_dir=fixture,
+        loop_checkpoint=loop_checkpoint,
+    )
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "release_ready is false" in summary["reason"]
 
 
 def test_release_mode_surfaces_publication_gate_blocker(

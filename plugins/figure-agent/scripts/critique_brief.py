@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.7). No external API is called; the brief itself is API-free.
+v1.9). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
+from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
 from PIL import Image
@@ -25,6 +26,7 @@ from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     compute_critique_input_hash,
     critique_generator_version,
+    file_sha256,
 )
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
@@ -317,7 +319,11 @@ def _panel_reference_sections(
 
 
 def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
-    crops = [crop for crop in crops if crop.get("kind") == "zoom_crop"]
+    crops = [
+        crop
+        for crop in crops
+        if crop.get("kind") in {"zoom_crop", "visual_clash_crop"}
+    ]
     if not crops:
         return ""
     lines = [
@@ -333,11 +339,14 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
     for crop in crops:
         crop_path = example_dir / crop["path"]
         source_path = example_dir / crop["source_path"]
-        lines.append(
+        crop_line = (
             f"- `{_example_relative_path(example_dir, crop_path)}` "
             f"from `{_example_relative_path(example_dir, source_path)}` "
             f"bbox_px={crop['bbox_px']}"
         )
+        if crop.get("kind") == "visual_clash_crop":
+            crop_line += f" visual_clash_ref=`{crop.get('visual_clash_ref', '')}`"
+        lines.append(crop_line)
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -368,6 +377,52 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
             f"from `{_example_relative_path(example_dir, source_path)}`"
         )
     return "\n" + "\n".join(lines) + "\n"
+
+
+def _reference_calibration_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    lines = [
+        "## Reference-Calibrated Top-Tier Comparison",
+        "Host LLM MUST use this pack to calibrate journal-level critique. Evaluate every "
+        "must-match trait, must-avoid trait, and calibration question below.",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Reference class: {pack['reference_class']}",
+        f"- Visual ambition: {pack['visual_ambition']}",
+        "",
+        "### Comparison References",
+    ]
+    for item in pack.get("comparison_references", []):
+        lines.append(
+            f"- {item['id']}: source={item['source']} role={item['role']} "
+            f"citation/path={item['path_or_citation']}"
+        )
+    lines.append("")
+    lines.append("### Must-Match Traits")
+    for item in pack.get("must_match_traits", []):
+        lines.append(f"- {item['id']} -> {item['reference_id']}: {item['trait']}")
+    lines.append("")
+    lines.append("### Must-Avoid Traits")
+    for item in pack.get("must_avoid_traits", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['trait']}")
+    lines.append("")
+    lines.append("### Calibration Questions")
+    for item in pack.get("calibration_questions", []):
+        lines.append(f"- {item['id']}: {item['question']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _reference_score_calibration(
+    example_dir: Path,
+    pack: dict | None,
+) -> dict[str, str] | None:
+    if pack is None:
+        return None
+    return {
+        "reference_pack_hash": file_sha256(example_dir / "critique_reference_pack.yaml"),
+        "reference_class": pack["reference_class"],
+        "visual_ambition": pack["visual_ambition"],
+    }
 
 
 def _format_metric(metric: object) -> str:
@@ -412,6 +467,7 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
             f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
         )
     total = report.get("total", len(candidates))
+    crop_by_ref = _visual_clash_crop_paths_by_ref(example_dir)
     lines = [
         "## Visual Clash Candidates (from check_visual_clash.py)",
         "Host LLM MUST review each candidate. For each, either link to a new/existing "
@@ -432,13 +488,38 @@ def _visual_clash_candidates_section(example_dir: Path) -> str:
         bbox = candidate.get("bbox_px")
         tex_lines = candidate.get("tex_lines")
         tex_display = tex_lines if isinstance(tex_lines, list) else "null"
+        candidate_id = str(candidate.get("id", ""))
+        crop_path = crop_by_ref.get(candidate_id)
+        crop_display = f" crop=`{crop_path}`" if crop_path else ""
         lines.append(
-            f"- id=`{candidate.get('id', '')}` "
+            f"- id=`{candidate_id}` "
             f"kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
             f"bbox_px={bbox} metric={_format_metric(candidate.get('metric'))} "
-            f"tex_lines={tex_display}"
+            f"tex_lines={tex_display}{crop_display}"
         )
     return "\n" + "\n".join(lines) + "\n"
+
+
+def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if not manifest_path.is_file():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    crops = manifest.get("crops")
+    if not isinstance(crops, list):
+        return {}
+    result: dict[str, str] = {}
+    for crop in crops:
+        if not isinstance(crop, dict) or crop.get("kind") != "visual_clash_crop":
+            continue
+        visual_clash_ref = crop.get("visual_clash_ref")
+        path = crop.get("path")
+        if isinstance(visual_clash_ref, str) and isinstance(path, str):
+            result[visual_clash_ref] = path
+    return result
 
 
 def generate_for(example_dir: Path) -> str:
@@ -474,14 +555,10 @@ def generate_for(example_dir: Path) -> str:
     render_path = _example_relative_path(example_dir, png_path)
     ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
-    generator_version = critique_generator_version(Path(__file__))
-    critique_input_hash = compute_critique_input_hash(
-        example_dir,
-        name,
-        spec,
-        style_lock_path=STYLE_LOCK_PATH,
-    )
-
+    try:
+        reference_calibration_pack = load_optional_reference_pack(example_dir)
+    except CritiqueReferencePackError as exc:
+        raise CritiqueBriefError(f"critique_reference_pack.yaml invalid: {exc}") from exc
     ref_section = ""
     if ref_path:
         ref_section = f"""
@@ -500,9 +577,19 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         spec=spec,
         pdf_page_size_cm=_pdf_page_size_cm(pdf_path) if panel_crop_paths else None,
     )
+    generator_version = critique_generator_version(Path(__file__))
+    critique_input_hash = compute_critique_input_hash(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
+    )
     zoom_audit_section = _zoom_audit_section(example_dir, zoom_crops)
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     visual_clash_section = _visual_clash_candidates_section(example_dir)
+    reference_calibration_section = _reference_calibration_section(
+        reference_calibration_pack
+    )
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -515,6 +602,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {zoom_audit_section}
 {print_scale_audit_section}
 {visual_clash_section}
+{reference_calibration_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
@@ -557,11 +645,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.7):
+(YAML front-matter then human-readable Markdown body — schema v1.9):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.7
+schema: figure-agent.critique.v1.9
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -648,7 +736,10 @@ top_tier_audit:
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
 {brief_sections.editorial_art_direction_schema()}
-{brief_sections.journal_grade_assessment_schema(critique_input_hash)}
+{brief_sections.journal_grade_assessment_schema(
+    critique_input_hash,
+    _reference_score_calibration(example_dir, reference_calibration_pack),
+)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png
@@ -658,6 +749,14 @@ micro_defects:
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
     visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
     status: open | resolved | accept_simplification
+crop_audit_log:
+  - crop_id: <crop id from build/audit_crops/manifest.json>
+    path: build/audit_crops/<crop>.png
+    source: <manifest source, e.g. full_render or visual_clash:VC001>
+    inspected: true
+    verdict: defect | no_defect | uncertain
+    linked_micro_defect_id: "<M001 when verdict=defect or empty>"
+    rationale: "<local geometry reason from direct crop inspection>"
 panels:
   - id: <panel id>
     findings:
@@ -717,6 +816,10 @@ defects in `micro_defects`. Every `BLOCKER` or `MAJOR` micro-defect must either
 link to a normal panel/top-level finding via `linked_finding_id` or use
 `status: accept_simplification` with a clear observation explaining why the
 crop-scale or print-scale issue is acceptable.
+Every crop id in `build/audit_crops/manifest.json.required_crop_ids` must appear
+exactly once in `crop_audit_log`. Use `verdict: uncertain` when the crop remains
+ambiguous; do not silently treat uncertainty as pass. Use `verdict: defect` only
+when `linked_micro_defect_id` names the corresponding `micro_defects[].id`.
 For every visual-clash-linked `accept_simplification`, the `observation` must
 name the `VC###` id and explain the concrete geometry/context reason it is not
 a defect; do not write vague phrases such as "acceptable after review".

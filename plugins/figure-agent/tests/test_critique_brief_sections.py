@@ -25,6 +25,14 @@ def test_critique_brief_sections_render_core_contracts() -> None:
 def test_critique_brief_sections_render_schema_blocks() -> None:
     quality_schema = quality_axes_schema()
     assessment_schema = journal_grade_assessment_schema("sha256:abc")
+    calibrated_schema = journal_grade_assessment_schema(
+        "sha256:abc",
+        {
+            "reference_pack_hash": "sha256:def",
+            "reference_class": "mechanism_schematic",
+            "visual_ambition": "high_impact_candidate",
+        },
+    )
 
     assert "quality_axes:" in quality_schema
     assert "  message_storyline:" in quality_schema
@@ -32,3 +40,6 @@ def test_critique_brief_sections_render_schema_blocks() -> None:
     assert "journal_grade_assessment:" in assessment_schema
     assert "assessed_artifact_hash: sha256:abc" in assessment_schema
     assert "overall_score: 0-100" in assessment_schema
+    assert "reference_calibration:" in calibrated_schema
+    assert "reference_pack_hash: sha256:def" in calibrated_schema
+    assert "score_basis: current_artifact_vs_pack" in calibrated_schema
