@@ -110,6 +110,13 @@ paths into the final TikZ source; produce semantic TikZ macros and named
 drawing constructs that remain editable during manuscript revision. The handoff
 is `coordinate_hints.yaml -> semantic TikZ authoring`.
 
+When moving a panel/subregion by a fixed offset, prefer the scoped dry-run
+helper over ad-hoc regex scripts:
+`uv run python3 scripts/tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`.
+Inspect the diff first; add `--write` only after confirming the selected line
+range is exactly the intended patch scope. The helper intentionally does not
+infer visual scope or parse arbitrary TikZ expressions.
+
 Golden fixtures declare `accepted` + `golden_contract` in `spec.yaml`;
 `check_golden_artifacts.py` auto-escalates into accepted mode when the key is
 present. Override with `--no-require-accepted` for ad-hoc inspection. Keep
