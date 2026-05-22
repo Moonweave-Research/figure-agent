@@ -1,7 +1,7 @@
 # Issue 25: Audit Evidence UX Surfacing
 
 **Date:** 2026-05-23 KST
-**Status:** 25A implemented; 25B-D open
+**Status:** 25A-B implemented; 25C-D open
 **Type:** post-Issue-24 usability and operator-readiness hardening
 
 ## Problem
@@ -54,6 +54,7 @@ surface existing audit state in a more usable form.
      - `reason`: one sentence.
 
 2. **Issue 25B: `/fig_status` Audit UX**
+   - Implemented in this branch.
    - Add a concise "Audit evidence" line or block to `/fig_status`.
    - Must distinguish:
      - no critique required;
@@ -129,3 +130,11 @@ Issue 25 is complete when an operator can run the normal figure-agent workflow
 and see, without digging through raw JSON, whether the current blocker is caused
 by missing/stale audit inputs, uncertain crops, visual-clash accounting,
 structured accept-simplification, or actual figure content.
+
+## Issue 25B Implementation Notes
+
+- `infer_stage()` now includes the shared `audit_evidence` object.
+- Single-figure `/fig_status <name>` prints an `Audit evidence:` line with
+  state, reason, compact blockers, and next action.
+- No-argument `/fig_status` appends `audit: <state>` only for actionable states.
+- Existing stage/state enums and `Next:` selection are unchanged.
