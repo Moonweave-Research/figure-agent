@@ -141,6 +141,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.6",
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
     }:
         frontmatter["micro_defects"] = [
             {
@@ -158,11 +159,12 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.6",
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
         }
-    if schema == "figure-agent.critique.v1.8":
+    if schema in {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9"}:
         frontmatter["crop_audit_log"] = [
             {
                 "crop_id": "full_q1",
@@ -196,6 +198,95 @@ def test_validate_critique_schema_accepts_v1_4_micro_defects() -> None:
 
 def test_validate_critique_schema_accepts_v1_8_crop_audit_log() -> None:
     validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.8"))
+
+
+def test_validate_critique_schema_accepts_v1_9_reference_calibrated_score() -> None:
+    critique_hash = "sha256:" + "a" * 64
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.9")
+    frontmatter["critique_input_hash"] = critique_hash
+    frontmatter["journal_grade_assessment"] = {
+        "schema": "figure-agent.journal-grade-assessment.v1",
+        "scoring_mode": "fresh_reaudit",
+        "assessed_artifact_hash": critique_hash,
+        "benchmark_level": "solid_manuscript",
+        "confidence": "high",
+        "blockers": [],
+        "regression_detected": False,
+        "regressions": [],
+        "score_is_gateable": True,
+        "next_quality_bottleneck": "polish",
+        "rationale": "solid manuscript calibrated to the pack",
+        "overall_score": 82,
+        "sub_scores": {key: 80 for key in vocab.JOURNAL_SCORE_KEYS},
+        "score_rationale": "scored against the current artifact and reference pack",
+        "reference_calibration": {
+            "reference_pack_hash": "sha256:" + "b" * 64,
+            "reference_class": "mechanism_schematic",
+            "visual_ambition": "high_impact_candidate",
+            "score_basis": "current_artifact_vs_pack",
+            "limiting_reference_traits": ["T003"],
+            "rationale": "T003 is the limiting trait relative to the pack",
+        },
+    }
+
+    validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_partial_v1_9_reference_calibration() -> None:
+    critique_hash = "sha256:" + "a" * 64
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.9")
+    frontmatter["critique_input_hash"] = critique_hash
+    frontmatter["journal_grade_assessment"] = {
+        "schema": "figure-agent.journal-grade-assessment.v1",
+        "scoring_mode": "fresh_reaudit",
+        "assessed_artifact_hash": critique_hash,
+        "benchmark_level": "solid_manuscript",
+        "confidence": "high",
+        "blockers": [],
+        "regression_detected": False,
+        "regressions": [],
+        "score_is_gateable": True,
+        "next_quality_bottleneck": "polish",
+        "rationale": "solid manuscript calibrated to the pack",
+        "overall_score": 82,
+        "sub_scores": {key: 80 for key in vocab.JOURNAL_SCORE_KEYS},
+        "score_rationale": "scored against the current artifact and reference pack",
+        "reference_calibration": {
+            "reference_pack_hash": "sha256:" + "b" * 64,
+            "reference_class": "mechanism_schematic",
+        },
+    }
+
+    with pytest.raises(CritiqueContractError, match="reference_calibration"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_keeps_v1_8_reference_calibration_legacy_compatible() -> None:
+    critique_hash = "sha256:" + "a" * 64
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.8")
+    frontmatter["critique_input_hash"] = critique_hash
+    frontmatter["journal_grade_assessment"] = {
+        "schema": "figure-agent.journal-grade-assessment.v1",
+        "scoring_mode": "fresh_reaudit",
+        "assessed_artifact_hash": critique_hash,
+        "benchmark_level": "solid_manuscript",
+        "confidence": "high",
+        "blockers": [],
+        "regression_detected": False,
+        "regressions": [],
+        "score_is_gateable": True,
+        "next_quality_bottleneck": "polish",
+        "rationale": "legacy assessment keeps future metadata non-binding",
+        "overall_score": 82,
+        "sub_scores": {key: 80 for key in vocab.JOURNAL_SCORE_KEYS},
+        "score_rationale": "current artifact only",
+        "reference_calibration": {
+            "reference_pack_hash": "sha256:" + "b" * 64,
+            "reference_class": "mechanism_schematic",
+        },
+    }
+
+    validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_8_missing_crop_audit_log() -> None:

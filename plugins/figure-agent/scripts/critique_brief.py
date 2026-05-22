@@ -4,7 +4,7 @@ Produces the prompt-context block consumed by the `/fig_critique <name>` slash
 command. The host Claude Code main loop reads the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
-v1.8). No external API is called; the brief itself is API-free.
+v1.9). No external API is called; the brief itself is API-free.
 
 Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 `docs/architecture-v0.2-proposal.md` §4.5 for the rename + extend rationale.
@@ -26,6 +26,7 @@ from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     compute_critique_input_hash,
     critique_generator_version,
+    file_sha256,
 )
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
@@ -411,6 +412,19 @@ def _reference_calibration_section(pack: dict | None) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _reference_score_calibration(
+    example_dir: Path,
+    pack: dict | None,
+) -> dict[str, str] | None:
+    if pack is None:
+        return None
+    return {
+        "reference_pack_hash": file_sha256(example_dir / "critique_reference_pack.yaml"),
+        "reference_class": pack["reference_class"],
+        "visual_ambition": pack["visual_ambition"],
+    }
+
+
 def _format_metric(metric: object) -> str:
     if not isinstance(metric, dict) or not metric:
         return "(none)"
@@ -631,11 +645,11 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.8):
+(YAML front-matter then human-readable Markdown body — schema v1.9):
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.8
+schema: figure-agent.critique.v1.9
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
@@ -722,7 +736,10 @@ top_tier_audit:
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
 {brief_sections.editorial_art_direction_schema()}
-{brief_sections.journal_grade_assessment_schema(critique_input_hash)}
+{brief_sections.journal_grade_assessment_schema(
+    critique_input_hash,
+    _reference_score_calibration(example_dir, reference_calibration_pack),
+)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png

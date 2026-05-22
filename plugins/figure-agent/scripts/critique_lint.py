@@ -26,6 +26,16 @@ from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
 CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
+VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
+    {
+        "figure-agent.critique.v1.7",
+        "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
+    }
+)
+CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
+    {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9"}
+)
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
     "false positive",
@@ -202,7 +212,7 @@ def _visual_clash_accounting_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
 ) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") != VISUAL_CLASH_ACCOUNTING_SCHEMA:
+    if frontmatter.get("schema") not in VISUAL_CLASH_ACCOUNTING_SCHEMAS:
         return []
     candidate_ids, violations = _visual_clash_candidate_ids(
         example_dir / "build" / "visual_clash.json"
@@ -297,7 +307,7 @@ def _crop_audit_accounting_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
 ) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") != CROP_AUDIT_ACCOUNTING_SCHEMA:
+    if frontmatter.get("schema") not in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         return []
     required_ids, violations = _crop_manifest_required_ids(
         example_dir / "build" / "audit_crops" / "manifest.json"

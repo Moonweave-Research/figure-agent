@@ -884,6 +884,72 @@ def test_loop_surfaces_advisory_score_block(
     assert iteration["stop_reason"] == "status_action_required"
 
 
+def test_loop_surfaces_reference_calibrated_score_metadata(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique_hash = "sha256:" + "a" * 64
+    assessment = _journal_assessment(
+        critique_hash,
+        with_scores=True,
+        overall_score=84,
+    )
+    assessment["reference_calibration"] = {
+        "reference_pack_hash": "sha256:" + "b" * 64,
+        "reference_class": "mechanism_schematic",
+        "visual_ambition": "high_impact_candidate",
+        "score_basis": "current_artifact_vs_pack",
+        "limiting_reference_traits": ["T003"],
+        "rationale": "T003 limits high-impact promotion",
+    }
+    print_scale_axis_overrides = {
+        "journal_polish": _quality_axis(
+            "journal_polish",
+            verdict="pass",
+        )
+        | {"evidence": "print-scale audit: print_178mm.png passes"},
+        "publication_readiness": _quality_axis(
+            "publication_readiness",
+            verdict="pass",
+        )
+        | {"evidence": "print-scale audit: print_thumbnail.png passes"},
+    }
+    _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.9",
+        axis_overrides=print_scale_axis_overrides,
+        critique_input_hash=critique_hash,
+        journal_assessment=assessment,
+        top_tier_audit=_top_tier_audit(),
+        micro_defects=[],
+        editorial_art_direction=_editorial_art_direction(),
+        crop_audit_log=[],
+    )
+    _write_adjudication(fixture, file_sha256(fixture / "critique.md"))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect reference calibrated score",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = json_stdout_summary(run_dir)
+    expected = {
+        "reference_pack_hash": "sha256:" + "b" * 64,
+        "reference_class": "mechanism_schematic",
+        "visual_ambition": "high_impact_candidate",
+        "score_basis": "current_artifact_vs_pack",
+        "limiting_reference_trait_count": 1,
+    }
+    assert iteration["journal_grade_assessment"]["reference_calibration_summary"] == expected
+    assert summary["journal_grade_assessment"]["reference_calibration_summary"] == expected
+    assert iteration["stop_reason"] == "status_action_required"
+
+
 def test_loop_does_not_mark_malformed_score_block_as_advisory(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2265,6 +2331,7 @@ def test_main_json_emits_machine_readable_summary(
             "top_tier_audit_summary": None,
             "editorial_art_direction_summary": None,
             "crop_audit_summary": None,
+            "journal_grade_assessment": None,
             "recommended_next_action": "inspect figure state",
         }
 
@@ -2356,6 +2423,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "top_tier_audit_summary": iteration["top_tier_audit_summary"],
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "crop_audit_summary": iteration["crop_audit_summary"],
+        "journal_grade_assessment": iteration["journal_grade_assessment"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
 

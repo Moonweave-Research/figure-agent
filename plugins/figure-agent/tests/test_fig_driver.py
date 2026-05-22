@@ -878,6 +878,50 @@ def test_release_mode_reports_release_blocked_without_mutation(
     assert summary["safe_command"] is None
 
 
+def test_release_mode_ignores_reference_calibrated_score_for_gate_selection(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    status = _release_ready_status()
+    status.update(
+        {
+            "acceptance_state": "NOT_ACCEPTED",
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+    loop_checkpoint = {
+        "final_stop_reason": "verify_only_complete",
+        "journal_grade_assessment": {
+            "overall_score": 99,
+            "score_is_gateable": True,
+            "score_policy": "advisory_fresh_reaudit_not_gate",
+            "reference_calibration_summary": {
+                "reference_pack_hash": "sha256:" + "b" * 64,
+                "reference_class": "mechanism_schematic",
+                "visual_ambition": "high_impact_candidate",
+                "score_basis": "current_artifact_vs_pack",
+                "limiting_reference_trait_count": 1,
+            },
+        },
+    }
+
+    summary = fig_driver._select_action(
+        "driver_demo",
+        mode="release",
+        goal="release",
+        status=status,
+        example_dir=fixture,
+        loop_checkpoint=loop_checkpoint,
+    )
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "release_ready is false" in summary["reason"]
+
+
 def test_release_mode_surfaces_publication_gate_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -200,8 +200,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.8" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
+    assert "schema: figure-agent.critique.v1.9" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "panels:" in brief
 
 
@@ -450,7 +450,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -473,15 +473,15 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_8_crop_editorial_and_micro_defect_schema(
+def test_critique_brief_output_format_uses_v1_9_crop_editorial_and_micro_defect_schema(
     tmp_path,
 ):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.8" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.8" in brief
+    assert "schema: figure-agent.critique.v1.9" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.9" in brief
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
@@ -938,6 +938,13 @@ calibration_questions:
     assert "dense apparatus boxes without visual hierarchy" in brief
     assert "Q001" in brief
     assert "Would this pass a first-glance Nature Materials mechanism read?" in brief
+    assert "reference_calibration:" in brief
+    assert "reference_pack_hash: sha256:" in brief
+    assert "reference_class: mechanism_schematic" in brief
+    assert "visual_ambition: high_impact_candidate" in brief
+    assert "score_basis: current_artifact_vs_pack" in brief
+    assert "limiting_reference_traits:" in brief
+    assert "scores cite the reference pack" in brief
 
 
 def test_critique_brief_omits_reference_calibrated_pack_when_missing(tmp_path):

@@ -14,6 +14,7 @@ CRITIQUE_SCHEMA_V1_5 = "figure-agent.critique.v1.5"
 CRITIQUE_SCHEMA_V1_6 = "figure-agent.critique.v1.6"
 CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
 CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
+CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -23,6 +24,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_6,
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
+        CRITIQUE_SCHEMA_V1_9,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -33,6 +35,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_6,
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
+        CRITIQUE_SCHEMA_V1_9,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -41,9 +44,10 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_6,
         CRITIQUE_SCHEMA_V1_7,
         CRITIQUE_SCHEMA_V1_8,
+        CRITIQUE_SCHEMA_V1_9,
     }
 )
-CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset({CRITIQUE_SCHEMA_V1_8})
+CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset({CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9})
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
     {
@@ -95,6 +99,21 @@ def has_complete_score_block(record: dict[str, Any]) -> bool:
     )
 
 
+def reference_calibration_summary(record: dict[str, Any]) -> dict[str, Any] | None:
+    calibration = record.get("reference_calibration")
+    if not isinstance(calibration, dict):
+        return None
+    traits = calibration.get("limiting_reference_traits")
+    trait_count = len(traits) if isinstance(traits, list) else 0
+    return {
+        "reference_pack_hash": calibration.get("reference_pack_hash"),
+        "reference_class": calibration.get("reference_class"),
+        "visual_ambition": calibration.get("visual_ambition"),
+        "score_basis": calibration.get("score_basis"),
+        "limiting_reference_trait_count": trait_count,
+    }
+
+
 def journal_grade_assessment(
     example_dir: Path,
     critique_state: Any,
@@ -129,6 +148,13 @@ def journal_grade_assessment(
     record["evidence_path"] = str(critique_path)
     if gateable and has_complete_score_block(record):
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
+    calibration_summary = (
+        reference_calibration_summary(record)
+        if frontmatter.get("schema") == CRITIQUE_SCHEMA_V1_9
+        else None
+    )
+    if calibration_summary is not None:
+        record["reference_calibration_summary"] = calibration_summary
     return record
 
 

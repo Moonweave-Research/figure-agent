@@ -145,6 +145,13 @@ gates, stale exports, final-artifact gates, accepted/golden gates,
 `quality_axes` verdicts, or `benchmark_level`. Do not invent journal acceptance
 probabilities. If you emit any numeric score, emit the complete
 `overall_score`, `sub_scores`, and `score_rationale` block.
+
+When a `Reference-Calibrated Top-Tier Comparison` pack is present, scores cite
+the reference pack. Fill `journal_grade_assessment.reference_calibration` with
+the pack hash, reference class, visual ambition, limiting trait ids, and a
+short rationale that explains why the score follows from the current artifact
+versus the declared pack. Do not use the pack to unlock release or bypass any
+non-passing audit slot.
 """
 
 
@@ -384,38 +391,53 @@ def editorial_art_direction_schema() -> str:
     return "\n".join(lines)
 
 
-def journal_grade_assessment_schema(critique_input_hash: str) -> str:
-    return "\n".join(
-        [
-            "journal_grade_assessment:",
-            "  schema: figure-agent.journal-grade-assessment.v1",
-            "  scoring_mode: fresh_reaudit",
-            f"  assessed_artifact_hash: {critique_input_hash}",
-            (
-                "  benchmark_level: draft | solid_manuscript | "
-                "high_impact_candidate | needs_human_art_direction | blocked"
-            ),
-            f"  confidence: {QUALITY_CONFIDENCE_VALUES}",
-            "  blockers: []",
-            "  regression_detected: true | false",
-            "  regressions: []",
-            "  score_is_gateable: true | false",
-            (
-                "  next_quality_bottleneck: storyline | composition | "
-                "component_fidelity | scientific_plausibility | label_semantics | "
-                "polish | reference_fidelity | export_scale_readability | human_policy"
-            ),
-            '  rationale: "<current artifact-only quality rationale>"',
-            "  overall_score: 0-100",
-            "  sub_scores:",
-            "    storyline: 0-100",
-            "    composition: 0-100",
-            "    component_fidelity: 0-100",
-            "    scientific_plausibility: 0-100",
-            "    label_semantics: 0-100",
-            "    polish: 0-100",
-            "    reference_fidelity: 0-100",
-            "    export_scale_readability: 0-100",
-            '  score_rationale: "<why these numbers describe only the current artifact>"',
-        ]
-    )
+def journal_grade_assessment_schema(
+    critique_input_hash: str,
+    reference_calibration: dict[str, str] | None = None,
+) -> str:
+    lines = [
+        "journal_grade_assessment:",
+        "  schema: figure-agent.journal-grade-assessment.v1",
+        "  scoring_mode: fresh_reaudit",
+        f"  assessed_artifact_hash: {critique_input_hash}",
+        (
+            "  benchmark_level: draft | solid_manuscript | "
+            "high_impact_candidate | needs_human_art_direction | blocked"
+        ),
+        f"  confidence: {QUALITY_CONFIDENCE_VALUES}",
+        "  blockers: []",
+        "  regression_detected: true | false",
+        "  regressions: []",
+        "  score_is_gateable: true | false",
+        (
+            "  next_quality_bottleneck: storyline | composition | "
+            "component_fidelity | scientific_plausibility | label_semantics | "
+            "polish | reference_fidelity | export_scale_readability | human_policy"
+        ),
+        '  rationale: "<current artifact-only quality rationale>"',
+        "  overall_score: 0-100",
+        "  sub_scores:",
+        "    storyline: 0-100",
+        "    composition: 0-100",
+        "    component_fidelity: 0-100",
+        "    scientific_plausibility: 0-100",
+        "    label_semantics: 0-100",
+        "    polish: 0-100",
+        "    reference_fidelity: 0-100",
+        "    export_scale_readability: 0-100",
+        '  score_rationale: "<why these numbers describe only the current artifact>"',
+    ]
+    if reference_calibration is not None:
+        lines.extend(
+            [
+                "  reference_calibration:",
+                f"    reference_pack_hash: {reference_calibration['reference_pack_hash']}",
+                f"    reference_class: {reference_calibration['reference_class']}",
+                f"    visual_ambition: {reference_calibration['visual_ambition']}",
+                "    score_basis: current_artifact_vs_pack",
+                "    limiting_reference_traits:",
+                "      - <trait id from critique_reference_pack.yaml>",
+                '    rationale: "<why scores cite the reference pack>"',
+            ]
+        )
+    return "\n".join(lines)

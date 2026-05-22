@@ -128,6 +128,88 @@ def test_journal_grade_assessment_adds_score_policy_for_complete_gateable_score(
     assert assessment["score_policy"] == "advisory_fresh_reaudit_not_gate"
 
 
+def test_journal_grade_assessment_surfaces_reference_calibration_summary(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.9",
+            "critique_input_hash": critique_hash,
+            "journal_grade_assessment": {
+                "schema": JOURNAL_ASSESSMENT_SCHEMA,
+                "scoring_mode": "fresh_reaudit",
+                "assessed_artifact_hash": critique_hash,
+                "score_is_gateable": True,
+                "benchmark_level": "solid_manuscript",
+                "overall_score": 82,
+                "sub_scores": _valid_scores(),
+                "score_rationale": "solid but not high impact",
+                "reference_calibration": {
+                    "reference_pack_hash": "sha256:" + "b" * 64,
+                    "reference_class": "mechanism_schematic",
+                    "visual_ambition": "high_impact_candidate",
+                    "score_basis": "current_artifact_vs_pack",
+                    "limiting_reference_traits": ["T003", "T004"],
+                    "rationale": "T003 and T004 limit the score",
+                },
+            },
+        },
+    )
+
+    assessment = journal_grade_assessment(example_dir, "FRESH")
+
+    assert assessment is not None
+    assert assessment["reference_calibration_summary"] == {
+        "reference_pack_hash": "sha256:" + "b" * 64,
+        "reference_class": "mechanism_schematic",
+        "visual_ambition": "high_impact_candidate",
+        "score_basis": "current_artifact_vs_pack",
+        "limiting_reference_trait_count": 2,
+    }
+    assert assessment["score_policy"] == "advisory_fresh_reaudit_not_gate"
+
+
+def test_journal_grade_assessment_does_not_surface_reference_calibration_for_legacy_schema(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.8",
+            "critique_input_hash": critique_hash,
+            "journal_grade_assessment": {
+                "schema": JOURNAL_ASSESSMENT_SCHEMA,
+                "scoring_mode": "fresh_reaudit",
+                "assessed_artifact_hash": critique_hash,
+                "score_is_gateable": True,
+                "benchmark_level": "solid_manuscript",
+                "overall_score": 82,
+                "sub_scores": _valid_scores(),
+                "score_rationale": "solid but not high impact",
+                "reference_calibration": {
+                    "reference_pack_hash": "sha256:" + "b" * 64,
+                    "reference_class": "mechanism_schematic",
+                    "visual_ambition": "high_impact_candidate",
+                    "score_basis": "current_artifact_vs_pack",
+                    "limiting_reference_traits": ["T003"],
+                },
+            },
+        },
+    )
+
+    assessment = journal_grade_assessment(example_dir, "FRESH")
+
+    assert assessment is not None
+    assert "reference_calibration_summary" not in assessment
+
+
 def test_journal_grade_assessment_accepts_v1_4_quality_axes_schema(
     tmp_path: Path,
 ) -> None:
