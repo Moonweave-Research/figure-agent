@@ -359,6 +359,30 @@ def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
     assert "crop_audit_log" in violations[0].message
 
 
+def test_lint_critique_rejects_v1_9_missing_crop_audit_log_with_manifest(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.9",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "crop_audit_log" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_8_unknown_crop_id(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
@@ -807,6 +831,34 @@ def test_lint_critique_reports_v1_7_passed_polish_without_print_scale_evidence(
         micro_defects_yaml="micro_defects: []\n",
         editorial_yaml=_editorial_yaml(),
         findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "audit_evidence",
+        "audit_evidence",
+    ]
+    assert "journal_polish" in violations[0].message
+    assert "publication_readiness" in violations[1].message
+
+
+def test_lint_critique_reports_v1_9_passed_polish_without_print_scale_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.9",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_crop_audit_log_yaml(
+            second_verdict="no_defect",
+            second_link="",
+        ),
+        editorial_yaml=_editorial_yaml(),
     )
 
     violations = critique_lint.lint_critique(fig_dir)
