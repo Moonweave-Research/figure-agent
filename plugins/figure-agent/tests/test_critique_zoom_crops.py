@@ -9,6 +9,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from critique_zoom_crops import build_zoom_crop_pack  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 def _write_png(path: Path, size: tuple[int, int] = (120, 80)) -> None:
@@ -241,6 +242,11 @@ def test_build_zoom_crop_pack_adds_visual_clash_crops_and_manifest(
         item for item in manifest["crops"] if item["kind"] == "visual_clash_crop"
     ]
     assert [item["visual_clash_ref"] for item in manifest_visual] == ["VC001", "VC002"]
+    for crop in manifest["crops"]:
+        assert isinstance(crop.get("sha256"), str)
+        assert crop["sha256"].startswith("sha256:")
+        assert len(crop["sha256"]) == len("sha256:") + 64
+        assert crop["sha256"] == file_sha256(example_dir / crop["path"])
 
 
 def test_build_zoom_crop_pack_ignores_malformed_visual_clash_json(

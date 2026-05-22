@@ -1,7 +1,7 @@
 # Issue 24: Audit Gate Hardening Roadmap
 
 **Date:** 2026-05-22 KST
-**Status:** 24A-B implemented; 24C-E open
+**Status:** 24A-D implemented; 24E open
 **Type:** post-Issue-23 audit-system hardening
 
 ## Problem
@@ -40,12 +40,14 @@ freshly bound to the exact image that the host LLM reviewed.
      "zero candidates." Legacy critiques can retain compatibility fallback.
 
 3. **Issue 24C: Crop Content Hash Integrity**
+   - Implemented in this branch.
    - The crop manifest participates in critique freshness, but the crop PNG
      files themselves are not content-hashed inside the manifest.
    - Required fix: add deterministic per-crop `sha256:` hashes to the manifest
      and validate that crop files still match the manifest the critique used.
 
 4. **Issue 24D: Historical Visual-Clash Regression Harness**
+   - Implemented in this branch.
    - Host-vision dogfood proved the HV+/`V_s` regression can be caught when the
      historical shape is presented with the new visual-clash evidence.
    - Required fix: add deterministic regression coverage for the defect family

@@ -22,6 +22,7 @@ from critique_contract import (  # noqa: E402
     load_critique_frontmatter,
 )
 from critique_evidence_lint import critique_evidence_violations  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
@@ -51,6 +52,12 @@ _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
     "decorative",
     "convention",
 )
+_HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
+_HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
+    ("VC026", "V"): "label_glyph_overlaps_internal_drawing",
+    ("VC027", "s"): "label_glyph_overlaps_internal_drawing",
+    ("VC050", "HV+"): "label_backdrop_overflows_outline",
+}
 
 
 @dataclass(frozen=True)
@@ -261,7 +268,78 @@ def _visual_clash_accounting_violations(
     ]
 
 
+def _micro_defects_by_visual_clash_ref(frontmatter: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_items = frontmatter.get("micro_defects")
+    if not isinstance(raw_items, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        visual_clash_ref = raw_item.get("visual_clash_ref")
+        if isinstance(visual_clash_ref, str) and visual_clash_ref.strip():
+            result[visual_clash_ref.strip()] = raw_item
+    return result
+
+
+def _historical_visual_clash_regression_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") not in VISUAL_CLASH_ACCOUNTING_SCHEMAS:
+        return []
+    report_path = example_dir / "build" / "visual_clash.json"
+    if not report_path.is_file():
+        return []
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(report, dict):
+        return []
+    fixture = report.get("fixture")
+    if (
+        example_dir.name != _HISTORICAL_VISUAL_CLASH_FIXTURE
+        and fixture != _HISTORICAL_VISUAL_CLASH_FIXTURE
+    ):
+        return []
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    defects_by_ref = _micro_defects_by_visual_clash_ref(frontmatter)
+    violations: list[CritiqueLintViolation] = []
+    for raw_candidate in candidates:
+        if not isinstance(raw_candidate, dict):
+            continue
+        candidate_id = raw_candidate.get("id")
+        text = raw_candidate.get("text")
+        if not isinstance(candidate_id, str) or not isinstance(text, str):
+            continue
+        expected_kind = _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS.get(
+            (candidate_id.strip(), text.strip())
+        )
+        if expected_kind is None:
+            continue
+        defect = defects_by_ref.get(candidate_id.strip())
+        if defect is None:
+            continue
+        if defect.get("kind") == expected_kind:
+            continue
+        violations.append(
+            CritiqueLintViolation(
+                severity="blocker",
+                category="historical_visual_clash_regression",
+                message=(
+                    f"{_HISTORICAL_VISUAL_CLASH_FIXTURE} candidate {candidate_id.strip()} "
+                    f"({text.strip()}) must use micro_defects[].kind={expected_kind}"
+                ),
+            )
+        )
+    return violations
+
+
 def _crop_manifest_required_ids(
+    example_dir: Path,
     manifest_path: Path,
 ) -> tuple[list[str], list[CritiqueLintViolation]]:
     if not manifest_path.is_file():
@@ -305,6 +383,88 @@ def _crop_manifest_required_ids(
                 )
             ]
         ids.append(crop_id.strip())
+    crops = manifest.get("crops")
+    if not isinstance(crops, list):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message="build/audit_crops/manifest.json crops must be a list",
+            )
+        ]
+    crop_by_id = {
+        crop.get("id").strip(): crop
+        for crop in crops
+        if isinstance(crop, dict) and isinstance(crop.get("id"), str) and crop.get("id").strip()
+    }
+    for crop_id in ids:
+        crop = crop_by_id.get(crop_id)
+        if crop is None:
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"required crop id missing from manifest crops: {crop_id}",
+                )
+            ]
+        expected_hash = crop.get("sha256")
+        if (
+            not isinstance(expected_hash, str)
+            or not expected_hash.startswith("sha256:")
+            or len(expected_hash) != len("sha256:") + 64
+        ):
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"manifest crop {crop_id} must include sha256:<64 hex chars>",
+                )
+            ]
+        hash_suffix = expected_hash.removeprefix("sha256:")
+        if hash_suffix.lower() != hash_suffix or any(
+            char not in "0123456789abcdef" for char in hash_suffix
+        ):
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"manifest crop {crop_id} must use lowercase sha256 hex",
+                )
+            ]
+        crop_path = crop.get("path")
+        relative_crop_path = Path(crop_path) if isinstance(crop_path, str) else None
+        if (
+            relative_crop_path is None
+            or relative_crop_path.is_absolute()
+            or ".." in relative_crop_path.parts
+            or relative_crop_path.parts[:2] != ("build", "audit_crops")
+            or relative_crop_path.suffix != ".png"
+        ):
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"manifest crop {crop_id} path must point to build/audit_crops/*.png",
+                )
+            ]
+        absolute_crop_path = example_dir / relative_crop_path
+        if not absolute_crop_path.is_file():
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"missing crop file for manifest crop {crop_id}: {crop_path}",
+                )
+            ]
+        actual_hash = file_sha256(absolute_crop_path)
+        if actual_hash != expected_hash:
+            return [], [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="crop_audit_accounting",
+                    message=f"hash mismatch for manifest crop {crop_id}: {crop_path}",
+                )
+            ]
     return ids, []
 
 
@@ -322,6 +482,7 @@ def _crop_audit_accounting_violations(
     if frontmatter.get("schema") not in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         return []
     required_ids, violations = _crop_manifest_required_ids(
+        example_dir,
         example_dir / "build" / "audit_crops" / "manifest.json"
     )
     if violations or not required_ids:
@@ -431,6 +592,7 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
     violations.extend(_audit_evidence_violations(frontmatter))
     violations.extend(_visual_clash_accounting_violations(example_dir, frontmatter))
+    violations.extend(_historical_visual_clash_regression_violations(example_dir, frontmatter))
     violations.extend(_crop_audit_accounting_violations(example_dir, frontmatter))
     return violations
 
