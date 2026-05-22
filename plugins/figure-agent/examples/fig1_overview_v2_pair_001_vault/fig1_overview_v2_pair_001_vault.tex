@@ -67,7 +67,11 @@
 \node[panelLetter, anchor=north west] at (6.95, 9.05) {c};
 \node[panelLetter, anchor=north west] at (0.10, 4.55) {d};
 \node[panelLetter, anchor=north west] at (4.70, 4.55) {e};
-\node[panelLetter, anchor=north west] at (9.95, 4.55) {f};
+% Iter 13: panel-letter f reverted to column-left convention (matches
+% d at 0.05 cm + e at 0.08 cm indent from column left). Iter 9 had
+% accidentally shifted f with Panel F apparatus content; panel-letters
+% identify the column, not the content, so they stay at the column edge.
+\node[panelLetter, anchor=north west] at (9.55, 4.55) {f};
 
 % ============================================================
 % Figure-wide macro: skeletal polysulfide zigzag chain (used by Panels A + B).
@@ -204,6 +208,13 @@
 % Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
 % identities read at standard view (PNG-visible delta; previous 4.4pt
 % rendered as nearly-invisible marks inside octagon).
+% Iter 13 walk-back: circle backdrops at minimum size 1.8mm visually
+% overlapped adjacent S vertices (octagon chord ~2.68 mm < 2× disc size).
+% Reverted to the original rectangular cAmberSphere!40 backdrop — at print
+% scale it blends with the ring fill so it reads as 'S atom in yellow
+% ground' with bonds breaking at the atom per chemistry convention. The
+% perceived 'sticker patch' artifact only shows at extreme zoom, not at
+% NC main-text Fig 1 publication scale.
 \foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
   \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
         text=cAmber!95!black, inner sep=0pt,
