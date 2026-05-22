@@ -51,8 +51,10 @@
                       text=cGray!90!black},
 ]
 
-% Figure-wide background wash
-\fill[cLGray!8, rounded corners=3mm] (-0.10, -0.10) rectangle (14.10, 9.10);
+% 2026-05-22 NC-Fig-1 redirect: figure-wide cLGray!8 wash + Row 1 cAmber!4
+% unifying band BOTH REMOVED. NC main-text Fig 1 convention = clean white
+% background. Cover-scene cohesion cue is anti-pattern for this venue.
+% Briefing §1+§3 updated 2026-05-22 to lock white-background convention.
 
 % R4: panel letters A–F at NW corner of each panel/column bbox.
 % v8.6 restructure: Row 2 letters re-anchored to 3-column boundaries.
@@ -104,7 +106,9 @@
 % Panel A iter 3/10: wash tone cAmber!08→!12 (+50%) so the row-binding
 % cue is perceivable rather than near-invisible; still well below content
 % saturation (chain cAmber!85, ring cGray!85).
-\fill[cAmber!12] (1.85, 6.83) ellipse (1.55cm and 0.65cm);
+% 2026-05-22 NC-Fig-1 redirect: Panel A cAmber wash ellipse REMOVED. Polymer
+% identity now carried purely by chain backbone color (cAmber!85 stroke) +
+% the "Sulfur-rich polymer" label. NC main-text Fig 1 = no decorative wash.
 
 % --- DIB benzene rings (meta-substituted, linear primary microstructure) ---
 \newcommand{\dibRingAt}[2]{%
@@ -229,7 +233,11 @@
   at (2.23, 8.20) {inverse\\vulcanization};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
-\node[labelStrong, anchor=north west, text=cAmber!70!black]
+% Cycle 1 / C404 (2026-05-22): orange-saturated bold caption was pulling
+% first-fixation LEFT, defeating Panel C's 1.5× hero hierarchy. Demoted to
+% neutral gray semi-bold so hero stays in Panel C (NC Fig 1 single-hero rule).
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black, anchor=north west]
   at (0.10,5.80) {Sulfur-rich polymer};
 % R10 subtitle: changed from "DIB-linked polysulfide network" — strictly,
 % poly(S-r-DIB) is a LINEAR random copolymer (DIB is bivalent; no covalent
@@ -497,10 +505,18 @@
 % one deep distribution".
 % R20: leaders color-matched to ⊖ (shallow tint blue, deep tint red) for
 % stronger visual binding LEFT site ↔ RIGHT level. Still dashed, low opacity.
-\draw[cBlue!55!black, densely dashed, line width=0.28pt] (siteS1) -- (10.50, 7.55);
-\draw[cBlue!55!black, densely dashed, line width=0.28pt] (siteS2) -- (10.50, 7.35);
-\draw[cRed!55!black, densely dashed, line width=0.28pt] (siteD1) -- (10.50, 6.20);
-\draw[cRed!55!black, densely dashed, line width=0.28pt] (siteD2) -- (10.50, 5.85);
+% Cycle 2 / C408 (2026-05-22): leader opacity 0.55 → 0.40 + dash sparser
+% (densely dashed → dash pattern with 1.5pt-on/1.5pt-off) so the 4 leaders
+% read as faint binding cues at zoom rather than competing structural lines
+% with the energy-band rules. Color identity preserved (blue/red).
+\draw[cBlue!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteS1) -- (10.50, 7.55);
+\draw[cBlue!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteS2) -- (10.50, 7.35);
+\draw[cRed!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteD1) -- (10.50, 6.20);
+\draw[cRed!55!black, opacity=0.72, dash pattern=on 1.5pt off 1.5pt,
+      line width=0.25pt] (siteD2) -- (10.50, 5.85);
 
 % R13: Half-identity labels and panel role subtitle.
 % iter E17 (C201): 5.5pt → 6pt for thumbnail-floor survival.
@@ -510,49 +526,25 @@
 \node[labelMute, anchor=south,
       font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
       text=cGray!65!black] at (12.20, 8.78) {energy diagram};
-\node[labelMute, anchor=south,
-      font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!75!black] at (10.40, 8.92) {localized traps};
+% Cycle 3 / C415 (2026-05-22): hero panel-subtitle bumped 6.5pt italic →
+% 7pt semibold upright so the trap-landscape headline carries the Panel C
+% hero identity at thumbnail. Companion sub-labels ("real space" / "energy
+% diagram") stay 6pt italic — preserves intra-Panel-C 2-tier hierarchy.
+\node[anchor=south,
+      font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
+      text=cGray!85!black] at (10.40, 8.92) {localized traps};
 
 % ============================================================
-% Row 2 cover-binding background — shared faded polymer matrix
-% (briefing §3 #1, M2 baseline; cAmber!8 tint + 3 wavy chain hints
-%  underneath Panels D/E/F/G, opacity ~0.15 effective)
+% Row 2 — NC main-text Fig 1 clean white background.
+% 2026-05-22 redirect: REMOVED cAmber!8 wash + 9 wave chain-hint segments.
+% Row 2 unity now carried entirely by:
+%   (i)  3-spoke branching arrows from C
+%   (ii) "convergent evidence" caption above branchRoot
+%   (iii) panel-letter typography (d / e / f) at top-left of each column
+% No background fill. No wavy chain hints. Dotted column dividers also REMOVED
+% — they were a Row-2-wash-only crutch; clean white-space gap reads as
+% the column separator under NC convention.
 % ============================================================
-\fill[cAmber!8, rounded corners=2mm] (-0.05, 0.05) rectangle (14.05, 4.55);
-% iter E16 (zoom-audit D1, 2026-05-21): 3 continuous waves broken into 3
-% segments each at column dividers x=4.55 and x=9.35. At print scale the
-% waves were faint cover-binding cue; at high zoom they were visibly
-% crossing g(E_t) Gaussian outlines (wave 1) and V_s decay curve (wave 2),
-% breaking data shape outlines. C006 resolution called for either dividers
-% OR wave breaks — dividers shipped earlier, wave breaks land here. Each
-% segment leaves a ~0.20cm gap centered on the divider so the dotted lines
-% read as the active separation cue.
-% Wave 1 (y≈1.20):
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 1.20) (2.50, 1.05) (4.45, 1.26)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(4.65, 1.27) (5.00, 1.30) (7.50, 1.10) (9.25, 1.21)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(9.45, 1.23) (10.00, 1.25) (12.50, 1.05) (13.90, 1.20)};
-% Wave 2 (y≈2.50):
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 2.50) (2.50, 2.65) (4.45, 2.51)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(4.65, 2.49) (5.00, 2.45) (7.50, 2.60) (9.25, 2.45)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(9.45, 2.43) (10.00, 2.40) (12.50, 2.60) (13.90, 2.50)};
-% Wave 3 (y≈3.80):
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(0.10, 3.80) (2.50, 3.65) (4.45, 3.81)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(4.65, 3.83) (5.00, 3.85) (7.50, 3.70) (9.25, 3.78)};
-\draw[cAmber!10, line width=0.30pt] plot[smooth] coordinates
-  {(9.45, 3.79) (10.00, 3.80) (12.50, 3.65) (13.90, 3.75)};
-
-% Vertical dotted column dividers for parallel evidence separation
-\draw[cGray!45!white, line width=0.35pt, densely dotted] (4.55, 0.20) -- (4.55, 4.30);
-\draw[cGray!45!white, line width=0.35pt, densely dotted] (9.35, 0.20) -- (9.35, 4.30);
 
 
 % ============================================================
@@ -561,44 +553,41 @@
 %  + Panel C/F color matching, NOT by arrow direction)
 % Anti-goal: linear D→E→F→G chain (causation misleading; briefing §8.7)
 % ============================================================
-% Caption above branching root (italic gray; carries "convergent" semantic)
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!75!black, anchor=south, align=center]
-  at (7.00, 4.92) {convergent evidence --- three independent probes of the same trap};
+% 2026-05-22 NC-Fig-1 redirect: caption backdrop fill REMOVED. On clean
+% white background, bold 7.5pt sans cGray!90 emerges from white via weight
+% alone. No backdrop punch (would create a wash-shaped object on otherwise
+% white figure — NC anti-pattern).
+\node[font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
+      text=cGray!90!black, anchor=south, align=center, inner sep=2pt]
+  at (7.00, 4.92) {convergent evidence};
 
 % Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
 \coordinate (branchRoot) at (6.95, 4.85);
 
-% 3 spokes — Stealth, narrative weight 0.9pt cGray
-% v8.6 endpoints: realigned to 3-column bbox centers (Column D / E / F top)
-%   spoke 1: kinetic     → Column D top center (2.28, 4.30)
-%   spoke 2: ISPD-paired → Column E top center (6.975, 4.30) [vertical]
-%   spoke 3: mechanical  → Column F top center (11.70, 4.30)
-\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+% 3 spokes — Stealth, narrative weight promoted 0.9pt → 1.1pt + darker tone
+% Cycle 1 / C403 (2026-05-22): pale 0.9pt cGray!65 spokes were dominated by
+% A→B→C inter-arrow chain, so reader read Row 2 as D→E→F SEQUENTIAL. Promoting
+% spoke stroke to top-of-3-tier (1.1pt, cGray!80) makes the fan visually
+% dominant against the L→R inter-panel arrows.
+\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
   (branchRoot) -- (2.28, 4.30);
-% iter 40: ISPD spoke tip lifted 4.30→4.50 to clear lifted HV+ box top (4.40).
-\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
   (branchRoot) -- (6.975, 4.50);
-% iter 27: spoke 3 tip 12.325 → 12.625 to land on new PSU center
-% (PSU shifted right to 12.20..13.05).
-\draw[-{Stealth[length=6pt,width=4pt]}, cGray!65!black, line width=0.9pt]
+\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
   (branchRoot) -- (12.625, 4.30);
 
-% Spoke modality labels (mid-spoke, italic small, with cAmber!8 fill punch)
-% v8.6 positions: midpoints recomputed for new spoke endpoints
-% iter 53: removed fill=cAmber!8 (Gemini Panel D MEDIUM). iter 53b: y +0.07cm
-% to clear spoke arrows. iter E14 (user-flagged): without fill, the 0.9pt-
-% thick spoke arrow lines visibly cross THROUGH label letters at high zoom.
-% Restored fill with reduced opacity (cAmber!8 with fill opacity=0.85) —
-% breaks arrow under label while letting background waves still flow.
+% Spoke modality labels — 2026-05-22 NC redirect: cAmber!8 fill → white fill.
+% Same "punch the arrow under label letters" purpose, now using plain white
+% rectangle behind label (NC main-text convention: any backdrop is white,
+% no tint). Arrow-on-label crossing is still broken; no colored box on figure.
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
+      anchor=south, fill=white, text opacity=1, inner sep=1pt]
   at (4.55, 4.62) {kinetic};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
+      anchor=south, fill=white, text opacity=1, inner sep=1pt]
   at (6.975, 4.56) {ISPD};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=cAmber!8, fill opacity=0.85, text opacity=1, inner sep=1pt]
+      anchor=south, fill=white, text opacity=1, inner sep=1pt]
   at (9.40, 4.62) {mechanical};
 
 % ============================================================
@@ -625,16 +614,16 @@
 % of scattered glyphs.
 % iter 61 illustration polish: rounded corners=1pt — soft cartoon-panel feel
 % vs sharp 90° engineering-box edges.
+% Cycle 1 / C401 (2026-05-22): compile emitted WARN collision IoU=0.064 between
+% SMU [28.5,189.5] and V/A [29.5,194.9]. At 6pt labels (~0.25cm tall each) the
+% 0.17cm c-to-c separation overlapped descenders+ascenders. Box height
+% 0.55→0.70cm; label c-to-c 0.17→0.30cm.
 \draw[cGray!75!black, line width=0.30pt, rounded corners=1pt]
-  (0.50, 3.15) rectangle (1.30, 3.70);
-% iter 53b: y nudges for vertical-symmetry around box mid (3.425):
-%   SMU 3.55 → 3.51 (0.085cm above mid)
-%   V/A 3.30 → 3.34 (0.085cm below mid) — symmetric balance.
+  (0.50, 3.07) rectangle (1.30, 3.77);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=center] at (0.90, 3.51) {SMU};
-% iter E17 (C201): 5.5pt → 6pt for thumbnail-floor survival.
+      anchor=center] at (0.90, 3.57) {SMU};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=center] at (0.90, 3.34) {V\,/\,A};
+      anchor=center] at (0.90, 3.27) {V\,/\,A};
 % v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
 % already carry source-meter identity; rectangle was decorative noise.
 
@@ -754,8 +743,10 @@
 % below annotation tier; line cap=round for smooth dash endcaps.
 \draw[cGray!85!black, dashed, line width=0.65pt, line cap=round]
   (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45);
+% Cycle 2 / C405 (2026-05-22): clearance above=4pt → 6pt + pos 0.92→0.88 so
+% label sits clearly ABOVE asymptotic tail rather than grazing it at thumbnail.
 \path[draw=none] (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45)
-  node[pos=0.92, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
+  node[pos=0.88, labelMute, text=cGray!65!black, sloped, above=6pt, inner sep=1pt]
   {Debye};
 
 % D-4 main equation label — iter 64 reverted to upper-left (0.55, 2.75)
@@ -763,17 +754,28 @@
 % = mental model first"); iter 62 upper-right move was creative but added
 % reader cognitive cost. Math style = default serif italic (figure-wide
 % convention, matches Panel E/F math labels).
-\node[labelStrong, anchor=west] at (0.55, 2.75) {$I(t)\!\sim\!t^{-n}$};
+% Cycle 4 / C419 (2026-05-22): bold 7pt sans equation read as "label header"
+% competing with curve labels (high n / low n / Debye). NC convention: equation
+% in math-italic, not bold sans. Switched to default serif italic 7.5pt with
+% subtle weight; preserves "equation = mental model" upper-left placement
+% while shrinking eye-pull weight relative to curve-identity labels.
+\node[font=\fontsize{7.5}{9}\selectfont, anchor=west] at (0.55, 2.75)
+  {$I(t)\!\sim\!t^{-n}$};
 
 % D-7b curve ID labels — 2026-05-20 framework rewrite + iter 55 interleave:
 %   high n (RED, sulfur) at pos=0.55 (RIGHT of midpoint)
 %   low n (BLUE, control) at pos=0.40 (LEFT of midpoint)
 %   prevents vertical stacking at same x (iter 54 audit: labels cluttered).
+% Cycle 2 / C409 (2026-05-22): "high n" cRed!75 on cRed!80 curve merges under
+% red-deficient CVD + grayscale. Switched label to bold cRed!90 with above=4pt
+% offset so weight + clearance carry the distinction; matches "low n" tier.
 \path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
-  node[pos=0.55, labelMute, text=cRed!75!black, sloped, above=3pt]
+  node[pos=0.55, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
+       text=cRed!90!black, sloped, above=4pt, inner sep=1pt]
   {high $n$};
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
-  node[pos=0.40, labelMute, text=cBlue!50!black, sloped, above=4pt]
+  node[pos=0.40, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
+       text=cBlue!60!black, sloped, above=4pt, inner sep=1pt]
   {low $n$};
 
 % =============== Column E — ISPD-paired =================
@@ -1284,11 +1286,13 @@
   (13.65, 0.35) -- (13.78, 0.35) -- (13.715, 0.22) -- cycle;
 \draw[cGray!70!black, line width=0.28pt] (13.66, 0.20) -- (13.77, 0.20);
 \draw[cGray!70!black, line width=0.28pt] (13.69, 0.16) -- (13.74, 0.16);
-% "electrode" label — iter 19: moved from (13.675, 2.65) anchor=south
-% (was conflicting with new PSU lead path at y=2.65..2.85) to right of
-% electrode at (13.95, 1.50) anchor=west.
-\node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!85!black] at (13.95, 1.50) {electrode};
+% Cycle 3 / C417 (2026-05-22): label at (13.95) anchor=west extended past
+% image right edge (x_max=14.10), clipping at NC reduction. Rotated to vertical
+% so it fits within the 0.15cm right-margin band without colliding with
+% cantilever or air-gap caliper.
+\node[labelMute, anchor=south, rotate=270,
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont,
+      text=cGray!85!black] at (13.98, 1.50) {electrode};
 % F-3 (relocated) Maxwell baseline arrow — iter 19: added to bottom zone
 % acting on bent cantilever toward electrode. Dashed, light (cRed!55), 0.45pt
 % — smaller tier vs Coulomb (cRed!80, 0.7pt). User direction: Maxwell stress

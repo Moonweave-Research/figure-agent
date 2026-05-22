@@ -1,6 +1,6 @@
 # Briefing — fig1_overview_v2_pair_001_vault
 
-> **Genre**: Cover / graphical abstract scene via M2 (per-panel cartoon-ize) implementation route.
+> **Genre**: Nature Communications **main-text Figure 1** — clean white-background convention. NOT a cover / graphical abstract scene. (2026-05-22 redirect: prior cover-scene framing dropped because NC main-text Fig 1 effectively never uses background washes.)
 > **Pilot pair**: `fig1_overview_v2_pair_001` / **Arm**: vault
 > **Design snapshot SHA**: `fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7`
 > **Vault query**: 966e2e89-5c8a-41ea-a11f-658c99c3d037 (approved_only, proposed_records_allowed=false)
@@ -10,7 +10,7 @@
 
 ## §1. Figure 정체성 + 30초 viewer impression
 
-**정체성**: Cover-figure / graphical abstract scene. Result-table 또는 plot-grid 인상은 anti-goal. 측정 결과 plot은 *iconic cartoon*으로 압축되고, schematic-illustration이 시각 무게의 다수를 차지.
+**정체성**: Nature Communications **main-text Figure 1**. 흰 배경 (no figure-wide wash, no Row wash, no Panel wash, no wavy chain hint background). Result-table 또는 plot-grid 인상은 여전히 anti-goal — 측정 결과 plot은 *iconic cartoon* 압축, schematic-illustration이 시각 무게 다수. 단 cover-scene cohesion cue는 사용 금지: 1 figure = 6 self-contained panel on clean white, panel-letter typography(a/b/c bold 8pt)가 panel 식별의 유일한 cue. Row-binding은 캡션 텍스트와 spoke arrow 기하학으로만 carry. (2026-05-22 redirect.)
 
 **30-second message**: *"황 풍부 폴리머에 deep charge trap이 존재하고, 3 lines of evidence가 모두 같은 trap을 가리키며, 거시적 bending으로 발현된다."*
 
@@ -54,12 +54,14 @@ Total ~14s for full read. Panel C dwell = single longest stop.
 - **Schematic panel (A / C / G)**: scene dominant. Detail density 비례적으로 높음.
 - **B**: hybrid. Skeletal chains with conceptual axis arrow (axis frame 없음).
 
-**Row 2 cover-binding mechanism (M2 baseline + P-A branching)**:
-1. Shared faded polymer matrix background underneath Row 2 4 panel (cAmber!8 tint with subtle chain hint, opacity ~0.15) — 4 panel을 시각적으로 1 scene으로 묶음.
-2. No hard panel borders Row 2 — visual continuity.
-3. *3-spoke branching arrow from C → {D, E↔F, G}* with modality labels (§4).
+**Row 2 binding mechanism (NC main-text Fig 1 convention — no background wash)**:
+1. ~~Shared faded polymer matrix background underneath Row 2~~ **REMOVED 2026-05-22**: NC main-text Fig 1은 컬러 wash 미사용 관행. Row 2 결속은 spoke arrow geometry + Row 2 caption + panel-letter 위치만으로 carry.
+2. No hard panel borders Row 2 — clean white-background visual continuity.
+3. *3-spoke branching arrow from C → {D, E↔F, G}* with modality labels (§4). 이 arrow + caption이 Row 2 unity의 유일한 cue.
 
-P-B (isometric on D/E/F) + P-C (silhouette inset on Row 2 panels)는 **거절** (§9).
+**M2 baseline downgrade**: cover-scene cohesion cue (faded chain-hint wash, cAmber tint, Row band) 전부 anti-pattern. M2 = "no per-panel border, plain white background, panel-letter typography hierarchy carry the panel boundary".
+
+P-B (isometric on D/E/F) + P-C (silhouette inset on Row 2 panels)는 **거절** (§9). 위 새 M2 baseline에서 P-A (3-spoke branching)만 살아남음.
 
 ---
 
