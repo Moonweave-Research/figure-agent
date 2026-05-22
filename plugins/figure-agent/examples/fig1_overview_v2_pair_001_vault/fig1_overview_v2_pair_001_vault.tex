@@ -47,7 +47,7 @@
                     text=cGray!80!black},
   % Figure-wide Nature compliance: panel letter 8pt bold upright per Nature
   % final-submission rule "8 pt bold, upright (not italic) a, b, c"
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{9}{10.8}\selectfont,
                       text=cGray!90!black},
 ]
 
@@ -570,16 +570,17 @@
 % Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
 \coordinate (branchRoot) at (6.95, 4.85);
 
-% 3 spokes — Stealth, narrative weight promoted 0.9pt → 1.1pt + darker tone
-% Cycle 1 / C403 (2026-05-22): pale 0.9pt cGray!65 spokes were dominated by
-% A→B→C inter-arrow chain, so reader read Row 2 as D→E→F SEQUENTIAL. Promoting
-% spoke stroke to top-of-3-tier (1.1pt, cGray!80) makes the fan visually
-% dominant against the L→R inter-panel arrows.
-\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
+% 3 spokes — narrative weight history: 0.9pt→1.1pt promotion (C403) made the
+% fan visually dominant, but at zoom the heavy Stealth heads + cGray!80 stroke
+% read as PowerPoint not Nature Communications. Designer iter (2026-05-22):
+% slim down to 0.7pt cGray!55 with 4.5pt Stealth heads — still on top of the
+% 3-tier (annotation 0.7pt, secondary 0.55pt, axes 0.55pt) but lighter and
+% closer to NC main-text figure schematic convention.
+\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
   (branchRoot) -- (2.28, 4.30);
-\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
-  (branchRoot) -- (6.975, 4.50);
-\draw[-{Stealth[length=7pt,width=5pt]}, cGray!80!black, line width=1.1pt]
+\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
+  (branchRoot) -- (6.575, 4.50);
+\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
   (branchRoot) -- (12.625, 4.30);
 
 % Spoke modality labels — 2026-05-22 NC redirect: cAmber!8 fill → white fill.
@@ -591,7 +592,7 @@
   at (4.55, 4.62) {kinetic};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=south, fill=white, text opacity=1, inner sep=1pt]
-  at (6.975, 4.56) {ISPD};
+  at (6.7625, 4.675) {ISPD};
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=south, fill=white, text opacity=1, inner sep=1pt]
   at (9.40, 4.62) {mechanical};
@@ -604,6 +605,15 @@
 %   Column E (ISPD):      x=4.65..9.30, spoke endpoint (6.975, 4.30) vertical
 %   Column F (mechanical): x=9.45..13.95, spoke endpoint (11.70, 4.30)
 % ============================================================
+
+% Row 2 column rules — Designer iter (2026-05-22): the NC redirect stripped
+% the Row-2 wash + dotted dividers, which left D / E / F floating in a single
+% unstructured band. Thin 0.20pt cGray!22 verticals reintroduce the column
+% landmark without bringing back any colored fill (NC main-text Fig 1 still
+% reads as 'white background'). Rules are drawn before panel content so they
+% sit under any element that may cross them (axis arrowheads, leader strokes).
+\draw[cGray!22, line width=0.20pt] (4.62, 0.20) -- (4.62, 4.40);
+\draw[cGray!22, line width=0.20pt] (9.47, 0.20) -- (9.47, 4.40);
 
 % =============== Column D — Kinetic =================
 
@@ -807,33 +817,33 @@
 % Ground drop shadow — iter 16: shifted down to track new substrate bottom
 % (y=3.15). Strip y=3.11..3.15.
 \shade[top color=cGray!28, bottom color=cGray!2, opacity=0.55]
-  (6.34, 3.11) rectangle (7.89, 3.15);
+  (5.94, 3.11) rectangle (7.49, 3.15);
 
 % Polymer film — iter 16: height 0.07 → 0.15cm. iter E5: gradient saturation
 % bumped cAmber!38→50 top, cAmber!20→28 bottom for clearer polymer-vs-substrate
 % contrast (substrate cGray!18 light, polymer was under-saturated for visibility).
 \shade[top color=cAmber!50, bottom color=cAmber!28]
-  (6.30, 3.45) rectangle (7.85, 3.60);
+  (5.9, 3.45) rectangle (7.45, 3.6);
 \draw[cAmber!70!black, line width=0.25pt]
-  (6.30, 3.45) rectangle (7.85, 3.60);
+  (5.9, 3.45) rectangle (7.45, 3.6);
 % Polymer top-edge sheen — iter 12: subtle near-white highlight on front-top
 % edge (y=3.52) — film/wax surface catching light. Thin (0.002cm) at low
 % opacity for sheen without breaking material identity.
 \fill[white, opacity=0.45]
-  (6.30, 3.599) rectangle (7.85, 3.601);
+  (5.9, 3.599) rectangle (7.45, 3.601);
 % Disk ambient shadow on polymer — iter 15: parallelogram → thin horizontal
 % band on polymer front-top edge (y=3.51..3.52) under disk hover x range.
 % Side-view side-projection of "disk casts shadow on polymer surface". Slight
 % rightward offset (7.21..7.62) preserves upper-left light convention.
-\fill[black, opacity=0.16] (7.21, 3.590) rectangle (7.62, 3.600);
+\fill[black, opacity=0.16] (6.81, 3.59) rectangle (7.22, 3.6);
 % Substrate — iter 16: height 0.22 → 0.30cm (y=3.15..3.45). Aspect 7:1 → 5:1.
 % iter E10: substrate gradient cGray!42→!22 → cGray!50→!25 (slight darken
 % for "metallic conductive substrate" feel — substrate is ground-attached
 % conductive base, deserves slightly more material weight than light gray).
 \shade[top color=cGray!50, bottom color=cGray!25]
-  (6.30, 3.15) rectangle (7.85, 3.45);
+  (5.9, 3.15) rectangle (7.45, 3.45);
 \draw[cGray!75!black, line width=0.28pt]
-  (6.30, 3.15) rectangle (7.85, 3.45);
+  (5.9, 3.15) rectangle (7.45, 3.45);
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
 % Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
 % clear thicker substrate bottom (y=3.23).
@@ -841,10 +851,10 @@
 % iter E8: rounded corners=1pt on lead bend (matches Panel D iter 64 SMU
 % lead convention; cross-panel illustration-register consistency).
 \draw[cGray!75!black, line width=0.35pt, rounded corners=1pt]
-  (7.85, 3.30) -- (7.95, 3.30) -- (7.95, 3.10);
-\draw[cGray!75!black, line width=0.42pt] (7.88, 3.10) -- (8.02, 3.10);
-\draw[cGray!75!black, line width=0.36pt] (7.90, 3.07) -- (8.00, 3.07);
-\draw[cGray!75!black, line width=0.32pt] (7.92, 3.04) -- (7.98, 3.04);
+  (7.45, 3.3) -- (7.55, 3.3) -- (7.55, 3.1);
+\draw[cGray!75!black, line width=0.42pt] (7.48, 3.1) -- (7.62, 3.1);
+\draw[cGray!75!black, line width=0.36pt] (7.5, 3.07) -- (7.6, 3.07);
+\draw[cGray!75!black, line width=0.32pt] (7.52, 3.04) -- (7.58, 3.04);
 
 % ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
 % Tech illustrator audit: floating "+" cue + no HV identifier = "where does
@@ -864,46 +874,47 @@
 % HV+ body — iter 46 (Pri 8): \shade → \fill matte solid (was "harsh PowerPoint
 % linear gradient" per Gemini). Subtler premium instrument finish.
 \fill[cGray!22, rounded corners=0.4pt]
-  (6.10, 4.10) rectangle (6.95, 4.40);
+  (5.7, 4.1) rectangle (6.55, 4.4);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (6.10, 4.10) rectangle (6.95, 4.40);
+  (5.7, 4.1) rectangle (6.55, 4.4);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
-\fill[cGray!70!black, rounded corners=0.2pt] (6.20, 4.22) rectangle (6.85, 4.38);
+\fill[cGray!70!black, rounded corners=0.2pt] (5.8, 4.22) rectangle (6.45, 4.38);
 \draw[cGray!85!black, line width=0.12pt, rounded corners=0.2pt]
-  (6.20, 4.22) rectangle (6.85, 4.38);
+  (5.8, 4.22) rectangle (6.45, 4.38);
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
 % DC-source schematic glyph (⎓: long bar above, short bar below).
-\draw[cAmber!90!white, line width=0.35pt] (6.28, 4.34) -- (6.78, 4.34);
-\draw[cAmber!90!white, line width=0.35pt] (6.40, 4.28) -- (6.66, 4.28);
+\draw[cAmber!90!white, line width=0.35pt] (5.88, 4.34) -- (6.38, 4.34);
+\draw[cAmber!90!white, line width=0.35pt] (6, 4.28) -- (6.26, 4.28);
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
 % iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
 % cGray!85 → !70 (less aggressive black dot at print scale).
-\fill[cGray!70!black] (6.55, 4.12) circle (0.018);
-\fill[cGray!40!black] (6.55, 4.12) circle (0.009);
+\fill[cGray!70!black] (6.15, 4.12) circle (0.018);
+\fill[cGray!40!black] (6.15, 4.12) circle (0.009);
 % Wire from terminal (now inside box at 4.12) to needle cuff at 4.05.
-\draw[cGray!75!black, line width=0.32pt] (6.55, 4.10) -- (6.55, 4.05);
-% HV+ label — y 4.20 → 4.14. iter E2 plain weight. iter E14 (user-flagged):
-% terminal → cuff wire at x=6.55, y=4.05..4.10 was crossing through label
-% letters. fill=cGray!22 matching box body masks wire. iter E14b: reordered
-% to draw AFTER wire (label was being drawn first → wire visible on top).
-% Finding C001 (v1.9 re-audit, VC015): cGray!22 backdrop did not mask the
-% wire stroke (still bisecting V glyph at zoom). Shifted label off the wire
-% centerline x=6.55 → x=6.30 so the wire is outside the label bbox entirely.
+\draw[cGray!75!black, line width=0.32pt] (6.15, 4.1) -- (6.15, 4.05);
+% HV+ label — Designer iter (2026-05-22 v1.9 cleanup): the iter-E14 cGray!22
+% backdrop never fully masked the terminal→cuff wire (C001 regression). The
+% iter-C001 sideways shift to x=6.30 fixed the wire crossing but left the
+% box internally lopsided (display + corona centered at 6.525, label parked
+% on the left). Lifted the label OUTSIDE the box body using the V_s probe
+% convention (apparatus label sits above its source box, no fill backdrop).
+% Result: centered HV+ caption above a clean source box, all wire/terminal
+% geometry untouched.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      fill=cGray!22, inner sep=0.5pt]
-  at (6.30, 4.18) {HV+};
+      anchor=south]
+  at (6.125, 4.42) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
 \shade[left color=cGray!75!black, right color=cGray!90!black]
-  (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
+  (6.135, 4.05) -- (6.165, 4.05) -- (6.15, 3.73) -- cycle;
 \draw[cGray!90!black, line width=0.22pt]
-  (6.535, 4.05) -- (6.565, 4.05) -- (6.55, 3.73) -- cycle;
+  (6.135, 4.05) -- (6.165, 4.05) -- (6.15, 3.73) -- cycle;
 % iter E13: cuff radius 0.045 → 0.025 + tone cGray!85 → !65 (was dominant
 % black dot reading as "button"; now subtle support indicator).
-\fill[cGray!65!black] (6.55, 4.05) circle (0.025);
+\fill[cGray!65!black] (6.15, 4.05) circle (0.025);
 % Sparks — iter E1: 5 → 3 rays. iter E16 (H3 Panel E critical review): 3 narrow
 % rays read as "needle only charges the leftmost ⊕"; corona discharge actually
 % covers a broad ionization region. Replaced with a semi-transparent cone +
@@ -911,12 +922,12 @@
 % width directly under the needle (x 6.35..6.95); downstream ⊕ at x≥7.00
 % represent accumulated surface charge from earlier scan steps, not the
 % current discharge instant.
-\fill[cRed!22, opacity=0.55] (6.55, 3.73) -- (6.35, 3.60) -- (6.95, 3.60) -- cycle;
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.55, 3.73) -- (6.55, 3.60);
+\fill[cRed!22, opacity=0.55] (6.15, 3.73) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
+\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.15, 3.73) -- (6.15, 3.6);
 % Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
-\foreach \cx in {6.65, 7.00, 7.35, 7.70} {
+\foreach \cx in {6.25, 6.60, 6.95, 7.30} {
   \fill[cRed!75!black] (\cx, 3.62) circle (0.045);
   \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
@@ -939,12 +950,12 @@
 % box (HV+ x=6.10-6.95, probe x=7.36-7.44, different x).
 \shade[left color=cGray!80!black, middle color=cGray!18,
        right color=cGray!80!black]
-  (7.36, 3.87) rectangle (7.44, 4.05);
+  (6.96, 3.87) rectangle (7.04, 4.05);
 \draw[cGray!80!black, line width=0.18pt]
-  (7.36, 3.87) -- (7.36, 4.05);
+  (6.96, 3.87) -- (6.96, 4.05);
 \draw[cGray!80!black, line width=0.18pt]
-  (7.44, 3.87) -- (7.44, 4.05);
-\fill[white, opacity=0.55] (7.395, 3.87) rectangle (7.405, 4.05);
+  (7.04, 3.87) -- (7.04, 4.05);
+\fill[white, opacity=0.55] (6.995, 3.87) rectangle (7.005, 4.05);
 % Disk electrode — iter 40: lifted 0.10cm. iter E3: gradient cAmber → cGray
 % (silver/metal vs polymer color confusion). Kelvin probe disk = metal
 % electrode; sharing cAmber with polymer film read as "same material" at
@@ -952,9 +963,9 @@
 % disk cross-section. Outline darker cGray for definition.
 \shade[left color=cGray!30, middle color=cGray!55,
        right color=cGray!28]
-  (7.20, 3.80) rectangle (7.60, 3.87);
-\draw[cGray!75!black, line width=0.45pt] (7.20, 3.80) rectangle (7.60, 3.87);
-\fill[white, opacity=0.55] (7.21, 3.868) rectangle (7.58, 3.870);
+  (6.8, 3.8) rectangle (7.2, 3.87);
+\draw[cGray!75!black, line width=0.45pt] (6.8, 3.8) rectangle (7.2, 3.87);
+\fill[white, opacity=0.55] (6.81, 3.868) rectangle (7.18, 3.87);
 % iter E16 (2026-05-21, user clarification): vertical-oscillation glyph
 % removed. Keyence SK-series surface voltmeter uses induction sensing, not
 % a vibrating tip — the ↕ cue evoked Kelvin-probe FM-CPD modulation and
@@ -966,7 +977,7 @@
 %      probe-hovers-above-polymer geometry self-conveys "non-contact".
 %   3) User audit: "그림에 d 가 필요 없을 수도 있어 보임".
 % Briefing §13.6 reference to "d label" superseded by this iter.
-% "Probe" — iter 48 (Codex): position (7.40,4.00)→(7.34,4.05), demoted to
+% "Probe" — iter 48 (Codex): position (7, 4)→(6.94, 4.05), demoted to
 % cGray!65 (secondary apparatus label tier).
 % iter E16 (2026-05-21, user clarification): label "Probe" → "$V_s$ probe"
 % — pairs with the right-hand "$V_s$ meter" as sensor↔readout, and avoids
@@ -977,7 +988,7 @@
 % with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
 % meter box left x=8.08).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=south] at (7.50, 4.10) {$V_s$ probe};
+      anchor=south] at (7.1, 4.1) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
@@ -995,21 +1006,21 @@
 % the box right edge (last 'r' clipped by rounded corner). Box widened right
 % edge 9.00 → 9.08 (gain 0.08cm) so the label fits inside with comfortable margin.
 \fill[cGray!22, rounded corners=0.4pt]
-  (8.08, 3.58) rectangle (9.08, 4.05);
+  (7.68, 3.58) rectangle (8.68, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (8.08, 3.58) rectangle (9.08, 4.05);
+  (7.68, 3.58) rectangle (8.68, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
 % Display — iter 50: enlarged vertically 0.15→0.22cm (decay curve room).
-\fill[cGray!70!black, rounded corners=0.3pt] (8.12, 3.78) rectangle (8.96, 4.00);
+\fill[cGray!70!black, rounded corners=0.3pt] (7.72, 3.78) rectangle (8.56, 4);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=0.3pt]
-  (8.12, 3.78) rectangle (8.96, 4.00);
+  (7.72, 3.78) rectangle (8.56, 4);
 % iter 50: axes + decay rescaled to taller display 3.78..4.00.
 \draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
-  (8.16, 3.81) -- (8.16, 3.98);
+  (7.76, 3.81) -- (7.76, 3.98);
 \draw[-{Stealth[length=1.5pt,width=1.2pt]}, cGray!30!white, line width=0.20pt]
-  (8.16, 3.81) -- (8.93, 3.81);
+  (7.76, 3.81) -- (8.53, 3.81);
 % iter E16 (H1 Panel E critical review): in-meter decay trace removed —
 % same V_s(t) is plotted in sub-zone below; inset duplicated the signal.
 % Screen now reads as "scope ready", with the real measurement deferred to E-3/E-4.
@@ -1019,25 +1030,25 @@
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
-  at (8.54, 3.66) {$V_s$ meter};
+  at (8.14, 3.66) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
 % to meter input port (natural gravity-aware path, not aerial arc).
-% Cable + Input port — iter E12: cable start moved from (7.40, 3.95) →
-% (7.40, 4.05) to match new lengthened shaft top. Bezier control points
-% adjusted for smooth droop from new higher start to meter port (8.12, 3.85).
+% Cable + Input port — iter E12: cable start moved from (7, 3.95) →
+% (7, 4.05) to match new lengthened shaft top. Bezier control points
+% adjusted for smooth droop from new higher start to meter port (7.72, 3.85).
 \draw[cGray!75!black, line width=0.30pt]
-  (7.40, 4.05) .. controls (7.55, 4.05) and (7.92, 3.90) .. (8.12, 3.85);
-\fill[cGray!85!black] (8.12, 3.85) circle (0.024);
-\fill[cGray!50!black] (8.12, 3.85) circle (0.012);
+  (7, 4.05) .. controls (7.15, 4.05) and (7.52, 3.9) .. (7.72, 3.85);
+\fill[cGray!85!black] (7.72, 3.85) circle (0.024);
+\fill[cGray!50!black] (7.72, 3.85) circle (0.012);
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
-% (6.15,3.525)→(6.00,3.50). Secondary apparatus annotation tier.
+% (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=east] at (6.00, 3.50) {polymer film};
-\draw[cGray!55!black, line width=0.18pt] (6.01, 3.50) -- (6.28, 3.525);
-\fill[cGray!55!black] (6.28, 3.525) circle (0.012);
+      anchor=east] at (5.6, 3.5) {polymer film};
+\draw[cGray!55!black, line width=0.18pt] (5.61, 3.5) -- (5.88, 3.525);
+\fill[cGray!55!black] (5.88, 3.525) circle (0.012);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
@@ -1046,21 +1057,21 @@
 % (multiplier 1.333× above axis y=1.65). V_s tip label shifted to new
 % mid-axis y=2.55.
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
-  (4.95, 1.65) -- (4.95, 2.85);
+  (5.15, 1.65) -- (5.15, 2.85);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
-  (4.95, 1.65) -- (8.55, 1.65);
-\draw[cGray!65!black, line width=0.40pt] (4.95, 2.05) -- (5.02, 2.05);
-\draw[cGray!65!black, line width=0.40pt] (4.95, 2.45) -- (5.02, 2.45);
-\draw[cGray!65!black, line width=0.40pt] (6.15, 1.65) -- (6.15, 1.72);
-\draw[cGray!65!black, line width=0.40pt] (7.35, 1.65) -- (7.35, 1.72);
+  (5.15, 1.65) -- (8.75, 1.65);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 2.05) -- (5.22, 2.05);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 2.45) -- (5.22, 2.45);
+\draw[cGray!65!black, line width=0.40pt] (6.35, 1.65) -- (6.35, 1.72);
+\draw[cGray!65!black, line width=0.40pt] (7.55, 1.65) -- (7.55, 1.72);
 % iter 51: x 4.83→4.73 (Gemini Defect 2 HIGH: rotated label right-edge
 % touching axis line at x=4.95). 0.10cm clearance.
 \node[labelMute, rotate=90, anchor=center,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (4.73, 2.55) {$V_s(t)$};
+  at (4.93, 2.55) {$V_s(t)$};
 \node[labelMute, anchor=north,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (8.50, 1.55) {$t$};
+  at (8.7, 1.55) {$t$};
 
 % E-4 V_s stretched-exp decay curve
 % v8.7 critique iter 2: waypoints adjusted to maintain stretched-exp shape
@@ -1071,8 +1082,8 @@
 % stay near axis bottom.
 \draw[cRed!70!black, line width=0.70pt]
   plot[smooth] coordinates
-  {(5.10, 2.72) (5.45, 2.32) (5.85, 2.01) (6.25, 1.81)
-   (6.65, 1.69) (7.10, 1.65) (7.55, 1.65) (8.00, 1.65) (8.40, 1.65)};
+  {(5.3, 2.72) (5.65, 2.32) (6.05, 2.01) (6.45, 1.81)
+   (6.85, 1.69) (7.3, 1.65) (7.75, 1.65) (8.2, 1.65) (8.6, 1.65)};
 % E-4-ii markers — iter 47 (Top Defect 2): reduced 5→4 (last asymptote dup
 % removed), smaller (1.2mm→0.9mm), lighter fill (cRed!50→!30 + white tint),
 % thinner outline. Gemini: "markers shouldn't bleed into solid blob".
@@ -1097,31 +1108,31 @@
 % distribution area, landing just above the Deep peak top (y=1.15). Visual
 % flow now clearly enters the energy domain, matching deep-dominant framing.
 \draw[-{Stealth[length=3.5pt,width=2.5pt]}, cGray!55!black, line width=0.40pt]
-  (6.90, 1.55) -- (6.90, 1.18);
+  (7.1, 1.55) -- (7.1, 1.18);
 \node[labelMute, anchor=west, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cGray!55!black, inner sep=1pt]
-  at (7.00, 1.45) {derive};
+  at (7.2, 1.45) {derive};
 
 % E-6 g(E_t) sub-zone axes
 % Column-E iter 5: axis top 1.35→1.45 (+0.10cm) — more headroom above
 % Gaussians for τ_d caliper.
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
-  (4.95, 0.40) -- (4.95, 1.45);
+  (5.15, 0.4) -- (5.15, 1.45);
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!65!black, line width=0.40pt]
-  (4.95, 0.40) -- (8.55, 0.40);
+  (5.15, 0.4) -- (8.75, 0.4);
 % Option-A qualitative ticks (C003 resolution): non-numeric tick strokes only,
 % no label nodes — visual anchors without Fig 3 quantitative overlap.
-\draw[cGray!65!black, line width=0.40pt] (4.95, 0.75) -- (5.02, 0.75);
-\draw[cGray!65!black, line width=0.40pt] (4.95, 1.10) -- (5.02, 1.10);
-\draw[cGray!65!black, line width=0.40pt] (6.15, 0.40) -- (6.15, 0.47);
-\draw[cGray!65!black, line width=0.40pt] (7.35, 0.40) -- (7.35, 0.47);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 0.75) -- (5.22, 0.75);
+\draw[cGray!65!black, line width=0.40pt] (5.15, 1.1) -- (5.22, 1.1);
+\draw[cGray!65!black, line width=0.40pt] (6.35, 0.4) -- (6.35, 0.47);
+\draw[cGray!65!black, line width=0.40pt] (7.55, 0.4) -- (7.55, 0.47);
 % iter 51: x 4.83→4.73 mirror to V_s(t) fix (Gemini Defect 2 HIGH).
 \node[labelMute, rotate=90, anchor=center,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (4.73, 1.25) {$g(E_t)$};
+  at (4.93, 1.25) {$g(E_t)$};
 \node[labelMute, anchor=north,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (8.50, 0.30) {$E_t$};
+  at (8.7, 0.3) {$E_t$};
 
 % E-7 shallow Gaussian + E-8 deep Gaussian (1.86× height per §5 Q4)
 % Column E iter 1 (2026-05-18) — T5 BLOCKER fix: deep peak y 1.30 → 1.24
@@ -1131,22 +1142,22 @@
 % Gaussians — iter 48 (Codex): Deep Gaussian narrowed 6.20..7.40 → 6.28..7.28
 % (Codex "narrow the deep Gaussian"). Peak y 1.24→1.15 (lower for less plush).
 \draw[cBlue!85, fill=cBlue!25, line width=0.55pt]
-  (5.30, 0.40) .. controls (5.55, 0.40) and (5.55, 0.85) .. (5.70, 0.85)
-              .. controls (5.85, 0.85) and (5.85, 0.40) .. (6.10, 0.40);
+  (5.5, 0.4) .. controls (5.75, 0.4) and (5.75, 0.85) .. (5.9, 0.85)
+              .. controls (6.05, 0.85) and (6.05, 0.4) .. (6.3, 0.4);
 \draw[cRed!85, fill=cRed!25, line width=0.55pt]
-  (6.28, 0.40) .. controls (6.46, 0.40) and (6.46, 1.15) .. (6.78, 1.15)
-              .. controls (7.10, 1.15) and (7.10, 0.40) .. (7.28, 0.40);
+  (6.48, 0.4) .. controls (6.66, 0.4) and (6.66, 1.15) .. (6.98, 1.15)
+              .. controls (7.3, 1.15) and (7.3, 0.4) .. (7.48, 0.4);
 
 % Option-A representative scatter points on Gaussians (C003 resolution):
 % 3 pts on shallow (blue) Gaussian, 3 pts on deep (red) Gaussian.
 % Strictly positioned on Bezier curve — supports measured-data credibility
 % cue without introducing numeric axis labels.
-\fill[cBlue!85!black] (5.55, 0.65) circle (0.04);
-\fill[cBlue!85!black] (5.70, 0.85) circle (0.04);
-\fill[cBlue!85!black] (5.85, 0.65) circle (0.04);
-\fill[cRed!85!black] (6.55, 0.80) circle (0.04);
-\fill[cRed!85!black] (6.78, 1.15) circle (0.04);
-\fill[cRed!85!black] (7.01, 0.80) circle (0.04);
+\fill[cBlue!85!black] (5.75, 0.65) circle (0.04);
+\fill[cBlue!85!black] (5.9, 0.85) circle (0.04);
+\fill[cBlue!85!black] (6.05, 0.65) circle (0.04);
+\fill[cRed!85!black] (6.75, 0.8) circle (0.04);
+\fill[cRed!85!black] (6.98, 1.15) circle (0.04);
+\fill[cRed!85!black] (7.21, 0.8) circle (0.04);
 
 % E-9 τ_d annotation between Gaussian peaks (energy-domain interval).
 % Column-E iter 4 (2026-05-18): redesigned from dashed double-headed arrow
@@ -1159,20 +1170,20 @@
 % E-9 caliper — iter 47 (Top Defect 3): line 0.32→0.22pt (Gemini "very thin
 % 0.4-0.5pt preferable gray"); T-caps shortened 0.06 → 0.04cm (3 default→
 % minimal crisp). Color cRed!55!black → cGray!65!black (subordinate to data).
-\draw[cGray!65!black, line width=0.22pt] (5.70, 1.42) -- (6.80, 1.42);
-\draw[cGray!65!black, line width=0.22pt] (5.70, 1.40) -- (5.70, 1.44);
-\draw[cGray!65!black, line width=0.22pt] (6.80, 1.40) -- (6.80, 1.44);
+\draw[cGray!65!black, line width=0.22pt] (5.9, 1.42) -- (7, 1.42);
+\draw[cGray!65!black, line width=0.22pt] (5.9, 1.4) -- (5.9, 1.44);
+\draw[cGray!65!black, line width=0.22pt] (7, 1.4) -- (7, 1.44);
 % τ_d label — iter 49 (Codex narrow): 6→5pt + cGray!85→!70 + no fill.
 \node[labelMute, anchor=south, text=cGray!70!black,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont, inner sep=1pt]
-  at (6.25, 1.43) {$\tau_d$};
+  at (6.45, 1.43) {$\tau_d$};
 
 % E-10 — iter 49 (Codex iter 48 narrow): font 6→5pt + tone 85→70 (Codex
 % "annotations still louder than evidence shapes").
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (5.70, 0.32) {Shallow};
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (5.9, 0.32) {Shallow};
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (6.78, 0.32) {Deep};
+      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (6.98, 0.32) {Deep};
 
 % =============== Column F — Mechanical =================
 
