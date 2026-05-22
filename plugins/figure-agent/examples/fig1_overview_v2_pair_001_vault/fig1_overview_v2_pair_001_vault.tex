@@ -493,13 +493,17 @@
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
 % v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
+% Iter 14: trap level markers upgraded to ball-shaded spheres for
+% consistency with Panel C trap-site dots + Panel D log-log + Panel E
+% Gaussian + Panel F q_tr spheres (iter 10 idiom). Was last flat dot set
+% missed in the iter 10 sweep.
 \foreach \dx/\dy in {11.15/7.55, 11.35/7.35} {
-  \node[circle, draw=cBlue!85!black, fill=cBlue!75!black, inner sep=0pt,
-        minimum size=1.5mm, line width=0.35pt] at (\dx,\dy) {};
+  \shade[ball color=cBlue!70!black] (\dx, \dy) circle (0.075);
+  \draw[cBlue!95!black, line width=0.20pt] (\dx, \dy) circle (0.075);
 }
 \foreach \dx/\dy in {11.15/6.20, 11.35/5.85} {
-  \node[circle, draw=cRed!85!black, fill=cRed!75!black, inner sep=0pt,
-        minimum size=1.6mm, line width=0.40pt] at (\dx,\dy) {};
+  \shade[ball color=cRed!70!black] (\dx, \dy) circle (0.08);
+  \draw[cRed!95!black, line width=0.22pt] (\dx, \dy) circle (0.08);
 }
 % Region labels — anchor to trap line clusters on right
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
