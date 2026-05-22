@@ -446,8 +446,14 @@
 \foreach \tickY in {8.30, 7.85, 7.49, 6.05, 5.30} {
   \draw[cGray!70!black, line width=0.45pt] (10.43, \tickY) -- (10.50, \tickY);
 }
+% Finding C004 (v1.9 re-audit, VC054): rotated 'Energy' label centered at
+% y=6.85 had label y range 6.85..7.73 — both shallow trap leaders (siteS1
+% to axis y=7.55 crossing the label at y=7.51; siteS2 to axis y=7.35
+% crossing at y=7.23) passed THROUGH the label glyphs. Shifted y_anchor
+% 6.85 → 6.30 so label range becomes 6.30..7.18, sitting between the
+% deep leader band (y ≤ 6.23) and the shallow leader band (y ≥ 7.23).
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
-      anchor=south, rotate=90] at (10.15, 6.85) {Energy};
+      anchor=south, rotate=90] at (10.15, 6.30) {Energy};
 
 % --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
 % R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
@@ -882,9 +888,12 @@
 % terminal → cuff wire at x=6.55, y=4.05..4.10 was crossing through label
 % letters. fill=cGray!22 matching box body masks wire. iter E14b: reordered
 % to draw AFTER wire (label was being drawn first → wire visible on top).
+% Finding C001 (v1.9 re-audit, VC015): cGray!22 backdrop did not mask the
+% wire stroke (still bisecting V glyph at zoom). Shifted label off the wire
+% centerline x=6.55 → x=6.30 so the wire is outside the label bbox entirely.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       fill=cGray!22, inner sep=0.5pt]
-  at (6.55, 4.14) {HV+};
+  at (6.30, 4.18) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
@@ -962,8 +971,13 @@
 % iter E16 (2026-05-21, user clarification): label "Probe" → "$V_s$ probe"
 % — pairs with the right-hand "$V_s$ meter" as sensor↔readout, and avoids
 % the Kelvin-probe reading the bare "Probe" + ↕ pair was producing.
+% Finding C003 (v1.9 re-audit, VC025): the math italic V glyph of "$V_s$ probe"
+% sat at TikZ x≈6.87 — 0.08cm INSIDE the HV+ source box (right edge x=6.95).
+% Shifted label center 7.34 → 7.50 so the label left edge clears the HV+ box
+% with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
+% meter box left x=8.08).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=south] at (7.34, 4.10) {$V_s$ probe};
+      anchor=south] at (7.50, 4.10) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
@@ -977,10 +991,13 @@
 % Right-side and top isometric faces REMOVED per user direction.
 %
 % (1) Front face — iter 46 (Pri 8 consistency): \shade → matte \fill cGray!22.
+% Finding C002 (v1.9 re-audit, VC019): 'V_s meter' label at 6.5pt was overflowing
+% the box right edge (last 'r' clipped by rounded corner). Box widened right
+% edge 9.00 → 9.08 (gain 0.08cm) so the label fits inside with comfortable margin.
 \fill[cGray!22, rounded corners=0.4pt]
-  (8.08, 3.58) rectangle (9.00, 4.05);
+  (8.08, 3.58) rectangle (9.08, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
-  (8.08, 3.58) rectangle (9.00, 4.05);
+  (8.08, 3.58) rectangle (9.08, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
