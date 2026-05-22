@@ -808,8 +808,14 @@
   (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45);
 % Cycle 2 / C405 (2026-05-22): clearance above=4pt → 6pt + pos 0.92→0.88 so
 % label sits clearly ABOVE asymptotic tail rather than grazing it at thumbnail.
+% Iter 21 (2026-05-23): Debye label at pos=0.88 above=6pt had its 'y'
+% descender grazing the red high-n power-law line just above; iter 21a
+% below=3pt put the label on the x-axis. Compromise: lower pos to 0.70
+% where Debye dashed is at y≈0.85 and the red high-n line is at y≈1.2
+% (gap ~0.35 cm), with above=4pt — label sits in the middle of the gap,
+% clearly anchored to Debye curve and well clear of the red line.
 \path[draw=none] (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45)
-  node[pos=0.88, labelMute, text=cGray!65!black, sloped, above=6pt, inner sep=1pt]
+  node[pos=0.70, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
   {Debye};
 
 % D-4 main equation label — iter 64 reverted to upper-left (0.55, 2.75)
