@@ -606,14 +606,21 @@
 %   Column F (mechanical): x=9.45..13.95, spoke endpoint (11.70, 4.30)
 % ============================================================
 
-% Row 2 column rules — Designer iter (2026-05-22): the NC redirect stripped
-% the Row-2 wash + dotted dividers, which left D / E / F floating in a single
-% unstructured band. Thin 0.20pt cGray!22 verticals reintroduce the column
-% landmark without bringing back any colored fill (NC main-text Fig 1 still
-% reads as 'white background'). Rules are drawn before panel content so they
-% sit under any element that may cross them (axis arrowheads, leader strokes).
-\draw[cGray!22, line width=0.20pt] (4.62, 0.20) -- (4.62, 4.40);
-\draw[cGray!22, line width=0.20pt] (9.47, 0.20) -- (9.47, 4.40);
+% Row 2 framing — Designer iter 3 (2026-05-22 v1.9.2): user request for
+% premium NC compartmentalisation. The iter-2 thin column rules read as too
+% subtle once apparatus + data zones shifted to fill Panel E. Promoted to a
+% 3-cell light rectangle band — an outer rounded box around Row 2 + 2 internal
+% verticals at the column boundaries (x=4.62 D/E, x=9.47 E/F). Asymmetric
+% framing convention: Row 1 (chemistry/landscape, free-flowing scene with
+% A→B inter-arrow) stays unboxed; Row 2 (heterogeneous apparatus + plot
+% panels) gets the box band. Stroke cGray!30 0.35pt rounded 2pt — visible
+% but unobtrusive at print scale, no fill, no colour. Drawn BEFORE panel
+% content so panel-letter typography sits on top of the box top edge per
+% NC corner-perch convention.
+\draw[cGray!30, line width=0.35pt, rounded corners=2pt]
+  (0.05, 0.10) rectangle (13.95, 4.50);
+\draw[cGray!30, line width=0.35pt] (4.62, 0.10) -- (4.62, 4.50);
+\draw[cGray!30, line width=0.35pt] (9.47, 0.10) -- (9.47, 4.50);
 
 % =============== Column D — Kinetic =================
 
