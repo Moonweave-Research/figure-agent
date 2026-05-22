@@ -55,6 +55,7 @@ _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
     "decorative",
     "convention",
 )
+_STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = 40
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",
@@ -224,6 +225,29 @@ def _visual_clash_accept_simplification_violations(
                         ),
                     )
                 )
+                continue
+            normalized_rationale = " ".join(rationale.split())
+            lowered_rationale = normalized_rationale.lower()
+            has_concrete_length = (
+                len(normalized_rationale) >= _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS
+            )
+            names_candidate = visual_clash_ref.strip() in normalized_rationale
+            gives_non_defect_reason = any(
+                marker in lowered_rationale for marker in _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS
+            )
+            if has_concrete_length and names_candidate and gives_non_defect_reason:
+                continue
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="visual_clash_accept_simplification",
+                    message=(
+                        "visual-clash-linked accept_simplification_rationale must be "
+                        "concrete, name the candidate id, and explain the non-defect "
+                        f"geometry/context: {visual_clash_ref.strip()} ({defect_id})"
+                    ),
+                )
+            )
             continue
         observation = raw_item.get("observation")
         if not isinstance(observation, str):
