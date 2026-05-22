@@ -396,25 +396,27 @@
 % R15: Vacuum level dashed reference at y=8.55 (above E_C) — adds ref04 anchor
 % convention. Vacuum is a *reference level*, not a quantitative measurement,
 % so allowed under briefing schematic rule.
-% Designer iter 5 (2026-05-22): reference lines + axis labels pulled in from
-% (10.55..13.80) + label x=13.95 to (10.55..11.55) + label x=11.60. The old
-% 3.25 cm long horizontal references made Panel C's right edge extend to
-% x≈15.10 (mobility edge label tail), 1.15 cm past the Row 2 box right edge —
-% Row 2 visually 'indented' from Row 1. Now references end just before the
-% trap-line / shallow-deep label cluster and labels sit next to the bands,
-% matching standard NC energy-diagram convention.
-\draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (11.55, 8.55);
+% Designer iter 6 (2026-05-22): iter-5 over-pulled the reference lines to 1.00 cm
+% and the labels sat right next to the axis, losing the NC energy-diagram
+% band-spanning convention (the references are supposed to read as horizontal
+% energy levels stretching across the band region). Re-extended references to
+% span the full band area including the Gaussian DOS overlay + trap level lines
+% + shallow/deep band labels, and re-pushed axis labels to line ends. New ranges
+% chosen so the LONGEST label ('mobility edge' at 1.15 cm width) lands its tail
+% exactly at the Row 2 outer-box right edge (x=13.30), so Panel C and Panel F
+% share the same right column.
+\draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (12.10, 8.55);
 \node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
-      anchor=west] at (11.60, 8.55) {vacuum};
-\draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (11.55, 8.30);
+      anchor=west] at (12.15, 8.55) {vacuum};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (12.10, 8.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=west] at (11.60, 8.30) {$E_C$};
-\draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (11.55, 7.85);
+      anchor=west] at (12.15, 8.30) {$E_C$};
+\draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (12.10, 7.85);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=west] at (11.60, 7.85) {mobility edge};
-\draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (11.55, 5.30);
+      anchor=west] at (12.15, 7.85) {mobility edge};
+\draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=west] at (11.60, 5.30) {$E_V$};
+      anchor=west] at (12.15, 5.30) {$E_V$};
 
 % R15: Gaussian DOS overlays (between Energy axis and trap lines).
 % ref07 NComm 2014 + ref05 NComm 2025 idiom — smooth bell curves encode
@@ -506,11 +508,11 @@
 % match briefing §13.3 C-R5 spec. cRed binds the depth scalar to the deep
 % trap species (color convention §8.6 / §13.9 Binding-1).
 \draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cRed!80!black, line width=0.45pt] (12.30, 8.27) -- (12.30, 5.83);
+      cRed!80!black, line width=0.45pt] (12.85, 8.27) -- (12.85, 5.83);
 % Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!80!black,
       anchor=west, inner sep=0.5pt]
-  at (12.35, 7.00) {$\Delta E_t$};
+  at (12.90, 7.00) {$\Delta E_t$};
 
 % R13: Re-add thin BLACK straight leaders (checklist #12 — no arrowhead, no
 % color, 0.30pt). Each LEFT ⊖ → its corresponding RIGHT band left edge.
