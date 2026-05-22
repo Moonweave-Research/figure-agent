@@ -71,6 +71,23 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
 
     _append_if(
         fixture_freshness,
+        render == "NOT_SCAFFOLDED",
+        code="source_not_scaffolded",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "fixture directory or spec.yaml is missing; scaffold the fixture before "
+            "compile/export."
+        ),
+    )
+    _append_if(
+        fixture_freshness,
+        render == "NOT_AUTHORED",
+        code="source_not_authored",
+        category=FIXTURE_FRESHNESS,
+        message="TikZ source is missing; author <name>.tex before compile/export.",
+    )
+    _append_if(
+        fixture_freshness,
         render == "MISSING",
         code="render_missing",
         category=FIXTURE_FRESHNESS,

@@ -60,6 +60,15 @@ def test_load_optional_reference_pack_returns_none_when_missing(tmp_path: Path) 
     assert load_optional_reference_pack(tmp_path) is None
 
 
+def test_load_optional_reference_pack_rejects_fixture_mismatch(tmp_path: Path) -> None:
+    example_dir = tmp_path / "actual"
+    example_dir.mkdir()
+    _write_valid_pack(example_dir / "critique_reference_pack.yaml")
+
+    with pytest.raises(CritiqueReferencePackError, match="fixture"):
+        load_optional_reference_pack(example_dir)
+
+
 def test_load_reference_pack_rejects_malformed_yaml(tmp_path: Path) -> None:
     pack_path = tmp_path / "critique_reference_pack.yaml"
     pack_path.write_text("schema: [", encoding="utf-8")

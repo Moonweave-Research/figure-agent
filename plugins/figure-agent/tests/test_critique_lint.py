@@ -383,6 +383,39 @@ def test_lint_critique_rejects_v1_9_missing_crop_audit_log_with_manifest(
     assert "crop_audit_log" in violations[0].message
 
 
+def test_lint_critique_rejects_v1_9_crop_audit_log_without_manifest(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.9",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: fake\n"
+            "    path: build/audit_crops/fake.png\n"
+            "    source: visual_clash\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: fake crop must not pass without manifest provenance\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["crop_audit_accounting"]
+    assert "manifest" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_8_unknown_crop_id(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()

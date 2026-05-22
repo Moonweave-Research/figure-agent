@@ -239,6 +239,21 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
 
 
+def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
+    tmp_path: Path,
+) -> None:
+    fixture = tmp_path / "examples" / "driver_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: driver_demo\npanels: []\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+
+    summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
+
+    assert summary["action"] == "create_or_fix_source"
+    assert summary["status_explanation"]["first_blocker"]["code"] == "source_not_authored"
+    assert "first blocker export_missing" not in summary["reason"]
+
+
 def test_driver_summary_surfaces_workspace_warnings(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

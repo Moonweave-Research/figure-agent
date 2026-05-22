@@ -259,7 +259,13 @@ def _crop_manifest_required_ids(
     manifest_path: Path,
 ) -> tuple[list[str], list[CritiqueLintViolation]]:
     if not manifest_path.is_file():
-        return [], []
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message="missing build/audit_crops/manifest.json for crop_audit_log validation",
+            )
+        ]
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:

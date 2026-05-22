@@ -2791,6 +2791,20 @@ def test_status_explanation_marks_critique_not_required_as_non_blocking(
     assert result["critique_state"] == "NOT_REQUIRED"
 
 
+def test_status_explanation_prioritizes_not_authored_before_missing_export(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert explanation["first_blocker"]["code"] == "source_not_authored"
+    assert explanation["first_blocker"]["next_command"] is None
+
+
 def test_status_explanation_surfaces_publication_gate_as_human_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

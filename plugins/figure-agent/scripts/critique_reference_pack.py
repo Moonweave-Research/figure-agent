@@ -140,4 +140,11 @@ def load_optional_reference_pack(example_dir: Path) -> dict[str, Any] | None:
     path = example_dir / "critique_reference_pack.yaml"
     if not path.is_file():
         return None
-    return load_reference_pack(path)
+    pack = load_reference_pack(path)
+    fixture = pack.get("fixture")
+    if fixture != example_dir.name:
+        raise CritiqueReferencePackError(
+            "critique_reference_pack.fixture must match example directory name: "
+            f"{example_dir.name}"
+        )
+    return pack
