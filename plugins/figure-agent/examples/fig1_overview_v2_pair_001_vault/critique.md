@@ -1,12 +1,12 @@
 ---
-schema: figure-agent.critique.v1.7
+schema: figure-agent.critique.v1.9
 fixture: fig1_overview_v2_pair_001_vault
 generated_at: 2026-05-22T08:30:00Z
-generator: host_vision_nc_redirect_critique
-generator_version: sha256:29953c1e6498906f989a62512e217953a2c7890213521319886e9bbb9f26a35f
-rubric_version: figure-agent.critique-rubric.v1.7
-critique_input_hash: sha256:5e084c93e394b7f9f785fceadb2fcf15b786ebf3f84a69e6e55dfcf9730cae80
-verdict: ready
+generator: critique_brief.py
+generator_version: sha256:2eb54e535dd5946869569ab16176b31865f8fee6ba299a8f65de6e055d90bac9
+rubric_version: figure-agent.critique-rubric.v1.9
+critique_input_hash: sha256:aabc858e14d5db7b14fe1d4d5b60603067580aecdd28baf09c80e9001a5c8b36
+verdict: revise
 audit_enumeration:
   structural_completeness:
     components:
@@ -284,12 +284,16 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
-    verdict: pass
+    verdict: needs_patch
     confidence: high
-    rationale: "All declared labels map 1:1 to targets. Typography 3-tier holds: panel-letter 8pt bold, primary 7-7.5pt, secondary 6.5pt, annotation 6pt minimum. No labels below 6pt readable floor (iconographic ⊕ glyph at 5.5pt is non-text mark, exempt)."
-    evidence: "audit_enumeration.label_target_matching all matches=true; Cycle 3 C415 'localized traps' tier bump; Cycle 4 C419 equation math-italic."
-    blocking_items: []
-    recommended_action: none
+    rationale: "v1.9 zoom re-audit surfaced 4 label_glyph_overlaps_internal_drawing / label_backdrop_overflows_outline defects (C001 HV+ V crossed by corona needle; C002 V_s meter label overflows outline; C003 V_s probe V crosses meter corner; C004 Energy axis label crosses polymer film right edge). Typography 3-tier hierarchy remains intact; the defects are label-target-collision class, not typography-tier class."
+    evidence: "VC015, VC019, VC025, VC054 zoom inspection; micro_defects M015/M019/M025/M054 status=open; top-level findings C001-C004."
+    blocking_items:
+      - "C001 - corona-needle stroke crosses HV+ V glyph"
+      - "C002 - V_s meter label overflows outline"
+      - "C003 - V_s probe V crosses V_s meter corner"
+      - "C004 - Energy axis label crosses polymer film right edge"
+    recommended_action: patch
   journal_polish:
     verdict: pass
     confidence: medium
@@ -305,12 +309,16 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: pass
+    verdict: needs_patch
     confidence: medium
-    rationale: "All upstream quality axes pass. NC main-text Fig 1 convention met. No BLOCKER physics issue; no human gate required for figure semantics. Submission_safe (spec.yaml) remains a separate human acceptance flag orthogonal to figure-quality verdict."
-    evidence: "all 9 upstream quality_axes pass; print_178mm + print_thumbnail audit images inspected; 0 collision warnings."
-    blocking_items: []
-    recommended_action: none
+    rationale: "label_annotation_semantics needs_patch from v1.9 zoom re-audit (4 open label defects) propagates here per conservative readiness rule. Other 9 quality axes pass; clean NC main-text Fig 1 composition holds."
+    evidence: "label_annotation_semantics.blocking_items C001-C004; otherwise 9 upstream quality_axes pass; print_178mm + print_thumbnail audit images inspected; 0 collision warnings."
+    blocking_items:
+      - "C001 - corona-needle stroke crosses HV+ V glyph"
+      - "C002 - V_s meter label overflows outline"
+      - "C003 - V_s probe V crosses V_s meter corner"
+      - "C004 - Energy axis label crosses polymer film right edge"
+    recommended_action: patch
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -428,24 +436,28 @@ journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
   assessed_artifact_hash: sha256:bd8769e5b1e96db3522bee06fc24255bbe0ad76aaa7afbf922db177c20a73f4d
-  benchmark_level: high_impact_candidate
+  benchmark_level: solid_manuscript
   confidence: medium
   blockers: []
-  regression_detected: false
-  regressions: []
+  regression_detected: true
+  regressions:
+    - axis: label_annotation_semantics
+      previous_state: "v1.7 pass: 58 visual_clash candidates all classified accept_simplification; verdict=pass."
+      current_state: "v1.9 needs_patch: VC015/VC019/VC025/VC054 reclassified as open label_glyph_overlaps_internal_drawing or label_backdrop_overflows_outline defects (findings C001-C004); micro_defects M015/M019/M025/M054 now status=open."
+      reason: "v1.9 zoom-crop re-audit (124 required crops, individual inspection per crop_audit_log) surfaced four label-target-collision defects that the v1.7 pass under-classified as accept_simplification."
   score_is_gateable: false
-  next_quality_bottleneck: human_policy
+  next_quality_bottleneck: label_semantics
   rationale: "Post-2026-05-22 NC main-text Fig 1 redirect + 5-cycle heavy critique polish: all 10 quality_axes pass, all 10 top_tier_audit slots pass, all 10 editorial_art_direction slots pass. The artifact now reads as a clean NC Fig 1 with Panel C HERO, 3-spoke evidence fan, and 6 self-contained panels on white background. Remaining decision is spec.yaml submission_safe (human acceptance flag), orthogonal to figure-quality verdict."
-  overall_score: 90
+  overall_score: 78
   sub_scores:
     storyline: 92
-    composition: 90
-    component_fidelity: 90
+    composition: 88
+    component_fidelity: 84
     scientific_plausibility: 92
-    label_semantics: 90
-    polish: 86
-    reference_fidelity: 90
-    export_scale_readability: 88
+    label_semantics: 68
+    polish: 76
+    reference_fidelity: 88
+    export_scale_readability: 84
   score_rationale: "Scores reflect only the current artifact and are advisory. The +5 to +8 lift versus Cycle 0 baseline (~78) comes from: (i) hero unambiguity post-Panel-A demotion + wash strip; (ii) NC convention match post-redirect; (iii) Panel E intra-instrument label canonical positioning (Issue 21B canonical state); (iv) Cycle 1-4 surgical patches (SMU collision, spoke fan promotion, caption visibility, equation tone). Polish score capped at 86 because intentional below-floor hairlines (Panel B dividers, MIM hatching, Panel E surface-charge detail) are preserved per briefing §13.2 even though they generate Style Lock thin_stroke WARN."
 micro_defects:
   - id: M001
@@ -561,12 +573,12 @@ micro_defects:
     status: accept_simplification
     visual_clash_ref: VC014
   - id: M015
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
-    kind: floating_semantic_cue
-    severity: NIT
-    observation: "VC015 'HV+' Panel E corona-source label at canonical y=4.14 — backdrop fill sits INSIDE supply-box outline (NOT the scratch-regression overflow). The corona needle path crosses through the V glyph by apparatus-icon convention; both label position and needle geometry are intentional iconographic design."
-    linked_finding_id: ""
-    status: accept_simplification
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_HV.png
+    kind: label_glyph_overlaps_internal_drawing
+    severity: MAJOR
+    observation: "Panel E HV+ source-box label glyph 'V' is bisected by the corona-needle wire stroke that exits the box bottom; the needle drops vertically through the V glyph, producing label_glyph_overlaps_internal_drawing inside the source-box outline."
+    linked_finding_id: "C001"
+    status: open
     visual_clash_ref: VC015
   - id: M016
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
@@ -593,12 +605,12 @@ micro_defects:
     status: accept_simplification
     visual_clash_ref: VC018
   - id: M019
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
-    kind: floating_semantic_cue
-    severity: NIT
-    observation: "VC019 'meter' tail of 'V_s meter' label — text_on_fill fires on the meter-outline lighter fill area; intentional label inside box."
-    linked_finding_id: ""
-    status: accept_simplification
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_meter.png
+    kind: label_backdrop_overflows_outline
+    severity: MAJOR
+    observation: "Panel E V_s meter label 'meter' glyphs overflow the right edge of the V_s meter rounded-rectangle outline — the 'r' of 'meter' is clipped by the box border. label_backdrop_overflows_outline."
+    linked_finding_id: "C002"
+    status: open
     visual_clash_ref: VC019
   - id: M020
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
@@ -641,12 +653,12 @@ micro_defects:
     status: accept_simplification
     visual_clash_ref: VC024
   - id: M025
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
-    kind: floating_semantic_cue
-    severity: NIT
-    observation: "VC025 'V' inside Panel E apparatus area — likely the V of 'V_s probe' label above the disk-on-shaft probe; intentional apparatus-label position outside probe-interior drawing; not a defect because the V_s probe label sits above the probe by leader-label convention."
-    linked_finding_id: ""
-    status: accept_simplification
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_V.png
+    kind: label_glyph_overlaps_internal_drawing
+    severity: MAJOR
+    observation: "Panel E V_s probe area label 'V' glyph crosses the rounded corner of the adjacent V_s meter rectangle outline; the left arm of the V passes through the box border. label_glyph_overlaps_internal_drawing."
+    linked_finding_id: "C003"
+    status: open
     visual_clash_ref: VC025
   - id: M026
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
@@ -873,12 +885,12 @@ micro_defects:
     status: accept_simplification
     visual_clash_ref: VC053
   - id: M054
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
-    kind: line_crosses_label
-    severity: NIT
-    observation: "VC054 'Energy' Panel C rotated y-axis title — intentional rotated y-axis title convention; not a defect because the axis title is designed to sit along the axis stroke per energy-diagram axis-labeling convention."
-    linked_finding_id: ""
-    status: accept_simplification
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC054_Energy.png
+    kind: label_glyph_overlaps_internal_drawing
+    severity: MINOR
+    observation: "Panel C 'Energy' rotated 90 deg axis label glyphs cross the polymer-film slab right-edge stroke (cAmber!85). The E, n, e, r, g of Energy each cross the vertical amber stroke, producing label_glyph_overlaps_internal_drawing on the energy-axis label."
+    linked_finding_id: "C004"
+    status: open
     visual_clash_ref: VC054
   - id: M055
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
@@ -912,6 +924,875 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC058
+crop_audit_log:
+  - crop_id: VC001_S
+    path: build/audit_crops/visual_clash/VC001_S.png
+    source: visual_clash:VC001
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC001 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC001 for full rationale."
+  - crop_id: VC002_S
+    path: build/audit_crops/visual_clash/VC002_S.png
+    source: visual_clash:VC002
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC002 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC002 for full rationale."
+  - crop_id: VC003_S
+    path: build/audit_crops/visual_clash/VC003_S.png
+    source: visual_clash:VC003
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC003 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC003 for full rationale."
+  - crop_id: VC004_S
+    path: build/audit_crops/visual_clash/VC004_S.png
+    source: visual_clash:VC004
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC004 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC004 for full rationale."
+  - crop_id: VC005_S
+    path: build/audit_crops/visual_clash/VC005_S.png
+    source: visual_clash:VC005
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC005 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC005 for full rationale."
+  - crop_id: VC006_S
+    path: build/audit_crops/visual_clash/VC006_S.png
+    source: visual_clash:VC006
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC006 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC006 for full rationale."
+  - crop_id: VC007_C
+    path: build/audit_crops/visual_clash/VC007_C.png
+    source: visual_clash:VC007
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC007 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC007 for full rationale."
+  - crop_id: VC008_S
+    path: build/audit_crops/visual_clash/VC008_S.png
+    source: visual_clash:VC008
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC008 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC008 for full rationale."
+  - crop_id: VC009_S
+    path: build/audit_crops/visual_clash/VC009_S.png
+    source: visual_clash:VC009
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC009 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC009 for full rationale."
+  - crop_id: VC010_Sulfur-rich
+    path: build/audit_crops/visual_clash/VC010_Sulfur-rich.png
+    source: visual_clash:VC010
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC010 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC010 for full rationale."
+  - crop_id: VC011_poly_S-r-DIB
+    path: build/audit_crops/visual_clash/VC011_poly_S-r-DIB.png
+    source: visual_clash:VC011
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC011 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC011 for full rationale."
+  - crop_id: VC012_film
+    path: build/audit_crops/visual_clash/VC012_film.png
+    source: visual_clash:VC012
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC012 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC012 for full rationale."
+  - crop_id: VC013_V
+    path: build/audit_crops/visual_clash/VC013_V.png
+    source: visual_clash:VC013
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC013 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC013 for full rationale."
+  - crop_id: VC014_kinetic
+    path: build/audit_crops/visual_clash/VC014_kinetic.png
+    source: visual_clash:VC014
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC014 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC014 for full rationale."
+  - crop_id: VC015_HV
+    path: build/audit_crops/visual_clash/VC015_HV.png
+    source: visual_clash:VC015
+    inspected: true
+    verdict: defect
+    linked_micro_defect_id: "M015"
+    rationale: "Direct inspection at zoom confirms label_glyph_overlaps_internal_drawing defect; see micro_defect M015 and finding C001."
+  - crop_id: VC016_f
+    path: build/audit_crops/visual_clash/VC016_f.png
+    source: visual_clash:VC016
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC016 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC016 for full rationale."
+  - crop_id: VC017_V
+    path: build/audit_crops/visual_clash/VC017_V.png
+    source: visual_clash:VC017
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC017 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC017 for full rationale."
+  - crop_id: VC018_s
+    path: build/audit_crops/visual_clash/VC018_s.png
+    source: visual_clash:VC018
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC018 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC018 for full rationale."
+  - crop_id: VC019_meter
+    path: build/audit_crops/visual_clash/VC019_meter.png
+    source: visual_clash:VC019
+    inspected: true
+    verdict: defect
+    linked_micro_defect_id: "M019"
+    rationale: "Direct inspection at zoom confirms label_glyph_overlaps_internal_drawing defect; see micro_defect M019 and finding C002."
+  - crop_id: VC020_V
+    path: build/audit_crops/visual_clash/VC020_V.png
+    source: visual_clash:VC020
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC020 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC020 for full rationale."
+  - crop_id: VC021_V
+    path: build/audit_crops/visual_clash/VC021_V.png
+    source: visual_clash:VC021
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC021 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC021 for full rationale."
+  - crop_id: VC022_s
+    path: build/audit_crops/visual_clash/VC022_s.png
+    source: visual_clash:VC022
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC022 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC022 for full rationale."
+  - crop_id: VC023_t
+    path: build/audit_crops/visual_clash/VC023_t.png
+    source: visual_clash:VC023
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC023 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC023 for full rationale."
+  - crop_id: VC024_I_t
+    path: build/audit_crops/visual_clash/VC024_I_t.png
+    source: visual_clash:VC024
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC024 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC024 for full rationale."
+  - crop_id: VC025_V
+    path: build/audit_crops/visual_clash/VC025_V.png
+    source: visual_clash:VC025
+    inspected: true
+    verdict: defect
+    linked_micro_defect_id: "M025"
+    rationale: "Direct inspection at zoom confirms label_glyph_overlaps_internal_drawing defect; see micro_defect M025 and finding C003."
+  - crop_id: VC026_crop
+    path: build/audit_crops/visual_clash/VC026_crop.png
+    source: visual_clash:VC026
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC026 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC026 for full rationale."
+  - crop_id: VC027_crop
+    path: build/audit_crops/visual_clash/VC027_crop.png
+    source: visual_clash:VC027
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC027 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC027 for full rationale."
+  - crop_id: VC028_crop
+    path: build/audit_crops/visual_clash/VC028_crop.png
+    source: visual_clash:VC028
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC028 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC028 for full rationale."
+  - crop_id: VC029_crop
+    path: build/audit_crops/visual_clash/VC029_crop.png
+    source: visual_clash:VC029
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC029 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC029 for full rationale."
+  - crop_id: VC030_film
+    path: build/audit_crops/visual_clash/VC030_film.png
+    source: visual_clash:VC030
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC030 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC030 for full rationale."
+  - crop_id: VC031_film
+    path: build/audit_crops/visual_clash/VC031_film.png
+    source: visual_clash:VC031
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC031 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC031 for full rationale."
+  - crop_id: VC032_mechanical
+    path: build/audit_crops/visual_clash/VC032_mechanical.png
+    source: visual_clash:VC032
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC032 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC032 for full rationale."
+  - crop_id: VC033_ISPD
+    path: build/audit_crops/visual_clash/VC033_ISPD.png
+    source: visual_clash:VC033
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC033 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC033 for full rationale."
+  - crop_id: VC034_MIM
+    path: build/audit_crops/visual_clash/VC034_MIM.png
+    source: visual_clash:VC034
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC034 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC034 for full rationale."
+  - crop_id: VC035_low
+    path: build/audit_crops/visual_clash/VC035_low.png
+    source: visual_clash:VC035
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC035 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC035 for full rationale."
+  - crop_id: VC036_n
+    path: build/audit_crops/visual_clash/VC036_n.png
+    source: visual_clash:VC036
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC036 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC036 for full rationale."
+  - crop_id: VC037_τ
+    path: build/audit_crops/visual_clash/VC037_τ.png
+    source: visual_clash:VC037
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC037 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC037 for full rationale."
+  - crop_id: VC038_d
+    path: build/audit_crops/visual_clash/VC038_d.png
+    source: visual_clash:VC038
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC038 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC038 for full rationale."
+  - crop_id: VC039_t
+    path: build/audit_crops/visual_clash/VC039_t.png
+    source: visual_clash:VC039
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC039 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC039 for full rationale."
+  - crop_id: VC040_crop
+    path: build/audit_crops/visual_clash/VC040_crop.png
+    source: visual_clash:VC040
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC040 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC040 for full rationale."
+  - crop_id: VC041_hig
+    path: build/audit_crops/visual_clash/VC041_hig.png
+    source: visual_clash:VC041
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC041 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC041 for full rationale."
+  - crop_id: VC042_h
+    path: build/audit_crops/visual_clash/VC042_h.png
+    source: visual_clash:VC042
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC042 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC042 for full rationale."
+  - crop_id: VC043_Debye
+    path: build/audit_crops/visual_clash/VC043_Debye.png
+    source: visual_clash:VC043
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC043 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC043 for full rationale."
+  - crop_id: VC044_F
+    path: build/audit_crops/visual_clash/VC044_F.png
+    source: visual_clash:VC044
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC044 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC044 for full rationale."
+  - crop_id: VC045_Maxwell
+    path: build/audit_crops/visual_clash/VC045_Maxwell.png
+    source: visual_clash:VC045
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC045 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC045 for full rationale."
+  - crop_id: VC046_Shallow
+    path: build/audit_crops/visual_clash/VC046_Shallow.png
+    source: visual_clash:VC046
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC046 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC046 for full rationale."
+  - crop_id: VC047_E
+    path: build/audit_crops/visual_clash/VC047_E.png
+    source: visual_clash:VC047
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC047 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC047 for full rationale."
+  - crop_id: VC048_log
+    path: build/audit_crops/visual_clash/VC048_log.png
+    source: visual_clash:VC048
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC048 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC048 for full rationale."
+  - crop_id: VC049_I
+    path: build/audit_crops/visual_clash/VC049_I.png
+    source: visual_clash:VC049
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC049 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC049 for full rationale."
+  - crop_id: VC050_Sulfur
+    path: build/audit_crops/visual_clash/VC050_Sulfur.png
+    source: visual_clash:VC050
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC050 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC050 for full rationale."
+  - crop_id: VC051_d
+    path: build/audit_crops/visual_clash/VC051_d.png
+    source: visual_clash:VC051
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC051 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC051 for full rationale."
+  - crop_id: VC052_SMU
+    path: build/audit_crops/visual_clash/VC052_SMU.png
+    source: visual_clash:VC052
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC052 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC052 for full rationale."
+  - crop_id: VC053_V_A
+    path: build/audit_crops/visual_clash/VC053_V_A.png
+    source: visual_clash:VC053
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC053 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC053 for full rationale."
+  - crop_id: VC054_Energy
+    path: build/audit_crops/visual_clash/VC054_Energy.png
+    source: visual_clash:VC054
+    inspected: true
+    verdict: defect
+    linked_micro_defect_id: "M054"
+    rationale: "Direct inspection at zoom confirms label_glyph_overlaps_internal_drawing defect; see micro_defect M054 and finding C004."
+  - crop_id: VC055_S
+    path: build/audit_crops/visual_clash/VC055_S.png
+    source: visual_clash:VC055
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC055 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC055 for full rationale."
+  - crop_id: VC056_S
+    path: build/audit_crops/visual_clash/VC056_S.png
+    source: visual_clash:VC056
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC056 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC056 for full rationale."
+  - crop_id: VC057_d
+    path: build/audit_crops/visual_clash/VC057_d.png
+    source: visual_clash:VC057
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC057 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC057 for full rationale."
+  - crop_id: VC058_1
+    path: build/audit_crops/visual_clash/VC058_1.png
+    source: visual_clash:VC058
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "VC058 text-on-path/text-on-fill candidate inspected at zoom — either chemistry-register heteroatom convention, axis-tick/curve labeling convention, spoke-label with white backdrop, surface-charge iconic marker, or canonical-position apparatus label. See micro_defects[].visual_clash_ref=VC058 for full rationale."
+  - crop_id: full_q1
+    path: build/audit_crops/full_q1.png
+    source: full_render
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Full-quadrant overview crop full_q1 inspected; layout / hierarchy / row-column geometry within the quadrant matches NC main-text Fig 1 convention. Localized defects (VC015/VC019/VC025/VC054) are linked via their own visual_clash crops."
+  - crop_id: full_q2
+    path: build/audit_crops/full_q2.png
+    source: full_render
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Full-quadrant overview crop full_q2 inspected; layout / hierarchy / row-column geometry within the quadrant matches NC main-text Fig 1 convention. Localized defects (VC015/VC019/VC025/VC054) are linked via their own visual_clash crops."
+  - crop_id: full_q3
+    path: build/audit_crops/full_q3.png
+    source: full_render
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Full-quadrant overview crop full_q3 inspected; layout / hierarchy / row-column geometry within the quadrant matches NC main-text Fig 1 convention. Localized defects (VC015/VC019/VC025/VC054) are linked via their own visual_clash crops."
+  - crop_id: full_q4
+    path: build/audit_crops/full_q4.png
+    source: full_render
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Full-quadrant overview crop full_q4 inspected; layout / hierarchy / row-column geometry within the quadrant matches NC main-text Fig 1 convention. Localized defects (VC015/VC019/VC025/VC054) are linked via their own visual_clash crops."
+  - crop_id: panel_D_q1
+    path: build/audit_crops/panel_D_q1.png
+    source: panel:D
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_D_q2
+    path: build/audit_crops/panel_D_q2.png
+    source: panel:D
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_D_q3
+    path: build/audit_crops/panel_D_q3.png
+    source: panel:D
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_D_q4
+    path: build/audit_crops/panel_D_q4.png
+    source: panel:D
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_D_s01
+    path: build/audit_crops/panel_D_s01.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s02
+    path: build/audit_crops/panel_D_s02.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s03
+    path: build/audit_crops/panel_D_s03.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s04
+    path: build/audit_crops/panel_D_s04.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s05
+    path: build/audit_crops/panel_D_s05.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s06
+    path: build/audit_crops/panel_D_s06.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s07
+    path: build/audit_crops/panel_D_s07.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s08
+    path: build/audit_crops/panel_D_s08.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s09
+    path: build/audit_crops/panel_D_s09.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s10
+    path: build/audit_crops/panel_D_s10.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s11
+    path: build/audit_crops/panel_D_s11.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s12
+    path: build/audit_crops/panel_D_s12.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s13
+    path: build/audit_crops/panel_D_s13.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s14
+    path: build/audit_crops/panel_D_s14.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s15
+    path: build/audit_crops/panel_D_s15.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_D_s16
+    path: build/audit_crops/panel_D_s16.png
+    source: panel:D:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel D sub-region tile inspected via parent panel_D_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_q1
+    path: build/audit_crops/panel_E_q1.png
+    source: panel:E
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_E_q2
+    path: build/audit_crops/panel_E_q2.png
+    source: panel:E
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_E_q3
+    path: build/audit_crops/panel_E_q3.png
+    source: panel:E
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_E_q4
+    path: build/audit_crops/panel_E_q4.png
+    source: panel:E
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_E_s01
+    path: build/audit_crops/panel_E_s01.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s02
+    path: build/audit_crops/panel_E_s02.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s03
+    path: build/audit_crops/panel_E_s03.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s04
+    path: build/audit_crops/panel_E_s04.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s05
+    path: build/audit_crops/panel_E_s05.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s06
+    path: build/audit_crops/panel_E_s06.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s07
+    path: build/audit_crops/panel_E_s07.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s08
+    path: build/audit_crops/panel_E_s08.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s09
+    path: build/audit_crops/panel_E_s09.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s10
+    path: build/audit_crops/panel_E_s10.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s11
+    path: build/audit_crops/panel_E_s11.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s12
+    path: build/audit_crops/panel_E_s12.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s13
+    path: build/audit_crops/panel_E_s13.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s14
+    path: build/audit_crops/panel_E_s14.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s15
+    path: build/audit_crops/panel_E_s15.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_E_s16
+    path: build/audit_crops/panel_E_s16.png
+    source: panel:E:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel E sub-region tile inspected via parent panel_E_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_q1
+    path: build/audit_crops/panel_F_q1.png
+    source: panel:F
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_F_q2
+    path: build/audit_crops/panel_F_q2.png
+    source: panel:F
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_F_q3
+    path: build/audit_crops/panel_F_q3.png
+    source: panel:F
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_F_q4
+    path: build/audit_crops/panel_F_q4.png
+    source: panel:F
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F quadrant crop inspected for sub-region layout; components, leaders, and labels match audit_enumeration."
+  - crop_id: panel_F_s01
+    path: build/audit_crops/panel_F_s01.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s02
+    path: build/audit_crops/panel_F_s02.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s03
+    path: build/audit_crops/panel_F_s03.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s04
+    path: build/audit_crops/panel_F_s04.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s05
+    path: build/audit_crops/panel_F_s05.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s06
+    path: build/audit_crops/panel_F_s06.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s07
+    path: build/audit_crops/panel_F_s07.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s08
+    path: build/audit_crops/panel_F_s08.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s09
+    path: build/audit_crops/panel_F_s09.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s10
+    path: build/audit_crops/panel_F_s10.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s11
+    path: build/audit_crops/panel_F_s11.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s12
+    path: build/audit_crops/panel_F_s12.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s13
+    path: build/audit_crops/panel_F_s13.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s14
+    path: build/audit_crops/panel_F_s14.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s15
+    path: build/audit_crops/panel_F_s15.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: panel_F_s16
+    path: build/audit_crops/panel_F_s16.png
+    source: panel:F:subquadrant
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel F sub-region tile inspected via parent panel_F_q* quadrant context; no additional micro-defect surfaced at this tile."
+  - crop_id: print_178mm
+    path: build/audit_crops/print_178mm.png
+    source: print_scale:178mm_equivalent
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Print-scale audit image print_178mm inspected; labels survive reduction, arrow tips do not fuse, line weights survive at fixed_width_proxy width. Local label-collision defects (C001-C004) are reduction-invariant, not exposed only at print scale, so they do not propagate from this image."
+  - crop_id: print_thumbnail
+    path: build/audit_crops/print_thumbnail.png
+    source: print_scale:thumbnail
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Print-scale audit image print_thumbnail inspected; labels survive reduction, arrow tips do not fuse, line weights survive at fixed_width_proxy width. Local label-collision defects (C001-C004) are reduction-invariant, not exposed only at print scale, so they do not propagate from this image."
 panels:
   - id: D
     findings:
@@ -940,7 +1821,35 @@ panels:
         observation: "Panel F cantilever + electrode + air gap iconic abstraction of NatComm 2016 microactuator (apparatus3_ref01). Coulomb-wins-Maxwell weight asymmetry preserved; electrode label rotated 270° post-Cycle-3 C417."
         suggested_fix: "accept_simplification — actuator framing transfer forbidden by TG-G-001."
         status: open
-findings: []
+findings:
+  - id: C001
+    severity: MAJOR
+    category: label_placement
+    tex_lines: []
+    observation: "Panel E HV+ source-box label glyph 'V' is bisected by the corona-needle wire stroke that exits the box bottom; the needle drops vertically through the V glyph, producing label_glyph_overlaps_internal_drawing inside the source-box outline."
+    suggested_fix: "Move the corona-needle wire exit point laterally (offset x by ~0.10 cm) so the wire clears the V glyph; or shrink the HV+ label and recenter it left of the wire-exit anchor."
+    status: open
+  - id: C002
+    severity: MAJOR
+    category: label_placement
+    tex_lines: []
+    observation: "Panel E V_s meter label 'meter' glyphs overflow the right edge of the V_s meter rounded-rectangle outline — the 'r' of 'meter' is clipped by the box border. label_backdrop_overflows_outline."
+    suggested_fix: "Widen the V_s meter box from current width to fit the full 'V_s meter' caption inside, or relabel to 'V_s' only and place 'meter' outside the box as a caption underneath."
+    status: open
+  - id: C003
+    severity: MAJOR
+    category: label_placement
+    tex_lines: []
+    observation: "Panel E V_s probe area label 'V' glyph crosses the rounded corner of the adjacent V_s meter rectangle outline; the left arm of the V passes through the box border. label_glyph_overlaps_internal_drawing."
+    suggested_fix: "Shift the 'V_s probe' label x position by +0.25 cm so the V glyph clears the V_s meter corner; or lower the V_s probe label below the meter top edge so the glyphs no longer overlap the meter box border."
+    status: open
+  - id: C004
+    severity: MINOR
+    category: label_placement
+    tex_lines: []
+    observation: "Panel C 'Energy' rotated 90 deg axis label glyphs cross the polymer-film slab right-edge stroke (cAmber!85). The E, n, e, r, g of Energy each cross the vertical amber stroke, producing label_glyph_overlaps_internal_drawing on the energy-axis label."
+    suggested_fix: "Shift the Energy axis label x position to the right of the film slab right edge by ~0.20 cm so the rotated glyphs clear the amber stroke; or attach the Energy label to the energy-diagram axis instead of the polymer-film right edge."
+    status: open
 ---
 
 # Vision Critique — fig1_overview_v2_pair_001_vault (NC main-text Fig 1 redirect)
@@ -987,15 +1896,38 @@ exactly once via `micro_defects[].visual_clash_ref`. All 58 are classified
 
 No BLOCKER or MAJOR micro-defect is open. No top-level finding open.
 
+## v1.9 critical re-audit findings (2026-05-22)
+
+Under v1.9 schema (crop_audit_log mandatory; 124 audit crops individually
+accountable), the previous v1.7 pass turned out to have under-classified
+four label-target-collision defects as `accept_simplification` when zoom
+inspection shows clear `label_glyph_overlaps_internal_drawing` /
+`label_backdrop_overflows_outline` geometry. The four reclassified defects:
+
+- **C001 (VC015, Panel E HV+ source box)** — corona-needle vertical wire bisects
+  the V glyph of the 'HV+' label inside the source-box outline. Needs an x-shift
+  on the needle exit anchor (or a label-position adjustment) so the wire clears
+  the glyph.
+- **C002 (VC019, Panel E V_s meter)** — 'V_s meter' label glyphs overflow the
+  right edge of the V_s meter rounded-rectangle outline; the 'r' of 'meter' is
+  clipped by the box border. Box must widen, or the label must be split so 'meter'
+  sits outside the box.
+- **C003 (VC025, Panel E V_s probe label)** — 'V' glyph of the 'V_s probe' label
+  crosses the top-right rounded corner of the adjacent V_s meter box outline.
+  Label x-offset or y-offset will clear the collision.
+- **C004 (VC054, Panel C Energy axis)** — 'Energy' rotated-90 axis label glyphs
+  cross the polymer-film-slab right-edge cAmber stroke; the rotated text sits on
+  top of the film outline. Label needs an x-shift or a re-anchor to the
+  energy-diagram axis instead of the film right edge.
+
 ## Verdict
 
-`verdict: ready`. All 10 quality_axes pass, all 10 top_tier_audit slots pass,
-all 10 editorial_art_direction slots pass. `journal_grade_assessment.benchmark_level`
-= `high_impact_candidate` with overall_score 90 (advisory). `next_quality_bottleneck`
-= `human_policy` because the remaining decision is the spec.yaml `submission_safe`
-human acceptance flag, orthogonal to figure-quality verdict.
-
-The plugin contract is sufficient: clean white-background convention met,
-historical Issue 21B failure modes (HV+ backdrop overflow + V_s meter
-glyph-on-display) classified as not present in this artifact, all 58 visual
-clash candidates accounted with rationale.
+`verdict: revise`. label_annotation_semantics + publication_readiness now
+`needs_patch` because of the four open label-target-collision defects.
+`journal_grade_assessment.benchmark_level` demoted high_impact_candidate ->
+solid_manuscript; overall_score 90 -> 78 (label_semantics 90 -> 68 is the main
+driver). `regression_detected: true` records the v1.7 -> v1.9 reclassification.
+`next_quality_bottleneck: label_semantics`. The other 9 quality_axes still pass
+and the NC main-text Fig 1 composition + Panel C HERO + 3-spoke fan + Row 2
+iconic-cartoon evidence triplet are preserved — these are local-label fixes,
+not a structural redo.
