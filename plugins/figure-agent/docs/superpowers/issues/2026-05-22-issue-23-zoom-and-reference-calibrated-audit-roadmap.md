@@ -1,7 +1,7 @@
 # Issue 23: Zoom and Reference-Calibrated Audit Roadmap
 
 **Date:** 2026-05-22 KST
-**Status:** 23A-C and 23E completed; 23D open
+**Status:** 23A-E completed
 **Type:** post-closeout audit-quality hardening
 
 ## Problem
@@ -47,6 +47,7 @@ Dogfood showed two practical facts:
      and must-avoid traits explicit critique inputs.
 
 4. **Issue 23D: Reference-Calibrated Scoring Guidance**
+   - Completed in commit `57e9bad`.
    - Uses the reference pack to sharpen advisory scores and benchmark levels.
    - Keeps scores advisory only. Scores do not unlock export, release,
      acceptance, or human gates.

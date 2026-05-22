@@ -1,7 +1,7 @@
 # Issue 23D: Reference-Calibrated Scoring Guidance
 
 **Date:** 2026-05-22 KST
-**Status:** planned
+**Status:** completed in commit `57e9bad`
 **Type:** advisory score calibration
 **Parent:** `2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`
 **Blocked by:** Issue 23C
@@ -54,16 +54,30 @@ Expected schema policy:
 
 ## Acceptance Criteria
 
-- [ ] `/fig_critique` brief explains how to score against a reference pack when
+- [x] `/fig_critique` brief explains how to score against a reference pack when
   one exists.
-- [ ] Reference-calibrated scoring is introduced through an explicit schema /
+- [x] Reference-calibrated scoring is introduced through an explicit schema /
   rubric version policy.
-- [ ] Validator accepts complete reference-calibration scoring metadata.
-- [ ] Validator rejects partial reference-calibration scoring metadata.
-- [ ] `fig_loop` surfaces compact reference-calibration score metadata.
-- [ ] Scores remain advisory and cannot change release action selection.
-- [ ] Tests cover complete metadata, partial metadata rejection, loop surfacing,
+- [x] Validator accepts complete reference-calibration scoring metadata.
+- [x] Validator rejects partial reference-calibration scoring metadata.
+- [x] `fig_loop` surfaces compact reference-calibration score metadata.
+- [x] Scores remain advisory and cannot change release action selection.
+- [x] Tests cover complete metadata, partial metadata rejection, loop surfacing,
   and no release-gate effect.
+
+## Implementation Notes
+
+- The critique/rubric contract is bumped to `figure-agent.critique.v1.9` /
+  `figure-agent.critique-rubric.v1.9`.
+- `journal_grade_assessment.reference_calibration` is optional, but when present
+  in v1.9 it must be complete and well-formed.
+- Legacy v1.8 and older critiques remain parseable; malformed future
+  `reference_calibration` fields are not made binding outside v1.9.
+- `fig_loop` surfaces a compact `reference_calibration_summary` for v1.9
+  critiques only.
+- `/fig_driver` release action selection remains keyed to existing readiness,
+  publication, human, and final-artifact gates; advisory scores do not unlock
+  release.
 
 ## Suggested Files
 
