@@ -22,6 +22,7 @@ from critique_contract import (  # noqa: E402
     load_critique_frontmatter,
 )
 from critique_evidence_lint import critique_evidence_violations  # noqa: E402
+from critique_schema_vocab import MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -32,11 +33,13 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
-    {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9"}
+    {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9", "figure-agent.critique.v1.10"}
 )
+STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset({"figure-agent.critique.v1.10"})
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = (
     "false positive",
@@ -193,6 +196,35 @@ def _visual_clash_accept_simplification_violations(
         ):
             continue
         defect_id = raw_item.get("id")
+        if frontmatter.get("schema") in STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS:
+            reason = raw_item.get("accept_simplification_reason")
+            rationale = raw_item.get("accept_simplification_rationale")
+            if reason not in MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS:
+                violations.append(
+                    CritiqueLintViolation(
+                        severity="blocker",
+                        category="visual_clash_accept_simplification",
+                        message=(
+                            "visual-clash-linked accept_simplification requires "
+                            "accept_simplification_reason with a supported enum value: "
+                            f"{visual_clash_ref.strip()} ({defect_id})"
+                        ),
+                    )
+                )
+                continue
+            if not isinstance(rationale, str) or not rationale.strip():
+                violations.append(
+                    CritiqueLintViolation(
+                        severity="blocker",
+                        category="visual_clash_accept_simplification",
+                        message=(
+                            "visual-clash-linked accept_simplification requires "
+                            "accept_simplification_rationale: "
+                            f"{visual_clash_ref.strip()} ({defect_id})"
+                        ),
+                    )
+                )
+            continue
         observation = raw_item.get("observation")
         if not isinstance(observation, str):
             observation = ""
@@ -571,6 +603,11 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
                 message=str(exc),
             )
         ]
+    if violations:
+        return violations
+
+    if frontmatter.get("schema") in STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS:
+        violations.extend(_visual_clash_accept_simplification_violations(frontmatter))
     if violations:
         return violations
 

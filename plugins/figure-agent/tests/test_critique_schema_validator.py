@@ -142,6 +142,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
     }:
         frontmatter["micro_defects"] = [
             {
@@ -160,11 +161,16 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.7",
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
         }
-    if schema in {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9"}:
+    if schema in {
+        "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
+    }:
         frontmatter["crop_audit_log"] = [
             {
                 "crop_id": "full_q1",
@@ -230,6 +236,92 @@ def test_validate_critique_schema_accepts_v1_9_reference_calibrated_score() -> N
     }
 
     validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_10_structured_accept_simplification() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
+    frontmatter["micro_defects"] = [
+        {
+            "id": "M001",
+            "crop": "examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png",
+            "kind": "line_crosses_label",
+            "severity": "MAJOR",
+            "observation": "VC001 is a detector false positive on a decorative background texture",
+            "linked_finding_id": "",
+            "visual_clash_ref": "VC001",
+            "status": "accept_simplification",
+            "accept_simplification_reason": "false_positive",
+            "accept_simplification_rationale": (
+                "VC001 marks a decorative texture behind the label, not a label collision."
+            ),
+        }
+    ]
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M001"
+
+    validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_10_missing_accept_reason() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
+    frontmatter["micro_defects"] = [
+        {
+            "id": "M001",
+            "crop": "examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png",
+            "kind": "line_crosses_label",
+            "severity": "MAJOR",
+            "observation": "VC001 is accepted without a structured reason",
+            "linked_finding_id": "",
+            "visual_clash_ref": "VC001",
+            "status": "accept_simplification",
+        }
+    ]
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M001"
+
+    with pytest.raises(CritiqueContractError, match="accept_simplification_reason"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_10_unknown_accept_reason() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
+    frontmatter["micro_defects"] = [
+        {
+            "id": "M001",
+            "crop": "examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png",
+            "kind": "line_crosses_label",
+            "severity": "MAJOR",
+            "observation": "VC001 is accepted with an unsupported reason",
+            "linked_finding_id": "",
+            "visual_clash_ref": "VC001",
+            "status": "accept_simplification",
+            "accept_simplification_reason": "looks_ok",
+            "accept_simplification_rationale": "VC001 was reviewed and looks acceptable.",
+        }
+    ]
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M001"
+
+    with pytest.raises(CritiqueContractError, match="accept_simplification_reason"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_10_missing_accept_rationale() -> None:
+    frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
+    frontmatter["micro_defects"] = [
+        {
+            "id": "M001",
+            "crop": "examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png",
+            "kind": "line_crosses_label",
+            "severity": "MAJOR",
+            "observation": "VC001 is accepted without a structured rationale",
+            "linked_finding_id": "",
+            "visual_clash_ref": "VC001",
+            "status": "accept_simplification",
+            "accept_simplification_reason": "false_positive",
+        }
+    ]
+    frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M001"
+
+    with pytest.raises(CritiqueContractError, match="accept_simplification_rationale"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_partial_v1_9_reference_calibration() -> None:

@@ -1,7 +1,7 @@
 # Issue 24: Audit Gate Hardening Roadmap
 
 **Date:** 2026-05-22 KST
-**Status:** 24A-D implemented; 24E open
+**Status:** 24A-E implemented
 **Type:** post-Issue-23 audit-system hardening
 
 ## Problem
@@ -54,6 +54,7 @@ freshly bound to the exact image that the host LLM reviewed.
      so the plugin does not rely only on host-vision reruns to prevent relapse.
 
 5. **Issue 24E: Structured Accept-Simplification Reasons**
+   - Implemented in this branch.
    - Current lint checks visual-clash-linked `accept_simplification` with prose
      length and keyword heuristics.
    - Required fix: introduce a structured reason enum plus rationale text so
