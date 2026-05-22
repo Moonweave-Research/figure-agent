@@ -1115,16 +1115,17 @@
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
-% Iter 18 (2026-05-23): user feedback — iter 17 anchor=west(4.72) placed
-% the label so its tail 'film' word's last letter ended at TikZ x=5.95
-% which crossed into the polymer slab (slab left x=5.90), making the 'm'
-% sit on the cAmber gradient. Moved the label INSIDE the slab itself at
-% slab x-center (6.675, 3.50) anchor=center — matches Panel D MIM 'polymer
-% film' italic-on-slab convention. Leader + connector dot removed since
-% label now sits on the labeled object.
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!65!black,
-      anchor=center] at (6.675, 3.525) {polymer film};
+% Iter 19 (2026-05-23): polymer film label REMOVED from Panel E entirely.
+% Sequence of attempts: (iter 17) left-margin with leader → text crossed
+% D/E column rule; (iter 18) inside slab → ⊕ surface charges competed for
+% the 0.15 cm slab vertical space; (iter 19a) below substrate as Panel-C
+% style caption → spatially disconnected from slab, looked like a V_s(t)
+% plot subtitle instead. Self-identifying material wins: cAmber gradient
+% slab + gray substrate stack + 4 surface ⊕ charges already reads as
+% 'polymer film on conductor' per figure-wide cAmber=polymer convention
+% (Panel A chain bond, Panel C film, Panel D MIM polymer film, Panel F
+% cantilever all use the same cAmber identity). No label needed in this
+% iconic-cartoon register.
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical
