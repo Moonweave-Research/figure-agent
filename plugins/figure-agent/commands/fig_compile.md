@@ -27,6 +27,9 @@ Steps:
    WARN-tier lints are report-only and include thin strokes, missing flagship macros,
    filled labels that may be overpainted by later draw/path commands, and short
    double-headed arrows whose tips may fuse at manuscript scale.
+   If the last edit was a fixed panel/subregion move, run
+   `uv run python3 scripts/tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`
+   first and inspect the dry-run diff before applying `--write`.
 3. If the fixture declares `spec.yaml.text_boundary_layout`, refresh the
    generated checker contract before compiling:
    `uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write`.
