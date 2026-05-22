@@ -2448,6 +2448,75 @@ def test_infer_stage_returns_exports_substate_field(tmp_path: Path) -> None:
     assert result["exports_substate"] == "MISSING"
 
 
+def test_infer_stage_returns_audit_evidence_summary(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "auditfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    (fig_dir / "auditfig.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "build").mkdir()
+    (fig_dir / "build" / "auditfig.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, "auditfig", schema="figure-agent.critique.v1.10")
+
+    result = infer_stage(fig_dir)
+
+    assert result["audit_evidence"]["evaluation_state"] == "missing_input"
+    assert result["audit_evidence"]["blocking_items"] == ["build/visual_clash.json"]
+
+
+def test_print_single_shows_audit_evidence_line(tmp_path: Path, capsys) -> None:
+    fig_dir = tmp_path / "auditfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    (fig_dir / "auditfig.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "build").mkdir()
+    (fig_dir / "build" / "auditfig.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, "auditfig", schema="figure-agent.critique.v1.10")
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fig_dir)
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+
+    assert "Audit evidence: missing_input" in captured.out
+    assert "blocking=build/visual_clash.json" in captured.out
+    assert "next=/fig_compile auditfig" in captured.out
+
+
+def test_no_arg_summary_shows_actionable_audit_evidence(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    fig_dir = examples_dir / "auditfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    (fig_dir / "reference").mkdir()
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    (fig_dir / "auditfig.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "build").mkdir()
+    (fig_dir / "build" / "auditfig.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, "auditfig", schema="figure-agent.critique.v1.10")
+    monkeypatch.chdir(tmp_path)
+
+    import status as status_mod
+
+    old_argv = sys.argv
+    sys.argv = ["status.py"]
+    try:
+        status_mod.main()
+    finally:
+        sys.argv = old_argv
+
+    captured = capsys.readouterr()
+    assert "auditfig  stage 3/4" in captured.out
+    assert "audit: missing_input" in captured.out
+
+
 def test_infer_stage_returns_status_vector_for_ready_final(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -242,6 +242,38 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
 
 
+def test_driver_summary_includes_actionable_audit_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "release_ready": False,
+            "critique_state": "FRESH",
+            "audit_evidence": {
+                "schema": "figure-agent.audit-evidence-summary.v1",
+                "fixture": "driver_demo",
+                "critique_schema": "figure-agent.critique.v1.10",
+                "evaluation_state": "needs_action",
+                "blocking_items": ["VC050"],
+                "next_action": "/fig_critique driver_demo",
+                "reason": "visual-clash candidates are not fully accounted",
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["audit_evidence"]["evaluation_state"] == "needs_action"
+    assert summary["audit_evidence"]["blocking_items"] == ["VC050"]
+    assert "audit evidence needs_action" in summary["reason"]
+    assert summary["action"] == "run_fig_loop"
+
+
 def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
     tmp_path: Path,
 ) -> None:

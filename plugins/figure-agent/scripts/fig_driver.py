@@ -154,6 +154,12 @@ def _summary(
             code = first_blocker.get("code")
             if isinstance(code, str) and code not in {"", "none"}:
                 reason = f"{reason} first blocker {code}."
+    audit_evidence = status.get("audit_evidence")
+    if isinstance(audit_evidence, dict):
+        audit_state = audit_evidence.get("evaluation_state")
+        audit_reason = audit_evidence.get("reason")
+        if audit_state in {"needs_action", "missing_input", "stale_or_mismatched"}:
+            reason = f"{reason} audit evidence {audit_state}: {audit_reason}."
     summary = {
         "schema": SCHEMA,
         "fixture": name,
@@ -170,6 +176,8 @@ def _summary(
     }
     if isinstance(status_explanation, dict):
         summary["status_explanation"] = status_explanation
+    if isinstance(audit_evidence, dict):
+        summary["audit_evidence"] = audit_evidence
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
     if closeout is not None:

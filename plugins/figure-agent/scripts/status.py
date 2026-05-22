@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import status_next_policy
 import status_readiness_policy
+from audit_evidence_summary import summarize_audit_evidence
 from export_freshness import EXPORT_STALE, compute_export_state
 from inputs import parse_spec
 from publication_gate import publication_gate_summary
@@ -249,6 +250,11 @@ def _with_status_explanation(result: dict) -> dict:
     return result
 
 
+def _finalize_status(result: dict, example_dir: Path) -> dict:
+    result["audit_evidence"] = summarize_audit_evidence(example_dir)
+    return _with_status_explanation(result)
+
+
 def _append_reference_image_check(
     checks: list[tuple[str, str]], notes: list[str], spec: dict, example_dir: Path
 ) -> None:
@@ -376,7 +382,7 @@ def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
     if not example_dir.exists() or not example_dir.is_dir():
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 0,
             "name": name,
             "checks": [],
@@ -399,7 +405,7 @@ def infer_stage(example_dir: Path) -> dict:
                 CRITIQUE_NOT_REQUIRED,
                 _default_final_artifact(name),
             ),
-        })
+        }, example_dir)
 
     spec_path = example_dir / "spec.yaml"
     tex_path = example_dir / f"{name}.tex"
@@ -452,7 +458,7 @@ def infer_stage(example_dir: Path) -> dict:
     if spec_path.exists() and not briefing_path.exists():
         checks.append(("spec_yaml", "present"))
         checks.append(("briefing_md", "missing"))
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 1,
             "name": name,
             "checks": checks,
@@ -476,7 +482,7 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        })
+        }, example_dir)
 
     # Stage 4: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
@@ -506,7 +512,7 @@ def infer_stage(example_dir: Path) -> dict:
             final_artifact=final_artifact,
             accepted=accepted,
         )
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 4,
             "name": name,
             "checks": checks,
@@ -524,13 +530,13 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        })
+        }, example_dir)
 
     # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 3,
             "name": name,
             "checks": checks,
@@ -554,7 +560,7 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        })
+        }, example_dir)
 
     # Stage 2: tex exists AND (no build pdf OR pdf stale relative to source set)
     if tex_path.exists():
@@ -564,7 +570,7 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 2,
             "name": name,
             "checks": checks,
@@ -588,12 +594,12 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        })
+        }, example_dir)
 
     # Stage 1: spec.yaml exists, no .tex authored yet
     if spec_path.exists():
         checks.append(("spec_yaml", "present"))
-        return _with_status_explanation({
+        return _finalize_status({
             "stage": 1,
             "name": name,
             "checks": checks,
@@ -617,10 +623,10 @@ def infer_stage(example_dir: Path) -> dict:
                 final_artifact,
                 publication_gate,
             ),
-        })
+        }, example_dir)
 
     # Stage 0 fallback (directory exists but no spec.yaml)
-    return _with_status_explanation({
+    return _finalize_status({
         "stage": 0,
         "name": name,
         "checks": [],
@@ -644,7 +650,7 @@ def infer_stage(example_dir: Path) -> dict:
             _default_final_artifact(name),
             publication_gate,
         ),
-    })
+    }, example_dir)
 
 
 def _print_single(result: dict) -> None:
@@ -666,6 +672,20 @@ def _print_single(result: dict) -> None:
             f"{result.get('final_artifact_kind', '?')} "
             f"{result.get('final_artifact_state', '?')} "
             f"{result.get('final_artifact_path', '?')}"
+        )
+    audit_evidence = result.get("audit_evidence")
+    if isinstance(audit_evidence, dict):
+        blocking_items = audit_evidence.get("blocking_items")
+        blocking_text = ""
+        if isinstance(blocking_items, list) and blocking_items:
+            blocking_text = f" blocking={','.join(str(item) for item in blocking_items[:5])}"
+        next_action = audit_evidence.get("next_action")
+        next_text = f" next={next_action}" if next_action else ""
+        print(
+            "  Audit evidence: "
+            f"{audit_evidence.get('evaluation_state', '?')} — "
+            f"{audit_evidence.get('reason', '?')}"
+            f"{blocking_text}{next_text}"
         )
     final_ready = str(bool(result.get("final_ready"))).lower()
     print(
@@ -723,6 +743,11 @@ def main() -> int:
             publication_gate_state = result.get("publication_gate_state")
             if publication_gate_state and publication_gate_state != "NOT_APPLICABLE":
                 line = f"{line}  publication: {publication_gate_state}"
+            audit_evidence = result.get("audit_evidence")
+            if isinstance(audit_evidence, dict):
+                audit_state = audit_evidence.get("evaluation_state")
+                if audit_state not in {"passed", "legacy", "not_applicable"}:
+                    line = f"{line}  audit: {audit_state}"
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)
