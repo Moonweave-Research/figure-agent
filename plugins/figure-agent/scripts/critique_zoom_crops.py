@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from PIL import Image
+from quality_manifest import file_sha256
 
 CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
 VISUAL_CLASH_CROP_MIN_WIDTH_PX = 600
@@ -368,7 +369,16 @@ def _write_crop_manifest(
     crops: list[dict[str, Any]],
 ) -> None:
     output_path = example_dir / "build" / "audit_crops" / "manifest.json"
-    manifest_crops = sorted(crops, key=lambda item: str(item.get("id") or ""))
+    manifest_crops: list[dict[str, Any]] = []
+    for crop in crops:
+        item = dict(crop)
+        path = item.get("path")
+        if isinstance(path, str) and path.strip():
+            crop_path = example_dir / path
+            if crop_path.is_file():
+                item["sha256"] = file_sha256(crop_path)
+        manifest_crops.append(item)
+    manifest_crops = sorted(manifest_crops, key=lambda item: str(item.get("id") or ""))
     payload = {
         "schema": CROP_MANIFEST_SCHEMA,
         "fixture": example_dir.name,
