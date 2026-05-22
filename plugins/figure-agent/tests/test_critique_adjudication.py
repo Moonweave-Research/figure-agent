@@ -1102,6 +1102,49 @@ def test_build_adjudication_scaffold_accepts_v1_4_major_micro_defect_simplificat
     assert scaffold["source_critique_hash"] == file_sha256(critique)
 
 
+def test_build_adjudication_scaffold_rejects_v1_10_vague_visual_clash_simplification(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    micro_defects_yaml = (
+        "micro_defects:\n"
+        "  - id: M001\n"
+        "    crop: examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png\n"
+        "    kind: label_backdrop_overflows_outline\n"
+        "    severity: NIT\n"
+        "    observation: VC001 is a detector false positive on a decorative texture\n"
+        "    linked_finding_id: \"\"\n"
+        "    visual_clash_ref: VC001\n"
+        "    status: accept_simplification\n"
+        "    accept_simplification_reason: false_positive\n"
+        "    accept_simplification_rationale: acceptable after review\n"
+    )
+    crop_audit_log_yaml = (
+        "crop_audit_log:\n"
+        "  - crop_id: VC001_A\n"
+        "    path: build/audit_crops/visual_clash/VC001_A.png\n"
+        "    source: visual_clash:VC001\n"
+        "    inspected: true\n"
+        "    verdict: no_defect\n"
+        "    linked_micro_defect_id: \"\"\n"
+        "    rationale: crop inspected and accounted through micro defect M001\n"
+    )
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.10",
+        extra_frontmatter_yaml=(
+            _complete_v1_3_top_tier_audit_yaml()
+            + micro_defects_yaml
+            + _complete_v1_5_editorial_art_direction_yaml()
+            + crop_audit_log_yaml
+        ),
+    )
+
+    with pytest.raises(CritiqueAdjudicationError, match="accept_simplification_rationale"):
+        build_adjudication_scaffold(fig_dir)
+
+
 def test_build_adjudication_scaffold_rejects_v1_3_missing_top_tier_audit(
     tmp_path: Path,
 ) -> None:

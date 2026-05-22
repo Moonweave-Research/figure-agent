@@ -637,7 +637,31 @@ def _validate_v1_10_accept_simplification(frontmatter: dict[str, Any]) -> None:
             vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
             label=label,
         )
-        _require_non_empty_string(item, "accept_simplification_rationale", label=label)
+        rationale = _require_non_empty_string(
+            item,
+            "accept_simplification_rationale",
+            label=label,
+        )
+        visual_clash_ref = item.get("visual_clash_ref")
+        if not isinstance(visual_clash_ref, str) or not visual_clash_ref.strip():
+            continue
+        normalized_rationale = " ".join(rationale.split())
+        lowered_rationale = normalized_rationale.lower()
+        if (
+            len(normalized_rationale)
+            >= vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
+            and visual_clash_ref.strip() in normalized_rationale
+            and any(
+                marker in lowered_rationale
+                for marker in vocab.MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
+            )
+        ):
+            continue
+        raise CritiqueContractError(
+            f"{label}.accept_simplification_rationale must be concrete, name "
+            "the visual_clash_ref candidate id, and explain the non-defect "
+            "geometry/context"
+        )
 
 
 def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
