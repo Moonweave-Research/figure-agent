@@ -21,7 +21,7 @@ crop-accountability lint needs a deterministic list of required crops. Do not
 make later lint infer required crops by globbing files from `build/audit_crops/`;
 stale files would make that contract unreliable.
 
-## Current Context
+## Implementation Context
 
 Already implemented:
 
@@ -30,35 +30,32 @@ Already implemented:
 - `critique_zoom_crops.py` generates full-render quadrants, panel quadrants,
   panel 4x4 sub-quadrants, optional instrument crops, and print-scale images.
 - `critique_brief.py` lists visual-clash candidates and high-zoom crops.
-
-Missing:
-
-- no crop is centered specifically on a visual-clash `bbox_px`;
-- the brief lists candidate coordinates but does not show a local image crop
-  for each candidate.
+- Issue 23A adds visual-clash-centered crops and a deterministic crop manifest,
+  so later crop-read accountability can bind to manifest entries instead of
+  filesystem globbing.
 
 ## Acceptance Criteria
 
-- [ ] For every visual-clash candidate in `build/visual_clash.json`, the crop
+- [x] For every visual-clash candidate in `build/visual_clash.json`, the crop
   pack emits a deterministic image under `build/audit_crops/visual_clash/`.
-- [ ] Each crop id preserves the candidate id, for example `VC050_HV_`.
-- [ ] Crops include context padding around `bbox_px` and clamp to the render
+- [x] Each crop id preserves the candidate id, for example `VC050_HV_`.
+- [x] Crops include context padding around `bbox_px` and clamp to the render
   bounds.
-- [ ] Tiny candidates are upscaled to a readable minimum width.
-- [ ] Crop ordering is deterministic by candidate id.
-- [ ] Crop generation writes a deterministic manifest, for example
+- [x] Tiny candidates are upscaled to a readable minimum width.
+- [x] Crop ordering is deterministic by candidate id.
+- [x] Crop generation writes a deterministic manifest, for example
   `build/audit_crops/manifest.json`, listing every required crop id, path,
   source, source candidate id when applicable, bbox, and generated size.
-- [ ] The crop manifest, not filesystem globbing, is the future source of truth
+- [x] The crop manifest, not filesystem globbing, is the future source of truth
   for crop-read accountability.
-- [ ] The crop manifest participates in critique freshness, or the rubric /
+- [x] The crop manifest participates in critique freshness, or the rubric /
   generator version changes in a way that makes existing critiques stale when
   the required crop contract changes.
-- [ ] `/fig_critique` brief lists every visual-clash crop under the existing
+- [x] `/fig_critique` brief lists every visual-clash crop under the existing
   high-zoom or visual-clash section.
-- [ ] Missing or malformed `visual_clash.json` degrades gracefully to the
+- [x] Missing or malformed `visual_clash.json` degrades gracefully to the
   current behavior.
-- [ ] Tests cover crop generation, bbox clamping, deterministic naming,
+- [x] Tests cover crop generation, bbox clamping, deterministic naming,
   manifest contents, freshness impact, and brief inclusion.
 
 ## Suggested Files

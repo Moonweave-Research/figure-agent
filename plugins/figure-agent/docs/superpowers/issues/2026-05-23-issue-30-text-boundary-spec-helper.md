@@ -1,6 +1,6 @@
 # Issue 30 — Text Boundary Spec Helper
 
-Status: completed in branch `codex/boundary-spec-helper`
+Status: completed in commit `2a91b27`
 
 ## Problem
 

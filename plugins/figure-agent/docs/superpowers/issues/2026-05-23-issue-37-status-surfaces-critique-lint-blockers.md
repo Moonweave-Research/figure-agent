@@ -1,6 +1,6 @@
 # Issue 37 — Status Surfaces Critique Lint Blockers
 
-**Status:** implemented in branch `codex/issue36-fig1-critique-refresh`
+**Status:** completed in commit `1bbc4be`
 
 ## Problem
 

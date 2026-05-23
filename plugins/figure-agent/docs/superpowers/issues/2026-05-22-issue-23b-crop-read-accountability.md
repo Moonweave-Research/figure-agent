@@ -55,20 +55,20 @@ Expected schema policy:
 
 ## Acceptance Criteria
 
-- [ ] `/fig_critique` brief requires a crop accountability block.
-- [ ] New crop-accountability requirements are gated behind a new critique
+- [x] `/fig_critique` brief requires a crop accountability block.
+- [x] New crop-accountability requirements are gated behind a new critique
   schema/rubric version rather than in-place mutation of v1.7.
-- [ ] Validator/lint rejects missing crop-accounting output when required crops
+- [x] Validator/lint rejects missing crop-accounting output when required crops
   exist.
-- [ ] Validator/lint rejects crop ids not present in the Issue 23A crop-pack
+- [x] Validator/lint rejects crop ids not present in the Issue 23A crop-pack
   manifest.
-- [ ] Validator/lint rejects missing crop ids from the Issue 23A crop-pack
+- [x] Validator/lint rejects missing crop ids from the Issue 23A crop-pack
   manifest.
-- [ ] `defect` crop verdicts require a linked `micro_defects[].id`.
-- [ ] `uncertain` crop verdicts are surfaced as not silently passing.
-- [ ] Legacy critiques without crop accountability remain parseable only under
+- [x] `defect` crop verdicts require a linked `micro_defects[].id`.
+- [x] `uncertain` crop verdicts are surfaced as not silently passing.
+- [x] Legacy critiques without crop accountability remain parseable only under
   their legacy schema.
-- [ ] Tests cover complete accounting, missing crop, unknown crop id, defect
+- [x] Tests cover complete accounting, missing crop, unknown crop id, defect
   without link, and legacy compatibility.
 
 ## Suggested Files

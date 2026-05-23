@@ -1,6 +1,6 @@
 # Issue 38 — Critique Lint Summary UX
 
-**Status:** implemented in branch `codex/issue38-critique-lint-summary`
+**Status:** completed in commit `330a579`
 
 ## Problem
 

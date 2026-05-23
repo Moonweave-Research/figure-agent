@@ -1,7 +1,7 @@
 # Issue 24A: Crop Uncertainty Stop Boundary
 
 **Date:** 2026-05-22 KST
-**Status:** implemented in branch
+**Status:** completed in commit `7d12067`
 **Type:** audit-gate correctness
 **Parent:** `2026-05-22-issue-24-audit-gate-hardening-roadmap.md`
 

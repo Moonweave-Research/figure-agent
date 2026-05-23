@@ -1,7 +1,7 @@
 # Issue 24D: Historical Visual-Clash Regression Harness
 
 **Date:** 2026-05-22 KST
-**Status:** implemented in branch
+**Status:** completed in commit `492e23a`
 **Type:** deterministic regression hardening
 **Parent:** `2026-05-22-issue-24-audit-gate-hardening-roadmap.md`
 

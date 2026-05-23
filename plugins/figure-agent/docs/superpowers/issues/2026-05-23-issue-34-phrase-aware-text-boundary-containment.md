@@ -1,6 +1,6 @@
 # Issue 34 — Phrase-Aware Text Boundary Containment
 
-Status: implemented in branch `codex/issue34-phrase-aware-text-boundary`
+Status: completed in commit `ab87fc4`
 
 Design spec:
 `../specs/2026-05-23-issue34-phrase-aware-text-boundary-design.md`

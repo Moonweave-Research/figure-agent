@@ -1,6 +1,6 @@
 # Issue 32 — Authoring Closeout Boundary Sync
 
-Status: completed in branch `codex/authoring-closeout`
+Status: completed in commit `18fbc42`
 
 ## Problem
 

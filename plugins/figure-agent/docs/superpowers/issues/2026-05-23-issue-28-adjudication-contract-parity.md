@@ -1,7 +1,7 @@
 # Issue 28: Adjudication Contract Parity
 
 **Date:** 2026-05-23 KST
-**Status:** implemented in this branch
+**Status:** completed in commit `ea77866`
 **Type:** post-Issue-27 loop-state hardening
 
 ## Problem

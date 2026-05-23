@@ -48,19 +48,19 @@ human-authorable, and deterministic.
 
 ## Acceptance Criteria
 
-- [ ] Pack parser loads valid `critique_reference_pack.yaml`.
-- [ ] Malformed pack produces controlled errors.
-- [ ] `/fig_critique` brief includes a
+- [x] Pack parser loads valid `critique_reference_pack.yaml`.
+- [x] Malformed pack produces controlled errors.
+- [x] `/fig_critique` brief includes a
   `## Reference-Calibrated Top-Tier Comparison` section when the pack exists.
-- [ ] The brief asks the host LLM to evaluate every must-match trait,
+- [x] The brief asks the host LLM to evaluate every must-match trait,
   must-avoid trait, and calibration question.
-- [ ] Missing pack is allowed and preserves current behavior.
-- [ ] Pack content is included in critique input hashing so pack edits make old
+- [x] Missing pack is allowed and preserves current behavior.
+- [x] Pack content is included in critique input hashing so pack edits make old
   critiques stale.
-- [ ] If pack semantics change the required critique output contract, the
+- [x] If pack semantics change the required critique output contract, the
   implementation bumps the rubric version rather than silently changing prompt
   meaning under the same version.
-- [ ] Tests cover valid pack, missing pack, malformed pack, brief inclusion, and
+- [x] Tests cover valid pack, missing pack, malformed pack, brief inclusion, and
   freshness impact.
 
 ## Suggested Files
