@@ -108,6 +108,43 @@ def test_build_text_boundary_checks_rejects_malformed_text_allowlist() -> None:
         helper.build_text_boundary_checks(layout)
 
 
+def test_build_text_boundary_checks_copies_text_phrases() -> None:
+    layout = {
+        "row_boxes": [
+            {
+                "id": "row2",
+                "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5],
+                "text_phrases": [
+                    {"id": "polymer_film", "words": ["polymer", "film"]},
+                    {"id": "f_maxwell", "words": ["F", "Maxwell"]},
+                ],
+            }
+        ]
+    }
+
+    checks = helper.build_text_boundary_checks(layout)
+
+    assert checks[0]["text_phrases"] == [
+        {"id": "polymer_film", "words": ["polymer", "film"]},
+        {"id": "f_maxwell", "words": ["F", "Maxwell"]},
+    ]
+
+
+def test_build_text_boundary_checks_rejects_malformed_text_phrases() -> None:
+    layout = {
+        "row_boxes": [
+            {
+                "id": "row2",
+                "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5],
+                "text_phrases": [{"id": "bad", "words": ["polymer"]}],
+            }
+        ]
+    }
+
+    with pytest.raises(helper.TextBoundarySpecHelperError, match="text_phrases"):
+        helper.build_text_boundary_checks(layout)
+
+
 def test_main_prints_yaml_snippet_without_writing(tmp_path: Path, capsys, monkeypatch) -> None:
     fixture = _write_fixture(
         tmp_path,

@@ -135,6 +135,117 @@ def test_containing_row_box_allowlist_flags_matching_text_outside_rect() -> None
     assert candidates[0]["kind"] == "text_outside_rect"
 
 
+def test_containing_row_box_text_phrase_inside_rect_is_clean() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 3.0, 2.54],
+            "clearance_pt": 0.0,
+            "text_phrases": [{"id": "polymer_film", "words": ["polymer", "film"]}],
+        }
+    ]
+    words = [
+        _word("polymer", 20.0, 20.0, 50.0, 30.0),
+        _word("film", 54.0, 20.0, 70.0, 30.0),
+        _word("caption", 140.0, 20.0, 170.0, 30.0),
+    ]
+
+    assert boundary.detect_text_boundary_clashes(words, (220.0, 220.0), checks) == []
+
+
+def test_containing_row_box_text_phrase_outside_rect_emits_one_candidate() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_phrases": [{"id": "polymer_film", "words": ["polymer", "film"]}],
+        }
+    ]
+    words = [
+        _word("polymer", 90.0, 20.0, 120.0, 30.0),
+        _word("film", 124.0, 20.0, 140.0, 30.0),
+    ]
+
+    candidates = boundary.detect_text_boundary_clashes(words, (220.0, 220.0), checks)
+
+    assert len(candidates) == 1
+    assert candidates[0]["kind"] == "text_outside_rect"
+    assert candidates[0]["text"] == "polymer film"
+    assert candidates[0]["text_source"] == "text_phrases"
+    assert candidates[0]["phrase_id"] == "polymer_film"
+    assert candidates[0]["words"] == ["polymer", "film"]
+    assert candidates[0]["bbox_pt"] == [90.0, 20.0, 140.0, 30.0]
+
+
+def test_containing_row_box_text_phrase_matches_shifted_subscript_words() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_phrases": [{"id": "f_maxwell", "words": ["F", "Maxwell"]}],
+        }
+    ]
+    words = [
+        _word("F", 90.0, 20.0, 96.0, 27.0),
+        _word("Maxwell", 96.5, 23.0, 126.0, 31.0),
+    ]
+
+    candidates = boundary.detect_text_boundary_clashes(words, (220.0, 220.0), checks)
+
+    assert [candidate["phrase_id"] for candidate in candidates] == ["f_maxwell"]
+
+
+def test_containing_row_box_text_phrase_rejects_large_gap() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_phrases": [{"id": "polymer_film", "words": ["polymer", "film"]}],
+        }
+    ]
+    words = [
+        _word("polymer", 90.0, 20.0, 120.0, 30.0),
+        _word("film", 160.0, 20.0, 180.0, 30.0),
+    ]
+
+    assert boundary.detect_text_boundary_clashes(words, (220.0, 220.0), checks) == []
+
+
+def test_containing_row_box_text_phrase_rejects_duplicate_phrase_id() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_phrases": [
+                {"id": "polymer_film", "words": ["polymer", "film"]},
+                {"id": "polymer_film", "words": ["polymer", "film"]},
+            ],
+        }
+    ]
+
+    with pytest.raises(boundary.TextBoundaryClashError, match="duplicate"):
+        boundary.detect_text_boundary_clashes([], (220.0, 220.0), checks)
+
+
 def test_containing_row_box_rejects_malformed_text_allowlist() -> None:
     checks = [
         {

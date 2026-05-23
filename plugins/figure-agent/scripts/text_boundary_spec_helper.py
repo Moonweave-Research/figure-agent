@@ -75,6 +75,41 @@ def _optional_text_allowlist(item: dict[str, Any], label: str) -> list[str] | No
     return [entry.strip() for entry in value]
 
 
+def _optional_text_phrases(
+    item: dict[str, Any],
+    label: str,
+) -> list[dict[str, list[str] | str]] | None:
+    value = item.get("text_phrases")
+    if value is None:
+        return None
+    if not isinstance(value, list) or not value:
+        raise TextBoundarySpecHelperError(f"{label}.text_phrases must be a non-empty list")
+    phrases: list[dict[str, list[str] | str]] = []
+    seen_ids: set[str] = set()
+    for index, raw_phrase in enumerate(value):
+        phrase_label = f"{label}.text_phrases[{index}]"
+        if not isinstance(raw_phrase, dict):
+            raise TextBoundarySpecHelperError(f"{phrase_label} must be a mapping")
+        phrase_id = raw_phrase.get("id")
+        if not isinstance(phrase_id, str) or not phrase_id.strip():
+            raise TextBoundarySpecHelperError(f"{phrase_label}.id is required")
+        phrase_id = phrase_id.strip()
+        if phrase_id in seen_ids:
+            raise TextBoundarySpecHelperError(f"{phrase_label}.id is duplicate")
+        seen_ids.add(phrase_id)
+        words = raw_phrase.get("words")
+        if (
+            not isinstance(words, list)
+            or len(words) < 2
+            or not all(isinstance(word, str) and word.strip() for word in words)
+        ):
+            raise TextBoundarySpecHelperError(
+                f"{phrase_label}.words must contain at least two non-empty strings"
+            )
+        phrases.append({"id": phrase_id, "words": [word.strip() for word in words]})
+    return phrases
+
+
 def _clearance(item: dict[str, Any], default_clearance: float) -> float:
     value = item.get("clearance_pt", default_clearance)
     if not isinstance(value, int | float):
@@ -121,6 +156,9 @@ def build_text_boundary_checks(layout: dict[str, Any]) -> list[dict[str, Any]]:
         text_allowlist = _optional_text_allowlist(item, f"row_boxes[{index}]")
         if text_allowlist is not None:
             check["text_allowlist"] = text_allowlist
+        text_phrases = _optional_text_phrases(item, f"row_boxes[{index}]")
+        if text_phrases is not None:
+            check["text_phrases"] = text_phrases
         checks.append(check)
 
     for index, raw_item in enumerate(_require_list(layout.get("column_rules"), "column_rules")):
