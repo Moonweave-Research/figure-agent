@@ -1,9 +1,22 @@
 # Issue 43 — Aesthetic Lever Grammar
 
-**Status:** design reviewed; implementation not started
+**Status:** implemented through Issue 43E; Issue 43F dogfood deferred
 
 Design spec:
 `../specs/2026-05-24-issue43-aesthetic-lever-grammar-design.md`
+
+Implementation commits:
+
+- `b3868db` — design aesthetic lever grammar.
+- `a49bda8` — Issue 43A, `aesthetic_intent.yaml` v2 parser/validator.
+- `4604dfa` — Issue 43B, `/fig_critique` v1.11 brief/rubric integration.
+- `aa1d6fd` — Issue 43C, critique schema v1.11 validation.
+- `c65a4bd` — Issue 43D, fixture-aware `critique_lint.py` lever accountability.
+- `a1a19ae` — Issue 43E, `/fig_loop` aesthetic lever summary surfacing.
+
+Issue 43F remains out of scope for this implementation slice: no real fixture
+source, generated artifact, accepted/golden state, or dogfood critique was
+mutated.
 
 ## Problem
 
