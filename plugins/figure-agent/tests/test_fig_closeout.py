@@ -121,6 +121,7 @@ def test_closeout_reports_compile_critique_and_loop_actions(
 
     assert report["schema"] == "figure-agent.closeout.v1"
     assert report["closeout_complete"] is False
+    assert steps["text_boundary_checks"]["state"] == "not_required"
     assert steps["compile"]["state"] == "needs_action"
     assert steps["compile"]["command"] == "/fig_compile loop_demo"
     assert steps["critique"]["state"] == "needs_action"
@@ -135,6 +136,122 @@ def test_closeout_reports_compile_critique_and_loop_actions(
         "adjudication",
         "export",
     ]
+
+
+def test_closeout_passes_matching_text_boundary_checks(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "text_boundary_layout:\n"
+        "  column_rules:\n"
+        "    - id: de\n"
+        "      x_pdf_cm: 4.62\n"
+        "      y_range_pdf_cm: [0.0, 4.5]\n"
+        "text_boundary_checks:\n"
+        "  - id: de_column_rule\n"
+        "    kind: vertical_line\n"
+        "    role: column_rule\n"
+        "    x_pdf_cm: 4.62\n"
+        "    y_range_pdf_cm: [0.0, 4.5]\n"
+        "    clearance_pt: 0.5\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    step = _steps_by_id(report)["text_boundary_checks"]
+
+    assert step["state"] == "passed"
+    assert step["command"] is None
+
+
+def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "text_boundary_layout:\n"
+        "  row_boxes:\n"
+        "    - id: row2\n"
+        "      bbox_pdf_cm: [0.0, 0.0, 13.8, 4.5]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    step = _steps_by_id(report)["text_boundary_checks"]
+
+    assert step["state"] == "needs_action"
+    assert step["command"] == (
+        "uv run python3 scripts/text_boundary_spec_helper.py examples/loop_demo --write"
+    )
+    assert report["next_action"] == step["command"]
+    assert "text_boundary_checks" in report["blocking_step_ids"]
+
+
+def test_closeout_requests_text_boundary_helper_when_checks_are_stale(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "text_boundary_layout:\n"
+        "  column_rules:\n"
+        "    - id: de\n"
+        "      x_pdf_cm: 4.62\n"
+        "      y_range_pdf_cm: [0.0, 4.5]\n"
+        "text_boundary_checks:\n"
+        "  - id: stale\n"
+        "    kind: vertical_line\n"
+        "    role: column_rule\n"
+        "    x_pdf_cm: 1.0\n"
+        "    y_range_pdf_cm: [0.0, 1.0]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    step = _steps_by_id(report)["text_boundary_checks"]
+
+    assert step["state"] == "needs_action"
+    assert step["reason"] == "text_boundary_checks do not match text_boundary_layout"
+
+
+def test_closeout_blocks_on_malformed_text_boundary_layout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "text_boundary_layout:\n"
+        "  row_boxes:\n"
+        "    - id: row2\n"
+        "      bbox_pdf_cm: [0.0, 1.0]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    step = _steps_by_id(report)["text_boundary_checks"]
+
+    assert step["state"] == "blocked"
+    assert "text_boundary_layout is invalid" in step["reason"]
+    assert step["command"] is None
 
 
 def test_closeout_blocks_compile_when_source_is_not_authored(
