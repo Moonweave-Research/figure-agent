@@ -1,6 +1,9 @@
 # Issue 34 — Phrase-Aware Text Boundary Containment
 
-Status: proposed
+Status: designed; implementation pending
+
+Design spec:
+`../specs/2026-05-23-issue34-phrase-aware-text-boundary-design.md`
 
 ## Problem
 
@@ -57,9 +60,9 @@ Preferred explicit contract:
 ```yaml
 text_phrases:
   - id: polymer_film
-    text: ["polymer", "film"]
+    words: ["polymer", "film"]
   - id: f_maxwell
-    text: ["F", "Maxwell"]
+    words: ["F", "Maxwell"]
 ```
 
 The checker should:
@@ -85,11 +88,13 @@ The checker should:
   generated checks.
 - Tests prove the checker does not duplicate candidates for the same phrase.
 
-## Review Questions
+## Design Decisions
 
-- Should grouped candidates expose `text` as the joined phrase, or also include
-  the underlying word list?
-- What default horizontal gap threshold is conservative enough for PDF word
-  extraction without accidentally joining unrelated labels?
-- Should fixture authors be required to give phrase ids so candidate reports can
-  point back to stable label names?
+- Grouped candidates expose both joined `text` and the underlying `words`.
+- Default tolerances are `max_phrase_gap_pt: 6.0` and
+  `max_phrase_y_center_delta_pt: 6.0`, with per-check overrides only when a real
+  extraction case requires them.
+- Fixture authors must provide stable phrase ids so reports can point back to
+  a declared label group.
+- The full implementation design lives in
+  `../specs/2026-05-23-issue34-phrase-aware-text-boundary-design.md`.
