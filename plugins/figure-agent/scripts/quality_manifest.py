@@ -14,6 +14,7 @@ from reference_contract import (
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
+CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 

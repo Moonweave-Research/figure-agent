@@ -18,13 +18,18 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
-from aesthetic_intent import AestheticIntentError, load_optional_aesthetic_intent
+from aesthetic_intent import (
+    AESTHETIC_INTENT_SCHEMA_V2,
+    AestheticIntentError,
+    load_optional_aesthetic_intent,
+)
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
 from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
+    CRITIQUE_RUBRIC_VERSION_V1_11,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -56,6 +61,8 @@ _MICRO_DEFECT_KIND_SCHEMA = (
     "label_glyph_overlaps_internal_drawing | label_crosses_panel_boundary | "
     "label_crosses_column_rule | label_overflows_row_box"
 )
+_CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
+_CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 
 
 class CritiqueBriefError(Exception):
@@ -430,6 +437,8 @@ def _reference_score_calibration(
 def _aesthetic_intent_section(pack: dict | None) -> str:
     if pack is None:
         return ""
+    if pack.get("schema") == AESTHETIC_INTENT_SCHEMA_V2:
+        return _aesthetic_lever_grammar_section(pack)
     lines = [
         "## Aesthetic Intent Calibration",
         "Host LLM MUST apply this fixture-specific aesthetic target when filling "
@@ -457,6 +466,88 @@ def _aesthetic_intent_section(pack: dict | None) -> str:
     for item in pack.get("polish_triggers", []):
         lines.append(f"- {item['id']} path={item['recommended_path']}: {item['condition']}")
     return "\n" + "\n".join(lines) + "\n"
+
+
+def _aesthetic_lever_grammar_section(pack: dict) -> str:
+    lines = [
+        "## Aesthetic Lever Grammar (host LLM MUST enumerate)",
+        "The fixture declares aesthetic intent schema v2. You MUST fill top-level YAML "
+        "field `aesthetic_lever_audit` with exactly one entry for every declared lever id.",
+        'Generic prose such as "improve polish" is invalid unless it is tied to a '
+        "lever id, observed evidence, allowed adjustment, forbidden guard, and route.",
+        "The v1 aesthetic anchor-citation rule still applies to "
+        "`top_tier_audit.aesthetic_coherence`, "
+        "`editorial_art_direction.visual_identity`, "
+        "`editorial_art_direction.aesthetic_risk`, and "
+        "`editorial_art_direction.tikz_vs_svg_polish_trigger`.",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Visual maturity: {pack['visual_maturity']}",
+        f"- Density: {pack['density']}",
+        f"- Reference style: {pack['reference_style']}",
+        "",
+        "### Design Principles",
+    ]
+    for item in pack.get("design_principles", []):
+        lines.append(f"- {item['id']}: {item['instruction']}")
+    lines.append("")
+    lines.append("### Must-Avoid Patterns")
+    for item in pack.get("must_avoid", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['pattern']}")
+    lines.append("")
+    lines.append("### Polish Triggers")
+    for item in pack.get("polish_triggers", []):
+        lines.append(f"- {item['id']} path={item['recommended_path']}: {item['condition']}")
+    lines.append("")
+    lines.append("### Declared Aesthetic Levers")
+    for item in pack.get("aesthetic_levers", []):
+        lines.extend(
+            [
+                (
+                    f"- {item['id']}: dimension={item['dimension']} "
+                    f"priority={item['priority']} route={item['default_route']}"
+                ),
+                f"  intent: {item['intent']}",
+                f"  positive_signals: {'; '.join(item['positive_signals'])}",
+                f"  anti_patterns: {'; '.join(item['anti_patterns'])}",
+                f"  allowed_adjustments: {'; '.join(item['allowed_adjustments'])}",
+                f"  forbidden_adjustments: {'; '.join(item['forbidden_adjustments'])}",
+            ]
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _uses_aesthetic_lever_schema(pack: dict | None) -> bool:
+    return bool(pack and pack.get("schema") == AESTHETIC_INTENT_SCHEMA_V2)
+
+
+def _aesthetic_lever_audit_schema(pack: dict | None) -> str:
+    if not _uses_aesthetic_lever_schema(pack):
+        return ""
+    dimension_values = (
+        "maturity | hero_hierarchy | whitespace_breathing | typography_authority | "
+        "color_harmony | line_weight_rhythm | component_fidelity | hand_craft | "
+        "cross_panel_grammar | polish_route"
+    )
+    evidence_values = (
+        "top_tier_audit.* | editorial_art_direction.* | quality_axes.* | "
+        "micro_defects.* | finding id"
+    )
+    return f"""aesthetic_lever_audit:
+  - lever_id: <id from aesthetic_intent.yaml aesthetic_levers[]>
+    dimension: {dimension_values}
+    verdict: pass | weak | fail | needs_human | not_applicable
+    confidence: low | medium | high
+    observed_positive_signals:
+      - "<current-artifact positive signal>"
+    observed_anti_patterns:
+      - "<current-artifact anti-pattern, or empty only for pass/not_applicable>"
+    route: none | tikz_patch | svg_polish | semantic_backport | human_art_direction
+    linked_evidence:
+      - "<{evidence_values}>"
+    allowed_next_adjustment: "<one bounded adjustment, or empty when route=none>"
+    forbidden_adjustment_guard: "<semantic guard from the declared lever>"
+    rationale: "<why this verdict and route follow from the declared lever>"
+"""
 
 
 def _format_metric(metric: object) -> str:
@@ -687,6 +778,17 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         reference_calibration_pack
     )
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
+    uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
+    critique_schema = (
+        _CRITIQUE_SCHEMA_VERSION_V1_11
+        if uses_aesthetic_lever_schema
+        else _CRITIQUE_SCHEMA_VERSION
+    )
+    critique_rubric_version = (
+        CRITIQUE_RUBRIC_VERSION_V1_11
+        if uses_aesthetic_lever_schema
+        else CRITIQUE_RUBRIC_VERSION
+    )
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -748,12 +850,12 @@ Write findings to `examples/{name}/critique.md` with this exact structure
 
 ```markdown
 ---
-schema: figure-agent.critique.v1.10
+schema: {critique_schema}
 fixture: {name}
 generated_at: <ISO-8601 timestamp>
 generator: critique_brief.py
 generator_version: {generator_version}
-rubric_version: {CRITIQUE_RUBRIC_VERSION}
+rubric_version: {critique_rubric_version}
 critique_input_hash: {critique_input_hash}
 verdict: ready | revise | block
 audit_enumeration:
@@ -839,6 +941,7 @@ top_tier_audit:
     critique_input_hash,
     _reference_score_calibration(example_dir, reference_calibration_pack),
 )}
+{_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png
