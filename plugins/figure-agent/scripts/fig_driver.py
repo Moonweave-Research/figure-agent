@@ -96,6 +96,7 @@ _STATUS_COMPACT_KEYS = (
     "final_ready",
     "publication_gate_state",
     "publication_gate_failures",
+    "critique_lint_summary",
 )
 
 _FORBIDDEN_BY_MODE: dict[str, list[str]] = {

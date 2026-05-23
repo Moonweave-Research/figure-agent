@@ -140,15 +140,33 @@ def _append_critique_lint_check(
     notes: list[str],
     example_dir: Path,
     critique_state: str,
-) -> None:
+) -> dict | None:
     if critique_state != CRITIQUE_FRESH:
-        return
+        return None
     violations = lint_critique(example_dir)
     if not violations:
         checks.append(("critique_lint", "passed"))
-        return
+        return {
+            "state": "passed",
+            "violation_count": 0,
+            "first_category": None,
+            "first_message": None,
+        }
     checks.append(("critique_lint", "blocked"))
     notes.append("critique_lint_blocked")
+    first = violations[0]
+    return {
+        "state": "blocked",
+        "violation_count": len(violations),
+        "first_category": first.category,
+        "first_message": first.message,
+    }
+
+
+def _add_critique_lint_summary(result: dict, summary: dict | None) -> dict:
+    if summary is not None:
+        result["critique_lint_summary"] = summary
+    return result
 
 
 def _is_stale(sources: tuple[Path, ...], targets: tuple[Path, ...]) -> bool:
@@ -505,7 +523,12 @@ def infer_stage(example_dir: Path) -> dict:
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
         checks.append(("exports", "present"))
         _append_critique_check(checks, notes, critique_state)
-        _append_critique_lint_check(checks, notes, example_dir, critique_state)
+        critique_lint_summary = _append_critique_lint_check(
+            checks,
+            notes,
+            example_dir,
+            critique_state,
+        )
         partial = not _all_four_exports_present(exports_dir, name)
         if partial:
             notes.append("partial_export")
@@ -530,56 +553,73 @@ def infer_stage(example_dir: Path) -> dict:
             final_artifact=final_artifact,
             accepted=accepted,
         )
-        return _finalize_status({
-            "stage": 4,
-            "name": name,
-            "checks": checks,
-            "next": next_hint,
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-            **_status_vector(
-                4,
-                notes,
-                accepted,
-                exports_substate,
-                render_state,
-                critique_state,
-                final_artifact,
-                publication_gate,
+        return _finalize_status(
+            _add_critique_lint_summary(
+                {
+                    "stage": 4,
+                    "name": name,
+                    "checks": checks,
+                    "next": next_hint,
+                    "notes": notes,
+                    "accepted": accepted,
+                    "exports_substate": exports_substate,
+                    **_status_vector(
+                        4,
+                        notes,
+                        accepted,
+                        exports_substate,
+                        render_state,
+                        critique_state,
+                        final_artifact,
+                        publication_gate,
+                    ),
+                },
+                critique_lint_summary,
             ),
-        }, example_dir)
+            example_dir,
+        )
 
     # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
-        _append_critique_lint_check(checks, notes, example_dir, critique_state)
-        return _finalize_status({
-            "stage": 3,
-            "name": name,
-            "checks": checks,
-            "next": status_next_policy.select_next_hint(
-                stage=3,
-                name=name,
-                notes=notes,
-                critique_state=critique_state,
-                exports_substate=exports_substate,
+        critique_lint_summary = _append_critique_lint_check(
+            checks,
+            notes,
+            example_dir,
+            critique_state,
+        )
+        return _finalize_status(
+            _add_critique_lint_summary(
+                {
+                    "stage": 3,
+                    "name": name,
+                    "checks": checks,
+                    "next": status_next_policy.select_next_hint(
+                        stage=3,
+                        name=name,
+                        notes=notes,
+                        critique_state=critique_state,
+                        exports_substate=exports_substate,
+                    ),
+                    "notes": notes,
+                    "accepted": accepted,
+                    "exports_substate": exports_substate,
+                    **_status_vector(
+                        3,
+                        notes,
+                        accepted,
+                        exports_substate,
+                        render_state,
+                        critique_state,
+                        final_artifact,
+                        publication_gate,
+                    ),
+                },
+                critique_lint_summary,
             ),
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-            **_status_vector(
-                3,
-                notes,
-                accepted,
-                exports_substate,
-                render_state,
-                critique_state,
-                final_artifact,
-                publication_gate,
-            ),
-        }, example_dir)
+            example_dir,
+        )
 
     # Stage 2: tex exists AND (no build pdf OR pdf stale relative to source set)
     if tex_path.exists():

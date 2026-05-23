@@ -489,9 +489,97 @@ polish_triggers:
 
     assert result["critique_state"] == "FRESH"
     assert "critique_lint_blocked" in result["notes"]
+    assert result["critique_lint_summary"] == {
+        "state": "blocked",
+        "violation_count": 1,
+        "first_category": "aesthetic_intent_accounting",
+        "first_message": (
+            "aesthetic intent pack exists; critique slots must cite at least one exact "
+            "aesthetic-intent anchor from target fields or item ids: "
+            "top_tier_audit.aesthetic_coherence, "
+            "editorial_art_direction.visual_identity, "
+            "editorial_art_direction.aesthetic_risk, "
+            "editorial_art_direction.tikz_vs_svg_polish_trigger"
+        ),
+    }
     assert "/fig_critique lint_blocked_fig" in result["next"]
     assert result["status_explanation"]["first_blocker"]["code"] == "critique_lint_blocked"
     assert result["status_explanation"]["first_blocker"]["manual"] is True
+
+
+def test_status_surfaces_passed_lint_summary_for_fresh_valid_critique(tmp_path: Path) -> None:
+    name = "lint_passed_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name)
+
+    result = infer_stage(fig_dir)
+
+    assert result["critique_state"] == "FRESH"
+    assert "critique_lint_blocked" not in result["notes"]
+    assert result["critique_lint_summary"] == {
+        "state": "passed",
+        "violation_count": 0,
+        "first_category": None,
+        "first_message": None,
+    }
+
+
+def test_status_surfaces_lint_summary_when_exports_exist(tmp_path: Path) -> None:
+    name = "lint_exported_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    exports_dir = fig_dir / "exports"
+    exports_dir.mkdir()
+    (exports_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name)
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["critique_state"] == "FRESH"
+    assert result["critique_lint_summary"] == {
+        "state": "passed",
+        "violation_count": 0,
+        "first_category": None,
+        "first_message": None,
+    }
+
+
+def test_status_omits_lint_summary_when_critique_is_stale(tmp_path: Path) -> None:
+    name = "lint_stale_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name, critique_input_hash="sha256:stale")
+
+    result = infer_stage(fig_dir)
+
+    assert result["critique_state"] == "STALE"
+    assert "critique_lint_summary" not in result
 
 
 def test_hash_metadata_marks_current_v1_4_critique_fresh(
