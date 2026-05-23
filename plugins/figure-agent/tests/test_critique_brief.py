@@ -1001,6 +1001,68 @@ calibration_questions:
     assert "scores cite the reference pack" in brief
 
 
+def test_critique_brief_includes_aesthetic_intent_calibration(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v1
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Intent Calibration" in brief
+    assert "Target journal: Nature Materials" in brief
+    assert "Visual maturity: editorial" in brief
+    assert "Density: balanced" in brief
+    assert "Reference style: multipanel_story" in brief
+    assert "mature_restraint: avoid cartoon-like oversized labels" in brief
+    assert "toy_diagram severity=MAJOR" in brief
+    assert "svg_micro_polish path=ready_for_svg_polish" in brief
+    assert "top_tier_audit.aesthetic_coherence" in brief
+    assert "editorial_art_direction.visual_identity" in brief
+    assert "editorial_art_direction.aesthetic_risk" in brief
+
+
+def test_critique_brief_omits_aesthetic_intent_calibration_when_missing(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Intent Calibration" not in brief
+
+
+def test_critique_brief_reports_malformed_aesthetic_intent(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "aesthetic_intent.yaml").write_text("schema: [", encoding="utf-8")
+
+    try:
+        generate_for(example_dir)
+    except critique_brief.CritiqueBriefError as exc:
+        assert "aesthetic_intent.yaml" in str(exc)
+    else:
+        raise AssertionError("expected CritiqueBriefError")
+
+
 def test_critique_brief_omits_reference_calibrated_pack_when_missing(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

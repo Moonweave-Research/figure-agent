@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
+from aesthetic_intent import AestheticIntentError, load_optional_aesthetic_intent
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
@@ -426,6 +427,36 @@ def _reference_score_calibration(
     }
 
 
+def _aesthetic_intent_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    lines = [
+        "## Aesthetic Intent Calibration",
+        "Host LLM MUST apply this fixture-specific aesthetic target when filling "
+        "`top_tier_audit.aesthetic_coherence`, "
+        "`editorial_art_direction.visual_identity`, "
+        "`editorial_art_direction.aesthetic_risk`, and "
+        "`editorial_art_direction.tikz_vs_svg_polish_trigger`.",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Visual maturity: {pack['visual_maturity']}",
+        f"- Density: {pack['density']}",
+        f"- Reference style: {pack['reference_style']}",
+        "",
+        "### Design Principles",
+    ]
+    for item in pack.get("design_principles", []):
+        lines.append(f"- {item['id']}: {item['instruction']}")
+    lines.append("")
+    lines.append("### Must-Avoid Patterns")
+    for item in pack.get("must_avoid", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['pattern']}")
+    lines.append("")
+    lines.append("### Polish Triggers")
+    for item in pack.get("polish_triggers", []):
+        lines.append(f"- {item['id']} path={item['recommended_path']}: {item['condition']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _format_metric(metric: object) -> str:
     if not isinstance(metric, dict) or not metric:
         return "(none)"
@@ -617,6 +648,10 @@ def generate_for(example_dir: Path) -> str:
         reference_calibration_pack = load_optional_reference_pack(example_dir)
     except CritiqueReferencePackError as exc:
         raise CritiqueBriefError(f"critique_reference_pack.yaml invalid: {exc}") from exc
+    try:
+        aesthetic_intent_pack = load_optional_aesthetic_intent(example_dir)
+    except AestheticIntentError as exc:
+        raise CritiqueBriefError(f"aesthetic_intent.yaml invalid: {exc}") from exc
     ref_section = ""
     if ref_path:
         ref_section = f"""
@@ -649,6 +684,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
+    aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -663,6 +699,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {visual_clash_section}
 {text_boundary_clash_section}
 {reference_calibration_section}
+{aesthetic_intent_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
