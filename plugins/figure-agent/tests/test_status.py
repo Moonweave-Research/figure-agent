@@ -13,7 +13,12 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
-from quality_manifest import CRITIQUE_RUBRIC_VERSION, file_sha256, input_manifest_hash  # noqa: E402
+from quality_manifest import (  # noqa: E402
+    CRITIQUE_RUBRIC_VERSION,
+    CRITIQUE_RUBRIC_VERSION_V1_11,
+    file_sha256,
+    input_manifest_hash,
+)
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
@@ -191,6 +196,44 @@ def _write_hashed_critique(
         "findings: []\n"
         "---\n"
         "# Vision Critique\n",
+        encoding="utf-8",
+    )
+
+
+def _write_aesthetic_intent_v2(fig_dir: Path, name: str) -> None:
+    (fig_dir / "aesthetic_intent.yaml").write_text(
+        f"""schema: figure-agent.aesthetic-intent.v2
+fixture: {name}
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: Prefer restrained publication-grade hierarchy.
+must_avoid:
+  - id: toy_diagram
+    pattern: Avoid cartoon-like oversized labels.
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: Semantic TikZ is correct but optical finish is limiting.
+    recommended_path: ready_for_svg_polish
+aesthetic_levers:
+  - id: maturity_restraint
+    dimension: maturity
+    intent: Mature publication-grade restraint.
+    priority: required
+    positive_signals:
+      - Quiet hierarchy.
+    anti_patterns:
+      - Toy-like label scale.
+    allowed_adjustments:
+      - Reduce label weight.
+    forbidden_adjustments:
+      - Add decorative effects.
+    default_route: tikz_patch
+""",
         encoding="utf-8",
     )
 
@@ -646,6 +689,50 @@ def test_hash_metadata_marks_critique_stale_when_rubric_version_changes(
         fig_dir,
         name,
         rubric_version="figure-agent.critique-rubric.v0",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_accepts_v1_11_rubric_for_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    name = "hash_aesthetic_v2_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_aesthetic_intent_v2(fig_dir, name)
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
+        schema="figure-agent.critique.v1.11",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
+
+
+def test_hash_metadata_rejects_v1_10_rubric_for_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    name = "hash_aesthetic_v2_old_rubric_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_aesthetic_intent_v2(fig_dir, name)
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        schema="figure-agent.critique.v1.11",
     )
 
     assert compute_critique_state(fig_dir, name) == "STALE"
