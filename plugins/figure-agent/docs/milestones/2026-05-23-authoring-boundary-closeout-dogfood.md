@@ -17,10 +17,10 @@ The goal is plugin workflow validation only. This milestone does not change any
 figure source, generated build artifact, export artifact, golden state, or
 accepted state.
 
-## Current Fixture Coverage
+## Fixture Coverage At Closeout
 
-No tracked example currently declares `spec.yaml.text_boundary_layout` or
-`spec.yaml.text_boundary_checks`.
+At the time this closeout evidence was captured, no tracked example declared
+`spec.yaml.text_boundary_layout` or `spec.yaml.text_boundary_checks`.
 
 Command:
 
@@ -29,7 +29,7 @@ find examples -maxdepth 2 -name spec.yaml -print | \
   xargs rg -n "text_boundary_layout|text_boundary_checks"
 ```
 
-Result: no matches.
+Result at closeout time: no matches.
 
 Interpretation: the plugin contract and tests are implemented, but real-fixture
 adoption remains a fixture-authoring step. This is not a code blocker; it is the
@@ -121,11 +121,12 @@ plugin does not notice" has a complete plugin-side chain:
 
 ### Remaining Practical Gap
 
-The only remaining work is adoption on real fixtures that contain boundary
-risks. For `fig1_overview_v2_pair_001_vault`, the natural adoption target is
-the apparatus row with D/E and E/F column rules plus instrument display
-rectangles. That should happen on the active figure branch, because it is
-fixture-specific authoring metadata, not core plugin code.
+The remaining work was adoption on real fixtures that contain boundary risks.
+`fig1_overview_v2_pair_001_vault` is the natural first adoption target because
+its apparatus row has D/E and E/F column rules plus instrument display
+rectangles. That adoption is fixture-specific authoring metadata, not core
+plugin code. See `2026-05-23-fig1-text-boundary-adoption.md` for the follow-up
+dogfood pass.
 
 ## Conclusion
 
