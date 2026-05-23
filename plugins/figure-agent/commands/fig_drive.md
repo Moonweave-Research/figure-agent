@@ -23,6 +23,24 @@ that records evidence after the user/outer agent acts on a recommendation.
 Neither command executes the recommendation — the driver never runs any
 action; `/fig_loop` only logs the resulting state.
 
+## Canonical Workflow Order
+
+Use `/fig_status <name>` or `/fig_drive <name> --mode review --goal "<goal>"
+--dry-run` as the first check. Follow this order unless the user explicitly
+asks for a lower-level command:
+
+1. `render_state: MISSING | STALE` -> `/fig_compile <name>`.
+2. `render_state: FRESH` and `critique_state: MISSING | STALE |
+   REFERENCE_MISSING` -> `/fig_critique <name>` or fix declared references.
+3. `critique_state: FRESH` and stale/missing adjudication -> `/fig_adjudicate
+   <name>` or repair `critique_adjudication.yaml`.
+4. Closed compile/critique/adjudication prerequisites -> `/fig_loop <name>
+   --goal "<goal>"`.
+5. Export, release, or polish only when the driver selects that action.
+
+This ordering is intentional: host vision critique must inspect the current
+render, so stale render wins over stale critique.
+
 ## Modes
 
 - `authoring` — source/build loop. Recommends `run_compile` when render is

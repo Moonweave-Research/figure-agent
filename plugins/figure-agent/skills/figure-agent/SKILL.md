@@ -48,6 +48,19 @@ figure workflow by running `/fig_status <name>` and follow its `Next:` hint.
 Do not choose between compile, critique, export, loop, polish, or release from
 memory. `/fig_status` is the traffic controller.
 
+Canonical next-action order:
+
+1. If `render_state` is `MISSING` or `STALE`, run `/fig_compile <name>` first.
+   Do not request host vision critique against a stale render.
+2. If render is `FRESH` and `critique_state` is `MISSING`, `STALE`, or
+   `REFERENCE_MISSING`, close that critique/reference gate next.
+3. If critique is `FRESH` and `critique_adjudication.yaml` is missing, stale,
+   or invalid, run `/fig_adjudicate <name>` or repair the adjudication file.
+4. Run `/fig_loop <name> --goal "<goal>"` only after status prerequisites are
+   closed enough to record a meaningful verify-only checkpoint.
+5. Run `/fig_export`, release, or SVG polish only when `/fig_status` or
+   `/fig_drive --dry-run` explicitly routes there.
+
 Use modes mentally:
 
 - `authoring`: source edits and `/fig_compile`; rerun `/fig_status <name>`
