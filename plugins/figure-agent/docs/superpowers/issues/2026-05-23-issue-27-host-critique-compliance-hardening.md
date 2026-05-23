@@ -1,7 +1,7 @@
 # Issue 27: Host Critique Compliance Hardening
 
 **Date:** 2026-05-23 KST
-**Status:** implemented in this branch
+**Status:** completed in commit `75bcbf6`
 **Type:** post-Issue-25 critique-output compliance hardening
 
 ## Problem

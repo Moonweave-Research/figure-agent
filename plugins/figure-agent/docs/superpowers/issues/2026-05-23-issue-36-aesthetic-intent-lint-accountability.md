@@ -1,6 +1,6 @@
 # Issue 36 — Aesthetic Intent Lint Accountability
 
-**Status:** implemented in branch `codex/issue36-aesthetic-intent-lint`
+**Status:** completed in commit `170265a`
 
 ## Problem
 

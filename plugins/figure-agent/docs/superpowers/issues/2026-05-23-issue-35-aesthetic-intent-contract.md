@@ -1,6 +1,6 @@
 # Issue 35 — Aesthetic Intent Contract
 
-Status: implemented in branch `codex/issue35-aesthetic-intent-contract`
+Status: completed in commit `2cc0c03`
 
 Design spec:
 `../specs/2026-05-23-issue35-aesthetic-intent-contract-design.md`

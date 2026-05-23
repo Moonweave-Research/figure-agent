@@ -1,6 +1,6 @@
 # Issue 31 — TeX Coordinate Shift Helper
 
-Status: completed in branch `codex/tex-coordinate-shift`
+Status: completed in commit `3de6fe4`
 
 ## Problem
 

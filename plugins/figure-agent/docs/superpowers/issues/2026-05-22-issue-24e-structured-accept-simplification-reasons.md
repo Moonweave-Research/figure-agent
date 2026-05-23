@@ -1,7 +1,7 @@
 # Issue 24E: Structured Accept-Simplification Reasons
 
 **Date:** 2026-05-22 KST
-**Status:** implemented in branch
+**Status:** completed in commit `cecd420`
 **Type:** audit-output hardening
 **Parent:** `2026-05-22-issue-24-audit-gate-hardening-roadmap.md`
 

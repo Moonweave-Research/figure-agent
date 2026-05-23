@@ -3,9 +3,9 @@ schema: figure-agent.critique.v1.9
 fixture: fig1_overview_v2_pair_001_vault
 generated_at: 2026-05-22T08:30:00Z
 generator: critique_brief.py
-generator_version: sha256:686392180beda5a9b90ba90e0a458fcf6f48e8550c4479f903b5504c9f4834df
+generator_version: sha256:548c833b17a5b71168b3233291ccfeeadfdca17733dc852b8c1d9e101ef78d32
 rubric_version: figure-agent.critique-rubric.v1.9
-critique_input_hash: sha256:255d356f1dde7e4862e181d1a713d46088c41f602ee91be2d59e150081fa4301
+critique_input_hash: sha256:563e58e0aa87318102604e4f8c19b554fc246478206ea70551bd466ae8229242
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -359,7 +359,7 @@ top_tier_audit:
     blocks_high_impact: false
   aesthetic_coherence:
     verdict: pass
-    finding: "Detail decreases gracefully chemistry -> apparatus -> plot cartoons. Line-weight 3-tier intact. No decorative wash, no AI-style gradient (object-color cAmber gradients on polymer slabs are material-encoded depth cues), no clip-art. Matches NC main-text Fig 1 published aesthetic."
+    finding: "Detail decreases gracefully chemistry -> apparatus -> plot cartoons. Line-weight 3-tier intact (Panel C HERO +0.05pt hero-tier variance under briefing relax R3 still within mature_restraint envelope — no decorative emphasis added, only HERO weight anchor). No decorative wash, no AI-style gradient (object-color cAmber gradients on polymer slabs are material-encoded depth cues), no clip-art. Matches NC main-text Fig 1 published aesthetic."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
 editorial_art_direction:
@@ -395,8 +395,8 @@ editorial_art_direction:
     blocks_high_impact: false
   visual_identity:
     verdict: pass
-    evidence: "Coherent motif: cAmber/cBlue/cRed semantic palette + zigzag chain + DIB ring + S8 ring + ⊕ charge marker + bimodal Gaussian + 3-spoke fan."
-    rationale: "Motif strength survives reduction; motif now reads through object color and stroke pattern, not through background wash."
+    evidence: "Coherent motif: cAmber/cBlue/cRed semantic palette + zigzag chain + DIB ring + S8 ring + ⊕ charge marker + bimodal Gaussian + 3-spoke fan. Panel B wt% axis tick marks (briefing relax R1) add scientific_hand_craft cue without disturbing motif."
+    rationale: "Motif strength survives reduction; motif now reads through object color and stroke pattern, not through background wash. preset_macro_feel risk mitigated by Panel C HERO sphere markers + R3 hero-tier weight variance + Panel B chain endpoint anchors (each chain has distinct length, not a stamped duplicate set)."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   claim_payload_fit:
@@ -407,14 +407,14 @@ editorial_art_direction:
     blocks_high_impact: false
   aesthetic_risk:
     verdict: pass
-    evidence: "Post-redirect: no AI-style background wash, no decorative gradient, no clip-art. Object-color cAmber gradients on polymer slabs are material-encoded depth, not aesthetic decoration."
-    rationale: "Residual risk limited to font-tier choices already audited."
+    evidence: "Post-redirect: no AI-style background wash, no decorative gradient, no clip-art. Object-color cAmber gradients on polymer slabs are material-encoded depth, not aesthetic decoration. R1/R3 briefing relaxations preserve instrument_precision register (apparatus boxes still crisp; tick marks ≤0.30pt = reference tier, no toy-like enlargement)."
+    rationale: "Residual risk limited to font-tier choices already audited. toy_diagram anti-pattern guard intact — no oversized arrows, rounded generic boxes, or unmodulated flat colors added by R1/R3."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: "All remaining items are semantic content edits (none open). No optical-only polish backlog. TikZ source can carry future edits."
-    rationale: "continue_tikz polish path."
+    evidence: "All remaining items are semantic content edits (none open). No optical-only polish backlog. TikZ source can carry future edits. R1 (Panel B tick marks) + R3 (Panel C HERO line weight +0.05pt) implemented in TikZ directly — neither requires svg_micro_polish path."
+    rationale: "continue_tikz polish path. semantic_backport not needed because R1/R3 are aesthetic-only relaxations carrying no mechanism, label, or storyline change."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
     recommended_path: continue_tikz
