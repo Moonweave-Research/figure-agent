@@ -13,6 +13,7 @@ Implementation commits:
 - `aa1d6fd` — Issue 43C, critique schema v1.11 validation.
 - `c65a4bd` — Issue 43D, fixture-aware `critique_lint.py` lever accountability.
 - `a1a19ae` — Issue 43E, `/fig_loop` aesthetic lever summary surfacing.
+- `2107e39` — Issue 43E follow-up, JSON summary contract test alignment.
 
 Issue 43F remains out of scope for this implementation slice: no real fixture
 source, generated artifact, accepted/golden state, or dogfood critique was

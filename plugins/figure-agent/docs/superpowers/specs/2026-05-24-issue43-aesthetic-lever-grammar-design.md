@@ -3,7 +3,8 @@
 ## Status
 
 Implemented through Issue 43E in commits `a49bda8`, `4604dfa`, `aa1d6fd`,
-`c65a4bd`, and `a1a19ae`. Issue 43F dogfood evidence remains deferred.
+`c65a4bd`, `a1a19ae`, and `2107e39`. Issue 43F dogfood evidence remains
+deferred.
 
 The implemented slice adds the v2 intent parser, v1.11 critique brief/schema
 contract, fixture-aware lint accountability, and `/fig_loop` summary surfacing.
