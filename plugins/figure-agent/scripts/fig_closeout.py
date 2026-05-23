@@ -18,6 +18,10 @@ from critique_adjudication import (  # noqa: E402
     load_adjudication,
 )
 from status import infer_stage  # noqa: E402
+from text_boundary_spec_helper import (  # noqa: E402
+    TextBoundarySpecHelperError,
+    build_text_boundary_checks,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPLETE_STATES = frozenset({"passed", "not_required"})
@@ -69,6 +73,64 @@ def _compile_step(name: str, status_result: dict[str, Any]) -> dict[str, Any]:
         reason=f"render_state is {render_state}",
         command=f"/fig_compile {name}",
         evidence={"render_state": render_state, "next": status_result.get("next")},
+    )
+
+
+def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
+    spec_path = example_dir / "spec.yaml"
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        return _step(
+            step_id="text_boundary_checks",
+            state="blocked",
+            reason=f"cannot read spec.yaml for text boundary checks: {exc}",
+            evidence_path=spec_path,
+        )
+    if not isinstance(spec, dict):
+        return _step(
+            step_id="text_boundary_checks",
+            state="blocked",
+            reason="spec.yaml must be a mapping",
+            evidence_path=spec_path,
+        )
+    layout = spec.get("text_boundary_layout")
+    if layout is None:
+        return _step(
+            step_id="text_boundary_checks",
+            state="not_required",
+            reason="spec.yaml.text_boundary_layout is absent",
+            evidence_path=spec_path,
+        )
+    try:
+        expected_checks = build_text_boundary_checks(layout)
+    except TextBoundarySpecHelperError as exc:
+        return _step(
+            step_id="text_boundary_checks",
+            state="blocked",
+            reason=f"text_boundary_layout is invalid: {exc}",
+            evidence_path=spec_path,
+        )
+    if spec.get("text_boundary_checks") == expected_checks:
+        return _step(
+            step_id="text_boundary_checks",
+            state="passed",
+            reason="text_boundary_checks match text_boundary_layout",
+            evidence_path=spec_path,
+            evidence={"check_count": len(expected_checks)},
+        )
+    reason = (
+        "text_boundary_checks are missing"
+        if "text_boundary_checks" not in spec
+        else "text_boundary_checks do not match text_boundary_layout"
+    )
+    return _step(
+        step_id="text_boundary_checks",
+        state="needs_action",
+        reason=reason,
+        command=f"uv run python3 scripts/text_boundary_spec_helper.py examples/{name} --write",
+        evidence_path=spec_path,
+        evidence={"expected_check_count": len(expected_checks)},
     )
 
 
@@ -323,6 +385,7 @@ def compute_closeout(
         status_result = infer_stage(example_dir)
     except (OSError, ValueError, yaml.YAMLError) as exc:
         raise FigCloseoutError(f"cannot compute status for examples/{name}: {exc}") from exc
+    text_boundary_checks_step = _text_boundary_checks_step(name, example_dir)
     compile_step = _compile_step(name, status_result)
     critique_step = _critique_step(name, status_result, example_dir)
     adjudication_step = _adjudication_step(name, status_result, example_dir)
@@ -337,9 +400,22 @@ def compute_closeout(
         example_dir,
         repo_root,
         runs_root,
-        (compile_step, critique_step, adjudication_step, export_step),
+        (
+            text_boundary_checks_step,
+            compile_step,
+            critique_step,
+            adjudication_step,
+            export_step,
+        ),
     )
-    steps = [compile_step, critique_step, adjudication_step, export_step, loop_rerun_step]
+    steps = [
+        text_boundary_checks_step,
+        compile_step,
+        critique_step,
+        adjudication_step,
+        export_step,
+        loop_rerun_step,
+    ]
     incomplete = [step for step in steps if step["state"] not in COMPLETE_STATES]
     next_step = next((step for step in steps if step["state"] == "needs_action"), None)
     if next_step is None:
