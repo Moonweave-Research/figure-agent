@@ -14,6 +14,7 @@ Implementation commits:
 - `c65a4bd` — Issue 43D, fixture-aware `critique_lint.py` lever accountability.
 - `a1a19ae` — Issue 43E, `/fig_loop` aesthetic lever summary surfacing.
 - `2107e39` — Issue 43E follow-up, JSON summary contract test alignment.
+- `1a02791` — Issue 43B/43E follow-up, v2 aesthetic-intent freshness expects rubric v1.11.
 
 Issue 43F remains out of scope for this implementation slice: no real fixture
 source, generated artifact, accepted/golden state, or dogfood critique was
