@@ -137,6 +137,15 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     )
     _append_if(
         fixture_freshness,
+        "critique_lint_blocked" in status.get("notes", []),
+        code="critique_lint_blocked",
+        category=FIXTURE_FRESHNESS,
+        message="critique.md is hash-fresh but fails critique_lint.py accountability checks.",
+        next_command=_command(name, "/fig_critique"),
+        manual=True,
+    )
+    _append_if(
+        fixture_freshness,
         export == "MISSING",
         code="export_missing",
         category=FIXTURE_FRESHNESS,

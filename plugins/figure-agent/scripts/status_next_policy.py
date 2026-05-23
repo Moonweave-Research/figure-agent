@@ -60,6 +60,10 @@ _NEXT_4_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> before treating exports as final;"
     " if no edits are needed, existing exports can remain in place."
 )
+_NEXT_CRITIQUE_LINT_BLOCKED = (
+    "run /fig_critique <name> to rewrite critique.md so it passes critique_lint.py"
+    " before continuing."
+)
 _NEXT_REFERENCE_MISSING = (
     "fix declared reference inputs in spec.yaml or add the missing files before continuing."
 )
@@ -131,6 +135,8 @@ def _select_stage_4_template(
         return spec_next_template
     if "missing_briefing" in notes:
         return _NEXT_MISSING_BRIEFING
+    if "critique_lint_blocked" in notes:
+        return _NEXT_CRITIQUE_LINT_BLOCKED
     if critique_state == "REFERENCE_MISSING":
         return _NEXT_REFERENCE_MISSING
     if is_stale and critique_needs_action(critique_state):
@@ -192,6 +198,8 @@ def select_next_hint(
         if template is None:
             if "missing_briefing" in notes:
                 template = _NEXT_MISSING_BRIEFING
+            elif "critique_lint_blocked" in notes:
+                template = _NEXT_CRITIQUE_LINT_BLOCKED
             elif critique_state == "REFERENCE_MISSING":
                 template = _NEXT_REFERENCE_MISSING
             elif critique_needs_action(critique_state):
