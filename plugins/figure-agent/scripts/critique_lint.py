@@ -287,6 +287,7 @@ def _aesthetic_lever_accounting_violations(
         verdict = item.get("verdict")
         route = item.get("route")
         priority = declared_item.get("priority")
+        default_route = declared_item.get("default_route")
         linked_evidence = _aesthetic_linked_evidence(item)
         if priority == "required" and verdict == "not_applicable":
             return [
@@ -310,6 +311,17 @@ def _aesthetic_lever_accounting_violations(
                     severity="blocker",
                     category="aesthetic_lever_accounting",
                     message=f"{lever_id} route must be none for pass verdict",
+                )
+            ]
+        if route != "none" and route != default_route:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"{lever_id} route must match declared default_route "
+                        f"{default_route}; got {route}"
+                    ),
                 )
             ]
         if route == "tikz_patch" and not _links_finding_or_quality_axis(
@@ -339,25 +351,23 @@ def _aesthetic_lever_accounting_violations(
                     ),
                 )
             ]
+        if route == "svg_polish" and _editorial_polish_trigger_path(frontmatter) != (
+            "ready_for_svg_polish"
+        ):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"{lever_id} route svg_polish requires recommended_path "
+                        "ready_for_svg_polish"
+                    ),
+                )
+            ]
         if route == "semantic_backport":
-            semantic_text = _text_blob(
-                {
-                    "linked_evidence": linked_evidence,
-                    "allowed_next_adjustment": item.get("allowed_next_adjustment"),
-                    "forbidden_adjustment_guard": item.get("forbidden_adjustment_guard"),
-                    "rationale": item.get("rationale"),
-                }
-            ).lower()
-            has_semantic_polish_trigger = (
+            has_semantic_trigger = (
                 "editorial_art_direction.tikz_vs_svg_polish_trigger" in linked_evidence
                 and _editorial_polish_trigger_path(frontmatter) == "semantic_backport_required"
-            )
-            has_semantic_trigger = (
-                has_semantic_polish_trigger
-                or "semantic_backport" in semantic_text
-                or "semantic backport" in semantic_text
-                or "source-level" in semantic_text
-                or "source update" in semantic_text
             )
             if not has_semantic_trigger:
                 return [
@@ -370,6 +380,19 @@ def _aesthetic_lever_accounting_violations(
                         ),
                     )
                 ]
+        if route == "human_art_direction" and (
+            "editorial_art_direction.human_art_direction_gate" not in linked_evidence
+        ):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"{lever_id} route human_art_direction must cite "
+                        "editorial_art_direction.human_art_direction_gate"
+                    ),
+                )
+            ]
         if route == "human_art_direction" and "accept_simplification" in _text_blob(
             item
         ).lower():

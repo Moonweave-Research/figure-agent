@@ -16,6 +16,7 @@ from reference_contract import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
 CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
+CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -134,6 +135,16 @@ def expected_critique_rubric_version(example_dir: Path) -> str:
     return CRITIQUE_RUBRIC_VERSION
 
 
+def _critique_schema_matches_expected_rubric(
+    metadata: dict,
+    expected_rubric_version: str,
+) -> bool:
+    schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_11
+    return schema != CRITIQUE_SCHEMA_VERSION_V1_11
+
+
 def yaml_frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -179,4 +190,5 @@ def critique_hash_freshness(
         values["critique_input_hash"].strip() == expected_hash
         and values["rubric_version"].strip() == expected_rubric_version
         and values["generator_version"].strip() == critique_generator_version(generator_path)
+        and _critique_schema_matches_expected_rubric(metadata, expected_rubric_version)
     )

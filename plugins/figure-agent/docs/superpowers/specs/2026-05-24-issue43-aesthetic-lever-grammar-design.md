@@ -205,23 +205,22 @@ aesthetic_lever_audit:
 - `verdict: pass` must have at least one `observed_positive_signals` entry and
   must use `route: none`.
 - `verdict: fail`, `weak`, or `needs_human` must have non-empty
-  `observed_anti_patterns` or a rationale explaining the uncertainty, and must
-  have non-empty `linked_evidence`.
-- `route` must follow the declared `default_route` unless the rationale explains
-  why the current observation routes differently.
+  `observed_anti_patterns` and non-empty `linked_evidence`.
+- `route` must follow the declared `default_route` for schema v1.11. Route
+  override rationale is deferred until a future schema has an explicit field for it.
 - `route: tikz_patch` must link to a normal finding or a
   `quality_axes.blocking_items` entry.
 - `route: svg_polish` must cite
-  `editorial_art_direction.tikz_vs_svg_polish_trigger` and must not change
+  `editorial_art_direction.tikz_vs_svg_polish_trigger`, that trigger must state
+  `recommended_path: ready_for_svg_polish`, and the route must not change
   scientific meaning.
-- `route: semantic_backport` must link to a normal finding,
-  `quality_axes.blocking_items`, or
-  `editorial_art_direction.tikz_vs_svg_polish_trigger` evidence that states the
-  semantic source must be updated before final-artifact promotion. The lint
-  layer validates those links; `/fig_loop` is responsible for surfacing the
-  stop boundary.
+- `route: semantic_backport` must cite
+  `editorial_art_direction.tikz_vs_svg_polish_trigger`, and that trigger must
+  state `recommended_path: semantic_backport_required`. Free-text rationale is
+  not enough to activate the route.
 - `route: human_art_direction` must surface as a human gate, not as
-  `accept_simplification`.
+  `accept_simplification`, and must cite
+  `editorial_art_direction.human_art_direction_gate`.
 - `route: none` is valid only for `pass` or `not_applicable`.
 - `linked_evidence` entries must use one of these forms:
   `top_tier_audit.<slot_key>`, `editorial_art_direction.<slot_key>`,
@@ -269,11 +268,15 @@ slots.
 - reject `route: none` for non-passing verdicts;
 - reject `route` other than `none` for passing verdicts;
 - reject `not_applicable` for required levers;
+- reject non-passing levers without concrete `observed_anti_patterns`;
+- reject active routes that do not match the declared `default_route`;
 - reject `route: tikz_patch` without a linked finding or quality-axis blocker;
-- reject `route: svg_polish` unless the editorial polish trigger is cited;
-- reject `route: semantic_backport` unless linked evidence explicitly points to
-  a source-level semantic update or the SVG polish trigger's semantic-backport
-  path;
+- reject `route: svg_polish` unless the editorial polish trigger is cited and
+  its `recommended_path` is `ready_for_svg_polish`;
+- reject `route: semantic_backport` unless the editorial polish trigger is cited
+  and its `recommended_path` is `semantic_backport_required`;
+- reject `route: human_art_direction` unless the human art-direction gate is
+  cited;
 - reject `route: human_art_direction` if hidden behind `accept_simplification`;
 - reject `journal_grade_assessment.benchmark_level: high_impact_candidate` when
   any required lever is `fail`, `needs_human`, or `weak` with a route other than
@@ -485,6 +488,12 @@ Review 1: schema and route correctness.
   surfacing to `/fig_loop`.
 - Finding: required levers could escape as `not_applicable`.
 - Fix: forbid `not_applicable` for `priority: required`.
+- Finding: review found that schema freshness, route defaults, and human-gate
+  routing could still drift through prose-level interpretation.
+- Fix: make v1.11 freshness schema-aware, require unresolved lever anti-pattern
+  evidence, require active routes to match declared `default_route`, require SVG
+  and semantic-backport routes to match the editorial trigger path, and make
+  `/fig_loop` stop on `human_art_direction` lever summaries.
 
 Review 2: implementation readiness.
 

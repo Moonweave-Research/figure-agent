@@ -883,6 +883,60 @@ def test_loop_surfaces_v1_11_aesthetic_lever_summary(
     assert stdout_summary["aesthetic_lever_summary"] == summary
 
 
+def test_loop_human_gates_v1_11_human_art_direction_lever(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.11",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(),
+        micro_defects=[],
+        crop_audit_log=[],
+        aesthetic_lever_audit=[
+            {
+                "lever_id": "target_journal_taste",
+                "dimension": "maturity",
+                "verdict": "needs_human",
+                "route": "human_art_direction",
+                "linked_evidence": ["editorial_art_direction.human_art_direction_gate"],
+            }
+        ],
+    )
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        [
+            {
+                "finding_id": "C001",
+                "decision": "apply",
+                "reason": "label overlaps arrow; adjust label offset and spacing",
+                "patch_target": "panel A label cluster",
+                "evidence": "critique.md C001",
+            }
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect aesthetic levers",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["aesthetic_lever_summary"]["evaluation_state"] == "needs_human"
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["human_gate_status"] == "required"
+    assert iteration["escalation_level"] == "human_review_required"
+    assert iteration["active_patch_target"] is None
+    assert iteration["patch_handoff"] is None
+    assert iteration["auto_patch_eligibility"] is None
+
+
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

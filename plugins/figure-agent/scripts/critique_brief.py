@@ -475,6 +475,13 @@ def _aesthetic_lever_grammar_section(pack: dict) -> str:
         "field `aesthetic_lever_audit` with exactly one entry for every declared lever id.",
         'Generic prose such as "improve polish" is invalid unless it is tied to a '
         "lever id, observed evidence, allowed adjustment, forbidden guard, and route.",
+        "For non-passing levers, `observed_anti_patterns` must be non-empty and "
+        "`route` must match the lever's declared default_route. Route overrides are "
+        "not part of schema v1.11.",
+        "`svg_polish` requires the editorial polish trigger to recommend "
+        "`ready_for_svg_polish`; `semantic_backport` requires that same trigger to "
+        "recommend `semantic_backport_required`; `human_art_direction` must cite "
+        "`editorial_art_direction.human_art_direction_gate`.",
         "The v1 aesthetic anchor-citation rule still applies to "
         "`top_tier_audit.aesthetic_coherence`, "
         "`editorial_art_direction.visual_identity`, "

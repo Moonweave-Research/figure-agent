@@ -716,6 +716,49 @@ def test_hash_metadata_accepts_v1_11_rubric_for_aesthetic_intent_v2(
     assert compute_critique_state(fig_dir, name) == "FRESH"
 
 
+def test_hash_metadata_rejects_v1_11_schema_without_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    name = "hash_v11_without_aesthetic_v2_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version=CRITIQUE_RUBRIC_VERSION,
+        schema="figure-agent.critique.v1.11",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
+def test_hash_metadata_rejects_legacy_schema_for_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    name = "hash_aesthetic_v2_legacy_schema_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    _write_aesthetic_intent_v2(fig_dir, name)
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
+        schema="figure-agent.critique.v1.10",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "STALE"
+
+
 def test_hash_metadata_rejects_v1_10_rubric_for_aesthetic_intent_v2(
     tmp_path: Path,
 ) -> None:

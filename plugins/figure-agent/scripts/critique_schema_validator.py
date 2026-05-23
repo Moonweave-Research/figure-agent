@@ -705,7 +705,7 @@ def _validate_v1_11_aesthetic_lever_audit(
         _validate_string_list(
             item.get("observed_anti_patterns"),
             f"{label}.observed_anti_patterns",
-            require_non_empty=False,
+            require_non_empty=verdict in {"weak", "fail", "needs_human"},
         )
         route = _require_enum(item, "route", vocab.AESTHETIC_LEVER_ROUTES, label=label)
         linked_evidence = _validate_string_list(

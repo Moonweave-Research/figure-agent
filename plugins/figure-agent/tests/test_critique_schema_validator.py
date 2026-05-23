@@ -367,6 +367,14 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_without_linked_evidence
         validate_critique_schema(frontmatter)
 
 
+def test_validate_critique_schema_rejects_v1_11_non_pass_without_anti_pattern() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["observed_anti_patterns"] = []
+
+    with pytest.raises(CritiqueContractError, match="observed_anti_patterns"):
+        validate_critique_schema(frontmatter)
+
+
 def test_validate_critique_schema_rejects_v1_10_missing_accept_reason() -> None:
     frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["micro_defects"] = [
