@@ -325,6 +325,24 @@ Closeout after SVG polish:
 7. Do not set `accepted: true` unless publication provenance, final-artifact
    state, and the existing accepted/golden checks are closed.
 
+Use the handoff scaffolder after `polish/<name>.polished.svg` exists:
+
+```bash
+uv run python3 scripts/svg_polish_handoff.py examples/<name> \
+  --reviewer author \
+  --editor human \
+  --toolchain "Inkscape:1.4" \
+  --edit-class label_micro_position \
+  --edit-class stroke_polish \
+  --reviewed-at 2026-05-23T00:00:00Z \
+  --notes "visual-only polish" \
+  --write
+```
+
+The scaffolder writes the audit first and the manifest last. It does not edit
+SVG geometry, generated exports, critique files, accepted state, golden
+contracts, or semantic source files.
+
 If no reviewer can confidently classify every SVG edit as visual-only, set
 `backport_required: true` in the manifest and return to the semantic source
 loop instead of promoting the polished SVG.

@@ -1279,6 +1279,7 @@ def test_polish_mode_stops_for_polish_handoff_when_export_current(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
+    assert "scripts/svg_polish_handoff.py" in summary["reason"]
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
@@ -1302,6 +1303,7 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
     assert "ready_for_svg_polish" in summary["reason"]
+    assert "scripts/svg_polish_handoff.py" in summary["reason"]
     assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
 
 

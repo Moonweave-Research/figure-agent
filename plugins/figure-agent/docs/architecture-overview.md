@@ -48,7 +48,7 @@ Layer 4: Compile Gates                 (compile.sh: lint -> lualatex -> checks)
 Layer 5: Export                        (PDF / SVG via dvisvgm / TIFF / PNG)
    |
    v
-Layer 5.5: Final Artifact              (planned polished-SVG contract;
+Layer 5.5: Final Artifact              (polished-SVG contract;
                                         optional, opt-in, no SVG editor)
    |
    v
@@ -301,10 +301,12 @@ Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a m
 
 ### Layer 5.5 — Final Artifact Contract
 
-**Status**: partially implemented command contract. Manifest schema,
-`/fig_status` state, accepted-gate validation, and verify-only `/fig_loop`
-safety are live. Full `/fig_loop` final-artifact surfacing and richer stop
-taxonomy remain planned.
+**Status**: implemented command contract with scaffolding UX in progress.
+Manifest schema, `/fig_status` state, accepted-gate validation, verify-only
+`/fig_loop` surfacing, and final-artifact blocking are live. The plugin still
+does not edit SVG geometry; `scripts/svg_polish_handoff.py` scaffolds the audit
+and manifest for an already-polished SVG.
+
 **Design**:
 `docs/superpowers/specs/2026-05-19-final-artifact-svg-polish-contract-design.md`.
 
@@ -342,8 +344,10 @@ final_artifact:
   provenance-backed polished SVG only for fixtures that explicitly opt in.
 - `/fig_loop` remains verify-only. It blocks completion when status reports
   `workflow_ready=true` but `final_ready=false`, and it surfaces the current
-  final-artifact state in its decision output. Full loop-level blocker taxonomy
-  is deferred to Issue 7E.
+  final-artifact state in its decision output.
+- `scripts/svg_polish_handoff.py` is the UX helper for writing
+  `polish/svg_polish_audit.md` and `polish/svg_polish_manifest.yaml` after a
+  human or outer agent creates `polish/<name>.polished.svg`.
 
 ### Layer 6 — Validation Gates
 

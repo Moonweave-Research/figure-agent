@@ -73,20 +73,23 @@ _NEXT_STYLE_PROFILE_UNKNOWN = (
     "fix unknown style_profile in examples/<name>/spec.yaml before continuing."
 )
 _NEXT_FINAL_ARTIFACT_MISSING = (
-    "final artifact is missing — create or restore the declared polished SVG, audit,"
-    " and polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
+    "final artifact is missing — create or restore polish/<name>.polished.svg,"
+    " then run scripts/svg_polish_handoff.py to scaffold"
+    " polish/svg_polish_audit.md and polish/svg_polish_manifest.yaml."
 )
 _NEXT_FINAL_ARTIFACT_INVALID = (
     "final artifact is invalid — fix spec.yaml final_artifact and"
     " polish/svg_polish_manifest.yaml, then rerun /fig_status <name>."
 )
 _NEXT_FINAL_ARTIFACT_STALE = (
-    "final artifact is stale — refresh polish/svg_polish_manifest.yaml after"
-    " source/export/critique/polish changes, then rerun /fig_status <name>."
+    "final artifact is stale — manifest must be refreshed by rerunning"
+    " scripts/svg_polish_handoff.py after source/export/critique/polish/audit"
+    " changes, then rerun /fig_status <name>."
 )
 _NEXT_FINAL_ARTIFACT_BLOCKED = (
     "final artifact requires semantic backport — patch TikZ/briefing/spec,"
-    " rerun compile/export/critique as needed, then recreate the polish manifest."
+    " rerun compile/export/critique as needed, then rerun"
+    " scripts/svg_polish_handoff.py."
 )
 
 

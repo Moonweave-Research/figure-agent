@@ -747,7 +747,9 @@ def _select_action(
                     reason=(
                         "latest /fig_loop editorial art-direction summary "
                         "recommends ready_for_svg_polish; generated export is "
-                        "current and SVG handoff may proceed without source edits."
+                        "current and SVG handoff may proceed without source edits. "
+                        "After polish/<name>.polished.svg exists, run "
+                        "scripts/svg_polish_handoff.py to scaffold audit and manifest."
                     ),
                     checkpoint=loop_checkpoint,
                 )
@@ -757,7 +759,8 @@ def _select_action(
         stop_boundary=None,
         reason=(
             "generated export is current; remaining work is visual-only SVG "
-            "polish handoff (see /fig_loop SVG Polish Handoff)."
+            "polish handoff. After polish/<name>.polished.svg exists, run "
+            "scripts/svg_polish_handoff.py to scaffold audit and manifest."
         ),
     )
 
