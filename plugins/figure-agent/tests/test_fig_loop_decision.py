@@ -110,6 +110,32 @@ def test_loop_decision_stale_critique_precedes_human_gate(tmp_path: Path) -> Non
     assert decision["human_gate_status"] == "not_requested"
 
 
+def test_loop_decision_status_next_precedes_stale_critique_when_render_unready(
+    tmp_path: Path,
+) -> None:
+    decision = loop_decision(
+        {
+            "notes": ["stale_export"],
+            "critique_state": "STALE",
+            "render_state": "STALE",
+            "workflow_ready": False,
+            "next": (
+                "exports are stale — re-run /fig_compile loop_demo, "
+                "then /fig_critique loop_demo, then /fig_export loop_demo."
+            ),
+        },
+        {"state": "fresh", "decisions": []},
+        tmp_path / "loop_demo",
+    )
+
+    assert decision["stop_reason"] == "status_action_required"
+    assert decision["recommended_next_action"] == (
+        "exports are stale — re-run /fig_compile loop_demo, "
+        "then /fig_critique loop_demo, then /fig_export loop_demo."
+    )
+    assert decision["human_gate_status"] == "not_requested"
+
+
 def test_loop_decision_human_gate_precedes_apply_decision(tmp_path: Path) -> None:
     decision = loop_decision(
         {"notes": [], "critique_state": "FRESH", "workflow_ready": True},
