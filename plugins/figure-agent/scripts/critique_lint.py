@@ -12,7 +12,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from aesthetic_intent import AestheticIntentError, load_optional_aesthetic_intent  # noqa: E402
+from aesthetic_intent import (  # noqa: E402
+    AESTHETIC_INTENT_SCHEMA_V2,
+    AestheticIntentError,
+    load_optional_aesthetic_intent,
+)
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
@@ -40,16 +44,26 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
-    {"figure-agent.critique.v1.8", "figure-agent.critique.v1.9", "figure-agent.critique.v1.10"}
+    {
+        "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
+    }
 )
-STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset({"figure-agent.critique.v1.10"})
+STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
+    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+)
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
 _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
-TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset({"figure-agent.critique.v1.10"})
+TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
+    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+)
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",
@@ -125,6 +139,284 @@ def _contains_aesthetic_anchor(text: str, anchors: set[str]) -> bool:
     return False
 
 
+def _aesthetic_lever_items(pack: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_items = pack.get("aesthetic_levers")
+    if not isinstance(raw_items, list):
+        return {}
+    items: dict[str, dict[str, Any]] = {}
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        lever_id = raw_item.get("id")
+        if isinstance(lever_id, str) and lever_id.strip():
+            items[lever_id.strip()] = raw_item
+    return items
+
+
+def _aesthetic_audit_items(frontmatter: dict[str, Any]) -> list[dict[str, Any]] | None:
+    raw_items = frontmatter.get("aesthetic_lever_audit")
+    if not isinstance(raw_items, list):
+        return None
+    return [item for item in raw_items if isinstance(item, dict)]
+
+
+def _aesthetic_linked_evidence(item: dict[str, Any]) -> list[str]:
+    raw_items = item.get("linked_evidence")
+    if not isinstance(raw_items, list):
+        return []
+    return [item.strip() for item in raw_items if isinstance(item, str) and item.strip()]
+
+
+def _quality_axis_is_blocking(frontmatter: dict[str, Any], evidence: str) -> bool:
+    if not evidence.startswith("quality_axes."):
+        return False
+    axis_name = evidence.removeprefix("quality_axes.")
+    quality_axes = frontmatter.get("quality_axes")
+    axis = quality_axes.get(axis_name) if isinstance(quality_axes, dict) else None
+    if not isinstance(axis, dict):
+        return False
+    blocking_items = axis.get("blocking_items")
+    return isinstance(blocking_items, list) and bool(blocking_items)
+
+
+def _links_finding_or_quality_axis(frontmatter: dict[str, Any], evidence: list[str]) -> bool:
+    finding_ids = {
+        critique_finding_id(finding, f"critique finding {index}")
+        for index, finding in enumerate(critique_findings(frontmatter))
+    }
+    return any(
+        item in finding_ids or _quality_axis_is_blocking(frontmatter, item)
+        for item in evidence
+    )
+
+
+def _editorial_polish_trigger_path(frontmatter: dict[str, Any]) -> str:
+    editorial = frontmatter.get("editorial_art_direction")
+    trigger = (
+        editorial.get("tikz_vs_svg_polish_trigger")
+        if isinstance(editorial, dict)
+        else None
+    )
+    path = trigger.get("recommended_path") if isinstance(trigger, dict) else None
+    return path.strip() if isinstance(path, str) else ""
+
+
+def _aesthetic_lever_accounting_violations(
+    pack: dict[str, Any],
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if pack.get("schema") != AESTHETIC_INTENT_SCHEMA_V2:
+        return []
+    if frontmatter.get("schema") != "figure-agent.critique.v1.11":
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_lever_accounting",
+                message=(
+                    "aesthetic_intent.yaml schema v2 requires "
+                    "critique schema figure-agent.critique.v1.11"
+                ),
+            )
+        ]
+
+    declared = _aesthetic_lever_items(pack)
+    audit_items = _aesthetic_audit_items(frontmatter)
+    if audit_items is None:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_lever_accounting",
+                message="missing aesthetic_lever_audit for v2 aesthetic intent",
+            )
+        ]
+
+    lever_ids = [
+        item.get("lever_id").strip()
+        for item in audit_items
+        if isinstance(item.get("lever_id"), str) and item.get("lever_id").strip()
+    ]
+    duplicate_ids = sorted({lever_id for lever_id in lever_ids if lever_ids.count(lever_id) > 1})
+    if duplicate_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_lever_accounting",
+                message=f"duplicate lever ids: {', '.join(duplicate_ids)}",
+            )
+        ]
+    declared_ids = set(declared)
+    unknown_ids = sorted(lever_id for lever_id in lever_ids if lever_id not in declared_ids)
+    if unknown_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_lever_accounting",
+                message=f"unknown lever ids: {', '.join(unknown_ids)}",
+            )
+        ]
+    missing_ids = sorted(declared_ids - set(lever_ids))
+    if missing_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_lever_accounting",
+                message=f"missing declared lever ids: {', '.join(missing_ids)}",
+            )
+        ]
+
+    item_by_id = {
+        item["lever_id"].strip(): item
+        for item in audit_items
+        if isinstance(item.get("lever_id"), str) and item["lever_id"].strip()
+    }
+    for lever_id, declared_item in declared.items():
+        item = item_by_id[lever_id]
+        expected_dimension = declared_item.get("dimension")
+        actual_dimension = item.get("dimension")
+        if actual_dimension != expected_dimension:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"dimension mismatch for {lever_id}: expected "
+                        f"{expected_dimension}, got {actual_dimension}"
+                    ),
+                )
+            ]
+        verdict = item.get("verdict")
+        route = item.get("route")
+        priority = declared_item.get("priority")
+        linked_evidence = _aesthetic_linked_evidence(item)
+        if priority == "required" and verdict == "not_applicable":
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=f"{lever_id} is required and cannot be not_applicable",
+                )
+            ]
+        if verdict in {"weak", "fail", "needs_human"} and route == "none":
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=f"{lever_id} route must not be none for verdict {verdict}",
+                )
+            ]
+        if verdict == "pass" and route != "none":
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=f"{lever_id} route must be none for pass verdict",
+                )
+            ]
+        if route == "tikz_patch" and not _links_finding_or_quality_axis(
+            frontmatter,
+            linked_evidence,
+        ):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"{lever_id} route tikz_patch must link to a finding id or "
+                        "quality axis blocking item"
+                    ),
+                )
+            ]
+        if route == "svg_polish" and (
+            "editorial_art_direction.tikz_vs_svg_polish_trigger" not in linked_evidence
+        ):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        f"{lever_id} route svg_polish must cite "
+                        "editorial_art_direction.tikz_vs_svg_polish_trigger"
+                    ),
+                )
+            ]
+        if route == "semantic_backport":
+            semantic_text = _text_blob(
+                {
+                    "linked_evidence": linked_evidence,
+                    "allowed_next_adjustment": item.get("allowed_next_adjustment"),
+                    "forbidden_adjustment_guard": item.get("forbidden_adjustment_guard"),
+                    "rationale": item.get("rationale"),
+                }
+            ).lower()
+            has_semantic_polish_trigger = (
+                "editorial_art_direction.tikz_vs_svg_polish_trigger" in linked_evidence
+                and _editorial_polish_trigger_path(frontmatter) == "semantic_backport_required"
+            )
+            has_semantic_trigger = (
+                has_semantic_polish_trigger
+                or "semantic_backport" in semantic_text
+                or "semantic backport" in semantic_text
+                or "source-level" in semantic_text
+                or "source update" in semantic_text
+            )
+            if not has_semantic_trigger:
+                return [
+                    CritiqueLintViolation(
+                        severity="blocker",
+                        category="aesthetic_lever_accounting",
+                        message=(
+                            f"{lever_id} route semantic_backport must cite "
+                            "semantic-backport evidence"
+                        ),
+                    )
+                ]
+        if route == "human_art_direction" and "accept_simplification" in _text_blob(
+            item
+        ).lower():
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        "human_art_direction must not be hidden behind "
+                        f"accept_simplification: {lever_id}"
+                    ),
+                )
+            ]
+
+    assessment = frontmatter.get("journal_grade_assessment")
+    is_high_impact = (
+        isinstance(assessment, dict)
+        and assessment.get("benchmark_level") == "high_impact_candidate"
+    )
+    if is_high_impact:
+        unresolved_required = [
+            lever_id
+            for lever_id, declared_item in declared.items()
+            if declared_item.get("priority") == "required"
+            and (
+                item_by_id[lever_id].get("verdict") in {"fail", "needs_human"}
+                or (
+                    item_by_id[lever_id].get("verdict") == "weak"
+                    and item_by_id[lever_id].get("route") != "none"
+                )
+            )
+        ]
+        if unresolved_required:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_lever_accounting",
+                    message=(
+                        "high_impact_candidate requires passing required aesthetic levers; "
+                        "unresolved: "
+                        + ", ".join(sorted(unresolved_required))
+                    ),
+                )
+            ]
+    return []
+
+
 def _aesthetic_intent_accounting_violations(
     example_dir: Path,
     frontmatter: dict[str, Any],
@@ -141,6 +433,9 @@ def _aesthetic_intent_accounting_violations(
         ]
     if pack is None:
         return []
+    lever_violations = _aesthetic_lever_accounting_violations(pack, frontmatter)
+    if lever_violations:
+        return lever_violations
     anchors = _aesthetic_intent_anchor_strings(pack)
     if not anchors:
         return [

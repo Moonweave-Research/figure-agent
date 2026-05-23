@@ -367,28 +367,6 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_without_linked_evidence
         validate_critique_schema(frontmatter)
 
 
-def test_validate_critique_schema_rejects_v1_11_high_impact_with_unresolved_lever() -> None:
-    critique_hash = "sha256:" + "a" * 64
-    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
-    frontmatter["critique_input_hash"] = critique_hash
-    frontmatter["journal_grade_assessment"] = {
-        "schema": "figure-agent.journal-grade-assessment.v1",
-        "scoring_mode": "fresh_reaudit",
-        "assessed_artifact_hash": critique_hash,
-        "benchmark_level": "high_impact_candidate",
-        "confidence": "high",
-        "blockers": [],
-        "regression_detected": False,
-        "regressions": [],
-        "score_is_gateable": True,
-        "next_quality_bottleneck": "polish",
-        "rationale": "claims high-impact quality despite an unresolved aesthetic lever",
-    }
-
-    with pytest.raises(CritiqueContractError, match="aesthetic_lever_audit"):
-        validate_critique_schema(frontmatter)
-
-
 def test_validate_critique_schema_rejects_v1_10_missing_accept_reason() -> None:
     frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["micro_defects"] = [

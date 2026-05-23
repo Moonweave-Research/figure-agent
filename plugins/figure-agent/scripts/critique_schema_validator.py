@@ -287,7 +287,6 @@ def _validate_journal_grade_assessment(
     quality_verdicts: dict[str, str],
     top_tier_verdicts: dict[str, str] | None = None,
     editorial_verdicts: dict[str, str] | None = None,
-    aesthetic_lever_verdicts: dict[str, tuple[str, str]] | None = None,
     *,
     allow_reference_calibration: bool = False,
 ) -> None:
@@ -377,17 +376,6 @@ def _validate_journal_grade_assessment(
             raise CritiqueContractError(
                 f"{label}.benchmark_level high_impact_candidate requires passing "
                 f"editorial_art_direction slots; non-passing slots: {audits}"
-            )
-        non_passing_aesthetic = {
-            lever_id: verdict
-            for lever_id, (verdict, route) in (aesthetic_lever_verdicts or {}).items()
-            if verdict in {"fail", "needs_human"} or (verdict == "weak" and route != "none")
-        }
-        if non_passing_aesthetic:
-            levers = ", ".join(sorted(non_passing_aesthetic))
-            raise CritiqueContractError(
-                f"{label}.benchmark_level high_impact_candidate requires passing "
-                f"aesthetic_lever_audit entries; non-passing levers: {levers}"
             )
 
     critique_input_hash = frontmatter.get("critique_input_hash")
@@ -923,13 +911,12 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_10_accept_simplification(frontmatter)
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
-        aesthetic_lever_verdicts = _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        _validate_v1_11_aesthetic_lever_audit(frontmatter)
         _validate_journal_grade_assessment(
             frontmatter,
             quality_verdicts,
             top_tier_verdicts,
             editorial_verdicts,
-            aesthetic_lever_verdicts,
             allow_reference_calibration=True,
         )
         _validate_v1_2_audit_to_finding(frontmatter)
