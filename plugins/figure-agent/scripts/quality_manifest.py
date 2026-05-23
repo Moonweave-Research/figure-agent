@@ -91,6 +91,9 @@ def critique_manifest_paths(
     critique_reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if critique_reference_pack_path.exists():
         paths.append(critique_reference_pack_path)
+    aesthetic_intent_path = example_dir / "aesthetic_intent.yaml"
+    if aesthetic_intent_path.exists():
+        paths.append(aesthetic_intent_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
