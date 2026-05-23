@@ -2,6 +2,76 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.5.6] - 2026-05-23
+
+Audit-hardening and workflow-readiness release. This brings the post-0.5.3
+loop/driver work up to the current plugin manifest version and documents the
+new audit evidence contracts, critique accountability gates, text-boundary
+checks, and canonical command order.
+
+Note: `0.5.4` and `0.5.5` existed only as intermediate manifest/version states
+without separate public tags. The current shipped plugin version is `0.5.6`.
+
+### Added
+
+- Visual-clash-centered audit crops and a deterministic
+  `build/audit_crops/manifest.json` crop pack for `/fig_critique`.
+- Crop-read accountability in the critique contract so host critiques must
+  explicitly account for required zoom, print-scale, and visual-clash crops.
+- Optional `critique_reference_pack.yaml` support for reference-calibrated
+  top-tier critique and advisory scoring metadata.
+- Audit evidence summary plumbing through `/fig_status`, `/fig_drive`, and
+  `/fig_loop`.
+- Text-boundary clash detection for labels crossing declared row boxes, column
+  rules, panel boundaries, and internal instrument rectangles.
+- Helpers for authoring-safe maintenance:
+  `text_boundary_spec_helper.py`, `tex_coordinate_shift.py`, and
+  `/fig_closeout` text-boundary sync reporting.
+- Aesthetic intent packs via `aesthetic_intent.yaml`, with `/fig_critique`
+  grounding and freshness participation.
+- Workspace dirty-file warnings in `/fig_drive --dry-run`.
+- Plugin readiness matrix documentation for real fixture status/driver/loop
+  behavior.
+
+### Changed
+
+- `/fig_loop` now forwards the canonical `/fig_status` next action when render
+  is missing or stale, so stale renders are compiled before host vision
+  critique is requested.
+- `/fig_status` now surfaces critique lint blockers and a compact
+  `critique_lint_summary` for fresh critiques.
+- `/fig_drive` now ingests current `/fig_loop` checkpoints, audit evidence,
+  publication gates, and closeout state while remaining dry-run only.
+- Critique schema/rubric surfaces were extended through the v1.9/v1.10 family
+  for top-tier audit, editorial art direction, micro-defects, crop
+  accountability, structured accept-simplification reasons, and
+  reference-calibrated scoring.
+- Canonical workflow docs now pin the order:
+  `/fig_status` or `/fig_drive --dry-run` first, then compile, critique,
+  adjudication, loop, export/release/polish only when routed.
+- CI was split into fast plugin tests and full render tests with timeout and
+  dependency-stall guardrails.
+
+### Fixed
+
+- Historical label/backdrop and glyph/internal-drawing visual-clash blind spots
+  are now represented in the micro-defect taxonomy and critique lint path.
+- Visual-clash `accept_simplification` entries now require concrete rationale
+  instead of vague prose.
+- Crop manifest and historical visual-clash regression lint paths were hardened
+  against stale or malformed audit evidence.
+- Phrase-aware text-boundary containment now covers labels split into multiple
+  PDF text fragments, such as phrase labels and math/subscript labels.
+- Documentation contract drift across completed Issues 23-41 was reconciled so
+  recently implemented work no longer appears open or branch-local.
+
+### Tests
+
+- Latest local full suite during Issue 40: 1084 pytest passed, 1 skipped,
+  1 xfailed; ruff clean; Claude plugin validation passed.
+- Latest main CI after Issue 41: `figure-agent tests` and
+  `figure-agent full render tests` both succeeded.
+
 ## [0.5.3] - 2026-05-18
 
 Loop-contract release for verify-only figure iteration and safe patch handoff.
