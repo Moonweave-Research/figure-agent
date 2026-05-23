@@ -1041,6 +1041,7 @@ polish_triggers:
     assert "top_tier_audit.aesthetic_coherence" in brief
     assert "editorial_art_direction.visual_identity" in brief
     assert "editorial_art_direction.aesthetic_risk" in brief
+    assert "must cite at least one exact aesthetic intent anchor" in brief
 
 
 def test_critique_brief_omits_aesthetic_intent_calibration_when_missing(tmp_path):

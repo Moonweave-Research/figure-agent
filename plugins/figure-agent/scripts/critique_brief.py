@@ -437,6 +437,8 @@ def _aesthetic_intent_section(pack: dict | None) -> str:
         "`editorial_art_direction.visual_identity`, "
         "`editorial_art_direction.aesthetic_risk`, and "
         "`editorial_art_direction.tikz_vs_svg_polish_trigger`.",
+        "Each of those four critique slots must cite at least one exact aesthetic intent "
+        "anchor from the target fields or item ids below; generic style prose is invalid.",
         f"- Target journal: {pack['target_journal']}",
         f"- Visual maturity: {pack['visual_maturity']}",
         f"- Density: {pack['density']}",
