@@ -26,6 +26,19 @@ final-artifact promotion, return to the command that closes that gate before
 re-invoking `/fig_loop`. Export and final-artifact freshness are evaluated by
 later gates and are not preconditions for recording loop evidence.
 
+Canonical pre-loop order:
+
+1. `render_state: MISSING | STALE` -> run `/fig_compile <name>` before
+   critique or loop.
+2. `render_state: FRESH` plus `critique_state: MISSING | STALE |
+   REFERENCE_MISSING` -> run `/fig_critique <name>` or fix declared reference
+   inputs.
+3. `critique_state: FRESH` plus missing/stale/invalid
+   `critique_adjudication.yaml` -> run `/fig_adjudicate <name>` or repair the
+   adjudication contract.
+4. Only then use `/fig_loop <name> --goal "<goal>"` to record the verify-only
+   state and patch/human-gate evidence.
+
 For automation, emit a small machine-readable summary:
 
 ```bash
@@ -222,10 +235,13 @@ successful executor run writes `patch_apply_NNN.json` into the latest loop run
 directory and leaves `closeout_required: true`; run `/fig_closeout <name>` next
 before claiming progress.
 
-When `critique_state` is `MISSING` or `STALE`, `/fig_loop` reports
-`status_action_required` with an ordinary `/fig_critique <name>` refresh action
-before considering adjudicated human gates or manual golden roll-forward. Human
-review and `--force-golden` approval are only meaningful after the critique
+When render is missing or stale, `/fig_loop` reports `status_action_required`
+and forwards `/fig_status`'s canonical compile/export freshness hint before
+considering critique refresh. When render is already fresh and
+`critique_state` is `MISSING` or `STALE`, it reports `status_action_required`
+with an ordinary `/fig_critique <name>` refresh action before considering
+adjudicated human gates or manual golden roll-forward. Human review and
+`--force-golden` approval are only meaningful after the render and critique
 evidence they depend on is fresh.
 
 ## SVG Polish Handoff
