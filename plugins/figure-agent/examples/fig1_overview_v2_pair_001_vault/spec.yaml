@@ -61,6 +61,24 @@ style_profile: polymer-paper
 visual_clash_cap: 59
 text_boundary_layout:
   clearance_pt: 0.5
+  row_boxes:
+    - id: row2
+      bbox_pdf_cm: [0.205, 5.863, 17.750, 11.457]
+      clearance_pt: 0.0
+      text_allowlist:
+        - ISPD
+        - kinetic
+        - mechanical
+        - HV+
+        - probe
+        - MIM
+        - stack
+        - SMU
+        - V/A
+        - meter
+        - Coulomb
+        - Maxwell
+        - repulsion
   column_rules:
     - id: row2_de
       x_pdf_cm: 6.015
@@ -79,6 +97,26 @@ text_boundary_layout:
       bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
       role: instrument_internal_drawing
 text_boundary_checks:
+  - id: row2_contain_text
+    kind: rect
+    role: row_box
+    bbox_pdf_cm: [0.205, 5.863, 17.750, 11.457]
+    mode: contain_text
+    clearance_pt: 0.0
+    text_allowlist:
+      - ISPD
+      - kinetic
+      - mechanical
+      - HV+
+      - probe
+      - MIM
+      - stack
+      - SMU
+      - V/A
+      - meter
+      - Coulomb
+      - Maxwell
+      - repulsion
   - id: row2_de_column_rule
     kind: vertical_line
     role: column_rule

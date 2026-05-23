@@ -92,6 +92,70 @@ def test_detects_text_outside_containing_row_box() -> None:
     assert candidates[0]["boundary_role"] == "row_box"
 
 
+def test_containing_row_box_allowlist_ignores_non_matching_text() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_allowlist": ["polymer"],
+        }
+    ]
+    words = [
+        _word("caption", 120.0, 20.0, 150.0, 30.0),
+        _word("polymer", 20.0, 20.0, 50.0, 30.0),
+    ]
+
+    assert boundary.detect_text_boundary_clashes(words, (200.0, 200.0), checks) == []
+
+
+def test_containing_row_box_allowlist_flags_matching_text_outside_rect() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_allowlist": ["polymer"],
+        }
+    ]
+    words = [
+        _word("caption", 120.0, 20.0, 150.0, 30.0),
+        _word("polymer", 120.0, 20.0, 150.0, 30.0),
+    ]
+
+    candidates = boundary.detect_text_boundary_clashes(words, (200.0, 200.0), checks)
+
+    assert [candidate["text"] for candidate in candidates] == ["polymer"]
+    assert candidates[0]["kind"] == "text_outside_rect"
+
+
+def test_containing_row_box_rejects_malformed_text_allowlist() -> None:
+    checks = [
+        {
+            "id": "row2_box",
+            "kind": "rect",
+            "role": "row_box",
+            "mode": "contain_text",
+            "bbox_pdf_cm": [0.0, 0.0, 2.54, 2.54],
+            "clearance_pt": 0.0,
+            "text_allowlist": ["polymer", ""],
+        }
+    ]
+
+    with pytest.raises(boundary.TextBoundaryClashError, match="text_allowlist"):
+        boundary.detect_text_boundary_clashes(
+            [_word("polymer", 120.0, 20.0, 150.0, 30.0)],
+            (200.0, 200.0),
+            checks,
+        )
+
+
 def test_detects_text_inside_forbidden_rect() -> None:
     checks = [
         {

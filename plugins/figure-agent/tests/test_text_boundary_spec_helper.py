@@ -21,7 +21,13 @@ def _write_fixture(tmp_path: Path, spec: str) -> Path:
 def test_build_text_boundary_checks_from_layout_sections() -> None:
     layout = {
         "clearance_pt": 0.5,
-        "row_boxes": [{"id": "row2", "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5]}],
+        "row_boxes": [
+            {
+                "id": "row2",
+                "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5],
+                "text_allowlist": ["polymer", "SMU"],
+            }
+        ],
         "column_rules": [{"id": "de", "x_pdf_cm": 4.62, "y_range_pdf_cm": [0.0, 4.5]}],
         "horizontal_rules": [
             {
@@ -51,6 +57,7 @@ def test_build_text_boundary_checks_from_layout_sections() -> None:
             "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5],
             "mode": "contain_text",
             "clearance_pt": 0.5,
+            "text_allowlist": ["polymer", "SMU"],
         },
         {
             "id": "de_column_rule",
@@ -83,6 +90,21 @@ def test_build_text_boundary_checks_rejects_malformed_bbox() -> None:
     layout = {"row_boxes": [{"id": "row2", "bbox_pdf_cm": [0.0, 1.0, 2.0]}]}
 
     with pytest.raises(helper.TextBoundarySpecHelperError, match="bbox_pdf_cm"):
+        helper.build_text_boundary_checks(layout)
+
+
+def test_build_text_boundary_checks_rejects_malformed_text_allowlist() -> None:
+    layout = {
+        "row_boxes": [
+            {
+                "id": "row2",
+                "bbox_pdf_cm": [0.0, 0.0, 13.8, 4.5],
+                "text_allowlist": ["polymer", ""],
+            }
+        ]
+    }
+
+    with pytest.raises(helper.TextBoundarySpecHelperError, match="text_allowlist"):
         helper.build_text_boundary_checks(layout)
 
 

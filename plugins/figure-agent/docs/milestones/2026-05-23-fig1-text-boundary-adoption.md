@@ -21,6 +21,7 @@ The fixture now declares `spec.yaml.text_boundary_layout` and matching
 
 Active checks:
 
+- Row 2 containment for an explicit allowlist of Row 2-only labels.
 - D/E column rule, scoped to the apparatus/result row body.
 - E/F column rule, scoped to the apparatus/result row body.
 - Panel E HV display forbidden rectangle.
@@ -35,8 +36,9 @@ header and bottom annotation band:
 - `kinetic` near the inter-row branch label band.
 - `ISPD` near the row header band.
 
-Those were false-positive risks for the current goal. The final contract keeps
-the high-value checks: column-rule crossing and label-internal-display overlap.
+Those were false-positive risks for the initial contract. Issue 33 later added
+scoped containment with `text_allowlist`, allowing the fixture to adopt Row 2
+containment for Row 2-only labels while still avoiding global word noise.
 
 ## Evidence
 
@@ -47,7 +49,7 @@ uv run python3 scripts/text_boundary_spec_helper.py \
   examples/fig1_overview_v2_pair_001_vault
 ```
 
-Result: generated 5 checks matching the committed `text_boundary_checks`.
+Result: generated 6 checks matching the committed `text_boundary_checks`.
 
 Closeout:
 
@@ -59,7 +61,7 @@ uv run python3 scripts/fig_closeout.py \
 Observed:
 
 - `text_boundary_checks`: `passed`
-- `check_count`: 5
+- `check_count`: 6
 - remaining closeout blockers are ordinary fixture workflow state
   (`compile`, `critique`, `adjudication`, `export`, `loop_rerun`), not boundary
   metadata drift.
@@ -80,11 +82,11 @@ Observed:
 
 ## Remaining Limitation
 
-The fixture still does not use a full `row_boxes: contain_text` contract because
-the current checker applies containment to all PDF words. That would require a
-scoped containment mode before it can be adopted without creating noise from
-normal text outside Row 2.
+The fixture uses scoped row containment only for exact PDF words in
+`text_allowlist`. It deliberately avoids common words such as `polymer`, because
+the same extracted word can also appear outside Row 2 and would be treated as an
+expected Row 2 label.
 
-This is not a blocker for the current failure class. Column-rule and forbidden
-instrument-rectangle checks are now active for the areas that caused the real
-manual-review misses.
+This is not a blocker for the current failure class. Row containment,
+column-rule, and forbidden instrument-rectangle checks are now active for the
+areas that caused the real manual-review misses.

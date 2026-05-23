@@ -54,6 +54,21 @@ def _bbox_pdf_cm_to_pt(values: object, *, field: str) -> list[float]:
     return [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
 
 
+def _text_allowlist(check: dict[str, Any]) -> set[str] | None:
+    value = check.get("text_allowlist")
+    if value is None:
+        return None
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(item, str) and item.strip() for item in value)
+    ):
+        raise TextBoundaryClashError(
+            f"{check['id']}.text_allowlist must be a non-empty string list"
+        )
+    return {item.strip() for item in value}
+
+
 def _ranges_overlap(a_min: float, a_max: float, b_min: float, b_max: float) -> bool:
     return max(a_min, b_min) <= min(a_max, b_max)
 
@@ -223,6 +238,9 @@ def _rect_candidate(check: dict[str, Any], word: dict[str, Any]) -> dict[str, An
     xmax = float(word["xmax"])
     ymax = float(word["ymax"])
     if mode == "contain_text":
+        allowlist = _text_allowlist(check)
+        if allowlist is not None and str(word.get("text", "")).strip() not in allowlist:
+            return None
         outside = (
             xmin < rect[0] + clearance
             or ymin < rect[1] + clearance

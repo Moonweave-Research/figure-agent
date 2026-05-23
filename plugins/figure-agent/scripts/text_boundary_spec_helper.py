@@ -60,6 +60,21 @@ def _require_number_list(
     return [float(entry) for entry in value]
 
 
+def _optional_text_allowlist(item: dict[str, Any], label: str) -> list[str] | None:
+    value = item.get("text_allowlist")
+    if value is None:
+        return None
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(entry, str) and entry.strip() for entry in value)
+    ):
+        raise TextBoundarySpecHelperError(
+            f"{label}.text_allowlist must be a non-empty string list"
+        )
+    return [entry.strip() for entry in value]
+
+
 def _clearance(item: dict[str, Any], default_clearance: float) -> float:
     value = item.get("clearance_pt", default_clearance)
     if not isinstance(value, int | float):
@@ -90,21 +105,23 @@ def build_text_boundary_checks(layout: dict[str, Any]) -> list[dict[str, Any]]:
     for index, raw_item in enumerate(_require_list(layout.get("row_boxes"), "row_boxes")):
         item = _require_mapping(raw_item, f"row_boxes[{index}]")
         item_id = _require_id(item, f"row_boxes[{index}]")
-        checks.append(
-            {
-                "id": f"{item_id}_contain_text",
-                "kind": "rect",
-                "role": _role(item, "row_box"),
-                "bbox_pdf_cm": _require_number_list(
-                    item,
-                    "bbox_pdf_cm",
-                    length=4,
-                    label=f"row_boxes[{index}]",
-                ),
-                "mode": "contain_text",
-                "clearance_pt": _clearance(item, default_clearance),
-            }
-        )
+        check = {
+            "id": f"{item_id}_contain_text",
+            "kind": "rect",
+            "role": _role(item, "row_box"),
+            "bbox_pdf_cm": _require_number_list(
+                item,
+                "bbox_pdf_cm",
+                length=4,
+                label=f"row_boxes[{index}]",
+            ),
+            "mode": "contain_text",
+            "clearance_pt": _clearance(item, default_clearance),
+        }
+        text_allowlist = _optional_text_allowlist(item, f"row_boxes[{index}]")
+        if text_allowlist is not None:
+            check["text_allowlist"] = text_allowlist
+        checks.append(check)
 
     for index, raw_item in enumerate(_require_list(layout.get("column_rules"), "column_rules")):
         item = _require_mapping(raw_item, f"column_rules[{index}]")
