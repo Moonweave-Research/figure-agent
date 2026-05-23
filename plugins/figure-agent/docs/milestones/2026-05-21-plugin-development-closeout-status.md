@@ -1,51 +1,45 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-21 KST
-**Status:** current release-smoke pass after Issue 22E
+**Date:** 2026-05-23 KST
+**Status:** current main truth after Issue 33 / PR #47
 
 ## Bottom Line
 
-The current plugin-development chain for loop orchestration, top-tier critique
-rubrics, visual-clash evidence, high-zoom audit crops, numeric advisory scoring,
-SVG-polish surfacing, and publication/export gating is complete enough for
-regular dogfood use on current `main`. The later post-closeout critical review
-has been resolved through Issue 22E; see
-`docs/superpowers/issues/2026-05-21-issue-22-post-closeout-critical-contract-hardening.md`.
+The plugin-development chain is usable for real figure dogfood on current
+`main`. The core loop now has deterministic compile/export/status gates,
+host-vision critique contracts, audit evidence accounting, high-zoom crop
+inputs, reference-calibrated critique packs, advisory scoring, publication
+gates, SVG-polish surfacing, and explicit text-boundary checks for box/rule
+overflow failures.
 
-This does not mean the plugin can certify final Nature/Science-level artwork by
-itself. It means the plugin now exposes the right deterministic gates,
-host-vision audit inputs, lint contracts, and stop boundaries so real figure
-work can proceed without the previous silent-loop and visual-clash blind spots.
+This still does not mean the plugin can certify a Nature/Science-ready figure
+by itself. It means the plugin now exposes the right evidence, stop boundaries,
+and lint contracts so a human or host LLM cannot silently skip the known audit
+surfaces.
 
-## Release-Smoke Result — 2026-05-21 KST
+## Latest Verified State
 
-Commands run from `plugins/figure-agent` on current `main`:
+Most recent local full verification before PR #47 merge:
 
 ```bash
 uv run pytest -q
-uv run ruff check .
+uv run ruff check scripts/check_text_boundary_clash.py scripts/text_boundary_spec_helper.py \
+  tests/test_text_boundary_clash.py tests/test_text_boundary_spec_helper.py
+git diff --check
 claude plugin validate .claude-plugin/plugin.json
 claude plugin validate .
 claude plugin validate ../../.claude-plugin/marketplace.json
-uv run python3 scripts/status.py fig1_overview_v2_pair_001_vault --json
-uv run python3 scripts/fig_driver.py fig1_overview_v2_pair_001_vault --mode review --goal smoke --dry-run
-uv run python3 scripts/fig_driver.py golden_trap_depth_picture --mode release --goal smoke --dry-run
-uv run python3 scripts/fig_driver.py smoke_trap_demo --mode authoring --goal smoke --dry-run
 ```
 
 Results:
 
-- Full test suite: `923 passed, 1 skipped, 1 xfailed`.
-- Ruff: clean.
-- Claude plugin validation: manifest, plugin directory, and marketplace all
-  pass.
-- Driver smoke: all sampled fixtures returned valid `figure-agent.driver.v1`
-  JSON with `may_execute: false` and a single safe next action.
-- Current sampled fixtures are artifact-stale on `main`; this is not a plugin
-  core failure. The driver correctly routes them to `/fig_compile` first.
-- `fig1_overview_v2_pair_001_vault` still carries human publication provenance
-  blockers and stale critique/export state. That remains a fixture closeout
-  problem, not a core plugin contract blocker.
+- Full test suite: `1058 passed, 1 skipped, 1 xfailed`.
+- Focused ruff check: clean.
+- Diff whitespace check: clean.
+- Claude plugin validation: manifest, plugin directory, and marketplace pass.
+- PR #47 CI `test`: pass.
+- `full-render` remains intentionally skipped on normal PRs unless the
+  workflow is label/main-triggered.
 
 ## Closed Critical Tracks
 
@@ -56,20 +50,32 @@ Results:
 - Top-tier audit rubrics: structural completeness, label-target matching,
   physical plausibility, conceptual completeness, journal-grade assessment,
   top-tier audit, editorial art direction, and micro-defect surfaces are present.
+- High-zoom audit: visual-clash bbox-centered crops, crop-read accountability,
+  reference-calibrated critique packs, reference-calibrated advisory scoring,
+  and fixture freshness UX cleanup are implemented through Issue 23A-E.
+- Audit gate hardening: crop uncertainty stop boundaries, required audit input
+  presence, crop content-hash integrity, historical visual-clash regression
+  harness, and structured `accept_simplification_reason` are implemented
+  through Issue 24A-E.
+- Audit evidence UX and compliance: Issues 25-28 surface audit evidence in
+  status/driver/loop flows, dogfood the fixture coverage, harden host critique
+  compliance, and keep adjudication parity with critique micro-defect contracts.
 - Visual-clash evidence pipeline: compile emits `build/visual_clash.json`, the
-  critique brief ingests the candidates, schema v1.7 assigns stable `VC###`
-  ids, and lint requires exact candidate accounting.
-- Historical visual-clash regression: host-vision dogfood caught the historical
-  `HV+` backdrop overflow and `$V_s$` same-box glyph/internal-drawing failure.
-- Accept-simplification loophole: visual-clash-linked `accept_simplification`
-  now requires a concrete candidate-specific rationale instead of vague prose.
-- CI guardrail: full-render CI compiles fixtures and runs
-  `check_visual_clash_budget.py`; ordinary PR CI stays fast and non-rendering.
+  critique brief ingests candidates, schema assigns stable `VC###` ids, and lint
+  requires exact candidate accounting.
+- Text-boundary evidence pipeline: compile emits `build/text_boundary_clash.json`
+  from explicit `spec.yaml.text_boundary_checks`; critique/lint require `TB###`
+  accounting for candidates.
+- Authoring-boundary helpers: `text_boundary_spec_helper.py`, scoped
+  `tex_coordinate_shift.py`, and `/fig_closeout` boundary-sync checks are
+  implemented through Issues 30-32.
+- Scoped containment: Issue 33 adds `text_allowlist` for `contain_text` row-box
+  checks and dogfoods it on `fig1_overview_v2_pair_001_vault`.
 - Final artifact/polish routing: polished SVG is surfaced as a final-artifact
-  state, but SVG editing remains explicit human/external-tool work.
-- Release gate binding: release mode now consumes the latest current
-  `/fig_loop` checkpoint and will not close release while adjudication, patch
-  handoff, or human-gated loop blockers remain unresolved.
+  state, while SVG editing remains explicit human/external-tool work.
+- Release gate binding: release mode consumes the latest current `/fig_loop`
+  checkpoint and will not close release while adjudication, patch handoff, or
+  human-gated loop blockers remain unresolved.
 
 ## Not A Remaining Blocker
 
@@ -79,40 +85,31 @@ Results:
   tests/PRs prove the behavior.
 - `full-render` is intentionally skipped on normal PRs unless labeled; it runs
   on `main` and label-triggered PRs because the render dependency stack is slow.
-- Host-vision critique is still semi-automatic by design. The plugin prepares
-  crops, candidate ids, schemas, and lint gates; it does not replace the host
-  LLM or human art-direction judgment.
+- Host-vision critique is semi-automatic by design. The plugin prepares crops,
+  candidate ids, schemas, and lint gates; it does not replace the host LLM or
+  human art-direction judgment.
+- SVG polish remains an explicit finalization path, not a hidden auto-editing
+  path.
 
-## Residual Optional Hardening
+## Current Priority List
 
 These are useful future improvements, but they are not required before using
-the plugin for real figure work:
+the plugin for real figure work.
 
-Post-closeout authoring-boundary hardening has now closed the most recent
-real-use box/rule overflow gap through Issues 29-32:
-
-- deterministic text-boundary clash candidates from explicit
-  `spec.yaml.text_boundary_checks`;
-- an author-facing `text_boundary_layout` helper;
-- a scoped TeX coordinate-shift helper for fixed panel/subregion moves;
-- `/fig_closeout` sync surfacing when generated boundary checks are missing or
-  stale.
-
-See `docs/milestones/2026-05-23-authoring-boundary-closeout-dogfood.md`.
-
-The current prioritized list is tracked in
-`docs/superpowers/issues/2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`.
-In order:
-
-1. visual-clash bbox-centered zoom crops;
-2. crop-read accountability;
-3. reference-calibrated critique packs;
-4. reference-calibrated advisory scoring;
-5. fixture freshness UX cleanup.
-
-Lower-priority backlog remains: deterministic historical regression harness,
-structured `accept_simplification_reason`, CI ergonomics, SVG polish handoff
-expansion, and external second-opinion vision checks.
+1. **Issue 34: phrase-aware text-boundary containment.** Current
+   `text_allowlist` matching is exact PDF word matching. It works for words
+   such as `SMU` and `Coulomb`, but not for labels split into multiple PDF
+   words or glyph fragments such as `polymer film`, `F_Maxwell`, and subscripted
+   math labels. This is the next highest-value deterministic audit improvement.
+2. **Fixture adoption expansion.** More real fixtures should declare
+   `text_boundary_layout` when they contain row boxes, panel rules, internal
+   display rectangles, or other explicit label-boundary hazards.
+3. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
+   now surface many audit fields. The next UX pass should make the single next
+   action and blocking evidence easier to scan without weakening contracts.
+4. **External second-opinion vision checks.** Gemini or another vision model
+   can be integrated later as an optional cross-check, but it should not become
+   a required dependency for the local-first plugin.
 
 ## Practical Use Guidance
 
@@ -122,13 +119,13 @@ For new real figure work, start with:
 2. `/fig_drive <name> --mode authoring --dry-run`
 3. Execute only the returned safe next command.
 4. Use `/fig_critique` when the driver reaches a host-vision critique boundary.
-5. Run `/fig_loop` after critique/adjudication to record the next loop state.
-6. Use `/fig_export` only after render and critique state are fresh enough for
+5. Run `/fig_adjudicate` after critique lint passes.
+6. Run `/fig_loop` after critique/adjudication to record the next loop state.
+7. Use `/fig_closeout` after each patch target.
+8. Use `/fig_export` only after render and critique state are fresh enough for
    release/export work.
 
 At this point, the core plugin release is usable. If continuing plugin
-hardening, start with Issue 23A because dogfood showed that host-vision critique
-needs bbox-centered zoom crops to reliably see small geometry defects. If not
-continuing plugin hardening, the next live work is fixture-specific: refresh
-stale renders/critiques/exports, then resolve the human publication provenance
-gate for the target figure.
+hardening, start with Issue 34. If not continuing plugin hardening, the next
+live work is fixture-specific: refresh stale renders/critiques/exports, then
+resolve any human publication provenance gate for the target figure.

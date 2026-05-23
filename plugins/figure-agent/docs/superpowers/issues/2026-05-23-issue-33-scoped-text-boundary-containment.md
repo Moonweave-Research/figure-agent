@@ -1,6 +1,6 @@
 # Issue 33 — Scoped Text Boundary Containment
 
-Status: implemented on branch `codex/scoped-text-boundary-containment`; pending final review/merge
+Status: completed in PR #47 / merge commit `9d32869`
 
 ## Problem
 
