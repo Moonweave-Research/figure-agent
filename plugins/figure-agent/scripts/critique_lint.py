@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from aesthetic_intent import AestheticIntentError, load_optional_aesthetic_intent  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     build_adjudication_scaffold,
@@ -54,6 +56,12 @@ _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC027", "s"): "label_glyph_overlaps_internal_drawing",
     ("VC050", "HV+"): "label_backdrop_overflows_outline",
 }
+_AESTHETIC_INTENT_REQUIRED_SLOTS = (
+    ("top_tier_audit", "aesthetic_coherence"),
+    ("editorial_art_direction", "visual_identity"),
+    ("editorial_art_direction", "aesthetic_risk"),
+    ("editorial_art_direction", "tikz_vs_svg_polish_trigger"),
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +86,91 @@ def _duplicate_finding_id_violations(frontmatter: dict[str, Any]) -> list[Critiq
             )
         seen.add(finding_id)
     return violations
+
+
+def _aesthetic_intent_anchor_strings(pack: dict[str, Any]) -> set[str]:
+    anchors = {
+        str(pack.get("target_journal", "")).strip(),
+        str(pack.get("visual_maturity", "")).strip(),
+        str(pack.get("density", "")).strip(),
+        str(pack.get("reference_style", "")).strip(),
+    }
+    for key in ("design_principles", "must_avoid", "polish_triggers"):
+        raw_items = pack.get(key)
+        if not isinstance(raw_items, list):
+            continue
+        for item in raw_items:
+            if not isinstance(item, dict):
+                continue
+            item_id = item.get("id")
+            if isinstance(item_id, str) and item_id.strip():
+                anchors.add(item_id.strip())
+    return {anchor.lower() for anchor in anchors if anchor}
+
+
+def _text_blob(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return " ".join(_text_blob(item) for item in value)
+    if isinstance(value, dict):
+        return " ".join(_text_blob(item) for item in value.values())
+    return ""
+
+
+def _contains_aesthetic_anchor(text: str, anchors: set[str]) -> bool:
+    for anchor in anchors:
+        if re.search(rf"(^|[^A-Za-z0-9_]){re.escape(anchor)}($|[^A-Za-z0-9_])", text):
+            return True
+    return False
+
+
+def _aesthetic_intent_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    try:
+        pack = load_optional_aesthetic_intent(example_dir)
+    except AestheticIntentError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_intent_accounting",
+                message=f"aesthetic_intent.yaml invalid: {exc}",
+            )
+        ]
+    if pack is None:
+        return []
+    anchors = _aesthetic_intent_anchor_strings(pack)
+    if not anchors:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_intent_accounting",
+                message="aesthetic_intent.yaml produced no usable lint anchors",
+            )
+        ]
+
+    missing: list[str] = []
+    for section_name, slot_name in _AESTHETIC_INTENT_REQUIRED_SLOTS:
+        raw_section = frontmatter.get(section_name)
+        raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
+        normalized_text = _text_blob(raw_slot).lower()
+        if not _contains_aesthetic_anchor(normalized_text, anchors):
+            missing.append(f"{section_name}.{slot_name}")
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="aesthetic_intent_accounting",
+            message=(
+                "aesthetic intent pack exists; critique slots must cite at least "
+                "one exact aesthetic-intent anchor from target fields or item ids: "
+                + ", ".join(missing)
+            ),
+        )
+    ]
 
 
 def _audit_evidence_violations(frontmatter: dict[str, Any]) -> list[CritiqueLintViolation]:
@@ -748,6 +841,10 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
                 message=str(exc),
             )
         ]
+    if violations:
+        return violations
+
+    violations.extend(_aesthetic_intent_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
 

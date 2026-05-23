@@ -163,6 +163,101 @@ def _editorial_yaml(*, hero_verdict: str = "pass", hero_fix: str = "accept_simpl
     return "\n".join(lines) + "\n"
 
 
+def _top_tier_yaml_with_aesthetic_anchor(anchor: str) -> str:
+    lines = ["top_tier_audit:"]
+    for key in TOP_TIER_KEYS:
+        finding = (
+            f"aesthetic_coherence cites aesthetic intent anchor {anchor}"
+            if key == "aesthetic_coherence"
+            else f"{key} finding"
+        )
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    finding: {_quote_yaml_string(finding)}",
+                "    concrete_fix: accept_simplification",
+                "    blocks_high_impact: false",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _editorial_yaml_with_aesthetic_anchors() -> str:
+    anchor_by_key = {
+        "visual_identity": "preset_macro_feel",
+        "aesthetic_risk": "toy_diagram",
+        "tikz_vs_svg_polish_trigger": "svg_micro_polish",
+    }
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    lines = ["editorial_art_direction:"]
+    for key in keys:
+        anchor = anchor_by_key.get(key)
+        evidence = f"{key} evidence"
+        rationale = f"{key} rationale"
+        concrete_fix = "accept_simplification"
+        if anchor is not None:
+            evidence = f"{key} cites aesthetic intent anchor {anchor}"
+            rationale = f"{key} remains calibrated to {anchor}"
+            concrete_fix = f"preserve {anchor} unless visual evidence contradicts it"
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    evidence: {_quote_yaml_string(evidence)}",
+                f"    rationale: {_quote_yaml_string(rationale)}",
+                f"    concrete_fix: {_quote_yaml_string(concrete_fix)}",
+                "    blocks_high_impact: false",
+            ]
+        )
+        if key == "tikz_vs_svg_polish_trigger":
+            lines.append("    recommended_path: ready_for_svg_polish")
+    return "\n".join(lines) + "\n"
+
+
+def _write_aesthetic_intent(fig_dir: Path, *, malformed: bool = False) -> Path:
+    path = fig_dir / "aesthetic_intent.yaml"
+    if malformed:
+        path.write_text("schema: [", encoding="utf-8")
+        return path
+    path.write_text(
+        f"""schema: figure-agent.aesthetic-intent.v1
+fixture: {fig_dir.name}
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: Prefer restrained publication-grade hierarchy.
+must_avoid:
+  - id: toy_diagram
+    pattern: Avoid cartoon-like oversized labels.
+    severity: MAJOR
+  - id: preset_macro_feel
+    pattern: Avoid repeated generic macro styling.
+    severity: MINOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: Semantic TikZ is correct but optical finish is limiting.
+    recommended_path: ready_for_svg_polish
+""",
+        encoding="utf-8",
+    )
+    return path
+
+
 def _write_critique(
     fig_dir: Path,
     *,
@@ -379,6 +474,103 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_generic_aesthetic_slots_when_intent_exists(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_aesthetic_intent(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "aesthetic_intent_accounting"
+    ]
+    assert "top_tier_audit.aesthetic_coherence" in violations[0].message
+    assert "editorial_art_direction.visual_identity" in violations[0].message
+    assert "editorial_art_direction.aesthetic_risk" in violations[0].message
+    assert "editorial_art_direction.tikz_vs_svg_polish_trigger" in violations[0].message
+
+
+def test_lint_critique_accepts_aesthetic_slots_with_exact_intent_anchors(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_aesthetic_intent(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        top_tier_yaml=_top_tier_yaml_with_aesthetic_anchor("mature_restraint"),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml_with_aesthetic_anchors(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_keeps_missing_aesthetic_intent_legacy_behavior(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_reports_malformed_aesthetic_intent_as_controlled_blocker(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_aesthetic_intent(fig_dir, malformed=True)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "aesthetic_intent_accounting"
+    ]
+    assert "aesthetic_intent.yaml invalid" in violations[0].message
 
 
 def test_lint_critique_accepts_complete_v1_8_crop_accounting(tmp_path: Path) -> None:
