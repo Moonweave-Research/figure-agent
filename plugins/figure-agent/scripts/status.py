@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import status_next_policy
 import status_readiness_policy
 from audit_evidence_summary import summarize_audit_evidence
+from critique_lint import lint_critique
 from export_freshness import EXPORT_STALE, compute_export_state
 from inputs import parse_spec
 from publication_gate import publication_gate_summary
@@ -132,6 +133,22 @@ def _append_critique_check(
         notes.append("critique_stale")
     elif critique_state == CRITIQUE_REFERENCE_MISSING:
         notes.append("critique_reference_missing")
+
+
+def _append_critique_lint_check(
+    checks: list[tuple[str, str]],
+    notes: list[str],
+    example_dir: Path,
+    critique_state: str,
+) -> None:
+    if critique_state != CRITIQUE_FRESH:
+        return
+    violations = lint_critique(example_dir)
+    if not violations:
+        checks.append(("critique_lint", "passed"))
+        return
+    checks.append(("critique_lint", "blocked"))
+    notes.append("critique_lint_blocked")
 
 
 def _is_stale(sources: tuple[Path, ...], targets: tuple[Path, ...]) -> bool:
@@ -488,6 +505,7 @@ def infer_stage(example_dir: Path) -> dict:
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
         checks.append(("exports", "present"))
         _append_critique_check(checks, notes, critique_state)
+        _append_critique_lint_check(checks, notes, example_dir, critique_state)
         partial = not _all_four_exports_present(exports_dir, name)
         if partial:
             notes.append("partial_export")
@@ -536,6 +554,7 @@ def infer_stage(example_dir: Path) -> dict:
     if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
+        _append_critique_lint_check(checks, notes, example_dir, critique_state)
         return _finalize_status({
             "stage": 3,
             "name": name,

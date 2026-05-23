@@ -439,6 +439,61 @@ def test_hash_metadata_keeps_matching_critique_fresh_even_when_mtime_is_old(
     assert compute_critique_state(fig_dir, name) == "FRESH"
 
 
+def test_status_surfaces_lint_blocker_for_fresh_invalid_critique(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "lint_blocked_fig"
+    fig_dir.mkdir()
+    (fig_dir / "reference").mkdir()
+    _make_spec(fig_dir, reference_image="reference/ref.png")
+    name = fig_dir.name
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "reference" / "ref.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    (fig_dir / "aesthetic_intent.yaml").write_text(
+        f"""schema: figure-agent.aesthetic-intent.v1
+fixture: {name}
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: Prefer restrained publication-grade hierarchy.
+must_avoid:
+  - id: toy_diagram
+    pattern: Avoid cartoon-like oversized labels.
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: Semantic TikZ is correct but optical finish is limiting.
+    recommended_path: ready_for_svg_polish
+""",
+        encoding="utf-8",
+    )
+    _write_hashed_critique(fig_dir, name)
+    old_time = time.time() - 100
+    fresh_time = time.time() + 10
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+        fig_dir / "reference" / "ref.png",
+        fig_dir / "aesthetic_intent.yaml",
+    ):
+        os.utime(path, (old_time, old_time))
+    for path in (build_dir / f"{name}.pdf", fig_dir / "critique.md"):
+        os.utime(path, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["critique_state"] == "FRESH"
+    assert "critique_lint_blocked" in result["notes"]
+    assert "/fig_critique lint_blocked_fig" in result["next"]
+    assert result["status_explanation"]["first_blocker"]["code"] == "critique_lint_blocked"
+    assert result["status_explanation"]["first_blocker"]["manual"] is True
+
+
 def test_hash_metadata_marks_current_v1_4_critique_fresh(
     tmp_path: Path,
 ) -> None:
