@@ -8,6 +8,8 @@ from typing import Any
 import yaml
 
 AESTHETIC_INTENT_SCHEMA = "figure-agent.aesthetic-intent.v1"
+AESTHETIC_INTENT_SCHEMA_V2 = "figure-agent.aesthetic-intent.v2"
+AESTHETIC_INTENT_SCHEMAS = frozenset({AESTHETIC_INTENT_SCHEMA, AESTHETIC_INTENT_SCHEMA_V2})
 TARGET_JOURNALS = frozenset(
     {"Nature Communications", "Nature Materials", "Science", "ACS", "internal", "unknown"}
 )
@@ -31,6 +33,25 @@ POLISH_PATHS = frozenset(
         "semantic_backport_required",
     }
 )
+AESTHETIC_LEVER_DIMENSIONS = frozenset(
+    {
+        "maturity",
+        "hero_hierarchy",
+        "whitespace_breathing",
+        "typography_authority",
+        "color_harmony",
+        "line_weight_rhythm",
+        "component_fidelity",
+        "hand_craft",
+        "cross_panel_grammar",
+        "polish_route",
+    }
+)
+AESTHETIC_LEVER_PRIORITIES = frozenset({"required", "recommended", "optional"})
+AESTHETIC_LEVER_ROUTES = frozenset(
+    {"tikz_patch", "svg_polish", "semantic_backport", "human_art_direction"}
+)
+MAX_AESTHETIC_LEVERS = 10
 
 
 class AestheticIntentError(Exception):
@@ -81,6 +102,36 @@ def _mapping_items(data: dict[str, Any], key: str, *, label: str) -> list[dict[s
     return items
 
 
+def _string_items(data: dict[str, Any], key: str, *, label: str) -> list[str]:
+    value = data.get(key)
+    if not isinstance(value, list) or not value:
+        raise AestheticIntentError(f"{label}.{key} must be a non-empty list")
+    items: list[str] = []
+    for index, raw_item in enumerate(value):
+        if not isinstance(raw_item, str) or not raw_item.strip():
+            raise AestheticIntentError(f"{label}.{key}[{index}] must be a non-empty string")
+        items.append(raw_item.strip())
+    return items
+
+
+def _validate_aesthetic_levers(data: dict[str, Any]) -> None:
+    levers = _mapping_items(data, "aesthetic_levers", label="aesthetic_intent")
+    if len(levers) > MAX_AESTHETIC_LEVERS:
+        raise AestheticIntentError(
+            f"aesthetic_intent.aesthetic_levers must contain at most {MAX_AESTHETIC_LEVERS} items"
+        )
+    for index, item in enumerate(levers):
+        label = f"aesthetic_intent.aesthetic_levers[{index}]"
+        _require_enum(item, "dimension", AESTHETIC_LEVER_DIMENSIONS, label=label)
+        _require_string(item, "intent", label=label)
+        _require_enum(item, "priority", AESTHETIC_LEVER_PRIORITIES, label=label)
+        _string_items(item, "positive_signals", label=label)
+        _string_items(item, "anti_patterns", label=label)
+        _string_items(item, "allowed_adjustments", label=label)
+        _string_items(item, "forbidden_adjustments", label=label)
+        _require_enum(item, "default_route", AESTHETIC_LEVER_ROUTES, label=label)
+
+
 def load_aesthetic_intent(path: Path) -> dict[str, Any]:
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -88,8 +139,9 @@ def load_aesthetic_intent(path: Path) -> dict[str, Any]:
         raise AestheticIntentError(f"malformed YAML in {path}: {exc}") from exc
     data = _require_mapping(raw, "aesthetic_intent")
     schema = _require_string(data, "schema", label="aesthetic_intent")
-    if schema != AESTHETIC_INTENT_SCHEMA:
-        raise AestheticIntentError(f"aesthetic_intent.schema must be {AESTHETIC_INTENT_SCHEMA}")
+    if schema not in AESTHETIC_INTENT_SCHEMAS:
+        allowed = ", ".join(sorted(AESTHETIC_INTENT_SCHEMAS))
+        raise AestheticIntentError(f"aesthetic_intent.schema must be one of: {allowed}")
     _require_string(data, "fixture", label="aesthetic_intent")
     _require_enum(data, "target_journal", TARGET_JOURNALS, label="aesthetic_intent")
     _require_enum(data, "visual_maturity", VISUAL_MATURITIES, label="aesthetic_intent")
@@ -112,6 +164,8 @@ def load_aesthetic_intent(path: Path) -> dict[str, Any]:
         label = f"aesthetic_intent.polish_triggers[{index}]"
         _require_string(item, "condition", label=label)
         _require_enum(item, "recommended_path", POLISH_PATHS, label=label)
+    if schema == AESTHETIC_INTENT_SCHEMA_V2:
+        _validate_aesthetic_levers(data)
     return data
 
 
@@ -127,4 +181,3 @@ def load_optional_aesthetic_intent(example_dir: Path) -> dict[str, Any] | None:
             f"{example_dir.name}"
         )
     return pack
-
