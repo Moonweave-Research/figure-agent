@@ -124,6 +124,7 @@ def _write_v1_2_critique(
     editorial_art_direction: dict | None = None,
     micro_defects: list[dict] | None = None,
     crop_audit_log: list[dict] | None = None,
+    aesthetic_lever_audit: list[dict] | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -148,6 +149,8 @@ def _write_v1_2_critique(
         frontmatter["micro_defects"] = micro_defects
     if crop_audit_log is not None:
         frontmatter["crop_audit_log"] = crop_audit_log
+    if aesthetic_lever_audit is not None:
+        frontmatter["aesthetic_lever_audit"] = aesthetic_lever_audit
     critique.write_text(
         "---\n"
         + yaml.safe_dump(frontmatter, sort_keys=False)
@@ -824,6 +827,60 @@ def test_loop_surfaces_v1_8_crop_audit_uncertain_verdicts(
     assert summary["uncertain_crop_ids"] == ["VC001_A"]
     stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["crop_audit_summary"] == summary
+
+
+def test_loop_surfaces_v1_11_aesthetic_lever_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.11",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(),
+        micro_defects=[],
+        crop_audit_log=[],
+        aesthetic_lever_audit=[
+            {
+                "lever_id": "maturity_restraint",
+                "dimension": "maturity",
+                "verdict": "pass",
+                "route": "none",
+                "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+            },
+            {
+                "lever_id": "hero_balance",
+                "dimension": "hero_hierarchy",
+                "verdict": "weak",
+                "route": "tikz_patch",
+                "linked_evidence": ["C001"],
+            },
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect aesthetic levers",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["aesthetic_lever_summary"]
+    assert summary["source"] == "critique.aesthetic_lever_audit"
+    assert summary["evidence_path"] == str(critique)
+    assert summary["evaluation_state"] == "needs_patch"
+    assert summary["worst_verdict"] == "weak"
+    assert summary["next_aesthetic_bottleneck"] == {
+        "lever_id": "hero_balance",
+        "dimension": "hero_hierarchy",
+        "route": "tikz_patch",
+        "linked_evidence": ["C001"],
+    }
+    stdout_summary = json_stdout_summary(run_dir)
+    assert stdout_summary["aesthetic_lever_summary"] == summary
 
 
 def test_loop_marks_hash_mismatched_journal_assessment_not_gateable(
@@ -2338,6 +2395,7 @@ def test_main_json_emits_machine_readable_summary(
             "top_tier_audit_summary": None,
             "editorial_art_direction_summary": None,
             "crop_audit_summary": None,
+            "aesthetic_lever_summary": None,
             "audit_evidence": {
                 "evaluation_state": "missing_input",
                 "blocking_items": ["build/visual_clash.json"],
@@ -2471,6 +2529,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "top_tier_audit_summary": iteration["top_tier_audit_summary"],
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "crop_audit_summary": iteration["crop_audit_summary"],
+        "aesthetic_lever_summary": iteration["aesthetic_lever_summary"],
         "audit_evidence": iteration["audit_evidence"],
         "journal_grade_assessment": iteration["journal_grade_assessment"],
         "recommended_next_action": iteration["recommended_next_action"],

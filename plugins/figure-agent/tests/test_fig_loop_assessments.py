@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from fig_loop_assessments import (  # noqa: E402
     JOURNAL_ASSESSMENT_SCHEMA,
     JOURNAL_SCORE_KEYS,
+    aesthetic_lever_summary,
     crop_audit_summary,
     editorial_art_direction_summary,
     journal_grade_assessment,
@@ -347,6 +348,138 @@ def test_crop_audit_summary_ignores_legacy_v1_7(tmp_path: Path) -> None:
     )
 
     assert crop_audit_summary(example_dir, "FRESH") is None
+
+
+def test_aesthetic_lever_summary_surfaces_v1_11_next_bottleneck(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.11",
+            "aesthetic_lever_audit": [
+                {
+                    "lever_id": "maturity_restraint",
+                    "dimension": "maturity",
+                    "verdict": "pass",
+                    "route": "none",
+                    "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+                },
+                {
+                    "lever_id": "hero_balance",
+                    "dimension": "hero_hierarchy",
+                    "verdict": "weak",
+                    "route": "tikz_patch",
+                    "linked_evidence": ["C001"],
+                },
+            ],
+        },
+    )
+
+    summary = aesthetic_lever_summary(example_dir, "FRESH")
+
+    assert summary == {
+        "source": "critique.aesthetic_lever_audit",
+        "evidence_path": str(example_dir / "critique.md"),
+        "lever_count": 2,
+        "verdict_counts": {
+            "pass": 1,
+            "not_applicable": 0,
+            "weak": 1,
+            "fail": 0,
+            "needs_human": 0,
+        },
+        "worst_verdict": "weak",
+        "evaluation_state": "needs_patch",
+        "next_aesthetic_bottleneck": {
+            "lever_id": "hero_balance",
+            "dimension": "hero_hierarchy",
+            "route": "tikz_patch",
+            "linked_evidence": ["C001"],
+        },
+    }
+
+
+def test_aesthetic_lever_summary_prioritizes_needs_human_over_fail(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.11",
+            "aesthetic_lever_audit": [
+                {
+                    "lever_id": "component_detail",
+                    "dimension": "component_fidelity",
+                    "verdict": "fail",
+                    "route": "semantic_backport",
+                    "linked_evidence": ["C002"],
+                },
+                {
+                    "lever_id": "target_taste",
+                    "dimension": "maturity",
+                    "verdict": "needs_human",
+                    "route": "human_art_direction",
+                    "linked_evidence": ["editorial_art_direction.human_art_direction_gate"],
+                },
+            ],
+        },
+    )
+
+    summary = aesthetic_lever_summary(example_dir, "FRESH")
+
+    assert summary is not None
+    assert summary["worst_verdict"] == "needs_human"
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["next_aesthetic_bottleneck"]["lever_id"] == "target_taste"
+
+
+def test_aesthetic_lever_summary_marks_v1_11_stale_without_silent_pass(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.11",
+            "aesthetic_lever_audit": [
+                {
+                    "lever_id": "maturity_restraint",
+                    "dimension": "maturity",
+                    "verdict": "pass",
+                    "route": "none",
+                    "linked_evidence": [],
+                }
+            ],
+        },
+    )
+
+    summary = aesthetic_lever_summary(example_dir, "STALE")
+
+    assert summary == {
+        "source": "critique.aesthetic_lever_audit",
+        "evidence_path": str(example_dir / "critique.md"),
+        "evaluation_state": "stale",
+    }
+
+
+def test_aesthetic_lever_summary_ignores_legacy_schema(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.10",
+            "aesthetic_lever_audit": [
+                {"lever_id": "maturity_restraint", "verdict": "fail"},
+            ],
+        },
+    )
+
+    assert aesthetic_lever_summary(example_dir, "FRESH") is None
 
 
 def test_top_tier_audit_summary_counts_valid_slots_and_worst_verdict(tmp_path: Path) -> None:
