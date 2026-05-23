@@ -88,6 +88,18 @@ Results:
 These are useful future improvements, but they are not required before using
 the plugin for real figure work:
 
+Post-closeout authoring-boundary hardening has now closed the most recent
+real-use box/rule overflow gap through Issues 29-32:
+
+- deterministic text-boundary clash candidates from explicit
+  `spec.yaml.text_boundary_checks`;
+- an author-facing `text_boundary_layout` helper;
+- a scoped TeX coordinate-shift helper for fixed panel/subregion moves;
+- `/fig_closeout` sync surfacing when generated boundary checks are missing or
+  stale.
+
+See `docs/milestones/2026-05-23-authoring-boundary-closeout-dogfood.md`.
+
 The current prioritized list is tracked in
 `docs/superpowers/issues/2026-05-22-issue-23-zoom-and-reference-calibrated-audit-roadmap.md`.
 In order:
