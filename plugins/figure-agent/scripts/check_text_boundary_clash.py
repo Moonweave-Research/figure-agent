@@ -18,6 +18,8 @@ from check_visual_clash import extract_pdf_words_and_page
 
 SCHEMA = "figure-agent.text-boundary-clash.v1"
 CM_TO_PT = 72.0 / 2.54
+DEFAULT_MAX_PHRASE_GAP_PT = 6.0
+DEFAULT_MAX_PHRASE_Y_CENTER_DELTA_PT = 6.0
 
 
 class TextBoundaryClashError(ValueError):
@@ -69,6 +71,54 @@ def _text_allowlist(check: dict[str, Any]) -> set[str] | None:
     return {item.strip() for item in value}
 
 
+def _text_phrases(check: dict[str, Any]) -> list[dict[str, Any]]:
+    value = check.get("text_phrases")
+    if value is None:
+        return []
+    if not isinstance(value, list) or not value:
+        raise TextBoundaryClashError(f"{check['id']}.text_phrases must be a non-empty list")
+    phrases: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, raw_phrase in enumerate(value):
+        label = f"{check['id']}.text_phrases[{index}]"
+        if not isinstance(raw_phrase, dict):
+            raise TextBoundaryClashError(f"{label} must be a mapping")
+        phrase_id = raw_phrase.get("id")
+        if not isinstance(phrase_id, str) or not phrase_id.strip():
+            raise TextBoundaryClashError(f"{label}.id must be a non-empty string")
+        phrase_id = phrase_id.strip()
+        if phrase_id in seen_ids:
+            raise TextBoundaryClashError(f"{check['id']}.text_phrases duplicate id: {phrase_id}")
+        seen_ids.add(phrase_id)
+        words = raw_phrase.get("words")
+        if (
+            not isinstance(words, list)
+            or len(words) < 2
+            or not all(isinstance(item, str) and item.strip() for item in words)
+        ):
+            raise TextBoundaryClashError(f"{label}.words must contain at least two strings")
+        phrases.append({"id": phrase_id, "words": [item.strip() for item in words]})
+    return phrases
+
+
+def _non_negative_number(value: object, *, field: str) -> float:
+    if not isinstance(value, int | float) or float(value) < 0:
+        raise TextBoundaryClashError(f"{field} must be a non-negative number")
+    return float(value)
+
+
+def _phrase_tolerances(check: dict[str, Any]) -> tuple[float, float]:
+    max_gap = _non_negative_number(
+        check.get("max_phrase_gap_pt", DEFAULT_MAX_PHRASE_GAP_PT),
+        field=f"{check['id']}.max_phrase_gap_pt",
+    )
+    max_center_delta = _non_negative_number(
+        check.get("max_phrase_y_center_delta_pt", DEFAULT_MAX_PHRASE_Y_CENTER_DELTA_PT),
+        field=f"{check['id']}.max_phrase_y_center_delta_pt",
+    )
+    return max_gap, max_center_delta
+
+
 def _ranges_overlap(a_min: float, a_max: float, b_min: float, b_max: float) -> bool:
     return max(a_min, b_min) <= min(a_max, b_max)
 
@@ -90,6 +140,23 @@ def _word_sort_key(word: dict[str, Any]) -> tuple[float, float, float, float, st
         float(word["xmax"]),
         str(word.get("text", "")),
     )
+
+
+def _word_center_y(word: dict[str, Any]) -> float:
+    return (float(word["ymin"]) + float(word["ymax"])) / 2.0
+
+
+def _same_phrase_line(
+    left: dict[str, Any],
+    right: dict[str, Any],
+    max_center_delta: float,
+) -> bool:
+    return _ranges_overlap(
+        float(left["ymin"]),
+        float(left["ymax"]),
+        float(right["ymin"]),
+        float(right["ymax"]),
+    ) or abs(_word_center_y(left) - _word_center_y(right)) <= max_center_delta
 
 
 def _check_sort_key(check: dict[str, Any]) -> tuple[str, str]:
@@ -143,6 +210,9 @@ def detect_text_boundary_clashes(
     _ = page_size_pt
     candidates: list[dict[str, Any]] = []
     for check in sorted(checks, key=_check_sort_key):
+        if check["kind"] == "rect":
+            candidates.extend(_rect_candidates(check, words))
+            continue
         for word in sorted(words, key=_word_sort_key):
             candidate = _candidate_for_word(check, word)
             if candidate is not None:
@@ -182,6 +252,77 @@ def _base_candidate(
         "boundary_pt": boundary_pt,
         "clearance_pt": round(clearance_pt, 6),
     }
+
+
+def _phrase_word(
+    span: list[dict[str, Any]],
+    *,
+    phrase_id: str,
+    phrase_words: list[str],
+) -> dict[str, Any]:
+    return {
+        "text": " ".join(phrase_words),
+        "phrase_id": phrase_id,
+        "words": phrase_words,
+        "text_source": "text_phrases",
+        "xmin": min(float(word["xmin"]) for word in span),
+        "ymin": min(float(word["ymin"]) for word in span),
+        "xmax": max(float(word["xmax"]) for word in span),
+        "ymax": max(float(word["ymax"]) for word in span),
+    }
+
+
+def _group_phrase_words(
+    words: list[dict[str, Any]],
+    phrase: dict[str, Any],
+    *,
+    max_gap: float,
+    max_center_delta: float,
+) -> list[dict[str, Any]]:
+    sorted_words = sorted(words, key=_word_sort_key)
+    phrase_words = phrase["words"]
+    matches: list[dict[str, Any]] = []
+    seen_spans: set[tuple[tuple[float, float, float, float], ...]] = set()
+    for start_index, first_word in enumerate(sorted_words):
+        if str(first_word.get("text", "")).strip() != phrase_words[0]:
+            continue
+        span = [first_word]
+        search_after = start_index + 1
+        for expected_text in phrase_words[1:]:
+            previous = span[-1]
+            next_word = None
+            for candidate_index, candidate in enumerate(
+                sorted_words[search_after:],
+                start=search_after,
+            ):
+                if float(candidate["xmin"]) < float(previous["xmax"]):
+                    continue
+                if float(candidate["xmin"]) - float(previous["xmax"]) > max_gap:
+                    break
+                if str(candidate.get("text", "")).strip() != expected_text:
+                    continue
+                if not _same_phrase_line(previous, candidate, max_center_delta):
+                    continue
+                next_word = candidate
+                search_after = candidate_index + 1
+                break
+            if next_word is None:
+                break
+            span.append(next_word)
+        if len(span) != len(phrase_words):
+            continue
+        span_key = tuple(tuple(_word_bbox(word)) for word in span)
+        if span_key in seen_spans:
+            continue
+        seen_spans.add(span_key)
+        matches.append(
+            _phrase_word(
+                span,
+                phrase_id=str(phrase["id"]),
+                phrase_words=list(phrase_words),
+            )
+        )
+    return matches
 
 
 def _vertical_candidate(check: dict[str, Any], word: dict[str, Any]) -> dict[str, Any] | None:
@@ -239,7 +380,10 @@ def _rect_candidate(check: dict[str, Any], word: dict[str, Any]) -> dict[str, An
     ymax = float(word["ymax"])
     if mode == "contain_text":
         allowlist = _text_allowlist(check)
+        has_phrase_source = bool(check.get("text_phrases"))
         if allowlist is not None and str(word.get("text", "")).strip() not in allowlist:
+            return None
+        if allowlist is None and has_phrase_source and word.get("text_source") != "text_phrases":
             return None
         outside = (
             xmin < rect[0] + clearance
@@ -268,6 +412,43 @@ def _rect_candidate(check: dict[str, Any], word: dict[str, Any]) -> dict[str, An
         boundary_pt={"bbox": rect, "mode": "avoid_inside"},
         clearance_pt=clearance,
     )
+
+
+def _rect_candidates(
+    check: dict[str, Any],
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    if check.get("mode") == "avoid_inside":
+        for word in sorted(words, key=_word_sort_key):
+            candidate = _rect_candidate(check, word)
+            if candidate is not None:
+                candidates.append(candidate)
+        return candidates
+
+    phrases = _text_phrases(check)
+    for word in sorted(words, key=_word_sort_key):
+        candidate = _rect_candidate(check, word)
+        if candidate is not None:
+            candidates.append(candidate)
+    if not phrases:
+        return candidates
+    max_gap, max_center_delta = _phrase_tolerances(check)
+    for phrase in phrases:
+        for phrase_word in _group_phrase_words(
+            words,
+            phrase,
+            max_gap=max_gap,
+            max_center_delta=max_center_delta,
+        ):
+            candidate = _rect_candidate(check, phrase_word)
+            if candidate is None:
+                continue
+            candidate["text_source"] = "text_phrases"
+            candidate["phrase_id"] = phrase_word["phrase_id"]
+            candidate["words"] = phrase_word["words"]
+            candidates.append(candidate)
+    return candidates
 
 
 def text_boundary_clash_payload(pdf_path: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:

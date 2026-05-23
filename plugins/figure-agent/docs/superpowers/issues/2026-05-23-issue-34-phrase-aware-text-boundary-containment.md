@@ -1,6 +1,6 @@
 # Issue 34 — Phrase-Aware Text Boundary Containment
 
-Status: designed; implementation pending
+Status: implemented in branch `codex/issue34-phrase-aware-text-boundary`
 
 Design spec:
 `../specs/2026-05-23-issue34-phrase-aware-text-boundary-design.md`
