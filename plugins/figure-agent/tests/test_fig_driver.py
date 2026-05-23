@@ -1261,6 +1261,33 @@ def test_release_mode_completes_after_latest_clean_loop_checkpoint(
     assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
 
 
+def test_release_mode_preserves_aesthetic_lever_summary_from_latest_loop(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    aesthetic_summary = {
+        "source": "critique.aesthetic_lever_audit",
+        "evaluation_state": "passed",
+        "lever_count": 2,
+        "worst_verdict": "pass",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        escalation_level="none",
+        recommended_next_action="release is ready",
+        aesthetic_lever_summary=aesthetic_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["loop_checkpoint"]["aesthetic_lever_summary"] == aesthetic_summary
+
+
 # --- polish mode -------------------------------------------------------------
 
 
