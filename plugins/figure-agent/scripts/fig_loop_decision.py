@@ -49,6 +49,16 @@ def loop_decision(
             "active_patch_target": None,
             "human_gate_status": "not_requested",
         }
+    if (
+        status_result.get("critique_state") in {"MISSING", "STALE"}
+        and status_result.get("render_state") in {"MISSING", "STALE"}
+    ):
+        return {
+            "stop_reason": "status_action_required",
+            "recommended_next_action": status_result.get("next", "inspect figure state"),
+            "active_patch_target": None,
+            "human_gate_status": "not_requested",
+        }
     if status_result.get("critique_state") in {"MISSING", "STALE"}:
         return {
             "stop_reason": "status_action_required",
