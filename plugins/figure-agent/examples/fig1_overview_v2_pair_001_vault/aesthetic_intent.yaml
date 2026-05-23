@@ -1,0 +1,27 @@
+schema: figure-agent.aesthetic-intent.v1
+fixture: fig1_overview_v2_pair_001_vault
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: "Prefer restrained, publication-grade visual hierarchy over decorative or cartoon-like emphasis."
+  - id: instrument_precision
+    instruction: "Keep apparatus components crisp and physically plausible while avoiding toy-like rounded blocks."
+  - id: scientific_hand_craft
+    instruction: "Use subtle component-level texture only when it clarifies mechanism, material identity, or scale."
+must_avoid:
+  - id: toy_diagram
+    pattern: "Oversized arrows, rounded generic boxes, unmodulated flat colors, or poster-like decorative gradients."
+    severity: MAJOR
+  - id: preset_macro_feel
+    pattern: "Repeated identical icon grammar that makes panels feel templated rather than editorially composed."
+    severity: MINOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: "TikZ is semantically correct but print-scale label, stroke, or spacing refinement still limits journal polish."
+    recommended_path: ready_for_svg_polish
+  - id: semantic_backport
+    condition: "A polish request would change mechanism, label meaning, component identity, or panel storyline."
+    recommended_path: semantic_backport_required
