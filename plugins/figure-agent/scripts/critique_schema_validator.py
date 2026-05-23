@@ -70,6 +70,18 @@ def _require_list(value: Any, label: str) -> list[Any]:
     return value
 
 
+def _validate_string_list(value: Any, label: str, *, require_non_empty: bool) -> list[str]:
+    items = _require_list(value, label)
+    if require_non_empty and not items:
+        raise CritiqueContractError(f"{label} must be a non-empty list")
+    strings: list[str] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, str) or not item.strip():
+            raise CritiqueContractError(f"{label}[{index}] must be a non-empty string")
+        strings.append(item.strip())
+    return strings
+
+
 def _validate_sha256_string(value: str, label: str) -> None:
     if not value.startswith("sha256:") or len(value) <= len("sha256:"):
         raise CritiqueContractError(f"{label} must be a sha256-prefixed string")
@@ -275,6 +287,7 @@ def _validate_journal_grade_assessment(
     quality_verdicts: dict[str, str],
     top_tier_verdicts: dict[str, str] | None = None,
     editorial_verdicts: dict[str, str] | None = None,
+    aesthetic_lever_verdicts: dict[str, tuple[str, str]] | None = None,
     *,
     allow_reference_calibration: bool = False,
 ) -> None:
@@ -364,6 +377,17 @@ def _validate_journal_grade_assessment(
             raise CritiqueContractError(
                 f"{label}.benchmark_level high_impact_candidate requires passing "
                 f"editorial_art_direction slots; non-passing slots: {audits}"
+            )
+        non_passing_aesthetic = {
+            lever_id: verdict
+            for lever_id, (verdict, route) in (aesthetic_lever_verdicts or {}).items()
+            if verdict in {"fail", "needs_human"} or (verdict == "weak" and route != "none")
+        }
+        if non_passing_aesthetic:
+            levers = ", ".join(sorted(non_passing_aesthetic))
+            raise CritiqueContractError(
+                f"{label}.benchmark_level high_impact_candidate requires passing "
+                f"aesthetic_lever_audit entries; non-passing levers: {levers}"
             )
 
     critique_input_hash = frontmatter.get("critique_input_hash")
@@ -664,6 +688,76 @@ def _validate_v1_10_accept_simplification(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _validate_v1_11_aesthetic_lever_audit(
+    frontmatter: dict[str, Any],
+) -> dict[str, tuple[str, str]]:
+    raw_items = _require_non_empty_list(
+        frontmatter.get("aesthetic_lever_audit"),
+        "critique frontmatter.aesthetic_lever_audit",
+    )
+    seen: set[str] = set()
+    verdicts: dict[str, tuple[str, str]] = {}
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.aesthetic_lever_audit[{index}]"
+        item = require_mapping(raw_item, label)
+        lever_id = _require_non_empty_string(item, "lever_id", label=label)
+        if lever_id in seen:
+            raise CritiqueContractError(
+                f"critique frontmatter.aesthetic_lever_audit has duplicate lever_id: {lever_id}"
+            )
+        seen.add(lever_id)
+        _require_enum(item, "dimension", vocab.AESTHETIC_LEVER_DIMENSIONS, label=label)
+        verdict = _require_enum(item, "verdict", vocab.AESTHETIC_LEVER_VERDICTS, label=label)
+        _require_enum(item, "confidence", vocab.QUALITY_CONFIDENCES, label=label)
+        positive_signals = _validate_string_list(
+            item.get("observed_positive_signals"),
+            f"{label}.observed_positive_signals",
+            require_non_empty=verdict == "pass",
+        )
+        _validate_string_list(
+            item.get("observed_anti_patterns"),
+            f"{label}.observed_anti_patterns",
+            require_non_empty=False,
+        )
+        route = _require_enum(item, "route", vocab.AESTHETIC_LEVER_ROUTES, label=label)
+        linked_evidence = _validate_string_list(
+            item.get("linked_evidence"),
+            f"{label}.linked_evidence",
+            require_non_empty=verdict in {"weak", "fail", "needs_human"},
+        )
+        allowed_next_adjustment = _require_string_value(
+            item,
+            "allowed_next_adjustment",
+            label=label,
+        )
+        _require_non_empty_string(item, "forbidden_adjustment_guard", label=label)
+        _require_non_empty_string(item, "rationale", label=label)
+
+        if verdict == "pass" and not positive_signals:
+            raise CritiqueContractError(
+                f"{label}.observed_positive_signals must be non-empty for pass verdict"
+            )
+        if verdict in {"pass", "not_applicable"} and route != "none":
+            raise CritiqueContractError(
+                f"{label}.route must be none for verdict {verdict}"
+            )
+        if verdict in {"weak", "fail", "needs_human"} and route == "none":
+            raise CritiqueContractError(
+                f"{label}.route must not be none for verdict {verdict}"
+            )
+        if route != "none" and not allowed_next_adjustment:
+            raise CritiqueContractError(
+                f"{label}.allowed_next_adjustment must be non-empty for route {route}"
+            )
+        if route != "none" and not linked_evidence:
+            raise CritiqueContractError(
+                f"{label}.linked_evidence must be non-empty for route {route}"
+            )
+
+        verdicts[lever_id] = (verdict, route)
+    return verdicts
+
+
 def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_non_empty_list(
         frontmatter.get("crop_audit_log"),
@@ -818,6 +912,24 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
             quality_verdicts,
             top_tier_verdicts,
             editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_11:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        aesthetic_lever_verdicts = _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            aesthetic_lever_verdicts,
             allow_reference_calibration=True,
         )
         _validate_v1_2_audit_to_finding(frontmatter)

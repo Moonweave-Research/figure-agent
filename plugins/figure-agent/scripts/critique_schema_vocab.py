@@ -13,6 +13,7 @@ CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
 CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
+CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -176,3 +177,23 @@ MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS = (
     "convention",
 )
 CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})
+AESTHETIC_LEVER_DIMENSIONS = frozenset(
+    {
+        "maturity",
+        "hero_hierarchy",
+        "whitespace_breathing",
+        "typography_authority",
+        "color_harmony",
+        "line_weight_rhythm",
+        "component_fidelity",
+        "hand_craft",
+        "cross_panel_grammar",
+        "polish_route",
+    }
+)
+AESTHETIC_LEVER_VERDICTS = frozenset(
+    {"pass", "weak", "fail", "needs_human", "not_applicable"}
+)
+AESTHETIC_LEVER_ROUTES = frozenset(
+    {"none", "tikz_patch", "svg_polish", "semantic_backport", "human_art_direction"}
+)
