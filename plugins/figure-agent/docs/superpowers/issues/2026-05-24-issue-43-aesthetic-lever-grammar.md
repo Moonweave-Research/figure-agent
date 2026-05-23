@@ -16,6 +16,7 @@ Implementation commits:
 - `2107e39` — Issue 43E follow-up, JSON summary contract test alignment.
 - `1a02791` — Issue 43B/43E follow-up, v2 aesthetic-intent freshness expects rubric v1.11.
 - `5511fba` — Review fixup, schema-aware freshness and strict aesthetic route gates.
+- `d817022` — Review fixup, polish driver honors loop-level aesthetic/top-tier blockers.
 
 Issue 43F remains out of scope for this implementation slice: no real fixture
 source, generated artifact, accepted/golden state, or dogfood critique was

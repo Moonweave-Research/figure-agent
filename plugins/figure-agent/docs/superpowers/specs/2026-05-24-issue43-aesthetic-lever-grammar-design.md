@@ -3,14 +3,16 @@
 ## Status
 
 Implemented through Issue 43E in commits `a49bda8`, `4604dfa`, `aa1d6fd`,
-`c65a4bd`, `a1a19ae`, `2107e39`, `1a02791`, and `5511fba`. Issue 43F dogfood
-evidence remains deferred.
+`c65a4bd`, `a1a19ae`, `2107e39`, `1a02791`, `5511fba`, and `d817022`.
+Issue 43F dogfood evidence remains deferred.
 
 The implemented slice adds the v2 intent parser, v1.11 critique brief/schema
 contract, fixture-aware lint accountability, and `/fig_loop` summary surfacing.
 It also makes hash freshness expect rubric v1.11 when a fixture declares
 `aesthetic_intent.yaml` schema v2 and hardens the route gates found during
-review.
+review. The dry-run driver also preserves the aesthetic lever summary from
+latest loop checkpoints and blocks polish handoff when loop-level human/top-tier
+blockers are still open.
 It does not add automatic drawing edits, SVG polish mutation, score gates,
 release shortcuts, or accepted/golden state changes.
 
