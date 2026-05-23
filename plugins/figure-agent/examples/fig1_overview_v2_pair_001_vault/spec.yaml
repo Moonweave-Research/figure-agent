@@ -59,6 +59,56 @@ panels:
     # reinforcement (v8.8+).
 style_profile: polymer-paper
 visual_clash_cap: 59
+text_boundary_layout:
+  clearance_pt: 0.5
+  column_rules:
+    - id: row2_de
+      x_pdf_cm: 6.015
+      y_range_pdf_cm: [6.244, 11.457]
+    - id: row2_ef
+      x_pdf_cm: 12.182
+      y_range_pdf_cm: [6.244, 11.457]
+  forbidden_rects:
+    - id: panel_e_hv_display
+      bbox_pdf_cm: [7.515, 6.015, 8.342, 6.219]
+      role: instrument_internal_drawing
+    - id: panel_e_vs_meter_display
+      bbox_pdf_cm: [9.957, 6.498, 11.025, 6.778]
+      role: instrument_internal_drawing
+    - id: panel_f_psu_display
+      bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
+      role: instrument_internal_drawing
+text_boundary_checks:
+  - id: row2_de_column_rule
+    kind: vertical_line
+    role: column_rule
+    x_pdf_cm: 6.015
+    y_range_pdf_cm: [6.244, 11.457]
+    clearance_pt: 0.5
+  - id: row2_ef_column_rule
+    kind: vertical_line
+    role: column_rule
+    x_pdf_cm: 12.182
+    y_range_pdf_cm: [6.244, 11.457]
+    clearance_pt: 0.5
+  - id: panel_e_hv_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [7.515, 6.015, 8.342, 6.219]
+    mode: avoid_inside
+    clearance_pt: 0.5
+  - id: panel_e_vs_meter_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [9.957, 6.498, 11.025, 6.778]
+    mode: avoid_inside
+    clearance_pt: 0.5
+  - id: panel_f_psu_display_avoid_inside
+    kind: rect
+    role: instrument_internal_drawing
+    bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
+    mode: avoid_inside
+    clearance_pt: 0.5
 notes: |
   pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
   D/E/F (3 columns, each split apparatus zone top + result zone bottom).

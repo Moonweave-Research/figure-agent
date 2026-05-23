@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:11d17b35b1e83b0bb5de8a2d48f416aec5a8dfa7ed870853ba596caba0c88f28
+source_critique_hash: sha256:64953c4d9a7f0832d31f7de5e92d7f919011686d0ae708b38d0d904dea253373
 decisions:
 - finding_id: P001
   decision: needs_human
@@ -33,18 +33,7 @@ decisions:
   patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
   evidence: critique.md marks C003 status resolved.
 - finding_id: C004
-  decision: resolved
-  reason: Critique marks C004 as resolved.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-    lines 1218-1226
-  evidence: critique.md marks C004 status resolved.
-- finding_id: C005
-  decision: resolved
-  reason: Critique marks C005 as resolved.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-  evidence: critique.md marks C005 status resolved.
-- finding_id: C006
-  decision: resolved
-  reason: Critique marks C006 as resolved.
-  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-  evidence: critique.md marks C006 status resolved.
+  decision: needs_human
+  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C004.
