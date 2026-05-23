@@ -52,7 +52,7 @@ Total ~14s for full read. Panel C dwell = single longest stop.
   - Curve shape 자체가 message
   - Plot이 *icon-sized*: reader가 *plot처럼 분석*하지 않게
 - **Schematic panel (A / C / G)**: scene dominant. Detail density 비례적으로 높음.
-- **B**: hybrid. Skeletal chains with conceptual axis arrow (axis frame 없음).
+- **B**: hybrid. Skeletal chains with conceptual axis arrow (axis frame 없음, 단 S60/S75/S85 정렬에 한해 수치 없는 미세 tick mark 3개 허용 — D/E/F의 "수치 없는 Tick marks" 허용 convention을 Panel B 단일 axis arrow에 일관 적용; tick 높이 ≤0.06cm, line width ≤0.30pt, cGray!60 stroke, 수치 라벨 부착 금지). [briefing relax R1, 2026-05-23]
 
 **Row 2 binding mechanism (NC main-text Fig 1 convention — no background wash)**:
 1. ~~Shared faded polymer matrix background underneath Row 2~~ **REMOVED 2026-05-22**: NC main-text Fig 1은 컬러 wash 미사용 관행. Row 2 결속은 spoke arrow geometry + Row 2 caption + panel-letter 위치만으로 carry.
@@ -414,6 +414,7 @@ Residual items + active markers:
 
 Style discipline (full list at corpus):
 - 3-tier line weight (mechanism 1.0–1.5pt / curve 0.8pt / reference 0.4pt)
+  - **Hero-tier micro variance allowance [briefing relax R3, 2026-05-23]**: Panel C (HERO #1) HERO element (polymer film outline, 4 energy level horizontal lines) 에 한해 동일 tier 상한값 +0.05pt 허용 (예: mechanism 1.0pt → 1.05pt, reference 0.4pt → 0.45pt). Same-tier 다른 panel과 시각적 식별 불가능한 수준 — *위계 강화 only, 새 tier 도입 아님*. 다른 panel HERO element에는 확장 금지.
 - ≤7 hues, fills ~30% saturation / strokes ~90%
 - Variables italic, units upright
 - Sans-serif throughout (Helvetica/Arial family)

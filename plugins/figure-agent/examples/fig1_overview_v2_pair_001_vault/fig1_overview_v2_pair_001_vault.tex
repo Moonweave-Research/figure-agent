@@ -297,6 +297,14 @@
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
   (3.95, 5.65) -- (6.60, 5.65);
+% briefing relax R1 (2026-05-23): 3 micro tick marks aligned with chain
+% endpoints (S60 xend=4.85 / S75 xend=5.65 / S85 xend=6.25). Visually
+% connects the wt% axis sample positions to the labelled chain endpoints.
+% No numeric labels (§9 "Tick 수치 라벨 없음" preserved). 0.06cm tall,
+% cGray!60 stroke 0.30pt — reference tier per §10 3-tier ladder.
+\foreach \tx in {4.85, 5.65, 6.25} {
+  \draw[cGray!60, line width=0.30pt] (\tx, 5.65) -- (\tx, 5.59);
+}
 % v8 Q1 fix: axis label corrected from "Chain length, n" (chain atom count
 % interpretation) to actual composition variable = sulfur weight-percent.
 % Sample labels S60..S85 are wt% S sample names (per planning/sulfur_sample_
@@ -344,7 +352,10 @@
 % Top-edge highlight + right-edge shadow = subtle 3D feel without drop shadow.
 \shade[top color=cAmber!10, bottom color=cAmber!38]
   (7.55, 6.20) rectangle (9.85, 7.70);
-\draw[cAmber!75!black, line width=0.55pt]
+% briefing relax R3 (2026-05-23): HERO polymer film outline 0.55pt → 0.60pt.
+% +0.05pt hero-tier micro variance — visually identical to neighbor curve tier
+% lines but anchors Panel C HERO #1 weight hierarchy. Within curve-tier cap (0.80pt).
+\draw[cAmber!75!black, line width=0.60pt]
   (7.55, 6.20) rectangle (9.85, 7.70);
 % Top-edge highlight (subtle white reflection, opacity 0.5)
 \draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.68) -- (9.80, 7.68);
@@ -485,11 +496,14 @@
 % Both shallow & deep show distribution via 2 stacked levels per category.
 % v7 polish #7: trap line weight 0.80→1.00pt (mechanism tier per §10 3-tier)
 % Polish iter: 1.00→1.10pt + line cap=round for crisp manicured termination.
+% briefing relax R3 (2026-05-23): 1.10pt → 1.15pt for 4 trap energy level
+% lines. +0.05pt hero-tier variance anchors Panel C HERO #1 weight; within
+% mechanism-tier cap (1.55pt under relaxation).
 \foreach \tY in {7.55, 7.35} {
-  \draw[cBlue!80!black, line width=1.10pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
+  \draw[cBlue!80!black, line width=1.15pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
 }
 \foreach \tY in {6.20, 5.85} {
-  \draw[cRed!80!black, line width=1.10pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
+  \draw[cRed!80!black, line width=1.15pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
 % v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
