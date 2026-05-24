@@ -1,6 +1,6 @@
 # Issue 43 — Aesthetic Lever Grammar
 
-**Status:** implemented through Issue 43E; Issue 43F dogfood deferred
+**Status:** implemented through Issue 43F; final dogfood evidence captured
 
 Design spec:
 `../specs/2026-05-24-issue43-aesthetic-lever-grammar-design.md`
@@ -18,10 +18,15 @@ Implementation commits:
 - `5511fba` — Review fixup, schema-aware freshness and strict aesthetic route gates.
 - `d817022` — Review fixup, polish driver honors loop-level aesthetic/top-tier blockers.
 - `91de4e9` — Review coverage, release driver preserves aesthetic lever checkpoint summary.
+- current branch — Issue 43F, fixture-level aesthetic lever grammar dogfood.
 
-Issue 43F remains out of scope for this implementation slice: no real fixture
-source, generated artifact, accepted/golden state, or dogfood critique was
-mutated.
+Issue 43F dogfood evidence:
+`../../milestones/2026-05-24-aesthetic-lever-grammar-dogfood.md`.
+
+The dogfood upgraded one intentionally selected real fixture to
+`aesthetic_intent.yaml` v2, refreshed its critique to schema v1.11, and verified
+lint/status/loop/driver consumption. No TikZ source, accepted/golden state,
+export artifact, or publication provenance file was edited.
 
 ## Problem
 

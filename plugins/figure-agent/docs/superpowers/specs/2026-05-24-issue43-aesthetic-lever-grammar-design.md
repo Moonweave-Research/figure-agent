@@ -4,7 +4,8 @@
 
 Implemented through Issue 43E in commits `a49bda8`, `4604dfa`, `aa1d6fd`,
 `c65a4bd`, `a1a19ae`, `2107e39`, `1a02791`, `5511fba`, `d817022`, and
-`91de4e9`. Issue 43F dogfood evidence remains deferred.
+`91de4e9`. Issue 43F dogfood evidence was captured in
+`docs/milestones/2026-05-24-aesthetic-lever-grammar-dogfood.md`.
 
 The implemented slice adds the v2 intent parser, v1.11 critique brief/schema
 contract, fixture-aware lint accountability, and `/fig_loop` summary surfacing.
