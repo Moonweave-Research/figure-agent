@@ -221,7 +221,7 @@ Review for:
   only to surface existing blocked states more clearly.
 - Add focused tests in existing status/driver/loop test files.
 
-- [ ] **Step 1: Write failing guard tests**
+- [x] **Step 1: Write failing guard tests**
 
 Cover:
 
@@ -232,13 +232,13 @@ Cover:
   `semantic_backport_required`;
 - no accepted/golden state is mutated.
 
-- [ ] **Step 2: Implement minimal guard wiring**
+- [x] **Step 2: Implement minimal guard wiring**
 
 Prefer reusing existing `semantic_change_declared` and `backport_required`
 fields. Avoid a manifest v2 unless the additive fields cannot express the
 contract.
 
-- [ ] **Step 3: Verify 44D**
+- [x] **Step 3: Verify 44D**
 
 Run:
 
@@ -248,7 +248,7 @@ uv run ruff check scripts/svg_polish_handoff.py scripts/svg_polish_manifest.py s
 git diff --check
 ```
 
-- [ ] **Step 4: Review 44D**
+- [x] **Step 4: Review 44D**
 
 Review for:
 

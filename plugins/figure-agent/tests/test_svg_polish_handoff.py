@@ -52,6 +52,7 @@ def _write_default_handoff(
     fig_dir: Path,
     style_lock: Path,
     *,
+    semantic_change_declared: bool = False,
     backport_required: bool = False,
 ) -> tuple[Path, Path]:
     return write_handoff_files(
@@ -62,7 +63,7 @@ def _write_default_handoff(
         edit_classes=["label_micro_position", "stroke_polish"],
         reviewed_at="2026-05-23T00:00:00Z",
         notes="visual-only polish",
-        semantic_change_declared=False,
+        semantic_change_declared=semantic_change_declared,
         backport_required=backport_required,
         force=False,
         style_lock_path=style_lock,
@@ -159,6 +160,33 @@ def test_backport_required_manifest_is_blocked_by_existing_final_artifact_state(
         encoding="utf-8",
     )
     _write_default_handoff(fig_dir, style_lock, backport_required=True)
+    spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+
+    state = compute_final_artifact_state(
+        fig_dir,
+        fig_dir.name,
+        spec,
+        style_lock_path=style_lock,
+        base_dir=fig_dir.parent.parent,
+    )
+
+    assert state["state"] == FINAL_ARTIFACT_BLOCKED
+    assert "semantic backport required" in state["error"]
+
+
+def test_semantic_change_declared_manifest_is_blocked_by_existing_final_artifact_state(
+    tmp_path: Path,
+) -> None:
+    fig_dir, style_lock = _make_fixture(tmp_path)
+    spec_path = fig_dir / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8")
+        + "final_artifact:\n"
+        + "  kind: polished_svg\n"
+        + "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    _write_default_handoff(fig_dir, style_lock, semantic_change_declared=True)
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
 
     state = compute_final_artifact_state(
