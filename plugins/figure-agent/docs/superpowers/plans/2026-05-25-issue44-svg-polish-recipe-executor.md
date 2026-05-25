@@ -28,7 +28,7 @@ existing figure-agent hashing utilities, pytest, ruff.
 - Create: `tests/test_svg_polish_recipe.py`
 - Update: `docs/superpowers/issues/2026-05-25-issue-44-svg-polish-recipe-executor.md`
 
-- [ ] **Step 1: Write failing schema tests**
+- [x] **Step 1: Write failing schema tests**
 
 Cover:
 
@@ -52,7 +52,7 @@ uv run pytest -q tests/test_svg_polish_recipe.py
 
 Expected: RED because the module does not exist.
 
-- [ ] **Step 2: Implement parser, validator, writer**
+- [x] **Step 2: Implement parser, validator, writer**
 
 Implement:
 
@@ -64,7 +64,7 @@ Implement:
 - `svg_polish_recipe_input_hash(...)`
 - `svg_polish_recipe_is_stale(...)`
 
-- [ ] **Step 3: Verify 44A**
+- [x] **Step 3: Verify 44A**
 
 Run:
 
@@ -74,7 +74,7 @@ uv run ruff check scripts/svg_polish_recipe.py tests/test_svg_polish_recipe.py
 git diff --check
 ```
 
-- [ ] **Step 4: Review 44A**
+- [x] **Step 4: Review 44A**
 
 Review for:
 
