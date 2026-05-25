@@ -97,7 +97,7 @@ Do not start 44B until 44A tests and review are clean.
 - Update: `commands/fig_loop.md` or `commands/fig_drive.md` only if UX text is
   needed.
 
-- [ ] **Step 1: Write failing executor tests**
+- [x] **Step 1: Write failing executor tests**
 
 Use small SVG fixtures. Cover:
 
@@ -121,7 +121,7 @@ uv run pytest -q tests/test_svg_polish_executor.py
 
 Expected: RED because the module does not exist.
 
-- [ ] **Step 2: Implement dry-run and write mode**
+- [x] **Step 2: Implement dry-run and write mode**
 
 Implement:
 
@@ -132,7 +132,7 @@ Implement:
 
 Start with XML attribute edits only. Do not rewrite path geometry.
 
-- [ ] **Step 3: Verify 44B**
+- [x] **Step 3: Verify 44B**
 
 Run:
 
@@ -142,7 +142,7 @@ uv run ruff check scripts/svg_polish_executor.py tests/test_svg_polish_executor.
 git diff --check
 ```
 
-- [ ] **Step 4: Review 44B**
+- [x] **Step 4: Review 44B**
 
 Review for:
 

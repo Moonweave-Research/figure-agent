@@ -325,6 +325,15 @@ Closeout after SVG polish:
 7. Do not set `accepted: true` unless publication provenance, final-artifact
    state, and the existing accepted/golden checks are closed.
 
+If the SVG polish is described by a bounded recipe, run the recipe executor
+before handoff. The executor defaults to dry-run and writes only
+`polish/<name>.polished.svg` in `--write` mode:
+
+```bash
+uv run python3 scripts/svg_polish_executor.py examples/<name>
+uv run python3 scripts/svg_polish_executor.py examples/<name> --write
+```
+
 Use the handoff scaffolder after `polish/<name>.polished.svg` exists:
 
 ```bash

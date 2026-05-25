@@ -187,6 +187,12 @@ boundary. If the summary says `ready_for_svg_polish` but another editorial slot
 still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
 wins over polish handoff.
 
+If a bounded `polish/svg_polish_recipe.yaml` exists, run
+`scripts/svg_polish_executor.py examples/<name>` first to inspect the dry-run
+plan, then rerun it with `--write` only for visual-only recipe edits. After the
+polished SVG exists, use `scripts/svg_polish_handoff.py` to scaffold audit and
+manifest metadata.
+
 ## Workspace Warnings
 
 `workspace_warnings` is an additive advisory field. The driver reads
