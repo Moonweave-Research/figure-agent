@@ -215,19 +215,19 @@
 % vertical room for full-text "inverse vulcanization" 2-line label between
 % (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
 % corner position (§13.1 A-5 semantic).
-% A-5 v8.5 [briefing relax R2, 2026-05-26]: v8.4 dial turn-up per advisor.
-% shadow opacity 0.18→0.40, offset 0.05→0.08cm; gradient delta widened
-% (cAmberSphere!18→cAmber!70); specular opacity 0.32→0.65, radius 0.6→1.5mm.
-% Chemistry constraint (regular octagon + 8 'S' + center S₈) preserved.
-\node[regular polygon, regular polygon sides=8, fill=black, opacity=0.40,
+% A-5 v8.6 [briefing relax R2, 2026-05-26]: v8.5 calibration — shadow
+% opacity 0.40→0.28, specular opacity 0.65→0.45, radius 1.5mm→0.7mm
+% (smaller + softer so it reads as light reflection, not floating disc).
+% gradient delta preserved (mechanism-bound material identity cue).
+\node[regular polygon, regular polygon sides=8, fill=black, opacity=0.28,
       minimum size=7mm, inner sep=0pt, draw=none]
-   at (3.13,8.47) {};
+   at (3.11,8.49) {};
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
       line width=0.7pt, minimum size=7mm,
       top color=cAmberSphere!10, bottom color=cAmber!70, shading angle=135,
       inner sep=0pt] (s8) at (3.05,8.55) {};
-\fill[white, opacity=0.65]
-  ([xshift=-1.5mm, yshift=1.5mm]s8.center) circle (1.5mm);
+\fill[white, opacity=0.45]
+  ([xshift=-1.2mm, yshift=1.2mm]s8.center) circle (0.7mm);
 % Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
 % identities read at standard view (PNG-visible delta; previous 4.4pt
 % rendered as nearly-invisible marks inside octagon).
@@ -403,13 +403,14 @@
   (7.55, 6.20) rectangle (9.85, 7.70);
 % Top-edge highlight (subtle white reflection, opacity 0.5)
 \draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.68) -- (9.80, 7.68);
-% v8.5: NW corner ellipsoidal specular spot — turned up per advisor
-\fill[white, opacity=0.65] (7.90, 7.48) ellipse (3.0mm and 1.0mm);
-% Right-edge thin shadow accent (depth cue) — turned up
-\draw[cAmber!85!black, line width=0.55pt, opacity=0.75]
+% C-L1 v8.6: NW corner ellipsoidal specular calibrated back —
+% 3mm×1mm→1.5mm×0.5mm + opacity 0.65→0.45 (over-elongated v8.5 reverted)
+\fill[white, opacity=0.45] (7.85, 7.50) ellipse (1.5mm and 0.5mm);
+% Right-edge thin shadow accent calibrated — 0.75→0.55
+\draw[cAmber!85!black, line width=0.45pt, opacity=0.55]
   (9.85, 6.22) -- (9.85, 7.68);
-% v8.5: bottom-edge ambient occlusion turned up
-\draw[cAmber!90!black, line width=0.55pt, opacity=0.55]
+% v8.6: bottom-edge ambient occlusion calibrated — 0.55→0.40
+\draw[cAmber!90!black, line width=0.40pt, opacity=0.40]
   (7.60, 6.26) -- (9.80, 6.26);
 
 % 3 wavy chain hints, varied weights for depth
@@ -524,10 +525,12 @@
 \draw[cRed!80!black, line width=0.65pt]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
-% C-R2/C-R3 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. spec
-% opacity 0.40→0.70, radius 0.4mm→1.1mm (~3x).
-\fill[white, opacity=0.70] (11.00, 7.49) circle (1.1mm);
-\fill[white, opacity=0.70] (11.10, 6.05) circle (1.1mm);
+% C-R2/C-R3 v8.6 [briefing relax R2, 2026-05-26]: REMOVED — v8.5 1.1mm
+% white specs at bell peaks read as ball-shaded DATA markers (matches
+% C-L3 trap / F-6 q_tr / E surface charges idiom), causing semantic
+% mis-read of distribution as scatter data. Bell 3D feel sacrificed to
+% preserve distribution-vs-data clarity. v8.4 small specs (0.4mm 0.40
+% opacity) was the over-the-line case; clean removal is safest.
 
 % --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
 % Convention #2 from 3rd reference search: top-tier figures use a real graph-
@@ -754,15 +757,14 @@
 % 0.55→0.70cm; label c-to-c 0.17→0.30cm.
 % Iter 10: SMU box gets the same subtle top->bottom shade as the other
 % instrument boxes (HV+, V_s meter, V_active PSU). Previously outline-only.
-% D apparatus v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
-% shadow 0.16→0.40, offset 0.02→0.05cm; gradient delta widened
-% cGray!4→cGray!40; specular 0.35→0.65, 0.5mm→1.2mm.
-\fill[black, opacity=0.40] (0.55, 3.02) rectangle (1.35, 3.72);
+% D apparatus v8.6 [briefing relax R2, 2026-05-26]: calibrated.
+% shadow 0.40→0.25, gradient delta preserved, specular 1.2mm→0.6mm + 0.65→0.42.
+\fill[black, opacity=0.25] (0.53, 3.04) rectangle (1.33, 3.74);
 \shade[top color=cGray!4, bottom color=cGray!40, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
 \draw[cGray!75!black, line width=0.30pt, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
-\fill[white, opacity=0.65] (0.62, 3.70) circle (1.2mm);
+\fill[white, opacity=0.42] (0.61, 3.71) circle (0.6mm);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=center] at (0.90, 3.57) {SMU};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
@@ -1028,15 +1030,15 @@
 % match the V_active PSU box convention without re-introducing the iter-46
 % "harsh PowerPoint" feel. Sphere/markers + subtle gradient on instrument
 % boxes form the premium NC look together.
-% E apparatus v8.5 [briefing relax R2, 2026-05-26]: HV+ box dial turn-up.
-% shadow 0.16→0.40 + offset; gradient delta wider cGray!4→cGray!40;
-% spec 0.35→0.65, 0.4mm→1.0mm.
-\fill[black, opacity=0.40] (5.74, 4.05) rectangle (6.59, 4.35);
+% E apparatus v8.6 [briefing relax R2, 2026-05-26]: HV+ box calibrated.
+% shadow 0.40→0.25, gradient preserved, NW spec REMOVED (E zone declutter —
+% display dark glass already provides material identity; redundant spec
+% contributes to "white circle soup" pattern flagged in v8.5 review).
+\fill[black, opacity=0.25] (5.72, 4.07) rectangle (6.57, 4.37);
 \shade[top color=cGray!4, bottom color=cGray!40, rounded corners=0.4pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
-\fill[white, opacity=0.65] (5.79, 4.35) circle (1.0mm);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
 \fill[cGray!70!black, rounded corners=0.2pt] (5.8, 4.22) rectangle (6.45, 4.38);
@@ -1177,13 +1179,14 @@
 % Finding C002 (v1.9 re-audit, VC019): 'V_s meter' label at 6.5pt was overflowing
 % the box right edge (last 'r' clipped by rounded corner). Box widened right
 % edge 9.00 → 9.08 (gain 0.08cm) so the label fits inside with comfortable margin.
-% E apparatus v8.5 [briefing relax R2, 2026-05-26]: V_s meter dial turn-up.
-\fill[black, opacity=0.40] (7.72, 3.53) rectangle (8.72, 4.00);
+% E apparatus v8.6 [briefing relax R2, 2026-05-26]: V_s meter calibrated.
+% NW spec REMOVED (display dark glass + label = sufficient material cue,
+% spec was redundant + contributed to "white circle soup").
+\fill[black, opacity=0.25] (7.70, 3.55) rectangle (8.70, 4.02);
 \shade[top color=cGray!4, bottom color=cGray!40, rounded corners=0.4pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
-\fill[white, opacity=0.65] (7.77, 4.00) circle (1.0mm);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
@@ -1394,13 +1397,14 @@
 % PSU pulsed bias source — iter 27: shifted right 0.30cm to reduce trapped
 % wire space between PSU and electrode (Gemini iter 26 "massive 0.88cm
 % horizontal gap"). New range (11.8, 3.2)..(12.65, 3.85), wire gap 0.58cm.
-% F apparatus v8.5 [briefing relax R2, 2026-05-26]: PSU dial turn-up.
-\fill[black, opacity=0.40] (11.84, 3.15) rectangle (12.69, 3.80);
+% F apparatus v8.6 [briefing relax R2, 2026-05-26]: PSU calibrated.
+% shadow 0.40→0.25, gradient preserved, spec 1.0mm→0.6mm + 0.65→0.42.
+\fill[black, opacity=0.25] (11.82, 3.17) rectangle (12.67, 3.82);
 \shade[top color=cGray!2, bottom color=cGray!45]
   (11.8, 3.2) rectangle (12.65, 3.85);
 \draw[cGray!60!black, line width=0.25pt]
   (11.8, 3.2) rectangle (12.65, 3.85);
-\fill[white, opacity=0.65] (11.89, 3.81) circle (1.0mm);
+\fill[white, opacity=0.42] (11.88, 3.82) circle (0.6mm);
 % Inset display window (shifted right with PSU)
 \fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);
 \draw[cGray!55!black, line width=0.18pt]
@@ -1445,14 +1449,14 @@
 % v8.7 critique iter 4: clip x-aligned with apparatus-zone clip (12.25..12.65)
 % so reader perceives "same mount, polymer bent" — clip is FIXED, polymer
 % MOVES under Coulomb force.
-% F-4 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. shadow 0.18→0.40,
-% offset bigger; gradient delta widened cGray!10→cGray!75; bevel 0.55→0.85.
-\fill[black, opacity=0.40] (11.89, 2.38) rectangle (12.29, 2.48);
+% F-4 v8.6 [briefing relax R2, 2026-05-26]: calibrated. shadow 0.40→0.28,
+% gradient delta preserved (metallic identity), bevel 0.85→0.55.
+\fill[black, opacity=0.28] (11.88, 2.39) rectangle (12.28, 2.49);
 \shade[top color=cGray!10!white, bottom color=cGray!75!white]
   (11.85, 2.42) rectangle (12.25, 2.52);
 \draw[cGray!75!black, line width=0.40pt]
   (11.85, 2.42) rectangle (12.25, 2.52);
-\draw[white, opacity=0.85, line width=0.50pt] (11.87, 2.515) -- (12.23, 2.515);
+\draw[white, opacity=0.55, line width=0.35pt] (11.87, 2.515) -- (12.23, 2.515);
 \draw[cGray!50!black, line width=0.40pt] (11.75, 2.65) -- (12.35, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
   \draw[cGray!50!black, line width=0.25pt]
@@ -1474,9 +1478,9 @@
   (11.855, 2.35) .. controls (11.855, 1.85) and (11.585, 1.35) .. (11.285, 0.88);
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
   (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
-% F-5 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. spec opacity
-% 0.30→0.60, radius 0.4mm→1.2mm (3x). Wet polymer cue prominent.
-\fill[white, opacity=0.60] (11.965, 2.28) circle (1.2mm);
+% F-5 v8.6 [briefing relax R2, 2026-05-26]: calibrated — 1.2mm→0.6mm,
+% 0.60→0.42; reads as polymer surface highlight, not white disc.
+\fill[white, opacity=0.42] (11.965, 2.30) circle (0.6mm);
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
 % Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
@@ -1520,17 +1524,17 @@
 % (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,
 % right edge stays at 13.80 (hatches/label on right unaffected). All internal
 % details + ground triangle shifted accordingly.
-% F-8 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. shadow 0.18→0.45,
-% offset 0.03→0.06cm; gradient delta wider cGray!90→cGray!25; left stripe
-% 0.50→0.85, thicker; NW spec 0.45→0.70 + 0.6mm→1.3mm.
-\fill[black, opacity=0.45] (13.29, 0.34) rectangle (13.46, 2.54);
+% F-8 v8.6 [briefing relax R2, 2026-05-26]: calibrated — shadow 0.45→0.32,
+% gradient delta preserved (metallic identity), stripe 0.85→0.70 + thinner,
+% NW spec 1.3mm→0.7mm + 0.70→0.50.
+\fill[black, opacity=0.32] (13.27, 0.36) rectangle (13.44, 2.56);
 \shade[left color=cGray!90!black, right color=cGray!25!black]
   (13.23, 0.4) rectangle (13.4, 2.6);
 \draw[cGray!85!black, line width=0.50pt]
   (13.23, 0.4) rectangle (13.4, 2.6);
-\draw[white, opacity=0.85, line width=0.55pt]
+\draw[white, opacity=0.70, line width=0.45pt]
   (13.235, 0.45) -- (13.235, 2.55);
-\fill[white, opacity=0.70] (13.255, 2.53) circle (1.3mm);
+\fill[white, opacity=0.50] (13.255, 2.53) circle (0.7mm);
 \foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
   \draw[cGray!75!black, line width=0.28pt]
     (13.40, \ey) -- (13.55, {\ey+0.08});
