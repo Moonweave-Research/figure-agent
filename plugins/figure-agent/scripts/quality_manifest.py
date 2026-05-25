@@ -97,6 +97,16 @@ def critique_manifest_paths(
     aesthetic_intent_path = example_dir / "aesthetic_intent.yaml"
     if aesthetic_intent_path.exists():
         paths.append(aesthetic_intent_path)
+    svg_polish_delta_paths = (
+        example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json",
+        example_dir / "polish" / "aesthetic_delta" / "before.png",
+        example_dir / "polish" / "aesthetic_delta" / "after.png",
+        example_dir / "polish" / "aesthetic_delta" / "diff.png",
+        example_dir / "polish" / "svg_polish_recipe.yaml",
+        example_dir / "polish" / f"{name}.polished.svg",
+        example_dir / "exports" / f"{name}.svg",
+    )
+    paths.extend(path for path in svg_polish_delta_paths if path.exists())
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
