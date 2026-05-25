@@ -123,14 +123,25 @@
     % A-1 v8.5 [briefing relax R2, 2026-05-26]: v8.4 cAmber!06 wash REMOVED
     % per advisor blocker 1 — sub-pixel noise. Ring material identity carried
     % by polysulfide chain stroke color + 'Sulfur-rich polymer' label.
-    \draw[cGray!85!black, line width=0.70pt]
+    % A-1 iter 3 [Panel A 10-loop]: ring outline + aromatic ticks cGray→amber.
+    % A-1 iter 6 [Panel A 10-loop, 2026-05-26]: light cAmber!08 hexagon fill
+    % added BEFORE outline. v8.4 cAmber!06 (gray outline → wash poor contrast,
+    % flagged noise); now with amber outline the slight wash reads as "amber
+    % chemistry tile", removing the bright-white interior dissonance vs amber
+    % border. Chemistry constraints preserved (regular hexagon + meta vertices).
+    \fill[cAmber!08]
       (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
       (240:\dibR) -- (300:\dibR) -- cycle;
-    % Panel A iter 1/10: aromatic tick width 0.55→0.65pt for Nature-grade
-    % chemistry weight presence (ratio to outline 0.70pt now 0.93, was 0.79).
-    \draw[cGray!85!black, line width=0.65pt] (66:0.78*\dibR) -- (114:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.65pt] (186:0.78*\dibR) -- (234:0.78*\dibR);
-    \draw[cGray!85!black, line width=0.65pt] (306:0.78*\dibR) -- (354:0.78*\dibR);
+    % A-1 iter 13 [Panel A 10-loop, 2026-05-26]: line cap=round + line
+    % join=round on ring outline + aromatic ticks. Removes sharp pixel
+    % corners at hexagon vertices and tick endpoints → soft hand-drawn
+    % stroke feel without breaking regular hexagon chemistry constraint.
+    \draw[cAmber!75!black, line width=0.70pt, line cap=round, line join=round]
+      (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
+      (240:\dibR) -- (300:\dibR) -- cycle;
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (66:0.78*\dibR) -- (114:0.78*\dibR);
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (186:0.78*\dibR) -- (234:0.78*\dibR);
+    \draw[cAmber!75!black, line width=0.65pt, line cap=round] (306:0.78*\dibR) -- (354:0.78*\dibR);
   \end{scope}
 }
 % R10 horizontal-row zigzag layout: 4 DIB rings in alternating high/low row,
@@ -142,6 +153,13 @@
 \dibRingAt{2.25}{7.10}
 \dibRingAt{3.00}{6.55}
 
+% A-2 iter 12 [Panel A 10-loop]: handChainBond style — used by both
+% isopropenyl linker stubs (iter 16) and polysulfide chain bonds (iter 11+12).
+% Defined here so it's available at first use point (linker bonds below).
+\tikzset{handChainBond/.style={cAmber!85!black, line width=0.9pt,
+        line cap=round, decorate,
+        decoration={snake, amplitude=0.05mm, segment length=2mm}}}
+
 % Quaternary C(CH3)2 methyl pair at each DIB-polysulfide junction (post-R7
 % reference fix: poly(S-r-DIB) has gem-dimethyl quaternary C between each
 % phenyl ring and its polysulfide chain, originating from 1,3-DIB's
@@ -152,10 +170,17 @@
   \pgfmathsetmacro{\mnorm}{sqrt(\mdx*\mdx + \mdy*\mdy)}
   \pgfmathsetmacro{\mnx}{\mdx/\mnorm}
   \pgfmathsetmacro{\mny}{\mdy/\mnorm}
-  \draw[cGray!75!black, line width=0.55pt]
-    (#1,#2) -- ({#1 - 0.08*\mny}, {#2 + 0.08*\mnx});
-  \draw[cGray!75!black, line width=0.55pt]
-    (#1,#2) -- ({#1 + 0.08*\mny}, {#2 - 0.08*\mnx});
+  % A-4 iter 10 + iter 15 [Panel A 10-loop, 2026-05-26]: tone cGray!60
+  % + line cap=round for figure-wide hand-feel cohesion (matches iter 13
+  % ring outline + iter 14 arrow + iter 12 chain bond styling).
+  % A-4 iter 20 [Panel A 10-loop, 2026-05-26]: methylPair stub length
+  % 0.08→0.065cm (19% shorter). Reduces X-cross visual clutter at chain
+  % interior endpoints where the two perpendicular stubs meet. gem-dimethyl
+  % semantic preserved (still V shape) but less dominant at zoom view.
+  \draw[cGray!60!black, line width=0.55pt, line cap=round]
+    (#1,#2) -- ({#1 - 0.065*\mny}, {#2 + 0.065*\mnx});
+  \draw[cGray!60!black, line width=0.55pt, line cap=round]
+    (#1,#2) -- ({#1 + 0.065*\mny}, {#2 - 0.065*\mnx});
 }
 
 % --- Isopropenyl linker bonds (8 total: 2 per ring at META positions, R10) ---
@@ -165,32 +190,52 @@
 %   Ring_c (2.25,7.10): 240° (LL ← from b)      + 0°   (R  → chain to d)
 %   Ring_d (3.00,6.55): 120° (UL ← from c)      + 0°   (R  → right dangling)
 % All vertex pairs are 120° apart (meta).
-\draw[cGray!85!black, line width=0.55pt] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
-\draw[cGray!85!black, line width=0.55pt] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
-\draw[cGray!85!black, line width=0.55pt] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
-\draw[cGray!85!black, line width=0.55pt] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
-\draw[cGray!85!black, line width=0.55pt] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
-\draw[cGray!85!black, line width=0.55pt] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
-\draw[cGray!85!black, line width=0.55pt] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
-\draw[cGray!85!black, line width=0.55pt] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
+% Iter 16 [Panel A 10-loop, 2026-05-26]: 8 isopropenyl linker stubs
+% restyled cGray!85!black 0.55pt → cAmber!85!black 0.9pt + line cap=round
+% to match chain bond style. User-flagged at zoom: gray 0.55pt + amber
+% 0.9pt at same junction read as "✕" misaligned cross-cut. Now ring vertex
+% → linker → polysulfide chain flow as ONE continuous amber bond (chemistry
+% intent — quaternary C connection — still encoded by methylPair "V" stubs
+% at chain endpoints, which keep their gray detail-tier styling).
+\draw[handChainBond] (0.88,6.88) -- (0.93,6.79);    % Ring_a 300° → chain to b
+\draw[handChainBond] (0.49,7.10) -- (0.39,7.10);    % Ring_a 180° → left dangling
+\draw[handChainBond] (1.37,6.78) -- (1.32,6.86);    % Ring_b 120° ← from a
+\draw[handChainBond] (1.76,6.55) -- (1.86,6.55);    % Ring_b 0°   → to c
+\draw[handChainBond] (2.12,6.88) -- (2.07,6.79);    % Ring_c 240° ← from b
+\draw[handChainBond] (2.51,7.10) -- (2.61,7.10);    % Ring_c 0°   → to d
+\draw[handChainBond] (2.87,6.78) -- (2.82,6.86);    % Ring_d 120° ← from c
+\draw[handChainBond] (3.26,6.55) -- (3.36,6.55);    % Ring_d 0°   → right dangling
 
 % --- Polysulfide segments (R10 horizontal-row zigzag, linear chain) ---
 % 3 internal chains (a→b, b→c, c→d) + left + right danglings.
-\draw[cAmber!85!black, line width=0.9pt] (0.93, 6.79) -- (1.32, 6.86);   % Ring_a → Ring_b (slight down)
-\draw[cAmber!85!black, line width=0.9pt] (1.86, 6.55) -- (2.07, 6.79);   % Ring_b → Ring_c (up-right)
-\draw[cAmber!85!black, line width=0.9pt] (2.61, 7.10) -- (2.82, 6.86);   % Ring_c → Ring_d (down-right)
-% Open chain ends (both terminals of linear copolymer)
-\draw[cAmber!85!black, line width=0.9pt] (0.39, 7.10) -- (0.10, 7.20);   % left dangling
-\draw[cAmber!85!black, line width=0.9pt] (3.36, 6.55) -- (3.50, 6.50);   % right dangling
-% A-2 v8.4 [briefing relax R2, 2026-05-26]: terminal danglings get
-% ball-shaded atom emphasis — "linear copolymer terminus" cue binding
-% to bivalent-DIB topology constraint (§9 line 396 LOCKED). B-1 endpoint
-% recipe (ball color + thin outline, radius 0.035cm).
+% A-2 iter 11+12 [Panel A 10-loop]: snake pathmorphing (amplitude 0.05mm,
+% segment length 2mm) + line cap=round for organic hand-drawn bond flow.
+% handChainBond style defined above (after \dibRingAt) so both linker
+% stubs (iter 16) and polysulfide chains share the style.
+\draw[handChainBond] (0.93, 6.79) -- (1.32, 6.86);   % Ring_a → Ring_b
+\draw[handChainBond] (1.86, 6.55) -- (2.07, 6.79);   % Ring_b → Ring_c
+\draw[handChainBond] (2.61, 7.10) -- (2.82, 6.86);   % Ring_c → Ring_d
+\draw[handChainBond] (0.39, 7.10) -- (0.10, 7.20);   % left dangling
+\draw[handChainBond] (3.36, 6.55) -- (3.50, 6.50);   % right dangling
+% A-2 iter 4 [Panel A 10-loop, 2026-05-26]: terminal danglings reverted
+% from ball-shaded (0.035cm + outline) to flat fill (0.025cm cAmber!85
+% !black), matching chain interior atom convention. Ball-shaded variant
+% read as "alien sphere accessory" at 600dpi vs the flat skeletal chain;
+% chain-consistency wins over the v8.4 terminus emphasis idea.
 \foreach \tx/\ty in {0.10/7.20, 3.50/6.50} {
-  \shade[ball color=cAmber!85!black] (\tx, \ty) circle (0.035cm);
-  \draw[cAmber!95!black, line width=0.16pt] (\tx, \ty) circle (0.035cm);
+  \fill[cAmber!85!black] (\tx, \ty) circle (0.025cm);
 }
 
+% A-4 iter 21 [Panel A 10-loop, 2026-05-26] final: chain interior atom
+% dots at 6 quaternary C positions (chain endpoint coords where methylPair
+% V stubs originate). Small flat amber dots (0.022cm, slightly smaller
+% than 0.025cm terminal atoms) — explicit "C atom" marker at V apex so
+% chemistry reads as "C with gem-dimethyl + polysulfide bonds" rather
+% than abstract "lines meeting". Matches terminal atom convention.
+\foreach \tx/\ty in {0.93/6.79, 1.32/6.86, 1.86/6.55, 2.07/6.79,
+                      2.61/7.10, 2.82/6.86} {
+  \fill[cAmber!85!black] (\tx, \ty) circle (0.022cm);
+}
 % Quaternary C(CH3)2 methyl pairs at the 6 internal junctions
 \methylPair{0.93}{6.79}{1.32}{6.86}
 \methylPair{1.32}{6.86}{0.93}{6.79}
@@ -215,19 +260,33 @@
 % vertical room for full-text "inverse vulcanization" 2-line label between
 % (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
 % corner position (§13.1 A-5 semantic).
-% A-5 v8.6 [briefing relax R2, 2026-05-26]: v8.5 calibration — shadow
-% opacity 0.40→0.28, specular opacity 0.65→0.45, radius 1.5mm→0.7mm
-% (smaller + softer so it reads as light reflection, not floating disc).
-% gradient delta preserved (mechanism-bound material identity cue).
-\node[regular polygon, regular polygon sides=8, fill=black, opacity=0.28,
-      minimum size=7mm, inner sep=0pt, draw=none]
-   at (3.11,8.49) {};
-\node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
-      line width=0.7pt, minimum size=7mm,
-      top color=cAmberSphere!10, bottom color=cAmber!70, shading angle=135,
-      inner sep=0pt] (s8) at (3.05,8.55) {};
-\fill[white, opacity=0.45]
-  ([xshift=-1.2mm, yshift=1.2mm]s8.center) circle (0.7mm);
+% A-5 iter 2 [Panel A 10-loop]: shadow opacity + offset calibrated.
+% A-5 iter 9 [Panel A 10-loop, 2026-05-26]: shadow color pure black →
+% cAmber!90!black for warm-tinted ambient consistent with amber chemistry
+% scene. Same opacity 0.18 + offset; only hue shift.
+% A-5 iter 22 [Panel A 10-loop, 2026-05-26] NC chemistry convention redesign:
+% Removed v8.4-v8.6 graphic frame (octagon outline + amber gradient + drop
+% shadow + specular highlight). Replaced with chemistry-standard 8 S-S
+% bonds + 8 'S' atom letters. Reference: typical chemistry literature
+% convention — S₈ molecule drawn as atoms-and-bonds, not graphic icon.
+% Bonds shortened at both ends (shorten <=2pt >=2pt) so they end with
+% small gap to letter glyphs (no overlap, atom letters readable).
+% A-5 iter 23 [Panel A 10-loop, 2026-05-26] P0 fix: minimum size 8.4mm
+% → 11mm. iter 22 sized bounding node to atom radius (0.42cm), causing
+% (s8.south west) anchor to coincide with SW 'S' atom letter position
+% (2.75, 8.25). Arrow tail visually originated INSIDE 'S' atom glyph —
+% chemistry convention violation (reaction arrows should originate exterior
+% to molecule). New 11mm bounding moves SW anchor to (2.66, 8.16),
+% ~0.13cm clear of SW atom letter, so arrow reads as "leaves S₈ molecule".
+\node[regular polygon, regular polygon sides=8, draw=none, fill=none,
+      minimum size=11mm, inner sep=0pt] (s8) at (3.05, 8.55) {};
+\foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
+  \pgfmathsetmacro{\nextAng}{\ang + 45}
+  \draw[cAmber!75!black, line width=0.55pt, line cap=round,
+        shorten <=2pt, shorten >=2pt]
+    ({3.05 + 0.42*cos(\ang)}, {8.55 + 0.42*sin(\ang)})
+    -- ({3.05 + 0.42*cos(\nextAng)}, {8.55 + 0.42*sin(\nextAng)});
+}
 % Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
 % identities read at standard view (PNG-visible delta; previous 4.4pt
 % rendered as nearly-invisible marks inside octagon).
@@ -238,26 +297,36 @@
 % ground' with bonds breaking at the atom per chemistry convention. The
 % perceived 'sticker patch' artifact only shows at extreme zoom, not at
 % NC main-text Fig 1 publication scale.
+% A-5 iter 1/17 [Panel A 10-loop]: sticker patch removed + vertex angle fix.
+% A-5 iter 19 [Panel A 10-loop, 2026-05-26]: letter radius 0.35→0.42cm.
+% Octagon outline (minimum size 7mm = radius 0.35) was passing through
+% letter center; with outward shift, 'S' atom letters sit just outside
+% vertex point — standard chemistry convention "atom label adjacent to
+% bond terminus rather than on bond line." Improves readability while
+% preserving 8-atoms-at-8-vertices semantic.
 \foreach \ang in {0, 45, 90, 135, 180, 225, 270, 315} {
   \node[font=\sffamily\bfseries\fontsize{6}{7.2}\selectfont,
-        text=cAmber!95!black, inner sep=0pt,
-        fill=cAmberSphere!40]
-    at ({3.05 + 0.35*cos(\ang+22.5)}, {8.55 + 0.35*sin(\ang+22.5)}) {S};
+        text=cAmber!95!black, inner sep=0pt]
+    at ({3.05 + 0.42*cos(\ang)}, {8.55 + 0.42*sin(\ang)}) {S};
 }
-\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cAmber!95!black, anchor=center] at (3.05, 8.55) {S$_8$};
+% A-5 iter 22: center 'S₈' identity label REMOVED per NC chemistry
+% convention (atoms + bonds carry molecular identity; redundant center
+% label is icon styling, not standard chemistry notation).
 
 % --- Inverse vulcanization transformation arrow (S8 → DIB Ring_c 60° vertex) ---
 % R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
 % the transformation destination semantically meaningful rather than landing in
 % empty space.
-% A-6 v8.4 [briefing relax R2, 2026-05-26]: arrow tone cAmber!70!black
-% → cAmber!85!black to match polysulfide chain stroke (transformation
-% result species). Visually binds arrow to "becomes this color" semantic.
-% Stealth tip, dashed (§17 transformation), 0.55pt, bend, target vertex
-% all preserved.
-\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!85!black,
-      line width=0.55pt] (s8.south west) to[bend right=14] (2.38,7.32);
+% A-6 v8.4: arrow tone cAmber!85!black.
+% A-6 iter 14 [Panel A 10-loop, 2026-05-26]: dash pattern tightened
+% (default 3pt/3pt → 2.2pt/1.8pt) + line cap=round for hand-drawn dash
+% rhythm. Tighter dash density reads as "deliberate hand-traced reaction
+% arrow" rather than CAD dashed line; round caps soften pixel sharpness
+% at each dash endpoint. §17 transformation semantic + bend preserved.
+\draw[-{Stealth[length=4pt,width=3pt]}, cAmber!85!black,
+      line width=0.55pt, line cap=round,
+      dash pattern=on 2.2pt off 1.8pt]
+      (s8.south west) to[bend right=14] (2.38,7.32);
 % v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
 %  S8 ring's lower-left vertex S atom. New position sits along the arrow path
 %  in the gap between the chain (top y=7.55) and the S8 ring (bottom y=8.10).
@@ -267,9 +336,15 @@
 % text; "inv. vulc." is idiosyncratic and was undefined in caption.md.
 % iter 38 acceptance-gate fix: x 2.50 -> 2.23 to clear the S8 lower-left
 % vertex S while preserving the arrow-path association.
-\node[font=\sffamily\fontsize{6.5}{7.8}\itshape\selectfont, text=cGray!75!black,
+% A-6 iter 5/7/8 [Panel A 10-loop]: text color amber, position shifts.
+% A-6 iter 18 [Panel A 10-loop, 2026-05-26] P1 fix: after iter 17 S₈ vertex
+% repositioning, leftmost 'S' atom now at x=2.70 (octagon vertex). Italic
+% 'vulcanization' tail with 'n' descender grazes vertex letter. Additional
+% left shift 1.95→1.80 + anchor change to north (text grows downward instead
+% of expanding both sides) so right edge is more predictable.
+\node[font=\sffamily\fontsize{6.5}{7.8}\itshape\selectfont, text=cAmber!75!black,
       anchor=center, inner sep=1pt, align=center]
-  at (2.23, 8.20) {inverse\\vulcanization};
+  at (1.80, 8.20) {inverse\\vulcanization};
 
 % --- Panel A inline labels (3-tier hierarchy per vault typography anchor) ---
 % Cycle 1 / C404 (2026-05-22): orange-saturated bold caption was pulling
