@@ -15,6 +15,11 @@ must_avoid:
   - id: toy_diagram
     pattern: "Oversized arrows, rounded generic boxes, unmodulated flat colors, or poster-like decorative gradients."
     severity: MAJOR
+    # v8.5 [briefing relax R2, 2026-05-26] qualification: "poster-like decorative gradients"
+    # excludes component-scale gradients that (a) bind to mechanism/material identity,
+    # (b) follow figure-wide upper-left light convention, and (c) are subordinate to
+    # stroke/label legibility. See briefing.md §9 line 384 R2 relax for the permitted
+    # band. Full-panel decorative washes and high-saturation poster gradients remain MAJOR.
   - id: preset_macro_feel
     pattern: "Repeated identical icon grammar that makes panels feel templated rather than editorially composed."
     severity: MINOR
@@ -35,6 +40,9 @@ aesthetic_levers:
       - "instrument boxes and labels remain crisp at print scale"
       - "accent color is tied to scientific meaning"
     anti_patterns:
+      # v8.5 [R2 relax, 2026-05-26] qualification: "unnecessary gradients" excludes
+      # mechanism-bound gradients (material identity, light source convention, depth
+      # cue). Saturation cap remains anti-pattern.
       - "poster-like saturation or unnecessary gradients"
       - "oversized arrows or cartoon apparatus styling"
       - "labels visually louder than the scientific objects they describe"
@@ -118,6 +126,9 @@ aesthetic_levers:
       - "deep-trap red appears only where it carries the intended mechanism"
     anti_patterns:
       - "extra accent hues without semantic role"
+      # v8.5 [R2 relax, 2026-05-26]: "decorative surface treatment" still anti, but
+      # mechanism-bound directional gradient + NW specular + drop shadow per
+      # briefing.md §9 line 384 R2 relax permitted band is NOT decorative.
       - "gradient polish that reads as decorative surface treatment"
       - "red or blue reused for unrelated emphasis"
     allowed_adjustments:

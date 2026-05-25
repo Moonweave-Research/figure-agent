@@ -120,6 +120,9 @@
 \newcommand{\dibRingAt}[2]{%
   \begin{scope}[shift={(#1,#2)}]
     \pgfmathsetmacro{\dibR}{0.26}
+    % A-1 v8.5 [briefing relax R2, 2026-05-26]: v8.4 cAmber!06 wash REMOVED
+    % per advisor blocker 1 — sub-pixel noise. Ring material identity carried
+    % by polysulfide chain stroke color + 'Sulfur-rich polymer' label.
     \draw[cGray!85!black, line width=0.70pt]
       (0:\dibR) -- (60:\dibR) -- (120:\dibR) -- (180:\dibR) --
       (240:\dibR) -- (300:\dibR) -- cycle;
@@ -179,6 +182,14 @@
 % Open chain ends (both terminals of linear copolymer)
 \draw[cAmber!85!black, line width=0.9pt] (0.39, 7.10) -- (0.10, 7.20);   % left dangling
 \draw[cAmber!85!black, line width=0.9pt] (3.36, 6.55) -- (3.50, 6.50);   % right dangling
+% A-2 v8.4 [briefing relax R2, 2026-05-26]: terminal danglings get
+% ball-shaded atom emphasis — "linear copolymer terminus" cue binding
+% to bivalent-DIB topology constraint (§9 line 396 LOCKED). B-1 endpoint
+% recipe (ball color + thin outline, radius 0.035cm).
+\foreach \tx/\ty in {0.10/7.20, 3.50/6.50} {
+  \shade[ball color=cAmber!85!black] (\tx, \ty) circle (0.035cm);
+  \draw[cAmber!95!black, line width=0.16pt] (\tx, \ty) circle (0.035cm);
+}
 
 % Quaternary C(CH3)2 methyl pairs at the 6 internal junctions
 \methylPair{0.93}{6.79}{1.32}{6.86}
@@ -204,9 +215,19 @@
 % vertical room for full-text "inverse vulcanization" 2-line label between
 % (S)_x top and S₈ bottom. Same horizontal x preserves panel top-right
 % corner position (§13.1 A-5 semantic).
+% A-5 v8.5 [briefing relax R2, 2026-05-26]: v8.4 dial turn-up per advisor.
+% shadow opacity 0.18→0.40, offset 0.05→0.08cm; gradient delta widened
+% (cAmberSphere!18→cAmber!70); specular opacity 0.32→0.65, radius 0.6→1.5mm.
+% Chemistry constraint (regular octagon + 8 'S' + center S₈) preserved.
+\node[regular polygon, regular polygon sides=8, fill=black, opacity=0.40,
+      minimum size=7mm, inner sep=0pt, draw=none]
+   at (3.13,8.47) {};
 \node[regular polygon, regular polygon sides=8, draw=cAmber!80!black,
-      line width=0.7pt, minimum size=7mm, fill=cAmberSphere!40,
+      line width=0.7pt, minimum size=7mm,
+      top color=cAmberSphere!10, bottom color=cAmber!70, shading angle=135,
       inner sep=0pt] (s8) at (3.05,8.55) {};
+\fill[white, opacity=0.65]
+  ([xshift=-1.5mm, yshift=1.5mm]s8.center) circle (1.5mm);
 % Panel A iter 3/10: S₈ atom letter font 4.4→6pt (+36%) so 8 vertex S
 % identities read at standard view (PNG-visible delta; previous 4.4pt
 % rendered as nearly-invisible marks inside octagon).
@@ -230,7 +251,12 @@
 % R10: arrow terminates on a specific atom (Ring_c upper-right vertex), making
 % the transformation destination semantically meaningful rather than landing in
 % empty space.
-\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!70!black,
+% A-6 v8.4 [briefing relax R2, 2026-05-26]: arrow tone cAmber!70!black
+% → cAmber!85!black to match polysulfide chain stroke (transformation
+% result species). Visually binds arrow to "becomes this color" semantic.
+% Stealth tip, dashed (§17 transformation), 0.55pt, bend, target vertex
+% all preserved.
+\draw[-{Stealth[length=4pt,width=3pt]}, dashed, cAmber!85!black,
       line width=0.55pt] (s8.south west) to[bend right=14] (2.38,7.32);
 % v8.2 polish: shifted from (2.55, 8.00) — old position right-edge bumped the
 %  S8 ring's lower-left vertex S atom. New position sits along the arrow path
@@ -285,6 +311,14 @@
   \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cAmber!90!black,
         anchor=west, inner sep=2pt]
     at (\xend, {\y + 0.04}) {S$_{\sn}$};
+}
+% B-1 v8.4 [briefing relax R2, 2026-05-26]: chain endpoint ball-shaded
+% atoms emphasize each S_n label anchor. Radius 0.04cm slightly larger
+% than zigSChain interior atoms (0.025cm); reads as "labeled chain terminus".
+% Skeletal chain stroke + interior atoms untouched (NC chemistry idiom).
+\foreach \xe/\ye in {4.85/7.94, 5.65/7.04, 6.25/6.14} {
+  \shade[ball color=cAmber!85!black] (\xe, \ye) circle (0.04cm);
+  \draw[cAmber!95!black, line width=0.18pt] (\xe, \ye) circle (0.04cm);
 }
 % B-4 (post-iter1 update): 2 sample boundary dividers between 3 chains.
 % Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
@@ -355,6 +389,11 @@
 % gradient adds depth without violating "no decoration" convention (the
 % gradient hints at film thickness/translucency, not aesthetic flourish).
 % Top-edge highlight + right-edge shadow = subtle 3D feel without drop shadow.
+% C-L1 v8.5 [briefing relax R2, 2026-05-26]: v8.4 dial turn-up per advisor.
+% shadow opacity 0.15→0.35 + offset widened (was already visible at 600dpi —
+% only opacity bumped); NW specular opacity 0.38→0.65 + size widened;
+% bottom AO opacity 0.35→0.55.
+\fill[black, opacity=0.35] (7.62, 6.13) rectangle (9.92, 7.63);
 \shade[top color=cAmber!10, bottom color=cAmber!38]
   (7.55, 6.20) rectangle (9.85, 7.70);
 % briefing relax R3 (2026-05-23): HERO polymer film outline 0.55pt → 0.60pt.
@@ -364,9 +403,14 @@
   (7.55, 6.20) rectangle (9.85, 7.70);
 % Top-edge highlight (subtle white reflection, opacity 0.5)
 \draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.68) -- (9.80, 7.68);
-% Right-edge thin shadow accent (depth cue)
-\draw[cAmber!85!black, line width=0.30pt, opacity=0.45]
+% v8.5: NW corner ellipsoidal specular spot — turned up per advisor
+\fill[white, opacity=0.65] (7.90, 7.48) ellipse (3.0mm and 1.0mm);
+% Right-edge thin shadow accent (depth cue) — turned up
+\draw[cAmber!85!black, line width=0.55pt, opacity=0.75]
   (9.85, 6.22) -- (9.85, 7.68);
+% v8.5: bottom-edge ambient occlusion turned up
+\draw[cAmber!90!black, line width=0.55pt, opacity=0.55]
+  (7.60, 6.26) -- (9.80, 6.26);
 
 % 3 wavy chain hints, varied weights for depth
 \draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
@@ -480,6 +524,10 @@
 \draw[cRed!80!black, line width=0.65pt]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x);
+% C-R2/C-R3 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. spec
+% opacity 0.40→0.70, radius 0.4mm→1.1mm (~3x).
+\fill[white, opacity=0.70] (11.00, 7.49) circle (1.1mm);
+\fill[white, opacity=0.70] (11.10, 6.05) circle (1.1mm);
 
 % --- Vertical Energy AXIS with tick marks (R14, replaces arrow).
 % Convention #2 from 3rd reference search: top-tier figures use a real graph-
@@ -628,6 +676,10 @@
 
 % Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
 \coordinate (branchRoot) at (6.95, 4.85);
+% v8.4 [briefing relax R2, 2026-05-26]: small anchor dot at branchRoot —
+% "3 paths from one origin" visual cue binding to 'convergent evidence'
+% caption semantic. Sub-pixel (0.6pt radius), tone-matched to spoke stroke.
+\fill[cGray!75!black] (branchRoot) circle (0.025);
 
 % 3 spokes — narrative weight history: 0.9pt→1.1pt promotion (C403) made the
 % fan visually dominant, but at zoom the heavy Stealth heads + cGray!80 stroke
@@ -702,10 +754,15 @@
 % 0.55→0.70cm; label c-to-c 0.17→0.30cm.
 % Iter 10: SMU box gets the same subtle top->bottom shade as the other
 % instrument boxes (HV+, V_s meter, V_active PSU). Previously outline-only.
-\shade[top color=cGray!10, bottom color=cGray!22, rounded corners=1pt]
+% D apparatus v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
+% shadow 0.16→0.40, offset 0.02→0.05cm; gradient delta widened
+% cGray!4→cGray!40; specular 0.35→0.65, 0.5mm→1.2mm.
+\fill[black, opacity=0.40] (0.55, 3.02) rectangle (1.35, 3.72);
+\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
 \draw[cGray!75!black, line width=0.30pt, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
+\fill[white, opacity=0.65] (0.62, 3.70) circle (1.2mm);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=center] at (0.90, 3.57) {SMU};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
@@ -714,8 +771,10 @@
 % already carry source-meter identity; rectangle was decorative noise.
 
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
-% Top electrode (single-direction hatched, slightly thicker)
-\fill[cGray!35!white] (1.70, 3.70) rectangle (3.50, 3.80);
+% Top electrode v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
+% gradient delta widened cGray!8→cGray!70 (was !18→!50).
+\shade[top color=cGray!8, bottom color=cGray!70]
+  (1.70, 3.70) rectangle (3.50, 3.80);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.70) rectangle (3.50, 3.80);
 \foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
@@ -728,8 +787,9 @@
   (1.70, 3.25) rectangle (3.50, 3.70);
 \draw[cAmber!70!black, line width=0.32pt]
   (1.70, 3.25) rectangle (3.50, 3.70);
-% Bottom electrode (hatched)
-\fill[cGray!35!white] (1.70, 3.15) rectangle (3.50, 3.25);
+% Bottom electrode v8.5 [briefing relax R2, 2026-05-26]: matching turn-up.
+\shade[top color=cGray!8, bottom color=cGray!70]
+  (1.70, 3.15) rectangle (3.50, 3.25);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.15) rectangle (3.50, 3.25);
 \foreach \hx in {1.75, 1.90, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95, 3.10, 3.25, 3.40} {
@@ -799,6 +859,13 @@
   (0.65, 2.30) -- (3.85, 0.55);
 \draw[cBlue!55!black, line width=0.80pt, line cap=round]
   (0.65, 2.30) -- (3.85, 1.50);
+% D-5/D-6 v8.4 [briefing relax R2, 2026-05-26]: common-start anchor dot at
+% (0.65, 2.30) — visualizes "shared I(0) initial polarization order-of-
+% magnitude match" cartoon convention (§8.4 + briefing line 844). Neutral
+% cGray ball (not red/blue) since point is shared, not associated with
+% either curve identity.
+\shade[ball color=cGray!65!black] (0.65, 2.30) circle (0.035);
+\draw[cGray!85!black, line width=0.16pt] (0.65, 2.30) circle (0.035);
 
 % Representative measured-data scatter points
 % Iter 10: power-law markers upgraded to ball-shaded spheres (NC convention
@@ -961,10 +1028,15 @@
 % match the V_active PSU box convention without re-introducing the iter-46
 % "harsh PowerPoint" feel. Sphere/markers + subtle gradient on instrument
 % boxes form the premium NC look together.
-\shade[top color=cGray!10, bottom color=cGray!22, rounded corners=0.4pt]
+% E apparatus v8.5 [briefing relax R2, 2026-05-26]: HV+ box dial turn-up.
+% shadow 0.16→0.40 + offset; gradient delta wider cGray!4→cGray!40;
+% spec 0.35→0.65, 0.4mm→1.0mm.
+\fill[black, opacity=0.40] (5.74, 4.05) rectangle (6.59, 4.35);
+\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=0.4pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
+\fill[white, opacity=0.65] (5.79, 4.35) circle (1.0mm);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
 \fill[cGray!70!black, rounded corners=0.2pt] (5.8, 4.22) rectangle (6.45, 4.38);
@@ -1105,10 +1177,13 @@
 % Finding C002 (v1.9 re-audit, VC019): 'V_s meter' label at 6.5pt was overflowing
 % the box right edge (last 'r' clipped by rounded corner). Box widened right
 % edge 9.00 → 9.08 (gain 0.08cm) so the label fits inside with comfortable margin.
-\shade[top color=cGray!10, bottom color=cGray!22, rounded corners=0.4pt]
+% E apparatus v8.5 [briefing relax R2, 2026-05-26]: V_s meter dial turn-up.
+\fill[black, opacity=0.40] (7.72, 3.53) rectangle (8.72, 4.00);
+\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=0.4pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 \draw[cGray!55!black, line width=0.20pt, rounded corners=0.4pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
+\fill[white, opacity=0.65] (7.77, 4.00) circle (1.0mm);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
@@ -1192,6 +1267,12 @@
   plot[smooth] coordinates
   {(5.3, 2.72) (5.65, 2.32) (6.05, 2.01) (6.45, 1.81)
    (6.85, 1.69) (7.3, 1.65) (7.75, 1.65) (8.2, 1.65) (8.6, 1.65)};
+% E-4 v8.4 [briefing relax R2, 2026-05-26]: V_s(0) anchor dot at decay
+% onset (5.3, 2.72) — neutral cGray (NOT cRed) to read as "reference
+% initial potential", distinct from cRed data markers. Does NOT reopen
+% iter 47/48 marker-count discipline (5→4→3 cRed marker reduction; cGray
+% anchor is a separate tier, similar to branchRoot dot semantic).
+\fill[cGray!70!black] (5.3, 2.72) circle (0.025);
 % E-4-ii markers — iter 47 (Top Defect 2): reduced 5→4 (last asymptote dup
 % removed), smaller (1.2mm→0.9mm), lighter fill (cRed!50→!30 + white tint),
 % thinner outline. Gemini: "markers shouldn't bleed into solid blob".
@@ -1313,10 +1394,13 @@
 % PSU pulsed bias source — iter 27: shifted right 0.30cm to reduce trapped
 % wire space between PSU and electrode (Gemini iter 26 "massive 0.88cm
 % horizontal gap"). New range (11.8, 3.2)..(12.65, 3.85), wire gap 0.58cm.
-\shade[top color=cGray!4, bottom color=cGray!22]
+% F apparatus v8.5 [briefing relax R2, 2026-05-26]: PSU dial turn-up.
+\fill[black, opacity=0.40] (11.84, 3.15) rectangle (12.69, 3.80);
+\shade[top color=cGray!2, bottom color=cGray!45]
   (11.8, 3.2) rectangle (12.65, 3.85);
 \draw[cGray!60!black, line width=0.25pt]
   (11.8, 3.2) rectangle (12.65, 3.85);
+\fill[white, opacity=0.65] (11.89, 3.81) circle (1.0mm);
 % Inset display window (shifted right with PSU)
 \fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);
 \draw[cGray!55!black, line width=0.18pt]
@@ -1361,9 +1445,14 @@
 % v8.7 critique iter 4: clip x-aligned with apparatus-zone clip (12.25..12.65)
 % so reader perceives "same mount, polymer bent" — clip is FIXED, polymer
 % MOVES under Coulomb force.
-\fill[cGray!50!white] (11.85, 2.42) rectangle (12.25, 2.52);
+% F-4 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. shadow 0.18→0.40,
+% offset bigger; gradient delta widened cGray!10→cGray!75; bevel 0.55→0.85.
+\fill[black, opacity=0.40] (11.89, 2.38) rectangle (12.29, 2.48);
+\shade[top color=cGray!10!white, bottom color=cGray!75!white]
+  (11.85, 2.42) rectangle (12.25, 2.52);
 \draw[cGray!75!black, line width=0.40pt]
   (11.85, 2.42) rectangle (12.25, 2.52);
+\draw[white, opacity=0.85, line width=0.50pt] (11.87, 2.515) -- (12.23, 2.515);
 \draw[cGray!50!black, line width=0.40pt] (11.75, 2.65) -- (12.35, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
   \draw[cGray!50!black, line width=0.25pt]
@@ -1385,6 +1474,9 @@
   (11.855, 2.35) .. controls (11.855, 1.85) and (11.585, 1.35) .. (11.285, 0.88);
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
   (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
+% F-5 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. spec opacity
+% 0.30→0.60, radius 0.4mm→1.2mm (3x). Wet polymer cue prominent.
+\fill[white, opacity=0.60] (11.965, 2.28) circle (1.2mm);
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
 % Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
@@ -1428,12 +1520,17 @@
 % (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,
 % right edge stays at 13.80 (hatches/label on right unaffected). All internal
 % details + ground triangle shifted accordingly.
-\shade[left color=cGray!75!black, right color=cGray!40!black]
+% F-8 v8.5 [briefing relax R2, 2026-05-26]: dial turn-up. shadow 0.18→0.45,
+% offset 0.03→0.06cm; gradient delta wider cGray!90→cGray!25; left stripe
+% 0.50→0.85, thicker; NW spec 0.45→0.70 + 0.6mm→1.3mm.
+\fill[black, opacity=0.45] (13.29, 0.34) rectangle (13.46, 2.54);
+\shade[left color=cGray!90!black, right color=cGray!25!black]
   (13.23, 0.4) rectangle (13.4, 2.6);
 \draw[cGray!85!black, line width=0.50pt]
   (13.23, 0.4) rectangle (13.4, 2.6);
-\draw[white, opacity=0.50, line width=0.35pt]
+\draw[white, opacity=0.85, line width=0.55pt]
   (13.235, 0.45) -- (13.235, 2.55);
+\fill[white, opacity=0.70] (13.255, 2.53) circle (1.3mm);
 \foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
   \draw[cGray!75!black, line width=0.28pt]
     (13.40, \ey) -- (13.55, {\ey+0.08});
