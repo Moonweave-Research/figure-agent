@@ -1,6 +1,6 @@
 [project]
 name = "figure-agent"
-version = "0.5.6"
+version = "0.6.0"
 description = "Claude Code plugin: paper-figure quality kernel for semantic TikZ compile, checks, export, and reproducibility."
 requires-python = ">=3.12"
 dependencies = [

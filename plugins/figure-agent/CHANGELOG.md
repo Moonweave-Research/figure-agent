@@ -2,6 +2,59 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.6.0] - 2026-05-25
+
+Aesthetic-lever grammar release. This moves the plugin from broad
+aesthetic-intent anchoring toward explicit, auditable figure-polish levers that
+host critique, lint, loop, and driver surfaces can enforce without turning the
+plugin into an autonomous illustrator.
+
+### Added
+
+- `aesthetic_intent.yaml` schema v2 with bounded `aesthetic_levers[]` for
+  maturity, hero hierarchy, whitespace, typography, color harmony, line-weight
+  rhythm, component fidelity, hand-craft routing, and cross-panel grammar.
+- Critique schema/rubric v1.11 with mandatory `aesthetic_lever_audit` when a
+  fixture opts into v2 aesthetic intent.
+- Fixture-aware critique lint accountability for missing, duplicate, unknown,
+  mismatched, unresolved, or unsafe aesthetic lever routes.
+- `/fig_loop` aesthetic lever summary with worst verdict, lever counts, and the
+  next aesthetic bottleneck.
+- `/fig_drive` and release checkpoint handling for loop-level aesthetic and
+  top-tier blockers.
+- Real fixture dogfood evidence for `fig1_overview_v2_pair_001_vault`, showing
+  `print_typography_authority` surfacing `C004` as a bounded TikZ patch
+  bottleneck instead of generic polish prose.
+
+### Changed
+
+- `/fig_critique` now emits the stronger "Aesthetic Lever Grammar" brief
+  section and schema v1.11 only for fixtures that explicitly declare
+  `figure-agent.aesthetic-intent.v2`; v1 or missing intent keeps the v1.10
+  path.
+- Critique freshness now expects rubric v1.11 for v2 aesthetic-intent fixtures.
+- High-impact candidate claims are blocked when required aesthetic levers remain
+  unresolved.
+- Polish-driver routing now respects aesthetic/top-tier blockers before
+  suggesting SVG handoff.
+
+### Fixed
+
+- Closed the anchor-only aesthetic-intent loophole where a critique could cite
+  broad intent while still returning generic "improve polish" guidance.
+- Tightened route gates so `tikz_patch`, `svg_polish`, `semantic_backport`, and
+  `human_art_direction` cannot be activated by unsupported prose alone.
+- Preserved advisory/gate separation: aesthetic critique does not bypass
+  adjudication, export/golden, publication, or human-review gates.
+
+### Tests
+
+- Local release verification: `1143 passed, 1 skipped, 1 xfailed`; ruff clean;
+  `git diff --check` clean; Claude plugin validation passed for plugin manifest,
+  plugin directory, and marketplace manifest.
+- PR #64 CI: `figure-agent tests` passed; `figure-agent full render tests`
+  skipped by workflow policy.
+
 ## [0.5.6] - 2026-05-23
 
 Audit-hardening and workflow-readiness release. This brings the post-0.5.3
