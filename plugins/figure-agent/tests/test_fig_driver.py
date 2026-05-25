@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
 import status as status_mod  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -1309,7 +1310,8 @@ def test_polish_mode_stops_for_polish_handoff_when_export_current(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
-    assert "scripts/svg_polish_handoff.py" in summary["reason"]
+    assert summary["safe_command"] is None
+    assert "polish/svg_polish_recipe.yaml" in summary["reason"]
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
@@ -1333,8 +1335,160 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
     assert "ready_for_svg_polish" in summary["reason"]
-    assert "scripts/svg_polish_handoff.py" in summary["reason"]
+    assert "polish/svg_polish_recipe.yaml" in summary["reason"]
+    assert summary["safe_command"] is None
     assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
+
+
+def test_polish_mode_with_recipe_returns_executor_dry_run_command(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    (fixture / "polish").mkdir()
+    (fixture / "polish" / "svg_polish_recipe.yaml").write_text(
+        "schema: figure-agent.svg-polish-recipe.v1\n",
+        encoding="utf-8",
+    )
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/svg_polish_executor.py examples/driver_demo --dry-run"
+    )
+    assert "svg_polish_executor.py" in summary["reason"]
+
+
+def test_polish_mode_with_polished_svg_returns_delta_pack_command(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    polish = fixture / "polish"
+    polish.mkdir()
+    (polish / "svg_polish_recipe.yaml").write_text(
+        "schema: figure-agent.svg-polish-recipe.v1\n",
+        encoding="utf-8",
+    )
+    (polish / "driver_demo.polished.svg").write_text("<svg/>\n", encoding="utf-8")
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["stop_boundary"] is None
+    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert "aesthetic delta" in summary["reason"]
+
+
+def test_polish_mode_with_delta_pack_returns_handoff_guidance(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    polish = fixture / "polish"
+    delta = polish / "aesthetic_delta"
+    delta.mkdir(parents=True)
+    (polish / "svg_polish_recipe.yaml").write_text(
+        "schema: figure-agent.svg-polish-recipe.v1\n",
+        encoding="utf-8",
+    )
+    (polish / "driver_demo.polished.svg").write_text("<svg/>\n", encoding="utf-8")
+    (delta / "before.png").write_bytes(b"before")
+    (delta / "after.png").write_bytes(b"after")
+    (delta / "diff.png").write_bytes(b"diff")
+    (delta / "delta_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.svg-polish-delta.v1",
+                "fixture": "driver_demo",
+                "source_svg": "exports/driver_demo.svg",
+                "polished_svg": "polish/driver_demo.polished.svg",
+                "recipe": "polish/svg_polish_recipe.yaml",
+                "source_svg_hash": file_sha256(fixture / "exports" / "driver_demo.svg"),
+                "polished_svg_hash": file_sha256(polish / "driver_demo.polished.svg"),
+                "recipe_hash": file_sha256(polish / "svg_polish_recipe.yaml"),
+                "operation_ids": ["R001"],
+                "artifacts": {
+                    "before_png": "polish/aesthetic_delta/before.png",
+                    "after_png": "polish/aesthetic_delta/after.png",
+                    "diff_png": "polish/aesthetic_delta/diff.png",
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["stop_boundary"] is None
+    assert summary["safe_command"] is None
+    assert "scripts/svg_polish_handoff.py" in summary["reason"]
+
+
+def test_polish_mode_with_invalid_delta_pack_returns_delta_pack_command(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    polish = fixture / "polish"
+    delta = polish / "aesthetic_delta"
+    delta.mkdir(parents=True)
+    (polish / "svg_polish_recipe.yaml").write_text(
+        "schema: figure-agent.svg-polish-recipe.v1\n",
+        encoding="utf-8",
+    )
+    (polish / "driver_demo.polished.svg").write_text("<svg/>\n", encoding="utf-8")
+    (delta / "delta_manifest.json").write_text(
+        '{"schema":"figure-agent.svg-polish-delta.v1"}\n',
+        encoding="utf-8",
+    )
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["stop_boundary"] is None
+    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert "delta pack is invalid" in summary["reason"]
 
 
 def test_polish_mode_preserves_aesthetic_lever_summary_from_latest_loop(

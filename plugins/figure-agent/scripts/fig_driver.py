@@ -36,6 +36,7 @@ import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
 from status import infer_stage  # noqa: E402
+from svg_polish_delta import SvgPolishDeltaError, svg_polish_delta_is_stale  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.driver.v1"
@@ -388,6 +389,64 @@ def _loop_checkpoint_review_blocker(
             ),
         }
     return None
+
+
+def _svg_polish_route_hint(example_dir: Path, name: str, *, prefix: str) -> dict[str, str | None]:
+    polish_dir = example_dir / "polish"
+    recipe_path = polish_dir / "svg_polish_recipe.yaml"
+    polished_svg_path = polish_dir / f"{name}.polished.svg"
+    delta_manifest_path = polish_dir / "aesthetic_delta" / "delta_manifest.json"
+    if not recipe_path.is_file():
+        return {
+            "safe_command": None,
+            "reason": (
+                f"{prefix} author a bounded polish/svg_polish_recipe.yaml first; "
+                "the driver will not invent visual polish operations."
+            ),
+        }
+    if not polished_svg_path.is_file():
+        return {
+            "safe_command": command_mod.svg_polish_executor_dry_run_command(name),
+            "reason": (
+                f"{prefix} polish/svg_polish_recipe.yaml exists; run the SVG polish "
+                "executor dry-run first, review the plan, then use "
+                f"`{command_mod.svg_polish_executor_write_command(name)}` only "
+                "for visual-only edits."
+            ),
+        }
+    if not delta_manifest_path.is_file():
+        return {
+            "safe_command": command_mod.svg_polish_delta_command(name),
+            "reason": (
+                f"{prefix} polished SVG exists; generate the SVG polish aesthetic "
+                "delta pack before critique or handoff review."
+            ),
+        }
+    try:
+        delta_stale = svg_polish_delta_is_stale(delta_manifest_path, example_dir=example_dir)
+    except SvgPolishDeltaError:
+        return {
+            "safe_command": command_mod.svg_polish_delta_command(name),
+            "reason": (
+                f"{prefix} SVG polish aesthetic delta pack is invalid; regenerate "
+                "before critique or handoff review."
+            ),
+        }
+    if delta_stale:
+        return {
+            "safe_command": command_mod.svg_polish_delta_command(name),
+            "reason": (
+                f"{prefix} SVG polish aesthetic delta pack is stale; regenerate "
+                "before critique or handoff review."
+            ),
+        }
+    return {
+        "safe_command": None,
+        "reason": (
+            f"{prefix} recipe, polished SVG, and aesthetic delta pack are present; "
+            "run scripts/svg_polish_handoff.py to scaffold audit and manifest."
+        ),
+    }
 
 
 def _publication_gate_blocks_release(status: dict[str, Any]) -> bool:
@@ -776,28 +835,31 @@ def _select_action(
                     checkpoint=loop_checkpoint,
                 )
             if polish_route == editorial_mod.ROUTE_READY_FOR_SVG_POLISH:
+                route_hint = _svg_polish_route_hint(
+                    example_dir,
+                    name,
+                    prefix=(
+                        "latest /fig_loop editorial art-direction summary "
+                        "recommends ready_for_svg_polish; generated export is current."
+                    ),
+                )
                 return make(
                     ACTION_POLISH_HANDOFF_STOP,
-                    safe_command=None,
+                    safe_command=route_hint["safe_command"],
                     stop_boundary=None,
-                    reason=(
-                        "latest /fig_loop editorial art-direction summary "
-                        "recommends ready_for_svg_polish; generated export is "
-                        "current and SVG handoff may proceed without source edits. "
-                        "After polish/<name>.polished.svg exists, run "
-                        "scripts/svg_polish_handoff.py to scaffold audit and manifest."
-                    ),
+                    reason=route_hint["reason"],
                     checkpoint=loop_checkpoint,
                 )
+    route_hint = _svg_polish_route_hint(
+        example_dir,
+        name,
+        prefix="generated export is current; remaining work is visual-only SVG polish.",
+    )
     return make(
         ACTION_POLISH_HANDOFF_STOP,
-        safe_command=None,
+        safe_command=route_hint["safe_command"],
         stop_boundary=None,
-        reason=(
-            "generated export is current; remaining work is visual-only SVG "
-            "polish handoff. After polish/<name>.polished.svg exists, run "
-            "scripts/svg_polish_handoff.py to scaffold audit and manifest."
-        ),
+        reason=route_hint["reason"],
     )
 
 

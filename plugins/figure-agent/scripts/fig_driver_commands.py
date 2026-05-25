@@ -23,3 +23,20 @@ def fig_loop_command(name: str, goal: str) -> str:
 
 def export_command(name: str) -> str:
     return f"uv run python3 scripts/run_export.py {name}"
+
+
+def svg_polish_executor_dry_run_command(name: str) -> str:
+    return f"uv run python3 scripts/svg_polish_executor.py examples/{name} --dry-run"
+
+
+def svg_polish_executor_write_command(name: str) -> str:
+    return f"uv run python3 scripts/svg_polish_executor.py examples/{name} --write"
+
+
+def svg_polish_delta_command(name: str) -> str:
+    script = (
+        "from pathlib import Path; "
+        "from svg_polish_delta import build_svg_polish_delta_pack; "
+        f"build_svg_polish_delta_pack(Path('examples/{name}'), base_dir=Path('.'))"
+    )
+    return f"PYTHONPATH=scripts uv run python3 -c {shlex.quote(script)}"

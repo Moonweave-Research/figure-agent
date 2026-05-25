@@ -187,11 +187,31 @@ boundary. If the summary says `ready_for_svg_polish` but another editorial slot
 still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
 wins over polish handoff.
 
-If a bounded `polish/svg_polish_recipe.yaml` exists, run
-`scripts/svg_polish_executor.py examples/<name>` first to inspect the dry-run
-plan, then rerun it with `--write` only for visual-only recipe edits. After the
-polished SVG exists, use `scripts/svg_polish_handoff.py` to scaffold audit and
-manifest metadata.
+If `/fig_driver --mode polish` reaches SVG polish, follow the first command it
+surfaces. The canonical recipe path is:
+
+1. If `polish/svg_polish_recipe.yaml` is missing, author a bounded recipe first.
+2. If the recipe exists, inspect the executor plan:
+
+```bash
+uv run python3 scripts/svg_polish_executor.py examples/<name> --dry-run
+```
+
+3. After reviewing the dry-run plan, write the polished SVG only for
+   visual-only edits:
+
+```bash
+uv run python3 scripts/svg_polish_executor.py examples/<name> --write
+```
+
+4. Generate before/after/diff evidence for critique:
+
+```bash
+PYTHONPATH=scripts uv run python3 -c "from pathlib import Path; from svg_polish_delta import build_svg_polish_delta_pack; build_svg_polish_delta_pack(Path('examples/<name>'), base_dir=Path('.'))"
+```
+
+5. Use `scripts/svg_polish_handoff.py` after the delta pack exists to scaffold
+   audit and manifest metadata.
 
 ## Workspace Warnings
 
