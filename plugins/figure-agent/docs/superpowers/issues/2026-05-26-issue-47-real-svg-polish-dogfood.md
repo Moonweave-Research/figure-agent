@@ -1,6 +1,6 @@
 # Issue 47 - Real Fixture SVG Polish Dogfood
 
-**Status:** blocked on host critique refresh
+**Status:** blocked on host critique refresh after latest-main preflight
 **Builds on:** Issue 46 polished-SVG clean dogfood
 
 ## Problem
@@ -46,13 +46,14 @@ Out of scope:
 On branch `codex/issue47-real-svg-polish-dogfood`, the real candidate does not
 yet reach the SVG polish route.
 
-After running compile, the state is:
+After merging latest `main` and running compile, the state is:
 
 - `render_state: FRESH`
 - `critique_state: STALE`
 - `export_state: TRACKED_GOLDEN`
 - `final_artifact_kind: generated_export`
 - `final_artifact_state: NONE`
+- `build/visual_clash.json total: 46`
 - `/fig_driver --mode polish` action: `run_critique`
 - stop boundary: `host_llm_critique_required`
 
@@ -64,6 +65,28 @@ The next required step is a host vision critique refresh:
 
 Do not author a polish recipe until the refreshed critique and loop checkpoint
 actually route to `ready_for_svg_polish`.
+
+## Host Critique Handoff
+
+Run the canonical host vision command:
+
+```bash
+/fig_critique fig1_overview_v2_pair_001_vault
+```
+
+The refreshed critique must account for current audit evidence, including
+`build/visual_clash.json` candidate `VC046` and the current audit-crop manifest.
+After writing `critique.md`, run:
+
+```bash
+uv run python3 scripts/critique_lint.py examples/fig1_overview_v2_pair_001_vault
+uv run python3 scripts/critique_adjudication.py scaffold \
+  examples/fig1_overview_v2_pair_001_vault --force
+uv run python3 scripts/fig_loop.py fig1_overview_v2_pair_001_vault \
+  --goal "issue47 real svg polish dogfood" --json
+uv run python3 scripts/fig_driver.py fig1_overview_v2_pair_001_vault \
+  --mode polish --goal "issue47 real svg polish dogfood" --dry-run
+```
 
 ## Acceptance Criteria
 

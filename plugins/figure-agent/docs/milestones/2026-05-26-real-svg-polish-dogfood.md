@@ -1,6 +1,6 @@
 # Issue 47 - Real Fixture SVG Polish Dogfood
 
-**Status:** blocked on host critique refresh
+**Status:** blocked on host critique refresh after latest-main preflight
 **Branch:** `codex/issue47-real-svg-polish-dogfood`
 **Date:** 2026-05-26
 **Candidate fixture:** `fig1_overview_v2_pair_001_vault`
@@ -18,7 +18,7 @@ temporary clean fixture proof.
 uv run python3 scripts/status.py examples/fig1_overview_v2_pair_001_vault
 ```
 
-Initial result:
+Initial result before refreshing the render:
 
 - `render_state: STALE`
 - `critique_state: STALE`
@@ -29,13 +29,24 @@ Initial result:
 bash scripts/compile.sh examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
 ```
 
-Result:
+Result on the original preflight branch:
 
 - compile succeeded;
 - no PDF text collisions;
 - no text-boundary clashes;
 - `build/visual_clash.json` regenerated;
 - visual clash total: `45`.
+
+After merging latest `main` (`2595bf1`, v8.5/v8.6 aesthetic upgrade) into this
+Issue 47 branch, compile was rerun.
+
+Latest compile result:
+
+- compile succeeded;
+- no PDF text collisions;
+- no text-boundary clashes;
+- `build/visual_clash.json` regenerated;
+- visual clash total: `46`.
 
 ```bash
 uv run python3 scripts/status.py examples/fig1_overview_v2_pair_001_vault
@@ -61,6 +72,7 @@ Result:
 - `action: run_critique`
 - `safe_command: /fig_critique fig1_overview_v2_pair_001_vault`
 - `stop_boundary: host_llm_critique_required`
+- `visual_clash.missing_refs: [VC046]` in stale critique accounting
 
 ## Judgment
 
