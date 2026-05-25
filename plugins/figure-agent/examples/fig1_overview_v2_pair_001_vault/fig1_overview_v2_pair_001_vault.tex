@@ -47,7 +47,9 @@
                     text=cGray!80!black},
   % Figure-wide Nature compliance: panel letter 8pt bold upright per Nature
   % final-submission rule "8 pt bold, upright (not italic) a, b, c"
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{9}{10.8}\selectfont,
+  % Panel letter size aligned to briefing §1 "panel-letter typography (a/b/c bold 8pt)"
+  % + Nature/Nat Comm "8 pt bold, upright" convention. Previously 9pt was 1pt over.
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
                       text=cGray!90!black},
 ]
 
@@ -288,11 +290,14 @@
 % Tone cGray!40 (post-v8.7 C002 fix), width 0.18pt densely dotted; x extent
 % 3.85..6.30 covers chain row span; y at midpoints between adjacent chains.
 % New midpoints: y=7.45 (between 7.90 and 7.00) / y=6.55 (between 7.00 and 6.10).
-% Panel B iter 2/10: divider tone cGray!40 → cGray!55 (+38%) so 3-chain
-% sample-distinctness reads at print scale more confidently. Width held
-% at 0.18pt — §13.2 forbidden cap >0.20pt (mechanism-tier 침범 회피).
+% Panel B iter 2026-05-25: divider tone cGray!55 -> cGray!30 (polish round).
+% Chain-length monotonic encoding + endpoint S60/S75/S85 labels carry sample
+% distinctness on their own; the dividers were competing with chain backbone
+% visual weight at print scale (post-cycle-2026-05-25 NC compliance assessment).
+% Demoted to faint hint tier — visible at thumbnail for grouping cue but no
+% longer reads as a structural element. Width held at 0.18pt.
 \foreach \dy in {7.45, 6.55} {
-  \draw[cGray!55, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
+  \draw[cGray!30, line width=0.18pt, densely dotted] (3.85, \dy) -- (6.30, \dy);
 }
 % Axis arrow
 \draw[-{Stealth[length=4pt,width=3pt]}, cGray!60!black, line width=0.55pt]
@@ -459,14 +464,16 @@
 % Polish iter: shallow opacity 0.70 → 0.85 + stroke 0.50 → 0.60pt;
 %              deep    opacity 0.70 → 0.80 + stroke 0.55 → 0.65pt.
 % Both Gaussians now read clearly at 300 dpi without washing into each other.
-\fill[cBlue!22, opacity=0.85]
+% HERO saturation lift: !22 -> !45 (Panel C HERO must out-saturate Panel E
+% g(E_t) evidence tier at !25 per briefing §5 hero hierarchy + §13.9 binding-1).
+\fill[cBlue!45, opacity=0.85]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!80!black, line width=0.60pt]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!22, opacity=0.80]
+\fill[cRed!45, opacity=0.80]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
@@ -489,7 +496,7 @@
 % 6.85 → 6.30 so label range becomes 6.30..7.18, sitting between the
 % deep leader band (y ≤ 6.23) and the shallow leader band (y ≥ 7.23).
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
-      anchor=south, rotate=90] at (10.15, 6.30) {Energy};
+      anchor=south, rotate=90] at (10.35, 6.30) {Energy};
 
 % --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
 % R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
@@ -585,8 +592,11 @@
 % 7pt semibold upright so the trap-landscape headline carries the Panel C
 % hero identity at thumbnail. Companion sub-labels ("real space" / "energy
 % diagram") stay 6pt italic — preserves intra-Panel-C 2-tier hierarchy.
+% 2026-05-25 polish: 7pt -> 7.5pt to strengthen Panel C HERO master-title
+% hierarchy relative to companion sub-labels ('real space' / 'energy diagram'
+% at 6pt italic). Stays below panel-letter 8pt cap so no letter-tier conflict.
 \node[anchor=south,
-      font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont,
+      font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
       text=cGray!85!black] at (10.40, 8.92) {localized traps};
 
 % ============================================================

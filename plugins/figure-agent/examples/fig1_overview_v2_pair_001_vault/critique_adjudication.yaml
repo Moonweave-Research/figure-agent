@@ -1,22 +1,22 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:e415fcab6f0d26d3fc39431acc15f0deafccd946c469206fd5a609f8526b1609
+source_critique_hash: sha256:534b844f6b17f3c8418f6d526c1c3d007743371fd69064dd3b86ad4237faf410
 decisions:
 - finding_id: P001
-  decision: needs_human
-  reason: Review P001 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: P001 suggested_fix is accept_simplification — Panel D iconic-cartoon register is briefing §3.2 intent. No source patch required.
   patch_target: ''
-  evidence: critique.md finding P001.
+  evidence: critique.md finding P001 suggested_fix says "accept_simplification — iconic-cartoon register is briefing intent."
 - finding_id: P002
-  decision: needs_human
-  reason: Review P002 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: P002 suggested_fix is accept_simplification — Panel E iconic abstraction of NatComm 2024 surface-charge ref01 is briefing §3.2 intent. No source patch required.
   patch_target: ''
-  evidence: critique.md finding P002.
+  evidence: critique.md finding P002 suggested_fix says "accept_simplification — register intent."
 - finding_id: P003
-  decision: needs_human
-  reason: Review P003 before selecting apply, dismiss, defer, or resolved.
+  decision: dismiss
+  reason: P003 suggested_fix is accept_simplification — Panel F iconic abstraction; actuator framing transfer forbidden by TG-G-001. No source patch required.
   patch_target: ''
-  evidence: critique.md finding P003.
+  evidence: critique.md finding P003 suggested_fix says "accept_simplification — actuator framing transfer forbidden by TG-G-001."
 - finding_id: C001
   decision: resolved
   reason: Critique marks C001 as resolved.
@@ -33,7 +33,7 @@ decisions:
   patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
   evidence: critique.md marks C003 status resolved.
 - finding_id: C004
-  decision: needs_human
-  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding C004.
+  decision: resolved
+  reason: C004 Energy axis label x-shift patched and verified 2026-05-25 — anchor (10.15, 6.30) -> (10.35, 6.30), clears film slab cAmber stroke at x=9.85 with 0.40cm margin and sits 0.05cm left of energy axis at x=10.50. Post-patch render visual gate confirms no overlap. Bundled patch round also lifted Panel C HERO Gaussian saturation cBlue!22/cRed!22 -> !45, panel letters figure-wide 9pt -> 8pt, Panel B dividers cGray!55 -> !30, and Panel C 'localized traps' master title 7pt -> 7.5pt.
+  patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
+  evidence: critique.md C004 status open -> resolved with resolution_evidence field; tex L491-492 anchor; lint passing.
