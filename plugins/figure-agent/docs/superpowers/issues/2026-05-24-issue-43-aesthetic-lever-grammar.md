@@ -18,7 +18,7 @@ Implementation commits:
 - `5511fba` — Review fixup, schema-aware freshness and strict aesthetic route gates.
 - `d817022` — Review fixup, polish driver honors loop-level aesthetic/top-tier blockers.
 - `91de4e9` — Review coverage, release driver preserves aesthetic lever checkpoint summary.
-- current branch — Issue 43F, fixture-level aesthetic lever grammar dogfood.
+- `8a865a6` — Issue 43F, fixture-level aesthetic lever grammar dogfood.
 
 Issue 43F dogfood evidence:
 `../../milestones/2026-05-24-aesthetic-lever-grammar-dogfood.md`.
