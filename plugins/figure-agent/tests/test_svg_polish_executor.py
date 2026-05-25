@@ -289,6 +289,31 @@ def test_cli_dry_run_prints_plan_and_writes_nothing(tmp_path: Path, capsys) -> N
     assert not (fig_dir / "polish" / "demo_fig.polished.svg").exists()
 
 
+def test_cli_explicit_dry_run_flag_prints_plan_and_writes_nothing(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    _write_recipe(
+        fig_dir,
+        [
+            _operation(
+                "R001",
+                selector={"kind": "element_id", "value": "label-a"},
+                action={"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
+            )
+        ],
+    )
+
+    exit_code = main([str(fig_dir), "--dry-run"])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "dry-run" in output
+    assert "R001" in output
+    assert not (fig_dir / "polish" / "demo_fig.polished.svg").exists()
+
+
 def test_cli_write_creates_polished_svg(tmp_path: Path) -> None:
     fig_dir = _make_fixture(tmp_path)
     _write_recipe(
@@ -303,6 +328,29 @@ def test_cli_write_creates_polished_svg(tmp_path: Path) -> None:
     )
 
     exit_code = main([str(fig_dir), "--write"])
+
+    assert exit_code == 0
+    assert (fig_dir / "polish" / "demo_fig.polished.svg").is_file()
+
+
+def test_cli_write_accepts_relative_example_dir(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    _write_recipe(
+        fig_dir,
+        [
+            _operation(
+                "R001",
+                selector={"kind": "element_id", "value": "label-a"},
+                action={"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
+            )
+        ],
+    )
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(["examples/demo_fig", "--write"])
 
     assert exit_code == 0
     assert (fig_dir / "polish" / "demo_fig.polished.svg").is_file()

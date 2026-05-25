@@ -267,13 +267,13 @@ Review for:
 - Do not commit generated build/export/delta artifacts unless repo policy
   explicitly requires a golden artifact update.
 
-- [ ] **Step 1: Select one fixture**
+- [x] **Step 1: Select one fixture**
 
 Use a fixture whose current loop checkpoint can legitimately route to
 `ready_for_svg_polish`. Do not use a fixture with unresolved semantic or human
 art-direction blockers.
 
-- [ ] **Step 2: Run end-to-end dogfood**
+- [x] **Step 2: Run end-to-end dogfood**
 
 Sequence:
 
@@ -295,7 +295,7 @@ Record:
 - whether semantic backport stayed false;
 - final `/fig_status` result.
 
-- [ ] **Step 3: Verify dogfood**
+- [x] **Step 3: Verify dogfood**
 
 Run:
 
@@ -304,7 +304,7 @@ uv run pytest -q tests/test_svg_polish_recipe.py tests/test_svg_polish_executor.
 git diff --check
 ```
 
-- [ ] **Step 4: Review 44E**
+- [x] **Step 4: Review 44E**
 
 Review for:
 

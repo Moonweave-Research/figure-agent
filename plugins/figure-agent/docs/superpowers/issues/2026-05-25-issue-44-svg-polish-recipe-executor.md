@@ -1,6 +1,6 @@
 # Issue 44 - SVG Polish Recipe Executor and Aesthetic Delta Gate
 
-**Status:** planned
+**Status:** implemented; final verification pending
 **Spec:** `../specs/2026-05-25-issue44-svg-polish-recipe-executor-design.md`
 **Plan:** `../plans/2026-05-25-issue44-svg-polish-recipe-executor.md`
 **Builds on:** Issue 42 SVG polish handoff, Issue 43 aesthetic lever grammar
@@ -122,3 +122,17 @@ artifact and whether the semantic guard caught any unsafe edit.
 This is the next plugin-product priority after Issue 43 because the audit
 kernel can now identify aesthetic bottlenecks and route to SVG polish. The next
 step is to make the SVG polish execution itself bounded and reviewable.
+
+## Implementation Notes
+
+Implemented as five narrow slices:
+
+- 44A: `svg_polish_recipe.py` parser/validator/writer/freshness contract.
+- 44B: dry-run-first `svg_polish_executor.py` with bounded XML-attribute edits.
+- 44C: SVG polish aesthetic delta pack and critique-brief surfacing.
+- 44D: semantic-change/backport BLOCKED guard regression coverage.
+- 44E: real-fixture dogfood on `fig1_overview_v2_pair_001_vault`.
+
+The 44E fixture did not start from a clean polish-ready release route on this
+branch; see `../../milestones/2026-05-25-svg-polish-recipe-dogfood.md` for the
+route precondition caveat and the two CLI defects found during dogfood.

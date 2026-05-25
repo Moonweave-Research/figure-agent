@@ -261,7 +261,13 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help=f"Recipe path, default: {SVG_POLISH_RECIPE_RELATIVE_PATH}",
     )
-    parser.add_argument("--write", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the planned polish operations without writing; this is the default.",
+    )
+    mode.add_argument("--write", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--base-dir", type=Path, default=None)
     return parser
@@ -280,7 +286,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 force=args.force,
                 base_dir=base_dir,
             )
-            print(f"wrote {output_path.relative_to(example_dir)}")
+            print(f"wrote {output_path.resolve().relative_to(example_dir.resolve())}")
             return 0
         plan = plan_svg_polish(recipe_path, example_dir=example_dir, base_dir=base_dir)
         print(f"dry-run: would write {plan['target_svg']}")
