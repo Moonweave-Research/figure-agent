@@ -5,7 +5,7 @@ generated_at: 2026-05-25T17:00:00Z
 generator: critique_brief.py
 generator_version: sha256:ddaf7c05958ff12c8bbc7bb00604b5329a16a8aff2f371bf45105af6405b0676
 rubric_version: figure-agent.critique-rubric.v1.11
-critique_input_hash: sha256:fe97f80f4684edeb63e31e5677bcc57a81a8560c810cedf93ea6b4ba4ad8da5a
+critique_input_hash: sha256:ff08c8026252437f028bd2413e9ef6828fc8aa8690f5df05da966d0b2ed9adb7
 verdict: ready
 audit_enumeration:
   structural_completeness:

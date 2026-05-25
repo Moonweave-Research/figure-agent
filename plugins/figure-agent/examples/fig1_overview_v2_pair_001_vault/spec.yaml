@@ -218,4 +218,4 @@ golden_contract:
     cantilever_charge_markers:
       pattern: '\\foreach \\cx/\\cy in \{12\.25'
       min: 1
-accepted: false
+accepted: true

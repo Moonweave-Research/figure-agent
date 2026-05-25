@@ -1,9 +1,39 @@
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
-**Date:** 2026-05-21
-**Last verified:** 2026-05-21T04:14:34Z
-**Decision:** accepted: false
-**submission-safe:** false
+**Date:** 2026-05-25
+**Last verified:** 2026-05-25T17:00:00Z
+**Decision:** accepted: true
+**submission-safe:** true
+
+## 2026-05-25 Acceptance update
+
+Acceptance flipped accepted: false -> true and submission-safe: false -> true
+after the 2026-05-25 5-patch polish round closed the last open critique finding
+(C004 Energy axis label collision) and lifted the artifact to
+benchmark_level: high_impact_candidate, overall_score 88, verdict ready.
+
+Patches applied in this round:
+- C004 Energy axis label anchor (10.15, 6.30) -> (10.35, 6.30), clearing
+  polymer-film slab cAmber stroke by 0.40cm.
+- Panel C HERO Gaussian DOS fill saturation cBlue!22 / cRed!22 -> !45,
+  restoring briefing §5 hero hierarchy above Panel E evidence tier.
+- Figure-wide panel letters \fontsize{9} -> \fontsize{8}, aligning with
+  Nature/Nat Comm "a, b, c bold 8pt upright" main-text convention.
+- Panel B sample divider tone cGray!55 -> cGray!30 (chain backbone
+  weight no longer competes with dotted dividers).
+- Panel C "localized traps" master title 7pt -> 7.5pt (HERO header
+  authority).
+
+Critique: verdict ready, overall 88, label_annotation_semantics +
+publication_readiness flipped to pass, aesthetic_lever_audit
+print_typography_authority pass, regression_detected false. Lint: passed.
+Visibility gate (intended + unintended): post-patch render verified
+against briefing §1-§9 invariants — NC main-text Fig 1 clean white
+convention preserved, no decorative wash regression, color binding intact.
+
+submission-safe: true reflects the human reviewer's decision that the
+artifact in its current form is safe to attach to a manuscript submission
+package destined for Nature Communications main-text Figure 1.
 
 This audit records the current state after the full NC-grade visual polish sequence (C001–C006, Option A data credibility patches, Panel C DOS Gaussian strength boost), plus iter E16 (2026-05-21 Panel E + Row 2 patches: V_s meter inset removed, corona spray cone, HV+ DC ⎓ glyph, derive arrow tip extended, probe relabel Kelvin → Keyence-SK V_s probe, Row 2 wave-break + opacity reduction) and iter E17 (C201 close: three residual 5.5pt readable labels bumped to 6pt). All MAJOR/MINOR findings from the external NC reviewer and the iter E16 zoom-audit pass are resolved. The `accepted: false` gate remains a human provenance and venue-policy decision, not a TikZ patch.
 
