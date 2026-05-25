@@ -166,7 +166,7 @@ Do not start 44C until 44B tests and review are clean.
   in the host critique brief for this slice.
 - Modify: `tests/test_critique_brief.py` if brief output changes.
 
-- [ ] **Step 1: Write failing delta tests**
+- [x] **Step 1: Write failing delta tests**
 
 Cover:
 
@@ -177,18 +177,18 @@ Cover:
 - missing delta pack preserves current behavior unless a later schema requires
   it.
 
-- [ ] **Step 2: Implement delta pack generation**
+- [x] **Step 2: Implement delta pack generation**
 
 Use existing local rendering tools where already available in the plugin. Keep
 all generated images ignored/untracked.
 
-- [ ] **Step 3: Wire critique brief if scoped**
+- [x] **Step 3: Wire critique brief if scoped**
 
 If implemented in this slice, add a `## SVG Polish Aesthetic Delta` section
 that tells the host LLM to compare before/after and detect regressions or
 semantic changes.
 
-- [ ] **Step 4: Verify 44C**
+- [x] **Step 4: Verify 44C**
 
 Run:
 
@@ -198,7 +198,7 @@ uv run ruff check scripts/svg_polish_delta.py tests/test_svg_polish_delta.py
 git diff --check
 ```
 
-- [ ] **Step 5: Review 44C**
+- [x] **Step 5: Review 44C**
 
 Review for:
 

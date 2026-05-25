@@ -36,6 +36,12 @@ from quality_manifest import (
 )
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
+from svg_polish_delta import (
+    SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
+    SvgPolishDeltaError,
+    load_svg_polish_delta_manifest,
+    svg_polish_delta_is_stale,
+)
 
 MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
@@ -421,6 +427,42 @@ def _reference_calibration_section(pack: dict | None) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _svg_polish_delta_section(example_dir: Path) -> str:
+    manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
+    if not manifest_path.is_file():
+        return ""
+    try:
+        manifest = load_svg_polish_delta_manifest(manifest_path, example_dir=example_dir)
+        if svg_polish_delta_is_stale(manifest_path, example_dir=example_dir):
+            raise CritiqueBriefError(
+                "SVG polish aesthetic delta pack is stale; regenerate it before critique"
+            )
+    except SvgPolishDeltaError as exc:
+        raise CritiqueBriefError(f"SVG polish aesthetic delta invalid: {exc}") from exc
+    artifacts = manifest["artifacts"]
+    operation_ids = ", ".join(manifest["operation_ids"])
+    lines = [
+        "## SVG Polish Aesthetic Delta",
+        "Host LLM MUST compare the before/after polish images before treating SVG "
+        "polish as an improvement.",
+        f"- before: `{artifacts['before_png']}`",
+        f"- after: `{artifacts['after_png']}`",
+        f"- diff: `{artifacts['diff_png']}`",
+        f"- recipe: `{manifest['recipe']}`",
+        f"- operation_ids: {operation_ids}",
+        f"- source_svg_hash: `{manifest['source_svg_hash']}`",
+        f"- polished_svg_hash: `{manifest['polished_svg_hash']}`",
+        f"- recipe_hash: `{manifest['recipe_hash']}`",
+        "",
+        "Questions the critique must answer:",
+        "- Did journal polish improve?",
+        "- Did any label/readability/spacing issue regress?",
+        "- Did any scientific semantics change?",
+        "- Should the route remain SVG polish, return to TikZ, or require human art direction?",
+    ]
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _reference_score_calibration(
     example_dir: Path,
     pack: dict | None,
@@ -785,6 +827,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         reference_calibration_pack
     )
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
+    svg_polish_delta_section = _svg_polish_delta_section(example_dir)
     uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
     critique_schema = (
         _CRITIQUE_SCHEMA_VERSION_V1_11
@@ -811,6 +854,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {text_boundary_clash_section}
 {reference_calibration_section}
 {aesthetic_intent_section}
+{svg_polish_delta_section}
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
