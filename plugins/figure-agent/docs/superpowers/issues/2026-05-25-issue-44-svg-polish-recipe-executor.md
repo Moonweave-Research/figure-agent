@@ -1,6 +1,6 @@
 # Issue 44 - SVG Polish Recipe Executor and Aesthetic Delta Gate
 
-**Status:** implemented; final verification pending
+**Status:** implemented on branch `codex/issue44-svg-polish-recipe`
 **Spec:** `../specs/2026-05-25-issue44-svg-polish-recipe-executor-design.md`
 **Plan:** `../plans/2026-05-25-issue44-svg-polish-recipe-executor.md`
 **Builds on:** Issue 42 SVG polish handoff, Issue 43 aesthetic lever grammar
@@ -132,6 +132,15 @@ Implemented as five narrow slices:
 - 44C: SVG polish aesthetic delta pack and critique-brief surfacing.
 - 44D: semantic-change/backport BLOCKED guard regression coverage.
 - 44E: real-fixture dogfood on `fig1_overview_v2_pair_001_vault`.
+
+Commits:
+
+- `c2d0c68` Plan SVG polish recipe executor
+- `90391bc` Add SVG polish recipe contract
+- `8d68b5b` Add safe SVG polish recipe executor
+- `08c6efc` Add SVG polish aesthetic delta pack
+- `c7175aa` Harden SVG polish semantic backport guard
+- `fc3a07a` Dogfood SVG polish recipe workflow
 
 The 44E fixture did not start from a clean polish-ready release route on this
 branch; see `../../milestones/2026-05-25-svg-polish-recipe-dogfood.md` for the
