@@ -16,6 +16,7 @@ CRITIQUE_SCHEMA_V1_7 = "figure-agent.critique.v1.7"
 CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
+CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -27,6 +28,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_11,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -39,6 +41,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_11,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -49,10 +52,11 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_8,
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_11,
     }
 )
 CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
-    {CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10}
+    {CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10, CRITIQUE_SCHEMA_V1_11}
 )
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
@@ -77,6 +81,10 @@ EDITORIAL_POLISH_PATHS = frozenset(
         "semantic_backport_required",
     }
 )
+AESTHETIC_LEVER_VERDICTS = ("pass", "not_applicable", "weak", "fail", "needs_human")
+AESTHETIC_LEVER_VERDICT_RANK = {
+    verdict: index for index, verdict in enumerate(AESTHETIC_LEVER_VERDICTS)
+}
 
 
 def is_score_value(value: Any) -> bool:
@@ -156,7 +164,8 @@ def journal_grade_assessment(
         record["score_policy"] = "advisory_fresh_reaudit_not_gate"
     calibration_summary = (
         reference_calibration_summary(record)
-        if frontmatter.get("schema") in {CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10}
+        if frontmatter.get("schema")
+        in {CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10, CRITIQUE_SCHEMA_V1_11}
         else None
     )
     if calibration_summary is not None:
@@ -318,4 +327,77 @@ def crop_audit_summary(
         "defect_crop_ids": defect_crop_ids,
         "uncertain_crop_ids": uncertain_crop_ids,
         "evaluation_state": "needs_action" if uncertain_crop_ids else "passed",
+    }
+
+
+def _aesthetic_bottleneck(item: dict[str, Any]) -> dict[str, Any]:
+    linked_evidence = item.get("linked_evidence")
+    return {
+        "lever_id": item.get("lever_id"),
+        "dimension": item.get("dimension"),
+        "route": item.get("route"),
+        "linked_evidence": linked_evidence if isinstance(linked_evidence, list) else [],
+    }
+
+
+def aesthetic_lever_summary(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_11:
+        return None
+    if critique_state != "FRESH":
+        return {
+            "source": "critique.aesthetic_lever_audit",
+            "evidence_path": str(critique_path),
+            "evaluation_state": "stale",
+        }
+
+    raw_items = frontmatter.get("aesthetic_lever_audit")
+    if not isinstance(raw_items, list):
+        return None
+
+    verdict_counts = dict.fromkeys(AESTHETIC_LEVER_VERDICTS, 0)
+    valid_items: list[dict[str, Any]] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        verdict = raw_item.get("verdict")
+        lever_id = raw_item.get("lever_id")
+        if not isinstance(verdict, str) or verdict not in AESTHETIC_LEVER_VERDICT_RANK:
+            continue
+        if not isinstance(lever_id, str) or not lever_id.strip():
+            continue
+        verdict_counts[verdict] += 1
+        valid_items.append(raw_item)
+
+    if not valid_items:
+        return None
+    worst_item = max(
+        valid_items,
+        key=lambda item: AESTHETIC_LEVER_VERDICT_RANK[str(item["verdict"])],
+    )
+    worst_verdict = str(worst_item["verdict"])
+    if verdict_counts["needs_human"]:
+        evaluation_state = "needs_human"
+    elif verdict_counts["fail"]:
+        evaluation_state = "blocked"
+    elif verdict_counts["weak"]:
+        evaluation_state = "needs_patch"
+    else:
+        evaluation_state = "passed"
+    return {
+        "source": "critique.aesthetic_lever_audit",
+        "evidence_path": str(critique_path),
+        "lever_count": len(valid_items),
+        "verdict_counts": verdict_counts,
+        "worst_verdict": worst_verdict,
+        "evaluation_state": evaluation_state,
+        "next_aesthetic_bottleneck": (
+            None if evaluation_state == "passed" else _aesthetic_bottleneck(worst_item)
+        ),
     }

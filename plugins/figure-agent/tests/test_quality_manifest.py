@@ -5,7 +5,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from quality_manifest import critique_manifest_paths, input_manifest_hash  # noqa: E402
+from quality_manifest import (  # noqa: E402
+    CRITIQUE_RUBRIC_VERSION,
+    CRITIQUE_RUBRIC_VERSION_V1_11,
+    critique_manifest_paths,
+    expected_critique_rubric_version,
+    input_manifest_hash,
+)
 
 
 def test_input_manifest_hash_changes_when_file_content_changes(tmp_path: Path) -> None:
@@ -154,3 +160,29 @@ def test_critique_manifest_includes_aesthetic_intent_when_present(
 
     assert intent_path in paths
     assert before != after
+
+
+def test_expected_critique_rubric_version_uses_v1_11_for_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        "schema: figure-agent.aesthetic-intent.v2\nfixture: demo\n",
+        encoding="utf-8",
+    )
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_11
+
+
+def test_expected_critique_rubric_version_keeps_v1_10_for_legacy_intent(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        "schema: figure-agent.aesthetic-intent.v1\nfixture: demo\n",
+        encoding="utf-8",
+    )
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION

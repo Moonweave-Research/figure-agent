@@ -48,6 +48,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
             "editorial_art_direction_summary"
         ),
         "crop_audit_summary": iteration.get("crop_audit_summary"),
+        "aesthetic_lever_summary": iteration.get("aesthetic_lever_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
     audit_evidence = iteration.get("audit_evidence")

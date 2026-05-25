@@ -83,6 +83,7 @@ def _write_loop_run(
     top_tier_audit_summary: dict[str, Any] | None = None,
     editorial_art_direction_summary: dict[str, Any] | None = None,
     crop_audit_summary: dict[str, Any] | None = None,
+    aesthetic_lever_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -109,6 +110,8 @@ def _write_loop_run(
         iteration["editorial_art_direction_summary"] = editorial_art_direction_summary
     if crop_audit_summary is not None:
         iteration["crop_audit_summary"] = crop_audit_summary
+    if aesthetic_lever_summary is not None:
+        iteration["aesthetic_lever_summary"] = aesthetic_lever_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -1258,6 +1261,33 @@ def test_release_mode_completes_after_latest_clean_loop_checkpoint(
     assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
 
 
+def test_release_mode_preserves_aesthetic_lever_summary_from_latest_loop(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    aesthetic_summary = {
+        "source": "critique.aesthetic_lever_audit",
+        "evaluation_state": "passed",
+        "lever_count": 2,
+        "worst_verdict": "pass",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        escalation_level="none",
+        recommended_next_action="release is ready",
+        aesthetic_lever_summary=aesthetic_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["loop_checkpoint"]["aesthetic_lever_summary"] == aesthetic_summary
+
+
 # --- polish mode -------------------------------------------------------------
 
 
@@ -1305,6 +1335,95 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
     assert "ready_for_svg_polish" in summary["reason"]
     assert "scripts/svg_polish_handoff.py" in summary["reason"]
     assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
+
+
+def test_polish_mode_preserves_aesthetic_lever_summary_from_latest_loop(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    aesthetic_summary = {
+        "source": "critique.aesthetic_lever_audit",
+        "evaluation_state": "passed",
+        "lever_count": 2,
+        "worst_verdict": "pass",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        aesthetic_lever_summary=aesthetic_summary,
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["loop_checkpoint"]["aesthetic_lever_summary"] == aesthetic_summary
+
+
+def test_polish_mode_honors_latest_loop_human_gate_before_svg_handoff(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        recommended_next_action="human art-direction review required for target_journal_taste",
+        aesthetic_lever_summary={
+            "source": "critique.aesthetic_lever_audit",
+            "evaluation_state": "needs_human",
+            "next_aesthetic_bottleneck": {
+                "lever_id": "target_journal_taste",
+                "route": "human_art_direction",
+            },
+        },
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "target_journal_taste" in summary["reason"]
+
+
+def test_polish_mode_honors_top_tier_blocker_before_svg_handoff(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        top_tier_audit_summary={
+            "source": "critique.top_tier_audit",
+            "worst_verdict": "weak",
+            "blocking_high_impact_count": 1,
+            "blocking_high_impact_slots": ["aesthetic_coherence"],
+        },
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert "top-tier audit" in summary["reason"]
 
 
 def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(

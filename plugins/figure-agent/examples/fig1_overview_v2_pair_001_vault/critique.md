@@ -1,12 +1,12 @@
 ---
-schema: figure-agent.critique.v1.9
+schema: figure-agent.critique.v1.11
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-22T08:30:00Z
+generated_at: 2026-05-24T00:00:00Z
 generator: critique_brief.py
-generator_version: sha256:548c833b17a5b71168b3233291ccfeeadfdca17733dc852b8c1d9e101ef78d32
-rubric_version: figure-agent.critique-rubric.v1.9
-critique_input_hash: sha256:563e58e0aa87318102604e4f8c19b554fc246478206ea70551bd466ae8229242
-verdict: ready
+generator_version: sha256:ddaf7c05958ff12c8bbc7bb00604b5329a16a8aff2f371bf45105af6405b0676
+rubric_version: figure-agent.critique-rubric.v1.11
+critique_input_hash: sha256:9c56f65ff0e0da15e9bc959a9308816d147bf26147c240bd95cb6f4c41ee1b55
+verdict: revise
 audit_enumeration:
   structural_completeness:
     components:
@@ -215,6 +215,132 @@ audit_enumeration:
       reference: briefing
       severity: MINOR
       proposed_action: accept_simplification
+aesthetic_lever_audit:
+  - lever_id: maturity_restraint
+    dimension: maturity
+    verdict: pass
+    confidence: high
+    observed_positive_signals:
+      - "Clean white background, restrained gray apparatus language, and semantic cAmber/cBlue/cRed accents keep the figure in an editorial register."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "top_tier_audit.aesthetic_coherence"
+      - "editorial_art_direction.aesthetic_risk"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not add decorative gradients, oversized arrows, or non-semantic accent color."
+    rationale: "The declared maturity_restraint lever is satisfied: decorative wash was removed and remaining emphasis carries mechanism or hierarchy."
+  - lever_id: panel_c_hero_hierarchy
+    dimension: hero_hierarchy
+    verdict: pass
+    confidence: high
+    observed_positive_signals:
+      - "Panel C remains the first-fixation hero through width, trap-landscape density, Delta E_t color, and the three-spoke fan into D/E/F."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "editorial_art_direction.hero_focus"
+      - "quality_axes.message_storyline"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not make Panel A/B or a Row 2 evidence column compete with Panel C as the primary model panel."
+    rationale: "The figure has a clear hero and a controlled transition from model to evidence."
+  - lever_id: row2_whitespace_breathing
+    dimension: whitespace_breathing
+    verdict: pass
+    confidence: medium
+    observed_positive_signals:
+      - "D/E/F column gutters and instrument-zone separation are visible after the zoom-crop audit and text-boundary check."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "quality_axes.composition_layout"
+      - "editorial_art_direction.abstraction_consistency"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not move evidence between columns or delete required Row 2 instrument labels."
+    rationale: "The lower row is dense but still readable; no row-wide whitespace blocker remains."
+  - lever_id: print_typography_authority
+    dimension: typography_authority
+    verdict: weak
+    confidence: medium
+    observed_positive_signals:
+      - "Most primary labels remain readable in print-scale and high-zoom crops."
+    observed_anti_patterns:
+      - "C004 still identifies an Energy-axis label/film-edge interaction class that belongs to typography authority, not generic polish."
+    route: tikz_patch
+    linked_evidence:
+      - "C004"
+      - "quality_axes.label_annotation_semantics"
+    allowed_next_adjustment: "micro-shift or re-anchor the Energy axis label so the rotated glyphs clear the adjacent film-edge stroke."
+    forbidden_adjustment_guard: "do not rename the Energy axis, alter the energy diagram semantics, or hide the mobility-edge/E_C/E_V references."
+    rationale: "The v2 lever grammar turns the remaining label-edge issue into a bounded typography-authority patch target."
+  - lever_id: semantic_color_economy
+    dimension: color_harmony
+    verdict: pass
+    confidence: high
+    observed_positive_signals:
+      - "cAmber maps to polymer, cBlue to shallow traps, cRed to deep/Coulomb/q_tr semantics, and cGray to apparatus or baselines."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "top_tier_audit.cross_panel_semantic_grammar"
+      - "editorial_art_direction.aesthetic_risk"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not swap shallow/deep colors or reuse red/blue for unrelated emphasis."
+    rationale: "Color remains semantic rather than decorative."
+  - lever_id: line_weight_rhythm
+    dimension: line_weight_rhythm
+    verdict: pass
+    confidence: medium
+    observed_positive_signals:
+      - "Primary narrative arrows, annotation strokes, axes, and support details keep distinguishable line-weight tiers."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "quality_axes.journal_polish"
+      - "top_tier_audit.visual_economy"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not change graph relationships, axes, wiring, or force direction semantics."
+    rationale: "Existing thin-stroke warnings are intentional support/detail tiers, not a failed line-rhythm lever."
+  - lever_id: component_fidelity_finish
+    dimension: component_fidelity
+    verdict: pass
+    confidence: medium
+    observed_positive_signals:
+      - "Panels D/E/F retain distinct kinetic, ISPD, and mechanical apparatus cues instead of collapsing into generic boxes."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "quality_axes.component_fidelity"
+      - "editorial_art_direction.illustration_readiness"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not invent unsupported apparatus or add decorative detail that implies false measurement capability."
+    rationale: "The component-fidelity lever passes as an iconic-cartoon register rather than a photoreal instrument register."
+  - lever_id: hand_craft_escape_route
+    dimension: hand_craft
+    verdict: not_applicable
+    confidence: medium
+    observed_positive_signals: []
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "editorial_art_direction.tikz_vs_svg_polish_trigger"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not use SVG polish to alter mechanism or mutate accepted/golden artifacts without gate approval."
+    rationale: "The current evidence routes remaining work to TikZ/source semantics rather than optical-only SVG polish."
+  - lever_id: cross_panel_grammar
+    dimension: cross_panel_grammar
+    verdict: pass
+    confidence: high
+    observed_positive_signals:
+      - "Panel letters, title weights, Row 2 apparatus register, and semantic palette repeat coherently across all six panels."
+    observed_anti_patterns: []
+    route: none
+    linked_evidence:
+      - "top_tier_audit.cross_panel_semantic_grammar"
+      - "quality_axes.panel_role_coherence"
+    allowed_next_adjustment: "accept_simplification"
+    forbidden_adjustment_guard: "do not flatten role-specific visual distinctions by making all panels identical."
+    rationale: "The six-panel figure reads as one visual series with role-aware variations."
 quality_axes:
   message_storyline:
     verdict: pass
@@ -284,12 +410,13 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
-    verdict: pass
-    confidence: high
-    rationale: "v1.9 zoom re-audit findings C001-C004 (label-target-collision class) all resolved via element-iteration patches: HV+ label shifted off wire centerline, V_s meter box widened to fit label, V_s probe label shifted clear of HV+ box, Energy axis label y-shifted out of shallow-leader crossing band. Typography 3-tier hierarchy remains intact."
-    evidence: "VC015, VC019, VC025, VC054 zoom inspection post-patch confirms no glyph-outline overlap; micro_defects M015/M019/M025/M054 status=resolved; findings C001-C004 status=resolved."
-    blocking_items: []
-    recommended_action: none
+    verdict: needs_patch
+    confidence: medium
+    rationale: "Most v1.9 zoom re-audit label-target-collision findings are resolved, but C004 remains a typography-authority weak point: the rotated Energy label sits too close to the Panel C film-edge / dashed-leader context at high zoom."
+    evidence: "VC015, VC019, and VC025 remain resolved; VC054 high-zoom crop still supports C004 as a bounded label-edge patch target."
+    blocking_items:
+      - "C004"
+    recommended_action: patch
   journal_polish:
     verdict: pass
     confidence: medium
@@ -305,12 +432,13 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: pass
+    verdict: needs_patch
     confidence: medium
-    rationale: "All upstream quality axes pass post-iteration. NC main-text Fig 1 convention met. No BLOCKER physics issue; no human gate required for figure semantics. Submission_safe (spec.yaml) remains a separate human acceptance flag orthogonal to figure-quality verdict."
-    evidence: "all 10 upstream quality_axes pass; print_178mm + print_thumbnail audit images inspected; 0 collision warnings; C001-C004 resolved via element-iteration patches."
-    blocking_items: []
-    recommended_action: none
+    rationale: "NC main-text Fig 1 convention is met and no BLOCKER physics issue remains, but C004 keeps the current artifact below release-level publication readiness until the Energy-label typography patch is resolved."
+    evidence: "quality_axes.label_annotation_semantics now routes C004 to a bounded patch; submission_safe remains a separate human acceptance flag."
+    blocking_items:
+      - "C004"
+    recommended_action: patch
 top_tier_audit:
   first_glance_message:
     verdict: pass
@@ -413,8 +541,8 @@ editorial_art_direction:
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: "All remaining items are semantic content edits (none open). No optical-only polish backlog. TikZ source can carry future edits. R1 (Panel B tick marks) + R3 (Panel C HERO line weight +0.05pt) implemented in TikZ directly — neither requires svg_micro_polish path."
-    rationale: "continue_tikz polish path. semantic_backport not needed because R1/R3 are aesthetic-only relaxations carrying no mechanism, label, or storyline change."
+    evidence: "The remaining C004 label/edge issue is a TikZ-source micro-position patch, not an optical-only SVG polish backlog. R1 (Panel B tick marks) + R3 (Panel C HERO line weight +0.05pt) were implemented in TikZ directly — neither requires svg_micro_polish path."
+    rationale: "continue_tikz polish path. semantic_backport is not needed because the remaining route is a label-position repair, not a mechanism, label-meaning, component-identity, or storyline change."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
     recommended_path: continue_tikz
@@ -428,19 +556,19 @@ journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
   assessed_artifact_hash: sha256:bd8769e5b1e96db3522bee06fc24255bbe0ad76aaa7afbf922db177c20a73f4d
-  benchmark_level: high_impact_candidate
+  benchmark_level: solid_manuscript
   confidence: medium
   blockers: []
   regression_detected: true
   regressions:
     - axis: label_annotation_semantics
       previous_state: "v1.7 pass: 58 visual_clash candidates all classified accept_simplification; verdict=pass."
-      current_state: "v1.9 ready post-iteration: 4 label-target-collision defects (C001-C004) resolved via one-line geometric shifts (HV+ off wire, V_s meter widened, V_s probe shifted right, Energy y-shifted). micro_defects + findings now status=resolved."
-      reason: "v1.9 zoom-crop re-audit surfaced the four label defects; element-iteration pass landed surgical fixes in a single commit (f8a686b) verified by zoom re-inspection of VC015/VC019/VC025/VC054."
+      current_state: "v1.11 dogfood: C001-C003 remain resolved, while C004 is kept open as a bounded typography-authority patch target linked to VC054."
+      reason: "v2 aesthetic lever accounting prevents the remaining label-edge issue from being hidden under a generic high-impact or polish claim."
   score_is_gateable: false
-  next_quality_bottleneck: human_policy
-  rationale: "Post-2026-05-22 NC main-text Fig 1 redirect + 5-cycle heavy critique polish: all 10 quality_axes pass, all 10 top_tier_audit slots pass, all 10 editorial_art_direction slots pass. The artifact now reads as a clean NC Fig 1 with Panel C HERO, 3-spoke evidence fan, and 6 self-contained panels on white background. Remaining decision is spec.yaml submission_safe (human acceptance flag), orthogonal to figure-quality verdict."
-  overall_score: 88
+  next_quality_bottleneck: label_semantics
+  rationale: "Post-2026-05-22 NC main-text Fig 1 redirect + 5-cycle heavy critique polish: storyline, composition, science, reference, and editorial slots are strong, but label_annotation_semantics and publication_readiness remain needs_patch because C004 is still open. The artifact reads as a clean NC Fig 1 with Panel C HERO, 3-spoke evidence fan, and 6 self-contained panels on white background, but it should not be promoted above solid_manuscript until the C004 typography-authority patch is resolved."
+  overall_score: 78
   sub_scores:
     storyline: 92
     composition: 90
@@ -460,6 +588,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC001
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC001 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M002
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC002_S.png
     kind: floating_semantic_cue
@@ -468,6 +598,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC002
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC002 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M003
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC003_S.png
     kind: floating_semantic_cue
@@ -476,6 +608,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC003
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC003 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M004
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC004_S.png
     kind: floating_semantic_cue
@@ -484,6 +618,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC004
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC004 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M005
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC005_S.png
     kind: floating_semantic_cue
@@ -492,6 +628,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC005
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC005 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M006
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_S.png
     kind: floating_semantic_cue
@@ -500,6 +638,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC006
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC006 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M007
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_C.png
     kind: floating_semantic_cue
@@ -508,6 +648,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC007
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC007 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M008
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC008_S.png
     kind: floating_semantic_cue
@@ -516,6 +658,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC008
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC008 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M009
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_Energy.png
     kind: floating_semantic_cue
@@ -524,6 +668,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC009
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC009 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M010
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_S.png
     kind: floating_semantic_cue
@@ -532,6 +678,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC010
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC010 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M011
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_S.png
     kind: floating_semantic_cue
@@ -540,6 +688,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC011
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC011 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M012
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_1.png
     kind: floating_semantic_cue
@@ -548,6 +698,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC012
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC012 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M013
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_Sulfur.png
     kind: floating_semantic_cue
@@ -556,6 +708,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC013
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC013 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M014
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_V.png
     kind: floating_semantic_cue
@@ -564,6 +718,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC014
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC014 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M015
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_ISPD.png
     kind: floating_semantic_cue
@@ -572,6 +728,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC015
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC015 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M016
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_e.png
     kind: floating_semantic_cue
@@ -580,6 +738,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC016
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC016 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M017
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_HV_.png
     kind: floating_semantic_cue
@@ -588,6 +748,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC017
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC017 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M018
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_f.png
     kind: floating_semantic_cue
@@ -596,6 +758,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC018
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC018 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M019
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_V.png
     kind: floating_semantic_cue
@@ -604,6 +768,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC019
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC019 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M020
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_film.png
     kind: floating_semantic_cue
@@ -612,6 +778,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC020
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC020 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M021
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_V.png
     kind: floating_semantic_cue
@@ -620,6 +788,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC021
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC021 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M022
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_s.png
     kind: floating_semantic_cue
@@ -628,6 +798,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC022
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC022 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M023
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_V.png
     kind: floating_semantic_cue
@@ -636,6 +808,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC023
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC023 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M024
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024__t_.png
     kind: floating_semantic_cue
@@ -644,6 +818,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC024
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC024 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M025
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_V.png
     kind: floating_semantic_cue
@@ -652,6 +828,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC025
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC025 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M026
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_low.png
     kind: floating_semantic_cue
@@ -660,6 +838,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC026
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC026 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M027
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_hig.png
     kind: floating_semantic_cue
@@ -668,6 +848,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC027
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC027 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M028
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028__.png
     kind: floating_semantic_cue
@@ -676,6 +858,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC028
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC028 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M029
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_d.png
     kind: floating_semantic_cue
@@ -684,6 +868,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC029
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC029 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M030
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030__.png
     kind: floating_semantic_cue
@@ -692,6 +878,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC030
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC030 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M031
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_h.png
     kind: floating_semantic_cue
@@ -700,6 +888,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC031
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC031 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M032
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_n.png
     kind: floating_semantic_cue
@@ -708,6 +898,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC032
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC032 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M033
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_Deb.png
     kind: floating_semantic_cue
@@ -716,6 +908,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC033
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC033 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M034
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_ye.png
     kind: floating_semantic_cue
@@ -724,6 +918,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC034
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC034 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M035
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_F.png
     kind: floating_semantic_cue
@@ -732,6 +928,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC035
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC035 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M036
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_log.png
     kind: floating_semantic_cue
@@ -740,6 +938,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC036
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC036 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M037
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_I.png
     kind: floating_semantic_cue
@@ -748,6 +948,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC037
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC037 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M038
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_I_t_.png
     kind: floating_semantic_cue
@@ -756,6 +958,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC038
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC038 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M039
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039__.png
     kind: floating_semantic_cue
@@ -764,6 +968,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC039
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC039 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M040
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040__.png
     kind: floating_semantic_cue
@@ -772,6 +978,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC040
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC040 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M041
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041__.png
     kind: floating_semantic_cue
@@ -780,6 +988,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC041
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC041 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M042
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC042__.png
     kind: floating_semantic_cue
@@ -788,6 +998,8 @@ micro_defects:
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC042
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC042 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
 crop_audit_log:
   - crop_id: VC001_S
     path: build/audit_crops/visual_clash/VC001_S.png
@@ -1675,10 +1887,11 @@ inspection shows clear `label_glyph_overlaps_internal_drawing` /
 ## Verdict
 
 `verdict: revise`. label_annotation_semantics + publication_readiness now
-`needs_patch` because of the four open label-target-collision defects.
+`needs_patch` because C004 remains open as a bounded typography-authority
+patch target.
 `journal_grade_assessment.benchmark_level` demoted high_impact_candidate ->
-solid_manuscript; overall_score 90 -> 78 (label_semantics 90 -> 68 is the main
-driver). `regression_detected: true` records the v1.7 -> v1.9 reclassification.
+solid_manuscript; overall_score 90 -> 78. `regression_detected: true` records
+the v1.7 -> v1.11 reclassification.
 `next_quality_bottleneck: label_semantics`. The other 9 quality_axes still pass
 and the NC main-text Fig 1 composition + Panel C HERO + 3-spoke fan + Row 2
 iconic-cartoon evidence triplet are preserved — these are local-label fixes,

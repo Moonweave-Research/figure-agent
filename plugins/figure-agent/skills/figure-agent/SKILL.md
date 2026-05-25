@@ -202,6 +202,15 @@ When `critique_reference_pack.yaml` exists, `/fig_critique` uses it as the
 project-specific top-tier calibration source and includes its target journal,
 reference class, must-match traits, must-avoid traits, and calibration
 questions in the brief.
+When `aesthetic_intent.yaml` uses schema v2, `/fig_critique` emits an
+`Aesthetic Lever Grammar` section and the critique must fill
+`aesthetic_lever_audit` exactly once for every declared lever. The host critique
+must route each non-passing lever through a visible TikZ patch, SVG polish,
+semantic backport, or human art-direction path; generic "improve polish" prose
+is invalid. Non-passing levers must name concrete anti-pattern evidence; active
+routes must match the declared `default_route`; `svg_polish` requires
+`ready_for_svg_polish`, `semantic_backport` requires `semantic_backport_required`,
+and `human_art_direction` must cite the explicit human art-direction gate.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or

@@ -17,6 +17,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fig_loop_adjudication import adjudication_state as build_adjudication_state  # noqa: E402
 from fig_loop_assessments import (  # noqa: E402
+    aesthetic_lever_summary as build_aesthetic_lever_summary,
+)
+from fig_loop_assessments import (
     crop_audit_summary as build_crop_audit_summary,
 )
 from fig_loop_assessments import (
@@ -67,6 +70,30 @@ def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _apply_aesthetic_lever_stop(
+    loop_decision: dict,
+    aesthetic_lever_summary: dict | None,
+) -> dict:
+    if not aesthetic_lever_summary:
+        return loop_decision
+    if aesthetic_lever_summary.get("evaluation_state") != "needs_human":
+        return loop_decision
+    bottleneck = aesthetic_lever_summary.get("next_aesthetic_bottleneck") or {}
+    lever_id = bottleneck.get("lever_id", "aesthetic lever")
+    updated = dict(loop_decision)
+    updated.update(
+        {
+            "stop_reason": "human_gate_required",
+            "recommended_next_action": (
+                f"human art-direction review required for {lever_id}"
+            ),
+            "active_patch_target": None,
+            "human_gate_status": "required",
+        }
+    )
+    return updated
+
+
 def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
     command = ensure_safe_command(("git", *args))
     result = subprocess.run(
@@ -108,7 +135,12 @@ def run_loop(
 
     status_result = infer_stage(example_dir)
     adjudication = build_adjudication_state(example_dir)
+    aesthetic_lever_summary = build_aesthetic_lever_summary(
+        example_dir,
+        status_result.get("critique_state"),
+    )
     loop_decision = build_loop_decision(status_result, adjudication, example_dir)
+    loop_decision = _apply_aesthetic_lever_stop(loop_decision, aesthetic_lever_summary)
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
     patch_handoff = build_patch_handoff(name, loop_decision)
@@ -160,6 +192,7 @@ def run_loop(
         "top_tier_audit_summary": top_tier_audit_summary,
         "editorial_art_direction_summary": editorial_art_direction_summary,
         "crop_audit_summary": crop_audit_summary,
+        "aesthetic_lever_summary": aesthetic_lever_summary,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,

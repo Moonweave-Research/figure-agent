@@ -6,6 +6,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from critique_schema_vocab import (  # noqa: E402
+    AESTHETIC_LEVER_DIMENSIONS,
+    AESTHETIC_LEVER_ROUTES,
+    AESTHETIC_LEVER_VERDICTS,
     CRITIQUE_SCHEMA_V1,
     CRITIQUE_SCHEMA_V1_1,
     CRITIQUE_SCHEMA_V1_2,
@@ -17,6 +20,7 @@ from critique_schema_vocab import (  # noqa: E402
     CRITIQUE_SCHEMA_V1_8,
     CRITIQUE_SCHEMA_V1_9,
     CRITIQUE_SCHEMA_V1_10,
+    CRITIQUE_SCHEMA_V1_11,
     CROP_AUDIT_VERDICTS,
     EDITORIAL_AUDIT_KEYS,
     EDITORIAL_POLISH_PATHS,
@@ -42,6 +46,7 @@ def test_critique_schema_versions_are_canonical() -> None:
     assert CRITIQUE_SCHEMA_V1_8 == "figure-agent.critique.v1.8"
     assert CRITIQUE_SCHEMA_V1_9 == "figure-agent.critique.v1.9"
     assert CRITIQUE_SCHEMA_V1_10 == "figure-agent.critique.v1.10"
+    assert CRITIQUE_SCHEMA_V1_11 == "figure-agent.critique.v1.11"
 
 
 def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
@@ -108,6 +113,26 @@ def test_critique_schema_vocab_keeps_current_audit_dimensions() -> None:
         }
     )
     assert CROP_AUDIT_VERDICTS == frozenset({"defect", "no_defect", "uncertain"})
+    assert AESTHETIC_LEVER_DIMENSIONS == frozenset(
+        {
+            "maturity",
+            "hero_hierarchy",
+            "whitespace_breathing",
+            "typography_authority",
+            "color_harmony",
+            "line_weight_rhythm",
+            "component_fidelity",
+            "hand_craft",
+            "cross_panel_grammar",
+            "polish_route",
+        }
+    )
+    assert AESTHETIC_LEVER_VERDICTS == frozenset(
+        {"pass", "weak", "fail", "needs_human", "not_applicable"}
+    )
+    assert AESTHETIC_LEVER_ROUTES == frozenset(
+        {"none", "tikz_patch", "svg_polish", "semantic_backport", "human_art_direction"}
+    )
 
 
 def test_editorial_art_direction_vocab_is_canonical() -> None:

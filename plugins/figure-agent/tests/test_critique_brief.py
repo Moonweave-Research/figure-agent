@@ -1044,6 +1044,95 @@ polish_triggers:
     assert "must cite at least one exact aesthetic intent anchor" in brief
 
 
+def test_critique_brief_includes_v2_aesthetic_lever_grammar(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v2
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+aesthetic_levers:
+  - id: maturity_restraint
+    dimension: maturity
+    intent: Make the figure read as controlled editorial science illustration.
+    priority: required
+    positive_signals:
+      - restrained label scale
+    anti_patterns:
+      - poster-like saturation
+    allowed_adjustments:
+      - reduce non-essential label prominence
+    forbidden_adjustments:
+      - change mechanism meaning
+    default_route: tikz_patch
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Lever Grammar" in brief
+    assert "## Aesthetic Intent Calibration" not in brief
+    assert "schema: figure-agent.critique.v1.11" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.11" in brief
+    assert "aesthetic_lever_audit:" in brief
+    assert "maturity_restraint" in brief
+    assert "dimension=maturity priority=required route=tikz_patch" in brief
+    assert "Generic prose such as \"improve polish\" is invalid" in brief
+
+
+def test_critique_brief_keeps_v1_schema_for_v1_aesthetic_intent(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v1
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Intent Calibration" in brief
+    assert "## Aesthetic Lever Grammar" not in brief
+    assert "schema: figure-agent.critique.v1.10" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.10" in brief
+    assert "aesthetic_lever_audit:" not in brief
+
+
 def test_critique_brief_omits_aesthetic_intent_calibration_when_missing(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

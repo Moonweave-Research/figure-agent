@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import yaml
+from aesthetic_intent import AESTHETIC_INTENT_SCHEMA_V2
 from reference_contract import (
     declared_figure_reference_path,
     participating_panel_reference_paths,
@@ -14,6 +15,8 @@ from reference_contract import (
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
+CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
+CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -119,6 +122,29 @@ def critique_generator_version(
     return file_sha256(generator_path)
 
 
+def expected_critique_rubric_version(example_dir: Path) -> str:
+    intent_path = example_dir / "aesthetic_intent.yaml"
+    if not intent_path.is_file():
+        return CRITIQUE_RUBRIC_VERSION
+    try:
+        data = yaml.safe_load(intent_path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return CRITIQUE_RUBRIC_VERSION
+    if isinstance(data, dict) and data.get("schema") == AESTHETIC_INTENT_SCHEMA_V2:
+        return CRITIQUE_RUBRIC_VERSION_V1_11
+    return CRITIQUE_RUBRIC_VERSION
+
+
+def _critique_schema_matches_expected_rubric(
+    metadata: dict,
+    expected_rubric_version: str,
+) -> bool:
+    schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_11
+    return schema != CRITIQUE_SCHEMA_VERSION_V1_11
+
+
 def yaml_frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -146,7 +172,7 @@ def critique_hash_freshness(
     style_lock_path: Path,
     base_dir: Path = REPO_ROOT,
     generator_path: Path = REPO_ROOT / "scripts" / "critique_brief.py",
-    rubric_version: str = CRITIQUE_RUBRIC_VERSION,
+    rubric_version: str | None = None,
 ) -> bool | None:
     metadata = yaml_frontmatter(critique_path)
     values = {key: metadata.get(key) for key in _CRITIQUE_METADATA_KEYS}
@@ -159,8 +185,10 @@ def critique_hash_freshness(
         style_lock_path=style_lock_path,
         base_dir=base_dir,
     )
+    expected_rubric_version = rubric_version or expected_critique_rubric_version(example_dir)
     return (
         values["critique_input_hash"].strip() == expected_hash
-        and values["rubric_version"].strip() == rubric_version
+        and values["rubric_version"].strip() == expected_rubric_version
         and values["generator_version"].strip() == critique_generator_version(generator_path)
+        and _critique_schema_matches_expected_rubric(metadata, expected_rubric_version)
     )

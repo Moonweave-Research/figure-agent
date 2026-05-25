@@ -290,7 +290,35 @@ def _crop_audit_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any
     }
 
 
-def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
+def _aesthetic_lever_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str, Any] | None:
+    summary = loop_checkpoint.get("aesthetic_lever_summary")
+    if not isinstance(summary, dict):
+        return None
+    if summary.get("evaluation_state") != "needs_human":
+        return None
+    bottleneck = summary.get("next_aesthetic_bottleneck")
+    lever_id = None
+    if isinstance(bottleneck, dict):
+        raw_lever_id = bottleneck.get("lever_id")
+        if isinstance(raw_lever_id, str) and raw_lever_id.strip():
+            lever_id = raw_lever_id.strip()
+    return {
+        "action": ACTION_HUMAN_GATE_STOP,
+        "safe_command": None,
+        "stop_boundary": STOP_HUMAN_GATE,
+        "reason": (
+            "latest /fig_loop checkpoint reports aesthetic lever human gate"
+            + (f" for {lever_id}" if lever_id else "")
+            + "; resolve human art-direction review before export, polish, or release."
+        ),
+    }
+
+
+def _loop_checkpoint_review_blocker(
+    loop_checkpoint: dict[str, Any],
+    *,
+    include_editorial: bool = True,
+) -> dict[str, Any] | None:
     loop_stop = loop_checkpoint["final_stop_reason"]
     loop_action = loop_checkpoint.get("recommended_next_action")
     patch_handoff = loop_checkpoint.get("patch_handoff")
@@ -330,6 +358,9 @@ def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
     crop_audit_blocker = _crop_audit_review_blocker(loop_checkpoint)
     if crop_audit_blocker is not None:
         return crop_audit_blocker
+    aesthetic_lever_blocker = _aesthetic_lever_review_blocker(loop_checkpoint)
+    if aesthetic_lever_blocker is not None:
+        return aesthetic_lever_blocker
     top_tier_summary = loop_checkpoint.get("top_tier_audit_summary")
     if _top_tier_audit_requires_human_gate(top_tier_summary):
         return {
@@ -343,7 +374,9 @@ def _loop_checkpoint_review_blocker(loop_checkpoint: dict[str, Any]) -> dict[str
             ),
         }
     editorial_summary = loop_checkpoint.get("editorial_art_direction_summary")
-    if editorial_mod.editorial_review_requires_human_gate(editorial_summary):
+    if include_editorial and editorial_mod.editorial_review_requires_human_gate(
+        editorial_summary
+    ):
         return {
             "action": ACTION_HUMAN_GATE_STOP,
             "safe_command": None,
@@ -667,13 +700,16 @@ def _select_action(
             ),
         )
     if loop_checkpoint is not None:
-        crop_audit_blocker = _crop_audit_review_blocker(loop_checkpoint)
-        if crop_audit_blocker is not None:
+        loop_blocker = _loop_checkpoint_review_blocker(
+            loop_checkpoint,
+            include_editorial=False,
+        )
+        if loop_blocker is not None:
             return make(
-                crop_audit_blocker["action"],
-                safe_command=crop_audit_blocker["safe_command"],
-                stop_boundary=crop_audit_blocker["stop_boundary"],
-                reason=crop_audit_blocker["reason"],
+                loop_blocker["action"],
+                safe_command=loop_blocker["safe_command"],
+                stop_boundary=loop_blocker["stop_boundary"],
+                reason=loop_blocker["reason"],
                 checkpoint=loop_checkpoint,
             )
     if final_state == "BLOCKED":

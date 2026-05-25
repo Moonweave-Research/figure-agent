@@ -68,6 +68,8 @@ EDITORIAL_AUDIT_KEYS = (
     "human_art_direction_gate",
 )
 
+CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
+
 
 def _quality_axis(axis_name: str) -> dict:
     axis = {
@@ -101,6 +103,37 @@ def _editorial_audit_slot(slot_name: str) -> dict:
     if slot_name == "tikz_vs_svg_polish_trigger":
         slot["recommended_path"] = "continue_tikz"
     return slot
+
+
+def _aesthetic_lever_audit() -> list[dict]:
+    return [
+        {
+            "lever_id": "maturity_restraint",
+            "dimension": "maturity",
+            "verdict": "pass",
+            "confidence": "high",
+            "observed_positive_signals": ["restrained label scale"],
+            "observed_anti_patterns": [],
+            "route": "none",
+            "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+            "allowed_next_adjustment": "",
+            "forbidden_adjustment_guard": "do not change mechanism meaning",
+            "rationale": "maturity_restraint passes with restrained labels",
+        },
+        {
+            "lever_id": "hero_balance",
+            "dimension": "hero_hierarchy",
+            "verdict": "weak",
+            "confidence": "medium",
+            "observed_positive_signals": ["Panel C keeps the main claim visible"],
+            "observed_anti_patterns": ["Panel F competes with the primary hero"],
+            "route": "tikz_patch",
+            "linked_evidence": ["C001"],
+            "allowed_next_adjustment": "rebalance Panel F accent weight",
+            "forbidden_adjustment_guard": "do not remove the mechanism panel",
+            "rationale": "hero_balance needs a bounded TikZ adjustment linked to C001",
+        },
+    ]
 
 
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
@@ -143,6 +176,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
+        CRITIQUE_SCHEMA_V1_11,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -162,6 +196,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
+        CRITIQUE_SCHEMA_V1_11,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -170,6 +205,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.8",
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
+        CRITIQUE_SCHEMA_V1_11,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -191,6 +227,8 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "rationale": "VC001_A crop shows the linked micro defect",
             },
         ]
+    if schema == CRITIQUE_SCHEMA_V1_11:
+        frontmatter["aesthetic_lever_audit"] = _aesthetic_lever_audit()
     return frontmatter
 
 
@@ -259,6 +297,82 @@ def test_validate_critique_schema_accepts_v1_10_structured_accept_simplification
     frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = "M001"
 
     validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_11_aesthetic_lever_audit() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_11))
+
+
+def test_validate_critique_schema_rejects_v1_11_missing_aesthetic_lever_audit() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter.pop("aesthetic_lever_audit")
+
+    with pytest.raises(CritiqueContractError, match="aesthetic_lever_audit"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_duplicate_aesthetic_lever_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["lever_id"] = "maturity_restraint"
+
+    with pytest.raises(CritiqueContractError, match="duplicate"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_verdict() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][0]["verdict"] = "beautiful"
+
+    with pytest.raises(CritiqueContractError, match="verdict"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_dimension() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][0]["dimension"] = "vibes"
+
+    with pytest.raises(CritiqueContractError, match="dimension"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_unknown_aesthetic_route() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["route"] = "auto_beautify"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_pass_with_active_route() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][0]["route"] = "svg_polish"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_non_pass_with_route_none() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["route"] = "none"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_non_pass_without_linked_evidence() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["linked_evidence"] = []
+
+    with pytest.raises(CritiqueContractError, match="linked_evidence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_11_non_pass_without_anti_pattern() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_11)
+    frontmatter["aesthetic_lever_audit"][1]["observed_anti_patterns"] = []
+
+    with pytest.raises(CritiqueContractError, match="observed_anti_patterns"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_10_missing_accept_reason() -> None:
