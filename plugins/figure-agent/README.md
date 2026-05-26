@@ -35,6 +35,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_loop     Record a verify-only loop checkpoint
 /fig_export   Export final PDF / SVG / TIFF / PNG
 /fig_status   "Where am I?" — read-only stage check
+/fig_drive    Dry-run advisory driver — recommends one next action
 ```
 
 ## A typical figure (start to finish)
@@ -42,6 +43,9 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 ```bash
 # 1. Scaffold the folder. Claude asks you 7 questions and fills briefing.md.
 /fig_new fig3_trap_concept
+
+# 1b. After scaffolding, use status as the canonical first check.
+/fig_status fig3_trap_concept
 
 # 2. (Optional) If you have a reference image (paper figure, sketch, mockup),
 #    drop it in examples/fig3_trap_concept/reference/ and extract hints.
@@ -68,27 +72,36 @@ uv run python3 scripts/critique_lint.py fig3_trap_concept
 /fig_export fig3_trap_concept
 ```
 
+For agent-driven work, use `/fig_status <name>` or
+`/fig_drive <name> --mode review --goal "<goal>" --dry-run` as the canonical
+first check and follow the printed `Next:` / driver action. Export, release, or
+polish only when status or the driver explicitly routes there.
+
 **Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
 
 ---
 
-## Current state (v0.5.6)
+## Current state (v0.7.0)
 
 | Area | What's working |
 |---|---|
 | **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
-| **Vision critique** | `/fig_critique` reads build PNG + per-panel reference crops, writes structured `critique.md`. Host Claude only — no external API. |
+| **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
-| **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context), and reports workflow/golden/release readiness separately. |
+| **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
+| **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish`. |
 
-## What's experimental / proposed (not built)
+## What remains experimental / proposed
 
-Filed as pre-spec issues; **no design committed**. Each has a decision gate that blocks design until empirical data exists. This is a deliberate response to v0.3/v0.4 specs being rejected for lack of data.
+Filed as pre-spec issues or promotion-policy gaps; no production workflow depends
+on them yet. Each has a decision gate that blocks design until empirical data
+exists. This is a deliberate response to v0.3/v0.4 specs being rejected for lack
+of data.
 
 - **`docs/subregion-iteration-tool.md`** — lift critique granularity from panel → sub-region (e.g., the 8 distinct elements inside one panel). Prerequisite: v0.5 dogfood log on `fig1_overview_v2`.
-- **`docs/svg-polish-pipeline.md`** — TikZ skeleton + SVG polish layer (Inkscape-replayable operations) for the final 5–10% of paper-grade quality. Prerequisite: sub-region tool data + verified SVG element-ID stability.
+- **Real-fixture SVG polish promotion policy** — Issue 47 proved the safe negative route (`continue_tikz` blocks recipe authoring). More real fixtures are needed before treating `ready_for_svg_polish` as a routine production handoff.
 
 Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.
 

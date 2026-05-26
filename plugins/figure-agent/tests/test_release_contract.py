@@ -110,6 +110,48 @@ def test_readme_documents_plugin_package_audit() -> None:
     assert "~/.claude/plugins/cache/" in readme
 
 
+def test_readme_current_state_matches_plugin_version() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+
+    assert f"Current state (v{plugin['version']})" in readme
+    assert "SVG polish" in readme
+    assert "What's experimental / proposed (not built)" not in readme
+    experimental_section = readme.partition("What remains experimental / proposed")[2]
+    assert experimental_section
+    assert "docs/svg-polish-pipeline.md" not in experimental_section
+
+
+def test_readme_documents_status_and_driver_first_workflow() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+
+    assert "/fig_drive" in readme
+    assert "/fig_status fig3_trap_concept" in readme
+    assert "canonical first check" in readme
+    assert "Export, release, or\npolish only when" in readme
+
+
+def test_active_docs_describe_svg_polish_handoff_as_shipped() -> None:
+    overview = (REPO_ROOT / "docs" / "architecture-overview.md").read_text()
+
+    assert "scaffolding UX in progress" not in overview
+    assert "svg_polish_recipe.py" in overview
+    assert "svg_polish_executor.py" in overview
+    assert "svg_polish_delta.py" in overview
+    assert "/fig_drive --mode polish" in overview
+
+
+def test_active_architecture_overview_uses_current_critique_loop_contract() -> None:
+    overview = (REPO_ROOT / "docs" / "architecture-overview.md").read_text()
+
+    assert "report-only for v0.2" not in overview
+    assert "Report-only for v0.2" not in overview
+    assert "accuracy ≥ 80%" not in overview
+    assert "verify-only `/fig_loop`" in overview
+    assert "`critique_adjudication.yaml`" in overview
+    assert "`/fig_drive`" in overview
+
+
 def test_plugin_package_audit_detects_and_removes_generated_junk(tmp_path: Path) -> None:
     plugin_root = tmp_path / "figure-agent"
     (plugin_root / ".claude-plugin").mkdir(parents=True)
