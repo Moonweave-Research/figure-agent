@@ -719,3 +719,67 @@ NOT a Panel iter — figure-wide intervention touching all panels. Logged separa
   readers confuse them.
 - This file gives one pilot's live iteration evidence only. Cross-fixture
   generalization remains pending.
+
+## Panel C 15-iter aesthetic loop (2026-05-26)
+
+Per-iter HERO #1 polish on `feature/panel-c-15iter-aesthetic-loop` branch. Element-iteration unit = sub-region. Each iter: zoom-crop PDF Panel C → identify one defect → surgical TeX patch → recompile → confirm. Reference crops: `build/panel_c_iter/iter{NN}_panelC.png`.
+
+| Iter | Sub-region | Defect | Patch | Result |
+|---|---|---|---|---|
+| 1 | C-L6 | d≈1μm dim caliper label crossed arrow column; arrowheads too small | Arrow x 7.42→7.48, heads 2pt→2.4pt + 0.30pt + perpendicular tick caps; label x 7.36→7.28 | Caliper reads as engineering dimension; label clear of arrow |
+| 2 | C-L6 | Rotated label extended above arrowhead (anchor=south + 6.5pt overflowed 1.34cm span) | anchor south→center + font 6.5→6pt | Label centered inside caliper span |
+| 3 | C-L1 | Drop shadow opacity 0.35 + offset 0.07cm read as a separate gray rail on slab right | Opacity 0.35→0.22, offset 0.07→0.05 | Shadow reads as subtle 3D not separate panel |
+| 4 | C-H1 | Sub-titles 'real space' (y=8.55) vs 'energy diagram' (y=8.78) baseline asymmetry | real space y 8.55→8.78 alignment | Companion pair reads as L/R typography pair |
+| 5 | C-L1 | NW specular 1.5mm×0.5mm round read as stray dot | 1.8mm×0.4mm + slid to (7.78,7.52) toward NW corner | Streak reflection of upper-left light source identity |
+| 6 | C-L2 | 6 chain-atom dots varied size 0.022-0.028 competed with trap dots | Unified to 0.022cm + opacity 0.70 | Hierarchy: texture (0.022@0.7) vs data (0.07@1.0) |
+| 7 | C-R1 | 'vacuum' italic, 'mobility edge' upright — typography inconsistent | vacuum italic→upright, color cGray!60→!55 | Both aux refs match; auxiliary tier kept via lighter gray |
+| 8 | C-R8 | Shallow escape arrow stub weak vs deep curve | weight 0.50→0.55pt + head 3→3.2pt + color !70→!80 | Activation-energy asymmetry preserved with stronger jump identity |
+| 9 | C-L5 | Caption 'poly(S-r-DIB) thin film' pressed against drop-shadow base | y 6.15→6.03 (1.2mm down) | Slab/caption visual separation |
+| 10 | C-L4/R6 | Trap dot strokes 0.20/0.22pt mixed across L+R+shallow/deep | Unified all 8 dots to 0.22pt outline | Edge identity consistent |
+| 11 | C-R9 | ΔE_t 2.44cm caliper with 2.6/2pt heads read as reference cue | Heads 3.2/2.4pt + line 0.45→0.50pt | Scalar caliper identity firm |
+| 12 | C-L1 | Slab sharp 90° corners read as "container box" | rounded corners=1pt on body + shadow + outline | Softer NC-grade slab feel |
+| 13 | C-R2/R3 | DOS bell fills @45% melted into right-half whitespace | Saturation 45→52 (shallow + deep) | Distribution body visible without crossing solid territory |
+| 14 | C-R8 | Deep escape S-curve (1.6cm) terminus too small | Arrowhead 2.6/2pt→3.2/2.4pt (line weight thin UNCHANGED) | Mobility-edge arrival clear; activation-energy weight asymmetry preserved |
+| 15 | C-L1 | iter12 round corners left top highlight + right shadow endpoints inside corner curve region | top highlight y 7.68→7.66; right shadow y range 6.22..7.68 → 6.24..7.66 | No overshoot past rounded outline at any corner |
+
+**Net aesthetic delta**: dimension caliper craft (iter 1-2), 3D feel calibration (iter 3, 5, 12, 15), typography consistency (iter 4, 7), data/texture hierarchy (iter 6, 10, 13), arrow scalar identity (iter 8, 11, 14), breathing (iter 9). No structural / chemistry / theory changes — all edits are sub-region tier polish within briefing R2 relax allowance.
+
+**Visibility gate**: intended ✅ (slab + DOS + traps + leaders + caliper + escape arrows all readable) | anomaly ✅ (no spurious markers, no label collisions, no edge artifacts).
+
+**Chemistry / theory lock**: untouched. briefing §9 LOCKED (S₈ vertex count, linear copolymer topology, regular hexagon DIB) — Panel C does not contain S₈/DIB ring directly; Panel A unchanged.
+
+
+### Panel C round 2 (iter 16-20) — critique-driven fixes
+
+After round 1 self-critique at 500 DPI zoom identified 9 residual defects (P0-P3), round 2 closed top 5:
+
+| Iter | Defect | Patch | Result |
+|---|---|---|---|
+| 16 | d≈1μm rotated label crossed arrowhead column ("1" disappeared at zoom) | Removed rotation; label horizontal "d ≈ 1 μm" above slab (y=7.74 anchor=south west) | All glyphs legible; caliper + label visually separated |
+| 17 | Shallow escape arrow "^"/carret stub vs deep S-curve dominance | Mini-S bezier (11.10,7.55) controls (11.10,7.65)(11.20,7.72) to (11.20,7.82) | Shallow path reads as "arrow" not tick; parallels deep curve form |
+| 18 | Bottom AO line read as second baseline (redundant with drop shadow + rounded corners) | opacity 0.40→0.20, width 0.40→0.30pt | Inner shadow hint preserved without competing edge weight |
+| 19 | "Energy" rotated label vs deep red leader near-miss (0.09cm gap) | label x 10.35→10.30, y 6.30→6.35 (combined 0.14cm clearance) | Leader/label visually separated |
+| 20 | iter6 over-subdued chain interior atom dots (texture role failed, invisible) | size 0.022→0.026, opacity 0.70→0.95, color !85→!90 | "S atom on chain" texture identity restored; still under data-tier 0.07 |
+
+**Round 1+2 combined** = 20 iters across 11 sub-regions. Style Lock passes (no new WARN on Panel C lines); collision/text-boundary checks ✅; chemistry/theory/briefing locks untouched. Branch `feature/panel-c-15iter-aesthetic-loop` ready for review (not committed).
+
+
+### Panel C round 3 (iter 21-25) — deep polish on round 2 leftover + new audit
+
+After round 2, 500 DPI super-zoom audit identified:
+- Top chain shorter than middle/bottom (P3 leftover from round 1)
+- Round corner 1pt too small to register (P2)
+- Right-edge cAmber accent + drop shadow = double-rail at zoom
+- Trap level line round caps "tab" appearance at zoom
+- Bottom chain wave direction (peaks-DOWN) inconsistent with top/middle (peaks-UP)
+
+| Iter | Defect | Patch | Result |
+|---|---|---|---|
+| 21 | Top chain right endpoint 9.75 (vs middle/bottom near 9.85) | endpoint coord 9.75→9.80 + slight y adjust | L-R chain length symmetry restored |
+| 22 | iter12 round corner 1pt invisible at 178mm print | rounded corners 1pt → 2pt (all 3 slab elements) | Corner softening now perceptible |
+| 23 | Right-edge cAmber accent (0.45pt opacity 0.55) created double-rail with drop shadow | width 0.45→0.25pt + opacity 0.55→0.30 | NC-grade barely-perceptible texture hint |
+| 24 | Trap level line ends had round-cap "tabs" merging with Gaussian DOS fill | line cap=round → butt (all 4 trap level lines) | Clean straight terminators; trap dots remain ball-shaded spheres on line |
+| 25 | Bottom chain peaks-DOWN broke 3-chain rhythm (top/middle peaks-UP) | wave y values 6.30→6.50 (intermediate peaks) + atom dots y 6.30→6.50 + right endpoint 9.75→9.80 | All 3 chains share peaks-UP phase; uniform polymer chain semantics |
+
+**Round 1+2+3 cumulative**: 25 iters across 13 sub-regions on `feature/panel-c-15iter-aesthetic-loop`. Style Lock + collision + text-boundary gates ✅. chemistry/theory/briefing locks untouched. No commit yet.
+

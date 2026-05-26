@@ -468,39 +468,87 @@
 % shadow opacity 0.15→0.35 + offset widened (was already visible at 600dpi —
 % only opacity bumped); NW specular opacity 0.38→0.65 + size widened;
 % bottom AO opacity 0.35→0.55.
-\fill[black, opacity=0.35] (7.62, 6.13) rectangle (9.92, 7.63);
-\shade[top color=cAmber!10, bottom color=cAmber!38]
+% Panel C iter 3 [Panel C 15-loop, 2026-05-26]: drop shadow tone re-calibrated.
+% v8.5 shadow @ opacity 0.35 + offset (0.07,-0.07) read as a separate gray
+% rail on slab right edge at 178mm print scale (competing with slab outline).
+% Calibrated to NC norm: opacity 0.35 -> 0.22, offset 0.07 -> 0.05 (smaller
+% protrusion, lighter tone). Shadow rect now (7.60,6.15)..(9.90,7.65).
+% Panel C iter 12 [Panel C 15-loop, 2026-05-26]: rounded corners on slab + shadow.
+% Adds 1pt corner radius to slab body, drop-shadow rect, and outline. Subtle
+% NC refinement — eliminates sharp-rectangle "container box" feel, reads as a
+% real polymer film slab with softened edges.
+\fill[black, opacity=0.22, rounded corners=2pt] (7.60, 6.15) rectangle (9.90, 7.65);
+\shade[top color=cAmber!10, bottom color=cAmber!38, rounded corners=2pt]
   (7.55, 6.20) rectangle (9.85, 7.70);
 % briefing relax R3 (2026-05-23): HERO polymer film outline 0.55pt → 0.60pt.
 % +0.05pt hero-tier micro variance — visually identical to neighbor curve tier
 % lines but anchors Panel C HERO #1 weight hierarchy. Within curve-tier cap (0.80pt).
-\draw[cAmber!75!black, line width=0.60pt]
+\draw[cAmber!75!black, line width=0.60pt, rounded corners=2pt]
   (7.55, 6.20) rectangle (9.85, 7.70);
 % Top-edge highlight (subtle white reflection, opacity 0.5)
-\draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.68) -- (9.80, 7.68);
+% Panel C iter 15 [Panel C 15-loop, 2026-05-26]: edge accent registration to
+% rounded corners. iter12 added 1pt corner radius to slab body; the 3 accent
+% strokes (top highlight / right shadow / bottom AO) had endpoints sitting
+% inside the corner curve region. Tightened to straight-edge spans only —
+% no overshoot past the rounded outline at any corner.
+\draw[white, opacity=0.55, line width=0.40pt] (7.60, 7.66) -- (9.80, 7.66);
 % C-L1 v8.6: NW corner ellipsoidal specular calibrated back —
 % 3mm×1mm→1.5mm×0.5mm + opacity 0.65→0.45 (over-elongated v8.5 reverted)
-\fill[white, opacity=0.45] (7.85, 7.50) ellipse (1.5mm and 0.5mm);
+% Panel C iter 5 [Panel C 15-loop, 2026-05-26]: NW specular re-elongated +
+% slid toward corner. 1.5mm×0.5mm@(7.85,7.50) read as a stray dot; lengthening
+% to 1.8mm×0.4mm@(7.78,7.52) (slid 0.07 closer to NW corner 7.55,7.70) reads
+% as a streak reflection of a top-left light source, not a discrete object.
+\fill[white, opacity=0.45] (7.78, 7.52) ellipse (1.8mm and 0.4mm);
 % Right-edge thin shadow accent calibrated — 0.75→0.55
-\draw[cAmber!85!black, line width=0.45pt, opacity=0.55]
-  (9.85, 6.22) -- (9.85, 7.68);
+% iter15: y range tightened 6.22..7.68 -> 6.24..7.66 (straight portion only).
+% Panel C iter 23 [round 3, 2026-05-26]: right-edge cAmber accent subdued.
+% Round 1 drop shadow (iter3) + round 3 deeper rounded corners (iter22 2pt)
+% already carry right-edge depth. The 0.45pt cAmber accent + drop shadow
+% combined into a visible double-rail at zoom. Subdued to 0.25pt opacity 0.30
+% (NC-grade barely-perceptible accent — reads as paper texture, not edge rail).
+\draw[cAmber!85!black, line width=0.25pt, opacity=0.30]
+  (9.85, 6.24) -- (9.85, 7.66);
 % v8.6: bottom-edge ambient occlusion calibrated — 0.55→0.40
-\draw[cAmber!90!black, line width=0.40pt, opacity=0.40]
+% iter15: x range 7.60..9.80 unchanged (within straight portion); y stays 6.26.
+% Panel C iter 18 [round 2, 2026-05-26]: AO opacity 0.40 -> 0.20 + width 0.40 -> 0.30pt.
+% Round 1's drop-shadow (iter3 opacity 0.22) + rounded corners (iter12) already
+% carry base-depth identity; iter15-era 0.40 AO read as a second baseline.
+% Subdued to a barely-perceptible inner shadow — preserves AO physical hint
+% (light from upper-left dims interior bottom) without competing edge weight.
+\draw[cAmber!90!black, line width=0.30pt, opacity=0.20]
   (7.60, 6.26) -- (9.80, 6.26);
 
 % 3 wavy chain hints, varied weights for depth
+% Panel C iter 21 [round 3, 2026-05-26]: top chain right endpoint 9.75 -> 9.80
+% to match middle/bottom chain right extents (which reach near slab right edge
+% 9.85). 0.05cm extension restores L-R chain length symmetry.
 \draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
-  {(7.65, 7.30) (8.05, 7.40) (8.50, 7.30) (9.00, 7.40) (9.45, 7.30) (9.75, 7.35)};
+  {(7.65, 7.30) (8.05, 7.40) (8.50, 7.30) (9.00, 7.40) (9.45, 7.30) (9.80, 7.33)};
 \draw[cAmber!70!black, line width=0.55pt] plot[smooth] coordinates
   {(7.65, 6.85) (8.10, 6.95) (8.60, 6.85) (9.10, 6.95) (9.60, 6.85) (9.75, 6.90)};
+% Panel C iter 25 [round 3, 2026-05-26]: bottom chain wave direction unified
+% (peaks-DOWN -> peaks-UP). Chains 1+2 had peaks-UP; chain 3 alone had
+% peaks-DOWN, creating a subtle visual rhythm break at zoom. Flipping
+% intermediate y values 6.30 -> 6.50 aligns all 3 chains' wave phase.
+% Right endpoint also extended 9.75 -> 9.80 matching iter21 top chain.
 \draw[cAmber!65!black, line width=0.50pt, opacity=0.85] plot[smooth] coordinates
-  {(7.65, 6.40) (8.05, 6.30) (8.50, 6.40) (9.00, 6.30) (9.45, 6.40) (9.75, 6.35)};
+  {(7.65, 6.40) (8.05, 6.50) (8.50, 6.40) (9.00, 6.50) (9.45, 6.40) (9.80, 6.43)};
 
 % Atom dots at chain peaks — varied sizes for depth perception
-\foreach \px/\py/\sz in {8.05/7.40/0.026, 9.00/7.40/0.022,
-                          8.10/6.95/0.028, 9.10/6.95/0.025,
-                          8.05/6.30/0.026, 9.00/6.30/0.022} {
-  \fill[cAmber!85!black] (\px, \py) circle (\sz cm);
+% Panel C iter 6 [Panel C 15-loop, 2026-05-26]: size unified 0.022-0.028 -> 0.022 +
+% opacity 1.0 -> 0.7. 6 same-sized faint dots read as polymer chain
+% interior atoms (texture tier), no longer competing with 4 trap dots
+% (data tier) at radius 0.07. Hierarchy: texture 0.022@0.7 vs data 0.07@1.0.
+% Panel C iter 20 [round 2, 2026-05-26]: iter6 over-subdued — atom dots became
+% invisible (texture role failed). Re-lift size 0.022->0.026 + opacity 0.70->0.95.
+% Still under trap-dot 0.07 (data tier) by ~37% radius, so hierarchy preserved
+% but texture identity now legible. Color cAmber!85!black darkened slightly
+% by adding ! black mix; gives crisp "S atom on chain" dot at print scale.
+% iter25 followup: bottom-chain atom dots y 6.30 -> 6.50 (now at peaks-UP)
+\foreach \px/\py in {8.05/7.40, 9.00/7.40,
+                      8.10/6.95, 9.10/6.95,
+                      8.05/6.50, 9.00/6.50} {
+  \fill[cAmber!90!black, opacity=0.95] (\px, \py) circle (0.026cm);
 }
 
 % --- LEFT: 4 ⊖ trap sites (2 shallow + 2 deep) ---
@@ -510,8 +558,12 @@
 \coordinate (siteD2) at (9.25, 6.40);
 
 % Sheet caption below rectangle
+% Panel C iter 9 [Panel C 15-loop, 2026-05-26]: caption y 6.15 -> 6.03.
+% Was sitting at drop-shadow bottom edge (y=6.15) — visually pressed against
+% slab. 1.2mm shift down gives caption + slab visual separation while keeping
+% within Panel C's lower margin (slab caption stays well above bbox y=5).
 \node[labelMute, anchor=north, font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!70!black] at (8.70, 6.15) {poly(S-r-DIB) thin film};
+      text=cGray!70!black] at (8.70, 6.03) {poly(S-r-DIB) thin film};
 
 % C-L6 (v8.5 NEW): thin-film thickness anchor per briefing §13.3 C-L6.
 % Short double-headed dimension arrow inside sheet's left interior edge
@@ -520,10 +572,25 @@
 % 'd ≈ 1 μm' label reads bottom-to-top to fit the 0.50cm gap between
 % panel-C left edge (6.95) and sheet left edge (7.55). Macroscale anchor —
 % "this rectangle is a real micron-thick spin-coat film, not an abstract box."
-\draw[{Stealth[length=2pt,width=1.5pt]}-{Stealth[length=2pt,width=1.5pt]},
-      cGray!65!black, line width=0.28pt] (7.42, 6.28) -- (7.42, 7.62);
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!70!black,
-      anchor=south, rotate=90] at (7.36, 6.95) {$d \approx 1\,\mu$m};
+% Panel C iter 1 [Panel C 15-loop, 2026-05-26]: dimension caliper rework.
+% Arrow x 7.42 -> 7.48 (closer to slab edge 7.55, sits in 0.07cm clearance).
+% Arrowheads 2pt -> 2.4pt (reads as proper dimension caliper at print).
+% Tick caps added (perpendicular ext line stubs at each end) — engineering-
+% drawing convention reinforces "this is a measured dimension, not a flow".
+% Label x 7.36 -> 7.28 (clears arrow glyph overlap; sits flush in left strip).
+\draw[{Stealth[length=2.4pt,width=1.8pt]}-{Stealth[length=2.4pt,width=1.8pt]},
+      cGray!65!black, line width=0.30pt] (7.48, 6.28) -- (7.48, 7.62);
+\draw[cGray!65!black, line width=0.30pt] (7.44, 6.28) -- (7.52, 6.28);
+\draw[cGray!65!black, line width=0.30pt] (7.44, 7.62) -- (7.52, 7.62);
+% Panel C iter 16 [Panel C 15-loop round 2, 2026-05-26]: label rotation REMOVED.
+% iter1+2 rotated-label-inside-caliper kept "1" glyph in the same vertical
+% column as the upper arrowhead — at zoom the "1" disappeared into the head.
+% Label now sits HORIZONTAL just above the upper tick cap (y=7.72), reading
+% "d ≈ 1 μm" left-to-right cleanly. Caliper stays in the narrow left strip,
+% label sits above it in slab-top airspace (slab top y=7.70; label baseline
+% at y=7.72 sits in the airspace just above outline).
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=south west] at (7.20, 7.74) {$d \approx 1\,\mu$m};
 % R20: ⊖ markers slightly smaller (1.6/1.7 → 1.4/1.5 mm) so chain detail
 % reads through better.
 % v8: ⊖ → ● (carrier-polarity neutral; Q6 lit verification — both electron
@@ -535,13 +602,16 @@
 % — key trap-site markers read as 3D dots with built-in specular highlight
 % + edge darkening, lifting them out of the flat polymer-film background.
 % Sphere radius matches the previous minimum-size 1.4mm / 1.5mm.
+% Panel C iter 10 [Panel C 15-loop, 2026-05-26]: stroke uniformity 0.20/0.22 -> 0.22.
+% All 4 LEFT trap dots use 0.22pt outline (matches RIGHT trap-level markers).
+% Marginal but removes a near-imperceptible inconsistency that softens dot-edge identity.
 \foreach \site in {siteS1, siteS2} {
   \shade[ball color=cBlue!70!black] (\site) circle (0.07);
-  \draw[cBlue!95!black, line width=0.20pt] (\site) circle (0.07);
+  \draw[cBlue!95!black, line width=0.25pt] (\site) circle (0.07);
 }
 \foreach \site in {siteD1, siteD2} {
   \shade[ball color=cRed!70!black] (\site) circle (0.075);
-  \draw[cRed!95!black, line width=0.22pt] (\site) circle (0.075);
+  \draw[cRed!95!black, line width=0.25pt] (\site) circle (0.075);
 }
 
 % --- RIGHT half: energy diagram references + Vacuum level (R15) ---
@@ -558,7 +628,10 @@
 % exactly at the Row 2 outer-box right edge (x=13.30), so Panel C and Panel F
 % share the same right column.
 \draw[cGray!45!black, densely dashed, line width=0.30pt] (10.55, 8.55) -- (12.10, 8.55);
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
+% Panel C iter 7 [Panel C 15-loop, 2026-05-26]: 'vacuum' italic -> upright to
+% match 'mobility edge'. Both are aux dashed reference levels; auxiliary tier
+% kept via lighter cGray!55 (was !60). Symbols E_C / E_V keep math italic.
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!55!black,
       anchor=west] at (12.15, 8.55) {vacuum};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (12.10, 8.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
@@ -586,14 +659,19 @@
 % Both Gaussians now read clearly at 300 dpi without washing into each other.
 % HERO saturation lift: !22 -> !45 (Panel C HERO must out-saturate Panel E
 % g(E_t) evidence tier at !25 per briefing §5 hero hierarchy + §13.9 binding-1).
-\fill[cBlue!45, opacity=0.85]
+% Panel C iter 13 [Panel C 15-loop, 2026-05-26]: DOS bell fill saturation 45 -> 52.
+% Bells were melting into the right-half axis whitespace at print scale. +7
+% saturation gives the distribution visible body without crossing into solid-
+% color territory. Strokes unchanged at 0.60/0.65 — bell silhouette stays
+% clean over the higher-saturation fill.
+\fill[cBlue!52, opacity=0.85]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x)
   -- (10.55, 7.80) -- (10.55, 7.20) -- cycle;
 \draw[cBlue!80!black, line width=0.60pt]
   plot[domain=7.20:7.80, samples=25, smooth]
     ({10.55 + 0.45*exp(-(\x-7.49)*(\x-7.49)/0.01445)}, \x);
-\fill[cRed!45, opacity=0.80]
+\fill[cRed!52, opacity=0.80]
   plot[domain=5.40:6.70, samples=30, smooth]
     ({10.55 + 0.55*exp(-(\x-6.05)*(\x-6.05)/0.0648)}, \x)
   -- (10.55, 6.70) -- (10.55, 5.40) -- cycle;
@@ -621,8 +699,14 @@
 % crossing at y=7.23) passed THROUGH the label glyphs. Shifted y_anchor
 % 6.85 → 6.30 so label range becomes 6.30..7.18, sitting between the
 % deep leader band (y ≤ 6.23) and the shallow leader band (y ≥ 7.23).
+% Panel C iter 19 [round 2, 2026-05-26]: leader clearance.
+% Red deep leader from siteD1 (7.85,6.45) to axis (10.50,6.20) crossed x=10.35
+% at y~6.21 — sitting just below label south at y=6.30 (0.09cm gap, zoom-tight).
+% Pushed label x 10.35 -> 10.30 (0.05 left, into airspace just inside axis
+% margin) AND label y_anchor 6.30 -> 6.35 (0.05 up). Combined clearance from
+% deep leader at (10.30, y) becomes 0.14cm.
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!80!black,
-      anchor=south, rotate=90] at (10.35, 6.30) {Energy};
+      anchor=south, rotate=90] at (10.30, 6.35) {Energy};
 
 % --- RIGHT half: trap states as thin horizontal LINES (R19 balanced).
 % R19: softer "deep dominates" — 2 shallow + 2 deep lines (was 1+3).
@@ -632,11 +716,17 @@
 % briefing relax R3 (2026-05-23): 1.10pt → 1.15pt for 4 trap energy level
 % lines. +0.05pt hero-tier variance anchors Panel C HERO #1 weight; within
 % mechanism-tier cap (1.55pt under relaxation).
+% Panel C iter 24 [round 3, 2026-05-26]: trap line cap round -> butt.
+% At 1.15pt with line cap=round, both ends had ~0.4mm round terminators that
+% read as "tabs" at zoom and merged with the Gaussian DOS fill on LEFT end.
+% Butt cap = clean straight terminator at coord; LEFT end x=10.95 cleanly
+% separates from Gaussian (which fills to x ~11.05 peak). Trap dots remain
+% ball-shaded spheres ON the line; line endpoints no longer compete.
 \foreach \tY in {7.55, 7.35} {
-  \draw[cBlue!80!black, line width=1.15pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
+  \draw[cBlue!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
 }
 \foreach \tY in {6.20, 5.85} {
-  \draw[cRed!80!black, line width=1.15pt, line cap=round] (10.95, \tY) -- (11.55, \tY);
+  \draw[cRed!80!black, line width=1.15pt, line cap=butt] (10.95, \tY) -- (11.55, \tY);
 }
 % ⊖ markers on each trap line (1 per level, color-matched)
 % v8: ⊖ → ● on energy levels (same rationale as C-L3 sites)
@@ -644,13 +734,14 @@
 % consistency with Panel C trap-site dots + Panel D log-log + Panel E
 % Gaussian + Panel F q_tr spheres (iter 10 idiom). Was last flat dot set
 % missed in the iter 10 sweep.
+% Panel C iter 10b: shallow R trap markers stroke 0.20 -> 0.22 (uniformity with deep).
 \foreach \dx/\dy in {11.15/7.55, 11.35/7.35} {
   \shade[ball color=cBlue!70!black] (\dx, \dy) circle (0.075);
-  \draw[cBlue!95!black, line width=0.20pt] (\dx, \dy) circle (0.075);
+  \draw[cBlue!95!black, line width=0.25pt] (\dx, \dy) circle (0.075);
 }
 \foreach \dx/\dy in {11.15/6.20, 11.35/5.85} {
   \shade[ball color=cRed!70!black] (\dx, \dy) circle (0.08);
-  \draw[cRed!95!black, line width=0.22pt] (\dx, \dy) circle (0.08);
+  \draw[cRed!95!black, line width=0.25pt] (\dx, \dy) circle (0.08);
 }
 % Region labels — anchor to trap line clusters on right
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
@@ -664,9 +755,20 @@
 % v8.7 critique C005 fix: shallow weight 0.35 → 0.50pt for visible "easy
 % escape" cue. Deep stays at 0.35pt — weight asymmetry encodes activation
 % energy difference (thicker = easier).
-\draw[-{Stealth[length=3pt,width=2.4pt]}, dashed, cBlue!70!black,
-      line width=0.50pt] (11.10, 7.55) -- (11.10, 7.82);
-\draw[-{Stealth[length=2.6pt,width=2pt]}, dashed, cRed!70!black,
+% Panel C iter 17 [Panel C 15-loop round 2, 2026-05-26]: shallow escape mini-curve.
+% iter8 straight stub still read as carret "^" at zoom; deep curve dominated
+% visual comparison. Mini-S bezier (11.10,7.55) -> (11.20,7.82) gives the
+% shallow path "arrow" identity (parallels deep S-curve in form, opposite in
+% length+curvature magnitude). Activation-energy weight asymmetry preserved
+% (0.55pt shallow vs 0.35pt deep). Lands on mobility edge at x=11.20 (clears
+% trap dot at 11.15/7.55 by 0.05cm above).
+\draw[-{Stealth[length=3.2pt,width=2.6pt]}, dashed, cBlue!80!black,
+      line width=0.55pt] (11.10, 7.55) .. controls (11.10, 7.65) and (11.20, 7.72) .. (11.20, 7.82);
+% Panel C iter 14 [Panel C 15-loop, 2026-05-26]: deep escape arrowhead lift.
+% Curve length 1.6cm with arrowhead 2.6/2pt was visually weak at terminus.
+% Head 2.6 -> 3.2pt, width 2 -> 2.4pt. Line weight 0.35pt UNCHANGED — preserves
+% activation-energy weight-asymmetry encoding (thin = hard escape) per design.
+\draw[-{Stealth[length=3.2pt,width=2.4pt]}, dashed, cRed!70!black,
       line width=0.35pt] (11.10, 6.20) .. controls (11.10, 6.60) and (11.85, 6.80) .. (11.85, 7.82);
 
 % Trap depth annotation: E_C → deep band mid (encodes depth scale, no
@@ -680,8 +782,12 @@
 % even though visual_clash did not flag it. Delta E_t label moves to the
 % right of the arrow (anchor=west at x=13.42, tail at ~13.82). Row 2 outer
 % box right edge widens 13.30 -> 13.85 to contain both.
-\draw[{Stealth[length=2.6pt,width=2pt]}-{Stealth[length=2.6pt,width=2pt]},
-      cRed!80!black, line width=0.45pt] (13.40, 8.27) -- (13.40, 5.83);
+% Panel C iter 11 [Panel C 15-loop, 2026-05-26]: DeltaE_t caliper firm-up.
+% Arrowhead 2.6/2pt -> 3.2/2.4pt + line 0.45 -> 0.50pt. The 2.44cm span at
+% 0.45pt read as a thin reference cue rather than a measured scalar caliper.
+% Heads still inside cap (max 3.5pt scaler) per intra-panel arrow tier.
+\draw[{Stealth[length=3.2pt,width=2.4pt]}-{Stealth[length=3.2pt,width=2.4pt]},
+      cRed!80!black, line width=0.50pt] (13.40, 8.27) -- (13.40, 5.83);
 % Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!80!black,
       anchor=west, inner sep=0.5pt]
@@ -708,9 +814,14 @@
 
 % R13: Half-identity labels and panel role subtitle.
 % iter E17 (C201): 5.5pt → 6pt for thumbnail-floor survival.
+% Panel C iter 4 [Panel C 15-loop, 2026-05-26]: sub-title baseline alignment.
+% 'real space' at y=8.55 vs 'energy diagram' at y=8.78 — 2.3mm asymmetry
+% weakened the companion-pair reading. Both now aligned at y=8.78 (just below
+% master title at y=8.92, above vacuum dashed at y=8.55). Letter-spacing
+% companion typography reads as a clean L/R pair.
 \node[labelMute, anchor=south,
       font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
-      text=cGray!65!black] at (8.35, 8.55) {real space};
+      text=cGray!65!black] at (8.35, 8.78) {real space};
 \node[labelMute, anchor=south,
       font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
       text=cGray!65!black] at (12.20, 8.78) {energy diagram};
@@ -824,7 +935,7 @@
 % middle-dot separator lower-half — both centered in box x-axis. Reads as
 % unified instrument identity ("SMU" = name, "V/A" = dual function) instead
 % of scattered glyphs.
-% iter 61 illustration polish: rounded corners=1pt — soft cartoon-panel feel
+% iter 61 illustration polish: rounded corners=2pt — soft cartoon-panel feel
 % vs sharp 90° engineering-box edges.
 % Cycle 1 / C401 (2026-05-22): compile emitted WARN collision IoU=0.064 between
 % SMU [28.5,189.5] and V/A [29.5,194.9]. At 6pt labels (~0.25cm tall each) the
@@ -835,9 +946,9 @@
 % D apparatus v8.6 [briefing relax R2, 2026-05-26]: calibrated.
 % shadow 0.40→0.25, gradient delta preserved, specular 1.2mm→0.6mm + 0.65→0.42.
 \fill[black, opacity=0.25] (0.53, 3.04) rectangle (1.33, 3.74);
-\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=1pt]
+\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=2pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
-\draw[cGray!75!black, line width=0.30pt, rounded corners=1pt]
+\draw[cGray!75!black, line width=0.30pt, rounded corners=2pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
 \fill[white, opacity=0.42] (0.61, 3.71) circle (0.6mm);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
@@ -874,10 +985,10 @@
 }
 
 % 2 leads from SMU box to MIM stack — iter 64 illustration polish:
-% rounded corners=1pt for soft elbow turns vs sharp 90° engineering elbows.
-\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
+% rounded corners=2pt for soft elbow turns vs sharp 90° engineering elbows.
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
   (1.30, 3.60) -- (1.50, 3.60) -- (1.50, 3.75) -- (1.70, 3.75);
-\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
   (1.30, 3.27) -- (1.50, 3.27) -- (1.50, 3.20) -- (1.70, 3.20);
 % iter 53: contact dots at lead-electrode junctions (Gemini MEDIUM
 % "unfinished circuit schematic"). Radius 0.018cm = 0.5pt, cGray!75!black.
@@ -887,8 +998,8 @@
 
 % Ground symbol at bottom electrode RIGHT side
 % iter 53b: horizontal segment lengthened 0.15→0.20cm + ground bars shifted.
-% iter 64: rounded corners=1pt on lead bend (matches SMU lead style).
-\draw[cGray!75!black, line width=0.28pt, rounded corners=1pt]
+% iter 64: rounded corners=2pt on lead bend (matches SMU lead style).
+\draw[cGray!75!black, line width=0.28pt, rounded corners=2pt]
   (3.50, 3.20) -- (3.70, 3.20) -- (3.70, 3.06);
 \draw[cGray!75!black, line width=0.30pt] (3.62, 3.06) -- (3.78, 3.06);
 \draw[cGray!75!black, line width=0.25pt] (3.65, 3.03) -- (3.75, 3.03);
@@ -1076,9 +1187,9 @@
 % Iter 7: ground bars shifted down (y was 3.20..3.26, now 3.12..3.18) to
 % clear thicker substrate bottom (y=3.23).
 % Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print.
-% iter E8: rounded corners=1pt on lead bend (matches Panel D iter 64 SMU
+% iter E8: rounded corners=2pt on lead bend (matches Panel D iter 64 SMU
 % lead convention; cross-panel illustration-register consistency).
-\draw[cGray!75!black, line width=0.35pt, rounded corners=1pt]
+\draw[cGray!75!black, line width=0.35pt, rounded corners=2pt]
   (7.45, 3.3) -- (7.55, 3.3) -- (7.55, 3.1);
 \draw[cGray!75!black, line width=0.42pt] (7.48, 3.1) -- (7.62, 3.1);
 \draw[cGray!75!black, line width=0.36pt] (7.5, 3.07) -- (7.6, 3.07);
