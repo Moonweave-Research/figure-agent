@@ -783,3 +783,15 @@ After round 2, 500 DPI super-zoom audit identified:
 
 **Round 1+2+3 cumulative**: 25 iters across 13 sub-regions on `feature/panel-c-15iter-aesthetic-loop`. Style Lock + collision + text-boundary gates ✅. chemistry/theory/briefing locks untouched. No commit yet.
 
+
+### Panel C round 4 (iter 26-27) — user-spotted overlap fix
+
+User spotted at 500 DPI zoom: "mobility edge" label sitting on dashed reference line baseline, "shallow" label with deep escape S-curve passing under glyph baseline.
+
+| Iter | Defect | Patch | Result |
+|---|---|---|---|
+| 26 | mobility edge label baseline y=7.85 = dashed line y=7.85 → glyphs nearly touched line | label y 7.85 → 7.92 (anchor=west kept; 0.07cm raise) | Clean visual gap between glyph caps and dashed line |
+| 27 | deep escape S-curve passed through (x=11.6..11.7, y=7.35..7.45) — under "shallow" label baseline 7.45 | shallow label x 11.60 → 11.78 (0.18cm rightshift) | Curve now passes left of label start; clean separation |
+
+**Round 4 net**: zoom-spotted user defects closed. 27 iters cumulative on `feature/panel-c-15iter-aesthetic-loop`.
+

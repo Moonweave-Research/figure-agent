@@ -637,8 +637,12 @@
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (12.15, 8.30) {$E_C$};
 \draw[cGray!55!black, dashed, line width=0.35pt] (10.55, 7.85) -- (12.10, 7.85);
+% Panel C iter 26 [round 4, 2026-05-26]: label baseline raised y 7.85 -> 7.92.
+% Both at y=7.85 caused label glyph caps to nearly touch the dashed line
+% (visually "stacked" appearance at zoom). 0.07cm raise puts label baseline
+% above dashed line; glyph y range becomes 7.92..~8.10 — clear visual gap.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=west] at (12.15, 7.85) {mobility edge};
+      anchor=west] at (12.15, 7.92) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (12.15, 5.30) {$E_V$};
@@ -744,8 +748,12 @@
   \draw[cRed!95!black, line width=0.25pt] (\dx, \dy) circle (0.08);
 }
 % Region labels — anchor to trap line clusters on right
+% Panel C iter 27 [round 4, 2026-05-26]: shallow label x 11.60 -> 11.78 to clear
+% deep escape S-curve (passes through x=11.6..11.7 at y=7.35-7.45 — under shallow
+% label glyph baseline). 0.18cm rightshift puts label START past curve apex.
+% deep label x kept at 11.60 (no curve passes through deep label area).
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cBlue!75!black, anchor=west] at (11.60, 7.45) {shallow};
+      text=cBlue!75!black, anchor=west] at (11.78, 7.45) {shallow};
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
       text=cRed!75!black, anchor=west] at (11.60, 6.02) {deep};
 
