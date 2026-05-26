@@ -147,6 +147,25 @@ text_boundary_checks:
     bbox_pdf_cm: [15.271, 6.778, 16.098, 7.070]
     mode: avoid_inside
     clearance_pt: 0.5
+label_path_proximity_checks:
+  - id: panel_c_mobility_edge_reference
+    kind: horizontal_line
+    role: reference_line
+    y_pdf_cm: 2.11
+    x_range_pdf_cm: [15.10, 17.70]
+    clearance_pt: 4.0
+    text_phrases:
+      - id: mobility_edge
+        words: [mobility, edge]
+  - id: panel_c_deep_escape_curve
+    kind: polyline
+    role: semantic_curve
+    points_pdf_cm:
+      - [14.90, 2.72]
+      - [15.30, 2.78]
+      - [16.00, 2.86]
+    clearance_pt: 5.0
+    text_allowlist: [shallow]
 notes: |
   pair_001 vault arm. v8.6 6-panel structure (A..F): Row 1 = A/B/C, Row 2 =
   D/E/F (3 columns, each split apparatus zone top + result zone bottom).

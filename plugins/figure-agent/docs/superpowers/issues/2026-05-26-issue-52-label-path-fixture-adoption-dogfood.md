@@ -1,6 +1,6 @@
 # Issue 52 — Label-Path Fixture Adoption Dogfood
 
-Status: open
+Status: implemented; pending commit
 
 ## Problem
 
@@ -22,6 +22,18 @@ both cases as `LP###` candidates without modifying figure source:
 
 This issue is the fixture-contract adoption slice, not another plugin-engine
 feature.
+
+## Current-Main Caveat
+
+At branch start, `main` still carries the source positions visible in
+`fig1_overview_v2_pair_001_vault.tex`:
+
+- `mobility edge` at source y `7.85`
+- `shallow` at source x `11.60`
+
+Those positions may still produce real LP candidates once checks are adopted.
+That is not a plugin failure. If candidates appear, record the dogfood as
+"adoption surfaced a live near-miss" and keep source polishing out of scope.
 
 ## Scope
 
@@ -82,9 +94,30 @@ PDF-cm convention as other figure-agent geometry contracts.
   be recorded as a clean adoption state, not a failure.
 - A deliberately regressed scratch copy or historical-shape replay produces the
   expected `LP###` candidates for the known near-miss class.
+- If current `main` already carries the historical near-miss shape, live
+  candidate emission from the current render satisfies the historical-shape
+  replay evidence; do not create a scratch copy just to reproduce the same
+  geometry.
 - If candidates are present, `critique_lint.py` rejects a critique missing the
   corresponding `micro_defects[].label_path_ref`.
 - Generated build artifacts and scratch regression copies are not committed.
+
+## Execution Plan
+
+1. Add a focused test that the real `fig1_overview_v2_pair_001_vault/spec.yaml`
+   declares exactly the two intended label-path checks.
+2. Add the two checks to `spec.yaml` using measured PDF-cm coordinates from the
+   current compiled PDF.
+3. Run `/fig_compile` on the fixture and inspect
+   `build/label_path_proximity.json`.
+4. If the current fixture emits LP candidates, treat them as dogfood evidence
+   and do not patch `.tex` in this issue.
+5. Record the result in a milestone doc, including whether the current render is
+   clean or whether live candidates were surfaced.
+6. Run targeted tests, lint/diff checks, and then perform 10 critical review
+   passes across contract, fixture scope, false-positive risk, freshness,
+   critique-accounting, generated-artifact hygiene, CI fit, documentation,
+   source-containment, and readiness.
 
 ## Review Questions
 

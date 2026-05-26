@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import check_label_path_proximity as proximity  # noqa: E402
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _word(text: str, xmin: float, ymin: float, xmax: float, ymax: float) -> dict[str, float | str]:
     return {"text": text, "xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax}
@@ -194,3 +196,32 @@ def test_main_strict_returns_one_when_candidates_exist(
     monkeypatch.setattr(sys, "argv", ["check_label_path_proximity.py", str(pdf), "--strict"])
 
     assert proximity.main() == 1
+
+
+def test_fig1_vault_declares_minimal_label_path_proximity_checks() -> None:
+    spec_path = (
+        REPO_ROOT
+        / "examples"
+        / "fig1_overview_v2_pair_001_vault"
+        / "spec.yaml"
+    )
+
+    checks = proximity.load_label_path_proximity_checks(spec_path)
+    by_id = {str(check["id"]): check for check in checks}
+
+    assert set(by_id) == {
+        "panel_c_mobility_edge_reference",
+        "panel_c_deep_escape_curve",
+    }
+    mobility = by_id["panel_c_mobility_edge_reference"]
+    assert mobility["kind"] == "horizontal_line"
+    assert mobility["role"] == "reference_line"
+    assert mobility["clearance_pt"] == 4.0
+    assert mobility["text_phrases"] == [
+        {"id": "mobility_edge", "words": ["mobility", "edge"]}
+    ]
+    shallow = by_id["panel_c_deep_escape_curve"]
+    assert shallow["kind"] == "polyline"
+    assert shallow["role"] == "semantic_curve"
+    assert shallow["clearance_pt"] == 5.0
+    assert shallow["text_allowlist"] == ["shallow"]
