@@ -8,6 +8,7 @@ from typing import Any
 
 from critique_lint import (
     CROP_AUDIT_ACCOUNTING_SCHEMAS,
+    LABEL_PATH_ACCOUNTING_SCHEMAS,
     STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS,
     TEXT_BOUNDARY_ACCOUNTING_SCHEMAS,
     VISUAL_CLASH_ACCOUNTING_SCHEMAS,
@@ -45,6 +46,13 @@ def _base_summary(example_dir: Path, critique_schema: str | None) -> dict[str, A
             "unknown_refs": [],
         },
         "text_boundary": {
+            "present": False,
+            "candidate_count": 0,
+            "accounted_count": 0,
+            "missing_refs": [],
+            "unknown_refs": [],
+        },
+        "label_path": {
             "present": False,
             "candidate_count": 0,
             "accounted_count": 0,
@@ -129,6 +137,26 @@ def _text_boundary_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str
     return ids, None
 
 
+def _label_path_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str | None]:
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return [], "malformed"
+    ids: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            return [], "malformed"
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            return [], "malformed"
+        candidate_id = candidate_id.strip()
+        if candidate_id in seen:
+            return [], "malformed"
+        seen.add(candidate_id)
+        ids.append(candidate_id)
+    return ids, None
+
+
 def _micro_defects(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
     raw_items = frontmatter.get("micro_defects")
     if not isinstance(raw_items, list):
@@ -149,6 +177,15 @@ def _text_boundary_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: list[str] = []
     for item in _micro_defects(frontmatter):
         ref = item.get("text_boundary_ref")
+        if isinstance(ref, str) and ref.strip():
+            refs.append(ref.strip())
+    return refs
+
+
+def _label_path_refs(frontmatter: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in _micro_defects(frontmatter):
+        ref = item.get("label_path_ref")
         if isinstance(ref, str) and ref.strip():
             refs.append(ref.strip())
     return refs
@@ -369,6 +406,49 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             "unknown_refs": text_unknown_refs,
         }
 
+    label_path_missing_refs: list[str] = []
+    label_path_unknown_refs: list[str] = []
+    if critique_schema in LABEL_PATH_ACCOUNTING_SCHEMAS:
+        label_report, label_error = _load_json(
+            example_dir / "build" / "label_path_proximity.json"
+        )
+        if label_error == "malformed":
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/label_path_proximity.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason="malformed build/label_path_proximity.json",
+            )
+        if label_report is not None:
+            label_candidate_ids, label_candidate_error = _label_path_candidate_ids(label_report)
+            if label_candidate_error is not None:
+                return _finish(
+                    summary,
+                    state="missing_input",
+                    blocking_items=["build/label_path_proximity.json"],
+                    next_action=f"/fig_compile {example_dir.name}",
+                    reason="malformed build/label_path_proximity.json candidates",
+                )
+            label_refs = _label_path_refs(frontmatter)
+            label_candidate_id_set = set(label_candidate_ids)
+            label_ref_set = set(label_refs)
+            label_path_missing_refs = [
+                candidate_id
+                for candidate_id in label_candidate_ids
+                if candidate_id not in label_refs
+            ]
+            label_path_unknown_refs = sorted(
+                ref for ref in label_ref_set if ref not in label_candidate_id_set
+            )
+            summary["label_path"] = {
+                "present": True,
+                "candidate_count": len(label_candidate_ids),
+                "accounted_count": len(label_ref_set & label_candidate_id_set),
+                "missing_refs": label_path_missing_refs,
+                "unknown_refs": label_path_unknown_refs,
+            }
+
     if critique_schema in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
         manifest, manifest_error = _load_json(manifest_path)
@@ -454,6 +534,15 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             blocking_items=blocking_items,
             next_action=f"/fig_critique {example_dir.name}",
             reason="text-boundary candidates are not fully accounted in micro_defects",
+        )
+    if label_path_missing_refs or label_path_unknown_refs:
+        blocking_items = label_path_missing_refs + label_path_unknown_refs
+        return _finish(
+            summary,
+            state="needs_action",
+            blocking_items=blocking_items,
+            next_action=f"/fig_critique {example_dir.name}",
+            reason="label-path proximity candidates are not fully accounted in micro_defects",
         )
     if accept_gaps:
         return _finish(

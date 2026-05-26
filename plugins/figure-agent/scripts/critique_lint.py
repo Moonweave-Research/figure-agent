@@ -64,6 +64,9 @@ _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_
 TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
     {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
 )
+LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
+    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+)
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
     ("VC026", "V"): "label_glyph_overlaps_internal_drawing",
@@ -856,6 +859,135 @@ def _text_boundary_accounting_violations(
     ]
 
 
+def _label_path_candidate_ids(
+    report_path: Path,
+) -> tuple[list[str], list[CritiqueLintViolation]]:
+    if not report_path.is_file():
+        return [], []
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="label_path_accounting",
+                message=f"malformed build/label_path_proximity.json: {exc}",
+            )
+        ]
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="label_path_accounting",
+                message="build/label_path_proximity.json candidates must be a list",
+            )
+        ]
+    ids: list[str] = []
+    violations: list[CritiqueLintViolation] = []
+    seen: set[str] = set()
+    for index, raw_candidate in enumerate(candidates):
+        if not isinstance(raw_candidate, dict):
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="label_path_accounting",
+                    message=(
+                        f"build/label_path_proximity.json candidates[{index}] "
+                        "must be a mapping"
+                    ),
+                )
+            )
+            continue
+        candidate_id = raw_candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="label_path_accounting",
+                    message=(
+                        f"build/label_path_proximity.json candidates[{index}].id "
+                        "is required"
+                    ),
+                )
+            )
+            continue
+        candidate_id = candidate_id.strip()
+        if candidate_id in seen:
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="label_path_accounting",
+                    message=f"duplicate label path candidate id: {candidate_id}",
+                )
+            )
+            continue
+        seen.add(candidate_id)
+        ids.append(candidate_id)
+    return ids, violations
+
+
+def _micro_defect_label_path_refs(frontmatter: dict[str, Any]) -> list[str]:
+    raw_items = frontmatter.get("micro_defects")
+    if not isinstance(raw_items, list):
+        return []
+    refs: list[str] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        value = raw_item.get("label_path_ref")
+        if isinstance(value, str) and value.strip():
+            refs.append(value.strip())
+    return refs
+
+
+def _label_path_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") not in LABEL_PATH_ACCOUNTING_SCHEMAS:
+        return []
+    candidate_ids, violations = _label_path_candidate_ids(
+        example_dir / "build" / "label_path_proximity.json"
+    )
+    if violations or not candidate_ids:
+        return violations
+    refs = _micro_defect_label_path_refs(frontmatter)
+    accounted = set(refs)
+    duplicate_refs = sorted({ref for ref in refs if refs.count(ref) > 1})
+    if duplicate_refs:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="label_path_accounting",
+                message=f"duplicate label_path_ref entries: {', '.join(duplicate_refs)}",
+            )
+        ]
+    candidate_id_set = set(candidate_ids)
+    unknown_refs = sorted(ref for ref in accounted if ref not in candidate_id_set)
+    if unknown_refs:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="label_path_accounting",
+                message=f"unknown label_path_ref entries: {', '.join(unknown_refs)}",
+            )
+        ]
+    missing = [candidate_id for candidate_id in candidate_ids if candidate_id not in accounted]
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="label_path_accounting",
+            message=(
+                "label_path_proximity.json candidates must be referenced by "
+                f"micro_defects[].label_path_ref; missing: {', '.join(missing)}"
+            ),
+        )
+    ]
+
+
 def _micro_defects_by_visual_clash_ref(frontmatter: dict[str, Any]) -> dict[str, dict[str, Any]]:
     raw_items = frontmatter.get("micro_defects")
     if not isinstance(raw_items, list):
@@ -1192,6 +1324,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     if violations:
         return violations
     violations.extend(_text_boundary_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(_label_path_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
     violations.extend(_historical_visual_clash_regression_violations(example_dir, frontmatter))

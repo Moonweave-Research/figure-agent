@@ -530,6 +530,69 @@ def test_critique_brief_includes_text_boundary_clash_candidates(tmp_path):
     assert brief.index("id=`TB001`") < brief.index("id=`TB002`")
 
 
+def test_critique_brief_includes_label_path_proximity_candidates(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir, size=(2000, 1600))
+    (example_dir / "build" / "label_path_proximity.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": "review_demo",
+                "render_pdf": "build/review_demo.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": "LP002",
+                        "kind": "label_curve_near_label",
+                        "text": "shallow",
+                        "path_id": "deep_escape_curve",
+                        "path_role": "semantic_curve",
+                        "bbox_pt": [430.0, 71.0, 460.0, 79.0],
+                        "path_pt": {
+                            "kind": "polyline",
+                            "points": [[448.0, 70.0], [456.0, 75.0]],
+                        },
+                        "clearance_pt": 5.0,
+                        "distance_pt": 2.25,
+                    },
+                    {
+                        "id": "LP001",
+                        "kind": "label_stacked_on_reference_line",
+                        "text": "mobility edge",
+                        "path_id": "mobility_edge_reference",
+                        "path_role": "reference_line",
+                        "bbox_pt": [443.0, 53.5, 492.0, 61.0],
+                        "path_pt": {
+                            "kind": "horizontal_line",
+                            "y": 56.69,
+                            "x_range": [430.0, 500.0],
+                        },
+                        "clearance_pt": 3.0,
+                        "distance_pt": 0.0,
+                    },
+                ],
+                "total": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Label-Path Proximity Candidates (from check_label_path_proximity.py)" in brief
+    assert "Host LLM MUST review each label-path proximity candidate" in brief
+    assert "`label_path_ref`" in brief
+    assert "`LP001`" in brief
+    assert "`LP002`" in brief
+    assert "label_stacked_on_reference_line" in brief
+    assert "label_curve_near_label" in brief
+    assert "path_id=`mobility_edge_reference`" in brief
+    assert "distance_pt=0" in brief
+    assert "crop=`build/audit_crops/label_path/LP001_mobility_edge.png`" in brief
+    assert "label_path_ref=`LP001`" in brief
+    assert brief.index("id=`LP001`") < brief.index("id=`LP002`")
+
+
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"
@@ -612,7 +675,7 @@ def test_critique_brief_output_format_uses_v1_10_crop_editorial_and_micro_defect
     assert "linked_finding_id: \"<P001/C001 or empty when accept_simplification>\"" in brief
     assert 'visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"' in brief
     assert (
-        'observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"'
+        'observation: "<visible micro-defect from a crop, print-scale image, or audit candidate>"'
     ) in brief
     assert "visual-clash-linked `accept_simplification`" in brief
     assert "status: open | resolved | accept_simplification" in brief

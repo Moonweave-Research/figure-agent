@@ -42,11 +42,13 @@ compile smoke
     assert result.returncode == 0, result.stderr + result.stdout
     assert (tmp_path / "build" / "smoke.pdf").exists()
     assert (tmp_path / "build" / "smoke.png").exists()
+    assert (tmp_path / "build" / "label_path_proximity.json").exists()
     assert not (tmp_path / "smoke.pdf").exists()
     assert not (tmp_path / "smoke.png").exists()
     combined = result.stdout + result.stderr
     assert "OK: no collisions found" in combined
     assert "visual clash" in combined
+    assert "label-path proximity" in combined
 
 
 @pytest.mark.skipif(

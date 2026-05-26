@@ -249,6 +249,69 @@ def test_build_zoom_crop_pack_adds_visual_clash_crops_and_manifest(
         assert crop["sha256"] == file_sha256(example_dir / crop["path"])
 
 
+def test_build_zoom_crop_pack_writes_label_path_crops_and_manifest(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    render = example_dir / "build" / "demo.png"
+    _write_png(render, size=(1000, 500))
+    (example_dir / "build" / "label_path_proximity.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": "demo",
+                "render_pdf": "build/demo.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": "LP001",
+                        "kind": "label_stacked_on_reference_line",
+                        "text": "mobility edge",
+                        "path_id": "mobility_edge_reference",
+                        "path_role": "reference_line",
+                        "bbox_pt": [100.0, 40.0, 150.0, 50.0],
+                        "path_pt": {
+                            "kind": "horizontal_line",
+                            "y": 45.0,
+                            "x_range": [90.0, 180.0],
+                        },
+                        "clearance_pt": 3.0,
+                        "distance_pt": 0.0,
+                    },
+                ],
+                "total": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    crops = build_zoom_crop_pack(
+        example_dir,
+        render,
+        panel_crop_paths=(),
+        pdf_page_size_cm=(10.0, 5.0),
+    )
+
+    label_path_crops = [item for item in crops if item["kind"] == "label_path_crop"]
+    assert [item["id"] for item in label_path_crops] == ["LP001_mobility_edge"]
+    assert label_path_crops[0]["path"].startswith("build/audit_crops/label_path/")
+    assert (example_dir / label_path_crops[0]["path"]).is_file()
+    assert label_path_crops[0]["label_path_ref"] == "LP001"
+    assert label_path_crops[0]["source"] == "label_path:LP001"
+    assert label_path_crops[0]["upscaled"] is True
+    assert label_path_crops[0]["size_px"][0] == 600
+
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_label_path = [
+        item for item in manifest["crops"] if item["kind"] == "label_path_crop"
+    ]
+    assert [item["label_path_ref"] for item in manifest_label_path] == ["LP001"]
+    assert manifest_label_path[0]["sha256"] == file_sha256(
+        example_dir / manifest_label_path[0]["path"]
+    )
+
+
 def test_build_zoom_crop_pack_ignores_malformed_visual_clash_json(
     tmp_path: Path,
 ) -> None:

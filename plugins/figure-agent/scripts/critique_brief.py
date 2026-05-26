@@ -59,13 +59,18 @@ _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
     "drawing_order_suspect",
     "label_backdrop_overflows_outline",
     "label_glyph_overlaps_internal_drawing",
+    "label_stacked_on_reference_line",
+    "label_curve_near_label",
+    "label_path_near_miss",
 )
 _MICRO_DEFECT_KIND_SCHEMA = (
     "line_crosses_label | wire_crosses_label | arrow_tip_fused | "
     "label_target_detached | floating_semantic_cue | drawing_order_suspect | "
     "print_scale_unreadable | label_backdrop_overflows_outline | "
     "label_glyph_overlaps_internal_drawing | label_crosses_panel_boundary | "
-    "label_crosses_column_rule | label_overflows_row_box"
+    "label_crosses_column_rule | label_overflows_row_box | "
+    "label_stacked_on_reference_line | label_curve_near_label | "
+    "label_path_near_miss"
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
@@ -337,7 +342,7 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
     crops = [
         crop
         for crop in crops
-        if crop.get("kind") in {"zoom_crop", "visual_clash_crop"}
+        if crop.get("kind") in {"zoom_crop", "visual_clash_crop", "label_path_crop"}
     ]
     if not crops:
         return ""
@@ -361,6 +366,8 @@ def _zoom_audit_section(example_dir: Path, crops: list[dict]) -> str:
         )
         if crop.get("kind") == "visual_clash_crop":
             crop_line += f" visual_clash_ref=`{crop.get('visual_clash_ref', '')}`"
+        if crop.get("kind") == "label_path_crop":
+            crop_line += f" label_path_ref=`{crop.get('label_path_ref', '')}`"
         lines.append(crop_line)
     return "\n" + "\n".join(lines) + "\n"
 
@@ -731,6 +738,70 @@ def _text_boundary_clash_candidates_section(example_dir: Path) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _label_path_candidate_sort_key(candidate: dict) -> tuple[str, str, str, str]:
+    return (
+        str(candidate.get("id") or ""),
+        str(candidate.get("path_id") or ""),
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+    )
+
+
+def _label_path_proximity_candidates_section(example_dir: Path) -> str:
+    report_path = example_dir / "build" / "label_path_proximity.json"
+    if not report_path.is_file():
+        return ""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return (
+            "\n## Label-Path Proximity Candidates (from check_label_path_proximity.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` is malformed JSON: {exc}\n"
+        )
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return (
+            "\n## Label-Path Proximity Candidates (from check_label_path_proximity.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
+        )
+    if not candidates:
+        return ""
+    total = report.get("total", len(candidates))
+    crop_by_ref = _label_path_crop_paths_by_ref(example_dir)
+    lines = [
+        "## Label-Path Proximity Candidates (from check_label_path_proximity.py)",
+        "Host LLM MUST review each label-path proximity candidate. For each, either "
+        "link to a new/existing `micro_defects` entry via `label_path_ref` or "
+        "explicitly justify `status: accept_simplification`.",
+        "Use `label_stacked_on_reference_line` when a label visually stacks on a "
+        "declared reference/baseline without an actual bbox overlap.",
+        "Use `label_curve_near_label` when a semantic curve passes too close to a label.",
+        "Use `label_path_near_miss` for other declared label/path clearance failures.",
+        f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
+        f"- Total candidates from JSON: {total}",
+        "",
+    ]
+    for candidate in sorted(
+        (item for item in candidates if isinstance(item, dict)),
+        key=_label_path_candidate_sort_key,
+    ):
+        candidate_id = str(candidate.get("id", ""))
+        crop_path = crop_by_ref.get(candidate_id)
+        crop_display = f" crop=`{crop_path}`" if crop_path else ""
+        lines.append(
+            f"- id=`{candidate_id}` "
+            f"kind=`{candidate.get('kind', '')}` text=`{candidate.get('text', '')}` "
+            f"path_id=`{candidate.get('path_id', '')}` "
+            f"path_role=`{candidate.get('path_role', '')}` "
+            f"bbox_pt={candidate.get('bbox_pt')} "
+            f"path_pt={candidate.get('path_pt')} "
+            f"clearance_pt={candidate.get('clearance_pt')} "
+            f"distance_pt={candidate.get('distance_pt')}"
+            f"{crop_display}"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if not manifest_path.is_file():
@@ -750,6 +821,28 @@ def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
         path = crop.get("path")
         if isinstance(visual_clash_ref, str) and isinstance(path, str):
             result[visual_clash_ref] = path
+    return result
+
+
+def _label_path_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if not manifest_path.is_file():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    crops = manifest.get("crops")
+    if not isinstance(crops, list):
+        return {}
+    result: dict[str, str] = {}
+    for crop in crops:
+        if not isinstance(crop, dict) or crop.get("kind") != "label_path_crop":
+            continue
+        label_path_ref = crop.get("label_path_ref")
+        path = crop.get("path")
+        if isinstance(label_path_ref, str) and isinstance(path, str):
+            result[label_path_ref] = path
     return result
 
 
@@ -805,12 +898,18 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
+    label_path_report_path = example_dir / "build" / "label_path_proximity.json"
+    pdf_page_size_cm = (
+        _pdf_page_size_cm(pdf_path)
+        if panel_crop_paths or (label_path_report_path.is_file() and pdf_path.is_file())
+        else None
+    )
     zoom_crops = build_zoom_crop_pack(
         example_dir,
         png_path,
         panel_crop_paths=panel_crop_paths,
         spec=spec,
-        pdf_page_size_cm=_pdf_page_size_cm(pdf_path) if panel_crop_paths else None,
+        pdf_page_size_cm=pdf_page_size_cm,
     )
     generator_version = critique_generator_version(Path(__file__))
     critique_input_hash = compute_critique_input_hash(
@@ -823,6 +922,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     print_scale_audit_section = _print_scale_audit_section(example_dir, zoom_crops)
     visual_clash_section = _visual_clash_candidates_section(example_dir)
     text_boundary_clash_section = _text_boundary_clash_candidates_section(example_dir)
+    label_path_proximity_section = _label_path_proximity_candidates_section(example_dir)
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
@@ -852,6 +952,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {print_scale_audit_section}
 {visual_clash_section}
 {text_boundary_clash_section}
+{label_path_proximity_section}
 {reference_calibration_section}
 {aesthetic_intent_section}
 {svg_polish_delta_section}
@@ -998,10 +1099,11 @@ micro_defects:
     crop: examples/{name}/build/audit_crops/<crop>.png
     kind: {_MICRO_DEFECT_KIND_SCHEMA}
     severity: BLOCKER | MAJOR | MINOR | NIT
-    observation: "<visible micro-defect from a High-Zoom crop or Print-Scale image>"
+    observation: "<visible micro-defect from a crop, print-scale image, or audit candidate>"
     linked_finding_id: "<P001/C001 or empty when accept_simplification>"
     visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
     text_boundary_ref: "<TB001 or empty when not from text_boundary_clash.json>"
+    label_path_ref: "<LP001 or empty when not from label_path_proximity.json>"
     status: open | resolved | accept_simplification
     accept_simplification_reason: "<required enum when status=accept_simplification>"
     accept_simplification_rationale: "<required when status=accept_simplification>"
