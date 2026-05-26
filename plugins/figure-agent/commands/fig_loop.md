@@ -123,6 +123,19 @@ handoff used by `/fig_drive --mode polish` to distinguish `continue_tikz`,
 `ready_for_svg_polish`, `needs_human_art_direction`, and
 `semantic_backport_required`.
 
+When that editorial summary exists, `/fig_loop` also writes
+`svg_polish_readiness`. This additive summary makes the polish boundary
+explicit:
+
+- `can_start_svg_polish: true` only for `ready_for_svg_polish`
+- `next_action: run_fig_loop` for `continue_tikz`
+- `next_action: semantic_backport` for `semantic_backport_required`
+- `next_action: human_art_direction_review` for `needs_human_art_direction`
+
+The field is read-only evidence. It does not override ordinary loop blockers,
+human gates, top-tier blockers, crop uncertainty, aesthetic lever gates, export
+freshness, accepted/golden gates, or publication provenance.
+
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
 change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop

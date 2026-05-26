@@ -40,6 +40,9 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
     editorial_summary = iteration.get("editorial_art_direction_summary")
     if isinstance(editorial_summary, dict):
         checkpoint["editorial_art_direction_summary"] = editorial_summary
+    svg_polish_readiness = iteration.get("svg_polish_readiness")
+    if isinstance(svg_polish_readiness, dict):
+        checkpoint["svg_polish_readiness"] = svg_polish_readiness
     crop_audit_summary = iteration.get("crop_audit_summary")
     if isinstance(crop_audit_summary, dict):
         checkpoint["crop_audit_summary"] = crop_audit_summary

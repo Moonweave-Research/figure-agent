@@ -182,6 +182,11 @@ def _summary(
         summary["audit_evidence"] = audit_evidence
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
+        svg_polish_readiness = editorial_mod.svg_polish_readiness_from_checkpoint(
+            loop_checkpoint
+        )
+        if svg_polish_readiness is not None:
+            summary["svg_polish_readiness"] = svg_polish_readiness
     if closeout is not None:
         summary["closeout"] = closeout
     return summary

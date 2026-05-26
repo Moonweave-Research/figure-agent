@@ -778,6 +778,89 @@ def test_loop_surfaces_v1_5_editorial_art_direction_summary(
     assert stdout_summary["editorial_art_direction_summary"] == summary
 
 
+def test_loop_surfaces_svg_polish_readiness_from_editorial_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.5",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(
+            trigger_path="continue_tikz",
+            overrides={
+                "tikz_vs_svg_polish_trigger": {
+                    "verdict": "weak",
+                    "evidence": "source-level polish remains",
+                    "rationale": "TikZ geometry still needs source repair",
+                    "concrete_fix": "continue TikZ iteration first",
+                    "blocks_high_impact": False,
+                    "recommended_path": "continue_tikz",
+                }
+            },
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect svg polish readiness",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    readiness = iteration["svg_polish_readiness"]
+    assert readiness["schema"] == "figure-agent.svg-polish-readiness.v1"
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["recommended_path"] == "continue_tikz"
+    assert readiness["next_action"] == "run_fig_loop"
+    assert readiness["blocking_items"][0]["id"] == "tikz_vs_svg_polish_trigger"
+    stdout_summary = json_stdout_summary(run_dir)
+    assert stdout_summary["svg_polish_readiness"] == readiness
+
+
+def test_loop_svg_polish_readiness_honors_top_tier_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.5",
+        top_tier_audit=_top_tier_audit(
+            overrides={
+                "aesthetic_coherence": {
+                    "verdict": "weak",
+                    "finding": "visual identity is not high-impact ready",
+                    "concrete_fix": "human art-direction review",
+                    "blocks_high_impact": True,
+                }
+            }
+        ),
+        editorial_art_direction=_editorial_art_direction(
+            trigger_path="ready_for_svg_polish"
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect svg polish readiness",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    readiness = iteration["svg_polish_readiness"]
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["recommended_path"] == "ready_for_svg_polish"
+    assert readiness["next_action"] == "human_art_direction_review"
+    assert readiness["blocking_items"][0]["source"] == "top_tier_audit_summary"
+    assert readiness["blocking_items"][0]["id"] == "aesthetic_coherence"
+
+
 def test_loop_surfaces_v1_8_crop_audit_uncertain_verdicts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

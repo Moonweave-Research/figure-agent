@@ -12,6 +12,8 @@ from fig_driver_editorial import (  # noqa: E402
     ROUTE_SEMANTIC_BACKPORT,
     editorial_polish_route,
     editorial_review_requires_human_gate,
+    svg_polish_readiness,
+    svg_polish_readiness_from_checkpoint,
 )
 
 
@@ -70,3 +72,145 @@ def test_editorial_polish_route_human_gate_wins_over_ready_path() -> None:
 def test_editorial_polish_route_ignores_missing_or_malformed_summary() -> None:
     assert editorial_polish_route(None) is None
     assert editorial_polish_route({"polish_recommended_path": "unknown"}) is None
+
+
+def test_svg_polish_readiness_explains_continue_tikz() -> None:
+    readiness = svg_polish_readiness(
+        {
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "weak",
+            "polish_trigger_verdict": "weak",
+            "polish_recommended_path": "continue_tikz",
+        }
+    )
+
+    assert readiness == {
+        "schema": "figure-agent.svg-polish-readiness.v1",
+        "source": "editorial_art_direction_summary",
+        "can_start_svg_polish": False,
+        "recommended_path": "continue_tikz",
+        "next_action": "run_fig_loop",
+        "blocking_reason": "editorial polish trigger recommends continue_tikz",
+        "blocking_items": [
+            {
+                "source": "editorial_art_direction_summary",
+                "id": "tikz_vs_svg_polish_trigger",
+                "recommended_path": "continue_tikz",
+                "verdict": "weak",
+            }
+        ],
+    }
+
+
+def test_svg_polish_readiness_allows_ready_path() -> None:
+    readiness = svg_polish_readiness(
+        {
+            "worst_verdict": "pass",
+            "polish_trigger_verdict": "pass",
+            "polish_recommended_path": "ready_for_svg_polish",
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is True
+    assert readiness["recommended_path"] == "ready_for_svg_polish"
+    assert readiness["next_action"] == "start_svg_polish_recipe"
+    assert readiness["blocking_items"] == []
+
+
+def test_svg_polish_readiness_routes_semantic_backport_and_human_gate() -> None:
+    semantic = svg_polish_readiness(
+        {
+            "worst_verdict": "fail",
+            "polish_trigger_verdict": "fail",
+            "polish_recommended_path": "semantic_backport_required",
+        }
+    )
+    human = svg_polish_readiness(
+        {
+            "worst_verdict": "needs_human",
+            "human_art_direction_gate_verdict": "needs_human",
+            "polish_recommended_path": "needs_human_art_direction",
+        }
+    )
+
+    assert semantic is not None
+    assert semantic["can_start_svg_polish"] is False
+    assert semantic["next_action"] == "semantic_backport"
+    assert semantic["blocking_items"][0]["recommended_path"] == "semantic_backport_required"
+    assert human is not None
+    assert human["can_start_svg_polish"] is False
+    assert human["next_action"] == "human_art_direction_review"
+    assert human["blocking_items"][0]["recommended_path"] == "needs_human_art_direction"
+
+
+def test_svg_polish_readiness_ignores_malformed_or_unknown_summary() -> None:
+    assert svg_polish_readiness(None) is None
+    assert svg_polish_readiness({"polish_recommended_path": "unknown"}) is None
+    assert svg_polish_readiness_from_checkpoint({}) is None
+    assert svg_polish_readiness_from_checkpoint(
+        {
+            "editorial_art_direction_summary": {
+                "polish_recommended_path": "ready_for_svg_polish"
+            }
+        }
+    )["can_start_svg_polish"] is True
+
+
+def test_svg_polish_readiness_from_checkpoint_preserves_existing_summary() -> None:
+    existing = {
+        "schema": "figure-agent.svg-polish-readiness.v1",
+        "source": "latest_loop_checkpoint",
+        "can_start_svg_polish": False,
+        "recommended_path": "continue_tikz",
+        "next_action": "run_fig_loop",
+        "blocking_reason": "existing",
+        "blocking_items": [],
+    }
+
+    assert svg_polish_readiness_from_checkpoint({"svg_polish_readiness": existing}) == existing
+
+
+def test_svg_polish_readiness_from_checkpoint_blocks_ready_path_for_top_tier_blocker() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "editorial_art_direction_summary": {
+                "polish_recommended_path": "ready_for_svg_polish",
+                "worst_verdict": "pass",
+            },
+            "top_tier_audit_summary": {
+                "source": "critique.top_tier_audit",
+                "worst_verdict": "weak",
+                "blocking_high_impact_count": 1,
+                "blocking_high_impact_slots": ["aesthetic_coherence"],
+            },
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["recommended_path"] == "ready_for_svg_polish"
+    assert readiness["next_action"] == "human_art_direction_review"
+    assert readiness["blocking_items"][0]["source"] == "top_tier_audit_summary"
+    assert readiness["blocking_items"][0]["id"] == "aesthetic_coherence"
+
+
+def test_svg_polish_readiness_from_checkpoint_blocks_ready_path_for_crop_uncertainty() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "editorial_art_direction_summary": {
+                "polish_recommended_path": "ready_for_svg_polish",
+                "worst_verdict": "pass",
+            },
+            "crop_audit_summary": {
+                "source": "critique.crop_audit_log",
+                "evaluation_state": "needs_action",
+                "uncertain_crop_ids": ["VC046_crop"],
+            },
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["next_action"] == "review_crop_audit"
+    assert readiness["blocking_items"][0]["id"] == "VC046_crop"

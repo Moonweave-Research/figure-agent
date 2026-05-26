@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from fig_driver_editorial import svg_polish_readiness_from_checkpoint  # noqa: E402
 from fig_loop_adjudication import adjudication_state as build_adjudication_state  # noqa: E402
 from fig_loop_assessments import (  # noqa: E402
     aesthetic_lever_summary as build_aesthetic_lever_summary,
@@ -160,6 +161,14 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
+    svg_polish_readiness_summary = svg_polish_readiness_from_checkpoint(
+        {
+            "top_tier_audit_summary": top_tier_audit_summary,
+            "editorial_art_direction_summary": editorial_art_direction_summary,
+            "crop_audit_summary": crop_audit_summary,
+            "aesthetic_lever_summary": aesthetic_lever_summary,
+        }
+    )
     auto_patch_eligibility = build_auto_patch_eligibility(loop_decision, patch_handoff)
     post_patch_evidence = post_patch_evidence_verdict(
         repo_root,
@@ -191,6 +200,7 @@ def run_loop(
         "journal_grade_assessment": journal_grade_assessment,
         "top_tier_audit_summary": top_tier_audit_summary,
         "editorial_art_direction_summary": editorial_art_direction_summary,
+        "svg_polish_readiness": svg_polish_readiness_summary,
         "crop_audit_summary": crop_audit_summary,
         "aesthetic_lever_summary": aesthetic_lever_summary,
         "auto_patch_eligibility": auto_patch_eligibility,

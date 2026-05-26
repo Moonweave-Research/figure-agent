@@ -51,6 +51,9 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "aesthetic_lever_summary": iteration.get("aesthetic_lever_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    svg_polish_readiness = iteration.get("svg_polish_readiness")
+    if svg_polish_readiness is not None:
+        summary["svg_polish_readiness"] = svg_polish_readiness
     audit_evidence = iteration.get("audit_evidence")
     if audit_evidence is not None:
         summary["audit_evidence"] = audit_evidence

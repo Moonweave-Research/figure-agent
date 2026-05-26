@@ -187,6 +187,33 @@ boundary. If the summary says `ready_for_svg_polish` but another editorial slot
 still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
 wins over polish handoff.
 
+When a current loop checkpoint is available, polish mode also emits
+`svg_polish_readiness` as an additive top-level JSON field. This is the compact
+answer to "can SVG polish start yet?":
+
+```json
+{
+  "schema": "figure-agent.svg-polish-readiness.v1",
+  "can_start_svg_polish": false,
+  "recommended_path": "continue_tikz",
+  "next_action": "run_fig_loop",
+  "blocking_reason": "editorial polish trigger recommends continue_tikz",
+  "blocking_items": [
+    {
+      "source": "editorial_art_direction_summary",
+      "id": "tikz_vs_svg_polish_trigger",
+      "recommended_path": "continue_tikz",
+      "verdict": "weak"
+    }
+  ]
+}
+```
+
+The readiness object is explanatory only. It never grants mutation authority.
+`ready_for_svg_polish` is necessary for the recipe route, but human, top-tier,
+crop, aesthetic, semantic-backport, freshness, export, accepted, golden, and
+publication gates still take precedence.
+
 If `/fig_driver --mode polish` reaches SVG polish, follow the first command it
 surfaces. The canonical recipe path is:
 

@@ -83,6 +83,7 @@ def _write_loop_run(
     recommended_next_action: str = "inspect figure state",
     top_tier_audit_summary: dict[str, Any] | None = None,
     editorial_art_direction_summary: dict[str, Any] | None = None,
+    svg_polish_readiness: dict[str, Any] | None = None,
     crop_audit_summary: dict[str, Any] | None = None,
     aesthetic_lever_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
@@ -109,6 +110,8 @@ def _write_loop_run(
         iteration["top_tier_audit_summary"] = top_tier_audit_summary
     if editorial_art_direction_summary is not None:
         iteration["editorial_art_direction_summary"] = editorial_art_direction_summary
+    if svg_polish_readiness is not None:
+        iteration["svg_polish_readiness"] = svg_polish_readiness
     if crop_audit_summary is not None:
         iteration["crop_audit_summary"] = crop_audit_summary
     if aesthetic_lever_summary is not None:
@@ -1338,6 +1341,39 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
     assert "polish/svg_polish_recipe.yaml" in summary["reason"]
     assert summary["safe_command"] is None
     assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
+    assert summary["svg_polish_readiness"]["can_start_svg_polish"] is True
+    assert summary["svg_polish_readiness"]["next_action"] == "start_svg_polish_recipe"
+
+
+def test_polish_mode_surfaces_existing_svg_polish_readiness_checkpoint(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    readiness = {
+        "schema": "figure-agent.svg-polish-readiness.v1",
+        "source": "latest_loop_checkpoint",
+        "can_start_svg_polish": False,
+        "recommended_path": "continue_tikz",
+        "next_action": "run_fig_loop",
+        "blocking_reason": "existing checkpoint readiness",
+        "blocking_items": [],
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "weak",
+            "polish_recommended_path": "continue_tikz",
+        },
+        svg_polish_readiness=readiness,
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert summary["svg_polish_readiness"] == readiness
 
 
 def test_polish_mode_with_recipe_returns_executor_dry_run_command(
@@ -1578,6 +1614,10 @@ def test_polish_mode_honors_top_tier_blocker_before_svg_handoff(
     assert summary["safe_command"] is None
     assert summary["stop_boundary"] == "human_gate_required"
     assert "top-tier audit" in summary["reason"]
+    assert summary["svg_polish_readiness"]["can_start_svg_polish"] is False
+    assert summary["svg_polish_readiness"]["blocking_items"][0]["source"] == (
+        "top_tier_audit_summary"
+    )
 
 
 def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
@@ -1652,6 +1692,8 @@ def test_polish_mode_surfaces_uncertain_crop_audit_from_latest_loop(
     assert summary["safe_command"] is None
     assert summary["stop_boundary"] == "human_gate_required"
     assert "print_178mm" in summary["reason"]
+    assert summary["svg_polish_readiness"]["can_start_svg_polish"] is False
+    assert summary["svg_polish_readiness"]["next_action"] == "review_crop_audit"
 
 
 def test_polish_mode_blocks_ready_path_when_editorial_slots_need_human(
