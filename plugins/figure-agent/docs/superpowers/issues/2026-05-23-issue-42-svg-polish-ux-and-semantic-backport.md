@@ -1,6 +1,6 @@
 # Issue 42 — SVG Polish UX and Semantic Backport Classifier
 
-**Status:** implemented; pending commit
+**Status:** implemented on main through Issue 44 SVG polish recipe executor
 **Spec:** `../specs/2026-05-23-issue42-svg-polish-ux-and-semantic-backport-design.md`
 **Plan:** `../plans/2026-05-23-issue42-svg-polish-ux-and-semantic-backport.md`
 

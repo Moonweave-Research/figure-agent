@@ -2,6 +2,55 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.7.0] - 2026-05-26
+
+SVG-polish route release. This ships the deterministic, non-mutating polish
+handoff layer and records the first real-fixture negative dogfood result: a
+fixture may be high-quality and still correctly route back to TikZ when the
+host critique says `continue_tikz`.
+
+### Added
+
+- `svg_polish_recipe.py`, `svg_polish_executor.py`, and
+  `svg_polish_delta.py` for bounded SVG-polish recipes, dry-run/executor
+  validation, and before/after/diff aesthetic delta packs.
+- `/fig_drive --mode polish` route hints for recipe authoring, executor dry
+  runs, delta-pack generation, and handoff review while preserving dry-run
+  driver semantics.
+- SVG polish command-facing documentation and dogfood milestones for Issues
+  44-47, including a clean temporary-fixture proof and a real-fixture preflight.
+- Real fig1 aesthetic-upgrade evidence and accepted/golden roll-forward for
+  `fig1_overview_v2_pair_001_vault`, including Panel A hand-feel / chemistry
+  convention refinements and figure-wide v8.5-v8.6 calibration.
+
+### Changed
+
+- `/fig_critique` and critique freshness now include SVG-polish aesthetic
+  delta inputs when present, so polish comparisons can participate in the same
+  hash-based audit contract as source/reference/critique inputs.
+- The polish driver now refuses to invent a recipe when the latest loop
+  checkpoint routes `continue_tikz`, `semantic_backport_required`, or human art
+  direction instead of `ready_for_svg_polish`.
+- Issue 42 and 42B docs now point to their implemented mainline slices instead
+  of stale "pending commit" wording.
+
+### Fixed
+
+- `critique_adjudication.py sync` now shares
+  `quality_manifest.expected_critique_rubric_version()` with `/fig_status`,
+  so v1.11 aesthetic-intent critiques can be synced instead of failing against
+  the legacy v1.10 rubric constant.
+- Real-fixture SVG-polish dogfood captured the correct negative route for
+  `fig1_overview_v2_pair_001_vault`: audit evidence passed, but
+  `editorial_art_direction_summary.polish_recommended_path` remained
+  `continue_tikz`, so no polish recipe was authored.
+
+### Tests
+
+- Local release verification: `1209 passed, 1 skipped, 1 xfailed`; ruff clean;
+  `git diff --check` clean; Claude plugin validation passed for plugin
+  manifest, plugin directory, and marketplace manifest.
+
 ## [0.6.0] - 2026-05-25
 
 Aesthetic-lever grammar release. This moves the plugin from broad

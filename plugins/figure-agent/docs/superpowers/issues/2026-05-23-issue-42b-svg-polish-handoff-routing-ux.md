@@ -1,6 +1,6 @@
 # Issue 42B — SVG Polish Handoff Routing UX
 
-**Status:** implemented; pending commit
+**Status:** implemented on main through Issue 45 SVG polish route UX
 **Builds on:** Issue 42 SVG polish handoff scaffolder
 
 ## Problem
