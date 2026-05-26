@@ -2,6 +2,34 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.7.1] - 2026-05-26
+
+Patch release for post-v0.7.0 SVG-polish readiness and current-truth
+documentation sync.
+
+### Added
+
+- `svg_polish_readiness` is now part of the current release surface: `/fig_loop`
+  records it when editorial art-direction evidence exists, and
+  `/fig_drive --mode polish` surfaces the same readiness object from the latest
+  loop checkpoint.
+- Release-contract coverage now checks that the plugin-development closeout
+  status and Issue 48 docs match the current plugin version and mainline state.
+
+### Changed
+
+- README current-state docs now identify v0.7.1 and describe the explicit SVG
+  polish readiness gate instead of only the recipe/executor tools.
+- The plugin-development closeout status now reflects the mainline state through
+  v0.7.1 / Issue 48 rather than the older Issue 33 / PR #47 checkpoint.
+- Issue 48 docs now identify the implementation as landed on main in commit
+  `ef1fda9`.
+
+### Fixed
+
+- Removed stale current-priority guidance that still pointed to Issue 34 even
+  though phrase-aware text-boundary containment is already complete.
+
 ## [0.7.0] - 2026-05-26
 
 SVG-polish route release. This ships the deterministic, non-mutating polish

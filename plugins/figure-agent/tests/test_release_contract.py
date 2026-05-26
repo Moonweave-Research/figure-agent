@@ -122,6 +122,30 @@ def test_readme_current_state_matches_plugin_version() -> None:
     assert "docs/svg-polish-pipeline.md" not in experimental_section
 
 
+def test_closeout_status_matches_current_release_truth() -> None:
+    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    closeout = (
+        REPO_ROOT
+        / "docs"
+        / "milestones"
+        / "2026-05-21-plugin-development-closeout-status.md"
+    ).read_text()
+    issue_48 = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-05-26-issue-48-svg-polish-promotion-readiness.md"
+    ).read_text()
+
+    assert f"current main truth through v{plugin['version']}" in closeout
+    assert "after Issue 33 / PR #47" not in closeout
+    assert "start with Issue 34" not in closeout
+    assert "Issue 48" in closeout
+    assert "implemented on main" in issue_48
+    assert "implemented on branch" not in issue_48
+
+
 def test_readme_documents_status_and_driver_first_workflow() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 

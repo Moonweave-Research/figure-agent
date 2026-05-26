@@ -1,6 +1,6 @@
 # Issue 48 - SVG Polish Promotion Readiness
 
-**Status:** implemented on branch `codex/issue48-svg-polish-promotion-gate`
+**Status:** implemented on main in commit `ef1fda9`
 **Builds on:** Issue 43 aesthetic lever grammar, Issue 44 recipe executor,
 Issue 45 polish route UX, Issue 46 clean SVG-polish dogfood, Issue 47 real
 fixture negative dogfood

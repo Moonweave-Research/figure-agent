@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-23 KST
-**Status:** current main truth after Issue 33 / PR #47
+**Date:** 2026-05-26 KST
+**Status:** current main truth through v0.7.1 / Issue 48
 
 ## Bottom Line
 
@@ -9,8 +9,8 @@ The plugin-development chain is usable for real figure dogfood on current
 `main`. The core loop now has deterministic compile/export/status gates,
 host-vision critique contracts, audit evidence accounting, high-zoom crop
 inputs, reference-calibrated critique packs, advisory scoring, publication
-gates, SVG-polish surfacing, and explicit text-boundary checks for box/rule
-overflow failures.
+gates, SVG-polish routing, SVG-polish readiness surfacing, aesthetic lever
+contracts, and explicit text-boundary checks for box/rule overflow failures.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -19,12 +19,11 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification before PR #47 merge:
+Most recent local full verification after Issue 48 landed on `main`:
 
 ```bash
 uv run pytest -q
-uv run ruff check scripts/check_text_boundary_clash.py scripts/text_boundary_spec_helper.py \
-  tests/test_text_boundary_clash.py tests/test_text_boundary_spec_helper.py
+uv run ruff check .
 git diff --check
 claude plugin validate .claude-plugin/plugin.json
 claude plugin validate .
@@ -33,11 +32,12 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1058 passed, 1 skipped, 1 xfailed`.
-- Focused ruff check: clean.
+- Full test suite: `1223 passed, 1 skipped, 1 xfailed`.
+- Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
-- PR #47 CI `test`: pass.
+- `main` and `origin/main` point at `ef1fda9` (`Add SVG polish promotion
+  readiness`).
 - `full-render` remains intentionally skipped on normal PRs unless the
   workflow is label/main-triggered.
 
@@ -71,6 +71,15 @@ Results:
   implemented through Issues 30-32.
 - Scoped containment: Issue 33 adds `text_allowlist` for `contain_text` row-box
   checks and dogfoods it on `fig1_overview_v2_pair_001_vault`.
+- Phrase-aware containment and status UX: Issue 34 handles split PDF words and
+  math fragments; Issues 35-38 add aesthetic intent contracts, lint
+  accountability, status surfacing, and compact lint summaries.
+- Docs/readiness sync: Issues 39-41 reconcile completed contract docs, publish
+  the plugin readiness matrix, and lock canonical usage docs.
+- SVG polish route: Issues 42-48 implement bounded polish UX, semantic
+  backport routing, aesthetic lever grammar, recipe execution, route surfacing,
+  clean and real-fixture dogfood, and the explicit `svg_polish_readiness`
+  contract.
 - Final artifact/polish routing: polished SVG is surfaced as a final-artifact
   state, while SVG editing remains explicit human/external-tool work.
 - Release gate binding: release mode consumes the latest current `/fig_loop`
@@ -96,18 +105,20 @@ Results:
 These are useful future improvements, but they are not required before using
 the plugin for real figure work.
 
-1. **Issue 34: phrase-aware text-boundary containment.** Current
-   `text_allowlist` matching is exact PDF word matching. It works for words
-   such as `SMU` and `Coulomb`, but not for labels split into multiple PDF
-   words or glyph fragments such as `polymer film`, `F_Maxwell`, and subscripted
-   math labels. This is the next highest-value deterministic audit improvement.
+1. **Real fixture state sweep.** Re-run `/fig_status`, `/fig_drive --mode
+   authoring`, `/fig_drive --mode review`, `/fig_drive --mode polish`, and
+   `/fig_drive --mode release` on representative fixtures to confirm the many
+   status surfaces still agree on one conservative next action.
 2. **Fixture adoption expansion.** More real fixtures should declare
    `text_boundary_layout` when they contain row boxes, panel rules, internal
    display rectangles, or other explicit label-boundary hazards.
-3. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
+3. **Paper-wide aesthetic context.** The plugin is strong at single-figure
+   audit; it still needs a bounded way to carry visual language, restraint,
+   typography, and palette intent across multiple figures in one manuscript.
+4. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
    now surface many audit fields. The next UX pass should make the single next
    action and blocking evidence easier to scan without weakening contracts.
-4. **External second-opinion vision checks.** Gemini or another vision model
+5. **External second-opinion vision checks.** Gemini or another vision model
    can be integrated later as an optional cross-check, but it should not become
    a required dependency for the local-first plugin.
 
@@ -126,6 +137,7 @@ For new real figure work, start with:
    release/export work.
 
 At this point, the core plugin release is usable. If continuing plugin
-hardening, start with Issue 34. If not continuing plugin hardening, the next
-live work is fixture-specific: refresh stale renders/critiques/exports, then
-resolve any human publication provenance gate for the target figure.
+hardening, start with the real fixture state sweep. If not continuing plugin
+hardening, the next live work is fixture-specific: refresh stale
+renders/critiques/exports, then resolve any human publication provenance gate
+for the target figure.

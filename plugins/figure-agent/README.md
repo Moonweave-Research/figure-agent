@@ -81,7 +81,7 @@ polish only when status or the driver explicitly routes there.
 
 ---
 
-## Current state (v0.7.0)
+## Current state (v0.7.1)
 
 | Area | What's working |
 |---|---|
@@ -91,7 +91,7 @@ polish only when status or the driver explicitly routes there.
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
-| **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish`. |
+| **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
 
 ## What remains experimental / proposed
 
@@ -101,7 +101,7 @@ exists. This is a deliberate response to v0.3/v0.4 specs being rejected for lack
 of data.
 
 - **`docs/subregion-iteration-tool.md`** — lift critique granularity from panel → sub-region (e.g., the 8 distinct elements inside one panel). Prerequisite: v0.5 dogfood log on `fig1_overview_v2`.
-- **Real-fixture SVG polish promotion policy** — Issue 47 proved the safe negative route (`continue_tikz` blocks recipe authoring). More real fixtures are needed before treating `ready_for_svg_polish` as a routine production handoff.
+- **Real-fixture SVG polish promotion policy** — Issue 47 proved the safe negative route (`continue_tikz` blocks recipe authoring), and Issue 48 made that readiness state explicit. More real fixtures are needed before treating `ready_for_svg_polish` as a routine production handoff.
 
 Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.
 
