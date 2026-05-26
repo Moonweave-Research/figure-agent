@@ -543,6 +543,43 @@ def _write_text_boundary_clash_report(fig_dir: Path, *, candidate_ids: tuple[str
     return report
 
 
+def _write_label_path_proximity_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
+    report = fig_dir / "build" / "label_path_proximity.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "label_path_near_miss",
+                        "text": f"label {candidate_id}",
+                        "path_id": "reference_line",
+                        "path_role": "reference_line",
+                        "bbox_pt": [index, index + 1, index + 2, index + 3],
+                        "path_pt": {
+                            "kind": "horizontal_line",
+                            "y": 10.0,
+                            "x_range": [0.0, 20.0],
+                        },
+                        "clearance_pt": 2.0,
+                        "distance_pt": 1.0,
+                    }
+                    for index, candidate_id in enumerate(candidate_ids, start=1)
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
 def _write_historical_visual_clash_report(fig_dir: Path) -> Path:
     report = fig_dir / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -1937,6 +1974,234 @@ def test_lint_critique_accepts_text_boundary_ref_accounting(tmp_path: Path) -> N
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_missing_label_path_ref_when_report_has_candidates(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=("LP001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["label_path_accounting"]
+    assert "missing: LP001" in violations[0].message
+
+
+def test_lint_critique_rejects_malformed_label_path_report_without_traceback(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    malformed_report = fig_dir / "build" / "label_path_proximity.json"
+    malformed_report.parent.mkdir(parents=True, exist_ok=True)
+    malformed_report.write_text("{not json", encoding="utf-8")
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["label_path_accounting"]
+    assert "malformed build/label_path_proximity.json" in violations[0].message
+
+
+def test_lint_critique_accepts_label_path_ref_accounting(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=("LP001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_path_near_miss\n"
+            "    severity: MINOR\n"
+            "    observation: LP001 shows a label too close to a declared semantic path\n"
+            "    linked_finding_id: ''\n"
+            "    visual_clash_ref: ''\n"
+            "    text_boundary_ref: ''\n"
+            "    label_path_ref: LP001\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_duplicate_label_path_ref_accounting(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=("LP001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_path_near_miss\n"
+            "    severity: MINOR\n"
+            "    observation: first LP001 account\n"
+            "    linked_finding_id: ''\n"
+            "    visual_clash_ref: ''\n"
+            "    text_boundary_ref: ''\n"
+            "    label_path_ref: LP001\n"
+            "    status: open\n"
+            "  - id: M002\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_path_near_miss\n"
+            "    severity: MINOR\n"
+            "    observation: duplicate LP001 account\n"
+            "    linked_finding_id: ''\n"
+            "    visual_clash_ref: ''\n"
+            "    text_boundary_ref: ''\n"
+            "    label_path_ref: LP001\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["label_path_accounting"]
+    assert "duplicate label_path_ref" in violations[0].message
+
+
+def test_lint_critique_rejects_unknown_label_path_ref_accounting(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=("LP001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_path_near_miss\n"
+            "    severity: MINOR\n"
+            "    observation: LP999 is a typo and must be rejected\n"
+            "    linked_finding_id: ''\n"
+            "    visual_clash_ref: ''\n"
+            "    text_boundary_ref: ''\n"
+            "    label_path_ref: LP999\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["label_path_accounting"]
+    assert "unknown label_path_ref" in violations[0].message
 
 
 def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale(

@@ -66,6 +66,10 @@ uv run python3 "$WORKFLOW_DIR/scripts/check_text_boundary_clash.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
+uv run python3 "$WORKFLOW_DIR/scripts/check_label_path_proximity.py" \
+  "${STRICT_ARGS[@]}" \
+  --json-output "${BUILD_DIR}/label_path_proximity.json" \
+  "$PDF_OUT"
 if [[ -f "coordinate_hints.yaml" ]]; then
   uv run python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi

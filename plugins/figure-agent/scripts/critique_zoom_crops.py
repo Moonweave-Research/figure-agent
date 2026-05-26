@@ -12,6 +12,8 @@ from quality_manifest import file_sha256
 
 CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
 VISUAL_CLASH_CROP_MIN_WIDTH_PX = 600
+LABEL_PATH_CROP_MIN_WIDTH_PX = 600
+CM_TO_PT = 72.0 / 2.54
 
 PRINT_SCALE_TARGETS = (
     ("print_178mm", "178mm_equivalent", 1000),
@@ -203,6 +205,128 @@ def _visual_clash_crop_id(candidate: dict[str, Any], index: int) -> str:
     return f"{_safe_stem(candidate_id)}_{_safe_stem(label)}"
 
 
+def _label_path_sort_key(candidate: dict[str, Any]) -> tuple[str, str, str, list[float]]:
+    bbox = candidate.get("bbox_pt")
+    bbox_key = bbox if isinstance(bbox, list) else []
+    return (
+        str(candidate.get("id") or ""),
+        str(candidate.get("kind") or ""),
+        str(candidate.get("text") or ""),
+        bbox_key,
+    )
+
+
+def _load_label_path_candidates(example_dir: Path) -> list[dict[str, Any]]:
+    report_path = example_dir / "build" / "label_path_proximity.json"
+    if not report_path.is_file():
+        return []
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    return sorted(
+        (candidate for candidate in candidates if isinstance(candidate, dict)),
+        key=_label_path_sort_key,
+    )
+
+
+def _valid_bbox_pt(value: Any) -> list[float] | None:
+    if not isinstance(value, list) or len(value) != 4:
+        return None
+    try:
+        bbox = [float(item) for item in value]
+    except (TypeError, ValueError):
+        return None
+    x0, y0, x1, y1 = bbox
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return bbox
+
+
+def _path_bbox_pt(value: Any) -> list[float] | None:
+    if not isinstance(value, dict):
+        return None
+    kind = value.get("kind")
+    if kind == "horizontal_line":
+        x_range = value.get("x_range")
+        y = value.get("y")
+        if (
+            not isinstance(x_range, list)
+            or len(x_range) != 2
+            or not all(isinstance(item, int | float) for item in x_range)
+            or not isinstance(y, int | float)
+        ):
+            return None
+        return [float(min(x_range)), float(y), float(max(x_range)), float(y)]
+    if kind == "vertical_line":
+        x = value.get("x")
+        y_range = value.get("y_range")
+        if (
+            not isinstance(y_range, list)
+            or len(y_range) != 2
+            or not all(isinstance(item, int | float) for item in y_range)
+            or not isinstance(x, int | float)
+        ):
+            return None
+        return [float(x), float(min(y_range)), float(x), float(max(y_range))]
+    if kind == "polyline":
+        points = value.get("points")
+        if not isinstance(points, list) or len(points) < 2:
+            return None
+        parsed_points: list[tuple[float, float]] = []
+        for point in points:
+            if (
+                not isinstance(point, list)
+                or len(point) != 2
+                or not all(isinstance(item, int | float) for item in point)
+            ):
+                return None
+            parsed_points.append((float(point[0]), float(point[1])))
+        xs = [point[0] for point in parsed_points]
+        ys = [point[1] for point in parsed_points]
+        return [min(xs), min(ys), max(xs), max(ys)]
+    return None
+
+
+def _bbox_pt_to_px(
+    bbox_pt: list[float],
+    *,
+    width_px: int,
+    height_px: int,
+    pdf_page_size_cm: tuple[float, float],
+) -> list[int] | None:
+    page_width_pt = pdf_page_size_cm[0] * CM_TO_PT
+    page_height_pt = pdf_page_size_cm[1] * CM_TO_PT
+    if page_width_pt <= 0 or page_height_pt <= 0:
+        return None
+    x0, y0, x1, y1 = bbox_pt
+    bbox = [
+        round(x0 / page_width_pt * width_px),
+        round(y0 / page_height_pt * height_px),
+        round(x1 / page_width_pt * width_px),
+        round(y1 / page_height_pt * height_px),
+    ]
+    x0_px, y0_px, x1_px, y1_px = bbox
+    if x1_px < x0_px:
+        x0_px, x1_px = x1_px, x0_px
+    if y1_px < y0_px:
+        y0_px, y1_px = y1_px, y0_px
+    if x1_px == x0_px:
+        x1_px += 1
+    if y1_px == y0_px:
+        y1_px += 1
+    return _clamp_bbox_px([x0_px, y0_px, x1_px, y1_px], width=width_px, height=height_px)
+
+
+def _label_path_crop_id(candidate: dict[str, Any], index: int) -> str:
+    candidate_id = str(candidate.get("id") or f"LP{index:03d}")
+    label = str(candidate.get("text") or candidate.get("kind") or "candidate")
+    return f"{_safe_stem(candidate_id)}_{_safe_stem(label)}"
+
+
 def _write_visual_clash_crops(
     *,
     source_path: Path,
@@ -262,6 +386,85 @@ def _write_visual_clash_crops(
                     "visual_clash_ref": clash_ref,
                     "visual_clash_kind": str(candidate.get("kind") or ""),
                     "visual_clash_text": str(candidate.get("text") or ""),
+                }
+            )
+    return crops
+
+
+def _write_label_path_crops(
+    *,
+    source_path: Path,
+    output_dir: Path,
+    example_dir: Path,
+    pdf_page_size_cm: tuple[float, float] | None,
+) -> list[dict[str, Any]]:
+    if pdf_page_size_cm is None:
+        return []
+    candidates = _load_label_path_candidates(example_dir)
+    if not candidates:
+        return []
+
+    crops: list[dict[str, Any]] = []
+    with Image.open(source_path) as image:
+        width, height = image.size
+        resampling = getattr(Image, "Resampling", Image).LANCZOS
+        for index, candidate in enumerate(candidates, start=1):
+            text_bbox_pt = _valid_bbox_pt(candidate.get("bbox_pt"))
+            path_bbox_pt = _path_bbox_pt(candidate.get("path_pt"))
+            if text_bbox_pt is None or path_bbox_pt is None:
+                continue
+            combined_bbox_pt = [
+                min(text_bbox_pt[0], path_bbox_pt[0]),
+                min(text_bbox_pt[1], path_bbox_pt[1]),
+                max(text_bbox_pt[2], path_bbox_pt[2]),
+                max(text_bbox_pt[3], path_bbox_pt[3]),
+            ]
+            target_bbox_px = _bbox_pt_to_px(
+                combined_bbox_pt,
+                width_px=width,
+                height_px=height,
+                pdf_page_size_cm=pdf_page_size_cm,
+            )
+            if target_bbox_px is None:
+                continue
+            x0, y0, x1, y1 = target_bbox_px
+            pad_x = max(8, round((x1 - x0) / 4))
+            pad_y = max(8, round((y1 - y0) / 4))
+            crop_box = [
+                max(0, x0 - pad_x),
+                max(0, y0 - pad_y),
+                min(width, x1 + pad_x),
+                min(height, y1 + pad_y),
+            ]
+            if crop_box[2] <= crop_box[0] or crop_box[3] <= crop_box[1]:
+                continue
+            crop_id = _label_path_crop_id(candidate, index)
+            output_path = output_dir / "label_path" / f"{crop_id}.png"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            crop = image.crop(tuple(crop_box))
+            upscaled = crop.width < LABEL_PATH_CROP_MIN_WIDTH_PX
+            if upscaled:
+                output_height = max(
+                    1,
+                    round(crop.height * (LABEL_PATH_CROP_MIN_WIDTH_PX / crop.width)),
+                )
+                crop = crop.resize((LABEL_PATH_CROP_MIN_WIDTH_PX, output_height), resampling)
+            crop.save(output_path)
+            label_path_ref = str(candidate.get("id") or f"LP{index:03d}")
+            crops.append(
+                {
+                    "id": crop_id,
+                    "kind": "label_path_crop",
+                    "source": f"label_path:{label_path_ref}",
+                    "path": _relative_to_example(example_dir, output_path),
+                    "source_path": _relative_to_example(example_dir, source_path),
+                    "bbox_px": crop_box,
+                    "target_bbox_px": target_bbox_px,
+                    "size_px": [crop.width, crop.height],
+                    "upscaled": upscaled,
+                    "label_path_ref": label_path_ref,
+                    "label_path_kind": str(candidate.get("kind") or ""),
+                    "label_path_text": str(candidate.get("text") or ""),
                 }
             )
     return crops
@@ -422,6 +625,14 @@ def build_zoom_crop_pack(
             source_path=render_path,
             output_dir=output_dir,
             example_dir=example_dir,
+        )
+    )
+    crops.extend(
+        _write_label_path_crops(
+            source_path=render_path,
+            output_dir=output_dir,
+            example_dir=example_dir,
+            pdf_page_size_cm=pdf_page_size_cm,
         )
     )
     for panel_crop_path in panel_crop_paths:

@@ -12,6 +12,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
+from audit_evidence_summary import summarize_audit_evidence  # noqa: E402
 from fig_loop import run_loop  # noqa: E402
 from fig_loop_records import json_stdout_summary  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
@@ -79,6 +80,43 @@ def _write_text_boundary_clash_report(fixture: Path, candidate_ids: tuple[str, .
     )
 
 
+def _write_label_path_proximity_report(fixture: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fixture / "build" / "label_path_proximity.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": fixture.name,
+                "render_pdf": f"build/{fixture.name}.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "label_path_near_miss",
+                        "text": candidate_id,
+                        "path_id": "reference_line",
+                        "path_role": "reference_line",
+                        "bbox_pt": [10.0, 20.0, 30.0, 40.0],
+                        "path_pt": {
+                            "kind": "horizontal_line",
+                            "y": 25.0,
+                            "x_range": [0.0, 50.0],
+                        },
+                        "clearance_pt": 2.0,
+                        "distance_pt": 1.0,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _write_crop_manifest(fixture: Path, crop_id: str = "full_q1") -> Path:
     crop_path = fixture / "build" / "audit_crops" / f"{crop_id}.png"
     crop_path.parent.mkdir(parents=True, exist_ok=True)
@@ -111,6 +149,7 @@ def _write_critique(
     fixture: Path,
     *,
     visual_clash_ref: str | None = "VC050",
+    label_path_ref: str | None = None,
     crop_id: str = "full_q1",
 ) -> None:
     micro_defects: list[dict[str, Any]] = []
@@ -128,6 +167,20 @@ def _write_critique(
                 "accept_simplification_rationale": (
                     "VC050 marks a deliberately high-contrast QA marker."
                 ),
+            }
+        )
+    if label_path_ref is not None:
+        micro_defects.append(
+            {
+                "id": "MLP001",
+                "kind": "label_path_near_miss",
+                "severity": "NIT",
+                "observation": f"{label_path_ref} is accounted as label/path proximity.",
+                "linked_finding_id": "",
+                "visual_clash_ref": "",
+                "text_boundary_ref": "",
+                "label_path_ref": label_path_ref,
+                "status": "open",
             }
         )
     frontmatter = {
@@ -193,6 +246,52 @@ def _make_repo_fixture(
         os.utime(path, (old_time, old_time))
     os.utime(build / f"{name}.pdf", (fresh_time, fresh_time))
     return fixture
+
+
+def test_audit_evidence_surfaces_unaccounted_label_path_proximity(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="labelpath_gap")
+    _write_label_path_proximity_report(fixture, ("LP001",))
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["LP001"]
+    assert summary["label_path"]["candidate_count"] == 1
+    assert summary["label_path"]["missing_refs"] == ["LP001"]
+    assert (
+        summary["reason"]
+        == "label-path proximity candidates are not fully accounted in micro_defects"
+    )
+
+
+def test_audit_evidence_accepts_accounted_label_path_proximity(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="labelpath_clean")
+    _write_label_path_proximity_report(fixture, ("LP001",))
+    _write_critique(fixture, visual_clash_ref="VC050", label_path_ref="LP001")
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["label_path"]["accounted_count"] == 1
+    assert summary["label_path"]["missing_refs"] == []
+
+
+def test_audit_evidence_blocks_malformed_label_path_proximity_report(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="labelpath_malformed")
+    report = fixture / "build" / "label_path_proximity.json"
+    report.write_text("{not json", encoding="utf-8")
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/label_path_proximity.json"]
+    assert summary["reason"] == "malformed build/label_path_proximity.json"
 
 
 def _assert_surfaces_state(

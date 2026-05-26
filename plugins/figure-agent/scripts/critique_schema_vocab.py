@@ -149,6 +149,9 @@ MICRO_DEFECT_KINDS = frozenset(
         "label_crosses_panel_boundary",
         "label_crosses_column_rule",
         "label_overflows_row_box",
+        "label_stacked_on_reference_line",
+        "label_curve_near_label",
+        "label_path_near_miss",
     }
 )
 MICRO_DEFECT_STATUSES = frozenset({"open", "resolved", "accept_simplification"})
