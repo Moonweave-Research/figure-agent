@@ -8,6 +8,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import critique_adjudication  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     load_adjudication,
@@ -17,6 +18,7 @@ from critique_adjudication import (  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
+    CRITIQUE_RUBRIC_VERSION_V1_11,
     compute_critique_input_hash,
     file_sha256,
 )
@@ -50,6 +52,8 @@ def _write_fresh_critique(
     *,
     generator_version: str | None = None,
     critique_input_hash: str | None = None,
+    schema: str = "figure-agent.critique.v1",
+    rubric_version: str = CRITIQUE_RUBRIC_VERSION,
     finding_status: str = "open",
     finding_severity: str | None = None,
     finding_category: str | None = None,
@@ -72,11 +76,11 @@ def _write_fresh_critique(
     critique = example / "critique.md"
     critique.write_text(
         "---\n"
-        "schema: figure-agent.critique.v1\n"
+        f"schema: {schema}\n"
         "fixture: demo_fig\n"
         "generator: critique_brief.py\n"
         f"generator_version: {generator_version}\n"
-        f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
+        f"rubric_version: {rubric_version}\n"
         f"critique_input_hash: {critique_input_hash}\n"
         "findings:\n"
         "  - id: C001\n"
@@ -91,6 +95,44 @@ def _write_fresh_critique(
         encoding="utf-8",
     )
     return critique
+
+
+def _write_aesthetic_intent_v2(example: Path) -> None:
+    (example / "aesthetic_intent.yaml").write_text(
+        """schema: figure-agent.aesthetic-intent.v2
+fixture: demo_fig
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: Prefer restrained publication-grade hierarchy.
+must_avoid:
+  - id: toy_diagram
+    pattern: Avoid cartoon-like oversized labels.
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: Semantic TikZ is correct but optical finish is limiting.
+    recommended_path: ready_for_svg_polish
+aesthetic_levers:
+  - id: maturity_restraint
+    dimension: maturity
+    intent: Mature publication-grade restraint.
+    priority: required
+    positive_signals:
+      - Quiet hierarchy.
+    anti_patterns:
+      - Toy-like label scale.
+    allowed_adjustments:
+      - Reduce label weight.
+    forbidden_adjustments:
+      - Add decorative effects.
+    default_route: tikz_patch
+""",
+        encoding="utf-8",
+    )
 
 
 def _write_adjudication(example: Path, source_hash: str = "sha256:old") -> Path:
@@ -129,6 +171,27 @@ def test_sync_adjudication_refreshes_hash_for_fresh_critique(tmp_path: Path) -> 
     payload = load_adjudication(adjudication)
     assert payload["source_critique_hash"] == file_sha256(critique)
     assert payload["decisions"][0]["decision"] == "dismiss"
+
+
+def test_sync_adjudication_accepts_v1_11_rubric_for_aesthetic_intent_v2(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_aesthetic_intent_v2(example)
+    monkeypatch.setattr(critique_adjudication, "validate_critique_schema", lambda _: None)
+    critique = _write_fresh_critique(
+        repo,
+        example,
+        schema="figure-agent.critique.v1.11",
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
+    )
+    _write_adjudication(example)
+
+    sync_adjudication(example, repo_root=repo)
+
+    payload = load_adjudication(example / "critique_adjudication.yaml")
+    assert payload["source_critique_hash"] == file_sha256(critique)
 
 
 def test_sync_adjudication_refuses_stale_generator_metadata(tmp_path: Path) -> None:

@@ -19,9 +19,9 @@ from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 from critique_schema_validator import validate_critique_schema  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from quality_manifest import (  # noqa: E402
-    CRITIQUE_RUBRIC_VERSION,
     compute_critique_input_hash,
     critique_generator_version,
+    expected_critique_rubric_version,
     file_sha256,
     yaml_frontmatter,
 )
@@ -442,7 +442,7 @@ def _critique_metadata_mismatches(
             base_dir=repo_root,
         ),
         "generator_version": critique_generator_version(generator_path),
-        "rubric_version": CRITIQUE_RUBRIC_VERSION,
+        "rubric_version": expected_critique_rubric_version(example_dir),
     }
     mismatches: list[str] = []
     for key, expected_value in expected.items():

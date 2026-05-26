@@ -1,11 +1,21 @@
 ---
 schema: figure-agent.critique.v1.11
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-25T17:00:00Z
+generated_at: 2026-05-26T20:30:00Z
 generator: critique_brief.py
-generator_version: sha256:ddaf7c05958ff12c8bbc7bb00604b5329a16a8aff2f371bf45105af6405b0676
+generator_version: sha256:2bf5a894b46560e4c00e301519d290e4796612ccef47c9bc49b054ac6b0ddcf8
 rubric_version: figure-agent.critique-rubric.v1.11
-critique_input_hash: sha256:ff08c8026252437f028bd2413e9ef6828fc8aa8690f5df05da966d0b2ed9adb7
+critique_input_hash: sha256:7848464b9001ba472d350676d7eaaf0a7d0d05dc23ae02630a4e9d1ba14acef7
+# Refreshed 2026-05-26 for Issue 47 real SVG polish dogfood:
+# - Hash refresh: brief reports new critique_input_hash 7848464b... (was ff08c80...).
+# - VC046 accounting added: new visual_clash candidate from v8.5/v8.6 + Panel A
+#   27-iter aesthetic upgrades (Panel E corona surface-charge '+' marker, same
+#   floating_semantic_cue convention as VC044/VC045). M046 micro_defect +
+#   VC046_crop crop_audit_log entry added; both accept_simplification.
+# - Structural audit findings remain valid: aesthetic upgrades (drop shadow /
+#   gradient / specular calibration, chemistry-convention S₈ redesign, ring
+#   junction unification, hand-feel snake decoration) do not invalidate any
+#   structural, mechanism, theory, or reference-fidelity finding in this critique.
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -630,7 +640,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC005 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M006
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_S.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_C.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC006 'S' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention."
@@ -640,7 +650,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC006 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M007
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_C.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_S.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC007 'C' near_miss candidate inspected at zoom: Visual clash candidate text='C' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -660,7 +670,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC008 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M009
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_S.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_Sulfur-rich.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC009 'Energy' text_on_fill candidate inspected at zoom: Energy-axis tick reference label per Panel C energy-diagram convention."
@@ -670,7 +680,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC009 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M010
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_Sulfur-rich.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_S.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC010 'S' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention."
@@ -830,7 +840,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC025 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M026
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_V.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_meter.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC026 'low' text_on_fill candidate inspected at zoom: Curve-identity label on power-law / Gaussian curve per log-log / DOS plot convention."
@@ -840,7 +850,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC026 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M027
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_t.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_V.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC027 'hig' text_on_path candidate inspected at zoom: Visual clash candidate text='hig' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -860,7 +870,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC028 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M029
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_low.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_V.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC029 'd' text_on_fill candidate inspected at zoom: Visual clash candidate text='d' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -880,7 +890,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC030 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M031
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_τ.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_hig.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC031 'h' text_on_path candidate inspected at zoom: Visual clash candidate text='h' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -890,7 +900,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC031 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M032
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_d.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_τ.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC032 'n' text_on_path candidate inspected at zoom: Visual clash candidate text='n' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -900,7 +910,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC032 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M033
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_crop.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_d.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC033 'Deb' text_on_fill candidate inspected at zoom: Visual clash candidate text='Deb' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -910,7 +920,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC033 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M034
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_h.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_crop.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC034 'ye' text_on_path candidate inspected at zoom: Visual clash candidate text='ye' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -920,7 +930,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC034 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M035
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_n.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_h.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC035 'F' text_on_path candidate inspected at zoom: Visual clash candidate text='F' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -930,7 +940,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC035 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M036
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_Deb.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_n.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC036 'log' text_on_fill candidate inspected at zoom: Visual clash candidate text='log' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -940,7 +950,7 @@ micro_defects:
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC036 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M037
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_ye.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_Deb.png
     kind: floating_semantic_cue
     severity: NIT
     observation: "VC037 'I' text_on_path candidate inspected at zoom: Visual clash candidate text='I' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
@@ -1029,6 +1039,16 @@ micro_defects:
     visual_clash_ref: VC045
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC045 iconographic ⊕ surface-charge marker is intentional Panel E corona-deposit cue per briefing §13.6 + §6 ISPD panel role."
+  - id: M046
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC046_crop.png
+    kind: floating_semantic_cue
+    severity: NIT
+    observation: "VC046 '+' candidate is Panel E corona-deposit surface-charge marker — same iconic '+' glyph inside cRed!75 charge dot per briefing §13.6 corona convention. New visual_clash candidate after v8.5/v8.6 + Panel A 27-iter aesthetic upgrades nearby (apparatus zone darker gradient pushed dark metric for one more '+'); marker geometry unchanged; dark=0.037, edge=0.011 — both well below 0.3 / 0.1 NIT thresholds."
+    linked_finding_id: ""
+    status: accept_simplification
+    visual_clash_ref: VC046
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC046 iconographic ⊕ surface-charge marker is intentional Panel E corona-deposit cue per briefing §13.6 + §6 ISPD panel role."
 crop_audit_log:
   - crop_id: VC001_S
     path: build/audit_crops/visual_clash/VC001_S.png
@@ -1065,15 +1085,15 @@ crop_audit_log:
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC005_S inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC006_S
-    path: build/audit_crops/visual_clash/VC006_S.png
+  - crop_id: VC006_C
+    path: build/audit_crops/visual_clash/VC006_C.png
     source: visual_clash:VC006
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC006_S inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC007_C
-    path: build/audit_crops/visual_clash/VC007_C.png
+  - crop_id: VC007_S
+    path: build/audit_crops/visual_clash/VC007_S.png
     source: visual_clash:VC007
     inspected: true
     verdict: no_defect
@@ -1086,15 +1106,15 @@ crop_audit_log:
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC008_S inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC009_S
-    path: build/audit_crops/visual_clash/VC009_S.png
+  - crop_id: VC009_Sulfur-rich
+    path: build/audit_crops/visual_clash/VC009_Sulfur-rich.png
     source: visual_clash:VC009
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC009_Energy inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC010_Sulfur-rich
-    path: build/audit_crops/visual_clash/VC010_Sulfur-rich.png
+  - crop_id: VC010_S
+    path: build/audit_crops/visual_clash/VC010_S.png
     source: visual_clash:VC010
     inspected: true
     verdict: no_defect
@@ -1205,120 +1225,120 @@ crop_audit_log:
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC025_V inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC026_V
-    path: build/audit_crops/visual_clash/VC026_V.png
+  - crop_id: VC026_meter
+    path: build/audit_crops/visual_clash/VC026_meter.png
     source: visual_clash:VC026
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC026_low inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC027_t
-    path: build/audit_crops/visual_clash/VC027_t.png
+  - crop_id: VC027_V
+    path: build/audit_crops/visual_clash/VC027_V.png
     source: visual_clash:VC027
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC027_hig inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC028_V
-    path: build/audit_crops/visual_clash/VC028_V.png
+  - crop_id: VC028_t
+    path: build/audit_crops/visual_clash/VC028_t.png
     source: visual_clash:VC028
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC028_τ inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC029_low
-    path: build/audit_crops/visual_clash/VC029_low.png
+  - crop_id: VC029_V
+    path: build/audit_crops/visual_clash/VC029_V.png
     source: visual_clash:VC029
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC029_d inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC030_hig
-    path: build/audit_crops/visual_clash/VC030_hig.png
+  - crop_id: VC030_low
+    path: build/audit_crops/visual_clash/VC030_low.png
     source: visual_clash:VC030
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC030_crop inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC031_τ
-    path: build/audit_crops/visual_clash/VC031_τ.png
+  - crop_id: VC031_hig
+    path: build/audit_crops/visual_clash/VC031_hig.png
     source: visual_clash:VC031
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC031_h inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC032_d
-    path: build/audit_crops/visual_clash/VC032_d.png
+  - crop_id: VC032_τ
+    path: build/audit_crops/visual_clash/VC032_τ.png
     source: visual_clash:VC032
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC032_n inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC033_crop
-    path: build/audit_crops/visual_clash/VC033_crop.png
+  - crop_id: VC033_d
+    path: build/audit_crops/visual_clash/VC033_d.png
     source: visual_clash:VC033
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC033_Deb inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC034_h
-    path: build/audit_crops/visual_clash/VC034_h.png
+  - crop_id: VC034_crop
+    path: build/audit_crops/visual_clash/VC034_crop.png
     source: visual_clash:VC034
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC034_ye inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC035_n
-    path: build/audit_crops/visual_clash/VC035_n.png
+  - crop_id: VC035_h
+    path: build/audit_crops/visual_clash/VC035_h.png
     source: visual_clash:VC035
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC035_F inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC036_Deb
-    path: build/audit_crops/visual_clash/VC036_Deb.png
+  - crop_id: VC036_n
+    path: build/audit_crops/visual_clash/VC036_n.png
     source: visual_clash:VC036
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC036_log inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC037_ye
-    path: build/audit_crops/visual_clash/VC037_ye.png
+  - crop_id: VC037_Deb
+    path: build/audit_crops/visual_clash/VC037_Deb.png
     source: visual_clash:VC037
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC037_I inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC038_F
-    path: build/audit_crops/visual_clash/VC038_F.png
+  - crop_id: VC038_ye
+    path: build/audit_crops/visual_clash/VC038_ye.png
     source: visual_clash:VC038
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC038_I_t inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC039_log
-    path: build/audit_crops/visual_clash/VC039_log.png
+  - crop_id: VC039_F
+    path: build/audit_crops/visual_clash/VC039_F.png
     source: visual_clash:VC039
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC039_crop inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC040_I
-    path: build/audit_crops/visual_clash/VC040_I.png
+  - crop_id: VC040_log
+    path: build/audit_crops/visual_clash/VC040_log.png
     source: visual_clash:VC040
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC040_crop inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC041_I_t
-    path: build/audit_crops/visual_clash/VC041_I_t.png
+  - crop_id: VC041_I
+    path: build/audit_crops/visual_clash/VC041_I.png
     source: visual_clash:VC041
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC041_crop inspected at zoom — see linked micro_defect via visual_clash_ref."
-  - crop_id: VC042_crop
-    path: build/audit_crops/visual_clash/VC042_crop.png
+  - crop_id: VC042_I_t
+    path: build/audit_crops/visual_clash/VC042_I_t.png
     source: visual_clash:VC042
     inspected: true
     verdict: no_defect
@@ -1345,6 +1365,13 @@ crop_audit_log:
     verdict: no_defect
     linked_micro_defect_id: ""
     rationale: "VC045_crop inspected at zoom — see linked micro_defect via visual_clash_ref."
+  - crop_id: VC046_crop
+    path: build/audit_crops/visual_clash/VC046_crop.png
+    source: visual_clash:VC046
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: M046
+    rationale: "VC046_crop inspected at zoom — Panel E corona-deposit '+' surface-charge marker per briefing §13.6 convention. dark=0.037 edge=0.011 well below 0.3/0.1 NIT thresholds. Linked to M046 micro_defect accept_simplification."
   - crop_id: full_q1
     path: build/audit_crops/full_q1.png
     source: full_render

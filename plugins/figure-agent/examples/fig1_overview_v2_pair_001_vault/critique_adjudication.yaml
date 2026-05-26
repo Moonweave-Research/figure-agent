@@ -1,22 +1,29 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:7ed50be995445a8326c1692b3a0dc1718e9746710f0f9665518888ddea878a26
+source_critique_hash: sha256:4fca3e5232dfca73dddfaae98578981bc04ed614703a8b82b7e6afc78f3c6ad1
 decisions:
 - finding_id: P001
   decision: dismiss
-  reason: P001 suggested_fix is accept_simplification — Panel D iconic-cartoon register is briefing §3.2 intent. No source patch required.
+  reason: "P001 suggested_fix is accept_simplification \u2014 Panel D iconic-cartoon\
+    \ register is briefing \xA73.2 intent. No source patch required."
   patch_target: ''
-  evidence: critique.md finding P001 suggested_fix says "accept_simplification — iconic-cartoon register is briefing intent."
+  evidence: "critique.md finding P001 suggested_fix says \"accept_simplification \u2014\
+    \ iconic-cartoon register is briefing intent.\""
 - finding_id: P002
   decision: dismiss
-  reason: P002 suggested_fix is accept_simplification — Panel E iconic abstraction of NatComm 2024 surface-charge ref01 is briefing §3.2 intent. No source patch required.
+  reason: "P002 suggested_fix is accept_simplification \u2014 Panel E iconic abstraction\
+    \ of NatComm 2024 surface-charge ref01 is briefing \xA73.2 intent. No source patch\
+    \ required."
   patch_target: ''
-  evidence: critique.md finding P002 suggested_fix says "accept_simplification — register intent."
+  evidence: "critique.md finding P002 suggested_fix says \"accept_simplification \u2014\
+    \ register intent.\""
 - finding_id: P003
   decision: dismiss
-  reason: P003 suggested_fix is accept_simplification — Panel F iconic abstraction; actuator framing transfer forbidden by TG-G-001. No source patch required.
+  reason: "P003 suggested_fix is accept_simplification \u2014 Panel F iconic abstraction;\
+    \ actuator framing transfer forbidden by TG-G-001. No source patch required."
   patch_target: ''
-  evidence: critique.md finding P003 suggested_fix says "accept_simplification — actuator framing transfer forbidden by TG-G-001."
+  evidence: "critique.md finding P003 suggested_fix says \"accept_simplification \u2014\
+    \ actuator framing transfer forbidden by TG-G-001.\""
 - finding_id: C001
   decision: resolved
   reason: Critique marks C001 as resolved.
@@ -34,6 +41,13 @@ decisions:
   evidence: critique.md marks C003 status resolved.
 - finding_id: C004
   decision: resolved
-  reason: C004 Energy axis label x-shift patched and verified 2026-05-25 — anchor (10.15, 6.30) -> (10.35, 6.30), clears film slab cAmber stroke at x=9.85 with 0.40cm margin and sits 0.05cm left of energy axis at x=10.50. Post-patch render visual gate confirms no overlap. Bundled patch round also lifted Panel C HERO Gaussian saturation cBlue!22/cRed!22 -> !45, panel letters figure-wide 9pt -> 8pt, Panel B dividers cGray!55 -> !30, and Panel C 'localized traps' master title 7pt -> 7.5pt.
+  reason: "C004 Energy axis label x-shift patched and verified 2026-05-25 \u2014 anchor\
+    \ (10.15, 6.30) -> (10.35, 6.30), clears film slab cAmber stroke at x=9.85 with\
+    \ 0.40cm margin and sits 0.05cm left of energy axis at x=10.50. Post-patch render\
+    \ visual gate confirms no overlap. Bundled patch round also lifted Panel C HERO\
+    \ Gaussian saturation cBlue!22/cRed!22 -> !45, panel letters figure-wide 9pt ->\
+    \ 8pt, Panel B dividers cGray!55 -> !30, and Panel C 'localized traps' master\
+    \ title 7pt -> 7.5pt."
   patch_target: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex
-  evidence: critique.md C004 status open -> resolved with resolution_evidence field; tex L491-492 anchor; lint passing.
+  evidence: critique.md C004 status open -> resolved with resolution_evidence field;
+    tex L491-492 anchor; lint passing.

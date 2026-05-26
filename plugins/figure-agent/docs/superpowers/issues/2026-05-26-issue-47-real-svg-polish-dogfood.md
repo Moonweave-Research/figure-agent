@@ -1,6 +1,6 @@
 # Issue 47 - Real Fixture SVG Polish Dogfood
 
-**Status:** blocked on host critique refresh after latest-main preflight
+**Status:** evidence closed - real fixture currently routes `continue_tikz`
 **Builds on:** Issue 46 polished-SVG clean dogfood
 
 ## Problem
@@ -66,37 +66,51 @@ The next required step is a host vision critique refresh:
 Do not author a polish recipe until the refreshed critique and loop checkpoint
 actually route to `ready_for_svg_polish`.
 
-## Host Critique Handoff
+## Host Critique Result
 
-Run the canonical host vision command:
+The canonical host vision command was run:
 
 ```bash
 /fig_critique fig1_overview_v2_pair_001_vault
 ```
 
-The refreshed critique must account for current audit evidence, including
+The refreshed critique accounted for current audit evidence, including
 `build/visual_clash.json` candidate `VC046` and the current audit-crop manifest.
-After writing `critique.md`, run:
+
+Local verification:
 
 ```bash
 uv run python3 scripts/critique_lint.py examples/fig1_overview_v2_pair_001_vault
-uv run python3 scripts/critique_adjudication.py scaffold \
-  examples/fig1_overview_v2_pair_001_vault --force
+uv run python3 scripts/critique_adjudication.py sync \
+  examples/fig1_overview_v2_pair_001_vault
 uv run python3 scripts/fig_loop.py fig1_overview_v2_pair_001_vault \
   --goal "issue47 real svg polish dogfood" --json
 uv run python3 scripts/fig_driver.py fig1_overview_v2_pair_001_vault \
   --mode polish --goal "issue47 real svg polish dogfood" --dry-run
 ```
 
+Result:
+
+- `critique_lint.py`: passed.
+- `critique_adjudication.py sync`: passed after fixing the v1.11 rubric
+  freshness policy mismatch.
+- `/fig_loop`: audit evidence passed, but
+  `editorial_art_direction_summary.polish_recommended_path: continue_tikz`.
+- `/fig_driver --mode polish`: `action: run_fig_loop`,
+  `stop_boundary: mode_forbidden_action`.
+
+This is an intentional negative result. The real fixture is not ready for SVG
+polish according to its refreshed critique, so the driver must not author or
+execute a polish recipe.
+
 ## Acceptance Criteria
 
 - Preflight evidence is recorded.
 - Host critique is refreshed and lint-clean.
-- `/fig_loop` records a checkpoint with no human/top-tier/crop blocker and
-  `polish_recommended_path: ready_for_svg_polish`.
-- A bounded recipe is authored and dry-run first.
-- Executor writes only `polish/<name>.polished.svg`.
-- Delta pack is generated and reviewed.
-- Handoff manifest is written.
-- Final artifact status is `FRESH` in an isolated dogfood path or explicitly
-  documented as blocked by fixture policy.
+- `/fig_loop` records a checkpoint with audit evidence passed.
+- If `polish_recommended_path` is `ready_for_svg_polish`, continue to recipe,
+  executor, delta pack, handoff, and final artifact state.
+- If `polish_recommended_path` is not `ready_for_svg_polish`, document the
+  negative result and do not author a polish recipe.
+- No source, generated export, accepted, golden, or polished-SVG state is
+  mutated during the dogfood unless explicitly approved.
