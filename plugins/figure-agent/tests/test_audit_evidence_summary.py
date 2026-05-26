@@ -10,6 +10,20 @@ from audit_evidence_summary import summarize_audit_evidence  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 
+def test_summary_without_critique_does_not_suggest_host_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "no_critique_required"
+    fig_dir.mkdir()
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "not_applicable"
+    assert summary["blocking_items"] == []
+    assert summary["next_action"] == ""
+    assert summary["reason"] == "critique.md is absent; audit evidence is not applicable"
+
+
 def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
     report = fig_dir / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -301,6 +315,7 @@ def test_summary_reports_missing_crop_manifest(tmp_path: Path) -> None:
 
     assert summary["evaluation_state"] == "missing_input"
     assert summary["blocking_items"] == ["build/audit_crops/manifest.json"]
+    assert summary["next_action"] == "/fig_critique demo_fig"
 
 
 def test_summary_reports_malformed_crop_manifest(tmp_path: Path) -> None:
@@ -318,6 +333,7 @@ def test_summary_reports_malformed_crop_manifest(tmp_path: Path) -> None:
     assert summary["evaluation_state"] == "missing_input"
     assert summary["blocking_items"] == ["build/audit_crops/manifest.json"]
     assert "malformed" in summary["reason"]
+    assert summary["next_action"] == "/fig_critique demo_fig"
 
 
 def test_summary_reports_crop_hash_mismatch(tmp_path: Path) -> None:
@@ -331,6 +347,7 @@ def test_summary_reports_crop_hash_mismatch(tmp_path: Path) -> None:
 
     assert summary["evaluation_state"] == "stale_or_mismatched"
     assert summary["blocking_items"] == ["full_q1"]
+    assert summary["next_action"] == "/fig_critique demo_fig"
 
 
 def test_summary_reports_crop_manifest_path_traversal(tmp_path: Path) -> None:

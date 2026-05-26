@@ -315,8 +315,8 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             summary,
             state="not_applicable",
             blocking_items=[],
-            next_action=f"/fig_critique {example_dir.name}",
-            reason="critique.md is missing",
+            next_action="",
+            reason="critique.md is absent; audit evidence is not applicable",
         )
 
     frontmatter = yaml_frontmatter(critique_path)
@@ -460,7 +460,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 summary,
                 state="missing_input",
                 blocking_items=["build/audit_crops/manifest.json"],
-                next_action=f"/fig_compile {example_dir.name}",
+                next_action=f"/fig_critique {example_dir.name}",
                 reason=reason,
             )
         required_ids, required_error = _manifest_required_ids(manifest or {})
@@ -469,7 +469,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 summary,
                 state="missing_input",
                 blocking_items=["build/audit_crops/manifest.json"],
-                next_action=f"/fig_compile {example_dir.name}",
+                next_action=f"/fig_critique {example_dir.name}",
                 reason="malformed build/audit_crops/manifest.json required crop ids",
             )
         mismatched_crop_ids, mismatch_error = _mismatched_manifest_crop_ids(
@@ -482,7 +482,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 summary,
                 state="missing_input",
                 blocking_items=["build/audit_crops/manifest.json"],
-                next_action=f"/fig_compile {example_dir.name}",
+                next_action=f"/fig_critique {example_dir.name}",
                 reason="malformed build/audit_crops/manifest.json crops",
             )
         if mismatched_crop_ids:
@@ -492,7 +492,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 summary,
                 state="stale_or_mismatched",
                 blocking_items=mismatched_crop_ids,
-                next_action=f"/fig_compile {example_dir.name}",
+                next_action=f"/fig_critique {example_dir.name}",
                 reason="audit crop files do not match build/audit_crops/manifest.json",
             )
         verdict_counts, uncertain_crop_ids, logged_crop_ids = _crop_audit_counts(frontmatter)

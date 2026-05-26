@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-05-26 KST
-**Status:** current main truth through v0.7.1 / Issue 52
+**Status:** current main truth through v0.7.1 / Issue 53
 
 ## Bottom Line
 
@@ -72,6 +72,9 @@ Results:
   `spec.yaml.label_path_proximity_checks`; critique/lint require `LP###`
   accounting for candidates, and the fig1 vault fixture now dogfoods two
   high-risk semantic path checks.
+- Post-compile fixture state sweep: Issue 53 re-ran all 8 real fixtures through
+  compile and `/fig_drive` mode checks, then tightened two misleading
+  audit-evidence next-action hints.
 - Authoring-boundary helpers: `text_boundary_spec_helper.py`, scoped
   `tex_coordinate_shift.py`, and `/fig_closeout` boundary-sync checks are
   implemented through Issues 30-32.
@@ -85,7 +88,8 @@ Results:
 - SVG polish route: Issues 42-48 implement bounded polish UX, semantic
   backport routing, aesthetic lever grammar, recipe execution, route surfacing,
   clean and real-fixture dogfood, and the explicit `svg_polish_readiness`
-  contract.
+  contract. Issue 48 remains the release-truth anchor for SVG polish promotion
+  readiness inside this later Issue 53 closeout.
 - Final artifact/polish routing: polished SVG is surfaced as a final-artifact
   state, while SVG editing remains explicit human/external-tool work.
 - Release gate binding: release mode consumes the latest current `/fig_loop`
@@ -111,21 +115,17 @@ Results:
 These are useful future improvements, but they are not required before using
 the plugin for real figure work.
 
-1. **Real fixture state sweep.** Re-run `/fig_status`, `/fig_drive --mode
-   authoring`, `/fig_drive --mode review`, `/fig_drive --mode polish`, and
-   `/fig_drive --mode release` on representative fixtures to confirm the many
-   status surfaces still agree on one conservative next action.
-2. **Fixture adoption expansion.** More real fixtures should declare
+1. **Fixture adoption expansion.** More real fixtures should declare
    `text_boundary_layout` and/or `label_path_proximity_checks` when they contain
    row boxes, panel rules, internal display rectangles, reference lines,
    semantic curves, or other explicit label-boundary hazards.
-3. **Paper-wide aesthetic context.** The plugin is strong at single-figure
+2. **Paper-wide aesthetic context.** The plugin is strong at single-figure
    audit; it still needs a bounded way to carry visual language, restraint,
    typography, and palette intent across multiple figures in one manuscript.
-4. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
+3. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
    now surface many audit fields. The next UX pass should make the single next
    action and blocking evidence easier to scan without weakening contracts.
-5. **External second-opinion vision checks.** Gemini or another vision model
+4. **External second-opinion vision checks.** Gemini or another vision model
    can be integrated later as an optional cross-check, but it should not become
    a required dependency for the local-first plugin.
 
