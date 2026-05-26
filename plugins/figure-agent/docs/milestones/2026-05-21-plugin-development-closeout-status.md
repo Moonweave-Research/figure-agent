@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-05-26 KST
-**Status:** current main truth through v0.7.1 / Issue 48
+**Status:** current main truth through v0.7.1 / Issue 52
 
 ## Bottom Line
 
@@ -10,7 +10,8 @@ The plugin-development chain is usable for real figure dogfood on current
 host-vision critique contracts, audit evidence accounting, high-zoom crop
 inputs, reference-calibrated critique packs, advisory scoring, publication
 gates, SVG-polish routing, SVG-polish readiness surfacing, aesthetic lever
-contracts, and explicit text-boundary checks for box/rule overflow failures.
+contracts, explicit text-boundary checks for box/rule overflow failures, and
+explicit label-path proximity checks for zoom-only near-miss failures.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -19,7 +20,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 48 landed on `main`:
+Most recent local full verification after Issue 52 landed on `main`:
 
 ```bash
 uv run pytest -q
@@ -32,12 +33,12 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1223 passed, 1 skipped, 1 xfailed`.
+- Full test suite: `1244 passed, 1 skipped, 1 xfailed`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
-- `main` and `origin/main` point at `ef1fda9` (`Add SVG polish promotion
-  readiness`).
+- `main` and `origin/main` point at `1924d31` (`Adopt label-path checks for
+  fig1 dogfood`).
 - `full-render` remains intentionally skipped on normal PRs unless the
   workflow is label/main-triggered.
 
@@ -66,6 +67,11 @@ Results:
 - Text-boundary evidence pipeline: compile emits `build/text_boundary_clash.json`
   from explicit `spec.yaml.text_boundary_checks`; critique/lint require `TB###`
   accounting for candidates.
+- Label-path evidence pipeline: compile emits
+  `build/label_path_proximity.json` from explicit
+  `spec.yaml.label_path_proximity_checks`; critique/lint require `LP###`
+  accounting for candidates, and the fig1 vault fixture now dogfoods two
+  high-risk semantic path checks.
 - Authoring-boundary helpers: `text_boundary_spec_helper.py`, scoped
   `tex_coordinate_shift.py`, and `/fig_closeout` boundary-sync checks are
   implemented through Issues 30-32.
@@ -110,8 +116,9 @@ the plugin for real figure work.
    `/fig_drive --mode release` on representative fixtures to confirm the many
    status surfaces still agree on one conservative next action.
 2. **Fixture adoption expansion.** More real fixtures should declare
-   `text_boundary_layout` when they contain row boxes, panel rules, internal
-   display rectangles, or other explicit label-boundary hazards.
+   `text_boundary_layout` and/or `label_path_proximity_checks` when they contain
+   row boxes, panel rules, internal display rectangles, reference lines,
+   semantic curves, or other explicit label-boundary hazards.
 3. **Paper-wide aesthetic context.** The plugin is strong at single-figure
    audit; it still needs a bounded way to carry visual language, restraint,
    typography, and palette intent across multiple figures in one manuscript.

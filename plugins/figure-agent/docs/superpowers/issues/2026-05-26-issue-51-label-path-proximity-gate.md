@@ -1,6 +1,6 @@
 # Issue 51 — Label-Path Proximity Gate
 
-Status: implemented; pending commit
+Status: completed in commits ee6d41c, 7223e7a; merged to main by 2a34f32
 
 ## Problem
 

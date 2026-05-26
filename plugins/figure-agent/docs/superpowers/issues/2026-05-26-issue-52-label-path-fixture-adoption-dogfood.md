@@ -1,6 +1,6 @@
 # Issue 52 — Label-Path Fixture Adoption Dogfood
 
-Status: implemented; pending commit
+Status: completed in commit 1924d31
 
 ## Problem
 
