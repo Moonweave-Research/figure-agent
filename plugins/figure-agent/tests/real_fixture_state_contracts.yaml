@@ -59,9 +59,9 @@ fixtures:
         safe_command:
         stop_boundary: accepted_or_final_ready_required
       polish:
-        action: polish_handoff_stop
-        safe_command:
-        stop_boundary:
+        action: run_fig_loop
+        safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'contract matrix' --json
+        stop_boundary: mode_forbidden_action
 
   - fixture: fig5_floating_clip_mechanism
     artifacts:

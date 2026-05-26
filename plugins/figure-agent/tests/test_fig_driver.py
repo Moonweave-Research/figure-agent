@@ -1303,7 +1303,7 @@ def test_polish_mode_requires_current_export_before_polish(tmp_path: Path) -> No
     assert summary["action"] == "run_compile"
 
 
-def test_polish_mode_stops_for_polish_handoff_when_export_current(
+def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path,
 ) -> None:
     fixture = _write_basic_fixture(tmp_path)
@@ -1311,10 +1311,12 @@ def test_polish_mode_stops_for_polish_handoff_when_export_current(
 
     summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
 
-    assert summary["action"] == "polish_handoff_stop"
-    assert summary["stop_boundary"] is None
-    assert summary["safe_command"] is None
-    assert "polish/svg_polish_recipe.yaml" in summary["reason"]
+    assert summary["action"] == "run_fig_loop"
+    assert summary["stop_boundary"] == "mode_forbidden_action"
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+    )
+    assert "ready_for_svg_polish" in summary["reason"]
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(

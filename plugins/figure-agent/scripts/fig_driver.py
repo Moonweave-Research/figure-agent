@@ -855,16 +855,15 @@ def _select_action(
                     reason=route_hint["reason"],
                     checkpoint=loop_checkpoint,
                 )
-    route_hint = _svg_polish_route_hint(
-        example_dir,
-        name,
-        prefix="generated export is current; remaining work is visual-only SVG polish.",
-    )
     return make(
-        ACTION_POLISH_HANDOFF_STOP,
-        safe_command=route_hint["safe_command"],
-        stop_boundary=None,
-        reason=route_hint["reason"],
+        ACTION_RUN_FIG_LOOP,
+        safe_command=command_mod.fig_loop_command(name, goal),
+        stop_boundary=STOP_MODE_FORBIDDEN,
+        reason=(
+            "generated export is current, but polish mode requires a current "
+            "/fig_loop checkpoint whose editorial art-direction summary routes "
+            "ready_for_svg_polish before SVG polish handoff can start."
+        ),
     )
 
 

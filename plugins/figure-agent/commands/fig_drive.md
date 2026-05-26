@@ -187,6 +187,12 @@ boundary. If the summary says `ready_for_svg_polish` but another editorial slot
 still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
 wins over polish handoff.
 
+If no current loop checkpoint can prove `ready_for_svg_polish`, polish mode
+returns `run_fig_loop` / `mode_forbidden_action` instead of falling back to SVG
+handoff from export freshness alone. This keeps SVG polish subordinate to the
+same critique, adjudication, audit, and human-gate evidence used by review and
+release.
+
 When a current loop checkpoint is available, polish mode also emits
 `svg_polish_readiness` as an additive top-level JSON field. This is the compact
 answer to "can SVG polish start yet?":
