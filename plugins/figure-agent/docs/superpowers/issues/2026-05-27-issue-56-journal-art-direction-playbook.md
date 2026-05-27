@@ -1,6 +1,6 @@
 # Issue 56 - Journal Art-Direction Playbook
 
-Status: completed in branch `codex/journal-art-direction-playbook`.
+Status: completed and merged via PR #66, merge commit `9bff885`.
 
 Design spec:
 `../specs/2026-05-27-journal-art-direction-playbook-design.md`
