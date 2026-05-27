@@ -892,14 +892,25 @@
 % Below: per-column modality companion-label nodes anchored to panel-letter
 % baselines — 6pt italic cGray!70 right of each letter.
 % ============================================================
-% Panel-loop iter L4-L5: modality label tier upgrade. italic 6pt → non-italic
-% 6.5pt cGray!75!black (category label tier, parity with Row 1 setup labels).
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=west] at (0.45, 4.42) {kinetic};
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=west] at (5.05, 4.42) {ISPD};
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
-      anchor=west] at (9.85, 4.42) {mechanical};
+% 2026-05-27 advisor-driven redesign: convergent evidence restored as 3 short
+% vertical drops + inter-row modality labels. Spoke fan (b6d9672 removed) and
+% inline panel-letter labels (iter L4-L5 packing) both retired in favor of:
+%
+%   3 vertical drops from Panel C bottom band to Row 2 frame top.
+%   No diagonal V-fan, no stealth heads, no white-fill backdrop, no caption.
+%   Drops carry "flow from above"; modality labels carry identity.
+%
+% Stroke 0.35pt cGray!50. Modality labels 6pt non-italic cGray!70 (connector
+% tier, NOT bold category) in inter-row gap above panel letters.
+\draw[cGray!50, line width=0.35pt] (2.275, 4.85) -- (2.275, 4.55);
+\draw[cGray!50, line width=0.35pt] (6.975, 4.85) -- (6.975, 4.55);
+\draw[cGray!50, line width=0.35pt] (11.70, 4.85) -- (11.70, 4.55);
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=north] at (2.275, 4.53) {kinetic};
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=north] at (6.975, 4.53) {ISPD};
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=north] at (11.70, 4.53) {mechanical};
 
 % ============================================================
 % v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
