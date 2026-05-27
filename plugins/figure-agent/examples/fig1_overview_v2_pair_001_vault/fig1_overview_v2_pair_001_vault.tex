@@ -866,52 +866,33 @@
 
 
 % ============================================================
-% Convergent evidence — 3-spoke branching C → Row 2
-% (briefing §4: divergent geometry; "convergent" semantic carried by caption
-%  + Panel C/F color matching, NOT by arrow direction)
-% Anti-goal: linear D→E→F→G chain (causation misleading; briefing §8.7)
+% Convergent evidence — 2026-05-27 NC convention re-design:
+% 3-spoke branching arrows + 'convergent evidence' caption REMOVED.
+%
+% User critique: 3-spoke fan + caption in inter-row gap = over-narration,
+% NC main-text Fig 1 anti-pattern (He NatComm 2024 / Checa SS-KPFM panels
+% sit adjacent without explicit convergence arrows; "evidence" relationship
+% carried by caption text, not figure geometry).
+%
+% Connection now carried by:
+%   (i)   panel-letter typography pairing (Row 1 C HERO + Row 2 d/e/f)
+%   (ii)  modality sub-labels INLINE with panel-letters (kinetic/ISPD/mechanical
+%         immediately right of letter — replaces spoke-floating labels)
+%   (iii) color-binding (Panel C cRed deep traps + Panel E cRed g(E_t) deep peak
+%         + Panel F cRed Coulomb arrow — narrative carry without explicit arrows)
+%   (iv)  inter-row vertical breathing room (gap 0.45cm → cleaner)
+%
+% Modality sub-labels are now rendered alongside each Row 2 panel letter via
+% the panel-letter node (handled at lines 67-72 where d/e/f are drawn).
+% Below: per-column modality companion-label nodes anchored to panel-letter
+% baselines — 6pt italic cGray!70 right of each letter.
 % ============================================================
-% 2026-05-22 NC-Fig-1 redirect: caption backdrop fill REMOVED. On clean
-% white background, bold 7.5pt sans cGray!90 emerges from white via weight
-% alone. No backdrop punch (would create a wash-shaped object on otherwise
-% white figure — NC anti-pattern).
-\node[font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
-      text=cGray!90!black, anchor=south, align=center, inner sep=2pt]
-  at (7.00, 4.92) {convergent evidence};
-
-% Branching root (in Panel C bottom band, x=6.95 = Panel C left + slight inset)
-\coordinate (branchRoot) at (6.95, 4.85);
-% v8.4 [briefing relax R2, 2026-05-26]: small anchor dot at branchRoot —
-% "3 paths from one origin" visual cue binding to 'convergent evidence'
-% caption semantic. Sub-pixel (0.6pt radius), tone-matched to spoke stroke.
-\fill[cGray!75!black] (branchRoot) circle (0.025);
-
-% 3 spokes — narrative weight history: 0.9pt→1.1pt promotion (C403) made the
-% fan visually dominant, but at zoom the heavy Stealth heads + cGray!80 stroke
-% read as PowerPoint not Nature Communications. Designer iter (2026-05-22):
-% slim down to 0.7pt cGray!55 with 4.5pt Stealth heads — still on top of the
-% 3-tier (annotation 0.7pt, secondary 0.55pt, axes 0.55pt) but lighter and
-% closer to NC main-text figure schematic convention.
-\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
-  (branchRoot) -- (2.28, 4.30);
-\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
-  (branchRoot) -- (7.05, 4.50);
-\draw[-{Stealth[length=4.5pt,width=3pt]}, cGray!55!black, line width=0.7pt]
-  (branchRoot) -- (12.225, 4.30);
-
-% Spoke modality labels — 2026-05-22 NC redirect: cAmber!8 fill → white fill.
-% Same "punch the arrow under label letters" purpose, now using plain white
-% rectangle behind label (NC main-text convention: any backdrop is white,
-% no tint). Arrow-on-label crossing is still broken; no colored box on figure.
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=white, text opacity=1, inner sep=1pt]
-  at (4.55, 4.62) {kinetic};
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=white, text opacity=1, inner sep=1pt]
-  at (7.0, 4.675) {ISPD};
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=south, fill=white, text opacity=1, inner sep=1pt]
-  at (10.60, 4.62) {mechanical};
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=west] at (0.40, 4.42) {kinetic};
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=west] at (5.00, 4.42) {ISPD};
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
+      anchor=west] at (9.80, 4.42) {mechanical};
 
 % ============================================================
 % v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
