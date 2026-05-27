@@ -631,7 +631,8 @@
 % Panel C iter 7 [Panel C 15-loop, 2026-05-26]: 'vacuum' italic -> upright to
 % match 'mobility edge'. Both are aux dashed reference levels; auxiliary tier
 % kept via lighter cGray!55 (was !60). Symbols E_C / E_V keep math italic.
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!55!black,
+% Panel-loop iter L7: vacuum label tone !55 → !60 (unify with mobility edge !65→!60).
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
       anchor=west] at (12.15, 8.55) {vacuum};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 8.30) -- (12.10, 8.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
@@ -645,7 +646,8 @@
 % iter26 0.07cm TikZ shift = 2.5pt PDF clearance (figure resized 178/139.5);
 % spec.yaml panel_c_mobility_edge_reference declares clearance_pt=4.0 — still
 % violates. Bumped to y=8.00 → 0.15cm TikZ shift = 5.4pt PDF clear > 4.0pt.
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
+% Panel-loop iter L7b: mobility edge !65 → !60 (unify with vacuum tier).
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
       anchor=west] at (12.15, 8.10) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
@@ -1080,19 +1082,30 @@
 % with high n / low n D-7b labels. above=4pt perpendicular offset above curve.
 % iter 60: Debye dash thinner (0.75 → 0.65pt) — reference tier clearly
 % below annotation tier; line cap=round for smooth dash endcaps.
-\draw[cGray!85!black, dashed, line width=0.65pt, line cap=round]
-  (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45);
-% Cycle 2 / C405 (2026-05-22): clearance above=4pt → 6pt + pos 0.92→0.88 so
-% label sits clearly ABOVE asymptotic tail rather than grazing it at thumbnail.
-% Iter 21 (2026-05-23): Debye label at pos=0.88 above=6pt had its 'y'
-% descender grazing the red high-n power-law line just above; iter 21a
-% below=3pt put the label on the x-axis. Compromise: lower pos to 0.70
-% where Debye dashed is at y≈0.85 and the red high-n line is at y≈1.2
-% (gap ~0.35 cm), with above=4pt — label sits in the middle of the gap,
-% clearly anchored to Debye curve and well clear of the red line.
-\path[draw=none] (0.65, 2.30) .. controls (0.95, 1.40) and (2.00, 0.50) .. (3.40, 0.45)
-  node[pos=0.70, labelMute, text=cGray!65!black, sloped, above=4pt, inner sep=1pt]
-  {Debye};
+% Panel D 'Debye cliff' rewrite (2026-05-27, feature/panel-d-debye-cliff):
+% Prior bezier (0.65,2.30) .. (2.00,0.50) .. (3.40,0.45) descended too
+% smoothly, reading as "just a steeper power-law" — failed to convey
+% single-τ exp identity. User-curated theory reference
+% `02_Surfur_Polymer/docs/debye_vs_powerlaw_correct.png` "정확한 버전" shows
+% Debye as horizontal plateau + sharp cliff (single-τ exp on log-log:
+% y = a − 0.4343·10^x/τ → plateau for t≪τ, cliff for t≫τ).
+% New geometry: plateau (x=0.65→1.80, y=2.30) + knee at x≈1.95 + steep
+% cliff to terminus (2.22, 0.55). Curve TERMINATES mid-plot — Debye "dies
+% fast" while single-power-law RED/BLUE persist to right edge.
+% NOTE: RED stays single steep line (Scher-Montroll CTRW single power-law
+% per si_methods_S0 §60+§175; broken-power-law direction explored 2026-05-27
+% 17:14 then reverted after cross-check with paper framework + reference
+% image — paper's "two-component conduction" is power-law→DC-plateau, not
+% two power-law segments with different n).
+\draw[cGray!85!black, dashed, line width=0.65pt, line cap=round, line join=round]
+  (0.65, 2.30) -- (1.80, 2.30)
+  .. controls (2.05, 2.28) and (2.12, 0.80) .. (2.22, 0.55);
+% Debye label relocated to cliff-terminus right (horizontal text). Cliff is
+% near-vertical so sloped label would itself be near-vertical — unreadable.
+% Empty wedge below RED line at x∈[2.20, 2.50] gives clear placement next to
+% terminus; no leader needed (adjacency + color match unambiguous).
+\node[labelMute, text=cGray!65!black, anchor=west, inner sep=1pt]
+  at (2.28, 0.62) {Debye};
 
 % D-4 main equation label — iter 64 reverted to upper-left (0.55, 2.75)
 % per user honest audit: upper-left is reading-order convention ("equation
