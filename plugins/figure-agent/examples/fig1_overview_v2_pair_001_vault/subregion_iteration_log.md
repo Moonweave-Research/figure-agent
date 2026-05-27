@@ -825,3 +825,18 @@ User spotted at 500 DPI zoom: "mobility edge" label sitting on dashed reference 
 | 15 | V_s meter readout fit | "V_s = 0.32 V" → "0.32 V" (variable name redundant w/ 'V_s meter' label) | Text fits cleanly inside display |
 
 **Gates**: Style Lock + collision + clash + text-boundary all ✅. No briefing edits.
+
+### Round 3 (iter 16-18) — color restructure (user: "올드함 색상 문젠가")
+
+iter 8-14 modernize (gradient depth + corner radius + drop shadow + readouts + 3D
+detail) closed silhouette/material elements but **mono-gray palette still read as
+80s "회색 페인트"**. User flagged. Color restructure with cBlue (#4477AA teal-blue):
+
+| Iter | Sub-region | Patch | Effect |
+|---|---|---|---|
+| 16 | HV+ + V_s meter box gradients | top cGray!12 → cBlue!10, bottom cGray!58 → cBlue!42, stroke cGray!65 → cBlue!55!black | Anodized metallic blue cast replacing flat painted-gray feel |
+| 17 | Digital readouts ("5 kV", "0.32 V") | cAmber!90!white → cBlue!8!white | LCD high-contrast white text; 80s amber CRT stereotype removed |
+| 18 | Corona plasma cone | cRed!22/cRed!55 → cBlue!28/cBlue!65 (cone fill + center ray) | Electric blue plasma glow (N2/O2 ionization color theory); also creates warm-cool complementary contrast with amber polymer slab |
+
+**Gates**: Style Lock + collision + clash + text-boundary all ✅.
+

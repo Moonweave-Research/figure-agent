@@ -1249,10 +1249,15 @@
 % opacity 0.25 -> 0.35 + offset (0.02, -0.02) -> (0.04, -0.04). Box now reads
 % as "physical instrument on paper" rather than "floating sketch". rounded
 % corners on shadow rect 1.8pt added for shadow/box edge alignment.
+% Panel E iter 16 [Panel E full-loop, 2026-05-27]: cool metallic cast.
+% User: "올드함 못 지우겠지 색상이 문젠가". Mono-cGray gradient = '회색 페인트'
+% feel, not anodized metal. Replaced cGray with cBlue (#4477AA, teal-blue
+% cast): top cGray!12 -> cBlue!10, bottom cGray!58 -> cBlue!42. Stroke
+% cGray!65!black -> cBlue!55!black. Drop shadow stays neutral black.
 \fill[black, opacity=0.35, rounded corners=1.8pt] (5.74, 4.06) rectangle (6.59, 4.36);
-\shade[top color=cGray!12, bottom color=cGray!58, rounded corners=1.8pt]
+\shade[top color=cBlue!10, bottom color=cBlue!42, rounded corners=1.8pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
-\draw[cGray!65!black, line width=0.22pt, rounded corners=1.8pt]
+\draw[cBlue!55!black, line width=0.22pt, rounded corners=1.8pt]
   (5.7, 4.1) rectangle (6.55, 4.4);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
@@ -1263,10 +1268,11 @@
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
 % DC-source schematic glyph (⎓: long bar above, short bar below).
 % Panel E iter 11 [Panel E full-loop, 2026-05-27]: DC glyph + readout text.
-% Replaced abstract ⎓ bars with a digital readout "5 kV" inside display.
-% Modern HV source instrument shows numeric value, not abstract glyph.
-% Font: monospace digital-style (\ttfamily) in cAmber. Centered in display.
-\node[font=\ttfamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cAmber!90!white]
+% Panel E iter 17 [Panel E full-loop, 2026-05-27]: readout cAmber -> cool LCD.
+% iter 11 amber (cAmber!90!white) = 80s CRT/calculator stereotype. Modern LCD
+% on HV/measurement instrument: high-contrast white text with subtle cool
+% tint. Replaced with cBlue!8!white = nearly white with blue cast.
+\node[font=\ttfamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cBlue!8!white]
   at (6.125, 4.30) {5 kV};
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
 % iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
@@ -1321,8 +1327,15 @@
 % width directly under the needle (x 6.35..6.95); downstream ⊕ at x≥7.00
 % represent accumulated surface charge from earlier scan steps, not the
 % current discharge instant.
-\fill[cRed!22, opacity=0.55] (6.15, 3.73) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
-\draw[cRed!55, line width=0.35pt, opacity=0.65] (6.15, 3.73) -- (6.15, 3.6);
+% Panel E iter 18 [Panel E full-loop, 2026-05-27]: corona plasma color.
+% cRed!22 pastel pink read as cartoon. Real corona discharge ionization region
+% glows violet-blue / electric blue (N2/O2 plasma). Replaced cRed -> cBlue
+% for plasma identity. Cone fill cBlue!28 opacity 0.55 (slightly more saturated
+% than old !22 since blue is darker than red at same %). Center ray cBlue!65
+% (was cRed!55) at 0.35pt opacity 0.65. cAmber polymer slab below contrasts
+% sharply with cool blue cone — color theory complementary punch.
+\fill[cBlue!28, opacity=0.55] (6.15, 3.73) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
+\draw[cBlue!65, line width=0.35pt, opacity=0.65] (6.15, 3.73) -- (6.15, 3.6);
 % Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
@@ -1421,10 +1434,11 @@
 % spec was redundant + contributed to "white circle soup").
 % iter8 follow-up: V_s meter box matching HV+ gradient depth + stroke.
 % iter10 follow-up: V_s meter drop shadow matching HV+.
+% iter 16 follow-up: V_s meter cool metallic to match HV+ box.
 \fill[black, opacity=0.35, rounded corners=1.8pt] (7.72, 3.54) rectangle (8.72, 4.01);
-\shade[top color=cGray!12, bottom color=cGray!58, rounded corners=1.8pt]
+\shade[top color=cBlue!10, bottom color=cBlue!42, rounded corners=1.8pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
-\draw[cGray!65!black, line width=0.22pt, rounded corners=1.8pt]
+\draw[cBlue!55!black, line width=0.22pt, rounded corners=1.8pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
@@ -1441,7 +1455,8 @@
 % text). Shortened to "0.32 V" only — variable name V_s is established by
 % label below ('V_s meter'), so display showing just the value matches lab
 % instrument convention (display = current reading, no axis legend).
-\node[font=\ttfamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cAmber!90!white]
+% iter17 follow-up: V_s meter readout matching LCD style.
+\node[font=\ttfamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cBlue!8!white]
   at (8.14, 3.89) {0.32\,V};
 % iter E16 (H1 Panel E critical review): in-meter decay trace removed —
 % same V_s(t) is plotted in sub-zone below; inset duplicated the signal.
