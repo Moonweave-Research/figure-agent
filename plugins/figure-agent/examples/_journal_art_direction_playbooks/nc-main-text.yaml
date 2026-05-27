@@ -1,0 +1,125 @@
+schema: figure-agent.journal-art-direction-playbook.v1
+playbook_id: nc-main-text
+target_journal: Nature Communications
+venue_context: main_text
+visual_maturity: restrained
+design_center:
+  - id: editorial_restraint
+    dimension: maturity
+    instruction: Keep the figure quiet, mature, and scientific before making it decorative.
+    priority: required
+    positive_signals:
+      - visual emphasis comes from hierarchy and evidence rather than effects
+      - the figure still feels calm at reduced print scale
+    anti_patterns:
+      - cartoon-like icons or large rounded shapes
+      - decorative gradients that do not encode information
+    evidence_prompts:
+      - name the first object the reader sees and why it deserves that role
+      - inspect whether any effect reads as poster decoration
+  - id: typography_authority
+    dimension: typography
+    instruction: Use compact journal-style labels with stable math and restrained hierarchy.
+    priority: required
+    positive_signals:
+      - labels are readable but subordinate to the drawing
+      - subscripts and symbols align cleanly inside small boxes
+    anti_patterns:
+      - slide-like explanatory text blocks
+      - labels that compete with panel titles
+    evidence_prompts:
+      - inspect print-scale label hierarchy
+      - list any label that feels larger than its evidence role
+  - id: whitespace_breathing
+    dimension: whitespace
+    instruction: Preserve small but visible breathing room around labels and dense apparatus regions.
+    priority: required
+    positive_signals:
+      - labels do not feel stacked on nearby rules, arrows, or boxes
+      - high-density regions retain a deliberate internal grid
+    anti_patterns:
+      - near-miss spacing that technically avoids overlap but feels cramped
+      - equal spacing everywhere with no editorial rhythm
+    evidence_prompts:
+      - inspect the densest crop for near-miss aesthetic collisions
+      - compare margins around equivalent labels across panels
+  - id: muted_palette
+    dimension: color
+    instruction: Use low-saturation accent color with one clear semantic role per accent.
+    priority: recommended
+    positive_signals:
+      - accent colors repeat with the same meaning across panels
+      - background tones support readability without becoming visual subjects
+    anti_patterns:
+      - saturated fills that look like presentation graphics
+      - new hues introduced for decoration rather than meaning
+    evidence_prompts:
+      - list every non-gray hue and its semantic role
+      - flag any hue that appears only once without purpose
+  - id: polish_boundary
+    dimension: polish_route
+    instruction: Keep semantic and layout changes in TikZ; reserve SVG polish for optical finish only.
+    priority: required
+    positive_signals:
+      - SVG candidates are limited to typography, line edge, and sub-point spacing
+      - source-level geometry remains the source of truth
+    anti_patterns:
+      - hiding a scientific ambiguity behind vector cleanup
+      - moving a component semantically in SVG
+    evidence_prompts:
+      - identify whether the next edit changes meaning or only finish
+      - state why TikZ cannot reasonably express the requested optical adjustment
+anti_patterns:
+  - id: toy_schematic
+    dimension: maturity
+    severity: MAJOR
+    pattern: oversized arrows, generic rounded blocks, or decorative badges make the figure feel childish
+    preferred_route: continue_tikz
+  - id: poster_gradient
+    dimension: color
+    severity: MAJOR
+    pattern: broad decorative gradient or glow that is not tied to a physical variable
+    preferred_route: semantic_backport_required
+  - id: mechanical_repeat
+    dimension: hand_craft
+    severity: MINOR
+    pattern: repeated small elements are semantically stable but optically too identical
+    preferred_route: ready_for_svg_polish
+positive_signals:
+  - id: calm_first_glance
+    dimension: hierarchy
+    signal: one clear entry point appears without poster-like emphasis
+    evidence_prompt: identify the first fixation target and its support in the caption
+  - id: print_scale_authority
+    dimension: typography
+    signal: labels stay legible and quiet at journal column scale
+    evidence_prompt: inspect reduced-size crops for cramped or shouty labels
+  - id: semantic_palette
+    dimension: color
+    signal: every accent hue has a repeated semantic role
+    evidence_prompt: map each hue to the physical or narrative meaning it encodes
+polish_route_rules:
+  - id: tikz_until_layout_closes
+    condition: any semantic placement, label target, component structure, or panel hierarchy still changes
+    recommended_path: continue_tikz
+    forbidden_actions:
+      - author SVG polish recipe before source-level geometry is stable
+      - use vector editing to move scientific objects semantically
+  - id: svg_for_optical_finish
+    condition: semantics are stable and remaining defects are sub-point typography, stroke edge, or micro-spacing finish
+    recommended_path: ready_for_svg_polish
+    forbidden_actions:
+      - change labels, symbols, component identity, or figure story in SVG
+      - bypass critique freshness or human gates
+  - id: human_for_taste_conflict
+    condition: restrained main-text convention conflicts with requested expressive or cover-like treatment
+    recommended_path: needs_human_art_direction
+    forbidden_actions:
+      - silently promote decorative effects in a main-text figure
+human_review_triggers:
+  - id: venue_taste_conflict
+    condition: author requests expressive cover-like styling for a main-text Nature Communications figure
+    severity: MAJOR
+  - id: ambiguous_polish_boundary
+    condition: the proposed SVG change might alter scientific meaning or reader interpretation
+    severity: MAJOR

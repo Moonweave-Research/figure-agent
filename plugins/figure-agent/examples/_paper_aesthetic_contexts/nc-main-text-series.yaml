@@ -1,0 +1,55 @@
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: nc-main-text-series
+target_journal: Nature Communications
+visual_maturity: restrained
+density: balanced
+shared_visual_language:
+  - id: restrained_palette
+    dimension: palette
+    instruction: Reuse muted semantic accents across the paper and avoid decorative one-off hues.
+    priority: required
+    positive_signals:
+      - the same hue family means the same physical role across figures
+      - gray scaffolding stays quieter than claim-bearing accents
+    anti_patterns:
+      - a main figure introduces a saturated decorative accent absent from the series
+  - id: compact_typography
+    dimension: typography
+    instruction: Keep label scale and math styling consistent across the main-text set.
+    priority: required
+    positive_signals:
+      - equivalent labels have equivalent visual weight across figures
+      - panel titles remain secondary to evidence
+    anti_patterns:
+      - one figure reads like a slide while others read like journal artwork
+  - id: source_first_polish
+    dimension: polish_route
+    instruction: Keep layout and semantic changes in source; reserve SVG polish for finish-only deltas.
+    priority: required
+    positive_signals:
+      - figure-specific SVG polish does not alter scientific geometry
+    anti_patterns:
+      - one figure depends on unbackported SVG edits for meaning
+figure_roles:
+  - fixture: template_overview
+    role: overview_mechanism
+    must_align_with:
+      - restrained_palette
+      - compact_typography
+      - source_first_polish
+    allowed_variations:
+      - may carry one stronger hero panel than downstream figures
+  - fixture: template_data
+    role: data_evidence
+    must_align_with:
+      - restrained_palette
+      - compact_typography
+    allowed_variations:
+      - may reduce schematic illustration in favor of data ink
+must_avoid:
+  - id: series_drift
+    pattern: one main-text figure appears to come from a different visual system
+    severity: MAJOR
+  - id: decorative_main_text
+    pattern: cover-like effect appears in a main-text panel without explicit venue intent
+    severity: MAJOR

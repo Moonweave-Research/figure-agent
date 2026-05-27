@@ -1,0 +1,53 @@
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: science-compact-series
+target_journal: Science
+visual_maturity: polished
+density: dense
+shared_visual_language:
+  - id: fast_story
+    dimension: figure_series
+    instruction: Make each figure legible as a compact explanatory step in the paper's argument.
+    priority: required
+    positive_signals:
+      - panel order and label economy reveal the claim quickly
+    anti_patterns:
+      - local detail obscures the main story
+  - id: compact_label_system
+    dimension: typography
+    instruction: Keep labels short, attached, and visually consistent across the series.
+    priority: required
+    positive_signals:
+      - equivalent labels have equivalent size and placement logic
+    anti_patterns:
+      - explanatory prose appears inside the figure
+  - id: tight_but_clear
+    dimension: whitespace
+    instruction: Use compact spacing without near-miss label, rule, or arrow stacking.
+    priority: required
+    positive_signals:
+      - dense panels retain visible separation at print scale
+    anti_patterns:
+      - technically non-overlapping elements look visually collided
+figure_roles:
+  - fixture: template_science_overview
+    role: overview_mechanism
+    must_align_with:
+      - fast_story
+      - compact_label_system
+      - tight_but_clear
+    allowed_variations:
+      - may compress supporting detail into stronger panel sequencing
+  - fixture: template_science_data
+    role: data_evidence
+    must_align_with:
+      - fast_story
+      - compact_label_system
+    allowed_variations:
+      - may prioritize axes and data ink over decorative schematic detail
+must_avoid:
+  - id: compact_clutter
+    pattern: compression creates near-miss aesthetic collisions or unclear reading order
+    severity: MAJOR
+  - id: prose_inside_figure
+    pattern: compact figure relies on explanatory sentences rather than visual grammar
+    severity: MAJOR

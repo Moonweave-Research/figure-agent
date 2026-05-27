@@ -1,0 +1,112 @@
+schema: figure-agent.journal-art-direction-playbook.v1
+playbook_id: graphical-abstract-expressive
+target_journal: Nature Communications
+venue_context: graphical_abstract
+visual_maturity: cover_like
+design_center:
+  - id: expressive_hero
+    dimension: hierarchy
+    instruction: Permit a stronger visual hero only when the figure is explicitly graphical-abstract or cover-like.
+    priority: required
+    positive_signals:
+      - one central visual object carries the main claim
+      - secondary elements support the hero instead of competing with it
+    anti_patterns:
+      - every component receives hero treatment
+      - expressive styling hides the mechanism
+    evidence_prompts:
+      - name the hero object and the claim it carries
+      - identify any element competing with the hero
+  - id: atmospheric_depth
+    dimension: color
+    instruction: Use depth, glow, or gradient only as a controlled narrative device.
+    priority: recommended
+    positive_signals:
+      - atmospheric effects guide attention or encode environment
+      - color remains tied to material or physical meaning
+    anti_patterns:
+      - decorative glow with no claim payload
+      - cover-like effects applied to all panels indiscriminately
+    evidence_prompts:
+      - explain what each atmospheric effect means
+      - flag any effect that survives if the science is ignored
+  - id: organic_finish
+    dimension: hand_craft
+    instruction: Allow organic line or texture variation after semantic structure is stable.
+    priority: recommended
+    positive_signals:
+      - repeated elements avoid copy-paste sameness
+      - texture variation improves finish without changing meaning
+    anti_patterns:
+      - hand-crafted effects change component identity
+      - texture masks missing material fidelity
+    evidence_prompts:
+      - compare repeated motifs for useful variation
+      - decide whether texture is finish or semantic repair
+  - id: abstraction_boundary
+    dimension: polish_route
+    instruction: Keep expressive abstraction explicitly gated by author or venue intent.
+    priority: required
+    positive_signals:
+      - the pack is selected intentionally, not by default
+      - any departure from main-text restraint is documented
+    anti_patterns:
+      - expressive pack applied to main-text figures silently
+      - graphical abstract treatment used to repair a wrong mechanism
+    evidence_prompts:
+      - state why this fixture is not main-text
+      - list any semantic change proposed during polish
+anti_patterns:
+  - id: main_text_leakage
+    dimension: maturity
+    severity: BLOCKER
+    pattern: cover-like treatment is applied to a main-text figure without explicit opt-in
+    preferred_route: needs_human_art_direction
+  - id: decorative_without_claim
+    dimension: color
+    severity: MAJOR
+    pattern: glow, wash, or gradient remains decorative after removing the scientific claim
+    preferred_route: semantic_backport_required
+  - id: organic_finish_only
+    dimension: hand_craft
+    severity: MINOR
+    pattern: stable expressive motifs need only optical hand-crafted variation
+    preferred_route: ready_for_svg_polish
+positive_signals:
+  - id: claim_bearing_hero
+    dimension: hierarchy
+    signal: the hero object visibly carries the graphical abstract's main claim
+    evidence_prompt: describe the claim from the hero before reading labels
+  - id: meaningful_atmosphere
+    dimension: color
+    signal: expressive color or depth has a declared scientific or narrative role
+    evidence_prompt: list each effect and its meaning
+  - id: controlled_organic_variation
+    dimension: hand_craft
+    signal: organic variation improves finish without changing semantics
+    evidence_prompt: compare motif variation against the source meaning
+polish_route_rules:
+  - id: tikz_until_claim_stable
+    condition: hero object, claim payload, or semantic structure still changes
+    recommended_path: continue_tikz
+    forbidden_actions:
+      - use expressive polish before the graphical abstract claim is stable
+      - hide inaccurate science behind atmosphere
+  - id: svg_for_expressive_finish
+    condition: claim and source geometry are stable and remaining work is texture, edge, or atmospheric finish
+    recommended_path: ready_for_svg_polish
+    forbidden_actions:
+      - change scientific labels or component relationships in SVG
+      - apply the pack to a main-text fixture without explicit opt-in
+  - id: human_for_style_boundary
+    condition: author intent or venue context does not clearly allow expressive treatment
+    recommended_path: needs_human_art_direction
+    forbidden_actions:
+      - infer cover-like permission from aesthetics alone
+human_review_triggers:
+  - id: venue_context_unclear
+    condition: the fixture does not explicitly declare graphical abstract or cover-like use
+    severity: BLOCKER
+  - id: expressive_effect_changes_meaning
+    condition: texture, glow, or gradient changes the perceived scientific mechanism
+    severity: MAJOR
