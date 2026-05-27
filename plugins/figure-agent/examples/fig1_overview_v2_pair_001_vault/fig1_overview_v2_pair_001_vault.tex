@@ -764,9 +764,11 @@
 % from deep escape S-curve still <5pt threshold. Bumped to 11.95 (0.35cm
 % total shift from original 11.60) — beyond curve apex x=11.85 with margin.
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cBlue!75!black, anchor=west] at (12.85, 7.45) {shallow};
+% Panel-loop iter L11: shallow tone !75 → !80!black (parity with high/low n + Coulomb).
+      text=cBlue!80!black, anchor=west] at (12.85, 7.45) {shallow};
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black, anchor=west] at (11.60, 6.02) {deep};
+% Panel-loop iter L12: deep tone !75 → !80!black (parity).
+      text=cRed!80!black, anchor=west] at (11.60, 6.02) {deep};
 
 % Escape arrows from BOTH shallow and deep (showing both are dynamic, no
 % one-sided "dominate" claim). Shallow escapes easier (shorter arrow with
@@ -1132,13 +1134,15 @@
 % Cycle 2 / C409 (2026-05-22): "high n" cRed!75 on cRed!80 curve merges under
 % red-deficient CVD + grayscale. Switched label to bold cRed!90 with above=4pt
 % offset so weight + clearance carry the distinction; matches "low n" tier.
+% Panel-loop iter L10: high n / low n tone parity. cRed!90 / cBlue!60 → both
+% !80!black for cross-line consistency (matching Coulomb iter L8 + Panel C trap).
 \path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
   node[pos=0.55, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
-       text=cRed!90!black, sloped, above=6pt, inner sep=1pt]
+       text=cRed!80!black, sloped, above=6pt, inner sep=1pt]
   {high $n$};
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
   node[pos=0.40, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
-       text=cBlue!60!black, sloped, above=6pt, inner sep=1pt]
+       text=cBlue!80!black, sloped, above=6pt, inner sep=1pt]
   {low $n$};
 
 % =============== Column E — ISPD-paired =================
@@ -1864,12 +1868,14 @@
 % around x=11.70).
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
   (11.75, 1.3) -- (10.85, 1.3);
-\node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!75!black,
+% Panel-loop iter L8: Coulomb tone cRed!75 → !80!black (match arrow stroke tone).
+\node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!80!black,
       anchor=south east] at (10.85, 1.35) {Coulomb};
 % iter 29: repulsion y 1.25 → 1.27 (gap 0.05→0.03) to match Coulomb's tight
 % spacing per Gemini cohesion polish.
+% Panel-loop iter L9: repulsion tone parity with Coulomb iter 8 (!75 → !80!black).
 \node[labelMute, anchor=north east, font=\sffamily\fontsize{6.5}{7.8}\selectfont,
-      text=cRed!75!black] at (10.85, 1.27) {repulsion};
+      text=cRed!80!black] at (10.85, 1.27) {repulsion};
 
 % F-8 result zone electrode + ground + air gap — iter 25: SLIMMED 0.25 → 0.17cm
 % (Gemini iter 24 "overpowering vs cantilever"). Left edge 13.55 → 13.63,
