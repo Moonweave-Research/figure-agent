@@ -69,6 +69,7 @@ EDITORIAL_AUDIT_KEYS = (
 )
 
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
+CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -136,6 +137,48 @@ def _aesthetic_lever_audit() -> list[dict]:
     ]
 
 
+def _journal_art_direction_playbook_audit() -> dict:
+    return {
+        "schema": "figure-agent.journal-art-direction-playbook-audit.v1",
+        "playbook_id": "nc-main-text",
+        "venue_context": "main_text",
+        "design_center": [
+            {
+                "id": "editorial_restraint",
+                "verdict": "pass",
+                "evidence": "editorial_restraint evidence in the current artifact",
+                "positive_signal_refs": ["restrained_hero"],
+                "anti_pattern_refs": [],
+                "route": "none",
+                "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+                "rationale": "editorial_restraint passes with restrained visual hierarchy",
+            },
+            {
+                "id": "typography_authority",
+                "verdict": "weak",
+                "evidence": "typography_authority needs print-scale refinement",
+                "positive_signal_refs": [],
+                "anti_pattern_refs": ["toy_schematic"],
+                "route": "continue_tikz",
+                "linked_evidence": ["C001"],
+                "rationale": "typography_authority is weak and linked to C001",
+            },
+        ],
+        "route_rule_applied": {
+            "id": "tikz_until_semantics_close",
+            "recommended_path": "continue_tikz",
+            "rationale": "semantic text placement still needs TikZ adjustment",
+        },
+        "human_review_triggers": [
+            {
+                "id": "taste_direction_conflict",
+                "active": False,
+                "rationale": "no conflict between playbook and fixture intent",
+            }
+        ],
+    }
+
+
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     frontmatter = {
         "schema": schema,
@@ -177,6 +220,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -197,6 +241,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -206,6 +251,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -229,6 +275,10 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         ]
     if schema == CRITIQUE_SCHEMA_V1_11:
         frontmatter["aesthetic_lever_audit"] = _aesthetic_lever_audit()
+    if schema == CRITIQUE_SCHEMA_V1_12:
+        frontmatter["journal_art_direction_playbook_audit"] = (
+            _journal_art_direction_playbook_audit()
+        )
     return frontmatter
 
 
@@ -372,6 +422,63 @@ def test_validate_critique_schema_rejects_v1_11_non_pass_without_anti_pattern() 
     frontmatter["aesthetic_lever_audit"][1]["observed_anti_patterns"] = []
 
     with pytest.raises(CritiqueContractError, match="observed_anti_patterns"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_12_journal_art_direction_playbook_audit() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_12))
+
+
+def test_validate_critique_schema_rejects_v1_12_missing_playbook_audit() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    frontmatter.pop("journal_art_direction_playbook_audit")
+
+    with pytest.raises(CritiqueContractError, match="journal_art_direction_playbook_audit"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_12_duplicate_design_center_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    audit = frontmatter["journal_art_direction_playbook_audit"]
+    audit["design_center"][1]["id"] = "editorial_restraint"
+
+    with pytest.raises(CritiqueContractError, match="duplicate"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_12_unknown_design_center_verdict() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    audit = frontmatter["journal_art_direction_playbook_audit"]
+    audit["design_center"][0]["verdict"] = "beautiful"
+
+    with pytest.raises(CritiqueContractError, match="verdict"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_12_pass_without_positive_refs() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    audit = frontmatter["journal_art_direction_playbook_audit"]
+    audit["design_center"][0]["positive_signal_refs"] = []
+
+    with pytest.raises(CritiqueContractError, match="positive_signal_refs"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_12_non_pass_without_linked_evidence() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    audit = frontmatter["journal_art_direction_playbook_audit"]
+    audit["design_center"][1]["linked_evidence"] = []
+
+    with pytest.raises(CritiqueContractError, match="linked_evidence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_12_bad_route_rule_path() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    audit = frontmatter["journal_art_direction_playbook_audit"]
+    audit["route_rule_applied"]["recommended_path"] = "auto_beautify"
+
+    with pytest.raises(CritiqueContractError, match="recommended_path"):
         validate_critique_schema(frontmatter)
 
 

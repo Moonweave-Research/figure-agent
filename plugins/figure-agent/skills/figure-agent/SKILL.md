@@ -209,6 +209,13 @@ anchors in `top_tier_audit.cross_panel_semantic_grammar`,
 `top_tier_audit.aesthetic_coherence`, and
 `editorial_art_direction.visual_identity`; generic art-direction prose is
 invalid once the fixture opts in.
+When `spec.yaml.journal_art_direction_playbook` is declared, `/fig_critique`
+resolves `examples/_journal_art_direction_playbooks/<playbook_id>.yaml` and
+emits a `Journal Art-Direction Playbook` section. The critique must fill
+`journal_art_direction_playbook_audit`, cite exact playbook anchors in the
+required top-tier/editorial/journal assessment rationale slots, and tie those
+anchors to current-artifact evidence; generic "looks polished" prose is
+invalid once the fixture opts in.
 When `aesthetic_intent.yaml` uses schema v2, `/fig_critique` emits an
 `Aesthetic Lever Grammar` section and the critique must fill
 `aesthetic_lever_audit` exactly once for every declared lever. The host critique

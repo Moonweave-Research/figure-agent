@@ -1,6 +1,6 @@
 # Issue 56 - Journal Art-Direction Playbook
 
-Status: design proposed
+Status: Issues 56A-C implemented in current branch; Issues 56D-E remain open.
 
 Design spec:
 `../specs/2026-05-27-journal-art-direction-playbook-design.md`
@@ -122,6 +122,6 @@ Implement in narrow slices:
 
 ## Current Recommendation
 
-Start with Issues 56A-C after design approval. They provide the durable contract:
-parser, freshness, brief, schema, and lint accountability. Keep Issue 56D/E as
-the next follow-up unless dogfood shows loop surfacing is needed immediately.
+Issues 56A-C provide the durable contract: parser, freshness, brief, schema, and
+lint accountability. Keep Issues 56D-E as the next follow-up unless dogfood
+shows loop surfacing is needed immediately.

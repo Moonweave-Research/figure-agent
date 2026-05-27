@@ -8,6 +8,11 @@ from pathlib import Path
 
 import yaml
 from aesthetic_intent import AESTHETIC_INTENT_SCHEMA_V2
+from journal_art_direction_playbook import (
+    JournalArtDirectionPlaybookError,
+    declared_journal_playbook_path,
+    journal_playbook_id_from_spec,
+)
 from paper_aesthetic_context import PaperAestheticContextError, declared_paper_context_path
 from reference_contract import (
     declared_figure_reference_path,
@@ -17,7 +22,9 @@ from reference_contract import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
 CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
+CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
 CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
+CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -107,6 +114,12 @@ def critique_manifest_paths(
         paper_context_path = None
     if paper_context_path is not None and paper_context_path.exists():
         paths.append(paper_context_path)
+    try:
+        journal_playbook_path = declared_journal_playbook_path(example_dir, spec)
+    except JournalArtDirectionPlaybookError:
+        journal_playbook_path = None
+    if journal_playbook_path is not None and journal_playbook_path.exists():
+        paths.append(journal_playbook_path)
     svg_polish_delta_paths = (
         example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json",
         example_dir / "polish" / "aesthetic_delta" / "before.png",
@@ -143,6 +156,18 @@ def critique_generator_version(
 
 
 def expected_critique_rubric_version(example_dir: Path) -> str:
+    spec_path = example_dir / "spec.yaml"
+    if spec_path.is_file():
+        try:
+            spec_data = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            spec_data = {}
+        if isinstance(spec_data, dict):
+            try:
+                if journal_playbook_id_from_spec(spec_data) is not None:
+                    return CRITIQUE_RUBRIC_VERSION_V1_12
+            except JournalArtDirectionPlaybookError:
+                return CRITIQUE_RUBRIC_VERSION_V1_12
     intent_path = example_dir / "aesthetic_intent.yaml"
     if not intent_path.is_file():
         return CRITIQUE_RUBRIC_VERSION
@@ -160,9 +185,11 @@ def _critique_schema_matches_expected_rubric(
     expected_rubric_version: str,
 ) -> bool:
     schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_12:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_12
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_11
-    return schema != CRITIQUE_SCHEMA_VERSION_V1_11
+    return schema not in {CRITIQUE_SCHEMA_VERSION_V1_11, CRITIQUE_SCHEMA_VERSION_V1_12}
 
 
 def yaml_frontmatter(path: Path) -> dict:

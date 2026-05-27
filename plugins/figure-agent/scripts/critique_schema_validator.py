@@ -746,6 +746,111 @@ def _validate_v1_11_aesthetic_lever_audit(
     return verdicts
 
 
+def _validate_v1_12_journal_art_direction_playbook_audit(
+    frontmatter: dict[str, Any],
+) -> None:
+    audit = require_mapping(
+        frontmatter.get("journal_art_direction_playbook_audit"),
+        "critique frontmatter.journal_art_direction_playbook_audit",
+    )
+    label = "critique frontmatter.journal_art_direction_playbook_audit"
+    schema = _require_non_empty_string(audit, "schema", label=label)
+    if schema != vocab.JOURNAL_PLAYBOOK_AUDIT_SCHEMA:
+        raise CritiqueContractError(
+            f"{label}.schema must be {vocab.JOURNAL_PLAYBOOK_AUDIT_SCHEMA}"
+        )
+    _require_non_empty_string(audit, "playbook_id", label=label)
+    _require_non_empty_string(audit, "venue_context", label=label)
+    raw_design_center = _require_non_empty_list(
+        audit.get("design_center"),
+        f"{label}.design_center",
+    )
+    seen_ids: set[str] = set()
+    for index, raw_item in enumerate(raw_design_center):
+        item_label = f"{label}.design_center[{index}]"
+        item = require_mapping(raw_item, item_label)
+        item_id = _require_non_empty_string(item, "id", label=item_label)
+        if item_id in seen_ids:
+            raise CritiqueContractError(
+                f"{label}.design_center has duplicate id: {item_id}"
+            )
+        seen_ids.add(item_id)
+        verdict = _require_enum(
+            item,
+            "verdict",
+            vocab.JOURNAL_PLAYBOOK_VERDICTS,
+            label=item_label,
+        )
+        _require_non_empty_string(item, "evidence", label=item_label)
+        positive_signal_refs = _validate_string_list(
+            item.get("positive_signal_refs"),
+            f"{item_label}.positive_signal_refs",
+            require_non_empty=verdict == "pass",
+        )
+        anti_pattern_refs = _validate_string_list(
+            item.get("anti_pattern_refs"),
+            f"{item_label}.anti_pattern_refs",
+            require_non_empty=verdict in {"weak", "fail", "needs_human"},
+        )
+        route = _require_enum(
+            item,
+            "route",
+            vocab.JOURNAL_PLAYBOOK_ROUTES,
+            label=item_label,
+        )
+        linked_evidence = _validate_string_list(
+            item.get("linked_evidence"),
+            f"{item_label}.linked_evidence",
+            require_non_empty=verdict in {"weak", "fail", "needs_human"},
+        )
+        _require_non_empty_string(item, "rationale", label=item_label)
+        if verdict == "pass" and not positive_signal_refs:
+            raise CritiqueContractError(
+                f"{item_label}.positive_signal_refs must be non-empty for pass verdict"
+            )
+        if verdict in {"weak", "fail", "needs_human"} and not anti_pattern_refs:
+            raise CritiqueContractError(
+                f"{item_label}.anti_pattern_refs must be non-empty for verdict {verdict}"
+            )
+        if verdict in {"pass", "not_applicable"} and route != "none":
+            raise CritiqueContractError(
+                f"{item_label}.route must be none for verdict {verdict}"
+            )
+        if verdict in {"weak", "fail", "needs_human"} and route == "none":
+            raise CritiqueContractError(
+                f"{item_label}.route must not be none for verdict {verdict}"
+            )
+        if route != "none" and not linked_evidence:
+            raise CritiqueContractError(
+                f"{item_label}.linked_evidence must be non-empty for route {route}"
+            )
+
+    route_rule = require_mapping(
+        audit.get("route_rule_applied"),
+        f"{label}.route_rule_applied",
+    )
+    _require_non_empty_string(route_rule, "id", label=f"{label}.route_rule_applied")
+    _require_enum(
+        route_rule,
+        "recommended_path",
+        vocab.JOURNAL_PLAYBOOK_ROUTES - {"none"},
+        label=f"{label}.route_rule_applied",
+    )
+    _require_non_empty_string(route_rule, "rationale", label=f"{label}.route_rule_applied")
+
+    raw_triggers = _require_list(
+        audit.get("human_review_triggers"),
+        f"{label}.human_review_triggers",
+    )
+    for index, raw_trigger in enumerate(raw_triggers):
+        trigger_label = f"{label}.human_review_triggers[{index}]"
+        trigger = require_mapping(raw_trigger, trigger_label)
+        _require_non_empty_string(trigger, "id", label=trigger_label)
+        if not isinstance(trigger.get("active"), bool):
+            raise CritiqueContractError(f"{trigger_label}.active must be a boolean")
+        _require_non_empty_string(trigger, "rationale", label=trigger_label)
+
+
 def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_non_empty_list(
         frontmatter.get("crop_audit_log"),
@@ -912,6 +1017,25 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_12:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
         _validate_journal_grade_assessment(
             frontmatter,
             quality_verdicts,

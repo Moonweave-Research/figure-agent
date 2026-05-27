@@ -14,6 +14,7 @@ CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
+CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -199,4 +200,18 @@ AESTHETIC_LEVER_VERDICTS = frozenset(
 )
 AESTHETIC_LEVER_ROUTES = frozenset(
     {"none", "tikz_patch", "svg_polish", "semantic_backport", "human_art_direction"}
+)
+
+JOURNAL_PLAYBOOK_AUDIT_SCHEMA = "figure-agent.journal-art-direction-playbook-audit.v1"
+JOURNAL_PLAYBOOK_VERDICTS = frozenset(
+    {"pass", "weak", "fail", "needs_human", "not_applicable"}
+)
+JOURNAL_PLAYBOOK_ROUTES = frozenset(
+    {
+        "none",
+        "continue_tikz",
+        "ready_for_svg_polish",
+        "semantic_backport_required",
+        "needs_human_art_direction",
+    }
 )
