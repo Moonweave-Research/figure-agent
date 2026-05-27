@@ -1,0 +1,118 @@
+fixtures:
+  - fixture: fig1_overview_v2_pair_001_vault
+    reference_image: true
+    text_boundary_check_ids:
+      - panel_e_hv_display_avoid_inside
+      - panel_e_vs_meter_display_avoid_inside
+      - panel_f_psu_display_avoid_inside
+      - row2_contain_text
+      - row2_de_column_rule
+      - row2_ef_column_rule
+    label_path_check_ids:
+      - panel_c_deep_escape_curve
+      - panel_c_mobility_edge_reference
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Row-2 apparatus boundaries, internal display boxes, and Panel C semantic
+      paths already have deterministic checks plus fixture-local aesthetic
+      intent.
+
+  - fixture: smoke_trap_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids:
+      - smoke_cb_reference_line
+      - smoke_deep_trap_line
+      - smoke_vb_reference_line
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_low_noise_smoke
+    rationale: >
+      Compact band diagram has three line-body-only label-path checks and no
+      reference-grounded critique requirement.
+
+  - fixture: fig1_overview_v2
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Reference-grounded critique exists, but deterministic boundary/path checks
+      need fixture-specific geometry rather than copied coordinates from the
+      vault variant.
+
+  - fixture: golden_trap_depth_picture
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Golden/reference fixture is useful for critique and export gates; adding
+      boundary/path checks needs a separate geometry pass to avoid false
+      positives in the target-picture layout.
+
+  - fixture: n3_trial_01_trap_depth
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Reference-grounded trial fixture has critique coverage, but row/component
+      boundary geometry is not declared yet.
+
+  - fixture: n3_trial_02_actuation_sequence
+    reference_image: true
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_reference_only
+    rationale: >
+      Reference-grounded sequence fixture has critique coverage, but explicit
+      path/boundary hazards need a fixture-specific adoption pass.
+
+  - fixture: fig3_trapping_concept
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: not_applicable_no_reference
+    rationale: >
+      Critique is not required by spec and no low-noise deterministic
+      boundary/path checks are declared for the current schematic.
+
+  - fixture: fig5_floating_clip_mechanism
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Fixture has panel boxes but no reference image; deterministic checks would
+      need explicit fixture geometry before adoption.

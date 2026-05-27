@@ -1,6 +1,6 @@
 # Issue 57 - Real Fixture Audit Adoption
 
-Status: proposed
+Status: implemented in branch `codex/issue57-real-fixture-audit-adoption`
 
 Depends on: Issue 56 journal art-direction playbook completion
 
@@ -85,3 +85,16 @@ manual catching:
 5. `n3_trial_02_actuation_sequence`
 
 Then sweep smaller/smoke fixtures only for low-noise deterministic checks.
+
+## Implementation Notes
+
+- Added `tests/real_fixture_audit_adoption.yaml` to record the current
+  adoption state for every real fixture.
+- Added `tests/test_real_fixture_audit_adoption.py` to verify that the matrix
+  matches each fixture's `spec.yaml` and companion pack files.
+- Added `docs/milestones/2026-05-28-real-fixture-audit-adoption.md` as the
+  human-readable adoption matrix and Issue 58 handoff.
+- No figure source, export, accepted, golden, or generated build artifact was
+  changed.
+- No new audit declarations were added in this slice; deferred fixtures are now
+  explicit rather than silently assumed covered.
