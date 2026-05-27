@@ -167,7 +167,8 @@ def _top_tier_yaml_with_aesthetic_anchor(anchor: str) -> str:
     lines = ["top_tier_audit:"]
     for key in TOP_TIER_KEYS:
         finding = (
-            f"aesthetic_coherence cites aesthetic intent anchor {anchor}"
+            f"aesthetic_coherence cites aesthetic intent anchor {anchor} "
+            "with current artifact evidence from Panel C spacing"
             if key == "aesthetic_coherence"
             else f"{key} finding"
         )
@@ -212,6 +213,7 @@ def _editorial_yaml_with_aesthetic_anchors(
         concrete_fix = "accept_simplification"
         if anchor is not None:
             evidence = f"{key} cites aesthetic intent anchor {anchor}"
+            evidence += " with current artifact evidence from the rendered figure"
             rationale = f"{key} remains calibrated to {anchor}"
             concrete_fix = f"preserve {anchor} unless visual evidence contradicts it"
         lines.extend(
@@ -229,12 +231,18 @@ def _editorial_yaml_with_aesthetic_anchors(
     return "\n".join(lines) + "\n"
 
 
-def _top_tier_yaml_with_paper_context_anchor(anchor: str) -> str:
+def _top_tier_yaml_with_paper_context_anchor(
+    anchor: str,
+    *,
+    current_artifact_evidence: bool = True,
+) -> str:
     lines = ["top_tier_audit:"]
     for key in TOP_TIER_KEYS:
         finding = f"{key} finding"
         if key in {"cross_panel_semantic_grammar", "aesthetic_coherence"}:
             finding = f"{key} cites paper-wide anchor {anchor}"
+            if current_artifact_evidence:
+                finding += " with current artifact evidence from Panel A spacing"
         lines.extend(
             [
                 f"  {key}:",
@@ -247,7 +255,11 @@ def _top_tier_yaml_with_paper_context_anchor(anchor: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _editorial_yaml_with_paper_context_anchor(anchor: str) -> str:
+def _editorial_yaml_with_paper_context_anchor(
+    anchor: str,
+    *,
+    current_artifact_evidence: bool = True,
+) -> str:
     keys = (
         "hero_focus",
         "narrative_choreography",
@@ -267,6 +279,8 @@ def _editorial_yaml_with_paper_context_anchor(anchor: str) -> str:
         concrete_fix = "accept_simplification"
         if key == "visual_identity":
             evidence = f"visual_identity cites paper-wide anchor {anchor}"
+            if current_artifact_evidence:
+                evidence += " with current artifact evidence from the rendered figure"
             rationale = f"visual identity remains calibrated to {anchor}"
             concrete_fix = f"preserve {anchor} unless visual evidence contradicts it"
         lines.extend(
@@ -284,7 +298,11 @@ def _editorial_yaml_with_paper_context_anchor(anchor: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _top_tier_yaml_with_journal_playbook_anchor(anchor: str) -> str:
+def _top_tier_yaml_with_journal_playbook_anchor(
+    anchor: str,
+    *,
+    current_artifact_evidence: bool = True,
+) -> str:
     required_keys = {
         "first_glance_message",
         "target_journal_fit",
@@ -297,6 +315,8 @@ def _top_tier_yaml_with_journal_playbook_anchor(anchor: str) -> str:
         finding = f"{key} finding"
         if key in required_keys:
             finding = f"{key} cites journal playbook anchor {anchor}"
+            if current_artifact_evidence:
+                finding += " with current artifact evidence from the rendered panel"
         lines.extend(
             [
                 f"  {key}:",
@@ -309,7 +329,11 @@ def _top_tier_yaml_with_journal_playbook_anchor(anchor: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _editorial_yaml_with_journal_playbook_anchor(anchor: str) -> str:
+def _editorial_yaml_with_journal_playbook_anchor(
+    anchor: str,
+    *,
+    current_artifact_evidence: bool = True,
+) -> str:
     required_keys = {
         "visual_identity",
         "aesthetic_risk",
@@ -334,6 +358,8 @@ def _editorial_yaml_with_journal_playbook_anchor(anchor: str) -> str:
         concrete_fix = "accept_simplification"
         if key in required_keys:
             evidence = f"{key} cites journal playbook anchor {anchor}"
+            if current_artifact_evidence:
+                evidence += " with current artifact evidence from the rendered figure"
             rationale = f"{key} remains calibrated to {anchor}"
             concrete_fix = f"preserve {anchor} unless current artifact evidence changes"
         lines.extend(
@@ -1165,6 +1191,40 @@ def test_lint_critique_accepts_exact_paper_context_anchors(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_paper_context_anchor_without_current_artifact_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_paper_aesthetic_context(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        top_tier_yaml=_top_tier_yaml_with_paper_context_anchor(
+            "restrained_palette",
+            current_artifact_evidence=False,
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml_with_paper_context_anchor(
+            "restrained_palette",
+            current_artifact_evidence=False,
+        ),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "paper_aesthetic_context_accounting"
+    ]
+    assert "current-artifact evidence" in violations[0].message
+    assert "top_tier_audit.cross_panel_semantic_grammar" in violations[0].message
+
+
 def test_lint_critique_keeps_missing_paper_context_legacy_behavior(
     tmp_path: Path,
 ) -> None:
@@ -1217,8 +1277,12 @@ def _write_complete_v1_12_journal_playbook_fixture(
     *,
     top_tier_yaml: str | None = None,
     editorial_yaml: str | None = None,
-    journal_grade_rationale: str = "journal assessment cites editorial_restraint",
+    journal_grade_rationale: str = (
+        "journal assessment cites editorial_restraint with current artifact "
+        "evidence from the rendered figure"
+    ),
     journal_playbook_audit_yaml: str | None = None,
+    aesthetic_lever_audit_yaml: str = "",
     findings_yaml: str | None = None,
 ) -> None:
     _write_journal_art_direction_playbook(fig_dir)
@@ -1239,6 +1303,7 @@ def _write_complete_v1_12_journal_playbook_fixture(
         journal_playbook_audit_yaml=journal_playbook_audit_yaml
         if journal_playbook_audit_yaml is not None
         else _journal_playbook_audit_yaml(),
+        aesthetic_lever_audit_yaml=aesthetic_lever_audit_yaml,
         journal_grade_yaml=_journal_grade_yaml(rationale=journal_grade_rationale),
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
@@ -1290,6 +1355,86 @@ def test_lint_critique_accepts_complete_journal_playbook_accounting(
     _write_complete_v1_12_journal_playbook_fixture(fig_dir)
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_accepts_v1_12_with_aesthetic_intent_v2(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_aesthetic_intent_v2(fig_dir)
+    top_tier_yaml = _top_tier_yaml_with_journal_playbook_anchor(
+        "editorial_restraint",
+    ).replace(
+        "aesthetic_coherence cites journal playbook anchor editorial_restraint "
+        "with current artifact evidence from the rendered panel",
+        "aesthetic_coherence cites journal playbook anchor editorial_restraint "
+        "and aesthetic intent anchor mature_restraint with current artifact "
+        "evidence from the rendered panel",
+    )
+    editorial_yaml = (
+        _editorial_yaml_with_journal_playbook_anchor("editorial_restraint")
+        .replace(
+            "visual_identity cites journal playbook anchor editorial_restraint "
+            "with current artifact evidence from the rendered figure",
+            "visual_identity cites journal playbook anchor editorial_restraint "
+            "and aesthetic intent anchor preset_macro_feel with current artifact "
+            "evidence from the rendered figure",
+        )
+        .replace(
+            "aesthetic_risk cites journal playbook anchor editorial_restraint "
+            "with current artifact evidence from the rendered figure",
+            "aesthetic_risk cites journal playbook anchor editorial_restraint "
+            "and aesthetic intent anchor toy_diagram with current artifact "
+            "evidence from the rendered figure",
+        )
+        .replace(
+            "tikz_vs_svg_polish_trigger cites journal playbook anchor editorial_restraint "
+            "with current artifact evidence from the rendered figure",
+            "tikz_vs_svg_polish_trigger cites journal playbook anchor editorial_restraint "
+            "and aesthetic intent anchor svg_micro_polish with current artifact "
+            "evidence from the rendered figure",
+        )
+    )
+    _write_complete_v1_12_journal_playbook_fixture(
+        fig_dir,
+        top_tier_yaml=top_tier_yaml,
+        editorial_yaml=editorial_yaml,
+        journal_grade_rationale=(
+            "journal assessment cites editorial_restraint with current artifact "
+            "evidence from the rendered figure"
+        ),
+        aesthetic_lever_audit_yaml=_aesthetic_lever_audit_yaml(),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_journal_playbook_anchor_without_current_artifact_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_complete_v1_12_journal_playbook_fixture(
+        fig_dir,
+        top_tier_yaml=_top_tier_yaml_with_journal_playbook_anchor(
+            "editorial_restraint",
+            current_artifact_evidence=False,
+        ),
+        editorial_yaml=_editorial_yaml_with_journal_playbook_anchor(
+            "editorial_restraint",
+            current_artifact_evidence=False,
+        ),
+        journal_grade_rationale="journal assessment cites editorial_restraint",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "journal_art_direction_playbook_accounting"
+    ]
+    assert "current-artifact evidence" in violations[0].message
+    assert "top_tier_audit.first_glance_message" in violations[0].message
 
 
 def test_lint_critique_accepts_active_journal_trigger_visible_as_finding(

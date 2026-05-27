@@ -120,6 +120,20 @@ _JOURNAL_PLAYBOOK_REQUIRED_SLOTS = (
     ("editorial_art_direction", "tikz_vs_svg_polish_trigger"),
     ("journal_grade_assessment", "rationale"),
 )
+_CURRENT_ARTIFACT_EVIDENCE_MARKERS = (
+    "current artifact",
+    "current render",
+    "rendered figure",
+    "rendered panel",
+    "visible",
+    "visibly",
+    "panel ",
+    "crop",
+    "print-scale",
+    "png",
+    "pdf",
+    "bbox",
+)
 
 
 @dataclass(frozen=True)
@@ -181,6 +195,12 @@ def _contains_aesthetic_anchor(text: str, anchors: set[str]) -> bool:
         if re.search(rf"(^|[^A-Za-z0-9_]){re.escape(anchor)}($|[^A-Za-z0-9_])", text):
             return True
     return False
+
+
+def _contains_anchor_with_current_artifact_evidence(text: str, anchors: set[str]) -> bool:
+    return _contains_aesthetic_anchor(text, anchors) and any(
+        marker in text for marker in _CURRENT_ARTIFACT_EVIDENCE_MARKERS
+    )
 
 
 def _aesthetic_lever_items(pack: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -251,14 +271,18 @@ def _aesthetic_lever_accounting_violations(
 ) -> list[CritiqueLintViolation]:
     if pack.get("schema") != AESTHETIC_INTENT_SCHEMA_V2:
         return []
-    if frontmatter.get("schema") != "figure-agent.critique.v1.11":
+    if frontmatter.get("schema") not in {
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+    }:
         return [
             CritiqueLintViolation(
                 severity="blocker",
                 category="aesthetic_lever_accounting",
                 message=(
                     "aesthetic_intent.yaml schema v2 requires "
-                    "critique schema figure-agent.critique.v1.11"
+                    "critique schema figure-agent.critique.v1.11 or "
+                    "figure-agent.critique.v1.12"
                 ),
             )
         ]
@@ -518,7 +542,7 @@ def _aesthetic_intent_accounting_violations(
         raw_section = frontmatter.get(section_name)
         raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
         normalized_text = _text_blob(raw_slot).lower()
-        if not _contains_aesthetic_anchor(normalized_text, anchors):
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
             missing.append(f"{section_name}.{slot_name}")
     if not missing:
         return []
@@ -528,7 +552,8 @@ def _aesthetic_intent_accounting_violations(
             category="aesthetic_intent_accounting",
             message=(
                 "aesthetic intent pack exists; critique slots must cite at least "
-                "one exact aesthetic-intent anchor from target fields or item ids: "
+                "one exact aesthetic-intent anchor from target fields or item ids "
+                "with current-artifact evidence: "
                 + ", ".join(missing)
             ),
         )
@@ -574,7 +599,7 @@ def _paper_aesthetic_context_accounting_violations(
         raw_section = frontmatter.get(section_name)
         raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
         normalized_text = _text_blob(raw_slot).lower()
-        if not _contains_aesthetic_anchor(normalized_text, anchors):
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
             missing.append(f"{section_name}.{slot_name}")
     if not missing:
         return []
@@ -585,7 +610,7 @@ def _paper_aesthetic_context_accounting_violations(
             message=(
                 "paper_aesthetic_context is declared; critique slots must cite at least "
                 "one exact paper-wide anchor from paper id, target fields, role, shared "
-                "language ids, or must-avoid ids: "
+                "language ids, or must-avoid ids with current-artifact evidence: "
                 + ", ".join(missing)
             ),
         )
@@ -810,7 +835,7 @@ def _journal_art_direction_playbook_accounting_violations(
         raw_section = frontmatter.get(section_name)
         raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
         normalized_text = _text_blob(raw_slot).lower()
-        if not _contains_aesthetic_anchor(normalized_text, anchors):
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
             missing.append(f"{section_name}.{slot_name}")
     if not missing:
         return []
