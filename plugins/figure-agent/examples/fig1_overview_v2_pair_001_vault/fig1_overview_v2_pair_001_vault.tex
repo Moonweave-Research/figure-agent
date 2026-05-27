@@ -1259,10 +1259,10 @@
 % Visual hierarchy: HV+ = compact source / V_s meter = larger read-out instrument.
 % Output terminal at (6.155, 4.13) stays inside; corona needle at x=6.155 stays
 % under box center (need slight shift: x 6.15 -> 6.155).
-\fill[black, opacity=0.18, rounded corners=0.8pt] (5.86, 4.09) rectangle (6.51, 4.34);
-\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=0.8pt]
+\fill[black, opacity=0.18, rounded corners=1.2pt] (5.86, 4.09) rectangle (6.51, 4.34);
+\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=1.2pt]
   (5.83, 4.12) rectangle (6.48, 4.37);
-\draw[cGray!60!black, line width=0.25pt, rounded corners=0.8pt]
+\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
   (5.83, 4.12) rectangle (6.48, 4.37);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
@@ -1315,12 +1315,14 @@
 % as one token. Shifted HV+ DOWN to y=4.10 (mid-height between letter y=4.55
 % and box bottom y=4.10) and shrunk font 6.5 -> 5.5pt (apparatus secondary
 % tier per V_s probe / V_s meter convention; 5.5pt was Codex iter 49 standard).
-% Panel E iter 36 [round 6 focal, 2026-05-27]: HV+ label primary tier.
-% Corona-charging is method focal — HV+ deserves primary label tier.
-% Font 6→6.5pt + tone cGray!65 → cGray!80!black + slight bold tier.
+% Panel E iter 38 [round 7 Option C, 2026-05-27]: HV+ + V_s meter labels unified
+% as box LEFT-outside (anchor=east). HV+ initial ABOVE-box attempt overshot
+% Row 2 frame y=4.50. Both apparatus box labels now sit LEFT of their box at
+% box mid-height — consistent visual rhythm. V_s probe label stays ABOVE probe
+% (no box, instrument-on-stand convention). polymer keeps LEFT-leader convention.
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!80!black,
       anchor=east]
-  at (5.55, 4.10) {HV+};
+  at (5.80, 4.25) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
@@ -1483,10 +1485,10 @@
 % iter8 follow-up: V_s meter box matching HV+ gradient depth + stroke.
 % iter10 follow-up: V_s meter drop shadow matching HV+.
 % iter 16 follow-up: V_s meter cool metallic to match HV+ box.
-\fill[black, opacity=0.18, rounded corners=0.8pt] (7.71, 3.55) rectangle (8.71, 4.02);
-\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=0.8pt]
+\fill[black, opacity=0.18, rounded corners=1.2pt] (7.71, 3.55) rectangle (8.71, 4.02);
+\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=1.2pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
-\draw[cGray!60!black, line width=0.25pt, rounded corners=0.8pt]
+\draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
@@ -1512,9 +1514,11 @@
 % iter 51: thin space between V_s and meter. iter E2: weight unified to plain
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
-% iter 36 follow-up: V_s meter tertiary tier — 6pt → 5.5pt + cGray!55!black.
+% iter 38: V_s meter label inside box bottom (revert to box-internal convention).
+% Box: x=7.68..8.68, y=3.58..4.05. Display: x=7.72..8.56, y=3.78..4.00.
+% Label sits at box bottom area (y=3.66, between box bottom 3.58 and display 3.78).
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black]
-  at (8.14, 3.70) {$V_s$ meter};
+  at (8.14, 3.68) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
