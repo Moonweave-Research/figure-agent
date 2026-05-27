@@ -103,9 +103,8 @@ These records keep the same `state`, `verdict`, `source`, `evidence_path`, and
 `quality_axis_blocking_items`. Legacy, stale, missing, or malformed critique
 frontmatter falls back to the earlier placeholder/status-derived behavior.
 
-When `critique.md` is fresh schema `figure-agent.critique.v1.3`,
-`figure-agent.critique.v1.4`, or `figure-agent.critique.v1.5`, `/fig_loop`
-also surfaces
+When `critique.md` is fresh schema `figure-agent.critique.v1.3` or newer,
+`/fig_loop` also surfaces
 `top_tier_audit_summary` in both `iteration_001.json` and the
 `--json` summary. The summary reports slot count, verdict counts,
 `weak_or_failed_slots`, `blocking_high_impact_slots`,
@@ -113,15 +112,24 @@ also surfaces
 This is a read-only visibility surface; it does not make score or top-tier
 audit prose release-gating by itself.
 
-When `critique.md` is fresh schema `figure-agent.critique.v1.5`, `/fig_loop`
-also surfaces `editorial_art_direction_summary` in both `iteration_001.json`
-and the `--json` summary. This summary reports the editorial slot verdicts,
-high-impact blockers, `worst_verdict`, and
+When `critique.md` is fresh schema `figure-agent.critique.v1.5` or newer,
+`/fig_loop` also surfaces `editorial_art_direction_summary` in both
+`iteration_001.json` and the `--json` summary. This summary reports the
+editorial slot verdicts, high-impact blockers, `worst_verdict`, and
 `polish_recommended_path` from
 `editorial_art_direction.tikz_vs_svg_polish_trigger`. It is the machine-readable
 handoff used by `/fig_drive --mode polish` to distinguish `continue_tikz`,
 `ready_for_svg_polish`, `needs_human_art_direction`, and
 `semantic_backport_required`.
+
+When `critique.md` is fresh schema `figure-agent.critique.v1.12`, `/fig_loop`
+also surfaces `journal_art_direction_playbook_summary` in both
+`iteration_001.json` and the `--json` summary. The summary reports the
+playbook id, venue context, design-center verdict counts, weakest design-center
+ids, active human-review trigger ids, and the selected playbook route rule.
+This field is read-only visibility. It does not create a new stop boundary or
+override existing human, top-tier, aesthetic lever, crop, export, accepted,
+golden, or publication gates.
 
 When that editorial summary exists, `/fig_loop` also writes
 `svg_polish_readiness`. This additive summary makes the polish boundary

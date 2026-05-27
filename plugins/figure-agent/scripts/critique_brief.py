@@ -26,6 +26,11 @@ from aesthetic_intent import (
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
+from journal_art_direction_playbook import (
+    JournalArtDirectionPlaybookError,
+    journal_playbook_anchors,
+    load_optional_journal_art_direction_playbook,
+)
 from paper_aesthetic_context import (
     PaperAestheticContextError,
     load_optional_paper_aesthetic_context,
@@ -36,6 +41,7 @@ from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_11,
+    CRITIQUE_RUBRIC_VERSION_V1_12,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -80,6 +86,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
+_CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
 
 
 class CritiqueBriefError(Exception):
@@ -501,6 +508,70 @@ def _paper_aesthetic_context_section(
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _journal_art_direction_playbook_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    lines = [
+        "## Journal Art-Direction Playbook",
+        "Host LLM MUST use this playbook as the journal-level taste vocabulary "
+        "for the current critique. Generic claims such as \"looks polished\" are "
+        "invalid unless they cite exact playbook anchors and current-artifact evidence.",
+        "The critique must cite exact playbook anchors in `top_tier_audit`, "
+        "`editorial_art_direction`, `journal_grade_assessment.rationale`, and "
+        "`journal_art_direction_playbook_audit`.",
+        f"- Playbook id: {pack['playbook_id']}",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Venue context: {pack['venue_context']}",
+        f"- Visual maturity: {pack['visual_maturity']}",
+        "",
+        "### Design Center",
+    ]
+    for item in pack.get("design_center", []):
+        lines.extend(
+            [
+                (
+                    f"- {item['id']} priority={item['priority']} "
+                    f"dimension={item['dimension']}: {item['instruction']}"
+                ),
+                f"  positive_signals: {'; '.join(item['positive_signals'])}",
+                f"  anti_patterns: {'; '.join(item['anti_patterns'])}",
+                f"  evidence_prompts: {'; '.join(item['evidence_prompts'])}",
+            ]
+        )
+    lines.append("")
+    lines.append("### Anti-Patterns")
+    for item in pack.get("anti_patterns", []):
+        lines.append(
+            f"- {item['id']} severity={item['severity']} "
+            f"route={item['preferred_route']}: {item['pattern']}"
+        )
+    lines.append("")
+    lines.append("### Positive Signals")
+    for item in pack.get("positive_signals", []):
+        lines.append(f"- {item['id']} dimension={item['dimension']}: {item['signal']}")
+        lines.append(f"  evidence_prompt: {item['evidence_prompt']}")
+    lines.append("")
+    lines.append("### Polish Route Rules")
+    for item in pack.get("polish_route_rules", []):
+        lines.append(f"- {item['id']} path={item['recommended_path']}: {item['condition']}")
+        lines.append(f"  forbidden_actions: {'; '.join(item['forbidden_actions'])}")
+    lines.append("")
+    lines.append("### Human Review Triggers")
+    for item in pack.get("human_review_triggers", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['condition']}")
+    anchors = sorted(journal_playbook_anchors(pack))
+    required_ids = ", ".join(item["id"] for item in pack.get("design_center", []))
+    lines.extend(
+        [
+            "",
+            "### Exact Playbook Anchors",
+            f"- Required design_center ids: {required_ids}",
+            f"- Full accepted anchor set: {', '.join(anchors)}",
+        ]
+    )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _svg_polish_delta_section(example_dir: Path) -> str:
     manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
     if not manifest_path.is_file():
@@ -670,6 +741,53 @@ def _aesthetic_lever_audit_schema(pack: dict | None) -> str:
     allowed_next_adjustment: "<one bounded adjustment, or empty when route=none>"
     forbidden_adjustment_guard: "<semantic guard from the declared lever>"
     rationale: "<why this verdict and route follow from the declared lever>"
+"""
+
+
+def _journal_art_direction_playbook_audit_schema(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    design_center_ids = " | ".join(item["id"] for item in pack.get("design_center", []))
+    positive_signal_ids = " | ".join(item["id"] for item in pack.get("positive_signals", []))
+    anti_pattern_ids = " | ".join(item["id"] for item in pack.get("anti_patterns", []))
+    route_rule_ids = " | ".join(item["id"] for item in pack.get("polish_route_rules", []))
+    human_trigger_ids = " | ".join(item["id"] for item in pack.get("human_review_triggers", []))
+    route_values = (
+        "none | continue_tikz | ready_for_svg_polish | "
+        "semantic_backport_required | needs_human_art_direction"
+    )
+    evidence_values = (
+        "top_tier_audit.* | editorial_art_direction.* | "
+        "journal_grade_assessment.rationale | finding id"
+    )
+    recommended_path_values = (
+        "continue_tikz | ready_for_svg_polish | semantic_backport_required | "
+        "needs_human_art_direction"
+    )
+    return f"""journal_art_direction_playbook_audit:
+  schema: figure-agent.journal-art-direction-playbook-audit.v1
+  playbook_id: {pack['playbook_id']}
+  venue_context: {pack['venue_context']}
+  design_center:
+    - id: {design_center_ids}
+      verdict: pass | weak | fail | needs_human | not_applicable
+      evidence: "<current artifact evidence tied to exact playbook anchors>"
+      positive_signal_refs:
+        - "{positive_signal_ids}"
+      anti_pattern_refs:
+        - "{anti_pattern_ids}"
+      route: {route_values}
+      linked_evidence:
+        - "{evidence_values}"
+      rationale: "<why this verdict follows from the playbook>"
+  route_rule_applied:
+    id: {route_rule_ids}
+    recommended_path: {recommended_path_values}
+    rationale: "<why this route wins without bypassing loop/driver gates>"
+  human_review_triggers:
+    - id: {human_trigger_ids}
+      active: true | false
+      rationale: "<why active, or why not active>"
 """
 
 
@@ -958,6 +1076,13 @@ def generate_for(example_dir: Path) -> str:
     except PaperAestheticContextError as exc:
         raise CritiqueBriefError(f"paper_aesthetic_context invalid: {exc}") from exc
     try:
+        journal_playbook_pack = load_optional_journal_art_direction_playbook(
+            example_dir,
+            spec,
+        )
+    except JournalArtDirectionPlaybookError as exc:
+        raise CritiqueBriefError(f"journal_art_direction_playbook invalid: {exc}") from exc
+    try:
         aesthetic_intent_pack = load_optional_aesthetic_intent(example_dir)
     except AestheticIntentError as exc:
         raise CritiqueBriefError(f"aesthetic_intent.yaml invalid: {exc}") from exc
@@ -1004,16 +1129,23 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         paper_aesthetic_context_pack,
         fixture=example_dir.name,
     )
+    journal_art_direction_playbook_section = _journal_art_direction_playbook_section(
+        journal_playbook_pack
+    )
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
     svg_polish_delta_section = _svg_polish_delta_section(example_dir)
     uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
     critique_schema = (
-        _CRITIQUE_SCHEMA_VERSION_V1_11
+        _CRITIQUE_SCHEMA_VERSION_V1_12
+        if journal_playbook_pack is not None
+        else _CRITIQUE_SCHEMA_VERSION_V1_11
         if uses_aesthetic_lever_schema
         else _CRITIQUE_SCHEMA_VERSION
     )
     critique_rubric_version = (
-        CRITIQUE_RUBRIC_VERSION_V1_11
+        CRITIQUE_RUBRIC_VERSION_V1_12
+        if journal_playbook_pack is not None
+        else CRITIQUE_RUBRIC_VERSION_V1_11
         if uses_aesthetic_lever_schema
         else CRITIQUE_RUBRIC_VERSION
     )
@@ -1033,6 +1165,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {label_path_proximity_section}
 {reference_calibration_section}
 {paper_aesthetic_context_section}
+{journal_art_direction_playbook_section}
 {aesthetic_intent_section}
 {svg_polish_delta_section}
 
@@ -1172,6 +1305,7 @@ top_tier_audit:
     critique_input_hash,
     _reference_score_calibration(example_dir, reference_calibration_pack),
 )}
+{_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 micro_defects:
   - id: M001

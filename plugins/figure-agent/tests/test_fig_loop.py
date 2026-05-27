@@ -125,6 +125,7 @@ def _write_v1_2_critique(
     micro_defects: list[dict] | None = None,
     crop_audit_log: list[dict] | None = None,
     aesthetic_lever_audit: list[dict] | None = None,
+    journal_art_direction_playbook_audit: dict | None = None,
 ) -> Path:
     axis_overrides = axis_overrides or {}
     quality_axes = {
@@ -151,6 +152,10 @@ def _write_v1_2_critique(
         frontmatter["crop_audit_log"] = crop_audit_log
     if aesthetic_lever_audit is not None:
         frontmatter["aesthetic_lever_audit"] = aesthetic_lever_audit
+    if journal_art_direction_playbook_audit is not None:
+        frontmatter["journal_art_direction_playbook_audit"] = (
+            journal_art_direction_playbook_audit
+        )
     critique.write_text(
         "---\n"
         + yaml.safe_dump(frontmatter, sort_keys=False)
@@ -266,6 +271,63 @@ def _journal_assessment(
             }
         )
     return assessment
+
+
+def _journal_art_direction_playbook_audit(
+    *,
+    typography_verdict: str = "weak",
+    typography_route: str = "continue_tikz",
+    active_human_trigger: bool = False,
+) -> dict:
+    return {
+        "schema": "figure-agent.journal-art-direction-playbook-audit.v1",
+        "playbook_id": "nc-main-text",
+        "venue_context": "main_text",
+        "design_center": [
+            {
+                "id": "editorial_restraint",
+                "verdict": "pass",
+                "evidence": "editorial_restraint is visible in current artifact",
+                "positive_signal_refs": ["restrained_hero"],
+                "anti_pattern_refs": [],
+                "route": "none",
+                "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+                "rationale": "restrained labels remain subordinate",
+            },
+            {
+                "id": "typography_authority",
+                "verdict": typography_verdict,
+                "evidence": "typography_authority still has print-scale refinement risk",
+                "positive_signal_refs": [],
+                "anti_pattern_refs": ["toy_schematic"],
+                "route": typography_route,
+                "linked_evidence": ["C001"],
+                "rationale": "typography_authority needs bounded source polish",
+            },
+            {
+                "id": "whitespace_breathing",
+                "verdict": "pass",
+                "evidence": "whitespace_breathing is adequate around dense labels",
+                "positive_signal_refs": ["print_scale_calm"],
+                "anti_pattern_refs": [],
+                "route": "none",
+                "linked_evidence": ["top_tier_audit.visual_economy"],
+                "rationale": "dense region remains readable",
+            },
+        ],
+        "route_rule_applied": {
+            "id": "tikz_until_semantics_close",
+            "recommended_path": "continue_tikz",
+            "rationale": "source-level polish still dominates",
+        },
+        "human_review_triggers": [
+            {
+                "id": "taste_direction_conflict",
+                "active": active_human_trigger,
+                "rationale": "no conflict" if not active_human_trigger else "author choice needed",
+            }
+        ],
+    }
 
 
 def _patch_fresh_status(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -964,6 +1026,93 @@ def test_loop_surfaces_v1_11_aesthetic_lever_summary(
     }
     stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["aesthetic_lever_summary"] == summary
+
+
+def test_loop_surfaces_v1_12_journal_art_direction_playbook_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.12",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(trigger_path="continue_tikz"),
+        micro_defects=[],
+        crop_audit_log=[],
+        journal_art_direction_playbook_audit=_journal_art_direction_playbook_audit(),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect journal art-direction playbook",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["journal_art_direction_playbook_summary"]
+    assert summary["source"] == "critique.journal_art_direction_playbook_audit"
+    assert summary["evidence_path"] == str(critique)
+    assert summary["playbook_id"] == "nc-main-text"
+    assert summary["venue_context"] == "main_text"
+    assert summary["design_center_count"] == 3
+    assert summary["verdict_counts"] == {
+        "pass": 2,
+        "not_applicable": 0,
+        "weak": 1,
+        "fail": 0,
+        "needs_human": 0,
+    }
+    assert summary["worst_verdict"] == "weak"
+    assert summary["evaluation_state"] == "needs_patch"
+    assert summary["weak_or_failed_design_center_ids"] == ["typography_authority"]
+    assert summary["recommended_path"] == "continue_tikz"
+    assert summary["route_rule_applied"] == {
+        "id": "tikz_until_semantics_close",
+        "recommended_path": "continue_tikz",
+    }
+    assert summary["active_human_review_triggers"] == []
+    stdout_summary = json_stdout_summary(run_dir)
+    assert stdout_summary["journal_art_direction_playbook_summary"] == summary
+
+
+def test_loop_does_not_create_new_stop_boundary_for_journal_playbook_summary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.12",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(trigger_path="continue_tikz"),
+        micro_defects=[],
+        crop_audit_log=[],
+        journal_art_direction_playbook_audit=_journal_art_direction_playbook_audit(
+            typography_verdict="needs_human",
+            typography_route="needs_human_art_direction",
+            active_human_trigger=True,
+        ),
+    )
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect journal art-direction playbook",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["journal_art_direction_playbook_summary"]
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["active_human_review_triggers"] == ["taste_direction_conflict"]
+    assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["human_gate_status"] == "not_requested"
+    assert iteration["active_patch_target"] is None
 
 
 def test_loop_human_gates_v1_11_human_art_direction_lever(
@@ -2483,6 +2632,7 @@ def test_main_json_emits_machine_readable_summary(
             },
             "top_tier_audit_summary": None,
             "crop_audit_summary": None,
+            "journal_art_direction_playbook_summary": None,
             "audit_evidence": {
                 "evaluation_state": "missing_input",
                 "blocking_items": ["build/visual_clash.json"],
@@ -2533,6 +2683,7 @@ def test_main_json_emits_machine_readable_summary(
             "editorial_art_direction_summary": None,
             "crop_audit_summary": None,
             "aesthetic_lever_summary": None,
+            "journal_art_direction_playbook_summary": None,
             "audit_evidence": {
                 "evaluation_state": "missing_input",
                 "blocking_items": ["build/visual_clash.json"],
@@ -2667,6 +2818,9 @@ def test_main_json_exercises_real_run_loop_summary(
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "crop_audit_summary": iteration["crop_audit_summary"],
         "aesthetic_lever_summary": iteration["aesthetic_lever_summary"],
+        "journal_art_direction_playbook_summary": iteration[
+            "journal_art_direction_playbook_summary"
+        ],
         "audit_evidence": iteration["audit_evidence"],
         "journal_grade_assessment": iteration["journal_grade_assessment"],
         "recommended_next_action": iteration["recommended_next_action"],

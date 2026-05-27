@@ -77,6 +77,7 @@ def test_json_stdout_summary_reads_manifest_and_iteration_contract(tmp_path: Pat
         },
         "crop_audit_summary": None,
         "aesthetic_lever_summary": None,
+        "journal_art_direction_playbook_summary": None,
         "journal_grade_assessment": None,
         "recommended_next_action": "inspect figure state",
     }

@@ -209,15 +209,24 @@ anchors in `top_tier_audit.cross_panel_semantic_grammar`,
 `top_tier_audit.aesthetic_coherence`, and
 `editorial_art_direction.visual_identity`; generic art-direction prose is
 invalid once the fixture opts in.
+When `spec.yaml.journal_art_direction_playbook` is declared, `/fig_critique`
+resolves `examples/_journal_art_direction_playbooks/<playbook_id>.yaml` and
+emits a `Journal Art-Direction Playbook` section. The critique must fill
+`journal_art_direction_playbook_audit`, cite exact playbook anchors in the
+required top-tier/editorial/journal assessment rationale slots, and tie those
+anchors to current-artifact evidence; generic "looks polished" prose is
+invalid once the fixture opts in.
 When `aesthetic_intent.yaml` uses schema v2, `/fig_critique` emits an
 `Aesthetic Lever Grammar` section and the critique must fill
 `aesthetic_lever_audit` exactly once for every declared lever. The host critique
-must route each non-passing lever through a visible TikZ patch, SVG polish,
-semantic backport, or human art-direction path; generic "improve polish" prose
-is invalid. Non-passing levers must name concrete anti-pattern evidence; active
-routes must match the declared `default_route`; `svg_polish` requires
-`ready_for_svg_polish`, `semantic_backport` requires `semantic_backport_required`,
-and `human_art_direction` must cite the explicit human art-direction gate.
+must cite exact aesthetic-intent anchors with current-artifact evidence in the
+required top-tier/editorial slots and route each non-passing lever through a
+visible TikZ patch, SVG polish, semantic backport, or human art-direction path;
+generic "improve polish" prose is invalid. Non-passing levers must name concrete
+anti-pattern evidence; active routes must match the declared `default_route`;
+`svg_polish` requires `ready_for_svg_polish`, `semantic_backport` requires
+`semantic_backport_required`, and `human_art_direction` must cite the explicit
+human art-direction gate.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or

@@ -538,7 +538,8 @@ polish_triggers:
         "first_category": "aesthetic_intent_accounting",
         "first_message": (
             "aesthetic intent pack exists; critique slots must cite at least one exact "
-            "aesthetic-intent anchor from target fields or item ids: "
+            "aesthetic-intent anchor from target fields or item ids "
+            "with current-artifact evidence: "
             "top_tier_audit.aesthetic_coherence, "
             "editorial_art_direction.visual_identity, "
             "editorial_art_direction.aesthetic_risk, "

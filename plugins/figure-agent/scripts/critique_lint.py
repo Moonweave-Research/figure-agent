@@ -34,6 +34,11 @@ from critique_schema_vocab import (  # noqa: E402
     MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
 )
 from inputs import parse_spec  # noqa: E402
+from journal_art_direction_playbook import (  # noqa: E402
+    JournalArtDirectionPlaybookError,
+    journal_playbook_anchors,
+    load_optional_journal_art_direction_playbook,
+)
 from paper_aesthetic_context import (  # noqa: E402
     PaperAestheticContextError,
     load_optional_paper_aesthetic_context,
@@ -51,6 +56,7 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
@@ -59,19 +65,32 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.9",
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
     }
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
-    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+    {
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+    }
 )
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
 _VISUAL_CLASH_ACCEPT_RATIONALE_MARKERS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS
 _STRUCTURED_ACCEPT_MIN_RATIONALE_CHARS = MICRO_DEFECT_ACCEPT_SIMPLIFICATION_MIN_RATIONALE_CHARS
 TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
-    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+    {
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+    }
 )
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
-    {"figure-agent.critique.v1.10", "figure-agent.critique.v1.11"}
+    {
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+    }
 )
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
 _HISTORICAL_VISUAL_CLASH_EXPECTED_KINDS = {
@@ -89,6 +108,31 @@ _PAPER_CONTEXT_REQUIRED_SLOTS = (
     ("top_tier_audit", "cross_panel_semantic_grammar"),
     ("top_tier_audit", "aesthetic_coherence"),
     ("editorial_art_direction", "visual_identity"),
+)
+_JOURNAL_PLAYBOOK_REQUIRED_SLOTS = (
+    ("top_tier_audit", "first_glance_message"),
+    ("top_tier_audit", "target_journal_fit"),
+    ("top_tier_audit", "visual_economy"),
+    ("top_tier_audit", "reduction_print_readability"),
+    ("top_tier_audit", "aesthetic_coherence"),
+    ("editorial_art_direction", "visual_identity"),
+    ("editorial_art_direction", "aesthetic_risk"),
+    ("editorial_art_direction", "tikz_vs_svg_polish_trigger"),
+    ("journal_grade_assessment", "rationale"),
+)
+_CURRENT_ARTIFACT_EVIDENCE_MARKERS = (
+    "current artifact",
+    "current render",
+    "rendered figure",
+    "rendered panel",
+    "visible",
+    "visibly",
+    "panel ",
+    "crop",
+    "print-scale",
+    "png",
+    "pdf",
+    "bbox",
 )
 
 
@@ -151,6 +195,12 @@ def _contains_aesthetic_anchor(text: str, anchors: set[str]) -> bool:
         if re.search(rf"(^|[^A-Za-z0-9_]){re.escape(anchor)}($|[^A-Za-z0-9_])", text):
             return True
     return False
+
+
+def _contains_anchor_with_current_artifact_evidence(text: str, anchors: set[str]) -> bool:
+    return _contains_aesthetic_anchor(text, anchors) and any(
+        marker in text for marker in _CURRENT_ARTIFACT_EVIDENCE_MARKERS
+    )
 
 
 def _aesthetic_lever_items(pack: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -221,14 +271,18 @@ def _aesthetic_lever_accounting_violations(
 ) -> list[CritiqueLintViolation]:
     if pack.get("schema") != AESTHETIC_INTENT_SCHEMA_V2:
         return []
-    if frontmatter.get("schema") != "figure-agent.critique.v1.11":
+    if frontmatter.get("schema") not in {
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+    }:
         return [
             CritiqueLintViolation(
                 severity="blocker",
                 category="aesthetic_lever_accounting",
                 message=(
                     "aesthetic_intent.yaml schema v2 requires "
-                    "critique schema figure-agent.critique.v1.11"
+                    "critique schema figure-agent.critique.v1.11 or "
+                    "figure-agent.critique.v1.12"
                 ),
             )
         ]
@@ -488,7 +542,7 @@ def _aesthetic_intent_accounting_violations(
         raw_section = frontmatter.get(section_name)
         raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
         normalized_text = _text_blob(raw_slot).lower()
-        if not _contains_aesthetic_anchor(normalized_text, anchors):
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
             missing.append(f"{section_name}.{slot_name}")
     if not missing:
         return []
@@ -498,7 +552,8 @@ def _aesthetic_intent_accounting_violations(
             category="aesthetic_intent_accounting",
             message=(
                 "aesthetic intent pack exists; critique slots must cite at least "
-                "one exact aesthetic-intent anchor from target fields or item ids: "
+                "one exact aesthetic-intent anchor from target fields or item ids "
+                "with current-artifact evidence: "
                 + ", ".join(missing)
             ),
         )
@@ -544,7 +599,7 @@ def _paper_aesthetic_context_accounting_violations(
         raw_section = frontmatter.get(section_name)
         raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
         normalized_text = _text_blob(raw_slot).lower()
-        if not _contains_aesthetic_anchor(normalized_text, anchors):
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
             missing.append(f"{section_name}.{slot_name}")
     if not missing:
         return []
@@ -555,7 +610,242 @@ def _paper_aesthetic_context_accounting_violations(
             message=(
                 "paper_aesthetic_context is declared; critique slots must cite at least "
                 "one exact paper-wide anchor from paper id, target fields, role, shared "
-                "language ids, or must-avoid ids: "
+                "language ids, or must-avoid ids with current-artifact evidence: "
+                + ", ".join(missing)
+            ),
+        )
+    ]
+
+
+def _journal_playbook_anchor_strings(pack: dict[str, Any]) -> set[str]:
+    return {anchor.lower() for anchor in journal_playbook_anchors(pack) if anchor}
+
+
+def _id_set(pack: dict[str, Any], key: str) -> set[str]:
+    return {
+        item["id"]
+        for item in pack.get(key, [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+
+
+def _journal_playbook_audit_violations(
+    pack: dict[str, Any],
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    category = "journal_art_direction_playbook_accounting"
+    raw_audit = frontmatter.get("journal_art_direction_playbook_audit")
+    if not isinstance(raw_audit, dict):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="missing journal_art_direction_playbook_audit for declared playbook",
+            )
+        ]
+    declared_design_ids = _id_set(pack, "design_center")
+    positive_signal_ids = _id_set(pack, "positive_signals")
+    anti_pattern_ids = _id_set(pack, "anti_patterns")
+    route_rules = {
+        item["id"]: item["recommended_path"]
+        for item in pack.get("polish_route_rules", [])
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and isinstance(item.get("recommended_path"), str)
+    }
+    human_trigger_ids = _id_set(pack, "human_review_triggers")
+    raw_design_items = raw_audit.get("design_center")
+    if not isinstance(raw_design_items, list):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="journal_art_direction_playbook_audit.design_center must be a list",
+            )
+        ]
+    audit_design_ids = {
+        item.get("id")
+        for item in raw_design_items
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    missing = sorted(declared_design_ids - audit_design_ids)
+    unknown = sorted(audit_design_ids - declared_design_ids)
+    if missing or unknown:
+        details: list[str] = []
+        if missing:
+            details.append("missing design_center ids: " + ", ".join(missing))
+        if unknown:
+            details.append("unknown design_center ids: " + ", ".join(unknown))
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="; ".join(details),
+            )
+        ]
+    unknown_positive_refs: set[str] = set()
+    unknown_anti_refs: set[str] = set()
+    for item in raw_design_items:
+        if not isinstance(item, dict):
+            continue
+        positive_refs = item.get("positive_signal_refs")
+        if isinstance(positive_refs, list):
+            unknown_positive_refs.update(
+                ref
+                for ref in positive_refs
+                if isinstance(ref, str) and ref not in positive_signal_ids
+            )
+        anti_refs = item.get("anti_pattern_refs")
+        if isinstance(anti_refs, list):
+            unknown_anti_refs.update(
+                ref
+                for ref in anti_refs
+                if isinstance(ref, str) and ref not in anti_pattern_ids
+            )
+    if unknown_positive_refs or unknown_anti_refs:
+        details = []
+        if unknown_positive_refs:
+            details.append(
+                "unknown positive_signal_refs: "
+                + ", ".join(sorted(unknown_positive_refs))
+            )
+        if unknown_anti_refs:
+            details.append("unknown anti_pattern_refs: " + ", ".join(sorted(unknown_anti_refs)))
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="; ".join(details),
+            )
+        ]
+    route_rule = raw_audit.get("route_rule_applied")
+    if not isinstance(route_rule, dict):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="journal_art_direction_playbook_audit.route_rule_applied must be a mapping",
+            )
+        ]
+    route_rule_id = route_rule.get("id")
+    recommended_path = route_rule.get("recommended_path")
+    if route_rule_id not in route_rules:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message=f"unknown route_rule_applied.id: {route_rule_id}",
+            )
+        ]
+    if recommended_path != route_rules[route_rule_id]:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message=(
+                    "route_rule_applied.recommended_path must match playbook rule "
+                    f"{route_rule_id}: {route_rules[route_rule_id]}"
+                ),
+            )
+        ]
+    raw_triggers = raw_audit.get("human_review_triggers")
+    if not isinstance(raw_triggers, list):
+        return []
+    unknown_triggers = sorted(
+        item.get("id")
+        for item in raw_triggers
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and item.get("id") not in human_trigger_ids
+    )
+    if unknown_triggers:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category=category,
+                message="unknown human_review_triggers ids: " + ", ".join(unknown_triggers),
+            )
+        ]
+    active_triggers = [
+        item["id"]
+        for item in raw_triggers
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and item.get("active") is True
+    ]
+    if active_triggers:
+        editorial = frontmatter.get("editorial_art_direction")
+        gate = editorial.get("human_art_direction_gate") if isinstance(editorial, dict) else None
+        gate_text = _text_blob(gate).lower()
+        findings_text = _text_blob(frontmatter.get("findings")).lower()
+        missing_gate_refs = [
+            trigger
+            for trigger in active_triggers
+            if trigger.lower() not in gate_text and trigger.lower() not in findings_text
+        ]
+        if missing_gate_refs:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category=category,
+                    message=(
+                        "active human_review_triggers must be visible in "
+                        "editorial_art_direction.human_art_direction_gate or findings: "
+                        + ", ".join(missing_gate_refs)
+                    ),
+                )
+            ]
+    return []
+
+
+def _journal_art_direction_playbook_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return []
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        pack = load_optional_journal_art_direction_playbook(example_dir, spec)
+    except (JournalArtDirectionPlaybookError, ValueError) as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="journal_art_direction_playbook_accounting",
+                message=f"journal_art_direction_playbook invalid: {exc}",
+            )
+        ]
+    if pack is None:
+        return []
+    audit_violations = _journal_playbook_audit_violations(pack, frontmatter)
+    if audit_violations:
+        return audit_violations
+    anchors = _journal_playbook_anchor_strings(pack)
+    if not anchors:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="journal_art_direction_playbook_accounting",
+                message="journal_art_direction_playbook produced no usable lint anchors",
+            )
+        ]
+    missing: list[str] = []
+    for section_name, slot_name in _JOURNAL_PLAYBOOK_REQUIRED_SLOTS:
+        raw_section = frontmatter.get(section_name)
+        raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
+        normalized_text = _text_blob(raw_slot).lower()
+        if not _contains_anchor_with_current_artifact_evidence(normalized_text, anchors):
+            missing.append(f"{section_name}.{slot_name}")
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="journal_art_direction_playbook_accounting",
+            message=(
+                "journal_art_direction_playbook is declared; critique slots must cite "
+                "at least one exact playbook anchor with current-artifact evidence: "
                 + ", ".join(missing)
             ),
         )
@@ -1366,6 +1656,11 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     if violations:
         return violations
     violations.extend(_paper_aesthetic_context_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(
+        _journal_art_direction_playbook_accounting_violations(example_dir, frontmatter)
+    )
     if violations:
         return violations
 
