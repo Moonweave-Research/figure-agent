@@ -118,8 +118,9 @@ Validation rules:
 
 - `schema` must exactly equal `figure-agent.paper-aesthetic-context.v1`.
 - `spec.yaml.paper_aesthetic_context` and pack `paper_id` must be safe ids:
-  ASCII letters, numbers, `_`, `.`, and `-` only; no slash, backslash, or
-  whitespace. This prevents path traversal when resolving the pack path.
+  start with an ASCII letter or number, then use only ASCII letters, numbers,
+  `_`, `.`, and `-`; no slash, backslash, or whitespace. This prevents path
+  traversal and hidden-file ambiguity when resolving the pack path.
 - `paper_id` must be a non-empty string and match the filename stem.
 - `target_journal`, `visual_maturity`, and `density` must be valid enums.
 - `shared_visual_language` must be a non-empty list with unique ids and at
@@ -144,7 +145,7 @@ fixture-local `Aesthetic Intent Calibration`:
 ## Paper-Wide Aesthetic Context
 Host LLM MUST evaluate whether this figure remains coherent with the declared
 paper-wide visual language. The critique must cite exact paper context anchors
-in `top_tier_audit.cross_panel_grammar`,
+in `top_tier_audit.cross_panel_semantic_grammar`,
 `top_tier_audit.aesthetic_coherence`, and
 `editorial_art_direction.visual_identity`.
 
@@ -214,7 +215,7 @@ failure when the fixture does opt in.
 When `spec.yaml.paper_aesthetic_context` is declared, `critique_lint.py` should
 require exact paper-wide anchor citations in:
 
-- `top_tier_audit.cross_panel_grammar`
+- `top_tier_audit.cross_panel_semantic_grammar`
 - `top_tier_audit.aesthetic_coherence`
 - `editorial_art_direction.visual_identity`
 

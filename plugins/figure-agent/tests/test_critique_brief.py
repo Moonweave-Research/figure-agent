@@ -147,6 +147,57 @@ def _write_svg_polish_delta_fixture(example_dir: Path) -> None:
     )
 
 
+def _enable_paper_aesthetic_context(example_dir: Path) -> Path:
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "paper_aesthetic_context: paper-demo\n",
+        encoding="utf-8",
+    )
+    pack_dir = example_dir.parent / "_paper_aesthetic_contexts"
+    pack_dir.mkdir(exist_ok=True)
+    pack_path = pack_dir / "paper-demo.yaml"
+    pack_path.write_text(
+        """
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: paper-demo
+target_journal: Nature Communications
+visual_maturity: editorial
+density: balanced
+shared_visual_language:
+  - id: restrained_palette
+    dimension: palette
+    instruction: keep palette restrained across the manuscript series
+    priority: required
+    positive_signals:
+      - repeated muted accent colors
+    anti_patterns:
+      - poster-like saturation
+  - id: typography_authority
+    dimension: typography
+    instruction: keep compact journal-style label hierarchy
+    priority: required
+    positive_signals:
+      - consistent label scale across figures
+    anti_patterns:
+      - slide-like explanatory labels
+figure_roles:
+  - fixture: review_demo
+    role: overview_mechanism
+    must_align_with:
+      - restrained_palette
+      - typography_authority
+    allowed_variations:
+      - may use one stronger hero panel than downstream data figures
+must_avoid:
+  - id: series_drift
+    pattern: one figure looks like a different design system from the rest
+    severity: MAJOR
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return pack_path
+
+
 def test_critique_brief_includes_invariants_when_section6_present(tmp_path):
     example_dir = _write_example(
         tmp_path,
@@ -1139,6 +1190,78 @@ def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
     assert "operation_ids: R001" in brief
     assert "Did journal polish improve?" in brief
     assert "Did any scientific semantics change?" in brief
+
+
+def test_critique_brief_includes_paper_wide_aesthetic_context(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _enable_paper_aesthetic_context(example_dir)
+    (example_dir / "aesthetic_intent.yaml").write_text(
+        """
+schema: figure-agent.aesthetic-intent.v1
+fixture: review_demo
+target_journal: Nature Materials
+visual_maturity: editorial
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: mature_restraint
+    instruction: avoid cartoon-like oversized labels and decorative gradients
+must_avoid:
+  - id: toy_diagram
+    pattern: rounded generic blocks and unmodulated flat color
+    severity: MAJOR
+polish_triggers:
+  - id: svg_micro_polish
+    condition: semantically correct TikZ lacks print-scale optical refinement
+    recommended_path: ready_for_svg_polish
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Paper-Wide Aesthetic Context" in brief
+    assert "Paper id: paper-demo" in brief
+    assert "Target journal: Nature Communications" in brief
+    assert "Visual maturity: editorial" in brief
+    assert "Density: balanced" in brief
+    assert "Figure role: overview_mechanism" in brief
+    assert "restrained_palette priority=required" in brief
+    assert "typography_authority priority=required" in brief
+    assert "series_drift severity=MAJOR" in brief
+    assert "top_tier_audit.cross_panel_semantic_grammar" in brief
+    assert "top_tier_audit.aesthetic_coherence" in brief
+    assert "editorial_art_direction.visual_identity" in brief
+    assert "must cite at least one exact paper-wide anchor" in brief
+    assert "restrained_palette, typography_authority" in brief
+    assert brief.index("## Paper-Wide Aesthetic Context") < brief.index(
+        "## Aesthetic Intent Calibration"
+    )
+
+
+def test_critique_brief_omits_paper_wide_context_without_opt_in(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Paper-Wide Aesthetic Context" not in brief
+
+
+def test_critique_brief_reports_invalid_paper_wide_context(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    pack_path = _enable_paper_aesthetic_context(example_dir)
+    pack_path.write_text("schema: [", encoding="utf-8")
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    try:
+        generate_for(example_dir)
+    except critique_brief.CritiqueBriefError as exc:
+        assert "paper_aesthetic_context" in str(exc)
+    else:
+        raise AssertionError("expected CritiqueBriefError")
 
 
 def test_critique_brief_includes_aesthetic_intent_calibration(tmp_path):

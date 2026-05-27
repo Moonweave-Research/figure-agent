@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 from aesthetic_intent import AESTHETIC_INTENT_SCHEMA_V2
+from paper_aesthetic_context import PaperAestheticContextError, declared_paper_context_path
 from reference_contract import (
     declared_figure_reference_path,
     participating_panel_reference_paths,
@@ -100,6 +101,12 @@ def critique_manifest_paths(
     aesthetic_intent_path = example_dir / "aesthetic_intent.yaml"
     if aesthetic_intent_path.exists():
         paths.append(aesthetic_intent_path)
+    try:
+        paper_context_path = declared_paper_context_path(example_dir, spec)
+    except PaperAestheticContextError:
+        paper_context_path = None
+    if paper_context_path is not None and paper_context_path.exists():
+        paths.append(paper_context_path)
     svg_polish_delta_paths = (
         example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json",
         example_dir / "polish" / "aesthetic_delta" / "before.png",

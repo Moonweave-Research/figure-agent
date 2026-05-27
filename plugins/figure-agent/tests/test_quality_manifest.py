@@ -195,6 +195,112 @@ def test_critique_manifest_includes_aesthetic_intent_when_present(
     assert before != after
 
 
+def test_critique_manifest_includes_declared_paper_aesthetic_context(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\npaper_aesthetic_context: paper-demo\n",
+        encoding="utf-8",
+    )
+    pack_dir = example_dir.parent / "_paper_aesthetic_contexts"
+    pack_dir.mkdir()
+    pack_path = pack_dir / "paper-demo.yaml"
+    pack_path.write_text(
+        "schema: figure-agent.paper-aesthetic-context.v1\n"
+        "paper_id: paper-demo\n"
+        "target_journal: Nature Communications\n"
+        "visual_maturity: editorial\n"
+        "density: balanced\n"
+        "shared_visual_language:\n"
+        "  - id: restrained_palette\n"
+        "    dimension: palette\n"
+        "    instruction: keep palette restrained\n"
+        "    priority: required\n"
+        "    positive_signals:\n"
+        "      - muted shared accents\n"
+        "    anti_patterns:\n"
+        "      - poster-like saturation\n"
+        "figure_roles:\n"
+        "  - fixture: demo\n"
+        "    role: overview_mechanism\n"
+        "    must_align_with:\n"
+        "      - restrained_palette\n"
+        "must_avoid:\n"
+        "  - id: series_drift\n"
+        "    pattern: inconsistent design system\n"
+        "    severity: MAJOR\n",
+        encoding="utf-8",
+    )
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo", "paper_aesthetic_context": "paper-demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    pack_path.write_text(pack_path.read_text(encoding="utf-8") + "changed: true\n")
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert pack_path in paths
+    assert before != after
+
+
+def test_critique_manifest_omits_paper_aesthetic_context_without_opt_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    pack_dir = example_dir.parent / "_paper_aesthetic_contexts"
+    pack_dir.mkdir()
+    pack_path = pack_dir / "paper-demo.yaml"
+    pack_path.write_text("schema: figure-agent.paper-aesthetic-context.v1\n")
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+
+    assert pack_path not in paths
+
+
+def test_critique_manifest_does_not_crash_on_invalid_paper_context_id(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        "name: demo\npaper_aesthetic_context: ../escape\n",
+        encoding="utf-8",
+    )
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo", "paper_aesthetic_context": "../escape"},
+        style_lock_path=style_lock,
+    )
+
+    assert spec_path in paths
+
+
 def test_critique_manifest_includes_svg_polish_delta_pack_when_present(
     tmp_path: Path,
 ) -> None:

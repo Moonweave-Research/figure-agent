@@ -26,6 +26,12 @@ from aesthetic_intent import (
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from inputs import parse_briefing, parse_spec
+from paper_aesthetic_context import (
+    PaperAestheticContextError,
+    load_optional_paper_aesthetic_context,
+    matching_figure_role,
+    paper_context_anchors,
+)
 from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
@@ -431,6 +437,67 @@ def _reference_calibration_section(pack: dict | None) -> str:
     lines.append("### Calibration Questions")
     for item in pack.get("calibration_questions", []):
         lines.append(f"- {item['id']}: {item['question']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _paper_aesthetic_context_section(
+    pack: dict | None,
+    *,
+    fixture: str,
+) -> str:
+    if pack is None:
+        return ""
+    role = matching_figure_role(pack, fixture)
+    must_align_with = role.get("must_align_with", [])
+    allowed_variations = role.get("allowed_variations", [])
+    shared_items = {
+        item["id"]: item
+        for item in pack.get("shared_visual_language", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    lines = [
+        "## Paper-Wide Aesthetic Context",
+        "Host LLM MUST evaluate whether this figure remains coherent with the declared "
+        "paper-wide visual language. The critique must cite exact paper context anchors "
+        "in `top_tier_audit.cross_panel_semantic_grammar`, "
+        "`top_tier_audit.aesthetic_coherence`, and "
+        "`editorial_art_direction.visual_identity`.",
+        "Each of those three critique slots must cite at least one exact paper-wide "
+        "anchor from the target fields, matching role, shared-language ids, or "
+        "must-avoid ids below; generic art-direction prose is invalid.",
+        f"- Paper id: {pack['paper_id']}",
+        f"- Target journal: {pack['target_journal']}",
+        f"- Visual maturity: {pack['visual_maturity']}",
+        f"- Density: {pack['density']}",
+        f"- Figure role: {role['role']}",
+        "",
+        "### Required Shared Visual Language",
+    ]
+    for item_id in must_align_with:
+        item = shared_items[item_id]
+        lines.append(
+            f"- {item['id']} priority={item['priority']} "
+            f"dimension={item['dimension']}: {item['instruction']}"
+        )
+    if allowed_variations:
+        lines.append("")
+        lines.append("### Allowed Role Variations")
+        for item in allowed_variations:
+            lines.append(f"- {item}")
+    lines.append("")
+    lines.append("### Paper-Wide Must-Avoid Patterns")
+    for item in pack.get("must_avoid", []):
+        lines.append(f"- {item['id']} severity={item['severity']}: {item['pattern']}")
+    anchors = sorted(paper_context_anchors(pack, fixture))
+    role_anchor_text = ", ".join(must_align_with)
+    lines.extend(
+        [
+            "",
+            "### Exact Paper-Wide Anchors",
+            f"- Required anchors from matching role: {role_anchor_text}",
+            f"- Full accepted anchor set: {', '.join(anchors)}",
+        ]
+    )
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -884,6 +951,13 @@ def generate_for(example_dir: Path) -> str:
     except CritiqueReferencePackError as exc:
         raise CritiqueBriefError(f"critique_reference_pack.yaml invalid: {exc}") from exc
     try:
+        paper_aesthetic_context_pack = load_optional_paper_aesthetic_context(
+            example_dir,
+            spec,
+        )
+    except PaperAestheticContextError as exc:
+        raise CritiqueBriefError(f"paper_aesthetic_context invalid: {exc}") from exc
+    try:
         aesthetic_intent_pack = load_optional_aesthetic_intent(example_dir)
     except AestheticIntentError as exc:
         raise CritiqueBriefError(f"aesthetic_intent.yaml invalid: {exc}") from exc
@@ -926,6 +1000,10 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
+    paper_aesthetic_context_section = _paper_aesthetic_context_section(
+        paper_aesthetic_context_pack,
+        fixture=example_dir.name,
+    )
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
     svg_polish_delta_section = _svg_polish_delta_section(example_dir)
     uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
@@ -954,6 +1032,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {text_boundary_clash_section}
 {label_path_proximity_section}
 {reference_calibration_section}
+{paper_aesthetic_context_section}
 {aesthetic_intent_section}
 {svg_polish_delta_section}
 

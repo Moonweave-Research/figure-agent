@@ -229,6 +229,61 @@ def _editorial_yaml_with_aesthetic_anchors(
     return "\n".join(lines) + "\n"
 
 
+def _top_tier_yaml_with_paper_context_anchor(anchor: str) -> str:
+    lines = ["top_tier_audit:"]
+    for key in TOP_TIER_KEYS:
+        finding = f"{key} finding"
+        if key in {"cross_panel_semantic_grammar", "aesthetic_coherence"}:
+            finding = f"{key} cites paper-wide anchor {anchor}"
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    finding: {_quote_yaml_string(finding)}",
+                "    concrete_fix: accept_simplification",
+                "    blocks_high_impact: false",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _editorial_yaml_with_paper_context_anchor(anchor: str) -> str:
+    keys = (
+        "hero_focus",
+        "narrative_choreography",
+        "illustration_readiness",
+        "abstraction_consistency",
+        "reference_class_fit",
+        "visual_identity",
+        "claim_payload_fit",
+        "aesthetic_risk",
+        "tikz_vs_svg_polish_trigger",
+        "human_art_direction_gate",
+    )
+    lines = ["editorial_art_direction:"]
+    for key in keys:
+        evidence = f"{key} evidence"
+        rationale = f"{key} rationale"
+        concrete_fix = "accept_simplification"
+        if key == "visual_identity":
+            evidence = f"visual_identity cites paper-wide anchor {anchor}"
+            rationale = f"visual identity remains calibrated to {anchor}"
+            concrete_fix = f"preserve {anchor} unless visual evidence contradicts it"
+        lines.extend(
+            [
+                f"  {key}:",
+                "    verdict: pass",
+                f"    evidence: {_quote_yaml_string(evidence)}",
+                f"    rationale: {_quote_yaml_string(rationale)}",
+                f"    concrete_fix: {_quote_yaml_string(concrete_fix)}",
+                "    blocks_high_impact: false",
+            ]
+        )
+        if key == "tikz_vs_svg_polish_trigger":
+            lines.append("    recommended_path: continue_tikz")
+    return "\n".join(lines) + "\n"
+
+
 def _write_aesthetic_intent(fig_dir: Path, *, malformed: bool = False) -> Path:
     path = fig_dir / "aesthetic_intent.yaml"
     if malformed:
@@ -256,6 +311,48 @@ polish_triggers:
     condition: Semantic TikZ is correct but optical finish is limiting.
     recommended_path: ready_for_svg_polish
 """,
+        encoding="utf-8",
+    )
+    return path
+
+
+def _write_paper_aesthetic_context(fig_dir: Path, *, malformed: bool = False) -> Path:
+    (fig_dir / "spec.yaml").write_text(
+        "name: demo_fig\npaper_aesthetic_context: paper-demo\n",
+        encoding="utf-8",
+    )
+    pack_dir = fig_dir.parent / "_paper_aesthetic_contexts"
+    pack_dir.mkdir(exist_ok=True)
+    path = pack_dir / "paper-demo.yaml"
+    if malformed:
+        path.write_text("schema: [", encoding="utf-8")
+        return path
+    path.write_text(
+        """
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: paper-demo
+target_journal: Nature Communications
+visual_maturity: editorial
+density: balanced
+shared_visual_language:
+  - id: restrained_palette
+    dimension: palette
+    instruction: keep palette restrained across the manuscript series
+    priority: required
+    positive_signals:
+      - repeated muted accent colors
+    anti_patterns:
+      - poster-like saturation
+figure_roles:
+  - fixture: demo_fig
+    role: overview_mechanism
+    must_align_with:
+      - restrained_palette
+must_avoid:
+  - id: series_drift
+    pattern: one figure looks like a different design system from the rest
+    severity: MAJOR
+""".lstrip(),
         encoding="utf-8",
     )
     return path
@@ -796,6 +893,103 @@ def test_lint_critique_reports_malformed_aesthetic_intent_as_controlled_blocker(
         "aesthetic_intent_accounting"
     ]
     assert "aesthetic_intent.yaml invalid" in violations[0].message
+
+
+def test_lint_critique_rejects_missing_paper_context_anchors(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_paper_aesthetic_context(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "paper_aesthetic_context_accounting"
+    ]
+    assert "top_tier_audit.cross_panel_semantic_grammar" in violations[0].message
+    assert "top_tier_audit.aesthetic_coherence" in violations[0].message
+    assert "editorial_art_direction.visual_identity" in violations[0].message
+
+
+def test_lint_critique_accepts_exact_paper_context_anchors(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_paper_aesthetic_context(fig_dir)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        top_tier_yaml=_top_tier_yaml_with_paper_context_anchor("restrained_palette"),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml_with_paper_context_anchor("restrained_palette"),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_keeps_missing_paper_context_legacy_behavior(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text("name: demo_fig\n", encoding="utf-8")
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_reports_invalid_paper_context_as_controlled_blocker(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_paper_aesthetic_context(fig_dir, malformed=True)
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "paper_aesthetic_context_accounting"
+    ]
+    assert "paper_aesthetic_context invalid" in violations[0].message
 
 
 def _write_complete_v1_11_aesthetic_fixture(

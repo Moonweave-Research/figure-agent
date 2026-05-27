@@ -33,6 +33,12 @@ from critique_schema_vocab import (  # noqa: E402
     MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS,
     MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
 )
+from inputs import parse_spec  # noqa: E402
+from paper_aesthetic_context import (  # noqa: E402
+    PaperAestheticContextError,
+    load_optional_paper_aesthetic_context,
+    paper_context_anchors,
+)
 from quality_manifest import file_sha256  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -78,6 +84,11 @@ _AESTHETIC_INTENT_REQUIRED_SLOTS = (
     ("editorial_art_direction", "visual_identity"),
     ("editorial_art_direction", "aesthetic_risk"),
     ("editorial_art_direction", "tikz_vs_svg_polish_trigger"),
+)
+_PAPER_CONTEXT_REQUIRED_SLOTS = (
+    ("top_tier_audit", "cross_panel_semantic_grammar"),
+    ("top_tier_audit", "aesthetic_coherence"),
+    ("editorial_art_direction", "visual_identity"),
 )
 
 
@@ -488,6 +499,63 @@ def _aesthetic_intent_accounting_violations(
             message=(
                 "aesthetic intent pack exists; critique slots must cite at least "
                 "one exact aesthetic-intent anchor from target fields or item ids: "
+                + ", ".join(missing)
+            ),
+        )
+    ]
+
+
+def _paper_context_anchor_strings(pack: dict[str, Any], fixture: str) -> set[str]:
+    return {anchor.lower() for anchor in paper_context_anchors(pack, fixture) if anchor}
+
+
+def _paper_aesthetic_context_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return []
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        pack = load_optional_paper_aesthetic_context(example_dir, spec)
+    except (PaperAestheticContextError, ValueError) as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="paper_aesthetic_context_accounting",
+                message=f"paper_aesthetic_context invalid: {exc}",
+            )
+        ]
+    if pack is None:
+        return []
+    anchors = _paper_context_anchor_strings(pack, example_dir.name)
+    if not anchors:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="paper_aesthetic_context_accounting",
+                message="paper_aesthetic_context produced no usable lint anchors",
+            )
+        ]
+
+    missing: list[str] = []
+    for section_name, slot_name in _PAPER_CONTEXT_REQUIRED_SLOTS:
+        raw_section = frontmatter.get(section_name)
+        raw_slot = raw_section.get(slot_name) if isinstance(raw_section, dict) else None
+        normalized_text = _text_blob(raw_slot).lower()
+        if not _contains_aesthetic_anchor(normalized_text, anchors):
+            missing.append(f"{section_name}.{slot_name}")
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="paper_aesthetic_context_accounting",
+            message=(
+                "paper_aesthetic_context is declared; critique slots must cite at least "
+                "one exact paper-wide anchor from paper id, target fields, role, shared "
+                "language ids, or must-avoid ids: "
                 + ", ".join(missing)
             ),
         )
@@ -1295,6 +1363,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
 
     violations.extend(_aesthetic_intent_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(_paper_aesthetic_context_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
 

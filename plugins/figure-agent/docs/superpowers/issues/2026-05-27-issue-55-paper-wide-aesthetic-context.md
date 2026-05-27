@@ -1,6 +1,6 @@
 # Issue 55 - Paper-Wide Aesthetic Context
 
-Status: design drafted
+Status: implemented and verified
 
 Design spec:
 `../specs/2026-05-27-paper-wide-aesthetic-context-design.md`
@@ -72,3 +72,23 @@ Implement in narrow slices:
   behavior.
 - Paper context changes make existing critiques stale for opted-in fixtures.
 - Host critiques cannot silently ignore paper-wide context once opted in.
+
+## Implementation Notes
+
+- Added `scripts/paper_aesthetic_context.py` for explicit opt-in pack parsing,
+  safe-id resolution, matching fixture-role lookup, and anchor extraction.
+- Added critique freshness participation through `quality_manifest.py` when
+  `spec.yaml.paper_aesthetic_context` is declared.
+- Added `## Paper-Wide Aesthetic Context` to `critique_brief.py` before
+  fixture-local aesthetic intent sections.
+- Added `paper_aesthetic_context_accounting` lint blockers for generic
+  critiques that omit exact paper-wide anchors from
+  `top_tier_audit.cross_panel_semantic_grammar`,
+  `top_tier_audit.aesthetic_coherence`, or
+  `editorial_art_direction.visual_identity`.
+- Corrected the design slot name from the draft-only
+  `top_tier_audit.cross_panel_grammar` to the existing schema slot
+  `top_tier_audit.cross_panel_semantic_grammar`.
+- Real fixture opt-in was not added in this slice to avoid intentionally
+  staling active figure work. Dogfood evidence uses synthetic test fixtures
+  that exercise the same parser, brief, freshness, and lint contracts.

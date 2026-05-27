@@ -202,6 +202,13 @@ When `critique_reference_pack.yaml` exists, `/fig_critique` uses it as the
 project-specific top-tier calibration source and includes its target journal,
 reference class, must-match traits, must-avoid traits, and calibration
 questions in the brief.
+When `spec.yaml.paper_aesthetic_context` is declared, `/fig_critique` resolves
+`examples/_paper_aesthetic_contexts/<paper_id>.yaml` and emits a
+`Paper-Wide Aesthetic Context` section. The critique must cite exact paper-wide
+anchors in `top_tier_audit.cross_panel_semantic_grammar`,
+`top_tier_audit.aesthetic_coherence`, and
+`editorial_art_direction.visual_identity`; generic art-direction prose is
+invalid once the fixture opts in.
 When `aesthetic_intent.yaml` uses schema v2, `/fig_critique` emits an
 `Aesthetic Lever Grammar` section and the critique must fill
 `aesthetic_lever_audit` exactly once for every declared lever. The host critique
