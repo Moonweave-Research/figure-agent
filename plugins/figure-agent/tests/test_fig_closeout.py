@@ -136,6 +136,8 @@ def test_closeout_reports_compile_critique_and_loop_actions(
         "adjudication",
         "export",
     ]
+    assert report["next_action_summary"]["action"] == "run_compile"
+    assert report["next_action_summary"]["safe_command"] == "/fig_compile loop_demo"
 
 
 def test_closeout_passes_matching_text_boundary_checks(
@@ -195,6 +197,8 @@ def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
         "uv run python3 scripts/text_boundary_spec_helper.py examples/loop_demo --write"
     )
     assert report["next_action"] == step["command"]
+    assert report["next_action_summary"]["action"] == "create_or_fix_source"
+    assert report["next_action_summary"]["safe_command"] == step["command"]
     assert "text_boundary_checks" in report["blocking_step_ids"]
 
 

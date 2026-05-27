@@ -48,6 +48,7 @@ from fig_loop_patch_evidence import (  # noqa: E402
     post_patch_evidence_verdict,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from next_action_summary import loop_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -152,6 +153,11 @@ def run_loop(
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
     patch_handoff = build_patch_handoff(name, loop_decision)
+    next_action_summary = loop_next_action_summary(
+        loop_decision,
+        status_result,
+        patch_handoff,
+    )
     journal_grade_assessment = build_journal_grade_assessment(
         example_dir,
         status_result.get("critique_state"),
@@ -204,6 +210,7 @@ def run_loop(
         "stop_reason": loop_decision["stop_reason"],
         "active_patch_target": loop_decision["active_patch_target"],
         "patch_handoff": patch_handoff,
+        "next_action_summary": next_action_summary,
         "journal_grade_assessment": journal_grade_assessment,
         "top_tier_audit_summary": top_tier_audit_summary,
         "editorial_art_direction_summary": editorial_art_direction_summary,

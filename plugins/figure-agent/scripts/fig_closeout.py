@@ -17,6 +17,7 @@ from critique_adjudication import (  # noqa: E402
     adjudication_is_stale,
     load_adjudication,
 )
+from next_action_summary import closeout_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
 from text_boundary_spec_helper import (  # noqa: E402
     TextBoundarySpecHelperError,
@@ -420,7 +421,7 @@ def compute_closeout(
     next_step = next((step for step in steps if step["state"] == "needs_action"), None)
     if next_step is None:
         next_step = next((step for step in steps if step["state"] == "blocked"), None)
-    return {
+    report = {
         "schema": "figure-agent.closeout.v1",
         "fixture": name,
         "closeout_complete": not incomplete,
@@ -437,6 +438,8 @@ def compute_closeout(
         },
         "steps": steps,
     }
+    report["next_action_summary"] = closeout_next_action_summary(report)
+    return report
 
 
 def _print_human(report: dict[str, Any]) -> None:

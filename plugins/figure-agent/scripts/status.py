@@ -13,6 +13,7 @@ from audit_evidence_summary import summarize_audit_evidence
 from critique_lint import lint_critique
 from export_freshness import EXPORT_STALE, compute_export_state
 from inputs import parse_spec
+from next_action_summary import status_next_action_summary
 from publication_gate import publication_gate_summary
 from quality_manifest import critique_hash_freshness, critique_manifest_paths
 from reference_contract import (
@@ -282,6 +283,7 @@ def _status_vector(
 
 def _with_status_explanation(result: dict) -> dict:
     result["status_explanation"] = build_status_explanation(result)
+    result["next_action_summary"] = status_next_action_summary(result)
     return result
 
 

@@ -54,6 +54,9 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         ),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    next_action_summary = iteration.get("next_action_summary")
+    if next_action_summary is not None:
+        summary["next_action_summary"] = next_action_summary
     svg_polish_readiness = iteration.get("svg_polish_readiness")
     if svg_polish_readiness is not None:
         summary["svg_polish_readiness"] = svg_polish_readiness

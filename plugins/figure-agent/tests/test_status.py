@@ -310,6 +310,8 @@ def test_stage_2_tex_no_build_pdf(tmp_path: Path) -> None:
     tex.write_text("% tikz", encoding="utf-8")
     result = infer_stage(fig_dir)
     assert result["stage"] == 2
+    assert result["next_action_summary"]["action"] == "run_compile"
+    assert result["next_action_summary"]["safe_command"] == "/fig_compile myfig"
 
 
 def test_stage_2_missing_briefing_does_not_suggest_compile(tmp_path: Path) -> None:

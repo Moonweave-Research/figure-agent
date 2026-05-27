@@ -22,9 +22,16 @@ The JSON report has schema `figure-agent.closeout.v1` and includes:
 
 - `closeout_complete`
 - `next_action`
+- `next_action_summary`
 - `blocking_step_ids`
 - `status`
 - `steps[]`
+
+`next_action_summary` follows the same shared compact shape as `/fig_status`,
+`/fig_drive`, and `/fig_loop`. It points at the first `needs_action` step, or
+the first blocked step when no copyable command is safe. It is read-only
+compression of the detailed `steps[]` list; `steps[]` remains the debugging
+surface.
 
 Each step has:
 

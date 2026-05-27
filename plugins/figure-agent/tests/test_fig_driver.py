@@ -203,6 +203,8 @@ def test_main_emits_json_summary_in_dry_run(
     assert isinstance(payload["status"], dict)
     assert isinstance(payload["forbidden_actions"], list)
     assert isinstance(payload["workspace_warnings"], list)
+    assert payload["next_action_summary"]["action"] == payload["action"]
+    assert payload["next_action_summary"]["safe_command"] == payload["safe_command"]
     for key in ("action", "safe_command", "stop_boundary", "reason"):
         assert key in payload
 
