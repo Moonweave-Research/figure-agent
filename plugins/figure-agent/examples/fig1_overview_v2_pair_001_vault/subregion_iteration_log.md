@@ -840,3 +840,23 @@ detail) closed silhouette/material elements but **mono-gray palette still read a
 
 **Gates**: Style Lock + collision + clash + text-boundary all ✅.
 
+
+### Round 4 (iter 19-23) — NC convention rollback
+
+User critique: iter 18 result felt "tech demo / infographic", not NC Fig 1.
+Diagnosis: too many hue families (amber + blue + red + gray = 4), LCD readout
+violation of NC convention, overplayed effects (0.35 shadow + 1.8pt corners).
+Rollback to NC절제 while preserving alignment/silhouette improvements:
+
+| Iter | Patch | Effect |
+|---|---|---|
+| 19 | Box gradient cBlue!10/!42 → cGray!18/!50, stroke cBlue!55 → cGray!60!black | Single neutral hue family — removed warm/cool 분열 |
+| 20 | Corona cone cBlue!28/!65 → cGray!22/!50 | Muted gray ionization hint replacing cartoon electric blue |
+| 21 | Digital readouts ("5 kV" / "0.32 V") REMOVED entirely | NC convention: instrument displays = abstract dark glass, no numeric |
+| 22 | Drop shadow opacity 0.35 → 0.18 (HV+ + V_s meter) | Subtle NC-grade shadow |
+| 23 | Rounded corners 1.8pt → 0.8pt (all instrument boxes + displays) | Removed iPhone-app exaggeration |
+
+**Net**: Round 2 modernize gains (3D detail, ball-shaded probe/needle, cable
+thickness, gradient depth) preserved; Round 3 color choices reverted to NC
+convention.
+
