@@ -426,7 +426,8 @@
 % (10/14/18/24 atoms drawn) is artistic correlate, NOT literal atom count.
 \node[labelMute, anchor=north] at (5.20, 5.62) {Sulfur content, wt\%};
 
-\draw[interArrow] (6.85, 7.0) -- (7.20, 7.0);
+% Panel-loop iter L6: B→C interArrow length 0.35→0.47cm (more visible transition).
+\draw[interArrow] (6.78, 7.0) -- (7.25, 7.0);
 
 % ============================================================
 % Panel C — Localized traps (HERO #1, vault energy_diagram grammar)
@@ -889,12 +890,14 @@
 % Below: per-column modality companion-label nodes anchored to panel-letter
 % baselines — 6pt italic cGray!70 right of each letter.
 % ============================================================
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
-      anchor=west] at (0.40, 4.42) {kinetic};
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
-      anchor=west] at (5.00, 4.42) {ISPD};
-\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
-      anchor=west] at (9.80, 4.42) {mechanical};
+% Panel-loop iter L4-L5: modality label tier upgrade. italic 6pt → non-italic
+% 6.5pt cGray!75!black (category label tier, parity with Row 1 setup labels).
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
+      anchor=west] at (0.45, 4.42) {kinetic};
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
+      anchor=west] at (5.05, 4.42) {ISPD};
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
+      anchor=west] at (9.85, 4.42) {mechanical};
 
 % ============================================================
 % v8.6 ROW 2 RESTRUCTURE — 3-column Option α (apparatus + result stacking)
@@ -916,10 +919,12 @@
 % but unobtrusive at print scale, no fill, no colour. Drawn BEFORE panel
 % content so panel-letter typography sits on top of the box top edge per
 % NC corner-perch convention.
-\draw[cGray!30, line width=0.35pt, rounded corners=2pt]
+% Panel-loop iter L2-L3 [post-spoke]: Row 2 frame tone subdue (post-spoke removal
+% the frame became visually prominent; lighter tone + thinner stroke).
+\draw[cGray!22, line width=0.30pt, rounded corners=2pt]
   (0.05, 0.10) rectangle (13.85, 4.50);
-\draw[cGray!30, line width=0.35pt] (4.62, 0.10) -- (4.62, 4.50);
-\draw[cGray!30, line width=0.35pt] (9.47, 0.10) -- (9.47, 4.50);
+\draw[cGray!22, line width=0.30pt] (4.62, 0.10) -- (4.62, 4.50);
+\draw[cGray!22, line width=0.30pt] (9.47, 0.10) -- (9.47, 4.50);
 
 % =============== Column D — Kinetic =================
 
@@ -1314,9 +1319,10 @@
 % Row 2 frame y=4.50. Both apparatus box labels now sit LEFT of their box at
 % box mid-height — consistent visual rhythm. V_s probe label stays ABOVE probe
 % (no box, instrument-on-stand convention). polymer keeps LEFT-leader convention.
+% Panel-loop iter L1 [post-spoke, 2026-05-27]: HV+ lowered to clear e+ISPD cluster.
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!80!black,
       anchor=east]
-  at (5.80, 4.25) {HV+};
+  at (5.80, 4.10) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
