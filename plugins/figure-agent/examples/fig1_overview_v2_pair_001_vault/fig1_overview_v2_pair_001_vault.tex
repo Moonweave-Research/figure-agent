@@ -1195,13 +1195,11 @@
 % conductive base, deserves slightly more material weight than light gray).
 \shade[top color=cGray!50, bottom color=cGray!25]
   (5.9, 3.15) rectangle (7.45, 3.45);
-% Iter 12: subtle horizontal striations on substrate (suggesting polished
-% metal / ITO conductor surface, briefing §13.6 ref01 Checa NatComm 2023).
-% Two thin lines at low opacity — barely visible, adds material weight
-% without competing with sample-charges or label leader.
-\foreach \sy in {3.22, 3.30, 3.38} {
-  \draw[white, opacity=0.25, line width=0.18pt] (5.95, \sy) -- (7.40, \sy);
-}
+% Panel E iter 24 [round 5 NC clean, 2026-05-27]: substrate striations REMOVED.
+% 3 white opacity 0.25 lines at 0.18pt = barely-visible noise. Either too
+% subtle (visual contribution ~0) or competing with leader at high zoom.
+% NC convention: clean single-tone substrate w/ gradient + outline carries
+% material identity. Removed lines for cleaner cross-section.
 \draw[cGray!75!black, line width=0.28pt]
   (5.9, 3.15) rectangle (7.45, 3.45);
 % Sample ground attaches to substrate (right edge, mid-substrate y=3.34).
@@ -1210,11 +1208,16 @@
 % Ground wire + bars — iter 45 (Pri 5b): line widths bumped for print.
 % iter E8: rounded corners=2pt on lead bend (matches Panel D iter 64 SMU
 % lead convention; cross-panel illustration-register consistency).
-\draw[cGray!75!black, line width=0.35pt, rounded corners=2pt]
-  (7.45, 3.3) -- (7.55, 3.3) -- (7.55, 3.1);
-\draw[cGray!75!black, line width=0.42pt] (7.48, 3.1) -- (7.62, 3.1);
-\draw[cGray!75!black, line width=0.36pt] (7.5, 3.07) -- (7.6, 3.07);
-\draw[cGray!75!black, line width=0.32pt] (7.52, 3.04) -- (7.58, 3.04);
+% Panel E iter 28 [round 5 NC clean, 2026-05-27]: ground symbol IEEE standard.
+% 3-bar version had unbalanced widths (0.42/0.36/0.32pt + manually shrinking
+% bars) — looked amateurish. Replaced with standard IEEE earth symbol:
+% widest top bar, two progressively shorter bars below, consistent stroke.
+% Bar widths: 0.16/0.10/0.06cm (geometric tapering). Common stroke 0.35pt.
+\draw[cGray!75!black, line width=0.35pt, rounded corners=1pt]
+  (7.45, 3.3) -- (7.55, 3.3) -- (7.55, 3.10);
+\draw[cGray!75!black, line width=0.35pt] (7.47, 3.10) -- (7.63, 3.10);
+\draw[cGray!75!black, line width=0.35pt] (7.50, 3.07) -- (7.60, 3.07);
+\draw[cGray!75!black, line width=0.35pt] (7.52, 3.04) -- (7.58, 3.04);
 
 % ----- Corona electrode assembly — iter 8 Option Y (encapsulated HV source) -----
 % Tech illustrator audit: floating "+" cue + no HV identifier = "where does
@@ -1249,21 +1252,25 @@
 % opacity 0.25 -> 0.35 + offset (0.02, -0.02) -> (0.04, -0.04). Box now reads
 % as "physical instrument on paper" rather than "floating sketch". rounded
 % corners on shadow rect 1.8pt added for shadow/box edge alignment.
-% Panel E iter 16 [Panel E full-loop, 2026-05-27]: cool metallic cast.
-% User: "올드함 못 지우겠지 색상이 문젠가". Mono-cGray gradient = '회색 페인트'
-% feel, not anodized metal. Replaced cGray with cBlue (#4477AA, teal-blue
-% cast): top cGray!12 -> cBlue!10, bottom cGray!58 -> cBlue!42. Stroke
-% cGray!65!black -> cBlue!55!black. Drop shadow stays neutral black.
-\fill[black, opacity=0.18, rounded corners=0.8pt] (5.73, 4.07) rectangle (6.58, 4.37);
+% Panel E iter 25 [round 5 NC clean, 2026-05-27]: HV+ box silhouette differentiate.
+% Both boxes were same generic rectangular shape, visual indistinguishable.
+% Shrunk HV+ width 0.85 -> 0.65cm (compact HV source enclosure aesthetic) +
+% height 0.30 -> 0.25cm. NEW: 5.83..6.48 x 4.12..4.37.
+% Visual hierarchy: HV+ = compact source / V_s meter = larger read-out instrument.
+% Output terminal at (6.155, 4.13) stays inside; corona needle at x=6.155 stays
+% under box center (need slight shift: x 6.15 -> 6.155).
+\fill[black, opacity=0.18, rounded corners=0.8pt] (5.86, 4.09) rectangle (6.51, 4.34);
 \shade[top color=cGray!18, bottom color=cGray!50, rounded corners=0.8pt]
-  (5.7, 4.1) rectangle (6.55, 4.4);
-\draw[cGray!60!black, line width=0.22pt, rounded corners=0.8pt]
-  (5.7, 4.1) rectangle (6.55, 4.4);
+  (5.83, 4.12) rectangle (6.48, 4.37);
+\draw[cGray!60!black, line width=0.25pt, rounded corners=0.8pt]
+  (5.83, 4.12) rectangle (6.48, 4.37);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
-\fill[cGray!70!black, rounded corners=1pt] (5.8, 4.22) rectangle (6.45, 4.38);
-\draw[cGray!85!black, line width=0.12pt, rounded corners=1pt]
-  (5.8, 4.22) rectangle (6.45, 4.38);
+% iter 25 follow-up: display refit to shrunk box. x 5.8→5.87, 6.45→6.44.
+% y 4.22→4.20, 4.38→4.33. Inside new box (5.83..6.48 x 4.12..4.37) with margin.
+\fill[cGray!70!black, rounded corners=1pt] (5.87, 4.20) rectangle (6.44, 4.33);
+\draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
+  (5.87, 4.20) rectangle (6.44, 4.33);
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
 % DC-source schematic glyph (⎓: long bar above, short bar below).
@@ -1275,10 +1282,11 @@
 % Output terminal — iter 45 (Pri 6a): moved INSIDE box body.
 % iter E13: radius 0.022 → 0.018 outer, 0.011 → 0.009 inner; tone
 % cGray!85 → !70 (less aggressive black dot at print scale).
-\fill[cGray!70!black] (6.15, 4.12) circle (0.018);
-\fill[cGray!40!black] (6.15, 4.12) circle (0.009);
-% Wire from terminal (now inside box at 4.12) to needle cuff at 4.05.
-\draw[cGray!75!black, line width=0.32pt] (6.15, 4.1) -- (6.15, 4.05);
+% iter 25 follow-up: output terminal moved INSIDE shrunk box (4.12→4.15).
+\fill[cGray!70!black] (6.155, 4.15) circle (0.018);
+\fill[cGray!40!black] (6.155, 4.15) circle (0.009);
+% Wire from terminal to needle cuff (now from box bottom y=4.12 to needle 4.05).
+\draw[cGray!75!black, line width=0.32pt] (6.155, 4.12) -- (6.155, 4.05);
 % HV+ label — Designer iter (2026-05-22 v1.9 cleanup): the iter-E14 cGray!22
 % backdrop never fully masked the terminal→cuff wire (C001 regression). The
 % iter-C001 sideways shift to x=6.30 fixed the wire crossing but left the
@@ -1299,7 +1307,9 @@
 % as one token. Shifted HV+ DOWN to y=4.10 (mid-height between letter y=4.55
 % and box bottom y=4.10) and shrunk font 6.5 -> 5.5pt (apparatus secondary
 % tier per V_s probe / V_s meter convention; 5.5pt was Codex iter 49 standard).
-\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!75!black,
+% Panel E iter 30 [round 5 NC clean, 2026-05-27]: apparatus label typography unify.
+% HV+: 5.5pt!75 -> 6pt!65. Matching V_s probe/V_s meter post-unify.
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black,
       anchor=east]
   at (5.55, 4.10) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
@@ -1342,9 +1352,16 @@
 % Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
+% Panel E iter 27 [round 5 NC clean, 2026-05-27]: ⊕ marker minimize.
+% iter E7 radius 0.045 + bold 5.5pt "+" white glyph = "sticker" feel.
+% NC convention surface charge: smaller flat circle outline + tiny "+",
+% reads as schematic indicator not 3D marker. Radius 0.045→0.038, font
+% 5.5→4.5pt, ball-shaded → flat cRed!65!black fill (matches Panel C trap
+% dot subtle tier when not the focal point). Outline cRed!95!black 0.18pt.
 \foreach \cx in {6.25, 6.60, 6.95, 7.30} {
-  \shade[ball color=cRed!70!black] (\cx, 3.62) circle (0.045);
-  \node[font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=white,
+  \fill[cRed!65!black] (\cx, 3.62) circle (0.038);
+  \draw[cRed!95!black, line width=0.18pt] (\cx, 3.62) circle (0.038);
+  \node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
@@ -1370,9 +1387,10 @@
 \shade[left color=cGray!80!black, middle color=cGray!18,
        right color=cGray!80!black]
   (6.95, 3.87) rectangle (7.05, 4.05);
-\draw[cGray!80!black, line width=0.20pt]
+% iter 29: probe shaft outline 0.20 → 0.22pt (between secondary tier).
+\draw[cGray!80!black, line width=0.22pt]
   (6.95, 3.87) -- (6.95, 4.05);
-\draw[cGray!80!black, line width=0.20pt]
+\draw[cGray!80!black, line width=0.22pt]
   (7.05, 3.87) -- (7.05, 4.05);
 \fill[white, opacity=0.55] (6.995, 3.87) rectangle (7.005, 4.05);
 % Cable connection dome at shaft top (3D dot for cable attachment point)
@@ -1408,11 +1426,8 @@
 % Shifted label center 7.34 → 7.50 so the label left edge clears the HV+ box
 % with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
 % meter box left x=8.08).
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-% Iter 17: pdftotext bbox showed V_s probe label glyph top at TikZ y=4.56,
-% 0.06 cm above the Row 2 box outline (y=4.50). Shifted anchor y 4.10 →
-% 4.00 so glyph top lands at ~4.46 with a clear 0.04 cm margin from box
-% top. Label bottom moves to y≈4.18, still 0.13 cm above probe shaft top.
+% iter30 follow-up: V_s probe 6.5pt -> 6pt (unified tier).
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black,
       anchor=south] at (7.1, 4.0) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
@@ -1441,7 +1456,7 @@
 \fill[black, opacity=0.18, rounded corners=0.8pt] (7.71, 3.55) rectangle (8.71, 4.02);
 \shade[top color=cGray!18, bottom color=cGray!50, rounded corners=0.8pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
-\draw[cGray!60!black, line width=0.22pt, rounded corners=0.8pt]
+\draw[cGray!60!black, line width=0.25pt, rounded corners=0.8pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
@@ -1467,8 +1482,9 @@
 % iter 51: thin space between V_s and meter. iter E2: weight unified to plain
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black]
-  at (8.14, 3.66) {$V_s$ meter};
+% iter30 follow-up: V_s meter 6.5pt!75 -> 6pt!65 (unified tier).
+\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black]
+  at (8.14, 3.68) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
@@ -1493,17 +1509,19 @@
 % left margin at (4.72, 3.50), italic 6.5pt, with a tiny leader pointing
 % to the slab top-left corner. cAmber slab color + ⊕ surface charges
 % carry the 'film' (thin layer) part implicitly.
-% Panel E iter 4 [Panel E full-loop, 2026-05-27]: polymer leader endpoint shift.
-% Old endpoint (5.88, 3.55) sat ON polymer top edge but within corona-cone
-% region (cone span x=5.95..6.55) — close to ⊕ marker zone start (x=6.25
-% leftmost). Reader could mis-read leader as pointing at first ⊕ charge.
-% Moved leader dot to (5.95, 3.52) — slightly inside polymer slab (top y=3.60,
-% interior y=3.52), at slab LEFT corner (slab x range 5.9..7.45). Leader now
-% terminates ON polymer body, clear of cone+⊕ zone.
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont,
-      text=cGray!65!black, anchor=west] at (4.72, 3.5) {polymer};
-\draw[cGray!55!black, line width=0.18pt] (5.45, 3.5) -- (5.95, 3.52);
-\fill[cGray!55!black] (5.95, 3.52) circle (0.012);
+% Panel E iter 26 [round 5 NC clean, 2026-05-27]: polymer callout cleanup.
+% Straight leader from (5.45, 3.5) to (5.95, 3.52) had near-zero slope
+% (0.02cm rise over 0.50cm run) — read as a generic horizontal segment.
+% Replaced with elbow connector (down-right L-shape) per NC technical
+% illustration convention: horizontal from label x=5.45, then short
+% vertical down to polymer top edge y=3.55. Label dot endpoint snapped to
+% slab interior at (5.92, 3.55). Italic kept, font 6.5→6pt (apparatus
+% secondary tier consistency).
+\node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont,
+      text=cGray!65!black, anchor=west] at (4.72, 3.50) {polymer};
+\draw[cGray!55!black, line width=0.20pt]
+  (5.42, 3.50) -- (5.85, 3.50) -- (5.92, 3.55);
+\fill[cGray!55!black] (5.92, 3.55) circle (0.014);
 
 % E-3 V_s sub-zone axes
 % Column-E iter 5 (2026-05-18, proportion adjust Option A): axis vertical

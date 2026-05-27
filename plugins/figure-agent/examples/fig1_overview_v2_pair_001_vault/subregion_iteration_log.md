@@ -860,3 +860,21 @@ Rollback to NC절제 while preserving alignment/silhouette improvements:
 thickness, gradient depth) preserved; Round 3 color choices reverted to NC
 convention.
 
+
+### Round 5 (iter 24-30) — NC clean schematic polish
+
+User: "다섯 일곱 번 이상 돌리죠 / 아이소매트릭은 굳이 안 / 개념도를 깔끔하게 보여주는 게 더 중요". Schematic 평면 유지 + clarity 우선 7 iter:
+
+| Iter | Sub-region | Patch | Effect |
+|---|---|---|---|
+| 24 | substrate striations | 3 white opacity-0.25 lines REMOVED | Clean single-tone substrate; no invisible noise |
+| 25 | HV+ box silhouette | Width 0.85→0.65cm + height 0.30→0.25cm; display + terminal refit | Silhouette differentiation vs V_s meter — HV+ = compact source |
+| 26 | polymer label callout | Straight slope leader → elbow connector (horizontal + short vertical); italic 6.5→6pt | NC technical illustration convention; cleaner pointing |
+| 27 | ⊕ surface charge markers | ball-shaded 0.045 + bold 5.5pt "+" → flat fill 0.038 + 4.5pt "+" + thin outline | "Sticker" feel removed; subtle schematic indicator tier |
+| 28 | Ground IEEE symbol | 3 bars at 0.42/0.36/0.32pt → uniform 0.35pt with geometric width taper | Standard IEEE earth convention; cleaner stroke discipline |
+| 29 | Apparatus stroke weights | Box outlines 0.22→0.25pt; display outlines 0.12→0.15pt; probe shaft 0.20→0.22pt | Tier hierarchy unified across instruments |
+| 30 | Label typography | HV+ 5.5pt!75 + V_s probe 6.5pt!65 + V_s meter 6.5pt!75 → all 6pt!65; polymer italic 6pt!65 (kept material convention) | Single label tier; italic reserved for material identifier (polymer) |
+
+**Net (Round 5)**: substrate clean / silhouette differentiation / leader convention / charge minimize / IEEE ground / stroke tier / typography unify. NC schematic clarity emphasized; non-conceptual visual noise removed.
+
+**Cumulative (30 iter)**: 23-iter (round 1-4) modernize+rollback + 7-iter (round 5) NC clean. Gates ✅ throughout.
