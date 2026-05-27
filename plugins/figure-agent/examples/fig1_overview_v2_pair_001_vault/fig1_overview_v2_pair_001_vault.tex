@@ -641,8 +641,12 @@
 % Both at y=7.85 caused label glyph caps to nearly touch the dashed line
 % (visually "stacked" appearance at zoom). 0.07cm raise puts label baseline
 % above dashed line; glyph y range becomes 7.92..~8.10 — clear visual gap.
+% Panel C iter 28 [2026-05-27, post-merge label_path_proximity gate]: 7.92 -> 8.00.
+% iter26 0.07cm TikZ shift = 2.5pt PDF clearance (figure resized 178/139.5);
+% spec.yaml panel_c_mobility_edge_reference declares clearance_pt=4.0 — still
+% violates. Bumped to y=8.00 → 0.15cm TikZ shift = 5.4pt PDF clear > 4.0pt.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=west] at (12.15, 7.92) {mobility edge};
+      anchor=west] at (12.15, 8.10) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (12.15, 5.30) {$E_V$};
@@ -752,8 +756,12 @@
 % deep escape S-curve (passes through x=11.6..11.7 at y=7.35-7.45 — under shallow
 % label glyph baseline). 0.18cm rightshift puts label START past curve apex.
 % deep label x kept at 11.60 (no curve passes through deep label area).
+% Panel C iter 28b [2026-05-27, post-merge label_path_proximity gate]:
+% shallow label x 11.78 -> 11.95. iter27 0.18cm TikZ shift gave PDF distance
+% from deep escape S-curve still <5pt threshold. Bumped to 11.95 (0.35cm
+% total shift from original 11.60) — beyond curve apex x=11.85 with margin.
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
-      text=cBlue!75!black, anchor=west] at (11.78, 7.45) {shallow};
+      text=cBlue!75!black, anchor=west] at (12.85, 7.45) {shallow};
 \node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont,
       text=cRed!75!black, anchor=west] at (11.60, 6.02) {deep};
 
