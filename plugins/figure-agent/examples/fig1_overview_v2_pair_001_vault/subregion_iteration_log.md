@@ -795,3 +795,33 @@ User spotted at 500 DPI zoom: "mobility edge" label sitting on dashed reference 
 
 **Round 4 net**: zoom-spotted user defects closed. 27 iters cumulative on `feature/panel-c-15iter-aesthetic-loop`.
 
+## Panel E 15-iter loop (Round 1+2: iter 1-15, 2026-05-27)
+
+`feature/panel-e-aesthetic-loop` branch off main. Panel E = ISPD HERO of Row 2 (apparatus zone + V_s(t) plot + g(E_t) plot).
+
+### Round 1 (iter 1-7) — P0+P1 fixes from 500 DPI critique audit
+
+| Iter | Sub-region | Defect | Patch |
+|---|---|---|---|
+| 1 | E-4 V_s data spheres | sphere 1 (5.45, 2.32) was 0.17cm BELOW curve (interp 2.49) | sphere y 2.32→2.50, 1.96→2.08, 1.78→1.80 (all 3 on-curve) |
+| 2 | E-8 deep Gaussian | peak ratio 1.67× violated briefing §5 Q4 spec 1.86× | deep peak y 1.15→1.23 (ratio 1.84≈spec) |
+| 3 | E-8 deep markers + E-5 derive arrow | sphere center y 1.15 was at old peak; arrow tip 1.18 | sphere y 1.15→1.23, outer 0.80→0.86; arrow tip 1.18→1.26 |
+| 4 | E-2 polymer leader | leader endpoint (5.88, 3.55) inside corona cone zone — read as pointing to ⊕ | endpoint 5.88→5.95 (on polymer body LEFT corner, clear of cone+⊕) |
+| 5 | E-2 HV+ label | label (5.55, 4.25) adjacent to panel-letter "e" — "eHV+" merged read | font 6.5→5.5pt + y 4.25→4.10 (apparatus secondary tier) |
+| 6 | E-9 τ_d caliper | y=1.42 inter-zone gap — semantic mis-bind to V_s plot | caliper y 1.42→1.30 (g(E_t) interior, above deep peak 1.23 by 0.07) |
+| 7 | E-2 V_s probe shadow | shadow x 6.81..7.22 off-aligned with disk x 6.80..7.20 | shadow x 6.85..7.25 (NW light = SE shadow offset) |
+
+### Round 2 (iter 8-15) — instrument modernize (user: "장비 셋업이 올드해")
+
+| Iter | Sub-region | Patch | Effect |
+|---|---|---|---|
+| 8 | HV+ + V_s meter gradients | top !4→12, bottom !40→58, stroke !55→65 | Deeper metallic feel; was washed-out schematic |
+| 9 | All instrument rounded corners | 0.4pt→1.8pt (main boxes), 0.2/0.3pt→1pt (displays) | Visible radius; 90° schematic feel removed |
+| 10 | Box drop shadows | opacity 0.25→0.35, offset 0.02→0.04cm, rounded corners on shadow | Boxes read as "sitting on paper" not floating |
+| 11 | HV+ display content | ⎓ abstract bars REMOVED → "5 kV" digital readout (\ttfamily amber) | Modern HV source — numeric reading, not symbol |
+| 12 | V_s meter display content | empty x-y axes REMOVED → "V_s = 0.32 V" digital readout | Real instrument convention (current reading shown) |
+| 13 | V_s probe shaft + cable dome | width 0.08→0.10cm + ball-shaded cable connection dome at top | Modern ESVM probe with cable attachment point |
+| 14 | Corona needle + cable | ball-shaded cuff bushing, needle tip stroke 0.22→0.25pt, cable 0.30→0.35pt + ball-shaded port | 3D depth; thicker cable |
+| 15 | V_s meter readout fit | "V_s = 0.32 V" → "0.32 V" (variable name redundant w/ 'V_s meter' label) | Text fits cleanly inside display |
+
+**Gates**: Style Lock + collision + clash + text-boundary all ✅. No briefing edits.
