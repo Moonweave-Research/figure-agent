@@ -1268,9 +1268,17 @@
 % per user "신호 찌그러짐"). New extent 4.22..4.38.
 % iter 25 follow-up: display refit to shrunk box. x 5.8→5.87, 6.45→6.44.
 % y 4.22→4.20, 4.38→4.33. Inside new box (5.83..6.48 x 4.12..4.37) with margin.
-\fill[cGray!70!black, rounded corners=1pt] (5.87, 4.20) rectangle (6.44, 4.33);
+% Panel E iter 32 [round 6 focal, 2026-05-27]: HV+ status LED indicator.
+% Display narrowed (x 5.87..6.44 → 5.90..6.36, width 0.57→0.46) to make
+% room for a status LED dot at right side (x=6.41, y=4.26) — small cRed!85
+% dot at 0.018cm radius signaling "HV ON". Subtle but adds active state
+% identity to PRIMARY tier instrument.
+\fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
-  (5.87, 4.20) rectangle (6.44, 4.33);
+  (5.90, 4.20) rectangle (6.36, 4.33);
+% iter 32: HV+ status LED — cRed dot indicating active discharge state.
+\fill[cRed!85!black] (6.41, 4.26) circle (0.018);
+\fill[cRed!50, opacity=0.6] (6.41, 4.26) circle (0.030);
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
 % DC-source schematic glyph (⎓: long bar above, short bar below).
@@ -1307,27 +1315,32 @@
 % as one token. Shifted HV+ DOWN to y=4.10 (mid-height between letter y=4.55
 % and box bottom y=4.10) and shrunk font 6.5 -> 5.5pt (apparatus secondary
 % tier per V_s probe / V_s meter convention; 5.5pt was Codex iter 49 standard).
-% Panel E iter 30 [round 5 NC clean, 2026-05-27]: apparatus label typography unify.
-% HV+: 5.5pt!75 -> 6pt!65. Matching V_s probe/V_s meter post-unify.
-\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black,
+% Panel E iter 36 [round 6 focal, 2026-05-27]: HV+ label primary tier.
+% Corona-charging is method focal — HV+ deserves primary label tier.
+% Font 6→6.5pt + tone cGray!65 → cGray!80!black + slight bold tier.
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cGray!80!black,
       anchor=east]
   at (5.55, 4.10) {HV+};
 % Corona needle electrode — iter 40: ENTIRE NEEDLE LIFTED 0.10cm. Tip 3.63→3.73,
 % cuff 3.95→4.05. Air gap from polymer (3.60) now 0.13cm (was 0.03cm "touching feel").
 % Spark length grows from 0.03 → 0.13cm — corona discharge clearly visible traveling air.
-% Panel E iter 14 [Panel E full-loop, 2026-05-27]: corona needle re-detail.
-% Triangular needle widened slightly (base 0.030 -> 0.040) for stronger
-% material identity at print. Gradient tone narrower (!75 → !80, !90 → !95)
-% for sharper metallic shading. Tip stroke weight 0.22 -> 0.25pt for crisp
-% silhouette. Cuff ball-shaded for 3D feel (was flat fill).
-\shade[left color=cGray!80!black, right color=cGray!95!black]
-  (6.13, 4.05) -- (6.17, 4.05) -- (6.15, 3.73) -- cycle;
-\draw[cGray!95!black, line width=0.25pt]
-  (6.13, 4.05) -- (6.17, 4.05) -- (6.15, 3.73) -- cycle;
-% iter E13: cuff radius 0.045 → 0.025 + tone cGray!85 → !65 (was dominant
-% black dot reading as "button"; now subtle support indicator).
-% iter14: flat fill -> ball-shaded sphere for 3D cuff bushing identity.
-\shade[ball color=cGray!70!black] (6.15, 4.05) circle (0.028);
+% Panel E iter 31 [round 6 focal, 2026-05-27]: corona needle visual weight ↑.
+% iter14 needle base 0.040 + tip y=3.73. Apparatus focal = corona charging,
+% so needle deserves PRIMARY tier weight. Lengthened: tip y 3.73 → 3.69
+% (extended 0.04 toward polymer at y=3.60 — 0.09cm gap = more visible
+% discharge path). Base widened 0.040 → 0.050 + gradient stronger
+% (cGray!90!black → black). Tip stroke 0.25 → 0.30pt for primary tier.
+% Cuff bushing slightly enlarged 0.028 → 0.032 with darker ball color.
+% iter 31 corrected: needle = symmetric triangle pointing DOWN.
+% Base width 0.050 (cx=6.155, was 0.030@6.15) + length extended (tip y 3.73→3.69).
+% Base x=6.130..6.180 + tip (6.155, 3.69). All centered on x=6.155 (matches
+% iter25 HV+ box center after shrink).
+\shade[left color=cGray!85!black, right color=black]
+  (6.130, 4.05) -- (6.180, 4.05) -- (6.155, 3.69) -- cycle;
+\draw[black, line width=0.30pt]
+  (6.130, 4.05) -- (6.180, 4.05) -- (6.155, 3.69) -- cycle;
+% iter 31 cuff: size 0.028 → 0.032, ball color darker, centered on x=6.155.
+\shade[ball color=cGray!85!black] (6.155, 4.05) circle (0.032);
 % Sparks — iter E1: 5 → 3 rays. iter E16 (H3 Panel E critical review): 3 narrow
 % rays read as "needle only charges the leftmost ⊕"; corona discharge actually
 % covers a broad ionization region. Replaced with a semi-transparent cone +
@@ -1347,21 +1360,34 @@
 % muted gray cone hint (presence indicator, not glow effect). Cone fill
 % cGray!22 opacity 0.45 + center ray cGray!50 0.30pt. Stays as ionization
 % region cue without competing visual weight with apparatus structure.
-\fill[cGray!22, opacity=0.45] (6.15, 3.73) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
-\draw[cGray!50, line width=0.30pt, opacity=0.55] (6.15, 3.73) -- (6.15, 3.6);
+% iter 31 follow-up: spark cone tip 3.73 → 3.69 (matches lengthened needle).
+% Center ray also from new tip x=6.155 (was 6.15).
+\fill[cGray!22, opacity=0.45] (6.155, 3.69) -- (5.95, 3.6) -- (6.55, 3.6) -- cycle;
+\draw[cGray!50, line width=0.30pt, opacity=0.55] (6.155, 3.69) -- (6.155, 3.6);
 % Surface charges — iter E7: radius 0.038 → 0.045 (back to iter 47 size) +
 % font 4.5 → 5.5pt for clearer "+" legibility. iter 48 Codex shrink was too
 % aggressive; charges read as red dots without legible polarity at small scale.
-% Panel E iter 27 [round 5 NC clean, 2026-05-27]: ⊕ marker minimize.
-% iter E7 radius 0.045 + bold 5.5pt "+" white glyph = "sticker" feel.
-% NC convention surface charge: smaller flat circle outline + tiny "+",
-% reads as schematic indicator not 3D marker. Radius 0.045→0.038, font
-% 5.5→4.5pt, ball-shaded → flat cRed!65!black fill (matches Panel C trap
-% dot subtle tier when not the focal point). Outline cRed!95!black 0.18pt.
-\foreach \cx in {6.25, 6.60, 6.95, 7.30} {
-  \fill[cRed!65!black] (\cx, 3.62) circle (0.038);
-  \draw[cRed!95!black, line width=0.18pt] (\cx, 3.62) circle (0.038);
-  \node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
+% Panel E iter 35 [round 6 focal, 2026-05-27]: ⊕ marker hierarchy.
+% iter 27 unified all 4 ⊕ markers. But charging-instant should differ from
+% accumulated-charge: corona cone covers x=5.95..6.55, so 1st ⊕ at x=6.25 is
+% under-cone (current-charge moment) — primary tier. 2nd ⊕ at x=6.60 just
+% past cone (recently-deposited) — secondary tier. 3rd+4th at x=6.95, 7.30
+% (accumulated from earlier scan steps) — tertiary tier.
+% Visual: 1st cRed!90 r=0.040 (focus), 2nd cRed!75 r=0.038, 3rd-4th cRed!55 r=0.034.
+\fill[cRed!90!black] (6.25, 3.62) circle (0.040);
+\draw[cRed!95!black, line width=0.20pt] (6.25, 3.62) circle (0.040);
+\node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=white,
+      inner sep=0pt] at (6.25, 3.62) {$+$};
+
+\fill[cRed!75!black] (6.60, 3.62) circle (0.038);
+\draw[cRed!90!black, line width=0.18pt] (6.60, 3.62) circle (0.038);
+\node[font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont, text=white,
+      inner sep=0pt] at (6.60, 3.62) {$+$};
+
+\foreach \cx in {6.95, 7.30} {
+  \fill[cRed!55!black] (\cx, 3.62) circle (0.034);
+  \draw[cRed!75!black, line width=0.16pt] (\cx, 3.62) circle (0.034);
+  \node[font=\sffamily\bfseries\fontsize{4}{4.8}\selectfont, text=white,
         inner sep=0pt] at (\cx, 3.62) {$+$};
 }
 
@@ -1380,31 +1406,35 @@
 % the 0.40cm-wide disk (1:5 ratio looked wrong). New 0.18cm shaft gives
 % 1:2.2 ratio — more recognizable probe assembly. No conflict with HV+
 % box (HV+ x=6.10-6.95, probe x=7.36-7.44, different x).
-% Panel E iter 13 [Panel E full-loop, 2026-05-27]: V_s probe shaft modernize.
-% Shaft width 0.08cm -> 0.10cm + cuff bullet (top dot for cable connection
-% point per modern ESVM probe design — cable attaches at shaft top dome).
-% Width: (6.95, 4.05) ↔ (7.05, 4.05). Center spec highlight x 6.995→7.005.
-\shade[left color=cGray!80!black, middle color=cGray!18,
-       right color=cGray!80!black]
-  (6.95, 3.87) rectangle (7.05, 4.05);
-% iter 29: probe shaft outline 0.20 → 0.22pt (between secondary tier).
-\draw[cGray!80!black, line width=0.22pt]
-  (6.95, 3.87) -- (6.95, 4.05);
-\draw[cGray!80!black, line width=0.22pt]
-  (7.05, 3.87) -- (7.05, 4.05);
-\fill[white, opacity=0.55] (6.995, 3.87) rectangle (7.005, 4.05);
-% Cable connection dome at shaft top (3D dot for cable attachment point)
-\shade[ball color=cGray!75!black] (7.00, 4.06) circle (0.025);
+% Panel E iter 33 [round 6 focal, 2026-05-27]: V_s probe DEMOTE (tertiary tier).
+% iter 13 widened to 0.10cm shaft + dome. Now reverted: shaft 0.10→0.08cm
+% + tone gradient muted (cGray!80 → cGray!60). Tertiary tier (readout side)
+% should not compete visually with corona-charging primary tier.
+% Shaft x range 6.96..7.04 (narrower); spec highlight x 7.005 unchanged.
+\shade[left color=cGray!60!black, middle color=cGray!10,
+       right color=cGray!60!black]
+  (6.96, 3.87) rectangle (7.04, 4.05);
+\draw[cGray!60!black, line width=0.18pt]
+  (6.96, 3.87) -- (6.96, 4.05);
+\draw[cGray!60!black, line width=0.18pt]
+  (7.04, 3.87) -- (7.04, 4.05);
+\fill[white, opacity=0.45] (6.995, 3.87) rectangle (7.005, 4.05);
+% iter 33: cable connection dome smaller + muted.
+\shade[ball color=cGray!55!black] (7.00, 4.055) circle (0.020);
 % Disk electrode — iter 40: lifted 0.10cm. iter E3: gradient cAmber → cGray
 % (silver/metal vs polymer color confusion). Kelvin probe disk = metal
 % electrode; sharing cAmber with polymer film read as "same material" at
 % glance. New gradient cGray!30 → cGray!55 → cGray!28 mimics polished metal
 % disk cross-section. Outline darker cGray for definition.
-\shade[left color=cGray!30, middle color=cGray!55,
-       right color=cGray!28]
+% Panel E iter 34 [round 6 focal, 2026-05-27]: V_s probe disk DEMOTE.
+% iter E3 outline 0.45pt cGray!75 - too prominent for tertiary tier.
+% Reduced to 0.28pt cGray!55!black + disk gradient muted (cGray!30/!55/!28
+% → cGray!25/!42/!22). Less metallic shine.
+\shade[left color=cGray!25, middle color=cGray!42,
+       right color=cGray!22]
   (6.8, 3.8) rectangle (7.2, 3.87);
-\draw[cGray!75!black, line width=0.45pt] (6.8, 3.8) rectangle (7.2, 3.87);
-\fill[white, opacity=0.55] (6.81, 3.868) rectangle (7.18, 3.87);
+\draw[cGray!55!black, line width=0.28pt] (6.8, 3.8) rectangle (7.2, 3.87);
+\fill[white, opacity=0.40] (6.81, 3.868) rectangle (7.18, 3.87);
 % iter E16 (2026-05-21, user clarification): vertical-oscillation glyph
 % removed. Keyence SK-series surface voltmeter uses induction sensing, not
 % a vibrating tip — the ↕ cue evoked Kelvin-probe FM-CPD modulation and
@@ -1426,8 +1456,8 @@
 % Shifted label center 7.34 → 7.50 so the label left edge clears the HV+ box
 % with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
 % meter box left x=8.08).
-% iter30 follow-up: V_s probe 6.5pt -> 6pt (unified tier).
-\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black,
+% iter 36 follow-up: V_s probe tertiary tier — 6pt → 5.5pt + cGray!55!black.
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black,
       anchor=south] at (7.1, 4.0) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
@@ -1482,9 +1512,9 @@
 % iter 51: thin space between V_s and meter. iter E2: weight unified to plain
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
-% iter30 follow-up: V_s meter 6.5pt!75 -> 6pt!65 (unified tier).
-\node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!65!black]
-  at (8.14, 3.68) {$V_s$ meter};
+% iter 36 follow-up: V_s meter tertiary tier — 6pt → 5.5pt + cGray!55!black.
+\node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black]
+  at (8.14, 3.70) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down

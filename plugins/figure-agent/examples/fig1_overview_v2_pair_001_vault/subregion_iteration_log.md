@@ -878,3 +878,20 @@ User: "다섯 일곱 번 이상 돌리죠 / 아이소매트릭은 굳이 안 / �
 **Net (Round 5)**: substrate clean / silhouette differentiation / leader convention / charge minimize / IEEE ground / stroke tier / typography unify. NC schematic clarity emphasized; non-conceptual visual noise removed.
 
 **Cumulative (30 iter)**: 23-iter (round 1-4) modernize+rollback + 7-iter (round 5) NC clean. Gates ✅ throughout.
+
+### Round 6 (iter 31-36) — Corona focal + V_s readout demote
+
+User critique post-iter-30: "완성도 아직 부족" + "그래프 강조를 왜해" (plot 비중 ↑ NOT correct direction). Diagnosis: apparatus zone에 7개 elements 비슷한 visual weight — method focal point 부재. Re-shifted hierarchy to corona-charging primary, V_s readout tertiary.
+
+| Iter | Sub-region | Patch | Hierarchy effect |
+|---|---|---|---|
+| 31 | Corona needle | base 0.040→0.050, length tip y 3.73→3.69 (+0.04 toward polymer), gradient !85/!90 → !90/black, stroke 0.25→0.30pt, cuff size 0.028→0.032 darker | PRIMARY tier — focal point of charging mechanism |
+| 32 | HV+ box display + status LED | Display narrowed (width 0.57→0.46), added cRed LED dot at right (x=6.41, y=4.26) w/ glow halo | Active source indicator |
+| 33 | V_s probe shaft | Width 0.10→0.08cm, gradient !80→!60, stroke 0.22→0.18pt, dome 0.025→0.020 | TERTIARY tier — readout side demoted |
+| 34 | V_s probe disk | gradient !30/!55/!28 → !25/!42/!22, outline 0.45→0.28pt, sheen opacity 0.55→0.40 | TERTIARY tier — muted metallic |
+| 35 | ⊕ markers temporal hierarchy | 1st (under cone) r=0.040 cRed!90 (current), 2nd r=0.038 !75 (recent), 3rd-4th r=0.034 !55 (accumulated) | Temporal narrative: charging instant → accumulated |
+| 36 | Label typography hierarchy | HV+ 6pt!65 → bold 6.5pt!80 (PRIMARY); V_s probe + V_s meter 6pt → 5.5pt!55 (TERTIARY) | Visual hierarchy through label tier |
+
+**Net (Round 6)**: corona-charging method = clear focal point. Readout (probe + meter) demoted to support role. Visual story: "HV+ → needle → cone → ⊕ on polymer (charging happens)" dominates; V_s probe + meter as "we then measure surface potential" subtitle.
+
+Gates ✅. 36 iter cumulative on `feature/panel-e-aesthetic-loop`.
