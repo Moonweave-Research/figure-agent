@@ -362,7 +362,8 @@
   at (0.10,5.42) {poly(S-r-DIB) linear copolymer};
 
 % Inter-panel arrow A → B
-\draw[interArrow] (3.50, 7.0) -- (3.85, 7.0);
+% iter PL4: length 0.35 → 0.47cm parity with B→C arrow (Panel-loop iter L6).
+\draw[interArrow] (3.43, 7.0) -- (3.90, 7.0);
 
 % ============================================================
 % Panel B — S60–S85 chain length scaffold (placeholder-level)
@@ -808,9 +809,11 @@
 % 0.45pt read as a thin reference cue rather than a measured scalar caliper.
 % Heads still inside cap (max 3.5pt scaler) per intra-panel arrow tier.
 \draw[{Stealth[length=3.2pt,width=2.4pt]}-{Stealth[length=3.2pt,width=2.4pt]},
-      cRed!80!black, line width=0.50pt] (13.40, 8.27) -- (13.40, 5.83);
+% iter PL5: ΔE_t tone cRed!80!black → cRed!75!black per briefing §13.3 C-R5 spec.
+      cRed!75!black, line width=0.50pt] (13.40, 8.27) -- (13.40, 5.83);
 % Polish iter: 5.5 → 6.5pt + cRed!80!black (stronger visual binding to deep trap).
-\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!80!black,
+% iter PL5b: ΔE_t label tone parity with arrow !75!black per briefing §13.3 C-R5.
+\node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cRed!75!black,
       anchor=west, inner sep=0.5pt]
   at (13.42, 7.00) {$\Delta E_t$};
 
@@ -910,16 +913,16 @@
 % Stroke 0.35pt cGray!50 unified (bracket + 3 verticals + up arrow).
 % Up arrow: small 3pt stealth head, target y=5.18 (just inside Panel C bbox).
 
-\draw[cGray!50, line width=0.35pt] (2.275, 4.85) -- (2.275, 4.55);
-\draw[cGray!50, line width=0.35pt] (6.975, 4.85) -- (6.975, 4.55);
-\draw[cGray!50, line width=0.35pt] (11.70, 4.85) -- (11.70, 4.55);
-% Bridge: horizontal bracket connecting 3 verticals at y=4.85
-\draw[cGray!50, line width=0.35pt] (2.275, 4.85) -- (11.70, 4.85);
+% iter PL7: bridge bracket tone cGray!50 → cGray!55 unify with up arrow.
+\draw[cGray!55, line width=0.35pt] (2.275, 4.85) -- (2.275, 4.55);
+\draw[cGray!55, line width=0.35pt] (6.975, 4.85) -- (6.975, 4.55);
+\draw[cGray!55, line width=0.35pt] (11.70, 4.85) -- (11.70, 4.55);
+\draw[cGray!55, line width=0.35pt] (2.275, 4.85) -- (11.70, 4.85);
 % Convergent arrow: up from bracket center pointing TO caption text.
 % iter PL3: arrow tip y 5.18 → 5.02 (just below caption baseline 5.05 with
-% 0.03cm gap). Arrow points UP to caption — visual reading: "3 evidence (D/E/F)
-% via bracket → converge on convergent evidence semantic gate".
-\draw[-{Stealth[length=3pt,width=2.2pt]}, cGray!55!black, line width=0.40pt]
+% 0.03cm gap). iter PL6: weight 0.40 → 0.35pt parity with bracket strokes
+% (cGray!50 throughout bridge structure).
+\draw[-{Stealth[length=3pt,width=2.2pt]}, cGray!55!black, line width=0.35pt]
   (6.975, 4.85) -- (6.975, 5.02);
 % Paper-context iter PL1: restore briefing §2 frame 5 "convergent evidence"
 % semantic gate caption. Subtle 6pt italic cGray!60 placed ABOVE up arrow tip
