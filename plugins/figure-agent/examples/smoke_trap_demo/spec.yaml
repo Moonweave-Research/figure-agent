@@ -4,6 +4,26 @@ panels:
     caption: long retention via deep trap
 style_profile: polymer-default
 visual_clash_cap: 3
+label_path_proximity_checks:
+  # Band body only; endpoint labels are intentional and stay outside this range.
+  - id: smoke_cb_reference_line
+    kind: horizontal_line
+    role: reference_line
+    y_pdf_cm: 2.30
+    x_range_pdf_cm: [1.72, 7.02]
+    clearance_pt: 3.0
+  - id: smoke_deep_trap_line
+    kind: horizontal_line
+    role: semantic_line
+    y_pdf_cm: 4.62
+    x_range_pdf_cm: [2.99, 5.94]
+    clearance_pt: 3.0
+  - id: smoke_vb_reference_line
+    kind: horizontal_line
+    role: reference_line
+    y_pdf_cm: 6.87
+    x_range_pdf_cm: [1.72, 7.02]
+    clearance_pt: 3.0
 selected_preview: dummy_v1.png
 selection_notes: |
   Smoke test placeholder preview. Authoring TikZ from briefing intent

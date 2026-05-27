@@ -225,3 +225,55 @@ def test_fig1_vault_declares_minimal_label_path_proximity_checks() -> None:
     assert shallow["role"] == "semantic_curve"
     assert shallow["clearance_pt"] == 5.0
     assert shallow["text_allowlist"] == ["shallow"]
+
+
+def test_smoke_trap_demo_declares_band_diagram_label_path_checks() -> None:
+    spec_path = REPO_ROOT / "examples" / "smoke_trap_demo" / "spec.yaml"
+
+    checks = proximity.load_label_path_proximity_checks(spec_path)
+    by_id = {str(check["id"]): check for check in checks}
+
+    assert set(by_id) == {
+        "smoke_cb_reference_line",
+        "smoke_deep_trap_line",
+        "smoke_vb_reference_line",
+    }
+    assert by_id["smoke_cb_reference_line"]["kind"] == "horizontal_line"
+    assert by_id["smoke_cb_reference_line"]["role"] == "reference_line"
+    assert by_id["smoke_cb_reference_line"]["y_pdf_cm"] == 2.30
+    assert by_id["smoke_cb_reference_line"]["x_range_pdf_cm"] == [1.72, 7.02]
+    assert by_id["smoke_cb_reference_line"]["clearance_pt"] == 3.0
+    assert "text_allowlist" not in by_id["smoke_cb_reference_line"]
+    assert by_id["smoke_deep_trap_line"]["kind"] == "horizontal_line"
+    assert by_id["smoke_deep_trap_line"]["role"] == "semantic_line"
+    assert by_id["smoke_deep_trap_line"]["y_pdf_cm"] == 4.62
+    assert by_id["smoke_deep_trap_line"]["x_range_pdf_cm"] == [2.99, 5.94]
+    assert by_id["smoke_deep_trap_line"]["clearance_pt"] == 3.0
+    assert "text_allowlist" not in by_id["smoke_deep_trap_line"]
+    assert by_id["smoke_vb_reference_line"]["kind"] == "horizontal_line"
+    assert by_id["smoke_vb_reference_line"]["role"] == "reference_line"
+    assert by_id["smoke_vb_reference_line"]["y_pdf_cm"] == 6.87
+    assert by_id["smoke_vb_reference_line"]["x_range_pdf_cm"] == [1.72, 7.02]
+    assert by_id["smoke_vb_reference_line"]["clearance_pt"] == 3.0
+    assert "text_allowlist" not in by_id["smoke_vb_reference_line"]
+
+
+def test_smoke_trap_demo_band_body_checks_do_not_flag_endpoint_labels() -> None:
+    spec_path = REPO_ROOT / "examples" / "smoke_trap_demo" / "spec.yaml"
+    checks = proximity.load_label_path_proximity_checks(spec_path)
+    words = [
+        _word("E", 38.831, 19.208, 49.173, 31.649),
+        _word("injection", 50.790, 31.376, 102.196, 44.349),
+        _word("CB", 206.254, 58.760, 225.717, 71.734),
+        _word("capture", 81.484, 89.145, 128.216, 102.119),
+        _word("E", 206.254, 123.564, 216.596, 136.005),
+        _word("t", 216.597, 128.582, 220.829, 137.291),
+        _word("VB", 206.254, 188.314, 224.944, 201.288),
+        _word("long", 50.632, 242.128, 77.122, 255.101),
+        _word("retention", 81.003, 242.128, 135.528, 255.101),
+        _word("via", 139.423, 242.128, 157.333, 255.101),
+        _word("deep", 161.228, 242.128, 192.398, 255.101),
+        _word("trap", 196.279, 242.128, 220.421, 255.101),
+    ]
+
+    assert proximity.detect_label_path_proximity(words, (271.061, 267.747), checks) == []

@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-26 KST
-**Status:** current main truth through v0.7.1 / Issue 53
+**Date:** 2026-05-27 KST
+**Status:** current main truth through v0.7.1 / Issue 54
 
 ## Bottom Line
 
@@ -71,7 +71,8 @@ Results:
   `build/label_path_proximity.json` from explicit
   `spec.yaml.label_path_proximity_checks`; critique/lint require `LP###`
   accounting for candidates, and the fig1 vault fixture now dogfoods two
-  high-risk semantic path checks.
+  high-risk semantic path checks. Issue 54 extends clean-current adoption to
+  `smoke_trap_demo` with line-body-only checks for its compact band diagram.
 - Post-compile fixture state sweep: Issue 53 re-ran all 8 real fixtures through
   compile and `/fig_drive` mode checks, then tightened two misleading
   audit-evidence next-action hints.
@@ -118,7 +119,8 @@ the plugin for real figure work.
 1. **Fixture adoption expansion.** More real fixtures should declare
    `text_boundary_layout` and/or `label_path_proximity_checks` when they contain
    row boxes, panel rules, internal display rectangles, reference lines,
-   semantic curves, or other explicit label-boundary hazards.
+   semantic curves, or other explicit label-boundary hazards. Current adoption:
+   `fig1_overview_v2_pair_001_vault` and `smoke_trap_demo`.
 2. **Paper-wide aesthetic context.** The plugin is strong at single-figure
    audit; it still needs a bounded way to carry visual language, restraint,
    typography, and palette intent across multiple figures in one manuscript.
