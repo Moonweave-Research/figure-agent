@@ -1,0 +1,232 @@
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+from external_vision_review import (  # noqa: E402
+    EXTERNAL_VISION_REVIEW_SCHEMA,
+    ExternalVisionReviewError,
+    external_vision_review_freshness,
+    load_external_vision_review,
+    load_optional_external_vision_review,
+)
+from fig_loop_assessments import external_vision_review_summary  # noqa: E402
+
+
+def _sha256(path: Path) -> str:
+    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+
+
+def _write_artifact(example_dir: Path, *, content: bytes = b"png") -> Path:
+    path = example_dir / "build" / f"{example_dir.name}.png"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+    return path
+
+
+def _write_crop(example_dir: Path, *, crop_id: str = "VC001") -> Path:
+    path = example_dir / "build" / "audit_crops" / f"{crop_id}.png"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"crop")
+    return path
+
+
+def _write_review(
+    example_dir: Path,
+    *,
+    fixture: str | None = None,
+    confidence: str = "medium",
+    suggested_action: str = "human_review",
+    conflict: bool = True,
+    artifact_hash: str | None = None,
+) -> Path:
+    artifact_path = _write_artifact(example_dir)
+    crop_path = _write_crop(example_dir)
+    if artifact_hash is None:
+        artifact_hash = _sha256(artifact_path)
+    conflicts = (
+        """
+conflicts:
+  - external_finding_id: EV001
+    host_finding_id: C001
+    summary: external review sees a label-target issue that host critique dismissed
+""".rstrip()
+        if conflict
+        else "conflicts: []"
+    )
+    path = example_dir / "external_vision_review.yaml"
+    path.write_text(
+        f"""
+schema: {EXTERNAL_VISION_REVIEW_SCHEMA}
+fixture: {fixture or example_dir.name}
+reviewer: Gemini manual second pass
+reviewed_at: 2026-05-28T12:00:00Z
+confidence: {confidence}
+reviewed_artifact:
+  path: build/{example_dir.name}.png
+  hash: {artifact_hash}
+reviewed_crops:
+  - crop_id: VC001
+    path: build/audit_crops/VC001.png
+    hash: {_sha256(crop_path)}
+findings:
+  - id: EV001
+    severity: MAJOR
+    observation: label appears visually attached to the wrong object in the crop
+    evidence_ref: VC001
+    suggested_action: {suggested_action}
+{conflicts}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_load_external_vision_review_accepts_valid_review(tmp_path: Path) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    path = _write_review(example_dir)
+
+    review = load_external_vision_review(path)
+
+    assert review["schema"] == EXTERNAL_VISION_REVIEW_SCHEMA
+    assert review["fixture"] == "demo"
+    assert review["reviewer"] == "Gemini manual second pass"
+    assert review["findings"][0]["id"] == "EV001"
+    assert review["conflicts"][0]["host_finding_id"] == "C001"
+
+
+def test_load_optional_external_vision_review_returns_none_without_opt_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_review(example_dir)
+
+    assert load_optional_external_vision_review(example_dir, {"name": "demo"}) is None
+
+
+def test_load_optional_external_vision_review_rejects_missing_opted_review(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+
+    with pytest.raises(ExternalVisionReviewError, match="missing"):
+        load_optional_external_vision_review(
+            example_dir,
+            {"name": "demo", "external_vision_review": True},
+        )
+
+
+def test_load_external_vision_review_rejects_malformed_yaml(tmp_path: Path) -> None:
+    path = tmp_path / "external_vision_review.yaml"
+    path.write_text("schema: [", encoding="utf-8")
+
+    with pytest.raises(ExternalVisionReviewError, match="malformed YAML"):
+        load_external_vision_review(path)
+
+
+def test_load_optional_external_vision_review_rejects_fixture_mismatch(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_review(example_dir, fixture="other")
+
+    with pytest.raises(ExternalVisionReviewError, match="fixture"):
+        load_optional_external_vision_review(
+            example_dir,
+            {"name": "demo", "external_vision_review": True},
+        )
+
+
+def test_load_external_vision_review_rejects_invalid_enums(tmp_path: Path) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    path = _write_review(example_dir, confidence="certain")
+
+    with pytest.raises(ExternalVisionReviewError, match="confidence"):
+        load_external_vision_review(path)
+
+    path = _write_review(example_dir, suggested_action="auto_patch")
+    with pytest.raises(ExternalVisionReviewError, match="suggested_action"):
+        load_external_vision_review(path)
+
+
+def test_external_vision_review_freshness_detects_stale_artifact_hash(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_review(example_dir)
+    review = load_external_vision_review(example_dir / "external_vision_review.yaml")
+
+    fresh = external_vision_review_freshness(example_dir, review)
+    assert fresh["state"] == "fresh"
+    assert fresh["stale_paths"] == []
+
+    (example_dir / "build" / "demo.png").write_bytes(b"changed")
+    stale = external_vision_review_freshness(example_dir, review)
+    assert stale["state"] == "stale"
+    assert stale["stale_paths"] == ["build/demo.png"]
+
+
+def test_external_vision_review_summary_marks_conflicts_needs_human(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+    _write_review(example_dir, conflict=True)
+
+    summary = external_vision_review_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["conflict_count"] == 1
+    assert summary["active_conflicts"] == ["EV001 vs C001"]
+
+
+def test_external_vision_review_summary_marks_stale_review(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+    _write_review(example_dir, conflict=False)
+    (example_dir / "build" / "demo.png").write_bytes(b"changed")
+
+    summary = external_vision_review_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "stale"
+    assert summary["freshness"]["stale_paths"] == ["build/demo.png"]
+
+
+def test_external_vision_review_summary_reports_spec_parse_error(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nstyle_profile: unknown\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+
+    summary = external_vision_review_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "invalid"
+    assert "Unknown style_profile" in summary["error"]

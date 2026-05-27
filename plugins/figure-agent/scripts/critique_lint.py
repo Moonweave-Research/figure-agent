@@ -33,6 +33,11 @@ from critique_schema_vocab import (  # noqa: E402
     MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS,
     MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS,
 )
+from external_vision_review import (  # noqa: E402
+    ExternalVisionReviewError,
+    external_vision_review_freshness,
+    load_optional_external_vision_review,
+)
 from inputs import parse_spec  # noqa: E402
 from journal_art_direction_playbook import (  # noqa: E402
     JournalArtDirectionPlaybookError,
@@ -1626,6 +1631,40 @@ def _crop_audit_accounting_violations(
     return []
 
 
+def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintViolation]:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return []
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        review = load_optional_external_vision_review(example_dir, spec)
+    except (ExternalVisionReviewError, ValueError) as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="external_vision_review",
+                message=f"external_vision_review invalid: {exc}",
+            )
+        ]
+    if review is None:
+        return []
+
+    freshness = external_vision_review_freshness(example_dir, review)
+    if freshness["state"] == "fresh":
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="external_vision_review",
+            message=(
+                f"external_vision_review is {freshness['state']}; "
+                f"stale_paths={freshness['stale_paths']} "
+                f"missing_paths={freshness['missing_paths']}"
+            ),
+        )
+    ]
+
+
 def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     critique_path = example_dir / "critique.md"
     try:
@@ -1649,6 +1688,10 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
                 message=str(exc),
             )
         ]
+    if violations:
+        return violations
+
+    violations.extend(_external_vision_review_violations(example_dir))
     if violations:
         return violations
 

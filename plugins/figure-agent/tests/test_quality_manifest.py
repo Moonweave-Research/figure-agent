@@ -398,6 +398,57 @@ def test_critique_manifest_includes_svg_polish_delta_pack_when_present(
     assert before != after
 
 
+def test_critique_manifest_ignores_external_vision_review_without_opt_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    review_path = example_dir / "external_vision_review.yaml"
+    review_path.write_text("schema: figure-agent.external-vision-review.v1\n", encoding="utf-8")
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+
+    assert review_path not in paths
+
+
+def test_critique_manifest_includes_external_vision_review_when_opted_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    review_path = example_dir / "external_vision_review.yaml"
+    review_path.write_text("schema: figure-agent.external-vision-review.v1\n", encoding="utf-8")
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo", "external_vision_review": True},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    review_path.write_text(
+        "schema: figure-agent.external-vision-review.v1\nreviewer: changed\n",
+        encoding="utf-8",
+    )
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert review_path in paths
+    assert before != after
+
+
 def test_expected_critique_rubric_version_uses_v1_11_for_aesthetic_intent_v2(
     tmp_path: Path,
 ) -> None:

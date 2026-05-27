@@ -82,6 +82,7 @@ def test_json_stdout_summary_reads_manifest_and_iteration_contract(tmp_path: Pat
         "crop_audit_summary": None,
         "aesthetic_lever_summary": None,
         "journal_art_direction_playbook_summary": None,
+        "external_vision_review_summary": None,
         "journal_grade_assessment": None,
         "next_action_summary": {
             "schema": "figure-agent.next-action-summary.v1",

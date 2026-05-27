@@ -1,6 +1,6 @@
 # Issue 61 - External Second-Opinion Vision Evidence
 
-Status: proposed
+Status: completed in implementing commit
 
 Depends on: Issue 58 single next-action UX and Issue 59 SVG polish promotion
 dogfood
@@ -60,6 +60,50 @@ Out of scope:
 - Conflicting external vs host critique findings surface as human review.
 - Provider-specific details remain outside the plugin core.
 - No network dependency is introduced into tests or normal commands.
+
+## Implementation Notes
+
+Implemented as an opt-in local evidence import path:
+
+- `scripts/external_vision_review.py` parses and validates
+  `examples/<name>/external_vision_review.yaml`.
+- `spec.yaml.external_vision_review: true` is the only opt-in switch.
+- `quality_manifest.py` includes the review file in critique input hashing only
+  when opted in.
+- `critique_brief.py` emits an `External Second-Opinion Vision Review` section
+  only for valid opted-in reviews.
+- `critique_lint.py` blocks malformed, stale, or missing-artifact external
+  review evidence.
+- `fig_loop.py` and `fig_loop_assessments.py` surface fresh conflicts as
+  `human_gate_required` and stale/missing/invalid evidence as action-required
+  state without demoting an existing human gate.
+- `fig_loop_records.py` includes `external_vision_review_summary` in JSON
+  stdout summaries.
+
+Verification performed during implementation:
+
+- `uv run pytest -q tests/test_external_vision_review.py tests/test_quality_manifest.py tests/test_critique_brief.py tests/test_critique_lint.py tests/test_fig_loop.py`
+  -> 257 passed.
+- `uv run ruff check ...` on touched Python files -> all checks passed.
+- `uv run pytest -q` -> 1328 passed, 3 skipped, 1 xfailed.
+- `uv run ruff check .` -> all checks passed.
+- `git diff --check` -> clean.
+- `claude plugin validate .claude-plugin/plugin.json` -> validation passed.
+- `claude plugin validate .` -> validation passed.
+- `claude plugin validate ../../.claude-plugin/marketplace.json` -> validation
+  passed.
+
+Review notes:
+
+- No provider API, network call, or provider-specific client was introduced.
+- No global external-review requirement was added; legacy fixtures remain
+  unaffected unless they opt in.
+- Stale, missing, malformed, or spec-invalid external evidence is surfaced as
+  non-pass state.
+- Fresh conflicts route to existing human-gate semantics.
+- Stale external evidence does not demote an existing human gate.
+- Source, export, accepted, golden, and generated artifacts are outside this
+  slice.
 
 ## Review Questions
 
