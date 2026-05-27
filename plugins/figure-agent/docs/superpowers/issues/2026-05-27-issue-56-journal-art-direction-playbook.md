@@ -1,6 +1,6 @@
 # Issue 56 - Journal Art-Direction Playbook
 
-Status: Issues 56A-D implemented in current branch; Issue 56E remains open.
+Status: completed in branch `codex/journal-art-direction-playbook`.
 
 Design spec:
 `../specs/2026-05-27-journal-art-direction-playbook-design.md`
@@ -122,6 +122,8 @@ Implement in narrow slices:
 
 ## Current Recommendation
 
-Issues 56A-D provide the durable contract: parser, freshness, brief, schema,
-lint accountability, and read-only loop surfacing. Keep Issue 56E as the next
-follow-up for dogfood and closeout evidence.
+Issues 56A-E provide the durable contract: parser, freshness, brief, schema,
+lint accountability, read-only loop surfacing, and synthetic dogfood closeout
+evidence. Real-fixture adoption should be a separate fixture-specific issue
+because it intentionally changes `spec.yaml` opt-ins and future critique
+freshness.
