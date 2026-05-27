@@ -17,6 +17,7 @@ CRITIQUE_SCHEMA_V1_8 = "figure-agent.critique.v1.8"
 CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
+CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -29,6 +30,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -42,6 +44,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -53,10 +56,17 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_9,
         CRITIQUE_SCHEMA_V1_10,
         CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
     }
 )
 CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
-    {CRITIQUE_SCHEMA_V1_8, CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10, CRITIQUE_SCHEMA_V1_11}
+    {
+        CRITIQUE_SCHEMA_V1_8,
+        CRITIQUE_SCHEMA_V1_9,
+        CRITIQUE_SCHEMA_V1_10,
+        CRITIQUE_SCHEMA_V1_11,
+        CRITIQUE_SCHEMA_V1_12,
+    }
 )
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
 JOURNAL_SCORE_KEYS = frozenset(
@@ -84,6 +94,10 @@ EDITORIAL_POLISH_PATHS = frozenset(
 AESTHETIC_LEVER_VERDICTS = ("pass", "not_applicable", "weak", "fail", "needs_human")
 AESTHETIC_LEVER_VERDICT_RANK = {
     verdict: index for index, verdict in enumerate(AESTHETIC_LEVER_VERDICTS)
+}
+JOURNAL_PLAYBOOK_VERDICTS = ("pass", "not_applicable", "weak", "fail", "needs_human")
+JOURNAL_PLAYBOOK_VERDICT_RANK = {
+    verdict: index for index, verdict in enumerate(JOURNAL_PLAYBOOK_VERDICTS)
 }
 
 
@@ -165,7 +179,12 @@ def journal_grade_assessment(
     calibration_summary = (
         reference_calibration_summary(record)
         if frontmatter.get("schema")
-        in {CRITIQUE_SCHEMA_V1_9, CRITIQUE_SCHEMA_V1_10, CRITIQUE_SCHEMA_V1_11}
+        in {
+            CRITIQUE_SCHEMA_V1_9,
+            CRITIQUE_SCHEMA_V1_10,
+            CRITIQUE_SCHEMA_V1_11,
+            CRITIQUE_SCHEMA_V1_12,
+        }
         else None
     )
     if calibration_summary is not None:
@@ -348,7 +367,7 @@ def aesthetic_lever_summary(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_11:
+    if frontmatter.get("schema") not in {CRITIQUE_SCHEMA_V1_11, CRITIQUE_SCHEMA_V1_12}:
         return None
     if critique_state != "FRESH":
         return {
@@ -399,5 +418,112 @@ def aesthetic_lever_summary(
         "evaluation_state": evaluation_state,
         "next_aesthetic_bottleneck": (
             None if evaluation_state == "passed" else _aesthetic_bottleneck(worst_item)
+        ),
+    }
+
+
+def _journal_playbook_bottleneck(item: dict[str, Any]) -> dict[str, Any]:
+    linked_evidence = item.get("linked_evidence")
+    return {
+        "id": item.get("id"),
+        "verdict": item.get("verdict"),
+        "route": item.get("route"),
+        "linked_evidence": linked_evidence if isinstance(linked_evidence, list) else [],
+    }
+
+
+def journal_art_direction_playbook_summary(
+    example_dir: Path,
+    critique_state: Any,
+) -> dict[str, Any] | None:
+    critique_path = example_dir / "critique.md"
+    if not critique_path.is_file():
+        return None
+    frontmatter = yaml_frontmatter(critique_path)
+    if frontmatter.get("schema") != CRITIQUE_SCHEMA_V1_12:
+        return None
+    if critique_state != "FRESH":
+        return {
+            "source": "critique.journal_art_direction_playbook_audit",
+            "evidence_path": str(critique_path),
+            "evaluation_state": "stale",
+        }
+
+    audit = frontmatter.get("journal_art_direction_playbook_audit")
+    if not isinstance(audit, dict):
+        return None
+    raw_items = audit.get("design_center")
+    if not isinstance(raw_items, list):
+        return None
+
+    verdict_counts = dict.fromkeys(JOURNAL_PLAYBOOK_VERDICTS, 0)
+    weak_or_failed_ids: list[str] = []
+    valid_items: list[dict[str, Any]] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        item_id = raw_item.get("id")
+        verdict = raw_item.get("verdict")
+        if not isinstance(item_id, str) or not item_id.strip():
+            continue
+        if not isinstance(verdict, str) or verdict not in JOURNAL_PLAYBOOK_VERDICT_RANK:
+            continue
+        verdict_counts[verdict] += 1
+        valid_items.append(raw_item)
+        if verdict in {"weak", "fail", "needs_human"}:
+            weak_or_failed_ids.append(item_id)
+
+    if not valid_items:
+        return None
+    route_rule = audit.get("route_rule_applied")
+    route_rule_summary = None
+    recommended_path = None
+    if isinstance(route_rule, dict):
+        route_id = route_rule.get("id")
+        route_path = route_rule.get("recommended_path")
+        if isinstance(route_id, str) and isinstance(route_path, str):
+            recommended_path = route_path
+            route_rule_summary = {
+                "id": route_id,
+                "recommended_path": route_path,
+            }
+    raw_triggers = audit.get("human_review_triggers")
+    active_triggers = []
+    if isinstance(raw_triggers, list):
+        active_triggers = [
+            item["id"]
+            for item in raw_triggers
+            if isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and item.get("active") is True
+        ]
+    worst_item = max(
+        valid_items,
+        key=lambda item: JOURNAL_PLAYBOOK_VERDICT_RANK[str(item["verdict"])],
+    )
+    worst_verdict = str(worst_item["verdict"])
+    if active_triggers or verdict_counts["needs_human"]:
+        evaluation_state = "needs_human"
+    elif verdict_counts["fail"]:
+        evaluation_state = "blocked"
+    elif verdict_counts["weak"]:
+        evaluation_state = "needs_patch"
+    else:
+        evaluation_state = "passed"
+    return {
+        "source": "critique.journal_art_direction_playbook_audit",
+        "evidence_path": str(critique_path),
+        "playbook_id": audit.get("playbook_id"),
+        "venue_context": audit.get("venue_context"),
+        "design_center_count": len(valid_items),
+        "verdict_counts": verdict_counts,
+        "worst_verdict": worst_verdict,
+        "evaluation_state": evaluation_state,
+        "weak_or_failed_design_center_ids": weak_or_failed_ids,
+        "recommended_path": recommended_path,
+        "route_rule_applied": route_rule_summary,
+        "active_human_review_triggers": active_triggers,
+        "next_journal_art_direction_bottleneck": (
+            None if evaluation_state == "passed" else _journal_playbook_bottleneck(worst_item)
         ),
     }

@@ -27,6 +27,9 @@ from fig_loop_assessments import (
     editorial_art_direction_summary as build_editorial_art_direction_summary,
 )
 from fig_loop_assessments import (
+    journal_art_direction_playbook_summary as build_journal_art_direction_playbook_summary,
+)
+from fig_loop_assessments import (
     journal_grade_assessment as build_journal_grade_assessment,
 )
 from fig_loop_assessments import (
@@ -140,6 +143,10 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
+    journal_playbook_summary = build_journal_art_direction_playbook_summary(
+        example_dir,
+        status_result.get("critique_state"),
+    )
     loop_decision = build_loop_decision(status_result, adjudication, example_dir)
     loop_decision = _apply_aesthetic_lever_stop(loop_decision, aesthetic_lever_summary)
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
@@ -203,6 +210,7 @@ def run_loop(
         "svg_polish_readiness": svg_polish_readiness_summary,
         "crop_audit_summary": crop_audit_summary,
         "aesthetic_lever_summary": aesthetic_lever_summary,
+        "journal_art_direction_playbook_summary": journal_playbook_summary,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,

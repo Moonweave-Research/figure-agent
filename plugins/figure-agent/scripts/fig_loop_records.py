@@ -49,6 +49,9 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         ),
         "crop_audit_summary": iteration.get("crop_audit_summary"),
         "aesthetic_lever_summary": iteration.get("aesthetic_lever_summary"),
+        "journal_art_direction_playbook_summary": iteration.get(
+            "journal_art_direction_playbook_summary"
+        ),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
     svg_polish_readiness = iteration.get("svg_polish_readiness")
