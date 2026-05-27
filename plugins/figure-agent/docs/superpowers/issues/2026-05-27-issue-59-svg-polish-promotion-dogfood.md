@@ -1,6 +1,6 @@
 # Issue 59 - SVG Polish Promotion Dogfood
 
-Status: proposed
+Status: evidence closed - polish route withheld behind stale critique gates
 
 Depends on: Issue 58 single next-action UX
 
@@ -68,3 +68,22 @@ Out of scope:
 2. Does `ready_for_svg_polish` remain subordinate to all safety gates?
 3. Is SVG polish being used for optical finish only, not semantic repair?
 4. Does the route help the user decide when to stop source-level iteration?
+
+## Evidence Notes
+
+- Added `docs/milestones/2026-05-28-svg-polish-promotion-dogfood.md`.
+- Ran `/fig_drive --mode polish --dry-run` on five real fixtures after Issue 58:
+  `fig1_overview_v2_pair_001_vault`, `fig1_overview_v2`,
+  `golden_trap_depth_picture`, `n3_trial_01_trap_depth`, and
+  `n3_trial_02_actuation_sequence`.
+- All five fixtures had `render_state: FRESH` and `critique_state: STALE`.
+- All five selected `action: run_critique` with
+  `stop_boundary: host_llm_critique_required`.
+- No fixture emitted `ready_for_svg_polish`, which is the correct conservative
+  behavior while the host-vision critique is stale.
+- No source, export, accepted, golden, publication provenance, or polished-SVG
+  artifact was edited.
+
+Positive real-fixture SVG polish promotion remains unproven. The next valid
+attempt must first refresh a host-vision critique and adjudication state for a
+candidate fixture.
