@@ -35,6 +35,7 @@ import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
+from next_action_summary import driver_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
 from svg_polish_delta import SvgPolishDeltaError, svg_polish_delta_is_stale  # noqa: E402
 
@@ -189,6 +190,7 @@ def _summary(
             summary["svg_polish_readiness"] = svg_polish_readiness
     if closeout is not None:
         summary["closeout"] = closeout
+    summary["next_action_summary"] = driver_next_action_summary(summary)
     return summary
 
 

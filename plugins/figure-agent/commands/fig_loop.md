@@ -58,7 +58,13 @@ becomes one JSON object with:
 - `patch_evidence_present`
 - `post_patch_evidence_verdict`
 - `audit_evidence`
+- `next_action_summary`
 - `recommended_next_action`
+
+`next_action_summary` uses the same shared read-only shape as `/fig_status`,
+`/fig_drive`, and `/fig_closeout`. It compresses the loop stop reason,
+recommended next action, patch-handoff scope, and evidence refs; it does not
+change verify-only behavior or make `/fig_loop` execute the next command.
 
 On preflight failure, the command preserves the existing error contract: exit
 code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.

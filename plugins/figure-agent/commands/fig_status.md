@@ -42,6 +42,12 @@ fixture freshness work from human-only publication decisions:
 `Explanation:` is derived from the same state vector as `Next:`. It is a
 readability layer, not a separate readiness rule.
 
+Machine-readable status results also include `next_action_summary`, a compact
+read-only object with `action`, `reason`, `blocking_source`, `safe_command`,
+`requires_human`, `allowed_scope`, `forbidden_scope`, and `evidence_refs`.
+This summary compresses the same `Next:`/`Explanation:` evidence; it does not
+replace `/fig_drive --dry-run` as the canonical mode-aware action selector.
+
 Single-figure output also prints `Audit evidence:` when a critique exists or
 the audit-evidence model can classify the fixture. This line is read-only and
 does not change stage, `Next:`, or readiness. It summarizes whether
@@ -105,6 +111,9 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `status_explanation`: structured explanation with `summary`,
   `first_blocker`, and buckets for `plugin_state`, `fixture_freshness`, and
   `human_blockers`. `/fig_driver --dry-run` reuses this same object.
+- `next_action_summary`: compact read-only next-action UX object derived from
+  status `Next:` and `status_explanation`. It is additive; detailed fields
+  remain authoritative for debugging and audits.
 - `audit_evidence`: structured read-only summary with `evaluation_state`,
   `blocking_items`, `next_action`, visual-clash accounting counts, and
   crop-audit verdict counts. This is an operator UX layer over existing audit

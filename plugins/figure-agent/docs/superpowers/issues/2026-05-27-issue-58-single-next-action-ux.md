@@ -1,6 +1,6 @@
 # Issue 58 - Single Next Action UX
 
-Status: proposed
+Status: implemented in branch `codex/issue58-single-next-action-ux`
 
 Depends on: Issue 57 real fixture audit adoption
 
@@ -78,3 +78,17 @@ Out of scope:
 
 The summary should compress evidence, not reinterpret it. The source of truth
 remains the existing state vector and loop checkpoint contracts.
+
+## Implementation Notes
+
+- Added `scripts/next_action_summary.py` as the shared read-only adapter for
+  `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout`.
+- Added `tests/test_next_action_summary.py` plus integration assertions in
+  status, driver, loop-record, and closeout tests.
+- Wired `next_action_summary` into existing JSON/status dictionaries without
+  changing `/fig_drive` action selection, action vocabulary, stop boundaries,
+  or mutation behavior.
+- Updated command docs and added
+  `docs/milestones/2026-05-28-single-next-action-ux.md`.
+- No figure source, export, accepted, golden, or generated build artifact was
+  changed.

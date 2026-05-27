@@ -2823,6 +2823,7 @@ def test_main_json_exercises_real_run_loop_summary(
         ],
         "audit_evidence": iteration["audit_evidence"],
         "journal_grade_assessment": iteration["journal_grade_assessment"],
+        "next_action_summary": iteration["next_action_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
 

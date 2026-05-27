@@ -75,6 +75,7 @@ render, so stale render wins over stale critique.
 | `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
 | `status_explanation` | object or absent     | shared `/fig_status` explanation of first blocker and state buckets |
 | `audit_evidence`    | object or absent      | shared `/fig_status` audit-evidence summary with compact blockers and next action |
+| `next_action_summary` | object              | compact read-only UX summary of the selected action, blocker source, scope, and evidence refs |
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 | `closeout`          | object or absent      | compact `/fig_closeout` evidence when incomplete closeout drives the recommendation |
@@ -101,6 +102,12 @@ recomputing state. Actionable states (`missing_input`, `stale_or_mismatched`,
 context. This keeps visual-clash/crop-accounting blockers visible to an outer
 executor without changing the driver's action vocabulary, dry-run guarantee, or
 selected command.
+
+`next_action_summary` is additive compression of the already selected driver
+action. It must match top-level `action` and `safe_command`; it does not
+reinterpret state, authorize mutation, or introduce a second selector. Use it
+for compact UI/handoff displays, then inspect `status_explanation`,
+`audit_evidence`, `loop_checkpoint`, or `closeout` for detailed evidence.
 
 ### Schema versioning
 
