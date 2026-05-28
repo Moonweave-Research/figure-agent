@@ -914,16 +914,25 @@
 % Up arrow: small 3pt stealth head, target y=5.18 (just inside Panel C bbox).
 
 % iter PL7: bridge bracket tone cGray!50 → cGray!55 unify with up arrow.
+% AGENT+ADVISOR FIX (2026-05-28): column-E center DOWN-vertical REMOVED.
+% The center already carries the UP arrow (convergence vector) + ISPD label;
+% a down-vertical there triple-stacked at x=6.975 and forced ISPD label down
+% into Panel E where it collided with the "V_s probe" instrument label.
+% Now: D + F down-verticals (grouping) + horizontal bracket + center up-arrow.
 \draw[cGray!55, line width=0.35pt] (2.275, 4.85) -- (2.275, 4.55);
-\draw[cGray!55, line width=0.35pt] (6.975, 4.85) -- (6.975, 4.55);
 \draw[cGray!55, line width=0.35pt] (11.70, 4.85) -- (11.70, 4.55);
 \draw[cGray!55, line width=0.35pt] (2.275, 4.85) -- (11.70, 4.85);
-% Convergent arrow: up from bracket center pointing TO caption text.
-% iter PL3: arrow tip y 5.18 → 5.02 (just below caption baseline 5.05 with
-% 0.03cm gap). iter PL6: weight 0.40 → 0.35pt parity with bracket strokes
-% (cGray!50 throughout bridge structure).
-\draw[-{Stealth[length=3pt,width=2.2pt]}, cGray!55!black, line width=0.35pt]
-  (6.975, 4.85) -- (6.975, 5.02);
+% Convergent arrow: up from bracket center pointing TO caption + Panel C.
+% AGENT+ADVISOR FIX (2026-05-28): agents found convergence reads weak because
+% up arrow was 0.35pt = same weight as grouping bracket/verticals (no hierarchy).
+% rowBridgeArrow style (line 40: 10pt head, 1.6pt) is too heavy for this 0.27cm
+% arrow (head would exceed shaft), so applied PROPORTIONATE heavy treatment:
+% weight 0.35→0.70pt + head 3→5pt + tone cGray!55→cGray!70!black + length
+% extended (tip 5.02→5.12). Now the convergence VECTOR is distinctly heavier
+% than the thin (0.35pt) grouping bracket — visual hierarchy: thin bracket =
+% "3 evidence grouped", bold up arrow = "converge on the model".
+\draw[-{Stealth[length=5pt,width=3.5pt]}, cGray!70!black, line width=0.70pt]
+  (6.975, 4.85) -- (6.975, 5.12);
 % Paper-context iter PL1: restore briefing §2 frame 5 "convergent evidence"
 % semantic gate caption. Subtle 6pt italic cGray!60 placed ABOVE up arrow tip
 % in inter-row gap, NOT bold dominant — integrated with bracket geometry as
@@ -932,13 +941,22 @@
 % content, wt%" axis label (baseline y=5.62, glyph bottom ~5.40). Previous y=5.20
 % put caption top 5.34 just 0.06cm below Sulfur label — visually stacked.
 % New y=5.05: caption glyph y range 5.05..5.19; Sulfur 5.40+ → 0.21cm gap.
+% AGENT+ADVISOR FIX: caption y 5.05 → 5.15 so heavier up-arrow tip (now 5.12)
+% sits just below caption baseline (0.03cm gap) instead of merging into glyphs.
+% Caption top 5.29; Sulfur axis label bottom ~5.40 → 0.11cm gap (still clear).
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!60!black,
-      anchor=south, inner sep=0pt] at (6.975, 5.05) {convergent evidence};
-% Modality labels (preserved): connector tier 6pt cGray!70 in inter-row gap
+      anchor=south, inner sep=0pt] at (6.975, 5.15) {convergent evidence};
+% Modality labels: connector tier 6pt cGray!70 in inter-row gap.
+% kinetic + mechanical sit below their down-verticals (y=4.53 anchor=north).
+% AGENT+ADVISOR FIX: ISPD moved UP to (6.975, 4.62) anchor=south — now in the
+% gap between bracket horizontal (4.85) and Panel E frame top (4.50), above the
+% removed down-vertical. Glyph 4.62..4.80; "V_s probe" at 4.0..4.19 → 0.43cm
+% clear (was 0.13cm collision). ISPD is the convergence-center column so a
+% slightly higher label sits naturally under the up-arrow origin.
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
       anchor=north] at (2.275, 4.53) {kinetic};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
-      anchor=north] at (6.975, 4.53) {ISPD};
+      anchor=south] at (6.975, 4.62) {ISPD};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
       anchor=north] at (11.70, 4.53) {mechanical};
 
@@ -1504,8 +1522,11 @@
 % with a 0.075cm gap while staying within the probe column (shaft x=7.36-7.44,
 % meter box left x=8.08).
 % iter 36 follow-up: V_s probe tertiary tier — 6pt → 5.5pt + cGray!55!black.
+% AGENT+ADVISOR FIX: y 4.0 → 4.10 (clears probe shaft top 4.05; documented
+% iter E13 target restored). With ISPD label moved up to 4.62, this label's
+% top (4.29) now has 0.33cm clearance from ISPD — collision resolved.
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black,
-      anchor=south] at (7.1, 4.0) {$V_s$ probe};
+      anchor=south] at (7.1, 4.10) {$V_s$ probe};
 % iter E13: y 4.05 → 4.10 to clear extended shaft top 4.05 (was overlapping baseline).
 
 % ----- V_s meter box — iter 15: side-view (pure 2D, isometric reverted) -----
@@ -1948,24 +1969,16 @@
 \node[labelMute, anchor=south, rotate=270,
       font=\sffamily\fontsize{6.5}{7.8}\selectfont,
       text=cGray!85!black] at (13.58, 1.5) {electrode};
-% F-3 (relocated) Maxwell baseline arrow — iter 19: added to bottom zone
-% acting on bent cantilever toward electrode. Dashed, light (cRed!55), 0.45pt
-% — smaller tier vs Coulomb (cRed!80, 0.7pt). User direction: Maxwell stress
-% induced at electrode by PSU is BASELINE, Coulomb (from q_tr) is dominant
-% repulsive force that bends polymer away — Coulomb wins visually.
-% iter 25: arrow start moved 12.20 → 12.34 (was INSIDE cantilever, right
-% edge at y=1.80 is x≈12.32). Now originates FROM cantilever surface.
-% Tip end shifted 13.50 → 13.60 to match new slim electrode left edge 13.63.
-\draw[-{Stealth[length=4pt,width=3pt]}, cGray!55!black, dashed,
-      line width=0.45pt]
-  (11.94, 1.8) -- (13.2, 1.8);
-% iter 29: label moved closer to arrow (1.75 → 1.78, gap 0.05→0.02cm) per
-% Gemini "floating slightly low and disconnected".
-% iter 51: y 1.78 → 1.72 — capital F top was crossing dashed-line stroke
-% (line y=1.80, 0.45pt thickness extends ±0.025; old gap 0.02cm < stroke).
-% New gap 0.08cm clears the stroke + slight breathing room.
-\node[font=\sffamily\itshape\fontsize{6.5}{7.8}\selectfont, text=cGray!65!black,
-      anchor=north] at (12.45, 1.72) {$F_{\mathrm{Maxwell}}$};
+% F-3 Maxwell baseline arrow + label — REMOVED 2026-05-28 (agent+advisor).
+% Agent 2 flagged this as a §8.5 BLOCKER: the iter-19 relocation put F_Maxwell
+% into the RESULT zone alongside Coulomb, which §8.5 LOCKED explicitly forbids
+% ("Maxwell arrow in result zone alongside Coulomb → FORBIDDEN; collapses the
+% contrast"). Advisor verdict: Panel F is a single-claim NC Fig 1 panel — the
+% Coulomb-repulsion signature IS the statement; the Maxwell-baseline contrast
+% belongs in the figure CAPTION text, not as a competing in-panel glyph.
+% Decision: Panel F is single-zone Coulomb-only. F_Maxwell arrow + label
+% deleted. Briefing §6/§8.5/§13.7 amended to the single-zone convention.
+% (User's original instinct — "척력만 표현" — was correct.)
 % Air gap arrow — iter 25: right end shifted 13.55 → 13.63 (new electrode left).
 \draw[<->, cGray!55!black, line width=0.30pt]
   (11.5, 0.55) -- (13.23, 0.55);
