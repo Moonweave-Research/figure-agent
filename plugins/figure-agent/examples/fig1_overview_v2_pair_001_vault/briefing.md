@@ -1,5 +1,20 @@
 # Briefing — fig1_overview_v2_pair_001_vault
 
+> **⚠️ v8.9 SYNC NOTE (2026-05-28, 3-agent panel audit + advisor).** The figure evolved
+> ahead of this briefing through ~110 polish iterations. Major reconciliations applied
+> in-place: §8.5/§6/§13.7 (Panel F → single-zone Coulomb-only, Maxwell removed), §4
+> (Row 2 connector → bridge bracket, supersedes 3-spoke fan), §13.6 E-2 (probe = induction
+> ESVM, NOT Kelvin probe — scientific), §13.5 D-7a (Debye → plateau+cliff). **Remaining
+> minor stale text not yet rewritten in place (figure is authoritative where they conflict):**
+> (1) §3.1 step 1 + §13.9 — "cAmber!8 wash ellipse" (Panel A) REMOVED 2026-05-22, no wash in figure.
+> (2) §13.2 B-2 — "full 4-label set" → Panel B shows **3** labels (S60/S75/S85) per §8.8 LOCKED.
+> (3) §13.2 B-4 — divider tone "cGray!55" → actual **cGray!30** (demoted 2026-05-25).
+> (4) §13.3 C-R1 — "vertical axis arrow at x=10.50" → actual **tick-marked Energy axis** (no arrowhead, R14).
+> (5) §10 line + §15 — "panel-letter ~9.5pt" → actual **8pt** (Nature/NatComm "8pt bold upright" final-submission rule).
+> (6) §3.3 + early §4 archived prose — "Panel G" → renamed **Column F** (v8.6).
+> (7) §13.4 Row2-BG-wash + Row2-BG-chains — REMOVED 2026-05-22 (NC main-text no background wash).
+> These are documentation lag only; the rendered figure + §8/§9 LOCKED invariants are correct.
+
 > **Genre**: Nature Communications **main-text Figure 1** — clean white-background convention. NOT a cover / graphical abstract scene. (2026-05-22 redirect: prior cover-scene framing dropped because NC main-text Fig 1 effectively never uses background washes.)
 > **Pilot pair**: `fig1_overview_v2_pair_001` / **Arm**: vault
 > **Design snapshot SHA**: `fa7a6d9ff7890a440ca3471995acf8145c47001a996dbd8bf2c428b363d8f7b7`
@@ -181,8 +196,29 @@ D/E/F's iconic cartoon plots. Pre-v8.4, G was visually dominant Row 2 element
 
 ---
 
-## §4. Row 2 branching arrow + label semantics
+## §4. Row 2 connector + label semantics (v8.9 BRIDGE BRACKET — supersedes 3-spoke)
 
+> **v8.9 BRIDGE BRACKET (2026-05-28, agent+advisor):** The original 3-spoke divergent
+> fan (single arrow from `branchRoot (6.95,4.85)` fanning to D/E/F) was iterated through
+> spoke-fan → removal → 3-vertical-drops → **bridge bracket**. The agent audit confirmed
+> the divergent fan never communicated convergence (it read as "1 model → 3 panels"). The
+> current connector is a CONVERGENT bridge bracket:
+> - **Horizontal bracket** at y=4.85 spanning the three columns (x=2.275..11.70), `cGray!55 0.35pt`.
+> - **2 down-verticals** (kinetic x=2.275, mechanical x=11.70) to panel-letter tops — visually
+>   GROUP the 3 evidence columns. (Column-E center has NO down-vertical — it carries the up-arrow.)
+> - **1 up-arrow** at bracket center (6.975) `cGray!70!black 0.70pt`, Stealth 5pt head, pointing
+>   UP to Panel C — the CONVERGENCE vector. Distinctly heavier than the thin grouping bracket
+>   (visual hierarchy: thin bracket = "3 grouped", bold arrow = "converge on the model").
+> - **Caption** "convergent evidence" italic 6pt cGray!60 just above the up-arrow tip (y≈5.15).
+>   (Shortened from the full "three independent probes of the same trap" — the bracket geometry
+>   + caption + color binding carry the meaning; user preferred a less assertive caption.)
+> - **Modality labels** kinetic/ISPD/mechanical 6pt cGray!70 in the inter-row gap (kinetic +
+>   mechanical below their verticals at y=4.53; ISPD just under the bracket at y=4.62).
+>
+> Convergent semantic now carried by GEOMETRY (3 columns → bracket → up-arrow → model) +
+> caption + color binding, not by a divergent fan that needed caption to invert its meaning.
+
+**Archived (pre-v8.9 3-spoke divergent fan):**
 - **Geometry**: Panel C 하단 single arrow가 Row 2 entry transition zone (above D/E/F/G, between rows)에서 3 spoke로 발산.
   - Spoke 1: C → D (kinetic)
   - Spoke 2: C → E ↔ F 묶음 (ISPD, paired)
@@ -307,7 +343,7 @@ Result: Panel C *시각적 hero*; Row 2는 *3 columns of evidence*로 평등 분
 |---|---|---|---|---|
 | 1 | **D** (retained letter for caption continuity) | Kinetic evidence | MIM stack + SMU + ground | I(t)~t⁻ⁿ absorption-current plot (high-n red sulfur + low-n blue control + Debye dashed reference) |
 | 2 | **E** (retained letter; ISPD-paired internal split via short arrow) | ISPD-paired evidence | corona needle ▽ + Kelvin probe ▭ + thin-film slab | V_s(t) decay (top sub-zone) + g(E_t) bimodal Gaussian (bottom sub-zone) — stacked within column |
-| 3 | **F** (was G; letter renamed to maintain alphabetical Row 2 flow) | Mechanical evidence | Power supply (V_active source) + 2 leads + neutral cantilever fixture + electrode (rest state) + **Maxwell attraction baseline** (light pink, polymer→electrode direction) | Bent cantilever (active state) + 3 q_tr ● markers (deep red) + **Coulomb repulsion** (bold red, electrode-away direction) — Coulomb WINS against Maxwell baseline |
+| 3 | **F** (was G; letter renamed to maintain alphabetical Row 2 flow) | Mechanical evidence | **[v8.9 single-zone]** V_active PSU box + lead to electrode | Bent cantilever + 3 q_tr ● markers (deep red) + **Coulomb repulsion ONLY** (bold red, electrode-away direction) + electrode + air gap. **NO Maxwell arrow** (single-zone Coulomb-only per §8.5 v8.9; Maxwell-baseline contrast → caption text) |
 
 **v8.6 letter re-mapping rationale:** old D/E/F/G (4 panels) → new D/E/F (3 columns). Old E+F (ISPD raw + derived) merge into single column E with internal vertical split. Old G (mechanical scene) → new column F. Caption labels (A..F) form continuous 6-panel alphabet without gap.
 
@@ -353,20 +389,25 @@ Brief = current implementation state. 다음 dogfood에서 새 gap 발견되면 
 **실측 데이터 출처**: `/Users/choemun-yeong/workspace/ResearchOS/02_Surfur_Polymer/저항 측정/260504_sulfur_rh25/results/data/selected_samples.csv` (k=19 rolling median + rlm MM-estimator fit, R²>0.99). 본 paper Fig 3에서 CvS n exponent + ISPD trap distribution 정량.
 
 **Reviewer challenge 대비**: (a) trap vs Maxwell-Wagner vs dipolar 분리 → ISPD g(E_t) discrete distribution evidence; (b) Jonscher universality 일반화 challenge → 본 sample set 내 n 차이 정량 강조 + 3-line convergence; (c) fair control → sulfur-poor copolymer 비교 추가 권장.
-8.5 Column F (was Panel G — mechanical evidence column post-v8.6): Cantilever clip on **TOP**, polymer hanging down. **v8.6 Maxwell-vs-Coulomb contrast amendment (formerly "Maxwell forbidden" pre-v8.6):**
+8.5 Column F (was Panel G — mechanical evidence column post-v8.6): Cantilever clip on **TOP**, polymer hanging down. **v8.9 SINGLE-ZONE COULOMB-ONLY (2026-05-28 amendment, supersedes v8.6 two-zone Maxwell-vs-Coulomb):**
 
-- **Apparatus zone (top of column, rest state):** Maxwell attraction arrow ALLOWED — depicted as light pink (`cRed!35!white`, dashed, thin 0.40pt) arrow pointing FROM neutral polymer TOWARD electrode. Label: "F_Maxwell (image/induced attraction, baseline)" italic 5.5pt cGray. Polymer is rendered in *pale* tone (cAmber!18..30, opacity 0.6) and *undeflected* (straight, no bend) to signal "neutral, no trapped charges yet." This zone establishes the *attractive baseline* — what would happen if there were NO trapped charges. Power supply + electrode + neutral fixture set up the field, Maxwell attraction is the unavoidable consequence.
-- **Result zone (bottom of column, active state):** **only Coulomb repulsion** arrow — bold red `cRed!80!black` solid 0.7pt, electrode-away direction (polymer LEFT). NO Maxwell arrow in this zone (would dilute novelty cue). Polymer rendered in *saturated* tone (cAmber!22→cAmber!42 gradient, current convention) and *bent* (the actual signature). 3 q_tr ● markers (deep red, polarity-same as electrode). Result zone narrates: "trapped charges drive net Coulomb repulsion that WINS against the apparatus-zone Maxwell baseline."
+**Decision (agent audit + advisor 2026-05-28):** Panel F is a **single-zone, single-claim** NC main-text Fig 1 panel. The Coulomb-repulsion signature IS the statement; the Maxwell-baseline contrast belongs in the figure **CAPTION text**, NOT as a competing in-panel glyph. The v8.6 two-zone design (apparatus-zone Maxwell baseline + result-zone Coulomb) was attempted via iters but: (a) collapsed during the 38-iter polish to a single result scene with only a `V_active` PSU box in the apparatus zone, (b) the relocated Maxwell arrow ended up in the result zone alongside Coulomb — which the v8.6 rule itself forbade, creating a self-contradiction. Rather than reconstruct the two underdeveloped zones (which ate column real-estate at ~4.5cm width), the panel is locked to single-zone Coulomb-only. User's original instinct ("척력만 표현") was correct.
 
-**Maxwell-vs-Coulomb contrast convention (v8.6 LOCKED):** when both forces are shown across zones, Maxwell = light/secondary (cRed!35 dashed thin), Coulomb = bold primary (cRed!80 solid). Color tier signals which force wins. Color asymmetry IS the novelty argument — Coulomb thicker/darker = "Coulomb dominates."
+**Current Column F content (LOCKED v8.9):**
+- `V_active` PSU box (top) with pulsed-bias waveform + lead to electrode.
+- Bent cantilever (clip on TOP, polymer hangs + bends LEFT, away from electrode = Coulomb repulsion signature). cAmber!22→cAmber!42 gradient.
+- 3 q_tr ● markers (deep red `cRed!75!black`) along the cantilever interior + `q_tr` leader/label.
+- **Coulomb repulsion arrow ONLY** — bold red `cRed!80!black` solid 0.7pt, electrode-away (polymer LEFT) + 2-line `Coulomb / repulsion` label.
+- Vertical electrode (hatched) + ground + air-gap dimension.
+- **NO Maxwell arrow in the panel.** Maxwell baseline, if needed for novelty framing, is stated in the figure caption text ("the trapped-charge Coulomb repulsion overcomes the baseline Maxwell attraction").
 
-**Justification for amendment (v8.6):** the pre-v8.6 "Maxwell forbidden" rule (design.md v2.2 §2.3, briefing §8.5 pre-v8.6) was intended to keep Fig 1 G simple. But hiding Maxwell makes Coulomb read as "just an arrow" without context — reader cannot tell why Coulomb is novel. The "Coulomb wins AGAINST baseline Maxwell" tension is the paper's actual claim per planning/session_260427_mechanism.md (F_clip = Q_clip × E_active vs F_Maxwell ∝ E²). Apparatus-vs-result zone split (v8.6) is the natural place to show this tension without cluttering the result. Fig 5 still owns the full mechanism (7-phase + Phase D snapshot); Fig 1 Column F now shows the macro-probe identity AND the force-tension at cartoon level.
-
-**Anti-violation rules:**
-- Maxwell arrow in result zone (alongside Coulomb) → FORBIDDEN; collapses the contrast.
-- Both arrows equal weight → FORBIDDEN; color tier discrimination required.
-- Coulomb arrow in apparatus zone → FORBIDDEN; apparatus is the *baseline before trapping*, no Coulomb because no q_tr.
+**Anti-violation rules (v8.9):**
+- Maxwell arrow anywhere in Panel F → FORBIDDEN (single-zone Coulomb-only; baseline contrast lives in caption text).
+- Coulomb arrow direction toward electrode → FORBIDDEN (repulsion = away from electrode = LEFT).
 - Quantitative force values (e.g., "F_Coulomb = 12 nN") → FORBIDDEN; Fig 1 is qualitative.
+- Reconstructing the two-zone (apparatus baseline + result) split → requires explicit re-spec; do not silently reintroduce Maxwell.
+
+**Pre-v8.9 archived (v8.6 two-zone Maxwell-vs-Coulomb):** apparatus zone = light-pink dashed Maxwell baseline on neutral straight cantilever; result zone = bold Coulomb on bent cantilever. Rationale was "show Coulomb wins against baseline." Superseded — that tension now carried by caption text, not in-panel glyphs. Fig 5 still owns the full 7-phase mechanism.
 8.6 Panel C ↔ Panel F color-consistent (bimodal: blue Shallow / red Deep).
 8.7 **Branching arrow physics constraint**: 3 spoke from C **must** match the 3 evidence lines in design.md §3.2 (kinetic / ISPD / mechanical). No new evidence line, no missing line. Spoke 순서 + label은 measurement modality, NOT causation chain — physics는 *3 independent measurements of same trap*, *not* causation chain D→...→G.
 8.8 Composition labels (S60 / S70 / S75 / S80 / S85 = **sulfur weight-percent sample names**, Q1 LOCKED — NOT chain atom count)은 **Panel B에만** 허용. Row 2 plot panel은 concept-based only ("**low n**" / "**high n**" — 2026-05-20 framework rewrite; 이전 "shallow-rich" / "deep-rich" 명명은 depolarization-framework 오인 산물, **DEPRECATED**). Numbers 60/70/75/80/85 refer to wt% S per planning/sulfur_sample_selection_policy.md (5 samples in paper; **Panel B shows 3 representative: S60/S75/S85** = endpoints + middle, concept-figure visual clarity per v8.7 iter1 user-confirmed restructure). Full 5-sample dataset belongs to Fig 2~ (quantitative panels). Drawn chain atom counts (10/18/24 in B-1) is artistic correlate only.
@@ -666,10 +707,22 @@ require a §17 amendment.
 - **D-5** **high-n** power-law line (cRed!80 0.80pt, **sulfur polymer paper hero**) from `(0.65, 2.30)` to `(3.85, 0.55)`. **Steep** slope (visual n ≈ 0.55; conceptual n ≈ 0.85 from real data — cartoon-compressed for figure scale). Physical meaning: constant V 인가 후 trap이 지속적으로 채워지며 I 가파르게 감소 → "trap-rich" / strong trap capability. *2026-05-20 framework rewrite: 이전 "deep-rich less-steep (0.65,2.40)→(3.85,1.10)" 매핑은 잘못된 depolarization framework 가정 결과; absorption-current 해석에서는 high n = steeper.*
 - **D-6** **low-n** power-law line (cBlue!80 0.80pt, **control polymer**, e.g., PI) from `(0.65, 2.30)` to `(3.85, 1.50)`. **Less steep** (visual n ≈ 0.25; conceptual n ≈ 0.55-0.60 PI / ≈ 0-0.2 PDMS). Physical meaning: trap 거의 없어 초기 polarization 후 I 평탄. *2026-05-20: 이전 "shallow-rich steeper" 매핑 폐기.*
 - **Both curves start at same y_0 = 2.30** (initial dielectric polarization current 동일 order — cartoon simplification; 실제 측정에서는 sample geometry 의해 다소 다름).
-- **D-7a** Debye dashed reference (cGray!85!black 0.75pt, bezier) ending at `(2.55, 0.56)`. **Ends below both power-law tails** per §8.4 (heavy-tail vs single-relaxation exponential). Label `Debye` (labelMute, cGray!65!black) at `(2.60, 0.55)` anchor=west, INSIDE plot, just above x-axis (iter 52d + iter 53 lift). No leader (color-match + adjacency = unambiguous identifier).
+- **D-7a** Debye reference — **v8.9 plateau+cliff (2026-05-28, theory-aligned, supersedes bezier)**. An ideal single-τ Debye process on log-log absorption-current axes is a **horizontal plateau** (flat for t≪τ) followed by a **sharp cliff** (falls off-scale for t≫τ): `y = a − 0.4343·10^x/τ`. Current render: horizontal plateau (x=0.65→1.80, y=2.30) + sharp knee + steep cliff terminating mid-plot at (2.22, 0.55), `dashed cGray!85!black`. This replaces the prior smooth bezier descent (which read as "just a steeper power-law", not a distinct single-relaxation reference). Label `Debye` (labelMute cGray!65!black) horizontal anchor=west at (2.28, 0.62) next to the cliff terminus (sloped label on a near-vertical cliff is unreadable). **Ends below both power-law tails** per §8.4. No leader (color-match + adjacency).
 - **D-7b** curve-ID labels (**high-n / low-n naming, 2026-05-20**): sloped path-attached convention — 'high n' (cRed!75!black) along D-5 red curve `above=3pt`; 'low n' (cBlue!75!black) along D-6 blue curve `above=4pt`. **No fill** (Nature cardinal sin guard — never break primary data strokes). 이전 'deep-rich/shallow-rich' 명명은 framework 오인 산물 — 폐기.
 
 ### §13.6 Column E — ISPD-paired evidence (v8.6 restructure, 10 sub-regions)
+
+> **v8.9 PROBE-IDENTITY CORRECTION (2026-05-28, agent audit — SCIENTIFIC):** The E-2
+> apparatus is a **Keyence SK-series electrostatic surface voltmeter (ESVM), INDUCTION-type,
+> NON-oscillating (non-contact)** — NOT a Kelvin probe. **Kelvin-probe / FM-CPD / vertical-
+> oscillation / vibration-cue convention is FORBIDDEN** (it implies the wrong measurement
+> physics). The figure was corrected: the disk-on-shaft is a generic non-contact induction
+> probe, the ↕ vibration glyph was REMOVED, and the label reads "$V_s$ probe" (pairs with
+> "$V_s$ meter" as sensor↔readout). The E-2 sub-region prose below still says "Kelvin probe
+> + FM-CPD oscillation + vibration `<->` cue" — that text is **scientifically STALE; ignore
+> it**. Also stale in E-2 below: "exponential-decay icon inside meter" (the meter display is
+> now plain dark glass, no in-meter trace — the V_s(t) decay is plotted in the E-4 sub-zone),
+> and "Corona 'C'/lightning label" (replaced by an explicit HV+ source box).
 
 **Cross-panel narrative attribution (2026-05-20 framework rewrite)**: Panel E shows **the sulfur polymer's** internal trap landscape — Panel D (D-5/D-6) establishes 황고분자 > control via cross-sample high-n vs low-n comparison; Panel E then drills into the sulfur sample's bimodal g(E_t) DOS (deep-trap-dominant, 1.86× shallow); Panel F shows the macroscopic mechanical consequence on the same sulfur cantilever. Reading sequence: D = comparison establishes hero → E = hero's trap landscape → F = hero's mechanical manifestation. Control polymer g(E_t) is NOT drawn (would clutter; Panel D already established 황 vs control).
 
@@ -696,7 +749,17 @@ require a §17 amendment.
 
 ### §13.7 Column F — Mechanical evidence (v8.6 restructure, supersedes Panel G; 8 sub-regions)
 
-**Cross-panel narrative attribution (2026-05-20 framework rewrite)**: Panel F shows **the sulfur polymer cantilever's** macroscopic response — third leg of the convergent-evidence triad (after D = kinetic CvS sample comparison establishing hero, E = hero's bimodal trap DOS). The bent cantilever, q_tr charge markers, and Coulomb-dominant arrow all depict the sulfur polymer (paper hero) under bias; control polymer mechanical response is NOT drawn (paper claim is "황고분자가 큰 bending", control would be flat/small — not the visual story). The Maxwell-vs-Coulomb force contrast within Panel F is intra-sample (same sulfur cantilever, two competing force terms).
+> **v8.9 SINGLE-ZONE AMENDMENT (2026-05-28, agent+advisor):** Per §8.5 v8.9, Panel F
+> is now **single-zone Coulomb-only**. The two-zone apparatus(Maxwell-baseline)/result(Coulomb)
+> split described in F-2/F-3 below is **ARCHIVED**. Current Panel F = `V_active` PSU box
+> (top) + bent cantilever + 3 q_tr ● + **Coulomb repulsion arrow ONLY** + electrode + air gap.
+> The F-3 Maxwell baseline arrow + label are REMOVED (they had ended up in the result zone
+> alongside Coulomb, violating the v8.6 rule). The apparatus zone is reduced to the PSU box;
+> the neutral straight cantilever / clip / apparatus-electrode described in F-2 below were
+> dropped during the 38-iter polish. Maxwell-baseline contrast, if needed, is stated in the
+> figure CAPTION text. F-2/F-3 sub-region prose below is retained for history only.
+
+**Cross-panel narrative attribution (2026-05-20 framework rewrite)**: Panel F shows **the sulfur polymer cantilever's** macroscopic response — third leg of the convergent-evidence triad (after D = kinetic CvS sample comparison establishing hero, E = hero's bimodal trap DOS). The bent cantilever, q_tr charge markers, and Coulomb-dominant arrow all depict the sulfur polymer (paper hero) under bias; control polymer mechanical response is NOT drawn (paper claim is "황고분자가 큰 bending", control would be flat/small — not the visual story). ~~The Maxwell-vs-Coulomb force contrast within Panel F is intra-sample~~ **[v8.9: Maxwell removed from panel; contrast now in caption text].**
 
 **Column bbox**: x=9.45..13.95, y=0.10..4.45. Internal split: apparatus zone y=2.80..4.25 + mini-gap y=2.65..2.80 + result zone y=0.20..2.60.
 
