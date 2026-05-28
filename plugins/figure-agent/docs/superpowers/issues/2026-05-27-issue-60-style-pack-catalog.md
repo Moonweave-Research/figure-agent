@@ -1,6 +1,6 @@
 # Issue 60 - Journal and Paper Style Pack Catalog
 
-Status: implemented in branch `codex/issue60-style-pack-catalog`
+Status: completed on main in commit `b2c98a5`
 
 Depends on: Issue 57 real fixture audit adoption and Issue 59 SVG polish
 promotion dogfood

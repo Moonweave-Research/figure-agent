@@ -21,6 +21,8 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 - ❌ **Data plots.** Numerical plots from real datasets go in `[Graph_making_hub]/`. This plugin is for **symbolic schematics** — energy diagrams, mechanism cartoons, device overviews.
 - ❌ **Auto-magic SVG → TikZ converter.** Reference images are used as visual guides for *you*, not as inputs to a code generator.
 - ❌ **Paid API service.** All vision work is done by the host Claude Code session you're already running.
+- ❌ **A hidden auto-designer.** The plugin exposes evidence, gates, and bounded handoffs; it does not silently invent art direction or source edits.
+- ❌ **Journal acceptance oracle.** It can raise a figure toward paper-grade quality, but it cannot certify Nature/Science acceptance.
 
 ---
 
@@ -81,17 +83,32 @@ polish only when status or the driver explicitly routes there.
 
 ---
 
-## Current state (v0.7.1)
+## Current state (v0.8.0)
 
 | Area | What's working |
 |---|---|
 | **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
+| **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
 | **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
+| **Style packs** | `docs/style-pack-catalog.md` and the opt-in journal style-pack catalog provide reusable Nature Communications, Nature Materials, Science, and graphical-abstract restraint/playbook anchors without applying them globally. |
+| **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale or conflicting second opinions surface as human-review evidence, not automatic truth. |
+
+### Release boundary
+
+- **Automatic:** deterministic compile, lint, freshness, export, golden, publication, visual/text clash, crop/accounting, package validation gates, and the shared single next-action summary.
+- **Semi-automatic:** host-vision critique and `/fig_loop` review checkpoints. Claude reads prepared images/evidence and writes structured critique; lint and loop contracts verify the result.
+- **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, SVG-polish delta packs, and external vision review evidence.
+- **Manual:** source drawing, semantic patch choices, human art direction, accepted/golden roll-forward, and final SVG/vector editing.
+
+The plugin is a quality/audit kernel, not a hidden auto-designer. It can make
+bad or under-audited figure states much harder to ship, but it cannot certify
+Nature/Science acceptance or replace author judgment about taste, novelty, or
+venue fit.
 
 ## What remains experimental / proposed
 

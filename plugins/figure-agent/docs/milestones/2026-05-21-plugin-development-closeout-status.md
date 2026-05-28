@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-27 KST
-**Status:** current main truth through v0.7.1 / Issue 54
+**Date:** 2026-05-28 KST
+**Status:** current main truth through v0.8.0 / Issue 62
 
 ## Bottom Line
 
@@ -11,7 +11,10 @@ host-vision critique contracts, audit evidence accounting, high-zoom crop
 inputs, reference-calibrated critique packs, advisory scoring, publication
 gates, SVG-polish routing, SVG-polish readiness surfacing, aesthetic lever
 contracts, explicit text-boundary checks for box/rule overflow failures, and
-explicit label-path proximity checks for zoom-only near-miss failures.
+explicit label-path proximity checks for zoom-only near-miss failures. The
+v0.8 slice adds real-fixture audit-adoption accounting, a shared single
+next-action summary, SVG-polish promotion dogfood evidence, opt-in journal
+style-pack catalog support, and optional external vision review evidence.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -20,7 +23,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 52 landed on `main`:
+Most recent local full verification after Issue 62 release hardening:
 
 ```bash
 uv run pytest -q
@@ -33,12 +36,10 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1244 passed, 1 skipped, 1 xfailed`.
+- Full test suite: `1337 passed, 3 skipped, 1 xfailed`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
-- `main` and `origin/main` point at `1924d31` (`Adopt label-path checks for
-  fig1 dogfood`).
 - `full-render` remains intentionally skipped on normal PRs unless the
   workflow is label/main-triggered.
 
@@ -96,6 +97,18 @@ Results:
 - Release gate binding: release mode consumes the latest current `/fig_loop`
   checkpoint and will not close release while adjudication, patch handoff, or
   human-gated loop blockers remain unresolved.
+- Real-fixture audit adoption: Issue 57 records fixture-level audit opt-in
+  state instead of implying coverage when a fixture lacks declarations.
+- Single next-action UX: Issue 58 adds shared read-only `next_action_summary`
+  output across status, driver, loop, and closeout flows.
+- SVG polish promotion dogfood: Issue 59 records that real fixtures remain
+  conservatively blocked behind stale critique evidence rather than being
+  promoted to SVG polish prematurely.
+- Journal style-pack catalog: Issue 60 adds opt-in venue/playbook packs for
+  restrained main-text and separated expressive contexts.
+- External vision review evidence: Issue 61 adds optional local
+  `external_vision_review.yaml` import and conflict surfacing without adding a
+  provider API dependency.
 
 ## Not A Remaining Blocker
 
@@ -125,11 +138,11 @@ the plugin for real figure work.
    audit; it still needs a bounded way to carry visual language, restraint,
    typography, and palette intent across multiple figures in one manuscript.
 3. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
-   now surface many audit fields. The next UX pass should make the single next
-   action and blocking evidence easier to scan without weakening contracts.
-4. **External second-opinion vision checks.** Gemini or another vision model
-   can be integrated later as an optional cross-check, but it should not become
-   a required dependency for the local-first plugin.
+   now expose a single next-action summary, but the human-readable output can
+   still be made denser and easier to scan without weakening contracts.
+4. **Positive SVG-polish promotion evidence.** The safe negative route is
+   documented; the next useful evidence is a fresh fixture that legitimately
+   reaches `ready_for_svg_polish`.
 
 ## Practical Use Guidance
 

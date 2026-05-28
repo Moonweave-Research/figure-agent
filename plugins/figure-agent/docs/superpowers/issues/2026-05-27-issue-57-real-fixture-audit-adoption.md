@@ -1,6 +1,6 @@
 # Issue 57 - Real Fixture Audit Adoption
 
-Status: implemented in branch `codex/issue57-real-fixture-audit-adoption`
+Status: completed on main in commit `46b7dec`
 
 Depends on: Issue 56 journal art-direction playbook completion
 

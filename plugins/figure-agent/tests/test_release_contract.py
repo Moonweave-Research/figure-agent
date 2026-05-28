@@ -14,12 +14,27 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
+EXPECTED_RELEASE_VERSION = "0.8.0"
+
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
 
     assert plugin["version"] == pyproject["project"]["version"]
+
+
+def test_release_metadata_matches_v0_8_version() -> None:
+    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
+    uv_lock = (REPO_ROOT / "uv.lock").read_text()
+
+    assert plugin["version"] == EXPECTED_RELEASE_VERSION
+    assert pyproject["project"]["version"] == EXPECTED_RELEASE_VERSION
+    assert (
+        f'name = "figure-agent"\nversion = "{EXPECTED_RELEASE_VERSION}"'
+        in uv_lock
+    )
 
 
 def test_active_docs_define_semantic_tikz_reference_workflow() -> None:
@@ -122,6 +137,43 @@ def test_readme_current_state_matches_plugin_version() -> None:
     assert "docs/svg-polish-pipeline.md" not in experimental_section
 
 
+def test_v0_8_readme_documents_release_boundaries() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+
+    assert f"Current state (v{EXPECTED_RELEASE_VERSION})" in readme
+    for required in [
+        "single next-action summary",
+        "journal style-pack catalog",
+        "external vision review",
+        "not a hidden auto-designer",
+        "cannot certify Nature/Science acceptance",
+    ]:
+        assert required in readme
+
+    boundary_section = readme.partition("## Current state")[2]
+    assert "Automatic" in boundary_section
+    assert "Semi-automatic" in boundary_section
+    assert "Opt-in" in boundary_section
+    assert "Manual" in boundary_section
+
+
+def test_v0_8_changelog_covers_issues_57_to_61() -> None:
+    changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
+    top_entry = changelog.partition("## [0.7.1]")[0]
+
+    assert f"## [{EXPECTED_RELEASE_VERSION}] - 2026-05-28" in top_entry
+    for required in [
+        "Issue 57",
+        "Issue 58",
+        "Issue 59",
+        "Issue 60",
+        "Issue 61",
+        "quality/audit kernel",
+        "not a hidden auto-designer",
+    ]:
+        assert required in top_entry
+
+
 def test_closeout_status_matches_current_release_truth() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     closeout = (
@@ -139,11 +191,29 @@ def test_closeout_status_matches_current_release_truth() -> None:
     ).read_text()
 
     assert f"current main truth through v{plugin['version']}" in closeout
+    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 62" in closeout
     assert "after Issue 33 / PR #47" not in closeout
     assert "start with Issue 34" not in closeout
     assert "Issue 48" in closeout
     assert "implemented on main" in issue_48
     assert "implemented on branch" not in issue_48
+
+
+def test_v0_8_issue_statuses_are_mainline_ready() -> None:
+    issue_files = {
+        "Issue 57": "2026-05-27-issue-57-real-fixture-audit-adoption.md",
+        "Issue 58": "2026-05-27-issue-58-single-next-action-ux.md",
+        "Issue 59": "2026-05-27-issue-59-svg-polish-promotion-dogfood.md",
+        "Issue 60": "2026-05-27-issue-60-style-pack-catalog.md",
+        "Issue 61": "2026-05-27-issue-61-external-second-opinion-vision.md",
+        "Issue 62": "2026-05-27-issue-62-v0-8-release-hardening.md",
+    }
+
+    for issue_name, file_name in issue_files.items():
+        text = (REPO_ROOT / "docs" / "superpowers" / "issues" / file_name).read_text()
+        assert "implemented in branch" not in text, issue_name
+        assert "Status: proposed" not in text, issue_name
+        assert "Status: completed" in text or "Status: implemented" in text, issue_name
 
 
 def test_readme_documents_status_and_driver_first_workflow() -> None:
