@@ -38,7 +38,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_export   Export final PDF / SVG / TIFF / PNG
 /fig_status   "Where am I?" — read-only stage check
 /fig_drive    Dry-run advisory driver — recommends one next action
-/fig_run      Bounded runner — executes safe compile steps, stops at gates
+/fig_run      Bounded runner — executes safe mechanical steps, stops at gates
 ```
 
 ## A typical figure (start to finish)
@@ -83,9 +83,9 @@ polish only when status or the driver explicitly routes there.
 When the user asks the plugin to proceed autonomously through safe mechanical
 steps, use `/fig_run <name> --mode review --goal "<goal>" --execute`. It runs
 only deterministic allowlisted shell work (compile, missing adjudication
-scaffold, and verify-only loop checkpoints) and stops before host critique,
-existing adjudication repair, export, patch, polish, accepted, or golden
-boundaries.
+scaffold, verify-only loop checkpoints, and non-golden draft export) and stops
+before host critique, existing adjudication repair, patch, polish, accepted,
+tracked-golden, force-golden, or release boundaries.
 
 **Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
 
@@ -98,7 +98,7 @@ boundaries.
 | **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
-| **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, and verify-only loop checkpoints; host/human/existing-adjudication/export/release/polish boundaries remain explicit stops. |
+| **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. Routine generated export SVGs do not make critiques stale unless the fixture opts into polished-SVG/final-artifact evidence. |

@@ -1,6 +1,6 @@
 # Issue 68: Safe Adjudication Runner Expansion
 
-Status: completed
+Status: completed; superseded by Issue 69 for draft export execution
 
 Depends on: Issue 67 safe loop runner expansion
 
@@ -43,7 +43,7 @@ Do not implement:
 - stale adjudication repair
 - invalid adjudication repair
 - critique mutation
-- export/release/accepted/golden automation
+- accepted/golden/release export automation
 
 ## Acceptance
 
@@ -52,7 +52,8 @@ Do not implement:
 - A failed scaffold command stops with `command_failed`.
 - `executable_actions` includes `run_compile`, `run_fig_loop`, and
   `run_adjudicate`.
-- `run_export` remains non-executable.
+- `run_export` remains non-executable in Issue 68. Issue 69 later permits only
+  non-golden draft export execution.
 
 ## Verification
 

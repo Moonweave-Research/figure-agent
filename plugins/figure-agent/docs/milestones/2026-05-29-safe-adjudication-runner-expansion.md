@@ -21,7 +21,8 @@ Stale, invalid, or shape-changed adjudication remains a manual review action.
   `run_adjudicate`.
 - Failed scaffold execution stops with `command_failed`.
 - Successful scaffold execution triggers a driver re-query.
-- `run_export` remains non-executable.
+- `run_export` remains non-executable in Issue 68. Issue 69 later permits only
+  non-golden draft export execution.
 
 ## Review Notes
 
