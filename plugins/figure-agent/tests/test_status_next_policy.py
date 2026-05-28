@@ -141,7 +141,17 @@ def test_stage_3_stale_critique_requires_critique_before_export() -> None:
 
     assert hint == (
         "run /fig_critique demo before /fig_export demo"
-        " because reference-grounded critique is missing or stale."
+        " because reference-grounded pre-export critique is missing or stale."
+    )
+
+
+def test_stage_4_fresh_exports_stale_critique_names_final_snapshot_review() -> None:
+    hint = _hint(stage=4, critique_state="STALE")
+
+    assert hint == (
+        "run /fig_critique demo as a final review of the current rendered candidate"
+        " before treating exports as final; if no edits are needed,"
+        " existing exports can remain in place."
     )
 
 

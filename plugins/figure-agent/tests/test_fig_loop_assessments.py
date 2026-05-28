@@ -13,6 +13,7 @@ from fig_loop_assessments import (  # noqa: E402
     aesthetic_lever_summary,
     crop_audit_summary,
     editorial_art_direction_summary,
+    journal_art_direction_playbook_summary,
     journal_grade_assessment,
     top_tier_audit_summary,
 )
@@ -348,6 +349,112 @@ def test_crop_audit_summary_ignores_legacy_v1_7(tmp_path: Path) -> None:
     )
 
     assert crop_audit_summary(example_dir, "FRESH") is None
+
+
+def test_latest_v1_13_schema_surfaces_all_loop_assessment_summaries(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    critique_hash = "sha256:" + "a" * 64
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.13",
+            "critique_input_hash": critique_hash,
+            "journal_grade_assessment": {
+                "schema": JOURNAL_ASSESSMENT_SCHEMA,
+                "scoring_mode": "fresh_reaudit",
+                "assessed_artifact_hash": critique_hash,
+                "score_is_gateable": True,
+                "benchmark_level": "solid_manuscript",
+                "overall_score": 84,
+                "sub_scores": _valid_scores(),
+                "score_rationale": "solid but not high impact",
+                "reference_calibration": {
+                    "reference_pack_hash": "sha256:" + "b" * 64,
+                    "reference_class": "mechanism_schematic",
+                    "visual_ambition": "high_impact_candidate",
+                    "score_basis": "current_artifact_vs_pack",
+                    "limiting_reference_traits": ["T001"],
+                    "rationale": "T001 still limits the figure.",
+                },
+            },
+            "top_tier_audit": {
+                "reader_misinterpretation_risk": {
+                    "verdict": "weak",
+                    "blocks_high_impact": True,
+                }
+            },
+            "editorial_art_direction": _editorial_art_direction(
+                trigger_path="continue_tikz",
+                overrides={"human_art_direction_gate": {"verdict": "pass"}},
+            ),
+            "crop_audit_log": [
+                {
+                    "crop_id": "VC001_A",
+                    "verdict": "uncertain",
+                    "rationale": "fine line ambiguity remains",
+                    "unintended_visible_anomaly": "uncertain",
+                    "anomaly_rationale": "possible stray continuation",
+                    "anomaly_link": "",
+                }
+            ],
+            "aesthetic_lever_audit": [
+                {
+                    "lever_id": "maturity_restraint",
+                    "dimension": "maturity",
+                    "verdict": "weak",
+                    "route": "tikz_patch",
+                    "linked_evidence": ["reader_misinterpretation_risk"],
+                }
+            ],
+            "journal_art_direction_playbook_audit": {
+                "playbook_id": "nature-communications",
+                "venue_context": "main_text",
+                "design_center": [
+                    {
+                        "id": "DC001",
+                        "verdict": "weak",
+                        "route": "tikz_patch",
+                        "linked_evidence": ["reader_misinterpretation_risk"],
+                    }
+                ],
+                "route_rule_applied": {
+                    "id": "RR001",
+                    "recommended_path": "continue_tikz",
+                },
+                "human_review_triggers": [],
+            },
+        },
+    )
+
+    assessment = journal_grade_assessment(example_dir, "FRESH")
+    top_tier = top_tier_audit_summary(example_dir, "FRESH")
+    editorial = editorial_art_direction_summary(example_dir, "FRESH")
+    crops = crop_audit_summary(example_dir, "FRESH")
+    aesthetic = aesthetic_lever_summary(example_dir, "FRESH")
+    playbook = journal_art_direction_playbook_summary(example_dir, "FRESH")
+
+    assert assessment is not None
+    assert assessment["overall_score"] == 84
+    assert assessment["reference_calibration_summary"] == {
+        "reference_pack_hash": "sha256:" + "b" * 64,
+        "reference_class": "mechanism_schematic",
+        "visual_ambition": "high_impact_candidate",
+        "score_basis": "current_artifact_vs_pack",
+        "limiting_reference_trait_count": 1,
+    }
+    assert top_tier is not None
+    assert top_tier["worst_verdict"] == "weak"
+    assert editorial is not None
+    assert editorial["polish_recommended_path"] == "continue_tikz"
+    assert crops is not None
+    assert crops["uncertain_crop_ids"] == ["VC001_A"]
+    assert aesthetic is not None
+    assert aesthetic["next_aesthetic_bottleneck"]["lever_id"] == "maturity_restraint"
+    assert playbook is not None
+    assert playbook["recommended_path"] == "continue_tikz"
 
 
 def test_aesthetic_lever_summary_surfaces_v1_11_next_bottleneck(tmp_path: Path) -> None:

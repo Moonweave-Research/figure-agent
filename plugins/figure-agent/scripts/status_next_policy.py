@@ -12,10 +12,13 @@ _NEXT_1 = (
     " (cp styles/tex_template.tex to start), then /fig_compile <name>."
 )
 _NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
-_NEXT_3 = "run /fig_critique <name> for vision review (optional), then /fig_export <name>."
+_NEXT_3 = (
+    "run /fig_critique <name> for pre-export reference-grounded review when useful,"
+    " then /fig_export <name>."
+)
 _NEXT_3_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> before /fig_export <name>"
-    " because reference-grounded critique is missing or stale."
+    " because reference-grounded pre-export critique is missing or stale."
 )
 _NEXT_4 = (
     "done — outputs in examples/<name>/exports/."
@@ -57,7 +60,8 @@ _NEXT_4_NOT_ACCEPTED = (
     " defects, then set accepted: true in spec.yaml."
 )
 _NEXT_4_CRITIQUE_REQUIRED = (
-    "run /fig_critique <name> before treating exports as final;"
+    "run /fig_critique <name> as a final review of the current rendered candidate"
+    " before treating exports as final;"
     " if no edits are needed, existing exports can remain in place."
 )
 _NEXT_CRITIQUE_LINT_BLOCKED = (

@@ -11,7 +11,7 @@ Run from the plugin root.
 
 Steps:
 1. Run: `uv run python scripts/run_export.py <name>`.
-   - If the fixture has a usable figure-level `reference_image`, or a panel with both `reference_image` and `bbox_pdf_cm`, a fresh `critique.md` is required first. Run `/fig_critique <name>` if the script reports `critique_missing` or `critique_stale`. Pass `--skip-critique` only for an intentional draft export.
+   - If the fixture has a usable figure-level `reference_image`, or a panel with both `reference_image` and `bbox_pdf_cm`, a fresh pre-export `critique.md` is required first. Run `/fig_critique <name>` if the script reports `critique_missing` or `critique_stale`. Pass `--skip-critique` only for an intentional draft export.
    - If the script reports `reference_image_missing` or `panel_reference_image_missing`, fix the declared path or add the file. `--skip-critique` does not override broken reference configuration.
    - The orchestrator then reads the exports/ sub-state and dispatches:
      - **MISSING** or **STALE** → regenerate PDF / SVG / TIFF / PNG.
@@ -27,6 +27,11 @@ If this command reports `critique_missing` or `critique_stale`, return to
 begin here: it starts only after a generated export is current and the
 remaining work is visual-only finalization (see `/fig_loop` SVG Polish
 Handoff).
+
+For generated-export fixtures without polished-SVG opt-in, the generated
+`exports/<name>.svg` is not itself a critique freshness input. Treat any
+post-export critique as a final review of the current rendered candidate, not
+as a hidden export mutation gate.
 
 Human-gated. No automatic commit.
 

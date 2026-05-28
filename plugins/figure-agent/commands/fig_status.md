@@ -64,7 +64,7 @@ or `full_q1` plus the next command or human-review instruction.
 | 0 | directory missing | /fig_new <name> |
 | 1 | spec.yaml present; no .tex authored yet | author <name>.tex from briefing.md, then /fig_compile <name> |
 | 2 | .tex present; build pdf missing or stale | /fig_compile <name> |
-| 3 | build pdf fresh; no exports | fix declared missing references, or run /fig_critique <name> when reference-grounded critique is missing/stale, then /fig_export <name> |
+| 3 | build pdf fresh; no exports | fix declared missing references, or run /fig_critique <name> when reference-grounded pre-export critique is missing/stale, then /fig_export <name> |
 | 4 | export artifact present | repair any stale/missing critique, export, final-artifact, or acceptance gate; otherwise done |
 
 The v0.1 stages 2/3 (preview-images-without-selection / selected_preview-set-without-tex) were removed in the v0.2 frozen-legacy cleanup along with `/fig_prompt` and `/fig_preview_select`. Active authoring now goes directly from `briefing.md` to `<name>.tex`; see `docs/architecture-overview.md` Layer 3 for the full picture.
@@ -79,7 +79,7 @@ Stage 4 next-hint variants (priority order):
 - `exports_substate == STALE` because export PDF content differs from build PDF
   or required siblings are missing → re-run /fig_export.
 - `partial_export` not all four export artifacts present → re-run /fig_export.
-- `critique_missing` or `critique_stale` with exports otherwise present → run `/fig_critique <name>` before continuing.
+- `critique_missing` or `critique_stale` with exports otherwise present → run `/fig_critique <name>` as a final review of the current rendered candidate before treating exports as final.
 - `final_artifact_missing` / `final_artifact_invalid` / `final_artifact_stale` / `final_artifact_blocked` for a declared polished SVG → repair the manifest, polished SVG, audit, or semantic backport before acceptance/release.
 - `accepted: false` declared in spec.yaml → resolve QUALITY_AUDIT.md defects and flip the flag.
 - otherwise → done.
@@ -145,8 +145,8 @@ Notes that may appear:
 - `previews_not_directory` — `examples/<name>/previews` exists as a file, not a directory.
 - `panel_reference_image_missing` — a panel declares `bbox_pdf_cm` and `reference_image` but the image file is not found at the declared path relative to the example directory; correct the path in `spec.yaml` or add the file before running `/fig_critique <name>`.
 - `critique_reference_missing` — a declared reference input needed for critique/export is missing; fix the path or add the file before `/fig_critique` or `/fig_export`.
-- `critique_missing` — the fixture has a usable figure-level `reference_image` or at least one panel with both `reference_image` and `bbox_pdf_cm`, but no `critique.md`; run `/fig_critique <name>` before `/fig_export <name>`.
-- `critique_stale` — `critique.md` hash metadata does not match current critique inputs, rubric version, or generator version; legacy critiques without hash metadata fall back to mtime comparison against `<name>.tex`, `briefing.md`, `spec.yaml`, usable reference image, participating panel reference image, `coordinate_hints.yaml`, reference-conditioned authoring docs, `subregion_iteration_log.md`, and Style Lock. Re-run `/fig_critique <name>`.
+- `critique_missing` — the fixture has a usable figure-level `reference_image` or at least one panel with both `reference_image` and `bbox_pdf_cm`, but no `critique.md`; run `/fig_critique <name>` before `/fig_export <name>` for pre-export review, or as final-review closeout when exports already exist.
+- `critique_stale` — `critique.md` hash metadata does not match current critique inputs, rubric version, or generator version; legacy critiques without hash metadata fall back to mtime comparison against `<name>.tex`, `briefing.md`, `spec.yaml`, usable reference image, participating panel reference image, `coordinate_hints.yaml`, reference-conditioned authoring docs, `subregion_iteration_log.md`, and Style Lock. Re-run `/fig_critique <name>` for the current pre-export or final-review snapshot.
 
 Build/export freshness source set: `<name>.tex`, `briefing.md`, `spec.yaml`,
 and `styles/polymer-paper-preamble.sty`. Reference images and

@@ -431,6 +431,97 @@ def test_critique_manifest_includes_svg_polish_delta_pack_when_present(
     assert before != after
 
 
+def test_critique_manifest_ignores_generated_export_svg_without_polish_opt_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    export_svg = example_dir / "exports" / "demo.svg"
+    export_svg.parent.mkdir()
+    export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    export_svg.write_text("<svg>changed generated export</svg>\n", encoding="utf-8")
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert export_svg not in paths
+    assert before == after
+
+
+def test_critique_manifest_includes_generated_export_svg_for_polished_svg_opt_in(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nfinal_artifact:\n  kind: polished_svg\n",
+        encoding="utf-8",
+    )
+    export_svg = example_dir / "exports" / "demo.svg"
+    export_svg.parent.mkdir()
+    export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo", "final_artifact": {"kind": "polished_svg"}},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    export_svg.write_text("<svg>changed generated export</svg>\n", encoding="utf-8")
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert export_svg in paths
+    assert before != after
+
+
+def test_critique_manifest_includes_generated_export_svg_for_polish_delta_pack(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    export_svg = example_dir / "exports" / "demo.svg"
+    export_svg.parent.mkdir()
+    export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
+    delta_dir = example_dir / "polish" / "aesthetic_delta"
+    delta_dir.mkdir(parents=True)
+    (delta_dir / "delta_manifest.json").write_text(
+        '{"schema":"figure-agent.svg-polish-delta.v1"}\n',
+        encoding="utf-8",
+    )
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    export_svg.write_text("<svg>changed generated export</svg>\n", encoding="utf-8")
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert export_svg in paths
+    assert before != after
+
+
 def test_critique_manifest_ignores_external_vision_review_without_opt_in(
     tmp_path: Path,
 ) -> None:
