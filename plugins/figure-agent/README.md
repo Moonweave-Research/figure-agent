@@ -87,6 +87,11 @@ scaffold, verify-only loop checkpoints, and non-golden draft export) and stops
 before host critique, existing adjudication repair, patch, polish, accepted,
 tracked-golden, force-golden, or release boundaries.
 
+`/fig_run --execute` records non-authoritative evidence under
+`.scratch/fig-run-runs/`. There is no resume command. To continue later, inspect
+the previous journal if useful, then rerun live `/fig_status` or `/fig_drive`
+and let the fresh driver choose the next action.
+
 **Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
 
 ---
@@ -99,6 +104,7 @@ tracked-golden, force-golden, or release boundaries.
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
+| **Runner journal** | `/fig_run --execute` records `.scratch/fig-run-runs/<timestamp>-<name>/` evidence by default. Journals are not replayable and do not replace fresh `/fig_status` or `/fig_drive` checks. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. Routine generated export SVGs do not make critiques stale unless the fixture opts into polished-SVG/final-artifact evidence. |
@@ -111,7 +117,10 @@ tracked-golden, force-golden, or release boundaries.
 ### Release boundary
 
 - **Automatic:** deterministic compile, lint, freshness, export, golden, publication, visual/text clash, crop/accounting, package validation gates, and the shared single next-action summary.
-- **Semi-automatic:** host-vision critique and `/fig_loop` review checkpoints. Claude reads prepared images/evidence and writes structured critique; lint and loop contracts verify the result.
+- **Semi-automatic:** `/fig_run` for allowlisted mechanical shell work,
+  host-vision critique, and `/fig_loop` review checkpoints. Claude reads
+  prepared images/evidence and writes structured critique; lint and loop
+  contracts verify the result.
 - **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, reference-learning aesthetic metrics, SVG-polish delta packs, and external vision review evidence.
 - **Manual:** source drawing, semantic patch choices, human art direction, accepted/golden roll-forward, and final SVG/vector editing.
 

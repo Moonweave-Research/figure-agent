@@ -1,6 +1,6 @@
 # Issue 70E: Safe Resume And Operator UX Closeout
 
-Status: proposed
+Status: implemented
 
 Depends on: Issue 70A and whichever of Issues 70B, 70C, and 70D actually ship
 
@@ -16,16 +16,24 @@ manual continuation path and the reason resume was deferred.
 
 ## What To Decide Or Build
 
-If 70D lands and real dogfood shows resume is useful, decide whether to add
-explicit resume behavior such as:
+70E decision: keep resume deferred. 70B/70D make stops inspectable and
+journaled, but they do not prove that a `--resume` flag is safer than rerunning
+live `/fig_status`, `/fig_drive`, and `/fig_run`. Explicit resume behavior such
+as:
 
 - `--resume <run_dir>`;
 - `--resume-latest`;
-- or a decision to keep resume as documentation only.
 
-Any resume command must re-run live status and driver selection. It must never
-replay old commands blindly. If this cannot be made safer than rerunning
-`/fig_drive` and `/fig_run` manually, resume should remain deferred.
+is therefore out of scope for shipped Issue 70 behavior.
+
+Continuation path:
+
+1. Inspect the previous `.scratch/fig-run-runs/<timestamp>-<name>/stop.md` or
+   stdout JSON if useful.
+2. Rerun `/fig_status <name>` or `/fig_drive <name> --mode <mode> --goal
+   "<goal>" --dry-run`.
+3. Run `/fig_run <name> --mode <mode> --goal "<goal>" --execute` only if the
+   fresh driver still selects an allowlisted mechanical action.
 
 Then close the operator UX:
 
@@ -40,23 +48,23 @@ Then close the operator UX:
 In scope:
 
 - A resume go/no-go decision.
-- Resume implementation only if freshness/currentness constraints are explicit.
-- Docs-only closeout if 70A or later evidence rejects resume/handoff work.
+- Docs-only closeout because current evidence rejects resume/replay work.
 - Current-truth docs closeout.
 - Full verification.
 
 Out of scope:
 
 - Host critique automation.
-- Source patch automation.
+- New source patch automation or exposing the existing explicit patch executor
+  through `/fig_run`.
 - Accepted/golden/release automation.
 - SVG/vector edit automation.
 - Provider API calls.
 
 ## Acceptance
 
-- If resume is implemented, stale journals cannot cause command replay.
-- If resume is deferred, docs explain why and how to continue manually.
+- Resume is deferred.
+- Docs explain why and how to continue manually.
 - Docs and command behavior agree.
 - New users can tell what `/fig_run` may execute and where it must stop.
 - Full verification passes.

@@ -1,6 +1,6 @@
 # Issue 70: Operator-Grade Guided Autonomy Readiness Roadmap
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 69 safe draft export runner expansion
 
@@ -17,9 +17,9 @@ paper-wide context, and UX compression as important evidence gaps. Issue 70
 therefore starts with a readiness gate: prove where guided autonomy is actually
 needed before adding more kernel behavior.
 
-If the readiness pass confirms stop/resume ambiguity as a recurring bottleneck,
-the next day-to-day friction is "what exactly should the operator or host LLM do
-when the runner stops?"
+If the readiness pass confirms stop/continuation ambiguity as a recurring
+bottleneck, the next day-to-day friction is "what exactly should the operator
+or host LLM do when the runner stops?"
 
 Today a boundary stop preserves safety, but the next handoff can still be
 ambiguous:
@@ -45,10 +45,11 @@ boundary.
 Make the plugin feel operator-grade without widening hidden mutation. `/fig_run`
 should either execute safe mechanical work or stop with a precise handoff that
 tells the next agent or human what to inspect, what not to mutate, how to close
-the boundary, and when a resume command is or is not safe.
+the boundary, and why fresh status/driver checks are required before continuing.
 
 This roadmap does not make the plugin a hidden auto-designer. It improves the
-contract around stops, resumes, and evidence.
+contract around stops, continuation, and evidence. Resume/replay is explicitly
+deferred until a future design proves it safer than rerunning live state.
 
 ## Design Principles
 
@@ -78,7 +79,8 @@ Run 70C before any future patch-executor exposure, because source mutation must
 be at least as freshness-safe as read-only driver routing. 70B may proceed
 before 70C only for non-source-mutation stops; patch/source-mutation handoff
 must remain deferred until 70C is complete. Defer 70D/70E until 70A/70B show
-that persisted runner journals and resume behavior are really needed.
+that persisted runner journals would reduce continuity friction and any resume
+behavior can be proven safer than live status/driver reruns.
 
 ```text
 70A readiness matrix
@@ -94,8 +96,9 @@ that persisted runner journals and resume behavior are really needed.
 current `/fig_run --execute` opportunity in review mode, no live patch/pending
 closeout coverage, and no positive SVG-polish route. The strongest next
 implementation candidate is 70C patch freshness hardening. 70B remains allowed
-only as a small non-patch explanatory handoff slice. 70D/70E resume or journal
-work is not justified yet.
+only as a small non-patch explanatory handoff slice. It did not justify command
+replay/resume; later slices therefore kept 70D to non-authoritative evidence
+journals and 70E to docs-only resume deferral.
 
 70C result:
 `docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` implements
@@ -114,6 +117,13 @@ and no expansion of the runner allowlist.
 gitignored `.scratch/fig-run-runs/` journal for `/fig_run` stdout payloads. The
 journal is non-authoritative evidence only: it records what happened, but never
 allows command replay or resume without fresh status/driver checks.
+
+70E result:
+`docs/milestones/2026-05-29-safe-resume-operator-ux-closeout.md` closes the
+roadmap with resume deferred. Current behavior is guided autonomy, not replay:
+read the last journal if helpful, then rerun live `/fig_status` or
+`/fig_drive`, and use `/fig_run --execute` only for freshly selected
+allowlisted mechanical actions.
 
 ## Out Of Scope For Issue 70
 
@@ -135,8 +145,9 @@ allows command replay or resume without fresh status/driver checks.
 - The roadmap explains which boundaries remain manual and why.
 - The next implementation slice can start with tests without re-litigating the
   whole architecture.
-- Documentation states that guided autonomy is about better stops and resumes,
-  not broader hidden mutation.
+- Documentation states that guided autonomy is about better stops,
+  continuation handoffs, and currentness checks, not resume/replay or broader
+  hidden mutation.
 
 ## Review Questions
 
@@ -145,5 +156,5 @@ allows command replay or resume without fresh status/driver checks.
    golden, release, patch, and polish boundaries?
 3. Are the child issues vertical enough to be implemented and verified
    independently?
-4. Does the roadmap avoid expanding auto-patch before stop/resume UX is
+4. Does the roadmap avoid expanding auto-patch before stop/continuation UX is
    trustworthy?

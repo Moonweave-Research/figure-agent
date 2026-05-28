@@ -30,8 +30,9 @@ Make guided autonomy evidence-driven and boundary-safe:
 1. prove which real fixture states still confuse operators;
 2. make boundary stops mechanically understandable when evidence justifies it;
 3. harden any source-mutating path before exposing it more prominently;
-4. add runner journals or resume behavior only if earlier evidence proves they
-   are safer than rerunning `/fig_drive`.
+4. add runner journals only as non-authoritative evidence, and add resume
+   behavior only if earlier evidence proves it safer than rerunning
+   `/fig_drive`.
 
 The system should feel autonomous in low-judgment mechanical steps and
 deliberately non-autonomous at host, human, source-patch, SVG-polish,
@@ -73,7 +74,10 @@ review-mode `/fig_run` would execute zero steps across the eight spec-backed
 fixtures because all sampled fixtures stopped at host or closeout boundaries.
 It also found no live patch/pending-closeout shape and no positive SVG-polish
 route. This makes 70C the strongest next implementation candidate; 70B is
-limited to non-patch explanatory handoff if pursued; 70D/70E remain deferred.
+limited to non-patch explanatory handoff if pursued; at that point, 70D/70E
+were deferred.
+Later slices kept 70D to non-authoritative evidence journals and 70E to
+docs-only resume deferral rather than command replay.
 
 Current 70C implementation:
 `docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` hardens the
@@ -158,13 +162,22 @@ No `--resume` behavior should be implemented in 70D.
 
 ## Safe Resume And UX Closeout
 
-70E decides whether resume is worth implementing after 70A/70B/70C and the
-conditional 70D are complete.
+70E is implemented as a docs-only closeout with resume deferred. A
+`.scratch/fig-run-runs/` journal can explain what happened, but it is stale
+evidence the moment source, critique, adjudication, export, accepted/golden, or
+publication state changes. No shipped command reads a fig-run journal to decide
+the next action. This does not ban other live evidence readers such as
+`/fig_drive` reading fresh `.scratch/fig-loop-runs/` checkpoints.
 
-If resume ships, it must re-run live status and driver selection. If resume is
-deferred, docs must explain the manual continuation path instead. In either
-case, 70E reconciles current-truth docs so operators can distinguish automatic,
-semi-automatic, and manual boundaries.
+Manual continuation path:
+
+1. Read the last `stop.md` or stdout payload only as context.
+2. Rerun live `/fig_status <name>` or `/fig_drive <name> --mode <mode> --goal
+   "<goal>" --dry-run`.
+3. Run `/fig_run <name> --mode <mode> --goal "<goal>" --execute` only if the
+   fresh driver selects an allowlisted shell action.
+
+This keeps automatic, semi-automatic, and manual boundaries explicit.
 
 ## Vertical Slices
 
@@ -191,8 +204,8 @@ continuity needs it. No replay or resume behavior.
 
 ### 70E: Safe Resume And Operator UX Closeout
 
-Make the resume go/no-go decision and close docs against actual behavior. This
-may be docs-only if 70A or later evidence rejects resume/handoff work.
+Make the resume go/no-go decision and close docs against actual behavior.
+Implemented as docs-only: resume is deferred.
 
 ## Safety Boundaries
 

@@ -155,6 +155,10 @@ change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
 checkpoint before a human or later automation decides what to patch.
 
+If `/fig_run` previously recorded a `.scratch/fig-run-runs/` journal, treat it
+only as context. `/fig_loop` state still comes from live status and its own
+`.scratch/fig-loop-runs/` checkpoint records.
+
 ## Final-Artifact Surfacing
 
 When a fixture declares `spec.yaml.final_artifact.kind: polished_svg`,

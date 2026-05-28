@@ -67,6 +67,10 @@ command. `/fig_run` is bounded: it executes compile, missing adjudication
 scaffold, verify-only loop checkpoint commands, and non-golden draft export,
 then stops at host critique, existing adjudication repair, patch, polish, human,
 accepted, tracked-golden, force-golden, and release boundaries.
+It records non-authoritative `.scratch/fig-run-runs/` evidence in execute mode.
+There is no resume command; after any interruption, inspect the prior journal
+only as context, then rerun live `/fig_status` or `/fig_drive` before using
+`/fig_run --execute` again.
 
 Use modes mentally:
 
@@ -125,6 +129,8 @@ polish backport, or actions the current mode forbids.
                          read-only next-action selector
 /fig_run <name> --mode <mode> --goal "<goal>" --execute
                          bounded executor for safe mechanical steps; stops at gates
+                         and writes non-authoritative .scratch/fig-run-runs/
+                         evidence; no resume/replay command exists
 ```
 
 Agent rule: when `coordinate_hints.yaml` exists, read it before authoring or

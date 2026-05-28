@@ -104,6 +104,11 @@ not permission to execute stale state; rerun live `/fig_status` and
 If recording fails after a run, the CLI still prints the public run payload with
 `journal_error` instead of hiding the result behind a traceback.
 
+There is no `--resume` or `--resume-latest` flag. To continue after an
+interruption, inspect `stop.md` only as context, then rerun live `/fig_status`
+or `/fig_drive --dry-run`. Use `/fig_run --execute` again only for the fresh
+driver-selected action.
+
 ### `boundary_handoff`
 
 When the runner stops before `complete`, it emits an additive

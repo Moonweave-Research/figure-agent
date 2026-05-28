@@ -18,6 +18,10 @@ critiques, patches, polishes, accepts, stages, or commits. It reads
 checkpoint under `.scratch/fig-loop-runs/`, and emits one advisory action as
 JSON.
 
+`/fig_drive` does not read `.scratch/fig-run-runs/` journals. Those records are
+operator evidence only; the driver always recomputes from live status, closeout,
+and current loop evidence.
+
 `/fig_drive` is the recommender. `/fig_loop` is the verify-only checkpoint
 that records evidence after the user/outer agent acts on a recommendation.
 Neither command executes the recommendation — the driver never runs any
