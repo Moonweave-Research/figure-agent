@@ -1,6 +1,6 @@
 # Issue 66: Safe Workflow Runner
 
-Status: completed
+Status: completed; superseded by Issue 67 for `run_fig_loop` allowlist expansion
 
 Completed in: Safe Workflow Runner implementation branch.
 
@@ -86,7 +86,8 @@ must ignore unknown fields.
 
 - A command is executable only if the driver action is allowlisted and the
   command is a shell command, not a slash command.
-- Issue 66A allowlist: `run_compile` only.
+- Issue 66A allowlist: `run_compile` only. Issue 67 expands this to include
+  `run_fig_loop`.
 - `run_critique` always stops because it requires host vision.
 - `run_adjudicate`, `run_fig_loop`, and `run_export` stop in Issue 66A even
   when they are shell commands, because they mutate review/export state and need

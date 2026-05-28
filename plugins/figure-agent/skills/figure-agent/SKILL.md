@@ -63,9 +63,9 @@ Canonical next-action order:
 
 If the user asks to proceed autonomously, use `/fig_run <name> --mode <mode>
 --goal "<goal>" --execute` rather than manually copy-pasting each safe driver
-command. `/fig_run` is bounded: Issue 66A only executes compile, then stops at
-host critique, adjudication, loop, export, patch, polish, human, accepted, and
-golden boundaries.
+command. `/fig_run` is bounded: it executes compile and verify-only loop
+checkpoint commands, then stops at host critique, adjudication, export, patch,
+polish, human, accepted, and golden boundaries.
 
 Use modes mentally:
 

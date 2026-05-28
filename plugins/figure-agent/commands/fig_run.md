@@ -23,21 +23,24 @@ mutation.
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate anything.
 
-## Issue 66A Execution Policy
+## Execution Policy
 
-The only executable action is:
+The executable actions are allowed only when the driver attaches no
+`stop_boundary`:
 
 - `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
+- `run_fig_loop` -> `uv run python3 scripts/fig_loop.py <name> --goal ... --json`
 
 The runner intentionally stops on these actions even when they have shell
 commands:
 
 - `run_adjudicate`
-- `run_fig_loop`
 - `run_export`
 
 Those commands mutate review/export evidence and need separate policy hardening
-before they can be safely automated. The runner always stops on `/fig_critique`
+before they can be safely automated. `/fig_loop` is allowed because it is
+verify-only and writes bounded run evidence under `.scratch/fig-loop-runs/`.
+The runner always stops on `/fig_critique`
 because that is a host-vision operation, not a shell command.
 
 ## Output JSON contract
@@ -52,7 +55,7 @@ because that is a host-vision operation, not a shell command.
 | `goal` | string | passthrough goal |
 | `execute` | bool | whether allowed shell commands were executed |
 | `max_steps` | int | safety cap |
-| `executable_actions` | list | current allowlist; Issue 66A is `run_compile` only |
+| `executable_actions` | list | current allowlist: `run_compile`, `run_fig_loop` |
 | `steps` | list | driver action plus execution result for each iteration |
 | `final_action` | string | last driver action |
 | `final_safe_command` | string or null | last command selected by driver |

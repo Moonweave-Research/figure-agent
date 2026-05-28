@@ -25,7 +25,12 @@ import fig_driver  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.run.v1"
 DEFAULT_MAX_STEPS = 5
-EXECUTABLE_ACTIONS = frozenset({fig_driver.ACTION_RUN_COMPILE})
+EXECUTABLE_ACTIONS = frozenset(
+    {
+        fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_FIG_LOOP,
+    }
+)
 
 STOP_PLAN_ONLY = "plan_only"
 STOP_HOST_BOUNDARY = "host_boundary"
@@ -88,6 +93,7 @@ def _is_executable_action(summary: dict[str, Any]) -> bool:
     return (
         isinstance(action, str)
         and action in EXECUTABLE_ACTIONS
+        and summary.get("stop_boundary") is None
         and isinstance(command, str)
         and command.strip() != ""
         and not _is_slash_command(command)

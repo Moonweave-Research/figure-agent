@@ -10,8 +10,8 @@ deterministic shell work and stops at the next boundary that requires host,
 human, review-state, export, release, patch, polish, accepted, or golden
 authority.
 
-Issue 66A intentionally allows only `run_compile`. This removes the most
-repetitive safe copy-paste step without weakening the existing gate model.
+Issue 66A intentionally allowed only `run_compile`. Issue 67 later expands the
+same bounded model to verify-only `/fig_loop` checkpoints.
 
 ## Files Changed
 
@@ -28,8 +28,8 @@ repetitive safe copy-paste step without weakening the existing gate model.
 - `--execute` runs `run_compile` only.
 - Re-queries `/fig_drive` after each executed command.
 - Stops on `/fig_critique` host boundary.
-- Stops on non-allowlisted shell actions: `run_adjudicate`, `run_fig_loop`,
-  and `run_export`.
+- Stops on non-allowlisted shell actions such as `run_adjudicate` and
+  `run_export`.
 - Stops on command failure and records stdout/stderr tails.
 - Stops on `--max-steps` if state does not advance.
 - Emits `figure-agent.run.v1` JSON evidence.
