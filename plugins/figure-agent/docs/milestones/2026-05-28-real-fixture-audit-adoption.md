@@ -24,16 +24,16 @@ The contract now lives at:
 
 ## Current Matrix
 
-| Fixture | Reference | Text Boundary | Label Path | Aesthetic Intent | Paper Context | Journal Playbook | Status |
-|---|---:|---:|---:|---:|---:|---:|---|
-| `fig1_overview_v2_pair_001_vault` | yes | 6 | 2 | yes | no | no | adopted_high_risk |
-| `smoke_trap_demo` | no | 0 | 3 | no | no | no | adopted_low_noise_smoke |
-| `fig1_overview_v2` | yes | 0 | 0 | no | no | no | deferred_reference_only |
-| `golden_trap_depth_picture` | yes | 0 | 0 | no | no | no | deferred_reference_only |
-| `n3_trial_01_trap_depth` | yes | 0 | 0 | no | no | no | deferred_reference_only |
-| `n3_trial_02_actuation_sequence` | yes | 0 | 0 | no | no | no | deferred_reference_only |
-| `fig3_trapping_concept` | no | 0 | 0 | no | no | no | not_applicable_no_reference |
-| `fig5_floating_clip_mechanism` | no | 0 | 0 | no | no | no | deferred_geometry_needed |
+| Fixture | Reference | Text Boundary | Label Path | Aesthetic Intent | Critique Reference Pack | Paper Context | Journal Playbook | Status |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `fig1_overview_v2_pair_001_vault` | yes | 6 | 2 | yes | no | no | no | adopted_high_risk |
+| `smoke_trap_demo` | no | 0 | 3 | no | no | no | no | adopted_low_noise_smoke |
+| `fig1_overview_v2` | yes | 0 | 0 | no | no | no | no | deferred_reference_only |
+| `golden_trap_depth_picture` | yes | 0 | 0 | no | no | no | no | deferred_reference_only |
+| `n3_trial_01_trap_depth` | yes | 0 | 0 | no | no | no | no | deferred_reference_only |
+| `n3_trial_02_actuation_sequence` | yes | 0 | 0 | no | yes | no | no | deferred_reference_only |
+| `fig3_trapping_concept` | no | 0 | 0 | no | no | no | no | not_applicable_no_reference |
+| `fig5_floating_clip_mechanism` | no | 0 | 0 | no | no | no | no | deferred_geometry_needed |
 
 ## Adopted Fixtures
 
@@ -74,6 +74,12 @@ as complete. They are explicitly deferred:
 The next adoption pass should add geometry only after inspecting each fixture's
 actual row boxes, label boundaries, semantic reference lines, and curve/label
 near-miss hazards. Copying coordinates from another fixture is forbidden.
+
+`n3_trial_02_actuation_sequence` now carries a fixture-local
+`critique_reference_pack.yaml` for reference-learning dogfood. That improves the
+host critique prompt, but it does not by itself adopt deterministic
+text-boundary or label-path geometry checks, so the fixture remains
+`deferred_reference_only`.
 
 `fig5_floating_clip_mechanism` has panel boxes but no reference grounding. It
 needs explicit geometry review before deterministic checks should be added.
