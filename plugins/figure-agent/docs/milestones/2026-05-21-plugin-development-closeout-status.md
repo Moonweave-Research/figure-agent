@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-28 KST
-**Status:** current main truth through v0.8.1 / Issue 63
+**Date:** 2026-05-29 KST
+**Status:** current main truth through v0.8.2 / Issue 64
 
 ## Bottom Line
 
@@ -17,7 +17,10 @@ next-action summary, SVG-polish promotion dogfood evidence, opt-in journal
 style-pack catalog support, and optional external vision review evidence.
 The v0.8.1 patch adds opt-in reference-learning contracts, non-model
 reference-aesthetic metric signals, loop-basin detection, and crop anomaly
-accountability for reference-learning critiques.
+accountability for reference-learning critiques. The v0.8.2 patch adds Issue 64
+closeout hardening: latest v1.13 critique summaries surface in `/fig_loop`, and
+routine generated export SVGs no longer churn critique freshness for
+non-polished fixtures.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -26,7 +29,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 63 / v0.8.1 release sync:
+Most recent local full verification after Issue 64 / v0.8.2 release sync:
 
 ```bash
 uv run pytest -q
@@ -39,7 +42,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1371 passed, 1 skipped, 1 xfailed`.
+- Full test suite: `1376 passed, 1 skipped, 1 xfailed, 6 warnings`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
@@ -116,6 +119,37 @@ Results:
   reference-learning contracts, deterministic reference-aesthetic metrics,
   status/loop/critique surfacing, repeated-basin detection, and v1.13 crop
   anomaly accountability without converting references into copy targets.
+- Loop-summary and export closeout UX: Issue 64 adds v1.13 summary surfacing to
+  `/fig_loop`, keeps generated export SVGs out of routine non-polished critique
+  freshness, and clarifies pre-export critique versus optional final-review
+  wording.
+
+## Current Fixture Sweep
+
+Read-only status sweep on 2026-05-29:
+
+```bash
+uv run python3 scripts/status.py
+```
+
+Result: the plugin code is current, but the checked-in example fixture states are
+not all release-ready. Most fixtures report `ready: false`; representative
+blockers include `critique_stale`, `stale_export`, `missing_briefing`,
+`coordinate_hints_missing`, and `reference_aesthetic_metrics_warning`.
+
+Examples that currently require operator action before release-style use:
+
+- `fig1_overview_v2_pair_001_vault`: accepted/golden fixture with
+  `critique_stale` and `stale_export`; driver routes first to `/fig_critique`.
+- `n3_trial_02_actuation_sequence`: render/export fresh, but
+  `critique_stale` plus `reference_aesthetic_metrics_warning`; driver routes
+  first to `/fig_critique`.
+- `golden_trap_depth_picture`: tracked golden state with stale critique/export
+  and human acceptance still required.
+
+This is expected for a working fixture corpus. It is not a plugin-code blocker,
+but future dogfood should begin from `/fig_status <name>` or `/fig_drive <name>
+--mode review --goal "<goal>" --dry-run` rather than assuming examples are fresh.
 
 ## Not A Remaining Blocker
 
@@ -136,18 +170,22 @@ Results:
 These are useful future improvements, but they are not required before using
 the plugin for real figure work.
 
-1. **Fixture adoption expansion.** More real fixtures should declare
+1. **Fixture state cleanup.** Refresh stale critiques/exports on the fixtures
+   currently under active use, starting with accepted/golden or publication-bound
+   fixtures. Do not force accepted/golden roll-forward without explicit human
+   approval.
+2. **Fixture adoption expansion.** More real fixtures should declare
    `text_boundary_layout` and/or `label_path_proximity_checks` when they contain
    row boxes, panel rules, internal display rectangles, reference lines,
    semantic curves, or other explicit label-boundary hazards. Current adoption:
    `fig1_overview_v2_pair_001_vault` and `smoke_trap_demo`.
-2. **Paper-wide aesthetic context.** The plugin is strong at single-figure
+3. **Paper-wide aesthetic context.** The plugin is strong at single-figure
    audit; it still needs a bounded way to carry visual language, restraint,
    typography, and palette intent across multiple figures in one manuscript.
-3. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
+4. **Audit UX compression.** `/fig_status`, `/fig_drive`, and `/fig_closeout`
    now expose a single next-action summary, but the human-readable output can
    still be made denser and easier to scan without weakening contracts.
-4. **Positive SVG-polish promotion evidence.** The safe negative route is
+5. **Positive SVG-polish promotion evidence.** The safe negative route is
    documented; the next useful evidence is a fresh fixture that legitimately
    reaches `ready_for_svg_polish`.
 
@@ -166,7 +204,8 @@ For new real figure work, start with:
    release/export work.
 
 At this point, the core plugin release is usable. If continuing plugin
-hardening, start with the real fixture state sweep. If not continuing plugin
-hardening, the next live work is fixture-specific: refresh stale
+hardening, start with fixture state cleanup/adoption rather than new kernel
+features. If not continuing plugin hardening, the next live work is
+fixture-specific: refresh stale
 renders/critiques/exports, then resolve any human publication provenance gate
 for the target figure.

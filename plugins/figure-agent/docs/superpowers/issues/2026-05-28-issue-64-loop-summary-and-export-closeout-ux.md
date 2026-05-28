@@ -1,6 +1,6 @@
 # Issue 64 - Loop Summary And Export Closeout UX
 
-Status: implemented on branch `codex/issue64-loop-closeout-ux`
+Status: completed in `main` commit `3985229` and released as v0.8.2
 
 Depends on: Issue 63 reference-learning and aesthetic metrics roadmap
 

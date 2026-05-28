@@ -14,7 +14,8 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.8.1"
+EXPECTED_RELEASE_VERSION = "0.8.2"
+EXPECTED_RELEASE_DATE = "2026-05-29"
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -161,7 +162,7 @@ def test_v0_8_changelog_covers_issues_57_to_61() -> None:
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
     top_entry = changelog.partition("## [0.7.1]")[0]
 
-    assert f"## [{EXPECTED_RELEASE_VERSION}] - 2026-05-28" in top_entry
+    assert f"## [{EXPECTED_RELEASE_VERSION}] - {EXPECTED_RELEASE_DATE}" in top_entry
     for required in [
         "Issue 57",
         "Issue 58",
@@ -194,7 +195,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     ).read_text()
 
     assert f"current main truth through v{plugin['version']}" in closeout
-    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 63" in closeout
+    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 64" in closeout
     assert "after Issue 33 / PR #47" not in closeout
     assert "start with Issue 34" not in closeout
     assert "Issue 48" in closeout
@@ -210,6 +211,7 @@ def test_v0_8_issue_statuses_are_mainline_ready() -> None:
         "Issue 60": "2026-05-27-issue-60-style-pack-catalog.md",
         "Issue 61": "2026-05-27-issue-61-external-second-opinion-vision.md",
         "Issue 62": "2026-05-27-issue-62-v0-8-release-hardening.md",
+        "Issue 64": "2026-05-28-issue-64-loop-summary-and-export-closeout-ux.md",
     }
 
     for issue_name, file_name in issue_files.items():

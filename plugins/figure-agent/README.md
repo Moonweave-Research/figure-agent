@@ -83,7 +83,7 @@ polish only when status or the driver explicitly routes there.
 
 ---
 
-## Current state (v0.8.1)
+## Current state (v0.8.2)
 
 | Area | What's working |
 |---|---|
@@ -92,7 +92,7 @@ polish only when status or the driver explicitly routes there.
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
-| **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. |
+| **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. Routine generated export SVGs do not make critiques stale unless the fixture opts into polished-SVG/final-artifact evidence. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
 | **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
 | **Style packs** | `docs/style-pack-catalog.md` and the opt-in journal style-pack catalog provide reusable Nature Communications, Nature Materials, Science, and graphical-abstract restraint/playbook anchors without applying them globally. |

@@ -2,6 +2,30 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.8.2] - 2026-05-29
+
+Patch release for Issue 64 loop-summary and generated-export closeout UX after
+v0.8.1.
+
+### Fixed
+
+- `/fig_loop` assessment summaries now surface latest v1.13 critique evidence,
+  including journal-grade assessment, top-tier audit, editorial art direction,
+  crop audit, reference calibration, aesthetic lever audit, and journal
+  art-direction playbook summaries when present.
+- Routine generated `exports/<name>.svg` files no longer churn
+  `critique_input_hash` for non-polished fixtures. Polished-SVG opt-in and
+  existing polish-layer evidence still include the generated SVG in final
+  artifact freshness.
+- `/fig_status` and `/fig_export` wording now distinguishes reference-grounded
+  pre-export critique from optional post-export final-review critique.
+
+### Guardrails
+
+- No source drawing, hidden auto-patching, accepted/golden mutation,
+  publication-gate bypass, or automatic SVG polish editing is introduced by
+  this patch.
+
 ## [0.8.1] - 2026-05-28
 
 Patch release for Issue 63 reference-learning and non-model aesthetic audit
