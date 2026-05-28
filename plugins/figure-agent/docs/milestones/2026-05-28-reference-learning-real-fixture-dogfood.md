@@ -1,6 +1,6 @@
 # Issue 63 Real-Fixture Dogfood
 
-Status: pass with host-critique follow-up pending
+Status: pass with host-critique completed
 
 Fixture: `n3_trial_02_actuation_sequence`
 
@@ -164,11 +164,90 @@ The fixture proves the intended v0.8.1 behavior:
 - The next action remains critique refresh, which is the correct human/host LLM
   handoff point.
 
+## Host Critique Follow-Up
+
+Host `/fig_critique n3_trial_02_actuation_sequence` was run after the
+reference-learning pack was added.
+
+Observed critique result:
+
+- schema: `figure-agent.critique.v1.13`
+- verdict: `revise`
+- benchmark: `solid_manuscript`
+- advisory score: `78/100`
+- next bottleneck: `label_semantics`
+- reference-learning verdict: useful; the reference acted as a bounded
+  style-class/context anchor, not a topology copy target.
+- visual-clash accounting: 9/9 candidates accounted.
+- real visual-clash defect: `VC008`, linked to `C001`.
+- false-positive visual-clash candidates: `VC001` through `VC007`, plus `VC009`.
+- source `.tex`, accepted/golden state, exports, and SVG polish files: unchanged.
+
+Findings:
+
+- `C001` MAJOR: P3 `prev.` label is occluded by the solid strip and no longer
+  clearly anchors the ghost outline.
+- `C002` MINOR: P3 lower-left recovery/ghost/label/strip cluster is crowded.
+- `C005` MINOR: teal is reused for both active Coulomb force and passive
+  recovery motion; recovery should be style-separated if patched.
+- `C003` NIT: P1 red arrows render as restrained rose, accepted as current
+  Style-Lock behavior rather than a physics defect.
+- `C004` NIT: rounded strip cap appears knob-like over the clamp because of
+  draw order.
+
+Post-critique validation:
+
+```bash
+uv run python scripts/critique_lint.py n3_trial_02_actuation_sequence
+```
+
+Result: `OK: critique lint passed for n3_trial_02_actuation_sequence`
+
+Adjudication refresh:
+
+```bash
+uv run python scripts/critique_adjudication.py scaffold n3_trial_02_actuation_sequence --force
+```
+
+Result: `critique_adjudication.yaml` refreshed against the new critique hash.
+
+Loop routing:
+
+```bash
+uv run python scripts/fig_loop.py n3_trial_02_actuation_sequence \
+  --goal 'Issue 63 reference-learning dogfood host critique' \
+  --json
+```
+
+Observed:
+
+- `audit_evidence.evaluation_state: passed`
+- visual-clash accounting: `candidate_count: 9`, `accounted_count: 9`,
+  `missing_refs: []`
+- crop audit: `required_count: 15`, `defect: 2`, `no_defect: 13`,
+  `uncertain: 0`
+- `reference_aesthetic_metrics_summary.evaluation_state: warning`
+- warning metric remains `dominant_hue_family_count_delta`, value `4.0`,
+  threshold `2.0`
+- `final_stop_reason: human_gate_required`
+- `escalation_level: human_review_required`
+- `next_action_summary.action: human_gate_stop`
+- reason: `human review required for C001`
+
+This is the desired safety behavior: the reference-learning pack and advisory
+score do not bypass a MAJOR label-semantics finding, and the loop stops for
+human review before patch selection.
+
+One integration observation remains: `critique.md` includes
+`journal_grade_assessment`, but this particular `fig_loop.py` JSON record
+surfaced `journal_grade_assessment: null`. This did not affect the blocking
+route, but it is worth a narrow follow-up if score visibility is expected for
+v1.13 critiques.
+
 ## Remaining Follow-Up
 
-Run host `/fig_critique n3_trial_02_actuation_sequence` in Claude after restart
-so the v1.13 critique can inspect the reference-learning contract, the warning
-metric, high-zoom crops, and unintended-visible-anomaly fields.
+Patch selection remains intentionally human-gated because `C001` is MAJOR and
+the scaffolded adjudication marks all five findings as `needs_human`.
 
 Do not treat the warning metric as a defect by itself. It is a suspicion signal:
 the host critique should decide whether the hue-family count difference is an

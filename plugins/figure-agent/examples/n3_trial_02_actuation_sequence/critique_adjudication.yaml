@@ -1,4 +1,29 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: n3_trial_02_actuation_sequence
-source_critique_hash: sha256:f9c9027e05f7d016b453e4d7d68cccb93e54331153e3c2807911528434b898eb
-decisions: []
+source_critique_hash: sha256:2af085d76564154e8ca5350883ae8b53e68ac48830547f56a8fd8bd84178ed25
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C001.
+- finding_id: C002
+  decision: needs_human
+  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C002.
+- finding_id: C003
+  decision: needs_human
+  reason: Review C003 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C003.
+- finding_id: C004
+  decision: needs_human
+  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C004.
+- finding_id: C005
+  decision: needs_human
+  reason: Review C005 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C005.
