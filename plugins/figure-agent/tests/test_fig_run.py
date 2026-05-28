@@ -154,6 +154,20 @@ def test_execute_stops_immediately_at_host_critique(
                 safe_command="/fig_critique runner_demo",
                 stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
             )
+            | {
+                "next_action_summary": {
+                    "action": fig_driver.ACTION_RUN_CRITIQUE,
+                    "safe_command": "/fig_critique runner_demo",
+                    "allowed_scope": [
+                        "examples/runner_demo/critique.md",
+                        "examples/runner_demo/build/audit_crops/",
+                    ],
+                    "forbidden_scope": ["hidden source edits"],
+                    "evidence_refs": [
+                        f"driver.stop_boundary:{fig_driver.STOP_HOST_LLM_CRITIQUE}"
+                    ],
+                }
+            }
         ],
     )
     commands: list[str] = []
@@ -176,6 +190,18 @@ def test_execute_stops_immediately_at_host_critique(
     assert payload["executed_count"] == 0
     assert payload["final_stop_reason"] == "host_boundary"
     assert payload["steps"][0]["would_execute"] is False
+    handoff = payload["boundary_handoff"]
+    assert handoff["schema"] == "figure-agent.boundary-handoff.v1"
+    assert handoff["action"] == fig_driver.ACTION_RUN_CRITIQUE
+    assert handoff["stop_boundary"] == fig_driver.STOP_HOST_LLM_CRITIQUE
+    assert handoff["required_actor"] == "host_llm"
+    assert handoff["allowed_scope"] == [
+        "examples/runner_demo/critique.md",
+        "examples/runner_demo/build/audit_crops/",
+    ]
+    assert handoff["continuation_guidance"]["rerun_live_status_first"] is True
+    assert handoff["continuation_guidance"]["rerun_live_driver_first"] is True
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_execute_stops_at_export_without_safe_status(
@@ -253,6 +279,7 @@ def test_execute_runs_draft_export_then_requeries(
     assert payload["final_stop_reason"] == "complete"
     assert payload["steps"][0]["executed"] is True
     assert payload["steps"][0]["returncode"] == 0
+    assert "boundary_handoff" not in payload
 
 
 def test_export_with_stop_boundary_is_not_executed(
@@ -601,6 +628,15 @@ def test_existing_adjudication_file_blocks_auto_scaffold(
     assert payload["final_action"] == fig_driver.ACTION_RUN_ADJUDICATE
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_ADJUDICATE
+    assert handoff["closeout_checks"] == [
+        "inspect critique_adjudication.yaml",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_adjudication_scaffold_failure_stops_without_requery(
@@ -693,6 +729,11 @@ def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][1]["action"] == fig_driver.ACTION_RUN_FIG_LOOP
     assert payload["steps"][1]["executed"] is True
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "human"
+    assert handoff["action"] == fig_driver.ACTION_HUMAN_GATE_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_HUMAN_GATE
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_fig_loop_failure_stops_without_requery(
@@ -806,6 +847,11 @@ def test_command_failure_stops_without_requery(
     assert payload["final_stop_reason"] == "command_failed"
     assert payload["steps"][0]["returncode"] == 7
     assert payload["steps"][0]["stderr_tail"] == "compile failed"
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_COMPILE
+    assert handoff["closeout_checks"] == ["inspect command stderr_tail", "rerun live /fig_status"]
+    assert "compile failed" in handoff["blocking_reason"]
 
 
 def test_max_steps_exceeded_for_repeated_executable_action(
@@ -838,6 +884,153 @@ def test_max_steps_exceeded_for_repeated_executable_action(
     assert payload["executed_count"] == 2
     assert payload["final_stop_reason"] == "max_steps_exceeded"
     assert len(payload["steps"]) == 2
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_COMPILE
+    assert handoff["closeout_checks"] == ["inspect repeated action", "rerun live /fig_drive"]
+    assert "command" not in handoff["continuation_guidance"]
+
+
+def test_release_blocked_handoff_requires_release_operator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RELEASE_BLOCKED,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_FORCE_GOLDEN,
+                reason="tracked golden export requires explicit force-golden",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert handoff["required_actor"] == "release_operator"
+    assert handoff["action"] == fig_driver.ACTION_RELEASE_BLOCKED
+    assert handoff["stop_boundary"] == fig_driver.STOP_FORCE_GOLDEN
+    assert handoff["allowed_scope"] == ["read-only"]
+    assert "command" not in handoff["continuation_guidance"]
+
+
+def test_reference_missing_handoff_requires_workflow_agent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_REFERENCE_MISSING,
+                reason="reference image missing; fix spec path first",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["stop_boundary"] == fig_driver.STOP_REFERENCE_MISSING
+    assert handoff["closeout_checks"] == [
+        "fix reference path or provide reference image",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+
+
+def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+                reason="polished SVG requires semantic backport to TikZ first",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="polish",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_POLISH_HANDOFF_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_SEMANTIC_BACKPORT
+    assert handoff["closeout_checks"] == [
+        "backport semantic changes to source/spec",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+
+
+def test_patch_handoff_boundary_is_deferred_without_patch_scope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_PATCH_HANDOFF,
+                reason="single patch target exists",
+                status={"render_state": "FRESH"},
+            )
+            | {
+                "next_action_summary": {
+                    "action": fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                    "allowed_scope": ["examples/runner_demo/runner_demo.tex"],
+                    "forbidden_scope": ["accepted", "golden_contract"],
+                    "evidence_refs": ["loop.final_stop_reason:patch_target_recommended"],
+                }
+            }
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["action"] == fig_driver.ACTION_PATCH_HANDOFF_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_PATCH_HANDOFF
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["deferred_boundary"] == "patch_source_mutation_deferred_until_70c"
+    assert handoff["allowed_scope"] == ["read-only"]
+    assert handoff["forbidden_scope"] == [
+        "source mutation before patch executor currentness is verified"
+    ]
 
 
 def test_main_emits_json_plan_by_default(

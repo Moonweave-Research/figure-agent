@@ -80,6 +80,12 @@ Current 70C implementation:
 existing opt-in patch executor so it refuses stale loop checkpoints, iteration
 fixture mismatch, and pending patch closeout evidence before mutation.
 
+Current 70B implementation:
+`docs/milestones/2026-05-29-boundary-handoff-packet.md` adds an explanatory
+`boundary_handoff` object to `/fig_run` non-complete results. It derives from
+existing driver/runner evidence, omits executable resume commands, and defers
+patch/source-mutation scope.
+
 ## Boundary Handoff Contract
 
 If 70A justifies it, 70B adds a handoff packet to `/fig_run` non-complete stops.

@@ -24,6 +24,7 @@ import fig_driver  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.run.v1"
+BOUNDARY_HANDOFF_SCHEMA = "figure-agent.boundary-handoff.v1"
 DEFAULT_MAX_STEPS = 5
 EXECUTABLE_ACTIONS = frozenset(
     {
@@ -40,6 +41,7 @@ STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
+PATCH_DEFERRED = "patch_source_mutation_deferred_until_70c"
 
 
 @dataclass(frozen=True)
@@ -184,6 +186,163 @@ def _step_payload(
     }
 
 
+def _list_from_summary(summary: dict[str, Any], key: str, fallback: list[str]) -> list[str]:
+    next_action = summary.get("next_action_summary")
+    if isinstance(next_action, dict):
+        value = next_action.get(key)
+        if isinstance(value, list) and all(isinstance(item, str) for item in value):
+            return list(value)
+    return list(fallback)
+
+
+def _evidence_refs(summary: dict[str, Any], final_stop_reason: str) -> list[str]:
+    refs = _list_from_summary(summary, "evidence_refs", [])
+    if refs:
+        return refs
+    stop_boundary = summary.get("stop_boundary")
+    if isinstance(stop_boundary, str) and stop_boundary:
+        return [f"driver.stop_boundary:{stop_boundary}"]
+    action = summary.get("action")
+    if isinstance(action, str) and action:
+        return [f"driver.action:{action}", f"runner.stop_reason:{final_stop_reason}"]
+    return [f"runner.stop_reason:{final_stop_reason}"]
+
+
+def _required_actor(summary: dict[str, Any], final_stop_reason: str) -> str:
+    action = summary.get("action")
+    stop_boundary = summary.get("stop_boundary")
+    if stop_boundary in {fig_driver.STOP_REFERENCE_MISSING, fig_driver.STOP_SEMANTIC_BACKPORT}:
+        return "workflow_agent"
+    if (
+        action == fig_driver.ACTION_RUN_CRITIQUE
+        or stop_boundary == fig_driver.STOP_HOST_LLM_CRITIQUE
+    ):
+        return "host_llm"
+    if action == fig_driver.ACTION_HUMAN_GATE_STOP or stop_boundary in {
+        fig_driver.STOP_HUMAN_GATE,
+        fig_driver.STOP_AMBIGUOUS_PATCH,
+    }:
+        return "human"
+    if action == fig_driver.ACTION_RELEASE_BLOCKED or stop_boundary in {
+        fig_driver.STOP_FORCE_GOLDEN,
+        fig_driver.STOP_ACCEPTED_OR_FINAL_READY,
+    }:
+        return "release_operator"
+    if action == fig_driver.ACTION_POLISH_HANDOFF_STOP:
+        return "svg_editor"
+    if final_stop_reason == STOP_HOST_BOUNDARY:
+        return "host_llm"
+    return "workflow_agent"
+
+
+def _blocking_reason(
+    summary: dict[str, Any],
+    final_stop_reason: str,
+    last_step: dict[str, Any] | None,
+) -> str:
+    reason = summary.get("reason")
+    if not isinstance(reason, str) or not reason:
+        reason = final_stop_reason
+    if final_stop_reason == STOP_COMMAND_FAILED and isinstance(last_step, dict):
+        stderr_tail = last_step.get("stderr_tail")
+        if isinstance(stderr_tail, str) and stderr_tail:
+            return f"{reason} command failed: {stderr_tail}"
+    return reason
+
+
+def _closeout_checks(final_stop_reason: str, summary: dict[str, Any]) -> list[str]:
+    if final_stop_reason == STOP_COMMAND_FAILED:
+        return ["inspect command stderr_tail", "rerun live /fig_status"]
+    if final_stop_reason == STOP_MAX_STEPS:
+        return ["inspect repeated action", "rerun live /fig_drive"]
+    stop_boundary = summary.get("stop_boundary")
+    if stop_boundary == fig_driver.STOP_REFERENCE_MISSING:
+        return [
+            "fix reference path or provide reference image",
+            "rerun live /fig_status",
+            "rerun live /fig_drive",
+        ]
+    if stop_boundary == fig_driver.STOP_SEMANTIC_BACKPORT:
+        return [
+            "backport semantic changes to source/spec",
+            "rerun live /fig_status",
+            "rerun live /fig_drive",
+        ]
+    action = summary.get("action")
+    if action == fig_driver.ACTION_RUN_CRITIQUE:
+        return [
+            "write or refresh critique.md",
+            "rerun live /fig_status",
+            "rerun live /fig_drive",
+        ]
+    if action == fig_driver.ACTION_RUN_ADJUDICATE:
+        return [
+            "inspect critique_adjudication.yaml",
+            "rerun live /fig_status",
+            "rerun live /fig_drive",
+        ]
+    if action == fig_driver.ACTION_RUN_EXPORT:
+        return ["complete closeout/export step", "rerun live /fig_status"]
+    if action == fig_driver.ACTION_RUN_FIG_LOOP:
+        return ["complete closeout loop rerun", "rerun live /fig_drive"]
+    if action == fig_driver.ACTION_RELEASE_BLOCKED:
+        return ["obtain explicit release/golden approval", "rerun live /fig_drive"]
+    if action == fig_driver.ACTION_HUMAN_GATE_STOP:
+        return ["record human decision", "rerun live /fig_loop or /fig_drive"]
+    return ["rerun live /fig_status", "rerun live /fig_drive"]
+
+
+def _boundary_handoff(
+    *,
+    summary: dict[str, Any],
+    final_stop_reason: str,
+    last_step: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if final_stop_reason == STOP_COMPLETE:
+        return None
+    action = summary.get("action")
+    stop_boundary = summary.get("stop_boundary")
+    handoff = {
+        "schema": BOUNDARY_HANDOFF_SCHEMA,
+        "action": action,
+        "stop_boundary": stop_boundary,
+        "required_actor": _required_actor(summary, final_stop_reason),
+        "blocking_reason": _blocking_reason(summary, final_stop_reason, last_step),
+        "evidence_refs": _evidence_refs(summary, final_stop_reason),
+        "allowed_scope": _list_from_summary(summary, "allowed_scope", ["read-only"]),
+        "forbidden_scope": _list_from_summary(
+            summary,
+            "forbidden_scope",
+            [
+                "hidden source edits",
+                "accepted/golden state without explicit approval",
+                "unrelated examples",
+            ],
+        ),
+        "closeout_checks": _closeout_checks(final_stop_reason, summary),
+        "continuation_guidance": {
+            "rerun_live_status_first": True,
+            "rerun_live_driver_first": True,
+            "note": "Do not replay this handoff; rerun live status and driver state first.",
+        },
+    }
+    if action == fig_driver.ACTION_PATCH_HANDOFF_STOP or stop_boundary in {
+        fig_driver.STOP_PATCH_HANDOFF,
+        fig_driver.STOP_AMBIGUOUS_PATCH,
+    }:
+        handoff.update(
+            {
+                "required_actor": "workflow_agent",
+                "deferred_boundary": PATCH_DEFERRED,
+                "allowed_scope": ["read-only"],
+                "forbidden_scope": [
+                    "source mutation before patch executor currentness is verified"
+                ],
+            }
+        )
+    return handoff
+
+
 def _result_payload(
     *,
     name: str,
@@ -196,7 +355,7 @@ def _result_payload(
     final_stop_reason: str,
     executed_count: int,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "schema": SCHEMA,
         "fixture": name,
         "mode": mode,
@@ -211,6 +370,14 @@ def _result_payload(
         "final_stop_reason": final_stop_reason,
         "executed_count": executed_count,
     }
+    handoff = _boundary_handoff(
+        summary=final_summary,
+        final_stop_reason=final_stop_reason,
+        last_step=steps[-1] if steps else None,
+    )
+    if handoff is not None:
+        payload["boundary_handoff"] = handoff
+    return payload
 
 
 def run_workflow(

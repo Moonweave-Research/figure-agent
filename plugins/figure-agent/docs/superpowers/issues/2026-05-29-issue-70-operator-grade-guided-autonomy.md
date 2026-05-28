@@ -103,6 +103,12 @@ stale loop checkpoint refusal, iteration fixture mismatch refusal, and pending
 patch closeout refusal for the existing opt-in patch executor. This still does
 not expose patch execution through `/fig_run`.
 
+70B result:
+`docs/milestones/2026-05-29-boundary-handoff-packet.md` implements an additive
+`boundary_handoff` object for `/fig_run` non-complete stops. The packet is
+explanatory only: no executable resume command, no patch edit scope leakage,
+and no expansion of the runner allowlist.
+
 ## Out Of Scope For Issue 70
 
 - Hidden source editing.

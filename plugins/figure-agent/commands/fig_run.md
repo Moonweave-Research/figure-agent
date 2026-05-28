@@ -65,11 +65,42 @@ because that is a host-vision operation, not a shell command.
 | `final_stop_boundary` | string or null | last driver stop boundary |
 | `final_stop_reason` | string | runner reason for stopping |
 | `executed_count` | int | number of shell commands actually run |
+| `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
 
 Step entries include the embedded `/fig_drive` JSON under `driver` so an outer
 agent can inspect the exact status, blocker, and next-action evidence used for
 the decision. A successful executed step may have `stop_reason: null`; the
 runner then re-queries the driver for the next action.
+
+### `boundary_handoff`
+
+When the runner stops before `complete`, it emits an additive
+`schema: figure-agent.boundary-handoff.v1` object. This object is a compact
+explanation of the stop, not a second router and not permission to bypass a
+boundary.
+
+Fields:
+
+| Field | Notes |
+|---|---|
+| `action` | copied from the final `/fig_drive` action |
+| `stop_boundary` | copied from the final `/fig_drive` stop boundary |
+| `required_actor` | one of `host_llm`, `human`, `svg_editor`, `release_operator`, `workflow_agent` |
+| `blocking_reason` | compact driver/runner reason; command failures include `stderr_tail` |
+| `evidence_refs` | copied from `next_action_summary` or fallback driver/runner evidence |
+| `allowed_scope` | copied from `next_action_summary`, except deferred patch/source boundaries |
+| `forbidden_scope` | copied from `next_action_summary`, except deferred patch/source boundaries |
+| `closeout_checks` | checks to perform after the required actor acts |
+| `continuation_guidance` | always says to rerun live status and driver state first |
+
+`boundary_handoff.continuation_guidance` intentionally does not contain an
+executable resume command. Resume/replay behavior is out of scope for
+`/fig_run`.
+
+Patch/source-mutation boundaries are explicitly deferred. If the final driver
+action is `patch_handoff_stop`, the handoff reports
+`deferred_boundary: patch_source_mutation_deferred_until_70c`, uses
+`allowed_scope: ["read-only"]`, and does not surface patch edit scope.
 
 ## Stop Reasons
 

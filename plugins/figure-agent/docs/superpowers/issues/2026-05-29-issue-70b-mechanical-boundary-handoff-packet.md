@@ -1,6 +1,6 @@
 # Issue 70B: Mechanical Boundary Handoff Packet
 
-Status: proposed
+Status: implemented
 
 Depends on: Issue 70A guided autonomy readiness matrix
 
