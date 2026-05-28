@@ -16,6 +16,7 @@ from inputs import parse_spec
 from next_action_summary import status_next_action_summary
 from publication_gate import publication_gate_summary
 from quality_manifest import critique_hash_freshness, critique_manifest_paths
+from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import (
     compute_reference_input_failures,
     declared_figure_reference_path,
@@ -289,6 +290,17 @@ def _with_status_explanation(result: dict) -> dict:
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
+    metrics_summary = reference_aesthetic_metrics_summary(example_dir)
+    if metrics_summary is not None:
+        state = metrics_summary.get("evaluation_state", "invalid")
+        result["reference_aesthetic_metrics"] = metrics_summary
+        result.setdefault("checks", []).append(("reference_aesthetic_metrics", state))
+        if state in {"missing", "stale", "invalid"}:
+            result.setdefault("notes", []).append(f"reference_aesthetic_metrics_{state}")
+        elif state == "warning":
+            result.setdefault("notes", []).append("reference_aesthetic_metrics_warning")
+        elif state == "severe_divergence":
+            result.setdefault("notes", []).append("reference_aesthetic_metrics_severe")
     return _with_status_explanation(result)
 
 

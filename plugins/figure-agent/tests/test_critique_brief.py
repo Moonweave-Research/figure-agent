@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import critique_brief  # noqa: E402
 from critique_brief import generate_for, main  # noqa: E402
+from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
 from svg_polish_delta import build_svg_polish_delta_pack  # noqa: E402
 from svg_polish_recipe import (  # noqa: E402
     SVG_POLISH_RECIPE_RELATIVE_PATH,
@@ -1359,6 +1360,60 @@ reference_learning:
         "override physics story"
     ) in brief
     assert "Use as a journal-tone anchor, not a content authority." in brief
+
+
+def test_critique_brief_includes_reference_aesthetic_metrics_summary(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    reference_dir = example_dir / "reference"
+    reference_dir.mkdir()
+    Image.new("RGB", (120, 80), "black").save(reference_dir / "example.png")
+    (example_dir / "critique_reference_pack.yaml").write_text(
+        """
+schema: figure-agent.critique-reference-pack.v1
+fixture: review_demo
+target_journal: Nature Materials
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: reference/example.png
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: compact journal-grade hierarchy
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: generic clip-art apparatus boxes
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Does this read as a journal mechanism figure?
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - style_anchor
+      allowed_transfer:
+        - restrained palette
+      forbidden_transfer:
+        - copy component topology
+      rationale: Use as a journal-tone anchor only.
+""".lstrip(),
+        encoding="utf-8",
+    )
+    build_reference_aesthetic_metrics(example_dir)
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference Aesthetic Metrics" in brief
+    assert "Evaluation state:" in brief
+    assert "Evidence path: `build/reference_aesthetic_metrics.json`" in brief
+    assert "Comparison count: 1" in brief
 
 
 def test_critique_brief_includes_external_second_opinion_review(tmp_path):

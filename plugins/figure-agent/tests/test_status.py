@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -19,6 +20,7 @@ from quality_manifest import (  # noqa: E402
     file_sha256,
     input_manifest_hash,
 )
+from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
@@ -57,6 +59,74 @@ def _make_spec(
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
+
+
+def _write_reference_learning_pack(directory: Path) -> None:
+    ref_dir = directory / "reference"
+    ref_dir.mkdir(exist_ok=True)
+    (directory / "critique_reference_pack.yaml").write_text(
+        f"""
+schema: figure-agent.critique-reference-pack.v1
+fixture: {directory.name}
+target_journal: Nature Communications
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: reference/style.png
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: compact editorial tone
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: poster-like palette
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Does this read as journal-grade?
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/style.png
+      roles:
+        - style_anchor
+        - density_reference
+      allowed_transfer:
+        - restrained palette
+      forbidden_transfer:
+        - copy component topology
+      rationale: Use as style class only.
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
+def test_status_surfaces_reference_aesthetic_metric_severe_divergence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "metric_demo"
+    build_dir = fig_dir / "build"
+    build_dir.mkdir(parents=True)
+    _make_spec(fig_dir)
+    (fig_dir / "metric_demo.tex").write_text("tex", encoding="utf-8")
+    (build_dir / "metric_demo.pdf").write_text("pdf", encoding="utf-8")
+    build = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(build).rectangle((0, 0, 79, 59), fill=(255, 0, 0))
+    build.save(build_dir / "metric_demo.png")
+    _write_reference_learning_pack(fig_dir)
+    reference = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(reference).rectangle((35, 25, 45, 35), fill=(40, 40, 40))
+    reference.save(fig_dir / "reference" / "style.png")
+    build_reference_aesthetic_metrics(fig_dir)
+
+    result = infer_stage(fig_dir)
+
+    assert "reference_aesthetic_metrics_severe" in result["notes"]
+    assert result["reference_aesthetic_metrics"]["evaluation_state"] == "severe_divergence"
+    assert ("reference_aesthetic_metrics", "severe_divergence") in result["checks"]
 
 
 def _critique_input_hash(fig_dir: Path, name: str) -> str:

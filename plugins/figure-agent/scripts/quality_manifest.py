@@ -106,6 +106,9 @@ def critique_manifest_paths(
     critique_reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if critique_reference_pack_path.exists():
         paths.append(critique_reference_pack_path)
+    reference_aesthetic_metrics_path = example_dir / "build" / "reference_aesthetic_metrics.json"
+    if reference_aesthetic_metrics_path.exists():
+        paths.append(reference_aesthetic_metrics_path)
     try:
         include_external_review = external_vision_review_opted_in(spec)
     except ExternalVisionReviewError:

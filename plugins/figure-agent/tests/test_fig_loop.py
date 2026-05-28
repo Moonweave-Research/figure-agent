@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -15,6 +16,7 @@ from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_markdown import decision_markdown  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
+from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
 
 
 def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
@@ -26,6 +28,58 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
     )
     (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
     return fixture
+
+
+def _write_reference_learning_metric_fixture(fixture: Path) -> None:
+    build_dir = fixture / "build"
+    ref_dir = fixture / "reference"
+    build_dir.mkdir(exist_ok=True)
+    ref_dir.mkdir(exist_ok=True)
+    build = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(build).rectangle((0, 0, 79, 59), fill=(255, 0, 0))
+    build.save(build_dir / f"{fixture.name}.png")
+    reference = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(reference).rectangle((35, 25, 45, 35), fill=(40, 40, 40))
+    reference.save(ref_dir / "style.png")
+    (fixture / "critique_reference_pack.yaml").write_text(
+        f"""
+schema: figure-agent.critique-reference-pack.v1
+fixture: {fixture.name}
+target_journal: Nature Communications
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: reference/style.png
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: compact editorial tone
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: poster-like palette
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Does this read as journal-grade?
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/style.png
+      roles:
+        - style_anchor
+        - density_reference
+      allowed_transfer:
+        - restrained palette
+      forbidden_transfer:
+        - copy component topology
+      rationale: Use as style class only.
+""".lstrip(),
+        encoding="utf-8",
+    )
+    build_reference_aesthetic_metrics(fixture)
 
 
 def _fixture_files(fixture: Path) -> dict[str, bytes]:
@@ -1186,6 +1240,34 @@ def test_loop_surfaces_external_vision_conflict_as_human_gate(
     assert iteration["escalation_level"] == "human_review_required"
     assert "external vision conflict" in iteration["recommended_next_action"]
     assert stdout_summary["external_vision_review_summary"] == summary
+
+
+def test_loop_routes_reference_aesthetic_metric_severe_divergence_to_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_reference_learning_metric_fixture(fixture)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect reference aesthetic divergence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    stdout_summary = json_stdout_summary(run_dir)
+    summary = iteration["reference_aesthetic_metrics_summary"]
+
+    assert summary["evaluation_state"] == "severe_divergence"
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["escalation_level"] == "human_review_required"
+    assert "reference aesthetic metric divergence" in iteration["recommended_next_action"]
+    assert stdout_summary["reference_aesthetic_metrics_summary"] == summary
 
 
 def test_loop_stale_external_vision_does_not_demote_existing_human_gate(

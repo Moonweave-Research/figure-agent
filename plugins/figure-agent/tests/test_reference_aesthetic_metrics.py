@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from reference_aesthetic_metrics import (  # noqa: E402
     METRICS_SCHEMA,
     build_reference_aesthetic_metrics,
+    reference_aesthetic_metrics_summary,
 )
 
 
@@ -101,8 +102,10 @@ def test_reference_aesthetic_metrics_skips_when_reference_learning_missing(
     example_dir = _write_base_fixture(tmp_path, with_learning=False)
 
     result = build_reference_aesthetic_metrics(example_dir)
+    summary = reference_aesthetic_metrics_summary(example_dir)
 
     assert result is None
+    assert summary is None
     assert not (example_dir / "build" / "reference_aesthetic_metrics.json").exists()
 
 
@@ -134,3 +137,94 @@ def test_reference_aesthetic_metrics_detects_silhouette_difference(tmp_path: Pat
     assert result is not None
     occupancy = result["comparisons"][0]["metrics"]["coarse_silhouette_occupancy_delta"]
     assert occupancy > 0.5
+
+
+def test_reference_aesthetic_metrics_summary_reports_missing_metrics(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "missing"
+    assert summary["next_action"].startswith("run scripts/reference_aesthetic_metrics.py")
+
+
+def test_reference_aesthetic_metrics_summary_reports_passed_metrics(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    build_reference_aesthetic_metrics(example_dir)
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "passed"
+    assert summary["next_action"] == "no reference aesthetic metric action required"
+
+
+def test_reference_aesthetic_metrics_summary_reports_warning_metrics(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    build_reference_aesthetic_metrics(example_dir)
+    output = example_dir / "build" / "reference_aesthetic_metrics.json"
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    payload["comparisons"][0]["metrics"]["palette_histogram_distance"] = 0.3
+    output.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "warning"
+    assert summary["warning_metric_count"] == 1
+    assert summary["severe_metric_count"] == 0
+
+
+def test_reference_aesthetic_metrics_summary_reports_stale_build_hash(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    build_reference_aesthetic_metrics(example_dir)
+    Image.new("RGB", (80, 60), "black").save(example_dir / "build" / "demo.png")
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "stale"
+    assert "build/demo.png" in summary["blocking_items"]
+
+
+def test_reference_aesthetic_metrics_summary_reports_invalid_metrics_json(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    output = example_dir / "build" / "reference_aesthetic_metrics.json"
+    output.write_text("{not yaml json", encoding="utf-8")
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "invalid"
+    assert summary["next_action"].startswith("rerun scripts/reference_aesthetic_metrics.py")
+
+
+def test_reference_aesthetic_metrics_summary_reports_severe_divergence(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    build = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(build).rectangle((0, 0, 79, 59), fill=(255, 0, 0))
+    build.save(example_dir / "build" / "demo.png")
+    reference = Image.new("RGB", (80, 60), "white")
+    ImageDraw.Draw(reference).rectangle((35, 25, 45, 35), fill=(40, 40, 40))
+    reference.save(example_dir / "reference" / "style.png")
+    build_reference_aesthetic_metrics(example_dir)
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "severe_divergence"
+    assert summary["severe_metric_count"] >= 1
+    assert summary["next_action"].startswith("review reference_aesthetic_metrics.json")

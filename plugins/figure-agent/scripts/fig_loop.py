@@ -52,6 +52,9 @@ from fig_loop_patch_evidence import (  # noqa: E402
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from next_action_summary import loop_next_action_summary  # noqa: E402
+from reference_aesthetic_metrics import (  # noqa: E402
+    reference_aesthetic_metrics_summary as build_reference_aesthetic_metrics_summary,
+)
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -142,6 +145,47 @@ def _apply_external_vision_stop(
     return loop_decision
 
 
+def _apply_reference_aesthetic_metrics_stop(
+    loop_decision: dict,
+    metrics_summary: dict | None,
+) -> dict:
+    if not metrics_summary:
+        return loop_decision
+    state = metrics_summary.get("evaluation_state")
+    if state == "severe_divergence":
+        blocking_items = metrics_summary.get("blocking_items") or []
+        blocking_text = ", ".join(blocking_items) if blocking_items else "metric threshold"
+        updated = dict(loop_decision)
+        updated.update(
+            {
+                "stop_reason": "human_gate_required",
+                "recommended_next_action": (
+                    "human review required for reference aesthetic metric divergence: "
+                    f"{blocking_text}"
+                ),
+                "active_patch_target": None,
+                "human_gate_status": "required",
+            }
+        )
+        return updated
+    if state in {"missing", "stale", "invalid"}:
+        if loop_decision.get("stop_reason") == "human_gate_required":
+            return loop_decision
+        updated = dict(loop_decision)
+        updated.update(
+            {
+                "stop_reason": "status_action_required",
+                "recommended_next_action": (
+                    metrics_summary.get("next_action")
+                    or "refresh reference aesthetic metrics before relying on them"
+                ),
+                "active_patch_target": None,
+            }
+        )
+        return updated
+    return loop_decision
+
+
 def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
     command = ensure_safe_command(("git", *args))
     result = subprocess.run(
@@ -192,11 +236,16 @@ def run_loop(
         status_result.get("critique_state"),
     )
     external_vision_review_summary = build_external_vision_review_summary(example_dir)
+    reference_aesthetic_metrics_summary = build_reference_aesthetic_metrics_summary(example_dir)
     loop_decision = build_loop_decision(status_result, adjudication, example_dir)
     loop_decision = _apply_aesthetic_lever_stop(loop_decision, aesthetic_lever_summary)
     loop_decision = _apply_external_vision_stop(
         loop_decision,
         external_vision_review_summary,
+    )
+    loop_decision = _apply_reference_aesthetic_metrics_stop(
+        loop_decision,
+        reference_aesthetic_metrics_summary,
     )
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
@@ -274,6 +323,8 @@ def run_loop(
         "human_gate_status": loop_decision["human_gate_status"],
         **escalation,
     }
+    if reference_aesthetic_metrics_summary is not None:
+        iteration["reference_aesthetic_metrics_summary"] = reference_aesthetic_metrics_summary
     manifest = {
         "schema": "figure-agent.fig-loop-run.v1",
         "fixture": name,

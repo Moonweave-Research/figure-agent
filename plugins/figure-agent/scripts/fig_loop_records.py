@@ -55,6 +55,9 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "external_vision_review_summary": iteration.get("external_vision_review_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
+    reference_aesthetic_metrics_summary = iteration.get("reference_aesthetic_metrics_summary")
+    if reference_aesthetic_metrics_summary is not None:
+        summary["reference_aesthetic_metrics_summary"] = reference_aesthetic_metrics_summary
     next_action_summary = iteration.get("next_action_summary")
     if next_action_summary is not None:
         summary["next_action_summary"] = next_action_summary

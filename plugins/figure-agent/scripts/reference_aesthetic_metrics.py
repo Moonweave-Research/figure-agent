@@ -17,6 +17,22 @@ from quality_manifest import file_sha256
 METRICS_SCHEMA = "figure-agent.reference-aesthetic-metrics.v1"
 METRIC_VERSION = "reference-aesthetic-metrics.v1"
 OUTPUT_RELATIVE_PATH = Path("build/reference_aesthetic_metrics.json")
+SEVERE_THRESHOLDS = {
+    "palette_histogram_distance": 0.55,
+    "dominant_hue_family_count_delta": 4.0,
+    "ink_density_delta": 0.35,
+    "edge_density_delta": 0.12,
+    "coarse_silhouette_occupancy_delta": 0.5,
+    "line_density_proxy_delta": 1.0,
+}
+WARNING_THRESHOLDS = {
+    "palette_histogram_distance": 0.25,
+    "dominant_hue_family_count_delta": 2.0,
+    "ink_density_delta": 0.15,
+    "edge_density_delta": 0.05,
+    "coarse_silhouette_occupancy_delta": 0.25,
+    "line_density_proxy_delta": 0.4,
+}
 
 
 class ReferenceAestheticMetricsError(Exception):
@@ -70,7 +86,8 @@ def _rgb_to_hsv(rgb: np.ndarray) -> np.ndarray:
     hue[green] = ((rgb[..., 2][green] - rgb[..., 0][green]) / delta[green]) + 2
     hue[blue] = ((rgb[..., 0][blue] - rgb[..., 1][blue]) / delta[blue]) + 4
     hue /= 6
-    saturation = np.where(maxc > 1e-6, delta / maxc, 0)
+    saturation = np.zeros_like(maxc)
+    np.divide(delta, maxc, out=saturation, where=maxc > 1e-6)
     return np.stack([hue, saturation, maxc], axis=-1)
 
 
@@ -207,6 +224,10 @@ def build_reference_aesthetic_metrics(example_dir: Path) -> dict[str, Any] | Non
         "metric_version": METRIC_VERSION,
         "fixture": name,
         "state": "measured" if comparisons else "skipped",
+        "reference_pack": {
+            "path": "critique_reference_pack.yaml",
+            "hash": file_sha256(example_dir / "critique_reference_pack.yaml"),
+        },
         "build_artifact": {
             "path": _example_relative_path(example_dir, build_path),
             "hash": file_sha256(build_path),
@@ -224,6 +245,199 @@ def build_reference_aesthetic_metrics(example_dir: Path) -> dict[str, Any] | Non
         encoding="utf-8",
     )
     return payload
+
+
+def _base_summary(example_dir: Path, state: str) -> dict[str, Any]:
+    return {
+        "schema": METRICS_SCHEMA,
+        "metric_version": METRIC_VERSION,
+        "fixture": example_dir.name,
+        "evaluation_state": state,
+        "evidence_path": OUTPUT_RELATIVE_PATH.as_posix(),
+        "comparison_count": 0,
+        "severe_metric_count": 0,
+        "blocking_items": [],
+        "next_action": "",
+    }
+
+
+def _metrics_payload(example_dir: Path) -> tuple[dict[str, Any] | None, str | None]:
+    output_path = example_dir / OUTPUT_RELATIVE_PATH
+    if not output_path.is_file():
+        return None, None
+    try:
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, str(exc)
+    if not isinstance(payload, dict):
+        return None, "metrics payload must be a mapping"
+    return payload, None
+
+
+def _payload_reference_pack_stale(example_dir: Path, payload: dict[str, Any]) -> bool:
+    current_path = example_dir / "critique_reference_pack.yaml"
+    reference_pack = payload.get("reference_pack")
+    if not current_path.is_file() or not isinstance(reference_pack, dict):
+        return True
+    return reference_pack.get("hash") != file_sha256(current_path)
+
+
+def _artifact_stale(example_dir: Path, artifact: dict[str, Any]) -> str | None:
+    path_value = artifact.get("path")
+    hash_value = artifact.get("hash")
+    if not isinstance(path_value, str) or not isinstance(hash_value, str):
+        return "build artifact metadata"
+    artifact_path = example_dir / path_value
+    if not artifact_path.is_file() or file_sha256(artifact_path) != hash_value:
+        return path_value
+    return None
+
+
+def _reference_stale(example_dir: Path, comparison: dict[str, Any]) -> str | None:
+    path_value = comparison.get("reference_path")
+    hash_value = comparison.get("reference_hash")
+    if not isinstance(path_value, str) or not isinstance(hash_value, str):
+        return "reference metadata"
+    reference_path = example_dir / path_value
+    if not reference_path.is_file() or file_sha256(reference_path) != hash_value:
+        return path_value
+    return None
+
+
+def _threshold_metrics(
+    payload: dict[str, Any],
+    thresholds: dict[str, float],
+) -> list[dict[str, Any]]:
+    flagged: list[dict[str, Any]] = []
+    for comparison in payload.get("comparisons", []):
+        if not isinstance(comparison, dict):
+            continue
+        reference_path = comparison.get("reference_path", "<unknown reference>")
+        metrics = comparison.get("metrics")
+        if not isinstance(metrics, dict):
+            continue
+        for metric_name, threshold in thresholds.items():
+            value = metrics.get(metric_name)
+            if isinstance(value, int | float) and float(value) > threshold:
+                flagged.append(
+                    {
+                        "reference_path": reference_path,
+                        "metric": metric_name,
+                        "value": _round(float(value)),
+                        "threshold": threshold,
+                    }
+                )
+    return flagged
+
+
+def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | None:
+    """Summarize opt-in reference-aesthetic metrics without generating them."""
+    try:
+        pack = load_optional_reference_pack(example_dir)
+    except CritiqueReferencePackError as exc:
+        summary = _base_summary(example_dir, "invalid")
+        summary["reason"] = f"critique_reference_pack.yaml invalid: {exc}"
+        summary["next_action"] = "fix critique_reference_pack.yaml"
+        return summary
+    if pack is None or not isinstance(pack.get("reference_learning"), dict):
+        return None
+
+    payload, error = _metrics_payload(example_dir)
+    if error is not None:
+        summary = _base_summary(example_dir, "invalid")
+        summary["reason"] = f"{OUTPUT_RELATIVE_PATH.as_posix()} invalid: {error}"
+        summary["next_action"] = (
+            f"rerun scripts/reference_aesthetic_metrics.py {example_dir.as_posix()}"
+        )
+        return summary
+    if payload is None:
+        summary = _base_summary(example_dir, "missing")
+        summary["next_action"] = (
+            f"run scripts/reference_aesthetic_metrics.py {example_dir.as_posix()}"
+        )
+        return summary
+    if (
+        payload.get("schema") != METRICS_SCHEMA
+        or payload.get("metric_version") != METRIC_VERSION
+        or payload.get("fixture") != example_dir.name
+    ):
+        summary = _base_summary(example_dir, "invalid")
+        summary["reason"] = "metrics schema, version, or fixture mismatch"
+        summary["next_action"] = (
+            f"rerun scripts/reference_aesthetic_metrics.py {example_dir.as_posix()}"
+        )
+        return summary
+
+    blocking_items: list[str] = []
+    if _payload_reference_pack_stale(example_dir, payload):
+        blocking_items.append("critique_reference_pack.yaml")
+    artifact = payload.get("build_artifact")
+    if not isinstance(artifact, dict):
+        blocking_items.append("build artifact metadata")
+    else:
+        stale_item = _artifact_stale(example_dir, artifact)
+        if stale_item is not None:
+            blocking_items.append(stale_item)
+    comparisons = payload.get("comparisons", [])
+    if not isinstance(comparisons, list):
+        summary = _base_summary(example_dir, "invalid")
+        summary["reason"] = "metrics comparisons must be a list"
+        summary["next_action"] = (
+            f"rerun scripts/reference_aesthetic_metrics.py {example_dir.as_posix()}"
+        )
+        return summary
+    for comparison in comparisons:
+        if not isinstance(comparison, dict):
+            blocking_items.append("reference metadata")
+            continue
+        stale_item = _reference_stale(example_dir, comparison)
+        if stale_item is not None:
+            blocking_items.append(stale_item)
+    if blocking_items:
+        summary = _base_summary(example_dir, "stale")
+        summary["comparison_count"] = len(comparisons)
+        summary["blocking_items"] = sorted(dict.fromkeys(blocking_items))
+        summary["next_action"] = (
+            f"rerun scripts/reference_aesthetic_metrics.py {example_dir.as_posix()}"
+        )
+        return summary
+
+    summary = _base_summary(
+        example_dir,
+        "passed" if payload.get("state") == "measured" else "skipped",
+    )
+    summary["comparison_count"] = len(comparisons)
+    summary["skip_reasons"] = payload.get("skip_reasons", [])
+    severe = _threshold_metrics(payload, SEVERE_THRESHOLDS)
+    if severe:
+        summary["evaluation_state"] = "severe_divergence"
+        summary["severe_metric_count"] = len(severe)
+        summary["severe_metrics"] = severe
+        summary["blocking_items"] = sorted(
+            {
+                f"{item['reference_path']}:{item['metric']}"
+                for item in severe
+            }
+        )
+        summary["next_action"] = (
+            "review reference_aesthetic_metrics.json and route aesthetic-class "
+            "divergence to human or agent critique"
+        )
+    else:
+        warnings = _threshold_metrics(payload, WARNING_THRESHOLDS)
+        if warnings:
+            summary["evaluation_state"] = "warning"
+            summary["warning_metric_count"] = len(warnings)
+            summary["warning_metrics"] = warnings
+            summary["next_action"] = (
+                "review reference_aesthetic_metrics.json before declaring aesthetic "
+                "class alignment"
+            )
+        elif summary["evaluation_state"] == "skipped":
+            summary["next_action"] = "provide at least one readable reference-learning image"
+        else:
+            summary["next_action"] = "no reference aesthetic metric action required"
+    return summary
 
 
 def main(argv: list[str] | None = None) -> int:

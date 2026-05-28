@@ -50,6 +50,7 @@ from quality_manifest import (
     critique_generator_version,
     file_sha256,
 )
+from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 from svg_polish_delta import (
@@ -480,6 +481,49 @@ def _reference_learning_section(pack: dict | None) -> str:
             ]
         )
     return "\n" + "\n".join(lines).rstrip() + "\n"
+
+
+def _reference_aesthetic_metrics_section(example_dir: Path) -> str:
+    summary = reference_aesthetic_metrics_summary(example_dir)
+    if summary is None:
+        return ""
+    lines = [
+        "## Reference Aesthetic Metrics",
+        "Non-model aesthetic-class measurements are advisory anchors, not copy-target "
+        "requirements. Use them to explain palette, density, silhouette, or line-density "
+        "divergence from allowed reference-learning traits.",
+        f"- Evaluation state: {summary['evaluation_state']}",
+        f"- Evidence path: `{summary['evidence_path']}`",
+        f"- Comparison count: {summary['comparison_count']}",
+        f"- Severe metric count: {summary['severe_metric_count']}",
+    ]
+    blocking_items = summary.get("blocking_items") or []
+    if blocking_items:
+        lines.append("- Blocking items: " + ", ".join(f"`{item}`" for item in blocking_items))
+    severe_metrics = summary.get("severe_metrics") or []
+    if severe_metrics:
+        lines.append("")
+        lines.append("Severe metrics to explain or route:")
+        for item in severe_metrics:
+            lines.append(
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
+                    **item
+                )
+            )
+    warning_metrics = summary.get("warning_metrics") or []
+    if warning_metrics:
+        lines.append("")
+        lines.append("Warning metrics to consider:")
+        for item in warning_metrics:
+            lines.append(
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
+                    **item
+                )
+            )
+    next_action = summary.get("next_action")
+    if next_action:
+        lines.append(f"- Next action: {next_action}")
+    return "\n" + "\n".join(lines) + "\n"
 
 
 def _external_vision_review_section(review: dict | None) -> str:
@@ -1214,6 +1258,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         reference_calibration_pack
     )
     reference_learning_section = _reference_learning_section(reference_calibration_pack)
+    reference_aesthetic_metrics_section = _reference_aesthetic_metrics_section(example_dir)
     external_vision_review_section = _external_vision_review_section(
         external_vision_review
     )
@@ -1257,6 +1302,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {label_path_proximity_section}
 {reference_calibration_section}
 {reference_learning_section}
+{reference_aesthetic_metrics_section}
 {external_vision_review_section}
 {paper_aesthetic_context_section}
 {journal_art_direction_playbook_section}
