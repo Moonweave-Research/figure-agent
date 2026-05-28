@@ -29,6 +29,7 @@ EXECUTABLE_ACTIONS = frozenset(
     {
         fig_driver.ACTION_RUN_ADJUDICATE,
         fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_EXPORT,
         fig_driver.ACTION_RUN_FIG_LOOP,
     }
 )
@@ -105,11 +106,45 @@ def _adjudication_scaffold_is_safe(name: str, *, repo_root: Path) -> bool:
     return not (repo_root / "examples" / name / "critique_adjudication.yaml").exists()
 
 
+def _has_forbidden_export_flag(command: str) -> bool:
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return True
+    return "--force-golden" in parts or "--skip-critique" in parts
+
+
+def _export_command_matches_fixture(command: str, name: str) -> bool:
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return False
+    return parts == ["uv", "run", "python3", "scripts/run_export.py", name]
+
+
+def _export_is_safe(summary: dict[str, Any], *, name: str) -> bool:
+    status = summary.get("status")
+    command = summary.get("safe_command")
+    if not isinstance(status, dict):
+        return False
+    if not isinstance(command, str) or _has_forbidden_export_flag(command):
+        return False
+    if not _export_command_matches_fixture(command, name):
+        return False
+    return (
+        status.get("acceptance_state") == "NOT_DECLARED"
+        and status.get("export_state") in {"MISSING", "STALE"}
+        and status.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
+    )
+
+
 def _would_execute(summary: dict[str, Any], *, name: str, repo_root: Path) -> bool:
     if not _is_executable_action(summary):
         return False
     if summary.get("action") == fig_driver.ACTION_RUN_ADJUDICATE:
         return _adjudication_scaffold_is_safe(name, repo_root=repo_root)
+    if summary.get("action") == fig_driver.ACTION_RUN_EXPORT:
+        return _export_is_safe(summary, name=name)
     return True
 
 

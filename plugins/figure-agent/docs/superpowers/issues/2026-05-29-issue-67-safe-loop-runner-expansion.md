@@ -1,6 +1,7 @@
 # Issue 67: Safe Loop Runner Expansion
 
-Status: completed; superseded by Issue 68 for missing adjudication scaffold
+Status: completed; superseded by Issue 68 for missing adjudication scaffold and
+Issue 69 for draft export execution
 
 Depends on: Issue 66 safe workflow runner
 
@@ -58,7 +59,9 @@ Do not implement:
 - If loop execution fails, the runner stops with `command_failed`.
 - If driver selects `run_fig_loop` with a stop boundary, the runner stops
   without executing.
-- `run_adjudicate` and `run_export` remain non-executable.
+- `run_adjudicate` and `run_export` remain non-executable in Issue 67. Issue 68
+  later permits missing adjudication scaffold, and Issue 69 later permits only
+  non-golden draft export execution.
 - JSON `executable_actions` includes `run_compile` and `run_fig_loop`.
 
 ## Verification

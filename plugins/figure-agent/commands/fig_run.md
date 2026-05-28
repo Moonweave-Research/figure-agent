@@ -16,9 +16,9 @@ uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
 for one next action, executes only allowlisted deterministic shell actions, then
 asks the driver again. It stops when the next action requires host vision,
-human judgment, patch handoff, SVG polish handoff, export/adjudication policy,
-accepted state, golden roll-forward, release approval, or any unsupported
-mutation.
+human judgment, patch handoff, SVG polish handoff, existing adjudication repair,
+accepted state, tracked-golden export, golden roll-forward, release approval, or
+any unsupported mutation.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate anything.
@@ -31,17 +31,19 @@ The executable actions are allowed only when the driver attaches no
 - `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
 - `run_adjudicate` -> `uv run python3 scripts/critique_adjudication.py scaffold <name>`
   only when `critique_adjudication.yaml` is missing
+- `run_export` -> `uv run python3 scripts/run_export.py <name>` only for
+  that exact fixture command and only for draft generated exports where
+  `acceptance_state: NOT_DECLARED`, `export_state: MISSING | STALE`, and
+  `critique_state: FRESH | NOT_REQUIRED`
 - `run_fig_loop` -> `uv run python3 scripts/fig_loop.py <name> --goal ... --json`
 
-The runner intentionally stops on this action even when it has a shell command:
-
-- `run_export`
-
-`run_export` mutates export state and needs separate policy hardening before it
-can be safely automated. `run_adjudicate` is allowed only for initial scaffold;
-existing adjudication files, including stale or invalid files, still require
-manual repair. `/fig_loop` is allowed because it is verify-only and writes
-bounded run evidence under `.scratch/fig-loop-runs/`. The runner always stops on `/fig_critique`
+`run_adjudicate` is allowed only for initial scaffold; existing adjudication
+files, including stale or invalid files, still require manual repair.
+`run_export` is allowed only for non-accepted draft fixtures with generated
+exports. Accepted fixtures, tracked-golden export state, closeout boundaries,
+`--force-golden`, and `--skip-critique` remain explicit manual actions.
+`/fig_loop` is allowed because it is verify-only and writes bounded run evidence
+under `.scratch/fig-loop-runs/`. The runner always stops on `/fig_critique`
 because that is a host-vision operation, not a shell command.
 
 ## Output JSON contract
@@ -56,7 +58,7 @@ because that is a host-vision operation, not a shell command.
 | `goal` | string | passthrough goal |
 | `execute` | bool | whether allowed shell commands were executed |
 | `max_steps` | int | safety cap |
-| `executable_actions` | list | current allowlist: `run_adjudicate`, `run_compile`, `run_fig_loop` |
+| `executable_actions` | list | current allowlist: `run_adjudicate`, `run_compile`, `run_export`, `run_fig_loop` |
 | `steps` | list | driver action plus execution result for each iteration |
 | `final_action` | string | last driver action |
 | `final_safe_command` | string or null | last command selected by driver |
@@ -73,8 +75,8 @@ runner then re-queries the driver for the next action.
 
 - `plan_only` — command would be executable, but `--execute` was not passed.
 - `host_boundary` — host vision or slash command required.
-- `not_executable_action` — driver selected an action outside the Issue 66A
-  allowlist.
+- `not_executable_action` — driver selected an unsupported action, or an
+  allowlisted action failed its extra safety predicate.
 - `command_failed` — an executed command returned non-zero.
 - `complete` — driver selected `complete`.
 - `max_steps_exceeded` — the runner hit the safety cap before state advanced to

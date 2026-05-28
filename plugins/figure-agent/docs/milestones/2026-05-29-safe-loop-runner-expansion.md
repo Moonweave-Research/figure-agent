@@ -21,7 +21,8 @@ roll-forward.
   executed.
 - `run_adjudicate` remained non-executable in Issue 67; Issue 68 later allows
   missing-file scaffold only.
-- `run_export` remains non-executable.
+- `run_export` remains non-executable in Issue 67. Issue 69 later permits only
+  non-golden draft export execution.
 - Any failed compile or loop command stops with `command_failed`.
 - Successful loop execution triggers a driver re-query.
 

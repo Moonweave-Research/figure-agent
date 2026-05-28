@@ -19,13 +19,14 @@ def _driver_summary(
     safe_command: str | None,
     stop_boundary: str | None = None,
     reason: str = "driver reason",
+    status: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "schema": fig_driver.SCHEMA,
         "fixture": "runner_demo",
         "mode": "review",
         "goal": "close loop",
-        "status": {"render_state": "STALE"},
+        "status": status or {"render_state": "STALE"},
         "action": action,
         "safe_command": safe_command,
         "stop_boundary": stop_boundary,
@@ -73,11 +74,12 @@ def test_plan_only_reports_compile_without_executing(
         ],
     )
     commands: list[str] = []
-    monkeypatch.setattr(
-        fig_run,
-        "_run_command",
-        lambda command, *, repo_root: commands.append(command),
-    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -155,11 +157,12 @@ def test_execute_stops_immediately_at_host_critique(
         ],
     )
     commands: list[str] = []
-    monkeypatch.setattr(
-        fig_run,
-        "_run_command",
-        lambda command, *, repo_root: commands.append(command),
-    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -175,7 +178,7 @@ def test_execute_stops_immediately_at_host_critique(
     assert payload["steps"][0]["would_execute"] is False
 
 
-def test_execute_stops_at_non_allowlisted_shell_action(
+def test_execute_stops_at_export_without_safe_status(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_driver_sequence(
@@ -200,6 +203,308 @@ def test_execute_stops_at_non_allowlisted_shell_action(
     assert payload["final_action"] == fig_driver.ACTION_RUN_EXPORT
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+
+
+def test_execute_runs_draft_export_then_requeries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "NOT_REQUIRED",
+                    "export_state": "MISSING",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="exported\n", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 2
+    assert commands == ["uv run python3 scripts/run_export.py runner_demo"]
+    assert payload["executable_actions"] == [
+        "run_adjudicate",
+        "run_compile",
+        "run_export",
+        "run_fig_loop",
+    ]
+    assert payload["executed_count"] == 1
+    assert payload["final_action"] == fig_driver.ACTION_COMPLETE
+    assert payload["final_stop_reason"] == "complete"
+    assert payload["steps"][0]["executed"] is True
+    assert payload["steps"][0]["returncode"] == 0
+
+
+def test_export_with_stop_boundary_is_not_executed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
+                stop_boundary=fig_driver.STOP_CLOSEOUT,
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "NOT_REQUIRED",
+                    "export_state": "MISSING",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            )
+        ],
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_driver.ACTION_RUN_EXPORT
+    assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+@pytest.mark.parametrize(
+    ("acceptance_state", "export_state"),
+    [
+        ("ACCEPTED", "STALE"),
+        ("NOT_DECLARED", "TRACKED_GOLDEN"),
+    ],
+)
+def test_export_for_accepted_or_tracked_fixture_is_not_executed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    acceptance_state: str,
+    export_state: str,
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "FRESH",
+                    "export_state": export_state,
+                    "acceptance_state": acceptance_state,
+                },
+            )
+        ],
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_driver.ACTION_RUN_EXPORT
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+def test_export_with_unclosed_critique_is_not_executed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "STALE",
+                    "export_state": "MISSING",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            )
+        ],
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+@pytest.mark.parametrize("flag", ["--force-golden", "--skip-critique"])
+def test_export_forbidden_flags_are_not_executed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, flag: str
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command=f"uv run python3 scripts/run_export.py runner_demo {flag}",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "NOT_REQUIRED",
+                    "export_state": "MISSING",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            )
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+def test_export_for_other_fixture_command_is_not_executed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py other_demo",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "NOT_REQUIRED",
+                    "export_state": "MISSING",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            )
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+def test_export_failure_stops_without_requery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
+                status={
+                    "render_state": "FRESH",
+                    "critique_state": "NOT_REQUIRED",
+                    "export_state": "STALE",
+                    "acceptance_state": "NOT_DECLARED",
+                },
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        return fig_run.CommandResult(returncode=8, stdout="", stderr="export failed")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 1
+    assert payload["executed_count"] == 1
+    assert payload["final_action"] == fig_driver.ACTION_RUN_EXPORT
+    assert payload["final_stop_reason"] == "command_failed"
+    assert payload["steps"][0]["stderr_tail"] == "export failed"
 
 
 def test_execute_runs_missing_adjudication_scaffold(
@@ -253,6 +558,7 @@ def test_execute_runs_missing_adjudication_scaffold(
     assert payload["executable_actions"] == [
         "run_adjudicate",
         "run_compile",
+        "run_export",
         "run_fig_loop",
     ]
     assert payload["executed_count"] == 2
@@ -379,6 +685,7 @@ def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
     assert payload["executable_actions"] == [
         "run_adjudicate",
         "run_compile",
+        "run_export",
         "run_fig_loop",
     ]
     assert payload["executed_count"] == 2

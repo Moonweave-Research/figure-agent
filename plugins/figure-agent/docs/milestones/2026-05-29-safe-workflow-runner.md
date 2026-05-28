@@ -10,8 +10,9 @@ deterministic shell work and stops at the next boundary that requires host,
 human, review-state, export, release, patch, polish, accepted, or golden
 authority.
 
-Issue 66A intentionally allowed only `run_compile`. Issue 67 later expands the
-same bounded model to verify-only `/fig_loop` checkpoints.
+Issue 66A intentionally allowed only `run_compile`. Issues 67, 68, and 69 later
+expand the same bounded model to verify-only `/fig_loop` checkpoints, missing
+adjudication scaffold, and non-golden draft export.
 
 ## Files Changed
 
@@ -57,9 +58,10 @@ same bounded model to verify-only `/fig_loop` checkpoints.
 
 ## Remaining Risk
 
-The runner is deliberately conservative. It does not yet automate adjudication,
-loop checkpointing, export, or closeout. Those can be considered later, but
-each needs a separate mutation policy because those steps write review/export
-state rather than just build artifacts.
+The runner is deliberately conservative. It still does not automate host
+critique, existing adjudication repair, closeout overrides, accepted/golden
+roll-forward, SVG polish editing, release approval, source patching, or git
+mutation. Those require separate explicit policies because they cross human,
+publication, or source-edit boundaries.
 
 No known Issue 66 plugin blocker remains.
