@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-05-28 KST
-**Status:** current main truth through v0.8.0 / Issue 62
+**Status:** current main truth through v0.8.1 / Issue 63
 
 ## Bottom Line
 
@@ -15,6 +15,9 @@ explicit label-path proximity checks for zoom-only near-miss failures. The
 v0.8 slice adds real-fixture audit-adoption accounting, a shared single
 next-action summary, SVG-polish promotion dogfood evidence, opt-in journal
 style-pack catalog support, and optional external vision review evidence.
+The v0.8.1 patch adds opt-in reference-learning contracts, non-model
+reference-aesthetic metric signals, loop-basin detection, and crop anomaly
+accountability for reference-learning critiques.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -23,7 +26,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 62 release hardening:
+Most recent local full verification after Issue 63 / v0.8.1 release sync:
 
 ```bash
 uv run pytest -q
@@ -36,7 +39,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1337 passed, 3 skipped, 1 xfailed`.
+- Full test suite: `1371 passed, 1 skipped, 1 xfailed`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
@@ -109,6 +112,10 @@ Results:
 - External vision review evidence: Issue 61 adds optional local
   `external_vision_review.yaml` import and conflict surfacing without adding a
   provider API dependency.
+- Reference learning and aesthetic metrics: Issue 63 adds optional
+  reference-learning contracts, deterministic reference-aesthetic metrics,
+  status/loop/critique surfacing, repeated-basin detection, and v1.13 crop
+  anomaly accountability without converting references into copy targets.
 
 ## Not A Remaining Blocker
 

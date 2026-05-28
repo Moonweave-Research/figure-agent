@@ -83,7 +83,7 @@ polish only when status or the driver explicitly routes there.
 
 ---
 
-## Current state (v0.8.0)
+## Current state (v0.8.1)
 
 | Area | What's working |
 |---|---|
@@ -97,12 +97,13 @@ polish only when status or the driver explicitly routes there.
 | **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, and `svg_polish_handoff.py` provide a bounded, non-mutating route for final visual-only SVG polish. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
 | **Style packs** | `docs/style-pack-catalog.md` and the opt-in journal style-pack catalog provide reusable Nature Communications, Nature Materials, Science, and graphical-abstract restraint/playbook anchors without applying them globally. |
 | **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale or conflicting second opinions surface as human-review evidence, not automatic truth. |
+| **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
 
 ### Release boundary
 
 - **Automatic:** deterministic compile, lint, freshness, export, golden, publication, visual/text clash, crop/accounting, package validation gates, and the shared single next-action summary.
 - **Semi-automatic:** host-vision critique and `/fig_loop` review checkpoints. Claude reads prepared images/evidence and writes structured critique; lint and loop contracts verify the result.
-- **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, SVG-polish delta packs, and external vision review evidence.
+- **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, reference-learning aesthetic metrics, SVG-polish delta packs, and external vision review evidence.
 - **Manual:** source drawing, semantic patch choices, human art direction, accepted/golden roll-forward, and final SVG/vector editing.
 
 The plugin is a quality/audit kernel, not a hidden auto-designer. It can make
