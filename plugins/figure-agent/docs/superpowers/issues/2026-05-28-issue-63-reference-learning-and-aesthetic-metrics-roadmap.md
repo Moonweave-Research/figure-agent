@@ -1,6 +1,6 @@
 # Issue 63 - Reference Learning And Aesthetic Metrics Roadmap
 
-Status: proposed
+Status: implemented on branch `codex/issue63-reference-learning-roadmap`
 
 Depends on: v0.8 release current-truth docs
 
@@ -49,16 +49,15 @@ non-model aesthetic-class signals and loop-stuck signals in `/fig_loop`.
 
 ## Child Issues
 
-1. Issue 63A - Reference Learning Contract - implemented on branch
-   `codex/issue63-reference-learning-roadmap`
-2. Issue 63B - Non-Model Aesthetic Metrics Pack - implemented on branch
-   `codex/issue63-reference-learning-roadmap`
-3. Issue 63C - Aesthetic Metric Surfacing In Status And Loop - implemented on
-   branch `codex/issue63-reference-learning-roadmap`
-4. Issue 63D - Basin And Diminishing-Returns Detector - implemented on branch
-   `codex/issue63-reference-learning-roadmap`
-5. Issue 63E - Unintended-Visible Anomaly Audit - implemented on branch
-   `codex/issue63-reference-learning-roadmap`
+1. Issue 63A - Reference Learning Contract - implemented in commit `82bddef`
+2. Issue 63B - Non-Model Aesthetic Metrics Pack - implemented in commit
+   `f168a02`
+3. Issue 63C - Aesthetic Metric Surfacing In Status And Loop - implemented in
+   commit `6f3a869`
+4. Issue 63D - Basin And Diminishing-Returns Detector - implemented in commit
+   `50ef146`
+5. Issue 63E - Unintended-Visible Anomaly Audit - implemented in commit
+   `73e300f`
 
 ## Order
 
@@ -89,3 +88,34 @@ Recommended sequence:
 2. Does it give the loop a non-model signal for old-looking or generic figures?
 3. Are semantics, physics, and author intent protected above style references?
 4. Can each child issue land as a narrow, reversible slice?
+
+## Implementation Closeout
+
+Implemented scope:
+
+- Issue 63A adds the optional reference-learning contract and brief surface so
+  references can teach editorial principles without becoming copy targets.
+- Issue 63B adds the local reference-aesthetic metrics pack.
+- Issue 63C surfaces those metrics in status, loop, critique context, and
+  critique freshness.
+- Issue 63D adds loop-basin detection for repeated patch targets, aesthetic
+  bottlenecks, and severe reference-aesthetic divergence.
+- Issue 63E adds crop-level unintended-visible-anomaly accountability for
+  reference-learning critiques.
+
+Verification performed for the implementation slice:
+
+- `uv run pytest -q` - `1371 passed, 1 skipped, 1 xfailed, 6 warnings`
+- `uv run ruff check .` - all checks passed
+- `git diff --check` - clean
+- `claude plugin validate .claude-plugin/plugin.json` - passed
+- `claude plugin validate .` - passed
+- `claude plugin validate ../../.claude-plugin/marketplace.json` - passed
+
+Known boundaries:
+
+- Metrics are suspicion and routing signals, not release authority.
+- Reference learning is opt-in and does not override briefing, theory guards,
+  fixture semantics, or author intent.
+- The roadmap does not introduce hidden auto-patching, provider API calls,
+  accepted/golden mutation, SVG polish editing, or source drawing work.
