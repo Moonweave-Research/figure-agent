@@ -83,13 +83,14 @@ fixtures:
     text_boundary_check_ids: []
     label_path_check_ids: []
     aesthetic_intent: false
-    critique_reference_pack: false
+    critique_reference_pack: true
     paper_aesthetic_context:
     journal_art_direction_playbook:
     adoption_status: deferred_reference_only
     rationale: >
-      Reference-grounded sequence fixture has critique coverage, but explicit
-      path/boundary hazards need a fixture-specific adoption pass.
+      Reference-grounded sequence fixture now has a critique reference pack for
+      reference-learning dogfood, but explicit path/boundary hazards still need
+      a fixture-specific adoption pass.
 
   - fixture: fig3_trapping_concept
     reference_image: false
