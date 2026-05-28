@@ -1,6 +1,6 @@
 # Issue 70C: Patch Executor Freshness And Pending-Closeout Hardening
 
-Status: proposed
+Status: implemented
 
 Depends on: Issue 70A guided autonomy readiness matrix
 

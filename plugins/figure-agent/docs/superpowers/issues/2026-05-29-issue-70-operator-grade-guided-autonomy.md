@@ -97,6 +97,12 @@ implementation candidate is 70C patch freshness hardening. 70B remains allowed
 only as a small non-patch explanatory handoff slice. 70D/70E resume or journal
 work is not justified yet.
 
+70C result:
+`docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` implements
+stale loop checkpoint refusal, iteration fixture mismatch refusal, and pending
+patch closeout refusal for the existing opt-in patch executor. This still does
+not expose patch execution through `/fig_run`.
+
 ## Out Of Scope For Issue 70
 
 - Hidden source editing.

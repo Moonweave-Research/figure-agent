@@ -75,6 +75,11 @@ It also found no live patch/pending-closeout shape and no positive SVG-polish
 route. This makes 70C the strongest next implementation candidate; 70B is
 limited to non-patch explanatory handoff if pursued; 70D/70E remain deferred.
 
+Current 70C implementation:
+`docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` hardens the
+existing opt-in patch executor so it refuses stale loop checkpoints, iteration
+fixture mismatch, and pending patch closeout evidence before mutation.
+
 ## Boundary Handoff Contract
 
 If 70A justifies it, 70B adds a handoff packet to `/fig_run` non-complete stops.
