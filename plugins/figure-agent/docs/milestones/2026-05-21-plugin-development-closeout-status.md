@@ -172,8 +172,8 @@ the plugin for real figure work.
 
 1. **Fixture state cleanup.** Refresh stale critiques/exports on the fixtures
    currently under active use, starting with accepted/golden or publication-bound
-   fixtures. Do not force accepted/golden roll-forward without explicit human
-   approval.
+   fixtures. Issue 65 records the current cleanup queue. Do not force
+   accepted/golden roll-forward without explicit human approval.
 2. **Fixture adoption expansion.** More real fixtures should declare
    `text_boundary_layout` and/or `label_path_proximity_checks` when they contain
    row boxes, panel rules, internal display rectangles, reference lines,
