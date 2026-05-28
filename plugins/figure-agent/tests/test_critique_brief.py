@@ -864,6 +864,8 @@ def test_critique_brief_output_format_uses_v1_10_crop_editorial_and_micro_defect
     assert "crop_id: <crop id from build/audit_crops/manifest.json>" in brief
     assert "verdict: defect | no_defect | uncertain" in brief
     assert "linked_micro_defect_id: \"<M001 when verdict=defect or empty>\"" in brief
+    assert "unintended_visible_anomaly:" not in brief
+    assert "anomaly_link:" not in brief
 
 
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):

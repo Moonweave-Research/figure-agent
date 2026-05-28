@@ -1281,15 +1281,35 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     if uses_reference_learning_schema:
         critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_13
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_13
+        crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
+    anomaly_rationale: "<whether any unintended visible artifact is present>"
+    anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
+"""
+        crop_anomaly_instructions = """
+For each crop, also answer the inverse question: "is anything visible here that
+was not intended?" Use `unintended_visible_anomaly: present` for stray bond,
+unintended line continuation, accidental component grouping, misleading reference transfer,
+phantom boundary or texture, or any other visible artifact not supported by
+briefing/author intent. `present` anomalies must link to a
+finding, micro-defect, or explicit `accept_simplification:<reason>` decision;
+`uncertain` anomalies require a concrete rationale and should route to more
+zoom/reference review.
+"""
     elif journal_playbook_pack is not None:
         critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_12
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_12
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
     elif uses_aesthetic_lever_schema:
         critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_11
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_11
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
     else:
         critique_schema = _CRITIQUE_SCHEMA_VERSION
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -1472,9 +1492,7 @@ crop_audit_log:
     verdict: defect | no_defect | uncertain
     linked_micro_defect_id: "<M001 when verdict=defect or empty>"
     rationale: "<local geometry reason from direct crop inspection>"
-    unintended_visible_anomaly: none | present | uncertain
-    anomaly_rationale: "<whether any unintended visible artifact is present>"
-    anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
+{crop_anomaly_schema.rstrip()}
 panels:
   - id: <panel id>
     findings:
@@ -1538,14 +1556,7 @@ Every crop id in `build/audit_crops/manifest.json.required_crop_ids` must appear
 exactly once in `crop_audit_log`. Use `verdict: uncertain` when the crop remains
 ambiguous; do not silently treat uncertainty as pass. Use `verdict: defect` only
 when `linked_micro_defect_id` names the corresponding `micro_defects[].id`.
-For each crop, also answer the inverse question: "is anything visible here that
-was not intended?" Use `unintended_visible_anomaly: present` for stray bond,
-unintended line continuation, accidental component grouping, misleading reference transfer,
-phantom boundary or texture, or any other visible artifact not supported by
-briefing/author intent. `present` anomalies must link to a
-finding, micro-defect, or explicit `accept_simplification:<reason>` decision;
-`uncertain` anomalies require a concrete rationale and should route to more
-zoom/reference review.
+{crop_anomaly_instructions.rstrip()}
 For every visual-clash-linked `accept_simplification`, the `observation` must
 name the `VC###` id. For every `micro_defects` item with
 `status: accept_simplification`, `accept_simplification_reason` must be one of
