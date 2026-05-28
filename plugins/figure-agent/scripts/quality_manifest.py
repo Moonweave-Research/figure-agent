@@ -24,8 +24,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
 CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
 CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
+CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
 CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
+CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -106,6 +108,9 @@ def critique_manifest_paths(
     critique_reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if critique_reference_pack_path.exists():
         paths.append(critique_reference_pack_path)
+    reference_aesthetic_metrics_path = example_dir / "build" / "reference_aesthetic_metrics.json"
+    if reference_aesthetic_metrics_path.exists():
+        paths.append(reference_aesthetic_metrics_path)
     try:
         include_external_review = external_vision_review_opted_in(spec)
     except ExternalVisionReviewError:
@@ -164,6 +169,17 @@ def critique_generator_version(
 
 
 def expected_critique_rubric_version(example_dir: Path) -> str:
+    reference_pack_path = example_dir / "critique_reference_pack.yaml"
+    if reference_pack_path.is_file():
+        try:
+            reference_pack = yaml.safe_load(reference_pack_path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            reference_pack = {}
+        if isinstance(reference_pack, dict) and isinstance(
+            reference_pack.get("reference_learning"),
+            dict,
+        ):
+            return CRITIQUE_RUBRIC_VERSION_V1_13
     spec_path = example_dir / "spec.yaml"
     if spec_path.is_file():
         try:
@@ -193,6 +209,8 @@ def _critique_schema_matches_expected_rubric(
     expected_rubric_version: str,
 ) -> bool:
     schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_13:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_13
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_12:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_12
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:

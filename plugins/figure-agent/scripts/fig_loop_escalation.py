@@ -8,7 +8,7 @@ from typing import Any
 def escalation_summary(loop_decision: dict[str, Any]) -> dict[str, Any]:
     stop_reason = loop_decision["stop_reason"]
     recommended = loop_decision.get("recommended_next_action", "")
-    if stop_reason == "human_gate_required":
+    if stop_reason in {"human_gate_required", "basin_detected"}:
         level = "human_review_required"
     elif stop_reason in {"patch_target_recommended", "active_subregion_recommended"}:
         level = "patch_allowed"

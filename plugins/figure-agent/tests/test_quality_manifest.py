@@ -9,6 +9,7 @@ from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_11,
     CRITIQUE_RUBRIC_VERSION_V1_12,
+    CRITIQUE_RUBRIC_VERSION_V1_13,
     critique_manifest_paths,
     expected_critique_rubric_version,
     input_manifest_hash,
@@ -161,6 +162,38 @@ def test_critique_manifest_includes_critique_reference_pack_when_present(
     after = input_manifest_hash(paths, base_dir=tmp_path)
 
     assert pack_path in paths
+    assert before != after
+
+
+def test_critique_manifest_includes_reference_aesthetic_metrics_when_present(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    (example_dir / "build").mkdir(parents=True)
+    style_lock = tmp_path / "style-lock.yml"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    metrics_path = example_dir / "build" / "reference_aesthetic_metrics.json"
+    metrics_path.write_text(
+        '{"schema":"figure-agent.reference-aesthetic-metrics.v1"}\n',
+        encoding="utf-8",
+    )
+
+    paths = critique_manifest_paths(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+    )
+    before = input_manifest_hash(paths, base_dir=tmp_path)
+    metrics_path.write_text(
+        '{"schema":"figure-agent.reference-aesthetic-metrics.v1","changed":true}\n',
+        encoding="utf-8",
+    )
+    after = input_manifest_hash(paths, base_dir=tmp_path)
+
+    assert metrics_path in paths
     assert before != after
 
 
@@ -473,6 +506,32 @@ def test_expected_critique_rubric_version_uses_v1_12_for_journal_playbook(
     )
 
     assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_12
+
+
+def test_expected_critique_rubric_version_uses_v1_13_for_reference_learning(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "critique_reference_pack.yaml").write_text(
+        """
+schema: figure-agent.critique-reference-pack.v1
+fixture: demo
+target_journal: Nature Communications
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references: []
+must_match_traits: []
+must_avoid_traits: []
+calibration_questions: []
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references: []
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_13
 
 
 def test_expected_critique_rubric_version_prefers_journal_playbook_over_intent_v2(

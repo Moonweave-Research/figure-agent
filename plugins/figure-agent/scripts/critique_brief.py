@@ -46,10 +46,12 @@ from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_11,
     CRITIQUE_RUBRIC_VERSION_V1_12,
+    CRITIQUE_RUBRIC_VERSION_V1_13,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
 )
+from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 from svg_polish_delta import (
@@ -91,6 +93,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 _CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
+_CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
 
 
 class CritiqueBriefError(Exception):
@@ -448,6 +451,80 @@ def _reference_calibration_section(pack: dict | None) -> str:
     lines.append("### Calibration Questions")
     for item in pack.get("calibration_questions", []):
         lines.append(f"- {item['id']}: {item['question']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _reference_learning_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    learning = pack.get("reference_learning")
+    if not isinstance(learning, dict):
+        return ""
+    lines = [
+        "## Reference Learning Contract",
+        "References are learning sources, not copy targets.",
+        "`briefing.md`, theory guards, fixture semantics, and author intent outrank "
+        "reference style. Learn only the allowed transfer items below; do not copy "
+        "forbidden structure, hardware, layout, or physics.",
+        "",
+    ]
+    for item in learning.get("references", []):
+        roles = ", ".join(item.get("roles", []))
+        allowed = "; ".join(item.get("allowed_transfer", []))
+        forbidden = "; ".join(item.get("forbidden_transfer", []))
+        lines.extend(
+            [
+                f"### `{item['path']}`",
+                f"- roles={roles}",
+                f"- Allowed transfer: {allowed}",
+                f"- Forbidden transfer: {forbidden}",
+                f"- Rationale: {item['rationale']}",
+                "",
+            ]
+        )
+    return "\n" + "\n".join(lines).rstrip() + "\n"
+
+
+def _reference_aesthetic_metrics_section(example_dir: Path) -> str:
+    summary = reference_aesthetic_metrics_summary(example_dir)
+    if summary is None:
+        return ""
+    lines = [
+        "## Reference Aesthetic Metrics",
+        "Non-model aesthetic-class measurements are advisory anchors, not copy-target "
+        "requirements. Use them to explain palette, density, silhouette, or line-density "
+        "divergence from allowed reference-learning traits.",
+        f"- Evaluation state: {summary['evaluation_state']}",
+        f"- Evidence path: `{summary['evidence_path']}`",
+        f"- Comparison count: {summary['comparison_count']}",
+        f"- Severe metric count: {summary['severe_metric_count']}",
+    ]
+    blocking_items = summary.get("blocking_items") or []
+    if blocking_items:
+        lines.append("- Blocking items: " + ", ".join(f"`{item}`" for item in blocking_items))
+    severe_metrics = summary.get("severe_metrics") or []
+    if severe_metrics:
+        lines.append("")
+        lines.append("Severe metrics to explain or route:")
+        for item in severe_metrics:
+            lines.append(
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
+                    **item
+                )
+            )
+    warning_metrics = summary.get("warning_metrics") or []
+    if warning_metrics:
+        lines.append("")
+        lines.append("Warning metrics to consider:")
+        for item in warning_metrics:
+            lines.append(
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
+                    **item
+                )
+            )
+    next_action = summary.get("next_action")
+    if next_action:
+        lines.append(f"- Next action: {next_action}")
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -1182,6 +1259,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
+    reference_learning_section = _reference_learning_section(reference_calibration_pack)
+    reference_aesthetic_metrics_section = _reference_aesthetic_metrics_section(example_dir)
     external_vision_review_section = _external_vision_review_section(
         external_vision_review
     )
@@ -1195,20 +1274,42 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     aesthetic_intent_section = _aesthetic_intent_section(aesthetic_intent_pack)
     svg_polish_delta_section = _svg_polish_delta_section(example_dir)
     uses_aesthetic_lever_schema = _uses_aesthetic_lever_schema(aesthetic_intent_pack)
-    critique_schema = (
-        _CRITIQUE_SCHEMA_VERSION_V1_12
-        if journal_playbook_pack is not None
-        else _CRITIQUE_SCHEMA_VERSION_V1_11
-        if uses_aesthetic_lever_schema
-        else _CRITIQUE_SCHEMA_VERSION
+    uses_reference_learning_schema = isinstance(
+        (reference_calibration_pack or {}).get("reference_learning"),
+        dict,
     )
-    critique_rubric_version = (
-        CRITIQUE_RUBRIC_VERSION_V1_12
-        if journal_playbook_pack is not None
-        else CRITIQUE_RUBRIC_VERSION_V1_11
-        if uses_aesthetic_lever_schema
-        else CRITIQUE_RUBRIC_VERSION
-    )
+    if uses_reference_learning_schema:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_13
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_13
+        crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
+    anomaly_rationale: "<whether any unintended visible artifact is present>"
+    anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
+"""
+        crop_anomaly_instructions = """
+For each crop, also answer the inverse question: "is anything visible here that
+was not intended?" Use `unintended_visible_anomaly: present` for stray bond,
+unintended line continuation, accidental component grouping, misleading reference transfer,
+phantom boundary or texture, or any other visible artifact not supported by
+briefing/author intent. `present` anomalies must link to a
+finding, micro-defect, or explicit `accept_simplification:<reason>` decision;
+`uncertain` anomalies require a concrete rationale and should route to more
+zoom/reference review.
+"""
+    elif journal_playbook_pack is not None:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_12
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_12
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
+    elif uses_aesthetic_lever_schema:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_11
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_11
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
+    else:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION
+        crop_anomaly_schema = ""
+        crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
@@ -1224,6 +1325,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {text_boundary_clash_section}
 {label_path_proximity_section}
 {reference_calibration_section}
+{reference_learning_section}
+{reference_aesthetic_metrics_section}
 {external_vision_review_section}
 {paper_aesthetic_context_section}
 {journal_art_direction_playbook_section}
@@ -1389,6 +1492,7 @@ crop_audit_log:
     verdict: defect | no_defect | uncertain
     linked_micro_defect_id: "<M001 when verdict=defect or empty>"
     rationale: "<local geometry reason from direct crop inspection>"
+{crop_anomaly_schema.rstrip()}
 panels:
   - id: <panel id>
     findings:
@@ -1452,6 +1556,7 @@ Every crop id in `build/audit_crops/manifest.json.required_crop_ids` must appear
 exactly once in `crop_audit_log`. Use `verdict: uncertain` when the crop remains
 ambiguous; do not silently treat uncertainty as pass. Use `verdict: defect` only
 when `linked_micro_defect_id` names the corresponding `micro_defects[].id`.
+{crop_anomaly_instructions.rstrip()}
 For every visual-clash-linked `accept_simplification`, the `observation` must
 name the `VC###` id. For every `micro_defects` item with
 `status: accept_simplification`, `accept_simplification_reason` must be one of

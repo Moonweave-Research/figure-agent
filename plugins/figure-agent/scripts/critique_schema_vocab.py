@@ -15,6 +15,7 @@ CRITIQUE_SCHEMA_V1_9 = "figure-agent.critique.v1.9"
 CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
+CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -181,6 +182,7 @@ MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS = (
     "convention",
 )
 CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})
+CROP_ANOMALY_VERDICTS = frozenset({"none", "present", "uncertain"})
 AESTHETIC_LEVER_DIMENSIONS = frozenset(
     {
         "maturity",

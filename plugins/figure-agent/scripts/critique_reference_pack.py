@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 
 REFERENCE_PACK_SCHEMA = "figure-agent.critique-reference-pack.v1"
+REFERENCE_LEARNING_SCHEMA = "figure-agent.reference-learning.v1"
 TARGET_JOURNALS = frozenset(
     {"Nature Communications", "Nature Materials", "Science", "ACS", "internal", "unknown"}
 )
@@ -26,6 +27,16 @@ VISUAL_AMBITIONS = frozenset(
 REFERENCE_SOURCES = frozenset({"provided_reference", "paper", "briefing", "human_note"})
 REFERENCE_ROLES = frozenset(
     {"layout", "style", "component_fidelity", "storyline", "journal_register"}
+)
+REFERENCE_LEARNING_ROLES = frozenset(
+    {
+        "apparatus_convention",
+        "composition_reference",
+        "density_reference",
+        "journal_tone_reference",
+        "style_anchor",
+        "typography_reference",
+    }
 )
 SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 
@@ -73,6 +84,65 @@ def _mapping_items(data: dict[str, Any], key: str, *, label: str) -> list[dict[s
     for index, item in enumerate(items):
         result.append(_require_mapping(item, f"{label}.{key}[{index}]"))
     return result
+
+
+def _require_string_list(
+    data: dict[str, Any],
+    key: str,
+    *,
+    label: str,
+    allowed: frozenset[str] | None = None,
+) -> list[str]:
+    raw_items = _require_list(data.get(key), f"{label}.{key}")
+    if not raw_items:
+        raise CritiqueReferencePackError(f"{label}.{key} must be a non-empty list")
+    items: list[str] = []
+    for index, raw_item in enumerate(raw_items):
+        if not isinstance(raw_item, str) or not raw_item.strip():
+            raise CritiqueReferencePackError(
+                f"{label}.{key}[{index}] must be a non-empty string"
+            )
+        item = raw_item.strip()
+        if allowed is not None and item not in allowed:
+            allowed_values = ", ".join(sorted(allowed))
+            raise CritiqueReferencePackError(
+                f"{label}.{key}[{index}] must be one of: {allowed_values}"
+            )
+        items.append(item)
+    return items
+
+
+def _validate_reference_learning(data: dict[str, Any]) -> None:
+    raw_learning = data.get("reference_learning")
+    if raw_learning is None:
+        return
+    learning = _require_mapping(raw_learning, "critique_reference_pack.reference_learning")
+    schema = _require_string(
+        learning,
+        "schema",
+        label="critique_reference_pack.reference_learning",
+    )
+    if schema != REFERENCE_LEARNING_SCHEMA:
+        raise CritiqueReferencePackError(
+            "critique_reference_pack.reference_learning.schema must be "
+            f"{REFERENCE_LEARNING_SCHEMA}"
+        )
+    references = _mapping_items(
+        learning,
+        "references",
+        label="critique_reference_pack.reference_learning",
+    )
+    if not references:
+        raise CritiqueReferencePackError(
+            "critique_reference_pack.reference_learning.references must be non-empty"
+        )
+    for index, item in enumerate(references):
+        label = f"critique_reference_pack.reference_learning.references[{index}]"
+        _require_string(item, "path", label=label)
+        _require_string_list(item, "roles", label=label, allowed=REFERENCE_LEARNING_ROLES)
+        _require_string_list(item, "allowed_transfer", label=label)
+        _require_string_list(item, "forbidden_transfer", label=label)
+        _require_string(item, "rationale", label=label)
 
 
 def load_reference_pack(path: Path) -> dict[str, Any]:
@@ -133,6 +203,7 @@ def load_reference_pack(path: Path) -> dict[str, Any]:
         label = f"critique_reference_pack.calibration_questions[{index}]"
         _require_string(item, "id", label=label)
         _require_string(item, "question", label=label)
+    _validate_reference_learning(data)
     return data
 
 
