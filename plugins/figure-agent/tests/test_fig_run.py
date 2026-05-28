@@ -202,6 +202,134 @@ def test_execute_stops_at_non_allowlisted_shell_action(
     assert payload["steps"][0]["would_execute"] is False
 
 
+def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+            ),
+            _driver_summary(
+                action=fig_driver.ACTION_HUMAN_GATE_STOP,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_HUMAN_GATE,
+            ),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 3
+    assert commands == [
+        "bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json",
+    ]
+    assert payload["executable_actions"] == ["run_compile", "run_fig_loop"]
+    assert payload["executed_count"] == 2
+    assert payload["final_action"] == fig_driver.ACTION_HUMAN_GATE_STOP
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][1]["action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert payload["steps"][1]["executed"] is True
+
+
+def test_fig_loop_failure_stops_without_requery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        return fig_run.CommandResult(returncode=9, stdout="", stderr="loop failed")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 1
+    assert payload["executed_count"] == 1
+    assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert payload["final_stop_reason"] == "command_failed"
+    assert payload["steps"][0]["stderr_tail"] == "loop failed"
+
+
+def test_fig_loop_with_stop_boundary_is_not_executed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+                stop_boundary=fig_driver.STOP_MODE_FORBIDDEN,
+            )
+        ],
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="polish",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert payload["final_stop_boundary"] == fig_driver.STOP_MODE_FORBIDDEN
+    assert payload["final_stop_reason"] == "not_executable_action"
+
+
 def test_command_failure_stops_without_requery(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
