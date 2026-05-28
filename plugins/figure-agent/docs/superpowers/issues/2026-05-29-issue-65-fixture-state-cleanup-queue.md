@@ -1,6 +1,6 @@
 # Issue 65 - Fixture State Cleanup Queue
 
-Status: completed in commit `545e376`
+Status: completed in commit `87d7b17`
 
 Depends on: v0.8.2 / Issue 64 release metadata sync
 
