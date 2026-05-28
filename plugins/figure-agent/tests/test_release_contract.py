@@ -14,7 +14,7 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.8.0"
+EXPECTED_RELEASE_VERSION = "0.8.1"
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -168,6 +168,9 @@ def test_v0_8_changelog_covers_issues_57_to_61() -> None:
         "Issue 59",
         "Issue 60",
         "Issue 61",
+        "Issue 63",
+        "reference-learning",
+        "non-model aesthetic audit",
         "quality/audit kernel",
         "not a hidden auto-designer",
     ]:
@@ -191,7 +194,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     ).read_text()
 
     assert f"current main truth through v{plugin['version']}" in closeout
-    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 62" in closeout
+    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 63" in closeout
     assert "after Issue 33 / PR #47" not in closeout
     assert "start with Issue 34" not in closeout
     assert "Issue 48" in closeout

@@ -2,6 +2,39 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.8.1] - 2026-05-28
+
+Patch release for Issue 63 reference-learning and non-model aesthetic audit
+signals after v0.8.0.
+
+### Added
+
+- Optional `reference_learning` contract inside `critique_reference_pack.yaml`
+  so references can teach editorial principles without becoming copy targets.
+- Deterministic `reference_aesthetic_metrics.py` pack for palette, density,
+  silhouette, and line-density divergence against opt-in reference-learning
+  anchors.
+- `/fig_status`, `/fig_loop`, critique freshness, and `/fig_critique` brief
+  surfacing for reference-aesthetic metric summaries.
+- Loop basin detection for repeated patch targets, repeated aesthetic
+  bottlenecks, and repeated severe reference-aesthetic divergence.
+- Critique schema/rubric v1.13 for reference-learning critiques, including
+  crop-level unintended-visible-anomaly accounting.
+
+### Fixed
+
+- Scoped `unintended_visible_anomaly` and `anomaly_link` prompt fields to v1.13
+  reference-learning critiques so legacy v1.10 critique briefs do not request
+  fields their schema does not validate.
+
+### Guardrails
+
+- Reference metrics are suspicion and routing signals, not release authority.
+- Reference learning does not override `briefing.md`, theory guards, fixture
+  semantics, or author intent.
+- No provider API calls, hidden auto-patching, accepted/golden mutation, SVG
+  polish editing, or source drawing work is introduced by this release.
+
 ## [0.8.0] - 2026-05-28
 
 Release-hardening pass for the v0.8 audit kernel after Issues 57-61. This
