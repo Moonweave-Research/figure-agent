@@ -1,6 +1,6 @@
 # Issue 63B - Non-Model Aesthetic Metrics Pack
 
-Status: proposed
+Status: implemented on branch `codex/issue63-reference-learning-roadmap`
 
 Depends on: Issue 63A reference-learning contract
 
@@ -56,12 +56,45 @@ Out of scope:
 
 ## Acceptance
 
-- A local script can generate `build/reference_aesthetic_metrics.json`.
-- Missing or incompatible references skip with a controlled explanation.
-- The output is deterministic for the same inputs.
-- Synthetic tests demonstrate palette, density, and silhouette divergence.
-- Tests prove full-image similarity is not used as a pass/fail contract.
-- Existing fixtures without reference-learning opt-in are unaffected.
+- [x] A local script can generate `build/reference_aesthetic_metrics.json`.
+- [x] Missing or incompatible references skip with a controlled explanation.
+- [x] The output is deterministic for the same inputs.
+- [x] Synthetic tests demonstrate palette, density, and silhouette divergence.
+- [x] Tests prove full-image similarity is not used as a pass/fail contract.
+- [x] Existing fixtures without reference-learning opt-in are unaffected.
+
+## Implementation Notes
+
+Implemented as `scripts/reference_aesthetic_metrics.py`.
+
+The script:
+
+- reads optional `critique_reference_pack.yaml`;
+- only runs when the pack contains `reference_learning`;
+- writes deterministic `build/reference_aesthetic_metrics.json`;
+- records build and reference hashes;
+- computes aesthetic-class deltas:
+  - `palette_histogram_distance`;
+  - `dominant_hue_family_count_delta`;
+  - `ink_density_delta`;
+  - `edge_density_delta`;
+  - `coarse_silhouette_occupancy_delta`;
+  - `line_density_proxy_delta`;
+- records build/reference feature summaries;
+- skips no-opt-in fixtures without creating a metrics file;
+- writes `state: skipped` with `skip_reasons` when the learning contract exists
+  but the declared local reference image cannot be measured.
+
+The implementation intentionally does not compute SSIM, pixel identity, or
+coordinate equality. It also does not surface metrics in `/fig_status` or
+`/fig_loop`; that remains Issue 63C.
+
+Verification performed:
+
+- `uv run pytest -q tests/test_reference_aesthetic_metrics.py`
+  -> 4 passed.
+- `uv run ruff check scripts/reference_aesthetic_metrics.py tests/test_reference_aesthetic_metrics.py`
+  -> all checks passed.
 
 ## Review Questions
 
