@@ -16,7 +16,10 @@ from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_markdown import decision_markdown  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
-from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
+from reference_aesthetic_metrics import (  # noqa: E402
+    build_reference_aesthetic_metrics,
+    reference_aesthetic_metrics_summary,
+)
 
 
 def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
@@ -80,6 +83,39 @@ reference_learning:
         encoding="utf-8",
     )
     build_reference_aesthetic_metrics(fixture)
+
+
+def _write_previous_basin_iteration(
+    runs_root: Path,
+    name: str,
+    suffix: str,
+    *,
+    status: dict,
+    reference_metrics: dict,
+) -> Path:
+    run_dir = runs_root / f"20260101-0000{suffix}-{name}"
+    run_dir.mkdir(parents=True)
+    write_json(
+        run_dir / "iteration_001.json",
+        {
+            "status": status,
+            "stop_reason": "human_gate_required",
+            "active_patch_target": None,
+            "reference_aesthetic_metrics_summary": reference_metrics,
+            "recommended_next_action": "human review required",
+        },
+    )
+    write_json(
+        run_dir / "run_manifest.json",
+        {
+            "schema": "figure-agent.fig-loop-run.v1",
+            "fixture": name,
+            "mode": "verify-only",
+            "final_stop_reason": "human_gate_required",
+            "iterations": ["iteration_001.json"],
+        },
+    )
+    return run_dir
 
 
 def _fixture_files(fixture: Path) -> dict[str, bytes]:
@@ -1268,6 +1304,178 @@ def test_loop_routes_reference_aesthetic_metric_severe_divergence_to_human_gate(
     assert iteration["escalation_level"] == "human_review_required"
     assert "reference aesthetic metric divergence" in iteration["recommended_next_action"]
     assert stdout_summary["reference_aesthetic_metrics_summary"] == summary
+
+
+def test_loop_detects_repeated_reference_aesthetic_metric_basin(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_reference_learning_metric_fixture(fixture)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    current_metrics = reference_aesthetic_metrics_summary(fixture)
+    assert current_metrics is not None
+    assert current_metrics["evaluation_state"] == "severe_divergence"
+    status = {
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+    }
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "01",
+        status=status,
+        reference_metrics=current_metrics,
+    )
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "02",
+        status=status,
+        reference_metrics=current_metrics,
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "detect repeated aesthetic basin",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    stdout_summary = json_stdout_summary(run_dir)
+
+    assert iteration["stop_reason"] == "basin_detected"
+    assert iteration["escalation_level"] == "human_review_required"
+    assert iteration["basin_summary"]["evaluation_state"] == "basin_detected"
+    assert iteration["basin_summary"]["history_count"] == 3
+    assert "step out" in iteration["recommended_next_action"]
+    assert stdout_summary["basin_summary"] == iteration["basin_summary"]
+
+
+def test_loop_does_not_detect_basin_without_repeated_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_reference_learning_metric_fixture(fixture)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "single metric divergence",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert "basin_summary" not in iteration
+
+
+def test_loop_ignores_stale_history_for_basin_detection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_reference_learning_metric_fixture(fixture)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    current_metrics = reference_aesthetic_metrics_summary(fixture)
+    assert current_metrics is not None
+    stale_status = {
+        "render_state": "STALE",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+    }
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "01",
+        status=stale_status,
+        reference_metrics=current_metrics,
+    )
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "02",
+        status=stale_status,
+        reference_metrics=current_metrics,
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "ignore stale basin history",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert "basin_summary" not in iteration
+
+
+def test_loop_does_not_count_warning_metrics_as_severe_basin_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_reference_learning_metric_fixture(fixture)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    warning_metrics = {
+        "evaluation_state": "warning",
+        "blocking_items": [],
+        "warning_metrics": [
+            {
+                "reference_path": "reference/style.png",
+                "metric": "palette_histogram_distance",
+            }
+        ],
+    }
+    status = {
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+    }
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "01",
+        status=status,
+        reference_metrics=warning_metrics,
+    )
+    _write_previous_basin_iteration(
+        runs_root,
+        "loop_demo",
+        "02",
+        status=status,
+        reference_metrics=warning_metrics,
+    )
+
+    run_dir = run_loop(
+        "loop_demo",
+        "ignore warning basin history",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert "basin_summary" not in iteration
 
 
 def test_loop_stale_external_vision_does_not_demote_existing_human_gate(

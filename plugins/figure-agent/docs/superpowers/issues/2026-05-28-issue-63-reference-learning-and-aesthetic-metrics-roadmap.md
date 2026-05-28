@@ -55,7 +55,8 @@ non-model aesthetic-class signals and loop-stuck signals in `/fig_loop`.
    `codex/issue63-reference-learning-roadmap`
 3. Issue 63C - Aesthetic Metric Surfacing In Status And Loop - implemented on
    branch `codex/issue63-reference-learning-roadmap`
-4. Issue 63D - Basin And Diminishing-Returns Detector
+4. Issue 63D - Basin And Diminishing-Returns Detector - implemented on branch
+   `codex/issue63-reference-learning-roadmap`
 5. Issue 63E - Unintended-Visible Anomaly Audit
 
 ## Order

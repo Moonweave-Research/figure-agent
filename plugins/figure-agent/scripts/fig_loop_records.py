@@ -67,4 +67,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
     audit_evidence = iteration.get("audit_evidence")
     if audit_evidence is not None:
         summary["audit_evidence"] = audit_evidence
+    basin = iteration.get("basin_summary")
+    if basin is not None:
+        summary["basin_summary"] = basin
     return summary
