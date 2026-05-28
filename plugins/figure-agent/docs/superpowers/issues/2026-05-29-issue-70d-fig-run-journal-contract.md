@@ -1,6 +1,6 @@
 # Issue 70D: Fig Run Journal Contract
 
-Status: proposed
+Status: implemented
 
 Depends on: Issues 70A and 70B
 
@@ -14,9 +14,11 @@ problems, the runner needs a gitignored journal similar to `/fig_loop`.
 
 ## What To Build
 
-Add a runner journal under `.scratch/fig-run-runs/<timestamp>-<name>/` only if
-70A/70B justify it. The journal should persist the public `/fig_run` payload and
-boundary handoff output without becoming authoritative workflow state.
+Add a runner journal under `.scratch/fig-run-runs/<timestamp>-<name>/`.
+70B dogfood justified this as continuity evidence: the handoff packet is useful,
+but a later session still needs a stable record of what `/fig_run` saw and why
+it stopped. The journal persists the public `/fig_run` payload and boundary
+handoff output without becoming authoritative workflow state.
 
 Suggested files:
 
@@ -34,6 +36,8 @@ The journal is evidence, not authority:
 
 - fresh `/fig_drive` state always decides next action;
 - old journals cannot replay commands;
+- recorded `safe_command` fields are evidence-only because the journal
+  preserves the public payload;
 - any future resume feature must revalidate current status and driver output;
 - journal currentness must be explicit before any `--resume` flag exists.
 
@@ -43,7 +47,9 @@ In scope:
 
 - Journal writer.
 - `--runs-root <path>` for tests.
-- Optional `--no-record` if recording is default.
+- `--record` to opt into plan-mode recording.
+- `--no-record` to preserve stdout-only behavior for execute callers that do
+  not want journal writes.
 - `.scratch/fig-run-runs/` gitignore coverage.
 
 Out of scope:
@@ -60,6 +66,8 @@ Out of scope:
 - Existing stdout JSON remains backward compatible.
 - Journals cannot be used to skip a fresh driver re-query.
 - Generated journals are not committed.
+- Plan-only remains no-write by default unless `--record` is explicit.
+- Recording failure must not hide the public run payload after execution.
 
 ## Verification
 

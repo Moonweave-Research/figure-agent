@@ -1033,6 +1033,445 @@ def test_patch_handoff_boundary_is_deferred_without_patch_scope(
     ]
 
 
+def test_main_records_non_authoritative_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--record",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    journal = payload["journal"]
+    assert journal["schema"] == "figure-agent.fig-run-journal-ref.v1"
+    assert journal["authoritative"] is False
+    assert journal["replay_allowed"] is False
+    assert journal["commands_are_evidence_only"] is True
+    assert journal["rerun_live_status_first"] is True
+    assert journal["rerun_live_driver_first"] is True
+    assert "command" not in journal
+
+    run_dir = Path(journal["run_dir"])
+    assert run_dir.parent == runs_root
+    assert run_dir.name.endswith("-runner_demo")
+    manifest_path = run_dir / "run_manifest.json"
+    run_path = run_dir / "run.json"
+    step_path = run_dir / "steps" / "step_001.json"
+    stop_path = run_dir / "stop.md"
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["schema"] == "figure-agent.fig-run-journal.v1"
+    assert manifest["fixture"] == "runner_demo"
+    assert manifest["mode"] == "review"
+    assert manifest["goal"] == "close loop"
+    assert manifest["final_action"] == fig_driver.ACTION_RUN_CRITIQUE
+    assert manifest["final_stop_boundary"] == fig_driver.STOP_HOST_LLM_CRITIQUE
+    assert manifest["final_stop_reason"] == "host_boundary"
+    assert manifest["started_at"].endswith("Z")
+    assert manifest["completed_at"].endswith("Z")
+    assert "branch" in manifest
+    assert "commit" in manifest
+    assert manifest["authoritative"] is False
+    assert manifest["replay_allowed"] is False
+    assert manifest["commands_are_evidence_only"] is True
+    assert manifest["rerun_live_status_first"] is True
+    assert manifest["rerun_live_driver_first"] is True
+    assert manifest["run_json"] == "run.json"
+    assert manifest["steps"] == ["steps/step_001.json"]
+    assert manifest["stop_markdown"] == "stop.md"
+
+    assert json.loads(run_path.read_text(encoding="utf-8")) == payload
+    assert json.loads(step_path.read_text(encoding="utf-8")) == payload["steps"][0]
+    stop_text = stop_path.read_text(encoding="utf-8")
+    assert "non-authoritative evidence" in stop_text
+    assert "Recorded safe_command fields are evidence only" in stop_text
+    assert "Do not replay commands from this journal" in stop_text
+    assert "Required actor: host_llm" in stop_text
+
+
+def test_main_plan_only_does_not_record_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "plan_only"
+    assert "journal" not in payload
+    assert not runs_root.exists()
+
+
+def test_execute_records_run_journal_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["executed_count"] == 1
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == runs_root
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["steps"] == ["steps/step_001.json", "steps/step_002.json"]
+    assert (run_dir / "steps" / "step_001.json").is_file()
+    assert (run_dir / "steps" / "step_002.json").is_file()
+    assert json.loads((run_dir / "run.json").read_text(encoding="utf-8")) == payload
+
+
+def test_journal_manifest_timestamps_cover_run_not_write_time(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    clock = iter(["run-start", "run-end"])
+    monkeypatch.setattr(fig_run, "_utc_now", lambda: next(clock), raising=False)
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["started_at"] == "run-start"
+    assert manifest["completed_at"] == "run-end"
+
+
+def test_execute_without_runs_root_uses_repo_scratch_fig_run_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    result = fig_run.main(
+        ["runner_demo", "--mode", "review", "--goal", "close loop", "--execute"],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == tmp_path / ".scratch" / "fig-run-runs"
+    assert (run_dir / "run_manifest.json").is_file()
+
+
+def test_main_no_record_disables_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--runs-root",
+            str(runs_root),
+            "--no-record",
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert "journal" not in payload
+    assert not runs_root.exists()
+
+
+def test_execute_no_record_disables_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+            "--no-record",
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["executed_count"] == 1
+    assert "journal" not in payload
+    assert "journal_error" not in payload
+    assert not runs_root.exists()
+
+
+def test_journal_write_failure_does_not_hide_run_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    def _fail_journal(*args: object, **kwargs: object) -> dict[str, Any]:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(fig_run, "write_run_journal", _fail_journal)
+
+    result = fig_run.main(
+        ["runner_demo", "--mode", "review", "--goal", "close loop", "--execute"],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "complete"
+    assert "journal" not in payload
+    error = payload["journal_error"]
+    assert error["schema"] == "figure-agent.fig-run-journal-error.v1"
+    assert error["authoritative"] is False
+    assert error["replay_allowed"] is False
+    assert error["commands_are_evidence_only"] is True
+    assert "disk full" in error["message"]
+
+
+def test_command_failed_journal_is_non_authoritative(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(7, "", "compile failed"),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "command_failed"
+    journal = payload["journal"]
+    assert journal["authoritative"] is False
+    assert journal["replay_allowed"] is False
+    assert "command" not in journal
+    run_dir = Path(journal["run_dir"])
+    stop_text = (run_dir / "stop.md").read_text(encoding="utf-8")
+    assert "Do not replay commands from this journal" in stop_text
+
+
+def test_run_journal_sanitizes_fixture_name_and_stays_within_runs_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "../bad/name with spaces",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--record",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == runs_root
+    assert run_dir.name.endswith("-.._bad_name_with_spaces")
+
+
+def test_run_workflow_does_not_write_journal_directly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == "plan_only"
+    assert "journal" not in payload
+    assert not (tmp_path / ".scratch").exists()
+
+
 def test_main_emits_json_plan_by_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

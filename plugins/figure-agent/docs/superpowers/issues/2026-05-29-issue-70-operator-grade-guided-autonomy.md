@@ -109,6 +109,12 @@ not expose patch execution through `/fig_run`.
 explanatory only: no executable resume command, no patch edit scope leakage,
 and no expansion of the runner allowlist.
 
+70D result:
+`docs/milestones/2026-05-29-fig-run-journal-contract.md` implements a
+gitignored `.scratch/fig-run-runs/` journal for `/fig_run` stdout payloads. The
+journal is non-authoritative evidence only: it records what happened, but never
+allows command replay or resume without fresh status/driver checks.
+
 ## Out Of Scope For Issue 70
 
 - Hidden source editing.

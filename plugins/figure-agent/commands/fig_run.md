@@ -11,6 +11,8 @@ Run from the plugin root:
 ```bash
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>"
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
+uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
+uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --no-record
 ```
 
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
@@ -21,7 +23,8 @@ accepted state, tracked-golden export, golden roll-forward, release approval, or
 any unsupported mutation.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
-run and does not mutate anything.
+run and does not mutate fixture source, exports, accepted state, or golden
+state. Plan-only runs do not write a journal unless `--record` is passed.
 
 ## Execution Policy
 
@@ -66,11 +69,40 @@ because that is a host-vision operation, not a shell command.
 | `final_stop_reason` | string | runner reason for stopping |
 | `executed_count` | int | number of shell commands actually run |
 | `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
+| `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |
+| `journal_error` | object, optional | recording failure details; run payload remains usable |
 
 Step entries include the embedded `/fig_drive` JSON under `driver` so an outer
 agent can inspect the exact status, blocker, and next-action evidence used for
 the decision. A successful executed step may have `stop_reason: null`; the
 runner then re-queries the driver for the next action.
+
+### Run Journal
+
+When `--execute` is passed, the CLI records each `/fig_run` payload under:
+
+```text
+.scratch/fig-run-runs/<timestamp>-<name>/
+├── run_manifest.json
+├── run.json
+├── steps/
+│   └── step_001.json
+└── stop.md
+```
+
+Use `--record` to record a plan-only run. Use `--runs-root <path>` to redirect
+journals in tests or dogfood runs. Use `--no-record` for stdout-only behavior,
+including execute mode.
+
+The journal is non-authoritative evidence. It exists so a later session can
+inspect what the runner saw and why it stopped. It preserves the public payload,
+so `safe_command` fields may appear inside `run.json` and step JSON as evidence
+of what the live driver selected. Those strings are not resume commands and are
+not permission to execute stale state; rerun live `/fig_status` and
+`/fig_drive` before continuing.
+
+If recording fails after a run, the CLI still prints the public run payload with
+`journal_error` instead of hiding the result behind a traceback.
 
 ### `boundary_handoff`
 

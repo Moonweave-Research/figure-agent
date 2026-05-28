@@ -137,15 +137,20 @@ read-only driver checkpoint routing:
 
 ## Runner Journal Contract
 
-70D is conditional. `/fig_run` currently emits stdout JSON only, and that may be
-enough if 70A/70B show stop continuity is not a real problem.
+70D is now implemented. 70B dogfood showed that boundary handoff packets are
+useful in live fixture states, but they are still ephemeral stdout unless a
+session records them. `/fig_run --execute` therefore writes a gitignored runner
+journal by default while preserving the public stdout JSON. Plan-only runs stay
+no-write by default and require explicit `--record` if a dogfood note should be
+persisted.
 
-If evidence justifies a journal, it should live under
-`.scratch/fig-run-runs/<timestamp>-<fixture>/` and persist the public run
-payload plus boundary handoff. The journal is evidence, not authority:
+The journal lives under `.scratch/fig-run-runs/<timestamp>-<fixture>/` and
+persists the public run payload plus boundary handoff. The journal is evidence,
+not authority:
 
 - fresh `/fig_drive` state still decides next action;
 - old journals cannot replay commands;
+- recorded `safe_command` fields are preserved as evidence only;
 - generated journals remain untracked;
 - tests can redirect the runs root.
 

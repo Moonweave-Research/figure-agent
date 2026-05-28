@@ -15,12 +15,14 @@ import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
+from fig_run_records import write_run_journal  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.run.v1"
@@ -49,6 +51,10 @@ class CommandResult:
     returncode: int
     stdout: str
     stderr: str
+
+
+def _utc_now() -> str:
+    return datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def _driver_summary(
@@ -472,7 +478,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
+    parser.add_argument("--runs-root", type=Path, default=None)
+    parser.add_argument("--record", action="store_true")
+    parser.add_argument("--no-record", action="store_true")
     args = parser.parse_args(argv)
+    started_at = _utc_now()
     try:
         payload = run_workflow(
             args.name,
@@ -485,6 +495,26 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     except ValueError as exc:
         print(f"fig_run.py: {exc}", file=sys.stderr)
         return 2
+    completed_at = _utc_now()
+    should_record = not args.no_record and (args.execute or args.record)
+    if should_record:
+        try:
+            payload = write_run_journal(
+                payload,
+                runs_root=args.runs_root or repo_root / ".scratch" / "fig-run-runs",
+                repo_root=repo_root,
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            payload["journal_error"] = {
+                "schema": "figure-agent.fig-run-journal-error.v1",
+                "recording_requested": True,
+                "authoritative": False,
+                "replay_allowed": False,
+                "commands_are_evidence_only": True,
+                "message": str(exc),
+            }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
