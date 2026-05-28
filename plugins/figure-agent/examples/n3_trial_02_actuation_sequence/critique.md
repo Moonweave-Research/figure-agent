@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.13
 fixture: n3_trial_02_actuation_sequence
-generated_at: 2026-05-28T12:13:44Z
+generated_at: 2026-05-28T13:07:47Z
 generator: critique_brief.py
 generator_version: sha256:f7b71b470a4bab2b0a486edb039a45f6187b3782e90db9cdd1e78b3cc05077e7
 rubric_version: figure-agent.critique-rubric.v1.13
-critique_input_hash: sha256:10434ffea6b7822fcb5bee9a25ef5ae0504c0b64f727e059cf105ba97bcefac6
+critique_input_hash: sha256:127e69c6c111a22f41a6f0c7b5e68900ea9a0edaa9beb6098ab1608685fae21b
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -32,8 +32,8 @@ audit_enumeration:
         connections: "Sit on the gold strip path; e- text label adjacent to top dot."
       - component: Ghost dashed outline (P3)
         mount_support: N/A
-        rationale: "Memory cue of the prior bent (P2) position."
-        connections: "Co-located with strip base in P3; labeled 'prev.'."
+        rationale: "Memory cue of the prior bent (P2) position; now labeled by a clearly separated 'prev.'."
+        connections: "Co-located with strip base in P3; 'prev.' sits immediately to its left."
       - component: Coulomb > Maxwell callout (P2)
         mount_support: N/A
         rationale: "Text annotation box stating the dominant force."
@@ -110,10 +110,10 @@ audit_enumeration:
       matches: true
       proposed_fix: ""
     - label: "prev."
-      nearest_object: "Solid gold strip (P3)"
+      nearest_object: "Dashed ghost outline (P3)"
       intended_target: "Ghost dashed outline (prior bent position)"
-      matches: false
-      proposed_fix: "Relocate prev. clear of the solid strip — place it left of / above the ghost (as in the reference), e.g. anchor near (11.30, 1.05)."
+      matches: true
+      proposed_fix: ""
     - label: "+V applied / -V applied / Open circuit"
       nearest_object: "Bottom of respective panel"
       intended_target: "Per-panel electrical state caption"
@@ -138,8 +138,8 @@ audit_enumeration:
   conceptual_completeness:
     - element: Legible 'prev.' anchor for the ghost outline
       reference: provided_reference
-      severity: MAJOR
-      proposed_action: expand
+      severity: NIT
+      proposed_action: accept_simplification
     - element: Prominent recovery-direction cue (reference uses a bold green curved arrow)
       reference: provided_reference
       severity: MINOR
@@ -173,7 +173,7 @@ quality_axes:
       - panel_id: "P3 Relaxation"
         role: result
         role_quality: clear
-        rationale: "Shows partial recovery with the ghost of the prior bent position."
+        rationale: "Shows partial recovery with the ghost of the prior bent position, now clearly labeled."
     blocking_items: []
     recommended_action: none
   subregion_integration:
@@ -198,39 +198,39 @@ quality_axes:
     blocking_items: []
     recommended_action: none
   composition_layout:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: "Overall three-panel balance and whitespace are good, but the P3 lower-left corner crowds the recovery arrow, ghost outline, prev. label, and strip base into one congested cluster."
-    evidence: "full_q4 crop; C002."
-    blocking_items: ["C002 - panel-3 lower-left congestion of recovery arrow / ghost / prev. / strip base"]
-    recommended_action: patch
+    rationale: "Three-panel balance and whitespace are good; the prior P3 lower-left congestion is resolved — prev., ghost, strip base, and recovery arrow now read as four distinct elements."
+    evidence: "full_q4 crop shows clean separation after the C001 label relocation."
+    blocking_items: []
+    recommended_action: none
   label_annotation_semantics:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "All labels bind to the correct targets except 'prev.', which is >50% occluded by the solid strip and reads as detached from the ghost it annotates."
-    evidence: "VC008 crop (dark=0.54); label_target_matching prev. row; C001."
-    blocking_items: ["C001 - prev. label occluded by the solid strip"]
-    recommended_action: patch
+    rationale: "Every label binds to the correct target; 'prev.' is now fully legible immediately left of the dashed ghost it annotates."
+    evidence: "full_q4 crop; label_target_matching prev. row now matches; visual_clash prev. text_on_path candidate removed (9 -> 8)."
+    blocking_items: []
+    recommended_action: none
   journal_polish:
-    verdict: needs_patch
+    verdict: pass
     confidence: medium
-    rationale: "Typography, palette economy, and line weights are restrained and consistent; the visible blemish is the swallowed prev. label plus the localized P3 congestion."
-    evidence: "print_178mm shows all other labels legible at manuscript scale; C001/C002."
-    blocking_items: ["C001 - prev. label occluded by the solid strip"]
-    recommended_action: patch
+    rationale: "Typography, palette economy, and line weights are restrained and consistent; the prior swallowed-label blemish is gone. Residual items are cosmetic NITs."
+    evidence: "print_178mm shows all labels legible at manuscript scale; only C003/C004 NITs remain."
+    blocking_items: []
+    recommended_action: none
   reference_fidelity:
     verdict: pass
     confidence: medium
-    rationale: "Render preserves the three-stage left-to-right story, the full label set, color semantics, and the ghost+prev cue; the 2D simplification of the reference's 3D styling is allowed_transfer, and no forbidden topology is copied."
+    rationale: "Render preserves the three-stage story, full label set, color semantics, and ghost+prev cue; the prev. placement now matches the reference's clear placement. 2D simplification is allowed_transfer; no forbidden topology copied."
     evidence: "reference/codex_gen_v1.png comparison; reference_learning allowed/forbidden lists; A001/A002 honored."
     blocking_items: []
     recommended_action: none
   publication_readiness:
     verdict: needs_patch
     confidence: medium
-    rationale: "Physics and storyline are sound, but the figure needs a small label/composition patch (prev. relocation + P3 decongestion) before it is manuscript-clean. Not less severe than the label/composition/polish axes above."
-    evidence: "C001 (MAJOR), C002 (MINOR)."
-    blocking_items: ["C001 - prev. label occluded by the solid strip", "C002 - panel-3 lower-left congestion"]
+    rationale: "Manuscript-usable now that the blocking MAJOR (C001) is resolved; one low-impact semantic-grammar refinement remains before the figure is fully clean. Not less severe than any upstream axis (all pass)."
+    evidence: "C005 (MINOR teal double-encoding); top_tier_audit.cross_panel_semantic_grammar weak."
+    blocking_items: ["C005 - teal encodes both the P2 repulsion force and the P3 recovery motion"]
     recommended_action: patch
 top_tier_audit:
   first_glance_message:
@@ -260,13 +260,13 @@ top_tier_audit:
     blocks_high_impact: false
   cross_panel_semantic_grammar:
     verdict: weak
-    finding: "Teal encodes two different roles: the active Coulomb repulsion force (P2 straight arrows) and the passive elastic recovery motion (P3 curved arrow)."
-    concrete_fix: "Give the P3 recovery arrow a distinct style (motion-curve / different hue) from the P2 force arrows."
+    finding: "Teal encodes two different roles: the active Coulomb repulsion force (P2 straight arrows) and the passive elastic recovery motion (P3 curved arrow). Shape (straight vs curved) and panel context partly disambiguate, but color does not."
+    concrete_fix: "Give the P3 recovery arrow a distinct style (motion-curve / different hue) from the P2 force arrows (see C005)."
     blocks_high_impact: false
   reader_misinterpretation_risk:
     verdict: weak
-    finding: "A careful reader may read the P3 teal recovery curve as an applied force rather than passive elastic relaxation, especially with the prev. anchor occluded."
-    concrete_fix: "Distinguish recovery-motion arrow style from force arrows and restore prev. legibility (C001)."
+    finding: "With the prev. anchor now restored, the main residual risk is reading the P3 teal recovery curve as an applied force rather than passive elastic relaxation."
+    concrete_fix: "Distinguish recovery-motion arrow style from force arrows (see C005)."
     blocks_high_impact: false
   reduction_print_readability:
     verdict: pass
@@ -280,7 +280,7 @@ top_tier_audit:
     blocks_high_impact: false
   aesthetic_coherence:
     verdict: pass
-    finding: "Consistent flat-2D register, line weights, and typographic hierarchy across panels."
+    finding: "Consistent flat-2D register, line weights, and typographic hierarchy across panels; the prior swallowed-label glitch is resolved."
     concrete_fix: "accept_simplification."
     blocks_high_impact: false
 editorial_art_direction:
@@ -328,54 +328,54 @@ editorial_art_direction:
     blocks_high_impact: false
   aesthetic_risk:
     verdict: weak
-    evidence: "prev. label swallowed by the strip (looks like a bug), rounded strip-cap knob over the clamp, and lower-left P3 congestion."
-    rationale: "These read as amateur slips that undercut an otherwise restrained schematic."
-    concrete_fix: "Fix prev. occlusion (C001) and decongest the P3 corner (C002)."
+    evidence: "Residual low-grade slips: rounded strip-cap knob over the clamp (C004) and teal double-encoding of force vs motion (C005). The prior swallowed prev. label is resolved."
+    rationale: "These are minor refinements rather than amateur glitches now that the occlusion is fixed."
+    concrete_fix: "Optional: tidy the strip-cap knob (C004) and restyle the recovery arrow (C005)."
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: "All open findings (prev. relocation, P3 decongestion, recovery-arrow restyle) are TikZ coordinate/style edits."
+    evidence: "All residual findings (recovery-arrow restyle, strip-cap knob, palette intensity) are TikZ coordinate/style edits."
     rationale: "No raster/vector post-processing is required; the gaps are addressable in source."
-    concrete_fix: "Patch coordinates/styles in the .tex; do not hand off to SVG polish."
+    concrete_fix: "Patch styles in the .tex if pursued; do not hand off to SVG polish."
     blocks_high_impact: false
     recommended_path: continue_tikz
   human_art_direction_gate:
     verdict: pass
-    evidence: "Visual ambition (solid_manuscript) is declared in the reference pack; the open defects are objective TikZ fixes."
+    evidence: "Visual ambition (solid_manuscript) is declared in the reference pack; residual items are objective TikZ refinements."
     rationale: "No taste/target-journal/cover decision blocks the next loop; only the optional depth-illustration question is human-discretionary and non-blocking."
-    concrete_fix: "Proceed with TikZ patches; defer any cover-level depth ambition to a human call."
+    concrete_fix: "Proceed; defer any cover-level depth ambition to a human call."
     blocks_high_impact: false
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:10434ffea6b7822fcb5bee9a25ef5ae0504c0b64f727e059cf105ba97bcefac6
+  assessed_artifact_hash: sha256:127e69c6c111a22f41a6f0c7b5e68900ea9a0edaa9beb6098ab1608685fae21b
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: []
   regression_detected: false
   regressions: []
   score_is_gateable: false
-  next_quality_bottleneck: label_semantics
-  rationale: "The current artifact honors every physics invariant and reads as a clean three-stage actuation cycle. It is held below high-impact by the occluded prev. label, the localized P3 lower-left congestion, a flatter editorial register than the reference, and a central claim (Coulomb>Maxwell) carried by a small text callout rather than visual dominance."
-  overall_score: 78
+  next_quality_bottleneck: polish
+  rationale: "Fresh re-audit after the C001 fix: the prior blocking MAJOR (prev. label occluded by the strip) and the P3 lower-left congestion are both resolved — prev. now reads clearly left of the dashed ghost. The artifact honors every physics invariant and tells a clean three-stage cycle. It stays at solid_manuscript (not high-impact) because of the flatter editorial register than the reference, the central claim carried by a small text callout, and one residual teal force/motion grammar refinement."
+  overall_score: 85
   sub_scores:
     storyline: 88
-    composition: 78
+    composition: 86
     component_fidelity: 85
     scientific_plausibility: 92
-    label_semantics: 68
-    polish: 76
-    reference_fidelity: 82
-    export_scale_readability: 84
-  score_rationale: "Numbers describe only the current render. scientific_plausibility is high because all invariants hold; label_semantics is dragged down by the >50% occluded prev. label; composition/polish reflect the P3 corner congestion; reference_fidelity credits preserved story/semantics while noting the prev. placement regressed versus the reference."
+    label_semantics: 89
+    polish: 83
+    reference_fidelity: 85
+    export_scale_readability: 86
+  score_rationale: "Numbers describe only the current render. label_semantics and composition rose versus the prior pass because the prev. occlusion and corner congestion are fixed; scientific_plausibility stays high (invariants hold); polish is held just under the rest by the cosmetic strip-cap knob and the teal double-encoding."
   reference_calibration:
     reference_pack_hash: sha256:a00c1f2b56157c7667bc4a2f51fe7cacc0ac6eea0ae4c47b0f3256224d567e5c
     reference_class: mechanism_schematic
     visual_ambition: solid_manuscript
     score_basis: current_artifact_vs_pack
     limiting_reference_traits:
-      - T002
-    rationale: "Scores cite the pack: the render matches the restrained mechanism-schematic register (T001) and avoids the must-avoid traits (A001 no topology copy, A002 no poster-like palette), but stage-to-stage readable separation (T002) is limited in P3 by the occluded prev. label and lower-left congestion, holding it at solid_manuscript rather than high-impact."
+      - T001
+    rationale: "Scores cite the pack: the render now matches the restrained mechanism-schematic register (T001) with readable stage separation (T002 satisfied after the prev. fix) and avoids the must-avoid traits (A001 no topology copy, A002 no poster-like palette). It stays at solid_manuscript because the flatter editorial register and small-callout claim payload keep it below the reference's compact editorial tone (T001) rather than any readability failure."
 micro_defects:
   - id: M001
     crop: examples/n3_trial_02_actuation_sequence/build/audit_crops/visual_clash/VC001_GND.png
@@ -462,41 +462,17 @@ micro_defects:
     accept_simplification_reason: false_positive
     accept_simplification_rationale: "VC007 is a false positive: the text is fully legible beside the electrode and the near-miss metric reflects the adjacent block edge, not a crossing."
   - id: M008
-    crop: examples/n3_trial_02_actuation_sequence/build/audit_crops/visual_clash/VC008_prev.png
-    kind: line_crosses_label
-    severity: MAJOR
-    observation: "VC008: the solid gold strip covers most of the 'prev.' label in P3 — only the leading 'p' is visible, the rest is occluded (dark=0.54). The label that anchors the ghost outline is effectively unreadable."
-    linked_finding_id: C001
-    visual_clash_ref: VC008
-    text_boundary_ref: ""
-    label_path_ref: ""
-    status: open
-    accept_simplification_reason: ""
-    accept_simplification_rationale: ""
-  - id: M009
-    crop: examples/n3_trial_02_actuation_sequence/build/audit_crops/visual_clash/VC009_Open.png
+    crop: examples/n3_trial_02_actuation_sequence/build/audit_crops/visual_clash/VC008_Open.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "VC009: the 'Open circuit' caption is crisp black on the white margin below P3."
+    observation: "VC008: the 'Open circuit' caption is crisp black on the white margin below P3."
     linked_finding_id: ""
-    visual_clash_ref: VC009
+    visual_clash_ref: VC008
     text_boundary_ref: ""
     label_path_ref: ""
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC009 is a false positive: the caption rests on the white page-margin background, not on any fill, so the text_on_fill flag is spurious."
-  - id: M010
-    crop: examples/n3_trial_02_actuation_sequence/build/audit_crops/full_q4.png
-    kind: label_curve_near_label
-    severity: MINOR
-    observation: "full_q4: the teal recovery curve, the dashed ghost, the 'prev.' label, and the strip base all converge in the P3 lower-left corner, producing a congested cluster."
-    linked_finding_id: C002
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    status: open
-    accept_simplification_reason: ""
-    accept_simplification_rationale: ""
+    accept_simplification_rationale: "VC008 is a false positive: the caption rests on the white page-margin background, not on any fill, so the text_on_fill flag is spurious."
 crop_audit_log:
   - crop_id: VC001_GND
     path: build/audit_crops/visual_clash/VC001_GND.png
@@ -568,23 +544,13 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: "Dark vertical mark is the electrode outline, which is intended."
     anomaly_link: ""
-  - crop_id: VC008_prev
-    path: build/audit_crops/visual_clash/VC008_prev.png
+  - crop_id: VC008_Open
+    path: build/audit_crops/visual_clash/VC008_Open.png
     source: visual_clash:VC008
-    inspected: true
-    verdict: defect
-    linked_micro_defect_id: M008
-    rationale: "Solid strip occludes 'rev.' of the prev. label; only 'p' survives, so the ghost anchor is unreadable."
-    unintended_visible_anomaly: none
-    anomaly_rationale: "The occluding object is the intended strip; the defect is placement, not a stray artifact."
-    anomaly_link: ""
-  - crop_id: VC009_Open
-    path: build/audit_crops/visual_clash/VC009_Open.png
-    source: visual_clash:VC009
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "'Open circuit' caption legible on white margin (M009 accept)."
+    rationale: "'Open circuit' caption legible on white margin (M008 accept)."
     unintended_visible_anomaly: none
     anomaly_rationale: "Only the intended caption text is present."
     anomaly_link: ""
@@ -622,9 +588,9 @@ crop_audit_log:
     path: build/audit_crops/full_q4.png
     source: full_render
     inspected: true
-    verdict: defect
-    linked_micro_defect_id: M010
-    rationale: "P3 lower-left congestion of recovery curve + ghost + prev. + strip base (M010); the prev. occlusion (M008) is also visible here."
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "P3 lower-left now reads cleanly after the C001 fix: 'prev.' sits legibly left of the dashed ghost, with the strip base and teal recovery arrow as distinct elements (prior occlusion + congestion resolved)."
     unintended_visible_anomaly: none
     anomaly_rationale: "The dashed ghost is an intended memory cue, not a stray artifact."
     anomaly_link: ""
@@ -634,7 +600,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "At 178mm all titles, captions, voltage, and instrument labels stay legible; the only weak spot is the already-captured prev. occlusion."
+    rationale: "At 178mm all titles, captions, voltage, instrument labels, and the relocated 'prev.' stay legible."
     unintended_visible_anomaly: none
     anomaly_rationale: "Reduction introduces no new marks."
     anomaly_link: ""
@@ -644,26 +610,12 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "Three-stage bend narrative survives at 360px; sub-6pt micro-labels (prev., e-, GND) drop, which is expected thumbnail behavior, not a figure defect (manuscript-scale legibility holds at 178mm)."
+    rationale: "Three-stage bend narrative survives at 360px; sub-6pt micro-labels drop, which is expected thumbnail behavior, not a figure defect (manuscript-scale legibility holds at 178mm)."
     unintended_visible_anomaly: none
     anomaly_rationale: "Reduction blends fine labels but adds nothing unintended."
     anomaly_link: ""
 panels: []
 findings:
-  - id: C001
-    severity: MAJOR
-    category: label_placement
-    tex_lines: [197, 198, 201, 202]
-    observation: "The 'prev.' label (line 197-198) is anchored at (11.65, 1.50), but the partially-recovered solid strip (line 201-202) passes through x~11.83-12.18 at that height and covers 'rev.', leaving only 'p' readable (VC008, dark=0.54). The label that anchors the dashed ghost is effectively illegible, and the reference places prev. clearly clear of the strip. Relates to top_tier_audit.reader_misinterpretation_risk and editorial_art_direction.aesthetic_risk."
-    suggested_fix: "Relocate the prev. label clear of the solid strip — move it left of / above the ghost, e.g. anchor=east near (11.35, 1.20) or anchor=south near (11.55, 0.95), matching the reference's clear placement."
-    status: open
-  - id: C002
-    severity: MINOR
-    category: whitespace
-    tex_lines: [193, 194, 197, 198, 201, 202, 205, 206]
-    observation: "In P3 the recovery curve (205-206), the dashed ghost (193-194), the prev. label (197-198), and the strip base (201-202) all converge into the lower-left corner, producing a congested cluster (full_q4). The recovery arrow is also less prominent than the reference's bold curved arrow."
-    suggested_fix: "Spread the P3 lower-left elements: nudge the recovery-arrow tail/curvature outward, separate the ghost from the strip base, and place prev. in the freed space so the four elements read distinctly."
-    status: open
   - id: C003
     severity: NIT
     category: palette
@@ -682,17 +634,19 @@ findings:
     severity: MINOR
     category: hierarchy
     tex_lines: [153, 154, 155, 205, 206]
-    observation: "Teal carries two distinct meanings: the active Coulomb repulsion force (P2 straight arrows, 153-155) and the passive elastic recovery motion (P3 curved arrow, 205-206). Same visual grammar for an applied force and a passive motion invites misreading the recovery as a force. Relates to top_tier_audit.cross_panel_semantic_grammar and top_tier_audit.reader_misinterpretation_risk."
+    observation: "Teal carries two distinct meanings: the active Coulomb repulsion force (P2 straight arrows, 153-155) and the passive elastic recovery motion (P3 curved arrow, 205-206). Shape (straight vs curved) and panel context partly disambiguate, but the shared color still invites reading the recovery as a force. The reference distinguishes them by using green for recovery. Relates to top_tier_audit.cross_panel_semantic_grammar and top_tier_audit.reader_misinterpretation_risk."
     suggested_fix: "Give the P3 recovery arrow a distinct style from the P2 force arrows — e.g. a dashed motion-curve or a different hue — so active force and passive recovery are not encoded identically."
     status: open
 ---
 
-# Vision Critique — n3_trial_02_actuation_sequence
+# Vision Critique — n3_trial_02_actuation_sequence (post-C001 re-audit)
 
-**Verdict: revise.** The figure is scientifically sound and tells its three-stage actuation story cleanly, but one MAJOR label-placement defect and a small cluster of MINOR/NIT polish issues keep it from being manuscript-clean. Every physics invariant in the briefing is honored: the strip bends toward the +V electrode under charge injection (P1), bends away from the electrode with an explicit "Coulomb > Maxwell" annotation (P2), and partially recovers toward upright at open circuit with a dashed "prev." ghost of the prior bent position (P3); the clamped GND top is fixed across all panels and electrons ride the strip throughout. The render correctly learns the reference's restrained mechanism-schematic register without copying its 3D hardware (A001/A002 honored) and intentionally simplifies to a flat 2D style.
+**Verdict: revise** (no BLOCKER, no MAJOR). This is a fresh re-audit after the C001 label relocation. The previously blocking MAJOR — the "prev." label occluded by the solid strip — is **resolved**: `prev.` now sits clearly to the left of the dashed ghost, fully legible, and binds to the ghost it annotates (confirmed in full_q4; the `prev.` text_on_path clash candidate dropped out of `visual_clash.json`, 9 → 8). The earlier P3 lower-left **congestion (C002) is also resolved** — the relocation separated `prev.`, the ghost, the strip base, and the recovery arrow into four distinct elements, so I no longer carry it as a finding. Every physics invariant remains honored: bend-toward-+V (P1), bend-away with the Coulomb > Maxwell annotation (P2), partial recovery with the dashed-ghost prior position (P3), fixed GND clamp throughout, and electrons on the strip in all panels.
 
-The blocking issue is **C001**: in panel 3 the partially-recovered solid strip passes directly over the "prev." label, occluding everything but the leading "p" (VC008, dark=0.54). Since "prev." is the cue that tells the reader the dashed outline is the *previous* bent position, an unreadable label undercuts the recovery narrative — and the reference shows this label can be placed clearly. Relocating it left of / above the ghost resolves the defect.
+What keeps the verdict at `revise` rather than fully clean is one residual low-impact MINOR plus two NITs — none of which block manuscript use:
 
-Three supporting issues cluster around the same panel-3 corner and the figure's color grammar. **C002** (MINOR): the recovery curve, ghost, prev. label, and strip base crowd the lower-left of P3, and the recovery arrow is less prominent than the reference's bold curved arrow — spreading these elements would both decongest the corner and strengthen the recovery cue. **C005** (MINOR): teal encodes both the active Coulomb repulsion force (P2) and the passive elastic recovery motion (P3), so a distinct recovery-arrow style is worth adopting to prevent reading the relaxation as an applied force. **C003** (NIT): the P1 injection arrows render as a muted rose rather than a saturated red — consistent across all three arrows, so this is the locked cRed value, not a bug. **C004** (NIT): each strip's rounded cap protrudes as a small knob over its clamp because the strip is drawn after the clamp; reordering or trimming the strip start tidies this.
+- **C005 (MINOR, hierarchy):** teal still encodes two roles — the active Coulomb repulsion force (P2 straight arrows) and the passive elastic recovery motion (P3 curved arrow). Straight-vs-curved shape and panel context partly disambiguate, but the shared color invites reading the recovery as a force; the reference avoids this by drawing the recovery arrow green. A distinct recovery-arrow style would close it.
+- **C003 (NIT, palette):** the P1 injection arrows render as a muted rose rather than a saturated red — consistent across all three, so this is the locked cRed value, not a bug.
+- **C004 (NIT, style):** each strip's rounded cap protrudes as a small gold knob over its clamp because the strip is drawn after the clamp; reordering or trimming the strip start tidies it.
 
-All nine visual-clash candidates were inspected at crop scale: VC008 is the genuine occlusion above; VC001–VC007 and VC009 are false positives where legible text sits on the white margin or the pale panel card and the clash metric merely reflects glyph contrast or a near-miss block/strip edge. Both print-scale proxies were checked — at 178mm every title, caption, voltage, and instrument label stays legible, and the thumbnail keeps the bend-state narrative while sub-6pt micro-labels drop as expected. The remaining gaps are all TikZ coordinate/style edits, so the recommended path stays `continue_tikz`; no SVG polish or human art-direction gate is required for the declared solid_manuscript ambition. Fresh re-audit benchmark: **solid_manuscript** (advisory score 78/100), with label semantics as the next quality bottleneck.
+All eight visual-clash candidates (VC001–VC008) are now false positives — legible text on the white margin or the pale panel card, with the clash metric reflecting glyph contrast or a near-miss block/strip edge. Both print-scale proxies pass: at 178mm every label, including the relocated `prev.`, stays legible; the thumbnail keeps the three-stage narrative while sub-6pt micro-labels drop as expected. All residual items are TikZ coordinate/style edits, so the recommended path stays `continue_tikz`; no SVG polish or human art-direction gate is required for the declared solid_manuscript ambition. Fresh re-audit benchmark: **solid_manuscript**, advisory **85/100** (up from 78 pre-fix), next bottleneck = polish. The figure is now manuscript-usable; C005 is an optional refinement, and the two NITs were already deprioritized.
