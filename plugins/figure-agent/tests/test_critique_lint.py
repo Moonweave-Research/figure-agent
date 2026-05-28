@@ -824,6 +824,44 @@ def _write_critique(
     return critique
 
 
+def _write_external_vision_review_fixture(
+    fig_dir: Path,
+    *,
+    stale: bool = False,
+    malformed: bool = False,
+) -> None:
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    (fig_dir / "spec.yaml").write_text(
+        "name: demo_fig\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+    artifact = fig_dir / "build" / "demo_fig.png"
+    artifact.parent.mkdir(parents=True, exist_ok=True)
+    artifact.write_bytes(b"png")
+    if malformed:
+        (fig_dir / "external_vision_review.yaml").write_text("schema: [", encoding="utf-8")
+        return
+    reviewed_hash = file_sha256(artifact)
+    if stale:
+        reviewed_hash = "sha256:" + "0" * 64
+    (fig_dir / "external_vision_review.yaml").write_text(
+        f"""
+schema: figure-agent.external-vision-review.v1
+fixture: demo_fig
+reviewer: Gemini manual second pass
+reviewed_at: "2026-05-28T12:00:00Z"
+confidence: medium
+reviewed_artifact:
+  path: build/demo_fig.png
+  hash: {reviewed_hash}
+reviewed_crops: []
+findings: []
+conflicts: []
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
 def _write_visual_clash_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
     report = fig_dir / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -1517,6 +1555,34 @@ def test_lint_critique_reports_invalid_journal_playbook_as_controlled_blocker(
         "journal_art_direction_playbook_accounting"
     ]
     assert "journal_art_direction_playbook invalid" in violations[0].message
+
+
+def test_lint_critique_reports_malformed_external_vision_review(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_external_vision_review_fixture(fig_dir, malformed=True)
+    _write_critique(fig_dir, findings_yaml="findings: []\n")
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert len(violations) == 1
+    assert violations[0].category == "external_vision_review"
+    assert "invalid" in violations[0].message
+
+
+def test_lint_critique_reports_stale_external_vision_review(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_external_vision_review_fixture(fig_dir, stale=True)
+    _write_critique(fig_dir, findings_yaml="findings: []\n")
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert len(violations) == 1
+    assert violations[0].category == "external_vision_review"
+    assert "stale" in violations[0].message
 
 
 def _write_complete_v1_11_aesthetic_fixture(

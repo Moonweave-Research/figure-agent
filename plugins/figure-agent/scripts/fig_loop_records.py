@@ -52,6 +52,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "journal_art_direction_playbook_summary": iteration.get(
             "journal_art_direction_playbook_summary"
         ),
+        "external_vision_review_summary": iteration.get("external_vision_review_summary"),
         "recommended_next_action": iteration.get("recommended_next_action"),
     }
     next_action_summary = iteration.get("next_action_summary")

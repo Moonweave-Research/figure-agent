@@ -25,6 +25,10 @@ from aesthetic_intent import (
 )
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
+from external_vision_review import (
+    ExternalVisionReviewError,
+    load_optional_external_vision_review,
+)
 from inputs import parse_briefing, parse_spec
 from journal_art_direction_playbook import (
     JournalArtDirectionPlaybookError,
@@ -444,6 +448,55 @@ def _reference_calibration_section(pack: dict | None) -> str:
     lines.append("### Calibration Questions")
     for item in pack.get("calibration_questions", []):
         lines.append(f"- {item['id']}: {item['question']}")
+    return "\n" + "\n".join(lines) + "\n"
+
+
+def _external_vision_review_section(review: dict | None) -> str:
+    if review is None:
+        return ""
+    artifact = review.get("reviewed_artifact")
+    artifact_path = artifact.get("path") if isinstance(artifact, dict) else ""
+    lines = [
+        "## External Second-Opinion Vision Review",
+        "",
+        "Optional imported evidence from a human or outer-agent vision pass.",
+        "This evidence can reveal blind spots, but it is not higher authority than",
+        "the host critique. Conflicts must route to human review; do not auto-apply",
+        "external suggestions or mutate source/accepted/golden/export state.",
+        "",
+        f"- Reviewer: {review['reviewer']}",
+        f"- Reviewed at: {review['reviewed_at']}",
+        f"- Confidence: {review['confidence']}",
+        f"- Reviewed artifact: `{artifact_path}`",
+        "",
+        "Findings:",
+    ]
+    for item in review.get("findings", []):
+        if not isinstance(item, dict):
+            continue
+        lines.append(
+            "- {id} [{severity}] {observation} "
+            "(evidence={evidence_ref}; action={suggested_action})".format(
+                id=item.get("id", ""),
+                severity=item.get("severity", ""),
+                observation=item.get("observation", ""),
+                evidence_ref=item.get("evidence_ref", ""),
+                suggested_action=item.get("suggested_action", ""),
+            )
+        )
+    conflicts = [item for item in review.get("conflicts", []) if isinstance(item, dict)]
+    if conflicts:
+        lines.extend(["", "Conflicts:"])
+        for item in conflicts:
+            lines.append(
+                "- external {external} vs host {host}: {summary}".format(
+                    external=item.get("external_finding_id", ""),
+                    host=item.get("host_finding_id", ""),
+                    summary=item.get("summary", ""),
+                )
+            )
+        lines.append("")
+        lines.append("Conflicts must route to human review; do not pick a winner silently.")
     return "\n" + "\n".join(lines) + "\n"
 
 
@@ -1069,6 +1122,10 @@ def generate_for(example_dir: Path) -> str:
     except CritiqueReferencePackError as exc:
         raise CritiqueBriefError(f"critique_reference_pack.yaml invalid: {exc}") from exc
     try:
+        external_vision_review = load_optional_external_vision_review(example_dir, spec)
+    except ExternalVisionReviewError as exc:
+        raise CritiqueBriefError(f"external_vision_review.yaml invalid: {exc}") from exc
+    try:
         paper_aesthetic_context_pack = load_optional_paper_aesthetic_context(
             example_dir,
             spec,
@@ -1125,6 +1182,9 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
+    external_vision_review_section = _external_vision_review_section(
+        external_vision_review
+    )
     paper_aesthetic_context_section = _paper_aesthetic_context_section(
         paper_aesthetic_context_pack,
         fixture=example_dir.name,
@@ -1164,6 +1224,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {text_boundary_clash_section}
 {label_path_proximity_section}
 {reference_calibration_section}
+{external_vision_review_section}
 {paper_aesthetic_context_section}
 {journal_art_direction_playbook_section}
 {aesthetic_intent_section}

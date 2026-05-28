@@ -1,0 +1,125 @@
+schema: figure-agent.journal-art-direction-playbook.v1
+playbook_id: nature-materials-dense
+target_journal: Nature Materials
+venue_context: main_text
+visual_maturity: editorial
+design_center:
+  - id: material_specificity
+    dimension: component_detail
+    instruction: Render materials with enough structure to distinguish phases, interfaces, and functional groups.
+    priority: required
+    positive_signals:
+      - polymer, electrode, interface, and trap regions differ by structure, not label alone
+      - repeated material motifs stay recognizable across panels
+    anti_patterns:
+      - featureless waves standing in for chemically specific materials
+      - material regions distinguished only by text labels
+    evidence_prompts:
+      - list each material and the visual evidence that identifies it
+      - compare the material cue to the reference or briefing target
+  - id: dense_hierarchy
+    dimension: hierarchy
+    instruction: Permit higher information density only when each tier has a clear reading order.
+    priority: required
+    positive_signals:
+      - dense panels still have a clear primary claim
+      - local callouts support, rather than fragment, the panel story
+    anti_patterns:
+      - every element receives equal visual weight
+      - dense callouts obscure the material mechanism
+    evidence_prompts:
+      - trace the intended reading path through the densest panel
+      - name the element that should be demoted first
+  - id: controlled_detail_palette
+    dimension: color
+    instruction: Use color to separate material roles while keeping the whole page editorial and cohesive.
+    priority: recommended
+    positive_signals:
+      - color families correspond to material or field roles
+      - dense detail remains readable in grayscale-adjacent tones
+    anti_patterns:
+      - decorative color variation without material meaning
+      - one saturated area dominates the mechanism without claim support
+    evidence_prompts:
+      - map color to material role
+      - inspect whether any saturated accent steals the hierarchy
+  - id: line_weight_rhythm
+    dimension: line_weight
+    instruction: Vary line weight only to clarify object class, depth, or interaction strength.
+    priority: recommended
+    positive_signals:
+      - outlines, internal structures, arrows, and guides have distinct but restrained weights
+      - emphasized material boundaries justify their heavier weight
+    anti_patterns:
+      - uniformly thin detail that disappears at print scale
+      - random heavy strokes with no semantic role
+    evidence_prompts:
+      - list the heaviest strokes and their meaning
+      - inspect print-scale disappearance of thin details
+  - id: handcrafted_finish
+    dimension: hand_craft
+    instruction: Allow small organic variation only after the material structure and layout are stable.
+    priority: optional
+    positive_signals:
+      - repeated chains or texture cues avoid copy-paste sameness
+      - variation does not change physical interpretation
+    anti_patterns:
+      - hand-drawn effects used to cover missing structure
+      - texture that looks illustrative but not scientific
+    evidence_prompts:
+      - decide whether variation is optical finish or semantic repair
+      - compare repeated material motifs for mechanical sameness
+anti_patterns:
+  - id: featureless_material
+    dimension: component_detail
+    severity: BLOCKER
+    pattern: material class is represented by a generic line or blob with no identifying structure
+    preferred_route: continue_tikz
+  - id: density_without_order
+    dimension: hierarchy
+    severity: MAJOR
+    pattern: high information density has no clear reading order or visual priority
+    preferred_route: continue_tikz
+  - id: texture_after_semantics
+    dimension: hand_craft
+    severity: MINOR
+    pattern: semantically stable repeated material motifs need optical variation only
+    preferred_route: ready_for_svg_polish
+positive_signals:
+  - id: material_readability
+    dimension: component_detail
+    signal: material identity is visible before the label is read
+    evidence_prompt: cover labels mentally and describe each material region
+  - id: dense_but_ordered
+    dimension: hierarchy
+    signal: high-density content still resolves to one primary claim per panel
+    evidence_prompt: state the reading order in five steps or fewer
+  - id: restrained_texture
+    dimension: hand_craft
+    signal: micro-variation improves finish without altering science
+    evidence_prompt: inspect whether texture variation changes material meaning
+polish_route_rules:
+  - id: tikz_for_material_structure
+    condition: material identity, interface geometry, or mechanism arrows are still underspecified
+    recommended_path: continue_tikz
+    forbidden_actions:
+      - use SVG polish to invent missing material structure
+      - smooth over an unresolved component-fidelity defect
+  - id: svg_for_texture_finish
+    condition: material structure is correct and only repeated texture edges or typography need optical refinement
+    recommended_path: ready_for_svg_polish
+    forbidden_actions:
+      - change material identity or trap geometry in SVG
+      - bypass audit crop accounting
+  - id: human_for_density_tradeoff
+    condition: density reduction would remove a scientifically important element
+    recommended_path: needs_human_art_direction
+    forbidden_actions:
+      - drop scientific content solely for visual cleanliness
+human_review_triggers:
+  - id: content_density_tradeoff
+    condition: a readability fix requires removing or merging a scientifically meaningful component
+    severity: MAJOR
+  - id: material_abstraction_dispute
+    condition: reviewer and author disagree whether a material simplification is acceptable
+    severity: MAJOR

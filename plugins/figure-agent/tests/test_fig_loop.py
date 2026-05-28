@@ -64,6 +64,49 @@ def _write_adjudication(
     )
 
 
+def _write_external_vision_review(fixture: Path, *, conflict: bool = True) -> None:
+    spec_path = fixture / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "external_vision_review: true\n",
+        encoding="utf-8",
+    )
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    artifact = build_dir / f"{fixture.name}.png"
+    artifact.write_bytes(b"png")
+    conflicts = (
+        """
+conflicts:
+  - external_finding_id: EV001
+    host_finding_id: C001
+    summary: external reviewer sees a defect that host critique dismissed
+""".rstrip()
+        if conflict
+        else "conflicts: []"
+    )
+    (fixture / "external_vision_review.yaml").write_text(
+        f"""
+schema: figure-agent.external-vision-review.v1
+fixture: {fixture.name}
+reviewer: Gemini manual second pass
+reviewed_at: "2026-05-28T12:00:00Z"
+confidence: medium
+reviewed_artifact:
+  path: build/{fixture.name}.png
+  hash: {file_sha256(artifact)}
+reviewed_crops: []
+findings:
+  - id: EV001
+    severity: MAJOR
+    observation: possible label-target mismatch in high-zoom review
+    evidence_ref: build/{fixture.name}.png
+    suggested_action: human_review
+{conflicts}
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
 QUALITY_AXIS_NAMES = (
     "message_storyline",
     "panel_role_coherence",
@@ -1113,6 +1156,72 @@ def test_loop_does_not_create_new_stop_boundary_for_journal_playbook_summary(
     assert iteration["stop_reason"] == "status_action_required"
     assert iteration["human_gate_status"] == "not_requested"
     assert iteration["active_patch_target"] is None
+
+
+def test_loop_surfaces_external_vision_conflict_as_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_external_vision_review(fixture, conflict=True)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect external vision conflict",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    stdout_summary = json_stdout_summary(run_dir)
+    summary = iteration["external_vision_review_summary"]
+
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["active_conflicts"] == ["EV001 vs C001"]
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["human_gate_status"] == "required"
+    assert iteration["escalation_level"] == "human_review_required"
+    assert "external vision conflict" in iteration["recommended_next_action"]
+    assert stdout_summary["external_vision_review_summary"] == summary
+
+
+def test_loop_stale_external_vision_does_not_demote_existing_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_external_vision_review(fixture, conflict=False)
+    (fixture / "build" / f"{fixture.name}.png").write_bytes(b"changed")
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(
+        fixture,
+        file_sha256(critique),
+        decisions=[
+            {
+                "finding_id": "C001",
+                "decision": "needs_human",
+                "reason": "domain decision remains unresolved",
+                "patch_target": "",
+                "evidence": "human note",
+            }
+        ],
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect stale external vision with human gate",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    assert iteration["external_vision_review_summary"]["evaluation_state"] == "stale"
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["escalation_level"] == "human_review_required"
 
 
 def test_loop_human_gates_v1_11_human_art_direction_lever(
@@ -2684,6 +2793,7 @@ def test_main_json_emits_machine_readable_summary(
             "crop_audit_summary": None,
             "aesthetic_lever_summary": None,
             "journal_art_direction_playbook_summary": None,
+            "external_vision_review_summary": None,
             "audit_evidence": {
                 "evaluation_state": "missing_input",
                 "blocking_items": ["build/visual_clash.json"],
@@ -2821,6 +2931,7 @@ def test_main_json_exercises_real_run_loop_summary(
         "journal_art_direction_playbook_summary": iteration[
             "journal_art_direction_playbook_summary"
         ],
+        "external_vision_review_summary": iteration["external_vision_review_summary"],
         "audit_evidence": iteration["audit_evidence"],
         "journal_grade_assessment": iteration["journal_grade_assessment"],
         "next_action_summary": iteration["next_action_summary"],

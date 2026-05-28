@@ -1,0 +1,54 @@
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: graphical-abstract-expressive-series
+target_journal: Nature Communications
+visual_maturity: cover_like
+density: balanced
+shared_visual_language:
+  - id: expressive_claim_hero
+    dimension: visual_identity
+    instruction: Use a stronger visual identity only for explicitly graphical-abstract or cover-like figures.
+    priority: required
+    positive_signals:
+      - a central hero carries the claim without confusing the mechanism
+    anti_patterns:
+      - every element receives decorative emphasis
+  - id: meaningful_atmosphere
+    dimension: palette
+    instruction: Tie glow, gradient, or atmospheric depth to a declared narrative or physical role.
+    priority: required
+    positive_signals:
+      - expressive color still maps to claim-bearing meaning
+    anti_patterns:
+      - effect remains purely decorative after the science is ignored
+  - id: explicit_opt_in_boundary
+    dimension: polish_route
+    instruction: Keep expressive treatment isolated from main-text figures unless explicitly selected.
+    priority: required
+    positive_signals:
+      - fixture or paper context names the expressive venue
+    anti_patterns:
+      - cover-like treatment leaks into main-text figures silently
+figure_roles:
+  - fixture: template_graphical_abstract
+    role: graphical_abstract
+    must_align_with:
+      - expressive_claim_hero
+      - meaningful_atmosphere
+      - explicit_opt_in_boundary
+    allowed_variations:
+      - may use stronger depth, texture, and color than main-text figures
+  - fixture: template_cover_scene
+    role: graphical_abstract
+    must_align_with:
+      - expressive_claim_hero
+      - meaningful_atmosphere
+      - explicit_opt_in_boundary
+    allowed_variations:
+      - may prioritize a single scene over multipanel grammar
+must_avoid:
+  - id: main_text_style_leak
+    pattern: expressive cover-like styling appears in a main-text schematic without explicit opt-in
+    severity: BLOCKER
+  - id: decorative_claim_loss
+    pattern: visual atmosphere becomes decorative and weakens the scientific claim
+    severity: MAJOR

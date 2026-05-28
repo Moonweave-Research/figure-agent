@@ -1,0 +1,109 @@
+schema: figure-agent.journal-art-direction-playbook.v1
+playbook_id: science-compact
+target_journal: Science
+venue_context: main_text
+visual_maturity: polished
+design_center:
+  - id: compact_story
+    dimension: hierarchy
+    instruction: Compress the figure into a fast explanatory path without losing the core mechanism.
+    priority: required
+    positive_signals:
+      - the reader can state the mechanism after one pass
+      - panel-to-panel transitions are explicit and economical
+    anti_patterns:
+      - local details interrupt the main explanatory flow
+      - arrows or labels repeat what the layout already says
+    evidence_prompts:
+      - summarize the story in one sentence from the visual alone
+      - remove any label that does not change interpretation
+  - id: economical_whitespace
+    dimension: whitespace
+    instruction: Use tight spacing only when local separations remain visibly intentional.
+    priority: required
+    positive_signals:
+      - compact panels avoid near-miss collisions at print scale
+      - dense rows preserve small anchor gaps around labels and rules
+    anti_patterns:
+      - technically non-overlapping elements that visually stack
+      - margins that vary without narrative reason
+    evidence_prompts:
+      - inspect the most crowded crop for near-miss spacing defects
+      - compare equivalent label-to-rule gaps
+  - id: compact_typography
+    dimension: typography
+    instruction: Keep labels short, authoritative, and directly attached to their targets.
+    priority: required
+    positive_signals:
+      - every label has an obvious target
+      - text length is compressed without becoming cryptic
+    anti_patterns:
+      - explanatory prose inside the figure
+      - detached labels that require caption repair
+    evidence_prompts:
+      - enumerate labels longer than three words
+      - flag any label whose nearest object is not its intended target
+  - id: decisive_linework
+    dimension: line_weight
+    instruction: Use crisp line hierarchy so compact elements do not blur together.
+    priority: recommended
+    positive_signals:
+      - arrows, guides, and object outlines remain distinguishable
+      - the lightest strokes remain visible at target scale
+    anti_patterns:
+      - hairlines that disappear in print
+      - heavy arrows that dominate the story
+    evidence_prompts:
+      - inspect the thinnest visible line at print scale
+      - identify any arrow that outweighs its target
+anti_patterns:
+  - id: cramped_near_miss
+    dimension: whitespace
+    severity: MAJOR
+    pattern: labels, rules, or arrows are technically separate but visually stacked or cramped
+    preferred_route: continue_tikz
+  - id: explanatory_clutter
+    dimension: typography
+    severity: MAJOR
+    pattern: in-figure prose explains what layout or caption should carry
+    preferred_route: continue_tikz
+  - id: crisp_edge_finish
+    dimension: hand_craft
+    severity: MINOR
+    pattern: semantically stable compact linework needs small optical edge cleanup
+    preferred_route: ready_for_svg_polish
+positive_signals:
+  - id: one_pass_story
+    dimension: hierarchy
+    signal: the figure story is recoverable in one visual pass
+    evidence_prompt: describe the panel sequence without reading the caption
+  - id: compact_label_discipline
+    dimension: typography
+    signal: labels are short, attached, and non-redundant
+    evidence_prompt: list any label that can be shortened or removed
+  - id: print_scale_separation
+    dimension: whitespace
+    signal: tight spacing remains deliberate at target print scale
+    evidence_prompt: inspect label-to-rule and label-to-arrow gaps
+polish_route_rules:
+  - id: tikz_for_story_compression
+    condition: story order, panel role, or label target still needs adjustment
+    recommended_path: continue_tikz
+    forbidden_actions:
+      - use SVG polish to compensate for unclear story order
+      - freeze source geometry before compact spacing is validated
+  - id: svg_for_edge_and_type_finish
+    condition: story and layout are stable but edge crispness or glyph spacing needs sub-point cleanup
+    recommended_path: ready_for_svg_polish
+    forbidden_actions:
+      - change panel order, arrow meaning, or target attachment in SVG
+      - add decorative effects to solve compactness
+  - id: human_for_compression_loss
+    condition: compactness conflicts with the scientific detail needed by the claim
+    recommended_path: needs_human_art_direction
+    forbidden_actions:
+      - remove evidence-bearing detail without author approval
+human_review_triggers:
+  - id: compression_vs_accuracy
+    condition: reducing clutter would remove scientific content needed for the figure claim
+    severity: MAJOR

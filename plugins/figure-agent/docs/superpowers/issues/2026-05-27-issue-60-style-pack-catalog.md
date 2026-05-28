@@ -1,6 +1,6 @@
 # Issue 60 - Journal and Paper Style Pack Catalog
 
-Status: proposed
+Status: implemented in branch `codex/issue60-style-pack-catalog`
 
 Depends on: Issue 57 real fixture audit adoption and Issue 59 SVG polish
 promotion dogfood
@@ -69,3 +69,24 @@ Out of scope:
 3. Are expressive/cover-like packs isolated so they cannot leak into
    manuscript figures?
 4. Do pack ids and anchors stay short enough for reliable host-LLM attention?
+
+## Implementation Notes
+
+- Added four opt-in journal art-direction playbooks:
+  - `examples/_journal_art_direction_playbooks/nc-main-text.yaml`
+  - `examples/_journal_art_direction_playbooks/nature-materials-dense.yaml`
+  - `examples/_journal_art_direction_playbooks/science-compact.yaml`
+  - `examples/_journal_art_direction_playbooks/graphical-abstract-expressive.yaml`
+- Added four opt-in paper-wide aesthetic contexts:
+  - `examples/_paper_aesthetic_contexts/nc-main-text-series.yaml`
+  - `examples/_paper_aesthetic_contexts/nature-materials-dense-series.yaml`
+  - `examples/_paper_aesthetic_contexts/science-compact-series.yaml`
+  - `examples/_paper_aesthetic_contexts/graphical-abstract-expressive-series.yaml`
+- Added `docs/style-pack-catalog.md` to explain pack choice, explicit opt-in,
+  interaction with fixture-local `aesthetic_intent.yaml`, and why expressive
+  packs must not leak into main-text figures.
+- Added `tests/test_style_pack_catalog.py` to load every catalog pack through
+  existing parsers and guard main-text versus expressive isolation.
+
+No new schema, global default, figure source edit, export artifact, accepted
+state, golden state, or polished-SVG artifact was introduced.

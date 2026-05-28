@@ -1,0 +1,53 @@
+schema: figure-agent.paper-aesthetic-context.v1
+paper_id: nature-materials-dense-series
+target_journal: Nature Materials
+visual_maturity: editorial
+density: dense
+shared_visual_language:
+  - id: material_specificity
+    dimension: iconography
+    instruction: Reuse material-specific visual cues so readers recognize phases across figures.
+    priority: required
+    positive_signals:
+      - polymer, electrode, interface, and trap motifs stay identifiable
+    anti_patterns:
+      - a material becomes a generic blob or wave in one figure
+  - id: dense_order
+    dimension: panel_grammar
+    instruction: Permit density only when each panel preserves a clear primary claim.
+    priority: required
+    positive_signals:
+      - dense panels still have a visible reading path
+    anti_patterns:
+      - every callout receives equal visual priority
+  - id: material_palette
+    dimension: palette
+    instruction: Tie palette variation to material class, field, or interface role.
+    priority: recommended
+    positive_signals:
+      - color differences reinforce material interpretation
+    anti_patterns:
+      - color variation is decorative or inconsistent across figures
+figure_roles:
+  - fixture: template_material_overview
+    role: overview_mechanism
+    must_align_with:
+      - material_specificity
+      - dense_order
+      - material_palette
+    allowed_variations:
+      - may use richer material motifs than compact Science figures
+  - fixture: template_material_detail
+    role: mechanism_detail
+    must_align_with:
+      - material_specificity
+      - dense_order
+    allowed_variations:
+      - may devote more space to interface-level texture
+must_avoid:
+  - id: featureless_material_series
+    pattern: material identity relies on label text rather than visible structure
+    severity: BLOCKER
+  - id: density_without_hierarchy
+    pattern: dense information removes the reader's ability to identify the primary claim
+    severity: MAJOR

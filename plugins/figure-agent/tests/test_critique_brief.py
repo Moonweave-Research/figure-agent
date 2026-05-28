@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -144,6 +145,43 @@ def _write_svg_polish_delta_fixture(example_dir: Path) -> None:
         recipe_path=recipe_path,
         renderer=_fake_svg_delta_renderer,
         base_dir=example_dir.parent,
+    )
+
+
+def _sha256(path: Path) -> str:
+    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+
+
+def _enable_external_vision_review(example_dir: Path) -> None:
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "external_vision_review: true\n",
+        encoding="utf-8",
+    )
+    artifact = example_dir / "build" / "review_demo.png"
+    (example_dir / "external_vision_review.yaml").write_text(
+        f"""
+schema: figure-agent.external-vision-review.v1
+fixture: review_demo
+reviewer: Gemini manual second pass
+reviewed_at: "2026-05-28T12:00:00Z"
+confidence: medium
+reviewed_artifact:
+  path: build/review_demo.png
+  hash: {_sha256(artifact)}
+reviewed_crops: []
+findings:
+  - id: EV001
+    severity: MAJOR
+    observation: external reviewer sees a possible near-miss label conflict
+    evidence_ref: build/review_demo.png
+    suggested_action: human_review
+conflicts:
+  - external_finding_id: EV001
+    host_finding_id: C001
+    summary: host critique treated the area as clean but external review disagrees
+""".lstrip(),
+        encoding="utf-8",
     )
 
 
@@ -1261,6 +1299,41 @@ calibration_questions:
     assert "score_basis: current_artifact_vs_pack" in brief
     assert "limiting_reference_traits:" in brief
     assert "scores cite the reference pack" in brief
+
+
+def test_critique_brief_includes_external_second_opinion_review(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _enable_external_vision_review(example_dir)
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## External Second-Opinion Vision Review" in brief
+    assert "Reviewer: Gemini manual second pass" in brief
+    assert "Confidence: medium" in brief
+    assert "EV001" in brief
+    assert "external reviewer sees a possible near-miss label conflict" in brief
+    assert "Conflicts must route to human review" in brief
+
+
+def test_critique_brief_rejects_malformed_external_vision_review(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "external_vision_review: true\n",
+        encoding="utf-8",
+    )
+    (example_dir / "external_vision_review.yaml").write_text("schema: [", encoding="utf-8")
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    try:
+        generate_for(example_dir)
+    except critique_brief.CritiqueBriefError as exc:
+        assert "external_vision_review.yaml invalid" in str(exc)
+    else:
+        raise AssertionError("expected CritiqueBriefError")
 
 
 def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):

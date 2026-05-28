@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 from aesthetic_intent import AESTHETIC_INTENT_SCHEMA_V2
+from external_vision_review import ExternalVisionReviewError, external_vision_review_opted_in
 from journal_art_direction_playbook import (
     JournalArtDirectionPlaybookError,
     declared_journal_playbook_path,
@@ -105,6 +106,13 @@ def critique_manifest_paths(
     critique_reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if critique_reference_pack_path.exists():
         paths.append(critique_reference_pack_path)
+    try:
+        include_external_review = external_vision_review_opted_in(spec)
+    except ExternalVisionReviewError:
+        include_external_review = False
+    external_vision_review_path = example_dir / "external_vision_review.yaml"
+    if include_external_review and external_vision_review_path.exists():
+        paths.append(external_vision_review_path)
     aesthetic_intent_path = example_dir / "aesthetic_intent.yaml"
     if aesthetic_intent_path.exists():
         paths.append(aesthetic_intent_path)

@@ -5,6 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from external_vision_review import (
+    ExternalVisionReviewError,
+    external_vision_review_freshness,
+    load_optional_external_vision_review,
+)
+from inputs import parse_spec
 from quality_manifest import yaml_frontmatter
 
 CRITIQUE_SCHEMA_V1_2 = "figure-agent.critique.v1.2"
@@ -96,6 +102,56 @@ AESTHETIC_LEVER_VERDICT_RANK = {
     verdict: index for index, verdict in enumerate(AESTHETIC_LEVER_VERDICTS)
 }
 JOURNAL_PLAYBOOK_VERDICTS = ("pass", "not_applicable", "weak", "fail", "needs_human")
+
+
+def external_vision_review_summary(example_dir: Path) -> dict[str, Any] | None:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return None
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        review = load_optional_external_vision_review(example_dir, spec)
+    except (ExternalVisionReviewError, ValueError) as exc:
+        return {
+            "source": "external_vision_review.yaml",
+            "evidence_path": str(example_dir / "external_vision_review.yaml"),
+            "evaluation_state": "invalid",
+            "error": str(exc),
+        }
+    if review is None:
+        return None
+
+    freshness = external_vision_review_freshness(example_dir, review)
+    conflicts = [
+        item
+        for item in review.get("conflicts", [])
+        if isinstance(item, dict)
+        and isinstance(item.get("external_finding_id"), str)
+        and isinstance(item.get("host_finding_id"), str)
+    ]
+    active_conflicts = [
+        f"{item['external_finding_id']} vs {item['host_finding_id']}"
+        for item in conflicts
+    ]
+    if freshness["state"] != "fresh":
+        evaluation_state = freshness["state"]
+    elif active_conflicts:
+        evaluation_state = "needs_human"
+    else:
+        evaluation_state = "passed"
+    findings = review.get("findings")
+    finding_count = len(findings) if isinstance(findings, list) else 0
+    return {
+        "source": "external_vision_review.yaml",
+        "evidence_path": str(example_dir / "external_vision_review.yaml"),
+        "reviewer": review.get("reviewer"),
+        "confidence": review.get("confidence"),
+        "finding_count": finding_count,
+        "conflict_count": len(active_conflicts),
+        "active_conflicts": active_conflicts,
+        "freshness": freshness,
+        "evaluation_state": evaluation_state,
+    }
 JOURNAL_PLAYBOOK_VERDICT_RANK = {
     verdict: index for index, verdict in enumerate(JOURNAL_PLAYBOOK_VERDICTS)
 }

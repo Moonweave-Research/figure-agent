@@ -27,6 +27,9 @@ from fig_loop_assessments import (
     editorial_art_direction_summary as build_editorial_art_direction_summary,
 )
 from fig_loop_assessments import (
+    external_vision_review_summary as build_external_vision_review_summary,
+)
+from fig_loop_assessments import (
     journal_art_direction_playbook_summary as build_journal_art_direction_playbook_summary,
 )
 from fig_loop_assessments import (
@@ -99,6 +102,46 @@ def _apply_aesthetic_lever_stop(
     return updated
 
 
+def _apply_external_vision_stop(
+    loop_decision: dict,
+    external_summary: dict | None,
+) -> dict:
+    if not external_summary:
+        return loop_decision
+    state = external_summary.get("evaluation_state")
+    if state == "needs_human":
+        conflicts = external_summary.get("active_conflicts") or []
+        conflict_text = ", ".join(conflicts) if conflicts else "external vision review"
+        updated = dict(loop_decision)
+        updated.update(
+            {
+                "stop_reason": "human_gate_required",
+                "recommended_next_action": (
+                    f"human review required for external vision conflict: {conflict_text}"
+                ),
+                "active_patch_target": None,
+                "human_gate_status": "required",
+            }
+        )
+        return updated
+    if state in {"stale", "missing_artifact", "invalid"}:
+        if loop_decision.get("stop_reason") == "human_gate_required":
+            return loop_decision
+        updated = dict(loop_decision)
+        updated.update(
+            {
+                "stop_reason": "status_action_required",
+                "recommended_next_action": (
+                    "refresh or fix external_vision_review.yaml before relying on "
+                    "external vision evidence"
+                ),
+                "active_patch_target": None,
+            }
+        )
+        return updated
+    return loop_decision
+
+
 def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
     command = ensure_safe_command(("git", *args))
     result = subprocess.run(
@@ -148,8 +191,13 @@ def run_loop(
         example_dir,
         status_result.get("critique_state"),
     )
+    external_vision_review_summary = build_external_vision_review_summary(example_dir)
     loop_decision = build_loop_decision(status_result, adjudication, example_dir)
     loop_decision = _apply_aesthetic_lever_stop(loop_decision, aesthetic_lever_summary)
+    loop_decision = _apply_external_vision_stop(
+        loop_decision,
+        external_vision_review_summary,
+    )
     axis_verdicts = build_axis_verdicts(status_result, adjudication, loop_decision, example_dir)
     escalation = escalation_summary(loop_decision)
     patch_handoff = build_patch_handoff(name, loop_decision)
@@ -218,6 +266,7 @@ def run_loop(
         "crop_audit_summary": crop_audit_summary,
         "aesthetic_lever_summary": aesthetic_lever_summary,
         "journal_art_direction_playbook_summary": journal_playbook_summary,
+        "external_vision_review_summary": external_vision_review_summary,
         "auto_patch_eligibility": auto_patch_eligibility,
         "patch_evidence": patch_evidence,
         "post_patch_evidence": post_patch_evidence,
