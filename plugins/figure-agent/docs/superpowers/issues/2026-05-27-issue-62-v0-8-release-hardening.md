@@ -1,6 +1,6 @@
 # Issue 62 - v0.8 Release Hardening
 
-Status: proposed
+Status: completed for v0.8.0 release candidate
 
 Depends on: Issues 57-61, or an explicit decision to defer any unfinished item
 

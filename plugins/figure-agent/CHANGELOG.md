@@ -2,6 +2,41 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.8.0] - 2026-05-28
+
+Release-hardening pass for the v0.8 audit kernel after Issues 57-61. This
+release makes the current command surface, opt-in evidence layers, and
+quality-claim boundaries explicit before the next plugin release candidate.
+
+### Added
+
+- Issue 57 real-fixture audit adoption matrix for explicit text-boundary,
+  label-path, reference, aesthetic, paper-wide, and journal-playbook coverage.
+- Issue 58 single next-action summary shared by status, driver, loop, and
+  closeout surfaces.
+- Issue 59 SVG polish promotion dogfood evidence showing the route stays
+  blocked behind stale critique gates until source-level evidence is fresh.
+- Issue 60 journal style-pack catalog with opt-in Nature Communications, Nature
+  Materials, Science, and graphical-abstract playbook/context packs.
+- Issue 61 optional external vision review evidence import for local
+  second-opinion reviews without provider API calls.
+
+### Changed
+
+- README and closeout docs now describe the plugin as a quality/audit kernel,
+  not a hidden auto-designer.
+- Current-state docs distinguish automatic deterministic gates,
+  semi-automatic host-vision critique, opt-in style/evidence packs, and manual
+  source or SVG editing.
+
+### Guardrails
+
+- v0.8.0 does not claim automatic Nature/Science acceptance.
+- External vision review is opt-in evidence only; conflicts route to human
+  judgment rather than overriding host critique.
+- SVG polish remains bounded finalization/handoff, not semantic repair or
+  hidden source mutation.
+
 ## [0.7.1] - 2026-05-26
 
 Patch release for post-v0.7.0 SVG-polish readiness and current-truth

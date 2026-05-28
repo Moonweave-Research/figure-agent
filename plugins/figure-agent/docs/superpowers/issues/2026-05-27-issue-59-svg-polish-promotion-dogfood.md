@@ -1,6 +1,6 @@
 # Issue 59 - SVG Polish Promotion Dogfood
 
-Status: evidence closed - polish route withheld behind stale critique gates
+Status: completed - evidence closed in commit `e02d5f8`; polish route withheld behind stale critique gates
 
 Depends on: Issue 58 single next-action UX
 

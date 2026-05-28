@@ -1,6 +1,6 @@
 # Issue 61 - External Second-Opinion Vision Evidence
 
-Status: completed in implementing commit
+Status: completed on main in commit `e37dc11`
 
 Depends on: Issue 58 single next-action UX and Issue 59 SVG polish promotion
 dogfood

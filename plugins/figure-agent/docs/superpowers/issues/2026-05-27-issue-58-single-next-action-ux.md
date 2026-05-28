@@ -1,6 +1,6 @@
 # Issue 58 - Single Next Action UX
 
-Status: implemented in branch `codex/issue58-single-next-action-ux`
+Status: completed on main in commit `0fc4fb3`
 
 Depends on: Issue 57 real fixture audit adoption
 
