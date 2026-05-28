@@ -70,6 +70,7 @@ EDITORIAL_AUDIT_KEYS = (
 
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
+CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -221,6 +222,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
+        CRITIQUE_SCHEMA_V1_13,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -242,6 +244,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
+        CRITIQUE_SCHEMA_V1_13,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -252,6 +255,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         "figure-agent.critique.v1.10",
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
+        CRITIQUE_SCHEMA_V1_13,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -262,6 +266,9 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "verdict": "no_defect",
                 "linked_micro_defect_id": "",
                 "rationale": "full_q1 was inspected and has no local defect",
+                "unintended_visible_anomaly": "none",
+                "anomaly_rationale": "no stray artifact is visible in full_q1",
+                "anomaly_link": "",
             },
             {
                 "crop_id": "VC001_A",
@@ -271,6 +278,9 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "verdict": "defect",
                 "linked_micro_defect_id": "M001",
                 "rationale": "VC001_A crop shows the linked micro defect",
+                "unintended_visible_anomaly": "present",
+                "anomaly_rationale": "VC001_A shows an unintended wire crossing",
+                "anomaly_link": "M001",
             },
         ]
     if schema == CRITIQUE_SCHEMA_V1_11:
@@ -292,6 +302,10 @@ def test_validate_critique_schema_accepts_v1_4_micro_defects() -> None:
 
 def test_validate_critique_schema_accepts_v1_8_crop_audit_log() -> None:
     validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.8"))
+
+
+def test_validate_critique_schema_accepts_v1_13_crop_anomaly_accounting() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_13))
 
 
 def test_validate_critique_schema_accepts_v1_9_reference_calibrated_score() -> None:
@@ -634,8 +648,56 @@ def test_validate_critique_schema_rejects_v1_8_defect_with_unknown_micro_defect_
         validate_critique_schema(frontmatter)
 
 
+def test_validate_critique_schema_rejects_v1_13_missing_anomaly_field() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter["crop_audit_log"][0].pop("unintended_visible_anomaly")
+
+    with pytest.raises(CritiqueContractError, match="unintended_visible_anomaly"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_13_present_anomaly_without_link() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter["crop_audit_log"][1]["unintended_visible_anomaly"] = "present"
+    frontmatter["crop_audit_log"][1]["anomaly_link"] = ""
+
+    with pytest.raises(CritiqueContractError, match="anomaly_link"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_13_uncertain_anomaly_with_rationale() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter["crop_audit_log"][0]["unintended_visible_anomaly"] = "uncertain"
+    frontmatter["crop_audit_log"][0]["anomaly_rationale"] = (
+        "crop is visually ambiguous and needs another zoom pass"
+    )
+    frontmatter["crop_audit_log"][0]["anomaly_link"] = ""
+
+    validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_13_none_anomaly_with_rationale() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_13)
+    frontmatter["crop_audit_log"][0]["unintended_visible_anomaly"] = "none"
+    frontmatter["crop_audit_log"][0]["anomaly_rationale"] = (
+        "no unintended visible artifact is present"
+    )
+
+    validate_critique_schema(frontmatter)
+
+
 def test_validate_critique_schema_accepts_legacy_v1_7_without_crop_audit_log() -> None:
     validate_critique_schema(_valid_frontmatter("figure-agent.critique.v1.7"))
+
+
+def test_validate_critique_schema_keeps_v1_12_legacy_without_anomaly_accounting() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_12)
+    for item in frontmatter["crop_audit_log"]:
+        item.pop("unintended_visible_anomaly")
+        item.pop("anomaly_rationale")
+        item.pop("anomaly_link")
+
+    validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_4_missing_micro_defects() -> None:

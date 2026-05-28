@@ -2072,6 +2072,27 @@ def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
     assert "crop_audit_log" in violations[0].message
 
 
+def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.13",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml(),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert violations
+    assert violations[0].category == "critique_contract"
+    assert "unintended_visible_anomaly" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_9_missing_crop_audit_log_with_manifest(
     tmp_path: Path,
 ) -> None:

@@ -62,6 +62,7 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
@@ -71,6 +72,7 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
     }
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
@@ -78,6 +80,7 @@ STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
     }
 )
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
@@ -88,6 +91,7 @@ TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
     }
 )
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
@@ -95,6 +99,7 @@ LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.10",
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
     }
 )
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"

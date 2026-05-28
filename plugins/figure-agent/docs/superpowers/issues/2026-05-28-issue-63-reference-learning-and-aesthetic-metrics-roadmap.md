@@ -57,7 +57,8 @@ non-model aesthetic-class signals and loop-stuck signals in `/fig_loop`.
    branch `codex/issue63-reference-learning-roadmap`
 4. Issue 63D - Basin And Diminishing-Returns Detector - implemented on branch
    `codex/issue63-reference-learning-roadmap`
-5. Issue 63E - Unintended-Visible Anomaly Audit
+5. Issue 63E - Unintended-Visible Anomaly Audit - implemented on branch
+   `codex/issue63-reference-learning-roadmap`
 
 ## Order
 

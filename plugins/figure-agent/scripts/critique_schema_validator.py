@@ -892,6 +892,63 @@ def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
             )
 
 
+def _finding_ids(frontmatter: dict[str, Any]) -> set[str]:
+    finding_ids: set[str] = set()
+    for item in frontmatter.get("findings", []):
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            finding_ids.add(item["id"].strip())
+    for panel in frontmatter.get("panels", []):
+        if not isinstance(panel, dict):
+            continue
+        for item in panel.get("findings", []):
+            if isinstance(item, dict) and isinstance(item.get("id"), str):
+                finding_ids.add(item["id"].strip())
+    return {item for item in finding_ids if item}
+
+
+def _validate_v1_13_crop_anomaly_accounting(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_non_empty_list(
+        frontmatter.get("crop_audit_log"),
+        "critique frontmatter.crop_audit_log",
+    )
+    micro_defect_ids = {
+        str(item.get("id")).strip()
+        for item in frontmatter.get("micro_defects", [])
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and item.get("id").strip()
+    }
+    finding_ids = _finding_ids(frontmatter)
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.crop_audit_log[{index}]"
+        item = require_mapping(raw_item, label)
+        anomaly = _require_enum(
+            item,
+            "unintended_visible_anomaly",
+            vocab.CROP_ANOMALY_VERDICTS,
+            label=label,
+        )
+        _require_non_empty_string(item, "anomaly_rationale", label=label)
+        anomaly_link = _require_string_value(item, "anomaly_link", label=label)
+        if anomaly != "present":
+            continue
+        if not anomaly_link:
+            raise CritiqueContractError(
+                f"{label}.anomaly_link must be set when unintended_visible_anomaly is present"
+            )
+        if anomaly_link.startswith("accept_simplification:"):
+            if not anomaly_link.split(":", 1)[1].strip():
+                raise CritiqueContractError(
+                    f"{label}.anomaly_link accept_simplification reason must be non-empty"
+                )
+            continue
+        if anomaly_link not in micro_defect_ids and anomaly_link not in finding_ids:
+            raise CritiqueContractError(
+                f"{label}.anomaly_link must reference a finding id, micro_defect id, "
+                "or accept_simplification:<reason>"
+            )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -1036,6 +1093,27 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_13:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        if "journal_art_direction_playbook_audit" in frontmatter:
+            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
         _validate_journal_grade_assessment(
             frontmatter,
             quality_verdicts,
