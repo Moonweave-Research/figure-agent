@@ -1,6 +1,6 @@
 # Issue 67: Safe Loop Runner Expansion
 
-Status: completed
+Status: completed; superseded by Issue 68 for missing adjudication scaffold
 
 Depends on: Issue 66 safe workflow runner
 

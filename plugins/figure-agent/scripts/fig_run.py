@@ -27,6 +27,7 @@ SCHEMA = "figure-agent.run.v1"
 DEFAULT_MAX_STEPS = 5
 EXECUTABLE_ACTIONS = frozenset(
     {
+        fig_driver.ACTION_RUN_ADJUDICATE,
         fig_driver.ACTION_RUN_COMPILE,
         fig_driver.ACTION_RUN_FIG_LOOP,
     }
@@ -98,6 +99,18 @@ def _is_executable_action(summary: dict[str, Any]) -> bool:
         and command.strip() != ""
         and not _is_slash_command(command)
     )
+
+
+def _adjudication_scaffold_is_safe(name: str, *, repo_root: Path) -> bool:
+    return not (repo_root / "examples" / name / "critique_adjudication.yaml").exists()
+
+
+def _would_execute(summary: dict[str, Any], *, name: str, repo_root: Path) -> bool:
+    if not _is_executable_action(summary):
+        return False
+    if summary.get("action") == fig_driver.ACTION_RUN_ADJUDICATE:
+        return _adjudication_scaffold_is_safe(name, repo_root=repo_root)
+    return True
 
 
 def _boundary_stop_reason(summary: dict[str, Any]) -> str:
@@ -185,7 +198,7 @@ def run_workflow(
     for index in range(1, max_steps + 1):
         summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
         final_summary = summary
-        would_execute = _is_executable_action(summary)
+        would_execute = _would_execute(summary, name=name, repo_root=repo_root)
 
         if not execute:
             stop_reason = STOP_PLAN_ONLY if would_execute else _boundary_stop_reason(summary)

@@ -29,18 +29,19 @@ The executable actions are allowed only when the driver attaches no
 `stop_boundary`:
 
 - `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
+- `run_adjudicate` -> `uv run python3 scripts/critique_adjudication.py scaffold <name>`
+  only when `critique_adjudication.yaml` is missing
 - `run_fig_loop` -> `uv run python3 scripts/fig_loop.py <name> --goal ... --json`
 
-The runner intentionally stops on these actions even when they have shell
-commands:
+The runner intentionally stops on this action even when it has a shell command:
 
-- `run_adjudicate`
 - `run_export`
 
-Those commands mutate review/export evidence and need separate policy hardening
-before they can be safely automated. `/fig_loop` is allowed because it is
-verify-only and writes bounded run evidence under `.scratch/fig-loop-runs/`.
-The runner always stops on `/fig_critique`
+`run_export` mutates export state and needs separate policy hardening before it
+can be safely automated. `run_adjudicate` is allowed only for initial scaffold;
+existing adjudication files, including stale or invalid files, still require
+manual repair. `/fig_loop` is allowed because it is verify-only and writes
+bounded run evidence under `.scratch/fig-loop-runs/`. The runner always stops on `/fig_critique`
 because that is a host-vision operation, not a shell command.
 
 ## Output JSON contract
@@ -55,7 +56,7 @@ because that is a host-vision operation, not a shell command.
 | `goal` | string | passthrough goal |
 | `execute` | bool | whether allowed shell commands were executed |
 | `max_steps` | int | safety cap |
-| `executable_actions` | list | current allowlist: `run_compile`, `run_fig_loop` |
+| `executable_actions` | list | current allowlist: `run_adjudicate`, `run_compile`, `run_fig_loop` |
 | `steps` | list | driver action plus execution result for each iteration |
 | `final_action` | string | last driver action |
 | `final_safe_command` | string or null | last command selected by driver |

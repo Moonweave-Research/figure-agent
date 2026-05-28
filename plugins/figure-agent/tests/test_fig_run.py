@@ -182,8 +182,8 @@ def test_execute_stops_at_non_allowlisted_shell_action(
         monkeypatch,
         [
             _driver_summary(
-                action=fig_driver.ACTION_RUN_ADJUDICATE,
-                safe_command="uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+                action=fig_driver.ACTION_RUN_EXPORT,
+                safe_command="uv run python3 scripts/run_export.py runner_demo",
             )
         ],
     )
@@ -197,9 +197,138 @@ def test_execute_stops_at_non_allowlisted_shell_action(
     )
 
     assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_driver.ACTION_RUN_EXPORT
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
+def test_execute_runs_missing_adjudication_scaffold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_ADJUDICATE,
+                safe_command="uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+            ),
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        if "critique_adjudication.py scaffold" in command:
+            adjudication = repo_root / "examples" / "runner_demo" / "critique_adjudication.yaml"
+            adjudication.parent.mkdir(parents=True, exist_ok=True)
+            adjudication.write_text(
+                "schema: figure-agent.critique-adjudication.v1\n",
+                encoding="utf-8",
+            )
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 3
+    assert commands == [
+        "uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json",
+    ]
+    assert payload["executable_actions"] == [
+        "run_adjudicate",
+        "run_compile",
+        "run_fig_loop",
+    ]
+    assert payload["executed_count"] == 2
+    assert payload["final_action"] == fig_driver.ACTION_COMPLETE
+    assert payload["final_stop_reason"] == "complete"
+
+
+def test_existing_adjudication_file_blocks_auto_scaffold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    adjudication = tmp_path / "examples" / "runner_demo" / "critique_adjudication.yaml"
+    adjudication.parent.mkdir(parents=True)
+    adjudication.write_text("existing: human decision\n", encoding="utf-8")
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_ADJUDICATE,
+                safe_command="uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+            )
+        ],
+    )
+    commands: list[str] = []
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: commands.append(command),
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
     assert payload["final_action"] == fig_driver.ACTION_RUN_ADJUDICATE
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+
+
+def test_adjudication_scaffold_failure_stops_without_requery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_ADJUDICATE,
+                safe_command="uv run python3 scripts/critique_adjudication.py scaffold runner_demo",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        return fig_run.CommandResult(returncode=4, stdout="", stderr="scaffold failed")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert len(calls) == 1
+    assert payload["executed_count"] == 1
+    assert payload["final_action"] == fig_driver.ACTION_RUN_ADJUDICATE
+    assert payload["final_stop_reason"] == "command_failed"
+    assert payload["steps"][0]["stderr_tail"] == "scaffold failed"
 
 
 def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
@@ -247,7 +376,11 @@ def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
         "bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
         "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json",
     ]
-    assert payload["executable_actions"] == ["run_compile", "run_fig_loop"]
+    assert payload["executable_actions"] == [
+        "run_adjudicate",
+        "run_compile",
+        "run_fig_loop",
+    ]
     assert payload["executed_count"] == 2
     assert payload["final_action"] == fig_driver.ACTION_HUMAN_GATE_STOP
     assert payload["final_stop_reason"] == "not_executable_action"
