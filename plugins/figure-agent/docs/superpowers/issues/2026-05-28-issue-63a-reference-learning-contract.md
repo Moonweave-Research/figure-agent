@@ -1,6 +1,6 @@
 # Issue 63A - Reference Learning Contract
 
-Status: proposed
+Status: implemented on branch `codex/issue63-reference-learning-roadmap`
 
 Depends on: Issue 63 reference-learning roadmap
 
@@ -79,13 +79,47 @@ reference_learning:
 
 ## Acceptance
 
-- Valid contracts are parsed and emitted in the critique brief.
-- Missing contracts preserve current behavior.
-- Malformed contracts fail with controlled errors or visible warnings.
-- Unknown roles or empty transfer lists cannot silently pass as authoritative.
-- The brief explicitly distinguishes "learn from this" from "copy this".
-- Tests cover valid, missing, malformed, unknown-role, and forbidden-transfer
-  cases.
+- [x] Valid contracts are parsed and emitted in the critique brief.
+- [x] Missing contracts preserve current behavior.
+- [x] Malformed contracts fail with controlled errors or visible warnings.
+- [x] Unknown roles or empty transfer lists cannot silently pass as
+  authoritative.
+- [x] The brief explicitly distinguishes "learn from this" from "copy this".
+- [x] Tests cover valid, missing, malformed, unknown-role, and
+  forbidden-transfer cases.
+
+## Implementation Notes
+
+Implemented as an optional `reference_learning` section inside the existing
+`critique_reference_pack.yaml`. This keeps freshness behavior inherited from the
+existing critique-reference-pack hash path and avoids introducing a second
+reference-learning file before metrics exist.
+
+The implemented contract:
+
+- validates `schema: figure-agent.reference-learning.v1`;
+- validates non-empty `references`;
+- validates controlled roles:
+  - `apparatus_convention`;
+  - `composition_reference`;
+  - `density_reference`;
+  - `journal_tone_reference`;
+  - `style_anchor`;
+  - `typography_reference`;
+- requires non-empty `allowed_transfer`, `forbidden_transfer`, and `rationale`
+  for every reference-learning item;
+- emits a `Reference Learning Contract` section in `/fig_critique` briefs;
+- tells the host LLM that references are learning sources, not copy targets;
+- preserves missing-contract compatibility.
+
+Verification performed:
+
+- `uv run pytest -q tests/test_critique_reference_pack.py tests/test_critique_brief.py`
+  -> 66 passed.
+- `uv run pytest -q tests/test_critique_reference_pack.py tests/test_critique_brief.py tests/test_quality_manifest.py`
+  -> 86 passed.
+- `uv run ruff check scripts/critique_reference_pack.py scripts/critique_brief.py tests/test_critique_reference_pack.py tests/test_critique_brief.py`
+  -> all checks passed.
 
 ## Review Questions
 

@@ -56,6 +56,117 @@ def test_load_reference_pack_accepts_valid_pack(tmp_path: Path) -> None:
     assert pack["must_match_traits"][0]["reference_id"] == "R001"
 
 
+def test_load_reference_pack_accepts_reference_learning_contract(tmp_path: Path) -> None:
+    pack_path = tmp_path / "critique_reference_pack.yaml"
+    _write_valid_pack(pack_path)
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8")
+        + """
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - style_anchor
+        - density_reference
+      allowed_transfer:
+        - restrained palette
+        - compact label hierarchy
+      forbidden_transfer:
+        - copy component topology
+        - override physics story
+      rationale: Use as journal-tone anchor, not content authority.
+""",
+        encoding="utf-8",
+    )
+
+    pack = load_reference_pack(pack_path)
+
+    learning = pack["reference_learning"]
+    assert learning["schema"] == "figure-agent.reference-learning.v1"
+    assert learning["references"][0]["roles"] == ["style_anchor", "density_reference"]
+    assert "copy component topology" in learning["references"][0]["forbidden_transfer"]
+
+
+def test_load_reference_pack_rejects_unknown_reference_learning_role(
+    tmp_path: Path,
+) -> None:
+    pack_path = tmp_path / "critique_reference_pack.yaml"
+    _write_valid_pack(pack_path)
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8")
+        + """
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - copy_target
+      allowed_transfer:
+        - exact panel geometry
+      forbidden_transfer:
+        - none
+      rationale: bad role
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CritiqueReferencePackError, match="roles"):
+        load_reference_pack(pack_path)
+
+
+def test_load_reference_pack_rejects_empty_reference_learning_transfer_lists(
+    tmp_path: Path,
+) -> None:
+    pack_path = tmp_path / "critique_reference_pack.yaml"
+    _write_valid_pack(pack_path)
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8")
+        + """
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - style_anchor
+      allowed_transfer: []
+      forbidden_transfer:
+        - copy component topology
+      rationale: empty allowed list is ambiguous
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CritiqueReferencePackError, match="allowed_transfer"):
+        load_reference_pack(pack_path)
+
+
+def test_load_reference_pack_rejects_empty_reference_learning_forbidden_transfer(
+    tmp_path: Path,
+) -> None:
+    pack_path = tmp_path / "critique_reference_pack.yaml"
+    _write_valid_pack(pack_path)
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8")
+        + """
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - style_anchor
+      allowed_transfer:
+        - restrained palette
+      forbidden_transfer: []
+      rationale: empty forbidden list is ambiguous
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CritiqueReferencePackError, match="forbidden_transfer"):
+        load_reference_pack(pack_path)
+
+
 def test_load_optional_reference_pack_returns_none_when_missing(tmp_path: Path) -> None:
     assert load_optional_reference_pack(tmp_path) is None
 

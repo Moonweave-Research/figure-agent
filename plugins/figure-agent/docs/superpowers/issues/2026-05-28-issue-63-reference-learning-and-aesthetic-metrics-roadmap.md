@@ -49,7 +49,8 @@ non-model aesthetic-class signals and loop-stuck signals in `/fig_loop`.
 
 ## Child Issues
 
-1. Issue 63A - Reference Learning Contract
+1. Issue 63A - Reference Learning Contract - implemented on branch
+   `codex/issue63-reference-learning-roadmap`
 2. Issue 63B - Non-Model Aesthetic Metrics Pack
 3. Issue 63C - Aesthetic Metric Surfacing In Status And Loop
 4. Issue 63D - Basin And Diminishing-Returns Detector

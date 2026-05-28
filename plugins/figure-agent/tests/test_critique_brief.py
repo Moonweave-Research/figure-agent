@@ -1301,6 +1301,66 @@ calibration_questions:
     assert "scores cite the reference pack" in brief
 
 
+def test_critique_brief_includes_reference_learning_contract(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "critique_reference_pack.yaml").write_text(
+        """
+schema: figure-agent.critique-reference-pack.v1
+fixture: review_demo
+target_journal: Nature Materials
+reference_class: mechanism_schematic
+visual_ambition: high_impact_candidate
+comparison_references:
+  - id: R001
+    source: human_note
+    path_or_citation: target journal exemplar set
+    role: journal_register
+must_match_traits:
+  - id: T001
+    trait: compact journal-grade hierarchy
+    reference_id: R001
+must_avoid_traits:
+  - id: A001
+    trait: generic clip-art apparatus boxes
+    severity: MAJOR
+calibration_questions:
+  - id: Q001
+    question: Does this read as a journal mechanism figure?
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: reference/example.png
+      roles:
+        - style_anchor
+        - typography_reference
+      allowed_transfer:
+        - restrained palette
+        - compact label hierarchy
+      forbidden_transfer:
+        - copy component topology
+        - introduce unbriefed hardware
+        - override physics story
+      rationale: Use as a journal-tone anchor, not a content authority.
+""".lstrip(),
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
+
+    brief = generate_for(example_dir)
+
+    assert "## Reference Learning Contract" in brief
+    assert "References are learning sources, not copy targets." in brief
+    assert "reference/example.png" in brief
+    assert "roles=style_anchor, typography_reference" in brief
+    assert "Allowed transfer: restrained palette; compact label hierarchy" in brief
+    assert (
+        "Forbidden transfer: copy component topology; introduce unbriefed hardware; "
+        "override physics story"
+    ) in brief
+    assert "Use as a journal-tone anchor, not a content authority." in brief
+
+
 def test_critique_brief_includes_external_second_opinion_review(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     _enable_external_vision_review(example_dir)

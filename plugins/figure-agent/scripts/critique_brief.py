@@ -451,6 +451,37 @@ def _reference_calibration_section(pack: dict | None) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _reference_learning_section(pack: dict | None) -> str:
+    if pack is None:
+        return ""
+    learning = pack.get("reference_learning")
+    if not isinstance(learning, dict):
+        return ""
+    lines = [
+        "## Reference Learning Contract",
+        "References are learning sources, not copy targets.",
+        "`briefing.md`, theory guards, fixture semantics, and author intent outrank "
+        "reference style. Learn only the allowed transfer items below; do not copy "
+        "forbidden structure, hardware, layout, or physics.",
+        "",
+    ]
+    for item in learning.get("references", []):
+        roles = ", ".join(item.get("roles", []))
+        allowed = "; ".join(item.get("allowed_transfer", []))
+        forbidden = "; ".join(item.get("forbidden_transfer", []))
+        lines.extend(
+            [
+                f"### `{item['path']}`",
+                f"- roles={roles}",
+                f"- Allowed transfer: {allowed}",
+                f"- Forbidden transfer: {forbidden}",
+                f"- Rationale: {item['rationale']}",
+                "",
+            ]
+        )
+    return "\n" + "\n".join(lines).rstrip() + "\n"
+
+
 def _external_vision_review_section(review: dict | None) -> str:
     if review is None:
         return ""
@@ -1182,6 +1213,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
+    reference_learning_section = _reference_learning_section(reference_calibration_pack)
     external_vision_review_section = _external_vision_review_section(
         external_vision_review
     )
@@ -1224,6 +1256,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
 {text_boundary_clash_section}
 {label_path_proximity_section}
 {reference_calibration_section}
+{reference_learning_section}
 {external_vision_review_section}
 {paper_aesthetic_context_section}
 {journal_art_direction_playbook_section}
