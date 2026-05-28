@@ -61,6 +61,12 @@ Canonical next-action order:
 5. Run `/fig_export`, release, or SVG polish only when `/fig_status` or
    `/fig_drive --dry-run` explicitly routes there.
 
+If the user asks to proceed autonomously, use `/fig_run <name> --mode <mode>
+--goal "<goal>" --execute` rather than manually copy-pasting each safe driver
+command. `/fig_run` is bounded: Issue 66A only executes compile, then stops at
+host critique, adjudication, loop, export, patch, polish, human, accepted, and
+golden boundaries.
+
 Use modes mentally:
 
 - `authoring`: source edits and `/fig_compile`; rerun `/fig_status <name>`
@@ -114,6 +120,10 @@ polish backport, or actions the current mode forbids.
                          adjudication, export, and loop rerun freshness
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
+/fig_drive <name> --mode <mode> --goal "<goal>" --dry-run
+                         read-only next-action selector
+/fig_run <name> --mode <mode> --goal "<goal>" --execute
+                         bounded executor for safe mechanical steps; stops at gates
 ```
 
 Agent rule: when `coordinate_hints.yaml` exists, read it before authoring or
