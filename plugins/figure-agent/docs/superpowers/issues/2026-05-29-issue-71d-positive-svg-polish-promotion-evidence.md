@@ -1,6 +1,14 @@
 # Issue 71D - Positive SVG Polish Promotion Evidence
 
-Status: proposed
+Status: completed
+
+Completion milestone:
+
+- `docs/milestones/2026-05-29-positive-svg-polish-promotion-evidence.md`
+
+Follow-up:
+
+- `docs/superpowers/issues/2026-05-29-issue-73-svg-polish-trigger-semantics.md`
 
 Depends on: Issue 71B and Issue 71C where applicable
 
