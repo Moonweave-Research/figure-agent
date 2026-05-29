@@ -1,6 +1,6 @@
 # Issue 71 - Real-Fixture Production Readiness Evidence Roadmap
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 70 operator-grade guided autonomy
 
@@ -132,6 +132,28 @@ The 2026-05-29 sweep produced these important buckets:
 - Release/golden/publication gates are rehearsed without accidental mutation.
 - Any plugin defect discovered by dogfood is turned into a separate narrow
   issue with tests.
+
+## Closeout
+
+All child issues have milestone evidence:
+
+- 71A: `docs/milestones/2026-05-29-real-fixture-production-readiness-baseline.md`
+- 71B: `docs/milestones/2026-05-29-issue-71b-host-vision-critique-closeout.md`
+- 71C: `docs/milestones/2026-05-29-non-critique-export-closeout-rehearsal.md`
+- 71D: `docs/milestones/2026-05-29-positive-svg-polish-promotion-evidence.md`
+- 71E: `docs/milestones/2026-05-29-release-golden-publication-gate-rehearsal.md`
+
+Final judgment:
+
+- Real fixtures now have explicit production-readiness evidence rather than an
+  assumed happy path.
+- Host-vision critique, release/golden, publication, accepted, and SVG-polish
+  boundaries remain explicit.
+- The plugin did not discover a release-boundary mutation bug in 71E.
+- Issue 73 addressed the main SVG-polish trigger ambiguity found by 71D.
+- Post-Issue-73 critique generator changes correctly make affected critiques
+  stale, so any future release rehearsal starts with a host-vision refresh
+  queue.
 
 ## Review Questions
 

@@ -1,6 +1,6 @@
 # Issue 71B - Host-Vision Critique Queue Closeout
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 71A
 
@@ -18,6 +18,22 @@ candidates, reference images, and print-scale outputs.
 Refresh the host-vision critique queue fixture by fixture, lint the resulting
 critique, scaffold or repair adjudication, and record the next `/fig_loop`
 state without source edits or hidden release decisions.
+
+## Closeout
+
+Completed in milestone:
+
+- `docs/milestones/2026-05-29-issue-71b-host-vision-critique-closeout.md`
+
+Outcome:
+
+- Five reference-grounded critiques were refreshed and linted.
+- Adjudication was synced, hash-rebound, or scaffolded per fixture without
+  fabricating human decisions.
+- No source, export, accepted, golden, publication, or SVG polish artifact was
+  mutated.
+- Remaining source-figure and release gates were routed to human review or
+  Issue 71E.
 
 ## Scope
 

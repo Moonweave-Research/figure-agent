@@ -1,6 +1,6 @@
 # Issue 71E - Release, Golden, And Publication Gate Rehearsal
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 71B, Issue 71C, and Issue 71D evidence
 
@@ -56,3 +56,20 @@ Out of scope:
 2. Does the plugin prevent accidental golden roll-forward?
 3. Are publication/provenance failures visible but non-fabricated?
 4. Does the rehearsal identify the next release-hardening issue, if any?
+
+## Closeout
+
+Completed in milestone:
+
+- `docs/milestones/2026-05-29-release-golden-publication-gate-rehearsal.md`
+
+Outcome:
+
+- Release/golden/publication mutation containment passed.
+- `/fig_run --execute --no-record` executed zero shell commands for every
+  release rehearsal row.
+- No accepted, golden, export, publication, source, SVG, or `.scratch` artifact
+  was mutated.
+- Several real release candidates are now correctly blocked first by stale
+  host critiques after Issue 73 changed the critique generator hash. That is a
+  freshness precondition, not a release-boundary defect.
