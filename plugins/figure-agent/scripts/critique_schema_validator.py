@@ -594,6 +594,32 @@ def _validate_v1_5_editorial_art_direction(frontmatter: dict[str, Any]) -> dict[
     return verdicts
 
 
+def _validate_v1_14_editorial_route_detail(frontmatter: dict[str, Any]) -> None:
+    editorial = require_mapping(
+        frontmatter.get("editorial_art_direction"),
+        "critique frontmatter.editorial_art_direction",
+    )
+    label = "critique frontmatter.editorial_art_direction.tikz_vs_svg_polish_trigger"
+    trigger = require_mapping(editorial.get("tikz_vs_svg_polish_trigger"), label)
+    required_field_by_path = {
+        "continue_tikz": "remaining_tikz_lever",
+        "ready_for_svg_polish": "svg_polish_candidate_reason",
+        "semantic_backport_required": "semantic_backport_reason",
+        "needs_human_art_direction": "human_art_direction_reason",
+    }
+    recommended_path = _require_enum(
+        trigger,
+        "recommended_path",
+        vocab.EDITORIAL_POLISH_PATHS,
+        label=label,
+    )
+    _require_non_empty_string(
+        trigger,
+        required_field_by_path[recommended_path],
+        label=label,
+    )
+
+
 def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_list(
         frontmatter.get("micro_defects"),
@@ -1108,6 +1134,28 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_4_micro_defects(frontmatter)
         _validate_v1_10_accept_simplification(frontmatter)
         editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        if "journal_art_direction_playbook_audit" in frontmatter:
+            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_14:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_14_editorial_route_detail(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_v1_13_crop_anomaly_accounting(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:

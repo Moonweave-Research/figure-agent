@@ -1,6 +1,6 @@
 # Issue 73 - SVG Polish Trigger Semantics
 
-Status: proposed
+Status: completed
 
 Depends on:
 
@@ -95,3 +95,32 @@ polish. Improve the contract around why the trigger chooses
   version while preserving legacy compatibility.
 - A follow-up 71D-style dogfood run can identify whether the strongest real
   fixture is truly source-polish-only or ready for bounded SVG optical polish.
+
+## Implementation Notes
+
+- Added schema/rubric `figure-agent.critique.v1.14` /
+  `figure-agent.critique-rubric.v1.14` for advanced aesthetic/reference
+  contracts only:
+  - `figure-agent.aesthetic-intent.v2`
+  - `spec.yaml.journal_art_direction_playbook`
+  - `critique_reference_pack.yaml.reference_learning`
+- Default and legacy fixtures remain on v1.10 unless one of those advanced
+  opt-ins is present. Legacy v1.13 critiques remain parseable without route
+  detail.
+- v1.14 requires exactly one route-specific rationale field on
+  `editorial_art_direction.tikz_vs_svg_polish_trigger`:
+  - `remaining_tikz_lever` for `continue_tikz`
+  - `svg_polish_candidate_reason` for `ready_for_svg_polish`
+  - `semantic_backport_reason` for `semantic_backport_required`
+  - `human_art_direction_reason` for `needs_human_art_direction`
+- `/fig_loop` surfaces the selected rationale as `polish_route_detail`.
+- `/fig_driver --mode polish` preserves the hard gate and includes route detail
+  in `svg_polish_readiness` without authorizing mutation.
+
+## Verification
+
+- Targeted pytest:
+  `uv run pytest -q tests/test_critique_brief.py tests/test_quality_manifest.py tests/test_critique_schema_validator.py tests/test_critique_lint.py tests/test_fig_driver_editorial.py tests/test_fig_loop.py tests/test_status.py tests/test_sync_critique_adjudication.py`
+  -> 496 passed.
+- Targeted ruff + `git diff --check` passed before final full-suite
+  verification.

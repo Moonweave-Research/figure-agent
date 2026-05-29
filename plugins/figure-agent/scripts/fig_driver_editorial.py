@@ -70,6 +70,9 @@ def _blocking_item(summary: dict[str, Any], recommended_path: str) -> dict[str, 
     verdict = _verdict_for_readiness(summary)
     if verdict is not None:
         item["verdict"] = verdict
+    route_detail = summary.get("polish_route_detail")
+    if isinstance(route_detail, str) and route_detail.strip():
+        item["route_detail"] = route_detail.strip()
     return item
 
 
@@ -185,8 +188,10 @@ def svg_polish_readiness(summary: Any) -> dict[str, Any] | None:
         return None
     recommended_path = recommended_path.strip()
     if recommended_path == "ready_for_svg_polish":
+        route_detail = summary.get("polish_route_detail")
+        route_detail = route_detail.strip() if isinstance(route_detail, str) else None
         if editorial_review_requires_human_gate(summary):
-            return {
+            readiness = {
                 "schema": READINESS_SCHEMA,
                 "source": "editorial_art_direction_summary",
                 "can_start_svg_polish": False,
@@ -198,7 +203,10 @@ def svg_polish_readiness(summary: Any) -> dict[str, Any] | None:
                 ),
                 "blocking_items": [_blocking_item(summary, recommended_path)],
             }
-        return {
+            if route_detail:
+                readiness["route_detail"] = route_detail
+            return readiness
+        readiness = {
             "schema": READINESS_SCHEMA,
             "source": "editorial_art_direction_summary",
             "can_start_svg_polish": True,
@@ -207,14 +215,22 @@ def svg_polish_readiness(summary: Any) -> dict[str, Any] | None:
             "blocking_reason": None,
             "blocking_items": [],
         }
+        if route_detail:
+            readiness["route_detail"] = route_detail
+        return readiness
     if recommended_path == "continue_tikz":
+        route_detail = summary.get("polish_route_detail")
+        route_detail = route_detail.strip() if isinstance(route_detail, str) else None
+        reason = "editorial polish trigger recommends continue_tikz"
+        if route_detail:
+            reason = f"{reason}: {route_detail}"
         return {
             "schema": READINESS_SCHEMA,
             "source": "editorial_art_direction_summary",
             "can_start_svg_polish": False,
             "recommended_path": recommended_path,
             "next_action": "run_fig_loop",
-            "blocking_reason": "editorial polish trigger recommends continue_tikz",
+            "blocking_reason": reason,
             "blocking_items": [_blocking_item(summary, recommended_path)],
         }
     if recommended_path == "semantic_backport_required":

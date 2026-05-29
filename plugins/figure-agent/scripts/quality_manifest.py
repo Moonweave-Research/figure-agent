@@ -25,9 +25,11 @@ CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
 CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
 CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
 CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
+CRITIQUE_RUBRIC_VERSION_V1_14 = "figure-agent.critique-rubric.v1.14"
 CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
+CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -190,7 +192,7 @@ def expected_critique_rubric_version(example_dir: Path) -> str:
             reference_pack.get("reference_learning"),
             dict,
         ):
-            return CRITIQUE_RUBRIC_VERSION_V1_13
+            return CRITIQUE_RUBRIC_VERSION_V1_14
     spec_path = example_dir / "spec.yaml"
     if spec_path.is_file():
         try:
@@ -200,9 +202,9 @@ def expected_critique_rubric_version(example_dir: Path) -> str:
         if isinstance(spec_data, dict):
             try:
                 if journal_playbook_id_from_spec(spec_data) is not None:
-                    return CRITIQUE_RUBRIC_VERSION_V1_12
+                    return CRITIQUE_RUBRIC_VERSION_V1_14
             except JournalArtDirectionPlaybookError:
-                return CRITIQUE_RUBRIC_VERSION_V1_12
+                return CRITIQUE_RUBRIC_VERSION_V1_14
     intent_path = example_dir / "aesthetic_intent.yaml"
     if not intent_path.is_file():
         return CRITIQUE_RUBRIC_VERSION
@@ -211,7 +213,7 @@ def expected_critique_rubric_version(example_dir: Path) -> str:
     except yaml.YAMLError:
         return CRITIQUE_RUBRIC_VERSION
     if isinstance(data, dict) and data.get("schema") == AESTHETIC_INTENT_SCHEMA_V2:
-        return CRITIQUE_RUBRIC_VERSION_V1_11
+        return CRITIQUE_RUBRIC_VERSION_V1_14
     return CRITIQUE_RUBRIC_VERSION
 
 
@@ -220,13 +222,20 @@ def _critique_schema_matches_expected_rubric(
     expected_rubric_version: str,
 ) -> bool:
     schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_14:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_14
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_13:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_13
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_12:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_12
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_11:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_11
-    return schema not in {CRITIQUE_SCHEMA_VERSION_V1_11, CRITIQUE_SCHEMA_VERSION_V1_12}
+    return schema not in {
+        CRITIQUE_SCHEMA_VERSION_V1_11,
+        CRITIQUE_SCHEMA_VERSION_V1_12,
+        CRITIQUE_SCHEMA_VERSION_V1_13,
+        CRITIQUE_SCHEMA_VERSION_V1_14,
+    }
 
 
 def yaml_frontmatter(path: Path) -> dict:

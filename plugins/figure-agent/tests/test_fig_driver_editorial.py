@@ -81,6 +81,7 @@ def test_svg_polish_readiness_explains_continue_tikz() -> None:
             "worst_verdict": "weak",
             "polish_trigger_verdict": "weak",
             "polish_recommended_path": "continue_tikz",
+            "polish_route_detail": "source-level label spacing remains patchable in TikZ",
         }
     )
 
@@ -90,13 +91,17 @@ def test_svg_polish_readiness_explains_continue_tikz() -> None:
         "can_start_svg_polish": False,
         "recommended_path": "continue_tikz",
         "next_action": "run_fig_loop",
-        "blocking_reason": "editorial polish trigger recommends continue_tikz",
+        "blocking_reason": (
+            "editorial polish trigger recommends continue_tikz: "
+            "source-level label spacing remains patchable in TikZ"
+        ),
         "blocking_items": [
             {
                 "source": "editorial_art_direction_summary",
                 "id": "tikz_vs_svg_polish_trigger",
                 "recommended_path": "continue_tikz",
                 "verdict": "weak",
+                "route_detail": "source-level label spacing remains patchable in TikZ",
             }
         ],
     }
@@ -108,6 +113,7 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
             "worst_verdict": "pass",
             "polish_trigger_verdict": "pass",
             "polish_recommended_path": "ready_for_svg_polish",
+            "polish_route_detail": "only optical vector edge cleanup remains",
         }
     )
 
@@ -115,6 +121,7 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
     assert readiness["can_start_svg_polish"] is True
     assert readiness["recommended_path"] == "ready_for_svg_polish"
     assert readiness["next_action"] == "start_svg_polish_recipe"
+    assert readiness["route_detail"] == "only optical vector edge cleanup remains"
     assert readiness["blocking_items"] == []
 
 

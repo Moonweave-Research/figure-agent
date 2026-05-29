@@ -1011,6 +1011,49 @@ def test_loop_surfaces_svg_polish_readiness_from_editorial_summary(
     assert stdout_summary["svg_polish_readiness"] == readiness
 
 
+def test_loop_surfaces_v1_14_svg_polish_route_detail(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.14",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(
+            trigger_path="continue_tikz",
+            overrides={
+                "tikz_vs_svg_polish_trigger": {
+                    "verdict": "pass",
+                    "evidence": "source-level lever is still visible in the render",
+                    "rationale": "the remaining polish is still source-addressable",
+                    "concrete_fix": "continue TikZ iteration first",
+                    "blocks_high_impact": False,
+                    "recommended_path": "continue_tikz",
+                    "remaining_tikz_lever": "move Panel F recovery label in source",
+                }
+            },
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect v1.14 svg polish route detail",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["editorial_art_direction_summary"]
+    assert summary["polish_recommended_path"] == "continue_tikz"
+    assert summary["polish_route_detail"] == "move Panel F recovery label in source"
+    readiness = iteration["svg_polish_readiness"]
+    assert readiness["blocking_items"][0]["route_detail"] == (
+        "move Panel F recovery label in source"
+    )
+
+
 def test_loop_svg_polish_readiness_honors_top_tier_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -3194,7 +3237,7 @@ def test_main_json_exercises_real_run_loop_summary(
 
     assert exit_code == 0
     assert captured.err == ""
-    assert payload == {
+    expected_payload = {
         "run_dir": str(run_dir),
         "manifest_path": str(manifest_path),
         "iteration_path": str(iteration_path),
@@ -3211,7 +3254,6 @@ def test_main_json_exercises_real_run_loop_summary(
         "editorial_art_direction_summary": iteration["editorial_art_direction_summary"],
         "crop_audit_summary": iteration["crop_audit_summary"],
         "aesthetic_lever_summary": iteration["aesthetic_lever_summary"],
-        "svg_polish_readiness": iteration["svg_polish_readiness"],
         "journal_art_direction_playbook_summary": iteration[
             "journal_art_direction_playbook_summary"
         ],
@@ -3221,6 +3263,9 @@ def test_main_json_exercises_real_run_loop_summary(
         "next_action_summary": iteration["next_action_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
+    if iteration["svg_polish_readiness"] is not None:
+        expected_payload["svg_polish_readiness"] = iteration["svg_polish_readiness"]
+    assert payload == expected_payload
 
 
 # --- Issue 7E: final-artifact loop surfacing ---------------------------------

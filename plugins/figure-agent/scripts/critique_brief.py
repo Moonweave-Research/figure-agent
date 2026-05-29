@@ -44,9 +44,7 @@ from paper_aesthetic_context import (
 from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
-    CRITIQUE_RUBRIC_VERSION_V1_11,
-    CRITIQUE_RUBRIC_VERSION_V1_12,
-    CRITIQUE_RUBRIC_VERSION_V1_13,
+    CRITIQUE_RUBRIC_VERSION_V1_14,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -91,9 +89,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
     "label_path_near_miss"
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
-_CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
-_CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
-_CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
+_CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
 
 
 class CritiqueBriefError(Exception):
@@ -794,7 +790,7 @@ def _aesthetic_lever_grammar_section(pack: dict) -> str:
         "lever id, observed evidence, allowed adjustment, forbidden guard, and route.",
         "For non-passing levers, `observed_anti_patterns` must be non-empty and "
         "`route` must match the lever's declared default_route. Route overrides are "
-        "not part of schema v1.11.",
+        "not part of schema v1.14.",
         "`svg_polish` requires the editorial polish trigger to recommend "
         "`ready_for_svg_polish`; `semantic_backport` requires that same trigger to "
         "recommend `semantic_backport_required`; `human_art_direction` must cite "
@@ -1278,9 +1274,14 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         (reference_calibration_pack or {}).get("reference_learning"),
         dict,
     )
-    if uses_reference_learning_schema:
-        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_13
-        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_13
+    uses_v1_14_contract = (
+        uses_reference_learning_schema
+        or journal_playbook_pack is not None
+        or uses_aesthetic_lever_schema
+    )
+    if uses_v1_14_contract:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_14
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_14
         crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
     anomaly_rationale: "<whether any unintended visible artifact is present>"
     anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
@@ -1295,16 +1296,6 @@ finding, micro-defect, or explicit `accept_simplification:<reason>` decision;
 `uncertain` anomalies require a concrete rationale and should route to more
 zoom/reference review.
 """
-    elif journal_playbook_pack is not None:
-        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_12
-        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_12
-        crop_anomaly_schema = ""
-        crop_anomaly_instructions = ""
-    elif uses_aesthetic_lever_schema:
-        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_11
-        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_11
-        crop_anomaly_schema = ""
-        crop_anomaly_instructions = ""
     else:
         critique_schema = _CRITIQUE_SCHEMA_VERSION
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION
@@ -1350,7 +1341,7 @@ zoom/reference review.
 
 {brief_sections.top_tier_journal_audit()}
 
-{brief_sections.editorial_art_direction_audit()}
+{brief_sections.editorial_art_direction_audit(require_route_detail=uses_v1_14_contract)}
 
 {brief_sections.journal_grade_assessment()}
 
@@ -1374,7 +1365,8 @@ zoom/reference review.
 ## Output format
 
 Write findings to `examples/{name}/critique.md` with this exact structure
-(YAML front-matter then human-readable Markdown body — schema v1.10):
+(YAML front-matter then human-readable Markdown body — use the schema printed
+below):
 
 ```markdown
 ---
@@ -1464,7 +1456,7 @@ top_tier_audit:
     finding: "<style authority across line weights, detail level, depth cues>"
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
-{brief_sections.editorial_art_direction_schema()}
+{brief_sections.editorial_art_direction_schema(require_route_detail=uses_v1_14_contract)}
 {brief_sections.journal_grade_assessment_schema(
     critique_input_hash,
     _reference_score_calibration(example_dir, reference_calibration_pack),

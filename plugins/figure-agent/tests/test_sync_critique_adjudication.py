@@ -18,7 +18,7 @@ from critique_adjudication import (  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
-    CRITIQUE_RUBRIC_VERSION_V1_11,
+    CRITIQUE_RUBRIC_VERSION_V1_14,
     compute_critique_input_hash,
     file_sha256,
 )
@@ -173,7 +173,7 @@ def test_sync_adjudication_refreshes_hash_for_fresh_critique(tmp_path: Path) -> 
     assert payload["decisions"][0]["decision"] == "dismiss"
 
 
-def test_sync_adjudication_accepts_v1_11_rubric_for_aesthetic_intent_v2(
+def test_sync_adjudication_accepts_v1_14_rubric_for_aesthetic_intent_v2(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -183,8 +183,8 @@ def test_sync_adjudication_accepts_v1_11_rubric_for_aesthetic_intent_v2(
     critique = _write_fresh_critique(
         repo,
         example,
-        schema="figure-agent.critique.v1.11",
-        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
+        schema="figure-agent.critique.v1.14",
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_14,
     )
     _write_adjudication(example)
 

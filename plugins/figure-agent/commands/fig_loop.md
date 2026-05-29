@@ -128,6 +128,14 @@ handoff used by `/fig_drive --mode polish` to distinguish `continue_tikz`,
 `ready_for_svg_polish`, `needs_human_art_direction`, and
 `semantic_backport_required`.
 
+For schema `figure-agent.critique.v1.14`, the summary also includes
+`polish_route_detail` from the route-specific rationale field:
+`remaining_tikz_lever`, `svg_polish_candidate_reason`,
+`semantic_backport_reason`, or `human_art_direction_reason`. This keeps a
+`verdict: pass` plus `recommended_path: continue_tikz` decision explainable
+without weakening the rule that SVG polish starts only on
+`ready_for_svg_polish`.
+
 When `critique.md` is fresh schema `figure-agent.critique.v1.12`, `/fig_loop`
 also surfaces `journal_art_direction_playbook_summary` in both
 `iteration_001.json` and the `--json` summary. The summary reports the
@@ -145,6 +153,12 @@ explicit:
 - `next_action: run_fig_loop` for `continue_tikz`
 - `next_action: semantic_backport` for `semantic_backport_required`
 - `next_action: human_art_direction_review` for `needs_human_art_direction`
+
+When v1.14 route detail exists, it is copied into
+`svg_polish_readiness.route_detail` or the relevant
+`blocking_items[].route_detail`, so an outer driver can report the exact
+remaining TikZ lever, SVG candidate reason, semantic backport reason, or human
+art-direction reason.
 
 The field is read-only evidence. It does not override ordinary loop blockers,
 human gates, top-tier blockers, crop uncertainty, aesthetic lever gates, export

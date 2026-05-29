@@ -201,9 +201,13 @@ driver routes `polish_recommended_path` as follows:
 The driver still never edits source, exports, polished SVGs, accepted state, or
 golden state. `continue_tikz` means polish mode is the wrong next executor; run
 the review loop and patch source through the normal `/fig_loop` handoff
-boundary. If the summary says `ready_for_svg_polish` but another editorial slot
-still reports `fail`, `needs_human`, or a high-impact blocker, the human gate
-wins over polish handoff.
+boundary. For schema `figure-agent.critique.v1.14`, the loop summary can carry
+route detail (`remaining_tikz_lever`, `svg_polish_candidate_reason`,
+`semantic_backport_reason`, or `human_art_direction_reason`); the driver copies
+that detail into its explanatory readiness output. If the summary says
+`ready_for_svg_polish` but another editorial slot still reports `fail`,
+`needs_human`, or a high-impact blocker, the human gate wins over polish
+handoff.
 
 If no current loop checkpoint can prove `ready_for_svg_polish`, polish mode
 returns `run_fig_loop` / `mode_forbidden_action` instead of falling back to SVG
@@ -221,13 +225,14 @@ answer to "can SVG polish start yet?":
   "can_start_svg_polish": false,
   "recommended_path": "continue_tikz",
   "next_action": "run_fig_loop",
-  "blocking_reason": "editorial polish trigger recommends continue_tikz",
+  "blocking_reason": "editorial polish trigger recommends continue_tikz: move Panel F recovery label in source",
   "blocking_items": [
     {
       "source": "editorial_art_direction_summary",
       "id": "tikz_vs_svg_polish_trigger",
       "recommended_path": "continue_tikz",
-      "verdict": "weak"
+      "verdict": "weak",
+      "route_detail": "move Panel F recovery label in source"
     }
   ]
 }

@@ -63,6 +63,7 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
@@ -73,6 +74,7 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
@@ -81,6 +83,7 @@ STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }
 )
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
@@ -92,6 +95,7 @@ TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }
 )
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
@@ -100,6 +104,7 @@ LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }
 )
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
@@ -284,6 +289,8 @@ def _aesthetic_lever_accounting_violations(
     if frontmatter.get("schema") not in {
         "figure-agent.critique.v1.11",
         "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
     }:
         return [
             CritiqueLintViolation(
@@ -291,8 +298,7 @@ def _aesthetic_lever_accounting_violations(
                 category="aesthetic_lever_accounting",
                 message=(
                     "aesthetic_intent.yaml schema v2 requires "
-                    "critique schema figure-agent.critique.v1.11 or "
-                    "figure-agent.critique.v1.12"
+                    "critique schema figure-agent.critique.v1.11 or newer"
                 ),
             )
         ]
