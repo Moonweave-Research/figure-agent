@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: golden_trap_depth_picture
-source_critique_hash: sha256:6a798472ad14651361b159df0963105250c7e9bc62591e4629fd33a098b3414f
+source_critique_hash: sha256:dbf3cd761df6b1a200b9e993ec32d9eaf2c8d95307d4bee95c1b6bbcc71c21a1
 decisions:
 - finding_id: C001
   decision: needs_human

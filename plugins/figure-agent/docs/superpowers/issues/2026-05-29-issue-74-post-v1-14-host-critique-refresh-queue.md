@@ -1,6 +1,22 @@
 # Issue 74 - Post-v1.14 Host Critique Refresh Queue
 
-Status: proposed
+Status: completed
+
+Closeout: `docs/milestones/2026-05-29-post-v1-14-host-critique-refresh-queue.md`
+
+All three queued critiques were refreshed to the v1.14 generator stamp
+(`sha256:46e53b4c…`) with byte-identical inputs (`critique_input_hash` unchanged):
+`golden_trap_depth_picture` and `fig1_overview_v2` stayed on the v1.10 base
+(generator re-stamp only); `fig1_overview_v2_pair_001_vault` migrated to schema
+v1.14 (added editorial route-detail + crop-anomaly accounting), carrying its
+observations and all human adjudication decisions forward via `sync`. Each fixture
+now reports `critique_state: FRESH` and no longer stops first on `critique_stale`.
+
+Next true gates: `golden_trap_depth_picture` and `fig1_overview_v2_pair_001_vault`
+stop on the tracked-golden export / `--force-golden` (and accepted-or-final-ready
+for pair_001) human gate; `fig1_overview_v2` stops on human acceptance
+(`not_accepted`). No protected file was mutated. Full pytest (1434 passed), ruff,
+diff check, and all three plugin validations pass.
 
 Depends on:
 

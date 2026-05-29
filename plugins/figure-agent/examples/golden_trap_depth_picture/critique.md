@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.10
 fixture: golden_trap_depth_picture
-generated_at: '2026-05-29T17:45:00Z'
+generated_at: '2026-05-29T20:30:00Z'
 generator: critique_brief.py
-generator_version: sha256:f7b71b470a4bab2b0a486edb039a45f6187b3782e90db9cdd1e78b3cc05077e7
+generator_version: sha256:46e53b4c600b76f3c2306916cb6077f8d553e2b08ffa7847e1bcf3a8ca4f3856
 rubric_version: figure-agent.critique-rubric.v1.10
 critique_input_hash: sha256:af28fe39be46aabd600dec17e494d80af8e794cac7ad2459ffea07254e6dbd67
 verdict: revise
