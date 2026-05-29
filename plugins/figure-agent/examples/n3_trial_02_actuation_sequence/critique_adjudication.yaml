@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: n3_trial_02_actuation_sequence
-source_critique_hash: sha256:bf48166728d7a1cea462c09951dbd0517476dc3b22f87cea934ad606e99d8fae
+source_critique_hash: sha256:7f36e8f0e0d5e4b9a355ce55f936484bf1ad34cf5fe0b40646e5de4e738994d3
 decisions:
 - finding_id: C003
   decision: dismiss

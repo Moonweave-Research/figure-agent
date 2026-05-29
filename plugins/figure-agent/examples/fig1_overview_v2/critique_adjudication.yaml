@@ -1,19 +1,34 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2
-source_critique_hash: sha256:73f647862f44a5b436f449449ecc192313ff58d0dea48567c436f39ca574c713
+source_critique_hash: sha256:f5c2ca6ef4e6b61b2769b4c2c550dfe1a7ed7a7646fbc16674f400064beaa285
 decisions:
-- finding_id: F001
+- finding_id: C001
   decision: needs_human
-  reason: Review F001 before selecting apply, dismiss, defer, or resolved.
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
   patch_target: ''
-  evidence: critique.md finding F001.
-- finding_id: F002
+  evidence: critique.md finding C001.
+- finding_id: C002
   decision: needs_human
-  reason: Review F002 before selecting apply, dismiss, defer, or resolved.
+  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
   patch_target: ''
-  evidence: critique.md finding F002.
-- finding_id: F003
+  evidence: critique.md finding C002.
+- finding_id: C003
   decision: needs_human
-  reason: Review F003 before selecting apply, dismiss, defer, or resolved.
+  reason: Review C003 before selecting apply, dismiss, defer, or resolved.
   patch_target: ''
-  evidence: critique.md finding F003.
+  evidence: critique.md finding C003.
+- finding_id: C004
+  decision: needs_human
+  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C004.
+- finding_id: C005
+  decision: needs_human
+  reason: Review C005 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C005.
+- finding_id: C006
+  decision: needs_human
+  reason: Review C006 before selecting apply, dismiss, defer, or resolved.
+  patch_target: ''
+  evidence: critique.md finding C006.

@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.11
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: 2026-05-28T12:00:00Z
+generated_at: 2026-05-29T08:30:00Z
 generator: critique_brief.py
-generator_version: sha256:161e4f449c3c4f40e5d9a107bd3f7cafd58d82ea229c08d90ac739309c6fc275
+generator_version: sha256:f7b71b470a4bab2b0a486edb039a45f6187b3782e90db9cdd1e78b3cc05077e7
 rubric_version: figure-agent.critique-rubric.v1.11
-critique_input_hash: sha256:c89ba2cc852f5019f8dfba5c61c0049c33de3ebe4ad397ea13675fe4e9e478de
+critique_input_hash: sha256:2deed84642ba6dcb52ea3ffe2bbdc2b5b7177de910d35c58bad92cf2580f04a4
 # Refreshed 2026-05-28 on integrated main (post spoke→drops→bridge evolution).
 # Cumulative figure state: Panel A 27 iter + Panel B (placeholder polish) +
 # Panel C 28 iter + Panel D Debye plateau+cliff theory-align + Panel E 38 iter
@@ -577,7 +577,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:bd8769e5b1e96db3522bee06fc24255bbe0ad76aaa7afbf922db177c20a73f4d
+  assessed_artifact_hash: sha256:2deed84642ba6dcb52ea3ffe2bbdc2b5b7177de910d35c58bad92cf2580f04a4
   benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
@@ -666,17 +666,17 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_S.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC007 'C' near_miss candidate inspected at zoom: Visual clash candidate text='C' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC007 'S' text_on_path candidate inspected at zoom: S8 ring atom label on octagon vertex — chemistry-convention element label sits adjacent to bond termination, no glyph-path crossing visible."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC007
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC007 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC007 is convention acceptable: S8 ring vertex atom label per standard chemistry-drawing convention; intentional schematic placement."
   - id: M008
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC008_S.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC008 'S' near_miss candidate inspected at zoom: Visual clash candidate text='S' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC008 'S' text_on_path candidate inspected at zoom: S8 ring atom label on octagon vertex — chemistry-convention element label; no glyph-path crossing visible."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC008
@@ -686,7 +686,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_C.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC009 'Energy' text_on_fill candidate inspected at zoom: Energy-axis tick reference label per Panel C energy-diagram convention."
+    observation: "VC009 'C' text_on_path candidate inspected at zoom: E_C subscript label adjacent to its energy-level tick line — standard energy-diagram convention label placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC009
@@ -696,7 +696,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_mobility.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC010 'S' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention."
+    observation: "VC010 'mobility' text_on_fill candidate inspected at zoom: 'mobility edge' energy-diagram reference label sits on the Panel C right-half fill region; intentional energy-diagram convention with the ΔEt arrow visible nearby."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC010
@@ -706,7 +706,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_edge.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC011 'S' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention."
+    observation: "VC011 'edge' text_on_fill candidate inspected at zoom: Tail of 'mobility edge' label on Panel C energy-diagram fill — same energy-diagram convention as VC010; no actionable defect."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC011
@@ -716,7 +716,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_S.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC012 '1' text_on_path candidate inspected at zoom: Visual clash candidate text='1' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC012 'S' near_miss candidate inspected at zoom: Panel B chain endpoint label 'S' (from S60/S75/S85) sits adjacent to ball-shaded terminal atom; no glyph crosses the chain stroke."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC012
@@ -726,7 +726,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_shallow.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC013 'Sulfur' text_on_path candidate inspected at zoom: Visual clash candidate text='Sulfur' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC013 'shallow' text_on_fill candidate inspected at zoom: 'shallow' trap-species label on Panel C energy-diagram region near the ΔEt arrow; intentional labeling of the shallow-trap Gaussian DOS cluster."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC013
@@ -736,7 +736,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_S.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC014 'V' text_on_fill candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC014 'S' near_miss candidate inspected at zoom: Panel B chain label near ball-shaded endpoint — no defect, convention-driven placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC014
@@ -746,7 +746,7 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_Sulfur-rich.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC015 'ISPD' text_on_fill candidate inspected at zoom: Canonical-position apparatus label sitting next to its source/instrument box per the apparatus convention."
+    observation: "VC015 'Sulfur-rich' text_on_fill candidate inspected at zoom: Panel A header label on clean white background — neutral-gray semibold anti-hero label per NC redirect; no underlying fill generates a clash."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC015
@@ -756,17 +756,17 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_poly_S-r-DIB.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC016 'e' text_on_path candidate inspected at zoom: Visual clash candidate text='e' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC016 'poly(S-r-DIB)' text_on_fill candidate inspected at zoom: Panel A subtitle label 'poly(S-r-DIB) linear copolymer' on white background — no underlying fill conflict; convention-acceptable subtitle placement."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC016
     accept_simplification_reason: convention_acceptable
     accept_simplification_rationale: "VC016 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
   - id: M017
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_HV_.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_Sulfur.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC017 'HV+' text_on_path candidate inspected at zoom: Canonical-position apparatus label sitting next to its source/instrument box per the apparatus convention."
+    observation: "VC017 'Sulfur' text_on_path candidate inspected at zoom: 'Sulfur content, wt%' Panel B axis label text on white background — axis label near the wt% axis arrow, convention-acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC017
@@ -776,252 +776,252 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_wt.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC018 'f' text_on_path candidate inspected at zoom: Visual clash candidate text='f' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC018 'wt%' text_on_path candidate inspected at zoom: 'Sulfur content, wt%' Panel B bottom axis label; 'wt%' glyph sits adjacent to axis arrow with nearby 'convergent' label from Panel C bridge zone — two labels in proximity but each in own panel region, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC018
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC018 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC018 is convention acceptable: 'wt%' is the axis unit label for the sulfur-content axis in Panel B; no glyph-outline crossing."
   - id: M019
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_convergent.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC019 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC019 'convergent' text_on_fill candidate inspected at zoom: 'convergent evidence' label in Panel C bridge bracket zone; text sits on white inter-row gap with up-arrow tip partially overlapping 'evide(nce)' tail — intentional bridge-bracket label, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC019
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC019 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC019 is convention acceptable: 'convergent evidence' is the bridge-bracket annotation label placed intentionally in the inter-row connector zone."
   - id: M020
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_V.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC020 'film' near_miss candidate inspected at zoom: Visual clash candidate text='film' kind=near_miss — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC020 'V' text_on_fill candidate inspected at zoom: E_V energy level label in Panel C energy diagram; clean white background, no stroke crossing; single-glyph identifier for valence band edge tick, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC020
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC020 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC020 is convention acceptable: 'V' is the valence-band edge identifier in the Panel C energy level diagram; no glyph-outline crossing."
   - id: M021
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_ISPD.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC021 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC021 'ISPD' text_on_path candidate inspected at zoom: 'ISPD' inter-row modality label sits on the bridge-bracket vertical connector shaft in the inter-row gap; label_stacked_on_reference_line but convention acceptable as inter-row connector label (not panel-internal content)."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC021
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC021 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC021 is convention acceptable: 'ISPD' is the inter-row bridge-bracket connector label, intentionally placed on the vertical shaft per §4 bridge-bracket convention."
   - id: M022
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_polymer.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC022 's' text_on_fill candidate inspected at zoom: Visual clash candidate text='s' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC022 'polymer' text_on_fill candidate inspected at zoom: 'polymer film' label in Panel C/E slab zone; 'polymer' glyph sits on white background adjacent to amber-gradient slab edge with leader line — label with leader is convention acceptable for schematic annotations."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC022
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC022 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC022 is convention acceptable: 'polymer' is part of the 'polymer film' schematic annotation in Panel C/E; no glyph-outline crossing at the detected region."
   - id: M023
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_film.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC023 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC023 'film' near_miss candidate inspected at zoom: '(polymer) film' label tail on amber slab in Panel C; 'film' glyph sits on the amber gradient region — intentional schematic annotation, the text color/contrast is designed for readability on the amber fill, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC023
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC023 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC023 is convention acceptable: 'film' is part of the 'polymer film' schematic annotation; near_miss bounding-box proximity to slab fill is intentional schematic placement."
   - id: M024
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024__t_.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024_crop.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC024 '(t)' text_on_path candidate inspected at zoom: Visual clash candidate text='(t)' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC024 '+' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E corona-deposit zone; '+' glyph sits inside cRed!75 charge dot per briefing §13.6 corona convention — iconic marker, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC024
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC024 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC024 is convention acceptable: '+' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention."
   - id: M025
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_crop.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC025 'V' text_on_path candidate inspected at zoom: Visual clash candidate text='V' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC025 '+' text_on_fill candidate inspected at zoom: ⊕ surface-charge marker in Panel E film-boundary zone; '+' glyph sits inside cRed!75 charge dot — iconic marker, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC025
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC025 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC025 is convention acceptable: '+' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention."
   - id: M026
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_crop.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC026 'low' text_on_fill candidate inspected at zoom: Curve-identity label on power-law / Gaussian curve per log-log / DOS plot convention."
+    observation: "VC026 '+' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E at film boundary upper edge; '+' glyph inside cRed!75 charge dot — iconic marker, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC026
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC026 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC026 is convention acceptable: '+' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention."
   - id: M027
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_crop.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC027 'hig' text_on_path candidate inspected at zoom: Visual clash candidate text='hig' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC027 '+' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E at upper surface zone; '+' glyph inside cRed!75 charge dot — iconic marker, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC027
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC027 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC027 is convention acceptable: '+' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention."
   - id: M028
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028__.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_Vs.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC028 'τ' text_on_path candidate inspected at zoom: Caliper label between Shallow and Deep peak energies per briefing §13.6 cross-domain mapping — intentional convention placing the time-axis caliper at the energy-domain inter-peak interval."
+    observation: "VC028 'Vs' text_on_path candidate inspected at zoom: 'V_s meter' label on Panel E ISPD instrument box face; 'Vs' abbreviation on the instrument label with box boundary partially overlapping — instrument-box label placement, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC028
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC028 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC028 is convention acceptable: 'Vs' is the surface-voltage meter label on the Panel E ISPD instrument box; instrument-label-on-box placement is convention-driven."
   - id: M029
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_meter.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC029 'd' text_on_fill candidate inspected at zoom: Visual clash candidate text='d' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC029 'meter' text_on_path candidate inspected at zoom: 'V_s meter' complete label on Panel E ISPD instrument box face; 'meter' word portion sits on instrument box boundary — instrument-box label placement, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC029
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC029 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC029 is convention acceptable: 'meter' is the second word of the 'V_s meter' ISPD instrument label; instrument-label-on-box placement is convention-driven."
   - id: M030
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030__.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_V.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC030 ')' text_on_fill candidate inspected at zoom: Visual clash candidate text=')' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC030 'V' text_on_path candidate inspected at zoom: 'Va(ctive)' label inside Panel D/E power-supply unit box; 'V' glyph on the PSU box face — instrument-box internal label, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC030
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC030 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC030 is convention acceptable: 'V' is part of the 'Va' power-supply voltage label on the PSU box face; instrument label placement is convention-driven."
   - id: M031
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_V.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC031 'h' text_on_path candidate inspected at zoom: Visual clash candidate text='h' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC031 'V' text_on_path candidate inspected at zoom: 'V_s(t)' Panel F axis label partial with axis arrows visible; 'V' glyph at axis arrow tip with nearby stroke — axis label at arrow tip, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC031
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC031 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC031 is convention acceptable: 'V' is the voltage axis identifier in Panel F surface-voltage plot; axis label at arrow tip placement is standard."
   - id: M032
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_t.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC032 'n' text_on_path candidate inspected at zoom: Visual clash candidate text='n' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC032 '(t)' text_on_fill candidate inspected at zoom: '(t)' parenthesized argument from the I(t)~t^-n equation with power-law curve visible behind; equation placed on white panel area with curve passing through nearby region — equation label with curve proximity, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC032
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC032 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC032 is convention acceptable: '(t)' is part of the I(t) current equation in Panel D; equation-on-plot-area placement is standard for cartoon-schematic kinetic diagrams."
   - id: M033
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_I_t.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC033 'Deb' text_on_fill candidate inspected at zoom: Visual clash candidate text='Deb' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC033 'I(t)' text_on_fill candidate inspected at zoom: Full 'I(t)~' equation label on white panel area in Panel D log-log plot zone; clean placement on white background with equation before the tilde separator — convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC033
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC033 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC033 is convention acceptable: 'I(t)' is the full current equation label in Panel D; equation on white panel background with no glyph-outline crossing."
   - id: M034
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_low.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC034 'ye' text_on_path candidate inspected at zoom: Visual clash candidate text='ye' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC034 'low' text_on_fill candidate inspected at zoom: 'low n' italic bold curve-identity label near the lower-slope power-law curve in Panel D log-log plot; label in canonical end-of-curve position — curve-identity label at curve tip, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC034
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC034 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC034 is convention acceptable: 'low' is the 'low n' curve-identity label in Panel D log-log plot; curve-end label placement is standard for multi-curve cartoon diagrams."
   - id: M035
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_crop.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC035 'F' text_on_path candidate inspected at zoom: Visual clash candidate text='F' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC035 ')' text_on_fill candidate inspected at zoom: closing ')' parenthesis from the I(t)~t^-n equation in Panel D; the ')' glyph sits in the equation string on white background — equation punctuation, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC035
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC035 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC035 is convention acceptable: ')' is the closing parenthesis of the I(t) equation in Panel D; equation character on white background with no glyph-outline crossing."
   - id: M036
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_hig.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC036 'log' text_on_fill candidate inspected at zoom: Visual clash candidate text='log' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC036 'hig' text_on_path candidate inspected at zoom: 'hig(h)' text fragment from the 'high n' curve-identity label in Panel D; blue power-law curve passes through the glyph bounding box — line_crosses_label but intentional schematic (high-n curve identification), convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC036
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC036 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC036 is convention acceptable: 'hig' is from the 'high n' curve-identity label in Panel D log-log plot; curve crossing curve-end label is accepted schematic convention."
   - id: M037
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_h.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC037 'I' text_on_path candidate inspected at zoom: Visual clash candidate text='I' kind=text_on_path — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC037 'h' text_on_path candidate inspected at zoom: 'gh' tail glyphs from 'high n' label in Panel D with blue curve line crossing through the bounding box — same line_crosses_label condition as VC036; intentional schematic convention for curve-end label."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC037
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC037 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC037 is convention acceptable: 'h' is the terminal glyph of the 'high n' curve-identity label in Panel D; same accepted schematic convention as VC036."
   - id: M038
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_I_t_.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_n.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC038 'I(t)' text_on_fill candidate inspected at zoom: Visual clash candidate text='I(t)' kind=text_on_fill — inspected at zoom; sits in canonical position with no glyph-outline crossing. Accept as convention-driven label placement."
+    observation: "VC038 'n' text_on_path candidate inspected at zoom: 'n' exponent subscript in the t^-n power-law equation with data marker dot visible above the glyph bounding box — subscript label with nearby data marker, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC038
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC038 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC038 is convention acceptable: 'n' is the power-law exponent subscript in the I(t)~t^-n equation in Panel D; data marker proximity is within accepted schematic convention."
   - id: M039
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039__.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_d.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC039 '+' text_on_fill candidate inspected at zoom: Surface-charge iconic marker — the '+' glyph sits inside the cRed!75 charge dot per Panel E ⊕ convention (briefing §13.6)."
+    observation: "VC039 'd' text_on_fill candidate inspected at zoom: 'τ_d' caliper label partial in Panel D/F zone; 'd' subscript of the τ_d discharge-time caliper sits near the caliper bar — caliper subscript label, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC039
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC039 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC039 is convention acceptable: 'd' is the subscript of the τ_d discharge-time caliper label; caliper annotation subscripts in close proximity to the caliper bar are convention-driven."
   - id: M040
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040__.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040_log.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC040 '+' text_on_fill candidate inspected at zoom: Surface-charge iconic marker — the '+' glyph sits inside the cRed!75 charge dot per Panel E ⊕ convention (briefing §13.6)."
+    observation: "VC040 'log' text_on_fill candidate inspected at zoom: 'log I' rotated y-axis label in Panel D or F with vertical axis line partially overlapping; 'log' sits at the axis label position — label_stacked_on_reference_line but convention acceptable for rotated axis labels."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC040
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC040 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC040 is convention acceptable: 'log' is the rotated y-axis label in the log-log plot; axis-line proximity is standard for rotated axis labels."
   - id: M041
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041__.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041_I.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC041 '+' text_on_path candidate inspected at zoom: Surface-charge iconic marker — the '+' glyph sits inside the cRed!75 charge dot per Panel E ⊕ convention (briefing §13.6)."
+    observation: "VC041 'I' text_on_path candidate inspected at zoom: 'I' italic glyph from τ_d caliper horizontal bar label in Panel F or D; the caliper H-bar serif letter sits near the caliper marker — caliper label italic glyph, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC041
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC041 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash."
+    accept_simplification_rationale: "VC041 is convention acceptable: 'I' is the italic current-axis or caliper label glyph; label-on-path detection near caliper bar is convention-driven."
   - id: M042
-    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC042_plus.png
+    crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC042_f.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC042 '+' candidate is Panel E corona-deposit surface-charge marker — the iconic '+' glyph rides inside the cRed!75 charge dot per briefing §13.6 corona convention; not an actionable label/stroke clash."
+    observation: "VC042 'f' text_on_path candidate inspected at zoom: 'f' panel letter identifier on clean white background at Panel F label position; no background fill, no stroke crossing — clean panel letter, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC042
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC042 iconographic ⊕ surface-charge marker is intentional Panel E corona-deposit cue per briefing §13.6 + §6 ISPD panel role."
+    accept_simplification_rationale: "VC042 is convention acceptable: 'f' is the Panel F identifier letter on white background with no glyph-outline crossing."
   # M043-M046 (Panel E ⊕ surface-charge floating_semantic_cue) REMOVED 2026-05-27:
   # Panel E iter 27 + 35 minimization (radius 0.045 -> 0.038/0.040/0.034 +
   # font 5.5pt -> 4.5pt) reduced dark/edge metrics below visual_clash threshold.
@@ -1033,12 +1033,12 @@ micro_defects:
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC043_HV.png
     kind: floating_semantic_cue
     severity: NIT
-    observation: "VC043 'log' candidate is Panel D log-log plot axis label text-on-path — 'log' identifier sits near plot axis arrow per NC iconic-cartoon convention."
+    observation: "VC043 'HV+' text_on_fill candidate inspected at zoom: 'HV+' outside supply box label in Panel E ISPD circuit; 'HV+' label sits outside the high-voltage supply rounded box with box boundary partially overlapping the glyph — instrument-external label placement, convention acceptable."
     linked_finding_id: ""
     status: accept_simplification
     visual_clash_ref: VC043
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC043 'log' axis label is intentional Panel D log-log plot label per briefing §13.4 + §6 kinetic panel role."
+    accept_simplification_rationale: "VC043 is convention acceptable: 'HV+' is the high-voltage supply label in the Panel E ISPD circuit diagram; label outside instrument box is convention-driven instrument annotation."
   - id: M_TB001
     crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
     kind: label_overflows_row_box
@@ -1904,20 +1904,19 @@ Row 2 column tops, no decorative wash anywhere.
 
 ## Visual-clash accounting
 
-`build/visual_clash.json` lists 58 candidates `VC001..VC058`. Each is accounted
-exactly once via `micro_defects[].visual_clash_ref`. All 58 are classified
+`build/visual_clash.json` lists 43 candidates `VC001..VC043`. Each is accounted
+exactly once via `micro_defects[].visual_clash_ref`. All 43 are classified
 `accept_simplification` because they correspond to either:
 
-- chemistry-register heteroatom labels on chain backbones (M001..M009, M055..M058),
-- axis-label / axis-tick / curve-identity labels overlapping their own axis
-  or curve by drawing convention (M013, M020..M023, M035..M043, M047..M049,
-  M054),
-- intentional iconographic markers (M026..M029 surface-charge ⊕),
-- canonical-position apparatus labels (M015 HV+, M017+M018 V_s of V_s meter,
-  M025 V_s probe area, M020 V_active, M052 SMU) — none in scratch-regression
-  position,
-- spoke modality labels with white-fill backdrop (M014, M032, M033), or
-- text emerging from clean white background (M010, M050, M058).
+- chemistry-register heteroatom labels on chain backbones (M001..M009),
+- energy-level / trap-species / axis labels near fills or lines by drawing
+  convention (M010..M017, M018..M023, M031..M035, M040),
+- intentional iconographic markers (M024..M027 surface-charge ⊕),
+- canonical-position apparatus labels (M028 Vs meter, M029 meter label,
+  M030 Va PSU, M043 HV+ source box) — none in scratch-regression position,
+- curve-identity labels at curve endpoints (M034, M036, M037), or
+- equation text and caliper labels on white background (M032, M033, M038,
+  M039, M041, M042).
 
 No BLOCKER or MAJOR micro-defect is open. No top-level finding open.
 

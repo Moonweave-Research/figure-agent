@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig1_overview_v2_pair_001_vault
-source_critique_hash: sha256:f53ce5853f9c8c4598a3ed30fdfb8d7bf93424318cb8b09c95b2223b9acc13dd
+source_critique_hash: sha256:93a79ac8dc57279946b52cd06eb731f7e310a9479e04a9233d69727f3c1f009a
 decisions:
 - finding_id: P001
   decision: dismiss

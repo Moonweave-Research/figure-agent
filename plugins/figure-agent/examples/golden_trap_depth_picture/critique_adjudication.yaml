@@ -1,4 +1,10 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: golden_trap_depth_picture
-source_critique_hash: sha256:5405b92ca3e5e957b517fa64960067fbf00d5cfb52b768fc641faaab72492cc2
-decisions: []
+source_critique_hash: sha256:6a798472ad14651361b159df0963105250c7e9bc62591e4629fd33a098b3414f
+decisions:
+- finding_id: C001
+  decision: needs_human
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/golden_trap_depth_picture/golden_trap_depth_picture.tex lines
+    85-86
+  evidence: critique.md finding C001.

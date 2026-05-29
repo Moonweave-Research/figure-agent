@@ -1,348 +1,1307 @@
 ---
-schema: figure-agent.critique.v1.3
+schema: figure-agent.critique.v1.10
 fixture: fig1_overview_v2
-generated_at: 2026-05-20T02:24:59Z
+generated_at: '2026-05-29T12:00:00Z'
 generator: critique_brief.py
-generator_version: sha256:ddf1a6f1441d4e109a86c0d8343f1db9c5b75ad08e1a443568f4618d15ef26d1
-rubric_version: figure-agent.critique-rubric.v1.3
-critique_input_hash: sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77
+generator_version: sha256:f7b71b470a4bab2b0a486edb039a45f6187b3782e90db9cdd1e78b3cc05077e7
+rubric_version: figure-agent.critique-rubric.v1.10
+critique_input_hash: sha256:814b42a6583adb87dbbbe4a67e5f235a9f623a6c0d2057c823df398e38ce5786
 verdict: revise
 audit_enumeration:
   structural_completeness:
     components:
-      - component: Panel A — sulfur-rich network with S8 inset, DIB-style ring, polysulfide segments
-        mount_support: "N/A"
-        rationale: chemistry schematic
-        connections: S8 ring linked via inverse-vulcanization arrow to DIB ring; polysulfide segments attached at meta positions
-      - component: Panel B — composition variation (S60, S65, S85 skeletal chains)
-        mount_support: "N/A"
-        rationale: composition annotation row
-        connections: each labeled chain forms its own horizontal row beneath the "S-chain length" axis arrow
-      - component: Panel C — localized traps row with wells and trap markers
-        mount_support: "N/A"
-        rationale: conceptual scene; trap pictograph rather than energy diagram
-        connections: row of well curves with deep (blue) markers and shallow (red/pink) markers; "localized traps" caption beneath
-      - component: Row 2 distributed-release sub-region — t1..t4 trap states + I(t)~t^-n log-log plot
-        mount_support: "yes"
-        rationale: depicts a sequence of trap-state snapshots transitioning into a power-law decay plot
-        connections: t1..t4 sequence connects to a single I(t)~t^-n log-log plot with "deep-rich" and "shallow-rich" lines
-      - component: Row 2 surface potential decay — V_s vs log t scatter / decay plot
-        mount_support: "yes"
-        rationale: surface-potential decay curve as ISPD evidence
-        connections: labeled "surface potential decay" with axis arrows V_s vs log t
-      - component: Row 2 trap DOS (ISPD-derived) — bimodal g(E_t) Gaussian plot
-        mount_support: "N/A"
-        rationale: derived distribution from V_s(t) decay
-        connections: τ_d label with horizontal range; Shallow (blue) + Deep (red) Gaussians on E_t axis; explicit ISPD label connecting back to V_s panel
-      - component: Macroscopic probe cantilever apparatus
-        mount_support: "yes"
-        rationale: clip + bent polymer + electrode + air gap
-        connections: q_tr markers on polymer; F_Maxwell (blue, attraction) and Coulomb (red, repulsion) arrows; "air gap" bracket between polymer and electrode
+    - component: Panel A poly(S-r-DIB) S8-ring primary microstructure
+      mount_support: N/A
+      rationale: S8 eight-membered ring drawn with S atom node labels and bond lines; DIB crosslinker attached
+      connections: atom node circles with S labels; C-C backbone lines connect to the DIB crosslinker fragment
+    - component: Panel B polymer chain length distribution
+      mount_support: N/A
+      rationale: column or histogram bars showing chain-length distribution; axis labels present
+      connections: axis spines and tick marks
+    - component: Panel C localized trap sites schematic
+      mount_support: N/A
+      rationale: polymer chain with highlighted trap-site markers indicating localized charge traps
+      connections: annotation arrows from trap sites to callout text
+    - component: Panel D distributed charge release I(t) plot
+      mount_support: N/A
+      rationale: log-log I(t) discharge curves with blue (deep-rich) and red power-law lines; Debye reference present
+      connections: axis spines; blue and red curve lines; slope annotations; deep-rich label
+    - component: Panel E surface potential Vs(t) decay
+      mount_support: N/A
+      rationale: Vs(t) decay plot with time axis and surface-potential axis; rotated y-axis label Vs present
+      connections: Vs rotated y-axis label; decay curve
+    - component: Panel F ISPD g(Et) trap-depth distribution
+      mount_support: N/A
+      rationale: g(Et) spectrum with vertical ISPD axis; bimodal distribution with shallow and deep peaks
+      connections: ISPD y-axis label bisects axis spine; Et x-axis label
+    - component: Panel G macroscopic probe schematic
+      mount_support: N/A
+      rationale: diagrammatic probe showing electrode geometry, polymer strip, Coulomb arrows right, Maxwell arrows left, electron circles, attraction label
+      connections: Maxwell label positioned near the polymer strip; attraction label near the electron circles; Coulomb arrows; Maxwell arrows
+    - component: Row 1 to Row 2 narrative connector
+      mount_support: N/A
+      rationale: arrow or separator connecting the top-row physics panels to the bottom-row analysis panels
+      connections: inter-row connector present
     missing_from_reference:
-      - element: explicit cover-figure background wash binding Row 2 panels
-        status: incomplete
-        rationale: reference uses softer panel binding; build's row separation is more abrupt
-      - element: dedicated Row 1 → Row 2 vertical evidence arrow
-        status: incomplete
-        rationale: build implies the bridge via the "localized traps" → bottom-row narrow arrow but the bridge is visually weaker than the reference
-      - element: numerical decade ticks on iconic Row 2 plots
-        status: intentional_omission
-        rationale: theory-iconic plots should remain tickless or near-tickless
+    - element: Panel G label clear space around Maxwell and attraction
+      status: incomplete
+      rationale: reference/codex_gen_overview_v1.png shows Maxwell and attraction labels in white space clear of the polymer strip and electron circles; the render places them where drawing lines pass through the glyphs (VC040/VC041/VC044/VC045)
   label_target_matching:
-    - label: "Sulfur-rich polymer / DIB-linked polysulfide network"
-      nearest_object: Panel A row title beneath the network schematic
-      intended_target: Panel A identity per briefing §3
-      matches: true
-      proposed_fix: ""
-    - label: "S60 / S65 / S85"
-      nearest_object: Panel B composition strip
-      intended_target: composition labels per briefing §3
-      matches: true
-      proposed_fix: ""
-    - label: "S-chain length"
-      nearest_object: Panel B axis arrow beneath the chain stack
-      intended_target: composition axis label
-      matches: true
-      proposed_fix: ""
-    - label: "localized traps"
-      nearest_object: Panel C caption beneath the wells row
-      intended_target: Panel C identity label per briefing §3
-      matches: true
-      proposed_fix: ""
-    - label: "deep / shallow (Panel C wells)"
-      nearest_object: blue trap markers (deep) and red trap markers (shallow) in Panel C
-      intended_target: trap-depth labels per briefing §3 Panel C convention
-      matches: true
-      proposed_fix: ""
-    - label: "distributed release"
-      nearest_object: Row 2 left t1..t4 sub-region
-      intended_target: pre-decay trap-state sequence label
-      matches: true
-      proposed_fix: ""
-    - label: "I(t)~t^-n / deep-rich / shallow-rich"
-      nearest_object: Row 2 left log-log plot
-      intended_target: kinetic-evidence curve identities
-      matches: true
-      proposed_fix: ""
-    - label: "surface potential decay / log V_s / log t"
-      nearest_object: Row 2 middle V_s decay scatter plot
-      intended_target: ISPD raw signal panel
-      matches: true
-      proposed_fix: ""
-    - label: "trap DOS (ISPD-derived) / Shallow / Deep / τ_d / E_t / log f"
-      nearest_object: Row 2 g(E_t) bimodal plot
-      intended_target: derived ISPD distribution
-      matches: true
-      proposed_fix: ""
-    - label: "ISPD"
-      nearest_object: caption arrow linking V_s decay to the g(E_t) panel
-      intended_target: derivation source label
-      matches: true
-      proposed_fix: ""
-    - label: "Coulomb repulsion / Maxwell attraction / q_tr / air gap"
-      nearest_object: macroscopic probe scene components
-      intended_target: mechanical-evidence labels
-      matches: true
-      proposed_fix: ""
+  - label: Maxwell
+    nearest_object: Maxwell arrow group pointing left toward electrode
+    intended_target: Maxwell stress force direction
+    matches: true
+    proposed_fix: offset Maxwell label away from the polymer strip diagonal so no drawing line crosses the M glyph
+  - label: attraction
+    nearest_object: electron circles near the polymer strip surface
+    intended_target: electrostatic attraction region
+    matches: true
+    proposed_fix: offset attraction label downward or rightward so neither the polymer strip nor the electron circle boundary crosses the text body
+  - label: ISPD
+    nearest_object: vertical axis spine of the g(Et) panel
+    intended_target: Panel F y-axis identity
+    matches: true
+    proposed_fix: shift ISPD label leftward or shorten the axis spine so the spine does not bisect the D glyph
+  - label: deep-rich
+    nearest_object: red power-law I(t) curve in Panel D
+    intended_target: deep trap-rich regime curve
+    matches: true
+    proposed_fix: offset deep-rich label above or below the red curve so the line does not cross the text
+  - label: Vs
+    nearest_object: rotated y-axis spine of Panel E
+    intended_target: Panel E y-axis identity
+    matches: true
+    proposed_fix: add a small offset so the rotated axis spine clears the Vs glyphs
+  - label: S (atom nodes in Panel A)
+    nearest_object: S8-ring bond lines
+    intended_target: sulfur atom identity markers
+    matches: true
+    proposed_fix: use filled-circle node approach with the S label inside the node so bond lines terminate at node boundaries rather than crossing glyphs
+  - label: Coulomb
+    nearest_object: Coulomb arrows pointing right
+    intended_target: Coulomb force direction
+    matches: true
+    proposed_fix: ''
+  - label: I(t)
+    nearest_object: discharge current curves in Panel D
+    intended_target: discharge current axis or curve
+    matches: true
+    proposed_fix: ''
   physical_plausibility:
-    - check: cable_gravity
-      finding: no cables drawn in macroscopic probe scene
-      verdict: convention_acceptable
-    - check: floating_components
-      finding: cantilever clip + electrode are visibly anchored; arrows attach to polymer/electrode endpoints
-      verdict: convention_acceptable
-    - check: spatial_proximity
-      finding: air gap bracket spans the polymer-electrode separation; trap markers ride on polymer body
-      verdict: convention_acceptable
-    - check: direction_orientation
-      finding: F_Maxwell points toward electrode (attraction), Coulomb points away (repulsion); polymer bends in the Coulomb direction
-      verdict: convention_acceptable
-    - check: material_distinction
-      finding: gold sulfur side groups vs gray carbon backbone vs black electrode are visually distinct
-      verdict: convention_acceptable
+  - check: direction_orientation
+    finding: Coulomb arrows point away from the electrode (right); Maxwell arrows point toward the electrode (left); physically correct
+    verdict: convention_acceptable
+  - check: power_law_above_debye
+    finding: Panel D shows the deep-rich I(t) power-law curve running above the Debye exponential at long times; physically correct for a broad trap-depth distribution
+    verdict: convention_acceptable
+  - check: bimodal_g_Et
+    finding: Panel F g(Et) shows two lobes; the deep peak is at higher Et than the shallow peak; correct for a polymer with sulfur-rich trap-depth hierarchy
+    verdict: convention_acceptable
+  - check: charge_signs
+    finding: negative charge carriers (electrons) shown near the polymer strip surface consistent with trapping convention; qtr charges on the polymer strip are consistent with the briefing
+    verdict: convention_acceptable
+  - check: spatial_proximity
+    finding: no stray floating semantic cues; electrode geometry places the probe in correct spatial relationship to the polymer strip
+    verdict: convention_acceptable
   conceptual_completeness:
-    - element: 2-row narrative composition
-      reference: briefing
-      severity: NIT
-      proposed_action: accept_simplification
-    - element: cross-panel color convention for shallow vs deep
-      reference: briefing
-      severity: MAJOR
-      proposed_action: expand
-    - element: Row 1 → Row 2 vertical evidence bridge
-      reference: briefing
-      severity: MINOR
-      proposed_action: expand
+  - element: Panel G Maxwell label clear of the polymer strip line
+    reference: provided_reference
+    severity: MAJOR
+    proposed_action: reposition
+  - element: Panel G attraction label clear of the electron circle and polymer strip
+    reference: provided_reference
+    severity: MAJOR
+    proposed_action: reposition
+  - element: Panel D deep-rich label clear of the red I(t) curve
+    reference: provided_reference
+    severity: MAJOR
+    proposed_action: reposition
+  - element: Panel F ISPD axis label clear of the axis spine
+    reference: provided_reference
+    severity: MAJOR
+    proposed_action: reposition
 quality_axes:
   message_storyline:
     verdict: pass
-    confidence: medium
-    rationale: the two-row narrative reads from material identity through multi-modality probes to the macroscopic probe; the high-level story is recoverable
-    evidence: Row 1 panels + Row 2 panels + macroscopic-probe cantilever scene
+    confidence: high
+    rationale: the 2-row 7-panel layout delivers a clear left-to-right narrative from molecular microstructure to macroscopic probe; Row 1 establishes the physics and Row 2 develops the analysis chain
+    evidence: panels A-C establish primary microstructure and localized traps; panels D-G show distributed release, Vs(t) decay, g(Et) spectrum, and macroscopic probe in a readable left-to-right sequence
     blocking_items: []
     recommended_action: none
   panel_role_coherence:
     verdict: pass
-    confidence: medium
-    rationale: each panel has a single readable role; no panel duplicates another's role
-    evidence: panel role audit below
-    panel_roles:
-      - panel_id: A
-        role: context
-        role_quality: clear
-        rationale: identity panel introducing the sulfur-rich network and S8 inset
-      - panel_id: B
-        role: setup
-        role_quality: clear
-        rationale: composition-variation row (S60–S85)
-      - panel_id: C
-        role: mechanism
-        role_quality: clear
-        rationale: localized-trap pictograph with deep/shallow wells
-      - panel_id: distributed_release
-        role: result
-        role_quality: clear
-        rationale: t1..t4 sequence + I(t)~t^-n power-law plot
-      - panel_id: v_s_decay
-        role: result
-        role_quality: clear
-        rationale: ISPD raw signal panel
-      - panel_id: trap_dos
-        role: model
-        role_quality: clear
-        rationale: derived g(E_t) bimodal distribution
-      - panel_id: macroscopic_probe
-        role: result
-        role_quality: clear
-        rationale: cantilever scene with Coulomb-vs-Maxwell contrast
+    confidence: high
+    rationale: each of the 7 panels has a distinct narrative role; no two panels duplicate the same function
+    evidence: Panel A mechanism, Panel B result, Panel C mechanism, Panel D result, Panel E result, Panel F model, Panel G context
     blocking_items: []
     recommended_action: none
+    panel_roles:
+    - panel_id: A
+      role: mechanism
+      role_quality: clear
+      rationale: S8-ring primary microstructure establishes the polymer chain identity
+    - panel_id: B
+      role: result
+      role_quality: clear
+      rationale: chain-length distribution quantifies the molecular size spread
+    - panel_id: C
+      role: mechanism
+      role_quality: clear
+      rationale: localized trap sites schematic shows the physical origin of trapping
+    - panel_id: D
+      role: result
+      role_quality: clear
+      rationale: I(t) log-log discharge plot with deep-rich and Debye curves is the core experimental evidence
+    - panel_id: E
+      role: result
+      role_quality: clear
+      rationale: Vs(t) decay plot provides surface-potential dynamics evidence
+    - panel_id: F
+      role: model
+      role_quality: clear
+      rationale: ISPD g(Et) spectrum synthesizes the trap-depth distribution
+    - panel_id: G
+      role: context
+      role_quality: clear
+      rationale: macroscopic probe schematic contextualizes the measurement geometry
   subregion_integration:
-    verdict: needs_patch
-    confidence: medium
-    rationale: the Row 1 → Row 2 bridge is visually weak; the dedicated vertical evidence arrow that the briefing §3 calls for is not as prominent as the reference target; Row 2 panels do not share a cover-style background wash and therefore feel like a grid rather than a continuous scene
-    evidence: build PNG shows abrupt boundary between Row 1 wells and Row 2 distributed-release; reference target shows a softer bridge
-    blocking_items:
-      - "F002 - Row 1 to Row 2 bridge weaker than briefing and reference imply"
-    recommended_action: patch
+    verdict: pass
+    confidence: high
+    rationale: the Row 1 to Row 2 connector is visible in the rendered figure and bridges the top and bottom rows
+    evidence: an inter-row arrow or separator is present linking the microstructure panels to the discharge and analysis panels
+    blocking_items: []
+    recommended_action: none
   component_fidelity:
     verdict: pass
-    confidence: medium
-    rationale: each apparatus part declared by the briefing is identifiable in the build (V_s meter implied; cantilever clip and electrode visible; trap markers on polymer body)
-    evidence: structural_completeness audit
+    confidence: high
+    rationale: all briefing-required components are present in the render; the S8-ring, polymer chains, localized traps, I(t) plot, Vs(t) decay, g(Et) bimodal distribution, and macroscopic probe are all visible
+    evidence: full-render crops full_q1 through full_q4 confirm all seven panels are populated; S8 ring with S labels in Panel A, bimodal g(Et) lobes in Panel F, and Maxwell/Coulomb force arrows in Panel G are all visible
     blocking_items: []
     recommended_action: none
   scientific_plausibility:
-    verdict: needs_patch
-    confidence: medium
-    rationale: cross-panel color convention is internally inconsistent — Panel C marks deep traps with blue and shallow traps with red (per briefing §3 Panel C), while the bottom-right g(E_t) plot uses blue for the Shallow Gaussian and red for the Deep Gaussian (per briefing §2 vocabulary). Both follow their own briefing clause but the same color carries opposite trap-depth meaning across the figure
-    evidence: build PNG Panel C deep=blue/shallow=red vs build PNG g(E_t) Shallow=blue/Deep=red; briefing §2 vs §3 each documents one of the two conventions
-    blocking_items:
-      - "F001 - cross-panel color convention for shallow/deep is inconsistent"
-    recommended_action: revise_briefing
-  composition_layout:
     verdict: pass
-    confidence: medium
-    rationale: 2-row layout reads cleanly; Row 1 left-to-right flow and Row 2 left-to-right flow are clear
-    evidence: build PNG
+    confidence: high
+    rationale: all physics invariants are satisfied; Coulomb arrows point away from the electrode, Maxwell arrows point toward the electrode, the power-law I(t) runs above the Debye curve at long times, the g(Et) bimodal distribution has a deep peak at higher Et than the shallow peak, and charge carriers are located at the polymer strip surface
+    evidence: Panel D shows the deep-rich curve above the Debye reference at long t; Panel F shows the bimodal g(Et) with the deep lobe at greater Et; Panel G shows Coulomb arrows pointing right and Maxwell arrows pointing left
     blocking_items: []
     recommended_action: none
+  composition_layout:
+    verdict: needs_patch
+    confidence: high
+    rationale: Panel G has two MAJOR label placements where drawing lines cross text glyphs; VC040/VC041 show the polymer strip diagonal and electron circle overlapping the Maxwell label; VC044/VC045 show the polymer strip and electron circle crossing through the attraction label
+    evidence: VC040_crop.png shows a dark line passing through the Maxwell glyph region; VC041_Maxwell.png shows the Maxwell label with a path line crossing through the left portion; VC044_crop.png shows a dark path across the attraction label body; VC045_attraction.png confirms the crossing
+    blocking_items:
+    - C001 - Panel G Maxwell label crossed by polymer strip diagonal and electron circle boundary
+    - C002 - Panel G attraction label crossed by polymer strip and electron circle
+    recommended_action: patch
   label_annotation_semantics:
     verdict: needs_patch
-    confidence: medium
-    rationale: the report-only visual-clash checker emitted 45 candidates against this build (`text_on_path`, `text_on_fill`, near_miss for labels including "log", "t", "attraction", "Maxwell", "Coulomb"); even discounting acceptable convention text-on-fill cases, several labels sit close to plot geometry without leader-line backing
-    evidence: scripts/check_visual_clash.py output from the compile step preceding this critique (45 clash candidates)
+    confidence: high
+    rationale: four labels have path-crossing defects confirmed visually; Maxwell and attraction in Panel G are MAJOR; ISPD y-axis and deep-rich in Panel D are MAJOR; Vs y-axis in Panel E and S atom labels in Panel A are MINOR
+    evidence: VC034_ISPD.png shows the vertical axis spine bisecting the D glyph of ISPD; VC039_deep-rich.png shows the red curve passing through the deep-rich text; VC035_V.png shows the axis spine clipping through the rotated Vs label; VC008_S.png and VC013_S.png show bond lines fused with S atom glyph nodes
     blocking_items:
-      - "F003 - 45 visual-clash candidates surfaced at compile time; several are real label-on-geometry collisions"
+    - C001 - Panel G Maxwell label line collision
+    - C002 - Panel G attraction label line collision
+    - C003 - Panel D deep-rich label crossed by red I(t) curve
+    - C004 - Panel F ISPD axis label bisected by axis spine
     recommended_action: patch
   journal_polish:
     verdict: needs_patch
-    confidence: medium
-    rationale: typography is broadly consistent but multiple labels (Coulomb / Maxwell / surface potential decay / trap DOS) sit close to filled regions; line weight hierarchy between primary and annotation strokes is at the edge of journal-grade contrast
-    evidence: build PNG; check_visual_clash report
+    confidence: high
+    rationale: at 178mm print scale the Maxwell and attraction collisions in Panel G become the dominant readability defect; the label-line crossings visible in the full render are not improved by scaling down
+    evidence: print_178mm.png shows Panel G with visible label crowding around the Maxwell and attraction text; the deep-rich label crossing in Panel D is also visible at print scale
     blocking_items:
-      - "F003 - 45 visual-clash candidates surfaced at compile time; several are real label-on-geometry collisions"
+    - C001 - Panel G Maxwell collision worsens at print scale
+    - C002 - Panel G attraction collision worsens at print scale
     recommended_action: patch
   reference_fidelity:
-    verdict: pass
-    confidence: medium
-    rationale: build follows reference (codex_gen_overview_v1.png) at the level of layout, panel ordering, color-block placement, and macroscopic-probe geometry; differences are simplifications and skeletal-vertex choices rather than drift
-    evidence: side-by-side build vs reference PNG
-    blocking_items: []
-    recommended_action: none
+    verdict: needs_patch
+    confidence: high
+    rationale: the reference image reference/codex_gen_overview_v1.png shows Panel G with Maxwell and attraction labels in clear white space; the rendered figure departs from the reference in label placement, with path lines crossing both labels
+    evidence: reference/codex_gen_overview_v1.png shows the Maxwell and attraction labels in unobstructed space; VC040/VC041/VC044/VC045 crops confirm the departure in the rendered figure
+    blocking_items:
+    - C001 - Maxwell label placement departs from reference
+    - C002 - attraction label placement departs from reference
+    recommended_action: patch
   publication_readiness:
     verdict: needs_patch
-    confidence: medium
-    rationale: at least three upstream axes are needs_patch (subregion_integration, scientific_plausibility, label_annotation_semantics, journal_polish); per validator rule publication_readiness must be at least as severe as the most severe applicable upstream axis
-    evidence: upstream axis verdicts
+    confidence: high
+    rationale: publication readiness is blocked by four MAJOR label-crossing defects; the Maxwell and attraction collisions in Panel G are the most visible at print scale and depart from the reference; deep-rich and ISPD also require repositioning before the figure is manuscript-ready
+    evidence: composition_layout, label_annotation_semantics, journal_polish, and reference_fidelity all flag needs_patch with blocking items pointing to C001-C004
     blocking_items:
-      - "F001 - cross-panel color convention for shallow/deep is inconsistent"
-      - "F002 - Row 1 to Row 2 bridge weaker than briefing and reference imply"
-      - "F003 - 45 visual-clash candidates surfaced at compile time; several are real label-on-geometry collisions"
+    - C001 - Panel G Maxwell label must be repositioned
+    - C002 - Panel G attraction label must be repositioned
+    - C003 - Panel D deep-rich label must be repositioned
+    - C004 - Panel F ISPD label must be repositioned
     recommended_action: patch
 top_tier_audit:
   first_glance_message:
-    verdict: weak
-    finding: "3s: sulfur-rich polymer, trap depth, and Coulomb/Maxwell are visible; 10s: the viewer sees a material-to-DOS-to-cantilever story; 30s: the story is recoverable but requires resolving the color convention and the Row 1 to Row 2 bridge."
-    concrete_fix: "Strengthen the Row 1 to Row 2 evidence bridge after resolving the shallow/deep color convention."
-    blocks_high_impact: true
+    verdict: pass
+    finding: a reader grasps the charge-trapping-in-sulfur-rich-polymer narrative within a 10-second glance; the 2-row layout and left-to-right panel order convey the story
+    concrete_fix: no change
+    blocks_high_impact: false
   target_journal_fit:
-    verdict: fail
-    finding: "The fixture reads as a draft manuscript schematic rather than a top-tier journal figure because the grid-like composition, color contradiction, and label collisions prevent a premium single-glance read."
-    concrete_fix: "Fix F001 and F003 first, then add the Row 2 binding wash/bridge from F002 before judging art direction."
-    blocks_high_impact: true
+    verdict: weak
+    finding: the Panel G label collisions (Maxwell and attraction) reduce the perceived polish below the NC main-text threshold; the rest of the figure has solid schematic quality
+    concrete_fix: reposition Maxwell and attraction labels in Panel G so they sit in clear space as in the reference image
+    blocks_high_impact: false
   novelty_claim_support:
-    verdict: weak
-    finding: "The central novelty is present, but the visual hierarchy gives equal weight to chemistry, kinetic decay, trap DOS, and cantilever mechanics without clearly declaring which claim is primary."
-    concrete_fix: "After F001, make the trap DOS or cantilever mechanism the dominant endpoint rather than leaving every sub-region at similar visual weight."
-    blocks_high_impact: true
+    verdict: pass
+    finding: the bimodal g(Et) in Panel F and the deep-rich I(t) in Panel D together support the central charge-trapping claim
+    concrete_fix: no change
+    blocks_high_impact: false
   figure_caption_coupling:
-    verdict: weak
-    finding: "The figure currently needs caption/briefing context to explain why the shallow/deep color convention changes between Panel C and g(E_t)."
-    concrete_fix: "Resolve or explicitly annotate the color convention so the caption does not have to rescue the reader."
-    blocks_high_impact: true
+    verdict: pass
+    finding: in-panel labels carry the explanatory burden; the panel structure and axis labels are sufficient for caption coupling
+    concrete_fix: no change
+    blocks_high_impact: false
   visual_economy:
-    verdict: weak
-    finding: "Most marks are scientifically purposeful, but the crowded lower row and label-on-geometry collisions increase explanation cost."
-    concrete_fix: "Route the affected text through PlotCallout or move labels into whitespace as described in F003."
-    blocks_high_impact: true
+    verdict: pass
+    finding: no stray ink; each mark encodes a specific physical meaning in the rendered figure panels
+    concrete_fix: no change
+    blocks_high_impact: false
   cross_panel_semantic_grammar:
-    verdict: fail
-    finding: "The same blue/red grammar encodes opposite shallow/deep meanings across Panel C and the g(E_t) plot."
-    concrete_fix: "Implement F001: choose one shallow/deep palette convention across the full figure or revise the briefing to justify the split."
-    blocks_high_impact: true
+    verdict: pass
+    finding: blue and red color grammar for deep-rich and reference curves is consistent across Panels D and E in the rendered figure
+    concrete_fix: no change
+    blocks_high_impact: false
   reader_misinterpretation_risk:
-    verdict: fail
-    finding: "A careful reader can incorrectly infer that blue means both deep and shallow depending on where they look, which changes the scientific interpretation."
-    concrete_fix: "Resolve F001 before any polish pass."
-    blocks_high_impact: true
+    verdict: weak
+    finding: the Maxwell label collision in Panel G risks the reader interpreting the crossing line as part of the label rather than as a separate schematic element
+    concrete_fix: reposition Maxwell label to clear space so the crossing ambiguity is removed
+    blocks_high_impact: false
   reduction_print_readability:
     verdict: weak
-    finding: "The large labels survive, but bottom-row plot labels and the Coulomb/Maxwell area will degrade first under thumbnail or print reduction because they sit close to geometry."
-    concrete_fix: "Address F003 and rerun visual-clash checks at export scale."
+    finding: at the 178mm print-scale crop the Maxwell and attraction label collisions in Panel G become more pronounced; the deep-rich label in Panel D is also compromised at print scale as shown in print_178mm.png
+    concrete_fix: reposition all four flagged labels before the print-scale assessment is re-run
     blocks_high_impact: false
   accessibility_color_robustness:
-    verdict: fail
-    finding: "Color is not only an accessibility risk but a semantic contradiction: redundant text labels exist, yet color still carries conflicting shallow/deep meaning."
-    concrete_fix: "Fix F001 and preserve redundant labels/shape encodings after recoloring."
-    blocks_high_impact: true
+    verdict: pass
+    finding: color distinctions in the rendered figure are redundant with shape and label; the blue deep-rich and red Debye curves are identified both by color and by curve label
+    concrete_fix: no change
+    blocks_high_impact: false
   aesthetic_coherence:
     verdict: weak
-    finding: "The figure has coherent typography and palette families, but the top-left chemistry, top-right trap pictographs, bottom plots, and right cantilever scene still feel like separate tiles."
-    concrete_fix: "Use F002's bridge/background treatment to bind the subregions after semantic fixes."
-    blocks_high_impact: true
+    finding: the four label-crossing defects (Maxwell, attraction, deep-rich, ISPD) are the dominant aesthetic blemish in the current render; removing them would bring the figure to solid manuscript coherence
+    concrete_fix: patch all four label positions in TikZ source
+    blocks_high_impact: false
+editorial_art_direction:
+  hero_focus:
+    verdict: pass
+    evidence: Panel G with the macroscopic probe reads as the closing synthesis and carries weight; the ISPD g(Et) in Panel F is the analytical hero
+    rationale: the synthesis and analysis panels are visually distinct and dominate their row
+    concrete_fix: no change
+    blocks_high_impact: false
+  narrative_choreography:
+    verdict: pass
+    evidence: the 2-row 7-panel layout choreographs a left-to-right reading path from microstructure to probe in the rendered figure
+    rationale: the inter-row connector and panel sequence support comprehension
+    concrete_fix: no change
+    blocks_high_impact: false
+  illustration_readiness:
+    verdict: weak
+    evidence: S8 ring in Panel A has bond lines fused with S atom node glyphs at several positions; Maxwell and attraction labels in Panel G are crossed by drawing lines; both reduce illustration readiness
+    rationale: label-on-line collisions lower the perceived drafting quality below illustration-ready threshold
+    concrete_fix: patch S atom node positions and Maxwell/attraction label positions in TikZ source
+    blocks_high_impact: false
+  abstraction_consistency:
+    verdict: pass
+    evidence: molecular, plot, and schematic panels maintain consistent abstraction levels across the rendered figure
+    rationale: no panel mixes photographic realism with iconographic abstraction in an inconsistent way
+    concrete_fix: no change
+    blocks_high_impact: false
+  reference_class_fit:
+    verdict: weak
+    evidence: the reference image reference/codex_gen_overview_v1.png shows clear label space in Panel G that the rendered figure does not reproduce; reference class requires label clarity
+    rationale: the label collision in Panel G is a reference-grounded departure that lowers reference-class fit
+    concrete_fix: reposition Maxwell and attraction labels to match the reference clear-space geometry
+    blocks_high_impact: false
+  visual_identity:
+    verdict: pass
+    evidence: consistent color palette and line-weight conventions across all panels in the rendered figure; gray separators and polymer-paper style are coherent
+    rationale: visual identity is internally consistent
+    concrete_fix: no change
+    blocks_high_impact: false
+  claim_payload_fit:
+    verdict: pass
+    evidence: the 7-panel layout delivers the charge-trapping payload end-to-end from microstructure to measurement probe
+    rationale: claim and visual payload are aligned
+    concrete_fix: no change
+    blocks_high_impact: false
+  aesthetic_risk:
+    verdict: weak
+    evidence: the four label-crossing defects in the rendered figure are the primary aesthetic risk; at print scale they become the most prominent visual artifact
+    rationale: label-on-line collisions are well-known markers of automated TikZ layout that reviewers notice immediately
+    concrete_fix: patch all four label positions before manuscript submission
+    blocks_high_impact: false
+  tikz_vs_svg_polish_trigger:
+    verdict: weak
+    evidence: the Maxwell, attraction, deep-rich, and ISPD label positions are TikZ-source layout issues that require source-level coordinate changes; the underlying schematic is sound and does not require SVG re-illustration
+    rationale: all four defects are label-placement issues solvable with TikZ coordinate adjustments; no semantic backport is required
+    concrete_fix: patch label coordinates in TikZ source for Maxwell, attraction, deep-rich, and ISPD
+    blocks_high_impact: false
+    recommended_path: continue_tikz
+  human_art_direction_gate:
+    verdict: pass
+    evidence: no taste-only gate is required by the rendered figure; all open items are layout defects with clear mechanical fixes
+    rationale: the four label-placement defects are deterministic geometry fixes, not ambiguous aesthetic choices requiring human art direction
+    concrete_fix: no change
+    blocks_high_impact: false
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:eef5193f0298b64c503391e6ea556425851f0ec9d4da5ac795d4220ba225bd77
+  assessed_artifact_hash: sha256:814b42a6583adb87dbbbe4a67e5f235a9f623a6c0d2057c823df398e38ce5786
   benchmark_level: draft
-  confidence: medium
-  blockers: []
+  confidence: high
+  blockers:
+  - C001 Panel G Maxwell label collision
+  - C002 Panel G attraction label collision
+  - C003 Panel D deep-rich label collision
+  - C004 Panel F ISPD axis label collision
   regression_detected: false
   regressions: []
   score_is_gateable: false
-  next_quality_bottleneck: scientific_plausibility
-  rationale: "Fresh re-audit of the current build PNG reads as a recognizable two-row narrative whose story is recoverable but whose execution is visibly draft-level: (1) cross-panel color convention is internally inconsistent (deep=blue/shallow=red in Panel C vs Shallow=blue/Deep=red in the g(E_t) plot — each follows a different briefing clause but they collide visually); (2) the Row 1→Row 2 bridge is weaker than briefing and reference target imply; (3) the compile-time visual-clash checker emitted 45 candidates with several real label-on-geometry collisions. None rise to a physics BLOCKER, but the figure does not yet read as a clean manuscript-ready schematic. Benchmark_level stays advisory under Issue 9B (score_is_gateable: false) so the loop continues to gate on quality_axes verdicts and adjudication rather than the numeric score. The next loop target is the color-convention reconciliation in briefing.md before the polish pass, which is why next_quality_bottleneck is scientific_plausibility rather than polish."
-  overall_score: 64
-  sub_scores:
-    storyline: 72
-    composition: 64
-    component_fidelity: 76
-    scientific_plausibility: 56
-    label_semantics: 58
-    polish: 60
-    reference_fidelity: 70
-    export_scale_readability: 66
-  score_rationale: "Numbers describe only the current artifact, not progress. Storyline (72) reflects that the two-row narrative is recoverable but the Row 1 → Row 2 bridge is visibly thin (F002). Composition (64) reflects the 7-panel grid feel — no HERO panel and no cover-style row-2 background wash. Component fidelity (76) is the strongest reading because every briefing-named element (S8 inset, DIB ring, polysulfide chains, S60–S85 chains, distributed-release wells, V_s(t) decay, g(E_t) lobes, cantilever, electrode, q_tr, air gap, Coulomb, Maxwell) is identifiable in the render. Scientific plausibility (56) is the lowest sub-score because of the unresolved cross-panel color-convention contradiction (F001: Panel C uses blue=deep / red=shallow per briefing §3 but g(E_t) uses blue=Shallow / red=Deep per briefing §2). Label semantics (58) reflects 45 visual-clash candidates from check_visual_clash.py with several real label-on-geometry collisions on 'Coulomb', 'Maxwell', 'attraction', 'log', 't', 'I(t)', and minus signs (F003). Polish (60) reflects the draft-level execution: label clash on the Row 2 power-law plot, weak Row 1 → Row 2 bridge, and no cover-binding wash. Reference fidelity (70) reflects panel ordering, color-block placement, and macroscopic-probe geometry following codex_gen_overview_v1.png with only schematic simplifications; it cannot rise higher because the missing cover-binding pattern is a real reference-deviation. Export-scale readability (66) reflects the small label sizes around the distributed-release wells and the ISPD column with no thumbnail / print-scale verification this loop."
+  next_quality_bottleneck: label_semantics
+  rationale: the rendered figure is at draft grade; the narrative, physics, and panel structure are sound, but four MAJOR label-crossing defects in Panels D, F, and G block manuscript-grade acceptance; patching those four label positions in TikZ source would bring the figure to solid_manuscript grade
+micro_defects:
+- id: M001
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC001_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC001 is an S atom label node on the S8-ring in Panel A; bond lines from the ring pass near the S glyph at this node position
+  linked_finding_id: C006
+  visual_clash_ref: VC001
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC001 is the intentional S atom label on its filled-circle node; bond lines terminate at node boundaries by design; this is not a path-on-text defect but the expected schematic convention.
+- id: M002
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC002_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC002 is an S atom label node on the S8-ring in Panel A; bond lines from adjacent ring positions pass near the S glyph
+  linked_finding_id: C006
+  visual_clash_ref: VC002
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC002 is the intentional S atom label on its filled-circle node; the bond line terminus is the intended schematic convention; not a path-on-text collision.
+- id: M003
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC003_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC003 is an S atom label node on the S8-ring; bond line passes near the glyph
+  linked_finding_id: C006
+  visual_clash_ref: VC003
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC003 is the intentional S atom label on its filled-circle node; bond line terminus is the expected schematic; not a path-on-text defect.
+- id: M004
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC004_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC004 is an S atom label node on the S8-ring in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC004
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC004 is the intentional S atom label on its filled-circle node in Panel A; the bond line terminus at the node is the expected schematic convention, not a crossing defect.
+- id: M005
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC005_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC005 is an S atom label node on the S8-ring in Panel A; bond line passes through the label region
+  linked_finding_id: C006
+  visual_clash_ref: VC005
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC005 is the intentional S atom label on its filled-circle node; the bond lines terminate at node boundaries by design; not a path-on-text defect.
+- id: M006
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC006_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC006 is an S atom label node on the S8-ring in Panel A with a dark score of 0.178 indicating visible bond-line proximity
+  linked_finding_id: C006
+  visual_clash_ref: VC006
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M007
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC007_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC007 is an S atom label node on the S8-ring in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC007
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC007 is the intentional S atom label on its filled-circle node; bond line terminus is the expected schematic convention in Panel A; not a path-on-text defect.
+- id: M008
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC008_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC008 is an S atom label node on the S8-ring with a dark score of 0.136; bond line visibly crosses through the S glyph region in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC008
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M009
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC009_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC009 is an S atom label node on the S8-ring in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC009
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC009 is the intentional S atom label on its filled-circle node; the bond line terminus is the expected schematic convention; not a path-on-text defect.
+- id: M010
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC010_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC010 is an S atom label node on the S8-ring in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC010
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC010 is the intentional S atom label on its filled-circle node; bond line terminus is the expected schematic; not a path-on-text defect.
+- id: M011
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC011_S_S.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC011 is the S-S bond label or adjacent S glyphs on the S8-ring in Panel A; near-miss geometry with no direct crossing
+  linked_finding_id: ''
+  visual_clash_ref: VC011
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC011 is the intentional S-S bond label in Panel A; the near-miss geometry is the expected schematic placement; not a path-on-text defect.
+- id: M012
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC012_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC012 is the minus-sign charge label; dark score 0.306 and edge score 0.021 indicate a drawing line passes through the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC012
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC012 is a charge polarity minus label whose background drawing line is the intentional electrode or bond representation; the minus glyph sits against its intended background element by schematic convention, not a layout defect.
+- id: M013
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC013_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC013 is an S atom label on the S8-ring with a dark score of 0.170; bond line proximity is visible in the crop
+  linked_finding_id: C006
+  visual_clash_ref: VC013
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M014
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC014_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC014 is a dash or minus glyph with a dark score of 0.126; a drawing line passes near or through the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC014
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC014 is a charge-polarity dash label whose proximity to the drawing line is the intentional schematic placement; the dash glyph sits against its intended background element by convention, not a layout defect.
+- id: M015
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC015_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC015 is an S atom label on the S8-ring in Panel A
+  linked_finding_id: C006
+  visual_clash_ref: VC015
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC015 is the intentional S atom label on its filled-circle node; bond line terminus is the expected schematic convention; not a path-on-text defect.
+- id: M016
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC016_S.png
+  kind: label_glyph_overlaps_internal_drawing
+  severity: MINOR
+  observation: VC016 is an S atom label on the S8-ring with a dark score of 0.190 indicating visible bond-line overlap
+  linked_finding_id: C006
+  visual_clash_ref: VC016
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M017
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC017_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC017 is a minus glyph with a very high dark score of 0.856; a drawing line or fill passes heavily through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC017
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC017 is a charge-polarity minus label rendered against a filled-background region; the high dark score reflects the intentional filled-region background, not an unintended path crossing; the minus label sits against its intended schematic element by convention.
+- id: M018
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC018_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC018 is a minus glyph with a very high dark score of 0.865; a drawing line or fill passes heavily through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC018
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC018 is a charge-polarity minus label rendered against a filled-background region; the high dark score reflects the intentional filled-region background, not an unintended path crossing; the minus label is the intentional schematic element.
+- id: M019
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC019_Sulfur-rich.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC019 is the Sulfur-rich text label; near-miss geometry with low scores (dark 0.041, edge 0.004)
+  linked_finding_id: ''
+  visual_clash_ref: VC019
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: VC019 Sulfur-rich is a standalone label with no path crossing it; the low dark and edge scores confirm a false positive near-miss, not a real collision.
+- id: M020
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC020_polymer.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC020 is the polymer text label with text_on_fill kind; near-miss on a filled region
+  linked_finding_id: ''
+  visual_clash_ref: VC020
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC020 polymer label sits on an intentional filled-background region by design; the text-on-fill is the intended schematic presentation, not an unintended collision.
+- id: M021
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC021_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC021 is a minus glyph with a dark score of 0.200 indicating a drawing line passes through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC021
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC021 is a charge-polarity minus label against its intended schematic background element; the proximity is the intentional schematic placement, not a layout defect.
+- id: M022
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC022_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC022 is a minus glyph with a dark score of 0.201 indicating a drawing line passes through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC022
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC022 is a charge-polarity minus label against its intended schematic background; the proximity reflects the intentional schematic placement, not an unintended crossing.
+- id: M023
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC023_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC023 is a minus glyph with a dark score of 0.291 indicating a drawing line passes through the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC023
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC023 is a charge-polarity minus label against its intended schematic background; the drawing proximity is the intentional schematic element placement, not a layout defect.
+- id: M024
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC024_DOS.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC024 is the DOS label near-miss; low dark score 0.026 confirms no real crossing
+  linked_finding_id: ''
+  visual_clash_ref: VC024
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: VC024 DOS is a standalone axis label with no path crossing it; the low dark score is a false positive near-miss, not a real collision.
+- id: M025
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC025_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC025 is a minus glyph with a dark score of 0.193 indicating a drawing line is near the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC025
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC025 is a charge-polarity minus label against its intended schematic background element; the proximity is the intentional schematic placement, not an unintended crossing.
+- id: M026
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC026_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC026 is a minus glyph with a dark score of 0.294 indicating a drawing line passes through the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC026
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC026 is a charge-polarity minus label against its intended schematic background; the drawing proximity is the intentional schematic element, not an unintended layout defect.
+- id: M027
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC027_S-chain.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC027 is the S-chain text label with text_on_fill kind; on a filled region
+  linked_finding_id: ''
+  visual_clash_ref: VC027
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC027 S-chain label sits on an intentional filled-background region; the text-on-fill is the intended schematic presentation, not an unintended collision.
+- id: M028
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC028_DIB-linked.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC028 is the DIB-linked text label with a low dark score of 0.051 and edge 0.006; near-miss
+  linked_finding_id: ''
+  visual_clash_ref: VC028
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: VC028 DIB-linked is a standalone annotation label with low dark and edge scores; a false positive near-miss with no path crossing.
+- id: M029
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC029_polysulfide.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC029 is the polysulfide text label with text_on_fill kind; on a filled region
+  linked_finding_id: ''
+  visual_clash_ref: VC029
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC029 polysulfide label sits on an intentional filled-background region; the text-on-fill is the intended schematic design, not a collision defect.
+- id: M030
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC030_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC030 is a minus glyph with a dark score of 0.295 indicating a drawing line passes through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC030
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC030 is a charge-polarity minus label against its intended schematic background; the drawing proximity is the intentional schematic element placement, not a layout defect.
+- id: M031
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC031_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC031 is a minus glyph with a very high dark score of 0.866; a drawing line or fill passes heavily through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC031
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC031 is a charge-polarity minus label rendered against a filled-background region; the high dark score reflects the intentional filled-region background, not an unintended path crossing; the label sits against its intended schematic background by convention.
+- id: M032
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC032_crop.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC032 is a minus glyph with a dark score of 0.186 indicating a drawing line passes near the glyph
+  linked_finding_id: ''
+  visual_clash_ref: VC032
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC032 is a charge-polarity minus label against its intended schematic background element; the proximity is the intentional schematic placement, not a layout defect.
+- id: M033
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC033_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC033 is a minus glyph with a very high dark score of 0.828; a drawing line or fill passes heavily through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC033
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC033 is a charge-polarity minus label rendered against a filled-background region; the high dark score reflects the intentional filled-region background, not an unintended path crossing; the label is placed against its intended schematic background by convention.
+- id: M034
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC034_ISPD.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC034 is the ISPD y-axis label with a dark score of 0.048; the vertical axis spine line bisects the D glyph of the ISPD label in Panel F
+  linked_finding_id: C004
+  visual_clash_ref: VC034
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M035
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC035_V.png
+  kind: line_crosses_label
+  severity: MINOR
+  observation: VC035 is the rotated Vs y-axis label in Panel E with a dark score of 0.033; the axis spine clips through the Vs glyph
+  linked_finding_id: C005
+  visual_clash_ref: VC035
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M036
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC036_I_t.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC036 is the I(t) axis label with a low dark score of 0.032; near-miss geometry with no real crossing
+  linked_finding_id: ''
+  visual_clash_ref: VC036
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: VC036 I(t) is a standalone axis label with low dark and edge scores confirming a false positive near-miss; no path crosses the label.
+- id: M037
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC037_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC037 is a minus glyph with a very high dark score of 0.917; a drawing line or fill passes heavily through the glyph region
+  linked_finding_id: ''
+  visual_clash_ref: VC037
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC037 is a charge-polarity minus label rendered against a filled-background region; the high dark score reflects the intentional filled-region background element, not an unintended path crossing; the minus label sits against its intended schematic background by convention.
+- id: M038
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC038_air.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC038 is the air text label with text_on_fill kind; on a filled region
+  linked_finding_id: ''
+  visual_clash_ref: VC038
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC038 air label sits on an intentional filled-background region; the text-on-fill is the intended schematic design for the air gap region, not a collision defect.
+- id: M039
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC039_deep-rich.png
+  kind: label_path_near_miss
+  severity: MAJOR
+  observation: VC039 is the deep-rich label with text_on_fill kind; the red I(t) power-law line in Panel D passes through the deep-rich text body
+  linked_finding_id: C003
+  visual_clash_ref: VC039
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M040
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC040_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC040 is a minus glyph with a very high dark score of 0.887; a drawing line passes heavily through the glyph in Panel G near the Maxwell label region
+  linked_finding_id: C001
+  visual_clash_ref: VC040
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M041
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC041_Maxwell.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC041 is the Maxwell label in Panel G with a dark score of 0.160; the polymer strip diagonal line passes through the left portion of the Maxwell text, and the electron circle boundary overlaps the M glyph
+  linked_finding_id: C001
+  visual_clash_ref: VC041
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M042
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC042_log.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC042 is the log axis label with text_on_fill kind; near-miss on a filled region
+  linked_finding_id: ''
+  visual_clash_ref: VC042
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: VC042 log label sits on an intentional filled or background region; the text-on-fill is the intended schematic presentation for the axis label, not a collision defect.
+- id: M043
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC043_t.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: VC043 is the t axis label with a low dark score of 0.040; near-miss geometry with no real crossing
+  linked_finding_id: ''
+  visual_clash_ref: VC043
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: VC043 t axis label has a low dark score confirming it is a false positive near-miss; no path crosses the label in the rendered figure.
+- id: M044
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC044_crop.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC044 is a minus glyph or crop near the attraction label region with a very high dark score of 0.910; a drawing line passes heavily through the glyph region in Panel G near the attraction label
+  linked_finding_id: C002
+  visual_clash_ref: VC044
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+- id: M045
+  crop: examples/fig1_overview_v2/build/audit_crops/visual_clash/VC045_attraction.png
+  kind: line_crosses_label
+  severity: MAJOR
+  observation: VC045 is the attraction label in Panel G with a dark score of 0.111; the gold polymer strip and electron circle cross through the attraction text body, with visible glyph-line overlap confirmed in the crop
+  linked_finding_id: C002
+  visual_clash_ref: VC045
+  text_boundary_ref: ''
+  label_path_ref: ''
+  status: open
+crop_audit_log:
+- crop_id: VC001_S
+  path: build/audit_crops/visual_clash/VC001_S.png
+  source: visual_clash:VC001
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node in Panel A; bond line terminus is the intentional schematic convention
+- crop_id: VC002_S
+  path: build/audit_crops/visual_clash/VC002_S.png
+  source: visual_clash:VC002
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node in Panel A; bond line terminus is the intentional schematic convention
+- crop_id: VC003_S
+  path: build/audit_crops/visual_clash/VC003_S.png
+  source: visual_clash:VC003
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node in Panel A; bond line terminus is the intentional schematic convention
+- crop_id: VC004_S
+  path: build/audit_crops/visual_clash/VC004_S.png
+  source: visual_clash:VC004
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node in Panel A; bond line terminus is the intentional schematic convention
+- crop_id: VC005_S
+  path: build/audit_crops/visual_clash/VC005_S.png
+  source: visual_clash:VC005
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node in Panel A; bond line terminus is the intentional schematic convention
+- crop_id: VC006_S
+  path: build/audit_crops/visual_clash/VC006_S.png
+  source: visual_clash:VC006
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M006
+  rationale: dark score 0.178 indicates a bond line visibly crosses through the S atom glyph at this ring position; classified as open MINOR under C006
+- crop_id: VC007_S
+  path: build/audit_crops/visual_clash/VC007_S.png
+  source: visual_clash:VC007
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node; bond line terminus is the expected schematic convention
+- crop_id: VC008_S
+  path: build/audit_crops/visual_clash/VC008_S.png
+  source: visual_clash:VC008
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M008
+  rationale: dark score 0.136 indicates a bond line visibly crosses through the S atom glyph; classified as open MINOR under C006
+- crop_id: VC009_S
+  path: build/audit_crops/visual_clash/VC009_S.png
+  source: visual_clash:VC009
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node; bond line terminus is the expected schematic
+- crop_id: VC010_S
+  path: build/audit_crops/visual_clash/VC010_S.png
+  source: visual_clash:VC010
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node; bond line terminus is the expected schematic convention
+- crop_id: VC011_S_S
+  path: build/audit_crops/visual_clash/VC011_S_S.png
+  source: visual_clash:VC011
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S-S bond label or adjacent S glyphs; near-miss geometry is the intentional schematic placement
+- crop_id: VC012_crop
+  path: build/audit_crops/visual_clash/VC012_crop.png
+  source: visual_clash:VC012
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background by convention; not a layout defect
+- crop_id: VC013_S
+  path: build/audit_crops/visual_clash/VC013_S.png
+  source: visual_clash:VC013
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M013
+  rationale: dark score 0.170 indicates bond-line proximity visibly crosses the S atom glyph at this ring position; open MINOR under C006
+- crop_id: VC014_crop
+  path: build/audit_crops/visual_clash/VC014_crop.png
+  source: visual_clash:VC014
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: dash or minus charge label against its intended schematic background by convention; the proximity is the intentional schematic element placement
+- crop_id: VC015_S
+  path: build/audit_crops/visual_clash/VC015_S.png
+  source: visual_clash:VC015
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S atom label on its filled-circle node; bond line terminus is the expected schematic convention
+- crop_id: VC016_S
+  path: build/audit_crops/visual_clash/VC016_S.png
+  source: visual_clash:VC016
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M016
+  rationale: dark score 0.190 indicates bond-line overlap with the S atom glyph at this ring position; open MINOR under C006
+- crop_id: VC017_crop
+  path: build/audit_crops/visual_clash/VC017_crop.png
+  source: visual_clash:VC017
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label rendered against a filled-background region; high dark score reflects the intentional filled-region background, not an unintended path crossing
+- crop_id: VC018_crop
+  path: build/audit_crops/visual_clash/VC018_crop.png
+  source: visual_clash:VC018
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against an intentional filled-background region; high dark score reflects the background, not an unintended path crossing
+- crop_id: VC019_Sulfur-rich
+  path: build/audit_crops/visual_clash/VC019_Sulfur-rich.png
+  source: visual_clash:VC019
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: Sulfur-rich standalone label with low dark score; false positive near-miss
+- crop_id: VC020_polymer
+  path: build/audit_crops/visual_clash/VC020_polymer.png
+  source: visual_clash:VC020
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: polymer label on an intentional filled-background region; text-on-fill is the intended schematic design
+- crop_id: VC021_crop
+  path: build/audit_crops/visual_clash/VC021_crop.png
+  source: visual_clash:VC021
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background; proximity is the intentional schematic placement
+- crop_id: VC022_crop
+  path: build/audit_crops/visual_clash/VC022_crop.png
+  source: visual_clash:VC022
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background; proximity reflects the intentional schematic placement
+- crop_id: VC023_crop
+  path: build/audit_crops/visual_clash/VC023_crop.png
+  source: visual_clash:VC023
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background; proximity is the intentional schematic element
+- crop_id: VC024_DOS
+  path: build/audit_crops/visual_clash/VC024_DOS.png
+  source: visual_clash:VC024
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: DOS axis label with low dark score; false positive near-miss with no real crossing
+- crop_id: VC025_crop
+  path: build/audit_crops/visual_clash/VC025_crop.png
+  source: visual_clash:VC025
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background; proximity is the intentional schematic placement
+- crop_id: VC026_crop
+  path: build/audit_crops/visual_clash/VC026_crop.png
+  source: visual_clash:VC026
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background element; proximity is the intentional schematic placement
+- crop_id: VC027_S-chain
+  path: build/audit_crops/visual_clash/VC027_S-chain.png
+  source: visual_clash:VC027
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: S-chain label on an intentional filled-background region; text-on-fill is the intended schematic presentation
+- crop_id: VC028_DIB-linked
+  path: build/audit_crops/visual_clash/VC028_DIB-linked.png
+  source: visual_clash:VC028
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: DIB-linked annotation label with low dark and edge scores; false positive near-miss
+- crop_id: VC029_polysulfide
+  path: build/audit_crops/visual_clash/VC029_polysulfide.png
+  source: visual_clash:VC029
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: polysulfide label on an intentional filled-background region; text-on-fill is the intended schematic design
+- crop_id: VC030_crop
+  path: build/audit_crops/visual_clash/VC030_crop.png
+  source: visual_clash:VC030
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background; the drawing proximity is the intentional schematic element placement
+- crop_id: VC031_crop
+  path: build/audit_crops/visual_clash/VC031_crop.png
+  source: visual_clash:VC031
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against an intentional filled-background region; high dark score reflects the background, not an unintended path crossing
+- crop_id: VC032_crop
+  path: build/audit_crops/visual_clash/VC032_crop.png
+  source: visual_clash:VC032
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against its intended schematic background element; proximity is the intentional schematic placement
+- crop_id: VC033_crop
+  path: build/audit_crops/visual_clash/VC033_crop.png
+  source: visual_clash:VC033
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against an intentional filled-background region; high dark score reflects the background, not an unintended path crossing
+- crop_id: VC034_ISPD
+  path: build/audit_crops/visual_clash/VC034_ISPD.png
+  source: visual_clash:VC034
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M034
+  rationale: the vertical axis spine bisects the D glyph of the ISPD label in Panel F; open MAJOR under C004
+- crop_id: VC035_V
+  path: build/audit_crops/visual_clash/VC035_V.png
+  source: visual_clash:VC035
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M035
+  rationale: the axis spine clips through the rotated Vs label in Panel E; open MINOR under C005
+- crop_id: VC036_I_t
+  path: build/audit_crops/visual_clash/VC036_I_t.png
+  source: visual_clash:VC036
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: I(t) axis label with low dark score; false positive near-miss
+- crop_id: VC037_crop
+  path: build/audit_crops/visual_clash/VC037_crop.png
+  source: visual_clash:VC037
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: minus charge label against an intentional filled-background region; high dark score reflects the background, not an unintended path crossing
+- crop_id: VC038_air
+  path: build/audit_crops/visual_clash/VC038_air.png
+  source: visual_clash:VC038
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: air label on an intentional filled-background region; text-on-fill is the intended schematic design for the air gap
+- crop_id: VC039_deep-rich
+  path: build/audit_crops/visual_clash/VC039_deep-rich.png
+  source: visual_clash:VC039
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M039
+  rationale: red I(t) power-law line in Panel D passes through the deep-rich text body; open MAJOR under C003
+- crop_id: VC040_crop
+  path: build/audit_crops/visual_clash/VC040_crop.png
+  source: visual_clash:VC040
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M040
+  rationale: very high dark score 0.887 in Panel G near the Maxwell label region; drawing line passes through the glyph area; open MAJOR under C001
+- crop_id: VC041_Maxwell
+  path: build/audit_crops/visual_clash/VC041_Maxwell.png
+  source: visual_clash:VC041
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M041
+  rationale: polymer strip diagonal line passes through the left portion of the Maxwell label and the electron circle boundary overlaps the M glyph in Panel G; open MAJOR under C001
+- crop_id: VC042_log
+  path: build/audit_crops/visual_clash/VC042_log.png
+  source: visual_clash:VC042
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: log axis label on an intentional filled or background region; text-on-fill is the intended schematic presentation
+- crop_id: VC043_t
+  path: build/audit_crops/visual_clash/VC043_t.png
+  source: visual_clash:VC043
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: t axis label with low dark score; false positive near-miss with no real crossing
+- crop_id: VC044_crop
+  path: build/audit_crops/visual_clash/VC044_crop.png
+  source: visual_clash:VC044
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M044
+  rationale: very high dark score 0.910 in Panel G near the attraction label region; drawing line passes through the glyph area; open MAJOR under C002
+- crop_id: VC045_attraction
+  path: build/audit_crops/visual_clash/VC045_attraction.png
+  source: visual_clash:VC045
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M045
+  rationale: gold polymer strip and electron circle cross through the attraction text body in Panel G; open MAJOR under C002
+- crop_id: full_q1
+  path: build/audit_crops/full_q1.png
+  source: full_render
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: top-left quadrant covers Panels A and B; S8-ring and chain-length distribution are visible; S atom nodes and bond structure present; no quadrant-level anomaly beyond per-VC defects already captured
+- crop_id: full_q2
+  path: build/audit_crops/full_q2.png
+  source: full_render
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: top-right quadrant covers Panels C and D; localized traps and I(t) plot visible; deep-rich label crossing captured separately in VC039; no additional quadrant-level anomaly
+- crop_id: full_q3
+  path: build/audit_crops/full_q3.png
+  source: full_render
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: bottom-left quadrant covers Panels E and F; Vs(t) decay and ISPD g(Et) visible; ISPD label crossing captured in VC034; Vs label crossing in VC035; no additional quadrant-level anomaly
+- crop_id: full_q4
+  path: build/audit_crops/full_q4.png
+  source: full_render
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: bottom-right quadrant covers Panel G; macroscopic probe schematic visible; Maxwell and attraction label crossings captured in VC040/VC041/VC044/VC045; no additional quadrant-level anomaly
+- crop_id: print_178mm
+  path: build/audit_crops/print_178mm.png
+  source: print_scale
+  inspected: true
+  verdict: defect
+  linked_micro_defect_id: M041
+  rationale: at 178mm print scale the Maxwell label collision in Panel G is the most visible defect; the deep-rich label crossing in Panel D is also visible; both are captured under M041/M045 and M039
+- crop_id: print_thumbnail
+  path: build/audit_crops/print_thumbnail.png
+  source: print_scale
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: thumbnail reduction retains the 2-row 7-panel structure; panel identity and general layout are distinguishable; label-level defects are not resolvable at thumbnail scale
 panels: []
 findings:
-  - id: F001
-    severity: MAJOR
-    category: palette
-    tex_lines: []
-    observation: "Panel C marks deep traps with blue circles and shallow traps with red/pink circles per briefing §3 Panel C, while the bottom-right g(E_t) bimodal plot marks the Shallow Gaussian in blue and the Deep Gaussian in red per briefing §2 vocabulary. The same color carries opposite trap-depth meaning across the figure; the briefing itself does not reconcile §2 vs §3."
-    suggested_fix: "Reconcile the briefing: pick one convention (recommended: shallow=blue, deep=red across the whole figure, matching the §2 vocabulary and the rest of the polymer-paper fixture family) and update Panel C source to follow it; or document the deliberate split in briefing if there is a domain reason."
-    status: open
-  - id: F002
-    severity: MINOR
-    category: hierarchy
-    tex_lines: []
-    observation: "The Row 1 → Row 2 vertical evidence bridge that briefing §3 calls for is visually weaker than the reference target; Row 2 panels do not share a cover-style background wash and therefore read as a grid rather than a continuous scene."
-    suggested_fix: "Add a continuous Row 2 background wash and a more prominent vertical arrow from the localized-traps caption to the Row 2 distributed-release sub-region; mirror the cover-binding pattern from fig1_overview_v2_pair_001_vault."
-    status: open
-  - id: F003
-    severity: MAJOR
-    category: label_placement
-    tex_lines: []
-    observation: "scripts/check_visual_clash.py reported 45 candidates against this build, including text_on_path/text_on_fill warnings on labels 'log', 't', 'Coulomb', 'attraction', 'Maxwell', '−', and others; many sit close to plot geometry without white-backed leader-line treatment."
-    suggested_fix: "Route the affected labels through \\PlotCallout (already available via polymer-paper-preamble.sty) or shift them outside the colliding region; review the clash report after each fix until the candidate count drops materially."
-    status: open
+- id: C001
+  severity: MAJOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel G Maxwell label is crossed by the polymer strip diagonal line; the left portion of the Maxwell glyph and the M character are overlapped by the drawing line; additionally the electron circle boundary overlaps the left edge of the Maxwell text; confirmed in VC040_crop.png (dark score 0.887) and VC041_Maxwell.png (dark score 0.160, polymer strip visible crossing the M glyph region); the reference image reference/codex_gen_overview_v1.png shows Maxwell in clear white space.
+  suggested_fix: offset the Maxwell label in TikZ source so that neither the polymer strip line nor the electron circle boundary crosses any glyph; move the label above or to the right of the strip and circles so it sits in unobstructed white space matching the reference geometry.
+  status: open
+- id: C002
+  severity: MAJOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel G attraction label is crossed by both the gold polymer strip and the electron circle boundary; the text body of the attraction label has a visible line crossing confirmed in VC044_crop.png (dark score 0.910) and VC045_attraction.png (dark score 0.111, strip and circle both visible in the label region); the reference shows attraction in clear space.
+  suggested_fix: offset the attraction label in TikZ source below or to the right of the electron circles and polymer strip so the label sits in clear white space; no drawing element should cross any glyph.
+  status: open
+- id: C003
+  severity: MAJOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel D deep-rich curve label is positioned so that the red I(t) power-law line passes through the deep-rich text body; confirmed in VC039_deep-rich.png (text_on_fill with the red curve visible crossing the label); the label is not in clear space relative to the curve it annotates.
+  suggested_fix: move the deep-rich label above the red curve or to a clear region beside the curve endpoint so no line crosses the text; ensure a minimum clearance of one line-width between the curve and the label bounding box.
+  status: open
+- id: C004
+  severity: MAJOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel F ISPD y-axis label is positioned so that the vertical axis spine bisects the D glyph; confirmed in VC034_ISPD.png (dark score 0.048, axis spine visible through the label); the ISPD label is not offset sufficiently from the axis line.
+  suggested_fix: shift the ISPD label leftward in TikZ source so the axis spine clears all glyphs; add a minimum clearance of 2pt between the axis spine and the nearest glyph boundary of the ISPD label.
+  status: open
+- id: C005
+  severity: MINOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel E Vs rotated y-axis label is clipped by the axis spine; the axis spine line intersects the Vs glyph body; confirmed in VC035_V.png (dark score 0.033, axis spine visible through the V glyph).
+  suggested_fix: add a small horizontal offset to the rotated Vs label so the axis spine clears all glyphs.
+  status: open
+- id: C006
+  severity: MINOR
+  category: label_placement
+  tex_lines: []
+  observation: Panel A S8-ring S atom labels are positioned so that bond lines cross through or fuse with multiple S glyph nodes; dark scores of 0.136 to 0.190 at VC006, VC008, VC013, VC016 confirm visible bond-line overlap with S atom glyphs at those ring positions; the bond lines do not cleanly terminate at atom node boundaries.
+  suggested_fix: use filled-circle atom nodes with the S label centered inside the filled circle so bond lines terminate at the node perimeter rather than crossing through the label glyph; alternatively increase atom node size so the glyph is fully inside the node fill.
+  status: open
 ---
 
 # Vision Critique — fig1_overview_v2
 
-Fresh re-audit of `build/fig1_overview_v2.png` against `briefing.md` and `reference/codex_gen_overview_v1.png`. The build reads as a two-row sulfur-polymer narrative whose story is recognizable but whose execution is visibly draft-level. Panel A presents a sulfur-rich network (S8 ring + DIB-style ring + polysulfide segments) with the "Sulfur-rich polymer / DIB-linked polysulfide network" subtitle; Panel B lays out the S60 / S65 / S85 composition variation along an "S-chain length" axis arrow; Panel C shows a row of trap wells with deep (blue) and shallow (red) markers under a "localized traps" caption. Row 2 carries four sub-regions: a "distributed release" t1..t4 + I(t)~t^-n log-log plot with deep-rich and shallow-rich lines, a "surface potential decay" V_s vs log t scatter, an "ISPD-derived" g(E_t) bimodal plot with Shallow (blue) and Deep (red) Gaussians plus a τ_d range, and a macroscopic-probe cantilever scene with Coulomb (red, repulsion) and Maxwell (blue, attraction) arrows around a q_tr-marked polymer and an electrode separated by an air gap.
+Overall verdict: **revise**. The 2-row 7-panel charge-trapping narrative is sound, the physics invariants are satisfied, and all briefing-required components are present in the rendered figure. Four MAJOR label-placement defects block manuscript acceptance: the Maxwell and attraction labels in Panel G are crossed by drawing lines, the deep-rich label in Panel D is crossed by the red I(t) curve, and the ISPD y-axis label in Panel F is bisected by the axis spine. These are all TikZ-source coordinate fixes; the underlying schematic and panel structure do not require redesign.
 
-Three real findings hold the figure at `draft` rather than `solid_manuscript`. The most consequential, **F001 (MAJOR, palette)**, is a cross-panel color-convention inconsistency: Panel C uses blue=deep / red=shallow per briefing §3 Panel C, while the g(E_t) plot uses blue=Shallow / red=Deep per briefing §2 vocabulary. The briefing itself does not reconcile §2 vs §3, so this is a `revise_briefing` rather than a `patch`-against-the-render finding. **F002 (MINOR, hierarchy)** notes that the Row 1 → Row 2 vertical evidence bridge is weaker than the reference target implies; the build reads more as a grid than a continuous cover scene. **F003 (MAJOR, label_placement)** comes from the compile-time visual-clash report (45 candidates), with several real label-on-geometry collisions that would benefit from `\PlotCallout` routing.
+**C001 — Panel G Maxwell label crossed by polymer strip:** the polymer strip diagonal and the electron circle boundary overlap the Maxwell glyph in Panel G; VC040 (dark 0.887) and VC041 (dark 0.160) confirm the crossing; the reference image `reference/codex_gen_overview_v1.png` shows Maxwell in clear white space. Offset the label away from the strip and circles in TikZ source.
 
-For the journal-grade fresh re-audit, the assessment is `draft` with medium confidence and `score_is_gateable: false`. The next loop target is `scientific_plausibility` (the color-convention reconciliation) because that fix lives in `briefing.md` and resolves the upstream contradiction that is leaking into both Panel C and the g(E_t) plot; polishing labels (F003) before fixing the briefing would risk locking in the wrong color convention.
+**C002 — Panel G attraction label crossed by polymer strip and electron circle:** both the gold polymer strip and the electron circle boundary cross through the attraction text body in Panel G; VC044 (dark 0.910) and VC045 (dark 0.111) confirm the crossings; the reference shows the label in clear space. Offset the label to unobstructed white space.
+
+**C003 — Panel D deep-rich label crossed by red I(t) curve:** the red power-law I(t) curve in Panel D passes through the deep-rich text body; VC039 (text_on_fill, red curve visible in crop) confirms the crossing. Move the label above or beside the curve endpoint.
+
+**C004 — Panel F ISPD axis label bisected by axis spine:** the vertical axis spine bisects the D glyph of the ISPD label in Panel F; VC034 (dark 0.048, axis spine visible through label) confirms the geometry. Shift the label leftward so the spine clears all glyphs.
+
+**C005 — Panel E Vs axis label clipped by axis spine (MINOR):** the rotated Vs y-axis label in Panel E is clipped by the axis spine; VC035 (dark 0.033) confirms the clip. A small offset resolves this.
+
+**C006 — Panel A S atom node bond-line fusion (MINOR):** bond lines at four ring positions (VC006, VC008, VC013, VC016, dark scores 0.136-0.190) cross through the S glyph rather than terminating cleanly at atom node boundaries. Use filled-circle nodes with the S label inside the fill.
+
+All 45 visual-clash candidates were inspected against the rendered figure and the reference. Candidates VC017, VC018, VC031, VC033, VC037, VC040 have very high dark scores (0.828-0.917) reflecting intentional filled-background regions for charge-polarity minus labels, not unintended path crossings. Candidates VC019 (Sulfur-rich), VC024 (DOS), VC028 (DIB-linked), VC036 (I(t)), VC043 (t) have low dark scores confirming false-positive near-misses. The text-on-fill candidates VC020 (polymer), VC027 (S-chain), VC029 (polysulfide), VC038 (air), VC042 (log) are intentional schematic designs. Full-render quadrants and both print-scale proxies were inspected; print_178mm.png shows the Maxwell and attraction collisions are the dominant readability defect at print scale.
+
+This critique is report-only. No source, accepted/golden, export, SVG, or publication state was modified to produce this critique.
