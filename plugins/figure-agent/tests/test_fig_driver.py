@@ -1455,6 +1455,38 @@ def test_polish_mode_surfaces_existing_svg_polish_readiness_checkpoint(
     assert summary["svg_polish_readiness"] == readiness
 
 
+def test_polish_mode_readiness_prefers_loop_human_gate_over_legacy_pass_trigger(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        recommended_next_action="human review required for C001",
+        editorial_art_direction_summary={
+            "source": "critique.editorial_art_direction",
+            "worst_verdict": "pass",
+            "polish_trigger_verdict": "pass",
+            "polish_recommended_path": "continue_tikz",
+        },
+    )
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["svg_polish_readiness"]["can_start_svg_polish"] is False
+    assert summary["svg_polish_readiness"]["next_action"] == "human_review"
+    assert summary["svg_polish_readiness"]["blocking_items"] == [
+        {
+            "source": "latest_loop_checkpoint",
+            "id": "human_gate_required",
+            "recommended_next_action": "human review required for C001",
+        }
+    ]
+
+
 def test_polish_mode_with_recipe_returns_executor_dry_run_command(
     tmp_path: Path,
 ) -> None:

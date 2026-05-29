@@ -104,6 +104,50 @@ def _blocking_readiness(
     }
 
 
+def _loop_source_blocker(checkpoint: dict[str, Any]) -> dict[str, Any] | None:
+    stop_reason = checkpoint.get("final_stop_reason")
+    if not isinstance(stop_reason, str) or not stop_reason.strip():
+        return None
+    stop_reason = stop_reason.strip()
+    if stop_reason == "verify_only_complete":
+        return None
+    if stop_reason in {
+        "crop_audit_uncertain",
+        "aesthetic_lever_needs_human",
+        "top_tier_audit_required",
+    }:
+        return None
+
+    next_action_by_stop = {
+        "human_gate_required": "human_review",
+        "patch_target_recommended": "patch_source",
+        "ambiguous_patch_selection": "human_review",
+        "status_action_required": "resolve_status_action",
+    }
+    next_action = next_action_by_stop.get(stop_reason, "run_fig_loop")
+    recommended = checkpoint.get("recommended_next_action")
+    if isinstance(recommended, str) and recommended.strip():
+        reason = (
+            f"latest /fig_loop checkpoint requires {next_action.replace('_', ' ')}: "
+            f"{recommended.strip()}"
+        )
+        item = {
+            "source": "latest_loop_checkpoint",
+            "id": stop_reason,
+            "recommended_next_action": recommended.strip(),
+        }
+    else:
+        reason = f"latest /fig_loop checkpoint stopped at {stop_reason}"
+        item = {"source": "latest_loop_checkpoint", "id": stop_reason}
+
+    return _blocking_readiness(
+        recommended_path=_checkpoint_recommended_path(checkpoint),
+        next_action=next_action,
+        blocking_reason=reason,
+        blocking_items=[item],
+    )
+
+
 def _crop_audit_blocker(checkpoint: dict[str, Any]) -> dict[str, Any] | None:
     summary = checkpoint.get("crop_audit_summary")
     if not isinstance(summary, dict) or summary.get("evaluation_state") != "needs_action":
@@ -268,6 +312,7 @@ def svg_polish_readiness_from_checkpoint(
         _crop_audit_blocker(checkpoint),
         _aesthetic_lever_blocker(checkpoint),
         _top_tier_blocker(checkpoint),
+        _loop_source_blocker(checkpoint),
     ):
         if blocker is not None:
             return blocker
