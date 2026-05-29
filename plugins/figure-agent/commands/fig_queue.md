@@ -4,7 +4,7 @@ description: Read-only multi-fixture driver queue. Aggregates /fig_drive decisio
 
 Inspect the driver-selected next action for multiple fixtures.
 
-**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [<fixture> ...] [--json]`
+**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json]`
 
 Run from the plugin root:
 
@@ -12,6 +12,8 @@ Run from the plugin root:
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
 uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --json
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --action run_fig_loop
 ```
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
@@ -30,6 +32,15 @@ fixtures by directory name. With fixture arguments, only those fixtures are
 checked. Missing fixtures are reported as controlled `error` rows instead of
 tracebacks.
 
+Filters are applied after driver rows are built, so they do not change driver
+selection or fixture scanning. Supported filters:
+
+- `--actor workflow_agent|host_llm|human|release_operator|svg_editor`
+- `--action <driver-action>`
+- `--stop-boundary <boundary-id>`
+- `--first-blocker <status-first-blocker-code>`
+- `--blocking-source <next-action-blocking-source>`
+
 ## Output JSON contract
 
 `schema: figure-agent.fixture-driver-queue.v1` with these top-level fields:
@@ -39,6 +50,8 @@ tracebacks.
 | `schema` | string | `figure-agent.fixture-driver-queue.v1` |
 | `mode` | string | driver mode: `authoring`, `review`, `release`, or `polish` |
 | `goal` | string | passthrough goal used for driver recommendations |
+| `filters` | object | active filters only; empty object when no filters were supplied |
+| `unfiltered_total` | int | row count before filters are applied |
 | `rows` | list | one compact row per fixture or controlled error |
 | `summary` | object | total/error counts plus grouped counts |
 

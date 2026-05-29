@@ -232,3 +232,111 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.fixture-driver-queue.v1"
     assert payload["rows"][0]["fixture"] == "alpha"
+
+
+def test_build_queue_filters_by_actor_and_preserves_unfiltered_total(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "alpha":
+            return _summary(
+                name,
+                action="run_critique",
+                stop_boundary="host_llm_critique_required",
+                first_blocker="critique_stale",
+            )
+        return _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary=None,
+            first_blocker="acceptance_not_declared",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        filters={"required_actor": "host_llm"},
+    )
+
+    assert queue["filters"] == {"required_actor": "host_llm"}
+    assert queue["unfiltered_total"] == 2
+    assert [row["fixture"] for row in queue["rows"]] == ["alpha"]
+    assert queue["summary"]["total"] == 1
+    assert queue["summary"]["by_required_actor"] == {"host_llm": 1}
+
+
+def test_build_queue_filters_compose_with_fixture_args(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+    seen: list[str] = []
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        seen.append(name)
+        return _summary(
+            name,
+            action="release_blocked",
+            stop_boundary="force_golden_required",
+            first_blocker="export_tracked_golden",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="release",
+        goal="triage",
+        fixtures=["beta"],
+        filters={"stop_boundary": "force_golden_required"},
+    )
+
+    assert seen == ["beta"]
+    assert queue["unfiltered_total"] == 1
+    assert [row["fixture"] for row in queue["rows"]] == ["beta"]
+
+
+def test_main_json_accepts_filter_flags(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="run_critique",
+            stop_boundary="host_llm_critique_required",
+            first_blocker="critique_stale",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert fig_queue.main(
+        [
+            "--mode",
+            "review",
+            "--goal",
+            "triage",
+            "--actor",
+            "host_llm",
+            "--action",
+            "run_critique",
+            "--json",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["filters"] == {
+        "action": "run_critique",
+        "required_actor": "host_llm",
+    }
+    assert payload["unfiltered_total"] == 1
+    assert payload["rows"][0]["fixture"] == "alpha"

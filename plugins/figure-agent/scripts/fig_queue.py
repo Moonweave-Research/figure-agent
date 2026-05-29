@@ -20,6 +20,20 @@ from driver_actor import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
+_FILTER_KEYS = (
+    "required_actor",
+    "action",
+    "stop_boundary",
+    "first_blocker",
+    "blocking_source",
+)
+_ACTORS = (
+    "workflow_agent",
+    "host_llm",
+    "human",
+    "release_operator",
+    "svg_editor",
+)
 
 
 def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
@@ -116,12 +130,36 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _active_filters(filters: dict[str, str | None] | None) -> dict[str, str]:
+    if not filters:
+        return {}
+    return {
+        key: value.strip()
+        for key, value in filters.items()
+        if key in _FILTER_KEYS and isinstance(value, str) and value.strip()
+    }
+
+
+def _filter_rows(
+    rows: list[dict[str, Any]],
+    filters: dict[str, str],
+) -> list[dict[str, Any]]:
+    if not filters:
+        return list(rows)
+    return [
+        row
+        for row in rows
+        if all(row.get(key) == value for key, value in filters.items())
+    ]
+
+
 def build_queue(
     *,
     repo_root: Path = REPO_ROOT,
     mode: str,
     goal: str,
     fixtures: list[str] | None,
+    filters: dict[str, str | None] | None = None,
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for name in _fixture_names(repo_root, fixtures):
@@ -154,12 +192,16 @@ def build_queue(
             )
             continue
         rows.append(_row_from_summary(driver_summary, mode=mode))
+    active_filters = _active_filters(filters)
+    filtered_rows = _filter_rows(rows, active_filters)
     return {
         "schema": SCHEMA,
         "mode": mode,
         "goal": goal,
-        "rows": rows,
-        "summary": _summary(rows),
+        "filters": active_filters,
+        "unfiltered_total": len(rows),
+        "rows": filtered_rows,
+        "summary": _summary(filtered_rows),
     }
 
 
@@ -198,6 +240,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
     parser.add_argument("--goal", default="triage fixture queue")
+    parser.add_argument("--actor", choices=list(_ACTORS), dest="required_actor")
+    parser.add_argument("--action")
+    parser.add_argument("--stop-boundary")
+    parser.add_argument("--first-blocker")
+    parser.add_argument("--blocking-source")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -206,6 +253,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         mode=args.mode,
         goal=args.goal,
         fixtures=list(args.fixtures) or None,
+        filters={
+            "required_actor": args.required_actor,
+            "action": args.action,
+            "stop_boundary": args.stop_boundary,
+            "first_blocker": args.first_blocker,
+            "blocking_source": args.blocking_source,
+        },
     )
     if args.json:
         print(json.dumps(queue, indent=2, sort_keys=True))
