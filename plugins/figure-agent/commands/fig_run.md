@@ -29,7 +29,9 @@ state. Plan-only runs do not write a journal unless `--record` is passed.
 ## Execution Policy
 
 The executable actions are allowed only when the driver attaches no
-`stop_boundary`:
+`stop_boundary`. The runner also revalidates that each shell command matches
+the current fixture before executing; an allowlisted action with a mismatched
+or malformed command stops as `not_executable_action`.
 
 - `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
 - `run_adjudicate` -> `uv run python3 scripts/critique_adjudication.py scaffold <name>`

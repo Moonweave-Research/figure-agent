@@ -122,11 +122,50 @@ def _has_forbidden_export_flag(command: str) -> bool:
     return "--force-golden" in parts or "--skip-critique" in parts
 
 
-def _export_command_matches_fixture(command: str, name: str) -> bool:
+def _command_parts(command: str) -> list[str] | None:
     try:
-        parts = shlex.split(command)
+        return shlex.split(command)
     except ValueError:
-        return False
+        return None
+
+
+def _compile_command_matches_fixture(command: str, name: str) -> bool:
+    parts = _command_parts(command)
+    return parts == [
+        "bash",
+        "scripts/compile.sh",
+        f"examples/{name}/{name}.tex",
+    ]
+
+
+def _adjudicate_command_matches_fixture(command: str, name: str) -> bool:
+    parts = _command_parts(command)
+    return parts == [
+        "uv",
+        "run",
+        "python3",
+        "scripts/critique_adjudication.py",
+        "scaffold",
+        name,
+    ]
+
+
+def _fig_loop_command_matches_fixture(command: str, name: str, goal: str) -> bool:
+    parts = _command_parts(command)
+    return parts == [
+        "uv",
+        "run",
+        "python3",
+        "scripts/fig_loop.py",
+        name,
+        "--goal",
+        goal,
+        "--json",
+    ]
+
+
+def _export_command_matches_fixture(command: str, name: str) -> bool:
+    parts = _command_parts(command)
     return parts == ["uv", "run", "python3", "scripts/run_export.py", name]
 
 
@@ -146,11 +185,20 @@ def _export_is_safe(summary: dict[str, Any], *, name: str) -> bool:
     )
 
 
-def _would_execute(summary: dict[str, Any], *, name: str, repo_root: Path) -> bool:
+def _would_execute(
+    summary: dict[str, Any], *, name: str, goal: str, repo_root: Path
+) -> bool:
     if not _is_executable_action(summary):
         return False
+    command = summary["safe_command"]
+    if summary.get("action") == fig_driver.ACTION_RUN_COMPILE:
+        return _compile_command_matches_fixture(command, name)
     if summary.get("action") == fig_driver.ACTION_RUN_ADJUDICATE:
-        return _adjudication_scaffold_is_safe(name, repo_root=repo_root)
+        return _adjudicate_command_matches_fixture(
+            command, name
+        ) and _adjudication_scaffold_is_safe(name, repo_root=repo_root)
+    if summary.get("action") == fig_driver.ACTION_RUN_FIG_LOOP:
+        return _fig_loop_command_matches_fixture(command, name, goal)
     if summary.get("action") == fig_driver.ACTION_RUN_EXPORT:
         return _export_is_safe(summary, name=name)
     return True
@@ -406,7 +454,9 @@ def run_workflow(
     for index in range(1, max_steps + 1):
         summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
         final_summary = summary
-        would_execute = _would_execute(summary, name=name, repo_root=repo_root)
+        would_execute = _would_execute(
+            summary, name=name, goal=goal, repo_root=repo_root
+        )
 
         if not execute:
             stop_reason = STOP_PLAN_ONLY if would_execute else _boundary_stop_reason(summary)

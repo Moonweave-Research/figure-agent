@@ -143,6 +143,56 @@ def test_execute_runs_compile_then_stops_at_host_critique(
     assert payload["steps"][1]["executed"] is False
 
 
+@pytest.mark.parametrize(
+    ("action", "safe_command"),
+    [
+        (
+            fig_driver.ACTION_RUN_COMPILE,
+            "bash scripts/compile.sh examples/other_demo/other_demo.tex",
+        ),
+        (
+            fig_driver.ACTION_RUN_ADJUDICATE,
+            "uv run python3 scripts/critique_adjudication.py scaffold other_demo",
+        ),
+        (
+            fig_driver.ACTION_RUN_FIG_LOOP,
+            "uv run python3 scripts/fig_loop.py other_demo --goal 'close loop' --json",
+        ),
+    ],
+)
+def test_runner_refuses_mismatched_fixture_commands(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    safe_command: str,
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [_driver_summary(action=action, safe_command=safe_command)],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == action
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
 def test_execute_stops_immediately_at_host_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
