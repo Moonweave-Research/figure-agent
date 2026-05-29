@@ -1,6 +1,6 @@
 # Issue 71C - Non-Critique Export And Closeout Rehearsal
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 71A
 
@@ -57,3 +57,11 @@ Out of scope:
    work?
 3. Did any safe mechanical state still require manual command chaining?
 4. Are generated artifacts excluded from the final diff?
+
+## Completion
+
+Completed in milestone:
+`docs/milestones/2026-05-29-non-critique-export-closeout-rehearsal.md`.
+
+The rehearsal found one driver/runner contract gap and split it into
+`docs/superpowers/issues/2026-05-29-issue-72-align-export-driver-runner-contract.md`.
