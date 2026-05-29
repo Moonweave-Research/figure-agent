@@ -1,6 +1,6 @@
 # Issue 71A - Real Fixture Baseline And Queue Freeze
 
-Status: proposed
+Status: completed
 
 Depends on: Issue 71 roadmap
 
@@ -59,3 +59,8 @@ Out of scope:
    work?
 4. Is the queue specific enough for a fresh agent to continue without another
    broad sweep?
+
+## Completion
+
+Completed in milestone:
+`docs/milestones/2026-05-29-real-fixture-production-readiness-baseline.md`.
