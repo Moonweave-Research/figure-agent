@@ -3206,6 +3206,27 @@ def test_status_explanation_marks_critique_not_required_as_non_blocking(
     assert result["critique_state"] == "NOT_REQUIRED"
 
 
+def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert result["stage"] == 4
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert explanation["first_blocker"]["code"] == "acceptance_not_declared"
+    assert explanation["first_blocker"]["category"] == "human_blocker"
+    assert explanation["first_blocker"]["manual"] is True
+    plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
+    assert "critique_not_required" in plugin_codes
+
+
 def test_status_explanation_prioritizes_not_authored_before_missing_export(
     tmp_path: Path,
 ) -> None:

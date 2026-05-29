@@ -1023,6 +1023,22 @@ def test_release_mode_reports_release_blocked_without_mutation(
     assert summary["safe_command"] is None
 
 
+def test_release_mode_surfaces_acceptance_not_declared_first_blocker(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert summary["status_explanation"]["first_blocker"]["code"] == (
+        "acceptance_not_declared"
+    )
+    assert "first blocker acceptance_not_declared" in summary["reason"]
+
+
 def test_release_mode_does_not_surface_not_accepted_export_as_executable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
