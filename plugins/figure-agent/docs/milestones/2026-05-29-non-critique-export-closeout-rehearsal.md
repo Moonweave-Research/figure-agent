@@ -67,7 +67,7 @@ uv run python3 scripts/fig_closeout.py fig5_floating_clip_mechanism --json
 - The fixture is `acceptance_state: NOT_ACCEPTED`, so the runner is following
   the conservative policy, but the driver output makes the action look runnable.
 
-This is not fixed inside Issue 71C. It is split into:
+This was split into and fixed by:
 `docs/superpowers/issues/2026-05-29-issue-72-align-export-driver-runner-contract.md`.
 
 ## Review Notes
@@ -91,5 +91,4 @@ This is not fixed inside Issue 71C. It is split into:
 - `claude plugin validate .` -> passed.
 - `claude plugin validate ../../.claude-plugin/marketplace.json` -> passed.
 
-No known Issue 71C fixture-closeout blocker remains. Issue 72 remains as a
-separate contract-alignment follow-up.
+No known Issue 71C fixture-closeout blocker remains.

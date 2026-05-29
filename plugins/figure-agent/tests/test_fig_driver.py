@@ -216,6 +216,7 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     synthetic_status.update(
         {
             "export_state": "MISSING",
+            "acceptance_state": "NOT_DECLARED",
             "release_ready": False,
             "status_explanation": {
                 "summary": "exports are missing.",
@@ -1020,6 +1021,80 @@ def test_release_mode_reports_release_blocked_without_mutation(
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert summary["may_execute"] is False
     assert summary["safe_command"] is None
+
+
+def test_release_mode_does_not_surface_not_accepted_export_as_executable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = {
+        "stage": 3,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "MISSING",
+        "acceptance_state": "NOT_ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": "exports/driver_demo.svg",
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+        "publication_gate_state": "HUMAN_ACCEPTANCE_REQUIRED",
+        "publication_gate_failures": [
+            {
+                "code": "missing_quality_audit",
+                "category": "quality_audit_stale",
+                "actor": "agent",
+                "message": "missing audit: QUALITY_AUDIT.md",
+                "required_action": "create QUALITY_AUDIT.md from the publication audit scaffold",
+            }
+        ],
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "acceptance_state is NOT_DECLARED" in summary["reason"]
+
+
+def test_polish_mode_does_not_surface_not_accepted_export_as_executable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    synthetic_status = {
+        "stage": 3,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "MISSING",
+        "acceptance_state": "NOT_ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": "exports/driver_demo.svg",
+        "workflow_ready": False,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+        "publication_gate_state": "HUMAN_ACCEPTANCE_REQUIRED",
+        "publication_gate_failures": [],
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert "acceptance_state is NOT_DECLARED" in summary["reason"]
 
 
 def test_release_mode_ignores_reference_calibrated_score_for_gate_selection(

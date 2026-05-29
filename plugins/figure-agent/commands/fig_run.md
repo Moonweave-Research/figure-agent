@@ -44,9 +44,11 @@ or malformed command stops as `not_executable_action`.
 
 `run_adjudicate` is allowed only for initial scaffold; existing adjudication
 files, including stale or invalid files, still require manual repair.
-`run_export` is allowed only for non-accepted draft fixtures with generated
-exports. Accepted fixtures, tracked-golden export state, closeout boundaries,
-`--force-golden`, and `--skip-critique` remain explicit manual actions.
+`run_export` is allowed only for draft fixtures whose acceptance has not yet
+been declared (`acceptance_state: NOT_DECLARED`) and whose generated exports
+are missing or stale. Accepted fixtures, explicitly not-accepted fixtures,
+tracked-golden export state, closeout boundaries, `--force-golden`, and
+`--skip-critique` remain explicit manual actions.
 `/fig_loop` is allowed because it is verify-only and writes bounded run evidence
 under `.scratch/fig-loop-runs/`. The runner always stops on `/fig_critique`
 because that is a host-vision operation, not a shell command.

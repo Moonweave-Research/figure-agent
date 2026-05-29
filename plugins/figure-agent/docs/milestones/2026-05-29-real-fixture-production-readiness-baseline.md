@@ -127,6 +127,14 @@ counted as failed production targets:
 - The queue is specific enough for the next agent to start 71B or 71C without a
   new broad sweep.
 
+Post-Issue 72 note: the original 71A baseline captured
+`fig5_floating_clip_mechanism` before the export driver/runner contract was
+aligned. Current driver behavior after Issue 72 is `release_blocked` in release
+mode and `polish_handoff_stop` in polish mode, both with
+`stop_boundary: accepted_or_final_ready_required`, because the fixture is
+`acceptance_state: NOT_ACCEPTED` and `/fig_run` auto-export remains limited to
+`NOT_DECLARED` draft fixtures.
+
 ## Verification
 
 - `git status --short --untracked-files=no` before this milestone write showed

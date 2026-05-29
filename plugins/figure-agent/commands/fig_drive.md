@@ -92,6 +92,13 @@ accepted_or_final_ready_required`; the `reason` names the first blocker code
 and required action. The driver remains dry-run and never sets `accepted`,
 writes `QUALITY_AUDIT.md`, forces golden state, or mutates provenance.
 
+For missing or stale generated exports, the driver only surfaces a runnable
+`run_export` command when the state also matches `/fig_run`'s draft-export
+execution policy: `acceptance_state: NOT_DECLARED`, `critique_state: FRESH |
+NOT_REQUIRED`, and `export_state: MISSING | STALE`. If acceptance is already
+declared as not accepted, release/polish mode returns a stop boundary instead
+of a command that the runner would later refuse.
+
 When present, `status_explanation` is copied from `/fig_status` without
 recomputing state. Its `first_blocker.code` is appended to `reason` so a
 caller can distinguish fixture freshness blockers (`render_stale`,

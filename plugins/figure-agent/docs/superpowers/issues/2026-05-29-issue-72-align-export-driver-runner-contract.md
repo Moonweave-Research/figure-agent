@@ -1,6 +1,6 @@
 # Issue 72 - Align Export Driver And Runner Contract
 
-Status: proposed
+Status: completed
 
 Discovered during: Issue 71C non-critique export and closeout rehearsal
 
@@ -83,3 +83,8 @@ Out of scope:
    as a generic draft fixture?
 4. Is the next action wording clear enough for an operator to continue without
    guessing?
+
+## Completion
+
+Completed in milestone:
+`docs/milestones/2026-05-29-export-driver-runner-contract-alignment.md`.
