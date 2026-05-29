@@ -22,6 +22,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
+from driver_actor import required_actor_for_driver_summary  # noqa: E402
 from fig_run_records import write_run_journal  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -263,30 +264,10 @@ def _evidence_refs(summary: dict[str, Any], final_stop_reason: str) -> list[str]
 
 
 def _required_actor(summary: dict[str, Any], final_stop_reason: str) -> str:
-    action = summary.get("action")
-    stop_boundary = summary.get("stop_boundary")
-    if stop_boundary in {fig_driver.STOP_REFERENCE_MISSING, fig_driver.STOP_SEMANTIC_BACKPORT}:
-        return "workflow_agent"
-    if (
-        action == fig_driver.ACTION_RUN_CRITIQUE
-        or stop_boundary == fig_driver.STOP_HOST_LLM_CRITIQUE
-    ):
-        return "host_llm"
-    if action == fig_driver.ACTION_HUMAN_GATE_STOP or stop_boundary in {
-        fig_driver.STOP_HUMAN_GATE,
-        fig_driver.STOP_AMBIGUOUS_PATCH,
-    }:
-        return "human"
-    if action == fig_driver.ACTION_RELEASE_BLOCKED or stop_boundary in {
-        fig_driver.STOP_FORCE_GOLDEN,
-        fig_driver.STOP_ACCEPTED_OR_FINAL_READY,
-    }:
-        return "release_operator"
-    if action == fig_driver.ACTION_POLISH_HANDOFF_STOP:
-        return "svg_editor"
-    if final_stop_reason == STOP_HOST_BOUNDARY:
-        return "host_llm"
-    return "workflow_agent"
+    return required_actor_for_driver_summary(
+        summary,
+        final_stop_reason=final_stop_reason,
+    )
 
 
 def _blocking_reason(

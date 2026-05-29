@@ -19,6 +19,7 @@ def _summary(
     stop_boundary: str | None,
     first_blocker: str,
     safe_command: str | None = None,
+    blocking_source: str | None = None,
 ) -> dict[str, Any]:
     return {
         "fixture": name,
@@ -39,6 +40,10 @@ def _summary(
                 "category": "fixture_freshness",
                 "manual": False,
             }
+        },
+        "next_action_summary": {
+            "blocking_source": blocking_source or stop_boundary or "driver.action",
+            "requires_human": action in {"human_gate_stop", "release_blocked"},
         },
     }
 
@@ -86,8 +91,19 @@ def test_build_queue_json_rows_and_summaries(
     assert queue["schema"] == "figure-agent.fixture-driver-queue.v1"
     assert [row["fixture"] for row in queue["rows"]] == ["alpha", "beta"]
     assert queue["rows"][0]["safe_command"] == "/fig_critique alpha"
+    assert queue["rows"][0]["required_actor"] == "host_llm"
+    assert queue["rows"][0]["blocking_source"] == "host_llm_critique_required"
+    assert queue["rows"][0]["requires_human"] is False
     assert queue["summary"]["total"] == 2
     assert queue["summary"]["by_action"] == {"release_blocked": 1, "run_critique": 1}
+    assert queue["summary"]["by_required_actor"] == {
+        "host_llm": 1,
+        "release_operator": 1,
+    }
+    assert queue["summary"]["by_blocking_source"] == {
+        "accepted_or_final_ready_required": 1,
+        "host_llm_critique_required": 1,
+    }
     assert queue["summary"]["by_stop_boundary"] == {
         "accepted_or_final_ready_required": 1,
         "host_llm_critique_required": 1,
@@ -146,6 +162,9 @@ def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
             "acceptance_state": None,
             "publication_gate_state": None,
             "release_ready": None,
+            "required_actor": "workflow_agent",
+            "blocking_source": "fixture_not_found",
+            "requires_human": False,
             "error": "examples/missing/ not found",
         }
     ]
@@ -170,6 +189,9 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
                 "acceptance_state": "NOT_DECLARED",
                 "publication_gate_state": "NOT_APPLICABLE",
                 "release_ready": False,
+                "required_actor": "host_llm",
+                "blocking_source": "host_llm_critique_required",
+                "requires_human": False,
             }
         ],
         "summary": {
@@ -178,14 +200,19 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
             "by_action": {"run_critique": 1},
             "by_stop_boundary": {"host_llm_critique_required": 1},
             "by_first_blocker": {"critique_stale": 1},
+            "by_required_actor": {"host_llm": 1},
+            "by_blocking_source": {"host_llm_critique_required": 1},
         },
     }
 
     fig_queue.print_table(queue)
 
     out = capsys.readouterr().out
-    assert "fixture action stop_boundary first_blocker safe_command" in out
-    assert "alpha run_critique host_llm_critique_required critique_stale /fig_critique alpha" in out
+    assert "fixture actor action stop_boundary first_blocker safe_command" in out
+    assert (
+        "alpha host_llm run_critique host_llm_critique_required "
+        "critique_stale /fig_critique alpha"
+    ) in out
     assert "summary total=1 errors=0" in out
 
 

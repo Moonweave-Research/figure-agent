@@ -12,6 +12,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
+from driver_actor import (  # noqa: E402
+    blocking_source_for_driver_summary,
+    required_actor_for_driver_summary,
+    requires_human_for_driver_summary,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
@@ -63,6 +68,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         "acceptance_state": status.get("acceptance_state"),
         "publication_gate_state": status.get("publication_gate_state"),
         "release_ready": status.get("release_ready"),
+        "required_actor": required_actor_for_driver_summary(summary),
+        "blocking_source": blocking_source_for_driver_summary(summary),
+        "requires_human": requires_human_for_driver_summary(summary),
     }
 
 
@@ -80,6 +88,9 @@ def _error_row(name: str, *, mode: str, stop_boundary: str, error: str) -> dict[
         "acceptance_state": None,
         "publication_gate_state": None,
         "release_ready": None,
+        "required_actor": "workflow_agent",
+        "blocking_source": stop_boundary,
+        "requires_human": False,
         "error": error,
     }
 
@@ -100,6 +111,8 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "by_action": _count(rows, "action"),
         "by_stop_boundary": _count(rows, "stop_boundary"),
         "by_first_blocker": _count(rows, "first_blocker"),
+        "by_required_actor": _count(rows, "required_actor"),
+        "by_blocking_source": _count(rows, "blocking_source"),
     }
 
 
@@ -157,13 +170,14 @@ def _cell(value: Any) -> str:
 
 
 def print_table(queue: dict[str, Any]) -> None:
-    print("fixture action stop_boundary first_blocker safe_command")
+    print("fixture actor action stop_boundary first_blocker safe_command")
     for row in queue.get("rows", []):
         print(
             " ".join(
                 _cell(row.get(key))
                 for key in (
                     "fixture",
+                    "required_actor",
                     "action",
                     "stop_boundary",
                     "first_blocker",

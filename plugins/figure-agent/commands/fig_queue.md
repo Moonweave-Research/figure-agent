@@ -16,8 +16,9 @@ uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
 dry-run driver selector once per fixture, copies the selected `action`,
-`stop_boundary`, `safe_command`, and `/fig_status` state fields into a compact
-row, then summarizes counts by action, stop boundary, and first blocker.
+`stop_boundary`, `safe_command`, required actor, blocker source, and
+`/fig_status` state fields into a compact row, then summarizes counts by
+action, stop boundary, first blocker, required actor, and blocking source.
 
 The command is read-only. It never compiles, critiques, adjudicates, loops,
 exports, patches, polishes, accepts, stages, commits, or forces golden state.
@@ -51,6 +52,9 @@ Each row includes:
 | `stop_boundary` | copied from `/fig_drive`, or a controlled error boundary |
 | `first_blocker` | `status_explanation.first_blocker.code` when available |
 | `safe_command` | copied from `/fig_drive`; still advisory, not executed |
+| `required_actor` | `workflow_agent`, `host_llm`, `human`, `release_operator`, or `svg_editor` |
+| `blocking_source` | compact source from `next_action_summary.blocking_source`, stop boundary, or driver action |
+| `requires_human` | copied from `next_action_summary.requires_human` when available |
 | `render_state` | compact status field |
 | `critique_state` | compact status field |
 | `export_state` | compact status field |
@@ -66,6 +70,8 @@ Each row includes:
 - `by_action`
 - `by_stop_boundary`
 - `by_first_blocker`
+- `by_required_actor`
+- `by_blocking_source`
 
 The queue does not reinterpret driver policy. If a row looks surprising, inspect
 the corresponding single-fixture `/fig_drive <name> --mode <mode> --goal
