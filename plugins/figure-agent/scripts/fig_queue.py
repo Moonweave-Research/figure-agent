@@ -262,7 +262,11 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "reason": reason,
             "allowed_scope": ["read-only closeout inspection"],
             "forbidden_scope": common_forbidden,
-            "closeout_checks": ["rerun /fig_queue after resolving the blocked row"],
+            "closeout_checks": [
+                "read JSON output even when exit code is 1",
+                "follow closeout.next_action",
+                "rerun /fig_queue after resolving the blocked row",
+            ],
         }
     return {
         "schema": OPERATOR_HANDOFF_SCHEMA,

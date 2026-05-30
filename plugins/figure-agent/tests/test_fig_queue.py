@@ -450,7 +450,11 @@ def test_build_queue_can_include_command_plan(
             "accepted/golden mutation",
             "publication state mutation",
         ],
-        "closeout_checks": ["rerun /fig_queue after resolving the blocked row"],
+        "closeout_checks": [
+            "read JSON output even when exit code is 1",
+            "follow closeout.next_action",
+            "rerun /fig_queue after resolving the blocked row",
+        ],
     }
     assert queue["command_plan"]["blocked"][1]["operator_handoff"] == {
         "schema": "figure-agent.queue-operator-handoff.v1",
