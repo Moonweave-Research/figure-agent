@@ -14,6 +14,8 @@ uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --json
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --action run_fig_loop
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --commands
 ```
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
@@ -41,6 +43,23 @@ selection or fixture scanning. Supported filters:
 - `--first-blocker <status-first-blocker-code>`
 - `--blocking-source <next-action-blocking-source>`
 
+Use `--command-plan` to add a read-only `command_plan` object to JSON output.
+Use `--commands` to print only executable deterministic workflow commands, one
+per line. Neither mode executes anything.
+
+The command plan treats a row as executable only when all of these are true:
+
+- `required_actor == workflow_agent`
+- `requires_human == false`
+- `safe_command` is present
+- `stop_boundary` is empty
+- `action` is one of `/fig_run`'s deterministic allowlist:
+  `run_compile`, `run_adjudicate`, `run_export`, or `run_fig_loop`
+
+Host critique, human review, release/golden approval, SVG polish handoff,
+missing commands, non-allowlisted actions, and rows with stop boundaries remain
+blocked and visible in the command plan.
+
 ## Output JSON contract
 
 `schema: figure-agent.fixture-driver-queue.v1` with these top-level fields:
@@ -54,6 +73,7 @@ selection or fixture scanning. Supported filters:
 | `unfiltered_total` | int | row count before filters are applied |
 | `rows` | list | one compact row per fixture or controlled error |
 | `summary` | object | total/error counts plus grouped counts |
+| `command_plan` | object | present only with `--command-plan`, `--commands`, or API opt-in |
 
 Each row includes:
 
@@ -85,6 +105,16 @@ Each row includes:
 - `by_first_blocker`
 - `by_required_actor`
 - `by_blocking_source`
+
+`command_plan` includes:
+
+| Field | Notes |
+|---|---|
+| `schema` | `figure-agent.fixture-command-plan.v1` |
+| `executable_count` | number of rows with safe deterministic commands |
+| `blocked_count` | number of rows excluded from executable commands |
+| `executable` | fixture/action/safe_command/required_actor records |
+| `blocked` | fixture/action/actor/blocking_source/stop_boundary/reason records |
 
 The queue does not reinterpret driver policy. If a row looks surprising, inspect
 the corresponding single-fixture `/fig_drive <name> --mode <mode> --goal

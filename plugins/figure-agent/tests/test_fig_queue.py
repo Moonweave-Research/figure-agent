@@ -340,3 +340,130 @@ def test_main_json_accepts_filter_flags(
     }
     assert payload["unfiltered_total"] == 1
     assert payload["rows"][0]["fixture"] == "alpha"
+
+
+def test_build_queue_can_include_command_plan(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+    _write_fixture(tmp_path, "gamma")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "alpha":
+            return _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary=None,
+                first_blocker="acceptance_not_declared",
+                safe_command="uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+            )
+        if name == "beta":
+            return _summary(
+                name,
+                action="run_export",
+                stop_boundary="closeout_required",
+                first_blocker="export_missing",
+                safe_command="uv run python3 scripts/run_export.py beta",
+            )
+        return _summary(
+            name,
+            action="run_critique",
+            stop_boundary="host_llm_critique_required",
+            first_blocker="critique_stale",
+            safe_command="/fig_critique gamma",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    assert queue["command_plan"]["schema"] == "figure-agent.fixture-command-plan.v1"
+    assert queue["command_plan"]["executable_count"] == 1
+    assert queue["command_plan"]["blocked_count"] == 2
+    assert queue["command_plan"]["executable"] == [
+        {
+            "fixture": "alpha",
+            "action": "run_fig_loop",
+            "safe_command": "uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+            "required_actor": "workflow_agent",
+        }
+    ]
+    assert [row["fixture"] for row in queue["command_plan"]["blocked"]] == [
+        "beta",
+        "gamma",
+    ]
+    assert queue["command_plan"]["blocked"][0]["reason"] == "stop_boundary:closeout_required"
+    assert queue["command_plan"]["blocked"][1]["reason"] == "required_actor:host_llm"
+
+
+def test_command_plan_uses_filtered_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary=None,
+            first_blocker="acceptance_not_declared",
+            safe_command=f"uv run python3 scripts/fig_loop.py {name} --goal triage --json",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        filters={"action": "run_critique"},
+        include_command_plan=True,
+    )
+
+    assert queue["unfiltered_total"] == 2
+    assert queue["rows"] == []
+    assert queue["command_plan"]["executable"] == []
+    assert queue["command_plan"]["blocked"] == []
+
+
+def test_main_commands_prints_executable_commands_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "alpha":
+            return _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary=None,
+                first_blocker="acceptance_not_declared",
+                safe_command="uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+            )
+        return _summary(
+            name,
+            action="human_gate_stop",
+            stop_boundary="human_gate_required",
+            first_blocker="not_accepted",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert fig_queue.main(
+        ["--mode", "review", "--goal", "triage", "--commands"],
+        repo_root=tmp_path,
+    ) == 0
+
+    assert capsys.readouterr().out.splitlines() == [
+        "uv run python3 scripts/fig_loop.py alpha --goal triage --json"
+    ]

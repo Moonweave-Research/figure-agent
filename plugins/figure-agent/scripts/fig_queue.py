@@ -20,6 +20,7 @@ from driver_actor import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
+COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
 _FILTER_KEYS = (
     "required_actor",
     "action",
@@ -33,6 +34,14 @@ _ACTORS = (
     "human",
     "release_operator",
     "svg_editor",
+)
+_EXECUTABLE_ACTIONS = frozenset(
+    {
+        fig_driver.ACTION_RUN_ADJUDICATE,
+        fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_EXPORT,
+        fig_driver.ACTION_RUN_FIG_LOOP,
+    }
 )
 
 
@@ -153,6 +162,58 @@ def _filter_rows(
     ]
 
 
+def _blocked_reason(row: dict[str, Any]) -> str | None:
+    actor = row.get("required_actor")
+    if actor != "workflow_agent":
+        return f"required_actor:{_cell(actor)}"
+    if row.get("requires_human") is True:
+        return "requires_human:true"
+    safe_command = row.get("safe_command")
+    if not isinstance(safe_command, str) or not safe_command:
+        return "safe_command:missing"
+    stop_boundary = row.get("stop_boundary")
+    if isinstance(stop_boundary, str) and stop_boundary:
+        return f"stop_boundary:{stop_boundary}"
+    action = row.get("action")
+    if action not in _EXECUTABLE_ACTIONS:
+        return f"action:not_executable:{_cell(action)}"
+    return None
+
+
+def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    executable: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
+    for row in rows:
+        reason = _blocked_reason(row)
+        if reason is None:
+            executable.append(
+                {
+                    "fixture": row.get("fixture"),
+                    "action": row.get("action"),
+                    "safe_command": row.get("safe_command"),
+                    "required_actor": row.get("required_actor"),
+                }
+            )
+            continue
+        blocked.append(
+            {
+                "fixture": row.get("fixture"),
+                "action": row.get("action"),
+                "required_actor": row.get("required_actor"),
+                "blocking_source": row.get("blocking_source"),
+                "stop_boundary": row.get("stop_boundary"),
+                "reason": reason,
+            }
+        )
+    return {
+        "schema": COMMAND_PLAN_SCHEMA,
+        "executable_count": len(executable),
+        "blocked_count": len(blocked),
+        "executable": executable,
+        "blocked": blocked,
+    }
+
+
 def build_queue(
     *,
     repo_root: Path = REPO_ROOT,
@@ -160,6 +221,7 @@ def build_queue(
     goal: str,
     fixtures: list[str] | None,
     filters: dict[str, str | None] | None = None,
+    include_command_plan: bool = False,
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for name in _fixture_names(repo_root, fixtures):
@@ -194,7 +256,7 @@ def build_queue(
         rows.append(_row_from_summary(driver_summary, mode=mode))
     active_filters = _active_filters(filters)
     filtered_rows = _filter_rows(rows, active_filters)
-    return {
+    queue = {
         "schema": SCHEMA,
         "mode": mode,
         "goal": goal,
@@ -203,6 +265,9 @@ def build_queue(
         "rows": filtered_rows,
         "summary": _summary(filtered_rows),
     }
+    if include_command_plan:
+        queue["command_plan"] = build_command_plan(filtered_rows)
+    return queue
 
 
 def _cell(value: Any) -> str:
@@ -245,6 +310,8 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--stop-boundary")
     parser.add_argument("--first-blocker")
     parser.add_argument("--blocking-source")
+    parser.add_argument("--command-plan", action="store_true")
+    parser.add_argument("--commands", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
@@ -260,8 +327,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             "first_blocker": args.first_blocker,
             "blocking_source": args.blocking_source,
         },
+        include_command_plan=args.command_plan or args.commands,
     )
-    if args.json:
+    if args.commands:
+        command_plan = queue["command_plan"]
+        for item in command_plan["executable"]:
+            print(item["safe_command"])
+    elif args.json:
         print(json.dumps(queue, indent=2, sort_keys=True))
     else:
         print_table(queue)
