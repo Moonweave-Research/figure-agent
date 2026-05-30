@@ -1,6 +1,6 @@
 # Issue 89 - v0.9 Operator-Grade Release Candidate
 
-Status: in progress
+Status: completed for PR #80; pending merge
 
 Depends on:
 

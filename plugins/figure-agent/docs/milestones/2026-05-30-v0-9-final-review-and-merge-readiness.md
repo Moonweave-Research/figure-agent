@@ -30,7 +30,7 @@ python3 scripts/plugin_package_audit.py /tmp/figure-agent-package-audit.U2GqZH -
 
 Results:
 
-- Full pytest: `1469 passed, 1 skipped, 1 xfailed, 6 warnings`.
+- Full pytest: `1471 passed, 1 skipped, 1 xfailed, 6 warnings`.
 - Ruff: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace passed.
@@ -79,6 +79,42 @@ package metadata milestone.
 Post-review status: clean. The package candidate is small enough and free of
 generated package junk; the v0.9 operator playbook gives a single command
 sequence for single-fixture, queue, host critique, closeout, and release gates.
+
+## Additional Post-PR Critical Review
+
+After PR #80 was marked ready for review, three more defects were found and
+fixed:
+
+1. Issue 89 status still said `in progress` even though 89A-E were completed
+   and the PR was ready. The issue status now says `completed for PR #80;
+   pending merge`, and release-contract coverage rejects stale `Status: in
+   progress` for the v0.9 issue set.
+2. `svg_polish_delta_command()` shell-quoted the command but embedded fixture
+   names directly inside Python `-c` source. Fixture names containing an
+   apostrophe could break the generated Python code. The helper now uses
+   `repr` for the embedded path, with regression coverage.
+3. Queue command-plan blocked reasons prioritized missing `safe_command` before
+   explicit `stop_boundary`. Stop boundaries now win, so an operator sees the
+   actual boundary reason first; regression coverage pins
+   `mode_forbidden_action`.
+
+Post-fix verification:
+
+```bash
+uv run pytest -q
+uv run ruff check .
+git diff --check
+claude plugin validate .claude-plugin/plugin.json
+claude plugin validate .
+claude plugin validate ../../.claude-plugin/marketplace.json
+```
+
+Results:
+
+- Full pytest: `1471 passed, 1 skipped, 1 xfailed, 6 warnings`.
+- Ruff: clean.
+- Diff whitespace check: clean.
+- Claude plugin validation: manifest, plugin directory, and marketplace passed.
 
 ## Remaining Risks
 

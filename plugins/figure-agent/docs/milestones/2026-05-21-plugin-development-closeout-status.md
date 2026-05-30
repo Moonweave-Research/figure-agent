@@ -47,7 +47,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1469 passed, 1 skipped, 1 xfailed, 6 warnings`.
+- Full test suite: `1471 passed, 1 skipped, 1 xfailed, 6 warnings`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.

@@ -236,12 +236,14 @@ def test_v0_9_issue_statuses_are_mainline_ready() -> None:
         "Issue 64": "2026-05-28-issue-64-loop-summary-and-export-closeout-ux.md",
         "Issue 70": "2026-05-29-issue-70-operator-grade-guided-autonomy.md",
         "Issue 88": "2026-05-30-issue-88-queue-operator-ergonomics-and-closeout.md",
+        "Issue 89": "2026-05-30-issue-89-v0-9-operator-grade-release-candidate.md",
     }
 
     for issue_name, file_name in issue_files.items():
         text = (REPO_ROOT / "docs" / "superpowers" / "issues" / file_name).read_text()
         assert "implemented in branch" not in text, issue_name
         assert "Status: proposed" not in text, issue_name
+        assert "Status: in progress" not in text, issue_name
         assert "Status: completed" in text or "Status: implemented" in text, issue_name
 
 

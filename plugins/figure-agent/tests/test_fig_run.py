@@ -203,6 +203,17 @@ def test_driver_command_helpers_quote_fixture_names() -> None:
     )
 
 
+def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
+    command = fig_driver_commands.svg_polish_delta_command("runner's demo")
+
+    parts = fig_run._command_parts(command)
+
+    assert parts is not None
+    assert parts[:4] == ["PYTHONPATH=scripts", "uv", "run", "python3"]
+    assert parts[4] == "-c"
+    assert "Path(\"examples/runner's demo\")" in parts[5]
+
+
 @pytest.mark.parametrize(
     ("action", "safe_command"),
     [

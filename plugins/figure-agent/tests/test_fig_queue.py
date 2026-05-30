@@ -501,6 +501,24 @@ def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> Non
     )
 
 
+def test_command_plan_prioritizes_stop_boundary_over_missing_command() -> None:
+    plan = fig_queue.build_command_plan(
+        [
+            {
+                "fixture": "alpha",
+                "action": "run_fig_loop",
+                "required_actor": "workflow_agent",
+                "safe_command": None,
+                "stop_boundary": "mode_forbidden_action",
+                "blocking_source": "mode_forbidden_action",
+                "requires_human": False,
+            }
+        ]
+    )
+
+    assert plan["blocked"][0]["reason"] == "stop_boundary:mode_forbidden_action"
+
+
 def test_command_plan_blocked_handoff_covers_human_and_release_rows(
     tmp_path: Path,
 ) -> None:

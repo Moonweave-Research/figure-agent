@@ -170,12 +170,12 @@ def _blocked_reason(row: dict[str, Any]) -> str | None:
         return f"required_actor:{_cell(actor)}"
     if row.get("requires_human") is True:
         return "requires_human:true"
-    safe_command = row.get("safe_command")
-    if not isinstance(safe_command, str) or not safe_command:
-        return "safe_command:missing"
     stop_boundary = row.get("stop_boundary")
     if isinstance(stop_boundary, str) and stop_boundary:
         return f"stop_boundary:{stop_boundary}"
+    safe_command = row.get("safe_command")
+    if not isinstance(safe_command, str) or not safe_command:
+        return "safe_command:missing"
     action = row.get("action")
     if action not in _EXECUTABLE_ACTIONS:
         return f"action:not_executable:{_cell(action)}"

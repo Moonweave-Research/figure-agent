@@ -38,9 +38,10 @@ def svg_polish_executor_write_command(name: str) -> str:
 
 
 def svg_polish_delta_command(name: str) -> str:
+    fixture_path = f"examples/{name}"
     script = (
         "from pathlib import Path; "
         "from svg_polish_delta import build_svg_polish_delta_pack; "
-        f"build_svg_polish_delta_pack(Path('examples/{name}'), base_dir=Path('.'))"
+        f"build_svg_polish_delta_pack(Path({fixture_path!r}), base_dir=Path('.'))"
     )
     return f"PYTHONPATH=scripts uv run python3 -c {_q(script)}"
