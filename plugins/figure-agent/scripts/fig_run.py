@@ -44,6 +44,7 @@ STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
+STOP_REPEATED_ACTION = "repeated_executable_action"
 PATCH_DEFERRED = "patch_source_mutation_deferred_until_70c"
 
 
@@ -251,6 +252,8 @@ def _list_from_summary(summary: dict[str, Any], key: str, fallback: list[str]) -
 
 
 def _evidence_refs(summary: dict[str, Any], final_stop_reason: str) -> list[str]:
+    if final_stop_reason == STOP_REPEATED_ACTION:
+        return [f"runner.stop_reason:{STOP_REPEATED_ACTION}"]
     refs = _list_from_summary(summary, "evidence_refs", [])
     if refs:
         return refs
@@ -275,6 +278,11 @@ def _blocking_reason(
     final_stop_reason: str,
     last_step: dict[str, Any] | None,
 ) -> str:
+    if final_stop_reason == STOP_REPEATED_ACTION:
+        return (
+            "same executable action and command was selected again after a "
+            "successful run; stopped to avoid no-progress replay"
+        )
     reason = summary.get("reason")
     if not isinstance(reason, str) or not reason:
         reason = final_stop_reason
@@ -288,8 +296,12 @@ def _blocking_reason(
 def _closeout_checks(final_stop_reason: str, summary: dict[str, Any]) -> list[str]:
     if final_stop_reason == STOP_COMMAND_FAILED:
         return ["inspect command stderr_tail", "rerun live /fig_status"]
-    if final_stop_reason == STOP_MAX_STEPS:
-        return ["inspect repeated action", "rerun live /fig_drive"]
+    if final_stop_reason in {STOP_MAX_STEPS, STOP_REPEATED_ACTION}:
+        return [
+            "inspect repeated action",
+            "rerun live /fig_status",
+            "rerun live /fig_drive",
+        ]
     stop_boundary = summary.get("stop_boundary")
     if stop_boundary == fig_driver.STOP_REFERENCE_MISSING:
         return [
@@ -431,6 +443,7 @@ def run_workflow(
     executed_count = 0
     final_summary: dict[str, Any] | None = None
     final_stop_reason = STOP_MAX_STEPS
+    executed_signatures: set[tuple[str, str]] = set()
 
     for index in range(1, max_steps + 1):
         summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
@@ -468,8 +481,23 @@ def run_workflow(
             break
 
         command = summary["safe_command"]
+        signature = (summary["action"], command)
+        if signature in executed_signatures:
+            steps.append(
+                _step_payload(
+                    index=index,
+                    summary=summary,
+                    would_execute=False,
+                    executed=False,
+                    stop_reason=STOP_REPEATED_ACTION,
+                )
+            )
+            final_stop_reason = STOP_REPEATED_ACTION
+            break
+
         result = _run_command(command, repo_root=repo_root)
         executed_count += 1
+        executed_signatures.add(signature)
         stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
         steps.append(
             _step_payload(

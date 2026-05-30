@@ -151,6 +151,9 @@ action is `patch_handoff_stop`, the handoff reports
   allowlisted action failed its extra safety predicate.
 - `command_failed` — an executed command returned non-zero.
 - `complete` — driver selected `complete`.
+- `repeated_executable_action` — a successful command was followed by the same
+  driver action and shell command again, so the runner stopped instead of
+  repeating a no-progress loop.
 - `max_steps_exceeded` — the runner hit the safety cap before state advanced to
   a boundary.
 

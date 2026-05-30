@@ -904,22 +904,31 @@ def test_command_failure_stops_without_requery(
     assert "compile failed" in handoff["blocking_reason"]
 
 
-def test_max_steps_exceeded_for_repeated_executable_action(
+def test_stops_after_repeated_executable_command_without_progress(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_driver_sequence(
         monkeypatch,
         [
             _driver_summary(
-                action=fig_driver.ACTION_RUN_COMPILE,
-                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
             )
         ],
     )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(0, "", "")
+
     monkeypatch.setattr(
         fig_run,
         "_run_command",
-        lambda command, *, repo_root: fig_run.CommandResult(0, "", ""),
+        _fake_run,
     )
 
     payload = fig_run.run_workflow(
@@ -931,13 +940,25 @@ def test_max_steps_exceeded_for_repeated_executable_action(
         repo_root=tmp_path,
     )
 
-    assert payload["executed_count"] == 2
-    assert payload["final_stop_reason"] == "max_steps_exceeded"
+    assert commands == [
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    ]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == "repeated_executable_action"
     assert len(payload["steps"]) == 2
+    assert payload["steps"][0]["executed"] is True
+    assert payload["steps"][1]["executed"] is False
+    assert payload["steps"][1]["would_execute"] is False
     handoff = payload["boundary_handoff"]
     assert handoff["required_actor"] == "workflow_agent"
-    assert handoff["action"] == fig_driver.ACTION_RUN_COMPILE
-    assert handoff["closeout_checks"] == ["inspect repeated action", "rerun live /fig_drive"]
+    assert handoff["action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert "same executable action and command" in handoff["blocking_reason"]
+    assert handoff["closeout_checks"] == [
+        "inspect repeated action",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+    assert "runner.stop_reason:repeated_executable_action" in handoff["evidence_refs"]
     assert "command" not in handoff["continuation_guidance"]
 
 
