@@ -81,6 +81,9 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
   - completed/no-op.
 - Any surprising row must become a narrow defect issue before release.
 
+Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
+`docs/milestones/2026-05-30-whole-corpus-release-smoke.md`.
+
 ### 89D - Release Notes And Operator Playbook
 
 - Write release notes for the operator-grade workflow.
