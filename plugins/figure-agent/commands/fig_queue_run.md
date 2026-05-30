@@ -66,7 +66,7 @@ blocked command-plan rows and will not be attempted.
 | `filters` | active queue filters |
 | `queue` | source queue summary plus command plan |
 | `runs` | one record per attempted fixture |
-| `summary` | planned executable, planned blocked, attempted, executed command, failed, and blocked counts |
+| `summary` | planned executable, planned blocked, attempted, unattempted executable, executed command, failed, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
 also include the embedded `/fig_run` result so the operator can inspect the live

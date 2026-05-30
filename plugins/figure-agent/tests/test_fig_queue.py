@@ -209,12 +209,12 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
 
     out = capsys.readouterr().out
     assert (
-        "fixture actor action stop_boundary first_blocker next_step next_command"
+        "fixture\tactor\taction\tstop_boundary\tfirst_blocker\tnext_step\tnext_command"
         in out
     )
     assert (
-        "alpha host_llm run_critique host_llm_critique_required "
-        "critique_stale Refresh host-vision critique for this fixture. "
+        "alpha\thost_llm\trun_critique\thost_llm_critique_required\t"
+        "critique_stale\tRefresh host-vision critique for this fixture.\t"
         "/fig_critique alpha"
     ) in out
     assert "summary total=1 errors=0" in out
@@ -479,6 +479,26 @@ def test_build_queue_can_include_command_plan(
             "rerun /fig_queue",
         ],
     }
+
+
+def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> None:
+    plan = fig_queue.build_command_plan(
+        [
+            {
+                "fixture": "beta demo",
+                "action": "run_export",
+                "required_actor": "workflow_agent",
+                "safe_command": "uv run python3 scripts/run_export.py 'beta demo'",
+                "stop_boundary": "closeout_required",
+                "blocking_source": "closeout_required",
+                "requires_human": False,
+            }
+        ]
+    )
+
+    assert plan["blocked"][0]["operator_handoff"]["command"] == (
+        "uv run python3 scripts/fig_closeout.py 'beta demo' --json"
+    )
 
 
 def test_command_plan_blocked_handoff_covers_human_and_release_rows(

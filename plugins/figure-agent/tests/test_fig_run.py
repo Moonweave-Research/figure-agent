@@ -10,6 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
+import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
 
 
@@ -141,6 +142,65 @@ def test_execute_runs_compile_then_stops_at_host_critique(
     assert payload["steps"][0]["executed"] is True
     assert payload["steps"][0]["returncode"] == 0
     assert payload["steps"][1]["executed"] is False
+
+
+def test_runner_accepts_quoted_fixture_name_commands(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    name = "runner demo"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh 'examples/runner demo/runner demo.tex'",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        name,
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == ["bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == "complete"
+
+
+def test_driver_command_helpers_quote_fixture_names() -> None:
+    assert fig_driver_commands.compile_command("runner demo") == (
+        "bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"
+    )
+    assert fig_driver_commands.adjudicate_command("runner demo") == (
+        "uv run python3 scripts/critique_adjudication.py scaffold 'runner demo'"
+    )
+    assert fig_driver_commands.export_command("runner demo") == (
+        "uv run python3 scripts/run_export.py 'runner demo'"
+    )
+    assert fig_driver_commands.fig_loop_command("runner demo", "close loop") == (
+        "uv run python3 scripts/fig_loop.py 'runner demo' --goal 'close loop' --json"
+    )
+    assert fig_driver_commands.svg_polish_executor_dry_run_command("runner demo") == (
+        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --dry-run"
+    )
+    assert fig_driver_commands.svg_polish_executor_write_command("runner demo") == (
+        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --write"
+    )
+    assert fig_driver_commands.svg_polish_delta_command("runner demo").startswith(
+        "PYTHONPATH=scripts uv run python3 -c "
+    )
 
 
 @pytest.mark.parametrize(
@@ -372,6 +432,9 @@ def test_export_with_stop_boundary_is_not_executed(
     assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+    assert payload["boundary_handoff"]["closeout_checks"][0] == (
+        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+    )
 
 
 @pytest.mark.parametrize(

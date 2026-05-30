@@ -85,6 +85,7 @@ def test_plan_only_reports_planned_runs_without_executing(
         "executed_commands": 0,
         "failed": 0,
         "blocked": 1,
+        "unattempted_executable": 0,
     }
     assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
     assert all(run["would_execute"] is True for run in payload["runs"])
@@ -168,6 +169,7 @@ def test_execute_respects_max_fixtures(
     assert [run["fixture"] for run in payload["runs"]] == ["alpha"]
     assert payload["summary"]["attempted"] == 1
     assert payload["summary"]["planned_executable"] == 2
+    assert payload["summary"]["unattempted_executable"] == 1
 
 
 def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:

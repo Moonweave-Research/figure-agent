@@ -79,13 +79,16 @@ def _summary(
             executed_commands += executed_count
         if result.get("final_stop_reason") == fig_run.STOP_COMMAND_FAILED:
             failed += 1
+    planned_executable = int(command_plan.get("executable_count", 0))
+    attempted = len(runs)
     return {
-        "planned_executable": int(command_plan.get("executable_count", 0)),
+        "planned_executable": planned_executable,
         "planned_blocked": int(command_plan.get("blocked_count", 0)),
-        "attempted": len(runs),
+        "attempted": attempted,
         "executed_commands": executed_commands,
         "failed": failed,
         "blocked": int(command_plan.get("blocked_count", 0)),
+        "unattempted_executable": max(planned_executable - attempted, 0),
     }
 
 

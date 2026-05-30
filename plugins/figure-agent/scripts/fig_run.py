@@ -329,6 +329,16 @@ def _closeout_checks(final_stop_reason: str, summary: dict[str, Any]) -> list[st
             "rerun live /fig_drive",
         ]
     if action == fig_driver.ACTION_RUN_EXPORT:
+        if summary.get("stop_boundary") == fig_driver.STOP_CLOSEOUT:
+            fixture = summary.get("fixture")
+            if isinstance(fixture, str) and fixture:
+                quoted_fixture = shlex.quote(fixture)
+                return [
+                    f"run uv run python3 scripts/fig_closeout.py {quoted_fixture} --json",
+                    "read JSON output even when exit code is 1",
+                    "follow closeout.next_action",
+                    "rerun live /fig_drive",
+                ]
         return ["complete closeout/export step", "rerun live /fig_status"]
     if action == fig_driver.ACTION_RUN_FIG_LOOP:
         return ["complete closeout loop rerun", "rerun live /fig_drive"]

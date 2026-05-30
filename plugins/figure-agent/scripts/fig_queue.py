@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from collections import Counter
 from pathlib import Path
@@ -258,7 +259,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "fixture": fixture,
             "required_actor": actor,
             "next_step": "Run read-only closeout inspection before attempting export.",
-            "command": f"uv run python3 scripts/fig_closeout.py {fixture} --json",
+            "command": f"uv run python3 scripts/fig_closeout.py {shlex.quote(fixture)} --json",
             "reason": reason,
             "allowed_scope": ["read-only closeout inspection"],
             "forbidden_scope": common_forbidden,
@@ -400,10 +401,10 @@ def _table_next_command(row: dict[str, Any]) -> str | None:
 
 
 def print_table(queue: dict[str, Any]) -> None:
-    print("fixture actor action stop_boundary first_blocker next_step next_command")
+    print("fixture\tactor\taction\tstop_boundary\tfirst_blocker\tnext_step\tnext_command")
     for row in queue.get("rows", []):
         print(
-            " ".join(
+            "\t".join(
                 [
                     _cell(row.get("fixture")),
                     _cell(row.get("required_actor")),
