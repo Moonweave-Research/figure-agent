@@ -29,6 +29,23 @@ exports, patches, polishes, accepts, stages, commits, or forces golden state.
 Use `/fig_run` for bounded deterministic execution of a single fixture after
 inspecting the queue.
 
+## Canonical operator sequence
+
+For multi-fixture work, use the queue before running any fixture command:
+
+1. Inspect the whole queue:
+   `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"`.
+2. Filter host-vision rows:
+   `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm`.
+3. Refresh those critiques in the host LLM environment, then re-check the
+   queue.
+4. Inspect deterministic workflow-agent work with
+   `--actor workflow_agent --command-plan --json`.
+5. Use `/fig_queue_run` in plan-only mode first; add `--execute` only after
+   reviewing the plan.
+6. Handle `human`, `release_operator`, and `svg_editor` rows as explicit
+   non-automatic gates.
+
 With no fixture arguments, the queue scans `examples/*/spec.yaml` and sorts
 fixtures by directory name. With fixture arguments, only those fixtures are
 checked. Missing fixtures are reported as controlled `error` rows instead of

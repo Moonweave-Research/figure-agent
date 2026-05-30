@@ -18,6 +18,16 @@ uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor wo
 `/fig_queue --command-plan` data, takes only `command_plan.executable`, and
 reports which fixture runs would be attempted.
 
+Use it after inspecting `/fig_queue --actor workflow_agent --command-plan`.
+The normal order is:
+
+1. run `/fig_queue` for the whole fixture set;
+2. close host LLM critique rows first;
+3. inspect the workflow-agent command plan;
+4. run `/fig_queue_run` without `--execute`;
+5. add `--execute` only after the plan shows the intended fixtures and no
+   unexpected blocked rows.
+
 With `--execute`, it still does not execute queue commands directly. For each
 planned fixture it calls `/fig_run` logic, which re-queries live driver state
 and applies the existing deterministic allowlist and safety predicates.
