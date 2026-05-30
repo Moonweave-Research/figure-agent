@@ -113,6 +113,9 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
 - Open or update a PR from `codex/issue70-guided-autonomy-roadmap`.
 - Do not merge unless CI is clean and the release gate review is explicit.
 
+Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
+`docs/milestones/2026-05-30-v0-9-final-review-and-merge-readiness.md`.
+
 ## Out Of Scope
 
 - New critique schema expansion.
@@ -133,6 +136,10 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
 - All protected mutation boundaries remain explicit.
 - Full local verification passes.
 - CI/PR path is ready for human merge decision.
+
+Status: satisfied for local release-candidate readiness. PR is the merge
+decision surface; do not merge without clean CI and explicit release gate
+review.
 
 ## Review Questions
 
