@@ -11,6 +11,8 @@ Run from the plugin root:
 ```bash
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>"
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
+uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
+uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --no-record
 ```
 
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
@@ -21,12 +23,15 @@ accepted state, tracked-golden export, golden roll-forward, release approval, or
 any unsupported mutation.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
-run and does not mutate anything.
+run and does not mutate fixture source, exports, accepted state, or golden
+state. Plan-only runs do not write a journal unless `--record` is passed.
 
 ## Execution Policy
 
 The executable actions are allowed only when the driver attaches no
-`stop_boundary`:
+`stop_boundary`. The runner also revalidates that each shell command matches
+the current fixture before executing; an allowlisted action with a mismatched
+or malformed command stops as `not_executable_action`.
 
 - `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
 - `run_adjudicate` -> `uv run python3 scripts/critique_adjudication.py scaffold <name>`
@@ -39,9 +44,11 @@ The executable actions are allowed only when the driver attaches no
 
 `run_adjudicate` is allowed only for initial scaffold; existing adjudication
 files, including stale or invalid files, still require manual repair.
-`run_export` is allowed only for non-accepted draft fixtures with generated
-exports. Accepted fixtures, tracked-golden export state, closeout boundaries,
-`--force-golden`, and `--skip-critique` remain explicit manual actions.
+`run_export` is allowed only for draft fixtures whose acceptance has not yet
+been declared (`acceptance_state: NOT_DECLARED`) and whose generated exports
+are missing or stale. Accepted fixtures, explicitly not-accepted fixtures,
+tracked-golden export state, closeout boundaries, `--force-golden`, and
+`--skip-critique` remain explicit manual actions.
 `/fig_loop` is allowed because it is verify-only and writes bounded run evidence
 under `.scratch/fig-loop-runs/`. The runner always stops on `/fig_critique`
 because that is a host-vision operation, not a shell command.
@@ -65,11 +72,76 @@ because that is a host-vision operation, not a shell command.
 | `final_stop_boundary` | string or null | last driver stop boundary |
 | `final_stop_reason` | string | runner reason for stopping |
 | `executed_count` | int | number of shell commands actually run |
+| `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
+| `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |
+| `journal_error` | object, optional | recording failure details; run payload remains usable |
 
 Step entries include the embedded `/fig_drive` JSON under `driver` so an outer
 agent can inspect the exact status, blocker, and next-action evidence used for
 the decision. A successful executed step may have `stop_reason: null`; the
 runner then re-queries the driver for the next action.
+
+### Run Journal
+
+When `--execute` is passed, the CLI records each `/fig_run` payload under:
+
+```text
+.scratch/fig-run-runs/<timestamp>-<name>/
+├── run_manifest.json
+├── run.json
+├── steps/
+│   └── step_001.json
+└── stop.md
+```
+
+Use `--record` to record a plan-only run. Use `--runs-root <path>` to redirect
+journals in tests or dogfood runs. Use `--no-record` for stdout-only behavior,
+including execute mode.
+
+The journal is non-authoritative evidence. It exists so a later session can
+inspect what the runner saw and why it stopped. It preserves the public payload,
+so `safe_command` fields may appear inside `run.json` and step JSON as evidence
+of what the live driver selected. Those strings are not resume commands and are
+not permission to execute stale state; rerun live `/fig_status` and
+`/fig_drive` before continuing.
+
+If recording fails after a run, the CLI still prints the public run payload with
+`journal_error` instead of hiding the result behind a traceback.
+
+There is no `--resume` or `--resume-latest` flag. To continue after an
+interruption, inspect `stop.md` only as context, then rerun live `/fig_status`
+or `/fig_drive --dry-run`. Use `/fig_run --execute` again only for the fresh
+driver-selected action.
+
+### `boundary_handoff`
+
+When the runner stops before `complete`, it emits an additive
+`schema: figure-agent.boundary-handoff.v1` object. This object is a compact
+explanation of the stop, not a second router and not permission to bypass a
+boundary.
+
+Fields:
+
+| Field | Notes |
+|---|---|
+| `action` | copied from the final `/fig_drive` action |
+| `stop_boundary` | copied from the final `/fig_drive` stop boundary |
+| `required_actor` | one of `host_llm`, `human`, `svg_editor`, `release_operator`, `workflow_agent` |
+| `blocking_reason` | compact driver/runner reason; command failures include `stderr_tail` |
+| `evidence_refs` | copied from `next_action_summary` or fallback driver/runner evidence |
+| `allowed_scope` | copied from `next_action_summary`, except deferred patch/source boundaries |
+| `forbidden_scope` | copied from `next_action_summary`, except deferred patch/source boundaries |
+| `closeout_checks` | checks to perform after the required actor acts |
+| `continuation_guidance` | always says to rerun live status and driver state first |
+
+`boundary_handoff.continuation_guidance` intentionally does not contain an
+executable resume command. Resume/replay behavior is out of scope for
+`/fig_run`.
+
+Patch/source-mutation boundaries are explicitly deferred. If the final driver
+action is `patch_handoff_stop`, the handoff reports
+`deferred_boundary: patch_source_mutation_deferred_until_70c`, uses
+`allowed_scope: ["read-only"]`, and does not surface patch edit scope.
 
 ## Stop Reasons
 
@@ -79,6 +151,9 @@ runner then re-queries the driver for the next action.
   allowlisted action failed its extra safety predicate.
 - `command_failed` — an executed command returned non-zero.
 - `complete` — driver selected `complete`.
+- `repeated_executable_action` — a successful command was followed by the same
+  driver action and shell command again, so the runner stopped instead of
+  repeating a no-progress loop.
 - `max_steps_exceeded` — the runner hit the safety cap before state advanced to
   a boundary.
 

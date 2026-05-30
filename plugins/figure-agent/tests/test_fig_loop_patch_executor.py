@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -25,8 +27,10 @@ def _write_latest_loop_run(
     auto_patch_eligibility: dict[str, Any] | None = None,
     adjudication: dict[str, Any] | None = None,
     fixture: str = "loop_demo",
+    stamp: str = "20260521T000000Z",
+    iteration_extra: dict[str, Any] | None = None,
 ) -> Path:
-    run_dir = repo_root / ".scratch" / "fig-loop-runs" / f"20260521T000000Z-{fixture}"
+    run_dir = repo_root / ".scratch" / "fig-loop-runs" / f"{stamp}-{fixture}"
     run_dir.mkdir(parents=True)
     (run_dir / "run_manifest.json").write_text(
         json.dumps(
@@ -38,26 +42,27 @@ def _write_latest_loop_run(
         ),
         encoding="utf-8",
     )
+    iteration_payload = {
+        "patch_handoff": patch_handoff,
+        "auto_patch_eligibility": auto_patch_eligibility,
+        "adjudication": adjudication
+        or {
+            "state": "fresh",
+            "decisions": [
+                {
+                    "finding_id": "C001",
+                    "decision": "apply",
+                    "reason": "label overlap is local",
+                    "patch_target": "panel A label cluster",
+                    "evidence": "critique.md C001",
+                }
+            ],
+        },
+    }
+    if iteration_extra:
+        iteration_payload.update(iteration_extra)
     (run_dir / "iteration_001.json").write_text(
-        json.dumps(
-            {
-                "patch_handoff": patch_handoff,
-                "auto_patch_eligibility": auto_patch_eligibility,
-                "adjudication": adjudication
-                or {
-                    "state": "fresh",
-                    "decisions": [
-                        {
-                            "finding_id": "C001",
-                            "decision": "apply",
-                            "reason": "label overlap is local",
-                            "patch_target": "panel A label cluster",
-                            "evidence": "critique.md C001",
-                        }
-                    ],
-                },
-            }
-        ),
+        json.dumps(iteration_payload),
         encoding="utf-8",
     )
     return run_dir
@@ -206,6 +211,15 @@ def _ready_repo(tmp_path: Path) -> tuple[Path, Path, Path]:
     return repo_root, runs_root, patch_path
 
 
+def _touch_newer(path: Path) -> None:
+    future = time.time() + 10
+    os.utime(path, (future, future))
+
+
+def _touch_at(path: Path, timestamp: float) -> None:
+    os.utime(path, (timestamp, timestamp))
+
+
 def test_executor_applies_one_allowed_patch_and_writes_closeout_evidence(
     tmp_path: Path,
 ) -> None:
@@ -280,6 +294,178 @@ def test_executor_refuses_without_explicit_apply_and_does_not_mutate(tmp_path: P
             runs_root=runs_root,
             patch_path=patch_path,
             apply=False,
+        )
+
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
+@pytest.mark.parametrize(
+    "evidence_rel_path",
+    [
+        "examples/loop_demo/loop_demo.tex",
+        "examples/loop_demo/critique.md",
+        "examples/loop_demo/critique_adjudication.yaml",
+    ],
+)
+def test_executor_refuses_stale_loop_run_without_mutation(
+    tmp_path: Path,
+    evidence_rel_path: str,
+) -> None:
+    repo_root, runs_root, patch_path = _ready_repo(tmp_path)
+    evidence_path = repo_root / evidence_rel_path
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    if not evidence_path.exists():
+        evidence_path.write_text("newer evidence\n", encoding="utf-8")
+    _touch_newer(evidence_path)
+    tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    with pytest.raises(PatchExecutorError, match="stale fig_loop run"):
+        apply_patch_file(
+            "loop_demo",
+            repo_root=repo_root,
+            runs_root=runs_root,
+            patch_path=patch_path,
+            apply=True,
+        )
+
+    assert evidence_rel_path in str(evidence_path)
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
+def test_executor_refuses_iteration_fixture_mismatch_without_mutation(tmp_path: Path) -> None:
+    repo_root = tmp_path
+    runs_root = repo_root / ".scratch" / "fig-loop-runs"
+    _fixture(repo_root)
+    _write_latest_loop_run(
+        repo_root,
+        patch_handoff=_handoff(),
+        auto_patch_eligibility=_eligibility(),
+        iteration_extra={"fixture": "other_fixture"},
+    )
+    patch_path = _patch_file(repo_root, _single_file_patch())
+    tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    with pytest.raises(PatchExecutorError, match="fixture"):
+        apply_patch_file(
+            "loop_demo",
+            repo_root=repo_root,
+            runs_root=runs_root,
+            patch_path=patch_path,
+            apply=True,
+        )
+
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
+def test_executor_refuses_pending_patch_closeout_without_mutation(tmp_path: Path) -> None:
+    repo_root, runs_root, patch_path = _ready_repo(tmp_path)
+    run_dir = runs_root / "20260521T000000Z-loop_demo"
+    pending_path = run_dir / "patch_apply_001.json"
+    pending_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.patch-apply.v1",
+                "fixture": "loop_demo",
+                "closeout_required": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    with pytest.raises(PatchExecutorError, match="pending patch closeout"):
+        apply_patch_file(
+            "loop_demo",
+            repo_root=repo_root,
+            runs_root=runs_root,
+            patch_path=patch_path,
+            apply=True,
+        )
+
+    assert str(pending_path).endswith("patch_apply_001.json")
+    assert tex_path.read_text(encoding="utf-8") == before
+
+
+def test_executor_selects_newer_clean_loop_run_over_older_pending_closeout(
+    tmp_path: Path,
+) -> None:
+    repo_root = tmp_path
+    runs_root = repo_root / ".scratch" / "fig-loop-runs"
+    _fixture(repo_root)
+    old_run = _write_latest_loop_run(
+        repo_root,
+        patch_handoff=_handoff(),
+        auto_patch_eligibility=_eligibility(),
+        stamp="20260521T000000Z",
+    )
+    (old_run / "patch_apply_001.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.patch-apply.v1",
+                "fixture": "loop_demo",
+                "closeout_required": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    clean_run = _write_latest_loop_run(
+        repo_root,
+        patch_handoff=_handoff(),
+        auto_patch_eligibility=_eligibility(),
+        stamp="20260521T010000Z",
+    )
+    now = time.time()
+    _touch_at(clean_run / "run_manifest.json", now + 20)
+    _touch_at(clean_run / "iteration_001.json", now + 20)
+    _touch_at(old_run, now + 30)
+    patch_path = _patch_file(repo_root, _single_file_patch())
+
+    report = apply_patch_file(
+        "loop_demo",
+        repo_root=repo_root,
+        runs_root=runs_root,
+        patch_path=patch_path,
+        apply=True,
+    )
+
+    assert report["changed_paths"] == ["examples/loop_demo/loop_demo.tex"]
+    assert (clean_run / "patch_apply_001.json").exists()
+    assert not (clean_run / "patch_apply_002.json").exists()
+
+
+def test_executor_refuses_newer_allowed_edit_scope_path_without_mutation(
+    tmp_path: Path,
+) -> None:
+    repo_root = tmp_path
+    runs_root = repo_root / ".scratch" / "fig-loop-runs"
+    _fixture(repo_root)
+    notes_path = repo_root / "examples" / "loop_demo" / "notes.md"
+    notes_path.write_text("fresh author note\n", encoding="utf-8")
+    _write_latest_loop_run(
+        repo_root,
+        patch_handoff=_handoff(
+            allowed=[
+                "examples/loop_demo/loop_demo.tex",
+                "examples/loop_demo/notes.md",
+            ]
+        ),
+        auto_patch_eligibility=_eligibility(),
+    )
+    _touch_newer(notes_path)
+    patch_path = _patch_file(repo_root, _single_file_patch())
+    tex_path = repo_root / "examples" / "loop_demo" / "loop_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    with pytest.raises(PatchExecutorError, match="allowed_edit_scope"):
+        apply_patch_file(
+            "loop_demo",
+            repo_root=repo_root,
+            runs_root=runs_root,
+            patch_path=patch_path,
+            apply=True,
         )
 
     assert tex_path.read_text(encoding="utf-8") == before

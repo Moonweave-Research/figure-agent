@@ -163,6 +163,39 @@ def _editorial_yaml(*, hero_verdict: str = "pass", hero_fix: str = "accept_simpl
     return "\n".join(lines) + "\n"
 
 
+def _editorial_yaml_with_route_detail(
+    *,
+    recommended_path: str = "continue_tikz",
+    include_detail: bool = True,
+) -> str:
+    text = _editorial_yaml()
+    text = text.replace(
+        "    recommended_path: continue_tikz",
+        f"    recommended_path: {recommended_path}",
+    )
+    if not include_detail:
+        return text
+    detail_by_path = {
+        "continue_tikz": (
+            "    remaining_tikz_lever: source-level label spacing remains patchable\n"
+        ),
+        "ready_for_svg_polish": (
+            "    svg_polish_candidate_reason: semantic source levers are closed "
+            "and only optical vector cleanup remains\n"
+        ),
+        "semantic_backport_required": (
+            "    semantic_backport_reason: SVG polish would hide a semantic source mismatch\n"
+        ),
+        "needs_human_art_direction": (
+            "    human_art_direction_reason: target journal taste direction needs human choice\n"
+        ),
+    }
+    return text.replace(
+        f"    recommended_path: {recommended_path}\n",
+        f"    recommended_path: {recommended_path}\n{detail_by_path[recommended_path]}",
+    )
+
+
 def _top_tier_yaml_with_aesthetic_anchor(anchor: str) -> str:
     lines = ["top_tier_audit:"]
     for key in TOP_TIER_KEYS:
@@ -780,6 +813,9 @@ def _single_crop_audit_log_yaml() -> str:
         "    verdict: no_defect\n"
         "    linked_micro_defect_id: ''\n"
         "    rationale: full crop inspected with no defect\n"
+        "    unintended_visible_anomaly: none\n"
+        "    anomaly_rationale: no unintended artifact is visible in this crop\n"
+        "    anomaly_link: ''\n"
     )
 
 
@@ -1068,6 +1104,10 @@ def _crop_audit_log_yaml(
 def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
         findings_yaml=(
@@ -1138,6 +1178,10 @@ def test_lint_critique_keeps_missing_aesthetic_intent_legacy_behavior(
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.5",
@@ -1638,6 +1682,51 @@ def test_lint_critique_accepts_complete_v1_11_aesthetic_lever_accounting(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_v1_14_continue_tikz_without_remaining_lever(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.14",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(include_detail=False),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "remaining_tikz_lever" in violations[0].message
+
+
+def test_lint_critique_accepts_v1_14_continue_tikz_with_remaining_lever(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.14",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(),
+        findings_yaml="findings: []\npanels: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
 def test_lint_critique_rejects_missing_v1_11_aesthetic_lever(
     tmp_path: Path,
 ) -> None:
@@ -2077,12 +2166,25 @@ def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.13",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
-        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        crop_audit_log_yaml=(
+            "crop_audit_log:\n"
+            "  - crop_id: full_q1\n"
+            "    path: build/audit_crops/full_q1.png\n"
+            "    source: full_render\n"
+            "    inspected: true\n"
+            "    verdict: no_defect\n"
+            "    linked_micro_defect_id: ''\n"
+            "    rationale: full crop inspected with no defect\n"
+        ),
         editorial_yaml=_editorial_yaml(),
     )
 

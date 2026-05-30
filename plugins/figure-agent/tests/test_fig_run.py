@@ -10,6 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
+import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
 
 
@@ -143,6 +144,126 @@ def test_execute_runs_compile_then_stops_at_host_critique(
     assert payload["steps"][1]["executed"] is False
 
 
+def test_runner_accepts_quoted_fixture_name_commands(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    name = "runner demo"
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh 'examples/runner demo/runner demo.tex'",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        name,
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == ["bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == "complete"
+
+
+def test_driver_command_helpers_quote_fixture_names() -> None:
+    assert fig_driver_commands.compile_command("runner demo") == (
+        "bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"
+    )
+    assert fig_driver_commands.adjudicate_command("runner demo") == (
+        "uv run python3 scripts/critique_adjudication.py scaffold 'runner demo'"
+    )
+    assert fig_driver_commands.export_command("runner demo") == (
+        "uv run python3 scripts/run_export.py 'runner demo'"
+    )
+    assert fig_driver_commands.fig_loop_command("runner demo", "close loop") == (
+        "uv run python3 scripts/fig_loop.py 'runner demo' --goal 'close loop' --json"
+    )
+    assert fig_driver_commands.svg_polish_executor_dry_run_command("runner demo") == (
+        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --dry-run"
+    )
+    assert fig_driver_commands.svg_polish_executor_write_command("runner demo") == (
+        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --write"
+    )
+    assert fig_driver_commands.svg_polish_delta_command("runner demo").startswith(
+        "PYTHONPATH=scripts uv run python3 -c "
+    )
+
+
+def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
+    command = fig_driver_commands.svg_polish_delta_command("runner's demo")
+
+    parts = fig_run._command_parts(command)
+
+    assert parts is not None
+    assert parts[:4] == ["PYTHONPATH=scripts", "uv", "run", "python3"]
+    assert parts[4] == "-c"
+    assert "Path(\"examples/runner's demo\")" in parts[5]
+
+
+@pytest.mark.parametrize(
+    ("action", "safe_command"),
+    [
+        (
+            fig_driver.ACTION_RUN_COMPILE,
+            "bash scripts/compile.sh examples/other_demo/other_demo.tex",
+        ),
+        (
+            fig_driver.ACTION_RUN_ADJUDICATE,
+            "uv run python3 scripts/critique_adjudication.py scaffold other_demo",
+        ),
+        (
+            fig_driver.ACTION_RUN_FIG_LOOP,
+            "uv run python3 scripts/fig_loop.py other_demo --goal 'close loop' --json",
+        ),
+    ],
+)
+def test_runner_refuses_mismatched_fixture_commands(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    safe_command: str,
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [_driver_summary(action=action, safe_command=safe_command)],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(fig_run, "_run_command", _fake_run)
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert commands == []
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == action
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert payload["steps"][0]["would_execute"] is False
+
+
 def test_execute_stops_immediately_at_host_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -154,6 +275,20 @@ def test_execute_stops_immediately_at_host_critique(
                 safe_command="/fig_critique runner_demo",
                 stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
             )
+            | {
+                "next_action_summary": {
+                    "action": fig_driver.ACTION_RUN_CRITIQUE,
+                    "safe_command": "/fig_critique runner_demo",
+                    "allowed_scope": [
+                        "examples/runner_demo/critique.md",
+                        "examples/runner_demo/build/audit_crops/",
+                    ],
+                    "forbidden_scope": ["hidden source edits"],
+                    "evidence_refs": [
+                        f"driver.stop_boundary:{fig_driver.STOP_HOST_LLM_CRITIQUE}"
+                    ],
+                }
+            }
         ],
     )
     commands: list[str] = []
@@ -176,6 +311,18 @@ def test_execute_stops_immediately_at_host_critique(
     assert payload["executed_count"] == 0
     assert payload["final_stop_reason"] == "host_boundary"
     assert payload["steps"][0]["would_execute"] is False
+    handoff = payload["boundary_handoff"]
+    assert handoff["schema"] == "figure-agent.boundary-handoff.v1"
+    assert handoff["action"] == fig_driver.ACTION_RUN_CRITIQUE
+    assert handoff["stop_boundary"] == fig_driver.STOP_HOST_LLM_CRITIQUE
+    assert handoff["required_actor"] == "host_llm"
+    assert handoff["allowed_scope"] == [
+        "examples/runner_demo/critique.md",
+        "examples/runner_demo/build/audit_crops/",
+    ]
+    assert handoff["continuation_guidance"]["rerun_live_status_first"] is True
+    assert handoff["continuation_guidance"]["rerun_live_driver_first"] is True
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_execute_stops_at_export_without_safe_status(
@@ -253,6 +400,7 @@ def test_execute_runs_draft_export_then_requeries(
     assert payload["final_stop_reason"] == "complete"
     assert payload["steps"][0]["executed"] is True
     assert payload["steps"][0]["returncode"] == 0
+    assert "boundary_handoff" not in payload
 
 
 def test_export_with_stop_boundary_is_not_executed(
@@ -295,6 +443,9 @@ def test_export_with_stop_boundary_is_not_executed(
     assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+    assert payload["boundary_handoff"]["closeout_checks"][0] == (
+        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+    )
 
 
 @pytest.mark.parametrize(
@@ -601,6 +752,15 @@ def test_existing_adjudication_file_blocks_auto_scaffold(
     assert payload["final_action"] == fig_driver.ACTION_RUN_ADJUDICATE
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_ADJUDICATE
+    assert handoff["closeout_checks"] == [
+        "inspect critique_adjudication.yaml",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_adjudication_scaffold_failure_stops_without_requery(
@@ -693,6 +853,11 @@ def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][1]["action"] == fig_driver.ACTION_RUN_FIG_LOOP
     assert payload["steps"][1]["executed"] is True
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "human"
+    assert handoff["action"] == fig_driver.ACTION_HUMAN_GATE_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_HUMAN_GATE
+    assert "command" not in handoff["continuation_guidance"]
 
 
 def test_fig_loop_failure_stops_without_requery(
@@ -806,10 +971,548 @@ def test_command_failure_stops_without_requery(
     assert payload["final_stop_reason"] == "command_failed"
     assert payload["steps"][0]["returncode"] == 7
     assert payload["steps"][0]["stderr_tail"] == "compile failed"
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_COMPILE
+    assert handoff["closeout_checks"] == ["inspect command stderr_tail", "rerun live /fig_status"]
+    assert "compile failed" in handoff["blocking_reason"]
 
 
-def test_max_steps_exceeded_for_repeated_executable_action(
+def test_stops_after_repeated_executable_command_without_progress(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+            )
+        ],
+    )
+    commands: list[str] = []
+
+    def _fake_run(command: str, *, repo_root: Path) -> fig_run.CommandResult:
+        commands.append(command)
+        return fig_run.CommandResult(0, "", "")
+
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        _fake_run,
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        max_steps=2,
+        repo_root=tmp_path,
+    )
+
+    assert commands == [
+        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
+    ]
+    assert payload["executed_count"] == 1
+    assert payload["final_stop_reason"] == "repeated_executable_action"
+    assert len(payload["steps"]) == 2
+    assert payload["steps"][0]["executed"] is True
+    assert payload["steps"][1]["executed"] is False
+    assert payload["steps"][1]["would_execute"] is False
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert "same executable action and command" in handoff["blocking_reason"]
+    assert handoff["closeout_checks"] == [
+        "inspect repeated action",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+    assert "runner.stop_reason:repeated_executable_action" in handoff["evidence_refs"]
+    assert "command" not in handoff["continuation_guidance"]
+
+
+def test_release_blocked_handoff_requires_release_operator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RELEASE_BLOCKED,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_FORCE_GOLDEN,
+                reason="tracked golden export requires explicit force-golden",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="release",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert payload["final_stop_reason"] == "not_executable_action"
+    assert handoff["required_actor"] == "release_operator"
+    assert handoff["action"] == fig_driver.ACTION_RELEASE_BLOCKED
+    assert handoff["stop_boundary"] == fig_driver.STOP_FORCE_GOLDEN
+    assert handoff["allowed_scope"] == ["read-only"]
+    assert "command" not in handoff["continuation_guidance"]
+
+
+def test_reference_missing_handoff_requires_workflow_agent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_REFERENCE_MISSING,
+                reason="reference image missing; fix spec path first",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["stop_boundary"] == fig_driver.STOP_REFERENCE_MISSING
+    assert handoff["closeout_checks"] == [
+        "fix reference path or provide reference image",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+
+
+def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+                reason="polished SVG requires semantic backport to TikZ first",
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="polish",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["action"] == fig_driver.ACTION_POLISH_HANDOFF_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_SEMANTIC_BACKPORT
+    assert handoff["closeout_checks"] == [
+        "backport semantic changes to source/spec",
+        "rerun live /fig_status",
+        "rerun live /fig_drive",
+    ]
+
+
+def test_patch_handoff_boundary_is_deferred_without_patch_scope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=fig_driver.STOP_PATCH_HANDOFF,
+                reason="single patch target exists",
+                status={"render_state": "FRESH"},
+            )
+            | {
+                "next_action_summary": {
+                    "action": fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                    "allowed_scope": ["examples/runner_demo/runner_demo.tex"],
+                    "forbidden_scope": ["accepted", "golden_contract"],
+                    "evidence_refs": ["loop.final_stop_reason:patch_target_recommended"],
+                }
+            }
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    handoff = payload["boundary_handoff"]
+    assert handoff["action"] == fig_driver.ACTION_PATCH_HANDOFF_STOP
+    assert handoff["stop_boundary"] == fig_driver.STOP_PATCH_HANDOFF
+    assert handoff["required_actor"] == "workflow_agent"
+    assert handoff["deferred_boundary"] == "patch_source_mutation_deferred_until_70c"
+    assert handoff["allowed_scope"] == ["read-only"]
+    assert handoff["forbidden_scope"] == [
+        "source mutation before patch executor currentness is verified"
+    ]
+
+
+def test_main_records_non_authoritative_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--record",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    journal = payload["journal"]
+    assert journal["schema"] == "figure-agent.fig-run-journal-ref.v1"
+    assert journal["authoritative"] is False
+    assert journal["replay_allowed"] is False
+    assert journal["commands_are_evidence_only"] is True
+    assert journal["rerun_live_status_first"] is True
+    assert journal["rerun_live_driver_first"] is True
+    assert "command" not in journal
+
+    run_dir = Path(journal["run_dir"])
+    assert run_dir.parent == runs_root
+    assert run_dir.name.endswith("-runner_demo")
+    manifest_path = run_dir / "run_manifest.json"
+    run_path = run_dir / "run.json"
+    step_path = run_dir / "steps" / "step_001.json"
+    stop_path = run_dir / "stop.md"
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["schema"] == "figure-agent.fig-run-journal.v1"
+    assert manifest["fixture"] == "runner_demo"
+    assert manifest["mode"] == "review"
+    assert manifest["goal"] == "close loop"
+    assert manifest["final_action"] == fig_driver.ACTION_RUN_CRITIQUE
+    assert manifest["final_stop_boundary"] == fig_driver.STOP_HOST_LLM_CRITIQUE
+    assert manifest["final_stop_reason"] == "host_boundary"
+    assert manifest["started_at"].endswith("Z")
+    assert manifest["completed_at"].endswith("Z")
+    assert "branch" in manifest
+    assert "commit" in manifest
+    assert manifest["authoritative"] is False
+    assert manifest["replay_allowed"] is False
+    assert manifest["commands_are_evidence_only"] is True
+    assert manifest["rerun_live_status_first"] is True
+    assert manifest["rerun_live_driver_first"] is True
+    assert manifest["run_json"] == "run.json"
+    assert manifest["steps"] == ["steps/step_001.json"]
+    assert manifest["stop_markdown"] == "stop.md"
+
+    assert json.loads(run_path.read_text(encoding="utf-8")) == payload
+    assert json.loads(step_path.read_text(encoding="utf-8")) == payload["steps"][0]
+    stop_text = stop_path.read_text(encoding="utf-8")
+    assert "non-authoritative evidence" in stop_text
+    assert "Recorded safe_command fields are evidence only" in stop_text
+    assert "Do not replay commands from this journal" in stop_text
+    assert "Required actor: host_llm" in stop_text
+
+
+def test_main_plan_only_does_not_record_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "plan_only"
+    assert "journal" not in payload
+    assert not runs_root.exists()
+
+
+def test_execute_records_run_journal_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["executed_count"] == 1
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == runs_root
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["steps"] == ["steps/step_001.json", "steps/step_002.json"]
+    assert (run_dir / "steps" / "step_001.json").is_file()
+    assert (run_dir / "steps" / "step_002.json").is_file()
+    assert json.loads((run_dir / "run.json").read_text(encoding="utf-8")) == payload
+
+
+def test_journal_manifest_timestamps_cover_run_not_write_time(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    clock = iter(["run-start", "run-end"])
+    monkeypatch.setattr(fig_run, "_utc_now", lambda: next(clock), raising=False)
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["started_at"] == "run-start"
+    assert manifest["completed_at"] == "run-end"
+
+
+def test_execute_without_runs_root_uses_repo_scratch_fig_run_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    result = fig_run.main(
+        ["runner_demo", "--mode", "review", "--goal", "close loop", "--execute"],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == tmp_path / ".scratch" / "fig-run-runs"
+    assert (run_dir / "run_manifest.json").is_file()
+
+
+def test_main_no_record_disables_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--runs-root",
+            str(runs_root),
+            "--no-record",
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert "journal" not in payload
+    assert not runs_root.exists()
+
+
+def test_execute_no_record_disables_run_journal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            ),
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+    monkeypatch.setattr(
+        fig_run,
+        "_run_command",
+        lambda command, *, repo_root: fig_run.CommandResult(0, "compiled\n", ""),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+            "--no-record",
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["executed_count"] == 1
+    assert "journal" not in payload
+    assert "journal_error" not in payload
+    assert not runs_root.exists()
+
+
+def test_journal_write_failure_does_not_hide_run_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
+        ],
+    )
+
+    def _fail_journal(*args: object, **kwargs: object) -> dict[str, Any]:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(fig_run, "write_run_journal", _fail_journal)
+
+    result = fig_run.main(
+        ["runner_demo", "--mode", "review", "--goal", "close loop", "--execute"],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "complete"
+    assert "journal" not in payload
+    error = payload["journal_error"]
+    assert error["schema"] == "figure-agent.fig-run-journal-error.v1"
+    assert error["authoritative"] is False
+    assert error["replay_allowed"] is False
+    assert error["commands_are_evidence_only"] is True
+    assert "disk full" in error["message"]
+
+
+def test_command_failed_journal_is_non_authoritative(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _install_driver_sequence(
         monkeypatch,
@@ -823,21 +1526,95 @@ def test_max_steps_exceeded_for_repeated_executable_action(
     monkeypatch.setattr(
         fig_run,
         "_run_command",
-        lambda command, *, repo_root: fig_run.CommandResult(0, "", ""),
+        lambda command, *, repo_root: fig_run.CommandResult(7, "", "compile failed"),
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--execute",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["final_stop_reason"] == "command_failed"
+    journal = payload["journal"]
+    assert journal["authoritative"] is False
+    assert journal["replay_allowed"] is False
+    assert "command" not in journal
+    run_dir = Path(journal["run_dir"])
+    stop_text = (run_dir / "stop.md").read_text(encoding="utf-8")
+    assert "Do not replay commands from this journal" in stop_text
+
+
+def test_run_journal_sanitizes_fixture_name_and_stays_within_runs_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "../bad/name with spaces",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--record",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    run_dir = Path(payload["journal"]["run_dir"])
+    assert run_dir.parent == runs_root
+    assert run_dir.name.endswith("-.._bad_name_with_spaces")
+
+
+def test_run_workflow_does_not_write_journal_directly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_COMPILE,
+                safe_command="bash scripts/compile.sh examples/runner_demo/runner_demo.tex",
+            )
+        ],
     )
 
     payload = fig_run.run_workflow(
         "runner_demo",
         mode="review",
         goal="close loop",
-        execute=True,
-        max_steps=2,
         repo_root=tmp_path,
     )
 
-    assert payload["executed_count"] == 2
-    assert payload["final_stop_reason"] == "max_steps_exceeded"
-    assert len(payload["steps"]) == 2
+    assert payload["final_stop_reason"] == "plan_only"
+    assert "journal" not in payload
+    assert not (tmp_path / ".scratch").exists()
 
 
 def test_main_emits_json_plan_by_default(

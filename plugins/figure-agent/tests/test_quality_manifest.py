@@ -7,9 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
-    CRITIQUE_RUBRIC_VERSION_V1_11,
-    CRITIQUE_RUBRIC_VERSION_V1_12,
-    CRITIQUE_RUBRIC_VERSION_V1_13,
+    CRITIQUE_RUBRIC_VERSION_V1_14,
     critique_manifest_paths,
     expected_critique_rubric_version,
     input_manifest_hash,
@@ -573,7 +571,7 @@ def test_critique_manifest_includes_external_vision_review_when_opted_in(
     assert before != after
 
 
-def test_expected_critique_rubric_version_uses_v1_11_for_aesthetic_intent_v2(
+def test_expected_critique_rubric_version_uses_v1_14_for_aesthetic_intent_v2(
     tmp_path: Path,
 ) -> None:
     example_dir = tmp_path / "examples" / "demo"
@@ -583,10 +581,10 @@ def test_expected_critique_rubric_version_uses_v1_11_for_aesthetic_intent_v2(
         encoding="utf-8",
     )
 
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_11
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
 
 
-def test_expected_critique_rubric_version_uses_v1_12_for_journal_playbook(
+def test_expected_critique_rubric_version_uses_v1_14_for_journal_playbook(
     tmp_path: Path,
 ) -> None:
     example_dir = tmp_path / "examples" / "demo"
@@ -596,10 +594,10 @@ def test_expected_critique_rubric_version_uses_v1_12_for_journal_playbook(
         encoding="utf-8",
     )
 
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_12
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
 
 
-def test_expected_critique_rubric_version_uses_v1_13_for_reference_learning(
+def test_expected_critique_rubric_version_uses_v1_14_for_reference_learning(
     tmp_path: Path,
 ) -> None:
     example_dir = tmp_path / "examples" / "demo"
@@ -622,10 +620,10 @@ reference_learning:
         encoding="utf-8",
     )
 
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_13
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
 
 
-def test_expected_critique_rubric_version_prefers_journal_playbook_over_intent_v2(
+def test_expected_critique_rubric_version_uses_v1_14_for_journal_playbook_and_intent_v2(
     tmp_path: Path,
 ) -> None:
     example_dir = tmp_path / "examples" / "demo"
@@ -639,7 +637,7 @@ def test_expected_critique_rubric_version_prefers_journal_playbook_over_intent_v
         encoding="utf-8",
     )
 
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_12
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
 
 
 def test_expected_critique_rubric_version_keeps_v1_10_for_legacy_intent(

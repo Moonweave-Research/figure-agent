@@ -81,6 +81,7 @@ def test_svg_polish_readiness_explains_continue_tikz() -> None:
             "worst_verdict": "weak",
             "polish_trigger_verdict": "weak",
             "polish_recommended_path": "continue_tikz",
+            "polish_route_detail": "source-level label spacing remains patchable in TikZ",
         }
     )
 
@@ -90,13 +91,17 @@ def test_svg_polish_readiness_explains_continue_tikz() -> None:
         "can_start_svg_polish": False,
         "recommended_path": "continue_tikz",
         "next_action": "run_fig_loop",
-        "blocking_reason": "editorial polish trigger recommends continue_tikz",
+        "blocking_reason": (
+            "editorial polish trigger recommends continue_tikz: "
+            "source-level label spacing remains patchable in TikZ"
+        ),
         "blocking_items": [
             {
                 "source": "editorial_art_direction_summary",
                 "id": "tikz_vs_svg_polish_trigger",
                 "recommended_path": "continue_tikz",
                 "verdict": "weak",
+                "route_detail": "source-level label spacing remains patchable in TikZ",
             }
         ],
     }
@@ -108,6 +113,7 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
             "worst_verdict": "pass",
             "polish_trigger_verdict": "pass",
             "polish_recommended_path": "ready_for_svg_polish",
+            "polish_route_detail": "only optical vector edge cleanup remains",
         }
     )
 
@@ -115,6 +121,7 @@ def test_svg_polish_readiness_allows_ready_path() -> None:
     assert readiness["can_start_svg_polish"] is True
     assert readiness["recommended_path"] == "ready_for_svg_polish"
     assert readiness["next_action"] == "start_svg_polish_recipe"
+    assert readiness["route_detail"] == "only optical vector edge cleanup remains"
     assert readiness["blocking_items"] == []
 
 
@@ -214,3 +221,88 @@ def test_svg_polish_readiness_from_checkpoint_blocks_ready_path_for_crop_uncerta
     assert readiness["can_start_svg_polish"] is False
     assert readiness["next_action"] == "review_crop_audit"
     assert readiness["blocking_items"][0]["id"] == "VC046_crop"
+
+
+def test_svg_polish_readiness_from_checkpoint_prefers_human_gate_over_legacy_pass_trigger() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "final_stop_reason": "human_gate_required",
+            "recommended_next_action": "human review required for C001",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "continue_tikz",
+            },
+        }
+    )
+
+    assert readiness == {
+        "schema": "figure-agent.svg-polish-readiness.v1",
+        "source": "latest_loop_checkpoint",
+        "can_start_svg_polish": False,
+        "recommended_path": "continue_tikz",
+        "next_action": "human_review",
+        "blocking_reason": (
+            "latest /fig_loop checkpoint requires human review: "
+            "human review required for C001"
+        ),
+        "blocking_items": [
+            {
+                "source": "latest_loop_checkpoint",
+                "id": "human_gate_required",
+                "recommended_next_action": "human review required for C001",
+            }
+        ],
+    }
+
+
+def test_svg_polish_readiness_prefers_patch_target_over_legacy_pass_trigger() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "final_stop_reason": "patch_target_recommended",
+            "recommended_next_action": "patch C002 before polish",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "continue_tikz",
+            },
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["next_action"] == "patch_source"
+    assert readiness["blocking_items"][0]["id"] == "patch_target_recommended"
+
+
+def test_svg_polish_readiness_prefers_status_action_over_legacy_pass_trigger() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "final_stop_reason": "status_action_required",
+            "recommended_next_action": "refresh export before polish",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "continue_tikz",
+            },
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is False
+    assert readiness["next_action"] == "resolve_status_action"
+    assert readiness["blocking_items"][0]["id"] == "status_action_required"
+
+
+def test_svg_polish_readiness_from_checkpoint_preserves_clean_loop_editorial_fallback() -> None:
+    readiness = svg_polish_readiness_from_checkpoint(
+        {
+            "final_stop_reason": "verify_only_complete",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "ready_for_svg_polish",
+                "polish_route_detail": "only optical vector edge cleanup remains",
+            },
+        }
+    )
+
+    assert readiness is not None
+    assert readiness["can_start_svg_polish"] is True
+    assert readiness["recommended_path"] == "ready_for_svg_polish"

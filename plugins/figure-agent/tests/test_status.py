@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import status as status_mod  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
-    CRITIQUE_RUBRIC_VERSION_V1_11,
+    CRITIQUE_RUBRIC_VERSION_V1_14,
     file_sha256,
     input_manifest_hash,
 )
@@ -767,7 +767,7 @@ def test_hash_metadata_marks_critique_stale_when_rubric_version_changes(
     assert compute_critique_state(fig_dir, name) == "STALE"
 
 
-def test_hash_metadata_accepts_v1_11_rubric_for_aesthetic_intent_v2(
+def test_hash_metadata_accepts_v1_14_rubric_for_aesthetic_intent_v2(
     tmp_path: Path,
 ) -> None:
     name = "hash_aesthetic_v2_fig"
@@ -782,8 +782,8 @@ def test_hash_metadata_accepts_v1_11_rubric_for_aesthetic_intent_v2(
     _write_hashed_critique(
         fig_dir,
         name,
-        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
-        schema="figure-agent.critique.v1.11",
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_14,
+        schema="figure-agent.critique.v1.14",
     )
 
     assert compute_critique_state(fig_dir, name) == "FRESH"
@@ -825,7 +825,7 @@ def test_hash_metadata_rejects_legacy_schema_for_aesthetic_intent_v2(
     _write_hashed_critique(
         fig_dir,
         name,
-        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_11,
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_14,
         schema="figure-agent.critique.v1.10",
     )
 
@@ -3204,6 +3204,27 @@ def test_status_explanation_marks_critique_not_required_as_non_blocking(
     assert "critique_not_required" in plugin_codes
     assert explanation["first_blocker"]["code"] != "critique_not_required"
     assert result["critique_state"] == "NOT_REQUIRED"
+
+
+def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "draftfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    explanation = result["status_explanation"]
+    assert result["stage"] == 4
+    assert result["acceptance_state"] == "NOT_DECLARED"
+    assert result["release_ready"] is False
+    assert explanation["first_blocker"]["code"] == "acceptance_not_declared"
+    assert explanation["first_blocker"]["category"] == "human_blocker"
+    assert explanation["first_blocker"]["manual"] is True
+    plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
+    assert "critique_not_required" in plugin_codes
 
 
 def test_status_explanation_prioritizes_not_authored_before_missing_export(

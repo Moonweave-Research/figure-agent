@@ -66,5 +66,9 @@ state is `TRACKED_GOLDEN`, the report marks export as blocked with an
 `next_action`; rolling forward golden artifacts remains a deliberate manual
 approval checkpoint.
 
+`/fig_closeout` does not resume `.scratch/fig-run-runs/` journals. After a
+runner interruption, use the journal only to understand the previous stop, then
+rerun live `/fig_status`, `/fig_drive`, or `/fig_closeout` as appropriate.
+
 Exit code is `0` only when `closeout_complete` is true. Incomplete closeout
 returns `1` so automation can stop before overclaiming.

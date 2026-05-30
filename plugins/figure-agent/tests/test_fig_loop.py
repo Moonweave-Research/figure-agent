@@ -286,14 +286,9 @@ def _write_v1_2_critique(
     if aesthetic_lever_audit is not None:
         frontmatter["aesthetic_lever_audit"] = aesthetic_lever_audit
     if journal_art_direction_playbook_audit is not None:
-        frontmatter["journal_art_direction_playbook_audit"] = (
-            journal_art_direction_playbook_audit
-        )
+        frontmatter["journal_art_direction_playbook_audit"] = journal_art_direction_playbook_audit
     critique.write_text(
-        "---\n"
-        + yaml.safe_dump(frontmatter, sort_keys=False)
-        + "---\n"
-        "# critique\n",
+        "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n# critique\n",
         encoding="utf-8",
     )
     return critique
@@ -1016,6 +1011,49 @@ def test_loop_surfaces_svg_polish_readiness_from_editorial_summary(
     assert stdout_summary["svg_polish_readiness"] == readiness
 
 
+def test_loop_surfaces_v1_14_svg_polish_route_detail(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_v1_2_critique(
+        fixture,
+        schema="figure-agent.critique.v1.14",
+        top_tier_audit=_top_tier_audit(),
+        editorial_art_direction=_editorial_art_direction(
+            trigger_path="continue_tikz",
+            overrides={
+                "tikz_vs_svg_polish_trigger": {
+                    "verdict": "pass",
+                    "evidence": "source-level lever is still visible in the render",
+                    "rationale": "the remaining polish is still source-addressable",
+                    "concrete_fix": "continue TikZ iteration first",
+                    "blocks_high_impact": False,
+                    "recommended_path": "continue_tikz",
+                    "remaining_tikz_lever": "move Panel F recovery label in source",
+                }
+            },
+        ),
+    )
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect v1.14 svg polish route detail",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["editorial_art_direction_summary"]
+    assert summary["polish_recommended_path"] == "continue_tikz"
+    assert summary["polish_route_detail"] == "move Panel F recovery label in source"
+    readiness = iteration["svg_polish_readiness"]
+    assert readiness["blocking_items"][0]["route_detail"] == (
+        "move Panel F recovery label in source"
+    )
+
+
 def test_loop_svg_polish_readiness_honors_top_tier_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1034,9 +1072,7 @@ def test_loop_svg_polish_readiness_honors_top_tier_blocker(
                 }
             }
         ),
-        editorial_art_direction=_editorial_art_direction(
-            trigger_path="ready_for_svg_polish"
-        ),
+        editorial_art_direction=_editorial_art_direction(trigger_path="ready_for_svg_polish"),
     )
     _patch_fresh_status(monkeypatch)
 
@@ -3077,22 +3113,22 @@ def test_main_json_emits_machine_readable_summary(
         "post_patch_evidence_verdict": None,
         "final_artifact_state": "NONE",
         "final_artifact_kind": "generated_export",
-            "final_artifact_path": "exports/loop_demo.svg",
-            "top_tier_audit_summary": None,
-            "editorial_art_direction_summary": None,
-            "crop_audit_summary": None,
-            "aesthetic_lever_summary": None,
-            "journal_art_direction_playbook_summary": None,
-            "external_vision_review_summary": None,
-            "audit_evidence": {
-                "evaluation_state": "missing_input",
-                "blocking_items": ["build/visual_clash.json"],
-                "next_action": "/fig_compile loop_demo",
-                "reason": "missing build/visual_clash.json",
-            },
-            "journal_grade_assessment": None,
-            "recommended_next_action": "inspect figure state",
-        }
+        "final_artifact_path": "exports/loop_demo.svg",
+        "top_tier_audit_summary": None,
+        "editorial_art_direction_summary": None,
+        "crop_audit_summary": None,
+        "aesthetic_lever_summary": None,
+        "journal_art_direction_playbook_summary": None,
+        "external_vision_review_summary": None,
+        "audit_evidence": {
+            "evaluation_state": "missing_input",
+            "blocking_items": ["build/visual_clash.json"],
+            "next_action": "/fig_compile loop_demo",
+            "reason": "missing build/visual_clash.json",
+        },
+        "journal_grade_assessment": None,
+        "recommended_next_action": "inspect figure state",
+    }
 
 
 def test_main_without_json_keeps_legacy_prose_output(
@@ -3201,7 +3237,7 @@ def test_main_json_exercises_real_run_loop_summary(
 
     assert exit_code == 0
     assert captured.err == ""
-    assert payload == {
+    expected_payload = {
         "run_dir": str(run_dir),
         "manifest_path": str(manifest_path),
         "iteration_path": str(iteration_path),
@@ -3227,6 +3263,9 @@ def test_main_json_exercises_real_run_loop_summary(
         "next_action_summary": iteration["next_action_summary"],
         "recommended_next_action": iteration["recommended_next_action"],
     }
+    if iteration["svg_polish_readiness"] is not None:
+        expected_payload["svg_polish_readiness"] = iteration["svg_polish_readiness"]
+    assert payload == expected_payload
 
 
 # --- Issue 7E: final-artifact loop surfacing ---------------------------------

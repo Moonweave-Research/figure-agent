@@ -1,0 +1,196 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+import fig_queue_run  # noqa: E402
+
+
+def _queue() -> dict[str, Any]:
+    return {
+        "schema": "figure-agent.fixture-driver-queue.v1",
+        "mode": "review",
+        "goal": "triage",
+        "filters": {"required_actor": "workflow_agent"},
+        "unfiltered_total": 3,
+        "rows": [],
+        "summary": {"total": 3, "errors": 0},
+        "command_plan": {
+            "schema": "figure-agent.fixture-command-plan.v1",
+            "executable_count": 2,
+            "blocked_count": 1,
+            "executable": [
+                {
+                    "fixture": "alpha",
+                    "action": "run_fig_loop",
+                    "safe_command": "uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+                    "required_actor": "workflow_agent",
+                },
+                {
+                    "fixture": "beta",
+                    "action": "run_compile",
+                    "safe_command": "bash scripts/compile.sh examples/beta/beta.tex",
+                    "required_actor": "workflow_agent",
+                },
+            ],
+            "blocked": [
+                {
+                    "fixture": "gamma",
+                    "action": "run_export",
+                    "required_actor": "workflow_agent",
+                    "blocking_source": "closeout_required",
+                    "stop_boundary": "closeout_required",
+                    "reason": "stop_boundary:closeout_required",
+                }
+            ],
+        },
+    }
+
+
+def test_plan_only_reports_planned_runs_without_executing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[str] = []
+
+    def fake_run_workflow(*args, **kwargs):
+        calls.append("called")
+        return {}
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=False,
+        max_steps=3,
+        max_fixtures=10,
+        fixtures=None,
+        filters={"required_actor": "workflow_agent"},
+    )
+
+    assert payload["schema"] == "figure-agent.queue-run.v1"
+    assert payload["execute"] is False
+    assert payload["summary"] == {
+        "planned_executable": 2,
+        "planned_blocked": 1,
+        "attempted": 2,
+        "executed_commands": 0,
+        "failed": 0,
+        "blocked": 1,
+        "unattempted_executable": 0,
+    }
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+    assert all(run["would_execute"] is True for run in payload["runs"])
+    assert all(run["executed"] is False for run in payload["runs"])
+    assert calls == []
+
+
+def test_execute_delegates_each_planned_fixture_to_fig_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[tuple[str, bool, int]] = []
+
+    def fake_run_workflow(
+        name: str,
+        *,
+        mode: str,
+        goal: str,
+        execute: bool,
+        max_steps: int,
+        repo_root: Path,
+    ) -> dict[str, Any]:
+        calls.append((name, execute, max_steps))
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "execute": execute,
+            "executed_count": 1,
+            "final_stop_reason": "complete",
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=4,
+        max_fixtures=10,
+        fixtures=None,
+        filters={},
+    )
+
+    assert calls == [("alpha", True, 4), ("beta", True, 4)]
+    assert payload["summary"]["attempted"] == 2
+    assert payload["summary"]["executed_commands"] == 2
+    assert payload["summary"]["failed"] == 0
+    assert [run["result"]["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+
+
+def test_execute_respects_max_fixtures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[str] = []
+
+    def fake_run_workflow(name: str, **kwargs) -> dict[str, Any]:
+        calls.append(name)
+        return {
+            "schema": "figure-agent.run.v1",
+            "fixture": name,
+            "executed_count": 1,
+            "final_stop_reason": "complete",
+        }
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    payload = fig_queue_run.run_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        execute=True,
+        max_steps=2,
+        max_fixtures=1,
+        fixtures=None,
+        filters={},
+    )
+
+    assert calls == ["alpha"]
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha"]
+    assert payload["summary"]["attempted"] == 1
+    assert payload["summary"]["planned_executable"] == 2
+    assert payload["summary"]["unattempted_executable"] == 1
+
+
+def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+
+    assert fig_queue_run.main(
+        [
+            "--mode",
+            "review",
+            "--goal",
+            "triage",
+            "--actor",
+            "workflow_agent",
+            "--max-fixtures",
+            "1",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.queue-run.v1"
+    assert payload["execute"] is False
+    assert payload["filters"] == {"required_actor": "workflow_agent"}
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha"]

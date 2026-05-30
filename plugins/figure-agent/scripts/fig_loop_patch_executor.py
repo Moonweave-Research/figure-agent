@@ -32,6 +32,8 @@ class PatchExecutorError(Exception):
 @dataclass(frozen=True)
 class LatestLoopRun:
     run_dir: Path
+    manifest_path: Path
+    iteration_path: Path
     iteration: dict[str, Any]
 
 
@@ -46,19 +48,113 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _latest_loop_run(name: str, runs_root: Path) -> LatestLoopRun:
-    candidates: list[Path] = []
+    candidates: list[LatestLoopRun] = []
     for manifest_path in runs_root.glob(f"*-{name}/run_manifest.json"):
         manifest = _read_json(manifest_path)
         if (
             manifest.get("schema") == "figure-agent.fig-loop-run.v1"
             and manifest.get("fixture") == name
         ):
-            candidates.append(manifest_path.parent)
+            run_dir = manifest_path.parent
+            iteration_path = run_dir / "iteration_001.json"
+            candidates.append(
+                LatestLoopRun(
+                    run_dir=run_dir,
+                    manifest_path=manifest_path,
+                    iteration_path=iteration_path,
+                    iteration=_read_json(iteration_path),
+                )
+            )
     if not candidates:
         raise PatchExecutorError(f"no fig_loop run found for {name}")
-    run_dir = max(candidates, key=lambda path: path.stat().st_mtime)
-    iteration_path = run_dir / "iteration_001.json"
-    return LatestLoopRun(run_dir=run_dir, iteration=_read_json(iteration_path))
+    return max(candidates, key=_loop_checkpoint_mtime)
+
+
+def _fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
+    example_dir = repo_root / "examples" / name
+    return (
+        example_dir / "spec.yaml",
+        example_dir / "briefing.md",
+        example_dir / "authoring_plan.md",
+        example_dir / "authoring_contract.md",
+        example_dir / "subregion_iteration_log.md",
+        example_dir / "theory_guard.md",
+        example_dir / "QUALITY_AUDIT.md",
+        example_dir / f"{name}.tex",
+        example_dir / "critique.md",
+        example_dir / "critique_adjudication.yaml",
+        example_dir / "build" / f"{name}.pdf",
+    )
+
+
+def _loop_checkpoint_mtime(loop_run: LatestLoopRun) -> float:
+    try:
+        return max(loop_run.manifest_path.stat().st_mtime, loop_run.iteration_path.stat().st_mtime)
+    except OSError as exc:
+        raise PatchExecutorError(f"cannot stat fig_loop run evidence: {loop_run.run_dir}") from exc
+
+
+def _allowed_scope_paths(repo_root: Path, patch_handoff: dict[str, Any]) -> tuple[Path, ...]:
+    allowed = patch_handoff.get("allowed_edit_scope")
+    if not isinstance(allowed, list):
+        return ()
+    paths = []
+    for rel_path in allowed:
+        if isinstance(rel_path, str) and _is_safe_repo_relative_path(rel_path):
+            paths.append(repo_root / rel_path)
+    return tuple(paths)
+
+
+def _newer_existing_paths(paths: tuple[Path, ...], checkpoint_mtime: float) -> list[Path]:
+    return [path for path in paths if path.is_file() and path.stat().st_mtime > checkpoint_mtime]
+
+
+def _validate_loop_run_currentness(
+    name: str,
+    repo_root: Path,
+    loop_run: LatestLoopRun,
+    patch_handoff: dict[str, Any],
+) -> None:
+    iteration_fixture = loop_run.iteration.get("fixture")
+    if isinstance(iteration_fixture, str) and iteration_fixture != name:
+        raise PatchExecutorError(
+            f"latest fig_loop iteration fixture mismatch: {iteration_fixture} != {name}"
+        )
+    checkpoint_mtime = _loop_checkpoint_mtime(loop_run)
+    try:
+        newer_evidence = _newer_existing_paths(
+            _fixture_evidence_paths(repo_root, name),
+            checkpoint_mtime,
+        )
+        newer_allowed_scope = _newer_existing_paths(
+            _allowed_scope_paths(repo_root, patch_handoff),
+            checkpoint_mtime,
+        )
+    except OSError as exc:
+        raise PatchExecutorError(f"cannot stat fixture evidence for {name}") from exc
+    if newer_evidence:
+        first = sorted(newer_evidence)[0]
+        raise PatchExecutorError(
+            f"stale fig_loop run: fixture evidence is newer than checkpoint: {first}"
+        )
+    if newer_allowed_scope:
+        first = sorted(newer_allowed_scope)[0]
+        raise PatchExecutorError(
+            f"stale fig_loop run: allowed_edit_scope evidence is newer than checkpoint: {first}"
+        )
+
+
+def _validate_no_pending_patch_closeout(name: str, loop_run: LatestLoopRun) -> None:
+    for evidence_path in sorted(loop_run.run_dir.glob("patch_apply_*.json")):
+        evidence = _read_json(evidence_path)
+        evidence_fixture = evidence.get("fixture")
+        if isinstance(evidence_fixture, str) and evidence_fixture != name:
+            raise PatchExecutorError(
+                f"patch apply evidence fixture mismatch in {evidence_path}: "
+                f"{evidence_fixture} != {name}"
+            )
+        if evidence.get("closeout_required") is True:
+            raise PatchExecutorError(f"pending patch closeout: {evidence_path}")
 
 
 def _validate_loop_state(loop_run: LatestLoopRun) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -255,6 +351,8 @@ def apply_patch_file(
         raise PatchExecutorError("explicit --apply is required before mutation")
     loop_run = _latest_loop_run(name, runs_root)
     patch_handoff, _auto_patch_eligibility = _validate_loop_state(loop_run)
+    _validate_loop_run_currentness(name, repo_root, loop_run, patch_handoff)
+    _validate_no_pending_patch_closeout(name, loop_run)
     changed_paths = changed_paths_from_unified_diff(patch_path)
     changed_path = _validate_patch_scope(changed_paths, patch_handoff)
     pre_patch = _allowed_scope_evidence(repo_root, patch_handoff)

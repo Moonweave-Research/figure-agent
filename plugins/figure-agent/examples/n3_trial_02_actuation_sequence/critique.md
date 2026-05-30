@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.13
 fixture: n3_trial_02_actuation_sequence
-generated_at: 2026-05-28T13:26:45Z
+generated_at: 2026-05-29T08:00:00Z
 generator: critique_brief.py
 generator_version: sha256:f7b71b470a4bab2b0a486edb039a45f6187b3782e90db9cdd1e78b3cc05077e7
 rubric_version: figure-agent.critique-rubric.v1.13
-critique_input_hash: sha256:b848919671d762581da296e0f74387cc90faf369cd33e3cfdf70119a1f7b415a
+critique_input_hash: sha256:127e69c6c111a22f41a6f0c7b5e68900ea9a0edaa9beb6098ab1608685fae21b
 verdict: revise
 audit_enumeration:
   structural_completeness:
@@ -348,7 +348,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:b848919671d762581da296e0f74387cc90faf369cd33e3cfdf70119a1f7b415a
+  assessed_artifact_hash: sha256:127e69c6c111a22f41a6f0c7b5e68900ea9a0edaa9beb6098ab1608685fae21b
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: []
@@ -639,14 +639,14 @@ findings:
     status: open
 ---
 
-# Vision Critique — n3_trial_02_actuation_sequence (post-C001 re-audit)
+# Vision Critique — n3_trial_02_actuation_sequence
 
-**Verdict: revise** (no BLOCKER, no MAJOR). This is a fresh re-audit after the C001 label relocation. The previously blocking MAJOR — the "prev." label occluded by the solid strip — is **resolved**: `prev.` now sits clearly to the left of the dashed ghost, fully legible, and binds to the ghost it annotates (confirmed in full_q4; the `prev.` text_on_path clash candidate dropped out of `visual_clash.json`, 9 → 8). The earlier P3 lower-left **congestion (C002) is also resolved** — the relocation separated `prev.`, the ghost, the strip base, and the recovery arrow into four distinct elements, so I no longer carry it as a finding. Every physics invariant remains honored: bend-toward-+V (P1), bend-away with the Coulomb > Maxwell annotation (P2), partial recovery with the dashed-ghost prior position (P3), fixed GND clamp throughout, and electrons on the strip in all panels.
+**Verdict: revise** (no BLOCKER, no MAJOR). Fresh re-audit of the current build. The `prev.` label sits to the left of the dashed ghost outline in the P3 lower region (confirmed in full_q4), legible and binding to the ghost it annotates. The P3 lower region shows the four intended elements — the solid strip, the dashed ghost, the `prev.` label, and the teal recovery curve — as distinct objects. Every physics invariant is honored: bend-toward-+V (P1), bend-away with the Coulomb > Maxwell annotation (P2), partial recovery with the dashed-ghost prior position (P3), fixed GND clamp throughout, and electrons on the strip in all panels.
 
 What keeps the verdict at `revise` rather than fully clean is one residual low-impact MINOR plus two NITs — none of which block manuscript use:
 
-- **C005 (MINOR, hierarchy):** teal still encodes two roles — the active Coulomb repulsion force (P2 straight arrows) and the passive elastic recovery motion (P3 curved arrow). Straight-vs-curved shape and panel context partly disambiguate, but the shared color invites reading the recovery as a force; the reference avoids this by drawing the recovery arrow green. A distinct recovery-arrow style would close it.
+- **C005 (MINOR, hierarchy):** teal encodes two roles — the active Coulomb repulsion force (P2 straight arrows) and the passive elastic recovery motion (P3 curved arrow). Straight-vs-curved shape and panel context partly disambiguate, but the shared color invites reading the recovery as a force; the reference avoids this by drawing the recovery arrow green. A distinct recovery-arrow style would close it.
 - **C003 (NIT, palette):** the P1 injection arrows render as a muted rose rather than a saturated red — consistent across all three, so this is the locked cRed value, not a bug.
 - **C004 (NIT, style):** each strip's rounded cap protrudes as a small gold knob over its clamp because the strip is drawn after the clamp; reordering or trimming the strip start tidies it.
 
-All eight visual-clash candidates (VC001–VC008) are now false positives — legible text on the white margin or the pale panel card, with the clash metric reflecting glyph contrast or a near-miss block/strip edge. Both print-scale proxies pass: at 178mm every label, including the relocated `prev.`, stays legible; the thumbnail keeps the three-stage narrative while sub-6pt micro-labels drop as expected. All residual items are TikZ coordinate/style edits, so the recommended path stays `continue_tikz`; no SVG polish or human art-direction gate is required for the declared solid_manuscript ambition. Fresh re-audit benchmark: **solid_manuscript**, advisory **85/100** (up from 78 pre-fix), next bottleneck = polish. The figure is now manuscript-usable; C005 is an optional refinement, and the two NITs were already deprioritized.
+All eight visual-clash candidates (VC001–VC008) are false positives — legible text on the white margin or the pale panel card, with the clash metric reflecting glyph contrast or a near-miss block/strip edge. Both print-scale proxies pass: at 178mm every label, including `prev.`, stays legible; the thumbnail keeps the three-stage narrative while sub-6pt micro-labels drop as expected. All residual items are TikZ coordinate/style edits, so the recommended path stays `continue_tikz`; no SVG polish or human art-direction gate is required for the declared solid_manuscript ambition. Fresh re-audit benchmark: **solid_manuscript**, advisory **85/100**, next bottleneck = polish. The figure is manuscript-usable; C005 is an optional refinement, and the two NITs are deprioritized.

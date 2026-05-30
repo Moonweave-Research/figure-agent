@@ -219,8 +219,19 @@ typographic hierarchy.
 """
 
 
-def editorial_art_direction_audit() -> str:
-    return """## Editorial Art-Direction Audit (host LLM MUST evaluate)
+def editorial_art_direction_audit(*, require_route_detail: bool = False) -> str:
+    route_detail = ""
+    if require_route_detail:
+        route_detail = """ The route is not implied by `verdict`; `verdict`
+only grades whether the routing judgment is well supported. If
+`recommended_path: continue_tikz`, fill `remaining_tikz_lever` with the single
+bounded source-level adjustment still available. If
+`recommended_path: ready_for_svg_polish`, fill `svg_polish_candidate_reason`
+with the evidence that semantic/source-level work is closed and only optical
+vector cleanup remains. If `semantic_backport_required`, fill
+`semantic_backport_reason`. If `needs_human_art_direction`, fill
+`human_art_direction_reason`."""
+    return f"""## Editorial Art-Direction Audit (host LLM MUST evaluate)
 
 After completing `top_tier_audit`, evaluate every editorial art-direction slot
 below under top-level YAML field `editorial_art_direction`. This block is about
@@ -278,7 +289,7 @@ mismatched icons, crowded text, weak whitespace, or accidental color choices.
 Decide whether the remaining gap should stay in TikZ or move to controlled SVG
 polish. This slot must include `recommended_path` with one of:
 `continue_tikz`, `ready_for_svg_polish`, `needs_human_art_direction`, or
-`semantic_backport_required`.
+`semantic_backport_required`.{route_detail}
 
 ### 10. Human Art-Direction Gate
 State whether a human should choose target-journal style, hero-panel priority,
@@ -370,7 +381,7 @@ def quality_axes_schema() -> str:
     )
 
 
-def editorial_art_direction_schema() -> str:
+def editorial_art_direction_schema(*, require_route_detail: bool = False) -> str:
     lines = ["editorial_art_direction:"]
     for key in vocab.EDITORIAL_AUDIT_KEYS:
         lines.extend(
@@ -384,10 +395,33 @@ def editorial_art_direction_schema() -> str:
             ]
         )
         if key == "tikz_vs_svg_polish_trigger":
-            lines.append(
-                "    recommended_path: continue_tikz | ready_for_svg_polish | "
-                "needs_human_art_direction | semantic_backport_required"
+            lines.extend(
+                [
+                    "    recommended_path: continue_tikz | ready_for_svg_polish | "
+                    "needs_human_art_direction | semantic_backport_required",
+                ]
             )
+            if require_route_detail:
+                lines.extend(
+                    [
+                        (
+                            '    remaining_tikz_lever: "<required when '
+                            'recommended_path=continue_tikz>"'
+                        ),
+                        (
+                            '    svg_polish_candidate_reason: "<required when '
+                            'recommended_path=ready_for_svg_polish>"'
+                        ),
+                        (
+                            '    semantic_backport_reason: "<required when '
+                            'recommended_path=semantic_backport_required>"'
+                        ),
+                        (
+                            '    human_art_direction_reason: "<required when '
+                            'recommended_path=needs_human_art_direction>"'
+                        ),
+                    ]
+                )
     return "\n".join(lines)
 
 

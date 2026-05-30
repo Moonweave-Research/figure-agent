@@ -25,6 +25,7 @@ CRITIQUE_SCHEMA_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
+CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -39,6 +40,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -54,6 +56,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -67,6 +70,7 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }
 )
 CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
@@ -77,6 +81,7 @@ CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }
 )
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
@@ -102,6 +107,12 @@ EDITORIAL_POLISH_PATHS = frozenset(
         "semantic_backport_required",
     }
 )
+EDITORIAL_POLISH_DETAIL_FIELD_BY_PATH = {
+    "continue_tikz": "remaining_tikz_lever",
+    "ready_for_svg_polish": "svg_polish_candidate_reason",
+    "semantic_backport_required": "semantic_backport_reason",
+    "needs_human_art_direction": "human_art_direction_reason",
+}
 AESTHETIC_LEVER_VERDICTS = ("pass", "not_applicable", "weak", "fail", "needs_human")
 AESTHETIC_LEVER_VERDICT_RANK = {
     verdict: index for index, verdict in enumerate(AESTHETIC_LEVER_VERDICTS)
@@ -246,6 +257,7 @@ def journal_grade_assessment(
             CRITIQUE_SCHEMA_V1_11,
             CRITIQUE_SCHEMA_V1_12,
             CRITIQUE_SCHEMA_V1_13,
+            CRITIQUE_SCHEMA_V1_14,
         }
         else None
     )
@@ -324,6 +336,7 @@ def editorial_art_direction_summary(
     valid_verdicts: list[str] = []
     polish_recommended_path: str | None = None
     polish_trigger_verdict: str | None = None
+    polish_route_detail: str | None = None
     human_gate_verdict: str | None = None
     for slot_name, slot in editorial.items():
         if not isinstance(slot_name, str) or not isinstance(slot, dict):
@@ -341,6 +354,10 @@ def editorial_art_direction_summary(
             recommended_path = slot.get("recommended_path")
             if isinstance(recommended_path, str) and recommended_path in EDITORIAL_POLISH_PATHS:
                 polish_recommended_path = recommended_path
+                detail_field = EDITORIAL_POLISH_DETAIL_FIELD_BY_PATH[recommended_path]
+                route_detail = slot.get(detail_field)
+                if isinstance(route_detail, str) and route_detail.strip():
+                    polish_route_detail = route_detail.strip()
             polish_trigger_verdict = verdict
         elif slot_name == "human_art_direction_gate":
             human_gate_verdict = verdict
@@ -348,7 +365,7 @@ def editorial_art_direction_summary(
     if not valid_verdicts or polish_recommended_path is None:
         return None
     worst_verdict = max(valid_verdicts, key=lambda verdict: TOP_TIER_VERDICT_RANK[verdict])
-    return {
+    summary = {
         "source": "critique.editorial_art_direction",
         "evidence_path": str(critique_path),
         "slot_count": len(valid_verdicts),
@@ -361,6 +378,9 @@ def editorial_art_direction_summary(
         "polish_trigger_verdict": polish_trigger_verdict,
         "human_art_direction_gate_verdict": human_gate_verdict,
     }
+    if polish_route_detail is not None:
+        summary["polish_route_detail"] = polish_route_detail
+    return summary
 
 
 def crop_audit_summary(
@@ -433,6 +453,7 @@ def aesthetic_lever_summary(
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }:
         return None
     if critique_state != "FRESH":
@@ -506,7 +527,11 @@ def journal_art_direction_playbook_summary(
     if not critique_path.is_file():
         return None
     frontmatter = yaml_frontmatter(critique_path)
-    if frontmatter.get("schema") not in {CRITIQUE_SCHEMA_V1_12, CRITIQUE_SCHEMA_V1_13}:
+    if frontmatter.get("schema") not in {
+        CRITIQUE_SCHEMA_V1_12,
+        CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
+    }:
         return None
     if critique_state != "FRESH":
         return {

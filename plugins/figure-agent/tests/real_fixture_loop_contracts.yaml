@@ -18,7 +18,7 @@ cases:
         workflow_ready: false
       adjudication:
         state: fresh
-        decision_count: 0
+        decision_count: 1
       stdout:
         final_stop_reason: status_action_required
         escalation_level: agent_action_required
@@ -46,7 +46,7 @@ cases:
         workflow_ready: false
       adjudication:
         state: fresh
-        decision_count: 0
+        decision_count: 1
       stdout:
         final_stop_reason: reference_input_missing
         escalation_level: agent_action_required
@@ -63,7 +63,7 @@ cases:
         final_stop_reason: human_gate_required
       iteration:
         stop_reason: human_gate_required
-        recommended_next_action: human review required for F001
+        recommended_next_action: human review required for C001
         human_gate_status: required
         escalation_level: human_review_required
         patch_handoff_present: false
@@ -73,12 +73,12 @@ cases:
         critique_state: FRESH
       adjudication:
         state: fresh
-        decision_count: 2
+        decision_count: 4
       stdout:
         final_stop_reason: human_gate_required
         escalation_level: human_review_required
         patch_handoff_present: false
-        recommended_next_action: human review required for F001
+        recommended_next_action: human review required for C001
 
   - id: single_apply_creates_patch_handoff
     fixture: n3_trial_01_trap_depth

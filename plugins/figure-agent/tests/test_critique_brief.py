@@ -826,7 +826,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_10_crop_editorial_and_micro_defect_schema(
+def test_critique_brief_output_format_uses_v1_10_default_schema(
     tmp_path,
 ):
     example_dir = _write_example(tmp_path, section6="- invariant")
@@ -838,6 +838,8 @@ def test_critique_brief_output_format_uses_v1_10_crop_editorial_and_micro_defect
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
+    assert "remaining_tikz_lever:" not in brief
+    assert "svg_polish_candidate_reason:" not in brief
     assert "micro_defects:" in brief
     for kind in (
         "line_crosses_label",
@@ -1353,8 +1355,8 @@ reference_learning:
     brief = generate_for(example_dir)
 
     assert "## Reference Learning Contract" in brief
-    assert "schema: figure-agent.critique.v1.13" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.13" in brief
+    assert "schema: figure-agent.critique.v1.14" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
     assert "References are learning sources, not copy targets." in brief
     assert "reference/example.png" in brief
     assert "roles=style_anchor, typography_reference" in brief
@@ -1620,8 +1622,8 @@ def test_critique_brief_includes_journal_art_direction_playbook(tmp_path):
     assert "toy_schematic severity=MAJOR route=continue_tikz" in brief
     assert "svg_for_optical_finish path=ready_for_svg_polish" in brief
     assert "must cite exact playbook anchors" in brief
-    assert "schema: figure-agent.critique.v1.12" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.12" in brief
+    assert "schema: figure-agent.critique.v1.14" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
     assert "journal_art_direction_playbook_audit:" in brief
 
 
@@ -1671,8 +1673,8 @@ aesthetic_levers:
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.12" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.12" in brief
+    assert "schema: figure-agent.critique.v1.14" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
     assert "journal_art_direction_playbook_audit:" in brief
     assert "aesthetic_lever_audit:" in brief
 
@@ -1788,9 +1790,11 @@ aesthetic_levers:
 
     assert "## Aesthetic Lever Grammar" in brief
     assert "## Aesthetic Intent Calibration" not in brief
-    assert "schema: figure-agent.critique.v1.11" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.11" in brief
+    assert "schema: figure-agent.critique.v1.14" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
     assert "aesthetic_lever_audit:" in brief
+    assert "remaining_tikz_lever:" in brief
+    assert "svg_polish_candidate_reason:" in brief
     assert "maturity_restraint" in brief
     assert "dimension=maturity priority=required route=tikz_patch" in brief
     assert "Generic prose such as \"improve polish\" is invalid" in brief

@@ -61,12 +61,31 @@ Canonical next-action order:
 5. Run `/fig_export`, release, or SVG polish only when `/fig_status` or
    `/fig_drive --dry-run` explicitly routes there.
 
-If the user asks to proceed autonomously, use `/fig_run <name> --mode <mode>
---goal "<goal>" --execute` rather than manually copy-pasting each safe driver
-command. `/fig_run` is bounded: it executes compile, missing adjudication
-scaffold, verify-only loop checkpoint commands, and non-golden draft export,
-then stops at host critique, existing adjudication repair, patch, polish, human,
-accepted, tracked-golden, force-golden, and release boundaries.
+If the user asks to proceed autonomously on one fixture, use
+`/fig_run <name> --mode <mode> --goal "<goal>" --execute` rather than manually
+copy-pasting each safe driver command. `/fig_run` is bounded: it executes
+compile, missing adjudication scaffold, verify-only loop checkpoint commands,
+and non-golden draft export, then stops at host critique, existing adjudication
+repair, patch, polish, human, accepted, tracked-golden, force-golden, and
+release boundaries. It records non-authoritative `.scratch/fig-run-runs/`
+evidence in execute mode. There is no resume command; after any interruption,
+inspect the prior journal only as context, then rerun live `/fig_status` or
+`/fig_drive` before using `/fig_run --execute` again.
+
+If the user asks to proceed autonomously across multiple fixtures, start with
+the queue:
+
+1. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"`
+2. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm`
+3. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json`
+4. `uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent`
+5. Add `--execute` only after reading the plan-only queue-run output.
+
+`/fig_queue_run` never executes queue commands directly. It delegates each
+planned fixture to `/fig_run`, so live driver revalidation remains the execution
+gate. Human, release/golden, host-vision, and SVG-polish rows stay explicit
+boundaries. For blocked command-plan rows, read `operator_handoff` for the
+required actor, next step, allowed scope, forbidden scope, and closeout checks.
 
 Use modes mentally:
 
@@ -125,6 +144,14 @@ polish backport, or actions the current mode forbids.
                          read-only next-action selector
 /fig_run <name> --mode <mode> --goal "<goal>" --execute
                          bounded executor for safe mechanical steps; stops at gates
+                         and writes non-authoritative .scratch/fig-run-runs/
+                         evidence; no resume/replay command exists
+/fig_queue --mode <mode> --goal "<goal>"
+                         read-only multi-fixture driver queue with actor/action
+                         filters and optional command plan
+/fig_queue_run --mode <mode> --goal "<goal>"
+                         plan or execute the queue's workflow-agent subset by
+                         delegating each fixture to /fig_run
 ```
 
 Agent rule: when `coordinate_hints.yaml` exists, read it before authoring or

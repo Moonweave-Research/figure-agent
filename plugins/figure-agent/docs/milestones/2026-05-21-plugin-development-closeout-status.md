@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-29 KST
-**Status:** current main truth through v0.8.2 / Issue 64
+**Date:** 2026-05-30 KST
+**Status:** current release-candidate truth through v0.9.0 / Issue 89
 
 ## Bottom Line
 
@@ -21,6 +21,10 @@ accountability for reference-learning critiques. The v0.8.2 patch adds Issue 64
 closeout hardening: latest v1.13 critique summaries surface in `/fig_loop`, and
 routine generated export SVGs no longer churn critique freshness for
 non-polished fixtures.
+The v0.9.0 release-candidate track freezes the operator-grade workflow:
+guided autonomy, bounded runner execution, multi-fixture queues, blocked-row
+operator handoffs, and closeout follow-through are documented and validated as
+the default operating model.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -29,7 +33,8 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 64 / v0.8.2 release sync:
+Most recent local full verification after Issue 89 / v0.9.0 release-candidate
+sync:
 
 ```bash
 uv run pytest -q
@@ -42,7 +47,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1376 passed, 1 skipped, 1 xfailed, 6 warnings`.
+- Full test suite: `1471 passed, 1 skipped, 1 xfailed, 6 warnings`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.

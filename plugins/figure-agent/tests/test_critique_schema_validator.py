@@ -71,6 +71,7 @@ EDITORIAL_AUDIT_KEYS = (
 CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
+CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -223,6 +224,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -245,6 +247,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -256,6 +259,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_11,
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
+        CRITIQUE_SCHEMA_V1_14,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -289,6 +293,11 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         frontmatter["journal_art_direction_playbook_audit"] = (
             _journal_art_direction_playbook_audit()
         )
+    if schema == CRITIQUE_SCHEMA_V1_14:
+        trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
+        trigger["remaining_tikz_lever"] = (
+            "source-level label spacing can still be repaired in TikZ"
+        )
     return frontmatter
 
 
@@ -305,6 +314,34 @@ def test_validate_critique_schema_accepts_v1_8_crop_audit_log() -> None:
 
 
 def test_validate_critique_schema_accepts_v1_13_crop_anomaly_accounting() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_13))
+
+
+def test_validate_critique_schema_accepts_v1_14_route_specific_trigger_detail() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_14))
+
+
+def test_validate_critique_schema_rejects_v1_14_continue_tikz_without_remaining_lever() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
+    del frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"][
+        "remaining_tikz_lever"
+    ]
+
+    with pytest.raises(CritiqueContractError, match="remaining_tikz_lever"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_14_ready_without_candidate_reason() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
+    trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
+    trigger["recommended_path"] = "ready_for_svg_polish"
+    trigger.pop("remaining_tikz_lever")
+
+    with pytest.raises(CritiqueContractError, match="svg_polish_candidate_reason"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_accepts_v1_13_without_route_specific_trigger_detail() -> None:
     validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_13))
 
 

@@ -463,6 +463,34 @@ def _publication_gate_blocks_release(status: dict[str, Any]) -> bool:
     }
 
 
+def _draft_export_is_runner_executable(status: dict[str, Any]) -> bool:
+    return (
+        status.get("acceptance_state") == "NOT_DECLARED"
+        and status.get("export_state") in {"MISSING", "STALE"}
+        and status.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
+    )
+
+
+def _draft_export_block_reason(status: dict[str, Any]) -> str:
+    acceptance = status.get("acceptance_state")
+    if acceptance != "NOT_DECLARED":
+        return (
+            f"exports are missing or stale, but acceptance_state is {acceptance}; "
+            "/fig_run auto-export is limited to draft fixtures whose "
+            "acceptance_state is NOT_DECLARED."
+        )
+    critique = status.get("critique_state")
+    if critique not in {"FRESH", "NOT_REQUIRED"}:
+        return (
+            f"exports are missing or stale, but critique_state is {critique}; "
+            "refresh or resolve critique before auto-export."
+        )
+    return (
+        "exports are missing or stale, but the current state is outside the "
+        "/fig_run auto-export policy."
+    )
+
+
 def _publication_gate_block_reason(status: dict[str, Any]) -> str:
     state = status.get("publication_gate_state")
     failures = status.get("publication_gate_failures")
@@ -700,6 +728,13 @@ def _select_action(
 
     if mode == "release":
         if export in ("MISSING", "STALE"):
+            if not _draft_export_is_runner_executable(status):
+                return make(
+                    ACTION_RELEASE_BLOCKED,
+                    safe_command=None,
+                    stop_boundary=STOP_ACCEPTED_OR_FINAL_READY,
+                    reason=_draft_export_block_reason(status),
+                )
             return make(
                 ACTION_RUN_EXPORT,
                 safe_command=command_mod.export_command(name),
@@ -756,6 +791,13 @@ def _select_action(
 
     # mode == "polish"
     if export in ("MISSING", "STALE"):
+        if not _draft_export_is_runner_executable(status):
+            return make(
+                ACTION_POLISH_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=STOP_ACCEPTED_OR_FINAL_READY,
+                reason=_draft_export_block_reason(status),
+            )
         return make(
             ACTION_RUN_EXPORT,
             safe_command=command_mod.export_command(name),

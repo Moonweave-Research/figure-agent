@@ -2,6 +2,46 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.9.0] - 2026-05-30
+
+Operator-grade release-candidate for the guided autonomy workflow after Issues
+70-89.
+
+### Added
+
+- Issue 70 guided autonomy surfaces for bounded runner execution without hidden
+  source edits, host critique, SVG polish, accepted, golden, or release
+  mutation.
+- Issue 71 real-fixture readiness closeout, including refreshed host-vision
+  critique/adjudication evidence for the current fixture corpus.
+- Issues 77-88 multi-fixture queue and queue-run operator surfaces that group
+  work by actor, expose blocked-row `operator_handoff` packets as explicit
+  operator handoff records, and delegate only the workflow-agent subset to
+  `/fig_run`.
+- Issue 88 queue closeout follow-through for fixtures blocked on export or loop
+  reruns, with exact follow-up commands instead of ambiguous prose.
+- Issue 89 release-candidate docs that freeze `/fig_status`, `/fig_drive`,
+  `/fig_run`, `/fig_queue`, and `/fig_queue_run` as the canonical operator
+  workflow.
+
+### Changed
+
+- README and architecture docs now present the single-fixture and multi-fixture
+  operating paths together, including bounded safe runner behavior and queue
+  handoff boundaries.
+- Release contract tests now assert the v0.9 operator-grade version surface
+  across plugin manifest, `pyproject.toml`, `uv.lock`, README, changelog, and
+  closeout status docs.
+
+### Guardrails
+
+- v0.9.0 is still a quality/audit kernel, not a hidden auto-designer.
+- Scores, reference-learning metrics, aesthetic signals, and queue summaries are
+  routing evidence only; they do not override critique lint, adjudication,
+  human review, accepted/golden, publication, or SVG-polish gates.
+- No generated build/export/.scratch artifacts, source drawing changes, hidden
+  auto-patching, or accepted/golden mutation are part of this release.
+
 ## [0.8.2] - 2026-05-29
 
 Patch release for Issue 64 loop-summary and generated-export closeout UX after

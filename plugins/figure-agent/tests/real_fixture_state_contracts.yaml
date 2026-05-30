@@ -86,13 +86,13 @@ fixtures:
         safe_command:
         stop_boundary:
       release:
-        action: run_export
-        safe_command: uv run python3 scripts/run_export.py fig5_floating_clip_mechanism
-        stop_boundary:
+        action: release_blocked
+        safe_command:
+        stop_boundary: accepted_or_final_ready_required
       polish:
-        action: run_export
-        safe_command: uv run python3 scripts/run_export.py fig5_floating_clip_mechanism
-        stop_boundary:
+        action: polish_handoff_stop
+        safe_command:
+        stop_boundary: accepted_or_final_ready_required
 
   - fixture: n3_trial_01_trap_depth
     artifacts:

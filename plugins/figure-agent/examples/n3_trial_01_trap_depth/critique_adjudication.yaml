@@ -1,14 +1,24 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: n3_trial_01_trap_depth
-source_critique_hash: sha256:6c93e9fe0c122f58d0d327709c1226b88de5a3f1d86e7e9c54558e156f040a8d
+source_critique_hash: sha256:e0887c7702a149dfff96531738fa62fa54612f7c8ddf7e4c06ace5da0bfe7e15
 decisions:
-- finding_id: F001
+- finding_id: C001
   decision: needs_human
-  reason: Review F001 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding F001.
-- finding_id: F003
+  reason: Review C001 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex lines 110-113
+  evidence: critique.md finding C001.
+- finding_id: C002
   decision: needs_human
-  reason: Review F003 before selecting apply, dismiss, defer, or resolved.
-  patch_target: ''
-  evidence: critique.md finding F003.
+  reason: Review C002 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex lines 172-176
+  evidence: critique.md finding C002.
+- finding_id: C003
+  decision: needs_human
+  reason: Review C003 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex lines 86-99
+  evidence: critique.md finding C003.
+- finding_id: C004
+  decision: needs_human
+  reason: Review C004 before selecting apply, dismiss, defer, or resolved.
+  patch_target: examples/n3_trial_01_trap_depth/n3_trial_01_trap_depth.tex lines 38-39
+  evidence: critique.md finding C004.
