@@ -165,6 +165,8 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 
 **Read these first:**
 - `docs/architecture-overview.md` — the layer-by-layer reference. Start here.
+- `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
+  single-fixture, queue, host critique, closeout, and release/golden operation.
 - `docs/quality-kernel-goal.md` — current product direction.
 - `docs/architecture-v0.5-per-panel-reference-workflow.md` — how `/fig_critique` works now.
 - `docs/milestones/2026-05-17-quality-state-hardening.md` — current issue record for reference contracts, readiness states, manifest hashes, and TIFF quality gates.

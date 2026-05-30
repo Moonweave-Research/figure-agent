@@ -99,6 +99,9 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
   - no accepted/golden mutation;
   - no external provider requirement.
 
+Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
+`docs/milestones/2026-05-30-v0-9-operator-playbook.md`.
+
 ### 89E - Final Review And Merge Readiness
 
 - Run full pytest, ruff, diff check, plugin validate, package audit, and secret

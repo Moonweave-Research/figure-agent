@@ -142,6 +142,7 @@ def test_current_readme_documents_release_boundaries() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
     assert f"Current state (v{EXPECTED_RELEASE_VERSION})" in readme
+    assert "docs/v0.9-operator-playbook.md" in readme
     for required in [
         "single next-action summary",
         "Bounded safe runner",
@@ -159,6 +160,23 @@ def test_current_readme_documents_release_boundaries() -> None:
     assert "Semi-automatic" in boundary_section
     assert "Opt-in" in boundary_section
     assert "Manual" in boundary_section
+
+
+def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> None:
+    playbook = (REPO_ROOT / "docs" / "v0.9-operator-playbook.md").read_text()
+
+    for required in [
+        "Single fixture",
+        "Multi-Fixture Queue",
+        "Host Critique Refresh",
+        "Closeout After Patch Or Export",
+        "Release And Golden Gate",
+        "What v0.9 Still Does Not Do",
+        "The command plan is the authority for batch execution",
+        "It does not automatically produce top-tier art direction",
+        "It does not mutate accepted/golden/publication state",
+    ]:
+        assert required in playbook
 
 
 def test_current_changelog_covers_operator_release() -> None:
