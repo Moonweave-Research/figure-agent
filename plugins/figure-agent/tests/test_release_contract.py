@@ -14,8 +14,8 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.8.2"
-EXPECTED_RELEASE_DATE = "2026-05-29"
+EXPECTED_RELEASE_VERSION = "0.9.0"
+EXPECTED_RELEASE_DATE = "2026-05-30"
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -25,7 +25,7 @@ def test_plugin_manifest_version_matches_pyproject() -> None:
     assert plugin["version"] == pyproject["project"]["version"]
 
 
-def test_release_metadata_matches_v0_8_version() -> None:
+def test_release_metadata_matches_current_version() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
     uv_lock = (REPO_ROOT / "uv.lock").read_text()
@@ -138,12 +138,15 @@ def test_readme_current_state_matches_plugin_version() -> None:
     assert "docs/svg-polish-pipeline.md" not in experimental_section
 
 
-def test_v0_8_readme_documents_release_boundaries() -> None:
+def test_current_readme_documents_release_boundaries() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
     assert f"Current state (v{EXPECTED_RELEASE_VERSION})" in readme
     for required in [
         "single next-action summary",
+        "Bounded safe runner",
+        "Operator queue",
+        "multi-fixture",
         "journal style-pack catalog",
         "external vision review",
         "not a hidden auto-designer",
@@ -158,21 +161,19 @@ def test_v0_8_readme_documents_release_boundaries() -> None:
     assert "Manual" in boundary_section
 
 
-def test_v0_8_changelog_covers_issues_57_to_61() -> None:
+def test_current_changelog_covers_operator_release() -> None:
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
-    top_entry = changelog.partition("## [0.7.1]")[0]
+    top_entry = changelog.partition("## [0.8.2]")[0]
 
     assert f"## [{EXPECTED_RELEASE_VERSION}] - {EXPECTED_RELEASE_DATE}" in top_entry
     for required in [
-        "Issue 57",
-        "Issue 58",
-        "Issue 59",
-        "Issue 60",
-        "Issue 61",
-        "Issue 63",
-        "reference-learning",
-        "non-model aesthetic audit",
-        "quality/audit kernel",
+        "Issue 70",
+        "Issue 71",
+        "Issue 88",
+        "Issue 89",
+        "guided autonomy",
+        "multi-fixture queue",
+        "operator handoff",
         "not a hidden auto-designer",
     ]:
         assert required in top_entry
@@ -194,8 +195,11 @@ def test_closeout_status_matches_current_release_truth() -> None:
         / "2026-05-26-issue-48-svg-polish-promotion-readiness.md"
     ).read_text()
 
-    assert f"current main truth through v{plugin['version']}" in closeout
-    assert f"current main truth through v{EXPECTED_RELEASE_VERSION} / Issue 64" in closeout
+    assert f"current release-candidate truth through v{plugin['version']}" in closeout
+    assert (
+        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issue 89"
+        in closeout
+    )
     assert "after Issue 33 / PR #47" not in closeout
     assert "start with Issue 34" not in closeout
     assert "Issue 48" in closeout
@@ -203,7 +207,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     assert "implemented on branch" not in issue_48
 
 
-def test_v0_8_issue_statuses_are_mainline_ready() -> None:
+def test_v0_9_issue_statuses_are_mainline_ready() -> None:
     issue_files = {
         "Issue 57": "2026-05-27-issue-57-real-fixture-audit-adoption.md",
         "Issue 58": "2026-05-27-issue-58-single-next-action-ux.md",
@@ -212,6 +216,8 @@ def test_v0_8_issue_statuses_are_mainline_ready() -> None:
         "Issue 61": "2026-05-27-issue-61-external-second-opinion-vision.md",
         "Issue 62": "2026-05-27-issue-62-v0-8-release-hardening.md",
         "Issue 64": "2026-05-28-issue-64-loop-summary-and-export-closeout-ux.md",
+        "Issue 70": "2026-05-29-issue-70-operator-grade-guided-autonomy.md",
+        "Issue 88": "2026-05-30-issue-88-queue-operator-ergonomics-and-closeout.md",
     }
 
     for issue_name, file_name in issue_files.items():

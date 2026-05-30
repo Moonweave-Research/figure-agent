@@ -113,7 +113,7 @@ and closeout rows stay visible as blocked operator handoffs.
 
 ---
 
-## Current state (v0.8.2)
+## Current state (v0.9.0)
 
 | Area | What's working |
 |---|---|

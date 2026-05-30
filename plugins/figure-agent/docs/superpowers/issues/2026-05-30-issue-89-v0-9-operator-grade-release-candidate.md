@@ -1,6 +1,6 @@
 # Issue 89 - v0.9 Operator-Grade Release Candidate
 
-Status: proposed
+Status: in progress
 
 Depends on:
 
@@ -65,6 +65,9 @@ v0.9 should say, plainly:
 - Run plugin package audit and validation.
 - Do not include generated `.scratch/`, build, export, or fixture output
   artifacts in the package.
+
+Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
+`docs/milestones/2026-05-30-v0-9-package-and-version-metadata.md`.
 
 ### 89C - Whole-Corpus Release Smoke
 
