@@ -401,6 +401,81 @@ def test_build_queue_can_include_command_plan(
     ]
     assert queue["command_plan"]["blocked"][0]["reason"] == "stop_boundary:closeout_required"
     assert queue["command_plan"]["blocked"][1]["reason"] == "required_actor:host_llm"
+    assert queue["command_plan"]["blocked"][0]["operator_handoff"] == {
+        "schema": "figure-agent.queue-operator-handoff.v1",
+        "fixture": "beta",
+        "required_actor": "workflow_agent",
+        "next_step": "Run read-only closeout inspection before attempting export.",
+        "command": "uv run python3 scripts/fig_closeout.py beta --json",
+        "reason": "stop_boundary:closeout_required",
+        "allowed_scope": ["read-only closeout inspection"],
+        "forbidden_scope": [
+            "source edits",
+            "export mutation",
+            "accepted/golden mutation",
+            "publication state mutation",
+        ],
+        "closeout_checks": ["rerun /fig_queue after resolving the blocked row"],
+    }
+    assert queue["command_plan"]["blocked"][1]["operator_handoff"] == {
+        "schema": "figure-agent.queue-operator-handoff.v1",
+        "fixture": "gamma",
+        "required_actor": "host_llm",
+        "next_step": "Refresh host-vision critique for this fixture.",
+        "command": "/fig_critique gamma",
+        "reason": "required_actor:host_llm",
+        "allowed_scope": [
+            "examples/gamma/critique.md",
+            "examples/gamma/build/audit_crops/",
+        ],
+        "forbidden_scope": [
+            "source edits",
+            "export mutation",
+            "accepted/golden mutation",
+            "publication state mutation",
+        ],
+        "closeout_checks": [
+            "run critique_lint",
+            "sync or scaffold critique_adjudication.yaml",
+            "rerun /fig_queue",
+        ],
+    }
+
+
+def test_command_plan_blocked_handoff_covers_human_and_release_rows(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        {
+            "fixture": "needs_human",
+            "action": "human_gate_stop",
+            "required_actor": "human",
+            "requires_human": True,
+            "safe_command": None,
+            "blocking_source": "human_gate_required",
+            "stop_boundary": "human_gate_required",
+        },
+        {
+            "fixture": "needs_release",
+            "action": "release_blocked",
+            "required_actor": "release_operator",
+            "requires_human": True,
+            "safe_command": None,
+            "blocking_source": "force_golden_required",
+            "stop_boundary": "force_golden_required",
+        },
+    ]
+
+    plan = fig_queue.build_command_plan(rows)
+
+    assert plan["blocked"][0]["operator_handoff"]["next_step"] == (
+        "Record the required human decision before continuing automation."
+    )
+    assert plan["blocked"][0]["operator_handoff"]["command"] is None
+    assert plan["blocked"][1]["operator_handoff"]["next_step"] == (
+        "Perform explicit release/golden review; do not force golden implicitly."
+    )
+    assert plan["blocked"][1]["operator_handoff"]["command"] is None
 
 
 def test_command_plan_uses_filtered_rows(

@@ -84,7 +84,8 @@ the queue:
 `/fig_queue_run` never executes queue commands directly. It delegates each
 planned fixture to `/fig_run`, so live driver revalidation remains the execution
 gate. Human, release/golden, host-vision, and SVG-polish rows stay explicit
-boundaries.
+boundaries. For blocked command-plan rows, read `operator_handoff` for the
+required actor, next step, allowed scope, forbidden scope, and closeout checks.
 
 Use modes mentally:
 

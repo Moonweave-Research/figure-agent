@@ -71,3 +71,7 @@ blocked command-plan rows and will not be attempted.
 Run records contain the planned fixture/action/command. In execute mode they
 also include the embedded `/fig_run` result so the operator can inspect the live
 revalidation stop reason.
+
+Blocked rows remain under `queue.command_plan.blocked`. Each blocked row carries
+`operator_handoff`, copied from `/fig_queue`, so the operator can see the next
+manual/host/release/closeout action without making that row executable.

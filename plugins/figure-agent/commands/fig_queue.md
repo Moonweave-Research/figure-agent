@@ -133,6 +133,12 @@ Each row includes:
 | `executable` | fixture/action/safe_command/required_actor records |
 | `blocked` | fixture/action/actor/blocking_source/stop_boundary/reason records |
 
+Blocked command-plan rows include an additive
+`schema: figure-agent.queue-operator-handoff.v1` object under
+`operator_handoff`. The handoff states the required actor, next step, optional
+command, allowed scope, forbidden scope, and closeout checks. It is guidance for
+the operator; it does not make blocked rows executable.
+
 The queue does not reinterpret driver policy. If a row looks surprising, inspect
 the corresponding single-fixture `/fig_drive <name> --mode <mode> --goal
 "<goal>" --dry-run` output for full evidence.

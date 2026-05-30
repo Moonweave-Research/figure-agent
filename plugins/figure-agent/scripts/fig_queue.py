@@ -21,6 +21,7 @@ from driver_actor import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.fixture-driver-queue.v1"
 COMMAND_PLAN_SCHEMA = "figure-agent.fixture-command-plan.v1"
+OPERATOR_HANDOFF_SCHEMA = "figure-agent.queue-operator-handoff.v1"
 _FILTER_KEYS = (
     "required_actor",
     "action",
@@ -180,6 +181,102 @@ def _blocked_reason(row: dict[str, Any]) -> str | None:
     return None
 
 
+def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
+    fixture = _cell(row.get("fixture"))
+    actor = _cell(row.get("required_actor"))
+    common_forbidden = [
+        "source edits",
+        "export mutation",
+        "accepted/golden mutation",
+        "publication state mutation",
+    ]
+    if actor == "host_llm":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": "Refresh host-vision critique for this fixture.",
+            "command": row.get("safe_command"),
+            "reason": reason,
+            "allowed_scope": [
+                f"examples/{fixture}/critique.md",
+                f"examples/{fixture}/build/audit_crops/",
+            ],
+            "forbidden_scope": common_forbidden,
+            "closeout_checks": [
+                "run critique_lint",
+                "sync or scaffold critique_adjudication.yaml",
+                "rerun /fig_queue",
+            ],
+        }
+    if actor == "human":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": "Record the required human decision before continuing automation.",
+            "command": None,
+            "reason": reason,
+            "allowed_scope": ["human decision record or acceptance decision"],
+            "forbidden_scope": common_forbidden,
+            "closeout_checks": ["rerun /fig_queue after recording the decision"],
+        }
+    if actor == "release_operator":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": (
+                "Perform explicit release/golden review; do not force golden implicitly."
+            ),
+            "command": None,
+            "reason": reason,
+            "allowed_scope": ["release/golden review with explicit approval"],
+            "forbidden_scope": [
+                "implicit --force-golden",
+                "implicit accepted mutation",
+                "source edits",
+                "unreviewed export mutation",
+            ],
+            "closeout_checks": ["rerun /fig_queue after release decision"],
+        }
+    if actor == "svg_editor":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": "Complete SVG polish handoff outside queue automation.",
+            "command": None,
+            "reason": reason,
+            "allowed_scope": ["declared polished SVG handoff scope"],
+            "forbidden_scope": common_forbidden,
+            "closeout_checks": ["rerun /fig_queue after polish handoff"],
+        }
+    if reason == "stop_boundary:closeout_required":
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": "Run read-only closeout inspection before attempting export.",
+            "command": f"uv run python3 scripts/fig_closeout.py {fixture} --json",
+            "reason": reason,
+            "allowed_scope": ["read-only closeout inspection"],
+            "forbidden_scope": common_forbidden,
+            "closeout_checks": ["rerun /fig_queue after resolving the blocked row"],
+        }
+    return {
+        "schema": OPERATOR_HANDOFF_SCHEMA,
+        "fixture": fixture,
+        "required_actor": actor,
+        "next_step": "Inspect the blocked queue row and rerun live driver state.",
+        "command": None,
+        "reason": reason,
+        "allowed_scope": ["read-only inspection"],
+        "forbidden_scope": common_forbidden,
+        "closeout_checks": ["rerun /fig_queue after resolving the blocked row"],
+    }
+
+
 def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
     executable: list[dict[str, Any]] = []
     blocked: list[dict[str, Any]] = []
@@ -203,6 +300,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "blocking_source": row.get("blocking_source"),
                 "stop_boundary": row.get("stop_boundary"),
                 "reason": reason,
+                "operator_handoff": _operator_handoff(row, reason=reason),
             }
         )
     return {
