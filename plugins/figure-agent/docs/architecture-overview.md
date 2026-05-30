@@ -58,6 +58,10 @@ Layer 6: Validation Gates              (check_golden_artifacts: basic / accepted
 Layer 7: State Inference               (status.py / fig_status)
    |
    v
+Layer 7.5: Driver / Operator Routing    (fig_drive / fig_run / fig_queue;
+                                        bounded execution + explicit handoffs)
+   |
+   v
 Layer 8: Reproducibility / Asset       (.gitignore + .gitattributes + LFS policy)
 
 Layer 4.5: Vision Critique             (host Claude reads build PNG via Read tool;
@@ -108,6 +112,9 @@ the plugin is. They must agree on:
   Visual QA / reproducibility) plus L4.5 vision critique.
 - The active workflow (`/fig_compile` / `/fig_critique` / `/fig_export` /
   `/fig_status`).
+- The operator workflow (`/fig_drive` for one fixture, `/fig_run` for bounded
+  mechanical single-fixture execution, `/fig_queue` and `/fig_queue_run` for
+  multi-fixture triage).
 - The boundary statement that the plugin does not call **external**
   image-gen or vision APIs; L4.5 vision critique is delegated to the
   host Claude Code main loop, not an external HTTP call.
@@ -423,6 +430,38 @@ final-artifact manifest with no semantic-backport blocker. `final_ready` is kept
 as a compatibility alias for `release_ready`.
 
 `status.py` is read-only; it never modifies any file.
+
+### Layer 7.5 — Driver / Operator Routing
+
+**Files**: `scripts/fig_driver.py`, `scripts/fig_run.py`,
+`scripts/fig_queue.py`, `scripts/fig_queue_run.py`,
+`scripts/fig_closeout.py`, `commands/fig_drive.md`, `commands/fig_run.md`,
+`commands/fig_queue.md`, `commands/fig_queue_run.md`,
+`commands/fig_closeout.md`.
+
+This layer turns read-only state into an operator-grade next action without
+making high-judgment decisions automatic.
+
+`/fig_drive` is the single-fixture recommender. It reads live status and
+closeout/loop evidence, emits one action, and never mutates fixture files.
+
+`/fig_run` is the bounded single-fixture executor. It delegates action
+selection to `/fig_drive`, executes only allowlisted deterministic shell work,
+then re-queries the driver. It may run compile, initial adjudication scaffold,
+verify-only loop checkpoints, and safe non-golden draft export. It stops at
+host-vision critique, existing adjudication repair, source patch, SVG polish,
+human, accepted, tracked-golden, force-golden, and release boundaries.
+
+`/fig_queue` is the multi-fixture operator dashboard. It scans fixtures through
+`/fig_drive`, groups work by actor/action/blocker, and adds blocked-row
+`operator_handoff` packets. `/fig_queue_run` is plan-only by default and
+delegates only the workflow-agent executable subset to `/fig_run`; it does not
+execute host, human, release, SVG, patch, or closeout rows directly.
+
+Run journals under `.scratch/fig-run-runs/` and loop journals under
+`.scratch/fig-loop-runs/` are non-authoritative evidence. They explain what
+happened, but they are never replay commands; operators must rerun live
+`/fig_status` or `/fig_drive` before continuing.
 
 ### Layer 8 — Reproducibility / Asset
 

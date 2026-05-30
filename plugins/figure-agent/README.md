@@ -39,6 +39,8 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_status   "Where am I?" — read-only stage check
 /fig_drive    Dry-run advisory driver — recommends one next action
 /fig_run      Bounded runner — executes safe mechanical steps, stops at gates
+/fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
+/fig_queue_run Plan or execute the queue's workflow-agent subset
 ```
 
 ## A typical figure (start to finish)
@@ -92,6 +94,21 @@ tracked-golden, force-golden, or release boundaries.
 the previous journal if useful, then rerun live `/fig_status` or `/fig_drive`
 and let the fresh driver choose the next action.
 
+For multi-fixture work, start with the queue rather than running fixture commands
+one by one:
+
+```bash
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
+uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
+uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent
+```
+
+Add `--execute` to `/fig_queue_run` only after inspecting the plan-only output.
+Queue execution delegates each fixture to `/fig_run`, so live driver
+revalidation remains the safety gate. Host, human, release/golden, SVG-polish,
+and closeout rows stay visible as blocked operator handoffs.
+
 **Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
 
 ---
@@ -104,6 +121,7 @@ and let the fresh driver choose the next action.
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
+| **Operator queue** | `/fig_queue` scans real fixtures through `/fig_drive`, groups next work by actor/action/blocker, emits blocked-row `operator_handoff` packets, and `/fig_queue_run` delegates the workflow-agent subset to `/fig_run` after plan-only review. |
 | **Runner journal** | `/fig_run --execute` records `.scratch/fig-run-runs/<timestamp>-<name>/` evidence by default. Journals are not replayable and do not replace fresh `/fig_status` or `/fig_drive` checks. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
