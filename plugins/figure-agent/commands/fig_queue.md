@@ -133,6 +133,11 @@ Each row includes:
 | `executable` | fixture/action/safe_command/required_actor records |
 | `blocked` | fixture/action/actor/blocking_source/stop_boundary/reason records |
 
+The human-readable table prints `next_step` and `next_command` columns. For
+blocked rows, these come from the same handoff policy used by
+`command_plan.blocked[].operator_handoff`, so the table does not show a blocked
+driver command as the next command to run.
+
 Blocked command-plan rows include an additive
 `schema: figure-agent.queue-operator-handoff.v1` object under
 `operator_handoff`. The handoff states the required actor, next step, optional

@@ -208,12 +208,47 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
     fig_queue.print_table(queue)
 
     out = capsys.readouterr().out
-    assert "fixture actor action stop_boundary first_blocker safe_command" in out
+    assert (
+        "fixture actor action stop_boundary first_blocker next_step next_command"
+        in out
+    )
     assert (
         "alpha host_llm run_critique host_llm_critique_required "
-        "critique_stale /fig_critique alpha"
+        "critique_stale Refresh host-vision critique for this fixture. "
+        "/fig_critique alpha"
     ) in out
     assert "summary total=1 errors=0" in out
+
+
+def test_print_table_uses_handoff_command_for_blocked_rows(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    queue = {
+        "schema": "figure-agent.fixture-driver-queue.v1",
+        "mode": "review",
+        "goal": "triage",
+        "rows": [
+            {
+                "fixture": "beta",
+                "mode": "review",
+                "action": "run_export",
+                "stop_boundary": "closeout_required",
+                "first_blocker": "export_missing",
+                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "required_actor": "workflow_agent",
+                "blocking_source": "closeout_required",
+                "requires_human": False,
+            }
+        ],
+        "summary": {"total": 1, "errors": 0},
+    }
+
+    fig_queue.print_table(queue)
+
+    out = capsys.readouterr().out
+    assert "Run read-only closeout inspection before attempting export." in out
+    assert "uv run python3 scripts/fig_closeout.py beta --json" in out
+    assert "uv run python3 scripts/run_export.py beta" not in out
 
 
 def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:

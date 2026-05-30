@@ -374,20 +374,41 @@ def _cell(value: Any) -> str:
     return str(value)
 
 
+def _table_next_step(row: dict[str, Any]) -> str:
+    reason = _blocked_reason(row)
+    if reason is None:
+        return "Executable workflow-agent command."
+    handoff = _operator_handoff(row, reason=reason)
+    next_step = handoff.get("next_step")
+    if isinstance(next_step, str) and next_step:
+        return next_step
+    return "Inspect blocked row and rerun /fig_queue."
+
+
+def _table_next_command(row: dict[str, Any]) -> str | None:
+    reason = _blocked_reason(row)
+    if reason is None:
+        command = row.get("safe_command")
+        return command if isinstance(command, str) else None
+    handoff = _operator_handoff(row, reason=reason)
+    command = handoff.get("command")
+    return command if isinstance(command, str) and command else None
+
+
 def print_table(queue: dict[str, Any]) -> None:
-    print("fixture actor action stop_boundary first_blocker safe_command")
+    print("fixture actor action stop_boundary first_blocker next_step next_command")
     for row in queue.get("rows", []):
         print(
             " ".join(
-                _cell(row.get(key))
-                for key in (
-                    "fixture",
-                    "required_actor",
-                    "action",
-                    "stop_boundary",
-                    "first_blocker",
-                    "safe_command",
-                )
+                [
+                    _cell(row.get("fixture")),
+                    _cell(row.get("required_actor")),
+                    _cell(row.get("action")),
+                    _cell(row.get("stop_boundary")),
+                    _cell(row.get("first_blocker")),
+                    _cell(_table_next_step(row)),
+                    _cell(_table_next_command(row)),
+                ]
             )
         )
     summary = queue.get("summary", {})
