@@ -51,7 +51,7 @@ uv run python3 scripts/fig_queue.py --mode review \
 
 The `fig5_floating_clip_mechanism` row now shows:
 
-- `next_step`: run read-only closeout inspection before export.
+- `next_step`: run read-only closeout inspection before continuing automation.
 - `next_command`:
   `uv run python3 scripts/fig_closeout.py fig5_floating_clip_mechanism --json`
 

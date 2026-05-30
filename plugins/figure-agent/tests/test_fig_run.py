@@ -448,6 +448,39 @@ def test_export_with_stop_boundary_is_not_executed(
     )
 
 
+def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_FIG_LOOP,
+                safe_command=(
+                    "uv run python3 scripts/fig_loop.py runner_demo "
+                    "--goal 'close loop' --json"
+                ),
+                stop_boundary=fig_driver.STOP_CLOSEOUT,
+            )
+        ],
+    )
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["executed_count"] == 0
+    assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
+    assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
+    assert payload["boundary_handoff"]["closeout_checks"][0] == (
+        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+    )
+
+
 @pytest.mark.parametrize(
     ("acceptance_state", "export_state"),
     [

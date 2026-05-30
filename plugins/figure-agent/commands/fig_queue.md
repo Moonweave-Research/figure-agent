@@ -72,6 +72,9 @@ The command plan treats a row as executable only when all of these are true:
 - `stop_boundary` is empty
 - `action` is one of `/fig_run`'s deterministic allowlist:
   `run_compile`, `run_adjudicate`, `run_export`, or `run_fig_loop`
+- for `run_export`, the row also matches the draft-export safety predicate:
+  exact fixture command, `acceptance_state: NOT_DECLARED`,
+  `export_state: MISSING | STALE`, and `critique_state: FRESH | NOT_REQUIRED`
 
 Host critique, human review, release/golden approval, SVG polish handoff,
 missing commands, non-allowlisted actions, and rows with stop boundaries remain

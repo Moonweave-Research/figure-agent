@@ -179,7 +179,26 @@ def _blocked_reason(row: dict[str, Any]) -> str | None:
     action = row.get("action")
     if action not in _EXECUTABLE_ACTIONS:
         return f"action:not_executable:{_cell(action)}"
+    if action == fig_driver.ACTION_RUN_EXPORT and not _export_row_is_safe(row):
+        return "export:safety_predicate_failed"
     return None
+
+
+def _export_row_is_safe(row: dict[str, Any]) -> bool:
+    command = row.get("safe_command")
+    fixture = row.get("fixture")
+    if not isinstance(command, str) or not isinstance(fixture, str) or not fixture:
+        return False
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return False
+    return (
+        parts == ["uv", "run", "python3", "scripts/run_export.py", fixture]
+        and row.get("acceptance_state") == "NOT_DECLARED"
+        and row.get("export_state") in {"MISSING", "STALE"}
+        and row.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
+    )
 
 
 def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
@@ -258,7 +277,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "schema": OPERATOR_HANDOFF_SCHEMA,
             "fixture": fixture,
             "required_actor": actor,
-            "next_step": "Run read-only closeout inspection before attempting export.",
+            "next_step": "Run read-only closeout inspection before continuing automation.",
             "command": f"uv run python3 scripts/fig_closeout.py {shlex.quote(fixture)} --json",
             "reason": reason,
             "allowed_scope": ["read-only closeout inspection"],

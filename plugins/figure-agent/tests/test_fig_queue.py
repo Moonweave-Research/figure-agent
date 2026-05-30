@@ -246,7 +246,7 @@ def test_print_table_uses_handoff_command_for_blocked_rows(
     fig_queue.print_table(queue)
 
     out = capsys.readouterr().out
-    assert "Run read-only closeout inspection before attempting export." in out
+    assert "Run read-only closeout inspection before continuing automation." in out
     assert "uv run python3 scripts/fig_closeout.py beta --json" in out
     assert "uv run python3 scripts/run_export.py beta" not in out
 
@@ -440,7 +440,7 @@ def test_build_queue_can_include_command_plan(
         "schema": "figure-agent.queue-operator-handoff.v1",
         "fixture": "beta",
         "required_actor": "workflow_agent",
-        "next_step": "Run read-only closeout inspection before attempting export.",
+        "next_step": "Run read-only closeout inspection before continuing automation.",
         "command": "uv run python3 scripts/fig_closeout.py beta --json",
         "reason": "stop_boundary:closeout_required",
         "allowed_scope": ["read-only closeout inspection"],
@@ -517,6 +517,93 @@ def test_command_plan_prioritizes_stop_boundary_over_missing_command() -> None:
     )
 
     assert plan["blocked"][0]["reason"] == "stop_boundary:mode_forbidden_action"
+
+
+@pytest.mark.parametrize(
+    ("acceptance_state", "export_state", "critique_state"),
+    [
+        ("ACCEPTED", "MISSING", "FRESH"),
+        ("NOT_DECLARED", "TRACKED_GOLDEN", "FRESH"),
+        ("NOT_DECLARED", "MISSING", "STALE"),
+    ],
+)
+def test_command_plan_does_not_mark_unsafe_export_rows_executable(
+    acceptance_state: str,
+    export_state: str,
+    critique_state: str,
+) -> None:
+    plan = fig_queue.build_command_plan(
+        [
+            {
+                "fixture": "beta",
+                "action": "run_export",
+                "required_actor": "workflow_agent",
+                "requires_human": False,
+                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "stop_boundary": None,
+                "blocking_source": "driver.action",
+                "acceptance_state": acceptance_state,
+                "export_state": export_state,
+                "critique_state": critique_state,
+            }
+        ]
+    )
+
+    assert plan["executable"] == []
+    assert plan["blocked"][0]["reason"] == "export:safety_predicate_failed"
+
+
+def test_command_plan_marks_safe_draft_export_row_executable() -> None:
+    plan = fig_queue.build_command_plan(
+        [
+            {
+                "fixture": "beta",
+                "action": "run_export",
+                "required_actor": "workflow_agent",
+                "requires_human": False,
+                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "stop_boundary": None,
+                "blocking_source": "driver.action",
+                "acceptance_state": "NOT_DECLARED",
+                "export_state": "STALE",
+                "critique_state": "FRESH",
+            }
+        ]
+    )
+
+    assert plan["blocked"] == []
+    assert plan["executable"] == [
+        {
+            "fixture": "beta",
+            "action": "run_export",
+            "safe_command": "uv run python3 scripts/run_export.py beta",
+            "required_actor": "workflow_agent",
+        }
+    ]
+
+
+def test_command_plan_accepts_quoted_safe_draft_export_fixture_with_spaces() -> None:
+    plan = fig_queue.build_command_plan(
+        [
+            {
+                "fixture": "beta demo",
+                "action": "run_export",
+                "required_actor": "workflow_agent",
+                "requires_human": False,
+                "safe_command": "uv run python3 scripts/run_export.py 'beta demo'",
+                "stop_boundary": None,
+                "blocking_source": "driver.action",
+                "acceptance_state": "NOT_DECLARED",
+                "export_state": "MISSING",
+                "critique_state": "NOT_REQUIRED",
+            }
+        ]
+    )
+
+    assert plan["blocked"] == []
+    assert plan["executable"][0]["safe_command"] == (
+        "uv run python3 scripts/run_export.py 'beta demo'"
+    )
 
 
 def test_command_plan_blocked_handoff_covers_human_and_release_rows(
