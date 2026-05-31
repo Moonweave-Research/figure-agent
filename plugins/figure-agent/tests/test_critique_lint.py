@@ -851,6 +851,35 @@ def _svg_polish_delta_audit_yaml(*, include_diff: bool = True) -> str:
     )
 
 
+def _aesthetic_gate_audit_yaml(*, generic: bool = False) -> str:
+    slots = (
+        "maturity_restraint",
+        "visual_hierarchy",
+        "template_genericness",
+        "overdecorated_or_cartoonish",
+        "journal_fit",
+        "handcrafted_finish",
+        "semantic_preservation",
+        "print_scale_finish",
+        "paper_wide_coherence",
+    )
+    evidence = "looks polished" if generic else "current render crop evidence is specific"
+    rationale = "looks premium" if generic else "current artifact evidence supports"
+    lines = ["aesthetic_gate_audit:"]
+    for slot in slots:
+        lines.extend(
+            [
+                f"  - slot: {slot}",
+                "    verdict: pass",
+                "    route: pass",
+                f"    evidence: {_quote_yaml_string(evidence + ' for ' + slot)}",
+                f"    rationale: {rationale} {slot}",
+                "    linked_evidence: [svg_polish_delta_audit.delta_image_audit_log]",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
 def _write_critique(
     fig_dir: Path,
     *,
@@ -863,6 +892,7 @@ def _write_critique(
     aesthetic_lever_audit_yaml: str = "",
     journal_playbook_audit_yaml: str = "",
     svg_polish_delta_audit_yaml: str = "",
+    aesthetic_gate_audit_yaml: str = "",
     journal_grade_yaml: str = "",
     journal_polish_evidence: str | None = None,
     publication_readiness_evidence: str | None = None,
@@ -885,6 +915,7 @@ def _write_critique(
         f"{aesthetic_lever_audit_yaml}"
         f"{journal_playbook_audit_yaml}"
         f"{svg_polish_delta_audit_yaml}"
+        f"{aesthetic_gate_audit_yaml}"
         f"{journal_grade_yaml}"
         f"{findings_yaml}"
         "---\n"
@@ -2285,6 +2316,7 @@ def test_lint_critique_accepts_v1_15_svg_delta_audit(
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
         editorial_yaml=_editorial_yaml_with_route_detail(),
         svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
         journal_polish_evidence="print-scale audit: print_178mm.png passes",
         publication_readiness_evidence="publication readiness cites print-scale evidence",
     )
@@ -2307,6 +2339,7 @@ def test_lint_critique_rejects_v1_15_missing_delta_image_accounting(
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
         editorial_yaml=_editorial_yaml_with_route_detail(),
         svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(include_diff=False),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
         journal_polish_evidence="print-scale audit: print_178mm.png passes",
         publication_readiness_evidence="publication readiness cites print-scale evidence",
     )
@@ -2317,6 +2350,35 @@ def test_lint_critique_rejects_v1_15_missing_delta_image_accounting(
         "svg_polish_delta_accounting"
     ]
     assert "missing delta_image_audit_log ids: diff" in violations[0].message
+
+
+def test_lint_critique_rejects_v1_15_generic_aesthetic_gate_prose(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_svg_polish_delta_manifest(fig_dir)
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.15",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(),
+        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(generic=True),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness cites print-scale evidence",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["aesthetic_gate_accounting"]
+    assert "generic aesthetic_gate_audit evidence" in violations[0].message
 
 
 def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(

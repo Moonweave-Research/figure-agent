@@ -620,6 +620,17 @@ def _validate_v1_14_editorial_route_detail(frontmatter: dict[str, Any]) -> None:
     )
 
 
+def _editorial_trigger_recommended_path(frontmatter: dict[str, Any]) -> str:
+    editorial = frontmatter.get("editorial_art_direction")
+    trigger = (
+        editorial.get("tikz_vs_svg_polish_trigger")
+        if isinstance(editorial, dict)
+        else None
+    )
+    path = trigger.get("recommended_path") if isinstance(trigger, dict) else None
+    return path.strip() if isinstance(path, str) else ""
+
+
 def _validate_v1_4_micro_defects(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_list(
         frontmatter.get("micro_defects"),
@@ -1082,6 +1093,60 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
             )
 
 
+def _validate_v1_15_aesthetic_gate_audit(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_mapping_items(
+        frontmatter.get("aesthetic_gate_audit"),
+        "critique frontmatter.aesthetic_gate_audit",
+    )
+    slots: list[str] = []
+    for index, item in enumerate(raw_items):
+        label = f"critique frontmatter.aesthetic_gate_audit[{index}]"
+        slot = _require_enum(item, "slot", frozenset(vocab.AESTHETIC_GATE_SLOTS), label=label)
+        slots.append(slot)
+        verdict = _require_enum(
+            item,
+            "verdict",
+            vocab.AESTHETIC_GATE_VERDICTS,
+            label=label,
+        )
+        route = _require_enum(item, "route", vocab.AESTHETIC_GATE_ROUTES, label=label)
+        _require_non_empty_string(item, "evidence", label=label)
+        _require_non_empty_string(item, "rationale", label=label)
+        _validate_string_list(
+            item.get("linked_evidence"),
+            f"{label}.linked_evidence",
+            require_non_empty=verdict in {"weak", "fail", "needs_human"} or route != "pass",
+        )
+        if verdict == "pass" and route != "pass":
+            raise CritiqueContractError(f"{label}.route must be pass for pass verdict")
+        if verdict in {"weak", "fail", "needs_human"} and route == "pass":
+            raise CritiqueContractError(f"{label}.route must not be pass for verdict {verdict}")
+        trigger_path = _editorial_trigger_recommended_path(frontmatter)
+        if route == "svg_polish" and trigger_path != "ready_for_svg_polish":
+            raise CritiqueContractError(
+                f"{label}.route svg_polish requires "
+                "editorial_art_direction.tikz_vs_svg_polish_trigger recommended_path "
+                "ready_for_svg_polish"
+            )
+        if route == "semantic_backport" and trigger_path != "semantic_backport_required":
+            raise CritiqueContractError(
+                f"{label}.route semantic_backport requires recommended_path "
+                "semantic_backport_required"
+            )
+    duplicate_slots = sorted({slot for slot in slots if slots.count(slot) > 1})
+    if duplicate_slots:
+        raise CritiqueContractError(
+            "critique frontmatter.aesthetic_gate_audit has duplicate slots: "
+            + ", ".join(duplicate_slots)
+        )
+    missing_slots = [slot for slot in vocab.AESTHETIC_GATE_SLOTS if slot not in slots]
+    if missing_slots:
+        raise CritiqueContractError(
+            "critique frontmatter.aesthetic_gate_audit missing slots: "
+            + ", ".join(missing_slots)
+        )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -1288,6 +1353,7 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_v1_13_crop_anomaly_accounting(frontmatter)
         _validate_v1_15_svg_polish_delta_audit(frontmatter)
+        _validate_v1_15_aesthetic_gate_audit(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         if "journal_art_direction_playbook_audit" in frontmatter:

@@ -771,6 +771,24 @@ def _svg_polish_delta_audit_schema(include_delta_audit: bool) -> str:
 """
 
 
+def _aesthetic_gate_audit_schema(include_gate: bool) -> str:
+    if not include_gate:
+        return ""
+    return """aesthetic_gate_audit:
+  - slot: maturity_restraint | visual_hierarchy | template_genericness |
+      overdecorated_or_cartoonish | journal_fit | handcrafted_finish |
+      semantic_preservation | print_scale_finish | paper_wide_coherence
+    verdict: pass | weak | fail | needs_human
+    route: pass | tikz_patch | svg_polish | semantic_backport |
+      needs_human_art_direction | accept_simplification
+    evidence: "<specific current-artifact evidence; generic 'looks polished' prose is invalid>"
+    rationale: "<why this slot takes the selected route>"
+    linked_evidence:
+      - svg_polish_delta_audit.delta_image_audit_log |
+        top_tier_audit.<slot> | editorial_art_direction.<slot> | finding id
+"""
+
+
 def _reference_score_calibration(
     example_dir: Path,
     pack: dict | None,
@@ -1520,6 +1538,7 @@ top_tier_audit:
 {_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 {_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
+{_aesthetic_gate_audit_schema(uses_svg_polish_delta_schema)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png

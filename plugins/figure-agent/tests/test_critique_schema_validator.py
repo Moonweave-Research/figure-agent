@@ -214,6 +214,30 @@ def _svg_polish_delta_audit() -> dict:
     }
 
 
+def _aesthetic_gate_audit() -> list[dict]:
+    return [
+        {
+            "slot": slot,
+            "verdict": "pass",
+            "route": "pass",
+            "evidence": f"current render evidence for {slot}",
+            "rationale": f"{slot} passes on current artifact evidence",
+            "linked_evidence": ["svg_polish_delta_audit.delta_image_audit_log"],
+        }
+        for slot in (
+            "maturity_restraint",
+            "visual_hierarchy",
+            "template_genericness",
+            "overdecorated_or_cartoonish",
+            "journal_fit",
+            "handcrafted_finish",
+            "semantic_preservation",
+            "print_scale_finish",
+            "paper_wide_coherence",
+        )
+    ]
+
+
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     frontmatter = {
         "schema": schema,
@@ -336,6 +360,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         )
     if schema == CRITIQUE_SCHEMA_V1_15:
         frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
+        frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
     return frontmatter
 
 
@@ -394,6 +419,25 @@ def test_validate_critique_schema_rejects_v1_15_regression_without_route_or_link
     ]
 
     with pytest.raises(CritiqueContractError, match="regressions must link"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_15_missing_aesthetic_gate() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    frontmatter.pop("aesthetic_gate_audit")
+
+    with pytest.raises(CritiqueContractError, match="aesthetic_gate_audit"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_15_incompatible_svg_route() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    frontmatter["aesthetic_gate_audit"][0]["verdict"] = "weak"
+    frontmatter["aesthetic_gate_audit"][0]["route"] = "svg_polish"
+    trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
+    trigger["recommended_path"] = "continue_tikz"
+
+    with pytest.raises(CritiqueContractError, match="route svg_polish requires"):
         validate_critique_schema(frontmatter)
 
 

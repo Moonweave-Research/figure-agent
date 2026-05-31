@@ -1534,6 +1534,8 @@ def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
     assert "rubric_version: figure-agent.critique-rubric.v1.15" in brief
     assert "svg_polish_delta_audit:" in brief
     assert "delta_image_audit_log:" in brief
+    assert "aesthetic_gate_audit:" in brief
+    assert "maturity_restraint | visual_hierarchy" in brief
 
 
 def test_critique_brief_includes_paper_wide_aesthetic_context(tmp_path):

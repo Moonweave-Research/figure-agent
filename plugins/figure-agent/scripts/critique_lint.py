@@ -1767,6 +1767,41 @@ def _svg_polish_delta_accounting_violations(
     return []
 
 
+def _aesthetic_gate_accounting_violations(
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") != SVG_POLISH_DELTA_AUDIT_SCHEMA:
+        return []
+    raw_items = frontmatter.get("aesthetic_gate_audit")
+    if not isinstance(raw_items, list):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="aesthetic_gate_accounting",
+                message="missing aesthetic_gate_audit for v1.15 critique",
+            )
+        ]
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        slot = item.get("slot")
+        evidence = _text_blob(item.get("evidence")).lower()
+        rationale = _text_blob(item.get("rationale")).lower()
+        evidence_blob = f"{evidence} {rationale}"
+        has_current_evidence = any(
+            marker in evidence_blob for marker in _CURRENT_ARTIFACT_EVIDENCE_MARKERS
+        )
+        if not has_current_evidence:
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="aesthetic_gate_accounting",
+                    message=f"generic aesthetic_gate_audit evidence for {slot}",
+                )
+            ]
+    return []
+
+
 def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintViolation]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
@@ -1843,6 +1878,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     if violations:
         return violations
     violations.extend(_svg_polish_delta_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(_aesthetic_gate_accounting_violations(frontmatter))
     if violations:
         return violations
 

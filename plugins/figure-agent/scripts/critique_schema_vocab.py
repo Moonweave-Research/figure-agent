@@ -215,6 +215,28 @@ SVG_DELTA_ROUTES = frozenset(
         "needs_human_art_direction",
     }
 )
+AESTHETIC_GATE_SLOTS = (
+    "maturity_restraint",
+    "visual_hierarchy",
+    "template_genericness",
+    "overdecorated_or_cartoonish",
+    "journal_fit",
+    "handcrafted_finish",
+    "semantic_preservation",
+    "print_scale_finish",
+    "paper_wide_coherence",
+)
+AESTHETIC_GATE_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
+AESTHETIC_GATE_ROUTES = frozenset(
+    {
+        "pass",
+        "tikz_patch",
+        "svg_polish",
+        "semantic_backport",
+        "needs_human_art_direction",
+        "accept_simplification",
+    }
+)
 AESTHETIC_LEVER_DIMENSIONS = frozenset(
     {
         "maturity",
