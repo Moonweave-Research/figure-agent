@@ -1,6 +1,6 @@
 # Issue 95 - Loop Improve Orchestrator
 
-Status: implemented; pending commit
+Status: completed in commit `48cad75`
 
 Type: workflow UX, loop orchestration, guided autonomy
 

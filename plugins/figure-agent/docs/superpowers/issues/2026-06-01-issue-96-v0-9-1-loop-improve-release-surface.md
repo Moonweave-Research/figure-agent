@@ -1,6 +1,6 @@
 # Issue 96 - v0.9.1 Loop Improve Release Surface
 
-Status: implemented; pending commit
+Status: completed in commit `96329c8`
 
 Type: release metadata, operator documentation, command-surface consistency
 
