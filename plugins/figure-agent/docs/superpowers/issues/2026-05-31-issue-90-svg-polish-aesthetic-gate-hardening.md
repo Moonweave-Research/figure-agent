@@ -1,6 +1,6 @@
 # Issue 90 - SVG Polish And Aesthetic Gate Hardening
 
-Status: proposed
+Status: completed in commits d33f3da, 452c00f, af2b005, b4d416b
 
 Type: SVG polish audit, aesthetic gate hardening, operator safety
 
@@ -475,3 +475,35 @@ Start with **Issue 90A**. It is the smallest useful slice: make the driver and
 loop answer "can SVG polish start?" without changing critique schema or SVG
 write behavior. Then implement 90B and 90C only after the gate summary is
 stable.
+
+## Implementation Closeout
+
+Implemented slices:
+
+- 90A: `svg_polish_gate` is now surfaced from the existing
+  `svg_polish_readiness` contract. `/fig_driver --mode polish` reports
+  `no_current_checkpoint`, `ready`, `needs_human`, `semantic_backport`, or
+  `blocked` without executing SVG writes.
+- 90B: v1.15 critique contract adds `svg_polish_delta_audit`. Fresh
+  `polish/aesthetic_delta/delta_manifest.json` requires v1.15 critique,
+  before/after/diff image-id accounting, and delta-local routing.
+- 90C: v1.15 critique contract adds closed-set `aesthetic_gate_audit`.
+  Generic "looks polished" evidence is rejected by lint; routes must stay
+  compatible with `tikz_vs_svg_polish_trigger`.
+
+Safety outcome:
+
+- No `/fig_run` or `/fig_queue_run` SVG write allowlist expansion.
+- `accept_svg_polish` remains a delta-local verdict and does not bypass
+  `svg_polish_manifest.py`, final-artifact freshness, accepted/golden, or
+  publication gates.
+- Existing v1.14 and older critiques remain parseable unless a fresh SVG delta
+  manifest opts the fixture into v1.15.
+
+Verification record:
+
+- TDD red tests were added before each production-code slice.
+- Targeted tests passed for driver/loop readiness, critique schema/lint/brief,
+  quality manifest, and SVG polish delta.
+- Full verification and plugin validation are recorded in
+  `docs/milestones/2026-05-31-issue-90-svg-polish-aesthetic-gate-closeout.md`.
