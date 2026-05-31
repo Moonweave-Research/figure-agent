@@ -11,7 +11,7 @@ import status_next_policy
 import status_readiness_policy
 from audit_evidence_summary import summarize_audit_evidence
 from critique_lint import lint_critique
-from export_freshness import EXPORT_STALE, compute_export_state
+from export_freshness import EXPORT_FRESH, EXPORT_STALE, compute_export_state
 from inputs import parse_spec
 from next_action_summary import status_next_action_summary
 from publication_gate import publication_gate_summary
@@ -547,7 +547,11 @@ def infer_stage(example_dir: Path) -> dict:
         if partial:
             notes.append("partial_export")
         export_paths = _existing_export_paths(exports_dir, name)
-        source_stale = _is_stale(sources, export_paths)
+        source_stale = (
+            _is_stale(sources, export_paths)
+            if exports_substate != EXPORT_FRESH
+            else False
+        )
         export_content_stale = exports_substate == EXPORT_STALE
         is_stale = source_stale or export_content_stale
         if is_stale:

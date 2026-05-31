@@ -1714,7 +1714,7 @@ def test_declared_polished_svg_stale_manifest_reports_stale(
 
     assert result["final_artifact_state"] == "STALE"
     assert "final_artifact_stale" in result["notes"]
-    assert "exports are stale" in result["next"]
+    assert "final artifact is stale" in result["next"]
 
 
 def test_declared_polished_svg_with_backport_reports_blocked(
@@ -3305,6 +3305,36 @@ def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
     assert explanation["first_blocker"]["manual"] is True
     plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
     assert "critique_not_required" in plugin_codes
+
+
+def test_status_does_not_call_content_fresh_exports_stale_for_acceptance_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "content_fresh_draft"
+    _make_status_ready_fixture(fig_dir)
+    name = fig_dir.name
+    old_time = time.time() - 100
+    middle_time = time.time() - 50
+    fresh_time = time.time() - 10
+    for path in (fig_dir / "exports").iterdir():
+        os.utime(path, (old_time, old_time))
+    for path in (
+        fig_dir / "spec.yaml",
+        fig_dir / "briefing.md",
+        fig_dir / f"{name}.tex",
+    ):
+        os.utime(path, (middle_time, middle_time))
+    os.utime(fig_dir / "build" / f"{name}.pdf", (fresh_time, fresh_time))
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["exports_substate"] == "FRESH"
+    assert "stale_export" not in result["notes"]
+    assert result["status_explanation"]["first_blocker"]["code"] == "acceptance_not_declared"
+    assert "fig_export" not in result["next"]
+    assert "accepted or final-ready declaration" in result["next"]
 
 
 def test_status_explanation_prioritizes_not_authored_before_missing_export(

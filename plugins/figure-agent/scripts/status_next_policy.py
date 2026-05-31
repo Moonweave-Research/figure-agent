@@ -59,6 +59,11 @@ _NEXT_4_NOT_ACCEPTED = (
     "golden fixture is not accepted yet — resolve examples/<name>/QUALITY_AUDIT.md"
     " defects, then set accepted: true in spec.yaml."
 )
+_NEXT_4_ACCEPTANCE_NOT_DECLARED = (
+    "fixture has no accepted or final-ready declaration — keep iterating with"
+    " /fig_loop <name>, or make an explicit human acceptance/final-artifact"
+    " decision before release."
+)
 _NEXT_4_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> as a final review of the current rendered candidate"
     " before treating exports as final;"
@@ -175,6 +180,8 @@ def _select_stage_4_template(
         return final_artifact_template
     if accepted is False:
         return _NEXT_4_NOT_ACCEPTED
+    if accepted is None:
+        return _NEXT_4_ACCEPTANCE_NOT_DECLARED
     return _NEXT_4
 
 
