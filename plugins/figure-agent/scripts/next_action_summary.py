@@ -226,6 +226,14 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
         stop = _string(loop_checkpoint.get("final_stop_reason"))
         if stop:
             evidence_refs.append(f"loop.final_stop_reason:{stop}")
+    ready_improvement = driver_summary.get("ready_improvement_summary")
+    marginal_return = None
+    if isinstance(ready_improvement, Mapping):
+        marginal_return = ready_improvement.get("marginal_return_summary")
+        if isinstance(marginal_return, Mapping):
+            marginal_state = _string(marginal_return.get("state"))
+            if marginal_state:
+                evidence_refs.append(f"ready_improvement.marginal_return:{marginal_state}")
     closeout = driver_summary.get("closeout")
     if isinstance(closeout, Mapping):
         blocking = closeout.get("blocking_step_ids")
@@ -234,7 +242,7 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
             evidence_refs.append(f"closeout.blocking_steps:{joined}")
     if not evidence_refs:
         evidence_refs.append("driver.action")
-    return _summary(
+    summary = _summary(
         fixture=fixture,
         action=action,
         reason=_string(driver_summary.get("reason"), "follow selected driver action"),
@@ -244,6 +252,27 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
         or blocking_source in _HUMAN_STOP_BOUNDARIES,
         evidence_refs=evidence_refs,
     )
+    if isinstance(ready_improvement, Mapping):
+        summary["ready_improvement_state"] = _string(
+            ready_improvement.get("state"),
+            "unknown",
+        )
+        summary["ready_improvement_safe_to_ship"] = ready_improvement.get(
+            "safe_to_ship"
+        ) is True
+        candidate_count = ready_improvement.get("candidate_count")
+        summary["optional_candidate_count"] = (
+            candidate_count if isinstance(candidate_count, int) else 0
+        )
+        if isinstance(marginal_return, Mapping):
+            summary["marginal_return_state"] = _string(
+                marginal_return.get("state"),
+                "unknown",
+            )
+            reason = _string(marginal_return.get("reason"))
+            if reason:
+                summary["marginal_return_reason"] = reason
+    return summary
 
 
 def loop_next_action_summary(

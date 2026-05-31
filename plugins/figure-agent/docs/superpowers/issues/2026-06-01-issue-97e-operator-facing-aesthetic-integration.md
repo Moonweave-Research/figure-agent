@@ -1,6 +1,6 @@
 # Issue 97E - Operator-Facing Aesthetic Integration
 
-Status: proposed
+Status: implemented for `/fig_driver.next_action_summary`
 
 Type: `/fig_driver` UX integration; future loop-improve integration
 
@@ -33,16 +33,38 @@ accountability, and marginal-return summaries into existing driver outputs, and
 future loop-improve outputs if that command is merged, as readable bounded
 next-action guidance.
 
+## Implementation
+
+`scripts/next_action_summary.py` now copies the already-computed
+`ready_improvement_summary` state into `/fig_driver.next_action_summary`:
+
+```yaml
+next_action_summary:
+  ready_improvement_state: not_ready | ready_no_actionable_improvement | ready_but_improvable
+  ready_improvement_safe_to_ship: true | false
+  optional_candidate_count: <int>
+  marginal_return_state: continue | stop_recommended | needs_human_art_direction | not_ready
+  marginal_return_reason: "<reason when available>"
+```
+
+This is additive. It does not change driver action vocabulary, stop
+boundaries, safe commands, release readiness, or hidden edit behavior.
+
 ## Acceptance
 
-- `/fig_driver` action vocabulary and stop boundaries remain backward
+- [x] `/fig_driver` action vocabulary and stop boundaries remain backward
   compatible.
-- If a loop-improve command exists in the target branch, it remains a bounded
+- [x] If a loop-improve command exists in the target branch, it remains a bounded
   orchestrator and does not become a hidden designer.
-- Optional aesthetic improvements are explicitly optional.
-- Human art-direction cases stop at the human boundary.
-- SVG polish cases still require the existing SVG polish readiness gate.
-- Release/golden/accepted/publication gates remain authoritative.
+- [x] Optional aesthetic improvements are explicitly optional.
+- [x] Human art-direction cases stop at the human boundary.
+- [x] SVG polish cases still require the existing SVG polish readiness gate.
+- [x] Release/golden/accepted/publication gates remain authoritative.
+
+## Verification
+
+- `uv run pytest -q tests/test_fig_driver.py::test_review_complete_surfaces_ready_improvement_candidates tests/test_fig_driver.py::test_human_gate_driver_result_does_not_offer_optional_improvement_candidates`
+  - Result: 2 passed.
 
 ## Review Questions
 

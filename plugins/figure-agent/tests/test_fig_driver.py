@@ -247,6 +247,14 @@ def test_review_complete_surfaces_ready_improvement_candidates(
     assert summary["blocks_release"] is False
     assert summary["auto_patch_allowed"] is False
     assert summary["candidates"][0]["source"] == "editorial_art_direction_summary"
+    next_action = payload["next_action_summary"]
+    assert next_action["ready_improvement_state"] == "ready_but_improvable"
+    assert next_action["optional_candidate_count"] == 1
+    assert next_action["marginal_return_state"] == "stop_recommended"
+    assert next_action["ready_improvement_safe_to_ship"] is True
+    assert "ready_improvement.marginal_return:stop_recommended" in next_action[
+        "evidence_refs"
+    ]
 
 
 def test_release_blocked_by_manual_gate_can_still_surface_safe_optional_candidates(
@@ -323,6 +331,10 @@ def test_human_gate_driver_result_does_not_offer_optional_improvement_candidates
     assert summary["state"] == "not_ready"
     assert summary["safe_to_ship"] is False
     assert summary["candidate_count"] == 0
+    next_action = payload["next_action_summary"]
+    assert next_action["ready_improvement_state"] == "not_ready"
+    assert next_action["optional_candidate_count"] == 0
+    assert next_action["marginal_return_state"] == "not_ready"
 
 
 def test_driver_summary_includes_status_explanation_and_first_blocker_code(
