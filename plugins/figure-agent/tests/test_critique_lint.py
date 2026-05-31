@@ -1858,7 +1858,10 @@ def test_lint_critique_reports_stale_external_vision_review(
 def _write_complete_v1_11_aesthetic_fixture(
     fig_dir: Path,
     *,
+    schema: str = "figure-agent.critique.v1.11",
     aesthetic_lever_audit_yaml: str | None = None,
+    aesthetic_gate_audit_yaml: str = "",
+    editorial_yaml: str | None = None,
     journal_grade_yaml: str = "",
     editorial_trigger_path: str = "ready_for_svg_polish",
     hero_default_route: str = "tikz_patch",
@@ -1866,19 +1869,21 @@ def _write_complete_v1_11_aesthetic_fixture(
     _write_aesthetic_intent_v2(fig_dir, hero_default_route=hero_default_route)
     _write_visual_clash_report(fig_dir, candidate_ids=())
     _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.11",
+        schema=schema,
         top_tier_yaml=_top_tier_yaml_with_aesthetic_anchor("mature_restraint"),
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
-        editorial_yaml=_editorial_yaml_with_aesthetic_anchors(
-            polish_trigger_path=editorial_trigger_path
-        ),
+        editorial_yaml=editorial_yaml
+        if editorial_yaml is not None
+        else _editorial_yaml_with_aesthetic_anchors(polish_trigger_path=editorial_trigger_path),
         aesthetic_lever_audit_yaml=aesthetic_lever_audit_yaml
         if aesthetic_lever_audit_yaml is not None
         else _aesthetic_lever_audit_yaml(),
+        aesthetic_gate_audit_yaml=aesthetic_gate_audit_yaml,
         journal_grade_yaml=journal_grade_yaml,
         journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
         publication_readiness_evidence=(
@@ -1906,6 +1911,44 @@ def test_lint_critique_accepts_complete_v1_11_aesthetic_lever_accounting(
     _write_complete_v1_11_aesthetic_fixture(fig_dir)
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_accepts_complete_v1_16_aesthetic_lever_accounting(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_complete_v1_11_aesthetic_fixture(
+        fig_dir,
+        schema="figure-agent.critique.v1.16",
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
+        editorial_yaml=_editorial_yaml_with_aesthetic_anchors().replace(
+            "    recommended_path: ready_for_svg_polish\n",
+            (
+                "    recommended_path: ready_for_svg_polish\n"
+                "    svg_polish_candidate_reason: semantic source levers are closed "
+                "and only optical vector cleanup remains\n"
+            ),
+        ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_v1_10_aesthetic_lever_accounting(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_complete_v1_11_aesthetic_fixture(
+        fig_dir,
+        schema="figure-agent.critique.v1.10",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["aesthetic_lever_accounting"]
+    assert "figure-agent.critique.v1.11 or newer" in violations[0].message
 
 
 def test_lint_critique_rejects_v1_14_continue_tikz_without_remaining_lever(

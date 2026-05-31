@@ -507,6 +507,68 @@ def test_aesthetic_lever_summary_surfaces_v1_11_next_bottleneck(tmp_path: Path) 
     }
 
 
+def test_v1_16_critique_surfaces_loop_audit_summaries(tmp_path: Path) -> None:
+    example_dir = tmp_path / "loop_demo"
+    example_dir.mkdir()
+    _write_critique(
+        example_dir / "critique.md",
+        {
+            "schema": "figure-agent.critique.v1.16",
+            "top_tier_audit": {
+                "target_journal_fit": {
+                    "verdict": "weak",
+                    "blocks_high_impact": True,
+                },
+            },
+            "editorial_art_direction": _editorial_art_direction(
+                trigger_path="continue_tikz",
+                overrides={
+                    "tikz_vs_svg_polish_trigger": {
+                        "remaining_tikz_lever": "source label polish remains patchable",
+                    }
+                },
+            ),
+            "crop_audit_log": [
+                {
+                    "crop_id": "full_q1",
+                    "verdict": "no_defect",
+                }
+            ],
+            "aesthetic_lever_audit": [
+                {
+                    "lever_id": "maturity_restraint",
+                    "dimension": "maturity",
+                    "verdict": "weak",
+                    "route": "tikz_patch",
+                    "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+                }
+            ],
+            "journal_art_direction_playbook_audit": {
+                "playbook_id": "nc-main-text",
+                "venue_context": "main_text",
+                "design_center": [
+                    {
+                        "id": "editorial_restraint",
+                        "verdict": "weak",
+                        "route": "continue_tikz",
+                    }
+                ],
+                "route_rule_applied": {
+                    "id": "tikz_until_semantics_close",
+                    "recommended_path": "continue_tikz",
+                },
+                "human_review_triggers": [],
+            },
+        },
+    )
+
+    assert top_tier_audit_summary(example_dir, "FRESH") is not None
+    assert editorial_art_direction_summary(example_dir, "FRESH") is not None
+    assert crop_audit_summary(example_dir, "FRESH") is not None
+    assert aesthetic_lever_summary(example_dir, "FRESH") is not None
+    assert journal_art_direction_playbook_summary(example_dir, "FRESH") is not None
+
+
 def test_aesthetic_lever_summary_prioritizes_needs_human_over_fail(
     tmp_path: Path,
 ) -> None:

@@ -113,6 +113,16 @@ TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.16",
     }
 )
+AESTHETIC_LEVER_ACCOUNTING_SCHEMAS = frozenset(
+    {
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
+    }
+)
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.10",
@@ -320,12 +330,7 @@ def _aesthetic_lever_accounting_violations(
 ) -> list[CritiqueLintViolation]:
     if pack.get("schema") != AESTHETIC_INTENT_SCHEMA_V2:
         return []
-    if frontmatter.get("schema") not in {
-        "figure-agent.critique.v1.11",
-        "figure-agent.critique.v1.12",
-        "figure-agent.critique.v1.13",
-        "figure-agent.critique.v1.14",
-    }:
+    if frontmatter.get("schema") not in AESTHETIC_LEVER_ACCOUNTING_SCHEMAS:
         return [
             CritiqueLintViolation(
                 severity="blocker",
