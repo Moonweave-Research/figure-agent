@@ -438,8 +438,8 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 
     assert "### A. Physics correctness" in brief
     assert "### B. Aesthetic placement" in brief
-    assert "schema: figure-agent.critique.v1.10" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.10" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "panels:" in brief
 
 
@@ -568,6 +568,8 @@ def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
 
     brief = generate_for(example_dir)
 
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "## High-Zoom Visual Audit Crops" in brief
     assert "`examples/review_demo/build/audit_crops/full_q1.png`" in brief
     assert "`examples/review_demo/build/audit_crops/full_q4.png`" in brief
@@ -772,6 +774,56 @@ def test_critique_brief_includes_label_path_proximity_candidates(tmp_path):
     assert brief.index("id=`LP001`") < brief.index("id=`LP002`")
 
 
+def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(example_dir, size=(2000, 1600))
+    (example_dir / "build" / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "fixture": "review_demo",
+                "render_pdf": "build/review_demo.pdf",
+                "source": "tikz-source:auto-discovery",
+                "candidates": [
+                    {
+                        "id": "UG002",
+                        "kind": "label_endpoint_near_miss",
+                        "evidence": "line close to mobility label",
+                        "bbox_pt": [10.0, 20.0, 40.0, 20.0],
+                        "source_line": 42,
+                        "nearest_text": "mobility",
+                        "distance_pt": 2.0,
+                        "recommended_action": "add_micro_defect",
+                    },
+                    {
+                        "id": "UG001",
+                        "kind": "undeclared_column_rule",
+                        "evidence": "column rule missing spec check",
+                        "bbox_pt": [72.0, 0.0, 72.0, 144.0],
+                        "source_line": 20,
+                        "nearest_text": "",
+                        "distance_pt": None,
+                        "recommended_action": "add_spec_check",
+                    },
+                ],
+                "total": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Undeclared Geometry Candidates (from check_undeclared_geometry.py)" in brief
+    assert "`undeclared_geometry_ref`" in brief
+    assert "`UG001`" in brief
+    assert "`UG002`" in brief
+    assert "kind=`undeclared_column_rule`" in brief
+    assert "nearest_text=`mobility`" in brief
+    assert "distance_pt=2.0" in brief
+    assert brief.index("id=`UG001`") < brief.index("id=`UG002`")
+
+
 def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"
@@ -803,7 +855,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
 
     assert "generator: critique_brief.py" in brief
     assert "generator_version: sha256:" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.10" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "critique_input_hash: sha256:" in brief
     assert "audit_enumeration:" in brief
     assert "quality_axes:" in brief
@@ -826,20 +878,20 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     assert brief.count("category: structural | physics | label_placement") == 2
 
 
-def test_critique_brief_output_format_uses_v1_10_default_schema(
+def test_critique_brief_output_format_uses_v1_16_default_schema_with_crops(
     tmp_path,
 ):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.10" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.10" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "top_tier_audit:" in brief
     assert "editorial_art_direction:" in brief
     assert "recommended_path: continue_tikz | ready_for_svg_polish" in brief
-    assert "remaining_tikz_lever:" not in brief
-    assert "svg_polish_candidate_reason:" not in brief
+    assert "remaining_tikz_lever:" in brief
+    assert "svg_polish_candidate_reason:" in brief
     assert "micro_defects:" in brief
     for kind in (
         "line_crosses_label",
@@ -866,8 +918,8 @@ def test_critique_brief_output_format_uses_v1_10_default_schema(
     assert "crop_id: <crop id from build/audit_crops/manifest.json>" in brief
     assert "verdict: defect | no_defect | uncertain" in brief
     assert "linked_micro_defect_id: \"<M001 when verdict=defect or empty>\"" in brief
-    assert "unintended_visible_anomaly:" not in brief
-    assert "anomaly_link:" not in brief
+    assert "unintended_visible_anomaly:" in brief
+    assert "anomaly_link:" in brief
 
 
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):
@@ -1355,8 +1407,8 @@ reference_learning:
     brief = generate_for(example_dir)
 
     assert "## Reference Learning Contract" in brief
-    assert "schema: figure-agent.critique.v1.14" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "References are learning sources, not copy targets." in brief
     assert "reference/example.png" in brief
     assert "roles=style_anchor, typography_reference" in brief
@@ -1530,8 +1582,8 @@ def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
     assert "operation_ids: R001" in brief
     assert "Did journal polish improve?" in brief
     assert "Did any scientific semantics change?" in brief
-    assert "schema: figure-agent.critique.v1.15" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.15" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "svg_polish_delta_audit:" in brief
     assert "delta_image_audit_log:" in brief
     assert "aesthetic_gate_audit:" in brief
@@ -1628,12 +1680,12 @@ def test_critique_brief_includes_journal_art_direction_playbook(tmp_path):
     assert "toy_schematic severity=MAJOR route=continue_tikz" in brief
     assert "svg_for_optical_finish path=ready_for_svg_polish" in brief
     assert "must cite exact playbook anchors" in brief
-    assert "schema: figure-agent.critique.v1.14" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "journal_art_direction_playbook_audit:" in brief
 
 
-def test_critique_brief_uses_v1_12_when_playbook_and_aesthetic_intent_v2(
+def test_critique_brief_uses_v1_16_when_playbook_and_aesthetic_intent_v2_with_crops(
     tmp_path,
 ):
     example_dir = _write_example(tmp_path, section6="- invariant")
@@ -1679,8 +1731,8 @@ aesthetic_levers:
 
     brief = generate_for(example_dir)
 
-    assert "schema: figure-agent.critique.v1.14" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "journal_art_direction_playbook_audit:" in brief
     assert "aesthetic_lever_audit:" in brief
 
@@ -1796,8 +1848,8 @@ aesthetic_levers:
 
     assert "## Aesthetic Lever Grammar" in brief
     assert "## Aesthetic Intent Calibration" not in brief
-    assert "schema: figure-agent.critique.v1.14" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.14" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "aesthetic_lever_audit:" in brief
     assert "remaining_tikz_lever:" in brief
     assert "svg_polish_candidate_reason:" in brief
@@ -1806,7 +1858,7 @@ aesthetic_levers:
     assert "Generic prose such as \"improve polish\" is invalid" in brief
 
 
-def test_critique_brief_keeps_v1_schema_for_v1_aesthetic_intent(tmp_path):
+def test_critique_brief_uses_v1_16_for_v1_aesthetic_intent_with_crops(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "aesthetic_intent.yaml").write_text(
         """
@@ -1837,8 +1889,8 @@ polish_triggers:
 
     assert "## Aesthetic Intent Calibration" in brief
     assert "## Aesthetic Lever Grammar" not in brief
-    assert "schema: figure-agent.critique.v1.10" in brief
-    assert "rubric_version: figure-agent.critique-rubric.v1.10" in brief
+    assert "schema: figure-agent.critique.v1.16" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.16" in brief
     assert "aesthetic_lever_audit:" not in brief
 
 

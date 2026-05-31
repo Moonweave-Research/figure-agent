@@ -88,12 +88,14 @@ _NEXT_FINAL_ARTIFACT_INVALID = (
 _NEXT_FINAL_ARTIFACT_STALE = (
     "final artifact is stale — manifest must be refreshed by rerunning"
     " scripts/svg_polish_handoff.py after source/export/critique/polish/audit"
-    " changes, then rerun /fig_status <name>."
+    " changes; if polish/svg_semantic_diff.json is stale, rerun"
+    " scripts/svg_semantic_diff.py, then rerun /fig_status <name>."
 )
 _NEXT_FINAL_ARTIFACT_BLOCKED = (
-    "final artifact requires semantic backport — patch TikZ/briefing/spec,"
-    " rerun compile/export/critique as needed, then rerun"
-    " scripts/svg_polish_handoff.py."
+    "final artifact requires semantic backport (semantic_backport_required)"
+    " or SVG semantic diff resolution — patch TikZ/briefing/spec, rerun"
+    " compile/export/critique as needed, then rerun scripts/svg_semantic_diff.py"
+    " and scripts/svg_polish_handoff.py."
 )
 
 

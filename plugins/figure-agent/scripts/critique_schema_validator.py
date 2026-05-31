@@ -1093,6 +1093,88 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
             )
 
 
+def _require_non_empty_string_list(value: Any, label: str) -> list[str]:
+    items = _require_non_empty_list(value, label)
+    result: list[str] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, str) or not item.strip():
+            raise CritiqueContractError(f"{label}[{index}] must be a non-empty string")
+        result.append(item.strip())
+    return result
+
+
+def _generic_observation(value: str) -> bool:
+    normalized = " ".join(value.lower().split())
+    generic_values = {
+        "all good",
+        "clear",
+        "looks fine",
+        "no defect",
+        "no issue",
+        "ok",
+        "pass",
+    }
+    return normalized in generic_values or len(normalized) < 24
+
+
+def _candidate_ref_from_source(source: str) -> str | None:
+    if ":" not in source:
+        return None
+    prefix, value = source.split(":", 1)
+    if prefix in {"visual_clash", "text_boundary", "label_path", "undeclared_geometry"}:
+        value = value.strip()
+        return value or None
+    return None
+
+
+def _validate_v1_16_grounded_crop_observations(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_non_empty_list(
+        frontmatter.get("crop_audit_log"),
+        "critique frontmatter.crop_audit_log",
+    )
+    for index, raw_item in enumerate(raw_items):
+        label = f"critique frontmatter.crop_audit_log[{index}]"
+        item = require_mapping(raw_item, label)
+        _require_non_empty_string_list(item.get("observed_objects"), f"{label}.observed_objects")
+        relationship = _require_non_empty_string(item, "local_relationship", label=label)
+        if _generic_observation(relationship):
+            raise CritiqueContractError(f"{label}.local_relationship must be crop-local")
+        candidate_refs = item.get("candidate_refs")
+        if not isinstance(candidate_refs, list) or not all(
+            isinstance(ref, str) and ref.strip() for ref in candidate_refs
+        ):
+            raise CritiqueContractError(f"{label}.candidate_refs must be a string list")
+        source = _require_non_empty_string(item, "source", label=label)
+        expected_ref = _candidate_ref_from_source(source)
+        if expected_ref and expected_ref not in {ref.strip() for ref in candidate_refs}:
+            raise CritiqueContractError(
+                f"{label}.candidate_refs must include deterministic candidate {expected_ref}"
+            )
+
+
+def _validate_v1_16_grounded_svg_delta_observations(frontmatter: dict[str, Any]) -> None:
+    if "svg_polish_delta_audit" not in frontmatter:
+        return
+    audit = require_mapping(
+        frontmatter.get("svg_polish_delta_audit"),
+        "critique frontmatter.svg_polish_delta_audit",
+    )
+    image_items = _require_mapping_items(
+        audit.get("delta_image_audit_log"),
+        "critique frontmatter.svg_polish_delta_audit.delta_image_audit_log",
+    )
+    for index, item in enumerate(image_items):
+        label = f"critique frontmatter.svg_polish_delta_audit.delta_image_audit_log[{index}]"
+        _require_non_empty_string_list(item.get("observed_objects"), f"{label}.observed_objects")
+        relationship = _require_non_empty_string(item, "local_relationship", label=label)
+        if _generic_observation(relationship):
+            raise CritiqueContractError(f"{label}.local_relationship must be image-local")
+        _require_non_empty_string(item, "delta_focus", label=label)
+        observation = _require_non_empty_string(item, "observation", label=label)
+        if _generic_observation(observation):
+            raise CritiqueContractError(f"{label}.observation must name delta-local evidence")
+
+
 def _validate_v1_15_aesthetic_gate_audit(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_mapping_items(
         frontmatter.get("aesthetic_gate_audit"),
@@ -1354,6 +1436,33 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_13_crop_anomaly_accounting(frontmatter)
         _validate_v1_15_svg_polish_delta_audit(frontmatter)
         _validate_v1_15_aesthetic_gate_audit(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        if "journal_art_direction_playbook_audit" in frontmatter:
+            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_16:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_14_editorial_route_detail(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        if "svg_polish_delta_audit" in frontmatter:
+            _validate_v1_15_svg_polish_delta_audit(frontmatter)
+            _validate_v1_15_aesthetic_gate_audit(frontmatter)
+        _validate_v1_16_grounded_crop_observations(frontmatter)
+        _validate_v1_16_grounded_svg_delta_observations(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         if "journal_art_direction_playbook_audit" in frontmatter:

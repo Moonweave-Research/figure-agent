@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
-    CRITIQUE_RUBRIC_VERSION_V1_15,
+    CRITIQUE_RUBRIC_VERSION_V1_16,
     critique_manifest_paths,
     expected_critique_rubric_version,
     input_manifest_hash,
@@ -641,7 +641,7 @@ def test_expected_critique_rubric_version_uses_v1_14_for_journal_playbook_and_in
     assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
 
 
-def test_expected_critique_rubric_version_uses_v1_15_for_svg_delta(
+def test_expected_critique_rubric_version_uses_v1_16_for_svg_delta(
     tmp_path: Path,
 ) -> None:
     example_dir = tmp_path / "examples" / "demo"
@@ -652,7 +652,29 @@ def test_expected_critique_rubric_version_uses_v1_15_for_svg_delta(
         encoding="utf-8",
     )
 
-    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_15
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_16
+
+
+def test_expected_critique_rubric_version_uses_v1_16_for_crop_manifest(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True)
+    manifest_path.write_text('{"schema":"figure-agent.audit-crop-manifest.v1"}\n')
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_16
+
+
+def test_expected_critique_rubric_version_uses_v1_16_for_undeclared_geometry(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    report_path = example_dir / "build" / "undeclared_geometry.json"
+    report_path.parent.mkdir(parents=True)
+    report_path.write_text('{"schema":"figure-agent.undeclared-geometry.v1"}\n')
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_16
 
 
 def test_expected_critique_rubric_version_keeps_v1_10_for_legacy_intent(

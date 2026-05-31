@@ -21,6 +21,7 @@ from svg_polish_recipe import (  # noqa: E402
     svg_polish_recipe_input_hash,
     write_svg_polish_recipe,
 )
+from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
 
 
 def _write_clean_fixture(tmp_path: Path, name: str = "clean_polish_demo") -> tuple[Path, Path]:
@@ -188,6 +189,7 @@ def test_clean_polished_svg_route_closes_from_recipe_to_driver_complete(
         style_lock_path=style_lock,
         base_dir=fixture.parent.parent,
     )
+    semantic_diff_path = build_svg_semantic_diff_report(fixture)
 
     status = status_mod.infer_stage(fixture)
     summary: dict[str, Any] = fig_driver.build_driver_summary(
@@ -202,6 +204,7 @@ def test_clean_polished_svg_route_closes_from_recipe_to_driver_complete(
     assert delta_manifest == fixture / "polish" / "aesthetic_delta" / "delta_manifest.json"
     assert audit_path == fixture / "polish" / "svg_polish_audit.md"
     assert manifest_path == fixture / "polish" / "svg_polish_manifest.yaml"
+    assert semantic_diff_path == fixture / "polish" / "svg_semantic_diff.json"
     assert status["render_state"] == "FRESH"
     assert status["export_state"] == "FRESH"
     assert status["final_artifact_kind"] == "polished_svg"

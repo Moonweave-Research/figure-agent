@@ -126,6 +126,73 @@ def test_delta_manifest_contains_current_hashes(tmp_path: Path) -> None:
     assert svg_polish_delta_is_stale(manifest_path, example_dir=fig_dir) is False
 
 
+def test_delta_manifest_contains_artifact_hashes_and_renderer_metadata(
+    tmp_path: Path,
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    recipe_path = _write_recipe(fig_dir)
+
+    manifest_path = build_svg_polish_delta_pack(
+        fig_dir,
+        recipe_path=recipe_path,
+        renderer=_fake_renderer,
+        base_dir=fig_dir.parent.parent,
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert manifest["artifact_hashes"] == {
+        "before_png_hash": file_sha256(fig_dir / "polish" / "aesthetic_delta" / "before.png"),
+        "after_png_hash": file_sha256(fig_dir / "polish" / "aesthetic_delta" / "after.png"),
+        "diff_png_hash": file_sha256(fig_dir / "polish" / "aesthetic_delta" / "diff.png"),
+    }
+    assert manifest["renderer"]["executable"]
+    assert manifest["renderer"]["version"]
+    assert manifest["renderer"]["script_hash"].startswith("sha256:")
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    (
+        "polish/aesthetic_delta/before.png",
+        "polish/aesthetic_delta/after.png",
+        "polish/aesthetic_delta/diff.png",
+    ),
+)
+def test_changed_delta_artifact_marks_delta_stale(
+    tmp_path: Path,
+    relative_path: str,
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    recipe_path = _write_recipe(fig_dir)
+    manifest_path = build_svg_polish_delta_pack(
+        fig_dir,
+        recipe_path=recipe_path,
+        renderer=_fake_renderer,
+        base_dir=fig_dir.parent.parent,
+    )
+
+    Image.new("RGBA", (4, 4), (13, 17, 19, 255)).save(fig_dir / relative_path)
+
+    assert svg_polish_delta_is_stale(manifest_path, example_dir=fig_dir) is True
+
+
+def test_malformed_delta_artifact_hash_fails_cleanly(tmp_path: Path) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    recipe_path = _write_recipe(fig_dir)
+    manifest_path = build_svg_polish_delta_pack(
+        fig_dir,
+        recipe_path=recipe_path,
+        renderer=_fake_renderer,
+        base_dir=fig_dir.parent.parent,
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artifact_hashes"]["before_png_hash"] = "sha256:not-a-real-hash"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(SvgPolishDeltaError, match="before_png_hash"):
+        load_svg_polish_delta_manifest(manifest_path, example_dir=fig_dir)
+
+
 def test_stale_recipe_fails_cleanly(tmp_path: Path) -> None:
     fig_dir = _make_fixture(tmp_path)
     recipe_path = _write_recipe(fig_dir)

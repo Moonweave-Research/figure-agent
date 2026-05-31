@@ -1598,6 +1598,18 @@ def test_polish_mode_with_delta_pack_returns_handoff_guidance(
                 "source_svg_hash": file_sha256(fixture / "exports" / "driver_demo.svg"),
                 "polished_svg_hash": file_sha256(polish / "driver_demo.polished.svg"),
                 "recipe_hash": file_sha256(polish / "svg_polish_recipe.yaml"),
+                "artifact_hashes": {
+                    "before_png_hash": file_sha256(delta / "before.png"),
+                    "after_png_hash": file_sha256(delta / "after.png"),
+                    "diff_png_hash": file_sha256(delta / "diff.png"),
+                },
+                "renderer": {
+                    "executable": "scripts/svg_to_png.sh",
+                    "version": "unknown",
+                    "script_hash": file_sha256(
+                        Path(__file__).resolve().parents[1] / "scripts" / "svg_to_png.sh"
+                    ),
+                },
                 "operation_ids": ["R001"],
                 "artifacts": {
                     "before_png": "polish/aesthetic_delta/before.png",

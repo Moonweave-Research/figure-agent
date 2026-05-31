@@ -60,7 +60,7 @@ from svg_polish_delta import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
 CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
-SVG_POLISH_DELTA_AUDIT_SCHEMA = "figure-agent.critique.v1.15"
+SVG_POLISH_DELTA_AUDIT_SCHEMA = "figure-agent.critique.v1.16"
 VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.7",
@@ -72,6 +72,7 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
         "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
@@ -84,6 +85,7 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
         "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
     }
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
@@ -94,6 +96,7 @@ STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
         "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
     }
 )
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
@@ -107,6 +110,7 @@ TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
         "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
     }
 )
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
@@ -117,6 +121,24 @@ LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
         "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
+    }
+)
+UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS = frozenset(
+    {
+        "figure-agent.critique.v1.4",
+        "figure-agent.critique.v1.5",
+        "figure-agent.critique.v1.6",
+        "figure-agent.critique.v1.7",
+        "figure-agent.critique.v1.8",
+        "figure-agent.critique.v1.9",
+        "figure-agent.critique.v1.10",
+        "figure-agent.critique.v1.11",
+        "figure-agent.critique.v1.12",
+        "figure-agent.critique.v1.13",
+        "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
+        "figure-agent.critique.v1.16",
     }
 )
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
@@ -1374,6 +1396,135 @@ def _label_path_accounting_violations(
     ]
 
 
+def _undeclared_geometry_candidate_ids(
+    report_path: Path,
+) -> tuple[list[str], list[CritiqueLintViolation]]:
+    if not report_path.is_file():
+        return [], []
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="undeclared_geometry_accounting",
+                message=f"malformed build/undeclared_geometry.json: {exc}",
+            )
+        ]
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="undeclared_geometry_accounting",
+                message="build/undeclared_geometry.json candidates must be a list",
+            )
+        ]
+    ids: list[str] = []
+    violations: list[CritiqueLintViolation] = []
+    seen: set[str] = set()
+    for index, raw_candidate in enumerate(candidates):
+        if not isinstance(raw_candidate, dict):
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="undeclared_geometry_accounting",
+                    message=(
+                        f"build/undeclared_geometry.json candidates[{index}] "
+                        "must be a mapping"
+                    ),
+                )
+            )
+            continue
+        candidate_id = raw_candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="undeclared_geometry_accounting",
+                    message=(
+                        f"build/undeclared_geometry.json candidates[{index}].id "
+                        "is required"
+                    ),
+                )
+            )
+            continue
+        candidate_id = candidate_id.strip()
+        if candidate_id in seen:
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="undeclared_geometry_accounting",
+                    message=f"duplicate undeclared geometry candidate id: {candidate_id}",
+                )
+            )
+            continue
+        seen.add(candidate_id)
+        ids.append(candidate_id)
+    return ids, violations
+
+
+def _micro_defect_undeclared_geometry_refs(frontmatter: dict[str, Any]) -> list[str]:
+    raw_items = frontmatter.get("micro_defects")
+    if not isinstance(raw_items, list):
+        return []
+    refs: list[str] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            continue
+        value = raw_item.get("undeclared_geometry_ref")
+        if isinstance(value, str) and value.strip():
+            refs.append(value.strip())
+    return refs
+
+
+def _undeclared_geometry_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    if frontmatter.get("schema") not in UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS:
+        return []
+    candidate_ids, violations = _undeclared_geometry_candidate_ids(
+        example_dir / "build" / "undeclared_geometry.json"
+    )
+    if violations or not candidate_ids:
+        return violations
+    refs = _micro_defect_undeclared_geometry_refs(frontmatter)
+    accounted = set(refs)
+    duplicate_refs = sorted({ref for ref in refs if refs.count(ref) > 1})
+    if duplicate_refs:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="undeclared_geometry_accounting",
+                message=f"duplicate undeclared_geometry_ref entries: {', '.join(duplicate_refs)}",
+            )
+        ]
+    candidate_id_set = set(candidate_ids)
+    unknown_refs = sorted(ref for ref in accounted if ref not in candidate_id_set)
+    if unknown_refs:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="undeclared_geometry_accounting",
+                message=f"unknown undeclared_geometry_ref entries: {', '.join(unknown_refs)}",
+            )
+        ]
+    missing = [candidate_id for candidate_id in candidate_ids if candidate_id not in accounted]
+    if not missing:
+        return []
+    return [
+        CritiqueLintViolation(
+            severity="blocker",
+            category="undeclared_geometry_accounting",
+            message=(
+                "undeclared_geometry.json candidates must be referenced by "
+                f"micro_defects[].undeclared_geometry_ref; missing: {', '.join(missing)}"
+            ),
+        )
+    ]
+
+
 def _micro_defects_by_visual_clash_ref(frontmatter: dict[str, Any]) -> dict[str, dict[str, Any]]:
     raw_items = frontmatter.get("micro_defects")
     if not isinstance(raw_items, list):
@@ -1685,7 +1836,7 @@ def _svg_polish_delta_accounting_violations(
                 severity="blocker",
                 category="svg_polish_delta_accounting",
                 message=(
-                    "fresh SVG polish delta requires critique schema "
+                    "fresh SVG polish delta requires current critique schema "
                     f"{SVG_POLISH_DELTA_AUDIT_SCHEMA}"
                 ),
             )
@@ -1778,7 +1929,7 @@ def _aesthetic_gate_accounting_violations(
             CritiqueLintViolation(
                 severity="blocker",
                 category="aesthetic_gate_accounting",
-                message="missing aesthetic_gate_audit for v1.15 critique",
+                message="missing aesthetic_gate_audit for current SVG polish delta critique",
             )
         ]
     for item in raw_items:
@@ -1913,6 +2064,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     if violations:
         return violations
     violations.extend(_label_path_accounting_violations(example_dir, frontmatter))
+    if violations:
+        return violations
+    violations.extend(_undeclared_geometry_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
     violations.extend(_historical_visual_clash_regression_violations(example_dir, frontmatter))

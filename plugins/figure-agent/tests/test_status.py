@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import time
@@ -26,6 +27,7 @@ from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
     write_svg_polish_manifest,
 )
+from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -1015,6 +1017,7 @@ def _write_polish_manifest(
     *,
     semantic_change_declared: bool = False,
     backport_required: bool = False,
+    semantic_report: bool = True,
 ) -> None:
     name = fig_dir.name
     polish = fig_dir / "polish"
@@ -1057,6 +1060,8 @@ def _write_polish_manifest(
         },
     }
     write_svg_polish_manifest(polish / "svg_polish_manifest.yaml", manifest)
+    if semantic_report:
+        build_svg_semantic_diff_report(fig_dir)
 
 
 def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
@@ -1728,6 +1733,81 @@ def test_declared_polished_svg_with_backport_reports_blocked(
     assert result["final_artifact_state"] == "BLOCKED"
     assert "final_artifact_blocked" in result["notes"]
     assert "semantic backport" in result["next"]
+
+
+def test_declared_polished_svg_missing_semantic_diff_reports_blocked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "missing_semantic_diff"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir, semantic_report=False)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "BLOCKED"
+    assert "final_artifact_blocked" in result["notes"]
+    assert "svg_semantic_diff" in result["next"]
+
+
+def test_declared_polished_svg_stale_semantic_diff_reports_stale(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "stale_semantic_diff"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    report = fig_dir / "polish" / "svg_semantic_diff.json"
+    data = yaml.safe_load(report.read_text(encoding="utf-8"))
+    data["polished_svg_hash"] = "sha256:" + "0" * 64
+    report.write_text(json.dumps(data), encoding="utf-8")
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "STALE"
+    assert "final_artifact_stale" in result["notes"]
+    assert "svg_semantic_diff" in result["next"]
+
+
+def test_declared_polished_svg_blocking_semantic_diff_reports_blocked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fig_dir = tmp_path / "blocking_semantic_diff"
+    _make_status_ready_fixture(fig_dir)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+    report = fig_dir / "polish" / "svg_semantic_diff.json"
+    data = yaml.safe_load(report.read_text(encoding="utf-8"))
+    data["summary"] = {
+        "state": "semantic_backport_required",
+        "blocker_count": 1,
+        "warning_count": 0,
+    }
+    data["findings"] = [
+        {
+            "id": "SD001",
+            "kind": "text_identity_loss",
+            "severity": "BLOCKER",
+            "evidence": "missing text label 'A'",
+            "recommended_route": "semantic_backport_required",
+        }
+    ]
+    report.write_text(json.dumps(data), encoding="utf-8")
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "BLOCKED"
+    assert "final_artifact_blocked" in result["notes"]
+    assert "semantic_backport_required" in result["next"]
 
 
 @pytest.mark.parametrize(

@@ -18,6 +18,7 @@ CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
+CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(

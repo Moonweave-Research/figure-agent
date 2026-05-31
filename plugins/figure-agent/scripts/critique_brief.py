@@ -45,7 +45,7 @@ from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
-    CRITIQUE_RUBRIC_VERSION_V1_15,
+    CRITIQUE_RUBRIC_VERSION_V1_16,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -91,7 +91,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
-_CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
+_CRITIQUE_SCHEMA_VERSION_V1_16 = "figure-agent.critique.v1.16"
 
 
 class CritiqueBriefError(Exception):
@@ -747,14 +747,23 @@ def _svg_polish_delta_audit_schema(include_delta_audit: bool) -> str:
     - image_id: before
       path: polish/aesthetic_delta/before.png
       verdict: inspected
+      observed_objects: ["<object names visible in before image>"]
+      local_relationship: "<relative position or clearance observed in before image>"
+      delta_focus: "<what changed or should remain unchanged in before>"
       observation: "<specific current-artifact evidence from before image>"
     - image_id: after
       path: polish/aesthetic_delta/after.png
       verdict: inspected
+      observed_objects: ["<object names visible in after image>"]
+      local_relationship: "<relative position or clearance observed in after image>"
+      delta_focus: "<what changed or should remain unchanged in after>"
       observation: "<specific current-artifact evidence from after image>"
     - image_id: diff
       path: polish/aesthetic_delta/diff.png
       verdict: inspected
+      observed_objects: ["<delta pixel/object names visible in diff image>"]
+      local_relationship: "<where the diff pixels sit relative to labels/marks>"
+      delta_focus: "<localized change visible in diff>"
       observation: "<specific current-artifact evidence from diff image>"
   compared_inputs: [before, after, diff]
   improvements:
@@ -1168,6 +1177,61 @@ def _label_path_proximity_candidates_section(example_dir: Path) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _undeclared_geometry_candidate_sort_key(candidate: dict) -> tuple[str, str, str]:
+    return (
+        str(candidate.get("id") or ""),
+        str(candidate.get("kind") or ""),
+        str(candidate.get("nearest_text") or ""),
+    )
+
+
+def _undeclared_geometry_candidates_section(example_dir: Path) -> str:
+    report_path = example_dir / "build" / "undeclared_geometry.json"
+    if not report_path.is_file():
+        return ""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return (
+            "\n## Undeclared Geometry Candidates (from check_undeclared_geometry.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` is malformed JSON: {exc}\n"
+        )
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return (
+            "\n## Undeclared Geometry Candidates (from check_undeclared_geometry.py)\n"
+            f"WARN: `{_example_relative_path(example_dir, report_path)}` has no candidates list.\n"
+        )
+    if not candidates:
+        return ""
+    total = report.get("total", len(candidates))
+    lines = [
+        "## Undeclared Geometry Candidates (from check_undeclared_geometry.py)",
+        "Host LLM MUST review each undeclared geometry candidate. For each, either "
+        "link to a new/existing `micro_defects` entry via `undeclared_geometry_ref` "
+        "or explicitly justify `status: accept_simplification`.",
+        "Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, "
+        "`label_overflows_row_box`, or `label_path_near_miss` as appropriate.",
+        f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
+        f"- Total candidates from JSON: {total}",
+        "",
+    ]
+    for candidate in sorted(
+        (item for item in candidates if isinstance(item, dict)),
+        key=_undeclared_geometry_candidate_sort_key,
+    ):
+        lines.append(
+            f"- id=`{candidate.get('id', '')}` "
+            f"kind=`{candidate.get('kind', '')}` "
+            f"nearest_text=`{candidate.get('nearest_text', '')}` "
+            f"bbox_pt={candidate.get('bbox_pt')} "
+            f"distance_pt={candidate.get('distance_pt')} "
+            f"source_line={candidate.get('source_line')} "
+            f"recommended_action=`{candidate.get('recommended_action', '')}`"
+        )
+    return "\n" + "\n".join(lines) + "\n"
+
+
 def _visual_clash_crop_paths_by_ref(example_dir: Path) -> dict[str, str]:
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if not manifest_path.is_file():
@@ -1307,6 +1371,7 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     visual_clash_section = _visual_clash_candidates_section(example_dir)
     text_boundary_clash_section = _text_boundary_clash_candidates_section(example_dir)
     label_path_proximity_section = _label_path_proximity_candidates_section(example_dir)
+    undeclared_geometry_section = _undeclared_geometry_candidates_section(example_dir)
     reference_calibration_section = _reference_calibration_section(
         reference_calibration_pack
     )
@@ -1335,10 +1400,15 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         or uses_aesthetic_lever_schema
     )
     uses_svg_polish_delta_schema = bool(svg_polish_delta_section)
-    uses_route_detail_contract = uses_v1_14_contract or uses_svg_polish_delta_schema
-    if uses_svg_polish_delta_schema:
-        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_15
-        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_15
+    uses_grounded_observation_schema = (
+        uses_svg_polish_delta_schema
+        or (example_dir / "build" / "audit_crops" / "manifest.json").is_file()
+        or (example_dir / "build" / "undeclared_geometry.json").is_file()
+    )
+    uses_route_detail_contract = uses_v1_14_contract or uses_grounded_observation_schema
+    if uses_grounded_observation_schema:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_16
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_16
         crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
     anomaly_rationale: "<whether any unintended visible artifact is present>"
     anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
@@ -1389,6 +1459,7 @@ zoom/reference review.
 {visual_clash_section}
 {text_boundary_clash_section}
 {label_path_proximity_section}
+{undeclared_geometry_section}
 {reference_calibration_section}
 {reference_learning_section}
 {reference_aesthetic_metrics_section}
@@ -1549,6 +1620,7 @@ micro_defects:
     visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"
     text_boundary_ref: "<TB001 or empty when not from text_boundary_clash.json>"
     label_path_ref: "<LP001 or empty when not from label_path_proximity.json>"
+    undeclared_geometry_ref: "<UG001 or empty when not from undeclared_geometry.json>"
     status: open | resolved | accept_simplification
     accept_simplification_reason: "<required enum when status=accept_simplification>"
     accept_simplification_rationale: "<required when status=accept_simplification>"
@@ -1560,6 +1632,9 @@ crop_audit_log:
     verdict: defect | no_defect | uncertain
     linked_micro_defect_id: "<M001 when verdict=defect or empty>"
     rationale: "<local geometry reason from direct crop inspection>"
+    observed_objects: ["<object names visible in this crop>"]
+    local_relationship: "<one sentence naming relative position or clearance>"
+    candidate_refs: ["<VC/TB/LP/UG ids related to this crop, or [] when none>"]
 {crop_anomaly_schema.rstrip()}
 panels:
   - id: <panel id>

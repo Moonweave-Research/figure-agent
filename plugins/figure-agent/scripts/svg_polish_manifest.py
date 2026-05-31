@@ -12,6 +12,16 @@ from reference_contract import (
     declared_figure_reference_path,
     participating_panel_reference_paths,
 )
+from svg_semantic_diff import (
+    SEMANTIC_DIFF_BACKPORT,
+    SEMANTIC_DIFF_INVALID,
+    SEMANTIC_DIFF_NEEDS_HUMAN,
+    SEMANTIC_DIFF_PASS,
+    SVG_SEMANTIC_DIFF_RELATIVE_PATH,
+    SvgSemanticDiffError,
+    load_svg_semantic_diff_report,
+    svg_semantic_diff_report_is_stale,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
@@ -49,6 +59,7 @@ _HASH_FIELDS = (
     ("polished", "polished_svg_hash"),
     ("polished", "audit_hash"),
 )
+_SEMANTIC_DIFF_BLOCKING_STATES = frozenset({SEMANTIC_DIFF_BACKPORT, SEMANTIC_DIFF_NEEDS_HUMAN})
 
 
 class SvgPolishManifestError(ValueError):
@@ -343,6 +354,62 @@ def _missing_input_path(example_dir: Path, message: str, fallback: str) -> str:
     return _relative_or_text(example_dir, message.removeprefix(prefix))
 
 
+def _semantic_diff_gate(example_dir: Path) -> dict[str, Any] | None:
+    report_path = example_dir / SVG_SEMANTIC_DIFF_RELATIVE_PATH
+    try:
+        report = load_svg_semantic_diff_report(report_path, example_dir=example_dir)
+    except SvgSemanticDiffError as exc:
+        message = str(exc)
+        if message.startswith("missing SVG semantic diff report:"):
+            return {
+                "state": FINAL_ARTIFACT_BLOCKED,
+                "notes": ["final_artifact_blocked"],
+                "error": (
+                    "missing SVG semantic diff report; run scripts/svg_semantic_diff.py "
+                    "or regenerate the SVG polish handoff before acceptance"
+                ),
+            }
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "notes": ["final_artifact_invalid"],
+            "error": message,
+        }
+    try:
+        stale = svg_semantic_diff_report_is_stale(report_path, example_dir=example_dir)
+    except SvgSemanticDiffError as exc:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "notes": ["final_artifact_invalid"],
+            "error": str(exc),
+        }
+    if stale:
+        return {
+            "state": FINAL_ARTIFACT_STALE,
+            "notes": ["final_artifact_stale"],
+            "error": "SVG semantic diff report is stale; rerun scripts/svg_semantic_diff.py",
+        }
+    diff_state = report["summary"]["state"]
+    if diff_state == SEMANTIC_DIFF_PASS:
+        return None
+    if diff_state == SEMANTIC_DIFF_INVALID:
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "notes": ["final_artifact_invalid"],
+            "error": "SVG semantic diff report state is invalid",
+        }
+    if diff_state in _SEMANTIC_DIFF_BLOCKING_STATES:
+        return {
+            "state": FINAL_ARTIFACT_BLOCKED,
+            "notes": ["final_artifact_blocked"],
+            "error": f"SVG semantic diff state {diff_state} blocks final-artifact promotion",
+        }
+    return {
+        "state": FINAL_ARTIFACT_INVALID,
+        "notes": ["final_artifact_invalid"],
+        "error": f"unsupported SVG semantic diff state {diff_state!r}",
+    }
+
+
 def compute_final_artifact_state(
     example_dir: Path,
     name: str,
@@ -467,6 +534,15 @@ def compute_final_artifact_state(
             "path": polished_path,
             "notes": ["final_artifact_blocked"],
             "error": "semantic backport required before acceptance",
+        }
+    semantic_diff = _semantic_diff_gate(example_dir)
+    if semantic_diff is not None:
+        return {
+            "state": semantic_diff["state"],
+            "kind": FINAL_ARTIFACT_POLISHED_SVG,
+            "path": polished_path,
+            "notes": semantic_diff["notes"],
+            "error": semantic_diff["error"],
         }
     return {
         "state": FINAL_ARTIFACT_FRESH,

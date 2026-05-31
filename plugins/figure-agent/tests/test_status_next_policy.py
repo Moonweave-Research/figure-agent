@@ -108,9 +108,10 @@ def test_stage_4_final_artifact_blocked_beats_not_accepted_after_core_outputs_re
     hint = _hint(stage=4, final_artifact_state="BLOCKED", accepted=False)
 
     assert hint == (
-        "final artifact requires semantic backport — patch TikZ/briefing/spec,"
+        "final artifact requires semantic backport (semantic_backport_required)"
+        " or SVG semantic diff resolution — patch TikZ/briefing/spec,"
         " rerun compile/export/critique as needed, then rerun"
-        " scripts/svg_polish_handoff.py."
+        " scripts/svg_semantic_diff.py and scripts/svg_polish_handoff.py."
     )
 
 

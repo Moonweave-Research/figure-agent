@@ -73,6 +73,7 @@ CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
+CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -192,18 +193,27 @@ def _svg_polish_delta_audit() -> dict:
                 "path": "polish/aesthetic_delta/before.png",
                 "verdict": "inspected",
                 "observation": "before image shows the generated SVG baseline",
+                "observed_objects": ["generated label"],
+                "local_relationship": "generated label remains left of the icon group",
+                "delta_focus": "baseline before-polish label and icon geometry",
             },
             {
                 "image_id": "after",
                 "path": "polish/aesthetic_delta/after.png",
                 "verdict": "inspected",
                 "observation": "after image shows improved label spacing",
+                "observed_objects": ["polished label"],
+                "local_relationship": "polished label remains left of the same icon group",
+                "delta_focus": "after-polish label spacing",
             },
             {
                 "image_id": "diff",
                 "path": "polish/aesthetic_delta/diff.png",
                 "verdict": "inspected",
                 "observation": "diff image shows only local typography movement",
+                "observed_objects": ["label delta pixels"],
+                "local_relationship": "diff pixels stay around the label baseline",
+                "delta_focus": "localized typography movement",
             },
         ],
         "compared_inputs": ["before", "after", "diff"],
@@ -283,6 +293,8 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
+        CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_16,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -307,6 +319,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
+        CRITIQUE_SCHEMA_V1_16,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -320,6 +333,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
+        CRITIQUE_SCHEMA_V1_16,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -333,6 +347,9 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "unintended_visible_anomaly": "none",
                 "anomaly_rationale": "no stray artifact is visible in full_q1",
                 "anomaly_link": "",
+                "observed_objects": ["Panel A label", "trap arrow"],
+                "local_relationship": "Panel A label sits above the trap arrow with clear spacing",
+                "candidate_refs": [],
             },
             {
                 "crop_id": "VC001_A",
@@ -345,6 +362,9 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
                 "unintended_visible_anomaly": "present",
                 "anomaly_rationale": "VC001_A shows an unintended wire crossing",
                 "anomaly_link": "M001",
+                "observed_objects": ["wire", "label A"],
+                "local_relationship": "wire crosses label A inside the visual clash crop",
+                "candidate_refs": ["VC001"],
             },
         ]
     if schema == CRITIQUE_SCHEMA_V1_11:
@@ -353,12 +373,12 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         frontmatter["journal_art_direction_playbook_audit"] = (
             _journal_art_direction_playbook_audit()
         )
-    if schema in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_15}:
+    if schema in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16}:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
         trigger["remaining_tikz_lever"] = (
             "source-level label spacing can still be repaired in TikZ"
         )
-    if schema == CRITIQUE_SCHEMA_V1_15:
+    if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16}:
         frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
         frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
     return frontmatter
@@ -386,6 +406,50 @@ def test_validate_critique_schema_accepts_v1_14_route_specific_trigger_detail() 
 
 def test_validate_critique_schema_accepts_v1_15_svg_delta_audit() -> None:
     validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_15))
+
+
+def test_validate_critique_schema_accepts_v1_16_grounded_observations() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_16))
+
+
+def test_validate_critique_schema_accepts_v1_16_crop_only_grounding() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter.pop("svg_polish_delta_audit")
+    frontmatter.pop("aesthetic_gate_audit")
+
+    validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_16_missing_crop_observed_objects() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter["crop_audit_log"][0].pop("observed_objects")
+
+    with pytest.raises(CritiqueContractError, match="observed_objects"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_16_generic_crop_relationship() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter["crop_audit_log"][0]["local_relationship"] = "looks fine"
+
+    with pytest.raises(CritiqueContractError, match="local_relationship"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_16_missing_candidate_ref() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter["crop_audit_log"][1]["candidate_refs"] = []
+
+    with pytest.raises(CritiqueContractError, match="VC001"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_16_generic_delta_observation() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_16)
+    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"][0]["observation"] = "ok"
+
+    with pytest.raises(CritiqueContractError, match="observation"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_15_missing_svg_delta_audit() -> None:

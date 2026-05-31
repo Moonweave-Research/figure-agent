@@ -31,6 +31,7 @@ from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
     write_svg_polish_manifest,
 )
+from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
 
 _BASELINE_REQUIRED_LABELS = [
     "Experiment",
@@ -404,7 +405,7 @@ def _write_valid_polish_manifest(
     polish.mkdir(exist_ok=True)
     (fixture / "critique.md").write_text("# critique\n", encoding="utf-8")
     (polish / f"{name}.polished.svg").write_text(
-        "<svg><text>polished</text></svg>\n",
+        (fixture / "exports" / f"{name}.svg").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     (polish / "svg_polish_audit.md").write_text(
@@ -440,6 +441,8 @@ def _write_valid_polish_manifest(
         },
     }
     write_svg_polish_manifest(polish / "svg_polish_manifest.yaml", manifest)
+    if not semantic_change_declared and not backport_required:
+        build_svg_semantic_diff_report(fixture)
 
 
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:

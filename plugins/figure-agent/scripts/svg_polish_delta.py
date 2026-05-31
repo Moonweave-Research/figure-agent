@@ -72,6 +72,18 @@ def _default_renderer(source_svg: Path, output_png: Path) -> None:
         raise SvgPolishDeltaError(f"SVG render failed for {source_svg}: {detail}")
 
 
+def _renderer_provenance(renderer: Renderer | None) -> dict[str, str]:
+    script = REPO_ROOT / "scripts" / "svg_to_png.sh"
+    executable = "scripts/svg_to_png.sh"
+    if renderer is not None:
+        executable = f"callable:{getattr(renderer, '__name__', renderer.__class__.__name__)}"
+    return {
+        "executable": executable,
+        "version": "unknown",
+        "script_hash": file_sha256(script),
+    }
+
+
 def _write_diff_image(before_png: Path, after_png: Path, diff_png: Path) -> None:
     with Image.open(before_png) as before_image, Image.open(after_png) as after_image:
         before = before_image.convert("RGBA")
@@ -93,6 +105,7 @@ def _manifest_payload(
     before_png: Path,
     after_png: Path,
     diff_png: Path,
+    renderer: Renderer | None,
 ) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
@@ -103,6 +116,12 @@ def _manifest_payload(
         "source_svg_hash": file_sha256(source_svg_path),
         "polished_svg_hash": file_sha256(polished_svg_path),
         "recipe_hash": file_sha256(recipe_path),
+        "artifact_hashes": {
+            "before_png_hash": file_sha256(before_png),
+            "after_png_hash": file_sha256(after_png),
+            "diff_png_hash": file_sha256(diff_png),
+        },
+        "renderer": _renderer_provenance(renderer),
         "operation_ids": [operation["id"] for operation in recipe["operations"]],
         "artifacts": {
             "before_png": _relative(example_dir, before_png),
@@ -141,6 +160,7 @@ def build_svg_polish_delta_pack(
         if existing:
             joined = ", ".join(str(path) for path in existing)
             raise SvgPolishDeltaError(f"refusing to overwrite existing delta artifact(s): {joined}")
+    renderer_provenance = renderer
     renderer = renderer or _default_renderer
     delta_dir.mkdir(parents=True, exist_ok=True)
     renderer(source_svg_path, before_png)
@@ -155,6 +175,7 @@ def build_svg_polish_delta_pack(
         before_png=before_png,
         after_png=after_png,
         diff_png=diff_png,
+        renderer=renderer_provenance,
     )
     manifest_path.write_text(
         json.dumps(manifest, sort_keys=True, indent=2) + "\n",
@@ -174,6 +195,14 @@ def _require_non_empty_string(data: dict[str, Any], key: str, *, label: str) -> 
     if not isinstance(value, str) or not value.strip():
         raise SvgPolishDeltaError(f"{label}.{key} must be a non-empty string")
     return value.strip()
+
+
+def _require_sha256(value: str, label: str) -> None:
+    if not value.startswith("sha256:") or len(value) != len("sha256:") + 64:
+        raise SvgPolishDeltaError(f"{label} must be a sha256:<64 hex chars> string")
+    suffix = value.removeprefix("sha256:")
+    if any(char not in "0123456789abcdef" for char in suffix):
+        raise SvgPolishDeltaError(f"{label} must be lowercase sha256 hex")
 
 
 def load_svg_polish_delta_manifest(path: Path, *, example_dir: Path) -> dict[str, Any]:
@@ -218,6 +247,26 @@ def load_svg_polish_delta_manifest(path: Path, *, example_dir: Path) -> dict[str
         artifact_path = _fixture_path(example_dir, path_value, f"artifacts.{key}")
         if not artifact_path.is_file():
             raise SvgPolishDeltaError(f"missing delta artifact: {artifact_path}")
+    artifact_hashes = _require_mapping(
+        data.get("artifact_hashes"),
+        "delta_manifest.artifact_hashes",
+    )
+    for key in ("before_png_hash", "after_png_hash", "diff_png_hash"):
+        value = _require_non_empty_string(
+            artifact_hashes,
+            key,
+            label="delta_manifest.artifact_hashes",
+        )
+        _require_sha256(value, f"delta_manifest.artifact_hashes.{key}")
+    renderer = _require_mapping(data.get("renderer"), "delta_manifest.renderer")
+    _require_non_empty_string(renderer, "executable", label="delta_manifest.renderer")
+    _require_non_empty_string(renderer, "version", label="delta_manifest.renderer")
+    script_hash = _require_non_empty_string(
+        renderer,
+        "script_hash",
+        label="delta_manifest.renderer",
+    )
+    _require_sha256(script_hash, "delta_manifest.renderer.script_hash")
     operation_ids = data.get("operation_ids")
     if not isinstance(operation_ids, list) or not all(
         isinstance(item, str) and item.strip() for item in operation_ids
@@ -225,8 +274,7 @@ def load_svg_polish_delta_manifest(path: Path, *, example_dir: Path) -> dict[str
         raise SvgPolishDeltaError("delta_manifest.operation_ids must be a string list")
     for key in ("source_svg_hash", "polished_svg_hash", "recipe_hash"):
         value = _require_non_empty_string(data, key, label="delta_manifest")
-        if not value.startswith("sha256:"):
-            raise SvgPolishDeltaError(f"delta_manifest.{key} must be sha256-prefixed")
+        _require_sha256(value, f"delta_manifest.{key}")
     return data
 
 
@@ -236,8 +284,16 @@ def svg_polish_delta_is_stale(path: Path, *, example_dir: Path) -> bool:
     source_svg = _fixture_path(example_dir, data["source_svg"], "source_svg")
     polished_svg = _fixture_path(example_dir, data["polished_svg"], "polished_svg")
     recipe_path = _fixture_path(example_dir, data["recipe"], "recipe")
+    artifacts = data["artifacts"]
+    artifact_hashes = data["artifact_hashes"]
+    before_png = _fixture_path(example_dir, artifacts["before_png"], "artifacts.before_png")
+    after_png = _fixture_path(example_dir, artifacts["after_png"], "artifacts.after_png")
+    diff_png = _fixture_path(example_dir, artifacts["diff_png"], "artifacts.diff_png")
     return (
         data["source_svg_hash"] != file_sha256(source_svg)
         or data["polished_svg_hash"] != file_sha256(polished_svg)
         or data["recipe_hash"] != file_sha256(recipe_path)
+        or artifact_hashes["before_png_hash"] != file_sha256(before_png)
+        or artifact_hashes["after_png_hash"] != file_sha256(after_png)
+        or artifact_hashes["diff_png_hash"] != file_sha256(diff_png)
     )

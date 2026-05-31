@@ -812,6 +812,9 @@ def _single_crop_audit_log_yaml() -> str:
         "    inspected: true\n"
         "    verdict: no_defect\n"
         "    linked_micro_defect_id: ''\n"
+        "    observed_objects: [Panel overview, label group]\n"
+        "    local_relationship: Crop labels remain separated from nearby boundaries and marks.\n"
+        "    candidate_refs: []\n"
         "    rationale: full crop inspected with no defect\n"
         "    unintended_visible_anomaly: none\n"
         "    anomaly_rationale: no unintended artifact is visible in this crop\n"
@@ -825,6 +828,9 @@ def _svg_polish_delta_audit_yaml(*, include_diff: bool = True) -> str:
         "    path: polish/aesthetic_delta/diff.png\n"
         "    verdict: inspected\n"
         "    observation: diff image shows only local typography movement\n"
+        "    observed_objects: [adjusted label, nearby panel structure]\n"
+        "    local_relationship: Diff highlight stays local and avoids semantic geometry.\n"
+        "    delta_focus: local typography movement around the intended polished label\n"
         if include_diff
         else ""
     )
@@ -837,10 +843,16 @@ def _svg_polish_delta_audit_yaml(*, include_diff: bool = True) -> str:
         "    path: polish/aesthetic_delta/before.png\n"
         "    verdict: inspected\n"
         "    observation: before image shows the generated SVG baseline\n"
+        "    observed_objects: [baseline label, adjacent panel marks]\n"
+        "    local_relationship: Baseline view shows label spacing against panel structure.\n"
+        "    delta_focus: pre-polish local spacing baseline\n"
         "  - image_id: after\n"
         "    path: polish/aesthetic_delta/after.png\n"
         "    verdict: inspected\n"
         "    observation: after image shows improved label spacing\n"
+        "    observed_objects: [polished label, adjacent panel marks]\n"
+        "    local_relationship: After view preserves geometry and improves label spacing.\n"
+        "    delta_focus: post-polish local spacing result\n"
         f"{diff_entry}"
         "  compared_inputs: [before, after, diff]\n"
         "  improvements:\n"
@@ -954,6 +966,18 @@ def _write_svg_polish_delta_manifest(fig_dir: Path) -> None:
                 "source_svg_hash": file_sha256(source_svg),
                 "polished_svg_hash": file_sha256(polished_svg),
                 "recipe_hash": file_sha256(recipe),
+                "artifact_hashes": {
+                    "before_png_hash": file_sha256(before),
+                    "after_png_hash": file_sha256(after),
+                    "diff_png_hash": file_sha256(diff),
+                },
+                "renderer": {
+                    "executable": "scripts/svg_to_png.sh",
+                    "version": "unknown",
+                    "script_hash": file_sha256(
+                        Path(__file__).resolve().parents[1] / "scripts" / "svg_to_png.sh"
+                    ),
+                },
                 "operation_ids": ["R001"],
                 "artifacts": {
                     "before_png": "polish/aesthetic_delta/before.png",
@@ -1105,6 +1129,38 @@ def _write_label_path_proximity_report(fig_dir: Path, *, candidate_ids: tuple[st
     return report
 
 
+def _write_undeclared_geometry_report(fig_dir: Path, *, candidate_ids: tuple[str, ...]) -> Path:
+    report = fig_dir / "build" / "undeclared_geometry.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "tikz-source:auto-discovery",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "label_endpoint_near_miss",
+                        "evidence": f"candidate {candidate_id}",
+                        "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                        "source_line": 10,
+                        "nearest_text": "mobility",
+                        "distance_pt": 2.0,
+                        "recommended_action": "add_micro_defect",
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
 def _write_historical_visual_clash_report(fig_dir: Path) -> Path:
     report = fig_dir / "build" / "visual_clash.json"
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -1225,6 +1281,68 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
             "    tex_lines: [10, 20]\n"
             "    observation: ordinary finding\n"
         ),
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
+
+
+def test_lint_critique_rejects_unaccounted_undeclared_geometry_candidate(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_undeclared_geometry_report(fig_dir, candidate_ids=("UG001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness includes print-scale evidence",
+        micro_defects_yaml="micro_defects: []\n",
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == [
+        "undeclared_geometry_accounting"
+    ]
+    assert "UG001" in violations[0].message
+
+
+def test_lint_critique_accepts_undeclared_geometry_micro_defect_ref(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_undeclared_geometry_report(fig_dir, candidate_ids=("UG001",))
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.4",
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness includes print-scale evidence",
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/full_q1.png\n"
+            "    kind: label_path_near_miss\n"
+            "    severity: NIT\n"
+            "    observation: undeclared geometry UG001 is a near miss candidate\n"
+            "    linked_finding_id: \"\"\n"
+            "    visual_clash_ref: \"\"\n"
+            "    text_boundary_ref: \"\"\n"
+            "    label_path_ref: \"\"\n"
+            "    undeclared_geometry_ref: UG001\n"
+            "    status: open\n"
+        ),
+        findings_yaml="findings: []\n",
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
@@ -2295,10 +2413,10 @@ def test_lint_critique_requires_v1_15_when_fresh_svg_delta_exists(
     assert [violation.category for violation in violations] == [
         "svg_polish_delta_accounting"
     ]
-    assert "figure-agent.critique.v1.15" in violations[0].message
+    assert "figure-agent.critique.v1.16" in violations[0].message
 
 
-def test_lint_critique_accepts_v1_15_svg_delta_audit(
+def test_lint_critique_accepts_v1_16_svg_delta_audit(
     tmp_path: Path,
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
@@ -2310,7 +2428,7 @@ def test_lint_critique_accepts_v1_15_svg_delta_audit(
     _write_label_path_proximity_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.15",
+        schema="figure-agent.critique.v1.16",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
@@ -2324,7 +2442,7 @@ def test_lint_critique_accepts_v1_15_svg_delta_audit(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
-def test_lint_critique_rejects_v1_15_missing_delta_image_accounting(
+def test_lint_critique_rejects_v1_16_missing_delta_image_accounting(
     tmp_path: Path,
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
@@ -2333,7 +2451,7 @@ def test_lint_critique_rejects_v1_15_missing_delta_image_accounting(
     _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.15",
+        schema="figure-agent.critique.v1.16",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
@@ -2352,7 +2470,7 @@ def test_lint_critique_rejects_v1_15_missing_delta_image_accounting(
     assert "missing delta_image_audit_log ids: diff" in violations[0].message
 
 
-def test_lint_critique_rejects_v1_15_generic_aesthetic_gate_prose(
+def test_lint_critique_rejects_v1_16_generic_aesthetic_gate_prose(
     tmp_path: Path,
 ) -> None:
     fig_dir = tmp_path / "demo_fig"
@@ -2364,7 +2482,7 @@ def test_lint_critique_rejects_v1_15_generic_aesthetic_gate_prose(
     _write_label_path_proximity_report(fig_dir, candidate_ids=())
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.15",
+        schema="figure-agent.critique.v1.16",
         findings_yaml="findings: []\npanels: []\n",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
