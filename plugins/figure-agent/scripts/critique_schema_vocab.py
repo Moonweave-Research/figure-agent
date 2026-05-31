@@ -17,6 +17,7 @@ CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
+CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -184,6 +185,36 @@ MICRO_DEFECT_ACCEPT_SIMPLIFICATION_RATIONALE_MARKERS = (
 )
 CROP_AUDIT_VERDICTS = frozenset({"defect", "no_defect", "uncertain"})
 CROP_ANOMALY_VERDICTS = frozenset({"none", "present", "uncertain"})
+
+SVG_DELTA_EVALUATION_STATES = frozenset(
+    {
+        "improved",
+        "no_meaningful_change",
+        "regressed",
+        "needs_human_art_direction",
+        "invalid",
+    }
+)
+SVG_DELTA_IMAGE_IDS = frozenset({"before", "after", "diff"})
+SVG_DELTA_IMAGE_VERDICTS = frozenset({"inspected"})
+SVG_DELTA_REGRESSION_CATEGORIES = frozenset(
+    {
+        "semantic_drift",
+        "label_readability",
+        "crop_regression",
+        "print_scale_regression",
+        "overdecorated",
+        "journal_mismatch",
+    }
+)
+SVG_DELTA_ROUTES = frozenset(
+    {
+        "continue_svg_polish",
+        "accept_svg_polish",
+        "semantic_backport_required",
+        "needs_human_art_direction",
+    }
+)
 AESTHETIC_LEVER_DIMENSIONS = frozenset(
     {
         "maturity",

@@ -45,6 +45,7 @@ from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
+    CRITIQUE_RUBRIC_VERSION_V1_15,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -90,6 +91,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
+_CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
 
 
 class CritiqueBriefError(Exception):
@@ -734,6 +736,41 @@ def _svg_polish_delta_section(example_dir: Path) -> str:
     return "\n" + "\n".join(lines) + "\n"
 
 
+def _svg_polish_delta_audit_schema(include_delta_audit: bool) -> str:
+    if not include_delta_audit:
+        return ""
+    return """svg_polish_delta_audit:
+  evaluation_state: <improved | no_meaningful_change | regressed |
+    needs_human_art_direction | invalid>
+  read_all_delta_images: true
+  delta_image_audit_log:
+    - image_id: before
+      path: polish/aesthetic_delta/before.png
+      verdict: inspected
+      observation: "<specific current-artifact evidence from before image>"
+    - image_id: after
+      path: polish/aesthetic_delta/after.png
+      verdict: inspected
+      observation: "<specific current-artifact evidence from after image>"
+    - image_id: diff
+      path: polish/aesthetic_delta/diff.png
+      verdict: inspected
+      observation: "<specific current-artifact evidence from diff image>"
+  compared_inputs: [before, after, diff]
+  improvements:
+    - "<specific improvement, or empty when not improved>"
+  regressions:
+    - category: <semantic_drift | label_readability | crop_regression |
+        print_scale_regression | overdecorated | journal_mismatch>
+      evidence: "<crop/diff/reference evidence>"
+      severity: BLOCKER | MAJOR | MINOR | NIT
+      linked_finding_id: "<finding id, or empty only for non-blocking route>"
+  route_after_delta: <continue_svg_polish | accept_svg_polish |
+    semantic_backport_required | needs_human_art_direction>
+  rationale: "<why this route is chosen; accept_svg_polish is delta-local, not release approval>"
+"""
+
+
 def _reference_score_calibration(
     example_dir: Path,
     pack: dict | None,
@@ -1279,7 +1316,26 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         or journal_playbook_pack is not None
         or uses_aesthetic_lever_schema
     )
-    if uses_v1_14_contract:
+    uses_svg_polish_delta_schema = bool(svg_polish_delta_section)
+    uses_route_detail_contract = uses_v1_14_contract or uses_svg_polish_delta_schema
+    if uses_svg_polish_delta_schema:
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_15
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_15
+        crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
+    anomaly_rationale: "<whether any unintended visible artifact is present>"
+    anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
+"""
+        crop_anomaly_instructions = """
+For each crop, also answer the inverse question: "is anything visible here that
+was not intended?" Use `unintended_visible_anomaly: present` for stray bond,
+unintended line continuation, accidental component grouping, misleading reference transfer,
+phantom boundary or texture, or any other visible artifact not supported by
+briefing/author intent. `present` anomalies must link to a
+finding, micro-defect, or explicit `accept_simplification:<reason>` decision;
+`uncertain` anomalies require a concrete rationale and should route to more
+zoom/reference review.
+"""
+    elif uses_v1_14_contract:
         critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_14
         critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_14
         crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
@@ -1341,7 +1397,7 @@ zoom/reference review.
 
 {brief_sections.top_tier_journal_audit()}
 
-{brief_sections.editorial_art_direction_audit(require_route_detail=uses_v1_14_contract)}
+{brief_sections.editorial_art_direction_audit(require_route_detail=uses_route_detail_contract)}
 
 {brief_sections.journal_grade_assessment()}
 
@@ -1456,13 +1512,14 @@ top_tier_audit:
     finding: "<style authority across line weights, detail level, depth cues>"
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
-{brief_sections.editorial_art_direction_schema(require_route_detail=uses_v1_14_contract)}
+{brief_sections.editorial_art_direction_schema(require_route_detail=uses_route_detail_contract)}
 {brief_sections.journal_grade_assessment_schema(
     critique_input_hash,
     _reference_score_calibration(example_dir, reference_calibration_pack),
 )}
 {_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
+{_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png

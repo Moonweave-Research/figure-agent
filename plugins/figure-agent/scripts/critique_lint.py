@@ -50,10 +50,17 @@ from paper_aesthetic_context import (  # noqa: E402
     paper_context_anchors,
 )
 from quality_manifest import file_sha256  # noqa: E402
+from svg_polish_delta import (  # noqa: E402
+    SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
+    SvgPolishDeltaError,
+    load_svg_polish_delta_manifest,
+    svg_polish_delta_is_stale,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
 CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
+SVG_POLISH_DELTA_AUDIT_SCHEMA = "figure-agent.critique.v1.15"
 VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.7",
@@ -64,6 +71,7 @@ VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
     }
 )
 CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
@@ -75,6 +83,7 @@ CROP_AUDIT_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
     }
 )
 STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
@@ -84,6 +93,7 @@ STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS = frozenset(
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
     }
 )
 _VISUAL_CLASH_ACCEPT_MIN_OBSERVATION_CHARS = 80
@@ -96,6 +106,7 @@ TEXT_BOUNDARY_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
     }
 )
 LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
@@ -105,6 +116,7 @@ LABEL_PATH_ACCOUNTING_SCHEMAS = frozenset(
         "figure-agent.critique.v1.12",
         "figure-agent.critique.v1.13",
         "figure-agent.critique.v1.14",
+        "figure-agent.critique.v1.15",
     }
 )
 _HISTORICAL_VISUAL_CLASH_FIXTURE = "fig1_visual_clash_regression"
@@ -1642,6 +1654,119 @@ def _crop_audit_accounting_violations(
     return []
 
 
+def _svg_polish_delta_accounting_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
+    if not manifest_path.is_file():
+        return []
+    try:
+        manifest = load_svg_polish_delta_manifest(manifest_path, example_dir=example_dir)
+        if svg_polish_delta_is_stale(manifest_path, example_dir=example_dir):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="svg_polish_delta_accounting",
+                    message="SVG polish delta manifest is stale; regenerate before critique",
+                )
+            ]
+    except SvgPolishDeltaError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message=f"SVG polish delta manifest invalid: {exc}",
+            )
+        ]
+    if frontmatter.get("schema") != SVG_POLISH_DELTA_AUDIT_SCHEMA:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message=(
+                    "fresh SVG polish delta requires critique schema "
+                    f"{SVG_POLISH_DELTA_AUDIT_SCHEMA}"
+                ),
+            )
+        ]
+    audit = frontmatter.get("svg_polish_delta_audit")
+    if not isinstance(audit, dict):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message="missing svg_polish_delta_audit for fresh SVG polish delta",
+            )
+        ]
+    expected_paths = {
+        "before": manifest["artifacts"]["before_png"],
+        "after": manifest["artifacts"]["after_png"],
+        "diff": manifest["artifacts"]["diff_png"],
+    }
+    raw_items = audit.get("delta_image_audit_log")
+    if not isinstance(raw_items, list):
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message="svg_polish_delta_audit.delta_image_audit_log must be a list",
+            )
+        ]
+    image_ids = [
+        item.get("image_id").strip()
+        for item in raw_items
+        if isinstance(item, dict)
+        and isinstance(item.get("image_id"), str)
+        and item.get("image_id").strip()
+    ]
+    duplicate_ids = sorted({image_id for image_id in image_ids if image_ids.count(image_id) > 1})
+    if duplicate_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message=f"duplicate delta_image_audit_log ids: {', '.join(duplicate_ids)}",
+            )
+        ]
+    expected_ids = set(expected_paths)
+    unknown_ids = sorted(image_id for image_id in image_ids if image_id not in expected_ids)
+    if unknown_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message=f"unknown delta_image_audit_log ids: {', '.join(unknown_ids)}",
+            )
+        ]
+    missing_ids = sorted(expected_ids - set(image_ids))
+    if missing_ids:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="svg_polish_delta_accounting",
+                message=f"missing delta_image_audit_log ids: {', '.join(missing_ids)}",
+            )
+        ]
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        image_id = item.get("image_id")
+        path = item.get("path")
+        if isinstance(image_id, str) and path != expected_paths.get(image_id):
+            return [
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="svg_polish_delta_accounting",
+                    message=(
+                        f"delta_image_audit_log path for {image_id} must match "
+                        f"manifest path {expected_paths.get(image_id)}"
+                    ),
+                )
+            ]
+    return []
+
+
 def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintViolation]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
@@ -1715,6 +1840,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     violations.extend(
         _journal_art_direction_playbook_accounting_violations(example_dir, frontmatter)
     )
+    if violations:
+        return violations
+    violations.extend(_svg_polish_delta_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
 

@@ -26,10 +26,12 @@ CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
 CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"
 CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
 CRITIQUE_RUBRIC_VERSION_V1_14 = "figure-agent.critique-rubric.v1.14"
+CRITIQUE_RUBRIC_VERSION_V1_15 = "figure-agent.critique-rubric.v1.15"
 CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
+CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -182,6 +184,9 @@ def critique_generator_version(
 
 
 def expected_critique_rubric_version(example_dir: Path) -> str:
+    delta_manifest_path = example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json"
+    if delta_manifest_path.is_file():
+        return CRITIQUE_RUBRIC_VERSION_V1_15
     reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if reference_pack_path.is_file():
         try:
@@ -222,6 +227,8 @@ def _critique_schema_matches_expected_rubric(
     expected_rubric_version: str,
 ) -> bool:
     schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_15:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_15
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_14:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_14
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_13:
@@ -235,6 +242,7 @@ def _critique_schema_matches_expected_rubric(
         CRITIQUE_SCHEMA_VERSION_V1_12,
         CRITIQUE_SCHEMA_VERSION_V1_13,
         CRITIQUE_SCHEMA_VERSION_V1_14,
+        CRITIQUE_SCHEMA_VERSION_V1_15,
     }
 
 

@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
+    CRITIQUE_RUBRIC_VERSION_V1_15,
     critique_manifest_paths,
     expected_critique_rubric_version,
     input_manifest_hash,
@@ -638,6 +639,20 @@ def test_expected_critique_rubric_version_uses_v1_14_for_journal_playbook_and_in
     )
 
     assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_14
+
+
+def test_expected_critique_rubric_version_uses_v1_15_for_svg_delta(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "examples" / "demo"
+    delta_dir = example_dir / "polish" / "aesthetic_delta"
+    delta_dir.mkdir(parents=True)
+    (delta_dir / "delta_manifest.json").write_text(
+        '{"schema":"figure-agent.svg-polish-delta.v1"}\n',
+        encoding="utf-8",
+    )
+
+    assert expected_critique_rubric_version(example_dir) == CRITIQUE_RUBRIC_VERSION_V1_15
 
 
 def test_expected_critique_rubric_version_keeps_v1_10_for_legacy_intent(

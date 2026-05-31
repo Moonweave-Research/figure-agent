@@ -72,6 +72,7 @@ CRITIQUE_SCHEMA_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
+CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -181,6 +182,38 @@ def _journal_art_direction_playbook_audit() -> dict:
     }
 
 
+def _svg_polish_delta_audit() -> dict:
+    return {
+        "evaluation_state": "improved",
+        "read_all_delta_images": True,
+        "delta_image_audit_log": [
+            {
+                "image_id": "before",
+                "path": "polish/aesthetic_delta/before.png",
+                "verdict": "inspected",
+                "observation": "before image shows the generated SVG baseline",
+            },
+            {
+                "image_id": "after",
+                "path": "polish/aesthetic_delta/after.png",
+                "verdict": "inspected",
+                "observation": "after image shows improved label spacing",
+            },
+            {
+                "image_id": "diff",
+                "path": "polish/aesthetic_delta/diff.png",
+                "verdict": "inspected",
+                "observation": "diff image shows only local typography movement",
+            },
+        ],
+        "compared_inputs": ["before", "after", "diff"],
+        "improvements": ["label spacing is cleaner in the current after image"],
+        "regressions": [],
+        "route_after_delta": "continue_svg_polish",
+        "rationale": "SVG delta improves optical polish without semantic drift",
+    }
+
+
 def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
     frontmatter = {
         "schema": schema,
@@ -225,6 +258,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_15,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -248,6 +282,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_15,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -260,6 +295,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_12,
         CRITIQUE_SCHEMA_V1_13,
         CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_15,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -293,11 +329,13 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         frontmatter["journal_art_direction_playbook_audit"] = (
             _journal_art_direction_playbook_audit()
         )
-    if schema == CRITIQUE_SCHEMA_V1_14:
+    if schema in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_15}:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
         trigger["remaining_tikz_lever"] = (
             "source-level label spacing can still be repaired in TikZ"
         )
+    if schema == CRITIQUE_SCHEMA_V1_15:
+        frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
     return frontmatter
 
 
@@ -319,6 +357,44 @@ def test_validate_critique_schema_accepts_v1_13_crop_anomaly_accounting() -> Non
 
 def test_validate_critique_schema_accepts_v1_14_route_specific_trigger_detail() -> None:
     validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_14))
+
+
+def test_validate_critique_schema_accepts_v1_15_svg_delta_audit() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_15))
+
+
+def test_validate_critique_schema_rejects_v1_15_missing_svg_delta_audit() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    frontmatter.pop("svg_polish_delta_audit")
+
+    with pytest.raises(CritiqueContractError, match="svg_polish_delta_audit"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_15_missing_delta_image_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    frontmatter["svg_polish_delta_audit"]["delta_image_audit_log"].pop()
+
+    with pytest.raises(CritiqueContractError, match="missing delta_image_audit_log ids"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_15_regression_without_route_or_link() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    audit = frontmatter["svg_polish_delta_audit"]
+    audit["evaluation_state"] = "improved"
+    audit["route_after_delta"] = "accept_svg_polish"
+    audit["regressions"] = [
+        {
+            "category": "semantic_drift",
+            "evidence": "diff image shifts a scientific arrow",
+            "severity": "MAJOR",
+            "linked_finding_id": "",
+        }
+    ]
+
+    with pytest.raises(CritiqueContractError, match="regressions must link"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_rejects_v1_14_continue_tikz_without_remaining_lever() -> None:

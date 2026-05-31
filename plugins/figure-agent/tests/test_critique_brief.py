@@ -1530,6 +1530,10 @@ def test_critique_brief_includes_svg_polish_aesthetic_delta(tmp_path):
     assert "operation_ids: R001" in brief
     assert "Did journal polish improve?" in brief
     assert "Did any scientific semantics change?" in brief
+    assert "schema: figure-agent.critique.v1.15" in brief
+    assert "rubric_version: figure-agent.critique-rubric.v1.15" in brief
+    assert "svg_polish_delta_audit:" in brief
+    assert "delta_image_audit_log:" in brief
 
 
 def test_critique_brief_includes_paper_wide_aesthetic_context(tmp_path):

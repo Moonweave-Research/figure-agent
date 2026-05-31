@@ -975,6 +975,113 @@ def _validate_v1_13_crop_anomaly_accounting(frontmatter: dict[str, Any]) -> None
             )
 
 
+def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
+    audit = require_mapping(
+        frontmatter.get("svg_polish_delta_audit"),
+        "critique frontmatter.svg_polish_delta_audit",
+    )
+    label = "critique frontmatter.svg_polish_delta_audit"
+    _require_enum(
+        audit,
+        "evaluation_state",
+        vocab.SVG_DELTA_EVALUATION_STATES,
+        label=label,
+    )
+    if audit.get("read_all_delta_images") is not True:
+        raise CritiqueContractError(f"{label}.read_all_delta_images must be true")
+    image_items = _require_mapping_items(
+        audit.get("delta_image_audit_log"),
+        f"{label}.delta_image_audit_log",
+    )
+    image_ids = []
+    for index, item in enumerate(image_items):
+        item_label = f"{label}.delta_image_audit_log[{index}]"
+        image_id = _require_enum(
+            item,
+            "image_id",
+            vocab.SVG_DELTA_IMAGE_IDS,
+            label=item_label,
+        )
+        image_ids.append(image_id)
+        expected_path = f"polish/aesthetic_delta/{image_id}.png"
+        path = _require_non_empty_string(item, "path", label=item_label)
+        if path != expected_path:
+            raise CritiqueContractError(
+                f"{item_label}.path must be {expected_path}"
+            )
+        _require_enum(
+            item,
+            "verdict",
+            vocab.SVG_DELTA_IMAGE_VERDICTS,
+            label=item_label,
+        )
+        _require_non_empty_string(item, "observation", label=item_label)
+    duplicate_ids = sorted({image_id for image_id in image_ids if image_ids.count(image_id) > 1})
+    if duplicate_ids:
+        raise CritiqueContractError(
+            "critique frontmatter.svg_polish_delta_audit has duplicate "
+            f"delta_image_audit_log ids: {', '.join(duplicate_ids)}"
+        )
+    missing_ids = sorted(vocab.SVG_DELTA_IMAGE_IDS - set(image_ids))
+    if missing_ids:
+        raise CritiqueContractError(
+            "critique frontmatter.svg_polish_delta_audit missing "
+            f"delta_image_audit_log ids: {', '.join(missing_ids)}"
+        )
+    compared_inputs = _validate_string_list(
+        audit.get("compared_inputs"),
+        f"{label}.compared_inputs",
+        require_non_empty=True,
+    )
+    if set(compared_inputs) != vocab.SVG_DELTA_IMAGE_IDS:
+        raise CritiqueContractError(
+            f"{label}.compared_inputs must contain before, after, and diff"
+        )
+    _validate_string_list(
+        audit.get("improvements"),
+        f"{label}.improvements",
+        require_non_empty=audit.get("evaluation_state") == "improved",
+    )
+    route = _require_enum(audit, "route_after_delta", vocab.SVG_DELTA_ROUTES, label=label)
+    _require_non_empty_string(audit, "rationale", label=label)
+    regressions = _require_list(audit.get("regressions"), f"{label}.regressions")
+    finding_ids = _finding_ids(frontmatter)
+    for index, raw_regression in enumerate(regressions):
+        regression_label = f"{label}.regressions[{index}]"
+        regression = require_mapping(raw_regression, regression_label)
+        _require_enum(
+            regression,
+            "category",
+            vocab.SVG_DELTA_REGRESSION_CATEGORIES,
+            label=regression_label,
+        )
+        _require_non_empty_string(regression, "evidence", label=regression_label)
+        severity = _require_enum(
+            regression,
+            "severity",
+            vocab.FINDING_SEVERITIES,
+            label=regression_label,
+        )
+        linked_finding_id = _require_string_value(
+            regression,
+            "linked_finding_id",
+            label=regression_label,
+        )
+        if severity in {"BLOCKER", "MAJOR"} and route not in {
+            "semantic_backport_required",
+            "needs_human_art_direction",
+        }:
+            if linked_finding_id not in finding_ids:
+                raise CritiqueContractError(
+                    f"{label}.regressions must link BLOCKER/MAJOR regressions "
+                    "to a visible finding or route to human/semantic backport"
+                )
+            raise CritiqueContractError(
+                f"{label}.regressions with BLOCKER/MAJOR severity require "
+                "semantic_backport_required or needs_human_art_direction"
+            )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -1158,6 +1265,29 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
         _validate_v1_14_editorial_route_detail(frontmatter)
         _validate_v1_8_crop_audit_log(frontmatter)
         _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        if "journal_art_direction_playbook_audit" in frontmatter:
+            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_15:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_14_editorial_route_detail(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        _validate_v1_15_svg_polish_delta_audit(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         if "journal_art_direction_playbook_audit" in frontmatter:
