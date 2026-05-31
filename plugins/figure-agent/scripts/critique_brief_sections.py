@@ -293,6 +293,32 @@ def aesthetic_antipattern_checklist() -> str:
     return "\n".join(lines) + "\n"
 
 
+def weakest_panel_coherence_check() -> str:
+    return """## Weakest-Panel Coherence Check (host LLM MUST name one)
+
+After the anti-pattern checklist, identify the weakest panel/subregion in the
+current artifact. This is a comparative audit: a panel can have no local
+collision defects and still be the limiting panel because it has weaker
+composition, typography, color maturity, density, component fidelity, story
+role, or style coherence than the rest of the figure.
+
+For multi-panel figures, name exactly one weakest panel/subregion or state
+`none` only when the panels are genuinely balanced. For single-panel figures,
+evaluate the weakest subregion or state `none` if no subregion is limiting.
+Route the limiting weakness through existing routes only:
+
+- weakness_type: composition | typography | color | density |
+  component_fidelity | story_role | style_mismatch | none
+- route: none | tikz_patch | svg_polish | semantic_backport |
+  human_art_direction | accept_simplification
+
+Do not let this check override BLOCKER/MAJOR findings. If the weakest panel has
+a semantic or scientific problem, route it through the normal finding,
+quality-axis, or semantic-backport path rather than treating it as optional
+polish.
+"""
+
+
 def editorial_art_direction_audit(*, require_route_detail: bool = False) -> str:
     route_detail = ""
     if require_route_detail:

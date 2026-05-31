@@ -1488,6 +1488,8 @@ zoom/reference review.
 
 {brief_sections.aesthetic_antipattern_checklist()}
 
+{brief_sections.weakest_panel_coherence_check()}
+
 {brief_sections.editorial_art_direction_audit(require_route_detail=uses_route_detail_contract)}
 
 {brief_sections.journal_grade_assessment()}

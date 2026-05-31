@@ -500,6 +500,18 @@ def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
     assert "decorative_detail_without_explanatory_value" in brief
 
 
+def test_critique_brief_includes_weakest_panel_coherence_check(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Weakest-Panel Coherence Check (host LLM MUST name one)" in brief
+    assert "weakest panel/subregion" in brief
+    assert "single-panel figures" in brief
+    assert "composition | typography | color | density" in brief
+    assert "tikz_patch | svg_polish | semantic_backport" in brief
+
+
 def test_critique_brief_includes_editorial_art_direction_audit(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

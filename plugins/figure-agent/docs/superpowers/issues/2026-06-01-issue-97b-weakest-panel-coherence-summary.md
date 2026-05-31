@@ -1,6 +1,7 @@
 # Issue 97B - Weakest-Panel Coherence Summary
 
-Status: proposed
+Status: first prompt-hardening slice implemented; structured output surfacing
+remains proposed
 
 Type: critique/loop summary, paper-quality audit
 
@@ -35,12 +36,19 @@ weakest_panel_summary:
 
 ## Acceptance
 
-- The brief asks the host LLM to identify the weakest panel or explicitly state
+- [x] The brief asks the host LLM to identify the weakest panel or explicitly state
   none.
-- Non-`none` routes cannot bypass existing gates.
-- `fig_loop` and `ready_improvement_summary` can surface the weakest panel as
+- [x] Non-`none` routes are constrained to existing route names and cannot
+  bypass existing gates in this prompt-hardening slice.
+- [ ] `fig_loop` and `ready_improvement_summary` can surface the weakest panel as
   optional only when no stronger blocker exists.
-- Legacy critiques remain parseable.
+- [x] Legacy critiques remain parseable because this slice adds prompt text
+  only and does not add a required schema field.
+
+## Verification
+
+- `uv run pytest -q tests/test_critique_brief.py::test_critique_brief_includes_weakest_panel_coherence_check tests/test_critique_brief.py::test_critique_brief_includes_aesthetic_antipattern_checklist`
+  - Result: 2 passed.
 
 ## Review Questions
 
