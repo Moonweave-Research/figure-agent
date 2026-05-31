@@ -34,6 +34,8 @@ def _write_loop_run(
     recommended_next_action: str = "inspect figure state",
     top_tier_audit_summary: dict[str, Any] | None = None,
     editorial_art_direction_summary: dict[str, Any] | None = None,
+    aesthetic_lever_summary: dict[str, Any] | None = None,
+    journal_art_direction_playbook_summary: dict[str, Any] | None = None,
     mtime: float | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -58,6 +60,12 @@ def _write_loop_run(
         iteration["top_tier_audit_summary"] = top_tier_audit_summary
     if editorial_art_direction_summary is not None:
         iteration["editorial_art_direction_summary"] = editorial_art_direction_summary
+    if aesthetic_lever_summary is not None:
+        iteration["aesthetic_lever_summary"] = aesthetic_lever_summary
+    if journal_art_direction_playbook_summary is not None:
+        iteration["journal_art_direction_playbook_summary"] = (
+            journal_art_direction_playbook_summary
+        )
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -146,6 +154,8 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
     )
     top_tier_summary = {"worst_verdict": "needs_human"}
     editorial_summary = {"polish_recommended_path": "ready_for_svg_polish"}
+    aesthetic_summary = {"evaluation_state": "needs_patch"}
+    journal_summary = {"evaluation_state": "needs_patch"}
     newest = _write_loop_run(
         tmp_path,
         run_id="20260521-130000-000000-driver_demo",
@@ -153,6 +163,8 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
         recommended_next_action="new action",
         top_tier_audit_summary=top_tier_summary,
         editorial_art_direction_summary=editorial_summary,
+        aesthetic_lever_summary=aesthetic_summary,
+        journal_art_direction_playbook_summary=journal_summary,
         mtime=new_time,
     )
 
@@ -168,4 +180,6 @@ def test_latest_loop_checkpoint_selects_newest_current_run_and_preserves_summari
         "recommended_next_action": "new action",
         "top_tier_audit_summary": top_tier_summary,
         "editorial_art_direction_summary": editorial_summary,
+        "aesthetic_lever_summary": aesthetic_summary,
+        "journal_art_direction_playbook_summary": journal_summary,
     }
