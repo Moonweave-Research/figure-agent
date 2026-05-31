@@ -9,6 +9,15 @@ ROUTE_READY_FOR_SVG_POLISH = "ready_for_svg_polish"
 ROUTE_RUN_LOOP = "run_loop"
 ROUTE_SEMANTIC_BACKPORT = "semantic_backport"
 READINESS_SCHEMA = "figure-agent.svg-polish-readiness.v1"
+GATE_SCHEMA = "figure-agent.svg-polish-gate.v1"
+REQUIRED_GATE_INPUTS = [
+    "critique_fresh",
+    "loop_checkpoint_current",
+    "tikz_vs_svg_polish_trigger_ready",
+    "no_top_tier_blockers",
+    "no_crop_uncertainty",
+    "no_human_art_direction_gate",
+]
 
 
 def _positive_int(value: Any) -> bool:
@@ -325,3 +334,85 @@ def svg_polish_readiness_from_checkpoint(
     readiness = dict(readiness)
     readiness["source"] = "latest_loop_checkpoint"
     return readiness
+
+
+def _gate_next_action(readiness_next_action: Any) -> str:
+    if readiness_next_action == "start_svg_polish_recipe":
+        return "start_svg_polish_recipe"
+    if readiness_next_action == "semantic_backport":
+        return "semantic_backport"
+    if readiness_next_action in {
+        "human_art_direction_review",
+        "human_review",
+    }:
+        return "human_art_direction"
+    if readiness_next_action == "run_fig_critique":
+        return "run_fig_critique"
+    return "rerun_fig_loop"
+
+
+def _gate_state(readiness: dict[str, Any]) -> str:
+    if readiness.get("can_start_svg_polish") is True:
+        return "ready"
+    next_action = readiness.get("next_action")
+    if next_action == "semantic_backport":
+        return "semantic_backport"
+    if next_action in {"human_art_direction_review", "human_review"}:
+        return "needs_human"
+    return "blocked"
+
+
+def svg_polish_gate_from_checkpoint(
+    checkpoint: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Return the compact operator-facing SVG polish gate summary."""
+    if checkpoint is None:
+        return {
+            "schema": GATE_SCHEMA,
+            "state": "no_current_checkpoint",
+            "source": "driver_blocker",
+            "can_start_svg_polish": False,
+            "recommended_path": None,
+            "next_action": "rerun_fig_loop",
+            "reason": "no current /fig_loop checkpoint proves ready_for_svg_polish",
+            "required_inputs": list(REQUIRED_GATE_INPUTS),
+            "blocking_items": [
+                {
+                    "source": "driver_blocker",
+                    "id": "no_current_checkpoint",
+                }
+            ],
+        }
+    readiness = svg_polish_readiness_from_checkpoint(checkpoint)
+    if readiness is None:
+        return {
+            "schema": GATE_SCHEMA,
+            "state": "blocked",
+            "source": "latest_loop_checkpoint",
+            "can_start_svg_polish": False,
+            "recommended_path": _checkpoint_recommended_path(checkpoint),
+            "next_action": "rerun_fig_loop",
+            "reason": "latest /fig_loop checkpoint lacks an SVG polish route",
+            "required_inputs": list(REQUIRED_GATE_INPUTS),
+            "blocking_items": [
+                {
+                    "source": "latest_loop_checkpoint",
+                    "id": "svg_polish_route_missing",
+                }
+            ],
+        }
+    reason = readiness.get("blocking_reason")
+    if reason is None:
+        reason = readiness.get("route_detail") or "ready_for_svg_polish checkpoint is clean"
+    next_action = _gate_next_action(readiness.get("next_action"))
+    return {
+        "schema": GATE_SCHEMA,
+        "state": _gate_state(readiness),
+        "source": readiness.get("source") or "latest_loop_checkpoint",
+        "can_start_svg_polish": readiness.get("can_start_svg_polish") is True,
+        "recommended_path": readiness.get("recommended_path"),
+        "next_action": next_action,
+        "reason": reason,
+        "required_inputs": list(REQUIRED_GATE_INPUTS),
+        "blocking_items": list(readiness.get("blocking_items") or []),
+    }

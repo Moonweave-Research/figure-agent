@@ -1007,8 +1007,14 @@ def test_loop_surfaces_svg_polish_readiness_from_editorial_summary(
     assert readiness["recommended_path"] == "continue_tikz"
     assert readiness["next_action"] == "run_fig_loop"
     assert readiness["blocking_items"][0]["id"] == "tikz_vs_svg_polish_trigger"
+    gate = iteration["svg_polish_gate"]
+    assert gate["schema"] == "figure-agent.svg-polish-gate.v1"
+    assert gate["state"] == "blocked"
+    assert gate["can_start_svg_polish"] is False
+    assert gate["recommended_path"] == "continue_tikz"
     stdout_summary = json_stdout_summary(run_dir)
     assert stdout_summary["svg_polish_readiness"] == readiness
+    assert stdout_summary["svg_polish_gate"] == gate
 
 
 def test_loop_surfaces_v1_14_svg_polish_route_detail(
@@ -3265,6 +3271,8 @@ def test_main_json_exercises_real_run_loop_summary(
     }
     if iteration["svg_polish_readiness"] is not None:
         expected_payload["svg_polish_readiness"] = iteration["svg_polish_readiness"]
+    if iteration["svg_polish_gate"] is not None:
+        expected_payload["svg_polish_gate"] = iteration["svg_polish_gate"]
     assert payload == expected_payload
 
 

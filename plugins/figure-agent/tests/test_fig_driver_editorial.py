@@ -12,6 +12,7 @@ from fig_driver_editorial import (  # noqa: E402
     ROUTE_SEMANTIC_BACKPORT,
     editorial_polish_route,
     editorial_review_requires_human_gate,
+    svg_polish_gate_from_checkpoint,
     svg_polish_readiness,
     svg_polish_readiness_from_checkpoint,
 )
@@ -306,3 +307,77 @@ def test_svg_polish_readiness_from_checkpoint_preserves_clean_loop_editorial_fal
     assert readiness is not None
     assert readiness["can_start_svg_polish"] is True
     assert readiness["recommended_path"] == "ready_for_svg_polish"
+
+
+def test_svg_polish_gate_reports_no_current_checkpoint() -> None:
+    gate = svg_polish_gate_from_checkpoint(None)
+
+    assert gate == {
+        "schema": "figure-agent.svg-polish-gate.v1",
+        "state": "no_current_checkpoint",
+        "source": "driver_blocker",
+        "can_start_svg_polish": False,
+        "recommended_path": None,
+        "next_action": "rerun_fig_loop",
+        "reason": "no current /fig_loop checkpoint proves ready_for_svg_polish",
+        "required_inputs": [
+            "critique_fresh",
+            "loop_checkpoint_current",
+            "tikz_vs_svg_polish_trigger_ready",
+            "no_top_tier_blockers",
+            "no_crop_uncertainty",
+            "no_human_art_direction_gate",
+        ],
+        "blocking_items": [
+            {
+                "source": "driver_blocker",
+                "id": "no_current_checkpoint",
+            }
+        ],
+    }
+
+
+def test_svg_polish_gate_normalizes_ready_checkpoint() -> None:
+    gate = svg_polish_gate_from_checkpoint(
+        {
+            "final_stop_reason": "verify_only_complete",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "ready_for_svg_polish",
+                "polish_route_detail": "only optical vector cleanup remains",
+            },
+        }
+    )
+
+    assert gate["schema"] == "figure-agent.svg-polish-gate.v1"
+    assert gate["state"] == "ready"
+    assert gate["source"] == "latest_loop_checkpoint"
+    assert gate["can_start_svg_polish"] is True
+    assert gate["next_action"] == "start_svg_polish_recipe"
+    assert gate["reason"] == "only optical vector cleanup remains"
+    assert gate["required_inputs"] == [
+        "critique_fresh",
+        "loop_checkpoint_current",
+        "tikz_vs_svg_polish_trigger_ready",
+        "no_top_tier_blockers",
+        "no_crop_uncertainty",
+        "no_human_art_direction_gate",
+    ]
+
+
+def test_svg_polish_gate_preserves_blocker_precedence() -> None:
+    gate = svg_polish_gate_from_checkpoint(
+        {
+            "final_stop_reason": "human_gate_required",
+            "recommended_next_action": "human review required for C001",
+            "editorial_art_direction_summary": {
+                "polish_trigger_verdict": "pass",
+                "polish_recommended_path": "ready_for_svg_polish",
+            },
+        }
+    )
+
+    assert gate["state"] == "needs_human"
+    assert gate["can_start_svg_polish"] is False
+    assert gate["next_action"] == "human_art_direction"
+    assert gate["blocking_items"][0]["id"] == "human_gate_required"

@@ -188,6 +188,10 @@ def _summary(
         )
         if svg_polish_readiness is not None:
             summary["svg_polish_readiness"] = svg_polish_readiness
+    if mode == "polish":
+        summary["svg_polish_gate"] = editorial_mod.svg_polish_gate_from_checkpoint(
+            loop_checkpoint
+        )
     if closeout is not None:
         summary["closeout"] = closeout
     summary["next_action_summary"] = driver_next_action_summary(summary)

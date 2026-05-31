@@ -1410,6 +1410,9 @@ def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(
         "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
     )
     assert "ready_for_svg_polish" in summary["reason"]
+    assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
+    assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
+    assert summary["svg_polish_gate"]["next_action"] == "rerun_fig_loop"
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
@@ -1438,6 +1441,9 @@ def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
     assert summary["loop_checkpoint"]["editorial_art_direction_summary"] == editorial_summary
     assert summary["svg_polish_readiness"]["can_start_svg_polish"] is True
     assert summary["svg_polish_readiness"]["next_action"] == "start_svg_polish_recipe"
+    assert summary["svg_polish_gate"]["state"] == "ready"
+    assert summary["svg_polish_gate"]["can_start_svg_polish"] is True
+    assert summary["svg_polish_gate"]["source"] == "latest_loop_checkpoint"
 
 
 def test_polish_mode_surfaces_existing_svg_polish_readiness_checkpoint(
@@ -1494,6 +1500,8 @@ def test_polish_mode_readiness_prefers_loop_human_gate_over_legacy_pass_trigger(
     assert summary["action"] == "human_gate_stop"
     assert summary["svg_polish_readiness"]["can_start_svg_polish"] is False
     assert summary["svg_polish_readiness"]["next_action"] == "human_review"
+    assert summary["svg_polish_gate"]["state"] == "needs_human"
+    assert summary["svg_polish_gate"]["next_action"] == "human_art_direction"
     assert summary["svg_polish_readiness"]["blocking_items"] == [
         {
             "source": "latest_loop_checkpoint",
