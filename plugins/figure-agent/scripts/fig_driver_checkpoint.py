@@ -49,6 +49,9 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
     aesthetic_lever_summary = iteration.get("aesthetic_lever_summary")
     if isinstance(aesthetic_lever_summary, dict):
         checkpoint["aesthetic_lever_summary"] = aesthetic_lever_summary
+    journal_playbook_summary = iteration.get("journal_art_direction_playbook_summary")
+    if isinstance(journal_playbook_summary, dict):
+        checkpoint["journal_art_direction_playbook_summary"] = journal_playbook_summary
     return checkpoint
 
 

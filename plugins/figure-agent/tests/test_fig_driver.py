@@ -86,6 +86,7 @@ def _write_loop_run(
     svg_polish_readiness: dict[str, Any] | None = None,
     crop_audit_summary: dict[str, Any] | None = None,
     aesthetic_lever_summary: dict[str, Any] | None = None,
+    journal_art_direction_playbook_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -116,6 +117,10 @@ def _write_loop_run(
         iteration["crop_audit_summary"] = crop_audit_summary
     if aesthetic_lever_summary is not None:
         iteration["aesthetic_lever_summary"] = aesthetic_lever_summary
+    if journal_art_direction_playbook_summary is not None:
+        iteration["journal_art_direction_playbook_summary"] = (
+            journal_art_direction_playbook_summary
+        )
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -207,6 +212,117 @@ def test_main_emits_json_summary_in_dry_run(
     assert payload["next_action_summary"]["safe_command"] == payload["safe_command"]
     for key in ("action", "safe_command", "stop_boundary", "reason"):
         assert key in payload
+
+
+def test_review_complete_surfaces_ready_improvement_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(tmp_path / "examples" / "driver_demo")
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "polish_recommended_path": "continue_tikz",
+            "polish_trigger_verdict": "pass",
+            "polish_route_detail": "tighten Panel C annotation spacing",
+            "human_art_direction_gate_verdict": "pass",
+            "worst_verdict": "pass",
+            "blocking_high_impact_count": 0,
+        },
+    )
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+
+    payload = _run_driver(
+        "driver_demo",
+        mode="review",
+        goal="find optional polish",
+        repo_root=tmp_path,
+    )
+
+    assert payload["action"] == "complete"
+    summary = payload["ready_improvement_summary"]
+    assert summary["state"] == "ready_but_improvable"
+    assert summary["safe_to_ship"] is True
+    assert summary["blocks_release"] is False
+    assert summary["auto_patch_allowed"] is False
+    assert summary["candidates"][0]["source"] == "editorial_art_direction_summary"
+
+
+def test_release_blocked_by_manual_gate_can_still_surface_safe_optional_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary={
+            "polish_recommended_path": "continue_tikz",
+            "polish_trigger_verdict": "pass",
+            "polish_route_detail": "optional paper-wide palette cleanup",
+            "human_art_direction_gate_verdict": "pass",
+            "worst_verdict": "pass",
+            "blocking_high_impact_count": 0,
+        },
+    )
+    status = _release_ready_status()
+    status.update(
+        {
+            "export_state": "TRACKED_GOLDEN",
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _example_dir: status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+
+    payload = _run_driver(
+        "driver_demo",
+        mode="release",
+        goal="release",
+        repo_root=tmp_path,
+    )
+
+    assert payload["action"] == "release_blocked"
+    summary = payload["ready_improvement_summary"]
+    assert summary["state"] == "ready_but_improvable"
+    assert summary["safe_to_ship"] is True
+    assert summary["candidate_count"] == 1
+
+
+def test_human_gate_driver_result_does_not_offer_optional_improvement_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(tmp_path / "examples" / "driver_demo")
+    _write_loop_run(
+        tmp_path,
+        stop_reason="human_gate_required",
+        escalation_level="human_review_required",
+        recommended_next_action="review art direction",
+        editorial_art_direction_summary={
+            "polish_recommended_path": "continue_tikz",
+            "polish_trigger_verdict": "pass",
+            "polish_route_detail": "tighten Panel C annotation spacing",
+            "human_art_direction_gate_verdict": "needs_human",
+            "worst_verdict": "needs_human",
+            "blocking_high_impact_count": 1,
+        },
+    )
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+
+    payload = _run_driver(
+        "driver_demo",
+        mode="review",
+        goal="review",
+        repo_root=tmp_path,
+    )
+
+    assert payload["action"] == "human_gate_stop"
+    summary = payload["ready_improvement_summary"]
+    assert summary["state"] == "not_ready"
+    assert summary["safe_to_ship"] is False
+    assert summary["candidate_count"] == 0
 
 
 def test_driver_summary_includes_status_explanation_and_first_blocker_code(

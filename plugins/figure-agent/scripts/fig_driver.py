@@ -35,6 +35,7 @@ import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
+import ready_improvement as ready_improvement_mod  # noqa: E402
 from next_action_summary import driver_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
 from svg_polish_delta import SvgPolishDeltaError, svg_polish_delta_is_stale  # noqa: E402
@@ -194,6 +195,15 @@ def _summary(
         )
     if closeout is not None:
         summary["closeout"] = closeout
+    ready_improvement = ready_improvement_mod.build_ready_improvement_summary(
+        fixture=name,
+        status=status,
+        action=action,
+        stop_boundary=stop_boundary,
+        loop_checkpoint=loop_checkpoint,
+    )
+    if ready_improvement is not None:
+        summary["ready_improvement_summary"] = ready_improvement
     summary["next_action_summary"] = driver_next_action_summary(summary)
     return summary
 
@@ -791,6 +801,7 @@ def _select_action(
                 "release_ready is false; resolve accepted/golden/final "
                 "artifact gates manually — driver will not mutate them."
             ),
+            checkpoint=loop_checkpoint,
         )
 
     # mode == "polish"
