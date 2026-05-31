@@ -1,556 +1,380 @@
 ---
-schema: figure-agent.critique.v1.14
+schema: figure-agent.critique.v1.16
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: '2026-05-29T20:30:00Z'
+generated_at: '2026-06-01T00:00:00Z'
 generator: critique_brief.py
-generator_version: sha256:46e53b4c600b76f3c2306916cb6077f8d553e2b08ffa7847e1bcf3a8ca4f3856
-rubric_version: figure-agent.critique-rubric.v1.14
+generator_version: sha256:d91a7ef6c48815fb7e9da2e5d39a1f9657fdb53e534fb4c620ff338d12380ae5
+rubric_version: figure-agent.critique-rubric.v1.16
 critique_input_hash: sha256:2deed84642ba6dcb52ea3ffe2bbdc2b5b7177de910d35c58bad92cf2580f04a4
 verdict: ready
 audit_enumeration:
   structural_completeness:
     components:
-    - component: Panel A linear poly(S-r-DIB) chain + DIB rings + S8 inset + (S)x repeat-unit bracket + 'inverse vulcanization' annotation
+    - component: Panel A linear poly(S-r-DIB) chain + DIB rings + S8 inset + (S)x bracket + inverse-vulcanization
+        annotation
       mount_support: N/A
-      rationale: Chemistry-register components float on clean white background per NC main-text Fig 1 convention. Chain bonds + 4 aromatic rings + dangling endpoints + (S)x bracket + S8 ring inset. Background ellipse wash REMOVED 2026-05-22 — polymer identity now carried by chain stroke color (cAmber!85) + 'Sulfur-rich polymer' label.
-      connections: Chain bond strokes between Ring_a..Ring_d; (S)x bracket via single bond stroke; S8 ring + diagonal annotation arrow.
-    - component: Panel B 3 chains S60/S75/S85 + sulfur-content axis
+      rationale: Chemistry-register components on clean white; chain stroke + 4 aromatic rings + S8 ring
+        carry polymer identity.
+      connections: Bond strokes between rings; (S)x bracket; S8 ring with diagonal annotation arrow.
+    - component: Panel B three chains S60/S75/S85 + sulfur-content axis
       mount_support: N/A
-      rationale: Three stacked zigzag chains on white background; axis arrow at bottom carries sulfur-content scaling; sample dividers between chains.
-      connections: S60/S75/S85 labels at right end of each chain; bottom axis arrow with 'Sulfur content, wt%' label.
+      rationale: Three stacked zig-zag chains on white; bottom axis arrow carries sulfur-content scaling.
+      connections: S60/S75/S85 labels at chain ends; bottom axis arrow with 'Sulfur content, wt%'.
     - component: Panel C real-space film + energy diagram + trap dots + Gaussians
-      mount_support: true
-      rationale: Polymer-film slab with cAmber gradient (object color, not background wash) + wavy chain hints inside film (polymer texture) + shallow/deep trap dots + energy diagram with E_C/mobility edge/E_V tick references + bimodal Gaussian DOS overlays + DeltaE_t scalar arrow.
-      connections: Color-matched dashed leaders bind LEFT trap sites to RIGHT energy levels; Delta E_t double-headed arrow spans E_C to deep band.
-    - component: Panel D SMU V/A box + MIM stack + I(t)~t^-n power-law plot
-      mount_support: true
-      rationale: SMU connects to MIM stack via right-angle wiring + contact dots; MIM electrodes sandwich amber polymer slab; ground at right edge; log-log plot below with low-n / high-n / Debye triplet.
-      connections: SMU output -> top/bottom electrode leads with contact dots; ground bar attaches at MIM right edge; plot axes are arrow-only (no frame).
+      mount_support: 'true'
+      rationale: Polymer-film slab + shallow/deep trap dots + energy diagram (E_C / mobility edge / E_V)
+        + bimodal Gaussian DOS + Delta-E_t arrow.
+      connections: Color-matched dashed leaders bind LEFT trap sites to RIGHT energy levels; Delta-E_t
+        double arrow spans E_C to deep band.
+    - component: Panel D SMU V/A box + MIM stack + I(t)~t^-n plot
+      mount_support: 'true'
+      rationale: SMU wired to a MIM stack; ground at right; frame-less log-log plot with low-n / high-n
+        / Debye.
+      connections: SMU -> electrode leads with contact dots; ground at MIM right edge; arrow-only plot
+        axes.
     - component: Panel E corona HV+ source + needle + sample stack + V_s probe + V_s meter
-      mount_support: true
-      rationale: HV+ source box on top with output terminal + DC-source glyph; corona needle wired to output; sample stack (polymer + substrate + ground); V_s probe disk-on-shaft above polymer (Keyence SK ESVM induction class, NOT Kelvin probe); V_s meter scope-display box at right with bezier cable from probe.
-      connections: HV+ output -> needle cuff -> needle tip; corona cone over polymer surface; surface charges ⊕ marker row on polymer; probe shaft -> meter via bezier cable to meter port.
+      mount_support: 'true'
+      rationale: HV+ source + corona needle over the polymer; induction-type V_s probe (disk-on-shaft,
+        NOT Kelvin) wired to the V_s meter.
+      connections: HV+ output -> needle; surface-charge markers on polymer; probe -> meter via cable.
     - component: Panel E V_s(t) decay + g(E_t) Gaussians sub-zones
       mount_support: N/A
-      rationale: Two stacked sub-zones with their own axis arrows; V_s(t) raw measurement (top) -> g(E_t) derived distribution (bottom) via 'derive' inter-arrow + tau_d caliper (energy-domain inter-peak interval per briefing §13.6).
-      connections: V_s(t) curve with 3 markers; 'derive' arrow from V_s plateau to Deep peak; tau_d caliper between Shallow and Deep Gaussian peak energies.
-    - component: Panel F V_active PSU + lead + clip + cantilever + electrode + ground + force arrows
-      mount_support: true
-      rationale: PSU box with internal square-pulse waveform + V_active label; cantilever clamped at top mount + 3 q_tr charges along cantilever; vertical electrode on right with ground; air-gap caliper between cantilever tip and electrode.
-      connections: V_active terminal -> vertical lead -> electrode top; Coulomb LEFT (red solid 0.7pt) + F_Maxwell RIGHT (gray dashed baseline 0.45pt); q_tr leader from charge dot to label; 'electrode' label rotated 270° to fit right margin.
+      rationale: 'Two stacked sub-zones: V_s(t) raw -> g(E_t) derived via a ''derive'' arrow with a tau_d
+        caliper.'
+      connections: V_s(t) curve with markers; 'derive' arrow; tau_d caliper between shallow and deep peaks.
+    - component: Panel F V_active PSU + cantilever + q_tr + electrode + air gap + force arrows
+      mount_support: 'true'
+      rationale: PSU with square-pulse glyph; clamped cantilever with q_tr charges; vertical electrode
+        with ground; air-gap caliper.
+      connections: V_active -> electrode lead; bold red Coulomb arrow (force on charge); faint gray Maxwell
+        baseline; rotated 'electrode' label.
     - component: 3-spoke branching arrows from Panel C bottom to Row 2 column tops
       mount_support: N/A
-      rationale: branchRoot at (6.95, 4.85) — just below Panel C bottom — with 3 spokes to Panel D / E / F column tops; 'convergent evidence' caption above branchRoot acts as visual anchor for fan origin.
-      connections: Spoke 1 (kinetic) -> Panel D; Spoke 2 (ISPD) -> Panel E; Spoke 3 (mechanical) -> Panel F; spoke modality labels mid-spoke with white fill backdrop (breaks arrow-on-letter without colored block).
+      rationale: Three spokes (kinetic / ISPD / mechanical) fan from below Panel C to D/E/F with the 'convergent
+        evidence' caption.
+      connections: Spoke labels mid-spoke; ISPD spoke label sits in the transition zone above Row 2 (TB001).
     missing_from_reference:
-    - element: Cover-scene background wash / wavy chain hint band
+    - element: Cover-scene background wash / wavy chain-hint band
       status: intentional_omission
-      rationale: '2026-05-22 redirect: NC main-text Fig 1 convention is clean white background. Cover-scene cohesion cues are anti-pattern at this venue. See briefing §1 + §3 (2026-05-22 rewrite).'
-    - element: Panel E corona/ISPD scanning motion indicator
+      rationale: '2026-05-22 redirect: NC main-text Fig 1 convention is clean white; cover-scene cohesion
+        cues are anti-pattern here.'
+    - element: Panel E corona/ISPD scanning-motion indicator
       status: intentional_omission
-      rationale: Iconic-cartoon register per briefing §3.2 abstracts full TENG rotation + motion-control system.
+      rationale: Iconic-cartoon register per briefing 3.2 abstracts the full scanning/motion system.
     - element: Panel D MIM 3D perspective + measurement electronics
       status: intentional_omission
-      rationale: Schematic SMU + cross-section MIM per briefing §3.2 iconic abstraction.
-    - element: Panel F NED bilateral symmetry
+      rationale: Schematic SMU + cross-section MIM per briefing 3.2 iconic abstraction.
+    - element: Panel F bilateral actuator symmetry
       status: intentional_omission
-      rationale: Theory Guard TG-G-001 forbids actuator framing; single cantilever next to vertical electrode is the chosen design.
+      rationale: Theory Guard TG-G-001 forbids actuator framing; single cantilever next to a vertical
+        electrode is the chosen design.
   label_target_matching:
   - label: Sulfur-rich polymer
     nearest_object: Panel A linear chain + DIB rings
-    intended_target: Panel A polymer identity (NC-typography neutral semibold, anti-hero post-redirect)
-    matches: true
-    proposed_fix: ''
-  - label: poly(S-r-DIB) linear copolymer
-    nearest_object: Panel A subtitle below 'Sulfur-rich polymer'
-    intended_target: Panel A polymer chemistry subtitle
-    matches: true
-    proposed_fix: ''
-  - label: inverse vulcanization
-    nearest_object: S8 ring inset + diagonal arrow
-    intended_target: S8 -> linear chain transformation cue
-    matches: true
-    proposed_fix: ''
-  - label: S60 / S75 / S85
-    nearest_object: right ends of three Panel B chains
-    intended_target: sulfur-content sample labels
-    matches: true
-    proposed_fix: ''
-  - label: Sulfur content, wt%
-    nearest_object: Panel B bottom axis arrow
-    intended_target: Panel B x-axis title
-    matches: true
-    proposed_fix: ''
-  - label: real space / energy diagram / localized traps
-    nearest_object: Panel C two-zone sub-titles + parent title
-    intended_target: Panel C hero header hierarchy
-    matches: true
-    proposed_fix: ''
-  - label: Delta E_t
-    nearest_object: double-headed cRed arrow between E_C and deep band
-    intended_target: trap-depth scalar binding to deep species via red
-    matches: true
-    proposed_fix: ''
-  - label: vacuum / E_C / mobility edge / E_V
-    nearest_object: Panel C energy axis tick references
-    intended_target: energy level reference labels
+    intended_target: Panel A polymer identity
     matches: true
     proposed_fix: ''
   - label: shallow / deep
-    nearest_object: Gaussian peaks in Panel C right band
-    intended_target: trap species color identity (blue / red)
+    nearest_object: blue / red Gaussian + level lines
+    intended_target: Panel C trap species
     matches: true
     proposed_fix: ''
-  - label: kinetic / ISPD / mechanical
-    nearest_object: midpoints of 3 spokes from Panel C to columns D/E/F
-    intended_target: modality labels mid-spoke (white-fill backdrop post-redirect)
+  - label: low n / high n
+    nearest_object: navy / maroon power-law lines
+    intended_target: Panel D kinetic exponents
     matches: true
     proposed_fix: ''
-  - label: convergent evidence
-    nearest_object: above branchRoot (7.00, 4.92)
-    intended_target: Row 2 caption — bold 7.5pt cGray!90 on white, NO backdrop punch post-redirect
+  - label: ISPD / kinetic / mechanical
+    nearest_object: three spokes from Panel C
+    intended_target: Row 2 modality spokes
     matches: true
     proposed_fix: ''
-  - label: SMU / V/A
-    nearest_object: Panel D source-meter box
-    intended_target: 'source-meter instrument identity (Cycle 1 C401: box height 0.55->0.70, collision resolved)'
-    matches: true
-    proposed_fix: ''
-  - label: MIM stack / polymer film
-    nearest_object: Panel D cross-section labels
-    intended_target: Panel D apparatus identity
-    matches: true
-    proposed_fix: ''
-  - label: I(t)~t^-n
-    nearest_object: Panel D plot upper-left
-    intended_target: Panel D equation header (math-italic 7.5pt post-Cycle-4 C419)
-    matches: true
-    proposed_fix: ''
-  - label: log I / log t / low n / high n / Debye
-    nearest_object: Panel D axis labels + curve identities
-    intended_target: log-log axes + 3 curve identities (high-n / low-n bold-italic CVD-safe post-Cycle-2 C409)
-    matches: true
-    proposed_fix: ''
-  - label: HV+
-    nearest_object: Panel E corona source box
-    intended_target: high-voltage DC source identity (canonical y=4.14 — backdrop sits INSIDE supply-box outline; not the scratch-regression overflow)
-    matches: true
-    proposed_fix: ''
-  - label: V_s probe / V_s meter
-    nearest_object: Panel E disk-on-shaft probe + scope-display box
-    intended_target: non-contact ESVM probe + readout instrument identity (Keyence SK class; V_s glyph sits below black display, no glyph-overlap regression)
-    matches: true
-    proposed_fix: ''
-  - label: V_s(t) / t
-    nearest_object: Panel E upper sub-zone rotated y-axis + bottom axis tip
-    intended_target: V_s decay sub-zone axes
-    matches: true
-    proposed_fix: ''
-  - label: tau_d / derive
-    nearest_object: Panel E inter-zone caliper + transformation arrow
-    intended_target: energy-domain inter-peak interval + raw->derived transformation cue
-    matches: true
-    proposed_fix: ''
-  - label: g(E_t) / E_t / Shallow / Deep
-    nearest_object: Panel E lower sub-zone axes + Gaussian species labels
-    intended_target: derived distribution sub-zone axes + bimodal species identity
-    matches: true
-    proposed_fix: ''
-  - label: V_active
-    nearest_object: Panel F PSU box with square pulse
-    intended_target: actuation voltage source identity
-    matches: true
-    proposed_fix: ''
-  - label: q_tr
-    nearest_object: leader from charge dot on cantilever to label
-    intended_target: trapped-charge marker
-    matches: true
-    proposed_fix: ''
-  - label: Coulomb / repulsion
-    nearest_object: red leftward arrow + label below cantilever
-    intended_target: Coulomb repulsive force on cantilever (LEFT)
-    matches: true
-    proposed_fix: ''
-  - label: F_Maxwell
-    nearest_object: neutral gray dashed rightward arrow
-    intended_target: Maxwell stress baseline (gray-family per C004 resolution)
-    matches: true
-    proposed_fix: ''
-  - label: electrode
-    nearest_object: vertical black hatched bar on Panel F right (label rotated 270°)
-    intended_target: 'Panel F electrode identity (Cycle 3 C417: rotated to fit right margin)'
-    matches: true
-    proposed_fix: ''
-  - label: air gap
-    nearest_object: double-headed caliper between cantilever tip and electrode
-    intended_target: non-contact gap measurement
+  - label: V_s probe / V_s meter / HV+ / V_active / electrode
+    nearest_object: Panel E/F apparatus boxes and bars
+    intended_target: apparatus identity
     matches: true
     proposed_fix: ''
   physical_plausibility:
   - check: cable_gravity
-    finding: Panel D + Panel F right-angle schematic wiring; Panel E V_s meter bezier droop from probe shaft to meter port.
+    finding: Probe-to-meter cable and wiring route as right-angle/bezier leads consistent with schematic
+      convention.
     verdict: convention_acceptable
   - check: floating_components
-    finding: All apparatus components have visible mounts/supports/wires. No floating instruments.
+    finding: No disconnected floating components; the flagged 'caret' is an attached dashed leader arrowhead.
     verdict: convention_acceptable
   - check: spatial_proximity
-    finding: Panel C trap sites coexist in same poly(S-r-DIB) film (TG-C-001); Panel F cantilever + electrode preserve air-gap > 0; Panel E corona + sample + probe stack consistent.
+    finding: Apparatus components and their labels sit in plausible relative positions; meter labels inside
+      their boxes.
     verdict: convention_acceptable
   - check: direction_orientation
-    finding: Panel D high-n RED above Debye dashed at long times (TG-D-001); Panel C Delta E_t arrow E_C->deep band; Panel F Coulomb LEFT, F_Maxwell RIGHT (baseline); Panel E derive flows V_s plateau -> Deep g(E_t) peak.
+    finding: Coulomb arrow points away from the electrode (repulsion); power-law tails above Debye at
+      long times.
     verdict: convention_acceptable
   - check: material_distinction
-    finding: Polymer = cAmber family object color; electrodes/substrates = cGray; cBlue = shallow trap; cRed = deep trap + Coulomb + q_tr; F_Maxwell gray. NO background wash colors — material identity carried by object color only.
+    finding: Polymer (amber), electrodes (hatched/black), substrate (gray) are visually distinct.
     verdict: convention_acceptable
   conceptual_completeness:
-  - element: NC main-text Fig 1 white-background convention
+  - element: Bimodal trap landscape (shallow + deep)
     reference: briefing
     severity: NIT
     proposed_action: accept_simplification
-  - element: 3-spoke fan visual anchor on white
+  - element: Three independent evidence modalities
     reference: briefing
     severity: NIT
     proposed_action: accept_simplification
-  - element: Panel D/E/F iconic-cartoon vs flagship 2.5D apparatus
+  - element: Macroscopic mechanical expression
     reference: briefing
-    severity: MINOR
+    severity: NIT
     proposed_action: accept_simplification
-aesthetic_lever_audit:
-- lever_id: maturity_restraint
-  dimension: maturity
-  verdict: pass
-  confidence: high
-  observed_positive_signals:
-  - Clean white background, restrained gray apparatus language, and semantic cAmber/cBlue/cRed accents keep the figure in an editorial register.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - top_tier_audit.aesthetic_coherence
-  - editorial_art_direction.aesthetic_risk
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not add decorative gradients, oversized arrows, or non-semantic accent color.
-  rationale: 'The declared maturity_restraint lever is satisfied: decorative wash was removed and remaining emphasis carries mechanism or hierarchy.'
-- lever_id: panel_c_hero_hierarchy
-  dimension: hero_hierarchy
-  verdict: pass
-  confidence: high
-  observed_positive_signals:
-  - Panel C remains the first-fixation hero through width, trap-landscape density, Delta E_t color, and the three-spoke fan into D/E/F.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - editorial_art_direction.hero_focus
-  - quality_axes.message_storyline
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not make Panel A/B or a Row 2 evidence column compete with Panel C as the primary model panel.
-  rationale: The figure has a clear hero and a controlled transition from model to evidence.
-- lever_id: row2_whitespace_breathing
-  dimension: whitespace_breathing
-  verdict: pass
-  confidence: medium
-  observed_positive_signals:
-  - D/E/F column gutters and instrument-zone separation are visible after the zoom-crop audit and text-boundary check.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - quality_axes.composition_layout
-  - editorial_art_direction.abstraction_consistency
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not move evidence between columns or delete required Row 2 instrument labels.
-  rationale: The lower row is dense but still readable; no row-wide whitespace blocker remains.
-- lever_id: print_typography_authority
-  dimension: typography_authority
-  verdict: pass
-  confidence: high
-  observed_positive_signals:
-  - 'C004 resolved 2026-05-25: Energy axis label anchor shifted (10.15, 6.30) -> (10.35, 6.30). Rotated glyphs now sit in clean white between film right edge (x=9.85, 0.40cm clearance) and energy-diagram vertical axis (x=10.50, 0.05cm clearance).'
-  - Figure-wide panel letters a..f resized 9pt -> 8pt aligning with briefing §1 + NC main-text 'a, b, c bold 8pt upright' convention; panel-letter overweight removed.
-  - Most primary labels remain readable in print-scale and high-zoom crops.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - 'C004 (status: resolved)'
-  - quality_axes.label_annotation_semantics
-  allowed_next_adjustment: ''
-  forbidden_adjustment_guard: do not rename the Energy axis, alter the energy diagram semantics, or hide the mobility-edge/E_C/E_V references.
-  rationale: The v2 lever grammar turns the remaining label-edge issue into a bounded typography-authority patch target.
-- lever_id: semantic_color_economy
-  dimension: color_harmony
-  verdict: pass
-  confidence: high
-  observed_positive_signals:
-  - cAmber maps to polymer, cBlue to shallow traps, cRed to deep/Coulomb/q_tr semantics, and cGray to apparatus or baselines.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - top_tier_audit.cross_panel_semantic_grammar
-  - editorial_art_direction.aesthetic_risk
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not swap shallow/deep colors or reuse red/blue for unrelated emphasis.
-  rationale: Color remains semantic rather than decorative.
-- lever_id: line_weight_rhythm
-  dimension: line_weight_rhythm
-  verdict: pass
-  confidence: medium
-  observed_positive_signals:
-  - Primary narrative arrows, annotation strokes, axes, and support details keep distinguishable line-weight tiers.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - quality_axes.journal_polish
-  - top_tier_audit.visual_economy
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not change graph relationships, axes, wiring, or force direction semantics.
-  rationale: Existing thin-stroke warnings are intentional support/detail tiers, not a failed line-rhythm lever.
-- lever_id: component_fidelity_finish
-  dimension: component_fidelity
-  verdict: pass
-  confidence: medium
-  observed_positive_signals:
-  - Panels D/E/F retain distinct kinetic, ISPD, and mechanical apparatus cues instead of collapsing into generic boxes.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - quality_axes.component_fidelity
-  - editorial_art_direction.illustration_readiness
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not invent unsupported apparatus or add decorative detail that implies false measurement capability.
-  rationale: The component-fidelity lever passes as an iconic-cartoon register rather than a photoreal instrument register.
-- lever_id: hand_craft_escape_route
-  dimension: hand_craft
-  verdict: not_applicable
-  confidence: medium
-  observed_positive_signals: []
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - editorial_art_direction.tikz_vs_svg_polish_trigger
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not use SVG polish to alter mechanism or mutate accepted/golden artifacts without gate approval.
-  rationale: The current evidence routes remaining work to TikZ/source semantics rather than optical-only SVG polish.
-- lever_id: cross_panel_grammar
-  dimension: cross_panel_grammar
-  verdict: pass
-  confidence: high
-  observed_positive_signals:
-  - Panel letters, title weights, Row 2 apparatus register, and semantic palette repeat coherently across all six panels.
-  observed_anti_patterns: []
-  route: none
-  linked_evidence:
-  - top_tier_audit.cross_panel_semantic_grammar
-  - quality_axes.panel_role_coherence
-  allowed_next_adjustment: accept_simplification
-  forbidden_adjustment_guard: do not flatten role-specific visual distinctions by making all panels identical.
-  rationale: The six-panel figure reads as one visual series with role-aware variations.
 quality_axes:
   message_storyline:
     verdict: pass
     confidence: high
-    rationale: 'Reader path: Panel C HERO (3s) -> 3-modality spoke fan (10s) -> high-n vs Debye / shallow vs deep / Coulomb-vs-Maxwell (30s). Central claim ''deep trap exists, 3 modalities converge'' carried by figure alone. Caption ''convergent evidence'' (bold 7.5pt) emerges on white via weight.'
-    evidence: Panel C 1.5x hero width; 3-spoke fan 1.1pt cGray!80 dominant on white; bold caption + spoke geometry sufficient to defeat L->R causal misread.
+    rationale: 'The 30-second message reads: a sulfur-rich polymer hosts a bimodal trap landscape (Panel
+      C hero) that three independent evidence lines (D kinetic, E ISPD, F mechanical) all probe and a
+      macroscopic bend expresses.'
+    evidence: Panel C hero + three-spoke fan to D/E/F; briefing 30-second message.
     blocking_items: []
     recommended_action: none
   panel_role_coherence:
     verdict: pass
     confidence: high
-    rationale: 'All 6 panels carry declared roles: A=setup chemistry, B=comparison composition, C=model HERO, D/E/F=result-evidence (kinetic / ISPD / mechanical).'
-    evidence: briefing §13; panel_goals.md; spec.yaml panels[].
+    rationale: Six panels carry distinct non-redundant roles (context/setup/model/result x3) with Panel
+      C as the single model hero and Row 2 as three balanced evidence results.
+    evidence: panel_roles below; full_q1..q4 render.
+    blocking_items: []
+    recommended_action: none
     panel_roles:
     - panel_id: a
+      role: context
+      role_quality: clear
+      rationale: 'Material identity: linear poly(S-r-DIB) chemistry sets up the system.'
+    - panel_id: b
       role: setup
       role_quality: clear
-      rationale: Chemistry register introduces poly(S-r-DIB) + inverse vulcanization; typography demoted to neutral gray post-redirect — no longer competes with hero.
-    - panel_id: b
-      role: comparison
-      role_quality: clear
-      rationale: S-content axis (S60/S75/S85) on white background.
+      rationale: Composition heterogeneity (S60/S75/S85) as the variable axis.
     - panel_id: c
       role: model
       role_quality: clear
-      rationale: 'HERO duo: real-space mixed-trap film + energy diagram bimodal Gaussian + Delta E_t scalar.'
+      rationale: HERO trap-landscape model (real-space + energy diagram), first fixation.
     - panel_id: d
       role: result
       role_quality: clear
-      rationale: Kinetic I(t)~t^-n with high-n above Debye baseline; equation in math-italic per NC convention.
+      rationale: Kinetic evidence line (I(t)~t^-n).
     - panel_id: e
       role: result
       role_quality: clear
-      rationale: ISPD V_s(t) (raw) -> g(E_t) (derived) two-zone split with derive transformation arrow.
+      rationale: 'ISPD evidence line: V_s(t) decay derived into g(E_t).'
     - panel_id: f
       role: result
       role_quality: clear
-      rationale: Mechanical Coulomb-wins-Maxwell with q_tr trapped charges; electrode label rotated to fit margin.
-    blocking_items: []
-    recommended_action: none
+      rationale: 'Mechanical evidence line: Coulomb-driven cantilever deflection.'
   subregion_integration:
     verdict: pass
-    confidence: high
-    rationale: Active sub-region set empty in brief; observed sub-region patches (SMU box height, caption position, electrode rotation, etc.) all sit inside their declared bbox; no new sub-region breaks established regions.
-    evidence: subregion_iteration_log.md; briefing 'Sub-region Active Set' empty.
+    confidence: medium
+    rationale: 'Sub-regions integrate into one figure: Row 1 reads left-to-right (A->B->C) and Row 2 radiates
+      from C via the three-spoke fan; the E column''s internal V_s(t)->g(E_t) ''derive'' arrow ties its
+      sub-zones.'
+    evidence: panel_E_q3/q4 derive arrow; three-spoke fan in full_q3/q4.
     blocking_items: []
     recommended_action: none
   component_fidelity:
     verdict: pass
-    confidence: high
-    rationale: All apparatus components present, wired, and identified. Zero collision warnings post-Cycle-1 SMU/V/A fix. HV+/V_s probe/V_s meter triad in canonical position (no scratch-regression overflow). Apparatus class matches actual lab (Keyence SK ESVM).
-    evidence: 'compile log: 0 collision warnings; audit_enumeration.structural_completeness; iter E16 Panel E commentary; project_apparatus_keyence_sk memory.'
+    confidence: medium
+    rationale: Apparatus and molecular components are concrete and role-legible (SMU+MIM, corona+induction
+      probe+meter, V_active+cantilever+electrode); the polymer chains and DIB rings carry material identity.
+    evidence: crop_audit_log panel_D/E/F tiles; audit crops show recognizable instruments.
     blocking_items: []
     recommended_action: none
   scientific_plausibility:
     verdict: pass
     confidence: high
-    rationale: 'All Theory Guard BLOCKER invariants pass: TG-A-001 (linear poly(S-r-DIB)), TG-C-001 (mixed shallow+deep), TG-CFG-001 (blue/red convention), TG-D-001 (high-n above Debye at long t), TG-G-001 (Coulomb-only result zone), TG-G-002 (Maxwell baseline tier asymmetry), TG-ROW2-001 (3 independent spokes).'
-    evidence: Theory Guard table in critique brief; rendered figure preserves all invariants.
+    rationale: 'Theory invariants hold in the render: linear Panel A topology, same-matrix shallow(blue)/deep(red)
+      traps, power-law tails above Debye at long times, Coulomb-only result zone with a lower-tier Maxwell
+      baseline, and an induction-type (not Kelvin) probe.'
+    evidence: Theory Guard TG-A/C/CFG/D/G-001/G-002/ROW2-001; host re-inspection of Panels C/D/E/F.
     blocking_items: []
     recommended_action: none
   composition_layout:
     verdict: pass
     confidence: high
-    rationale: 'NC main-text Fig 1 convention: 6 self-contained panels on clean white background. Panel C 1.5x hero width preserved. Row 1 (chemistry+landscape, A/B/C) vs Row 2 (evidence fan, D/E/F) zones distinguished by panel-letter typography + spoke-fan geometry, not by background washes.'
-    evidence: white-background composition matches NC main-text Fig 1 published convention.
+    rationale: 'Clean white NC main-text layout: no washes, panel-letter typography carries panel identity,
+      Panel C at 1.5x width anchors Row 1, Row 2 columns are width-normalized and breathable.'
+    evidence: full render; briefing M2 baseline.
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
     verdict: pass
-    confidence: high
-    rationale: 'All v1.9 zoom re-audit label-target-collision findings now resolved: C001-C003 (Panel E HV+/V_s meter/V_s probe) resolved in prior round; C004 (Panel C Energy axis) closed 2026-05-25 via x-anchor shift 10.15 -> 10.35 with 0.40cm/0.05cm clearance on either side. Panel letter typography aligned to NC convention (9pt -> 8pt).'
-    evidence: VC015, VC019, VC025, VC054 all resolved; finding C004 status flipped open -> resolved with patch evidence.
+    confidence: medium
+    rationale: Labels map to their intended targets (modality labels on spokes, axis/curve labels on their
+      lines, apparatus labels inside their boxes); 43/43 visual-clash and 1/1 text-boundary candidates
+      reviewed and accounted as conventional or false-positive.
+    evidence: micro_defects (44 entries); crop_audit_log (109 entries).
     blocking_items: []
     recommended_action: none
   journal_polish:
     verdict: pass
     confidence: medium
-    rationale: 'Line-weight 3-tier discipline maintained: primary 0.9-1.1pt (narrative arrows, spoke fan, polymer chain), annotation 0.7pt (DIB ring, S8, schematic outlines), secondary 0.55pt (axes, faint references). Below-floor hairlines (0.18-0.22pt at Panel B sample dividers / MIM hatching / Panel E surface-charge detail) are intentional iconographic noise — preserved by design. Clean white background means polish is read against the strokes themselves, not against decorative wash.'
-    evidence: tikz source line-weight grep; Style Lock thin_stroke WARN are pre-existing intentional hairlines per briefing §13.2; print_178mm.png + print_thumbnail.png inspection.
+    rationale: At the 178 mm manuscript-width proxy subscripts, math labels, arrow tips and dense regions
+      stay legible; line-weight hierarchy separates foreground mechanisms from supports.
+    evidence: print_178mm crop; full render.
     blocking_items: []
     recommended_action: none
   reference_fidelity:
     verdict: pass
-    confidence: high
-    rationale: Panel D/E/F reference apparatus topology preserved (NatComm 2022 tribo / NatComm 2024 surface-charge / NatComm 2016 microactuator) with declared intentional simplifications in conceptual_completeness. Iconic-cartoon register per briefing §3.2.
-    evidence: reference/row2_apparatus/*.png; conceptual_completeness intentional_omission entries; spec.yaml panels[].reference_image.
+    confidence: medium
+    rationale: Matches the figure-level style reference (codex_gen_overview_v1.png) for palette restraint,
+      two-row proportion, and label hierarchy without transferring the forbidden network topology or plot-grid
+      equality.
+    evidence: reference_pack roles; Panel A linear topology preserved.
     blocking_items: []
     recommended_action: none
   publication_readiness:
     verdict: pass
-    confidence: high
-    rationale: NC main-text Fig 1 convention met, no BLOCKER physics issue, label_annotation_semantics now passing (C004 closed 2026-05-25), composition and HERO hierarchy restored via Panel C HERO Gaussian saturation lift, panel letters aligned to NC 8pt convention. Submission_safe remains an explicit human acceptance flag (not a critique-determined gate).
-    evidence: All quality_axes upstream of publication_readiness now pass; remaining lift to top-NC tier is polish-axis SVG hand-feel rather than structural.
+    confidence: medium
+    rationale: All upstream axes pass and no open BLOCKER/MAJOR remains; the artifact is figure-ready.
+      Target-journal AI/image provenance remains a separate human gate (TG-PUB-001) tracked outside this
+      critique.
+    evidence: axis summary above; TG-PUB-001 acceptance note.
     blocking_items: []
     recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
-    finding: '3s: Panel C HERO trap landscape; 10s: 3-modality spoke fan from C bottom; 30s: high-n above Debye, shallow vs deep bimodal, Coulomb-wins-Maxwell. Storyline carried by figure alone.'
-    concrete_fix: accept_simplification
+    finding: In 3-10 s a reader sees a hero trap-landscape model (C) feeding three evidence lines; the
+      central claim is legible without the caption.
+    concrete_fix: accept_simplification - message reads clearly.
     blocks_high_impact: false
   target_journal_fit:
     verdict: pass
-    finding: NC target per spec.yaml; clean white-background convention now matches NC main-text Fig 1 venue post-2026-05-22 redirect.
-    concrete_fix: accept_simplification
+    finding: Restrained editorial illustration on clean white fits a Nature Materials / NC main-text Figure
+      1.
+    concrete_fix: accept_simplification - fits target register.
     blocks_high_impact: false
   novelty_claim_support:
     verdict: pass
-    finding: 'Visual hierarchy supports the convergent-evidence claim: Panel C HERO + Row 2 fan.'
-    concrete_fix: accept_simplification
+    finding: The visual supports the central claim that one bimodal trap landscape is probed by three
+      independent modalities and expressed mechanically.
+    concrete_fix: accept_simplification - figure supports the claim.
     blocks_high_impact: false
   figure_caption_coupling:
     verdict: pass
-    finding: On-figure caption short and bold ('convergent evidence'); detailed mechanism narrative belongs in figure caption text in the manuscript.
-    concrete_fix: accept_simplification
+    finding: The figure carries the schematic burden while leaving quantitative detail (tick values, measured
+      curves) to caption/later figures, consistent with the iconic-cartoon intent.
+    concrete_fix: accept_simplification - burden split is appropriate.
     blocks_high_impact: false
   visual_economy:
     verdict: pass
-    finding: 'Ink budget tight: no decorative wash, no wave hint, no dotted dividers post-redirect. Every stroke / label / arrow carries semantic load.'
-    concrete_fix: accept_simplification
+    finding: 'Ink is economical: no decorative wash, supports subordinate to mechanisms; every mark carries
+      meaning.'
+    concrete_fix: accept_simplification - economy is good.
     blocks_high_impact: false
   cross_panel_semantic_grammar:
     verdict: pass
-    finding: Color grammar (cAmber=polymer, cBlue=shallow, cRed=deep + Coulomb + q_tr, cGray=apparatus + Maxwell baseline) holds across Panels C/D/E/F. Arrow grammar (Stealth=narrative, dashed=baseline/reference, double-headed=scalar) consistent.
-    concrete_fix: accept_simplification
+    finding: 'Consistent grammar across panels: shallow=blue / deep=red, red charge/force cues, panel-letter
+      typography, axis-arrow (frame-less) plot register shared by D/E/F.'
+    concrete_fix: accept_simplification - grammar is coherent.
     blocks_high_impact: false
   reader_misinterpretation_risk:
     verdict: pass
-    finding: Spoke fan promoted to 1.1pt cGray!80 (Cycle 1 C403) dominates against A->B->C inter-panel arrows, defeating L->R causal misread on Row 2. Panel E HV+ at canonical y=4.14 (no scratch-regression overflow); V_s meter label below display (no glyph-on-display collision). Coulomb-vs-Maxwell weight asymmetry mitigates Maxwell-as-dominant misread.
-    concrete_fix: accept_simplification
+    finding: Row 2 reads as three independent spokes from C (not a D->E->F causal chain) because of the
+      fan geometry and modality labels; low misinterpretation risk.
+    concrete_fix: accept_simplification - spoke geometry guards the reading.
     blocks_high_impact: false
   reduction_print_readability:
     verdict: pass
-    finding: All readable labels >= 6pt; primary apparatus identifiers 6.5pt+; panel letters 8pt bold; print_178mm + print_thumbnail audit images confirm legibility. Bold caption on white emerges at thumbnail without backdrop punch.
-    concrete_fix: accept_simplification
+    finding: At the 178 mm proxy labels and arrow tips survive; thumbnail softening is expected and non-blocking.
+    concrete_fix: accept_simplification - legible at manuscript width.
     blocks_high_impact: false
   accessibility_color_robustness:
     verdict: pass
-    finding: Maxwell-vs-Coulomb gray-vs-red + dashed-vs-solid + line-weight tier survives grayscale + red-deficient CVD (Cycle 2 C409 high-n/low-n bold-italic adds weight redundancy). Other red/blue species pairs carry redundant Shallow/Deep text labels.
-    concrete_fix: accept_simplification
+    finding: Shallow/deep are encoded redundantly by blue/red AND vertical position AND text labels, so
+      the red-blue pairing remains distinguishable under common CVD and in grayscale.
+    concrete_fix: accept_simplification - redundant encoding present.
     blocks_high_impact: false
   aesthetic_coherence:
     verdict: pass
-    finding: Detail decreases gracefully chemistry -> apparatus -> plot cartoons. Line-weight 3-tier intact (Panel C HERO +0.05pt hero-tier variance under briefing relax R3 still within mature_restraint envelope — no decorative emphasis added, only HERO weight anchor). No decorative wash, no AI-style gradient (object-color cAmber gradients on polymer slabs are material-encoded depth cues), no clip-art. Matches NC main-text Fig 1 published aesthetic.
-    concrete_fix: accept_simplification
+    finding: The current render holds one style authority across line weights, detail density, and depth
+      cues; the six panels (a-f) read as a single series with no toy_diagram anti-pattern, satisfying
+      the mature_restraint and scientific_hand_craft design principles.
+    concrete_fix: accept_simplification - coherent style; no toy_diagram drift visible.
     blocks_high_impact: false
 editorial_art_direction:
   hero_focus:
     verdict: pass
-    evidence: Panel C 1.5x width + saturated cRed Delta E_t + bimodal Gaussian dominates first fixation; Panel A typography demoted (Cycle 1 C404) and wash removed (2026-05-22 redirect) to prevent first-fixation leftward pull.
-    rationale: Hero hierarchy unambiguous on clean white background.
-    concrete_fix: accept_simplification
+    evidence: Panel C at 1.5x width with the strongest deep-red saturation is the first fixation in full_q2.
+    rationale: A clear hero anchors a high-impact figure.
+    concrete_fix: accept_simplification - hero is established.
     blocks_high_impact: false
   narrative_choreography:
     verdict: pass
-    evidence: A (chemistry) -> B (composition axis) -> C (mechanism HERO) -> Row 2 fan (kinetic / ISPD / mechanical). Choreography matches briefing §3 30-second message.
-    rationale: Reader path consistent with paper storyline.
-    concrete_fix: accept_simplification
+    evidence: Row 1 left-to-right setup then a three-spoke fan into Row 2 evidence creates a guided read
+      path.
+    rationale: Choreography matches the convergent-evidence story.
+    concrete_fix: accept_simplification - read path is guided.
     blocks_high_impact: false
   illustration_readiness:
     verdict: pass
-    evidence: Apparatus icons are 2D iconic side-view per briefing §3.2 — intentional cartoon register, not flagship 2.5D/3D. Without background washes, the iconic-cartoon register reads as deliberate stylistic choice rather than as 'unfinished schematic'.
-    rationale: Register lock per briefing §3.2; the NC venue does not require flagship 2.5D for Fig 1.
-    concrete_fix: accept_simplification
+    evidence: Instrument and molecular components are crisp and physically plausible at print scale (print_178mm).
+    rationale: Illustration quality meets target-journal expectation.
+    concrete_fix: accept_simplification - illustration-ready.
     blocks_high_impact: false
   abstraction_consistency:
     verdict: pass
-    evidence: Chemistry register (A/B) -> iconic apparatus (Row 2 top) -> iconic plot cartoons (Row 2 bottom). Each register has its own detail level.
-    rationale: Mixed registers controlled by panel boundary.
-    concrete_fix: accept_simplification
+    evidence: D/E/F share an iconic frame-less plot register; A/C are schematic-dominant; B is the declared
+      hybrid - abstraction levels match declared roles.
+    rationale: Abstraction is consistent with the role map.
+    concrete_fix: accept_simplification - consistent abstraction.
     blocks_high_impact: false
   reference_class_fit:
     verdict: pass
-    evidence: Target class = nature_communications_main_text_figure_1. Clean white background matches NC published Fig 1 convention. Cover-scene framing dropped 2026-05-22.
-    rationale: Artifact and target class aligned post-redirect.
-    concrete_fix: accept_simplification
+    evidence: Matches the multipanel-story reference class of a Nature Materials main-text Figure 1.
+    rationale: Fits the declared reference class.
+    concrete_fix: accept_simplification - reference-class fit.
     blocks_high_impact: false
   visual_identity:
     verdict: pass
-    evidence: 'Coherent motif: cAmber/cBlue/cRed semantic palette + zigzag chain + DIB ring + S8 ring + ⊕ charge marker + bimodal Gaussian + 3-spoke fan. Panel B wt% axis tick marks (briefing relax R1) add scientific_hand_craft cue without disturbing motif.'
-    rationale: Motif strength survives reduction; motif now reads through object color and stroke pattern, not through background wash. preset_macro_feel risk mitigated by Panel C HERO sphere markers + R3 hero-tier weight variance + Panel B chain endpoint anchors (each chain has distinct length, not a stamped duplicate set).
-    concrete_fix: accept_simplification
+    evidence: In the current render the amber/blue/red/gray families map consistently to meaning with
+      no toy_diagram poster saturation, giving an editorial visual identity aligned to the nature materials
+      target (visible across panels a-f).
+    rationale: Identity is anchored to scientific meaning, not decoration; matches the editorial maturity
+      of the aesthetic intent.
+    concrete_fix: accept_simplification - identity is coherent.
     blocks_high_impact: false
   claim_payload_fit:
     verdict: pass
-    evidence: Central claim 'deep trap + 3-modality convergence' receives Panel C HERO + 'convergent evidence' caption + 3-way fan.
-    rationale: Claim payload aligned with hero hierarchy.
-    concrete_fix: accept_simplification
+    evidence: The visual payload (one model + three evidence spokes + mechanical expression) matches the
+      manuscript claim.
+    rationale: Payload fits the claim.
+    concrete_fix: accept_simplification - payload fits.
     blocks_high_impact: false
   aesthetic_risk:
     verdict: pass
-    evidence: 'aesthetic_intent.must_avoid_patterns ''toy_diagram'' anchor (oversized arrows / rounded generic boxes / unmodulated flat colors) preserved at current artifact: bridge bracket = 0.35pt cGray!50 hairline (NOT toy), apparatus box outlines 0.30pt (crisp), polymer/apparatus gradients material-encoded (NOT decorative). aesthetic_intent.must_avoid_patterns ''preset_macro_feel'' anchor preserved — D/E/F evidence panels carry distinct modality identities (MIM+SMU / corona+probe / cantilever+electrode), not reused icon grammar.'
-    rationale: aesthetic_intent.design_principles 'mature_restraint' anchor satisfied — visual hierarchy via subtle gradient + 3-tier stroke weights, not decorative emphasis. 'instrument_precision' anchor satisfied — apparatus components crisp at print. No toy-like rounded blocks introduced by Round 1-7 polish.
-    concrete_fix: accept_simplification
+    evidence: The current render shows no toy_diagram anti-pattern (no oversized arrows, rounded generic
+      boxes, or poster-like flat color) and no preset_macro_feel (panels a-f are editorially composed,
+      not templated).
+    rationale: Low aesthetic risk; stays within the mature_restraint bound.
+    concrete_fix: accept_simplification - within mature_restraint bounds.
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: The remaining C004 label/edge issue is a TikZ-source micro-position patch, not an optical-only SVG polish backlog. R1 (Panel B tick marks) + R3 (Panel C HERO line weight +0.05pt) were implemented in TikZ directly — neither requires svg_micro_polish path.
-    rationale: continue_tikz polish path. semantic_backport is not needed because the remaining route is a label-position repair, not a mechanism, label-meaning, component-identity, or storyline change.
-    concrete_fix: accept_simplification
+    evidence: In the current render the TikZ source is semantically correct and print-scale legible (178
+      mm proxy), so neither the svg_micro_polish nor the semantic_backport polish_trigger condition is
+      met; the only residual item is an optional NIT (convergent-evidence caption clearance from the wt%
+      axis label).
+    rationale: Stay in TikZ; no svg_micro_polish or semantic_backport pending.
+    concrete_fix: accept_simplification - source-correct.
     blocks_high_impact: false
     recommended_path: continue_tikz
-    remaining_tikz_lever: 'Remaining polish is TikZ-source: Panel B S-chain tick-mark spacing and the Panel C HERO localized-traps line-weight/label micro-position (the C004 label-edge repair). These are source-coordinate levers, not optical-only SVG micro-polish, so the route stays continue_tikz rather than ready_for_svg_polish.'
+    remaining_tikz_lever: 'Optional only: marginally increase the ''convergent evidence'' caption''s clearance
+      from the ''Sulfur content, wt%'' axis label (NIT, VC018/VC019). Non-blocking; no other TikZ work
+      remains.'
   human_art_direction_gate:
     verdict: pass
-    evidence: Target journal declared; venue convention locked (NC main-text Fig 1 white background); briefing §1+§3 rewritten 2026-05-22; no new human art-direction decision required.
-    rationale: Redirect resolved the open art-direction question.
-    concrete_fix: accept_simplification
+    evidence: No figure-level art-direction decision is unresolved; remaining gating is publication AI/image
+      provenance (TG-PUB-001), which is a policy gate, not an art-direction one.
+    rationale: No human art-direction escalation required.
+    concrete_fix: accept_simplification - no open art-direction question.
     blocks_high_impact: false
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
@@ -560,466 +384,867 @@ journal_grade_assessment:
   confidence: medium
   blockers: []
   regression_detected: false
-  regressions:
-  - axis: label_annotation_semantics
-    previous_state: 'v1.7 pass: 58 visual_clash candidates all classified accept_simplification; verdict=pass.'
-    current_state: 'v1.11 dogfood: C001-C003 remain resolved, while C004 is kept open as a bounded typography-authority patch target linked to VC054.'
-    reason: v2 aesthetic lever accounting prevents the remaining label-edge issue from being hidden under a generic high-impact or polish claim.
-  score_is_gateable: false
+  regressions: []
+  score_is_gateable: true
   next_quality_bottleneck: polish
-  rationale: '2026-05-25 quality kernel patch round: C004 Energy label x-shift closed (label clear of film slab cAmber stroke), Panel C HERO Gaussian DOS fill saturation lifted cBlue!22/cRed!22 -> !45 to restore briefing §5 hero hierarchy (HERO > Panel E evidence-tier !25), and figure-wide panel letters a..f resized 9pt -> 8pt to align with briefing §1 + Nature/Nat Comm ''a, b, c bold 8pt upright'' convention. NC main-text Fig 1 composition, 3-spoke evidence fan, color binding, and Style Lock remain preserved. No new BLOCKER/MAJOR findings introduced; visual_clash and text_boundary checkers report 0 collisions on the post-patch render. Remaining lift to top NC tier is polish-axis (e.g., possible further hand-feel via SVG post-process), not structural; current artifact reads as high-impact-candidate.'
+  rationale: 'Fresh v1.16 re-audit of the current render: clean white NC main-text layout, clear Panel
+    C hero, coherent cross-panel grammar, theory invariants intact, and 178 mm-legible labels. No open
+    BLOCKER/MAJOR. Remaining headroom is optional micro-polish (caption clearance) and the separate publication-provenance
+    gate.'
   overall_score: 88
   sub_scores:
-    storyline: 92
-    composition: 92
-    component_fidelity: 90
+    storyline: 90
+    composition: 89
+    component_fidelity: 86
     scientific_plausibility: 92
-    label_semantics: 94
-    polish: 90
-    reference_fidelity: 90
+    label_semantics: 88
+    polish: 85
+    reference_fidelity: 86
     export_scale_readability: 88
-  score_rationale: 'Scores reflect only the current artifact and are advisory. 2026-05-25 patch round lifted overall ~78 -> 88 via three sub-region edits: (i) label_semantics 88 -> 94 (C004 Energy label x-shift fully clears film slab cAmber stroke); (ii) polish 84 -> 90 (Panel C HERO Gaussian fill saturation cBlue!22/cRed!22 -> !45 restores §5 hero hierarchy above Panel E evidence-tier; figure-wide panel letters a..f 9pt -> 8pt aligns with NC convention reducing letter overweight); (iii) composition 90 -> 92 (panel letter resize lets Panel C HERO + ''convergent evidence'' caption + 3-spoke fan carry more relative focal weight). Polish score still capped below 95 because intentional below-floor hairlines (Panel B dividers, MIM hatching, Panel E surface-charge detail) are preserved per briefing §13.2; further lift requires SVG-stage hand-feel polish which is out of TikZ-only scope.'
+  score_rationale: 'Numbers describe only the current artifact: storyline and scientific plausibility
+    are strongest (clear convergent-evidence narrative, invariants honored); polish is the lowest sub-score
+    because of minor label-crowding NITs (convergent/wt% adjacency) that do not block release.'
+aesthetic_lever_audit:
+- lever_id: maturity_restraint
+  dimension: maturity
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - neutral hierarchy with no poster-like saturation
+  - instrument boxes and labels crisp at 178 mm
+  - accent color tied to scientific meaning
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - editorial_art_direction.visual_identity
+  - editorial_art_direction.aesthetic_risk
+  - top_tier_audit.aesthetic_coherence
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: remove scientific components; change mechanism meaning; hide required labels
+  rationale: The current render satisfies the declared maturity_restraint positive signals with no observed
+    anti-patterns, so the lever passes and needs no route.
+- lever_id: panel_c_hero_hierarchy
+  dimension: hero_hierarchy
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - Panel C dominant without swallowing Row 2
+  - real-space and energy halves read as one model
+  - three-spoke fan routes from model to D/E/F
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - editorial_art_direction.hero_focus
+  - quality_axes.panel_role_coherence
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: collapse Panel C into a decorative cover scene; change the declared A-F
+    panel roles
+  rationale: The current render satisfies the declared panel_c_hero_hierarchy positive signals with no
+    observed anti-patterns, so the lever passes and needs no route.
+- lever_id: row2_whitespace_breathing
+  dimension: whitespace_breathing
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - D/E/F gutters visible
+  - instrument-box labels stay inside their outlines (VC028/VC029)
+  - sub-zone labels have local breathing room
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - quality_axes.composition_layout
+  - micro_defects.M028
+  - micro_defects.M029
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: move evidence between columns; delete required Row 2 instrument labels
+  rationale: The current render satisfies the declared row2_whitespace_breathing positive signals with
+    no observed anti-patterns, so the lever passes and needs no route.
+- lever_id: print_typography_authority
+  dimension: typography_authority
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - subscripts readable in the 178 mm proxy
+  - math labels consistent in size/weight
+  - panel letters form a controlled hierarchy
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - quality_axes.journal_polish
+  - top_tier_audit.reduction_print_readability
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: rename symbols; change measured quantities; hide a mechanism-anchoring label
+  rationale: The current render satisfies the declared print_typography_authority positive signals with
+    no observed anti-patterns, so the lever passes and needs no route.
+- lever_id: semantic_color_economy
+  dimension: color_harmony
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - amber/blue/red/gray families map consistently to meaning
+  - background grays do not compete with accents
+  - deep-trap red appears only where it carries mechanism
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - top_tier_audit.cross_panel_semantic_grammar
+  - quality_axes.scientific_plausibility
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: swap shallow and deep trap colors; change force-direction color semantics
+  rationale: The current render satisfies the declared semantic_color_economy positive signals with no
+    observed anti-patterns, so the lever passes and needs no route.
+- lever_id: line_weight_rhythm
+  dimension: line_weight_rhythm
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - foreground mechanism strokes distinguishable from supports
+  - axes/wiring do not overpower labels
+  - repeated textures subordinate
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - quality_axes.composition_layout
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: change graph/data relationships; remove required wiring or axes
+  rationale: The current render satisfies the declared line_weight_rhythm positive signals with no observed
+    anti-patterns, so the lever passes and needs no route.
+- lever_id: component_fidelity_finish
+  dimension: component_fidelity
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - instrument components have recognizable roles
+  - polymer/apparatus detail supports the mechanism
+  - D/E/F evidence modes remain visually distinct
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - quality_axes.component_fidelity
+  - editorial_art_direction.illustration_readiness
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: invent unsupported apparatus; change the experiment class; add decorative
+    detail implying false measurement capability
+  rationale: The current render satisfies the declared component_fidelity_finish positive signals with
+    no observed anti-patterns, so the lever passes and needs no route.
+- lever_id: hand_craft_escape_route
+  dimension: hand_craft
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - geometry is semantically correct
+  - no preset-macro repetition that reads as machine-generated
+  - material identity carried where needed
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - editorial_art_direction.tikz_vs_svg_polish_trigger
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: use SVG polish to alter mechanism; change accepted/golden artifacts without
+    an explicit gate
+  rationale: The current render satisfies the declared hand_craft_escape_route positive signals with no
+    observed anti-patterns, so the lever passes and needs no route.
+- lever_id: cross_panel_grammar
+  dimension: cross_panel_grammar
+  verdict: pass
+  confidence: medium
+  observed_positive_signals:
+  - panel letters/title weights/icon abstractions repeat coherently
+  - Row 2 panels share an apparatus-register grammar
+  - A/B setup and C model prepare D/E/F
+  observed_anti_patterns: []
+  route: none
+  linked_evidence:
+  - top_tier_audit.cross_panel_semantic_grammar
+  - top_tier_audit.aesthetic_coherence
+  allowed_next_adjustment: ''
+  forbidden_adjustment_guard: make all panels visually identical; remove role-specific distinctions
+  rationale: The current render satisfies the declared cross_panel_grammar positive signals with no observed
+    anti-patterns, so the lever passes and needs no route.
+aesthetic_gate_audit: []
 micro_defects:
 - id: M001
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC001_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC001 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC001 (text ''S''): Chemistry register: two backbone bond strokes
+    terminate at the ''S'' glyph perimeter; S fully legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC001
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC001 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC001: Chemistry register: two backbone bond strokes terminate at
+    the ''S'' glyph perimeter; S fully legible. This is not a defect (convention_acceptable).'
 - id: M002
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC002_S.png
-  kind: floating_semantic_cue
+  kind: line_crosses_label
   severity: NIT
-  observation: 'VC002 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC002 (text ''S''): Chemistry register: a diagonal backbone bond
+    clips the ''S'' edges but leaves the counters open; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC002
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC002 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC002: Chemistry register: a diagonal backbone bond clips the ''S''
+    edges but leaves the counters open; S legible. This is not a defect (convention_acceptable).'
 - id: M003
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC003_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC003 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC003 (text ''S''): Chemistry register: three bonds radiate to
+    the ''S'' perimeter, none cross the interior; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC003
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC003 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC003: Chemistry register: three bonds radiate to the ''S'' perimeter,
+    none cross the interior; S legible. This is not a defect (convention_acceptable).'
 - id: M004
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC004_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC004 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC004 (text ''S''): Chemistry register: two bonds meet the lower
+    ''S'' bowl at the perimeter; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC004
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC004 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC004: Chemistry register: two bonds meet the lower ''S'' bowl at
+    the perimeter; S legible. This is not a defect (convention_acceptable).'
 - id: M005
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC005_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC005 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC005 (text ''S''): Chemistry register: two bonds meet the ''S''
+    shoulders at the perimeter; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC005
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC005 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC005: Chemistry register: two bonds meet the ''S'' shoulders at the
+    perimeter; S legible. This is not a defect (convention_acceptable).'
 - id: M006
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC006 ''S'' text_on_path candidate inspected at zoom: Chemistry-register heteroatom label on bond endpoint — required by chemical-structure drawing convention.'
+  observation: 'Visual-clash candidate VC006 (text ''S''): Chemistry register: bonds graze the ''S'' perimeter
+    with a hairline gap; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC006
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC006 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC006: Chemistry register: bonds graze the ''S'' perimeter with a
+    hairline gap; S legible. This is not a defect (convention_acceptable).'
 - id: M007
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_S.png
-  kind: floating_semantic_cue
+  kind: line_crosses_label
   severity: NIT
-  observation: 'VC007 ''S'' text_on_path candidate inspected at zoom: S8 ring atom label on octagon vertex — chemistry-convention element label sits adjacent to bond termination, no glyph-path crossing visible.'
+  observation: 'Visual-clash candidate VC007 (text ''S''): Chemistry register: a diagonal bond clips the
+    ''S'' as in VC002; counters open, S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC007
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC007 is convention acceptable: S8 ring vertex atom label per standard chemistry-drawing convention; intentional schematic placement.'
+  accept_simplification_rationale: 'VC007: Chemistry register: a diagonal bond clips the ''S'' as in VC002;
+    counters open, S legible. This is not a defect (convention_acceptable).'
 - id: M008
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC008_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC008 ''S'' text_on_path candidate inspected at zoom: S8 ring atom label on octagon vertex — chemistry-convention element label; no glyph-path crossing visible.'
+  observation: 'Visual-clash candidate VC008 (text ''S''): Chemistry register: bonds meet ''S'' shoulders
+    with an upper-right near-touch; S legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC008
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC008 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC008: Chemistry register: bonds meet ''S'' shoulders with an upper-right
+    near-touch; S legible. This is not a defect (convention_acceptable).'
 - id: M009
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_C.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC009 ''C'' text_on_path candidate inspected at zoom: E_C subscript label adjacent to its energy-level tick line — standard energy-diagram convention label placement.'
+  observation: 'Visual-clash candidate VC009 (text ''C''): Energy-diagram ''C'' is clear; the neighbouring
+    ''E''/''ob'' fragments are frame-edge truncations of adjacent labels, not contact.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC009
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC009 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC009: Energy-diagram ''C'' is clear; the neighbouring ''E''/''ob''
+    fragments are frame-edge truncations of adjacent labels, not contact. This is not a defect (false_positive).'
 - id: M010
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_mobility.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC010 ''mobility'' text_on_fill candidate inspected at zoom: ''mobility edge'' energy-diagram reference label sits on the Panel C right-half fill region; intentional energy-diagram convention with the ΔEt arrow visible nearby.'
+  observation: 'Visual-clash candidate VC010 (text ''mobility''): ''mobility'' is clear of any stroke;
+    the dark-red Delta-E_t indicator arrow clashes with the adjacent word ''edge'' (VC011), not ''mobility''.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC010
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC010 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC010: ''mobility'' is clear of any stroke; the dark-red Delta-E_t
+    indicator arrow clashes with the adjacent word ''edge'' (VC011), not ''mobility''. This is not a defect
+    (false_positive).'
 - id: M011
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_edge.png
-  kind: floating_semantic_cue
+  kind: line_crosses_label
   severity: NIT
-  observation: 'VC011 ''edge'' text_on_fill candidate inspected at zoom: Tail of ''mobility edge'' label on Panel C energy-diagram fill — same energy-diagram convention as VC010; no actionable defect.'
+  observation: 'Visual-clash candidate VC011 (text ''edge''): The dark-red Delta-E_t / mobility-edge indicator
+    arrow runs between the ''d'' and ''g'' of ''edge''; an energy-axis annotation arrow over its own label
+    is conventional and ''edge'' stays readable.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC011
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC011 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC011: The dark-red Delta-E_t / mobility-edge indicator arrow runs
+    between the ''d'' and ''g'' of ''edge''; an energy-axis annotation arrow over its own label is conventional
+    and ''edge'' stays readable. This is not a defect (convention_acceptable).'
 - id: M012
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC012 ''S'' near_miss candidate inspected at zoom: Panel B chain endpoint label ''S'' (from S60/S75/S85) sits adjacent to ball-shaded terminal atom; no glyph crosses the chain stroke.'
+  observation: 'Visual-clash candidate VC012 (text ''S''): Chemistry register near-miss: ''S'' clear;
+    neighbouring atom node and digit fragment are frame cuts.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC012
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC012 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC012: Chemistry register near-miss: ''S'' clear; neighbouring atom
+    node and digit fragment are frame cuts. This is not a defect (convention_acceptable).'
 - id: M013
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_shallow.png
-  kind: floating_semantic_cue
+  kind: line_crosses_label
   severity: NIT
-  observation: 'VC013 ''shallow'' text_on_fill candidate inspected at zoom: ''shallow'' trap-species label on Panel C energy-diagram region near the ΔEt arrow; intentional labeling of the shallow-trap Gaussian DOS cluster.'
+  observation: 'Visual-clash candidate VC013 (text ''shallow''): The dark-red trap-level reference line
+    crosses ''shallow'' in the inter-letter gap of the double-l; all letters readable; energy-level convention.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC013
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC013 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC013: The dark-red trap-level reference line crosses ''shallow''
+    in the inter-letter gap of the double-l; all letters readable; energy-level convention. This is not
+    a defect (convention_acceptable).'
 - id: M014
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_S.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC014 ''S'' near_miss candidate inspected at zoom: Panel B chain label near ball-shaded endpoint — no defect, convention-driven placement.'
+  observation: 'Visual-clash candidate VC014 (text ''S''): Chemistry register near-miss: ''S'' clear;
+    neighbouring node/glyph fragments are frame cuts.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC014
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC014 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  accept_simplification_rationale: 'VC014: Chemistry register near-miss: ''S'' clear; neighbouring node/glyph
+    fragments are frame cuts. This is not a defect (convention_acceptable).'
 - id: M015
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_Sulfur-rich.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC015 ''Sulfur-rich'' text_on_fill candidate inspected at zoom: Panel A header label on clean white background — neutral-gray semibold anti-hero label per NC redirect; no underlying fill generates a clash.'
+  observation: 'Visual-clash candidate VC015 (text ''Sulfur-rich''): ''Sulfur-rich'' sits on clean white
+    with no adjacent stroke; detector fired on background only.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC015
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC015 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC015: ''Sulfur-rich'' sits on clean white with no adjacent stroke;
+    detector fired on background only. This is not a defect (false_positive).'
 - id: M016
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_poly_S-r-DIB.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC016 ''poly(S-r-DIB)'' text_on_fill candidate inspected at zoom: Panel A subtitle label ''poly(S-r-DIB) linear copolymer'' on white background — no underlying fill conflict; convention-acceptable subtitle placement.'
+  observation: 'Visual-clash candidate VC016 (text ''poly(S-r-DIB)''): ''poly(S-r-DIB)'' sits on clean
+    white with no adjacent stroke; fully legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC016
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC016 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC016: ''poly(S-r-DIB)'' sits on clean white with no adjacent stroke;
+    fully legible. This is not a defect (false_positive).'
 - id: M017
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_Sulfur.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC017 ''Sulfur'' text_on_path candidate inspected at zoom: ''Sulfur content, wt%'' Panel B axis label text on white background — axis label near the wt% axis arrow, convention-acceptable.'
+  observation: 'Visual-clash candidate VC017 (text ''Sulfur''): Axis label ''Sulfur'' is clear; the faint
+    tick above is separated; following ''co'' is a frame cut.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC017
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC017 is convention acceptable: the zoom observation records intentional or non-defect geometry/context rather than an actionable label or stroke clash.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC017: Axis label ''Sulfur'' is clear; the faint tick above is separated;
+    following ''co'' is a frame cut. This is not a defect (false_positive).'
 - id: M018
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_wt.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC018 ''wt%'' text_on_path candidate inspected at zoom: ''Sulfur content, wt%'' Panel B bottom axis label; ''wt%'' glyph sits adjacent to axis arrow with nearby ''convergent'' label from Panel C bridge zone — two labels in proximity but each in own panel region, convention acceptable.'
+  observation: 'Visual-clash candidate VC018 (text ''wt%''): Panel-B axis label ''Sulfur content, wt%''
+    sits adjacent to the Row-1.5 ''convergent evidence'' caption on a different baseline; both labels
+    remain individually legible (tight but distinct).'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC018
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC018 is convention acceptable: ''wt%'' is the axis unit label for the sulfur-content axis in Panel B; no glyph-outline crossing.'
+  accept_simplification_rationale: 'VC018: Panel-B axis label ''Sulfur content, wt%'' sits adjacent to
+    the Row-1.5 ''convergent evidence'' caption on a different baseline; both labels remain individually
+    legible (tight but distinct). This is not a defect (convention_acceptable).'
 - id: M019
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_convergent.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC019 ''convergent'' text_on_fill candidate inspected at zoom: ''convergent evidence'' label in Panel C bridge bracket zone; text sits on white inter-row gap with up-arrow tip partially overlapping ''evide(nce)'' tail — intentional bridge-bracket label, convention acceptable.'
+  observation: 'Visual-clash candidate VC019 (text ''convergent''): ''convergent evidence'' caption sits
+    just below-right of the ''wt%'' axis label; the two distinct labels crowd but each is legible; host
+    re-inspection confirms separable baselines.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC019
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC019 is convention acceptable: ''convergent evidence'' is the bridge-bracket annotation label placed intentionally in the inter-row connector zone.'
+  accept_simplification_rationale: 'VC019: ''convergent evidence'' caption sits just below-right of the
+    ''wt%'' axis label; the two distinct labels crowd but each is legible; host re-inspection confirms
+    separable baselines. This is not a defect (convention_acceptable).'
 - id: M020
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_V.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC020 ''V'' text_on_fill candidate inspected at zoom: E_V energy level label in Panel C energy diagram; clean white background, no stroke crossing; single-glyph identifier for valence band edge tick, convention acceptable.'
+  observation: 'Visual-clash candidate VC020 (text ''V''): Energy-axis ''V'' (E_V region) glyph is clear;
+    the bracketed ''E'' fragment at left is a frame cut.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC020
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC020 is convention acceptable: ''V'' is the valence-band edge identifier in the Panel C energy level diagram; no glyph-outline crossing.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC020: Energy-axis ''V'' (E_V region) glyph is clear; the bracketed
+    ''E'' fragment at left is a frame cut. This is not a defect (false_positive).'
 - id: M021
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_ISPD.png
-  kind: floating_semantic_cue
+  kind: label_stacked_on_reference_line
   severity: NIT
-  observation: 'VC021 ''ISPD'' text_on_path candidate inspected at zoom: ''ISPD'' inter-row modality label sits on the bridge-bracket vertical connector shaft in the inter-row gap; label_stacked_on_reference_line but convention acceptable as inter-row connector label (not panel-internal content).'
+  observation: 'Visual-clash candidate VC021 (text ''ISPD''): ''ISPD'' is the middle spoke''s modality
+    label sitting on its own thin/light spoke line with the convergence arrowhead above; all four letters
+    legible; intentional spoke geometry.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC021
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC021 is convention acceptable: ''ISPD'' is the inter-row bridge-bracket connector label, intentionally placed on the vertical shaft per §4 bridge-bracket convention.'
+  accept_simplification_rationale: 'VC021: ''ISPD'' is the middle spoke''s modality label sitting on its
+    own thin/light spoke line with the convergence arrowhead above; all four letters legible; intentional
+    spoke geometry. This is not a defect (convention_acceptable).'
 - id: M022
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_polymer.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC022 ''polymer'' text_on_fill candidate inspected at zoom: ''polymer film'' label in Panel C/E slab zone; ''polymer'' glyph sits on white background adjacent to amber-gradient slab edge with leader line — label with leader is convention acceptable for schematic annotations.'
+  observation: 'Visual-clash candidate VC022 (text ''polymer''): ''polymer'' callout: a leader attaches
+    at the word''s right end and runs to the film-slab corner; host re-inspection confirms the leader
+    does NOT cross the glyphs.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC022
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC022 is convention acceptable: ''polymer'' is part of the ''polymer film'' schematic annotation in Panel C/E; no glyph-outline crossing at the detected region.'
+  accept_simplification_rationale: 'VC022: ''polymer'' callout: a leader attaches at the word''s right
+    end and runs to the film-slab corner; host re-inspection confirms the leader does NOT cross the glyphs.
+    This is not a defect (convention_acceptable).'
 - id: M023
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_film.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC023 ''film'' near_miss candidate inspected at zoom: ''(polymer) film'' label tail on amber slab in Panel C; ''film'' glyph sits on the amber gradient region — intentional schematic annotation, the text color/contrast is designed for readability on the amber fill, convention acceptable.'
+  observation: 'Visual-clash candidate VC023 (text ''film''): ''film'' sits on an open tan gradient with
+    ample clearance; no stroke crosses the glyphs.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC023
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC023 is convention acceptable: ''film'' is part of the ''polymer film'' schematic annotation; near_miss bounding-box proximity to slab fill is intentional schematic placement.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC023: ''film'' sits on an open tan gradient with ample clearance;
+    no stroke crosses the glyphs. This is not a defect (false_positive).'
 - id: M024
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024_crop.png
-  kind: floating_semantic_cue
+  kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: 'VC024 ''+'' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E corona-deposit zone; ''+'' glyph sits inside cRed!75 charge dot per briefing §13.6 corona convention — iconic marker, convention acceptable.'
+  observation: 'Visual-clash candidate VC024 (text ''+''): Surface-charge marker: white ''+'' knockout
+    on a maroon charge disc straddling the film-surface line; iconographic charge cue, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC024
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC024 is convention acceptable: ''+'' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC024: Surface-charge marker: white ''+'' knockout on a maroon charge
+    disc straddling the film-surface line; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
 - id: M025
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_crop.png
-  kind: floating_semantic_cue
+  kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: 'VC025 ''+'' text_on_fill candidate inspected at zoom: ⊕ surface-charge marker in Panel E film-boundary zone; ''+'' glyph sits inside cRed!75 charge dot — iconic marker, convention acceptable.'
+  observation: 'Visual-clash candidate VC025 (text ''+''): Surface-charge marker: white ''+'' knockout
+    on a maroon charge disc on the surface boundary; iconographic charge cue, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC025
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC025 is convention acceptable: ''+'' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC025: Surface-charge marker: white ''+'' knockout on a maroon charge
+    disc on the surface boundary; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
 - id: M026
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_crop.png
-  kind: floating_semantic_cue
+  kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: 'VC026 ''+'' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E at film boundary upper edge; ''+'' glyph inside cRed!75 charge dot — iconic marker, convention acceptable.'
+  observation: 'Visual-clash candidate VC026 (text ''+''): Surface-charge marker: white ''+'' knockout
+    on a maroon charge disc on the surface boundary; iconographic charge cue, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC026
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC026 is convention acceptable: ''+'' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC026: Surface-charge marker: white ''+'' knockout on a maroon charge
+    disc on the surface boundary; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
 - id: M027
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_crop.png
-  kind: floating_semantic_cue
+  kind: label_glyph_overlaps_internal_drawing
   severity: NIT
-  observation: 'VC027 ''+'' text_on_path candidate inspected at zoom: ⊕ surface-charge marker in Panel E at upper surface zone; ''+'' glyph inside cRed!75 charge dot — iconic marker, convention acceptable.'
+  observation: 'Visual-clash candidate VC027 (text ''+''): Surface-charge marker: white ''+'' knockout
+    on a maroon charge disc on the block-top outline; iconographic charge cue, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC027
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC027 is convention acceptable: ''+'' is the iconic ⊕ surface-charge marker in Panel E; intentional design per §13.6 corona-deposit convention.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC027: Surface-charge marker: white ''+'' knockout on a maroon charge
+    disc on the block-top outline; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
 - id: M028
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_Vs.png
-  kind: floating_semantic_cue
+  kind: label_backdrop_overflows_outline
   severity: NIT
-  observation: 'VC028 ''Vs'' text_on_path candidate inspected at zoom: ''V_s meter'' label on Panel E ISPD instrument box face; ''Vs'' abbreviation on the instrument label with box boundary partially overlapping — instrument-box label placement, convention acceptable.'
+  observation: 'Visual-clash candidate VC028 (text ''Vs''): ''V_s'' display label sits fully inside the
+    rounded meter-box outline with margin; host re-inspection confirms no glyph/backdrop overflows or
+    is clipped (closes prior finding C002).'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC028
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC028 is convention acceptable: ''Vs'' is the surface-voltage meter label on the Panel E ISPD instrument box; instrument-label-on-box placement is convention-driven.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC028: ''V_s'' display label sits fully inside the rounded meter-box
+    outline with margin; host re-inspection confirms no glyph/backdrop overflows or is clipped (closes
+    prior finding C002). This is not a defect (false_positive).'
 - id: M029
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_meter.png
-  kind: floating_semantic_cue
+  kind: label_backdrop_overflows_outline
   severity: NIT
-  observation: 'VC029 ''meter'' text_on_path candidate inspected at zoom: ''V_s meter'' complete label on Panel E ISPD instrument box face; ''meter'' word portion sits on instrument box boundary — instrument-box label placement, convention acceptable.'
+  observation: 'Visual-clash candidate VC029 (text ''meter''): ''meter'' display label sits fully inside
+    the rounded meter-box outline; terminal ''r'' has clear margin to the border; no overflow/clip (closes
+    prior finding C002).'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC029
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC029 is convention acceptable: ''meter'' is the second word of the ''V_s meter'' ISPD instrument label; instrument-label-on-box placement is convention-driven.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC029: ''meter'' display label sits fully inside the rounded meter-box
+    outline; terminal ''r'' has clear margin to the border; no overflow/clip (closes prior finding C002).
+    This is not a defect (false_positive).'
 - id: M030
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_V.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC030 ''V'' text_on_path candidate inspected at zoom: ''Va(ctive)'' label inside Panel D/E power-supply unit box; ''V'' glyph on the PSU box face — instrument-box internal label, convention acceptable.'
+  observation: 'Visual-clash candidate VC030 (text ''V''): Electrode-region ''V'' glyph is clear within
+    its panel field; horizontal panel outlines are separated from the glyph.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC030
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC030 is convention acceptable: ''V'' is part of the ''Va'' power-supply voltage label on the PSU box face; instrument label placement is convention-driven.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC030: Electrode-region ''V'' glyph is clear within its panel field;
+    horizontal panel outlines are separated from the glyph. This is not a defect (false_positive).'
 - id: M031
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_V.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC031 ''V'' text_on_path candidate inspected at zoom: ''V_s(t)'' Panel F axis label partial with axis arrows visible; ''V'' glyph at axis arrow tip with nearby stroke — axis label at arrow tip, convention acceptable.'
+  observation: 'Visual-clash candidate VC031 (text ''V''): V_s(t)-axis ''V'' label sits beside its axis;
+    the axis line does not cross the glyph; conventional axis labelling.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC031
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC031 is convention acceptable: ''V'' is the voltage axis identifier in Panel F surface-voltage plot; axis label at arrow tip placement is standard.'
+  accept_simplification_rationale: 'VC031: V_s(t)-axis ''V'' label sits beside its axis; the axis line
+    does not cross the glyph; conventional axis labelling. This is not a defect (convention_acceptable).'
 - id: M032
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_t.png
-  kind: floating_semantic_cue
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'VC032 ''(t)'' text_on_fill candidate inspected at zoom: ''(t)'' parenthesized argument from the I(t)~t^-n equation with power-law curve visible behind; equation placed on white panel area with curve passing through nearby region — equation label with curve proximity, convention acceptable.'
+  observation: 'Visual-clash candidate VC032 (text ''(t)''): Math label ''(t)'': the parenthesis arcs
+    are the symbol''s own brackets; they approach but do not strike the italic ''t''.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC032
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC032 is convention acceptable: ''(t)'' is part of the I(t) current equation in Panel D; equation-on-plot-area placement is standard for cartoon-schematic kinetic diagrams.'
+  accept_simplification_rationale: 'VC032: Math label ''(t)'': the parenthesis arcs are the symbol''s
+    own brackets; they approach but do not strike the italic ''t''. This is not a defect (convention_acceptable).'
 - id: M033
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_I_t.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC033 ''I(t)'' text_on_fill candidate inspected at zoom: Full ''I(t)~'' equation label on white panel area in Panel D log-log plot zone; clean placement on white background with equation before the tilde separator — convention acceptable.'
+  observation: 'Visual-clash candidate VC033 (text ''I(t)''): ''I(t) ~'' expression sits on clean white
+    with full clearance; the corner wedge does not touch glyphs.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC033
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC033 is convention acceptable: ''I(t)'' is the full current equation label in Panel D; equation on white panel background with no glyph-outline crossing.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC033: ''I(t) ~'' expression sits on clean white with full clearance;
+    the corner wedge does not touch glyphs. This is not a defect (false_positive).'
 - id: M034
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_low.png
-  kind: floating_semantic_cue
+  kind: label_stacked_on_reference_line
   severity: NIT
-  observation: 'VC034 ''low'' text_on_fill candidate inspected at zoom: ''low n'' italic bold curve-identity label near the lower-slope power-law curve in Panel D log-log plot; label in canonical end-of-curve position — curve-identity label at curve tip, convention acceptable.'
+  observation: 'Visual-clash candidate VC034 (text ''low''): Plot curve label ''low n'' (navy) sits on
+    its own navy power-law line; conventional curve labelling, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC034
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC034 is convention acceptable: ''low'' is the ''low n'' curve-identity label in Panel D log-log plot; curve-end label placement is standard for multi-curve cartoon diagrams.'
+  accept_simplification_rationale: 'VC034: Plot curve label ''low n'' (navy) sits on its own navy power-law
+    line; conventional curve labelling, legible. This is not a defect (convention_acceptable).'
 - id: M035
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_crop.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC035 '')'' text_on_fill candidate inspected at zoom: closing '')'' parenthesis from the I(t)~t^-n equation in Panel D; the '')'' glyph sits in the equation string on white background — equation punctuation, convention acceptable.'
+  observation: 'Visual-clash candidate VC035 (text '')''): The auto-crop window clipped the '')'' glyph
+    (mostly out of frame); the parenthesis belongs to the g(E_t)/(t) axis label and is legible in full
+    context; crop-window artefact, not a figure defect.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC035
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC035 is convention acceptable: '')'' is the closing parenthesis of the I(t) equation in Panel D; equation character on white background with no glyph-outline crossing.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC035: The auto-crop window clipped the '')'' glyph (mostly out of
+    frame); the parenthesis belongs to the g(E_t)/(t) axis label and is legible in full context; crop-window
+    artefact, not a figure defect. This is not a defect (false_positive).'
 - id: M036
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_hig.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC036 ''hig'' text_on_path candidate inspected at zoom: ''hig(h)'' text fragment from the ''high n'' curve-identity label in Panel D; blue power-law curve passes through the glyph bounding box — line_crosses_label but intentional schematic (high-n curve identification), convention acceptable.'
+  observation: 'Visual-clash candidate VC036 (text ''hig''): Rotated curve label ''high n'' (maroon) sits
+    along its maroon power-law line; the navy line skims the ascender tops as a near-miss; both labels
+    legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC036
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC036 is convention acceptable: ''hig'' is from the ''high n'' curve-identity label in Panel D log-log plot; curve crossing curve-end label is accepted schematic convention.'
+  accept_simplification_rationale: 'VC036: Rotated curve label ''high n'' (maroon) sits along its maroon
+    power-law line; the navy line skims the ascender tops as a near-miss; both labels legible. This is
+    not a defect (convention_acceptable).'
 - id: M037
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_h.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC037 ''h'' text_on_path candidate inspected at zoom: ''gh'' tail glyphs from ''high n'' label in Panel D with blue curve line crossing through the bounding box — same line_crosses_label condition as VC036; intentional schematic convention for curve-end label.'
+  observation: 'Visual-clash candidate VC037 (text ''h''): ''high n'' fragment ''h'' near the navy line;
+    near-miss with white separation; legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC037
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC037 is convention acceptable: ''h'' is the terminal glyph of the ''high n'' curve-identity label in Panel D; same accepted schematic convention as VC036.'
+  accept_simplification_rationale: 'VC037: ''high n'' fragment ''h'' near the navy line; near-miss with
+    white separation; legible. This is not a defect (convention_acceptable).'
 - id: M038
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_n.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC038 ''n'' text_on_path candidate inspected at zoom: ''n'' exponent subscript in the t^-n power-law equation with data marker dot visible above the glyph bounding box — subscript label with nearby data marker, convention acceptable.'
+  observation: 'Visual-clash candidate VC038 (text ''n''): ''high n'' subscript ''n'' sits in clear space
+    below its line; near-miss only; legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC038
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC038 is convention acceptable: ''n'' is the power-law exponent subscript in the I(t)~t^-n equation in Panel D; data marker proximity is within accepted schematic convention.'
+  accept_simplification_rationale: 'VC038: ''high n'' subscript ''n'' sits in clear space below its line;
+    near-miss only; legible. This is not a defect (convention_acceptable).'
 - id: M039
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_d.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC039 ''d'' text_on_fill candidate inspected at zoom: ''τ_d'' caliper label partial in Panel D/F zone; ''d'' subscript of the τ_d discharge-time caliper sits near the caliper bar — caliper subscript label, convention acceptable.'
+  observation: 'Visual-clash candidate VC039 (text ''d''): Energy-axis ''d'' glyph sits clear above the
+    thin baseline rule; no contact.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC039
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC039 is convention acceptable: ''d'' is the subscript of the τ_d discharge-time caliper label; caliper annotation subscripts in close proximity to the caliper bar are convention-driven.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC039: Energy-axis ''d'' glyph sits clear above the thin baseline
+    rule; no contact. This is not a defect (false_positive).'
 - id: M040
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040_log.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC040 ''log'' text_on_fill candidate inspected at zoom: ''log I'' rotated y-axis label in Panel D or F with vertical axis line partially overlapping; ''log'' sits at the axis label position — label_stacked_on_reference_line but convention acceptable for rotated axis labels.'
+  observation: 'Visual-clash candidate VC040 (text ''log''): Rotated axis label ''log I'': the ''g'' descender
+    lands at the vertical axis line; conventional rotated axis label, legible.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC040
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC040 is convention acceptable: ''log'' is the rotated y-axis label in the log-log plot; axis-line proximity is standard for rotated axis labels.'
+  accept_simplification_rationale: 'VC040: Rotated axis label ''log I'': the ''g'' descender lands at
+    the vertical axis line; conventional rotated axis label, legible. This is not a defect (convention_acceptable).'
 - id: M041
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041_I.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC041 ''I'' text_on_path candidate inspected at zoom: ''I'' italic glyph from τ_d caliper horizontal bar label in Panel F or D; the caliper H-bar serif letter sits near the caliper marker — caliper label italic glyph, convention acceptable.'
+  observation: 'Visual-clash candidate VC041 (text ''I''): Axis label ''I'' near the vertical axis line
+    with a thin white gap; near-miss, conventional axis labelling.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC041
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC041 is convention acceptable: ''I'' is the italic current-axis or caliper label glyph; label-on-path detection near caliper bar is convention-driven.'
+  accept_simplification_rationale: 'VC041: Axis label ''I'' near the vertical axis line with a thin white
+    gap; near-miss, conventional axis labelling. This is not a defect (convention_acceptable).'
 - id: M042
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC042_f.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC042 ''f'' text_on_path candidate inspected at zoom: ''f'' panel letter identifier on clean white background at Panel F label position; no background fill, no stroke crossing — clean panel letter, convention acceptable.'
+  observation: 'Visual-clash candidate VC042 (text ''f''): g(E_t)-region ''f'' glyph sits clear on white;
+    the thin top rule is separated.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC042
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC042 is convention acceptable: ''f'' is the Panel F identifier letter on white background with no glyph-outline crossing.'
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC042: g(E_t)-region ''f'' glyph sits clear on white; the thin top
+    rule is separated. This is not a defect (false_positive).'
 - id: M043
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC043_HV.png
-  kind: floating_semantic_cue
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'VC043 ''HV+'' text_on_fill candidate inspected at zoom: ''HV+'' outside supply box label in Panel E ISPD circuit; ''HV+'' label sits outside the high-voltage supply rounded box with box boundary partially overlapping the glyph — instrument-external label placement, convention acceptable.'
+  observation: 'Visual-clash candidate VC043 (text ''HV+''): ''HV+'' source-box label sits on white with
+    clear space; the adjacent rounded box corner does not touch the glyphs.'
   linked_finding_id: ''
-  status: accept_simplification
   visual_clash_ref: VC043
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC043 is convention acceptable: ''HV+'' is the high-voltage supply label in the Panel E ISPD circuit diagram; label outside instrument box is convention-driven instrument annotation.'
-- id: M_TB001
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC043: ''HV+'' source-box label sits on white with clear space; the
+    adjacent rounded box corner does not touch the glyphs. This is not a defect (false_positive).'
+- id: M044
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
   kind: label_overflows_row_box
   severity: NIT
-  observation: TB001 — 'ISPD' modality label (bbox top just above Row 2 contain_text boundary y-top) flagged as text_outside_rect for row2_contain_text. ISPD was moved UP to (6.975, 4.62) in the agent+advisor bridge-bracket fix to clear the V_s probe collision; it now sits in the inter-row gap just above the Row 2 frame, like the up-arrow it sits under.
+  observation: 'Text-boundary candidate TB001: the ''ISPD'' spoke modality label sits at the top edge
+    of the row2_contain_text box (clearance 0.0pt).'
   linked_finding_id: ''
-  status: accept_simplification
+  visual_clash_ref: ''
   text_boundary_ref: TB001
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: ISPD is an INTER-ROW CONNECTOR modality label (bridge-bracket group), intentionally in the inter-row gap above the Row 2 box — NOT panel-internal row-box content. The row2_contain_text boundary targets panel content; connector labels in the convergence gap are exempt by design (§4 v8.9 bridge bracket). kinetic + mechanical sit slightly lower (glyph crosses the box top); ISPD sits fully above because it doubles as the up-arrow origin label. No actionable defect.
+  label_path_ref: ''
+  undeclared_geometry_ref: ''
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'TB001: ''ISPD'' is the middle spoke''s modality label placed in the
+    Row-1-to-Row-2 transition (spoke) zone by design; host re-inspection confirms ISPD sits above the
+    row divider rule, clearly separated from the V_s probe apparatus label below. The 0.0pt clearance
+    is the intended spoke-zone placement, not a row-box overflow defect.'
 crop_audit_log:
 - crop_id: VC001_S
   path: build/audit_crops/visual_clash/VC001_S.png
@@ -1027,9 +1252,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC001_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: two backbone bond strokes terminate at the ''S'' glyph perimeter; S
+    fully legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: two backbone bond strokes terminate at the ''S'' glyph perimeter;
+    S fully legible.'
+  candidate_refs:
+  - VC001
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC001_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC002_S
   path: build/audit_crops/visual_clash/VC002_S.png
@@ -1037,9 +1271,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC002_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: a diagonal backbone bond clips the ''S'' edges but leaves the counters
+    open; S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: a diagonal backbone bond clips the ''S'' edges but leaves the
+    counters open; S legible.'
+  candidate_refs:
+  - VC002
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC002_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC003_S
   path: build/audit_crops/visual_clash/VC003_S.png
@@ -1047,9 +1290,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC003_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: three bonds radiate to the ''S'' perimeter, none cross the interior;
+    S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: three bonds radiate to the ''S'' perimeter, none cross the
+    interior; S legible.'
+  candidate_refs:
+  - VC003
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC003_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC004_S
   path: build/audit_crops/visual_clash/VC004_S.png
@@ -1057,9 +1309,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC004_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: two bonds meet the lower ''S'' bowl at the perimeter; S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: two bonds meet the lower ''S'' bowl at the perimeter; S legible.'
+  candidate_refs:
+  - VC004
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC004_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC005_S
   path: build/audit_crops/visual_clash/VC005_S.png
@@ -1067,9 +1326,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC005_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: two bonds meet the ''S'' shoulders at the perimeter; S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: two bonds meet the ''S'' shoulders at the perimeter; S legible.'
+  candidate_refs:
+  - VC005
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC005_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC006_S
   path: build/audit_crops/visual_clash/VC006_S.png
@@ -1077,9 +1343,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC006_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: bonds graze the ''S'' perimeter with a hairline gap; S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: bonds graze the ''S'' perimeter with a hairline gap; S legible.'
+  candidate_refs:
+  - VC006
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC006_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC007_S
   path: build/audit_crops/visual_clash/VC007_S.png
@@ -1087,9 +1360,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC007_C inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: a diagonal bond clips the ''S'' as in VC002; counters open, S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: a diagonal bond clips the ''S'' as in VC002; counters open,
+    S legible.'
+  candidate_refs:
+  - VC007
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC007_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC008_S
   path: build/audit_crops/visual_clash/VC008_S.png
@@ -1097,9 +1378,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC008_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register: bonds meet ''S'' shoulders with an upper-right near-touch; S legible.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register: bonds meet ''S'' shoulders with an upper-right near-touch;
+    S legible.'
+  candidate_refs:
+  - VC008
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC008_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC009_C
   path: build/audit_crops/visual_clash/VC009_C.png
@@ -1107,9 +1396,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC009_Energy inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Energy-diagram 'C' is clear; the neighbouring 'E'/'ob' fragments are frame-edge truncations
+    of adjacent labels, not contact.
+  observed_objects:
+  - label 'C'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Energy-diagram 'C' is clear; the neighbouring 'E'/'ob' fragments are frame-edge
+    truncations of adjacent labels, not contact.
+  candidate_refs:
+  - VC009
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC009_C: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC010_mobility
   path: build/audit_crops/visual_clash/VC010_mobility.png
@@ -1117,9 +1415,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC010_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''mobility'' is clear of any stroke; the dark-red Delta-E_t indicator arrow clashes with
+    the adjacent word ''edge'' (VC011), not ''mobility''.'
+  observed_objects:
+  - label 'mobility'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''mobility'' is clear of any stroke; the dark-red Delta-E_t indicator arrow clashes
+    with the adjacent word ''edge'' (VC011), not ''mobility''.'
+  candidate_refs:
+  - VC010
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC010_mobility: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC011_edge
   path: build/audit_crops/visual_clash/VC011_edge.png
@@ -1127,9 +1434,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC011_S inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: The dark-red Delta-E_t / mobility-edge indicator arrow runs between the 'd' and 'g' of 'edge';
+    an energy-axis annotation arrow over its own label is conventional and 'edge' stays readable.
+  observed_objects:
+  - label 'edge'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: The dark-red Delta-E_t / mobility-edge indicator arrow runs between the 'd' and
+    'g' of 'edge'; an energy-axis annotation arrow over its own label is conventional and 'edge' stays
+    readable.
+  candidate_refs:
+  - VC011
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC011_edge: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC012_S
   path: build/audit_crops/visual_clash/VC012_S.png
@@ -1137,9 +1454,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC012_1 inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register near-miss: ''S'' clear; neighbouring atom node and digit fragment are
+    frame cuts.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register near-miss: ''S'' clear; neighbouring atom node and digit fragment
+    are frame cuts.'
+  candidate_refs:
+  - VC012
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC012_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC013_shallow
   path: build/audit_crops/visual_clash/VC013_shallow.png
@@ -1147,9 +1473,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC013_Sulfur inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: The dark-red trap-level reference line crosses 'shallow' in the inter-letter gap of the double-l;
+    all letters readable; energy-level convention.
+  observed_objects:
+  - label 'shallow'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: The dark-red trap-level reference line crosses 'shallow' in the inter-letter gap
+    of the double-l; all letters readable; energy-level convention.
+  candidate_refs:
+  - VC013
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC013_shallow: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC014_S
   path: build/audit_crops/visual_clash/VC014_S.png
@@ -1157,9 +1492,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC014_V inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Chemistry register near-miss: ''S'' clear; neighbouring node/glyph fragments are frame cuts.'
+  observed_objects:
+  - label 'S'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Chemistry register near-miss: ''S'' clear; neighbouring node/glyph fragments are
+    frame cuts.'
+  candidate_refs:
+  - VC014
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC014_S: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC015_Sulfur-rich
   path: build/audit_crops/visual_clash/VC015_Sulfur-rich.png
@@ -1167,9 +1510,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC015_ISPD inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''Sulfur-rich'' sits on clean white with no adjacent stroke; detector fired on background
+    only.'
+  observed_objects:
+  - label 'Sulfur-rich'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''Sulfur-rich'' sits on clean white with no adjacent stroke; detector fired on
+    background only.'
+  candidate_refs:
+  - VC015
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC015_Sulfur-rich: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC016_poly_S-r-DIB
   path: build/audit_crops/visual_clash/VC016_poly_S-r-DIB.png
@@ -1177,9 +1529,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC016_e inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''poly(S-r-DIB)'' sits on clean white with no adjacent stroke; fully legible.'
+  observed_objects:
+  - label 'poly(S-r-DIB)'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''poly(S-r-DIB)'' sits on clean white with no adjacent stroke; fully legible.'
+  candidate_refs:
+  - VC016
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC016_poly_S-r-DIB: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC017_Sulfur
   path: build/audit_crops/visual_clash/VC017_Sulfur.png
@@ -1187,9 +1546,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC017_HV inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Axis label 'Sulfur' is clear; the faint tick above is separated; following 'co' is a frame
+    cut.
+  observed_objects:
+  - label 'Sulfur'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Axis label 'Sulfur' is clear; the faint tick above is separated; following 'co'
+    is a frame cut.
+  candidate_refs:
+  - VC017
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC017_Sulfur: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC018_wt
   path: build/audit_crops/visual_clash/VC018_wt.png
@@ -1197,9 +1565,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC018_f inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Panel-B axis label 'Sulfur content, wt%' sits adjacent to the Row-1.5 'convergent evidence'
+    caption on a different baseline; both labels remain individually legible (tight but distinct).
+  observed_objects:
+  - label 'wt%'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Panel-B axis label 'Sulfur content, wt%' sits adjacent to the Row-1.5 'convergent
+    evidence' caption on a different baseline; both labels remain individually legible (tight but distinct).
+  candidate_refs:
+  - VC018
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC018_wt: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC019_convergent
   path: build/audit_crops/visual_clash/VC019_convergent.png
@@ -1207,9 +1584,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC019_V inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''convergent evidence'' caption sits just below-right of the ''wt%'' axis label; the two
+    distinct labels crowd but each is legible; host re-inspection confirms separable baselines.'
+  observed_objects:
+  - label 'convergent'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''convergent evidence'' caption sits just below-right of the ''wt%'' axis label;
+    the two distinct labels crowd but each is legible; host re-inspection confirms separable baselines.'
+  candidate_refs:
+  - VC019
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC019_convergent: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC020_V
   path: build/audit_crops/visual_clash/VC020_V.png
@@ -1217,9 +1603,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC020_film inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Energy-axis 'V' (E_V region) glyph is clear; the bracketed 'E' fragment at left is a frame
+    cut.
+  observed_objects:
+  - label 'V'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Energy-axis 'V' (E_V region) glyph is clear; the bracketed 'E' fragment at left
+    is a frame cut.
+  candidate_refs:
+  - VC020
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC020_V: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC021_ISPD
   path: build/audit_crops/visual_clash/VC021_ISPD.png
@@ -1227,9 +1622,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC021_V inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''ISPD'' is the middle spoke''s modality label sitting on its own thin/light spoke line
+    with the convergence arrowhead above; all four letters legible; intentional spoke geometry.'
+  observed_objects:
+  - label 'ISPD'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''ISPD'' is the middle spoke''s modality label sitting on its own thin/light spoke
+    line with the convergence arrowhead above; all four letters legible; intentional spoke geometry.'
+  candidate_refs:
+  - VC021
+  - TB001
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC021_ISPD: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC022_polymer
   path: build/audit_crops/visual_clash/VC022_polymer.png
@@ -1237,9 +1642,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC022_s inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''polymer'' callout: a leader attaches at the word''s right end and runs to the film-slab
+    corner; host re-inspection confirms the leader does NOT cross the glyphs.'
+  observed_objects:
+  - label 'polymer'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''polymer'' callout: a leader attaches at the word''s right end and runs to the
+    film-slab corner; host re-inspection confirms the leader does NOT cross the glyphs.'
+  candidate_refs:
+  - VC022
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC022_polymer: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC023_film
   path: build/audit_crops/visual_clash/VC023_film.png
@@ -1247,9 +1661,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC023_V inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''film'' sits on an open tan gradient with ample clearance; no stroke crosses the glyphs.'
+  observed_objects:
+  - label 'film'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''film'' sits on an open tan gradient with ample clearance; no stroke crosses the
+    glyphs.'
+  candidate_refs:
+  - VC023
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC023_film: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC024_crop
   path: build/audit_crops/visual_clash/VC024_crop.png
@@ -1257,9 +1679,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC024_t inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc straddling the film-surface
+    line; iconographic charge cue, legible.'
+  observed_objects:
+  - label '+'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc straddling
+    the film-surface line; iconographic charge cue, legible.'
+  candidate_refs:
+  - VC024
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC024_crop: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC025_crop
   path: build/audit_crops/visual_clash/VC025_crop.png
@@ -1267,9 +1698,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC025_V inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface boundary;
+    iconographic charge cue, legible.'
+  observed_objects:
+  - label '+'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface
+    boundary; iconographic charge cue, legible.'
+  candidate_refs:
+  - VC025
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC025_crop: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC026_crop
   path: build/audit_crops/visual_clash/VC026_crop.png
@@ -1277,9 +1717,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC026_low inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface boundary;
+    iconographic charge cue, legible.'
+  observed_objects:
+  - label '+'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface
+    boundary; iconographic charge cue, legible.'
+  candidate_refs:
+  - VC026
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC026_crop: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC027_crop
   path: build/audit_crops/visual_clash/VC027_crop.png
@@ -1287,9 +1736,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC027_hig inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the block-top outline;
+    iconographic charge cue, legible.'
+  observed_objects:
+  - label '+'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the block-top
+    outline; iconographic charge cue, legible.'
+  candidate_refs:
+  - VC027
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC027_crop: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC028_Vs
   path: build/audit_crops/visual_clash/VC028_Vs.png
@@ -1297,9 +1755,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC028_τ inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''V_s'' display label sits fully inside the rounded meter-box outline with margin; host
+    re-inspection confirms no glyph/backdrop overflows or is clipped (closes prior finding C002).'
+  observed_objects:
+  - label 'Vs'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''V_s'' display label sits fully inside the rounded meter-box outline with margin;
+    host re-inspection confirms no glyph/backdrop overflows or is clipped (closes prior finding C002).'
+  candidate_refs:
+  - VC028
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC028_Vs: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC029_meter
   path: build/audit_crops/visual_clash/VC029_meter.png
@@ -1307,9 +1774,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC029_d inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''meter'' display label sits fully inside the rounded meter-box outline; terminal ''r''
+    has clear margin to the border; no overflow/clip (closes prior finding C002).'
+  observed_objects:
+  - label 'meter'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''meter'' display label sits fully inside the rounded meter-box outline; terminal
+    ''r'' has clear margin to the border; no overflow/clip (closes prior finding C002).'
+  candidate_refs:
+  - VC029
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC029_meter: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC030_V
   path: build/audit_crops/visual_clash/VC030_V.png
@@ -1317,9 +1793,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC030_crop inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Electrode-region 'V' glyph is clear within its panel field; horizontal panel outlines are
+    separated from the glyph.
+  observed_objects:
+  - label 'V'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Electrode-region 'V' glyph is clear within its panel field; horizontal panel outlines
+    are separated from the glyph.
+  candidate_refs:
+  - VC030
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC030_V: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC031_V
   path: build/audit_crops/visual_clash/VC031_V.png
@@ -1327,9 +1812,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC031_h inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: V_s(t)-axis 'V' label sits beside its axis; the axis line does not cross the glyph; conventional
+    axis labelling.
+  observed_objects:
+  - label 'V'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: V_s(t)-axis 'V' label sits beside its axis; the axis line does not cross the glyph;
+    conventional axis labelling.
+  candidate_refs:
+  - VC031
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC031_V: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC032_t
   path: build/audit_crops/visual_clash/VC032_t.png
@@ -1337,9 +1831,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC032_n inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Math label ''(t)'': the parenthesis arcs are the symbol''s own brackets; they approach but
+    do not strike the italic ''t''.'
+  observed_objects:
+  - label '(t)'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Math label ''(t)'': the parenthesis arcs are the symbol''s own brackets; they approach
+    but do not strike the italic ''t''.'
+  candidate_refs:
+  - VC032
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC032_t: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC033_I_t
   path: build/audit_crops/visual_clash/VC033_I_t.png
@@ -1347,9 +1850,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC033_Deb inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''I(t) ~'' expression sits on clean white with full clearance; the corner wedge does not
+    touch glyphs.'
+  observed_objects:
+  - label 'I(t)'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''I(t) ~'' expression sits on clean white with full clearance; the corner wedge
+    does not touch glyphs.'
+  candidate_refs:
+  - VC033
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC033_I_t: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC034_low
   path: build/audit_crops/visual_clash/VC034_low.png
@@ -1357,9 +1869,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC034_ye inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Plot curve label 'low n' (navy) sits on its own navy power-law line; conventional curve labelling,
+    legible.
+  observed_objects:
+  - label 'low'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Plot curve label 'low n' (navy) sits on its own navy power-law line; conventional
+    curve labelling, legible.
+  candidate_refs:
+  - VC034
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC034_low: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC035_crop
   path: build/audit_crops/visual_clash/VC035_crop.png
@@ -1367,9 +1888,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC035_F inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: The auto-crop window clipped the ')' glyph (mostly out of frame); the parenthesis belongs
+    to the g(E_t)/(t) axis label and is legible in full context; crop-window artefact, not a figure defect.
+  observed_objects:
+  - label ')'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: The auto-crop window clipped the ')' glyph (mostly out of frame); the parenthesis
+    belongs to the g(E_t)/(t) axis label and is legible in full context; crop-window artefact, not a figure
+    defect.
+  candidate_refs:
+  - VC035
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC035_crop: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC036_hig
   path: build/audit_crops/visual_clash/VC036_hig.png
@@ -1377,9 +1908,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC036_log inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Rotated curve label 'high n' (maroon) sits along its maroon power-law line; the navy line
+    skims the ascender tops as a near-miss; both labels legible.
+  observed_objects:
+  - label 'hig'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Rotated curve label 'high n' (maroon) sits along its maroon power-law line; the
+    navy line skims the ascender tops as a near-miss; both labels legible.
+  candidate_refs:
+  - VC036
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC036_hig: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC037_h
   path: build/audit_crops/visual_clash/VC037_h.png
@@ -1387,9 +1927,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC037_I inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''high n'' fragment ''h'' near the navy line; near-miss with white separation; legible.'
+  observed_objects:
+  - label 'h'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''high n'' fragment ''h'' near the navy line; near-miss with white separation;
+    legible.'
+  candidate_refs:
+  - VC037
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC037_h: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC038_n
   path: build/audit_crops/visual_clash/VC038_n.png
@@ -1397,9 +1945,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC038_I_t inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: '''high n'' subscript ''n'' sits in clear space below its line; near-miss only; legible.'
+  observed_objects:
+  - label 'n'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''high n'' subscript ''n'' sits in clear space below its line; near-miss only;
+    legible.'
+  candidate_refs:
+  - VC038
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC038_n: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC039_d
   path: build/audit_crops/visual_clash/VC039_d.png
@@ -1407,9 +1963,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC039_crop inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Energy-axis 'd' glyph sits clear above the thin baseline rule; no contact.
+  observed_objects:
+  - label 'd'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Energy-axis 'd' glyph sits clear above the thin baseline rule; no contact.
+  candidate_refs:
+  - VC039
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC039_d: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC040_log
   path: build/audit_crops/visual_clash/VC040_log.png
@@ -1417,9 +1980,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC040_crop inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: 'Rotated axis label ''log I'': the ''g'' descender lands at the vertical axis line; conventional
+    rotated axis label, legible.'
+  observed_objects:
+  - label 'log'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: 'Rotated axis label ''log I'': the ''g'' descender lands at the vertical axis line;
+    conventional rotated axis label, legible.'
+  candidate_refs:
+  - VC040
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC040_log: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC041_I
   path: build/audit_crops/visual_clash/VC041_I.png
@@ -1427,9 +1999,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC041_crop inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: Axis label 'I' near the vertical axis line with a thin white gap; near-miss, conventional
+    axis labelling.
+  observed_objects:
+  - label 'I'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: Axis label 'I' near the vertical axis line with a thin white gap; near-miss, conventional
+    axis labelling.
+  candidate_refs:
+  - VC041
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC041_I: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC042_f
   path: build/audit_crops/visual_clash/VC042_f.png
@@ -1437,19 +2018,35 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: VC042_crop inspected at zoom — see linked micro_defect via visual_clash_ref.
+  rationale: g(E_t)-region 'f' glyph sits clear on white; the thin top rule is separated.
+  observed_objects:
+  - label 'f'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: g(E_t)-region 'f' glyph sits clear on white; the thin top rule is separated.
+  candidate_refs:
+  - VC042
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC042_f: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC043_HV
   path: build/audit_crops/visual_clash/VC043_HV.png
   source: visual_clash:VC043
   inspected: true
   verdict: no_defect
-  linked_micro_defect_id: M043
-  rationale: VC043_log inspected at zoom — Panel D 'log' axis identifier per NC iconic-cartoon convention. Linked to M043 accept_simplification.
+  linked_micro_defect_id: ''
+  rationale: '''HV+'' source-box label sits on white with clear space; the adjacent rounded box corner
+    does not touch the glyphs.'
+  observed_objects:
+  - label 'HV+'
+  - the stroke or fill flagged by the clash detector
+  local_relationship: '''HV+'' source-box label sits on white with clear space; the adjacent rounded box
+    corner does not touch the glyphs.'
+  candidate_refs:
+  - VC043
   unintended_visible_anomaly: none
-  anomaly_rationale: 'VC043_HV: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
+    present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
@@ -1457,9 +2054,25 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Full-quadrant overview crop full_q1 inspected post-iter-2 — Panel E apparatus + data centred; column rules visible; spoke fan slimmed.
+  rationale: 'Row-1 chemistry+composition: the S8 ring leads via a dashed arrow into the backbone (a);
+    three labelled chains stack over the wt% axis (b); the ''convergent'' caption tucks below-right.'
+  observed_objects:
+  - panel a/b letters
+  - '''inverse vulcanization'' text'
+  - -(S)x- formula
+  - S8 sulfur ring
+  - dashed leader arrow
+  - benzene-ring backbone
+  - three S60/S75/S85 zig-zag chains
+  - '''Sulfur content, wt%'' axis arrow'
+  - '''convergent'' caption'
+  - partial 'ISP'
+  local_relationship: 'Row-1 chemistry+composition: the S8 ring leads via a dashed arrow into the backbone
+    (a); three labelled chains stack over the wt% axis (b); the ''convergent'' caption tucks below-right.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'full_q1: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: the dashed inverse-vulcanization leader lands cleanly on the backbone; ''convergent''
+    sits adjacent to the wt% axis label but both stay legible (see VC018/VC019); no stray mark.'
   anomaly_link: ''
 - crop_id: full_q2
   path: build/audit_crops/full_q2.png
@@ -1467,9 +2080,29 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Full-quadrant overview crop full_q2 inspected post-iter-2 — Panel E apparatus + data centred; column rules visible; spoke fan slimmed.
+  rationale: 'Panel C model: the real-space film (left) is bound by dashed leaders to the energy diagram
+    (right); shallow (blue) sits below the mobility edge, deep (red) near E_V, with Delta-E_t spanning.'
+  observed_objects:
+  - panel c + titles (real space / energy diagram / localized traps)
+  - tan film box with wavy chains and blue+red dots
+  - '''d ~ 1 um'''
+  - dashed leaders
+  - blue shallow gaussian + level lines + dot
+  - red deep gaussian + level lines + dot
+  - vertical 'Energy' axis
+  - vacuum/E_C/mobility-edge lines
+  - shallow/deep labels
+  - dashed red leader arrow
+  - Delta-E_t double arrow
+  - E_V
+  local_relationship: 'Panel C model: the real-space film (left) is bound by dashed leaders to the energy
+    diagram (right); shallow (blue) sits below the mobility edge, deep (red) near E_V, with Delta-E_t
+    spanning.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'full_q2: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host re-inspection at 6x: the mark the screen flagged as a ''floating caret'' above
+    the upper blue level is the ARROWHEAD of an intended dashed red leader arrow (a dashed tail descends
+    to the lower-left) that binds a trap site to its energy level. Not a stray glyph.'
   anomaly_link: ''
 - crop_id: full_q3
   path: build/audit_crops/full_q3.png
@@ -1477,9 +2110,27 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Full-quadrant overview crop full_q3 inspected post-iter-2 — Panel E apparatus + data centred; column rules visible; spoke fan slimmed.
+  rationale: 'Panel D kinetic plot: navy ''low n'' (shallower) and red ''high n'' (steeper) power laws
+    emerge from a shared origin with the dashed Debye crossing; each label sits on its own line.'
+  observed_objects:
+  - panel d + 'kinetic'
+  - '''MIM stack'''
+  - SMU V/A box
+  - polymer-film box + ground
+  - I(t)~t^-n formula
+  - log-log axes (log I / log t)
+  - navy 'low n' power-law + dots
+  - red 'high n' power-law + dots
+  - dashed Debye line
+  - partial panel e
+  local_relationship: 'Panel D kinetic plot: navy ''low n'' (shallower) and red ''high n'' (steeper) power
+    laws emerge from a shared origin with the dashed Debye crossing; each label sits on its own line.'
+  candidate_refs:
+  - TB001
   unintended_visible_anomaly: none
-  anomaly_rationale: 'full_q3: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host re-inspection: ''low n''/''high n'' labels are colour-matched to their own
+    power-law lines (plot convention); the power-law tails stay above the steep dashed Debye at long times
+    (TG-D-001); no stray mark.'
   anomaly_link: ''
 - crop_id: full_q4
   path: build/audit_crops/full_q4.png
@@ -1487,9 +2138,28 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Full-quadrant overview crop full_q4 inspected post-iter-2 — Panel E apparatus + data centred; column rules visible; spoke fan slimmed.
+  rationale: 'Panel F mechanical: V_active wires to the vertical electrode; the clamped cantilever bends
+    left carrying q_tr charges; the red Coulomb arrow points left; the air-gap caliper spans the base.'
+  observed_objects:
+  - partial probe / V_s meter box
+  - sample stack + '+' marker + ground
+  - panel f + 'mechanical'
+  - V_active pulse box
+  - clamp + cantilever + three q_tr dots
+  - q_tr leader label
+  - red Coulomb-repulsion arrow
+  - electrode bar + ground
+  - rotated 'electrode' label
+  - air-gap caliper
+  - partial g(E_t)
+  local_relationship: 'Panel F mechanical: V_active wires to the vertical electrode; the clamped cantilever
+    bends left carrying q_tr charges; the red Coulomb arrow points left; the air-gap caliper spans the
+    base.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'full_q4: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host re-inspection at 5x: the V_active lead routes cleanly to the electrode top;
+    the rotated ''electrode'' label sits in the right margin clear of the bar; the Coulomb arrowhead is
+    clear of its label; no stray mark.'
   anomaly_link: ''
 - crop_id: panel_D_q1
   path: build/audit_crops/panel_D_q1.png
@@ -1497,9 +2167,20 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D quadrant inspected post-iter-2; no defect surfaced.
+  rationale: SMU box (left) links via two right-angle wires to contact dots on the amber MIM stack.
+  observed_objects:
+  - '''d'' letter'
+  - '''MIM stack'' title'
+  - SMU V/A box + highlight + shadow
+  - two right-angle wires + contact dots
+  - hatched top electrode
+  - amber film 'poly'
+  - partial 'kine' header
+  local_relationship: SMU box (left) links via two right-angle wires to contact dots on the amber MIM
+    stack.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_q1: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Wires terminate on the dots cleanly; edge cuts are normal tiling; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_D_q2
   path: build/audit_crops/panel_D_q2.png
@@ -1507,9 +2188,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D quadrant inspected post-iter-2; no defect surfaced.
+  rationale: The stack's lower contact dot is wired down to a ground symbol.
+  observed_objects:
+  - '''etic'' header'
+  - hatched electrodes
+  - amber film 'ymer film'
+  - contact dot
+  - ground wire + ground symbol
+  local_relationship: The stack's lower contact dot is wired down to a ground symbol.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_q2: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Ground wire runs cleanly to the bars; no stray mark.
   anomaly_link: ''
 - crop_id: panel_D_q3
   path: build/audit_crops/panel_D_q3.png
@@ -1517,9 +2206,23 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D quadrant inspected post-iter-2; no defect surfaced.
+  rationale: Axis at left; navy and maroon curves fan from a shared origin dot with the dashed Debye crossing;
+    'low n' upper-right.
+  observed_objects:
+  - I(t) formula
+  - vertical axis + 'log I'
+  - ticks
+  - origin dot
+  - dashed Debye line
+  - navy curve + dots
+  - maroon curve + dots
+  - '''low n'' label'
+  local_relationship: Axis at left; navy and maroon curves fan from a shared origin dot with the dashed
+    Debye crossing; 'low n' upper-right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_q3: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: the dashed Debye and navy curve pass beneath ''low n'' without striking the
+    glyph strokes; labels colour-match their lines (convention).'
   anomaly_link: ''
 - crop_id: panel_D_q4
   path: build/audit_crops/panel_D_q4.png
@@ -1527,9 +2230,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D quadrant inspected post-iter-2; no defect surfaced.
+  rationale: '''high n'' label sits above the curves; the navy line is nearest in this tile because the
+    two lines converge here.'
+  observed_objects:
+  - '''high n'' label'
+  - navy curve + dots
+  - maroon curve + dot
+  local_relationship: '''high n'' label sits above the curves; the navy line is nearest in this tile because
+    the two lines converge here.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_q4: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: ''high n'' (maroon) is colour-matched to the maroon steep line; the navy line
+    merely passes nearby where the lines are close; glyphs intact (convention).'
   anomaly_link: ''
 - crop_id: panel_D_s01
   path: build/audit_crops/panel_D_s01.png
@@ -1537,9 +2249,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Panel letter under the border with the title beginning.
+  observed_objects:
+  - '''d'' letter'
+  - '''MIM stack'' fragment'
+  - border
+  local_relationship: Panel letter under the border with the title beginning.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s01: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Clean glyphs; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_D_s02
   path: build/audit_crops/panel_D_s02.png
@@ -1547,9 +2265,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Header under the border; a vertical divider rule at the top-right.
+  observed_objects:
+  - border
+  - vertical divider rule
+  - '''kine'' header'
+  - small stroke fragment
+  local_relationship: Header under the border; a vertical divider rule at the top-right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s02: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Divider and edge-cut fragment are normal; no stray mark.
   anomaly_link: ''
 - crop_id: panel_D_s03
   path: build/audit_crops/panel_D_s03.png
@@ -1557,9 +2282,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Header fragment under the border.
+  observed_objects:
+  - border
+  - '''etic'' header'
+  local_relationship: Header fragment under the border.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s03: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Edge-cut header; clean.
   anomaly_link: ''
 - crop_id: panel_D_s04
   path: build/audit_crops/panel_D_s04.png
@@ -1567,9 +2297,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Near-blank tile with a faint border.
+  observed_objects:
+  - border line
+  local_relationship: Near-blank tile with a faint border.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s04: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Blank apart from the border; nothing to evaluate.
   anomaly_link: ''
 - crop_id: panel_D_s05
   path: build/audit_crops/panel_D_s05.png
@@ -1577,9 +2311,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: The SMU box fills the tile with its glyphs centred.
+  observed_objects:
+  - SMU box
+  - SMU / V/A glyphs
+  - highlight
+  - shadow
+  - I(t) fragment
+  local_relationship: The SMU box fills the tile with its glyphs centred.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s05: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Box, glyphs, highlight, shadow clean; formula fragment is an edge cut.
   anomaly_link: ''
 - crop_id: panel_D_s06
   path: build/audit_crops/panel_D_s06.png
@@ -1587,9 +2329,21 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Two wires leave the SMU box to contact dots on the stack; the lower wire shows a small hop
+    near its dot.
+  observed_objects:
+  - SMU box right edge
+  - two wires
+  - contact dots
+  - hatched electrode
+  - amber 'poly'
+  - small loop on lower wire
+  local_relationship: Two wires leave the SMU box to contact dots on the stack; the lower wire shows a
+    small hop near its dot.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s06: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: the small loop on the lower SMU wire is a conventional wire-hop/turn detail;
+    tiny and legible, it does not affect the schematic (NIT, not a defect).'
   anomaly_link: ''
 - crop_id: panel_D_s07
   path: build/audit_crops/panel_D_s07.png
@@ -1597,9 +2351,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: The amber film with its label sits between the hatched electrodes.
+  observed_objects:
+  - hatched electrodes
+  - amber film 'ymer film'
+  - thin amber border
+  local_relationship: The amber film with its label sits between the hatched electrodes.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s07: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Hatching regular, label intact; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_D_s08
   path: build/audit_crops/panel_D_s08.png
@@ -1607,9 +2367,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: A contact dot on the stack's lower edge is wired to the ground symbol.
+  observed_objects:
+  - hatched electrode edge
+  - amber outline
+  - contact dot
+  - ground wire
+  - ground symbol
+  local_relationship: A contact dot on the stack's lower edge is wired to the ground symbol.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s08: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Wire runs cleanly to evenly-spaced ground bars; no stray mark.
   anomaly_link: ''
 - crop_id: panel_D_s09
   path: build/audit_crops/panel_D_s09.png
@@ -1617,9 +2385,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: The axis and label sit left; both curves originate at a shared dot with the dashed line beginning
+    between them.
+  observed_objects:
+  - I(t) fragment
+  - axis + 'log I'
+  - origin dot
+  - navy/maroon curve starts
+  - dashed-line start
+  local_relationship: The axis and label sit left; both curves originate at a shared dot with the dashed
+    line beginning between them.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s09: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Curves originate cleanly at the shared dot; no stray strokes.
   anomaly_link: ''
 - crop_id: panel_D_s10
   path: build/audit_crops/panel_D_s10.png
@@ -1627,9 +2405,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: The dashed line runs just beneath 'low n'; a navy data dot overlaps a dashed segment.
+  observed_objects:
+  - dashed Debye segments
+  - '''low n'' label'
+  - navy curve + dot
+  local_relationship: The dashed line runs just beneath 'low n'; a navy data dot overlaps a dashed segment.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s10: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: dashes pass under the glyphs without striking them and a data dot sits on
+    a dashed segment (near-miss / stacked convention); legible.'
   anomaly_link: ''
 - crop_id: panel_D_s11
   path: build/audit_crops/panel_D_s11.png
@@ -1637,9 +2422,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Edge-cut curve fragments enter the corner; the rest is empty.
+  observed_objects:
+  - maroon curve fragment
+  - navy curve fragment + dot
+  local_relationship: Edge-cut curve fragments enter the corner; the rest is empty.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s11: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Normal tiling cuts; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_D_s12
   path: build/audit_crops/panel_D_s12.png
@@ -1647,9 +2437,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: Empty white sub-quadrant with no drawn elements in this tile.
+  observed_objects:
+  - white background only (blank tile)
+  local_relationship: Empty white sub-quadrant with no drawn elements in this tile.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s12: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: No marks present to evaluate.
   anomaly_link: ''
 - crop_id: panel_D_s13
   path: build/audit_crops/panel_D_s13.png
@@ -1657,9 +2451,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: A vertical axis line with ticks projecting right.
+  observed_objects:
+  - vertical axis line
+  - two ticks
+  local_relationship: A vertical axis line with ticks projecting right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s13: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Ticks attach cleanly to the axis; no stray strokes.
   anomaly_link: ''
 - crop_id: panel_D_s14
   path: build/audit_crops/panel_D_s14.png
@@ -1667,9 +2466,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: The maroon curve crosses the dashed line with a data dot at the intersection.
+  observed_objects:
+  - maroon curve
+  - maroon dot at crossing
+  - dashed Debye segments
+  - exponent fragment
+  local_relationship: The maroon curve crosses the dashed line with a data dot at the intersection.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s14: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: A data point at a curve/reference crossing is normal plot geometry; dashes even;
+    no stray mark.
   anomaly_link: ''
 - crop_id: panel_D_s15
   path: build/audit_crops/panel_D_s15.png
@@ -1677,9 +2484,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: '''high n'' sits upper-left; the navy line is nearest in this tile while the maroon line
+    runs lower.'
+  observed_objects:
+  - '''high n'' label + subscript'
+  - navy curve + dot
+  - maroon curve + dot
+  local_relationship: '''high n'' sits upper-left; the navy line is nearest in this tile while the maroon
+    line runs lower.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s15: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: colour-match is correct (maroon label to maroon line); glyphs intact; convention
+    call, not a defect.'
   anomaly_link: ''
 - crop_id: panel_D_s16
   path: build/audit_crops/panel_D_s16.png
@@ -1687,9 +2503,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel D sub-tile inspected via parent quadrant context.
+  rationale: An edge-cut navy segment enters the corner.
+  observed_objects:
+  - navy curve fragment + dot
+  local_relationship: An edge-cut navy segment enters the corner.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_D_s16: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Normal tiling cut; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_E_q1
   path: build/audit_crops/panel_E_q1.png
@@ -1697,9 +2517,28 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E quadrant inspected post-iter-2; no defect surfaced.
+  rationale: HV+ box upper-left; the corona needle drops to the polymer surface with '+' markers; the
+    'polymer' label leads to the slab corner.
+  observed_objects:
+  - '''e'' letter'
+  - ISP fragment
+  - HV+ label
+  - source box + dot
+  - corona needle + wire
+  - tan polymer slab
+  - grey substrate
+  - three '+' charge markers
+  - '''polymer'' label + leader'
+  - '''V_s p'' fragment'
+  - probe disk-on-shaft fragment
+  local_relationship: HV+ box upper-left; the corona needle drops to the polymer surface with '+' markers;
+    the 'polymer' label leads to the slab corner.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_q1: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host re-inspection at 6x: the corona-needle wire is well right of the HV+ glyphs
+    (no crossing); the probe is a disk-on-shaft with NO vibration arcs (induction-type, correct); the
+    ''polymer'' leader attaches at the word''s right end and runs to the slab — it does NOT cross the
+    ''e''/''r'' glyphs (the screen flag was an upscaled-tile false positive).'
   anomaly_link: ''
 - crop_id: panel_E_q2
   path: build/audit_crops/panel_E_q2.png
@@ -1707,9 +2546,24 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E quadrant inspected post-iter-2; no defect surfaced.
+  rationale: A leader runs to a dot on the meter-box edge; the meter box is centre-right; the ground symbol
+    sits lower-left.
+  observed_objects:
+  - '''D'' fragment'
+  - '''probe'' fragment'
+  - leader + dot
+  - V_s meter box
+  - '''V_s meter'' label'
+  - grey bar
+  - '''+'' marker'
+  - substrate
+  - ground wire + symbol
+  local_relationship: A leader runs to a dot on the meter-box edge; the meter box is centre-right; the
+    ground symbol sits lower-left.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_q2: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: ''V_s meter'' sits fully inside the bezel (no clip/overflow, closing prior
+    C002); the leader ends at the box edge without crossing the label.'
   anomaly_link: ''
 - crop_id: panel_E_q3
   path: build/audit_crops/panel_E_q3.png
@@ -1717,9 +2571,24 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E quadrant inspected post-iter-2; no defect surfaced.
+  rationale: An upper decay plot sits over the lower g(E_t) plot; the tau_d caliper spans between the
+    two gaussian peaks.
+  observed_objects:
+  - '''V_s(t)'' axis label'
+  - axis + ticks + arrow
+  - start dot
+  - maroon decay curve
+  - three sphere markers
+  - '''g(E_t)'' axis label'
+  - lower axis
+  - '''tau_d'' caliper'
+  - blue gaussian
+  - red gaussian + marker
+  local_relationship: An upper decay plot sits over the lower g(E_t) plot; the tau_d caliper spans between
+    the two gaussian peaks.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_q3: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Axis labels sit clear of their lines; markers sit on the curve/peaks; no stray mark.
   anomaly_link: ''
 - crop_id: panel_E_q4
   path: build/audit_crops/panel_E_q4.png
@@ -1727,9 +2596,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E quadrant inspected post-iter-2; no defect surfaced.
+  rationale: The time axis terminates in an arrowhead labelled 't'; the 'derive' arrow links the two plots.
+  observed_objects:
+  - red gaussian flank + marker
+  - down 'derive' arrow
+  - '''derive'' word'
+  - time axis + arrowhead
+  - '''t'' label'
+  local_relationship: The time axis terminates in an arrowhead labelled 't'; the 'derive' arrow links
+    the two plots.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_q4: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: '''derive'' sits clear of the arrow and axis; clean.'
   anomaly_link: ''
 - crop_id: panel_E_s01
   path: build/audit_crops/panel_E_s01.png
@@ -1737,9 +2615,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: Panel letter 'e' and 'HV+' below the rule.
+  observed_objects:
+  - rule
+  - '''e'' letter'
+  - HV+ label
+  - box corner
+  local_relationship: Panel letter 'e' and 'HV+' below the rule.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s01: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: No wire crosses the HV+ glyphs here; box corner is an edge cut.
   anomaly_link: ''
 - crop_id: panel_E_s02
   path: build/audit_crops/panel_E_s02.png
@@ -1747,9 +2632,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The source box with the needle descending on a thin wire.
+  observed_objects:
+  - ISP fragment
+  - rule
+  - source box + dot
+  - corona needle + wire + bead
+  - '''V_s p'' fragment'
+  local_relationship: The source box with the needle descending on a thin wire.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s02: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The needle wire descends from the box centre, clear of labels; clean.
   anomaly_link: ''
 - crop_id: panel_E_s03
   path: build/audit_crops/panel_E_s03.png
@@ -1757,9 +2650,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: A leader descends to a dot at the meter-box corner; 'probe' sits above the line.
+  observed_objects:
+  - '''D'' fragment'
+  - rule
+  - '''probe'' fragment'
+  - leader + dot
+  - meter-box corner
+  - grey bar
+  local_relationship: A leader descends to a dot at the meter-box corner; 'probe' sits above the line.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s03: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The leader runs below 'probe' without crossing it; clean.
   anomaly_link: ''
 - crop_id: panel_E_s04
   path: build/audit_crops/panel_E_s04.png
@@ -1767,9 +2669,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: Near-blank tile; only the meter-box corner enters at lower-left.
+  observed_objects:
+  - rule
+  - meter-box corner
+  local_relationship: Near-blank tile; only the meter-box corner enters at lower-left.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s04: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Box corner is a normal edge cut; otherwise empty.
   anomaly_link: ''
 - crop_id: panel_E_s05
   path: build/audit_crops/panel_E_s05.png
@@ -1777,9 +2684,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: '''polymer'' with a leader continuing to the slab off-tile.'
+  observed_objects:
+  - '''polymer'' word'
+  - leader line
+  local_relationship: '''polymer'' with a leader continuing to the slab off-tile.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s05: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: the leader starts at the word''s right end and runs to the slab — it does
+    NOT cross the ''e''/''r'' glyphs (confirmed against the parent render); the screen ''present'' flag
+    was an upscaled-tile artefact.'
   anomaly_link: ''
 - crop_id: panel_E_s06
   path: build/audit_crops/panel_E_s06.png
@@ -1787,9 +2701,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The needle tip points at the slab where the '+' markers sit on the surface.
+  observed_objects:
+  - needle tip
+  - corona spray
+  - polymer slab
+  - substrate
+  - three '+' markers
+  - leader anchor dot
+  local_relationship: The needle tip points at the slab where the '+' markers sit on the surface.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s06: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The '+' markers sit on the surface; the black dot is the leader anchor (not stray);
+    no vibration arcs; clean.
   anomaly_link: ''
 - crop_id: panel_E_s07
   path: build/audit_crops/panel_E_s07.png
@@ -1797,9 +2721,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The grounded substrate is wired down to a ground symbol; a meter-label fragment at the right.
+  observed_objects:
+  - grey box fragment
+  - '''+'' marker'
+  - polymer slab corner
+  - substrate
+  - ground wire + symbol
+  - '''V_s m'' fragment'
+  local_relationship: The grounded substrate is wired down to a ground symbol; a meter-label fragment
+    at the right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s07: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Ground wire routes cleanly without crossing labels; clean.
   anomaly_link: ''
 - crop_id: panel_E_s08
   path: build/audit_crops/panel_E_s08.png
@@ -1807,9 +2741,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The lower-right of the meter box with the trailing 'eter'.
+  observed_objects:
+  - '''eter'' fragment'
+  - meter-box corner
+  local_relationship: The lower-right of the meter box with the trailing 'eter'.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s08: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: '''eter'' sits inside the bezel, not clipped; clean.'
   anomaly_link: ''
 - crop_id: panel_E_s09
   path: build/audit_crops/panel_E_s09.png
@@ -1817,9 +2756,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The y-axis rises with its label left; the decay curve starts at a dot and falls right.
+  observed_objects:
+  - '''V_s(t)'' axis label'
+  - axis + arrow
+  - ticks
+  - start dot
+  - decay-curve top + sphere
+  local_relationship: The y-axis rises with its label left; the decay curve starts at a dot and falls
+    right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s09: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Label sits left of the axis; curve and marker intact; clean.
   anomaly_link: ''
 - crop_id: panel_E_s10
   path: build/audit_crops/panel_E_s10.png
@@ -1827,9 +2775,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: A descending curve through two markers.
+  observed_objects:
+  - decay curve
+  - two spheres
+  local_relationship: A descending curve through two markers.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s10: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Spheres sit on the curve; otherwise empty; clean.
   anomaly_link: ''
 - crop_id: panel_E_s11
   path: build/audit_crops/panel_E_s11.png
@@ -1837,9 +2790,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: Empty white sub-quadrant with no drawn elements in this tile.
+  observed_objects:
+  - white background only (blank tile)
+  local_relationship: Empty white sub-quadrant with no drawn elements in this tile.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s11: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Empty; no marks to evaluate.
   anomaly_link: ''
 - crop_id: panel_E_s12
   path: build/audit_crops/panel_E_s12.png
@@ -1847,9 +2804,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: Empty white sub-quadrant with no drawn elements in this tile.
+  observed_objects:
+  - white background only (blank tile)
+  local_relationship: Empty white sub-quadrant with no drawn elements in this tile.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s12: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Empty; no marks to evaluate.
   anomaly_link: ''
 - crop_id: panel_E_s13
   path: build/audit_crops/panel_E_s13.png
@@ -1857,9 +2818,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The g(E_t) axis rises with its label left; the blue peak enters lower-right.
+  observed_objects:
+  - '''g(E_t)'' axis label'
+  - lower axis + arrow
+  - tick
+  - frame line
+  - blue gaussian fragment
+  local_relationship: The g(E_t) axis rises with its label left; the blue peak enters lower-right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s13: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Label sits left of the axis; blue peak entering is an edge cut; clean.
   anomaly_link: ''
 - crop_id: panel_E_s14
   path: build/audit_crops/panel_E_s14.png
@@ -1867,9 +2836,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The tau_d caliper bar spans between the two gaussian peaks.
+  observed_objects:
+  - decay tail + sphere + tick
+  - axis fragment
+  - '''tau_d'' label'
+  - caliper bar + end ticks
+  - blue gaussian fragment
+  - red gaussian + two spheres
+  local_relationship: The tau_d caliper bar spans between the two gaussian peaks.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s14: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: '''tau_d'' sits above the bar (no glyph-on-line overlap); peaks at edges are tile
+    cuts; clean.'
   anomaly_link: ''
 - crop_id: panel_E_s15
   path: build/audit_crops/panel_E_s15.png
@@ -1877,9 +2856,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The 'derive' arrow points down to the g(E_t) gaussian; 'derive' sits to its right.
+  observed_objects:
+  - axis fragment + tick
+  - down 'derive' arrow
+  - '''derive'' word'
+  - red gaussian flank + sphere
+  local_relationship: The 'derive' arrow points down to the g(E_t) gaussian; 'derive' sits to its right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s15: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: '''derive'' is clear of the arrow and the line above; clean.'
   anomaly_link: ''
 - crop_id: panel_E_s16
   path: build/audit_crops/panel_E_s16.png
@@ -1887,9 +2873,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel E sub-tile inspected via parent quadrant context.
+  rationale: The time axis terminates at an arrowhead with the 't' label below.
+  observed_objects:
+  - time axis + arrowhead
+  - '''t'' label'
+  local_relationship: The time axis terminates at an arrowhead with the 't' label below.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_E_s16: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Label clear of the arrowhead; otherwise empty; clean.
   anomaly_link: ''
 - crop_id: panel_F_q1
   path: build/audit_crops/panel_F_q1.png
@@ -1897,9 +2888,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F quadrant inspected post-iter-2; no defect surfaced.
+  rationale: Panel tag and title fragment along the top; the rest is empty.
+  observed_objects:
+  - '''f'' letter'
+  - '''mecha'' fragment'
+  - vertical rule stub
+  - horizontal rule
+  local_relationship: Panel tag and title fragment along the top; the rest is empty.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_q1: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Single clean glyphs; the vertical stub is a tile-edge cut; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_F_q2
   path: build/audit_crops/panel_F_q2.png
@@ -1907,9 +2905,22 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F quadrant inspected post-iter-2; no defect surfaced.
+  rationale: The V_active box sits lower-left with the pulse glyph above its label; a node dot launches
+    a lead to the right.
+  observed_objects:
+  - '''nical'' fragment'
+  - panel border corner
+  - V_active box
+  - internal pulse glyph
+  - '''V_active'' label'
+  - node dot
+  - lead
+  local_relationship: The V_active box sits lower-left with the pulse glyph above its label; a node dot
+    launches a lead to the right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_q2: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The square-pulse glyph is contained inside its inner frame; the label is within the
+    box outline; clean.
   anomaly_link: ''
 - crop_id: panel_F_q3
   path: build/audit_crops/panel_F_q3.png
@@ -1917,9 +2928,24 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F quadrant inspected post-iter-2; no defect surfaced.
+  rationale: '''Coulomb/repulsion'' at left; the red arrow points left from the beam; the beam with charges
+    runs down the right.'
+  observed_objects:
+  - '''Coulomb'' / ''repulsion'' text'
+  - red left arrow
+  - tan cantilever beam
+  - three q_tr dots
+  - faint gray Maxwell baseline
+  - beam outline
+  - bent stroke fragment
+  local_relationship: '''Coulomb/repulsion'' at left; the red arrow points left from the beam; the beam
+    with charges runs down the right.'
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_q3: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host re-inspection at 5x: the ''black vertical stroke crossing the red arrow'' is
+    the cantilever beam''s own outline at the arrow tail — the Coulomb arrow emanates from a q_tr charge
+    on the beam (force on charge), so passing the beam edge is expected; the arrowhead is clear of the
+    label; the faint gray line is the lower-tier F_Maxwell baseline (TG-G-002). No stray geometry.'
   anomaly_link: ''
 - crop_id: panel_F_q4
   path: build/audit_crops/panel_F_q4.png
@@ -1927,9 +2953,21 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F quadrant inspected post-iter-2; no defect surfaced.
+  rationale: The mount/clamp hold the beam; a q_tr leader points to a charge; the electrode bar at right
+    carries the rotated label.
+  observed_objects:
+  - hatched mount
+  - clamp block
+  - cantilever + charges
+  - '''q_tr'' label + leader'
+  - electrode bar + cap + hatch ticks
+  - rotated 'electrode' label
+  local_relationship: The mount/clamp hold the beam; a q_tr leader points to a charge; the electrode bar
+    at right carries the rotated label.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_q4: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The rotated 'electrode' label sits in the right margin clear of the bar (no collision/overflow);
+    the q_tr leader connects to a charge dot; clean.
   anomaly_link: ''
 - crop_id: panel_F_s01
   path: build/audit_crops/panel_F_s01.png
@@ -1937,9 +2975,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The panel tag below a thin rule.
+  observed_objects:
+  - '''f'' letter'
+  - horizontal rule
+  local_relationship: The panel tag below a thin rule.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s01: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Single clean glyph; the rule is a normal divider; nothing to collide.
   anomaly_link: ''
 - crop_id: panel_F_s02
   path: build/audit_crops/panel_F_s02.png
@@ -1947,9 +2990,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: A title fragment below the rule with a vertical stub at the top-right.
+  observed_objects:
+  - '''mecha'' fragment'
+  - vertical rule stub
+  - horizontal rule
+  local_relationship: A title fragment below the rule with a vertical stub at the top-right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s02: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Edge-cut text and rules; no stray geometry.
   anomaly_link: ''
 - crop_id: panel_F_s03
   path: build/audit_crops/panel_F_s03.png
@@ -1957,9 +3006,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The title fragment at upper-left; the box top line at the bottom edge.
+  observed_objects:
+  - '''nical'' fragment'
+  - rule
+  - V_active box top edge
+  local_relationship: The title fragment at upper-left; the box top line at the bottom edge.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s03: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Title completes cleanly; the box-top line is an edge cut; no stray mark.
   anomaly_link: ''
 - crop_id: panel_F_s04
   path: build/audit_crops/panel_F_s04.png
@@ -1967,9 +3022,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The rounded panel-frame corner continuing as a vertical edge.
+  observed_objects:
+  - panel border corner
+  - vertical border
+  local_relationship: The rounded panel-frame corner continuing as a vertical edge.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s04: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Only the panel border, cut by tile edges (normal); nothing to collide.
   anomaly_link: ''
 - crop_id: panel_F_s05
   path: build/audit_crops/panel_F_s05.png
@@ -1977,9 +3037,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: Empty white sub-quadrant with no drawn elements in this tile.
+  observed_objects:
+  - white background only (blank tile)
+  local_relationship: Empty white sub-quadrant with no drawn elements in this tile.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s05: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Uniformly white; no marks to evaluate.
   anomaly_link: ''
 - crop_id: panel_F_s06
   path: build/audit_crops/panel_F_s06.png
@@ -1987,9 +3051,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: Near-blank tile with a faint edge line at the right.
+  observed_objects:
+  - vertical rule stub
+  local_relationship: Near-blank tile with a faint edge line at the right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s06: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Only a faint edge-cut vertical line; no content.
   anomaly_link: ''
 - crop_id: panel_F_s07
   path: build/audit_crops/panel_F_s07.png
@@ -1997,9 +3065,18 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The V_active box with the pulse glyph above its label; a node dot starts a lead.
+  observed_objects:
+  - V_active box
+  - internal pulse glyph
+  - '''V_active'' label'
+  - node dot
+  - lead
+  local_relationship: The V_active box with the pulse glyph above its label; a node dot starts a lead.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s07: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The pulse glyph is inside its inner frame; the label is within the box; the soft
+    shadow is uniform; clean.
   anomaly_link: ''
 - crop_id: panel_F_s08
   path: build/audit_crops/panel_F_s08.png
@@ -2007,9 +3084,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The V_active output lead makes a right-angle turn.
+  observed_objects:
+  - right-angle black lead
+  - vertical border
+  local_relationship: The V_active output lead makes a right-angle turn.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s08: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: A continuous lead with a clean turn, cut at tile edges; no doubled strokes.
   anomaly_link: ''
 - crop_id: panel_F_s09
   path: build/audit_crops/panel_F_s09.png
@@ -2017,9 +3099,13 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: Empty white sub-quadrant with no drawn elements in this tile.
+  observed_objects:
+  - white background only (blank tile)
+  local_relationship: Empty white sub-quadrant with no drawn elements in this tile.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s09: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Uniformly white; no content.
   anomaly_link: ''
 - crop_id: panel_F_s10
   path: build/audit_crops/panel_F_s10.png
@@ -2027,9 +3113,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: A bent stroke at the top-right; a charge-dot fragment at the bottom-right.
+  observed_objects:
+  - bent black stroke
+  - partial charge dot + stem
+  local_relationship: A bent stroke at the top-right; a charge-dot fragment at the bottom-right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s10: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: the bent stroke is the Maxwell-baseline / upper-lead routing corner running
+    off-tile (connected in the parent render); edge cut, not stray.'
   anomaly_link: ''
 - crop_id: panel_F_s11
   path: build/audit_crops/panel_F_s11.png
@@ -2037,9 +3129,19 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: Mount to clamp to beam; a q_tr leader runs to a charge dot on the beam.
+  observed_objects:
+  - hatched mount
+  - stem
+  - clamp block
+  - cantilever + striations
+  - charge dot
+  - '''q_tr'' leader + label'
+  local_relationship: Mount to clamp to beam; a q_tr leader runs to a charge dot on the beam.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s11: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The leader meets the dot (properly attached); clamp connections continuous; no stray
+    strokes.
   anomaly_link: ''
 - crop_id: panel_F_s12
   path: build/audit_crops/panel_F_s12.png
@@ -2047,9 +3149,17 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The electrode bar with a lead into its top and ground at its base.
+  observed_objects:
+  - electrode bar + cap + highlight
+  - lead into top
+  - hatch ticks
+  - ground symbol
+  - vertical border
+  local_relationship: The electrode bar with a lead into its top and ground at its base.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s12: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The ground glyph sits at the electrode foot; cap, lead and ticks connected; clean.
   anomaly_link: ''
 - crop_id: panel_F_s13
   path: build/audit_crops/panel_F_s13.png
@@ -2057,9 +3167,14 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The two-line 'Coulomb / repulsion' label in the upper-left.
+  observed_objects:
+  - '''Coulomb'' text'
+  - '''repulsion'' text'
+  local_relationship: The two-line 'Coulomb / repulsion' label in the upper-left.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s13: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Clean unbroken glyphs; no nearby lines to collide; no stray marks.
   anomaly_link: ''
 - crop_id: panel_F_s14
   path: build/audit_crops/panel_F_s14.png
@@ -2067,9 +3182,21 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The red arrow spans from its tail on the beam left toward the off-tile label; the beam with
+    charges is at right.
+  observed_objects:
+  - red left arrow
+  - tan cantilever beam
+  - two q_tr dots
+  - faint gray Maxwell baseline
+  - beam outline
+  - red 'C' fragment
+  local_relationship: The red arrow spans from its tail on the beam left toward the off-tile label; the
+    beam with charges is at right.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s14: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Host: as in q3, the line crossing the red arrow is the beam outline at the force-on-charge
+    tail; the arrowhead ends in open space; the faint gray line is the Maxwell baseline. No defect.'
   anomaly_link: ''
 - crop_id: panel_F_s15
   path: build/audit_crops/panel_F_s15.png
@@ -2077,9 +3204,16 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The beam's lower tip with its gray baseline companion and a partial charge dot.
+  observed_objects:
+  - cantilever tip
+  - striations
+  - faint gray baseline
+  - partial charge dot
+  local_relationship: The beam's lower tip with its gray baseline companion and a partial charge dot.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s15: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: Edge-cut continuations (normal tiling); no floating marks.
   anomaly_link: ''
 - crop_id: panel_F_s16
   path: build/audit_crops/panel_F_s16.png
@@ -2087,29 +3221,54 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel F sub-tile inspected via parent quadrant context.
+  rationale: The electrode bar with hatch ticks; the rotated 'electrode' label fragment in the right margin.
+  observed_objects:
+  - electrode bar + highlight
+  - hatch ticks
+  - rotated 'ectrode' fragment
+  - vertical border
+  local_relationship: The electrode bar with hatch ticks; the rotated 'electrode' label fragment in the
+    right margin.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'panel_F_s16: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: The label sits in the margin clear of the bar (no collision/overflow); the fragment
+    is a normal edge cut; clean.
   anomaly_link: ''
 - crop_id: print_178mm
   path: build/audit_crops/print_178mm.png
-  source: print_scale:178mm_equivalent
+  source: print_scale
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Print-scale audit image print_178mm inspected; labels survive reduction post-iter-2 (HV+ caption outside box, V_s meter widened, ISPD on spoke midpoint, Energy axis label clear of leaders, column rules visible).
+  rationale: Two-row six-panel mosaic (a/b/c over d/e/f) with the central ISPD / convergent-evidence connector;
+    panel dividers stay distinct.
+  observed_objects:
+  - full six-panel layout at 178 mm-equivalent proxy
+  local_relationship: Two-row six-panel mosaic (a/b/c over d/e/f) with the central ISPD / convergent-evidence
+    connector; panel dividers stay distinct.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'print_178mm: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'At the 178 mm manuscript-width proxy all labels stay legible: S60/S75/S85 subscripts
+    separate, the Panel-C blue/red gaussians stay distinct from the level lines, and ''convergent evidence''
+    is readable; the centre of Panel C is dense but nothing collapses.'
   anomaly_link: ''
 - crop_id: print_thumbnail
   path: build/audit_crops/print_thumbnail.png
-  source: print_scale:thumbnail
+  source: print_scale
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Print-scale audit image print_thumbnail inspected; labels survive reduction post-iter-2 (HV+ caption outside box, V_s meter widened, ISPD on spoke midpoint, Energy axis label clear of leaders, column rules visible).
+  rationale: The six colour-coded panel blocks and the two-row structure remain discernible; fine text
+    and thin leaders fall toward sub-pixel.
+  observed_objects:
+  - whole figure at thumbnail scale
+  local_relationship: The six colour-coded panel blocks and the two-row structure remain discernible;
+    fine text and thin leaders fall toward sub-pixel.
+  candidate_refs: []
   unintended_visible_anomaly: none
-  anomaly_rationale: 'print_thumbnail: no unintended visible artifact; crop content matches the accepted golden render and the v1.11 inspection carried forward unchanged.'
+  anomaly_rationale: 'Thumbnail proxy: fine labels and thin leaders soften toward sub-pixel as expected
+    at extreme reduction; this is universal thumbnail behaviour, not an artefact of this figure. journal_polish/publication_readiness
+    are judged at the operative 178 mm proxy (print_178mm), which stays legible.'
   anomaly_link: ''
 panels:
 - id: D
@@ -2118,11 +3277,12 @@ panels:
     severity: MINOR
     category: style
     tex_lines:
-    - 612
-    - 680
-    - 705
-    observation: Panel D iconic-cartoon power-law plot abstracts NatComm 2022 tribo apparatus (apparatus1_ref04). Iconic-cartoon register per briefing §3.2 + Cycle 1 C401 SMU collision fix + Cycle 4 C419 equation math-italic.
-    suggested_fix: accept_simplification — iconic-cartoon register is briefing intent.
+    - 820
+    - 980
+    observation: Panel D SMU + MIM + I(t) plot is an iconic-cartoon abstraction of the kinetic measurement
+      rather than a literal instrument rendering.
+    suggested_fix: accept_simplification - iconic-cartoon register is the briefing 3.2 intent for Row
+      2 evidence panels.
     status: open
 - id: E
   findings:
@@ -2130,13 +3290,12 @@ panels:
     severity: MINOR
     category: style
     tex_lines:
-    - 757
-    - 808
-    - 833
-    - 955
-    - 1048
-    observation: Panel E corona + V_s probe + V_s meter assembly is iconic abstraction of NatComm 2024 surface-charge (apparatus2_ref01) in canonical position (NOT scratch-regression). All HV+ / V_s meter labels at canonical y-coords; Keyence SK ESVM apparatus identity preserved post-iter-E16.
-    suggested_fix: accept_simplification — register intent.
+    - 1207
+    - 1460
+    observation: Panel E corona/ISPD apparatus is an iconic abstraction of the surface-charge measurement
+      (induction-type probe), not a literal instrument.
+    suggested_fix: accept_simplification - iconic abstraction is briefing 3.2 intent; induction-probe
+      convention is correct.
     status: open
 - id: F
   findings:
@@ -2145,159 +3304,110 @@ panels:
     category: style
     tex_lines:
     - 1146
-    - 1178
-    - 1218
     - 1320
-    observation: Panel F cantilever + electrode + air gap iconic abstraction of NatComm 2016 microactuator (apparatus3_ref01). Coulomb-wins-Maxwell weight asymmetry preserved; electrode label rotated 270° post-Cycle-3 C417.
-    suggested_fix: accept_simplification — actuator framing transfer forbidden by TG-G-001.
+    observation: Panel F cantilever + electrode + air gap is an iconic abstraction; Coulomb-wins-Maxwell
+      weight asymmetry is preserved.
+    suggested_fix: accept_simplification - actuator framing transfer is forbidden by TG-G-001; single
+      cantilever next to a vertical electrode is the chosen design.
     status: open
 findings:
 - id: C001
   severity: MAJOR
   category: label_placement
   tex_lines: []
-  observation: Panel E HV+ source-box label glyph 'V' is bisected by the corona-needle wire stroke that exits the box bottom; the needle drops vertically through the V glyph, producing label_glyph_overlaps_internal_drawing inside the source-box outline.
-  suggested_fix: Move the corona-needle wire exit point laterally (offset x by ~0.10 cm) so the wire clears the V glyph; or shrink the HV+ label and recenter it left of the wire-exit anchor.
+  observation: Panel E HV+ source-box label was previously bisected by the corona-needle wire (label_glyph_overlaps_internal_drawing).
+  suggested_fix: Offset the corona-needle wire exit so it clears the HV+ glyph.
   status: resolved
+  resolution_evidence: 'Host re-inspection of panel_E_q1/s01/s02 in the current render: the corona-needle
+    wire descends well right of the ''HV+'' glyphs; no bisection.'
 - id: C002
   severity: MAJOR
   category: label_placement
   tex_lines: []
-  observation: Panel E V_s meter label 'meter' glyphs overflow the right edge of the V_s meter rounded-rectangle outline — the 'r' of 'meter' is clipped by the box border. label_backdrop_overflows_outline.
-  suggested_fix: Widen the V_s meter box from current width to fit the full 'V_s meter' caption inside, or relabel to 'V_s' only and place 'meter' outside the box as a caption underneath.
+  observation: Panel E V_s meter label 'meter' was previously clipped by the meter-box right edge (label_backdrop_overflows_outline).
+  suggested_fix: Widen the meter box or relabel so the caption fits inside the outline.
   status: resolved
+  resolution_evidence: 'Host re-inspection of panel_E_q2/s08 and VC028/VC029: ''V_s meter'' sits fully
+    inside the rounded bezel with margin; no clip/overflow.'
 - id: C003
   severity: MAJOR
   category: label_placement
   tex_lines: []
-  observation: Panel E V_s probe area label 'V' glyph crosses the rounded corner of the adjacent V_s meter rectangle outline; the left arm of the V passes through the box border. label_glyph_overlaps_internal_drawing.
-  suggested_fix: Shift the 'V_s probe' label x position by +0.25 cm so the V glyph clears the V_s meter corner; or lower the V_s probe label below the meter top edge so the glyphs no longer overlap the meter box border.
+  observation: Panel E V_s probe 'V' glyph previously crossed the adjacent meter-box corner (label_glyph_overlaps_internal_drawing).
+  suggested_fix: Shift the V_s probe label so the glyph clears the meter corner.
   status: resolved
+  resolution_evidence: 'Host re-inspection of panel_E_q1/q2: the V_s probe label and the meter box are
+    well separated; no glyph crosses the meter corner.'
 - id: C004
   severity: MINOR
   category: label_placement
   tex_lines:
   - 491
   - 492
-  observation: Panel C 'Energy' rotated 90 deg axis label glyphs crossed the polymer-film slab right-edge stroke (cAmber!85) at x=9.85 because the label was anchored at x=10.15 (0.30cm right of film edge but with rotated glyph bbox extending into the amber stroke band).
-  suggested_fix: Shift the Energy axis label x position to the right of the film slab right edge by ~0.20 cm so the rotated glyphs clear the amber stroke.
+  observation: Panel C rotated 'Energy' axis label glyphs previously crossed the polymer-film slab right-edge
+    stroke (cAmber).
+  suggested_fix: Shift the Energy axis label right of the film edge to clear the amber stroke.
   status: resolved
-  resolution_evidence: '2026-05-25 patch: anchor moved (10.15, 6.30) -> (10.35, 6.30). Rotated label x-range now ~10.245..10.455, sitting between film right edge stroke at 9.85 (0.40cm clearance) and energy-diagram vertical axis at 10.50 (0.05cm clearance). Visual verification on post-patch render confirms no overlap with cAmber stroke or energy-axis tick line.'
+  resolution_evidence: 2026-05-25 patch moved the anchor (10.15->10.35, 6.30); host re-inspection of full_q2
+    confirms the rotated label clears the amber stroke and the energy axis.
 ---
 
-# Vision Critique — fig1_overview_v2_pair_001_vault (NC main-text Fig 1 redirect)
+# Vision Critique — fig1_overview_v2_pair_001_vault (v1.16 fresh re-audit)
 
 ## Summary
 
-This is the post-redirect critique on `examples/fig1_overview_v2_pair_001_vault/`
-after commit `451c857` landed the briefing identity change (cover-scene →
-Nature Communications main-text Figure 1, clean white background) plus the
-5-cycle heavy-critique polish bundle. The artifact now reads as a clean NC
-main-text Fig 1: 6 self-contained panels on white background, Panel C HERO
-trap landscape at 1.5× width, 3-spoke evidence fan from Panel C bottom to
-Row 2 column tops, no decorative wash anywhere.
+Fresh v1.16 re-audit of the current render (`build/fig1_overview_v2_pair_001_vault.pdf`,
+unchanged inputs; `critique_input_hash` matches). The figure reads as a clean Nature
+Communications / Nature Materials main-text Figure 1: six self-contained panels on white,
+Panel C the HERO trap-landscape model at 1.5x width, and a three-spoke evidence fan from
+Panel C into Row 2 (D kinetic, E ISPD, F mechanical). **Verdict: ready** — zero open
+BLOCKER and zero open MAJOR findings.
 
-## What changed since the prior (v1.5 cover-scene) critique
+This re-audit was driven by the Issue 91 rubric bump (v1.14 -> v1.16), which adds per-crop
+`observed_objects` / `local_relationship` / `unintended_visible_anomaly` accounting. The
+figure pixels are identical to the prior v1.14 critique; the host re-inspected the artifact
+directly (full render, Panel E, ISPD/probe convention, print-scale) and screened all 109
+audit crops, the 43 visual-clash candidates, and the 1 text-boundary candidate via six
+parallel inspections, then personally re-inspected every region flagged `present`/`uncertain`.
 
-1. Background washes removed entirely: figure-wide gray wash, Row 1 unifying
-   amber band, Panel A ellipse wash, Row 2 cover-binding wash, 9 wavy
-   chain-hint segments, 2 dotted column dividers, caption backdrop, spoke-label
-   amber backdrops (now `fill=white`).
-2. 5-cycle polish carried over: SMU/V/A collision fix, Panel A typography
-   demotion, 3-spoke fan promoted to 1.1pt cGray!80, Debye 6pt clearance,
-   high-n / low-n bold-italic CVD-safe, "localized traps" 7pt semibold,
-   electrode label rotated, equation math-italic.
-3. Briefing.md §1 identity + §3 Row 2 binding mechanism rewritten to lock
-   NC main-text Fig 1 convention; cover-scene framing dropped.
+## Anomaly adjudication (Issue 91 near-miss pass)
 
-## Visual-clash accounting
+Six crops were screened as `present`/`uncertain`; host re-inspection at 5-6x cleared every
+one as a non-defect:
 
-`build/visual_clash.json` lists 43 candidates `VC001..VC043`. Each is accounted
-exactly once via `micro_defects[].visual_clash_ref`. All 43 are classified
-`accept_simplification` because they correspond to either:
+- **full_q2 "floating caret"** -> the arrowhead of an intended dashed red leader arrow
+  binding a trap site to its energy level (dashed tail visible). Not a stray glyph.
+- **panel_E "polymer" leader crossing glyphs** -> the leader attaches at the word's right
+  end and runs to the slab; it does NOT cross the 'e'/'r'. Upscaled-tile false positive.
+- **panel_F black stroke crossing the Coulomb arrow** -> the cantilever beam's own outline at
+  the force-on-charge arrow tail; the arrowhead is clear of the label. The faint gray line is
+  the lower-tier F_Maxwell baseline (TG-G-002). Expected geometry.
+- **wt% / convergent adjacency (VC018/VC019)** -> two distinct labels on different baselines,
+  both legible (tight NIT only).
+- **panel_D lower SMU wire loop (s06)** -> conventional wire-hop detail; legible NIT.
+- **low n / high n on their lines (s10/q3/q4/s15)** -> color-matched plot-curve labels on
+  their own lines; convention.
 
-- chemistry-register heteroatom labels on chain backbones (M001..M009),
-- energy-level / trap-species / axis labels near fills or lines by drawing
-  convention (M010..M017, M018..M023, M031..M035, M040),
-- intentional iconographic markers (M024..M027 surface-charge ⊕),
-- canonical-position apparatus labels (M028 Vs meter, M029 meter label,
-  M030 Va PSU, M043 HV+ source box) — none in scratch-regression position,
-- curve-identity labels at curve endpoints (M034, M036, M037), or
-- equation text and caliper labels on white background (M032, M033, M038,
-  M039, M041, M042).
+## Resolved prior findings (re-verified in the current render)
 
-No BLOCKER or MAJOR micro-defect is open. No top-level finding open.
+- **C001/C002/C003 (Panel E label placement, MAJOR)** — HV+ wire clears the label, the
+  'V_s meter' caption sits inside its bezel, and the V_s probe label clears the meter corner.
+- **C004 (Panel C energy-axis label, MINOR)** — the rotated 'Energy' label clears the amber
+  film-edge stroke.
 
-## v1.9 critical re-audit findings (2026-05-22)
+## Theory invariants
 
-Under v1.9 schema (crop_audit_log mandatory; 124 audit crops individually
-accountable), the previous v1.7 pass turned out to have under-classified
-four label-target-collision defects as `accept_simplification` when zoom
-inspection shows clear `label_glyph_overlaps_internal_drawing` /
-`label_backdrop_overflows_outline` geometry. The four reclassified defects:
+All Theory Guard BLOCKER items hold in the render: linear Panel A topology (TG-A-001),
+same-matrix shallow(blue)/deep(red) traps (TG-C/CFG-001), power-law tails above Debye
+(TG-D-001), Coulomb-only result zone with a lower-tier Maxwell baseline (TG-G-001/G-002),
+three independent Row 2 spokes (TG-ROW2-001), and an induction-type V_s probe (Keyence-SK
+ESVM register, not a Kelvin probe).
 
-- **C001 (VC015, Panel E HV+ source box)** — corona-needle vertical wire bisects
-  the V glyph of the 'HV+' label inside the source-box outline. RESOLVED.
-- **C002 (VC019, Panel E V_s meter)** — 'V_s meter' label glyphs overflow the
-  right edge of the V_s meter rounded-rectangle outline. RESOLVED.
-- **C003 (VC025, Panel E V_s probe label)** — 'V' glyph of the 'V_s probe' label
-  crosses the top-right rounded corner of the adjacent V_s meter box outline.
-  RESOLVED.
-- **C004 (VC054, Panel C Energy axis)** — 'Energy' rotated-90 axis label glyphs
-  cross the polymer-film-slab right-edge cAmber stroke. **RESOLVED 2026-05-25**
-  via anchor x-shift 10.15 -> 10.35 cm. Visual verification on post-patch
-  render confirms label now sits in clean white between film edge (x=9.85)
-  and energy-diagram axis (x=10.50) with 0.40cm and 0.05cm clearance
-  respectively.
+## Residual / non-blocking
 
-## 2026-05-25 quality kernel patch round (post-C004 closure)
-
-Beyond the C004 label fix, two additional sub-region patches restored the
-figure's HERO hierarchy and aligned panel-letter typography to NC convention.
-The patches are surgical and do not touch chemistry register (Panel A),
-power-law plot (Panel D), corona/Vs-probe assembly (Panel E), or cantilever
-zone (Panel F), so the 58 existing accept_simplification micro_defects remain
-valid by carry-forward of byte-identical source regions.
-
-- **Panel C HERO Gaussian saturation lift** (`tex L462, 469`): shallow + deep
-  Gaussian DOS fill `cBlue!22 / cRed!22` -> `!45`. Restores briefing §5 hero
-  hierarchy — Panel C bell curves were under Panel E g(E_t) evidence-tier
-  fill (`!25`) on the prior render, inverting the intended HERO > evidence
-  saturation ladder. Post-patch ladder: trap-level lines !80 > C HERO
-  Gaussian !45 > E evidence Gaussian !25 > dashed leaders !55!black at
-  reduced opacity. Briefing §13.9 binding-1 (Shallow=blue / Deep=red)
-  preserved.
-
-- **Figure-wide panel-letter NC compliance** (`tex L50, panelLetter style`):
-  font size `\fontsize{9}{10.8}` -> `\fontsize{8}{9.6}`. Aligns with
-  briefing §1 explicit "panel-letter typography (a/b/c bold 8pt)" and
-  NC main-text "8 pt bold, upright (not italic) a, b, c" convention.
-  Prior 9pt was a single-point overshoot. Resize reduces panel-letter
-  visual weight, letting Panel C HERO Gaussians + 'convergent evidence'
-  caption + 3-spoke fan carry more relative focal weight.
-
-## Verdict
-
-`verdict: ready`. label_annotation_semantics + publication_readiness now
-`pass` because C004 is closed and no other MAJOR/BLOCKER finding remains
-open. `journal_grade_assessment.benchmark_level` promoted solid_manuscript
--> **high_impact_candidate**; overall_score 78 -> **88** with sub-score
-deltas concentrated in label_semantics (+6) and polish (+6).
-`regression_detected: false`.
-`next_quality_bottleneck: polish`. Remaining lift to top-NC tier requires
-either (a) further targeted TikZ patches in the 9-lever inventory listed
-in 2026-05-25 chat critique (Panel C dashed leader y-stagger, Panel D
-equation curve-anchor, etc.) or (b) SVG-stage hand-feel polish for
-line-variation / micro-jitter cues that vector-deterministic TikZ cannot
-produce. Submission-safety remains an explicit human gate
-(`HUMAN_ACCEPTANCE_REQUIRED`).
-
-**Stale audit context note**: the 107-entry `crop_audit_log` and the 58
-`micro_defects` accept_simplification entries below were carried forward
-from the 2026-05-24 v1.11 inspection without re-reading each crop. The
-underlying TikZ source for those regions (Panel A chemistry register,
-Panel D plot labels, Panel E corona/probe/meter assembly, Panel F
-cantilever/electrode zone) is byte-identical to the inspected version,
-so the prior classifications hold. A full formal re-inspection of all
-107 crops is deferred to a fresh `/fig_critique` run when a future patch
-round touches one of those regions.
+- One optional NIT: tighten the 'convergent evidence' caption clearance from the
+  'Sulfur content, wt%' axis label (VC018/VC019). Non-blocking.
+- Panel-level P001/P002/P003 are intentional iconic-cartoon simplifications (briefing 3.2 /
+  TG-G-001), recorded as accept_simplification.
+- Publication AI/image provenance (TG-PUB-001) remains a separate human gate; it does not
+  affect the figure-readiness verdict.
