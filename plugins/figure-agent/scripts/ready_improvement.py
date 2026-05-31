@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 SCHEMA = "figure-agent.ready-improvement-summary.v1"
+MARGINAL_RETURN_SCHEMA = "figure-agent.marginal-return-summary.v1"
 
 ACTION_COMPLETE = "complete"
 ACTION_RELEASE_BLOCKED = "release_blocked"
@@ -54,6 +55,79 @@ def _summary_base(*, state: str, safe_to_ship: bool) -> dict[str, Any]:
         "auto_patch_allowed": False,
         "candidate_count": 0,
         "candidates": [],
+    }
+
+
+def _marginal_return_summary(
+    *,
+    state: str,
+    candidates: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if state == "not_ready":
+        return {
+            "schema": MARGINAL_RETURN_SCHEMA,
+            "state": "not_ready",
+            "optional_candidate_count": 0,
+            "highest_expected_gain": "none",
+            "highest_regression_risk": "low",
+            "reason": "Blocking workflow evidence remains; optional polish is not the next step.",
+            "reopen_condition": "Resolve the blocking driver or loop boundary first.",
+        }
+    if not candidates:
+        return {
+            "schema": MARGINAL_RETURN_SCHEMA,
+            "state": "stop_recommended",
+            "optional_candidate_count": 0,
+            "highest_expected_gain": "none",
+            "highest_regression_risk": "low",
+            "reason": "No structured optional improvement candidates remain.",
+            "reopen_condition": (
+                "Reopen polish only if fresh critique, external review, or human art "
+                "direction identifies a concrete new target."
+            ),
+        }
+
+    gain_order = {"none": 0, "low": 1, "medium": 2, "high": 3}
+    risk_order = {"low": 0, "medium": 1, "high": 2, "needs_human": 3}
+    gains = [
+        value
+        if (value := str(candidate.get("expected_gain", "low"))) in gain_order
+        else "low"
+        for candidate in candidates
+    ]
+    risks = [
+        value if (value := str(candidate.get("risk", "low"))) in risk_order else "medium"
+        for candidate in candidates
+    ]
+    highest_gain = max(
+        gains,
+        key=lambda value: gain_order.get(value, 0),
+    )
+    highest_risk = max(
+        risks,
+        key=lambda value: risk_order.get(value, 0),
+    )
+    if highest_risk == "needs_human":
+        marginal_state = "needs_human_art_direction"
+        reason = "At least one optional candidate is a subjective art-direction decision."
+        reopen_condition = "Continue only after a human selects a concrete art-direction target."
+    elif gain_order.get(highest_gain, 0) >= gain_order["medium"]:
+        marginal_state = "continue"
+        reason = "A structured optional candidate still has medium expected gain."
+        reopen_condition = "Continue with one bounded candidate, then re-run the loop."
+    else:
+        marginal_state = "stop_recommended"
+        reason = "Only low-gain optional polish candidates remain."
+        reopen_condition = "Continue only if the operator explicitly wants a low-risk polish pass."
+
+    return {
+        "schema": MARGINAL_RETURN_SCHEMA,
+        "state": marginal_state,
+        "optional_candidate_count": len(candidates),
+        "highest_expected_gain": highest_gain,
+        "highest_regression_risk": highest_risk,
+        "reason": reason,
+        "reopen_condition": reopen_condition,
     }
 
 
@@ -405,7 +479,12 @@ def build_ready_improvement_summary(
         loop_checkpoint=loop_checkpoint,
     )
     if not safe_to_ship or not _loop_checkpoint_is_ready(loop_checkpoint):
-        return _summary_base(state="not_ready", safe_to_ship=False)
+        summary = _summary_base(state="not_ready", safe_to_ship=False)
+        summary["marginal_return_summary"] = _marginal_return_summary(
+            state="not_ready",
+            candidates=[],
+        )
+        return summary
 
     candidates = []
     candidates.extend(_editorial_candidates(fixture, loop_checkpoint))
@@ -418,4 +497,8 @@ def build_ready_improvement_summary(
     summary = _summary_base(state=state, safe_to_ship=True)
     summary["candidate_count"] = len(candidates)
     summary["candidates"] = candidates
+    summary["marginal_return_summary"] = _marginal_return_summary(
+        state=state,
+        candidates=candidates,
+    )
     return summary

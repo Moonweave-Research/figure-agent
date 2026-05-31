@@ -1486,6 +1486,8 @@ zoom/reference review.
 
 {brief_sections.top_tier_journal_audit()}
 
+{brief_sections.aesthetic_antipattern_checklist()}
+
 {brief_sections.editorial_art_direction_audit(require_route_detail=uses_route_detail_contract)}
 
 {brief_sections.journal_grade_assessment()}

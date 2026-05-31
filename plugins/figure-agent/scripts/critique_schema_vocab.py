@@ -227,6 +227,21 @@ AESTHETIC_GATE_SLOTS = (
     "print_scale_finish",
     "paper_wide_coherence",
 )
+AESTHETIC_ANTIPATTERN_IDS = (
+    "childish_shape_language",
+    "poster_gradient_decoration",
+    "generic_template_look",
+    "dead_flat_vector_finish",
+    "uniform_line_weight_monotony",
+    "weak_hero_anchor",
+    "cramped_or_dead_whitespace",
+    "low_authority_typography",
+    "annotation_noise_competes_with_science",
+    "panel_style_mismatch",
+    "reference_overcopying",
+    "reference_underlearning",
+    "decorative_detail_without_explanatory_value",
+)
 AESTHETIC_GATE_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
 AESTHETIC_GATE_ROUTES = frozenset(
     {

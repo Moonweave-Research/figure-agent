@@ -479,6 +479,27 @@ def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
     assert "### 10. Aesthetic Coherence" in brief
 
 
+def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+
+    brief = generate_for(example_dir)
+
+    assert "## Aesthetic Anti-Pattern Checklist (host LLM MUST inspect)" in brief
+    assert "childish_shape_language" in brief
+    assert "poster_gradient_decoration" in brief
+    assert "generic_template_look" in brief
+    assert "dead_flat_vector_finish" in brief
+    assert "uniform_line_weight_monotony" in brief
+    assert "weak_hero_anchor" in brief
+    assert "cramped_or_dead_whitespace" in brief
+    assert "low_authority_typography" in brief
+    assert "annotation_noise_competes_with_science" in brief
+    assert "panel_style_mismatch" in brief
+    assert "reference_overcopying" in brief
+    assert "reference_underlearning" in brief
+    assert "decorative_detail_without_explanatory_value" in brief
+
+
 def test_critique_brief_includes_editorial_art_direction_audit(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

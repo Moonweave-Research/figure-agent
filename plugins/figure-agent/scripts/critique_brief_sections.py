@@ -219,6 +219,80 @@ typographic hierarchy.
 """
 
 
+_AESTHETIC_ANTIPATTERN_PROMPTS = {
+    "childish_shape_language": (
+        "Do shapes, rounded boxes, oversized icons, or cartoon cues make the "
+        "figure feel juvenile rather than editorial?"
+    ),
+    "poster_gradient_decoration": (
+        "Are gradients, shadows, glows, or decorative effects acting like "
+        "poster decoration instead of explanatory structure?"
+    ),
+    "generic_template_look": (
+        "Does the figure look like a reusable schematic template rather than "
+        "a figure tailored to this scientific claim?"
+    ),
+    "dead_flat_vector_finish": (
+        "Where depth or material distinction matters, does the rendering feel "
+        "dead-flat or unfinished?"
+    ),
+    "uniform_line_weight_monotony": (
+        "Are all strokes too similar, making hierarchy and material importance "
+        "hard to read?"
+    ),
+    "weak_hero_anchor": (
+        "Is there no clear visual anchor or primary panel element for first "
+        "glance comprehension?"
+    ),
+    "cramped_or_dead_whitespace": (
+        "Does whitespace feel accidental, cramped, or empty rather than "
+        "intentionally balanced?"
+    ),
+    "low_authority_typography": (
+        "Do type size, weight, spacing, or alignment make the figure feel less "
+        "publication-grade?"
+    ),
+    "annotation_noise_competes_with_science": (
+        "Do labels, arrows, legends, or notes compete with the scientific "
+        "payload instead of reducing interpretation cost?"
+    ),
+    "panel_style_mismatch": (
+        "Does any panel visibly belong to a different visual system, maturity "
+        "level, or abstraction level?"
+    ),
+    "reference_overcopying": (
+        "Did the figure copy visual structure from a reference that is not "
+        "semantically appropriate for this figure?"
+    ),
+    "reference_underlearning": (
+        "Did the figure ignore useful editorial lessons from the provided "
+        "reference class, such as restraint, hierarchy, density, or finish?"
+    ),
+    "decorative_detail_without_explanatory_value": (
+        "Is any texture, pattern, icon detail, or embellishment visible but not "
+        "helping the reader understand the science?"
+    ),
+}
+
+
+def aesthetic_antipattern_checklist() -> str:
+    lines = [
+        "## Aesthetic Anti-Pattern Checklist (host LLM MUST inspect)",
+        "",
+        "Inspect every closed-set anti-pattern below before finalizing "
+        "`top_tier_audit`, `editorial_art_direction`, `quality_axes`, "
+        "and any optional `aesthetic_gate_audit`. Do not answer with generic "
+        "taste prose such as \"looks polished\". For each present or uncertain "
+        "anti-pattern, route the issue to one of: TikZ micro-polish, SVG polish "
+        "only when the existing SVG route is ready, semantic backport, human "
+        "art direction, or explicit accept_simplification with rationale.",
+        "",
+    ]
+    for anti_pattern_id in vocab.AESTHETIC_ANTIPATTERN_IDS:
+        lines.append(f"- `{anti_pattern_id}`: {_AESTHETIC_ANTIPATTERN_PROMPTS[anti_pattern_id]}")
+    return "\n".join(lines) + "\n"
+
+
 def editorial_art_direction_audit(*, require_route_detail: bool = False) -> str:
     route_detail = ""
     if require_route_detail:

@@ -46,6 +46,18 @@ def test_ready_checkpoint_without_optional_evidence_has_no_candidates() -> None:
     assert summary["auto_patch_allowed"] is False
     assert summary["candidate_count"] == 0
     assert summary["candidates"] == []
+    assert summary["marginal_return_summary"] == {
+        "schema": "figure-agent.marginal-return-summary.v1",
+        "state": "stop_recommended",
+        "optional_candidate_count": 0,
+        "highest_expected_gain": "none",
+        "highest_regression_risk": "low",
+        "reason": "No structured optional improvement candidates remain.",
+        "reopen_condition": (
+            "Reopen polish only if fresh critique, external review, or human art "
+            "direction identifies a concrete new target."
+        ),
+    }
 
 
 def test_continue_tikz_route_detail_becomes_optional_candidate() -> None:
@@ -75,6 +87,8 @@ def test_continue_tikz_route_detail_becomes_optional_candidate() -> None:
     assert candidate["required_actor"] == "workflow_agent"
     assert candidate["allowed_scope"] == ["examples/demo/demo.tex"]
     assert "tighten Panel C" in candidate["reason"]
+    assert summary["marginal_return_summary"]["state"] == "stop_recommended"
+    assert summary["marginal_return_summary"]["highest_expected_gain"] == "low"
 
 
 def test_weak_top_tier_slot_becomes_optional_candidate_without_blocker() -> None:
@@ -96,6 +110,8 @@ def test_weak_top_tier_slot_becomes_optional_candidate_without_blocker() -> None
     assert summary["candidates"][0]["source"] == "top_tier_audit_summary"
     assert summary["candidates"][0]["source_id"] == "aesthetic_coherence"
     assert summary["candidates"][0]["risk"] == "medium"
+    assert summary["marginal_return_summary"]["state"] == "continue"
+    assert summary["marginal_return_summary"]["highest_expected_gain"] == "medium"
 
 
 def test_top_tier_fail_count_is_blocking_not_optional() -> None:
@@ -117,6 +133,7 @@ def test_top_tier_fail_count_is_blocking_not_optional() -> None:
     assert summary["state"] == "not_ready"
     assert summary["safe_to_ship"] is False
     assert summary["candidate_count"] == 0
+    assert summary["marginal_return_summary"]["state"] == "not_ready"
 
 
 def test_weak_aesthetic_lever_becomes_optional_candidate() -> None:
@@ -251,3 +268,56 @@ def test_journal_playbook_weak_item_becomes_optional_candidate() -> None:
     assert summary["state"] == "ready_but_improvable"
     assert summary["candidates"][0]["source"] == "journal_art_direction_playbook_summary"
     assert summary["candidates"][0]["source_id"] == "maturity_restraint"
+
+
+def test_human_art_direction_candidate_sets_marginal_return_human_state() -> None:
+    summary = build_ready_improvement_summary(
+        fixture="demo",
+        status=_status(),
+        action="complete",
+        stop_boundary=None,
+        loop_checkpoint=_checkpoint(
+            aesthetic_lever_summary={
+                "evaluation_state": "needs_patch",
+                "next_aesthetic_bottleneck": {
+                    "lever_id": "maturity_restraint",
+                    "dimension": "maturity",
+                    "route": "human_art_direction",
+                    "linked_evidence": ["editorial_art_direction.aesthetic_risk"],
+                },
+            }
+        ),
+    )
+
+    assert summary["state"] == "ready_but_improvable"
+    assert summary["candidates"][0]["risk"] == "needs_human"
+    assert summary["marginal_return_summary"]["state"] == "needs_human_art_direction"
+    assert summary["marginal_return_summary"]["highest_regression_risk"] == "needs_human"
+
+
+def test_marginal_return_summary_normalizes_unknown_future_candidate_values() -> None:
+    summary = build_ready_improvement_summary(
+        fixture="demo",
+        status=_status(),
+        action="complete",
+        stop_boundary=None,
+        loop_checkpoint=_checkpoint(
+            top_tier_audit_summary={
+                "worst_verdict": "weak",
+                "blocking_high_impact_count": 0,
+                "weak_or_failed_slots": ["aesthetic_coherence"],
+            },
+            aesthetic_lever_summary={
+                "evaluation_state": "needs_patch",
+                "next_aesthetic_bottleneck": {
+                    "lever_id": "future_lever",
+                    "dimension": "maturity",
+                    "route": "unknown_future_route",
+                    "linked_evidence": ["editorial_art_direction.aesthetic_risk"],
+                },
+            },
+        ),
+    )
+
+    assert summary["marginal_return_summary"]["highest_expected_gain"] == "medium"
+    assert summary["marginal_return_summary"]["highest_regression_risk"] == "medium"
