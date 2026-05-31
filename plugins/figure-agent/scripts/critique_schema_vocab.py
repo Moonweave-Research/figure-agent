@@ -19,6 +19,7 @@ CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
+CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
 
 FINDING_SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
 ALLOWED_CONCEPTUAL_REFERENCES = frozenset(
@@ -241,6 +242,34 @@ AESTHETIC_ANTIPATTERN_IDS = (
     "reference_overcopying",
     "reference_underlearning",
     "decorative_detail_without_explanatory_value",
+)
+AESTHETIC_ANTIPATTERN_VERDICTS = frozenset(
+    {"absent", "present", "needs_human", "not_applicable"}
+)
+AESTHETIC_ANTIPATTERN_ROUTES = frozenset(
+    {
+        "none",
+        "tikz_patch",
+        "svg_polish",
+        "semantic_backport",
+        "human_art_direction",
+        "accept_simplification",
+    }
+)
+WEAKEST_PANEL_WEAKNESS_TYPES = frozenset(
+    {
+        "composition",
+        "typography",
+        "color",
+        "density",
+        "component_fidelity",
+        "story_role",
+        "style_mismatch",
+        "none",
+    }
+)
+REFERENCE_LEARNING_ACCOUNTING_VERDICTS = frozenset(
+    {"absent", "present", "needs_human", "not_applicable"}
 )
 AESTHETIC_GATE_VERDICTS = frozenset({"pass", "weak", "fail", "needs_human"})
 AESTHETIC_GATE_ROUTES = frozenset(

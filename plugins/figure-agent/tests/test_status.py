@@ -18,6 +18,7 @@ import status as status_mod  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
+    CRITIQUE_RUBRIC_VERSION_V1_17,
     file_sha256,
     input_manifest_hash,
 )
@@ -786,6 +787,30 @@ def test_hash_metadata_accepts_v1_14_rubric_for_aesthetic_intent_v2(
         name,
         rubric_version=CRITIQUE_RUBRIC_VERSION_V1_14,
         schema="figure-agent.critique.v1.14",
+    )
+
+    assert compute_critique_state(fig_dir, name) == "FRESH"
+
+
+def test_hash_metadata_accepts_v1_17_rubric_for_audit_crop_manifest(
+    tmp_path: Path,
+) -> None:
+    name = "hash_crop_manifest_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    manifest_path = fig_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True)
+    manifest_path.write_text('{"schema":"figure-agent.audit-crop-manifest.v1"}\n')
+    _write_hashed_critique(
+        fig_dir,
+        name,
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_17,
+        schema="figure-agent.critique.v1.17",
     )
 
     assert compute_critique_state(fig_dir, name) == "FRESH"

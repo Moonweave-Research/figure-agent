@@ -28,12 +28,14 @@ CRITIQUE_RUBRIC_VERSION_V1_13 = "figure-agent.critique-rubric.v1.13"
 CRITIQUE_RUBRIC_VERSION_V1_14 = "figure-agent.critique-rubric.v1.14"
 CRITIQUE_RUBRIC_VERSION_V1_15 = "figure-agent.critique-rubric.v1.15"
 CRITIQUE_RUBRIC_VERSION_V1_16 = "figure-agent.critique-rubric.v1.16"
+CRITIQUE_RUBRIC_VERSION_V1_17 = "figure-agent.critique-rubric.v1.17"
 CRITIQUE_SCHEMA_VERSION_V1_11 = "figure-agent.critique.v1.11"
 CRITIQUE_SCHEMA_VERSION_V1_12 = "figure-agent.critique.v1.12"
 CRITIQUE_SCHEMA_VERSION_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_VERSION_V1_15 = "figure-agent.critique.v1.15"
 CRITIQUE_SCHEMA_VERSION_V1_16 = "figure-agent.critique.v1.16"
+CRITIQUE_SCHEMA_VERSION_V1_17 = "figure-agent.critique.v1.17"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
 
 
@@ -188,11 +190,11 @@ def critique_generator_version(
 def expected_critique_rubric_version(example_dir: Path) -> str:
     delta_manifest_path = example_dir / "polish" / "aesthetic_delta" / "delta_manifest.json"
     if delta_manifest_path.is_file():
-        return CRITIQUE_RUBRIC_VERSION_V1_16
+        return CRITIQUE_RUBRIC_VERSION_V1_17
     audit_crop_manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     undeclared_geometry_path = example_dir / "build" / "undeclared_geometry.json"
     if audit_crop_manifest_path.is_file() or undeclared_geometry_path.is_file():
-        return CRITIQUE_RUBRIC_VERSION_V1_16
+        return CRITIQUE_RUBRIC_VERSION_V1_17
     reference_pack_path = example_dir / "critique_reference_pack.yaml"
     if reference_pack_path.is_file():
         try:
@@ -233,6 +235,8 @@ def _critique_schema_matches_expected_rubric(
     expected_rubric_version: str,
 ) -> bool:
     schema = metadata.get("schema")
+    if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_17:
+        return schema == CRITIQUE_SCHEMA_VERSION_V1_17
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_16:
         return schema == CRITIQUE_SCHEMA_VERSION_V1_16
     if expected_rubric_version == CRITIQUE_RUBRIC_VERSION_V1_15:
@@ -252,6 +256,7 @@ def _critique_schema_matches_expected_rubric(
         CRITIQUE_SCHEMA_VERSION_V1_14,
         CRITIQUE_SCHEMA_VERSION_V1_15,
         CRITIQUE_SCHEMA_VERSION_V1_16,
+        CRITIQUE_SCHEMA_VERSION_V1_17,
     }
 
 

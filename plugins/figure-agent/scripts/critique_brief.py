@@ -45,7 +45,7 @@ from PIL import Image
 from quality_manifest import (
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
-    CRITIQUE_RUBRIC_VERSION_V1_16,
+    CRITIQUE_RUBRIC_VERSION_V1_17,
     compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
@@ -91,7 +91,7 @@ _MICRO_DEFECT_KIND_SCHEMA = (
 )
 _CRITIQUE_SCHEMA_VERSION = "figure-agent.critique.v1.10"
 _CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
-_CRITIQUE_SCHEMA_VERSION_V1_16 = "figure-agent.critique.v1.16"
+_CRITIQUE_SCHEMA_VERSION_V1_17 = "figure-agent.critique.v1.17"
 
 
 class CritiqueBriefError(Exception):
@@ -802,6 +802,70 @@ def _aesthetic_gate_audit_schema(include_gate: bool) -> str:
 """
 
 
+def _aesthetic_antipattern_audit_schema(include_audit: bool) -> str:
+    if not include_audit:
+        return ""
+    return """aesthetic_antipattern_audit:
+  - id: childish_shape_language | poster_gradient_decoration |
+      generic_template_look | dead_flat_vector_finish |
+      uniform_line_weight_monotony | weak_hero_anchor |
+      cramped_or_dead_whitespace | low_authority_typography |
+      annotation_noise_competes_with_science | panel_style_mismatch |
+      reference_overcopying | reference_underlearning |
+      decorative_detail_without_explanatory_value
+    verdict: absent | present | needs_human | not_applicable
+    severity: BLOCKER | MAJOR | MINOR | NIT
+    route: none | tikz_patch | svg_polish | semantic_backport |
+      human_art_direction | accept_simplification
+    evidence: "<specific crop/current-artifact evidence; generic taste prose is invalid>"
+    rationale: "<why this verdict and route are correct>"
+    linked_evidence:
+      - top_tier_audit.aesthetic_coherence |
+        editorial_art_direction.aesthetic_risk |
+        editorial_art_direction.tikz_vs_svg_polish_trigger |
+        editorial_art_direction.human_art_direction_gate |
+        quality_axes.<axis> | finding id | micro_defect id
+"""
+
+
+def _weakest_panel_coherence_schema(include_summary: bool) -> str:
+    if not include_summary:
+        return ""
+    return """weakest_panel_coherence:
+  panel_id: "<panel id, subregion parent, or none>"
+  subregion_id: "<subregion id or none>"
+  weakness_type: composition | typography | color | density |
+    component_fidelity | story_role | style_mismatch | none
+  route: none | tikz_patch | svg_polish | semantic_backport |
+    human_art_direction | accept_simplification
+  evidence: "<specific crop/current-artifact evidence for the weakest panel decision>"
+  rationale: "<why this panel/subregion is limiting, or why none is limiting>"
+  linked_evidence:
+    - quality_axes.<axis> | top_tier_audit.<slot> |
+      editorial_art_direction.<slot> | finding id | micro_defect id
+"""
+
+
+def _reference_learning_accountability_schema(include_summary: bool) -> str:
+    if not include_summary:
+        return ""
+    return """reference_learning_accountability:
+  learned_principle: "<what the reference class taught, or not_applicable with reason>"
+  rejected_copy_target: "<what was intentionally not copied, or not_applicable with reason>"
+  overcopying: absent | present | needs_human | not_applicable
+  underlearning: absent | present | needs_human | not_applicable
+  route: none | tikz_patch | svg_polish | semantic_backport |
+    human_art_direction | accept_simplification
+  evidence: "<specific current-artifact/reference evidence; not pixel-copy scoring>"
+  rationale: "<why the reference was learned from without forcing wrong topology>"
+  linked_evidence:
+    - journal_grade_assessment.reference_calibration |
+      top_tier_audit.reference_class_fit |
+      editorial_art_direction.reference_class_fit |
+      finding id | micro_defect id
+"""
+
+
 def _reference_score_calibration(
     example_dir: Path,
     pack: dict | None,
@@ -1411,8 +1475,8 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     )
     uses_route_detail_contract = uses_v1_14_contract or uses_grounded_observation_schema
     if uses_grounded_observation_schema:
-        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_16
-        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_16
+        critique_schema = _CRITIQUE_SCHEMA_VERSION_V1_17
+        critique_rubric_version = CRITIQUE_RUBRIC_VERSION_V1_17
         crop_anomaly_schema = """    unintended_visible_anomaly: none | present | uncertain
     anomaly_rationale: "<whether any unintended visible artifact is present>"
     anomaly_link: "<finding id, micro_defect id, or accept_simplification:<reason> when present>"
@@ -1618,6 +1682,9 @@ top_tier_audit:
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 {_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
 {_aesthetic_gate_audit_schema(uses_svg_polish_delta_schema)}
+{_aesthetic_antipattern_audit_schema(uses_grounded_observation_schema)}
+{_weakest_panel_coherence_schema(uses_grounded_observation_schema)}
+{_reference_learning_accountability_schema(uses_grounded_observation_schema)}
 micro_defects:
   - id: M001
     crop: examples/{name}/build/audit_crops/<crop>.png

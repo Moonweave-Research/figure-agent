@@ -943,6 +943,14 @@ def _finding_ids(frontmatter: dict[str, Any]) -> set[str]:
     return {item for item in finding_ids if item}
 
 
+def _micro_defect_ids(frontmatter: dict[str, Any]) -> set[str]:
+    return {
+        item["id"].strip()
+        for item in frontmatter.get("micro_defects", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str) and item["id"].strip()
+    }
+
+
 def _validate_v1_13_crop_anomaly_accounting(frontmatter: dict[str, Any]) -> None:
     raw_items = _require_non_empty_list(
         frontmatter.get("crop_audit_log"),
@@ -1229,6 +1237,200 @@ def _validate_v1_15_aesthetic_gate_audit(frontmatter: dict[str, Any]) -> None:
         )
 
 
+def _validate_v1_17_aesthetic_antipattern_audit(frontmatter: dict[str, Any]) -> None:
+    raw_items = _require_mapping_items(
+        frontmatter.get("aesthetic_antipattern_audit"),
+        "critique frontmatter.aesthetic_antipattern_audit",
+    )
+    ids: list[str] = []
+    for index, item in enumerate(raw_items):
+        label = f"critique frontmatter.aesthetic_antipattern_audit[{index}]"
+        anti_pattern_id = _require_enum(
+            item,
+            "id",
+            frozenset(vocab.AESTHETIC_ANTIPATTERN_IDS),
+            label=label,
+        )
+        ids.append(anti_pattern_id)
+        verdict = _require_enum(
+            item,
+            "verdict",
+            vocab.AESTHETIC_ANTIPATTERN_VERDICTS,
+            label=label,
+        )
+        _require_enum(item, "severity", vocab.FINDING_SEVERITIES, label=label)
+        route = _require_enum(
+            item,
+            "route",
+            vocab.AESTHETIC_ANTIPATTERN_ROUTES,
+            label=label,
+        )
+        evidence = _require_non_empty_string(item, "evidence", label=label)
+        if _generic_observation(evidence):
+            raise CritiqueContractError(f"{label}.evidence must be current-artifact specific")
+        rationale = _require_non_empty_string(item, "rationale", label=label)
+        if _generic_observation(rationale):
+            raise CritiqueContractError(f"{label}.rationale must explain the route")
+        linked_evidence = _validate_string_list(
+            item.get("linked_evidence"),
+            f"{label}.linked_evidence",
+            require_non_empty=verdict in {"present", "needs_human"} or route != "none",
+        )
+        if verdict in {"absent", "not_applicable"} and route != "none":
+            raise CritiqueContractError(
+                f"{label}.route must be none for verdict {verdict}"
+            )
+        if verdict in {"present", "needs_human"} and route == "none":
+            raise CritiqueContractError(
+                f"{label}.route must not be none for verdict {verdict}"
+            )
+        if route == "accept_simplification" and "accept" not in rationale.lower():
+            raise CritiqueContractError(
+                f"{label}.rationale must explicitly justify accept_simplification"
+            )
+        _validate_v1_17_route_contract(
+            label=label,
+            route=route,
+            linked_evidence=linked_evidence,
+            frontmatter=frontmatter,
+        )
+
+    duplicate_ids = sorted({item_id for item_id in ids if ids.count(item_id) > 1})
+    if duplicate_ids:
+        raise CritiqueContractError(
+            "critique frontmatter.aesthetic_antipattern_audit has duplicate ids: "
+            + ", ".join(duplicate_ids)
+        )
+    missing_ids = [item_id for item_id in vocab.AESTHETIC_ANTIPATTERN_IDS if item_id not in ids]
+    if missing_ids:
+        raise CritiqueContractError(
+            "critique frontmatter.aesthetic_antipattern_audit missing ids: "
+            + ", ".join(missing_ids)
+        )
+
+
+def _validate_v1_17_route_contract(
+    *,
+    label: str,
+    route: str,
+    linked_evidence: list[str],
+    frontmatter: dict[str, Any],
+) -> None:
+    trigger_path = _editorial_trigger_recommended_path(frontmatter)
+    finding_ids = _finding_ids(frontmatter)
+    micro_defect_ids = _micro_defect_ids(frontmatter)
+    if route == "svg_polish" and trigger_path != "ready_for_svg_polish":
+        raise CritiqueContractError(
+            f"{label}.route svg_polish requires "
+            "editorial_art_direction.tikz_vs_svg_polish_trigger recommended_path "
+            "ready_for_svg_polish"
+        )
+    if route == "semantic_backport" and trigger_path != "semantic_backport_required":
+        raise CritiqueContractError(
+            f"{label}.route semantic_backport requires recommended_path "
+            "semantic_backport_required"
+        )
+    if route == "human_art_direction" and (
+        "editorial_art_direction.human_art_direction_gate" not in linked_evidence
+    ):
+        raise CritiqueContractError(
+            f"{label}.route human_art_direction requires "
+            "editorial_art_direction.human_art_direction_gate linked_evidence"
+        )
+    if route == "tikz_patch" and not any(
+        ref in finding_ids
+        or ref in micro_defect_ids
+        or ref.startswith("quality_axes.")
+        for ref in linked_evidence
+    ):
+        raise CritiqueContractError(
+            f"{label}.route tikz_patch must link to a finding, micro_defect, "
+            "or quality axis"
+        )
+
+
+def _validate_v1_17_weakest_panel_coherence(frontmatter: dict[str, Any]) -> None:
+    label = "critique frontmatter.weakest_panel_coherence"
+    item = require_mapping(frontmatter.get("weakest_panel_coherence"), label)
+    _require_non_empty_string(item, "panel_id", label=label)
+    _require_non_empty_string(item, "subregion_id", label=label)
+    weakness_type = _require_enum(
+        item,
+        "weakness_type",
+        vocab.WEAKEST_PANEL_WEAKNESS_TYPES,
+        label=label,
+    )
+    route = _require_enum(item, "route", vocab.AESTHETIC_ANTIPATTERN_ROUTES, label=label)
+    evidence = _require_non_empty_string(item, "evidence", label=label)
+    if _generic_observation(evidence):
+        raise CritiqueContractError(f"{label}.evidence must be current-artifact specific")
+    rationale = _require_non_empty_string(item, "rationale", label=label)
+    if _generic_observation(rationale):
+        raise CritiqueContractError(f"{label}.rationale must explain the route")
+    if weakness_type == "none" and route != "none":
+        raise CritiqueContractError(f"{label}.route must be none for weakness_type none")
+    if weakness_type != "none" and route == "none":
+        raise CritiqueContractError(f"{label}.route must not be none for weakest panel")
+    linked_evidence = _validate_string_list(
+        item.get("linked_evidence"),
+        f"{label}.linked_evidence",
+        require_non_empty=weakness_type != "none" or route != "none",
+    )
+    _validate_v1_17_route_contract(
+        label=label,
+        route=route,
+        linked_evidence=linked_evidence,
+        frontmatter=frontmatter,
+    )
+
+
+def _validate_v1_17_reference_learning_accountability(
+    frontmatter: dict[str, Any],
+) -> None:
+    label = "critique frontmatter.reference_learning_accountability"
+    item = require_mapping(frontmatter.get("reference_learning_accountability"), label)
+    _require_non_empty_string(item, "learned_principle", label=label)
+    _require_non_empty_string(item, "rejected_copy_target", label=label)
+    overcopying = _require_enum(
+        item,
+        "overcopying",
+        vocab.REFERENCE_LEARNING_ACCOUNTING_VERDICTS,
+        label=label,
+    )
+    underlearning = _require_enum(
+        item,
+        "underlearning",
+        vocab.REFERENCE_LEARNING_ACCOUNTING_VERDICTS,
+        label=label,
+    )
+    route = _require_enum(item, "route", vocab.AESTHETIC_ANTIPATTERN_ROUTES, label=label)
+    evidence = _require_non_empty_string(item, "evidence", label=label)
+    if _generic_observation(evidence):
+        raise CritiqueContractError(f"{label}.evidence must be current-artifact specific")
+    rationale = _require_non_empty_string(item, "rationale", label=label)
+    if _generic_observation(rationale):
+        raise CritiqueContractError(f"{label}.rationale must explain reference learning")
+    active = overcopying in {"present", "needs_human"} or underlearning in {
+        "present",
+        "needs_human",
+    }
+    if not active and route != "none":
+        raise CritiqueContractError(f"{label}.route must be none when reference misuse is absent")
+    if active and route == "none":
+        raise CritiqueContractError(f"{label}.route must not be none for reference misuse")
+    linked_evidence = _validate_string_list(
+        item.get("linked_evidence"),
+        f"{label}.linked_evidence",
+        require_non_empty=active or route != "none",
+    )
+    _validate_v1_17_route_contract(
+        label=label,
+        route=route,
+        linked_evidence=linked_evidence,
+        frontmatter=frontmatter,
+    )
+
+
 def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
     """Validate schema-specific critique.md frontmatter fields."""
     critique_schema = frontmatter.get("schema")
@@ -1463,6 +1665,36 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
             _validate_v1_15_aesthetic_gate_audit(frontmatter)
         _validate_v1_16_grounded_crop_observations(frontmatter)
         _validate_v1_16_grounded_svg_delta_observations(frontmatter)
+        if "aesthetic_lever_audit" in frontmatter:
+            _validate_v1_11_aesthetic_lever_audit(frontmatter)
+        if "journal_art_direction_playbook_audit" in frontmatter:
+            _validate_v1_12_journal_art_direction_playbook_audit(frontmatter)
+        _validate_journal_grade_assessment(
+            frontmatter,
+            quality_verdicts,
+            top_tier_verdicts,
+            editorial_verdicts,
+            allow_reference_calibration=True,
+        )
+        _validate_v1_2_audit_to_finding(frontmatter)
+    elif critique_schema == vocab.CRITIQUE_SCHEMA_V1_17:
+        _validate_v1_1_audit(frontmatter)
+        quality_verdicts = _validate_v1_2_quality_axes(frontmatter)
+        top_tier_verdicts = _validate_v1_3_top_tier_audit(frontmatter)
+        _validate_v1_4_micro_defects(frontmatter)
+        _validate_v1_10_accept_simplification(frontmatter)
+        editorial_verdicts = _validate_v1_5_editorial_art_direction(frontmatter)
+        _validate_v1_14_editorial_route_detail(frontmatter)
+        _validate_v1_8_crop_audit_log(frontmatter)
+        _validate_v1_13_crop_anomaly_accounting(frontmatter)
+        if "svg_polish_delta_audit" in frontmatter:
+            _validate_v1_15_svg_polish_delta_audit(frontmatter)
+            _validate_v1_15_aesthetic_gate_audit(frontmatter)
+        _validate_v1_16_grounded_crop_observations(frontmatter)
+        _validate_v1_16_grounded_svg_delta_observations(frontmatter)
+        _validate_v1_17_aesthetic_antipattern_audit(frontmatter)
+        _validate_v1_17_weakest_panel_coherence(frontmatter)
+        _validate_v1_17_reference_learning_accountability(frontmatter)
         if "aesthetic_lever_audit" in frontmatter:
             _validate_v1_11_aesthetic_lever_audit(frontmatter)
         if "journal_art_direction_playbook_audit" in frontmatter:

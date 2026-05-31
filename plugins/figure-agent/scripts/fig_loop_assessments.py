@@ -28,6 +28,7 @@ CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
+CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
 CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
     {
         CRITIQUE_SCHEMA_V1_2,
@@ -45,6 +46,7 @@ CRITIQUE_SCHEMAS_WITH_QUALITY_AXES = frozenset(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
@@ -63,6 +65,7 @@ CRITIQUE_SCHEMAS_WITH_TOP_TIER_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
@@ -79,6 +82,7 @@ CRITIQUE_SCHEMAS_WITH_EDITORIAL_ART_DIRECTION = frozenset(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }
 )
 CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
@@ -92,6 +96,7 @@ CRITIQUE_SCHEMAS_WITH_CROP_AUDIT = frozenset(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }
 )
 JOURNAL_ASSESSMENT_SCHEMA = "figure-agent.journal-grade-assessment.v1"
@@ -466,6 +471,7 @@ def aesthetic_lever_summary(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }:
         return None
     if critique_state != "FRESH":
@@ -545,6 +551,7 @@ def journal_art_direction_playbook_summary(
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }:
         return None
     if critique_state != "FRESH":

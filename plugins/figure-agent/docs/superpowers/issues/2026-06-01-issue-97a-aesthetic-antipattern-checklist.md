@@ -1,9 +1,8 @@
 # Issue 97A - Aesthetic Anti-Pattern Checklist
 
-Status: first prompt-hardening slice implemented; schema/lint enforcement remains
-proposed for a later narrow slice
+Status: implemented through schema v1.17
 
-Type: critique rubric hardening, schema/lint candidate
+Type: critique rubric hardening, schema/lint contract
 
 Parent:
 
@@ -46,7 +45,7 @@ The checklist should be route-aware:
 
 ## Expected Contract
 
-Preferred output field for a future schema slice:
+Implemented output field for schema `figure-agent.critique.v1.17`:
 
 ```yaml
 aesthetic_antipattern_audit:
@@ -60,10 +59,10 @@ aesthetic_antipattern_audit:
       - top_tier_audit.aesthetic_coherence | editorial_art_direction.aesthetic_risk | finding id | micro_defect id
 ```
 
-The first implementation slice uses the smaller safe path: it adds the closed
-anti-pattern checklist to the host critique brief without introducing a new
-required critique field. A later vNext slice can promote the checklist into a
-linted schema field once the fixture refresh cost is acceptable.
+The first prompt-hardening slice added the closed checklist to the host brief.
+The second slice promotes it into `aesthetic_antipattern_audit` for grounded
+v1.17 critiques. Legacy v1.16 and older critiques remain parseable, but new
+grounded critiques with audit crops must answer the closed checklist.
 
 ## Anti-Pattern IDs
 
@@ -94,14 +93,23 @@ linted schema field once the fixture refresh cost is acceptable.
 - Tests cover brief output, schema/lint acceptance, unknown ids, missing ids,
   invalid route, and generic evidence rejection.
 
-First-slice acceptance:
+Implemented contract:
 
 - The critique brief names every anti-pattern id with a concrete inspection
   question.
 - The prompt explicitly tells the host LLM to route present/uncertain
   anti-patterns through existing TikZ/SVG/semantic/human/accept-simplification
   paths.
-- No schema/rubric version is bumped in this slice.
+- The output format requires `aesthetic_antipattern_audit` under schema
+  `figure-agent.critique.v1.17`.
+- Validation rejects missing, duplicate, or unknown anti-pattern ids.
+- Validation rejects present/needs-human anti-patterns with no linked evidence
+  or no route.
+- `svg_polish` routes require the existing
+  `editorial_art_direction.tikz_vs_svg_polish_trigger.recommended_path:
+  ready_for_svg_polish`.
+- `semantic_backport` and `human_art_direction` routes must cite their matching
+  downstream evidence paths.
 
 ## Verification
 
@@ -113,6 +121,24 @@ First-slice acceptance:
   - Result: all checks passed.
 - `git diff --check`
   - Result: clean.
+- `uv run pytest -q tests/test_critique_schema_validator.py tests/test_quality_manifest.py tests/test_critique_brief.py tests/test_critique_lint.py`
+  - Result: 282 passed.
+- `uv run pytest -q tests/test_status.py tests/test_fig_driver.py tests/test_fig_loop.py tests/test_ready_improvement.py`
+  - Result: 311 passed, 1 skipped.
+- `uv run pytest -q tests/test_fig_loop_assessments.py tests/test_fig_loop.py tests/test_fig_driver.py tests/test_critique_schema_validator.py tests/test_critique_brief.py tests/test_quality_manifest.py tests/test_status.py::test_hash_metadata_accepts_v1_17_rubric_for_audit_crop_manifest`
+  - Result: 362 passed.
+- `uv run pytest -q tests/test_status.py::test_hash_metadata_accepts_v1_17_rubric_for_audit_crop_manifest tests/test_fig_loop_assessments.py::test_v1_17_critique_surfaces_loop_audit_summaries`
+  - Result: 2 passed.
+- `uv run pytest -q`
+  - Result: 1561 passed, 3 skipped, 1 xfailed.
+- `uv run ruff check .`
+  - Result: all checks passed.
+- `claude plugin validate .claude-plugin/plugin.json`
+  - Result: passed.
+- `claude plugin validate .`
+  - Result: passed.
+- `claude plugin validate ../../.claude-plugin/marketplace.json`
+  - Result: passed.
 
 ## Review Checklist
 

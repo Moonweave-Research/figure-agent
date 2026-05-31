@@ -1,6 +1,6 @@
 # Issue 97 - Top-Tier Aesthetic Edge-Case Audit Roadmap
 
-Status: proposed
+Status: implemented for Issues 97A-E
 
 Type: aesthetic audit hardening, guided improvement, operator UX
 
@@ -57,6 +57,18 @@ is merged, as optional or human-gated next actions.
 - Optional improvements never hide blockers.
 - Existing driver/runner boundaries remain explicit; any future loop-improve
   integration must remain a bounded orchestrator, not a hidden designer.
+
+## Implemented Slices
+
+- 97A: brief checklist plus v1.17 `aesthetic_antipattern_audit` schema
+  validation for grounded critiques.
+- 97B: v1.17 `weakest_panel_coherence` schema validation for grounded
+  critiques.
+- 97C: v1.17 `reference_learning_accountability` schema validation for
+  grounded critiques.
+- 97D: marginal-return summary added to `ready_improvement_summary`.
+- 97E: `/fig_driver.next_action_summary` surfaces ready-improvement and
+  marginal-return state.
 
 ## Review Checklist
 

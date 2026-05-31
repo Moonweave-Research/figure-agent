@@ -4,7 +4,7 @@ Date: 2026-06-01
 
 ## Status
 
-Design draft for the next plugin hardening track.
+Partially implemented hardening track.
 
 ## Current Truth
 
@@ -140,23 +140,30 @@ optional improvement candidates.
    Add a closed, non-prose checklist to the critique brief and validation path
    so generic "looks polished" answers are rejected. This is the highest value
    because it translates vague taste into inspectable categories.
+   Status: implemented through v1.17 `aesthetic_antipattern_audit` for grounded
+   critiques.
 
 2. **Issue 97B - Weakest-Panel Coherence Summary.**
    Add a structured summary that names the weakest panel/subregion and routes
    the repair to TikZ, SVG, human art direction, or accept-simplification.
+   Status: implemented through v1.17 `weakest_panel_coherence`.
 
 3. **Issue 97C - Reference Learning Accountability.**
    Require reference-learning critiques to distinguish learned principle,
    forbidden copy target, over-copying, and under-learning.
+   Status: implemented through v1.17 `reference_learning_accountability`.
 
 4. **Issue 97D - Marginal-Return Stop Signal.**
    Add a stop/continue summary for optional polish candidates so the plugin can
    say when further loops are likely low value.
+   Status: implemented as
+   `ready_improvement_summary.marginal_return_summary`.
 
 5. **Issue 97E - Operator-Facing Integration.**
    Surface the above in `/fig_driver`, and in the loop-improve orchestrator if
    that branch is merged, without changing action vocabulary or release
    authority.
+   Status: implemented for `/fig_driver.next_action_summary`.
 
 ## First Slice Recommendation
 

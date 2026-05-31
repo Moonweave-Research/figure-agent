@@ -74,6 +74,7 @@ CRITIQUE_SCHEMA_V1_13 = "figure-agent.critique.v1.13"
 CRITIQUE_SCHEMA_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_V1_15 = "figure-agent.critique.v1.15"
 CRITIQUE_SCHEMA_V1_16 = "figure-agent.critique.v1.16"
+CRITIQUE_SCHEMA_V1_17 = "figure-agent.critique.v1.17"
 
 
 def _quality_axis(axis_name: str) -> dict:
@@ -139,6 +140,46 @@ def _aesthetic_lever_audit() -> list[dict]:
             "rationale": "hero_balance needs a bounded TikZ adjustment linked to C001",
         },
     ]
+
+
+def _aesthetic_antipattern_audit() -> list[dict]:
+    return [
+        {
+            "id": anti_pattern_id,
+            "verdict": "absent",
+            "severity": "NIT",
+            "route": "none",
+            "evidence": f"{anti_pattern_id} absent in current crop evidence",
+            "rationale": f"{anti_pattern_id} is not visible in the current artifact",
+            "linked_evidence": ["top_tier_audit.aesthetic_coherence"],
+        }
+        for anti_pattern_id in vocab.AESTHETIC_ANTIPATTERN_IDS
+    ]
+
+
+def _weakest_panel_coherence() -> dict:
+    return {
+        "panel_id": "none",
+        "subregion_id": "none",
+        "weakness_type": "none",
+        "route": "none",
+        "evidence": "current artifact crops show no weakest panel mismatch",
+        "rationale": "all panels are balanced in the current artifact",
+        "linked_evidence": [],
+    }
+
+
+def _reference_learning_accountability() -> dict:
+    return {
+        "learned_principle": "not_applicable because no reference learning pack is declared",
+        "rejected_copy_target": "not_applicable because no reference topology was copied",
+        "overcopying": "absent",
+        "underlearning": "absent",
+        "route": "none",
+        "evidence": "current artifact was checked against the available briefing context",
+        "rationale": "no reference misuse is visible in the current artifact",
+        "linked_evidence": [],
+    }
 
 
 def _journal_art_direction_playbook_audit() -> dict:
@@ -294,7 +335,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
-        CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }:
         frontmatter["micro_defects"] = [
             {
@@ -320,6 +361,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }:
         frontmatter["editorial_art_direction"] = {
             key: _editorial_audit_slot(key) for key in EDITORIAL_AUDIT_KEYS
@@ -334,6 +376,7 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_14,
         CRITIQUE_SCHEMA_V1_15,
         CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
     }:
         frontmatter["crop_audit_log"] = [
             {
@@ -373,14 +416,25 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         frontmatter["journal_art_direction_playbook_audit"] = (
             _journal_art_direction_playbook_audit()
         )
-    if schema in {CRITIQUE_SCHEMA_V1_14, CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16}:
+    if schema in {
+        CRITIQUE_SCHEMA_V1_14,
+        CRITIQUE_SCHEMA_V1_15,
+        CRITIQUE_SCHEMA_V1_16,
+        CRITIQUE_SCHEMA_V1_17,
+    }:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
         trigger["remaining_tikz_lever"] = (
             "source-level label spacing can still be repaired in TikZ"
         )
-    if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16}:
+    if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16, CRITIQUE_SCHEMA_V1_17}:
         frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
         frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
+    if schema == CRITIQUE_SCHEMA_V1_17:
+        frontmatter["aesthetic_antipattern_audit"] = _aesthetic_antipattern_audit()
+        frontmatter["weakest_panel_coherence"] = _weakest_panel_coherence()
+        frontmatter["reference_learning_accountability"] = (
+            _reference_learning_accountability()
+        )
     return frontmatter
 
 
@@ -410,6 +464,111 @@ def test_validate_critique_schema_accepts_v1_15_svg_delta_audit() -> None:
 
 def test_validate_critique_schema_accepts_v1_16_grounded_observations() -> None:
     validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_16))
+
+
+def test_validate_critique_schema_accepts_v1_17_aesthetic_antipattern_audit() -> None:
+    validate_critique_schema(_valid_frontmatter(CRITIQUE_SCHEMA_V1_17))
+
+
+def test_validate_critique_schema_rejects_v1_17_missing_antipattern_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["aesthetic_antipattern_audit"].pop()
+
+    with pytest.raises(CritiqueContractError, match="missing ids"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_unknown_antipattern_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["aesthetic_antipattern_audit"][0]["id"] = "vibes"
+
+    with pytest.raises(CritiqueContractError, match="id"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_duplicate_antipattern_id() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["aesthetic_antipattern_audit"][1]["id"] = (
+        frontmatter["aesthetic_antipattern_audit"][0]["id"]
+    )
+
+    with pytest.raises(CritiqueContractError, match="duplicate"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_present_without_linked_evidence() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    item = frontmatter["aesthetic_antipattern_audit"][0]
+    item["verdict"] = "present"
+    item["severity"] = "MAJOR"
+    item["route"] = "tikz_patch"
+    item["linked_evidence"] = []
+
+    with pytest.raises(CritiqueContractError, match="linked_evidence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_unknown_antipattern_route() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["aesthetic_antipattern_audit"][0]["route"] = "auto_beautify"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_generic_antipattern_evidence() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["aesthetic_antipattern_audit"][0]["evidence"] = "looks fine"
+
+    with pytest.raises(CritiqueContractError, match="evidence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_svg_route_when_not_ready() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    item = frontmatter["aesthetic_antipattern_audit"][0]
+    item["verdict"] = "present"
+    item["severity"] = "MINOR"
+    item["route"] = "svg_polish"
+    item["linked_evidence"] = [
+        "editorial_art_direction.tikz_vs_svg_polish_trigger",
+        "P001",
+    ]
+
+    with pytest.raises(CritiqueContractError, match="route svg_polish requires"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_missing_weakest_panel() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter.pop("weakest_panel_coherence")
+
+    with pytest.raises(CritiqueContractError, match="weakest_panel_coherence"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_weakest_panel_route_none() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["weakest_panel_coherence"]["weakness_type"] = "composition"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_missing_reference_learning() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter.pop("reference_learning_accountability")
+
+    with pytest.raises(CritiqueContractError, match="reference_learning_accountability"):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_17_reference_underlearning_route_none() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["reference_learning_accountability"]["underlearning"] = "present"
+
+    with pytest.raises(CritiqueContractError, match="route"):
+        validate_critique_schema(frontmatter)
 
 
 def test_validate_critique_schema_accepts_v1_16_crop_only_grounding() -> None:

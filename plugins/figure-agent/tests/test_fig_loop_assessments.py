@@ -507,13 +507,13 @@ def test_aesthetic_lever_summary_surfaces_v1_11_next_bottleneck(tmp_path: Path) 
     }
 
 
-def test_v1_16_critique_surfaces_loop_audit_summaries(tmp_path: Path) -> None:
+def test_v1_17_critique_surfaces_loop_audit_summaries(tmp_path: Path) -> None:
     example_dir = tmp_path / "loop_demo"
     example_dir.mkdir()
     _write_critique(
         example_dir / "critique.md",
         {
-            "schema": "figure-agent.critique.v1.16",
+            "schema": "figure-agent.critique.v1.17",
             "top_tier_audit": {
                 "target_journal_fit": {
                     "verdict": "weak",
