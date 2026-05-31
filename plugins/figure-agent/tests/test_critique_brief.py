@@ -1451,6 +1451,11 @@ reference_learning:
         "override physics story"
     ) in brief
     assert "Use as a journal-tone anchor, not a content authority." in brief
+    assert "Reference-learning accountability required:" in brief
+    assert (
+        "state what was learned, what was rejected, and whether the current figure "
+        "over-copies or under-learns"
+    ) in brief
 
 
 def test_critique_brief_includes_unintended_visible_anomaly_contract(tmp_path):

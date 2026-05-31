@@ -1,6 +1,7 @@
 # Issue 97C - Reference Learning Accountability
 
-Status: proposed
+Status: first prompt-accountability slice implemented; structured schema
+accounting remains proposed
 
 Type: reference-learning audit, anti-copy guard
 
@@ -46,12 +47,19 @@ reference_learning_accountability:
 
 ## Acceptance
 
-- Reference accountability appears only when a reference-learning pack exists.
-- It does not use pixel identity or SSIM as a copy target.
-- It cannot override briefing, theory guards, fixture semantics, or author
+- [x] Reference accountability appears only when a reference-learning pack exists.
+- [x] It does not use pixel identity or SSIM as a copy target.
+- [x] It cannot override briefing, theory guards, fixture semantics, or author
   intent.
-- Over-copying and under-learning can route to human art direction or semantic
-  backport, but not hidden auto-editing.
+- [x] Over-copying and under-learning are described as routed audit issues, not
+  hidden auto-editing.
+- [ ] Future schema slice can require a structured
+  `reference_learning_accountability` field.
+
+## Verification
+
+- `uv run pytest -q tests/test_critique_brief.py::test_critique_brief_includes_reference_learning_contract`
+  - Result: 1 passed.
 
 ## Review Questions
 

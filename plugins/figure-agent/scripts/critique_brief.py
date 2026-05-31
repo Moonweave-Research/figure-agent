@@ -464,6 +464,10 @@ def _reference_learning_section(pack: dict | None) -> str:
         "`briefing.md`, theory guards, fixture semantics, and author intent outrank "
         "reference style. Learn only the allowed transfer items below; do not copy "
         "forbidden structure, hardware, layout, or physics.",
+        "Reference-learning accountability required: state what was learned, what "
+        "was rejected, and whether the current figure over-copies or under-learns "
+        "the reference class. Treat over-copying or under-learning as a routed "
+        "audit issue, not as generic prose.",
         "",
     ]
     for item in learning.get("references", []):
