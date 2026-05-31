@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-05-30 KST
-**Status:** current release-candidate truth through v0.9.0 / Issue 89
+**Date:** 2026-06-01 KST
+**Status:** current release-candidate truth through v0.9.1 / Issue 95
 
 ## Bottom Line
 
@@ -25,6 +25,10 @@ The v0.9.0 release-candidate track freezes the operator-grade workflow:
 guided autonomy, bounded runner execution, multi-fixture queues, blocked-row
 operator handoffs, and closeout follow-through are documented and validated as
 the default operating model.
+The v0.9.1 patch adds `/fig_improve` as the loop-centered one-fixture entry
+point for repeated improvement requests. It wraps `/fig_run` without widening
+automation permissions and stops at host, human, patch, SVG, release, and
+optional-improvement boundaries.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -33,7 +37,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 89 / v0.9.0 release-candidate
+Most recent local full verification after Issue 95 / v0.9.1 release-candidate
 sync:
 
 ```bash
@@ -47,7 +51,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1471 passed, 1 skipped, 1 xfailed, 6 warnings`.
+- Full test suite: `1552 passed, 3 skipped, 1 xfailed, 6 warnings`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.

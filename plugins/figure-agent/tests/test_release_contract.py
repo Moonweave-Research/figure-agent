@@ -14,8 +14,8 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.9.0"
-EXPECTED_RELEASE_DATE = "2026-05-30"
+EXPECTED_RELEASE_VERSION = "0.9.1"
+EXPECTED_RELEASE_DATE = "2026-06-01"
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -146,6 +146,7 @@ def test_current_readme_documents_release_boundaries() -> None:
     for required in [
         "single next-action summary",
         "Bounded safe runner",
+        "Loop-centered improvement orchestrator",
         "Operator queue",
         "multi-fixture",
         "journal style-pack catalog",
@@ -167,6 +168,7 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
 
     for required in [
         "Single fixture",
+        "Loop-Centered Improvement",
         "Multi-Fixture Queue",
         "Host Critique Refresh",
         "Closeout After Patch Or Export",
@@ -181,17 +183,15 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
 
 def test_current_changelog_covers_operator_release() -> None:
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
-    top_entry = changelog.partition("## [0.8.2]")[0]
+    top_entry = changelog.partition("## [0.9.0]")[0]
 
     assert f"## [{EXPECTED_RELEASE_VERSION}] - {EXPECTED_RELEASE_DATE}" in top_entry
     for required in [
-        "Issue 70",
-        "Issue 71",
-        "Issue 88",
-        "Issue 89",
-        "guided autonomy",
-        "multi-fixture queue",
-        "operator handoff",
+        "Issue 95",
+        "/fig_improve",
+        "loop-centered",
+        "host critique",
+        "optional-improvement",
         "not a hidden auto-designer",
     ]:
         assert required in top_entry
@@ -215,7 +215,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
 
     assert f"current release-candidate truth through v{plugin['version']}" in closeout
     assert (
-        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issue 89"
+        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issue 95"
         in closeout
     )
     assert "after Issue 33 / PR #47" not in closeout

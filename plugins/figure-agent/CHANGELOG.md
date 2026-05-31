@@ -2,6 +2,29 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.9.1] - 2026-06-01
+
+Patch release for Issue 95 loop-centered improvement orchestration after the
+v0.9.0 operator release candidate.
+
+### Added
+
+- Issue 95 `/fig_improve`, a loop-centered single-fixture entry point for
+  "keep improving this figure" requests. It wraps `/fig_run`, surfaces
+  host critique, human, patch, SVG polish, release, and optional-improvement
+  boundaries, and emits `figure-agent.improve.v1` JSON.
+- Official docs and skill routing now prefer `/fig_improve` when the user asks
+  to run repeated critique/improvement loops on one fixture.
+
+### Guardrails
+
+- `/fig_improve` is not a hidden auto-designer. It does not author host
+  critiques, patch source, edit SVG, force golden, set accepted state, or bypass
+  release/human gates.
+- Optional-improvement candidates remain advisory. They do not override
+  critique lint, adjudication, accepted/golden, publication, SVG-polish, or
+  human-review gates.
+
 ## [0.9.0] - 2026-05-30
 
 Operator-grade release-candidate for the guided autonomy workflow after Issues
