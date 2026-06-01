@@ -177,8 +177,11 @@ the workflow together.
     commit references.
 
 13. **Issue 100T/U - evidence trace and human-decision diff**
-    Keep this behind the P0/P1 workflow fixes. It is valuable for audits, but it
-    should not slow down the narrower evidence-parity and final-preset fixes.
+    Completed as an auditability hardening slice. Added optional
+    `inspection_trace.yaml` parser/validator + CLI, wired present traces into
+    `critique_lint.py`, and added `critique_adjudication.py sync --preview`
+    for a read-only preserved/dropped/added/shape-changed decision diff before
+    operators choose normal sync or force-scaffold.
 
 14. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.

@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import critique_adjudication  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
+    build_adjudication_decision_diff,
     load_adjudication,
     main,
     sync_adjudication,
@@ -90,6 +91,38 @@ def _write_fresh_critique(
         "    tex_lines: [10, 20]\n"
         "    observation: label needs review\n"
         f"{suggested_fix_yaml}"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    return critique
+
+
+def _write_fresh_critique_with_findings(
+    repo: Path,
+    example: Path,
+    findings_yaml: str,
+) -> Path:
+    spec = parse_spec((example / "spec.yaml").read_text(encoding="utf-8"))
+    critique_input_hash = compute_critique_input_hash(
+        example,
+        "demo_fig",
+        spec,
+        style_lock_path=repo / "styles" / "polymer-paper-preamble.sty",
+        base_dir=repo,
+    )
+    generator_version = file_sha256(repo / "scripts" / "critique_brief.py")
+    critique = example / "critique.md"
+    critique.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        "fixture: demo_fig\n"
+        "generator: critique_brief.py\n"
+        f"generator_version: {generator_version}\n"
+        f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
+        f"critique_input_hash: {critique_input_hash}\n"
+        "findings:\n"
+        f"{findings_yaml}"
         "---\n"
         "# critique\n",
         encoding="utf-8",
@@ -322,3 +355,96 @@ def test_sync_adjudication_cli_reports_controlled_stale_error(
     assert exit_code == 1
     assert "generator_version mismatch" in captured.err
     assert f"/fig_critique {example.name}" in captured.err
+
+
+def test_adjudication_decision_diff_preview_reports_preserved_and_added_ids(
+    tmp_path: Path,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_fresh_critique_with_findings(
+        repo,
+        example,
+        "  - id: C001\n"
+        "    status: open\n"
+        "    tex_lines: [10, 20]\n"
+        "    observation: existing finding\n"
+        "  - id: C002\n"
+        "    status: open\n"
+        "    tex_lines: [30, 40]\n"
+        "    observation: new finding\n",
+    )
+    adjudication = _write_adjudication(example)
+
+    preview = build_adjudication_decision_diff(example, repo_root=repo)
+
+    assert preview["schema"] == "figure-agent.adjudication-decision-diff.v1"
+    assert preview["existing_source_critique_hash"] == "sha256:old"
+    assert preview["new_source_critique_hash"] == file_sha256(example / "critique.md")
+    assert preview["preserved_decision_ids"] == ["C001"]
+    assert preview["added_finding_ids"] == ["C002"]
+    assert preview["dropped_decision_ids"] == []
+    assert preview["shape_changed_decision_ids"] == []
+    assert preview["normal_sync_safe"] is False
+    assert load_adjudication(adjudication)["source_critique_hash"] == "sha256:old"
+
+
+def test_adjudication_decision_diff_preview_reports_dropped_and_shape_changed_ids(
+    tmp_path: Path,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_fresh_critique(repo, example, finding_status="resolved")
+    _write_adjudication(example)
+    payload = load_adjudication(example / "critique_adjudication.yaml")
+    payload["decisions"].append(
+        {
+            "finding_id": "C999",
+            "decision": "dismiss",
+            "reason": "obsolete decision",
+            "patch_target": "",
+            "evidence": "",
+        }
+    )
+    (example / "critique_adjudication.yaml").write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    preview = build_adjudication_decision_diff(example, repo_root=repo)
+
+    assert preview["preserved_decision_ids"] == []
+    assert preview["dropped_decision_ids"] == ["C999"]
+    assert preview["added_finding_ids"] == []
+    assert preview["shape_changed_decision_ids"] == ["C001"]
+    assert preview["normal_sync_safe"] is False
+
+
+def test_sync_adjudication_cli_preview_prints_diff_without_writing(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_fresh_critique(repo, example)
+    adjudication = _write_adjudication(example)
+    before = adjudication.read_text(encoding="utf-8")
+
+    exit_code = main(["sync", "demo_fig", "--preview", "--repo-root", str(repo)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "schema: figure-agent.adjudication-decision-diff.v1" in captured.out
+    assert "normal_sync_safe: true" in captured.out
+    assert adjudication.read_text(encoding="utf-8") == before
+
+
+def test_adjudication_decision_diff_preview_reports_missing_existing_adjudication(
+    tmp_path: Path,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    _write_fresh_critique(repo, example)
+
+    preview = build_adjudication_decision_diff(example, repo_root=repo)
+
+    assert preview["existing_adjudication_present"] is False
+    assert preview["normal_sync_safe"] is False
+    assert preview["force_would_recreate"] is True
+    assert preview["added_finding_ids"] == ["C001"]

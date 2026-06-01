@@ -1291,6 +1291,45 @@ def test_lint_critique_accepts_valid_v1_3_critique(tmp_path: Path) -> None:
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_reports_invalid_optional_inspection_trace(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: ordinary finding\n"
+        ),
+    )
+    (fig_dir / "inspection_trace.yaml").write_text(
+        "schema: figure-agent.inspection-trace.v1\n"
+        "fixture: demo_fig\n"
+        "source: subagent\n"
+        "inspected_artifacts:\n"
+        "  - id: full_q1\n"
+        "    path: build/audit_crops/full_q1.png\n"
+        "    sha256: sha256:stale\n"
+        "    verdict: inspected\n"
+        "    note: subagent read this crop\n",
+        encoding="utf-8",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert len(violations) == 1
+    assert violations[0].category == "inspection_trace"
+    assert "hash mismatch" in violations[0].message
+
+
 def test_lint_critique_rejects_unaccounted_undeclared_geometry_candidate(
     tmp_path: Path,
 ) -> None:
