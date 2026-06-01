@@ -290,6 +290,7 @@ def test_issue_100_inventory_header_and_surface_counts_match_current_tree() -> N
     command_doc_count = len(list((REPO_ROOT / "commands").glob("fig_*.md")))
 
     assert f"through Issue 100{latest_issue_suffix}" in inventory
+    assert f"branch baseline: `main` after Issue 100{latest_issue_suffix}" in inventory
     assert (
         f"Current inventory is {script_count} scripts, {test_count} tests, "
         f"and {command_doc_count} command docs."
