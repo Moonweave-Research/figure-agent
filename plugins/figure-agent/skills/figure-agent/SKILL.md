@@ -75,8 +75,9 @@ and non-golden draft export, then stops at host critique, existing adjudication
 repair, patch, polish, human, accepted, tracked-golden, force-golden, and
 release boundaries. It records non-authoritative `.scratch/fig-run-runs/`
 evidence in execute mode. There is no resume command; after any interruption,
-inspect the prior journal only as context, then rerun live `/fig_status` or
-`/fig_drive` before using `/fig_run --execute` again.
+run `uv run python3 scripts/fig_run_journal.py <name>` to summarize the prior
+stop, then rerun live `/fig_status` or `/fig_drive` before using
+`/fig_run --execute` again. Do not replay commands from a journal.
 
 If the user asks to "use figure-agent to improve this", "loop 10 times", or
 "keep reviewing and polishing until no major issues remain" for one fixture,

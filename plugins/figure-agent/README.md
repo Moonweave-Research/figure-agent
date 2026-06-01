@@ -93,9 +93,10 @@ before host critique, existing adjudication repair, patch, polish, accepted,
 tracked-golden, force-golden, or release boundaries.
 
 `/fig_run --execute` records non-authoritative evidence under
-`.scratch/fig-run-runs/`. There is no resume command. To continue later, inspect
-the previous journal if useful, then rerun live `/fig_status` or `/fig_drive`
-and let the fresh driver choose the next action.
+`.scratch/fig-run-runs/`. There is no resume command. To continue later, run
+`uv run python3 scripts/fig_run_journal.py <name>` to summarize the previous
+stop, then rerun live `/fig_status` or `/fig_drive` and let the fresh driver
+choose the next action. Do not replay commands from a journal.
 
 When the user asks to keep improving one fixture through repeated critical
 loops, use `/fig_improve <name> --goal "<goal>" --execute --max-loops N`.

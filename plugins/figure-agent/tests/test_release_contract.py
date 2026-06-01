@@ -196,6 +196,19 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
         assert required in playbook
 
 
+def test_readme_and_skill_route_journal_inspection_through_summary_script() -> None:
+    docs_by_path = {
+        "README.md": (REPO_ROOT / "README.md").read_text(),
+        "skills/figure-agent/SKILL.md": (
+            REPO_ROOT / "skills" / "figure-agent" / "SKILL.md"
+        ).read_text(),
+    }
+
+    for doc_path, text in docs_by_path.items():
+        assert "fig_run_journal.py" in text, doc_path
+        assert "Do not replay commands" in text, doc_path
+
+
 def test_current_changelog_covers_operator_release() -> None:
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
     top_entry = changelog.partition("## [0.9.0]")[0]

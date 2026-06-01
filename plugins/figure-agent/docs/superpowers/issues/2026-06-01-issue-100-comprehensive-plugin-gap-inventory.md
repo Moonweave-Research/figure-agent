@@ -91,6 +91,7 @@ the workflow together.
 | G100-26 | P3 | SVG polish queue summary | After Issue 100AD, SVG polish gate details were present per row but not aggregated in `summary`. | Corpus-level polish triage still required scanning every row to know how many fixtures were ready, blocked, `continue_tikz`, or blocked by a specific source. | Operators could miss the dominant SVG-polish blocker class across a fixture set. | Issue 100AE - polish queue SVG summary counts |
 | G100-27 | P3 | Queue mode docs drift | `/fig_queue` accepts every `fig_driver.MODES` value, but its command doc listed only `authoring`, `review`, `release`, and `polish`. | `fig_driver.MODES` includes `final`, while `commands/fig_queue.md` omitted it from the mode contract and examples. | Operators could miss the final-readiness queue path even though it is supported by code. | Issue 100AF - fig_queue driver-mode documentation guard |
 | G100-28 | P3 | Skill command list drift | The README core command list included `/fig_e2e_smoke`, but the agent-facing SKILL quick command list did not. | README and command docs exposed the deterministic smoke harness while the host-agent skill inventory omitted it. | Agents could miss the smoke harness during final plugin/fixture verification even after reading the plugin skill. | Issue 100AG - skill command list drift guard |
+| G100-29 | P3 | Run journal continuation docs | `fig_run_journal.py` existed, but README/SKILL continuation guidance still said only to inspect the prior journal as context. | Issue 100J shipped the safe summary helper; `commands/fig_run.md` documented it, but the two highest-traffic docs did not. | Interrupted sessions could still drift into raw journal spelunking or stale command replay instead of live-state continuation. | Issue 100AH - run journal summary doc guard |
 
 ## Recommended Execution Order
 
@@ -301,6 +302,12 @@ the workflow together.
     Completed as a command-surface docs guard. The SKILL quick command list now
     names `/fig_e2e_smoke`, and the release contract test fails if README core
     commands are missing from the agent-facing skill inventory.
+
+31. **Issue 100AH - run journal summary doc guard**
+    Completed as a continuation-UX docs guard. README and SKILL now point
+    interrupted `/fig_run` sessions to `fig_run_journal.py`, and the release
+    contract test fails if either doc stops naming the safe summary helper or
+    the no-replay boundary.
 
 ## Non-Goals
 
