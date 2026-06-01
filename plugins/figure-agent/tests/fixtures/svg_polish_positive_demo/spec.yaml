@@ -1,0 +1,5 @@
+name: svg_polish_positive_demo
+panels: []
+final_artifact:
+  kind: polished_svg
+  manifest: polish/svg_polish_manifest.yaml
