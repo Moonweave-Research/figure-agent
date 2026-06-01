@@ -21,8 +21,8 @@ from svg_polish_recipe import (  # noqa: E402
 )
 
 
-def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
-    fig_dir = tmp_path / "examples" / name
+def _make_fixture_at(root: Path, name: str = "demo_fig") -> Path:
+    fig_dir = root / name
     (fig_dir / "exports").mkdir(parents=True)
     (fig_dir / "polish").mkdir()
     (fig_dir / "exports" / f"{name}.svg").write_text(
@@ -41,6 +41,10 @@ def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
         encoding="utf-8",
     )
     return fig_dir
+
+
+def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
+    return _make_fixture_at(tmp_path / "examples", name)
 
 
 def _valid_recipe(fig_dir: Path) -> dict:
@@ -397,3 +401,55 @@ def test_svg_polish_recipe_template_cli_refuses_overwrite_without_force(
     captured = capsys.readouterr()
     assert exit_code == 1
     assert "refusing to overwrite" in captured.err
+
+
+def test_template_write_rejects_parent_relative_fixture_before_writing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _make_fixture_at(tmp_path, "outside")
+    recipe_path = outside_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+    recipe_path.unlink(missing_ok=True)
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "--template",
+            "examples/../outside",
+            "--write-template",
+            "--base-dir",
+            str(tmp_path),
+        ]
+    )
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not recipe_path.exists()
+
+
+def test_template_write_rejects_existing_relative_dir_outside_examples(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _make_fixture_at(tmp_path, "outside")
+    recipe_path = outside_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+    recipe_path.unlink(missing_ok=True)
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "--template",
+            "outside",
+            "--write-template",
+            "--base-dir",
+            str(tmp_path),
+        ]
+    )
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not recipe_path.exists()
