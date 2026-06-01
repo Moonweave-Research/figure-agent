@@ -74,7 +74,7 @@ the workflow together.
 | G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 89 scripts, 100 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
-| G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context exists, but consistent style propagation across figures still depends on the author creating and maintaining the context. | README marks paper-wide context as opt-in. | A single figure can pass, while the paper series remains visually inconsistent. | Issue 100L - paper-wide style context closeout |
+| G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
 | G100-13 | P2 | Subregion iteration | Subregion iteration tooling had parser/loop integration but no starter/append helper for the operator-facing log. | README listed `docs/subregion-iteration-tool.md` as experimental/proposed even though active-set plumbing existed. | The most effective human workflow could still drift into inconsistent hand-authored logs. | Issue 100M - subregion iteration assistant |
 | G100-14 | P3 | Plugin freshness/install UX | Plugin cache and marketplace validation exist, but "am I using the newest plugin?" is still something users ask. | README discusses plugin install validation and cache audit, but no single user-facing freshness command is prominent. | Users may run old cached command docs while main has newer behavior. | Issue 100N - plugin install/version freshness check |
 | G100-15 | P3 | Detector tuning feedback | Deterministic detectors catch more issues now, but threshold tuning is empirical and false-positive/false-negative memory is scattered across milestones. | Visual clash and geometry checkers have known report-only/noisy modes. | Detector quality improves only through ad hoc issue creation instead of a systematic feedback log. | Issue 100O - detector feedback ledger |
@@ -162,7 +162,14 @@ the workflow together.
    checks, and stale fixture evidence, then points operators back to live
    `/fig_status` and `/fig_drive`.
 
-11. **Issue 100M - subregion iteration assistant**
+11. **Issue 100L - paper-wide context template**
+    Completed as paper-series workflow hardening. Added
+    `scripts/paper_aesthetic_context.py --template <paper_id> --fixture <name>
+    --write-template` so operators can start a valid v1 paper-wide context pack
+    without manually copying catalog examples. Fixture opt-in remains explicit
+    through `spec.yaml.paper_aesthetic_context`.
+
+12. **Issue 100M - subregion iteration assistant**
     Completed as text-form workflow hardening. Added
     `scripts/subregion_iteration_log.py` so operators can create the canonical
     `subregion_iteration_log.md` and append one patch row at a time while
@@ -171,41 +178,41 @@ the workflow together.
 
 ### Track D - Maintainability
 
-12. **Issue 100H/I - schema and module maps**
+13. **Issue 100H/I - schema and module maps**
    Completed on main in commit `d3ccf37`; merged by `200910c`. Added
    `docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md`,
    covering active schema owners, critique schema capability lineage, module
    layer ownership, and governance rules for future schema/script changes.
 
-13. **Issue 100N/O - freshness and detector feedback**
+14. **Issue 100N/O - freshness and detector feedback**
     Completed on main in commit `d50da39`; merged by `5a51be3`. Added
     read-only `critique_freshness` diagnostics to status output and
     `detector_feedback` counts to audit evidence so stale critique causes and
     detector tuning signals are visible without changing gates or mutating
     fixture state.
 
-14. **Issue 100P - stale issue status sweep**
+15. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-15. **Issue 100T/U - evidence trace and human-decision diff**
+16. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-16. **Issue 100Q - critique entity consistency lint**
+17. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-17. **Issue 100S - final strict profile and warning budgets**
+18. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
