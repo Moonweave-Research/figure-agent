@@ -17,6 +17,7 @@ from paper_aesthetic_context import (  # noqa: E402
     PaperAestheticContextError,
     declared_paper_context_path,
 )
+from quality_manifest import critique_manifest_paths  # noqa: E402
 
 SCHEMA = "figure-agent.fig-run-journal-summary.v1"
 JOURNAL_SCHEMA = "figure-agent.fig-run-journal.v1"
@@ -127,19 +128,26 @@ def _fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
         example_dir / "build" / f"{name}.pdf",
         example_dir / "build" / f"{name}.png",
     ]
+    paths.extend(_critique_manifest_paths(repo_root, example_dir, name))
     paths.extend(_declared_context_paths(example_dir))
     return tuple(dict.fromkeys(paths))
 
 
+def _critique_manifest_paths(repo_root: Path, example_dir: Path, name: str) -> tuple[Path, ...]:
+    spec = _load_spec_mapping(example_dir)
+    if spec is None:
+        return ()
+    return critique_manifest_paths(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=repo_root / "styles" / "polymer-paper-preamble.sty",
+    )
+
+
 def _declared_context_paths(example_dir: Path) -> tuple[Path, ...]:
-    spec_path = example_dir / "spec.yaml"
-    if not spec_path.is_file():
-        return ()
-    try:
-        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
-    except (OSError, UnicodeDecodeError, yaml.YAMLError):
-        return ()
-    if not isinstance(spec, dict):
+    spec = _load_spec_mapping(example_dir)
+    if spec is None:
         return ()
     paths: list[Path] = []
     try:
@@ -155,6 +163,17 @@ def _declared_context_paths(example_dir: Path) -> tuple[Path, ...]:
     if journal_playbook_path is not None:
         paths.append(journal_playbook_path)
     return tuple(paths)
+
+
+def _load_spec_mapping(example_dir: Path) -> dict[str, Any] | None:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return None
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return None
+    return spec if isinstance(spec, dict) else None
 
 
 def _repo_relative(repo_root: Path, path: Path) -> str:

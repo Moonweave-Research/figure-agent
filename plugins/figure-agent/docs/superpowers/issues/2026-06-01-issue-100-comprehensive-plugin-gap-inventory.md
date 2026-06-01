@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AP, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AQ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AP run journal declared context pack staleness;
+- branch baseline: `main` after Issue 100AQ run journal critique input parity;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -100,6 +100,7 @@ the workflow together.
 | G100-35 | P2 | Run journal optional evidence staleness | `fig_run_journal.py` marked journals stale against core fixture and build files, but not newer optional evidence such as `external_vision_review.yaml`. | External reviews, reference packs, aesthetic intent, and detector reports can change the next review route after a run journal was written. | A continuation summary could appear available even though important review evidence changed after the interrupted run. | Issue 100AN - run journal optional evidence staleness |
 | G100-36 | P2 | Run journal inspection/SVG polish evidence staleness | Issue 100AN still omitted `inspection_trace.yaml` and SVG polish sidecars from journal staleness checks. | Inspection traces and SVG polish delta/final-artifact sidecars can change after a run journal stops. | A continuation summary could appear available even though host-read accountability or SVG polish evidence changed after the interrupted run. | Issue 100AO - run journal inspection/SVG polish evidence staleness |
 | G100-37 | P2 | Run journal declared context staleness | `fig_run_journal.py` still did not consider spec-declared paper-wide aesthetic context or journal art-direction playbook packs stored outside the fixture directory. | `quality_manifest.py` includes declared context/playbook paths in critique input hashing, but the journal helper used only fixed fixture-local paths. | A continuation summary could appear available even though paper-wide or journal-specific art-direction context changed after the interrupted run. | Issue 100AP - run journal declared context pack staleness |
+| G100-38 | P2 | Run journal critique input parity | `fig_run_journal.py` still maintained its own stale evidence list instead of reusing the critique input manifest source set. | Reference images, panel reference images, `reference/reference_pack.md`, and shared style lock changes participate in critique freshness but were not guaranteed to stale a prior journal. | An interrupted run could appear resumable even though the next `/fig_critique` would be based on changed reference/style evidence. | Issue 100AQ - run journal critique input parity |
 
 ## Recommended Execution Order
 
@@ -359,6 +360,12 @@ the workflow together.
     `spec.yaml` best-effort and marks a prior journal stale when declared
     paper-wide aesthetic context or journal art-direction playbook packs change
     after the journal.
+
+40. **Issue 100AQ - run journal critique input parity**
+    Completed as a continuation-safety guard. `fig_run_journal.py` now reuses
+    `quality_manifest.critique_manifest_paths()` so reference, panel reference,
+    authoring reference-pack, style-lock, and future shared critique input paths
+    stale prior journals through the same source set used by critique freshness.
 
 ## Non-Goals
 
