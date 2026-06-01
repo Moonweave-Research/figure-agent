@@ -240,6 +240,42 @@ def test_latest_journal_summary_marks_svg_polish_sidecar_newer_as_stale(
     ]
 
 
+def test_latest_journal_summary_marks_declared_context_pack_newer_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    new_time = time.time()
+    (example_dir / "spec.yaml").write_text(
+        "name: runner_demo\n"
+        "paper_aesthetic_context: paper-demo\n"
+        "journal_art_direction_playbook: nc-main-text\n",
+        encoding="utf-8",
+    )
+    _touch_fixture_evidence(example_dir, old_time - 10)
+    _write_run_journal(tmp_path, run_id="20260601-010000-old", mtime=old_time)
+    paper_pack = (
+        tmp_path / "examples" / "_paper_aesthetic_contexts" / "paper-demo.yaml"
+    )
+    journal_pack = (
+        tmp_path / "examples" / "_journal_art_direction_playbooks" / "nc-main-text.yaml"
+    )
+    paper_pack.parent.mkdir(parents=True)
+    journal_pack.parent.mkdir(parents=True)
+    paper_pack.write_text("schema: figure-agent.paper-aesthetic-context.v1\n")
+    journal_pack.write_text("schema: figure-agent.journal-art-direction-playbook.v1\n")
+    os.utime(paper_pack, (new_time, new_time))
+    os.utime(journal_pack, (new_time, new_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == [
+        "examples/_journal_art_direction_playbooks/nc-main-text.yaml",
+        "examples/_paper_aesthetic_contexts/paper-demo.yaml",
+    ]
+
+
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:
     _write_fixture(tmp_path)
     runs_root = tmp_path / "custom-runs"
