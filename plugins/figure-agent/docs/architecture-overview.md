@@ -236,9 +236,10 @@ Layer 6 artifact validation.
 
 When `subregion_iteration_log.md` exists, `scripts/subregion_active_set.py`
 parses the Markdown Active Target Set and Iteration Log tables so `/fig_critique`
-can focus the host review on currently active sub-regions. This parser is
-text-form evidence plumbing only; it is not a sub-region schema, bbox cropper,
-or auto-segmentation layer.
+can focus the host review on currently active sub-regions.
+`scripts/subregion_iteration_log.py` can scaffold the canonical log and append
+one iteration row after each patch. This remains text-form evidence plumbing
+only; it is not a sub-region schema, bbox cropper, or auto-segmentation layer.
 
 When `reference/reference_pack.md` exists, `scripts/reference_pack.py` parses the
 Reference Roles table so accepted-mode validation can require role and

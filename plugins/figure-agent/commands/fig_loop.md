@@ -239,6 +239,11 @@ exactly one target. The target is either:
 - `target_type: subregion` with one active sub-region id from
   `subregion_iteration_log.md`
 
+If a fixture needs a log, start the canonical text-form file with
+`uv run python3 scripts/subregion_iteration_log.py --template examples/<name> --write-template`.
+After each one-target patch, append the result with
+`uv run python3 scripts/subregion_iteration_log.py --append examples/<name> ...`.
+
 The outer agent must keep the patch scope inside `patch_handoff.allowed_edit_scope`.
 By default that means `examples/<name>/<name>.tex`, with optional updates to
 `authoring_plan.md` or `subregion_iteration_log.md`.
