@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import yaml
 from PIL import Image, ImageDraw, ImageFont
 
@@ -23,6 +25,7 @@ SCHEMA_VERSION = "0.4.2"
 
 def build_perception_pack(name: str) -> None:
     """Write extract.yaml and overlay.png for a compiled figure."""
+    fixture_identity.validate_fixture_name(name)
     figure_dir = _resolve_figure_dir(name)
     build_dir = figure_dir / "build"
     pdf_path = build_dir / f"{name}.pdf"
@@ -306,6 +309,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build v0.4.2 perception data-only pack.")
     parser.add_argument("name", help="figure name")
     args = parser.parse_args()
+    try:
+        fixture_identity.validate_fixture_name(args.name)
+    except ValueError as exc:
+        print(f"perception_pack.py: {exc}", file=sys.stderr)
+        return 1
     build_perception_pack(args.name)
     return 0
 
