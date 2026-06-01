@@ -79,7 +79,7 @@ the workflow together.
 | G100-14 | P3 | Plugin freshness/install UX | Plugin cache and marketplace validation exist, but "am I using the newest plugin?" is still something users ask. | README discusses plugin install validation and cache audit, but no single user-facing freshness command is prominent. | Users may run old cached command docs while main has newer behavior. | Issue 100N - plugin install/version freshness check |
 | G100-15 | P3 | Detector tuning feedback | Deterministic detectors catch more issues now, but threshold tuning is empirical and false-positive/false-negative memory is scattered across milestones. | Visual clash and geometry checkers have known report-only/noisy modes. | Detector quality improves only through ad hoc issue creation instead of a systematic feedback log. | Issue 100O - detector feedback ledger |
 | G100-16 | P3 | Documentation hygiene | Some older issue documents carried stale status text such as "pending commit" or branch-only implementation status after later merges. | Issue 100P swept the current stale headers for 100F/100G and normalized 100E/100R/100J/100H-I/100N-O to main commit references. | Agents no longer see already-merged Issue 100 work as pending branch work. | Issue 100P - stale issue status sweep |
-| G100-17 | P1 | Critique semantic drift | A critique can be hash-fresh while prose or audit slots still mention a phantom/deleted visual entity. | Freshness proves source inputs match the critique, not that every named entity in the critique exists in the render/source. | A host critique can pass lint while carrying stale semantic claims that confuse humans. | Issue 100Q - critique entity consistency lint |
+| G100-17 | P1 | Critique semantic drift | A critique can be hash-fresh while prose or audit slots still mention a phantom/deleted visual entity. | Issue 100Q adds a conservative source-text lint for matched symbolic label-target entities that are absent from active TeX or survive only in comments. | Fresh critiques that claim a removed symbolic label is visible are blocked before they confuse human operators. | Issue 100Q - critique entity consistency lint |
 | G100-18 | P1 | Scratch artifact provenance | Ad hoc diagnostic crops can be stale relative to the current build and still influence human or agent judgment. | Generated build crops are manifest-bound, but arbitrary scratch crops are not part of the freshness graph. | Users can chase a defect that exists only in an old diagnostic artifact. | Issue 100R - diagnostic artifact provenance rule |
 | G100-19 | P1 | Strict-mode false-positive budget | A final-readiness preset cannot be just raw `FIGURE_AGENT_STRICT=1`; noisy report-only candidates need fixture caps or adjudicated budgets. | Strict mode exists and visual/geometry checkers are intentionally conservative/noisy in iteration. | A final preset could become unusable if every known false positive hard-fails. | Issue 100S - final strict profile and warning budgets |
 | G100-20 | P2 | Host/subagent evidence trace | Crop accounting says what the critique claims to have inspected, but there is no durable transcript-level read log for subagent-host inspection. | Milestones often record manual Read counts, but the plugin contract stores crop audit results rather than the viewer transcript. | Independent review of "did the host actually inspect this?" still relies on session prose. | Issue 100T - optional inspection transcript artifact |
@@ -116,38 +116,38 @@ the workflow together.
    value without semantic drift.
 
 5. **Issue 100E - reference-learning authoring template**
-   Implemented on branch `codex/issue100e-reference-template`. The reference
-   pack tool now emits a v1.1 starter template and validates that v1.1 opt-in
+   Completed on main in commit `99a440e`. The reference pack tool now emits a
+   v1.1 starter template and validates that v1.1 opt-in
    `reference_learning` covers concrete allowed-transfer axes (palette family,
    density, typography hierarchy, abstraction level, line language, composition
    rhythm) plus anti-copy guards (topology, exact geometry, label text, claim
    payload, panel semantics). Legacy v1 packs remain parseable.
 
 6. **Issue 100F - advisory-vs-blocking aesthetic language**
-   Implemented on branch `codex/issue100f-aesthetic-language`. Shared
-   `next_action_summary` now includes additive `decision_boundary` metadata, and
-   `/fig_drive.operator_guidance` copies it so deterministic gates, host-vision
-   gates, human decisions, release decisions, SVG-polish handoffs,
+   Completed on main in commit `52855e1`. Shared `next_action_summary` now
+   includes additive `decision_boundary` metadata, and
+   `/fig_drive.operator_guidance` copies it so deterministic gates,
+   host-vision gates, human decisions, release decisions, SVG-polish handoffs,
    advisory-only improvements, and clean completion are explicit.
 
 ### Track C - Reduce Long-Session Friction
 
 7. **Issue 100G - repeated-defect basin detector**
-   Implemented on branch `codex/issue100g-basin-detector`. Existing
-   `fig_loop_basin.py` history detection now stays visible through
+   Completed on main in commit `417805b`. Existing `fig_loop_basin.py`
+   history detection now stays visible through
    `/fig_drive.loop_checkpoint` and `/fig_run.boundary_handoff`: basin stops
    name the repeated signal, preserve `basin_summary`, and begin closeout with
    step-out actions instead of flattening into a generic human gate.
 
 8. **Issue 100R - diagnostic artifact provenance rule**
-   Implemented on branch `codex/issue100r-diagnostic-provenance`. Added
+   Completed on main in commit `49cb61d`; merged by `14c5b64`. Added
    `scripts/diagnostic_artifact_provenance.py` so extra screenshots, `/tmp`
    crops, and `.scratch/` diagnostics can be classified before use:
    current build renders and manifest-bound audit crops are authoritative;
    stale, mismatched, missing, or unmanifested diagnostics are context only.
 
 9. **Issue 100J - resumable guided run checkpoint**
-   Implemented on branch `codex/issue100j-run-journal-summary`. Added
+   Completed on main in commit `12c66c2`; merged by `8b0ff98`. Added
    `scripts/fig_run_journal.py` to summarize the latest
    `.scratch/fig-run-runs` journal for a fixture without replaying stored
    commands. The summary names the previous stop, required actor, closeout
@@ -157,14 +157,14 @@ the workflow together.
 ### Track D - Maintainability
 
 10. **Issue 100H/I - schema and module maps**
-   Implemented on branch `codex/issue100hi-schema-module-map`. Added
+   Completed on main in commit `d3ccf37`; merged by `200910c`. Added
    `docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md`,
    covering active schema owners, critique schema capability lineage, module
    layer ownership, and governance rules for future schema/script changes.
 
 11. **Issue 100N/O - freshness and detector feedback**
-    Implemented on branch `codex/issue100no-freshness-detector-feedback`.
-    Added read-only `critique_freshness` diagnostics to status output and
+    Completed on main in commit `d50da39`; merged by `5a51be3`. Added
+    read-only `critique_freshness` diagnostics to status output and
     `detector_feedback` counts to audit evidence so stale critique causes and
     detector tuning signals are visible without changing gates or mutating
     fixture state.
@@ -179,6 +179,13 @@ the workflow together.
 13. **Issue 100T/U - evidence trace and human-decision diff**
     Keep this behind the P0/P1 workflow fixes. It is valuable for audits, but it
     should not slow down the narrower evidence-parity and final-preset fixes.
+
+14. **Issue 100Q - critique entity consistency lint**
+    Completed as a conservative critique-lint hardening slice.
+    `critique_lint.py` now blocks matched symbolic label-target audit entries
+    whose entity token is absent from active TeX or appears only in comments.
+    This closes the narrow phantom-entity gap without attempting broad visual
+    OCR or natural-language object detection.
 
 ## Non-Goals
 

@@ -85,7 +85,14 @@ def _quality_axes_yaml(
     )
 
 
-def _audit_enumeration_yaml() -> str:
+def _audit_enumeration_yaml(*, label_target_matching_yaml: str | None = None) -> str:
+    label_target_matching = (
+        label_target_matching_yaml
+        or "    - label: Apparatus\n"
+        "      nearest_object: apparatus\n"
+        "      intended_target: apparatus\n"
+        "      matches: true\n"
+    )
     return (
         "audit_enumeration:\n"
         "  structural_completeness:\n"
@@ -98,10 +105,7 @@ def _audit_enumeration_yaml() -> str:
         "        status: intentional_omission\n"
         "        rationale: simplified schematic\n"
         "  label_target_matching:\n"
-        "    - label: Apparatus\n"
-        "      nearest_object: apparatus\n"
-        "      intended_target: apparatus\n"
-        "      matches: true\n"
+        f"{label_target_matching}"
         "  physical_plausibility:\n"
         "    - check: floating_components\n"
         "      finding: no floating components\n"
@@ -908,6 +912,7 @@ def _write_critique(
     journal_grade_yaml: str = "",
     journal_polish_evidence: str | None = None,
     publication_readiness_evidence: str | None = None,
+    label_target_matching_yaml: str | None = None,
 ) -> Path:
     critique = fig_dir / "critique.md"
     quality_axes = _quality_axes_yaml(
@@ -918,7 +923,7 @@ def _write_critique(
         "---\n"
         f"schema: {schema}\n"
         "fixture: demo_fig\n"
-        f"{_audit_enumeration_yaml()}"
+        f"{_audit_enumeration_yaml(label_target_matching_yaml=label_target_matching_yaml)}"
         f"{quality_axes}"
         f"{top_tier_yaml or _top_tier_yaml()}"
         f"{micro_defects_yaml}"
@@ -4393,6 +4398,60 @@ def test_lint_critique_reports_duplicate_finding_ids(tmp_path: Path) -> None:
 
     assert [violation.category for violation in violations] == ["duplicate_finding_id"]
     assert "P001" in violations[0].message
+
+
+def test_lint_critique_rejects_matched_entity_that_is_comment_only(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "entity_drift"
+    fig_dir.mkdir()
+    (fig_dir / "entity_drift.tex").write_text(
+        "% removed label: $F_{\\mathrm{Maxwell}}$\n"
+        "\\node at (0, 0) {$F_{\\mathrm{Coulomb}}$};\n",
+        encoding="utf-8",
+    )
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.3",
+        label_target_matching_yaml=(
+            "    - label: F_Maxwell\n"
+            "      nearest_object: neutral gray dashed rightward arrow\n"
+            "      intended_target: Maxwell force arrow\n"
+            "      matches: true\n"
+        ),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert violations
+    assert violations[0].category == "critique_entity_consistency"
+    assert "F_Maxwell" in violations[0].message
+    assert "comment-only" in violations[0].message
+
+
+def test_lint_critique_accepts_matched_entity_present_in_active_tex(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "entity_present"
+    fig_dir.mkdir()
+    (fig_dir / "entity_present.tex").write_text(
+        "\\node at (0, 0) {$F_{\\mathrm{Maxwell}}$};\n",
+        encoding="utf-8",
+    )
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.3",
+        label_target_matching_yaml=(
+            "    - label: F_Maxwell\n"
+            "      nearest_object: neutral gray dashed rightward arrow\n"
+            "      intended_target: Maxwell force arrow\n"
+            "      matches: true\n"
+        ),
+        findings_yaml="findings: []\n",
+    )
+
+    assert critique_lint.lint_critique(fig_dir) == []
 
 
 def test_lint_critique_reports_malformed_finding_ids_without_traceback(
