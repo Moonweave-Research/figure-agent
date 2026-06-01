@@ -338,6 +338,30 @@ def test_external_vision_review_template_uses_current_artifact_and_manifest_crop
     assert external_vision_review_freshness(example_dir, review)["state"] == "fresh"
 
 
+def test_external_vision_review_freshness_detects_manifest_crop_set_drift(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_artifact(example_dir, content=b"render")
+    first_crop = _write_crop(example_dir, crop_id="full_q1")
+    _write_crop_manifest(example_dir, [first_crop])
+    review_path = example_dir / "external_vision_review.yaml"
+    review_path.write_text(
+        external_vision_review_template(example_dir),
+        encoding="utf-8",
+    )
+    review = load_external_vision_review(review_path)
+
+    second_crop = _write_crop(example_dir, crop_id="VC002_B")
+    _write_crop_manifest(example_dir, [first_crop, second_crop])
+
+    freshness = external_vision_review_freshness(example_dir, review)
+
+    assert freshness["state"] == "stale"
+    assert freshness["stale_paths"] == ["build/audit_crops/VC002_B.png"]
+
+
 def test_external_vision_review_template_cli_emits_reloadable_yaml(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

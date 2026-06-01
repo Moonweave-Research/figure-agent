@@ -343,6 +343,11 @@ def external_vision_review_freshness(
 ) -> dict[str, Any]:
     stale_paths: list[str] = []
     missing_paths: list[str] = []
+    errors: list[str] = []
+
+    def mark_stale(path: str) -> None:
+        if path not in stale_paths:
+            stale_paths.append(path)
 
     artifact_path, artifact_state = _hash_record_state(
         example_dir,
@@ -352,22 +357,40 @@ def external_vision_review_freshness(
         ),
     )
     if artifact_state == "stale":
-        stale_paths.append(artifact_path)
+        mark_stale(artifact_path)
     elif artifact_state == "missing":
         missing_paths.append(artifact_path)
 
     raw_crops = review.get("reviewed_crops")
+    reviewed_crop_paths: set[str] = set()
     if isinstance(raw_crops, list):
         for raw_crop in raw_crops:
             if not isinstance(raw_crop, dict):
                 continue
             crop_path, crop_state = _hash_record_state(example_dir, raw_crop)
+            reviewed_crop_paths.add(crop_path)
             if crop_state == "stale":
-                stale_paths.append(crop_path)
+                mark_stale(crop_path)
             elif crop_state == "missing":
                 missing_paths.append(crop_path)
 
-    if missing_paths:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if manifest_path.is_file():
+        try:
+            current_crop_paths = {
+                record["path"] for record in _reviewed_crop_records(example_dir)
+            }
+        except ExternalVisionReviewError as exc:
+            current_crop_paths = set()
+            errors.append(str(exc))
+        for path in sorted(current_crop_paths - reviewed_crop_paths):
+            mark_stale(path)
+        for path in sorted(reviewed_crop_paths - current_crop_paths):
+            mark_stale(path)
+
+    if errors:
+        state = "invalid"
+    elif missing_paths:
         state = "missing_artifact"
     elif stale_paths:
         state = "stale"
@@ -377,6 +400,7 @@ def external_vision_review_freshness(
         "state": state,
         "stale_paths": stale_paths,
         "missing_paths": missing_paths,
+        "errors": errors,
     }
 
 

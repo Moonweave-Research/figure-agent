@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AK, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AL, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AK inventory baseline freshness guard;
+- branch baseline: `main` after Issue 100AL external review crop-set freshness;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -95,6 +95,7 @@ the workflow together.
 | G100-30 | P3 | Gap inventory freshness | The Issue 100 inventory body listed Issues 100AG/AH, but the status header still claimed the roadmap was current only through Issue 100AF; code-surface counts were also stale. | The inventory is the active whole-plugin review ledger, so its own freshness metadata needs a guard. | Future review loops can mis-prioritize if the roadmap appears older than its body or reports stale surface size. | Issue 100AI - gap inventory freshness guard |
 | G100-31 | P1 | External finding handoff | `external_vision_review.yaml` could report a fresh external finding without a `conflicts[]` entry, and the loop treated that review as `passed`. | Issue 100K intentionally left external review as optional local evidence, but only explicit host-vs-external conflicts triggered human review. | A second-opinion reviewer could find a new issue that is neither copied into host critique nor surfaced as a human gate. | Issue 100AJ - external finding handoff gate |
 | G100-32 | P3 | Gap inventory baseline freshness | The Issue 100 inventory status header was current, but the context section still said the branch baseline was `main` after Issue 99. | Issue 100AI guarded only the header and code-surface counts, leaving another stale roadmap metadata field unguarded. | Future agents could anchor review decisions to an obsolete baseline even though the body lists newer completed work. | Issue 100AK - inventory baseline freshness guard |
+| G100-33 | P1 | External review crop-set freshness | `external_vision_review.yaml` hashed reviewed crops, but did not become stale when the current audit-crop manifest later added or removed crop paths. | Issue 100K template binds the initial crop set, but freshness only rechecked files already listed by `reviewed_crops[]`. | A second-opinion review could remain fresh even though a new high-zoom crop was never inspected by the external reviewer. | Issue 100AL - external review crop-set freshness |
 
 ## Recommended Execution Order
 
@@ -327,6 +328,11 @@ the workflow together.
     Completed as a roadmap-hygiene guard. The Issue 100 branch-baseline line
     now tracks the latest Issue 100 suffix through the same release-contract
     test that protects the status header and code-surface counts.
+
+35. **Issue 100AL - external review crop-set freshness**
+    Completed as a crop-manifest freshness guard. External second-opinion
+    reviews now become stale when the current audit-crop manifest adds or
+    removes crop paths that were not represented in `reviewed_crops[]`.
 
 ## Non-Goals
 
