@@ -1,6 +1,6 @@
 # Issue 63E - Unintended-Visible Anomaly Audit
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: Issue 63A reference-learning contract
 

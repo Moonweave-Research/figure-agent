@@ -1,6 +1,6 @@
 # Issue 63D - Basin And Diminishing-Returns Detector
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: Issue 63C aesthetic metric surfacing
 

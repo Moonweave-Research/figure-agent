@@ -1,6 +1,6 @@
 # Issue 100V - SVG Polish Positive Harness
 
-Status: implemented on branch `codex/issue100v-svg-positive-harness`
+Status: completed; merged to main in `fb57028`
 
 Type: SVG polish positive path, deterministic harness, final-artifact workflow
 

@@ -1,6 +1,6 @@
 # Issue 63 - Reference Learning And Aesthetic Metrics Roadmap
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: v0.8 release current-truth docs
 

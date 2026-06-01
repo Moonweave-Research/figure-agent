@@ -1,6 +1,6 @@
 # Issue 63C - Aesthetic Metric Surfacing In Status And Loop
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: Issue 63B non-model aesthetic metrics pack
 

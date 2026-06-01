@@ -1,6 +1,6 @@
 # Issue 63B - Non-Model Aesthetic Metrics Pack
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: Issue 63A reference-learning contract
 

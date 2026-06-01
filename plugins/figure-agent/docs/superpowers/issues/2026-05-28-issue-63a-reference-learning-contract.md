@@ -1,6 +1,6 @@
 # Issue 63A - Reference Learning Contract
 
-Status: implemented on branch `codex/issue63-reference-learning-roadmap`
+Status: completed; merged to main
 
 Depends on: Issue 63 reference-learning roadmap
 
