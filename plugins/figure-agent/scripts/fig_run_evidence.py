@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import fixture_identity  # noqa: E402
 import yaml
 from journal_art_direction_playbook import (  # noqa: E402
     JournalArtDirectionPlaybookError,
@@ -28,6 +29,7 @@ def repo_relative(repo_root: Path, path: Path) -> str:
 
 
 def fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
+    fixture_identity.validate_fixture_name(name)
     example_dir = repo_root / "examples" / name
     paths = [
         example_dir / f"{name}.tex",
@@ -83,6 +85,7 @@ def evidence_snapshot(repo_root: Path, name: str) -> dict[str, Any]:
 
 
 def snapshot_stale_paths(repo_root: Path, name: str, snapshot: object) -> list[str]:
+    fixture_identity.validate_fixture_name(name)
     if snapshot is None:
         return []
     if not isinstance(snapshot, dict):
