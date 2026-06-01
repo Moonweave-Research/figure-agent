@@ -203,6 +203,34 @@ def test_run_export_blocks_reference_fixture_without_critique(
     assert "--skip-critique" in captured.err
 
 
+def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "examples").mkdir(parents=True)
+    outside = repo / "outside"
+    (outside / "build").mkdir(parents=True)
+    (outside / "spec.yaml").write_text("name: outside\npanels: []\n", encoding="utf-8")
+    (outside / "outside.tex").write_text("% tikz\n", encoding="utf-8")
+    (outside / "build" / "outside.pdf").write_bytes(b"%PDF")
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _example, _name: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "../outside", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "fixture name must be a single examples/<name> directory name" in captured.err
+
+
 def test_run_export_blocks_declared_missing_reference_before_regenerate(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

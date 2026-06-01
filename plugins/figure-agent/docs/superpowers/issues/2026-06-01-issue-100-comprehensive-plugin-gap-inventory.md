@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AV, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AW, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AV driver fixture name boundary;
+- branch baseline: `main` after Issue 100AW export fixture name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -71,7 +71,7 @@ the workflow together.
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
 | G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. Issue 100Z adds a release-contract guard so script schema constants cannot drift out of the module map. | Future changes now have a test-backed ownership map instead of relying on manual updates alone. | Issue 100H - schema capability matrix and deprecation policy; Issue 100Z - schema map drift guard |
-| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 95 scripts, 101 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
+| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 96 scripts, 102 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
 | G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
@@ -106,6 +106,7 @@ the workflow together.
 | G100-41 | P2 | Run journal new evidence freshness | Issue 100AR compared only files present in the stored snapshot, while the legacy mtime fallback missed newly added evidence files with older mtimes. | A new `spec.yaml` or optional evidence file can be copied in after the journal while preserving an old timestamp. | A continuation summary could appear available even though the current evidence source set contains files that were never present in the recorded run journal. | Issue 100AT - run journal new evidence snapshot gap |
 | G100-42 | P2 | Queue fixture path boundary | `/fig_queue` treated explicit fixture arguments as path fragments under `examples/` without rejecting `../` or multi-component names first. | `examples/../outside` can resolve to an existing directory outside `examples/`, allowing the queue to call the driver with an unsafe fixture identity. | Batch queue triage could inspect or route a non-fixture path instead of surfacing an operator error row. | Issue 100AU - queue fixture name boundary |
 | G100-43 | P2 | Driver fixture path boundary | `/fig_drive` and `/fig_run` still relied on `examples/<name>` path joining after Issue 100AU fixed only the queue surface. | `fig_driver.build_driver_summary("../outside", ...)` could reach status inference if `examples/../outside` existed, and `fig_run` inherits driver behavior. | Direct single-fixture entrypoints could inspect or plan commands for a non-fixture path instead of failing before workflow routing. | Issue 100AV - driver fixture name boundary |
+| G100-44 | P1 | Export fixture path boundary | `/fig_export` still accepted raw fixture names after queue/driver boundary hardening and resolved them as `examples/<name>` before export checks. | `run_export.py ../outside --skip-critique` could reach internal build/export path checks for an escaped path instead of failing at fixture identity validation. | A mutation-capable export command should not rely on downstream path failures to avoid writing outside a declared fixture. | Issue 100AW - export fixture name boundary |
 
 ## Recommended Execution Order
 
@@ -402,6 +403,12 @@ the workflow together.
     inherits the same controlled error path instead of letting traversal syntax
     become a fixture identity. `/fig_queue` reuses the same driver-side policy
     so the queue and direct-entrypoint boundaries stay aligned.
+
+46. **Issue 100AW - export fixture name boundary**
+    Completed as export safety hardening. Added shared fixture identity helpers
+    and made `/fig_export` reject unsafe fixture names before critique, export,
+    build-PDF, or regeneration checks. `/fig_drive` and `/fig_queue` use the
+    same policy to prevent path-boundary drift.
 
 ## Non-Goals
 

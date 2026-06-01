@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from critique_lint import lint_critique  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
@@ -76,6 +77,12 @@ def main() -> int:
         help="export even when reference-grounded critique is missing or stale",
     )
     args = parser.parse_args()
+
+    try:
+        fixture_identity.validate_fixture_name(args.name)
+    except ValueError as exc:
+        print(f"run_export.py: {exc}", file=sys.stderr)
+        return 1
 
     example_dir = REPO_ROOT / "examples" / args.name
     if not example_dir.is_dir():

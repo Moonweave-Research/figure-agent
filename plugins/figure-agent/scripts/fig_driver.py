@@ -37,6 +37,7 @@ import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
 import fig_driver_guidance as guidance_mod  # noqa: E402
+import fixture_identity  # noqa: E402
 import ready_improvement as ready_improvement_mod  # noqa: E402
 from next_action_summary import driver_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
@@ -236,15 +237,7 @@ def _status_for(example_dir: Path) -> dict[str, Any]:
     return infer_stage(example_dir)
 
 
-def is_safe_fixture_name(name: str) -> bool:
-    if not isinstance(name, str) or not name.strip():
-        return False
-    relative = Path(name)
-    return (
-        not relative.is_absolute()
-        and len(relative.parts) == 1
-        and ".." not in relative.parts
-    )
+is_safe_fixture_name = fixture_identity.is_safe_fixture_name
 
 
 def _workspace_warnings(repo_root: Path) -> list[str]:
@@ -595,8 +588,7 @@ def build_driver_summary(
 ) -> dict[str, Any]:
     if mode not in MODES:
         raise ValueError(f"unsupported mode: {mode}")
-    if not is_safe_fixture_name(name):
-        raise ValueError("fixture name must be a single examples/<name> directory name")
+    fixture_identity.validate_fixture_name(name)
     example_dir = repo_root / "examples" / name
     status = _status_for(example_dir)
     workspace_warnings = _workspace_warnings(repo_root)
