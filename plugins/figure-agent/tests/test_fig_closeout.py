@@ -99,6 +99,26 @@ def _write_loop_run(repo: Path, name: str = "loop_demo", *, fixture: str | None 
     return iteration
 
 
+def test_closeout_rejects_unsafe_fixture_name_before_status(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("name: outside\npanels: []\n", encoding="utf-8")
+
+    def status_should_not_run(_example_dir: Path) -> dict:
+        raise AssertionError("unsafe fixture name reached status inference")
+
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", status_should_not_run)
+
+    with pytest.raises(
+        fig_closeout_mod.FigCloseoutError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        compute_closeout("../outside", repo_root=tmp_path)
+
+
 def test_closeout_reports_compile_critique_and_loop_actions(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

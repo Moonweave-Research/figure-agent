@@ -503,6 +503,27 @@ def test_main_missing_fixture_returns_json_error(
     assert captured.err == ""
 
 
+def test_run_smoke_rejects_unsafe_fixture_name_before_commands(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "examples").mkdir()
+    outside = repo / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("name: outside\npanels: []\n", encoding="utf-8")
+    commands: list[list[str]] = []
+
+    def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+        commands.append(args)
+        return _completed(args)
+
+    with pytest.raises(
+        smoke.SmokeError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        smoke.run_smoke("../outside", repo_root=repo, command_runner=runner)
+
+    assert commands == []
+
+
 def test_main_returns_exit_code_1_when_run_smoke_reports_unsuccessful_summary(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
