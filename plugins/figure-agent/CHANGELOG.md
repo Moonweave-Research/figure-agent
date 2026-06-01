@@ -4,8 +4,8 @@ All notable changes to figure-agent are documented here.
 
 ## [0.9.1] - 2026-06-01
 
-Patch release for Issue 95 loop-centered improvement orchestration after the
-v0.9.0 operator release candidate.
+Patch release for Issue 95 loop-centered improvement orchestration plus the
+post-v0.9.0 top-tier critique contract sync.
 
 ### Added
 
@@ -15,6 +15,11 @@ v0.9.0 operator release candidate.
   boundaries, and emits `figure-agent.improve.v1` JSON.
 - Official docs and skill routing now prefer `/fig_improve` when the user asks
   to run repeated critique/improvement loops on one fixture.
+- Issues 97 and 98 v1.17 grounded critique contract sync. Host critique
+  guidance now requires `aesthetic_antipattern_audit`,
+  `weakest_panel_coherence`, and `reference_learning_accountability` where the
+  grounded v1.17 route applies, and command docs no longer describe those
+  paths as v1.14-only.
 
 ### Guardrails
 
@@ -24,6 +29,8 @@ v0.9.0 operator release candidate.
 - Optional-improvement candidates remain advisory. They do not override
   critique lint, adjudication, accepted/golden, publication, SVG-polish, or
   human-review gates.
+- v1.17 aesthetic and reference-learning fields are critique evidence, not
+  permission to bypass human, release, accepted, golden, or publication gates.
 
 ## [0.9.0] - 2026-05-30
 

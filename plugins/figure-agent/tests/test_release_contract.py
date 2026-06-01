@@ -192,6 +192,9 @@ def test_current_changelog_covers_operator_release() -> None:
         "loop-centered",
         "host critique",
         "optional-improvement",
+        "Issues 97 and 98",
+        "v1.17 grounded critique contract sync",
+        "aesthetic_antipattern_audit",
         "not a hidden auto-designer",
     ]:
         assert required in top_entry
@@ -215,7 +218,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
 
     assert f"current release-candidate truth through v{plugin['version']}" in closeout
     assert (
-        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issue 95"
+        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issues 95-98"
         in closeout
     )
     assert "after Issue 33 / PR #47" not in closeout

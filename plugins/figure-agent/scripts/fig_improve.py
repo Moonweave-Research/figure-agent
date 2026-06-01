@@ -95,7 +95,25 @@ def _required_actor(run_payload: dict[str, Any], stop_reason: str) -> str:
     return "workflow_agent"
 
 
-def _instruction(name: str, stop_reason: str, actor: str) -> str:
+def _boundary_handoff(run_payload: dict[str, Any]) -> dict[str, Any]:
+    handoff = run_payload.get("boundary_handoff")
+    return handoff if isinstance(handoff, dict) else {}
+
+
+def _closeout_checks(run_payload: dict[str, Any]) -> list[str]:
+    handoff = _boundary_handoff(run_payload)
+    checks = handoff.get("closeout_checks")
+    if isinstance(checks, list) and all(isinstance(item, str) for item in checks):
+        return [item for item in checks if item.strip()]
+    return []
+
+
+def _instruction(
+    name: str, stop_reason: str, actor: str, run_payload: dict[str, Any]
+) -> str:
+    stop_boundary = run_payload.get("final_stop_boundary")
+    action = run_payload.get("final_action")
+    closeout_checks = _closeout_checks(run_payload)
     if stop_reason == fig_run.STOP_COMPLETE:
         return "No required plugin action remains."
     if stop_reason == STOP_OPTIONAL_IMPROVEMENT:
@@ -103,6 +121,22 @@ def _instruction(name: str, stop_reason: str, actor: str) -> str:
             "Review ready_improvement_summary.candidates and choose at most one "
             "optional polish target before rerunning /fig_improve."
         )
+    if stop_boundary == fig_driver.STOP_REFERENCE_MISSING:
+        return "Fix reference path or provide reference image, then rerun /fig_improve."
+    if stop_boundary == fig_driver.STOP_SEMANTIC_BACKPORT:
+        return "Backport semantic changes to source/spec, then rerun /fig_improve."
+    if action == fig_driver.ACTION_PATCH_HANDOFF_STOP or stop_boundary in {
+        fig_driver.STOP_PATCH_HANDOFF,
+        fig_driver.STOP_AMBIGUOUS_PATCH,
+    }:
+        return (
+            "Review the patch handoff and verify executor currentness before source "
+            "mutation, then rerun /fig_improve."
+        )
+    if stop_boundary == fig_driver.STOP_CLOSEOUT:
+        if any("fig_closeout.py" in check for check in closeout_checks):
+            return "Run fig_closeout.py for closeout guidance, then rerun /fig_improve."
+        return "Complete the listed closeout checks, then rerun /fig_improve."
     if actor == "host_llm":
         return f"Run /fig_critique {name}, then rerun /fig_improve."
     if actor == "human":
@@ -194,7 +228,9 @@ def run_improvement(
         "final_required_actor": final_actor,
         "final_action": final_run.get("final_action"),
         "final_stop_boundary": final_run.get("final_stop_boundary"),
-        "next_operator_instruction": _instruction(name, final_stop_reason, final_actor),
+        "next_operator_instruction": _instruction(
+            name, final_stop_reason, final_actor, final_run
+        ),
     }
     if ready_improvement is not None:
         payload["ready_improvement_summary"] = ready_improvement

@@ -48,6 +48,7 @@ def _run_payload(
     final_action: str,
     final_stop_reason: str,
     final_stop_boundary: str | None = None,
+    boundary_handoff: dict[str, Any] | None = None,
     ready_improvement_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     driver = _driver(
@@ -55,7 +56,7 @@ def _run_payload(
         stop_boundary=final_stop_boundary,
         ready_improvement_summary=ready_improvement_summary,
     )
-    return {
+    payload = {
         "schema": fig_run.SCHEMA,
         "fixture": "demo",
         "mode": "review",
@@ -80,6 +81,30 @@ def _run_payload(
         "final_stop_boundary": final_stop_boundary,
         "final_stop_reason": final_stop_reason,
         "executed_count": 0,
+    }
+    if boundary_handoff is not None:
+        payload["boundary_handoff"] = boundary_handoff
+    return payload
+
+
+def _boundary_handoff(
+    *,
+    action: str,
+    stop_boundary: str | None,
+    required_actor: str = "workflow_agent",
+    closeout_checks: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "schema": fig_run.BOUNDARY_HANDOFF_SCHEMA,
+        "action": action,
+        "stop_boundary": stop_boundary,
+        "required_actor": required_actor,
+        "blocking_reason": "boundary reason",
+        "evidence_refs": [f"driver.stop_boundary:{stop_boundary}"],
+        "allowed_scope": ["read-only"],
+        "forbidden_scope": ["hidden source edits"],
+        "closeout_checks": closeout_checks or ["rerun live /fig_drive"],
+        "continuation_guidance": {"rerun_live_driver_first": True},
     }
 
 
@@ -255,6 +280,148 @@ def test_improve_plan_only_runs_one_cycle_without_execution(
     assert payload["final_stop_reason"] == "plan_only"
     assert payload["final_required_actor"] == "workflow_agent"
     assert len(payload["cycles"]) == 1
+
+
+def test_improve_explains_reference_missing_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_RUN_CRITIQUE,
+                final_stop_reason=fig_run.STOP_HOST_BOUNDARY,
+                final_stop_boundary=fig_driver.STOP_REFERENCE_MISSING,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_RUN_CRITIQUE,
+                    stop_boundary=fig_driver.STOP_REFERENCE_MISSING,
+                    closeout_checks=[
+                        "fix reference path or provide reference image",
+                        "rerun live /fig_drive",
+                    ],
+                ),
+            )
+        ],
+    )
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_required_actor"] == "workflow_agent"
+    assert payload["next_operator_instruction"] == (
+        "Fix reference path or provide reference image, then rerun /fig_improve."
+    )
+
+
+def test_improve_explains_semantic_backport_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+                    stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+                    closeout_checks=[
+                        "backport semantic changes to source/spec",
+                        "rerun live /fig_drive",
+                    ],
+                ),
+            )
+        ],
+    )
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_required_actor"] == "workflow_agent"
+    assert payload["next_operator_instruction"] == (
+        "Backport semantic changes to source/spec, then rerun /fig_improve."
+    )
+
+
+def test_improve_explains_deferred_patch_handoff_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_PATCH_HANDOFF,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_PATCH_HANDOFF_STOP,
+                    stop_boundary=fig_driver.STOP_PATCH_HANDOFF,
+                    closeout_checks=[
+                        "verify patch executor currentness",
+                        "rerun live /fig_drive",
+                    ],
+                ),
+            )
+        ],
+    )
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_required_actor"] == "workflow_agent"
+    assert payload["next_operator_instruction"] == (
+        "Review the patch handoff and verify executor currentness before source "
+        "mutation, then rerun /fig_improve."
+    )
+
+
+def test_improve_explains_closeout_boundary(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_RUN_FIG_LOOP,
+                final_stop_reason=fig_run.STOP_NOT_EXECUTABLE,
+                final_stop_boundary=fig_driver.STOP_CLOSEOUT,
+                boundary_handoff=_boundary_handoff(
+                    action=fig_driver.ACTION_RUN_FIG_LOOP,
+                    stop_boundary=fig_driver.STOP_CLOSEOUT,
+                    closeout_checks=[
+                        "run uv run python3 scripts/fig_closeout.py demo --json",
+                        "follow closeout.next_action",
+                        "rerun live /fig_drive",
+                    ],
+                ),
+            )
+        ],
+    )
+
+    payload = fig_improve.run_improvement(
+        "demo",
+        goal="improve",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_required_actor"] == "workflow_agent"
+    assert payload["next_operator_instruction"] == (
+        "Run fig_closeout.py for closeout guidance, then rerun /fig_improve."
+    )
 
 
 def test_improve_stops_on_repeated_boundary(

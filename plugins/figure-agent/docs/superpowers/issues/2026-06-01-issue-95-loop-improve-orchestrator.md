@@ -80,9 +80,10 @@ improvement workflow.
 
 ## Verification
 
-- `uv run pytest -q tests/test_fig_improve.py` -> 8 passed
-- `uv run pytest -q tests/test_fig_improve.py tests/test_fig_run.py tests/test_fig_driver.py` -> 128 passed
-- `uv run pytest -q` -> 1552 passed, 3 skipped, 1 xfailed
+- `uv run pytest -q tests/test_fig_improve.py` -> 12 passed after the boundary
+  instruction hardening review
+- `uv run pytest -q tests/test_fig_improve.py tests/test_fig_run.py tests/test_fig_driver.py tests/test_release_contract.py tests/test_command_contract_docs.py` -> 154 passed
+- `uv run pytest -q` -> 1576 passed, 3 skipped, 1 xfailed, 6 warnings
 - `uv run ruff check .` -> passed
 - `git diff --check` -> clean
 - `claude plugin validate .claude-plugin/plugin.json` -> passed
@@ -96,6 +97,7 @@ improvement workflow.
 2. UX: fixed during review. Early docs made `--max-loops` sound like one call
    could complete host critique or source patching; docs now state that the
    operator reruns `/fig_improve` after the required actor acts.
-3. Test coverage: clean. Tests cover host boundary, internal continuation after
-   safe step cap, complete, optional improvements, plan-only mode, repeated
-   boundary, CLI JSON, and invalid max loops.
+3. Test coverage: clean. Tests cover host boundary, reference-missing,
+   semantic-backport, deferred patch handoff, closeout, internal continuation
+   after safe step cap, complete, optional improvements, plan-only mode,
+   repeated boundary, CLI JSON, and invalid max loops.
