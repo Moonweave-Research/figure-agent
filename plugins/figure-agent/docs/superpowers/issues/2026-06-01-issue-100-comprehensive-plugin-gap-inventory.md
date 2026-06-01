@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BE, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BF, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BE text-boundary helper parent-relative path boundary;
+- branch baseline: `main` after Issue 100BF diagnostic provenance fixture path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -115,6 +115,7 @@ the workflow together.
 | G100-50 | P2 | Run journal writer path boundary | `fig_run_records.write_run_journal()` accepted raw `payload["fixture"]`, sanitized the run directory name, and wrote non-authoritative journal evidence for traversal syntax if called directly. | Tests could bypass the driver boundary by monkeypatching the runner and still record a journal for `../bad/name with spaces`. | A write-capable continuation helper should reject unsafe fixture identity before run directory allocation, evidence snapshotting, or JSON writes. | Issue 100BC - fig run journal writer fixture name boundary |
 | G100-51 | P2 | Run journal evidence helper path boundary | `fig_run_evidence.py` exposed shared evidence path/snapshot helpers that resolved raw fixture names under `examples/<name>` without validating the fixture identity itself. | Direct `evidence_snapshot(repo_root, "../outside")` could read existing files outside `examples/` even though normal journal reader/writer paths had been hardened. | Shared continuation-evidence helpers should enforce the same fixture boundary as their callers, so future module reuse cannot reintroduce traversal reads. | Issue 100BD - fig run evidence helper fixture name boundary |
 | G100-52 | P2 | Text-boundary helper write path boundary | `text_boundary_spec_helper.py --write` accepted parent-relative relative paths such as `examples/../outside` and could rewrite a normalized `outside/spec.yaml` if it existed. | The helper is usually invoked as `examples/<name> --write`, but its parser also accepted arbitrary path-like input before rejecting traversal syntax. | A write-capable authoring helper should preserve explicit path support while rejecting accidental traversal paths before spec resolution or mutation. | Issue 100BE - text-boundary helper parent-relative path boundary |
+| G100-53 | P2 | Diagnostic provenance fixture path boundary | `diagnostic_artifact_provenance.py` accepted traversal-like fixture paths and still emitted normal provenance JSON. | `diagnostic_artifact_provenance.py examples/../outside ... --repo-root <repo>` returned schema-valid output instead of surfacing invalid fixture identity. | A tool that decides whether diagnostic images are authoritative should reject invalid fixture/path inputs instead of making wrong-fixture evidence look like a normal report. | Issue 100BF - diagnostic provenance fixture path boundary |
 
 ## Recommended Execution Order
 
@@ -472,6 +473,13 @@ the workflow together.
     still supports `examples/<name>`, `examples/<name>/spec.yaml`, and absolute
     explicit paths, but rejects relative paths containing `..` before resolving
     or rewriting `spec.yaml`.
+
+55. **Issue 100BF - diagnostic provenance fixture path boundary**
+    Completed as evidence-provenance safety hardening.
+    `diagnostic_artifact_provenance.py` now resolves fixture input through a
+    CLI-only boundary that accepts fixture names, `examples/<name>`, or direct
+    absolute children of `<repo-root>/examples`, and rejects traversal-like or
+    nested fixture paths before emitting authoritative/diagnostic classifications.
 
 ## Non-Goals
 
