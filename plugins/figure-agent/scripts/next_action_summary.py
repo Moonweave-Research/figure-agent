@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 SCHEMA = "figure-agent.next-action-summary.v1"
+DECISION_BOUNDARY_SCHEMA = "figure-agent.decision-boundary.v1"
 
 ACTION_CREATE_OR_FIX_SOURCE = "create_or_fix_source"
 ACTION_RUN_COMPILE = "run_compile"
@@ -41,6 +42,107 @@ _DEFAULT_FORBIDDEN_SCOPE = [
     "hidden source edits",
     "generated artifacts outside the selected command",
 ]
+
+
+def _decision_boundary(
+    *,
+    action: str,
+    blocking_source: str,
+    requires_human: bool,
+) -> dict[str, Any]:
+    if action == ACTION_COMPLETE:
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "none",
+            "authority": "none",
+            "blocks_progress": False,
+            "blocks_release": False,
+            "explanation": "No required plugin action remains for this mode.",
+        }
+    if blocking_source in {"reference_missing", "critique_reference_missing"}:
+        if requires_human:
+            return {
+                "schema": DECISION_BOUNDARY_SCHEMA,
+                "kind": "human_decision",
+                "authority": "human",
+                "blocks_progress": True,
+                "blocks_release": True,
+                "explanation": "A human domain or art-direction decision is required.",
+            }
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "deterministic_plugin_gate",
+            "authority": "plugin",
+            "blocks_progress": True,
+            "blocks_release": True,
+            "explanation": (
+                "Declared reference inputs must be fixed before host vision critique can run."
+            ),
+        }
+    if action == ACTION_RUN_CRITIQUE or blocking_source == "host_llm_critique_required":
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "host_vision_gate",
+            "authority": "host_llm",
+            "blocks_progress": True,
+            "blocks_release": True,
+            "explanation": "Host vision critique is required before this workflow can close.",
+        }
+    if action == ACTION_RELEASE_BLOCKED or blocking_source in {
+        "force_golden_required",
+        "accepted_or_final_ready_required",
+    }:
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "release_decision",
+            "authority": "release_operator",
+            "blocks_progress": True,
+            "blocks_release": True,
+            "explanation": (
+                "Release, accepted, golden, or final-artifact state needs "
+                "explicit human closure."
+            ),
+        }
+    if requires_human:
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "human_decision",
+            "authority": "human",
+            "blocks_progress": True,
+            "blocks_release": True,
+            "explanation": "A human domain or art-direction decision is required.",
+        }
+    if action == ACTION_POLISH_HANDOFF_STOP:
+        return {
+            "schema": DECISION_BOUNDARY_SCHEMA,
+            "kind": "polish_handoff",
+            "authority": "svg_editor",
+            "blocks_progress": True,
+            "blocks_release": False,
+            "explanation": "SVG polish is a bounded editor handoff, not hidden source mutation.",
+        }
+    return {
+        "schema": DECISION_BOUNDARY_SCHEMA,
+        "kind": "deterministic_plugin_gate",
+        "authority": "plugin",
+        "blocks_progress": True,
+        "blocks_release": True,
+        "explanation": "A deterministic plugin workflow step must run before continuing.",
+    }
+
+
+def _advisory_only_boundary() -> dict[str, Any]:
+    return {
+        "schema": DECISION_BOUNDARY_SCHEMA,
+        "kind": "advisory_only",
+        "authority": "plugin",
+        "blocks_progress": False,
+        "blocks_release": False,
+        "explanation": (
+            "The required workflow is complete; optional improvement candidates "
+            "are advisory and do not block release."
+        ),
+    }
 
 
 def _string(value: Any, fallback: str = "") -> str:
@@ -158,6 +260,11 @@ def _summary(
         "blocking_source": blocking_source,
         "safe_command": safe_command,
         "requires_human": requires_human,
+        "decision_boundary": _decision_boundary(
+            action=action,
+            blocking_source=blocking_source,
+            requires_human=requires_human,
+        ),
         "allowed_scope": _allowed_scope(action, fixture, patch_handoff),
         "forbidden_scope": _forbidden_scope(action, patch_handoff),
         "evidence_refs": evidence_refs,
@@ -260,6 +367,12 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
         summary["ready_improvement_safe_to_ship"] = ready_improvement.get(
             "safe_to_ship"
         ) is True
+        if (
+            action == ACTION_COMPLETE
+            and summary["ready_improvement_state"] == "ready_but_improvable"
+            and summary["ready_improvement_safe_to_ship"] is True
+        ):
+            summary["decision_boundary"] = _advisory_only_boundary()
         candidate_count = ready_improvement.get("candidate_count")
         summary["optional_candidate_count"] = (
             candidate_count if isinstance(candidate_count, int) else 0

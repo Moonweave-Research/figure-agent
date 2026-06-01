@@ -126,13 +126,21 @@ command.
 action. It must match top-level `action` and `safe_command`; it does not
 reinterpret state, authorize mutation, or introduce a second selector. Use it
 for compact UI/handoff displays, then inspect `status_explanation`,
-`audit_evidence`, `loop_checkpoint`, or `closeout` for detailed evidence.
+`audit_evidence`, `loop_checkpoint`, or `closeout` for detailed evidence. Its
+`decision_boundary` sub-object names the authority behind the next step:
+`deterministic_plugin_gate`, `host_vision_gate`, `human_decision`,
+`release_decision`, `polish_handoff`, `advisory_only`, or `none`. Use this to
+distinguish "must resolve before continuing" from "safe but optionally
+improvable"; advisory-only aesthetic candidates do not block release.
 
 `operator_guidance` is the user-facing answer to "what do I do next?" It names
 one required actor (`workflow_agent`, `host_llm`, `human`, `release_operator`,
 `svg_editor`, or `none`) and one next-step instruction. In `complete` states it
 explains that no required plugin action remains for the selected mode; in
-human/release states it does not surface hidden mutation commands.
+human/release states it does not surface hidden mutation commands. It copies
+`next_action_summary.decision_boundary` when available so shell users can see
+the same blocking/advisory distinction without reading lower-level evidence
+objects.
 
 In `--mode final`, `final_readiness_profile` is added. It is a non-mutating
 checklist, not a second router. The strict compile row always includes:

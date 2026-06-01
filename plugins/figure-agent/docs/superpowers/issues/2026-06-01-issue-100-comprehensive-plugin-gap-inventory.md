@@ -124,8 +124,11 @@ the workflow together.
    payload, panel semantics). Legacy v1 packs remain parseable.
 
 6. **Issue 100F - advisory-vs-blocking aesthetic language**
-   Tighten command docs and driver prose so aesthetic signals are never confused
-   with hard scientific/publication gates.
+   Implemented on branch `codex/issue100f-aesthetic-language`. Shared
+   `next_action_summary` now includes additive `decision_boundary` metadata, and
+   `/fig_drive.operator_guidance` copies it so deterministic gates, host-vision
+   gates, human decisions, release decisions, SVG-polish handoffs,
+   advisory-only improvements, and clean completion are explicit.
 
 ### Track C - Reduce Long-Session Friction
 

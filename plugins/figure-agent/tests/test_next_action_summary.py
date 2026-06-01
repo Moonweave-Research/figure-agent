@@ -27,6 +27,14 @@ def _assert_summary_shape(summary: dict[str, Any]) -> None:
     assert isinstance(summary["allowed_scope"], list)
     assert isinstance(summary["forbidden_scope"], list)
     assert isinstance(summary["evidence_refs"], list)
+    boundary = summary["decision_boundary"]
+    assert boundary["schema"] == "figure-agent.decision-boundary.v1"
+    assert isinstance(boundary["kind"], str)
+    assert isinstance(boundary["authority"], str)
+    assert isinstance(boundary["blocks_progress"], bool)
+    assert isinstance(boundary["blocks_release"], bool)
+    assert isinstance(boundary["explanation"], str)
+    assert boundary["explanation"]
 
 
 def test_status_summary_maps_render_missing_to_compile_action() -> None:
@@ -54,6 +62,9 @@ def test_status_summary_maps_render_missing_to_compile_action() -> None:
     assert summary["blocking_source"] == "render_missing"
     assert summary["requires_human"] is False
     assert summary["evidence_refs"] == ["status.first_blocker:render_missing"]
+    assert summary["decision_boundary"]["kind"] == "deterministic_plugin_gate"
+    assert summary["decision_boundary"]["authority"] == "plugin"
+    assert summary["decision_boundary"]["blocks_progress"] is True
 
 
 def test_driver_summary_preserves_human_gate_stop() -> None:
@@ -77,6 +88,79 @@ def test_driver_summary_preserves_human_gate_stop() -> None:
     assert summary["blocking_source"] == "human_gate_required"
     assert summary["requires_human"] is True
     assert "loop.final_stop_reason:human_gate_required" in summary["evidence_refs"]
+    assert summary["decision_boundary"]["kind"] == "human_decision"
+    assert summary["decision_boundary"]["authority"] == "human"
+    assert summary["decision_boundary"]["blocks_release"] is True
+
+
+def test_status_summary_marks_reference_missing_as_human_decision_not_host_vision() -> None:
+    summary = status_next_action_summary(
+        {
+            "name": "demo",
+            "render_state": "FRESH",
+            "critique_state": "REFERENCE_MISSING",
+            "status_explanation": {
+                "first_blocker": {
+                    "code": "critique_reference_missing",
+                    "message": "declared critique reference input is missing.",
+                    "manual": True,
+                },
+            },
+        }
+    )
+
+    _assert_summary_shape(summary)
+    assert summary["action"] == "run_critique"
+    assert summary["requires_human"] is True
+    assert summary["decision_boundary"]["kind"] == "human_decision"
+    assert summary["decision_boundary"]["authority"] == "human"
+
+
+def test_driver_summary_marks_reference_missing_as_workflow_blocker_not_host_vision() -> None:
+    summary = driver_next_action_summary(
+        {
+            "fixture": "demo",
+            "action": "run_critique",
+            "safe_command": None,
+            "stop_boundary": "reference_missing",
+            "reason": "declared reference input is missing.",
+        }
+    )
+
+    _assert_summary_shape(summary)
+    assert summary["decision_boundary"]["kind"] == "deterministic_plugin_gate"
+    assert summary["decision_boundary"]["authority"] == "plugin"
+
+
+def test_driver_summary_marks_ready_improvement_as_advisory_only() -> None:
+    summary = driver_next_action_summary(
+        {
+            "fixture": "demo",
+            "action": "complete",
+            "safe_command": None,
+            "stop_boundary": None,
+            "reason": "review mode is complete.",
+            "ready_improvement_summary": {
+                "state": "ready_but_improvable",
+                "safe_to_ship": True,
+                "candidate_count": 1,
+                "marginal_return_summary": {"state": "stop_recommended"},
+            },
+        }
+    )
+
+    _assert_summary_shape(summary)
+    assert summary["decision_boundary"] == {
+        "schema": "figure-agent.decision-boundary.v1",
+        "kind": "advisory_only",
+        "authority": "plugin",
+        "blocks_progress": False,
+        "blocks_release": False,
+        "explanation": (
+            "The required workflow is complete; optional improvement candidates "
+            "are advisory and do not block release."
+        ),
+    }
 
 
 def test_loop_summary_maps_patch_target_to_handoff_stop() -> None:

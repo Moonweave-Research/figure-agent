@@ -256,6 +256,11 @@ def test_review_complete_surfaces_ready_improvement_candidates(
     assert "ready_improvement.marginal_return:stop_recommended" in next_action[
         "evidence_refs"
     ]
+    assert next_action["decision_boundary"]["kind"] == "advisory_only"
+    assert next_action["decision_boundary"]["blocks_release"] is False
+    assert payload["operator_guidance"]["decision_boundary"] == next_action[
+        "decision_boundary"
+    ]
 
 
 def test_release_blocked_by_manual_gate_can_still_surface_safe_optional_candidates(
@@ -565,6 +570,8 @@ def test_final_mode_explains_tracked_golden_as_release_operator_boundary(
     assert summary["safe_command"] is None
     assert summary["operator_guidance"]["required_actor"] == "release_operator"
     assert "force-golden" in summary["operator_guidance"]["next_step"]
+    assert summary["operator_guidance"]["decision_boundary"]["kind"] == "release_decision"
+    assert summary["operator_guidance"]["decision_boundary"]["blocks_release"] is True
     assert summary["final_readiness_profile"]["release_gate"]["state"] == "human_required"
 
 
@@ -627,8 +634,26 @@ def test_operator_guidance_does_not_suggest_force_golden_for_non_golden_first_bl
     guidance = fig_driver_guidance.operator_guidance(summary)
 
     assert guidance["required_actor"] == "release_operator"
+    assert guidance["decision_boundary"]["kind"] == "release_decision"
     assert "force-golden" not in guidance["next_step"]
     assert "accepted" in guidance["next_step"]
+
+
+def test_operator_guidance_fallback_preserves_advisory_ready_improvement_boundary() -> None:
+    guidance = fig_driver_guidance.operator_guidance(
+        {
+            "action": "complete",
+            "stop_boundary": None,
+            "ready_improvement_summary": {
+                "state": "ready_but_improvable",
+                "safe_to_ship": True,
+            },
+        }
+    )
+
+    assert guidance["required_actor"] == "none"
+    assert guidance["decision_boundary"]["kind"] == "advisory_only"
+    assert guidance["decision_boundary"]["blocks_release"] is False
 
 
 # --- authoring mode ----------------------------------------------------------

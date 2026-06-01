@@ -8,6 +8,7 @@ import fig_driver_commands as command_mod
 
 OPERATOR_GUIDANCE_SCHEMA = "figure-agent.operator-guidance.v1"
 FINAL_READINESS_SCHEMA = "figure-agent.final-readiness.v1"
+DECISION_BOUNDARY_SCHEMA = "figure-agent.decision-boundary.v1"
 
 ACTION_RUN_CRITIQUE = "run_critique"
 ACTION_HUMAN_GATE_STOP = "human_gate_stop"
@@ -22,6 +23,78 @@ STOP_AMBIGUOUS_PATCH = "ambiguous_patch_selection"
 STOP_HUMAN_GATE = "human_gate_required"
 STOP_FORCE_GOLDEN = "force_golden_required"
 STOP_ACCEPTED_OR_FINAL_READY = "accepted_or_final_ready_required"
+
+
+def _advisory_ready_improvement(summary: dict[str, Any]) -> bool:
+    ready_improvement = summary.get("ready_improvement_summary")
+    return (
+        isinstance(ready_improvement, dict)
+        and ready_improvement.get("state") == "ready_but_improvable"
+        and ready_improvement.get("safe_to_ship") is True
+    )
+
+
+def _advisory_only_boundary() -> dict[str, Any]:
+    return {
+        "schema": DECISION_BOUNDARY_SCHEMA,
+        "kind": "advisory_only",
+        "authority": "plugin",
+        "blocks_progress": False,
+        "blocks_release": False,
+        "explanation": (
+            "The required workflow is complete; optional improvement candidates "
+            "are advisory and do not block release."
+        ),
+    }
+
+
+def _fallback_decision_boundary(actor: str, action: Any, stop_boundary: Any) -> dict[str, Any]:
+    if action == ACTION_COMPLETE:
+        kind = "none"
+        authority = "none"
+        blocks_progress = False
+        blocks_release = False
+        explanation = "No required plugin action remains for this mode."
+    elif actor == "host_llm":
+        kind = "host_vision_gate"
+        authority = "host_llm"
+        blocks_progress = True
+        blocks_release = True
+        explanation = "Host vision critique is required before this workflow can close."
+    elif actor == "release_operator":
+        kind = "release_decision"
+        authority = "release_operator"
+        blocks_progress = True
+        blocks_release = True
+        explanation = (
+            "Release, accepted, golden, or final-artifact state needs explicit human closure."
+        )
+    elif actor == "human":
+        kind = "human_decision"
+        authority = "human"
+        blocks_progress = True
+        blocks_release = True
+        explanation = "A human domain or art-direction decision is required."
+    elif actor == "svg_editor":
+        kind = "polish_handoff"
+        authority = "svg_editor"
+        blocks_progress = True
+        blocks_release = False
+        explanation = "SVG polish is a bounded editor handoff, not hidden source mutation."
+    else:
+        kind = "deterministic_plugin_gate"
+        authority = "plugin"
+        blocks_progress = action != ACTION_COMPLETE or bool(stop_boundary)
+        blocks_release = blocks_progress
+        explanation = "A deterministic plugin workflow step must run before continuing."
+    return {
+        "schema": DECISION_BOUNDARY_SCHEMA,
+        "kind": kind,
+        "authority": authority,
+        "blocks_progress": blocks_progress,
+        "blocks_release": blocks_release,
+        "explanation": explanation,
+    }
 
 
 def required_actor_for_summary(summary: dict[str, Any]) -> str:
@@ -118,12 +191,27 @@ def operator_guidance(summary: dict[str, Any]) -> dict[str, Any]:
     action = summary.get("action")
     stop_boundary = summary.get("stop_boundary")
     actor = required_actor_for_summary(summary)
-    return {
+    payload = {
         "schema": OPERATOR_GUIDANCE_SCHEMA,
         "state": _operator_state(action, stop_boundary, actor),
         "required_actor": actor,
         "next_step": _operator_next_step(summary, actor),
     }
+    next_action = summary.get("next_action_summary")
+    if isinstance(next_action, dict) and isinstance(
+        next_action.get("decision_boundary"),
+        dict,
+    ):
+        payload["decision_boundary"] = next_action["decision_boundary"]
+    elif action == ACTION_COMPLETE and _advisory_ready_improvement(summary):
+        payload["decision_boundary"] = _advisory_only_boundary()
+    else:
+        payload["decision_boundary"] = _fallback_decision_boundary(
+            actor,
+            action,
+            stop_boundary,
+        )
+    return payload
 
 
 def _profile_step(state: str, *, reason: str, command: str | None = None) -> dict[str, Any]:

@@ -45,6 +45,9 @@ readability layer, not a separate readiness rule.
 Machine-readable status results also include `next_action_summary`, a compact
 read-only object with `action`, `reason`, `blocking_source`, `safe_command`,
 `requires_human`, `allowed_scope`, `forbidden_scope`, and `evidence_refs`.
+It also includes `decision_boundary`, which explains whether the selected next
+step is a deterministic plugin gate, host-vision gate, human decision, release
+decision, SVG-polish handoff, advisory-only improvement, or no remaining action.
 This summary compresses the same `Next:`/`Explanation:` evidence; it does not
 replace `/fig_drive --dry-run` as the canonical mode-aware action selector.
 
