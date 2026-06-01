@@ -77,7 +77,7 @@ the workflow together.
 | G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
 | G100-13 | P2 | Subregion iteration | Subregion iteration tooling had parser/loop integration but no starter/append helper for the operator-facing log. | README listed `docs/subregion-iteration-tool.md` as experimental/proposed even though active-set plumbing existed. | The most effective human workflow could still drift into inconsistent hand-authored logs. | Issue 100M - subregion iteration assistant |
 | G100-14 | P3 | Plugin freshness/install UX | Plugin cache and marketplace validation exist, but "am I using the newest plugin?" is still something users ask. | Issue 100W adds a read-only source-vs-installed cache freshness command; package audit remains the cleanup tool after update. | Users can now distinguish stale installed plugin state from actual workflow behavior. | Issue 100W - plugin install freshness check |
-| G100-15 | P3 | Detector tuning feedback | Deterministic detectors catch more issues now, but threshold tuning is empirical and false-positive/false-negative memory is scattered across milestones. | Visual clash and geometry checkers have known report-only/noisy modes. | Detector quality improves only through ad hoc issue creation instead of a systematic feedback log. | Issue 100O - detector feedback ledger |
+| G100-15 | P3 | Detector tuning feedback | Deterministic detectors catch more issues now, but threshold tuning is empirical and false-positive/false-negative memory is scattered across milestones. | Visual clash and geometry checkers have known report-only/noisy modes. Issue 100X aggregates existing per-fixture detector feedback into a cross-fixture read-only ledger. | Detector quality improves through a stable review surface instead of ad hoc issue creation alone. | Issue 100O - detector feedback fields; Issue 100X - detector feedback ledger |
 | G100-16 | P3 | Documentation hygiene | Some older issue documents carried stale status text such as "pending commit" or branch-only implementation status after later merges. | Issue 100P swept the current stale headers for 100F/100G and normalized 100E/100R/100J/100H-I/100N-O to main commit references. | Agents no longer see already-merged Issue 100 work as pending branch work. | Issue 100P - stale issue status sweep |
 | G100-17 | P1 | Critique semantic drift | A critique can be hash-fresh while prose or audit slots still mention a phantom/deleted visual entity. | Issue 100Q adds a conservative source-text lint for matched symbolic label-target entities that are absent from active TeX or survive only in comments. | Fresh critiques that claim a removed symbolic label is visible are blocked before they confuse human operators. | Issue 100Q - critique entity consistency lint |
 | G100-18 | P1 | Scratch artifact provenance | Ad hoc diagnostic crops can be stale relative to the current build and still influence human or agent judgment. | Generated build crops are manifest-bound, but arbitrary scratch crops are not part of the freshness graph. | Users can chase a defect that exists only in an old diagnostic artifact. | Issue 100R - diagnostic artifact provenance rule |
@@ -198,35 +198,43 @@ the workflow together.
     detector tuning signals are visible without changing gates or mutating
     fixture state.
 
-16. **Issue 100W - plugin install freshness check**
+16. **Issue 100X - detector feedback ledger**
+    Implemented as a read-only cross-fixture diagnostic. Added
+    `scripts/detector_feedback_ledger.py` to aggregate existing
+    `audit_evidence_summary.py` detector feedback across selected fixtures or
+    all critiques under `examples/`. The ledger reports detector totals and
+    fixture-qualified unlinked micro-defect ids without changing thresholds,
+    critique schema, or release gates.
+
+17. **Issue 100W - plugin install freshness check**
     Implemented as a read-only operator diagnostic. Added
     `scripts/plugin_install_freshness.py` to compare the development plugin
     tree with the latest local Claude plugin cache, ignore generated package
     junk, and report fresh/stale/missing/invalid JSON with changed, missing, and
     extra file lists.
 
-17. **Issue 100P - stale issue status sweep**
+18. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-18. **Issue 100T/U - evidence trace and human-decision diff**
+19. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-19. **Issue 100Q - critique entity consistency lint**
+20. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-20. **Issue 100S - final strict profile and warning budgets**
+21. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
