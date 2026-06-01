@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -12,8 +13,10 @@ from external_vision_review import (  # noqa: E402
     EXTERNAL_VISION_REVIEW_SCHEMA,
     ExternalVisionReviewError,
     external_vision_review_freshness,
+    external_vision_review_template,
     load_external_vision_review,
     load_optional_external_vision_review,
+    main,
 )
 from fig_loop_assessments import external_vision_review_summary  # noqa: E402
 
@@ -34,6 +37,32 @@ def _write_crop(example_dir: Path, *, crop_id: str = "VC001") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(b"crop")
     return path
+
+
+def _write_crop_manifest(example_dir: Path, crops: list[Path]) -> None:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.audit-crop-manifest.v1",
+                "fixture": example_dir.name,
+                "render_path": f"build/{example_dir.name}.png",
+                "required_crop_ids": [path.stem for path in crops],
+                "crops": [
+                    {
+                        "id": path.stem,
+                        "path": str(path.relative_to(example_dir)),
+                        "sha256": _sha256(path),
+                    }
+                    for path in crops
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_review(
@@ -230,3 +259,138 @@ def test_external_vision_review_summary_reports_spec_parse_error(
     assert summary is not None
     assert summary["evaluation_state"] == "invalid"
     assert "Unknown style_profile" in summary["error"]
+
+
+def test_external_vision_review_template_uses_current_artifact_and_manifest_crops(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    artifact_path = _write_artifact(example_dir, content=b"render")
+    full_crop = _write_crop(example_dir, crop_id="full_q1")
+    clash_crop = _write_crop(example_dir, crop_id="VC001_A")
+    _write_crop_manifest(example_dir, [full_crop, clash_crop])
+
+    template = external_vision_review_template(
+        example_dir,
+        reviewer="Gemini manual second pass",
+        reviewed_at="2026-06-02T00:00:00Z",
+    )
+    review_path = example_dir / "external_vision_review.yaml"
+    review_path.write_text(template, encoding="utf-8")
+
+    review = load_external_vision_review(review_path)
+
+    assert review["fixture"] == "demo"
+    assert review["reviewer"] == "Gemini manual second pass"
+    assert review["reviewed_artifact"] == {
+        "path": "build/demo.png",
+        "hash": _sha256(artifact_path),
+    }
+    assert [crop["crop_id"] for crop in review["reviewed_crops"]] == [
+        "VC001_A",
+        "full_q1",
+    ]
+    assert review["findings"] == []
+    assert review["conflicts"] == []
+    assert external_vision_review_freshness(example_dir, review)["state"] == "fresh"
+
+
+def test_external_vision_review_template_cli_emits_reloadable_yaml(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_artifact(example_dir)
+    crop = _write_crop(example_dir, crop_id="full_q1")
+    _write_crop_manifest(example_dir, [crop])
+
+    exit_code = main(
+        [
+            "--template",
+            str(example_dir),
+            "--reviewer",
+            "external reviewer",
+            "--reviewed-at",
+            "2026-06-02T00:00:00Z",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    review_path = example_dir / "external_vision_review.yaml"
+    review_path.write_text(output, encoding="utf-8")
+    review = load_external_vision_review(review_path)
+    assert review["fixture"] == "demo"
+    assert review["reviewed_crops"][0]["crop_id"] == "full_q1"
+
+
+def test_external_vision_review_template_cli_can_write_canonical_file(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_artifact(example_dir)
+
+    exit_code = main(
+        [
+            "--template",
+            str(example_dir),
+            "--write-template",
+            "--reviewed-at",
+            "2026-06-02T00:00:00Z",
+        ]
+    )
+
+    assert exit_code == 0
+    review = load_external_vision_review(example_dir / "external_vision_review.yaml")
+    assert review["reviewed_artifact"]["path"] == "build/demo.png"
+
+
+def test_external_vision_review_template_cli_refuses_overwrite_without_force(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_artifact(example_dir)
+    (example_dir / "external_vision_review.yaml").write_text("existing\n", encoding="utf-8")
+
+    exit_code = main(["--template", str(example_dir), "--write-template"])
+
+    assert exit_code == 1
+    assert "already exists" in capsys.readouterr().err
+
+
+def test_external_vision_review_template_rejects_unsafe_manifest_crop_path(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    _write_artifact(example_dir)
+    outside = tmp_path / "outside.png"
+    outside.write_bytes(b"outside")
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.audit-crop-manifest.v1",
+                "fixture": "demo",
+                "render_path": "build/demo.png",
+                "required_crop_ids": ["escape"],
+                "crops": [
+                    {
+                        "id": "escape",
+                        "path": "../outside.png",
+                        "sha256": _sha256(outside),
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ExternalVisionReviewError, match="safe path"):
+        external_vision_review_template(example_dir)

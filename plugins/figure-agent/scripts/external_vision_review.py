@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
+import json
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +32,10 @@ def _file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return f"sha256:{digest.hexdigest()}"
+
+
+def _utc_now() -> str:
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _require_mapping(value: Any, label: str) -> dict[str, Any]:
@@ -190,6 +198,94 @@ def external_vision_review_path(example_dir: Path) -> Path:
     return example_dir / EXTERNAL_VISION_REVIEW_FILENAME
 
 
+def _relative_to_example(example_dir: Path, path: Path) -> str:
+    return str(path.relative_to(example_dir))
+
+
+def _reviewed_crop_records(example_dir: Path) -> list[dict[str, str]]:
+    manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    if not manifest_path.is_file():
+        return []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ExternalVisionReviewError(
+            f"malformed build/audit_crops/manifest.json: {exc}"
+        ) from exc
+    crops = manifest.get("crops")
+    if not isinstance(crops, list):
+        raise ExternalVisionReviewError("build/audit_crops/manifest.json crops must be a list")
+    records: list[dict[str, str]] = []
+    for index, crop in enumerate(crops):
+        if not isinstance(crop, dict):
+            raise ExternalVisionReviewError(
+                f"build/audit_crops/manifest.json crops[{index}] must be a mapping"
+            )
+        crop_id = crop.get("id")
+        crop_path = crop.get("path")
+        if not isinstance(crop_id, str) or not crop_id.strip():
+            raise ExternalVisionReviewError(
+                f"build/audit_crops/manifest.json crops[{index}].id must be non-empty"
+            )
+        if not isinstance(crop_path, str) or not crop_path.strip():
+            raise ExternalVisionReviewError(
+                f"build/audit_crops/manifest.json crops[{index}].path must be non-empty"
+            )
+        crop_path = _require_relative_path(
+            {"path": crop_path},
+            "path",
+            label=f"build/audit_crops/manifest.json crops[{index}]",
+        )
+        path = example_dir / crop_path
+        if not path.is_file():
+            raise ExternalVisionReviewError(
+                f"build/audit_crops/manifest.json crop missing: {crop_path}"
+            )
+        records.append(
+            {
+                "crop_id": crop_id,
+                "path": crop_path,
+                "hash": _file_sha256(path),
+            }
+        )
+    return sorted(records, key=lambda item: item["crop_id"])
+
+
+def external_vision_review_template(
+    example_dir: Path,
+    *,
+    reviewer: str = "external reviewer",
+    reviewed_at: str | None = None,
+) -> str:
+    """Return a fresh starter external_vision_review.yaml for a fixture."""
+    render_path = example_dir / "build" / f"{example_dir.name}.png"
+    if not render_path.is_file():
+        raise ExternalVisionReviewError(
+            f"build/{example_dir.name}.png not found; run /fig_compile first"
+        )
+    data: dict[str, Any] = {
+        "schema": EXTERNAL_VISION_REVIEW_SCHEMA,
+        "fixture": example_dir.name,
+        "reviewer": reviewer.strip() or "external reviewer",
+        "reviewed_at": reviewed_at or _utc_now(),
+        "confidence": "medium",
+        "reviewed_artifact": {
+            "path": _relative_to_example(example_dir, render_path),
+            "hash": _file_sha256(render_path),
+        },
+        "reviewed_crops": _reviewed_crop_records(example_dir),
+        "findings": [],
+        "conflicts": [],
+    }
+    load_data = yaml.safe_load(yaml.safe_dump(data, sort_keys=False))
+    if not isinstance(load_data, dict):
+        raise ExternalVisionReviewError("generated external vision review is invalid")
+    _validate_reviewed_artifact(load_data)
+    _validate_reviewed_crops(load_data)
+    _validate_conflicts(load_data, _validate_findings(load_data))
+    return yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
+
+
 def load_external_vision_review(path: Path) -> dict[str, Any]:
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -282,3 +378,49 @@ def external_vision_review_freshness(
         "stale_paths": stale_paths,
         "missing_paths": missing_paths,
     }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate or template figure-agent external vision reviews."
+    )
+    parser.add_argument("path", nargs="?", type=Path, help="external_vision_review.yaml")
+    parser.add_argument("--template", type=Path, help="example directory to template")
+    parser.add_argument("--write-template", action="store_true", help="write canonical file")
+    parser.add_argument("--force", action="store_true", help="overwrite existing template")
+    parser.add_argument("--reviewer", default="external reviewer")
+    parser.add_argument("--reviewed-at", default=None)
+    args = parser.parse_args(argv)
+
+    try:
+        if args.template is not None:
+            template = external_vision_review_template(
+                args.template,
+                reviewer=args.reviewer,
+                reviewed_at=args.reviewed_at,
+            )
+            if args.write_template:
+                output_path = external_vision_review_path(args.template)
+                if output_path.exists() and not args.force:
+                    raise ExternalVisionReviewError(
+                        f"{output_path} already exists; pass --force to overwrite"
+                    )
+                output_path.write_text(template, encoding="utf-8")
+                print(f"wrote {output_path}")
+            else:
+                print(template, end="")
+            return 0
+        if args.write_template:
+            parser.error("--write-template requires --template EXAMPLE_DIR")
+        if args.path is None:
+            parser.error("provide external_vision_review.yaml or --template EXAMPLE_DIR")
+        load_external_vision_review(args.path)
+        print(f"OK: external vision review valid: {args.path}")
+        return 0
+    except ExternalVisionReviewError as exc:
+        print(f"external_vision_review.py: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
