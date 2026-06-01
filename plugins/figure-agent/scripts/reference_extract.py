@@ -93,6 +93,10 @@ __all__ = [
 ]
 
 
+class ReferenceExtractError(ValueError):
+    """Controlled user-facing reference extraction error."""
+
+
 def _hash_file(path: Path, algo: str = "sha256") -> str:
     h = hashlib.new(algo)
     with path.open("rb") as f:
@@ -116,7 +120,18 @@ def _resolve_reference_path(example_dir: Path) -> Path | None:
     reference = spec.get("reference_image") if spec else None
     if not reference or not isinstance(reference, str) or not reference.strip():
         return None
-    return example_dir / reference.strip()
+    raw_reference = Path(reference.strip())
+    if raw_reference.is_absolute():
+        raise ReferenceExtractError("reference_image must stay under example directory")
+    root = example_dir.resolve()
+    candidate = (example_dir / raw_reference).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError as exc:
+        raise ReferenceExtractError(
+            "reference_image must stay under example directory"
+        ) from exc
+    return candidate
 
 
 def extract_coordinate_hints(
@@ -134,7 +149,10 @@ def extract_coordinate_hints(
     file missing) output_path is None and failure_messages explains why.
     """
     failures: list[str] = []
-    reference_path = _resolve_reference_path(example_dir)
+    try:
+        reference_path = _resolve_reference_path(example_dir)
+    except ReferenceExtractError as exc:
+        return None, [f"{example_dir.name}: {exc}"]
     if reference_path is None:
         return None, [
             f"{example_dir.name}: spec.yaml does not declare reference_image;"
@@ -173,7 +191,7 @@ def extract_coordinate_hints(
         "metadata": {
             "extraction_version": EXTRACTION_VERSION,
             "created_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
-            "reference_image_path": str(reference_path.relative_to(example_dir)),
+            "reference_image_path": str(reference_path.relative_to(example_dir.resolve())),
             "reference_image_hash": _hash_file(reference_path),
             "ocr_status": ocr_status,
             "parameters": {
