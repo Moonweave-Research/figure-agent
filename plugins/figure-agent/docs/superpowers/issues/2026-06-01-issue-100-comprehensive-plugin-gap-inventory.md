@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BD, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BE, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BD fig run evidence helper fixture name boundary;
+- branch baseline: `main` after Issue 100BE text-boundary helper parent-relative path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -114,6 +114,7 @@ the workflow together.
 | G100-49 | P2 | Run journal continuation path boundary | `fig_run_journal.py` accepted raw fixture names before producing `next_live_commands`. | `fig_run_journal.py ../outside` produced normal JSON with `/fig_status ../outside` and `/fig_drive ../outside ...` commands. | A continuation helper should not generate follow-up commands for traversal syntax. | Issue 100BB - fig run journal fixture name boundary |
 | G100-50 | P2 | Run journal writer path boundary | `fig_run_records.write_run_journal()` accepted raw `payload["fixture"]`, sanitized the run directory name, and wrote non-authoritative journal evidence for traversal syntax if called directly. | Tests could bypass the driver boundary by monkeypatching the runner and still record a journal for `../bad/name with spaces`. | A write-capable continuation helper should reject unsafe fixture identity before run directory allocation, evidence snapshotting, or JSON writes. | Issue 100BC - fig run journal writer fixture name boundary |
 | G100-51 | P2 | Run journal evidence helper path boundary | `fig_run_evidence.py` exposed shared evidence path/snapshot helpers that resolved raw fixture names under `examples/<name>` without validating the fixture identity itself. | Direct `evidence_snapshot(repo_root, "../outside")` could read existing files outside `examples/` even though normal journal reader/writer paths had been hardened. | Shared continuation-evidence helpers should enforce the same fixture boundary as their callers, so future module reuse cannot reintroduce traversal reads. | Issue 100BD - fig run evidence helper fixture name boundary |
+| G100-52 | P2 | Text-boundary helper write path boundary | `text_boundary_spec_helper.py --write` accepted parent-relative relative paths such as `examples/../outside` and could rewrite a normalized `outside/spec.yaml` if it existed. | The helper is usually invoked as `examples/<name> --write`, but its parser also accepted arbitrary path-like input before rejecting traversal syntax. | A write-capable authoring helper should preserve explicit path support while rejecting accidental traversal paths before spec resolution or mutation. | Issue 100BE - text-boundary helper parent-relative path boundary |
 
 ## Recommended Execution Order
 
@@ -465,6 +466,12 @@ the workflow together.
     helpers themselves, so direct helper reuse cannot read traversal-selected
     files outside `examples/` even if a future caller forgets the normal driver
     or journal validation precondition.
+
+54. **Issue 100BE - text-boundary helper parent-relative path boundary**
+    Completed as authoring-helper safety hardening. `text_boundary_spec_helper.py`
+    still supports `examples/<name>`, `examples/<name>/spec.yaml`, and absolute
+    explicit paths, but rejects relative paths containing `..` before resolving
+    or rewriting `spec.yaml`.
 
 ## Non-Goals
 

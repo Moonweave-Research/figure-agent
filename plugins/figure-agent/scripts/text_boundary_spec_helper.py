@@ -239,6 +239,8 @@ def _load_spec(spec_path: Path) -> dict[str, Any]:
 
 def _fixture_dir(raw: str) -> Path:
     path = Path(raw)
+    if not path.is_absolute() and ".." in path.parts:
+        raise TextBoundarySpecHelperError("parent-relative paths are not accepted")
     if path.name == "spec.yaml":
         return path.parent
     return path
@@ -269,12 +271,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    fixture_dir = _fixture_dir(args.fixture)
-    spec_path = fixture_dir if fixture_dir.name == "spec.yaml" else fixture_dir / "spec.yaml"
-    if not spec_path.is_file():
-        print(f"ERROR: missing spec.yaml: {spec_path}", file=sys.stderr)
-        return 2
     try:
+        fixture_dir = _fixture_dir(args.fixture)
+        spec_path = fixture_dir if fixture_dir.name == "spec.yaml" else fixture_dir / "spec.yaml"
+        if not spec_path.is_file():
+            print(f"ERROR: missing spec.yaml: {spec_path}", file=sys.stderr)
+            return 2
         spec = _load_spec(spec_path)
         layout = spec.get("text_boundary_layout")
         if layout is None:
