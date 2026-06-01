@@ -81,7 +81,7 @@ the workflow together.
 | G100-16 | P3 | Documentation hygiene | Some older issue documents carried stale status text such as "pending commit" or branch-only implementation status after later merges. | Issue 100P swept the current stale headers for 100F/100G and normalized 100E/100R/100J/100H-I/100N-O to main commit references. | Agents no longer see already-merged Issue 100 work as pending branch work. | Issue 100P - stale issue status sweep |
 | G100-17 | P1 | Critique semantic drift | A critique can be hash-fresh while prose or audit slots still mention a phantom/deleted visual entity. | Issue 100Q adds a conservative source-text lint for matched symbolic label-target entities that are absent from active TeX or survive only in comments. | Fresh critiques that claim a removed symbolic label is visible are blocked before they confuse human operators. | Issue 100Q - critique entity consistency lint |
 | G100-18 | P1 | Scratch artifact provenance | Ad hoc diagnostic crops can be stale relative to the current build and still influence human or agent judgment. | Generated build crops are manifest-bound, but arbitrary scratch crops are not part of the freshness graph. | Users can chase a defect that exists only in an old diagnostic artifact. | Issue 100R - diagnostic artifact provenance rule |
-| G100-19 | P1 | Strict-mode false-positive budget | A final-readiness preset cannot be just raw `FIGURE_AGENT_STRICT=1`; noisy report-only candidates need fixture caps or adjudicated budgets. | Strict mode exists and visual/geometry checkers are intentionally conservative/noisy in iteration. | A final preset could become unusable if every known false positive hard-fails. | Issue 100S - final strict profile and warning budgets |
+| G100-19 | P1 | Strict-mode false-positive budget | A final-readiness preset cannot be just raw `FIGURE_AGENT_STRICT=1`; noisy report-only candidates need fixture caps or adjudicated budgets. | Issue 100S makes `visual_clash_cap` a first-class final-mode warning budget and routes missing reports to strict compile, over-budget reports to human review. | Final mode no longer claims completion while visual-clash warnings exceed the reviewed fixture cap. | Issue 100S - final strict profile and warning budgets |
 | G100-20 | P2 | Host/subagent evidence trace | Crop accounting says what the critique claims to have inspected, but there is no durable transcript-level read log for subagent-host inspection. | Milestones often record manual Read counts, but the plugin contract stores crop audit results rather than the viewer transcript. | Independent review of "did the host actually inspect this?" still relies on session prose. | Issue 100T - optional inspection transcript artifact |
 | G100-21 | P2 | Human-decision preservation | `scaffold --force` and re-adjudication flows can be correct but still risky if operators do not see which human decisions were preserved, dropped, or rebound. | Sync paths exist, but force-scaffold remains a sharp tool in real workflows. | Human rationale can be accidentally flattened during freshness repair. | Issue 100U - adjudication decision diff preview |
 
@@ -186,6 +186,13 @@ the workflow together.
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
+
+15. **Issue 100S - final strict profile and warning budgets**
+    Completed as a final-mode warning-budget hardening slice. Reused
+    `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
+    `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
+    strict compile when the report is missing and stops at a human gate when
+    visual-clash warnings exceed the reviewed fixture cap.
 
 ## Non-Goals
 

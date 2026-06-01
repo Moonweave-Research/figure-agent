@@ -69,6 +69,22 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
         os.utime(path, (fresh_time, fresh_time))
 
 
+def _write_visual_clash_report(fixture: Path, *, total: int, name: str = "driver_demo") -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "fixture": name,
+                "render_pdf": f"build/{name}.pdf",
+                "candidates": [],
+                "total": total,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def _run_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
     return fig_driver.build_driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
 
@@ -570,7 +586,8 @@ def test_final_mode_recommends_strict_compile_for_stale_render(
 def test_final_mode_explains_tracked_golden_as_release_operator_boundary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _write_basic_fixture(tmp_path)
+    fixture = _write_basic_fixture(tmp_path)
+    _write_visual_clash_report(fixture, total=0)
     synthetic_status = _release_ready_status()
     synthetic_status.update(
         {
@@ -602,7 +619,8 @@ def test_final_mode_explains_tracked_golden_as_release_operator_boundary(
 def test_final_mode_complete_explains_no_required_plugin_action(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _write_basic_fixture(tmp_path)
+    fixture = _write_basic_fixture(tmp_path)
+    _write_visual_clash_report(fixture, total=0)
     monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
     monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
     _write_loop_run(
@@ -619,12 +637,69 @@ def test_final_mode_complete_explains_no_required_plugin_action(
     assert summary["operator_guidance"]["required_actor"] == "none"
     assert "No required plugin action remains" in summary["operator_guidance"]["next_step"]
     assert summary["final_readiness_profile"]["overall_state"] == "pass"
+    assert summary["final_readiness_profile"]["warning_budget"]["state"] == "pass"
+
+
+def test_final_mode_blocks_complete_when_warning_budget_exceeds_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_visual_clash_report(fixture, total=3)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="release is ready",
+    )
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+    assert "warning budget exceeded" in summary["reason"]
+    assert summary["operator_guidance"]["required_actor"] == "human"
+    assert summary["final_readiness_profile"]["overall_state"] == "human_required"
+    assert summary["final_readiness_profile"]["warning_budget"]["budget_state"] == "needs_action"
+    assert summary["final_readiness_profile"]["warning_budget"]["visual_clash"] == {
+        "present": True,
+        "total": 3,
+        "cap": 0,
+        "over_by": 3,
+        "status": "over_budget",
+    }
+
+
+def test_final_mode_requests_strict_compile_when_warning_budget_report_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="release is ready",
+    )
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "run_compile"
+    assert (
+        summary["safe_command"]
+        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+    )
+    assert "warning budget input is missing" in summary["reason"]
+    assert summary["final_readiness_profile"]["warning_budget"]["state"] == "needs_action"
+    assert summary["final_readiness_profile"]["warning_budget"]["budget_state"] == "missing_input"
 
 
 def test_final_mode_requires_loop_checkpoint_before_complete(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _write_basic_fixture(tmp_path)
+    fixture = _write_basic_fixture(tmp_path)
+    _write_visual_clash_report(fixture, total=0)
     monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
     monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
 
