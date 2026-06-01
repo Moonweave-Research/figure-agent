@@ -158,6 +158,7 @@ polish backport, or actions the current mode forbids.
 /fig_closeout <name>    read-only post-patch checklist for compile, critique,
                          adjudication, export, and loop rerun freshness
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
+/fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
 /fig_drive <name> --mode <mode> --goal "<goal>" --dry-run
                          read-only next-action selector
