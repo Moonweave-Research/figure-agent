@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BM, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BN, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BM SVG polish recipe CLI fixture path boundary;
+- branch baseline: `main` after Issue 100BN external vision review CLI fixture path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -123,6 +123,7 @@ the workflow together.
 | G100-58 | P1 | SVG polish handoff write path boundary | `svg_polish_handoff.py --write` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/svg_polish_audit.md` plus `polish/svg_polish_manifest.yaml` there. | TDD reproduced exit code 0 and both handoff files written for traversal-like and existing outside-relative CLI paths. | A final-artifact handoff writer must reject unsafe fixture syntax before writing audit/manifest state outside declared examples. | Issue 100BK - SVG polish handoff CLI fixture path boundary |
 | G100-59 | P1 | SVG polish executor write path boundary | `svg_polish_executor.py --write` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/<name>.polished.svg` there. | TDD reproduced exit code 0 and an outside polished SVG write for traversal-like and existing outside-relative CLI paths. | The recipe executor is the direct SVG mutation step, so it must reject unsafe fixture syntax before applying recipe operations or writing polished SVG output. | Issue 100BL - SVG polish executor CLI fixture path boundary |
 | G100-60 | P2 | SVG polish recipe template write path boundary | `svg_polish_recipe.py --template ... --write-template` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/svg_polish_recipe.yaml` there. | TDD reproduced exit code 0 and an outside recipe template write for traversal-like and existing outside-relative CLI paths. | The recipe starter should not create polish workflow state outside declared examples before executor/handoff boundaries run. | Issue 100BM - SVG polish recipe CLI fixture path boundary |
+| G100-61 | P2 | External vision review template write path boundary | `external_vision_review.py --template ... --write-template` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `external_vision_review.yaml` there. | TDD reproduced exit code 0 and an outside external review template write for traversal-like and existing outside-relative CLI paths. | External second-opinion evidence can influence loop/human gates, so its template writer must not create review state outside declared examples. | Issue 100BN - external vision review CLI fixture path boundary |
 
 ## Recommended Execution Order
 
@@ -543,6 +544,15 @@ the workflow together.
     Traversal-like, nested, or existing outside-relative paths fail with a
     controlled `invalid fixture path` error before
     `polish/svg_polish_recipe.yaml` can be written.
+
+63. **Issue 100BN - external vision review CLI fixture path boundary**
+    Completed as second-opinion evidence safety hardening.
+    `external_vision_review.py --template` now validates CLI fixture input
+    before printing or writing a starter review: fixture names resolve under
+    `examples/<name>`, `examples/<name>` remains valid, and explicit absolute
+    paths remain valid. Traversal-like, nested, or existing outside-relative
+    paths fail with a controlled `invalid fixture path` error before
+    `external_vision_review.yaml` can be written.
 
 ## Non-Goals
 

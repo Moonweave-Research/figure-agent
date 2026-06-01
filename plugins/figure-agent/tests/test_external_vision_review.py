@@ -429,6 +429,60 @@ def test_external_vision_review_template_cli_refuses_overwrite_without_force(
     assert "already exists" in capsys.readouterr().err
 
 
+def test_template_write_rejects_parent_relative_fixture_before_writing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = tmp_path / "outside"
+    outside_dir.mkdir()
+    _write_artifact(outside_dir)
+    review_path = outside_dir / "external_vision_review.yaml"
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "--template",
+            "examples/../outside",
+            "--write-template",
+            "--reviewed-at",
+            "2026-06-02T00:00:00Z",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not review_path.exists()
+
+
+def test_template_write_rejects_existing_relative_dir_outside_examples(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = tmp_path / "outside"
+    outside_dir.mkdir()
+    _write_artifact(outside_dir)
+    review_path = outside_dir / "external_vision_review.yaml"
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "--template",
+            "outside",
+            "--write-template",
+            "--reviewed-at",
+            "2026-06-02T00:00:00Z",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not review_path.exists()
+
+
 def test_external_vision_review_template_rejects_unsafe_manifest_crop_path(
     tmp_path: Path,
 ) -> None:
