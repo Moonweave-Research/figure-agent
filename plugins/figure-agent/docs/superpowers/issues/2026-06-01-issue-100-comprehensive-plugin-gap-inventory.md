@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AC, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AE, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -88,6 +88,7 @@ the workflow together.
 | G100-23 | P3 | Stale issue status headers | Completed issue docs can still claim implementation is only in a branch or working tree after merge. | Issues 16A, 44, 49, and 50 had stale branch/working-tree status headers. | Future operators can misroute already-mainline work as unfinished branch work. | Issue 100AB - stale issue status guard |
 | G100-24 | P1 | Package cleanup safety | The installed-cache package cleanup helper could delete tracked files when accidentally run in a development checkout. | Running `plugin_package_audit.py --clean` in a feature worktree classified tracked `.gitkeep` and golden export paths under `build/`/`exports/` as junk. | A release hygiene command can damage source-controlled fixture artifacts unless tracked paths are protected. | Issue 100AC - package audit tracked-path safety |
 | G100-25 | P2 | SVG polish queue triage | `/fig_drive --mode polish` computes `svg_polish_gate` and readiness, but `/fig_queue --mode polish` did not copy those fields into rows or the human-readable table. | A polish-mode queue could show only `run_fig_loop` or `mode_forbidden_action`, hiding whether the blocker was missing checkpoint evidence, `continue_tikz`, crop uncertainty, human gate, or a true ready path. | Operators still had to inspect each fixture's driver JSON individually to understand SVG polish readiness across a corpus. | Issue 100AD - polish queue SVG gate surfacing |
+| G100-26 | P3 | SVG polish queue summary | After Issue 100AD, SVG polish gate details were present per row but not aggregated in `summary`. | Corpus-level polish triage still required scanning every row to know how many fixtures were ready, blocked, `continue_tikz`, or blocked by a specific source. | Operators could miss the dominant SVG-polish blocker class across a fixture set. | Issue 100AE - polish queue SVG summary counts |
 
 ## Recommended Execution Order
 
@@ -282,6 +283,12 @@ the workflow together.
     `/fig_drive` into queue rows, and the table view adds SVG-specific columns
     when those fields are present. This keeps SVG polish conservative while
     making corpus-level blockers visible without per-fixture driver JSON.
+
+28. **Issue 100AE - polish queue SVG summary counts**
+    Completed as a corpus-triage hardening slice. `/fig_queue --mode polish`
+    now aggregates SVG gate state, recommended path, and readiness blocker
+    sources under summary counts when those row fields are present, so the queue
+    can identify dominant polish blockers without weakening readiness policy.
 
 ## Non-Goals
 

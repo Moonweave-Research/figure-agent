@@ -136,6 +136,9 @@ driver has a current loop checkpoint or gate explanation:
 - `by_first_blocker`
 - `by_required_actor`
 - `by_blocking_source`
+- `by_svg_polish_gate_state` when polish rows expose SVG gate state
+- `by_svg_polish_recommended_path` when polish rows expose readiness route
+- `by_svg_polish_blocking_source` when polish readiness reports blocker sources
 
 `command_plan` includes:
 
