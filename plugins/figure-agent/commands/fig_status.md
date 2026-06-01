@@ -115,9 +115,9 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
   status `Next:` and `status_explanation`. It is additive; detailed fields
   remain authoritative for debugging and audits.
 - `audit_evidence`: structured read-only summary with `evaluation_state`,
-  `blocking_items`, `next_action`, visual-clash accounting counts, and
-  crop-audit verdict counts. This is an operator UX layer over existing audit
-  artifacts, not a new release gate.
+  `blocking_items`, `next_action`, visual-clash, text-boundary, label-path,
+  undeclared-geometry accounting counts, and crop-audit verdict counts. This is
+  an operator UX layer over existing audit artifacts, not a new release gate.
 
 For polished SVG final artifacts, `publication_gate_state` also enforces the
 publication disclosure field because the submitted artifact may include human

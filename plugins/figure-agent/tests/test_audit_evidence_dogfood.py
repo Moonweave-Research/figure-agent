@@ -46,6 +46,7 @@ def _write_visual_clash_report(fixture: Path, candidate_ids: tuple[str, ...]) ->
         encoding="utf-8",
     )
     _write_text_boundary_clash_report(fixture, ())
+    _write_undeclared_geometry_report(fixture, ())
 
 
 def _write_text_boundary_clash_report(fixture: Path, candidate_ids: tuple[str, ...]) -> None:
@@ -117,6 +118,38 @@ def _write_label_path_proximity_report(fixture: Path, candidate_ids: tuple[str, 
     )
 
 
+def _write_undeclared_geometry_report(fixture: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fixture / "build" / "undeclared_geometry.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "fixture": fixture.name,
+                "render_pdf": f"build/{fixture.name}.pdf",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_crosses_undeclared_rect",
+                        "text": candidate_id,
+                        "bbox_pt": [10.0, 20.0, 30.0, 40.0],
+                        "geometry": {
+                            "kind": "rect",
+                            "bbox_pt": [5.0, 10.0, 35.0, 45.0],
+                        },
+                        "clearance_pt": -0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _write_crop_manifest(fixture: Path, crop_id: str = "full_q1") -> Path:
     crop_path = fixture / "build" / "audit_crops" / f"{crop_id}.png"
     crop_path.parent.mkdir(parents=True, exist_ok=True)
@@ -150,6 +183,7 @@ def _write_critique(
     *,
     visual_clash_ref: str | None = "VC050",
     label_path_ref: str | None = None,
+    undeclared_geometry_ref: str | None = None,
     crop_id: str = "full_q1",
 ) -> None:
     micro_defects: list[dict[str, Any]] = []
@@ -180,6 +214,23 @@ def _write_critique(
                 "visual_clash_ref": "",
                 "text_boundary_ref": "",
                 "label_path_ref": label_path_ref,
+                "status": "open",
+            }
+        )
+    if undeclared_geometry_ref is not None:
+        micro_defects.append(
+            {
+                "id": "MUG001",
+                "kind": "label_crosses_column_rule",
+                "severity": "NIT",
+                "observation": (
+                    f"{undeclared_geometry_ref} is accounted as undeclared geometry."
+                ),
+                "linked_finding_id": "",
+                "visual_clash_ref": "",
+                "text_boundary_ref": "",
+                "label_path_ref": "",
+                "undeclared_geometry_ref": undeclared_geometry_ref,
                 "status": "open",
             }
         )
@@ -294,6 +345,56 @@ def test_audit_evidence_blocks_malformed_label_path_proximity_report(
     assert summary["reason"] == "malformed build/label_path_proximity.json"
 
 
+def test_audit_evidence_surfaces_unaccounted_undeclared_geometry(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="undeclared_gap")
+    _write_undeclared_geometry_report(fixture, ("UG001",))
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["UG001"]
+    assert summary["undeclared_geometry"]["candidate_count"] == 1
+    assert summary["undeclared_geometry"]["missing_refs"] == ["UG001"]
+    assert (
+        summary["reason"]
+        == "undeclared-geometry candidates are not fully accounted in micro_defects"
+    )
+
+
+def test_audit_evidence_accepts_accounted_undeclared_geometry(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="undeclared_clean")
+    _write_undeclared_geometry_report(fixture, ("UG001",))
+    _write_critique(
+        fixture,
+        visual_clash_ref="VC050",
+        undeclared_geometry_ref="UG001",
+    )
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["undeclared_geometry"]["accounted_count"] == 1
+    assert summary["undeclared_geometry"]["missing_refs"] == []
+
+
+def test_audit_evidence_blocks_malformed_undeclared_geometry_report(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="undeclared_malformed")
+    report = fixture / "build" / "undeclared_geometry.json"
+    report.write_text("{not json", encoding="utf-8")
+
+    summary = summarize_audit_evidence(fixture)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/undeclared_geometry.json"]
+    assert summary["reason"] == "malformed build/undeclared_geometry.json"
+
+
 def _assert_surfaces_state(
     tmp_path: Path,
     fixture: Path,
@@ -355,6 +456,20 @@ def test_audit_evidence_needs_action_surfaces_vc_blocker_through_commands(
         fixture,
         expected_state="needs_action",
         expected_blocker="VC050",
+    )
+
+
+def test_audit_evidence_undeclared_geometry_surfaces_through_commands(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_repo_fixture(tmp_path, name="audit_undeclared_gap")
+    _write_undeclared_geometry_report(fixture, ("UG001",))
+
+    _assert_surfaces_state(
+        tmp_path,
+        fixture,
+        expected_state="needs_action",
+        expected_blocker="UG001",
     )
 
 

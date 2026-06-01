@@ -51,6 +51,8 @@ def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) ->
     )
     if not (fig_dir / "build" / "text_boundary_clash.json").exists():
         _write_text_boundary_clash_report(fig_dir, ())
+    if not (fig_dir / "build" / "undeclared_geometry.json").exists():
+        _write_undeclared_geometry_report(fig_dir, ())
 
 
 def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
@@ -73,6 +75,34 @@ def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, .
                         "bbox_pt": [70.0, 20.0, 75.0, 30.0],
                         "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
                         "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_undeclared_geometry_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fig_dir / "build" / "undeclared_geometry.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "text_crosses_undeclared_rect",
+                        "text": f"label {candidate_id}",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "geometry": {"kind": "rect", "bbox_pt": [65.0, 10.0, 80.0, 40.0]},
+                        "clearance_pt": -0.5,
                     }
                     for candidate_id in candidate_ids
                 ],
@@ -122,6 +152,7 @@ def _micro_defect_yaml(
     *,
     visual_clash_ref: str = "VC001",
     text_boundary_ref: str = "",
+    undeclared_geometry_ref: str = "",
     status: str = "accept_simplification",
     structured: bool = True,
 ) -> str:
@@ -134,6 +165,7 @@ def _micro_defect_yaml(
         "    linked_finding_id: \"\"\n"
         f"    visual_clash_ref: {visual_clash_ref}\n"
         f"    text_boundary_ref: {text_boundary_ref!r}\n"
+        f"    undeclared_geometry_ref: {undeclared_geometry_ref!r}\n"
         f"    status: {status}\n"
     )
     if structured:
@@ -290,6 +322,115 @@ def test_summary_reports_unaccounted_text_boundary_candidate(tmp_path: Path) -> 
     assert summary["blocking_items"] == ["TB001"]
     assert summary["text_boundary"]["candidate_count"] == 1
     assert summary["text_boundary"]["missing_refs"] == ["TB001"]
+
+
+def test_summary_reports_missing_undeclared_geometry_report_for_v1_17(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    (fig_dir / "build" / "undeclared_geometry.json").unlink()
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        micro_defects_yaml=_micro_defect_yaml(undeclared_geometry_ref="UG001"),
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/undeclared_geometry.json"]
+    assert summary["next_action"] == "/fig_compile demo_fig"
+
+
+def test_summary_reports_malformed_undeclared_geometry_report(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    report = fig_dir / "build" / "undeclared_geometry.json"
+    report.write_text("{", encoding="utf-8")
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, schema="figure-agent.critique.v1.17")
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/undeclared_geometry.json"]
+    assert "malformed" in summary["reason"]
+
+
+def test_summary_reports_unaccounted_undeclared_geometry_candidate(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_undeclared_geometry_report(fig_dir, ("UG001", "UG002"))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        micro_defects_yaml=_micro_defect_yaml(undeclared_geometry_ref="UG001"),
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["UG002"]
+    assert summary["undeclared_geometry"]["candidate_count"] == 2
+    assert summary["undeclared_geometry"]["missing_refs"] == ["UG002"]
+
+
+def test_summary_reports_unknown_undeclared_geometry_ref(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_undeclared_geometry_report(fig_dir, ("UG001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        micro_defects_yaml=_micro_defect_yaml(undeclared_geometry_ref="UG999"),
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["UG001", "UG999"]
+    assert summary["undeclared_geometry"]["missing_refs"] == ["UG001"]
+    assert summary["undeclared_geometry"]["unknown_refs"] == ["UG999"]
+
+
+def test_summary_reports_passed_undeclared_geometry_accounting(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_undeclared_geometry_report(fig_dir, ("UG001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        micro_defects_yaml=_micro_defect_yaml(undeclared_geometry_ref="UG001"),
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["undeclared_geometry"]["present"] is True
+    assert summary["undeclared_geometry"]["candidate_count"] == 1
+    assert summary["undeclared_geometry"]["accounted_count"] == 1
+
+
+def test_summary_reports_passed_undeclared_geometry_zero_candidates(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_undeclared_geometry_report(fig_dir, ())
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, schema="figure-agent.critique.v1.17")
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "passed"
+    assert summary["undeclared_geometry"]["present"] is True
+    assert summary["undeclared_geometry"]["candidate_count"] == 0
+    assert summary["undeclared_geometry"]["accounted_count"] == 0
 
 
 def test_summary_reports_uncertain_crop_ids(tmp_path: Path) -> None:

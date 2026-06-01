@@ -110,9 +110,10 @@ guessing from the raw state vector. This is explanatory only; it does not make
 When present, `audit_evidence` is also copied from `/fig_status` without
 recomputing state. Actionable states (`missing_input`, `stale_or_mismatched`,
 `needs_action`) are appended to `reason` with the summary's compact blocker
-context. This keeps visual-clash/crop-accounting blockers visible to an outer
-executor without changing the driver's action vocabulary, dry-run guarantee, or
-selected command.
+context. This keeps visual-clash, text-boundary, label-path,
+undeclared-geometry, and crop-accounting blockers visible to an outer executor
+without changing the driver's action vocabulary, dry-run guarantee, or selected
+command.
 
 `next_action_summary` is additive compression of the already selected driver
 action. It must match top-level `action` and `safe_command`; it does not

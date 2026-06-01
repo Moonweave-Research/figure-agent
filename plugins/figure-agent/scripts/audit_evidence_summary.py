@@ -11,6 +11,7 @@ from critique_lint import (
     LABEL_PATH_ACCOUNTING_SCHEMAS,
     STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS,
     TEXT_BOUNDARY_ACCOUNTING_SCHEMAS,
+    UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS,
     VISUAL_CLASH_ACCOUNTING_SCHEMAS,
 )
 from critique_schema_vocab import MICRO_DEFECT_ACCEPT_SIMPLIFICATION_REASONS
@@ -53,6 +54,13 @@ def _base_summary(example_dir: Path, critique_schema: str | None) -> dict[str, A
             "unknown_refs": [],
         },
         "label_path": {
+            "present": False,
+            "candidate_count": 0,
+            "accounted_count": 0,
+            "missing_refs": [],
+            "unknown_refs": [],
+        },
+        "undeclared_geometry": {
             "present": False,
             "candidate_count": 0,
             "accounted_count": 0,
@@ -157,6 +165,26 @@ def _label_path_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str | 
     return ids, None
 
 
+def _undeclared_geometry_candidate_ids(report: dict[str, Any]) -> tuple[list[str], str | None]:
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return [], "malformed"
+    ids: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            return [], "malformed"
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            return [], "malformed"
+        candidate_id = candidate_id.strip()
+        if candidate_id in seen:
+            return [], "malformed"
+        seen.add(candidate_id)
+        ids.append(candidate_id)
+    return ids, None
+
+
 def _micro_defects(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
     raw_items = frontmatter.get("micro_defects")
     if not isinstance(raw_items, list):
@@ -186,6 +214,15 @@ def _label_path_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: list[str] = []
     for item in _micro_defects(frontmatter):
         ref = item.get("label_path_ref")
+        if isinstance(ref, str) and ref.strip():
+            refs.append(ref.strip())
+    return refs
+
+
+def _undeclared_geometry_refs(frontmatter: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in _micro_defects(frontmatter):
+        ref = item.get("undeclared_geometry_ref")
         if isinstance(ref, str) and ref.strip():
             refs.append(ref.strip())
     return refs
@@ -449,6 +486,53 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 "unknown_refs": label_path_unknown_refs,
             }
 
+    undeclared_geometry_missing_refs: list[str] = []
+    undeclared_geometry_unknown_refs: list[str] = []
+    if critique_schema in UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS:
+        undeclared_report, undeclared_error = _load_json(
+            example_dir / "build" / "undeclared_geometry.json"
+        )
+        if undeclared_error is not None:
+            reason = "missing build/undeclared_geometry.json"
+            if undeclared_error == "malformed":
+                reason = "malformed build/undeclared_geometry.json"
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/undeclared_geometry.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason=reason,
+            )
+        undeclared_candidate_ids, undeclared_candidate_error = (
+            _undeclared_geometry_candidate_ids(undeclared_report or {})
+        )
+        if undeclared_candidate_error is not None:
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/undeclared_geometry.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason="malformed build/undeclared_geometry.json candidates",
+            )
+        undeclared_refs = _undeclared_geometry_refs(frontmatter)
+        undeclared_candidate_id_set = set(undeclared_candidate_ids)
+        undeclared_ref_set = set(undeclared_refs)
+        undeclared_geometry_missing_refs = [
+            candidate_id
+            for candidate_id in undeclared_candidate_ids
+            if candidate_id not in undeclared_refs
+        ]
+        undeclared_geometry_unknown_refs = sorted(
+            ref for ref in undeclared_ref_set if ref not in undeclared_candidate_id_set
+        )
+        summary["undeclared_geometry"] = {
+            "present": True,
+            "candidate_count": len(undeclared_candidate_ids),
+            "accounted_count": len(undeclared_ref_set & undeclared_candidate_id_set),
+            "missing_refs": undeclared_geometry_missing_refs,
+            "unknown_refs": undeclared_geometry_unknown_refs,
+        }
+
     if critique_schema in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
         manifest, manifest_error = _load_json(manifest_path)
@@ -543,6 +627,15 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             blocking_items=blocking_items,
             next_action=f"/fig_critique {example_dir.name}",
             reason="label-path proximity candidates are not fully accounted in micro_defects",
+        )
+    if undeclared_geometry_missing_refs or undeclared_geometry_unknown_refs:
+        blocking_items = undeclared_geometry_missing_refs + undeclared_geometry_unknown_refs
+        return _finish(
+            summary,
+            state="needs_action",
+            blocking_items=blocking_items,
+            next_action=f"/fig_critique {example_dir.name}",
+            reason="undeclared-geometry candidates are not fully accounted in micro_defects",
         )
     if accept_gaps:
         return _finish(
