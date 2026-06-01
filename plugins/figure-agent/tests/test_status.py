@@ -3479,6 +3479,59 @@ def test_main_resolves_single_name_under_examples(
     assert "named_fig — stage 1/4" in captured.out
 
 
+def test_main_accepts_examples_fixture_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    fixture = tmp_path / "examples" / "named_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "examples/named_fig"])
+
+    assert status_mod.main() == 0
+
+    captured = capsys.readouterr()
+    assert "named_fig — stage 1/4" in captured.out
+
+
+def test_main_rejects_parent_relative_example_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    _make_spec(outside)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "examples/../outside"])
+
+    assert status_mod.main() == 1
+
+    captured = capsys.readouterr()
+    assert "invalid fixture path" in captured.err
+    assert captured.out == ""
+
+
+def test_main_reports_controlled_error_for_invalid_fixture_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", " "])
+
+    assert status_mod.main() == 1
+
+    captured = capsys.readouterr()
+    assert "invalid fixture path" in captured.err
+    assert captured.out == ""
+
+
 def test_tracked_golden_stale_gives_force_golden_hint(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
