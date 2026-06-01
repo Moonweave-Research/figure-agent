@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import yaml
 from quality_manifest import REPO_ROOT, input_manifest_hash
 from svg_polish_manifest import ALLOWED_EDIT_CLASSES
@@ -338,6 +339,37 @@ def svg_polish_recipe_template(
     return yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise SvgPolishRecipeError("invalid fixture path: expected examples/<fixture-name>")
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise SvgPolishRecipeError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise SvgPolishRecipeError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SvgPolishRecipeError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Validate or template figure-agent SVG polish recipes."
@@ -363,9 +395,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.template is not None:
-            template = svg_polish_recipe_template(args.template, base_dir=args.base_dir)
+            example_dir = _resolve_example_dir_for_cli(args.template)
+            template = svg_polish_recipe_template(example_dir, base_dir=args.base_dir)
             if args.write_template:
-                output_path = args.template / SVG_POLISH_RECIPE_RELATIVE_PATH
+                output_path = example_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
                 if output_path.exists() and not args.force:
                     raise SvgPolishRecipeError(
                         f"refusing to overwrite existing recipe: {output_path}"
