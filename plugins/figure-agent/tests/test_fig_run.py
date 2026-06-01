@@ -1850,6 +1850,22 @@ def test_main_rejects_invalid_max_steps(
     assert "max_steps must be >= 1" in captured.err
 
 
+def test_main_rejects_unsafe_fixture_name_cleanly(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "examples").mkdir()
+
+    result = fig_run.main(
+        ["../outside", "--mode", "review", "--goal", "close loop"],
+        repo_root=tmp_path,
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "fixture name must be a single examples/<name> directory name" in captured.err
+    assert captured.out == ""
+
+
 def test_run_workflow_rejects_final_mode_as_driver_only(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="final mode is driver-only"):
         fig_run.run_workflow(

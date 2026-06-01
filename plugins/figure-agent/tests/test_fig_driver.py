@@ -234,6 +234,47 @@ def test_main_emits_json_summary_in_dry_run(
         assert key in payload
 
 
+def test_build_driver_summary_rejects_unsafe_fixture_name_before_status(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("name: outside\n", encoding="utf-8")
+
+    def status_should_not_run(_example_dir: Path) -> dict[str, Any]:
+        raise AssertionError("unsafe fixture name reached status inference")
+
+    monkeypatch.setattr(fig_driver, "_status_for", status_should_not_run)
+
+    with pytest.raises(
+        ValueError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        fig_driver.build_driver_summary(
+            "../outside",
+            mode="review",
+            goal="triage",
+            repo_root=tmp_path,
+        )
+
+
+def test_main_rejects_unsafe_fixture_name_cleanly(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "examples").mkdir()
+
+    result = fig_driver.main(
+        ["../outside", "--mode", "review", "--goal", "triage", "--dry-run"],
+        repo_root=tmp_path,
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "fixture name must be a single examples/<name> directory name" in captured.err
+    assert captured.out == ""
+
+
 def test_review_complete_surfaces_ready_improvement_candidates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

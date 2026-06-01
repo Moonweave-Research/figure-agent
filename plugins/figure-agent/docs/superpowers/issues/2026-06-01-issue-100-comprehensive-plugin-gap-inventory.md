@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AU, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AV, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AU queue fixture name boundary;
+- branch baseline: `main` after Issue 100AV driver fixture name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -105,6 +105,7 @@ the workflow together.
 | G100-40 | P2 | Run journal malformed input safety | Issue 100AR's snapshot writer reused critique input path expansion directly, and malformed `spec.yaml.panels[]` entries could raise while recording a non-authoritative journal. | A scalar panel entry reproduces `AttributeError: 'str' object has no attribute 'get'` through `participating_panel_reference_paths()`. | `/fig_run --record` could fail to write a continuation journal exactly when malformed inputs make recovery context more important. | Issue 100AS - run journal malformed-spec safe snapshot |
 | G100-41 | P2 | Run journal new evidence freshness | Issue 100AR compared only files present in the stored snapshot, while the legacy mtime fallback missed newly added evidence files with older mtimes. | A new `spec.yaml` or optional evidence file can be copied in after the journal while preserving an old timestamp. | A continuation summary could appear available even though the current evidence source set contains files that were never present in the recorded run journal. | Issue 100AT - run journal new evidence snapshot gap |
 | G100-42 | P2 | Queue fixture path boundary | `/fig_queue` treated explicit fixture arguments as path fragments under `examples/` without rejecting `../` or multi-component names first. | `examples/../outside` can resolve to an existing directory outside `examples/`, allowing the queue to call the driver with an unsafe fixture identity. | Batch queue triage could inspect or route a non-fixture path instead of surfacing an operator error row. | Issue 100AU - queue fixture name boundary |
+| G100-43 | P2 | Driver fixture path boundary | `/fig_drive` and `/fig_run` still relied on `examples/<name>` path joining after Issue 100AU fixed only the queue surface. | `fig_driver.build_driver_summary("../outside", ...)` could reach status inference if `examples/../outside` existed, and `fig_run` inherits driver behavior. | Direct single-fixture entrypoints could inspect or plan commands for a non-fixture path instead of failing before workflow routing. | Issue 100AV - driver fixture name boundary |
 
 ## Recommended Execution Order
 
@@ -394,6 +395,13 @@ the workflow together.
     arguments are now validated as non-empty single relative path components
     before driver invocation; unsafe names surface as blocked
     `unsafe_fixture_name` rows.
+
+45. **Issue 100AV - driver fixture name boundary**
+    Completed as direct-entrypoint safety hardening. `/fig_drive` now validates
+    fixture names before status inference or command planning, and `/fig_run`
+    inherits the same controlled error path instead of letting traversal syntax
+    become a fixture identity. `/fig_queue` reuses the same driver-side policy
+    so the queue and direct-entrypoint boundaries stay aligned.
 
 ## Non-Goals
 
