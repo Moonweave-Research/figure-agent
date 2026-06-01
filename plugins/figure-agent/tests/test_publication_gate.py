@@ -103,6 +103,11 @@ def test_publication_audit_scaffold_uses_conservative_defaults() -> None:
     assert "accepted: true" not in text
 
 
+def test_publication_audit_scaffold_rejects_unsafe_fixture_name() -> None:
+    with pytest.raises(ValueError, match="fixture name"):
+        publication_audit_scaffold_text("../outside")
+
+
 def test_write_publication_audit_scaffold_refuses_overwrite_without_force(
     tmp_path: Path,
 ) -> None:
@@ -113,6 +118,17 @@ def test_write_publication_audit_scaffold_refuses_overwrite_without_force(
         write_publication_audit_scaffold(audit, fixture="demo_fig")
 
     assert audit.read_text(encoding="utf-8") == "existing\n"
+
+
+def test_write_publication_audit_scaffold_rejects_unsafe_fixture_before_write(
+    tmp_path: Path,
+) -> None:
+    audit = tmp_path / "QUALITY_AUDIT.md"
+
+    with pytest.raises(ValueError, match="fixture name"):
+        write_publication_audit_scaffold(audit, fixture="../outside")
+
+    assert not audit.exists()
 
 
 def test_write_publication_audit_scaffold_can_force_overwrite(tmp_path: Path) -> None:
