@@ -166,6 +166,26 @@ def test_latest_journal_summary_marks_journal_stale_when_fixture_evidence_is_new
     assert summary["next_live_commands"][0] == "/fig_status runner_demo"
 
 
+def test_latest_journal_summary_marks_external_review_evidence_newer_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    new_time = time.time()
+    _touch_fixture_evidence(example_dir, old_time - 10)
+    _write_run_journal(tmp_path, run_id="20260601-010000-old", mtime=old_time)
+    external_review = example_dir / "external_vision_review.yaml"
+    external_review.write_text("schema: figure-agent.external-vision-review.v1\n")
+    os.utime(external_review, (new_time, new_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == [
+        "examples/runner_demo/external_vision_review.yaml"
+    ]
+
+
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:
     _write_fixture(tmp_path)
     runs_root = tmp_path / "custom-runs"
