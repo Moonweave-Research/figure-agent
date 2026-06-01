@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import critique_brief_sections as brief_sections
+import fixture_identity
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
     AestheticIntentError,
@@ -1800,13 +1801,38 @@ subscription tokens.)
 """
 
 
+def _resolve_example_dir_for_cli(value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    if path.parts and path.parts[0] == "examples":
+        if len(path.parts) != 2 or ".." in path.parts:
+            raise CritiqueBriefError("invalid fixture path: expected examples/<fixture-name>")
+        _validate_fixture_name(path.parts[1], value)
+        return Path("examples") / path.parts[1]
+    if len(path.parts) == 1:
+        _validate_fixture_name(value, value)
+        return path
+    raise CritiqueBriefError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise CritiqueBriefError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print("usage: critique_brief.py <example_dir>", file=sys.stderr)
         return 2
 
     try:
-        brief = generate_for(Path(sys.argv[1]))
+        brief = generate_for(_resolve_example_dir_for_cli(sys.argv[1]))
     except (FileNotFoundError, CritiqueBriefError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
