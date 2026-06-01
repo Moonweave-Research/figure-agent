@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pdfplumber
 import yaml
 from check_visual_clash import extract_pdf_words_and_page
 
@@ -20,6 +21,20 @@ DEFAULT_NEAR_MISS_PT = 4.0
 _POINT_RE = r"\((-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)"
 _RECT_RE = re.compile(rf"{_POINT_RE}\s*rectangle\s*{_POINT_RE}")
 _SEGMENT_RE = re.compile(rf"{_POINT_RE}\s*--\s*{_POINT_RE}")
+_COMMAND_RE = re.compile(r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?")
+_LINE_WIDTH_RE = re.compile(r"line width\s*=\s*([0-9.]+)\s*pt")
+_CGRAY_TONE_RE = re.compile(r"cGray!(\d+(?:\.\d+)?)")
+FRAME_TONE_MAX = 35.0
+FRAME_LINE_WIDTH_MAX_PT = 0.35
+FRAME_LINE_MIN_LENGTH_PT = 2.0 * CM_TO_PT
+FRAME_RECT_MIN_WIDTH_PT = 4.0 * CM_TO_PT
+FRAME_RECT_MIN_HEIGHT_PT = 3.0 * CM_TO_PT
+RENDERED_FRAME_LINE_WIDTH_MAX_PT = 0.75
+RENDERED_FRAME_LINE_MIN_LENGTH_PT = 2.0 * CM_TO_PT
+RENDERED_FRAME_RECT_MIN_WIDTH_PT = 4.0 * CM_TO_PT
+RENDERED_FRAME_RECT_MIN_HEIGHT_PT = 3.0 * CM_TO_PT
+RENDERED_FRAME_GRAY_MIN = 0.55
+RENDERED_FRAME_NEUTRAL_DELTA_MAX = 0.04
 
 
 class UndeclaredGeometryError(ValueError):
@@ -57,9 +72,15 @@ def _line_pt(values: tuple[float, float, float, float]) -> dict[str, Any]:
 
 def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
     geometry: list[dict[str, Any]] = []
+    current_command = ""
+    current_options = ""
     for line_no, line in enumerate(tex_text.splitlines(), start=1):
         if line.lstrip().startswith("%"):
             continue
+        command_match = _COMMAND_RE.search(line)
+        if command_match is not None:
+            current_command = str(command_match.group("command") or "")
+            current_options = str(command_match.group("options") or "")
         for match in _RECT_RE.finditer(line):
             x0, y0, x1, y1 = (float(value) for value in match.groups())
             geometry.append(
@@ -67,6 +88,8 @@ def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
                     "kind": "rect",
                     "bbox_pt": _bbox_cm_to_pt([x0, y0, x1, y1]),
                     "source_line": line_no,
+                    "command": current_command,
+                    "options": current_options,
                 }
             )
         for match in _SEGMENT_RE.finditer(line):
@@ -77,6 +100,8 @@ def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
                         "kind": "vertical_line",
                         "line_pt": _line_pt((x0, y0, x1, y1)),
                         "source_line": line_no,
+                        "command": current_command,
+                        "options": current_options,
                     }
                 )
             elif abs(y0 - y1) < 0.03 and abs(x0 - x1) >= 0.25:
@@ -85,8 +110,13 @@ def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
                         "kind": "horizontal_line",
                         "line_pt": _line_pt((x0, y0, x1, y1)),
                         "source_line": line_no,
+                        "command": current_command,
+                        "options": current_options,
                     }
                 )
+        if ";" in line:
+            current_command = ""
+            current_options = ""
     return geometry
 
 
@@ -212,6 +242,71 @@ def _segment_rect_distance(line: dict[str, Any], word: dict[str, Any]) -> float:
     return _point_rect_distance(x, y, (x0, y0, x1, y1))
 
 
+def _line_crosses_word(line: dict[str, Any], word: dict[str, Any]) -> bool:
+    x0, y0, x1, y1 = _word_bbox(word)
+    if line["kind"] == "vertical_line":
+        x = float(line["x"])
+        y_start, y_end = line["y_range"]
+        return x0 <= x <= x1 and _ranges_overlap([y0, y1], [y_start, y_end], 0.0)
+    y = float(line["y"])
+    x_start, x_end = line["x_range"]
+    return y0 <= y <= y1 and _ranges_overlap([x0, x1], [x_start, x_end], 0.0)
+
+
+def _rect_boundary_lines(bbox_pt: list[float]) -> list[dict[str, Any]]:
+    x0, y0, x1, y1 = bbox_pt
+    return [
+        {"kind": "horizontal_line", "y": y0, "x_range": [x0, x1], "side": "bottom"},
+        {"kind": "horizontal_line", "y": y1, "x_range": [x0, x1], "side": "top"},
+        {"kind": "vertical_line", "x": x0, "y_range": [y0, y1], "side": "left"},
+        {"kind": "vertical_line", "x": x1, "y_range": [y0, y1], "side": "right"},
+    ]
+
+
+def _line_bbox(line: dict[str, Any]) -> list[float]:
+    if line["kind"] == "vertical_line":
+        x = float(line["x"])
+        y0, y1 = line["y_range"]
+        return [x, float(y0), x, float(y1)]
+    y = float(line["y"])
+    x0, x1 = line["x_range"]
+    return [float(x0), y, float(x1), y]
+
+
+def _gray_tone(options: str) -> float | None:
+    match = _CGRAY_TONE_RE.search(options)
+    if match is not None:
+        return float(match.group(1))
+    return 50.0 if "cGray" in options else None
+
+
+def _line_width_pt(options: str) -> float:
+    match = _LINE_WIDTH_RE.search(options)
+    return float(match.group(1)) if match is not None else 0.4
+
+
+def _is_frame_like_geometry(geometry: dict[str, Any]) -> bool:
+    if geometry.get("command") != "draw":
+        return False
+    options = str(geometry.get("options") or "")
+    tone = _gray_tone(options)
+    if tone is None or tone > FRAME_TONE_MAX:
+        return False
+    if _line_width_pt(options) > FRAME_LINE_WIDTH_MAX_PT:
+        return False
+    if geometry["kind"] == "rect":
+        x0, y0, x1, y1 = geometry["bbox_pt"]
+        width = abs(x1 - x0)
+        height = abs(y1 - y0)
+        return width >= FRAME_RECT_MIN_WIDTH_PT and height >= FRAME_RECT_MIN_HEIGHT_PT
+    line = geometry["line_pt"]
+    if line["kind"] == "vertical_line":
+        y0, y1 = line["y_range"]
+        return abs(float(y1) - float(y0)) >= FRAME_LINE_MIN_LENGTH_PT - 1e-3
+    x0, x1 = line["x_range"]
+    return abs(float(x1) - float(x0)) >= FRAME_LINE_MIN_LENGTH_PT - 1e-3
+
+
 def _base_candidate(
     *,
     kind: str,
@@ -233,14 +328,140 @@ def _base_candidate(
     }
 
 
+def _is_light_neutral_stroke(color: object) -> bool:
+    if isinstance(color, int | float):
+        return float(color) >= RENDERED_FRAME_GRAY_MIN
+    if not isinstance(color, tuple) or not color:
+        return False
+    channels = [float(value) for value in color if isinstance(value, int | float)]
+    if not channels:
+        return False
+    return (
+        max(channels) - min(channels) <= RENDERED_FRAME_NEUTRAL_DELTA_MAX
+        and sum(channels) / len(channels) >= RENDERED_FRAME_GRAY_MIN
+    )
+
+
+def _rendered_line_from_pdf_line(raw_line: dict[str, Any]) -> dict[str, Any] | None:
+    if float(raw_line.get("linewidth") or 0.0) > RENDERED_FRAME_LINE_WIDTH_MAX_PT:
+        return None
+    if not _is_light_neutral_stroke(raw_line.get("stroking_color")):
+        return None
+    x0 = float(raw_line["x0"])
+    x1 = float(raw_line["x1"])
+    top = float(raw_line["top"])
+    bottom = float(raw_line["bottom"])
+    if abs(x0 - x1) < 0.5 and abs(bottom - top) >= RENDERED_FRAME_LINE_MIN_LENGTH_PT:
+        return {"kind": "vertical_line", "x": x0, "y_range": sorted([top, bottom])}
+    if abs(top - bottom) < 0.5 and abs(x1 - x0) >= RENDERED_FRAME_LINE_MIN_LENGTH_PT:
+        return {"kind": "horizontal_line", "y": top, "x_range": sorted([x0, x1])}
+    return None
+
+
+def _rendered_rect_boundary_lines(raw_rect: dict[str, Any]) -> list[dict[str, Any]]:
+    if not raw_rect.get("stroke"):
+        return []
+    if raw_rect.get("fill"):
+        return []
+    if float(raw_rect.get("linewidth") or 0.0) > RENDERED_FRAME_LINE_WIDTH_MAX_PT:
+        return []
+    if not _is_light_neutral_stroke(raw_rect.get("stroking_color")):
+        return []
+    x0 = float(raw_rect["x0"])
+    x1 = float(raw_rect["x1"])
+    top = float(raw_rect["top"])
+    bottom = float(raw_rect["bottom"])
+    if abs(x1 - x0) < RENDERED_FRAME_RECT_MIN_WIDTH_PT:
+        return []
+    if abs(bottom - top) < RENDERED_FRAME_RECT_MIN_HEIGHT_PT:
+        return []
+    return [
+        {"kind": "horizontal_line", "y": top, "x_range": sorted([x0, x1]), "side": "top"},
+        {
+            "kind": "horizontal_line",
+            "y": bottom,
+            "x_range": sorted([x0, x1]),
+            "side": "bottom",
+        },
+        {"kind": "vertical_line", "x": x0, "y_range": sorted([top, bottom]), "side": "left"},
+        {"kind": "vertical_line", "x": x1, "y_range": sorted([top, bottom]), "side": "right"},
+    ]
+
+
+def detect_rendered_boundary_crossings(
+    words: list[dict[str, Any]],
+    rendered_lines: list[dict[str, Any]],
+    rendered_rects: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return label/frame crossing candidates from rendered PDF coordinates."""
+    candidates: list[dict[str, Any]] = []
+    for raw_line in rendered_lines:
+        line = _rendered_line_from_pdf_line(raw_line)
+        if line is None:
+            continue
+        crossing_kind = (
+            "label_crosses_column_rule"
+            if line["kind"] == "vertical_line"
+            else "label_crosses_horizontal_rule"
+        )
+        for word in words:
+            if not _line_crosses_word(line, word):
+                continue
+            candidates.append(
+                _base_candidate(
+                    kind=crossing_kind,
+                    evidence=f"rendered frame/rule crosses text {word.get('text', '')!r}",
+                    bbox_pt=_line_bbox(line),
+                    source_line=0,
+                    nearest_text=str(word.get("text", "")),
+                    distance_pt=0.0,
+                    recommended_action="add_micro_defect",
+                )
+            )
+    for raw_rect in rendered_rects:
+        for line in _rendered_rect_boundary_lines(raw_rect):
+            for word in words:
+                if not _line_crosses_word(line, word):
+                    continue
+                candidate = _base_candidate(
+                    kind="label_crosses_rect_boundary",
+                    evidence=(
+                        f"rendered frame rectangle {line['side']} border crosses "
+                        f"text {word.get('text', '')!r}"
+                    ),
+                    bbox_pt=_line_bbox(line),
+                    source_line=0,
+                    nearest_text=str(word.get("text", "")),
+                    distance_pt=0.0,
+                    recommended_action="add_micro_defect",
+                )
+                candidate["boundary_side"] = line["side"]
+                candidates.append(candidate)
+    return candidates
+
+
+def _rendered_boundary_crossings_from_pdf(
+    pdf_path: Path,
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            return []
+        page = pdf.pages[0]
+        return detect_rendered_boundary_crossings(words, page.lines, page.rects)
+
+
 def detect_undeclared_geometry(
     tex_text: str,
     words: list[dict[str, Any]],
     spec: dict[str, Any] | None,
     *,
     near_miss_pt: float = DEFAULT_NEAR_MISS_PT,
+    page_size_pt: tuple[float, float] | None = None,
+    source_crossings: bool = True,
 ) -> list[dict[str, Any]]:
     """Return deterministic undeclared geometry and near-miss candidates."""
+    _ = page_size_pt
     spec = spec or {}
     declared = _declared_boundaries(spec)
     candidates: list[dict[str, Any]] = []
@@ -259,14 +480,37 @@ def detect_undeclared_geometry(
                     source_line=geometry["source_line"],
                 )
             )
+            if not source_crossings or not _is_frame_like_geometry(geometry):
+                continue
+            for line in _rect_boundary_lines(geometry["bbox_pt"]):
+                for word in words:
+                    if not _line_crosses_word(line, word):
+                        continue
+                    candidate = _base_candidate(
+                        kind="label_crosses_rect_boundary",
+                        evidence=(
+                            f"source line {geometry['source_line']} rectangle "
+                            f"{line['side']} border crosses text "
+                            f"{word.get('text', '')!r}"
+                        ),
+                        bbox_pt=_line_bbox(line),
+                        source_line=geometry["source_line"],
+                        nearest_text=str(word.get("text", "")),
+                        distance_pt=0.0,
+                        recommended_action="add_micro_defect",
+                    )
+                    candidate["boundary_side"] = line["side"]
+                    candidates.append(candidate)
             continue
         line = geometry["line_pt"]
         if geometry["kind"] == "vertical_line":
             bbox = [line["x"], line["y_range"][0], line["x"], line["y_range"][1]]
             kind = "undeclared_column_rule"
+            crossing_kind = "label_crosses_column_rule"
         else:
             bbox = [line["x_range"][0], line["y"], line["x_range"][1], line["y"]]
             kind = "undeclared_horizontal_rule"
+            crossing_kind = "label_crosses_horizontal_rule"
         candidates.append(
             _base_candidate(
                 kind=kind,
@@ -276,6 +520,26 @@ def detect_undeclared_geometry(
             )
         )
         for word in words:
+            if (
+                source_crossings
+                and _is_frame_like_geometry(geometry)
+                and _line_crosses_word(line, word)
+            ):
+                candidates.append(
+                    _base_candidate(
+                        kind=crossing_kind,
+                        evidence=(
+                            f"source line {geometry['source_line']} line crosses "
+                            f"text {word.get('text', '')!r}"
+                        ),
+                        bbox_pt=_line_bbox(line),
+                        source_line=geometry["source_line"],
+                        nearest_text=str(word.get("text", "")),
+                        distance_pt=0.0,
+                        recommended_action="add_micro_defect",
+                    )
+                )
+                continue
             distance = _segment_rect_distance(line, word)
             if 0 < distance <= near_miss_pt:
                 candidates.append(
@@ -297,6 +561,9 @@ def detect_undeclared_geometry(
         "undeclared_column_rule": 0,
         "undeclared_horizontal_rule": 0,
         "label_endpoint_near_miss": 1,
+        "label_crosses_rect_boundary": 1,
+        "label_crosses_column_rule": 1,
+        "label_crosses_horizontal_rule": 1,
         "undeclared_path_near_label": 1,
         "low_clearance_inside_boundary": 1,
     }
@@ -364,12 +631,25 @@ def main(argv: list[str] | None = None) -> int:
         spec_path = args.spec or pdf_path.parent.parent / "spec.yaml"
         if not tex_path.is_file():
             raise UndeclaredGeometryError(f"missing TeX source: {tex_path}")
-        words, _page_size = extract_pdf_words_and_page(pdf_path)
+        words, page_size = extract_pdf_words_and_page(pdf_path)
         candidates = detect_undeclared_geometry(
             tex_path.read_text(encoding="utf-8"),
             words,
             _load_spec(spec_path),
+            page_size_pt=page_size,
+            source_crossings=False,
         )
+        candidates.extend(_rendered_boundary_crossings_from_pdf(pdf_path, words))
+        candidates.sort(
+            key=lambda item: (
+                item["source_line"],
+                item["kind"],
+                item["nearest_text"],
+                item["bbox_pt"],
+            )
+        )
+        for index, candidate in enumerate(candidates, start=1):
+            candidate["id"] = f"UG{index:03d}"
         payload = undeclared_geometry_payload(pdf_path, candidates)
         output = args.json_output or pdf_path.parent / "undeclared_geometry.json"
         _write_json(output, payload)
