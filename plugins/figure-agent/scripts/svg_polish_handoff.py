@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from quality_manifest import file_sha256
 from svg_polish_manifest import (
     ALLOWED_EDIT_CLASSES,
@@ -338,6 +339,39 @@ def _parse_toolchain(value: str) -> dict[str, str]:
     return {"name": name.strip(), "version": version.strip()}
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise SvgPolishHandoffError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise SvgPolishHandoffError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise SvgPolishHandoffError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SvgPolishHandoffError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("example_dir", type=Path)
@@ -359,9 +393,10 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        example_dir = _resolve_example_dir_for_cli(args.example_dir)
         if args.write:
             audit_path, manifest_path = write_handoff_files(
-                args.example_dir,
+                example_dir,
                 reviewer=args.reviewer,
                 editor=args.editor,
                 toolchain=args.toolchain,
@@ -374,14 +409,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 style_lock_path=args.style_lock_path,
                 base_dir=args.base_dir,
             )
-            print(f"wrote {audit_path.relative_to(args.example_dir)}")
-            print(f"wrote {manifest_path.relative_to(args.example_dir)}")
+            print(f"wrote {audit_path.relative_to(example_dir)}")
+            print(f"wrote {manifest_path.relative_to(example_dir)}")
             return 0
-        name = _fixture_name(args.example_dir)
+        name = _fixture_name(example_dir)
         _validate_inputs(
-            args.example_dir,
+            example_dir,
             name,
-            args.example_dir / "polish" / f"{name}.polished.svg",
+            example_dir / "polish" / f"{name}.polished.svg",
         )
         _validate_editor(args.editor)
         _validate_metadata(args.reviewer, args.reviewed_at, args.notes)
