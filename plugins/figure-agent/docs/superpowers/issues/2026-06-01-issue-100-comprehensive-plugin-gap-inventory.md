@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100Z, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AA, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -84,6 +84,7 @@ the workflow together.
 | G100-19 | P1 | Strict-mode false-positive budget | A final-readiness preset cannot be just raw `FIGURE_AGENT_STRICT=1`; noisy report-only candidates need fixture caps or adjudicated budgets. | Issue 100S makes `visual_clash_cap` a first-class final-mode warning budget and routes missing reports to strict compile, over-budget reports to human review. | Final mode no longer claims completion while visual-clash warnings exceed the reviewed fixture cap. | Issue 100S - final strict profile and warning budgets |
 | G100-20 | P2 | Host/subagent evidence trace | Crop accounting says what the critique claims to have inspected, but there is no durable transcript-level read log for subagent-host inspection. | Milestones often record manual Read counts, but the plugin contract stores crop audit results rather than the viewer transcript. | Independent review of "did the host actually inspect this?" still relies on session prose. | Issue 100T - optional inspection transcript artifact |
 | G100-21 | P2 | Human-decision preservation | `scaffold --force` and re-adjudication flows can be correct but still risky if operators do not see which human decisions were preserved, dropped, or rebound. | Sync paths exist, but force-scaffold remains a sharp tool in real workflows. | Human rationale can be accidentally flattened during freshness repair. | Issue 100U - adjudication decision diff preview |
+| G100-22 | P2 | Command surface drift | Command docs can be added without the README Core commands list naming the command. | `/fig_closeout` and `/fig_e2e_smoke` had command docs, but the README Core commands list omitted them. | Operators can miss important workflow and smoke-test commands even after reading the main README. | Issue 100AA - command surface drift guard |
 
 ## Recommended Execution Order
 
@@ -226,28 +227,34 @@ the workflow together.
     version but different payloads. Different-version stale caches still
     recommend `claude plugin update`.
 
-20. **Issue 100P - stale issue status sweep**
+20. **Issue 100AA - command surface drift guard**
+    Implemented as a release-contract documentation guard. README Core commands
+    now names every `commands/fig_*.md` slash command, including `/fig_closeout`
+    and `/fig_e2e_smoke`, and `tests/test_release_contract.py` fails when a new
+    command doc is added without README command-surface review.
+
+21. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-21. **Issue 100T/U - evidence trace and human-decision diff**
+22. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-22. **Issue 100Q - critique entity consistency lint**
+23. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-23. **Issue 100S - final strict profile and warning budgets**
+24. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests

@@ -263,6 +263,21 @@ def test_readme_documents_status_and_driver_first_workflow() -> None:
     assert "Export, release, or\npolish only when" in readme
 
 
+def test_readme_core_commands_cover_command_docs() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+    core_commands_section = readme.partition("## Core commands")[2].partition(
+        "## A typical figure"
+    )[0]
+
+    missing = []
+    for command_doc in sorted((REPO_ROOT / "commands").glob("fig_*.md")):
+        command = f"/{command_doc.stem}"
+        if command not in core_commands_section:
+            missing.append(command)
+
+    assert missing == []
+
+
 def test_active_docs_describe_svg_polish_handoff_as_shipped() -> None:
     overview = (REPO_ROOT / "docs" / "architecture-overview.md").read_text()
 
