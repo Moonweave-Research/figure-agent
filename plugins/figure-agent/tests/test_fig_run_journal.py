@@ -276,6 +276,46 @@ def test_latest_journal_summary_marks_declared_context_pack_newer_as_stale(
     ]
 
 
+def test_latest_journal_summary_marks_reference_inputs_newer_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    new_time = time.time()
+    (example_dir / "spec.yaml").write_text(
+        "name: runner_demo\n"
+        "reference_image: refs/figure-ref.png\n"
+        "panels:\n"
+        "  - id: A\n"
+        "    reference_image: refs/panel-a-ref.png\n"
+        "    bbox_pdf_cm: [0, 0, 1, 1]\n",
+        encoding="utf-8",
+    )
+    reference_dir = example_dir / "refs"
+    reference_dir.mkdir()
+    figure_ref = reference_dir / "figure-ref.png"
+    panel_ref = reference_dir / "panel-a-ref.png"
+    reference_pack = example_dir / "reference" / "reference_pack.md"
+    reference_pack.parent.mkdir()
+    figure_ref.write_bytes(b"figure reference")
+    panel_ref.write_bytes(b"panel reference")
+    reference_pack.write_text("reference notes\n", encoding="utf-8")
+    _touch_fixture_evidence(example_dir, old_time - 10)
+    os.utime(figure_ref, (new_time, new_time))
+    os.utime(panel_ref, (new_time, new_time))
+    os.utime(reference_pack, (new_time, new_time))
+    _write_run_journal(tmp_path, run_id="20260601-010000-old", mtime=old_time)
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == [
+        "examples/runner_demo/reference/reference_pack.md",
+        "examples/runner_demo/refs/figure-ref.png",
+        "examples/runner_demo/refs/panel-a-ref.png",
+    ]
+
+
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:
     _write_fixture(tmp_path)
     runs_root = tmp_path / "custom-runs"
