@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from audit_evidence_summary import summarize_audit_evidence
 
 SCHEMA = "figure-agent.detector-feedback-ledger.v1"
@@ -25,6 +26,7 @@ def _selected_fixture_dirs(examples_root: Path, fixture_names: list[str]) -> lis
     if fixture_names:
         fixture_dirs: list[Path] = []
         for fixture_name in sorted(dict.fromkeys(fixture_names)):
+            fixture_identity.validate_fixture_name(fixture_name)
             fixture_dir = examples_root / fixture_name
             if not fixture_dir.is_dir():
                 raise ValueError(f"fixture not found: {fixture_name}")
@@ -37,10 +39,20 @@ def _selected_fixture_dirs(examples_root: Path, fixture_names: list[str]) -> lis
         (
             path
             for path in examples_root.iterdir()
-            if path.is_dir() and (path / "critique.md").is_file()
+            if _is_fixture_dir_under_examples_root(path, examples_root)
         ),
         key=lambda path: path.name,
     )
+
+
+def _is_fixture_dir_under_examples_root(path: Path, examples_root: Path) -> bool:
+    if not path.is_dir() or not (path / "critique.md").is_file():
+        return False
+    try:
+        path.resolve().relative_to(examples_root)
+    except ValueError:
+        return False
+    return True
 
 
 def _empty_totals() -> dict[str, Any]:
