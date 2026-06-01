@@ -11,6 +11,7 @@ Run from the plugin root:
 ```bash
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
 uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --json
+uv run python3 scripts/fig_queue.py --mode final --goal "final readiness" --json
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --action run_fig_loop
@@ -87,7 +88,7 @@ blocked and visible in the command plan.
 | Field | Type | Notes |
 |---|---|---|
 | `schema` | string | `figure-agent.fixture-driver-queue.v1` |
-| `mode` | string | driver mode: `authoring`, `review`, `release`, or `polish` |
+| `mode` | string | driver mode: `authoring`, `review`, `release`, `polish`, or `final` |
 | `goal` | string | passthrough goal used for driver recommendations |
 | `filters` | object | active filters only; empty object when no filters were supplied |
 | `unfiltered_total` | int | row count before filters are applied |

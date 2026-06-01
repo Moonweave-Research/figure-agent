@@ -14,6 +14,7 @@ SCRIPTS_ROOT = REPO_ROOT / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from fig_driver import MODES as FIG_DRIVER_MODES  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
@@ -129,6 +130,14 @@ def test_readme_documents_plugin_package_audit() -> None:
     assert "scripts/plugin_package_audit.py" in readme
     assert "--max-mib" in readme
     assert "~/.claude/plugins/cache/" in readme
+
+
+def test_fig_queue_docs_cover_all_driver_modes() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "driver mode:" in command_doc
+    for mode in FIG_DRIVER_MODES:
+        assert f"`{mode}`" in command_doc, f"fig_queue docs omit driver mode {mode!r}"
 
 
 def test_readme_current_state_matches_plugin_version() -> None:
