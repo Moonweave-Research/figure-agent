@@ -186,6 +186,60 @@ def test_latest_journal_summary_marks_external_review_evidence_newer_as_stale(
     ]
 
 
+def test_latest_journal_summary_marks_inspection_trace_newer_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    new_time = time.time()
+    _touch_fixture_evidence(example_dir, old_time - 10)
+    _write_run_journal(tmp_path, run_id="20260601-010000-old", mtime=old_time)
+    inspection_trace = example_dir / "inspection_trace.yaml"
+    inspection_trace.write_text("inspection_trace:\n  schema: figure-agent.inspection-trace.v1\n")
+    os.utime(inspection_trace, (new_time, new_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == [
+        "examples/runner_demo/inspection_trace.yaml"
+    ]
+
+
+def test_latest_journal_summary_marks_svg_polish_sidecar_newer_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    new_time = time.time()
+    _touch_fixture_evidence(example_dir, old_time - 10)
+    _write_run_journal(tmp_path, run_id="20260601-010000-old", mtime=old_time)
+    polish_dir = example_dir / "polish"
+    polish_dir.mkdir()
+    manifest = polish_dir / "svg_polish_manifest.yaml"
+    manifest.write_text("schema: figure-agent.svg-polish-manifest.v1\n")
+    os.utime(manifest, (new_time, new_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == [
+        "examples/runner_demo/polish/svg_polish_manifest.yaml"
+    ]
+
+    delta_manifest = polish_dir / "aesthetic_delta" / "delta_manifest.json"
+    delta_manifest.parent.mkdir()
+    delta_manifest.write_text('{"schema": "figure-agent.svg-polish-delta.v1"}\n')
+    os.utime(delta_manifest, (new_time, new_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["stale_against"] == [
+        "examples/runner_demo/polish/aesthetic_delta/delta_manifest.json",
+        "examples/runner_demo/polish/svg_polish_manifest.yaml",
+    ]
+
+
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:
     _write_fixture(tmp_path)
     runs_root = tmp_path / "custom-runs"

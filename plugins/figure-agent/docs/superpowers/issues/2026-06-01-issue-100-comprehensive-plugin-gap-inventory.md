@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AN, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AO, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AN run journal optional evidence staleness;
+- branch baseline: `main` after Issue 100AO run journal inspection/SVG polish evidence staleness;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -98,6 +98,7 @@ the workflow together.
 | G100-33 | P1 | External review crop-set freshness | `external_vision_review.yaml` hashed reviewed crops, but did not become stale when the current audit-crop manifest later added or removed crop paths. | Issue 100K template binds the initial crop set, but freshness only rechecked files already listed by `reviewed_crops[]`. | A second-opinion review could remain fresh even though a new high-zoom crop was never inspected by the external reviewer. | Issue 100AL - external review crop-set freshness |
 | G100-34 | P3 | External finding docs | README and `/fig_critique` docs still described external second-opinion routing in terms of stale or conflicting reviews after unresolved external findings became first-class human-gate evidence. | Issue 100AJ changed loop behavior, but the high-traffic operator docs did not yet name the new unresolved-finding boundary. | Operators could under-use the second-opinion path by thinking only conflicts matter, not standalone new findings. | Issue 100AM - external finding documentation guard |
 | G100-35 | P2 | Run journal optional evidence staleness | `fig_run_journal.py` marked journals stale against core fixture and build files, but not newer optional evidence such as `external_vision_review.yaml`. | External reviews, reference packs, aesthetic intent, and detector reports can change the next review route after a run journal was written. | A continuation summary could appear available even though important review evidence changed after the interrupted run. | Issue 100AN - run journal optional evidence staleness |
+| G100-36 | P2 | Run journal inspection/SVG polish evidence staleness | Issue 100AN still omitted `inspection_trace.yaml` and SVG polish sidecars from journal staleness checks. | Inspection traces and SVG polish delta/final-artifact sidecars can change after a run journal stops. | A continuation summary could appear available even though host-read accountability or SVG polish evidence changed after the interrupted run. | Issue 100AO - run journal inspection/SVG polish evidence staleness |
 
 ## Recommended Execution Order
 
@@ -346,6 +347,11 @@ the workflow together.
     prior journal stale when newer optional critique/evidence inputs such as
     `external_vision_review.yaml`, reference packs, aesthetic intent, or build
     detector reports appear after the journal.
+
+38. **Issue 100AO - run journal inspection/SVG polish evidence staleness**
+    Completed as a continuation-safety guard. `fig_run_journal.py` now also
+    marks a prior journal stale when newer host-read accountability evidence or
+    SVG polish sidecars appear after the journal.
 
 ## Non-Goals
 
