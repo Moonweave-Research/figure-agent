@@ -265,6 +265,15 @@ anti-pattern evidence; active routes must match the declared `default_route`;
 `svg_polish` requires `ready_for_svg_polish`, `semantic_backport` requires
 `semantic_backport_required`, and `human_art_direction` must cite the explicit
 human art-direction gate.
+For schema v1.17 grounded critiques, `/fig_critique` must also fill
+`aesthetic_antipattern_audit`, `weakest_panel_coherence`, and
+`reference_learning_accountability`. These fields convert softer top-tier
+design risks into route-aware evidence: generic template feel, childish or
+cartoonish language, weak eye path, weakest-panel mismatch, reference
+over-copying, and reference under-learning must be explicitly classified as
+`none`, `tikz_patch`, `svg_polish`, `semantic_backport`, or
+`human_art_direction`. They are audit/accountability fields, not permission for
+hidden source edits or release-gate bypass.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or

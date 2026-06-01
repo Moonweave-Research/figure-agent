@@ -128,8 +128,9 @@ handoff used by `/fig_drive --mode polish` to distinguish `continue_tikz`,
 `ready_for_svg_polish`, `needs_human_art_direction`, and
 `semantic_backport_required`.
 
-For schema `figure-agent.critique.v1.14`, the summary also includes
-`polish_route_detail` from the route-specific rationale field:
+For schema `figure-agent.critique.v1.14` and newer schemas that inherit the
+route-detail contract, the summary also includes `polish_route_detail` from
+the route-specific rationale field:
 `remaining_tikz_lever`, `svg_polish_candidate_reason`,
 `semantic_backport_reason`, or `human_art_direction_reason`. This keeps a
 `verdict: pass` plus `recommended_path: continue_tikz` decision explainable
@@ -154,7 +155,7 @@ explicit:
 - `next_action: semantic_backport` for `semantic_backport_required`
 - `next_action: human_art_direction_review` for `needs_human_art_direction`
 
-When v1.14 route detail exists, it is copied into
+When route detail exists, it is copied into
 `svg_polish_readiness.route_detail` or the relevant
 `blocking_items[].route_detail`, so an outer driver can report the exact
 remaining TikZ lever, SVG candidate reason, semantic backport reason, or human

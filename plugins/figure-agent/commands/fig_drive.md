@@ -201,8 +201,9 @@ driver routes `polish_recommended_path` as follows:
 The driver still never edits source, exports, polished SVGs, accepted state, or
 golden state. `continue_tikz` means polish mode is the wrong next executor; run
 the review loop and patch source through the normal `/fig_loop` handoff
-boundary. For schema `figure-agent.critique.v1.14`, the loop summary can carry
-route detail (`remaining_tikz_lever`, `svg_polish_candidate_reason`,
+boundary. For schema `figure-agent.critique.v1.14` and newer schemas that
+inherit the route-detail contract, the loop summary can carry route detail
+(`remaining_tikz_lever`, `svg_polish_candidate_reason`,
 `semantic_backport_reason`, or `human_art_direction_reason`); the driver copies
 that detail into its explanatory readiness output. If the summary says
 `ready_for_svg_polish` but another editorial slot still reports `fail`,
