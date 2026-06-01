@@ -163,8 +163,20 @@ def _count(rows: list[dict[str, Any]], key: str) -> dict[str, int]:
     return dict(sorted(counts.items()))
 
 
+def _count_list_items(rows: list[dict[str, Any]], key: str) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for row in rows:
+        value = row.get(key)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if isinstance(item, str) and item:
+                counts[item] += 1
+    return dict(sorted(counts.items()))
+
+
 def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    return {
+    summary = {
         "total": len(rows),
         "errors": sum(1 for row in rows if row.get("action") == "error"),
         "by_action": _count(rows, "action"),
@@ -173,6 +185,16 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "by_required_actor": _count(rows, "required_actor"),
         "by_blocking_source": _count(rows, "blocking_source"),
     }
+    by_svg_gate = _count(rows, "svg_polish_gate_state")
+    if by_svg_gate:
+        summary["by_svg_polish_gate_state"] = by_svg_gate
+    by_svg_path = _count(rows, "svg_polish_recommended_path")
+    if by_svg_path:
+        summary["by_svg_polish_recommended_path"] = by_svg_path
+    by_svg_blocker = _count_list_items(rows, "svg_polish_blocking_sources")
+    if by_svg_blocker:
+        summary["by_svg_polish_blocking_source"] = by_svg_blocker
+    return summary
 
 
 def _active_filters(filters: dict[str, str | None] | None) -> dict[str, str]:
