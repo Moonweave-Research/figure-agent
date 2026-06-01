@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -81,6 +82,114 @@ def test_load_paper_aesthetic_context_accepts_valid_pack(tmp_path: Path) -> None
     assert pack["target_journal"] == "Nature Communications"
     assert role["role"] == "overview_mechanism"
     assert role["must_align_with"] == ["restrained_palette", "typography_authority"]
+
+
+def test_paper_aesthetic_context_template_emits_valid_pack(tmp_path: Path) -> None:
+    example_dir = _example_dir(tmp_path, fixture="fig2_mechanism")
+    path = example_dir.parent / "_paper_aesthetic_contexts" / "paper-demo.yaml"
+
+    text = paper_aesthetic_context.paper_aesthetic_context_template(
+        paper_id="paper-demo",
+        fixture="fig2_mechanism",
+    )
+    path.parent.mkdir(parents=True)
+    path.write_text(text, encoding="utf-8")
+
+    pack = paper_aesthetic_context.load_paper_aesthetic_context(path)
+    role = paper_aesthetic_context.matching_figure_role(pack, "fig2_mechanism")
+
+    assert pack["paper_id"] == "paper-demo"
+    assert role["fixture"] == "fig2_mechanism"
+    assert set(role["must_align_with"]) == {
+        "series_palette",
+        "series_typography",
+        "source_first_polish",
+    }
+
+
+def test_write_paper_aesthetic_context_refuses_overwrite_without_force(
+    tmp_path: Path,
+) -> None:
+    example_dir = _example_dir(tmp_path)
+    path = example_dir.parent / "_paper_aesthetic_contexts" / "paper-demo.yaml"
+    path.parent.mkdir(parents=True)
+    path.write_text("existing\n", encoding="utf-8")
+
+    try:
+        paper_aesthetic_context.write_paper_aesthetic_context(
+            path,
+            paper_aesthetic_context.paper_aesthetic_context_template(
+                paper_id="paper-demo",
+                fixture="fig1_demo",
+            ),
+        )
+    except FileExistsError as exc:
+        assert "already exists" in str(exc)
+    else:
+        raise AssertionError("expected FileExistsError")
+
+    assert path.read_text(encoding="utf-8") == "existing\n"
+
+
+def test_paper_aesthetic_context_template_cli_writes_reloadable_pack(
+    tmp_path: Path,
+) -> None:
+    examples_dir = tmp_path / "examples"
+    example_dir = examples_dir / "fig1_demo"
+    example_dir.mkdir(parents=True)
+    script = Path(__file__).resolve().parents[1] / "scripts" / "paper_aesthetic_context.py"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--template",
+            "paper-demo",
+            "--fixture",
+            "fig1_demo",
+            "--examples-dir",
+            str(examples_dir),
+            "--write-template",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    path = examples_dir / "_paper_aesthetic_contexts" / "paper-demo.yaml"
+    pack = paper_aesthetic_context.load_paper_aesthetic_context(path)
+    assert paper_aesthetic_context.matching_figure_role(pack, "fig1_demo")["role"] == (
+        "overview_mechanism"
+    )
+
+
+def test_paper_aesthetic_context_template_cli_rejects_missing_examples_dir(
+    tmp_path: Path,
+) -> None:
+    script = Path(__file__).resolve().parents[1] / "scripts" / "paper_aesthetic_context.py"
+    missing_examples = tmp_path / "missing_examples"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--template",
+            "paper-demo",
+            "--fixture",
+            "fig1_demo",
+            "--examples-dir",
+            str(missing_examples),
+            "--write-template",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "missing examples directory" in result.stderr
+    assert not missing_examples.exists()
 
 
 def test_load_paper_aesthetic_context_rejects_unsafe_paper_id(tmp_path: Path) -> None:

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -292,3 +294,169 @@ def paper_context_anchors(pack: dict[str, Any], fixture: str) -> set[str]:
                 if isinstance(item_id, str) and item_id.strip():
                     anchors.add(item_id.strip())
     return {anchor for anchor in anchors if anchor}
+
+
+def paper_aesthetic_context_template(
+    *,
+    paper_id: str,
+    fixture: str,
+    target_journal: str = "Nature Communications",
+    visual_maturity: str = "restrained",
+    density: str = "balanced",
+    role: str = "overview_mechanism",
+) -> str:
+    if not is_safe_paper_context_id(paper_id):
+        raise PaperAestheticContextError(
+            "paper_id must be a safe id: start with an ASCII letter or number, "
+            "then use only ASCII letters, numbers, _, ., and -"
+        )
+    if not isinstance(fixture, str) or not fixture.strip():
+        raise PaperAestheticContextError("fixture must be a non-empty string")
+    if target_journal not in TARGET_JOURNALS:
+        raise PaperAestheticContextError("target_journal is not supported")
+    if visual_maturity not in VISUAL_MATURITIES:
+        raise PaperAestheticContextError("visual_maturity is not supported")
+    if density not in DENSITIES:
+        raise PaperAestheticContextError("density is not supported")
+    if role not in _FIGURE_ROLES:
+        raise PaperAestheticContextError("role is not supported")
+    data = {
+        "schema": PAPER_AESTHETIC_CONTEXT_SCHEMA,
+        "paper_id": paper_id,
+        "target_journal": target_journal,
+        "visual_maturity": visual_maturity,
+        "density": density,
+        "shared_visual_language": [
+            {
+                "id": "series_palette",
+                "dimension": "palette",
+                "instruction": (
+                    "Reuse semantic color roles across figures and avoid one-off "
+                    "decorative hues."
+                ),
+                "priority": "required",
+                "positive_signals": [
+                    "the same hue family means the same physical or narrative role",
+                ],
+                "anti_patterns": [
+                    "one figure introduces a saturated accent absent from the series",
+                ],
+            },
+            {
+                "id": "series_typography",
+                "dimension": "typography",
+                "instruction": "Keep label scale and hierarchy consistent across figures.",
+                "priority": "required",
+                "positive_signals": [
+                    "equivalent labels have equivalent visual weight",
+                ],
+                "anti_patterns": [
+                    "one figure reads like a slide while others read like journal artwork",
+                ],
+            },
+            {
+                "id": "source_first_polish",
+                "dimension": "polish_route",
+                "instruction": (
+                    "Keep semantic layout changes in source; reserve SVG polish for "
+                    "finish-only deltas."
+                ),
+                "priority": "recommended",
+                "positive_signals": [
+                    "SVG polish does not alter scientific geometry",
+                ],
+                "anti_patterns": [
+                    "one figure depends on unbackported SVG edits for meaning",
+                ],
+            },
+        ],
+        "figure_roles": [
+            {
+                "fixture": fixture.strip(),
+                "role": role,
+                "must_align_with": [
+                    "series_palette",
+                    "series_typography",
+                    "source_first_polish",
+                ],
+                "allowed_variations": [
+                    "may carry figure-specific emphasis when explicitly justified",
+                ],
+            }
+        ],
+        "must_avoid": [
+            {
+                "id": "series_drift",
+                "pattern": "one figure appears to come from a different visual system",
+                "severity": "MAJOR",
+            },
+            {
+                "id": "decorative_context_leak",
+                "pattern": "cover-like or decorative treatment leaks into main figures",
+                "severity": "MAJOR",
+            },
+        ],
+    }
+    return yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
+
+
+def write_paper_aesthetic_context(path: Path, text: str, *, force: bool = False) -> None:
+    if path.exists() and not force:
+        raise FileExistsError(f"paper_aesthetic_context already exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _template_path(examples_dir: Path, paper_id: str) -> Path:
+    if not examples_dir.is_dir():
+        raise PaperAestheticContextError(f"missing examples directory: {examples_dir}")
+    if not is_safe_paper_context_id(paper_id):
+        raise PaperAestheticContextError("paper_id must be a safe id")
+    return examples_dir / PAPER_CONTEXT_DIRNAME / f"{paper_id}.yaml"
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", nargs="?", type=Path, help="paper aesthetic context YAML")
+    parser.add_argument("--template", help="paper context id to scaffold")
+    parser.add_argument("--fixture", help="fixture name to include in figure_roles")
+    parser.add_argument("--examples-dir", type=Path, default=Path("examples"))
+    parser.add_argument("--target-journal", default="Nature Communications")
+    parser.add_argument("--visual-maturity", default="restrained")
+    parser.add_argument("--density", default="balanced")
+    parser.add_argument("--role", default="overview_mechanism")
+    parser.add_argument("--write-template", action="store_true")
+    parser.add_argument("--force", action="store_true")
+    args = parser.parse_args(argv)
+
+    try:
+        if args.template is not None:
+            if not isinstance(args.fixture, str) or not args.fixture.strip():
+                parser.error("--template requires --fixture")
+            text = paper_aesthetic_context_template(
+                paper_id=args.template,
+                fixture=args.fixture,
+                target_journal=args.target_journal,
+                visual_maturity=args.visual_maturity,
+                density=args.density,
+                role=args.role,
+            )
+            if args.write_template:
+                path = _template_path(args.examples_dir, args.template)
+                write_paper_aesthetic_context(path, text, force=args.force)
+                print(path)
+            else:
+                print(text, end="")
+            return 0
+        if args.path is None:
+            parser.error("provide a context YAML path or --template PAPER_ID")
+        load_paper_aesthetic_context(args.path)
+        print(f"OK: paper aesthetic context valid: {args.path}")
+        return 0
+    except (FileExistsError, PaperAestheticContextError) as exc:
+        print(f"paper_aesthetic_context.py: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
