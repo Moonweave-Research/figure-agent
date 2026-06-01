@@ -78,7 +78,7 @@ the workflow together.
 | G100-13 | P2 | Subregion iteration | Subregion iteration tooling remains experimental/proposed. | README lists `docs/subregion-iteration-tool.md` as experimental/proposed. | The most effective human workflow is still not fully productized. | Issue 100M - subregion iteration assistant |
 | G100-14 | P3 | Plugin freshness/install UX | Plugin cache and marketplace validation exist, but "am I using the newest plugin?" is still something users ask. | README discusses plugin install validation and cache audit, but no single user-facing freshness command is prominent. | Users may run old cached command docs while main has newer behavior. | Issue 100N - plugin install/version freshness check |
 | G100-15 | P3 | Detector tuning feedback | Deterministic detectors catch more issues now, but threshold tuning is empirical and false-positive/false-negative memory is scattered across milestones. | Visual clash and geometry checkers have known report-only/noisy modes. | Detector quality improves only through ad hoc issue creation instead of a systematic feedback log. | Issue 100O - detector feedback ledger |
-| G100-16 | P3 | Documentation hygiene | Some older issue documents still carry stale status text such as "pending commit" or "pending merge" after later merges. | Status search finds older issue docs with drift-prone status markers. | Agents may over-trust stale milestone text instead of current git truth. | Issue 100P - stale issue status sweep |
+| G100-16 | P3 | Documentation hygiene | Some older issue documents carried stale status text such as "pending commit" or "pending merge" after later merges. | Issue 100 cleanup swept the two known stale headers: Issue 53 and Issue 89. | Agents no longer see those two historical issues as pending work. | Issue 100P - stale issue status sweep |
 | G100-17 | P1 | Critique semantic drift | A critique can be hash-fresh while prose or audit slots still mention a phantom/deleted visual entity. | Freshness proves source inputs match the critique, not that every named entity in the critique exists in the render/source. | A host critique can pass lint while carrying stale semantic claims that confuse humans. | Issue 100Q - critique entity consistency lint |
 | G100-18 | P1 | Scratch artifact provenance | Ad hoc diagnostic crops can be stale relative to the current build and still influence human or agent judgment. | Generated build crops are manifest-bound, but arbitrary scratch crops are not part of the freshness graph. | Users can chase a defect that exists only in an old diagnostic artifact. | Issue 100R - diagnostic artifact provenance rule |
 | G100-19 | P1 | Strict-mode false-positive budget | A final-readiness preset cannot be just raw `FIGURE_AGENT_STRICT=1`; noisy report-only candidates need fixture caps or adjudicated budgets. | Strict mode exists and visual/geometry checkers are intentionally conservative/noisy in iteration. | A final preset could become unusable if every known false positive hard-fails. | Issue 100S - final strict profile and warning budgets |
@@ -259,10 +259,10 @@ runs.
   SVG polish is a bounded handoff path, not an automatic broad beautifier.
 - Issue 99 explicitly deferred `undeclared_geometry` audit-evidence surfacing;
   this is now tracked and implemented as G100-01/Issue 100A.
-- Two older issue files still carry drift-prone status text:
+- Two older issue files carried drift-prone status text:
   `2026-05-27-issue-53-post-compile-real-fixture-state-sweep.md` and
-  `2026-05-30-issue-89-v0-9-operator-grade-release-candidate.md`. This is now
-  tracked as G100-16/Issue 100P.
+  `2026-05-30-issue-89-v0-9-operator-grade-release-candidate.md`. Issue 100
+  cleanup now updates both headers to completed/current-state wording.
 
 ## Completion Criteria For This Roadmap
 

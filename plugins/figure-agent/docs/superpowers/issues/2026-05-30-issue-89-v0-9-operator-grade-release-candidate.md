@@ -1,6 +1,7 @@
 # Issue 89 - v0.9 Operator-Grade Release Candidate
 
-Status: completed for PR #80; pending merge
+Status: completed in commits `fa5077f` through `73fe6b9`; superseded by
+current v0.9.1 release surface
 
 Depends on:
 

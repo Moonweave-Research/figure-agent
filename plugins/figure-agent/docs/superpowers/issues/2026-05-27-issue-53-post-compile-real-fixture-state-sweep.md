@@ -1,6 +1,6 @@
 # Issue 53 — Post-Compile Real Fixture State Sweep
 
-Status: implemented; pending commit
+Status: completed in commit `3d40bd6`
 
 ## Problem
 
