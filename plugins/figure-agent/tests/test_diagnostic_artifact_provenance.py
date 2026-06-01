@@ -4,8 +4,11 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import diagnostic_artifact_provenance  # noqa: E402
 from diagnostic_artifact_provenance import classify_artifact, provenance_report  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -125,3 +128,52 @@ def test_report_summarizes_authoritative_and_diagnostic_paths(tmp_path: Path) ->
         "manifest_bound_current",
         "diagnostic_only",
     ]
+
+
+def test_cli_accepts_examples_fixture_path(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root = tmp_path
+    example_dir = _write_fixture(repo_root)
+
+    result = diagnostic_artifact_provenance.main(
+        [
+            "examples/demo",
+            "build/demo.png",
+            "--repo-root",
+            str(repo_root),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["fixture"] == "demo"
+    assert payload["artifacts"][0]["classification"] == "build_render_current"
+    assert str(example_dir) in payload["example_dir"]
+
+
+def test_cli_rejects_parent_relative_fixture_path(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root = tmp_path / "repo"
+    outside = repo_root / "outside"
+    outside_build = outside / "build"
+    outside_build.mkdir(parents=True)
+    (repo_root / "examples").mkdir()
+    (outside_build / "outside.png").write_bytes(b"outside render\n")
+
+    result = diagnostic_artifact_provenance.main(
+        [
+            "examples/../outside",
+            "build/outside.png",
+            "--repo-root",
+            str(repo_root),
+        ]
+    )
+
+    assert result == 2
+    captured = capsys.readouterr()
+    assert "fixture path must be a fixture name or examples/<name> path" in captured.err
+    assert captured.out == ""

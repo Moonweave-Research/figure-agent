@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.diagnostic-artifact-provenance.v1"
+FIXTURE_PATH_ERROR = "fixture path must be a fixture name or examples/<name> path"
+
+
+class DiagnosticArtifactProvenanceError(ValueError):
+    """Controlled error for diagnostic artifact provenance input."""
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -162,6 +168,27 @@ def provenance_report(example_dir: Path, artifact_paths: list[Path]) -> dict[str
     }
 
 
+def _resolve_example_dir(raw_fixture: str, repo_root: Path) -> Path:
+    fixture_path = Path(raw_fixture)
+    examples_root = repo_root / "examples"
+    if fixture_path.is_absolute():
+        try:
+            relative = fixture_path.resolve().relative_to(examples_root.resolve())
+        except ValueError as exc:
+            raise DiagnosticArtifactProvenanceError(FIXTURE_PATH_ERROR) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise DiagnosticArtifactProvenanceError(FIXTURE_PATH_ERROR)
+        return examples_root / relative
+
+    if ".." in fixture_path.parts:
+        raise DiagnosticArtifactProvenanceError(FIXTURE_PATH_ERROR)
+    if len(fixture_path.parts) == 1:
+        return examples_root / fixture_path
+    if len(fixture_path.parts) == 2 and fixture_path.parts[0] == "examples":
+        return repo_root / fixture_path
+    raise DiagnosticArtifactProvenanceError(FIXTURE_PATH_ERROR)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Classify diagnostic artifacts before using them as figure evidence."
@@ -179,8 +206,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    fixture = Path(args.fixture)
-    example_dir = fixture if fixture.is_dir() else args.repo_root / "examples" / args.fixture
+    try:
+        example_dir = _resolve_example_dir(args.fixture, args.repo_root)
+    except DiagnosticArtifactProvenanceError as exc:
+        print(f"diagnostic_artifact_provenance.py: {exc}", file=sys.stderr)
+        return 2
     report = provenance_report(example_dir, [Path(item) for item in args.artifacts])
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
