@@ -389,6 +389,27 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
 
 
+def test_driver_summary_copies_critique_freshness_diagnostics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "critique_state": "STALE",
+            "critique_freshness": {
+                "metadata_complete": True,
+                "is_fresh": False,
+                "mismatch_reasons": ["generator_version"],
+            },
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["critique_freshness"]["mismatch_reasons"] == ["generator_version"]
+
+
 def test_driver_compact_status_includes_critique_lint_summary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

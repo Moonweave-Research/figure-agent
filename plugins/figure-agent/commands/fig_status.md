@@ -117,10 +117,18 @@ Stage 4 corresponds to old v0.1 stage 6; print format is now `stage X/4` (was `s
 - `next_action_summary`: compact read-only next-action UX object derived from
   status `Next:` and `status_explanation`. It is additive; detailed fields
   remain authoritative for debugging and audits.
+- `critique_freshness`: read-only hash diagnostic for `critique.md` when it
+  exists. It names whether metadata is complete and gives stable
+  `mismatch_reasons` such as `critique_input_hash`, `rubric_version`,
+  `generator_version`, or `schema_rubric`; it explains `critique_stale`
+  without repairing or mutating critique/adjudication state.
 - `audit_evidence`: structured read-only summary with `evaluation_state`,
   `blocking_items`, `next_action`, visual-clash, text-boundary, label-path,
   undeclared-geometry accounting counts, and crop-audit verdict counts. This is
   an operator UX layer over existing audit artifacts, not a new release gate.
+  Its `detector_feedback` sub-object summarizes accepted false positives,
+  detector-linked defects, and micro-defects with no detector reference so
+  threshold tuning work has a consistent signal.
 
 For polished SVG final artifacts, `publication_gate_state` also enforces the
 publication disclosure field because the submitted artifact may include human

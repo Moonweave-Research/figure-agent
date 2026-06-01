@@ -163,8 +163,11 @@ the workflow together.
    layer ownership, and governance rules for future schema/script changes.
 
 11. **Issue 100N/O - freshness and detector feedback**
-    Add low-risk operator utilities for plugin-version freshness and detector
-    false-positive/false-negative tracking.
+    Implemented on branch `codex/issue100no-freshness-detector-feedback`.
+    Added read-only `critique_freshness` diagnostics to status output and
+    `detector_feedback` counts to audit evidence so stale critique causes and
+    detector tuning signals are visible without changing gates or mutating
+    fixture state.
 
 12. **Issue 100P - stale issue status sweep**
     Sweep old issue headers for `pending commit`, `pending merge`, and similar

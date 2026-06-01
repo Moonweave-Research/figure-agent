@@ -83,6 +83,7 @@ render, so stale render wins over stale critique.
 | `forbidden_actions` | list of strings       | union of action-vocabulary names and mutation-namespace identifiers (see below) |
 | `workspace_warnings` | list of strings      | read-only git/workspace warnings; never blocks or mutates |
 | `status_explanation` | object or absent     | shared `/fig_status` explanation of first blocker and state buckets |
+| `critique_freshness` | object or absent     | shared `/fig_status` critique hash mismatch diagnostic |
 | `audit_evidence`    | object or absent      | shared `/fig_status` audit-evidence summary with compact blockers and next action |
 | `next_action_summary` | object              | compact read-only UX summary of the selected action, blocker source, scope, and evidence refs |
 | `may_execute`       | bool                  | always `false`                                   |
@@ -120,7 +121,14 @@ recomputing state. Actionable states (`missing_input`, `stale_or_mismatched`,
 context. This keeps visual-clash, text-boundary, label-path,
 undeclared-geometry, and crop-accounting blockers visible to an outer executor
 without changing the driver's action vocabulary, dry-run guarantee, or selected
-command.
+command. Its `detector_feedback` counts accepted false positives,
+detector-linked defects, and micro-defects with no detector ref; use those
+counts for tuning discussions, not as release gates.
+
+When present, `critique_freshness` is copied from `/fig_status` as the
+operator-facing explanation for `critique_stale`. It can distinguish source
+input hash drift from rubric/schema or generator-version drift without
+repairing hashes or changing the selected action.
 
 `next_action_summary` is additive compression of the already selected driver
 action. It must match top-level `action` and `safe_command`; it does not

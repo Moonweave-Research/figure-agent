@@ -289,21 +289,87 @@ def critique_hash_freshness(
     generator_path: Path = REPO_ROOT / "scripts" / "critique_brief.py",
     rubric_version: str | None = None,
 ) -> bool | None:
-    metadata = yaml_frontmatter(critique_path)
-    values = {key: metadata.get(key) for key in _CRITIQUE_METADATA_KEYS}
-    if not all(isinstance(value, str) and value.strip() for value in values.values()):
+    diagnostics = critique_freshness_diagnostics(
+        critique_path,
+        example_dir,
+        name,
+        spec,
+        style_lock_path=style_lock_path,
+        base_dir=base_dir,
+        generator_path=generator_path,
+        rubric_version=rubric_version,
+    )
+    if not diagnostics["metadata_complete"]:
         return None
-    expected_hash = compute_critique_input_hash(
+    return bool(diagnostics["is_fresh"])
+
+
+def critique_freshness_diagnostics(
+    critique_path: Path,
+    example_dir: Path,
+    name: str,
+    spec: dict,
+    *,
+    style_lock_path: Path,
+    base_dir: Path = REPO_ROOT,
+    generator_path: Path = REPO_ROOT / "scripts" / "critique_brief.py",
+    rubric_version: str | None = None,
+) -> dict:
+    """Explain hash freshness without changing the freshness decision."""
+    metadata = yaml_frontmatter(critique_path)
+    actual = {key: metadata.get(key) for key in _CRITIQUE_METADATA_KEYS}
+    metadata_complete = all(isinstance(value, str) and value.strip() for value in actual.values())
+    expected_rubric_version = rubric_version or expected_critique_rubric_version(example_dir)
+    expected_input_hash = compute_critique_input_hash(
         example_dir,
         name,
         spec,
         style_lock_path=style_lock_path,
         base_dir=base_dir,
     )
-    expected_rubric_version = rubric_version or expected_critique_rubric_version(example_dir)
-    return (
-        values["critique_input_hash"].strip() == expected_hash
-        and values["rubric_version"].strip() == expected_rubric_version
-        and values["generator_version"].strip() == critique_generator_version(generator_path)
-        and _critique_schema_matches_expected_rubric(metadata, expected_rubric_version)
+    schema_matches_rubric = _critique_schema_matches_expected_rubric(
+        metadata,
+        expected_rubric_version,
     )
+    diagnostics = {
+        "metadata_complete": metadata_complete,
+        "is_fresh": None,
+        "mismatch_reasons": [],
+        "actual": {
+            "critique_input_hash": actual.get("critique_input_hash"),
+            "rubric_version": actual.get("rubric_version"),
+            "generator_version": actual.get("generator_version"),
+            "schema": metadata.get("schema"),
+        },
+        "expected": {
+            "critique_input_hash": expected_input_hash,
+            "rubric_version": expected_rubric_version,
+            "generator_version": None,
+        },
+        "schema_matches_rubric": schema_matches_rubric,
+    }
+    if not metadata_complete:
+        diagnostics["mismatch_reasons"] = ["missing_hash_metadata"]
+        return diagnostics
+
+    expected_generator_version = (
+        critique_generator_version(generator_path) if generator_path.is_file() else None
+    )
+    diagnostics["expected"]["generator_version"] = expected_generator_version
+
+    mismatch_reasons: list[str] = []
+    if str(actual["critique_input_hash"]).strip() != expected_input_hash:
+        mismatch_reasons.append("critique_input_hash")
+    if str(actual["rubric_version"]).strip() != expected_rubric_version:
+        mismatch_reasons.append("rubric_version")
+    if (
+        expected_generator_version is None
+        or str(actual["generator_version"]).strip() != expected_generator_version
+    ):
+        mismatch_reasons.append("generator_version")
+    if not schema_matches_rubric:
+        mismatch_reasons.append("schema_rubric")
+
+    diagnostics["mismatch_reasons"] = mismatch_reasons
+    diagnostics["is_fresh"] = not mismatch_reasons
+    return diagnostics

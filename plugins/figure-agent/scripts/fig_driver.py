@@ -189,6 +189,9 @@ def _summary(
     }
     if isinstance(status_explanation, dict):
         summary["status_explanation"] = status_explanation
+    critique_freshness = status.get("critique_freshness")
+    if isinstance(critique_freshness, dict):
+        summary["critique_freshness"] = critique_freshness
     if isinstance(audit_evidence, dict):
         summary["audit_evidence"] = audit_evidence
     if loop_checkpoint is not None:

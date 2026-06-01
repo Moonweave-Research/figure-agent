@@ -73,6 +73,35 @@ def _base_summary(example_dir: Path, critique_schema: str | None) -> dict[str, A
             "verdict_counts": {"defect": 0, "no_defect": 0, "uncertain": 0},
             "uncertain_crop_ids": [],
         },
+        "detector_feedback": {
+            "visual_clash": {
+                "candidate_count": 0,
+                "accounted_count": 0,
+                "accepted_false_positive_count": 0,
+                "linked_defect_count": 0,
+            },
+            "text_boundary": {
+                "candidate_count": 0,
+                "accounted_count": 0,
+                "accepted_false_positive_count": 0,
+                "linked_defect_count": 0,
+            },
+            "label_path": {
+                "candidate_count": 0,
+                "accounted_count": 0,
+                "accepted_false_positive_count": 0,
+                "linked_defect_count": 0,
+            },
+            "undeclared_geometry": {
+                "candidate_count": 0,
+                "accounted_count": 0,
+                "accepted_false_positive_count": 0,
+                "linked_defect_count": 0,
+            },
+            "unlinked_micro_defect_count": 0,
+            "unlinked_micro_defect_ids": [],
+            "summary": "no detector feedback",
+        },
     }
 
 
@@ -247,6 +276,67 @@ def _structured_accept_gaps(frontmatter: dict[str, Any]) -> list[str]:
         ):
             gaps.append(visual_clash_ref.strip())
     return sorted(dict.fromkeys(gaps))
+
+
+def _detector_feedback(frontmatter: dict[str, Any], summary: dict[str, Any]) -> dict[str, Any]:
+    detector_refs = {
+        "visual_clash": "visual_clash_ref",
+        "text_boundary": "text_boundary_ref",
+        "label_path": "label_path_ref",
+        "undeclared_geometry": "undeclared_geometry_ref",
+    }
+    feedback = {
+        source: {
+            "candidate_count": int(summary.get(source, {}).get("candidate_count", 0)),
+            "accounted_count": int(summary.get(source, {}).get("accounted_count", 0)),
+            "accepted_false_positive_count": 0,
+            "linked_defect_count": 0,
+        }
+        for source in detector_refs
+    }
+    false_positive_refs: dict[str, set[str]] = {source: set() for source in detector_refs}
+    linked_defect_refs: dict[str, set[str]] = {source: set() for source in detector_refs}
+    unlinked_ids: list[str] = []
+
+    for item in _micro_defects(frontmatter):
+        item_id = item.get("id")
+        status = item.get("status")
+        has_detector_ref = False
+        for source, field in detector_refs.items():
+            ref = item.get(field)
+            if not isinstance(ref, str) or not ref.strip():
+                continue
+            has_detector_ref = True
+            ref_id = ref.strip()
+            if (
+                status == "accept_simplification"
+                and item.get("accept_simplification_reason") == "false_positive"
+            ):
+                false_positive_refs[source].add(ref_id)
+            else:
+                linked_defect_refs[source].add(ref_id)
+        if not has_detector_ref and status != "accept_simplification":
+            if isinstance(item_id, str) and item_id.strip():
+                unlinked_ids.append(item_id.strip())
+
+    for source in detector_refs:
+        feedback[source]["accepted_false_positive_count"] = len(false_positive_refs[source])
+        feedback[source]["linked_defect_count"] = len(linked_defect_refs[source])
+
+    unique_unlinked_ids = sorted(dict.fromkeys(unlinked_ids))
+    false_positive_count = sum(
+        item["accepted_false_positive_count"] for item in feedback.values()
+    )
+    linked_defect_count = sum(item["linked_defect_count"] for item in feedback.values())
+    unlinked_count = len(unique_unlinked_ids)
+    feedback["unlinked_micro_defect_count"] = unlinked_count
+    feedback["unlinked_micro_defect_ids"] = unique_unlinked_ids
+    feedback["summary"] = (
+        f"{false_positive_count} accepted false positive(s); "
+        f"{linked_defect_count} detector-linked defect(s); "
+        f"{unlinked_count} unlinked micro defect(s)"
+    )
+    return feedback
 
 
 def _manifest_required_ids(manifest: dict[str, Any]) -> tuple[list[str], str | None]:
@@ -616,6 +706,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
     else:
         uncertain_crop_ids = []
 
+    summary["detector_feedback"] = _detector_feedback(frontmatter, summary)
     accept_gaps = _structured_accept_gaps(frontmatter)
     if missing_refs or unknown_refs:
         blocking_items = missing_refs + unknown_refs
