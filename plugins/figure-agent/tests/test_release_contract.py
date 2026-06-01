@@ -14,8 +14,8 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.9.1"
-EXPECTED_RELEASE_DATE = "2026-06-01"
+EXPECTED_RELEASE_VERSION = "0.9.2"
+EXPECTED_RELEASE_DATE = "2026-06-02"
 
 
 def test_plugin_manifest_version_matches_pyproject() -> None:
@@ -218,7 +218,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
 
     assert f"current release-candidate truth through v{plugin['version']}" in closeout
     assert (
-        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issues 95-98"
+        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issues 95-100"
         in closeout
     )
     assert "after Issue 33 / PR #47" not in closeout

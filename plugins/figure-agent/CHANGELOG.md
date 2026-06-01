@@ -2,6 +2,28 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.9.2] - 2026-06-02
+
+Patch release for the first Issue 100 hardening wave after v0.9.1.
+
+### Added
+
+- Final warning-budget visibility in release mode, so high-confidence detector
+  warning debt remains visible before human roll-forward decisions.
+- Optional `inspection_trace.yaml` validation and critique-lint surfacing for
+  reviewed crops, commands, verdicts, and outstanding doubts.
+- `critique_adjudication.py sync --preview`, which shows the decision diff
+  before mutating adjudication state.
+- SVG polish positive-route recipe templates via
+  `svg_polish_recipe.py --template <fixture> --write-template`, producing a
+  hash-bound starter file for conservative polish edits.
+
+### Guardrails
+
+- The new evidence and template surfaces are review aids only. They do not
+  execute SVG edits, force golden, set accepted state, bypass release gates, or
+  convert optional-improvement findings into blocking release decisions.
+
 ## [0.9.1] - 2026-06-01
 
 Patch release for Issue 95 loop-centered improvement orchestration plus the

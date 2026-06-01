@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
-**Date:** 2026-06-01 KST
-**Status:** current release-candidate truth through v0.9.1 / Issues 95-98
+**Date:** 2026-06-02 KST
+**Status:** current release-candidate truth through v0.9.2 / Issues 95-100
 
 ## Bottom Line
 
@@ -33,6 +33,11 @@ The same patch train also carries the v1.17 grounded critique contract sync:
 `aesthetic_antipattern_audit`, `weakest_panel_coherence`, and
 `reference_learning_accountability` are now explicit command-facing critique
 requirements where the grounded route applies.
+The v0.9.2 patch closes the first Issue 100 hardening wave: final warning
+budgets are visible at release time, inspection traces and adjudication sync
+previews make evidence/proposed decision changes reviewable, and the SVG polish
+positive route now has a hash-bound starter recipe template instead of a
+blank-page handoff.
 
 This still does not mean the plugin can certify a Nature/Science-ready figure
 by itself. It means the plugin now exposes the right evidence, stop boundaries,
@@ -41,7 +46,7 @@ surfaces.
 
 ## Latest Verified State
 
-Most recent local full verification after Issue 95-98 / v0.9.1
+Most recent local full verification after Issue 95-100 / v0.9.2
 release-candidate sync:
 
 ```bash
@@ -55,7 +60,7 @@ claude plugin validate ../../.claude-plugin/marketplace.json
 
 Results:
 
-- Full test suite: `1576 passed, 3 skipped, 1 xfailed, 6 warnings`.
+- Full test suite: `1664 passed, 3 skipped, 1 xfailed, 10 warnings`.
 - Ruff check: clean.
 - Diff whitespace check: clean.
 - Claude plugin validation: manifest, plugin directory, and marketplace pass.
