@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BC, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BD, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BC fig run journal writer fixture name boundary;
+- branch baseline: `main` after Issue 100BD fig run evidence helper fixture name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -71,7 +71,7 @@ the workflow together.
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
 | G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. Issue 100Z adds a release-contract guard so script schema constants cannot drift out of the module map. | Future changes now have a test-backed ownership map instead of relying on manual updates alone. | Issue 100H - schema capability matrix and deprecation policy; Issue 100Z - schema map drift guard |
-| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 96 scripts, 102 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
+| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 96 scripts, 103 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
 | G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
@@ -113,6 +113,7 @@ the workflow together.
 | G100-48 | P2 | Detector feedback ledger path boundary | `detector_feedback_ledger.py` accepted selected fixture names without validating that each one was a single fixture identity. | `build_detector_feedback_ledger(examples_root, ["../outside"])` could include an escaped critique directory if the normalized path existed. | Detector tuning and whole-plugin review evidence should not be polluted by traversal-selected non-fixtures. | Issue 100BA - detector feedback ledger fixture name boundary |
 | G100-49 | P2 | Run journal continuation path boundary | `fig_run_journal.py` accepted raw fixture names before producing `next_live_commands`. | `fig_run_journal.py ../outside` produced normal JSON with `/fig_status ../outside` and `/fig_drive ../outside ...` commands. | A continuation helper should not generate follow-up commands for traversal syntax. | Issue 100BB - fig run journal fixture name boundary |
 | G100-50 | P2 | Run journal writer path boundary | `fig_run_records.write_run_journal()` accepted raw `payload["fixture"]`, sanitized the run directory name, and wrote non-authoritative journal evidence for traversal syntax if called directly. | Tests could bypass the driver boundary by monkeypatching the runner and still record a journal for `../bad/name with spaces`. | A write-capable continuation helper should reject unsafe fixture identity before run directory allocation, evidence snapshotting, or JSON writes. | Issue 100BC - fig run journal writer fixture name boundary |
+| G100-51 | P2 | Run journal evidence helper path boundary | `fig_run_evidence.py` exposed shared evidence path/snapshot helpers that resolved raw fixture names under `examples/<name>` without validating the fixture identity itself. | Direct `evidence_snapshot(repo_root, "../outside")` could read existing files outside `examples/` even though normal journal reader/writer paths had been hardened. | Shared continuation-evidence helpers should enforce the same fixture boundary as their callers, so future module reuse cannot reintroduce traversal reads. | Issue 100BD - fig run evidence helper fixture name boundary |
 
 ## Recommended Execution Order
 
@@ -457,6 +458,13 @@ the workflow together.
     keeps its existing live-payload behavior by reporting writer validation
     failures as `journal_error` when a caller bypasses the normal driver-side
     fixture boundary.
+
+53. **Issue 100BD - fig run evidence helper fixture name boundary**
+    Completed as shared-helper safety hardening. `fig_run_evidence.py` now
+    validates fixture identity inside the evidence path and stale-snapshot
+    helpers themselves, so direct helper reuse cannot read traversal-selected
+    files outside `examples/` even if a future caller forgets the normal driver
+    or journal validation precondition.
 
 ## Non-Goals
 
