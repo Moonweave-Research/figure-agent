@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AL, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AM, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AL external review crop-set freshness;
+- branch baseline: `main` after Issue 100AM external finding documentation guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -96,6 +96,7 @@ the workflow together.
 | G100-31 | P1 | External finding handoff | `external_vision_review.yaml` could report a fresh external finding without a `conflicts[]` entry, and the loop treated that review as `passed`. | Issue 100K intentionally left external review as optional local evidence, but only explicit host-vs-external conflicts triggered human review. | A second-opinion reviewer could find a new issue that is neither copied into host critique nor surfaced as a human gate. | Issue 100AJ - external finding handoff gate |
 | G100-32 | P3 | Gap inventory baseline freshness | The Issue 100 inventory status header was current, but the context section still said the branch baseline was `main` after Issue 99. | Issue 100AI guarded only the header and code-surface counts, leaving another stale roadmap metadata field unguarded. | Future agents could anchor review decisions to an obsolete baseline even though the body lists newer completed work. | Issue 100AK - inventory baseline freshness guard |
 | G100-33 | P1 | External review crop-set freshness | `external_vision_review.yaml` hashed reviewed crops, but did not become stale when the current audit-crop manifest later added or removed crop paths. | Issue 100K template binds the initial crop set, but freshness only rechecked files already listed by `reviewed_crops[]`. | A second-opinion review could remain fresh even though a new high-zoom crop was never inspected by the external reviewer. | Issue 100AL - external review crop-set freshness |
+| G100-34 | P3 | External finding docs | README and `/fig_critique` docs still described external second-opinion routing in terms of stale or conflicting reviews after unresolved external findings became first-class human-gate evidence. | Issue 100AJ changed loop behavior, but the high-traffic operator docs did not yet name the new unresolved-finding boundary. | Operators could under-use the second-opinion path by thinking only conflicts matter, not standalone new findings. | Issue 100AM - external finding documentation guard |
 
 ## Recommended Execution Order
 
@@ -333,6 +334,11 @@ the workflow together.
     Completed as a crop-manifest freshness guard. External second-opinion
     reviews now become stale when the current audit-crop manifest adds or
     removes crop paths that were not represented in `reviewed_crops[]`.
+
+36. **Issue 100AM - external finding documentation guard**
+    Completed as a high-traffic docs guard. README and `/fig_critique` now say
+    external unresolved findings become human-gate evidence, and the release
+    contract fails if either doc drops that boundary.
 
 ## Non-Goals
 
