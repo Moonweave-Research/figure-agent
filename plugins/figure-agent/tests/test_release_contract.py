@@ -23,6 +23,21 @@ EXPECTED_RELEASE_VERSION = "0.9.2"
 EXPECTED_RELEASE_DATE = "2026-06-02"
 
 
+def _issue_suffix_value(suffix: str) -> int:
+    value = 0
+    for char in suffix:
+        value = value * 26 + (ord(char) - ord("A") + 1)
+    return value
+
+
+def _issue_suffix_from_value(value: int) -> str:
+    suffix = ""
+    while value:
+        value, remainder = divmod(value - 1, 26)
+        suffix = chr(ord("A") + remainder) + suffix
+    return suffix
+
+
 def test_plugin_manifest_version_matches_pyproject() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
@@ -254,6 +269,31 @@ def test_closeout_status_matches_current_release_truth() -> None:
     assert "Issue 48" in closeout
     assert "implemented on main" in issue_48
     assert "implemented on branch" not in issue_48
+
+
+def test_issue_100_inventory_header_and_surface_counts_match_current_tree() -> None:
+    inventory = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
+    ).read_text()
+    latest_issue = max(
+        _issue_suffix_value(match.group(1))
+        for match in re.finditer(r"Issue 100([A-Z]+)", inventory)
+    )
+    latest_issue_suffix = _issue_suffix_from_value(latest_issue)
+
+    script_count = len(list((REPO_ROOT / "scripts").glob("*.py")))
+    test_count = len(list((REPO_ROOT / "tests").glob("test_*.py")))
+    command_doc_count = len(list((REPO_ROOT / "commands").glob("fig_*.md")))
+
+    assert f"through Issue 100{latest_issue_suffix}" in inventory
+    assert (
+        f"Current inventory is {script_count} scripts, {test_count} tests, "
+        f"and {command_doc_count} command docs."
+    ) in inventory
 
 
 def test_v0_9_issue_statuses_are_mainline_ready() -> None:
