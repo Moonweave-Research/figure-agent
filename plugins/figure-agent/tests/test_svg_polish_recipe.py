@@ -12,8 +12,10 @@ from svg_polish_recipe import (  # noqa: E402
     SVG_POLISH_RECIPE_RELATIVE_PATH,
     SvgPolishRecipeError,
     load_svg_polish_recipe,
+    main,
     svg_polish_recipe_input_hash,
     svg_polish_recipe_is_stale,
+    svg_polish_recipe_template,
     validate_svg_polish_recipe,
     write_svg_polish_recipe,
 )
@@ -292,3 +294,106 @@ def test_writer_emits_reloadable_yaml_and_preserves_unknown_fields(tmp_path: Pat
     assert raw["operations"][0]["future_note"] == "preserve me"
     reloaded = load_svg_polish_recipe(recipe_path, example_dir=fig_dir)
     assert reloaded == raw
+
+
+def test_svg_polish_recipe_template_emits_reloadable_fixture_specific_yaml(
+    tmp_path: Path,
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+
+    template = svg_polish_recipe_template(fig_dir, base_dir=fig_dir.parent.parent)
+    recipe_path = fig_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+    recipe_path.write_text(template, encoding="utf-8")
+
+    loaded = load_svg_polish_recipe(recipe_path, example_dir=fig_dir)
+    assert loaded["fixture"] == "demo_fig"
+    assert loaded["source_svg"] == "exports/demo_fig.svg"
+    assert loaded["target_svg"] == "polish/demo_fig.polished.svg"
+    assert loaded["recipe_input_hash"] == svg_polish_recipe_input_hash(
+        fig_dir,
+        "demo_fig",
+        source_svg="exports/demo_fig.svg",
+        base_dir=fig_dir.parent.parent,
+    )
+    assert [operation["class"] for operation in loaded["operations"]] == [
+        "label_micro_position",
+        "stroke_polish",
+        "typography_cleanup",
+    ]
+
+
+def test_svg_polish_recipe_template_cli_emits_fixture_template(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+
+    exit_code = main(["--template", str(fig_dir), "--base-dir", str(fig_dir.parent.parent)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "schema: figure-agent.svg-polish-recipe.v1" in captured.out
+    assert "fixture: demo_fig" in captured.out
+    assert "target_svg: polish/demo_fig.polished.svg" in captured.out
+
+
+def test_svg_polish_recipe_template_reports_missing_export(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    (fig_dir / "exports" / "demo_fig.svg").unlink()
+
+    exit_code = main(["--template", str(fig_dir), "--base-dir", str(fig_dir.parent.parent)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "missing recipe.source_svg" in captured.err
+
+
+def test_svg_polish_recipe_template_cli_can_write_canonical_recipe(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    recipe_path = fig_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+    recipe_path.unlink(missing_ok=True)
+
+    exit_code = main(
+        [
+            "--template",
+            str(fig_dir),
+            "--write-template",
+            "--base-dir",
+            str(fig_dir.parent.parent),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert f"wrote {SVG_POLISH_RECIPE_RELATIVE_PATH}" in captured.out
+    assert recipe_path.is_file()
+    assert load_svg_polish_recipe(recipe_path, example_dir=fig_dir)["fixture"] == "demo_fig"
+
+
+def test_svg_polish_recipe_template_cli_refuses_overwrite_without_force(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    recipe_path = fig_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+    write_svg_polish_recipe(recipe_path, _valid_recipe(fig_dir))
+
+    exit_code = main(
+        [
+            "--template",
+            str(fig_dir),
+            "--write-template",
+            "--base-dir",
+            str(fig_dir.parent.parent),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "refusing to overwrite" in captured.err

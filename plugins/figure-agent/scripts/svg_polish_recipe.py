@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -261,3 +263,131 @@ def svg_polish_recipe_is_stale(
         base_dir=base_dir,
     )
     return data["recipe_input_hash"] != expected
+
+
+def svg_polish_recipe_template(
+    example_dir: Path,
+    *,
+    base_dir: Path = REPO_ROOT,
+) -> str:
+    """Return a fixture-specific starter SVG polish recipe."""
+    name = example_dir.name
+    source_svg = f"exports/{name}.svg"
+    _validate_source_svg_path(example_dir, source_svg)
+    recipe_hash = svg_polish_recipe_input_hash(
+        example_dir,
+        name,
+        source_svg=source_svg,
+        base_dir=base_dir,
+    )
+    data = {
+        "schema": SCHEMA,
+        "fixture": name,
+        "source_svg": source_svg,
+        "target_svg": f"polish/{name}.polished.svg",
+        "recipe_input_hash": recipe_hash,
+        "operations": [
+            {
+                "id": "R001_label_micro_position",
+                "class": "label_micro_position",
+                "selector": {"kind": "element_id", "value": "replace_with_label_id"},
+                "action": {"type": "translate", "dx": 0.0, "dy": -1.0, "unit": "px"},
+                "rationale": (
+                    "Template starter: replace selector with one real label ID for "
+                    "a sub-10px optical alignment adjustment."
+                ),
+                "semantic_guard": {
+                    "allowed": True,
+                    "reason": "same label, target, and meaning; visual-only micro-position.",
+                },
+            },
+            {
+                "id": "R002_stroke_polish",
+                "class": "stroke_polish",
+                "selector": {"kind": "element_id", "value": "replace_with_line_id"},
+                "action": {"type": "set_stroke_width", "value": 1.0},
+                "rationale": (
+                    "Template starter: replace selector with one decorative or outline "
+                    "stroke whose width needs subtle optical normalization."
+                ),
+                "semantic_guard": {
+                    "allowed": True,
+                    "reason": "stroke polish only; no geometry, topology, or claim change.",
+                },
+            },
+            {
+                "id": "R003_typography_cleanup",
+                "class": "typography_cleanup",
+                "selector": {"kind": "text_exact", "value": "replace_with_exact_text"},
+                "action": {"type": "set_opacity", "value": 0.95},
+                "rationale": (
+                    "Template starter: replace selector with one exact text node for "
+                    "minor optical tone cleanup."
+                ),
+                "semantic_guard": {
+                    "allowed": True,
+                    "reason": (
+                        "typography tone cleanup only; text content and label "
+                        "target unchanged."
+                    ),
+                },
+            },
+        ],
+    }
+    validate_svg_polish_recipe(data, example_dir=example_dir)
+    return yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate or template figure-agent SVG polish recipes."
+    )
+    parser.add_argument(
+        "path",
+        nargs="?",
+        type=Path,
+        help=f"{SVG_POLISH_RECIPE_RELATIVE_PATH} path to validate",
+    )
+    parser.add_argument(
+        "--template",
+        type=Path,
+        help="print a starter recipe for an example directory",
+    )
+    parser.add_argument(
+        "--write-template",
+        action="store_true",
+        help=f"write the starter recipe to {SVG_POLISH_RECIPE_RELATIVE_PATH}",
+    )
+    parser.add_argument("--force", action="store_true", help="overwrite an existing template")
+    parser.add_argument("--base-dir", type=Path, default=REPO_ROOT)
+    args = parser.parse_args(argv)
+    try:
+        if args.template is not None:
+            template = svg_polish_recipe_template(args.template, base_dir=args.base_dir)
+            if args.write_template:
+                output_path = args.template / SVG_POLISH_RECIPE_RELATIVE_PATH
+                if output_path.exists() and not args.force:
+                    raise SvgPolishRecipeError(
+                        f"refusing to overwrite existing recipe: {output_path}"
+                    )
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_text(template, encoding="utf-8")
+                print(f"wrote {SVG_POLISH_RECIPE_RELATIVE_PATH}")
+                return 0
+            print(template, end="")
+            return 0
+        if args.write_template:
+            parser.error("--write-template requires --template EXAMPLE_DIR")
+        if args.path is None:
+            parser.error("provide a recipe path or --template EXAMPLE_DIR")
+        example_dir = args.path.parent.parent
+        load_svg_polish_recipe(args.path, example_dir=example_dir)
+    except SvgPolishRecipeError as exc:
+        print(f"svg_polish_recipe.py: {exc}", file=sys.stderr)
+        return 1
+    print(f"OK: SVG polish recipe valid: {args.path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
