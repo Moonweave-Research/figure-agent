@@ -250,9 +250,63 @@ def test_ledger_default_fixture_selection_skips_directories_without_critiques(
     assert [row["fixture"] for row in ledger["fixtures"]] == ["has_critique"]
 
 
+def test_ledger_default_fixture_selection_skips_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    examples_root = tmp_path / "examples"
+    _write_complete_fixture(
+        examples_root,
+        "inside",
+        visual_candidates=(),
+        micro_defects_yaml="micro_defects: []\n",
+    )
+    outside_fixture = _write_complete_fixture(
+        tmp_path / "outside_root",
+        "outside",
+        visual_candidates=(),
+        micro_defects_yaml="micro_defects: []\n",
+    )
+    (examples_root / "linked_outside").symlink_to(outside_fixture, target_is_directory=True)
+
+    ledger = build_detector_feedback_ledger(examples_root, [])
+
+    assert [row["fixture"] for row in ledger["fixtures"]] == ["inside"]
+
+
 def test_ledger_rejects_unknown_selected_fixture(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="fixture not found"):
         build_detector_feedback_ledger(tmp_path / "examples", ["missing_fixture"])
+
+
+def test_ledger_rejects_unsafe_selected_fixture_before_reading_outside_root(
+    tmp_path: Path,
+) -> None:
+    examples_root = tmp_path / "examples"
+    examples_root.mkdir()
+    _write_complete_fixture(
+        tmp_path,
+        "outside",
+        visual_candidates=(),
+        micro_defects_yaml="micro_defects: []\n",
+    )
+
+    with pytest.raises(ValueError, match="single examples/<name> directory name"):
+        build_detector_feedback_ledger(examples_root, ["../outside"])
+
+
+def test_cli_rejects_unsafe_selected_fixture_cleanly(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    examples_root = tmp_path / "examples"
+    examples_root.mkdir()
+
+    exit_code = main(["--examples-root", str(examples_root), "../outside"])
+
+    assert exit_code == 2
+    captured = capsys.readouterr()
+    assert "single examples/<name> directory name" in captured.err
+    assert "Traceback" not in captured.err
 
 
 def test_cli_prints_ledger_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

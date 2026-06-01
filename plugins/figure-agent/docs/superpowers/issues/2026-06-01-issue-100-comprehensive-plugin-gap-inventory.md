@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AZ, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BA, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AZ spec bbox helper fixture name boundary;
+- branch baseline: `main` after Issue 100BA detector feedback ledger fixture name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -110,6 +110,7 @@ the workflow together.
 | G100-45 | P1 | Direct fixture command path boundary | `/fig_loop`, `/fig_closeout`, `/fig_e2e_smoke`, and `fig_loop_patch_executor.py` still resolved `examples/<name>` directly instead of sharing the fixture identity boundary. | Unsafe fixture names could reach scratch run writing, status inference, smoke command planning, or patch loop lookup before failing for incidental reasons. | Direct workflow and mutation-capable commands need the same boundary as queue/driver/export so traversal syntax cannot become a fixture identity. | Issue 100AX - direct fixture command boundary |
 | G100-46 | P2 | Perception pack path boundary | `perception_pack.py` supports cwd-based figure-directory operation, but still used `name` as a raw filename segment under `build/`. | `build_perception_pack("../outside")` could resolve `build/../outside.pdf` in cwd mode and reset `build/perception/` before any fixture identity error. | A compile-side evidence generator should preserve cwd mode for safe names while rejecting traversal syntax before output reset. | Issue 100AY - perception pack figure name boundary |
 | G100-47 | P2 | Spec bbox helper path boundary | `spec_bbox_helper.py` accepted `name` under a custom `--examples-root` without validating that it was a single fixture identity. | `spec_bbox_helper.run(["../outside", "--examples-root", ".../examples"])` could read an escaped TeX file if the normalized path existed. | A geometry-authoring helper should not let traversal syntax become the source of panel reference coordinates. | Issue 100AZ - spec bbox helper fixture name boundary |
+| G100-48 | P2 | Detector feedback ledger path boundary | `detector_feedback_ledger.py` accepted selected fixture names without validating that each one was a single fixture identity. | `build_detector_feedback_ledger(examples_root, ["../outside"])` could include an escaped critique directory if the normalized path existed. | Detector tuning and whole-plugin review evidence should not be polluted by traversal-selected non-fixtures. | Issue 100BA - detector feedback ledger fixture name boundary |
 
 ## Recommended Execution Order
 
@@ -433,6 +434,13 @@ the workflow together.
     custom `--examples-root` operation for safe single-component fixture names,
     but rejects absolute, parent-relative, or multi-component names before
     resolving the source TeX file used to derive panel `bbox_pdf_cm` values.
+
+50. **Issue 100BA - detector feedback ledger fixture name boundary**
+    Completed as diagnostic safety hardening. Explicit selected fixture names
+    in `detector_feedback_ledger.py` now share the common fixture identity
+    validator before any directory lookup. Default all-fixture scanning still
+    reads direct child directories under `examples_root`, but skips symlinked
+    entries whose resolved path escapes the examples root.
 
 ## Non-Goals
 
