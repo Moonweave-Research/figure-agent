@@ -82,7 +82,7 @@ def evidence_snapshot(repo_root: Path, name: str) -> dict[str, Any]:
     return {"schema": EVIDENCE_SNAPSHOT_VERSION, "items": items}
 
 
-def snapshot_stale_paths(repo_root: Path, snapshot: object) -> list[str]:
+def snapshot_stale_paths(repo_root: Path, name: str, snapshot: object) -> list[str]:
     if snapshot is None:
         return []
     if not isinstance(snapshot, dict):
@@ -94,6 +94,7 @@ def snapshot_stale_paths(repo_root: Path, snapshot: object) -> list[str]:
         return [MALFORMED_EVIDENCE_SNAPSHOT]
 
     stale_paths: list[str] = []
+    recorded_paths: set[str] = set()
     for item in items:
         if not isinstance(item, dict):
             stale_paths.append(MALFORMED_EVIDENCE_SNAPSHOT)
@@ -103,6 +104,7 @@ def snapshot_stale_paths(repo_root: Path, snapshot: object) -> list[str]:
         if not isinstance(raw_path, str) or not raw_path:
             stale_paths.append(MALFORMED_EVIDENCE_SNAPSHOT)
             continue
+        recorded_paths.add(raw_path)
         if not isinstance(recorded_hash, str) or not recorded_hash.startswith("sha256:"):
             stale_paths.append(raw_path)
             continue
@@ -126,6 +128,13 @@ def snapshot_stale_paths(repo_root: Path, snapshot: object) -> list[str]:
             continue
         if current_hash != recorded_hash:
             stale_paths.append(raw_path)
+
+    for path in fixture_evidence_paths(repo_root, name):
+        if not path.is_file():
+            continue
+        current_relative = repo_relative(repo_root, path)
+        if current_relative not in recorded_paths:
+            stale_paths.append(current_relative)
     return sorted(dict.fromkeys(stale_paths))
 
 

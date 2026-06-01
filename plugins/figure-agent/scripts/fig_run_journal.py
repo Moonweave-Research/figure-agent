@@ -191,7 +191,7 @@ def latest_journal_summary(
         dict.fromkeys(
             [
                 *_stale_against(repo_root, name, journal_mtime=mtime),
-                *snapshot_stale_paths(repo_root, manifest.get("evidence_snapshot")),
+                *snapshot_stale_paths(repo_root, name, manifest.get("evidence_snapshot")),
             ]
         )
     )
