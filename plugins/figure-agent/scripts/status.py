@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity
 import status_next_policy
 import status_readiness_policy
 from audit_evidence_summary import summarize_audit_evidence
@@ -856,17 +857,31 @@ def main() -> int:
             print(line)
         return 0
 
-    example_dir = Path(sys.argv[1])
-    if (
-        not example_dir.is_absolute()
-        and len(example_dir.parts) == 1
-        and not example_dir.exists()
-        and (Path("examples") / example_dir).is_dir()
-    ):
-        example_dir = Path("examples") / example_dir
+    try:
+        example_dir = _resolve_example_dir_for_cli(sys.argv[1])
+    except ValueError as exc:
+        print(f"invalid fixture path: {exc}", file=sys.stderr)
+        return 1
     result = infer_stage(example_dir)
     _print_single(result)
     return 0
+
+
+def _resolve_example_dir_for_cli(value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    if path.parts and path.parts[0] == "examples":
+        if len(path.parts) != 2 or ".." in path.parts:
+            raise ValueError("expected examples/<fixture-name>")
+        fixture_identity.validate_fixture_name(path.parts[1])
+        return Path("examples") / path.parts[1]
+    if len(path.parts) == 1:
+        fixture_identity.validate_fixture_name(value)
+        if not path.exists() and (Path("examples") / path).is_dir():
+            return Path("examples") / path
+        return path
+    raise ValueError("expected fixture name, examples/<fixture-name>, or an absolute path")
 
 
 if __name__ == "__main__":

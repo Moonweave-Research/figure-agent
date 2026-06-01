@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BI, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BJ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BI critique brief CLI fixture path boundary;
+- branch baseline: `main` after Issue 100BJ status CLI fixture path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -119,6 +119,7 @@ the workflow together.
 | G100-54 | P1 | Critique adjudication write path boundary | `critique_adjudication.py scaffold/sync` accepted `examples/../outside` and could reach or write `critique_adjudication.yaml` outside `examples/` before failing for incidental downstream reasons. | TDD reproduced `scaffold examples/../outside --force` exiting 0 and writing an adjudication file when a normalized outside critique existed. | A write-capable human-decision helper must reject unsafe fixture/path syntax before scaffold/sync can mutate or refresh adjudication state. | Issue 100BG - critique adjudication CLI fixture path boundary |
 | G100-55 | P2 | Critique lint CLI fixture path boundary | `critique_lint.py` accepted `examples/../outside` and could report `OK: critique lint passed` for a normalized directory outside `examples/`. | TDD reproduced a valid outside `critique.md` returning exit code 0 through the traversal-like CLI path. | A read-only validity gate should not make escaped or malformed fixture identity look like normal plugin truth. | Issue 100BH - critique lint CLI fixture path boundary |
 | G100-56 | P1 | Critique brief CLI fixture path boundary | `critique_brief.py` accepted `examples/../outside` and emitted a full host-vision critique brief for the normalized outside directory. | TDD reproduced the CLI printing a complete `# Critique brief` and audit crop list for `examples/../review_demo`. | The host-vision entrypoint must not make an escaped path look like the intended `/fig_critique <name>` target. | Issue 100BI - critique brief CLI fixture path boundary |
+| G100-57 | P1 | Status CLI fixture path boundary | `status.py` accepted `examples/../outside` and printed a normal stage/state summary for the normalized outside directory. | TDD reproduced `/fig_status` equivalent output `outside — stage 1/4` for `examples/../outside`. | The canonical first workflow check must not make an escaped path look like normal fixture state. | Issue 100BJ - status CLI fixture path boundary |
 
 ## Recommended Execution Order
 
@@ -505,6 +506,13 @@ the workflow together.
     remain valid for tests/ad hoc review, and traversal-like or nested relative
     paths fail with a controlled `invalid fixture path` error before a brief is
     emitted.
+
+59. **Issue 100BJ - status CLI fixture path boundary**
+    Completed as canonical-status safety hardening. `status.py` now validates
+    single-figure CLI fixture input before computing the state vector: fixture
+    names, `examples/<name>`, and explicit absolute paths remain valid, while
+    traversal-like or nested relative paths fail with a controlled
+    `invalid fixture path` error before a stage/status summary is printed.
 
 ## Non-Goals
 
