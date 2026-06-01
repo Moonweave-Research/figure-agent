@@ -1,7 +1,6 @@
 # Issue 100G - Run-History Basin And Repeated-Defect Detector
 
-Status: implemented on branch `codex/issue100g-basin-detector`; verified and
-pending commit
+Status: completed on main in commit `417805b`
 
 Depends on:
 

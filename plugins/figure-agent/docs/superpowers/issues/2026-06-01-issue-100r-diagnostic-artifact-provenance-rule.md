@@ -1,6 +1,6 @@
 # Issue 100R - Diagnostic Artifact Provenance Rule
 
-Status: implemented on branch `codex/issue100r-diagnostic-provenance`
+Status: completed on main in commit `49cb61d`; merged by `14c5b64`
 
 Type: evidence provenance, operator safety, long-session friction
 
