@@ -8,6 +8,16 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+import yaml
+from journal_art_direction_playbook import (  # noqa: E402
+    JournalArtDirectionPlaybookError,
+    declared_journal_playbook_path,
+)
+from paper_aesthetic_context import (  # noqa: E402
+    PaperAestheticContextError,
+    declared_paper_context_path,
+)
+
 SCHEMA = "figure-agent.fig-run-journal-summary.v1"
 JOURNAL_SCHEMA = "figure-agent.fig-run-journal.v1"
 
@@ -85,7 +95,7 @@ def _journal_mtime(run_dir: Path, manifest: dict[str, Any]) -> float:
 
 def _fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
     example_dir = repo_root / "examples" / name
-    return (
+    paths = [
         example_dir / f"{name}.tex",
         example_dir / "briefing.md",
         example_dir / "spec.yaml",
@@ -116,7 +126,35 @@ def _fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
         example_dir / "polish" / f"{name}.polished.svg",
         example_dir / "build" / f"{name}.pdf",
         example_dir / "build" / f"{name}.png",
-    )
+    ]
+    paths.extend(_declared_context_paths(example_dir))
+    return tuple(dict.fromkeys(paths))
+
+
+def _declared_context_paths(example_dir: Path) -> tuple[Path, ...]:
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return ()
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return ()
+    if not isinstance(spec, dict):
+        return ()
+    paths: list[Path] = []
+    try:
+        paper_context_path = declared_paper_context_path(example_dir, spec)
+    except PaperAestheticContextError:
+        paper_context_path = None
+    if paper_context_path is not None:
+        paths.append(paper_context_path)
+    try:
+        journal_playbook_path = declared_journal_playbook_path(example_dir, spec)
+    except JournalArtDirectionPlaybookError:
+        journal_playbook_path = None
+    if journal_playbook_path is not None:
+        paths.append(journal_playbook_path)
+    return tuple(paths)
 
 
 def _repo_relative(repo_root: Path, path: Path) -> str:
