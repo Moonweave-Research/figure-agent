@@ -16,16 +16,21 @@ from subregion_active_set import (  # noqa: E402
 from subregion_iteration_log import (  # noqa: E402
     SubregionIterationLogError,
     append_iteration_row,
+    main,
     subregion_iteration_log_template,
     write_subregion_iteration_log,
 )
 
 
-def _example_dir(tmp_path: Path) -> Path:
-    example_dir = tmp_path / "examples" / "demo_fig"
+def _example_dir_at(root: Path, name: str = "demo_fig") -> Path:
+    example_dir = root / name
     example_dir.mkdir(parents=True)
-    (example_dir / "demo_fig.tex").write_text("% demo\n", encoding="utf-8")
+    (example_dir / f"{name}.tex").write_text("% demo\n", encoding="utf-8")
     return example_dir
+
+
+def _example_dir(tmp_path: Path) -> Path:
+    return _example_dir_at(tmp_path / "examples")
 
 
 def test_template_is_parseable_by_existing_active_set_parser(tmp_path: Path) -> None:
@@ -192,3 +197,54 @@ def test_cli_write_template_and_append_are_reloadable(tmp_path: Path) -> None:
     text = log_path.read_text(encoding="utf-8")
     assert active_subregion_ids(parse_active_target_rows(text)) == []
     assert iteration_patch_ids(text) == ["G-1"]
+
+
+def test_cli_template_rejects_parent_relative_fixture_before_writing(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _example_dir_at(tmp_path, "outside")
+    log_path = outside_dir / "subregion_iteration_log.md"
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(["--template", "examples/../outside", "--write-template"])
+
+    assert exit_code == 2
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not log_path.exists()
+
+
+def test_cli_append_rejects_existing_relative_dir_outside_examples(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _example_dir_at(tmp_path, "outside")
+    log_path = outside_dir / "subregion_iteration_log.md"
+    write_subregion_iteration_log(log_path, subregion_iteration_log_template(outside_dir))
+    before = log_path.read_text(encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "--append",
+            "outside",
+            "--iteration",
+            "iter-999",
+            "--subregion-id",
+            "X-1",
+            "--problem",
+            "outside append",
+            "--patch-summary",
+            "should not write",
+            "--result",
+            "blocked",
+        ]
+    )
+
+    assert exit_code == 2
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert log_path.read_text(encoding="utf-8") == before
