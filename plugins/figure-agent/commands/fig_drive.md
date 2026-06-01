@@ -295,7 +295,15 @@ publication gates still take precedence.
 If `/fig_driver --mode polish` reaches SVG polish, follow the first command it
 surfaces. The canonical recipe path is:
 
-1. If `polish/svg_polish_recipe.yaml` is missing, author a bounded recipe first.
+1. If `polish/svg_polish_recipe.yaml` is missing, start from the fixture-aware
+   bounded recipe template:
+
+```bash
+uv run python3 scripts/svg_polish_recipe.py --template examples/<name> --write-template
+```
+
+   Then replace placeholder selectors with real SVG IDs/classes/text before
+   using the executor.
 2. If the recipe exists, inspect the executor plan:
 
 ```bash

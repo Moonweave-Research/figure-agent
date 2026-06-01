@@ -111,9 +111,11 @@ the workflow together.
 ### Track B - Improve Top-Tier Polish Without Pretending It Is Objective
 
 4. **Issue 100D - SVG polish positive-route dogfood**
-   Run real-fixture dogfood for bounded SVG polish where the route is actually
-   `ready_for_svg_polish`. Add recipe templates only after proving they produce
-   value without semantic drift.
+   Completed as a positive-route usability hardening slice. Added a
+   fixture-aware `svg_polish_recipe.py --template examples/<name>` starter that
+   emits a valid bounded recipe with current `recipe_input_hash` and conservative
+   visual-only operation classes. This improves startability without changing
+   executor safety or claiming SVG polish should run automatically.
 
 5. **Issue 100E - reference-learning authoring template**
    Completed on main in commit `99a440e`. The reference pack tool now emits a
