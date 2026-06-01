@@ -2411,6 +2411,24 @@ def test_cli_scaffold_writes_fixture_by_name(
     assert load_adjudication(fig_dir / "critique_adjudication.yaml")["fixture"] == "demo_fig"
 
 
+def test_cli_scaffold_accepts_examples_fixture_path(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fig_dir = tmp_path / "examples" / "demo_fig"
+    fig_dir.mkdir(parents=True)
+    _write_critique_with_findings(fig_dir)
+
+    with pytest.warns(DeprecationWarning, match="legacy"):
+        exit_code = main(["scaffold", "examples/demo_fig", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "wrote" in captured.out
+    assert captured.err == ""
+    assert load_adjudication(fig_dir / "critique_adjudication.yaml")["fixture"] == "demo_fig"
+
+
 def test_cli_scaffold_supports_conservative_policy(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -2463,3 +2481,37 @@ def test_cli_scaffold_reports_controlled_error(
     assert exit_code == 1
     assert captured.out == ""
     assert "critique_adjudication.py: missing critique" in captured.err
+
+
+@pytest.mark.parametrize("command", ("scaffold", "sync"))
+def test_cli_rejects_parent_relative_example_path_before_write(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    command: str,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    _write_critique_with_findings(outside, fixture="outside")
+
+    exit_code = main([command, "examples/../outside", "--force", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "invalid fixture path" in captured.err
+    assert not (outside / "critique_adjudication.yaml").exists()
+
+
+@pytest.mark.parametrize("command", ("scaffold", "sync"))
+def test_cli_reports_controlled_error_for_invalid_fixture_name(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    command: str,
+) -> None:
+    exit_code = main([command, " ", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "invalid fixture path" in captured.err
