@@ -1356,7 +1356,7 @@ def test_critique_brief_includes_reference_calibrated_pack(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "critique_reference_pack.yaml").write_text(
         """
-schema: figure-agent.critique-reference-pack.v1
+schema: figure-agent.critique-reference-pack.v1.1
 fixture: review_demo
 target_journal: Nature Materials
 reference_class: mechanism_schematic
@@ -1407,7 +1407,7 @@ def test_critique_brief_includes_reference_learning_contract(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "critique_reference_pack.yaml").write_text(
         """
-schema: figure-agent.critique-reference-pack.v1
+schema: figure-agent.critique-reference-pack.v1.1
 fixture: review_demo
 target_journal: Nature Materials
 reference_class: mechanism_schematic
@@ -1437,9 +1437,17 @@ reference_learning:
         - typography_reference
       allowed_transfer:
         - restrained palette
+        - balanced ink density
         - compact label hierarchy
+        - mechanism abstraction level
+        - clean line language
+        - stage composition rhythm
       forbidden_transfer:
         - copy component topology
+        - copy exact geometry or coordinates
+        - copy label text
+        - copy claim payload
+        - copy panel semantics
         - introduce unbriefed hardware
         - override physics story
       rationale: Use as a journal-tone anchor, not a content authority.
@@ -1457,10 +1465,15 @@ reference_learning:
     assert "References are learning sources, not copy targets." in brief
     assert "reference/example.png" in brief
     assert "roles=style_anchor, typography_reference" in brief
-    assert "Allowed transfer: restrained palette; compact label hierarchy" in brief
     assert (
-        "Forbidden transfer: copy component topology; introduce unbriefed hardware; "
-        "override physics story"
+        "Allowed transfer: restrained palette; balanced ink density; "
+        "compact label hierarchy; mechanism abstraction level; clean line language; "
+        "stage composition rhythm"
+    ) in brief
+    assert (
+        "Forbidden transfer: copy component topology; copy exact geometry or "
+        "coordinates; copy label text; copy claim payload; copy panel semantics; "
+        "introduce unbriefed hardware; override physics story"
     ) in brief
     assert "Use as a journal-tone anchor, not a content authority." in brief
     assert "Reference-learning accountability required:" in brief
@@ -1503,8 +1516,17 @@ reference_learning:
         - style_anchor
       allowed_transfer:
         - restrained palette
+        - balanced ink density
+        - compact typography hierarchy
+        - mechanism abstraction level
+        - clean line language
+        - stage composition rhythm
       forbidden_transfer:
         - copy component topology
+        - copy exact geometry or coordinates
+        - copy label text
+        - copy claim payload
+        - copy panel semantics
       rationale: Use as a journal-tone anchor only.
 """.lstrip(),
         encoding="utf-8",
@@ -1563,8 +1585,17 @@ reference_learning:
         - style_anchor
       allowed_transfer:
         - restrained palette
+        - balanced ink density
+        - compact typography hierarchy
+        - mechanism abstraction level
+        - clean line language
+        - stage composition rhythm
       forbidden_transfer:
         - copy component topology
+        - copy exact geometry or coordinates
+        - copy label text
+        - copy claim payload
+        - copy panel semantics
       rationale: Use as a journal-tone anchor only.
 """.lstrip(),
         encoding="utf-8",

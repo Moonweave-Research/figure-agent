@@ -58,8 +58,16 @@ reference_learning:
       allowed_transfer:
         - restrained palette
         - balanced ink density
+        - compact typography hierarchy
+        - mechanism abstraction level
+        - clean line language
+        - stage composition rhythm
       forbidden_transfer:
         - copy component topology
+        - copy exact geometry or coordinates
+        - copy label text
+        - copy claim payload
+        - copy panel semantics
       rationale: Use as style class only.
 """
     (example_dir / "critique_reference_pack.yaml").write_text(pack.lstrip(), encoding="utf-8")

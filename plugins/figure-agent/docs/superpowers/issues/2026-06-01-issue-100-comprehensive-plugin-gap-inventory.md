@@ -116,9 +116,12 @@ the workflow together.
    value without semantic drift.
 
 5. **Issue 100E - reference-learning authoring template**
-   Add a small, explicit template for what to learn from a reference: palette
-   family, density, typography hierarchy, abstraction level, line language,
-   and what must not be copied.
+   Implemented on branch `codex/issue100e-reference-template`. The reference
+   pack tool now emits a v1.1 starter template and validates that v1.1 opt-in
+   `reference_learning` covers concrete allowed-transfer axes (palette family,
+   density, typography hierarchy, abstraction level, line language, composition
+   rhythm) plus anti-copy guards (topology, exact geometry, label text, claim
+   payload, panel semantics). Legacy v1 packs remain parseable.
 
 6. **Issue 100F - advisory-vs-blocking aesthetic language**
    Tighten command docs and driver prose so aesthetic signals are never confused
