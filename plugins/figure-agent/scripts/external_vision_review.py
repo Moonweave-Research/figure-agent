@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import yaml
 
 EXTERNAL_VISION_REVIEW_SCHEMA = "figure-agent.external-vision-review.v1"
@@ -404,6 +405,39 @@ def external_vision_review_freshness(
     }
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise ExternalVisionReviewError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise ExternalVisionReviewError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise ExternalVisionReviewError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise ExternalVisionReviewError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Validate or template figure-agent external vision reviews."
@@ -418,13 +452,14 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.template is not None:
+            example_dir = _resolve_example_dir_for_cli(args.template)
             template = external_vision_review_template(
-                args.template,
+                example_dir,
                 reviewer=args.reviewer,
                 reviewed_at=args.reviewed_at,
             )
             if args.write_template:
-                output_path = external_vision_review_path(args.template)
+                output_path = external_vision_review_path(example_dir)
                 if output_path.exists() and not args.force:
                     raise ExternalVisionReviewError(
                         f"{output_path} already exists; pass --force to overwrite"
