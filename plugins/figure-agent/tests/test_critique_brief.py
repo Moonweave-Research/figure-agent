@@ -1056,6 +1056,47 @@ def test_critique_brief_allows_coordinate_hints_newer_than_png(tmp_path, capsys,
     assert "# Critique brief — review_demo" in captured.out
 
 
+def test_critique_brief_cli_accepts_examples_fixture_path(tmp_path, capsys, monkeypatch):
+    examples = tmp_path / "examples"
+    example_dir = _write_example(examples, section6="- invariant")
+    _write_real_render_pair(example_dir)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", "examples/review_demo"])
+
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert "# Critique brief — review_demo" in captured.out
+    assert captured.err == ""
+
+
+def test_critique_brief_cli_rejects_parent_relative_example_path(
+    tmp_path, capsys, monkeypatch
+):
+    (tmp_path / "examples").mkdir()
+    outside = _write_example(tmp_path, section6="- invariant")
+    _write_real_render_pair(outside)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", "examples/../review_demo"])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert "invalid fixture path" in captured.err
+
+
+def test_critique_brief_cli_reports_controlled_error_for_invalid_fixture_name(
+    tmp_path, capsys, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", " "])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert "invalid fixture path" in captured.err
+    assert captured.out == ""
+
+
 def test_critique_brief_allows_reference_image_newer_than_png(
     tmp_path, capsys, monkeypatch
 ):
