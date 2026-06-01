@@ -103,6 +103,23 @@ def test_extract_skips_when_reference_file_missing(tmp_path: Path) -> None:
     assert any("reference image not found" in f for f in failures)
 
 
+def test_extract_rejects_reference_image_outside_fixture(tmp_path: Path) -> None:
+    fixture = tmp_path / "escapedRef"
+    fixture.mkdir()
+    outside_ref = tmp_path / "outside.png"
+    Image.new("RGB", (20, 20), "white").save(outside_ref)
+    (fixture / "spec.yaml").write_text(
+        "name: escapedRef\nreference_image: ../outside.png\n",
+        encoding="utf-8",
+    )
+
+    out, failures = extract_coordinate_hints(fixture)
+
+    assert out is None
+    assert any("reference_image must stay under example directory" in f for f in failures)
+    assert not (fixture / "coordinate_hints.yaml").exists()
+
+
 def test_extract_writes_hints_for_synthetic_palette_image(tmp_path: Path) -> None:
     fixture = tmp_path / "synthFixture"
     fixture.mkdir()
