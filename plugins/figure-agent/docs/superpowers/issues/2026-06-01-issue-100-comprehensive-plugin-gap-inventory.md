@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AX, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AY, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AX direct fixture command boundary;
+- branch baseline: `main` after Issue 100AY perception pack figure name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -108,6 +108,7 @@ the workflow together.
 | G100-43 | P2 | Driver fixture path boundary | `/fig_drive` and `/fig_run` still relied on `examples/<name>` path joining after Issue 100AU fixed only the queue surface. | `fig_driver.build_driver_summary("../outside", ...)` could reach status inference if `examples/../outside` existed, and `fig_run` inherits driver behavior. | Direct single-fixture entrypoints could inspect or plan commands for a non-fixture path instead of failing before workflow routing. | Issue 100AV - driver fixture name boundary |
 | G100-44 | P1 | Export fixture path boundary | `/fig_export` still accepted raw fixture names after queue/driver boundary hardening and resolved them as `examples/<name>` before export checks. | `run_export.py ../outside --skip-critique` could reach internal build/export path checks for an escaped path instead of failing at fixture identity validation. | A mutation-capable export command should not rely on downstream path failures to avoid writing outside a declared fixture. | Issue 100AW - export fixture name boundary |
 | G100-45 | P1 | Direct fixture command path boundary | `/fig_loop`, `/fig_closeout`, `/fig_e2e_smoke`, and `fig_loop_patch_executor.py` still resolved `examples/<name>` directly instead of sharing the fixture identity boundary. | Unsafe fixture names could reach scratch run writing, status inference, smoke command planning, or patch loop lookup before failing for incidental reasons. | Direct workflow and mutation-capable commands need the same boundary as queue/driver/export so traversal syntax cannot become a fixture identity. | Issue 100AX - direct fixture command boundary |
+| G100-46 | P2 | Perception pack path boundary | `perception_pack.py` supports cwd-based figure-directory operation, but still used `name` as a raw filename segment under `build/`. | `build_perception_pack("../outside")` could resolve `build/../outside.pdf` in cwd mode and reset `build/perception/` before any fixture identity error. | A compile-side evidence generator should preserve cwd mode for safe names while rejecting traversal syntax before output reset. | Issue 100AY - perception pack figure name boundary |
 
 ## Recommended Execution Order
 
@@ -417,6 +418,14 @@ the workflow together.
     names before scratch writes, status inference, smoke command planning, or
     patch loop lookup. `perception_pack.py` remains a separate design question
     because it supports cwd-based figure-directory operation.
+
+48. **Issue 100AY - perception pack figure name boundary**
+    Completed as compile-side evidence safety hardening. `perception_pack.py`
+    now preserves cwd-based operation for safe single-component figure names,
+    but rejects absolute, parent-relative, or multi-component names before
+    resolving build PDFs/PNGs or resetting `build/perception/`. The CLI reports
+    unsafe figure names as controlled errors without masking other runtime
+    failures.
 
 ## Non-Goals
 
