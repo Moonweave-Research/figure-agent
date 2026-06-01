@@ -9,6 +9,8 @@ from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
     CRITIQUE_RUBRIC_VERSION_V1_17,
+    critique_freshness_diagnostics,
+    critique_generator_version,
     critique_manifest_paths,
     expected_critique_rubric_version,
     input_manifest_hash,
@@ -37,6 +39,160 @@ def test_input_manifest_hash_is_stable_for_path_order(tmp_path: Path) -> None:
     assert input_manifest_hash((first, second), base_dir=tmp_path) == input_manifest_hash(
         (second, first), base_dir=tmp_path
     )
+
+
+def _write_basic_critique_fixture(tmp_path: Path) -> tuple[Path, Path]:
+    example_dir = tmp_path / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    style_lock = tmp_path / "polymer-paper-preamble.sty"
+    style_lock.write_text("style\n", encoding="utf-8")
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    return example_dir, style_lock
+
+
+def _write_metadata_critique(
+    critique_path: Path,
+    *,
+    critique_input_hash: str,
+    generator_version: str,
+    rubric_version: str,
+    schema: str = "figure-agent.critique.v1",
+) -> None:
+    critique_path.write_text(
+        "---\n"
+        f"schema: {schema}\n"
+        "fixture: demo\n"
+        f"generator_version: {generator_version}\n"
+        f"rubric_version: {rubric_version}\n"
+        f"critique_input_hash: {critique_input_hash}\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+
+
+def test_critique_freshness_diagnostics_reports_no_mismatch_for_fresh_metadata(
+    tmp_path: Path,
+) -> None:
+    example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
+    spec = {"name": "demo"}
+    expected_hash = input_manifest_hash(
+        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+        base_dir=tmp_path,
+    )
+    generator_path = tmp_path / "critique_brief.py"
+    generator_path.write_text("generator\n", encoding="utf-8")
+    _write_metadata_critique(
+        example_dir / "critique.md",
+        critique_input_hash=expected_hash,
+        generator_version=critique_generator_version(generator_path),
+        rubric_version=CRITIQUE_RUBRIC_VERSION,
+    )
+
+    diagnostics = critique_freshness_diagnostics(
+        example_dir / "critique.md",
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
+        base_dir=tmp_path,
+        generator_path=generator_path,
+    )
+
+    assert diagnostics["metadata_complete"] is True
+    assert diagnostics["is_fresh"] is True
+    assert diagnostics["mismatch_reasons"] == []
+
+
+def test_critique_freshness_diagnostics_reports_generator_mismatch(tmp_path: Path) -> None:
+    example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
+    spec = {"name": "demo"}
+    expected_hash = input_manifest_hash(
+        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+        base_dir=tmp_path,
+    )
+    generator_path = tmp_path / "critique_brief.py"
+    generator_path.write_text("generator\n", encoding="utf-8")
+    _write_metadata_critique(
+        example_dir / "critique.md",
+        critique_input_hash=expected_hash,
+        generator_version="sha256:stale",
+        rubric_version=CRITIQUE_RUBRIC_VERSION,
+    )
+
+    diagnostics = critique_freshness_diagnostics(
+        example_dir / "critique.md",
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
+        base_dir=tmp_path,
+        generator_path=generator_path,
+    )
+
+    assert diagnostics["is_fresh"] is False
+    assert diagnostics["mismatch_reasons"] == ["generator_version"]
+
+
+def test_critique_freshness_diagnostics_reports_missing_metadata(tmp_path: Path) -> None:
+    example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
+    (example_dir / "critique.md").write_text(
+        "---\nschema: figure-agent.critique.v1\nfixture: demo\n---\n# critique\n",
+        encoding="utf-8",
+    )
+
+    diagnostics = critique_freshness_diagnostics(
+        example_dir / "critique.md",
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=style_lock,
+        base_dir=tmp_path,
+        generator_path=tmp_path / "missing_generator.py",
+    )
+
+    assert diagnostics["metadata_complete"] is False
+    assert diagnostics["is_fresh"] is None
+    assert diagnostics["mismatch_reasons"] == ["missing_hash_metadata"]
+
+
+def test_critique_freshness_diagnostics_reports_schema_rubric_mismatch(
+    tmp_path: Path,
+) -> None:
+    example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
+    spec = {"name": "demo"}
+    intent_path = example_dir / "aesthetic_intent.yaml"
+    intent_path.write_text(
+        "schema: figure-agent.aesthetic-intent.v2\nfixture: demo\n",
+        encoding="utf-8",
+    )
+    expected_hash = input_manifest_hash(
+        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+        base_dir=tmp_path,
+    )
+    generator_path = tmp_path / "critique_brief.py"
+    generator_path.write_text("generator\n", encoding="utf-8")
+    _write_metadata_critique(
+        example_dir / "critique.md",
+        critique_input_hash=expected_hash,
+        generator_version=critique_generator_version(generator_path),
+        rubric_version=CRITIQUE_RUBRIC_VERSION_V1_14,
+        schema="figure-agent.critique.v1",
+    )
+
+    diagnostics = critique_freshness_diagnostics(
+        example_dir / "critique.md",
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
+        base_dir=tmp_path,
+        generator_path=generator_path,
+    )
+
+    assert diagnostics["is_fresh"] is False
+    assert diagnostics["mismatch_reasons"] == ["schema_rubric"]
 
 
 def test_critique_manifest_includes_audit_crop_manifest_when_present(

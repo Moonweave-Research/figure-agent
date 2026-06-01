@@ -15,7 +15,11 @@ from export_freshness import EXPORT_FRESH, EXPORT_STALE, compute_export_state
 from inputs import parse_spec
 from next_action_summary import status_next_action_summary
 from publication_gate import publication_gate_summary
-from quality_manifest import critique_hash_freshness, critique_manifest_paths
+from quality_manifest import (
+    critique_freshness_diagnostics,
+    critique_hash_freshness,
+    critique_manifest_paths,
+)
 from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import (
     compute_reference_input_failures,
@@ -288,7 +292,29 @@ def _with_status_explanation(result: dict) -> dict:
     return result
 
 
+def _append_critique_freshness_diagnostics(result: dict, example_dir: Path) -> None:
+    critique_path = example_dir / "critique.md"
+    name = result.get("name")
+    if not critique_path.is_file() or not isinstance(name, str) or not name:
+        return
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    result["critique_freshness"] = critique_freshness_diagnostics(
+        critique_path,
+        example_dir,
+        name,
+        spec,
+        style_lock_path=STYLE_LOCK_PATH,
+    )
+
+
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    _append_critique_freshness_diagnostics(result, example_dir)
     result["audit_evidence"] = summarize_audit_evidence(example_dir)
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:

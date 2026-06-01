@@ -701,6 +701,54 @@ def test_status_omits_lint_summary_when_critique_is_stale(tmp_path: Path) -> Non
     assert "critique_lint_summary" not in result
 
 
+def test_status_surfaces_critique_freshness_mismatch_reasons(tmp_path: Path) -> None:
+    name = "freshness_reason_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/golden.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    reference = fig_dir / "reference"
+    reference.mkdir()
+    (reference / "golden.png").write_bytes(b"\x89PNG")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_hashed_critique(fig_dir, name, critique_input_hash="sha256:stale")
+
+    result = infer_stage(fig_dir)
+
+    assert result["critique_state"] == "STALE"
+    assert result["critique_freshness"]["mismatch_reasons"] == ["critique_input_hash"]
+    assert result["critique_freshness"]["metadata_complete"] is True
+    assert result["critique_freshness"]["is_fresh"] is False
+
+
+def test_status_does_not_crash_when_critique_diagnostic_input_is_missing(
+    tmp_path: Path,
+) -> None:
+    name = "missing_ref_diagnostic_fig"
+    fig_dir = tmp_path / name
+    fig_dir.mkdir()
+    _make_spec(fig_dir, reference_image="reference/missing.png")
+    (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
+    (fig_dir / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1\n"
+        f"fixture: {name}\n"
+        "generator_version: sha256:stale\n"
+        "rubric_version: figure-agent.critique-rubric.v1.10\n"
+        "critique_input_hash: sha256:stale\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["critique_state"] == "REFERENCE_MISSING"
+    assert result["critique_freshness"]["metadata_complete"] is True
+
+
 def test_hash_metadata_marks_current_v1_4_critique_fresh(
     tmp_path: Path,
 ) -> None:

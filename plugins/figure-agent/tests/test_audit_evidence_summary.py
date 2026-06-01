@@ -298,6 +298,76 @@ def test_summary_reports_passed_accounting_counts(tmp_path: Path) -> None:
     assert summary["blocking_items"] == []
 
 
+def test_summary_reports_detector_feedback_for_false_positive_and_defect_refs(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    micro_defects = (
+        "micro_defects:\n"
+        "  - id: M001\n"
+        "    kind: line_crosses_label\n"
+        "    severity: NIT\n"
+        "    observation: VC001 is texture, not a defect.\n"
+        "    linked_finding_id: \"\"\n"
+        "    visual_clash_ref: VC001\n"
+        "    status: accept_simplification\n"
+        "    accept_simplification_reason: false_positive\n"
+        "    accept_simplification_rationale: VC001 marks texture, not a defect.\n"
+        "  - id: M002\n"
+        "    kind: label_too_close_to_path\n"
+        "    severity: MAJOR\n"
+        "    observation: TB001 crosses a declared text boundary.\n"
+        "    linked_finding_id: C002\n"
+        "    visual_clash_ref: ''\n"
+        "    text_boundary_ref: TB001\n"
+        "    status: open\n"
+    )
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    _write_text_boundary_clash_report(fig_dir, ("TB001",))
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, micro_defects_yaml=micro_defects)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    feedback = summary["detector_feedback"]
+    assert feedback["visual_clash"]["accepted_false_positive_count"] == 1
+    assert feedback["visual_clash"]["linked_defect_count"] == 0
+    assert feedback["text_boundary"]["accepted_false_positive_count"] == 0
+    assert feedback["text_boundary"]["linked_defect_count"] == 1
+    assert feedback["unlinked_micro_defect_count"] == 0
+    assert "1 accepted false positive" in feedback["summary"]
+    assert "1 detector-linked defect" in feedback["summary"]
+
+
+def test_summary_reports_unlinked_micro_defects_as_detector_feedback(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    micro_defects = (
+        "micro_defects:\n"
+        "  - id: M777\n"
+        "    kind: print_scale_unreadable\n"
+        "    severity: MINOR\n"
+        "    observation: print scale issue found by host vision only.\n"
+        "    linked_finding_id: C777\n"
+        "    visual_clash_ref: ''\n"
+        "    text_boundary_ref: ''\n"
+        "    label_path_ref: ''\n"
+        "    undeclared_geometry_ref: ''\n"
+        "    status: open\n"
+    )
+    _write_visual_clash_report(fig_dir, ())
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir, micro_defects_yaml=micro_defects)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    feedback = summary["detector_feedback"]
+    assert feedback["unlinked_micro_defect_count"] == 1
+    assert feedback["unlinked_micro_defect_ids"] == ["M777"]
+    assert "1 unlinked micro defect" in feedback["summary"]
+
+
 def test_summary_reports_unaccounted_visual_clash_candidate(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     _write_visual_clash_report(fig_dir, ("VC001", "VC002"))
