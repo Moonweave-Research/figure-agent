@@ -141,6 +141,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Style packs** | `docs/style-pack-catalog.md` and the opt-in journal style-pack catalog provide reusable Nature Communications, Nature Materials, Science, and graphical-abstract restraint/playbook anchors without applying them globally. |
 | **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale or conflicting second opinions surface as human-review evidence, not automatic truth. Start a hash-bound review file with `uv run python3 scripts/external_vision_review.py --template examples/<name> --write-template`. |
 | **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. Start a v1.1 pack with `uv run python3 scripts/critique_reference_pack.py --template <fixture>`; validation requires concrete allowed-transfer axes and anti-copy guards before `/fig_critique` can use the pack. Legacy v1 packs remain parseable. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
+| **Sub-region iteration log** | Optional `subregion_iteration_log.md` evidence narrows critique and loop handoff to the current one-line patch unit. Start a canonical log with `uv run python3 scripts/subregion_iteration_log.py --template examples/<name> --write-template`, then append one row per patch with `--append examples/<name> ...`. The helper records evidence only; it does not infer regions or edit source. |
 
 ### Release boundary
 
@@ -160,12 +161,10 @@ venue fit.
 
 ## What remains experimental / proposed
 
-Filed as pre-spec issues or promotion-policy gaps; no production workflow depends
-on them yet. Each has a decision gate that blocks design until empirical data
-exists. This is a deliberate response to v0.3/v0.4 specs being rejected for lack
-of data.
+Filed as promotion-policy gaps; no production workflow depends on them yet. Each
+has a decision gate that blocks broad automation until empirical data exists.
+This is a deliberate response to v0.3/v0.4 specs being rejected for lack of data.
 
-- **`docs/subregion-iteration-tool.md`** — lift critique granularity from panel → sub-region (e.g., the 8 distinct elements inside one panel). Prerequisite: v0.5 dogfood log on `fig1_overview_v2`.
 - **Real-fixture SVG polish promotion policy** — Issue 47 proved the safe negative route (`continue_tikz` blocks recipe authoring), and Issue 48 made that readiness state explicit. Issue 100D adds a fixture-aware recipe starter, but more positive-route real fixture evidence is still needed before treating `ready_for_svg_polish` as a routine production handoff.
 
 Falsified directions kept on record in `docs/historical/` and the relevant `architecture-v0.X-*.md` files: Python+SVG-from-scratch, LLM-as-quality-judge, perception auto-detection.

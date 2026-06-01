@@ -1,6 +1,8 @@
 # Sub-Region Iteration Tool — Issue / Pre-Spec
 
-**Status:** ISSUE + narrow parser prototype. No schema, cropper, or auto-segmentation committed.
+**Status:** text-form evidence plumbing shipped. Parser, critique/loop
+integration, and a log starter/append helper exist; no schema, cropper, or
+auto-segmentation is committed.
 **Filed:** 2026-05-15
 **Drives from:** `feedback_element_iteration_workflow.md`, `feedback_subregion_iteration_unit.md`.
 **Predecessor work:** `architecture-v0.5-per-panel-reference-workflow.md` lifted granularity from figure → panel. This issue asks whether to lift granularity panel → sub-region.
@@ -53,31 +55,34 @@ Option 3 inherits v0.5 cleanly; option 2 re-enters falsified territory.
 
 ## 7. Decision gate
 
-**Status (2026-05-15): PARTIALLY MET — design remains BLOCKED, but enumeration prerequisite is closed.**
+**Status (2026-06-02): PARTIALLY PRODUCTIZED — text-form loop evidence is
+supported; broad schema/crop automation remains deferred.**
 
 Original gate split into two:
 
 | Prerequisite | State | Evidence |
 |---|---|---|
 | Enumeration (≥1 concrete panel sub-region list) | ✅ MET | §8 case study — 46 sub-regions across `fig1_overview_v2_pair_001_vault` 7 panels + Row 2 cover-binding. Source: `examples/fig1_overview_v2_pair_001_vault/briefing.md` §13. |
-| Iteration log (which sub-regions actually received 1-line patches over multiple cycles) | 🟡 LIVE EVIDENCE STARTED | `examples/fig1_overview_v2_pair_001_vault/subregion_iteration_log.md` records the v5-v7 active/stable split and concrete patch units. More cycles and at least one cross-fixture comparison are still required before tool design unblocks. |
+| Iteration log (which sub-regions actually received 1-line patches over multiple cycles) | ✅ TEXT-FORM SUPPORTED | `examples/<name>/subregion_iteration_log.md` is parsed by `scripts/subregion_active_set.py`; `scripts/subregion_iteration_log.py` can scaffold the canonical log and append one row per patch. More cross-fixture comparison is still required before schema/crop automation unblocks. |
 | Cross-fixture generalization | ❌ PENDING | §8.4 requests enumeration for at least one other fixture (`fig1_overview_v2` no-vault arm or `golden_trap_depth_picture`). Single-fixture form might not generalize. |
 
-**Design remains blocked** until the live iteration log has enough cycles and
-cross-fixture comparison surfaces. The enumeration alone tells us *what*
-sub-regions exist; the iteration log tells us *which ones are real iteration
-units vs. named-but-stable catalog entries* (§8.3 #2). Without enough of the
-latter, schema design optimizes for the wrong dimension.
+**Broad schema/crop design remains blocked** until enough cross-fixture
+iteration evidence surfaces. The enumeration tells us *what* sub-regions exist;
+the iteration log tells us *which ones are real iteration units vs.
+named-but-stable catalog entries* (§8.3 #2). The text-form helper deliberately
+records that loop without trying to infer boundaries or create a new source
+schema.
 
 Tool shape must come from observed iteration, not from this issue.
 
-**Narrow parser prototype (2026-05-16):** `scripts/subregion_active_set.py`
-parses `subregion_iteration_log.md` Markdown tables and emits the current active
-target IDs plus observed patch-unit IDs. `scripts/critique_brief.py` includes
-that summary in the reference-conditioned authoring context when the log exists.
-This is not a schema commitment: it reads the live evidence file, keeps an empty
-active set empty, and does not infer boundaries, crop sub-regions, or modify
-TikZ.
+**Narrow text-form tooling:** `scripts/subregion_active_set.py` parses
+`subregion_iteration_log.md` Markdown tables and emits the current active target
+IDs plus observed patch-unit IDs. `scripts/critique_brief.py` includes that
+summary in the reference-conditioned authoring context when the log exists.
+`scripts/subregion_iteration_log.py` creates the canonical log shape and appends
+one iteration row at a time. This is not a schema commitment: it reads and writes
+the live evidence file, keeps an empty active set empty, and does not infer
+boundaries, crop sub-regions, or modify TikZ.
 
 ---
 

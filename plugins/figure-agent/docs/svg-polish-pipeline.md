@@ -66,7 +66,11 @@ Without (a)+(b)+(c), Path B collapses into "ad-hoc per-figure scripts" — worse
 
 Do **not** enter design until:
 
-1. Sub-region tool produces ≥ 1 working dogfood with **iteration log** (not just enumeration) on a real figure. *Status:* enumeration ✅ (`subregion-iteration-tool.md` §8); iteration log ❌ pending.
+1. Sub-region tool produces ≥ 1 working dogfood with **iteration log** (not just
+   enumeration) on a real figure. *Status:* enumeration ✅
+   (`subregion-iteration-tool.md` §8); text-form iteration log plumbing ✅
+   (`scripts/subregion_iteration_log.py` + `scripts/subregion_active_set.py`);
+   schema/crop automation remains deferred until cross-fixture evidence exists.
 2. Iteration log surfaces a concrete "TikZ cannot do X" pattern with ≥ 3 occurrences across distinct figures or panels. *Status:* ❌ pending — requires (1) first.
 3. SVG element-ID stability across re-compile is verified (independent check, single golden fixture, three rebuild cycles). *Status:* ❌ pending — independent of (1)+(2); could be tested in parallel.
 
