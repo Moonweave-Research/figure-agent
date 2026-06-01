@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import fig_driver
+import fig_driver_guidance as guidance_mod
 
 STOP_HOST_BOUNDARY = "host_boundary"
 
@@ -41,27 +41,12 @@ def required_actor_for_driver_summary(
     *,
     final_stop_reason: str | None = None,
 ) -> str:
-    action = summary.get("action")
-    stop_boundary = summary.get("stop_boundary")
-    if stop_boundary in {fig_driver.STOP_REFERENCE_MISSING, fig_driver.STOP_SEMANTIC_BACKPORT}:
-        return "workflow_agent"
+    actor = guidance_mod.required_actor_for_summary(summary)
+    if actor != "workflow_agent":
+        return actor
     if (
-        action == fig_driver.ACTION_RUN_CRITIQUE
-        or stop_boundary == fig_driver.STOP_HOST_LLM_CRITIQUE
+        final_stop_reason == STOP_HOST_BOUNDARY
+        and summary.get("stop_boundary") != guidance_mod.STOP_REFERENCE_MISSING
     ):
         return "host_llm"
-    if action == fig_driver.ACTION_HUMAN_GATE_STOP or stop_boundary in {
-        fig_driver.STOP_HUMAN_GATE,
-        fig_driver.STOP_AMBIGUOUS_PATCH,
-    }:
-        return "human"
-    if action == fig_driver.ACTION_RELEASE_BLOCKED or stop_boundary in {
-        fig_driver.STOP_FORCE_GOLDEN,
-        fig_driver.STOP_ACCEPTED_OR_FINAL_READY,
-    }:
-        return "release_operator"
-    if action == fig_driver.ACTION_POLISH_HANDOFF_STOP:
-        return "svg_editor"
-    if final_stop_reason == STOP_HOST_BOUNDARY:
-        return "host_llm"
-    return "workflow_agent"
+    return actor

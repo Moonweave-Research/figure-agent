@@ -96,14 +96,17 @@ the workflow together.
    `/fig_drive` inherit this through the existing shared `audit_evidence` path.
 
 2. **Issue 100B - guided entrypoint and explanation UX**
-   Make `/fig_drive` or `/fig_improve` explain "why this is done" versus "why
-   this is blocked" in plain operator terms. The user should not have to infer
-   whether the next step is critique, loop, patch, SVG polish, export, or
-   human approval.
+   Implemented in `/fig_drive` through additive `operator_guidance`, which
+   names the plain next step and the required actor (`workflow_agent`,
+   `host_llm`, `human`, `release_operator`, `svg_editor`, or `none`) without
+   changing the existing action vocabulary or mutation boundaries.
 
 3. **Issue 100C - final-readiness preset**
-   Add a single final-check mode that bundles the strict/final checks the plugin
-   already knows how to run, without mutating accepted/golden/publication state.
+   Implemented as `/fig_drive --mode final --goal "final readiness" --dry-run`.
+   The mode reuses release gates and emits `final_readiness_profile` with a
+   strict compile row, critique, loop, export, publication, and release-gate
+   states. It remains dry-run and does not mutate accepted/golden/publication
+   state.
 
 ### Track B - Improve Top-Tier Polish Without Pretending It Is Objective
 

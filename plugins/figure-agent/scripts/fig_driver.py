@@ -35,6 +35,7 @@ import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
 import fig_driver_editorial as editorial_mod  # noqa: E402
+import fig_driver_guidance as guidance_mod  # noqa: E402
 import ready_improvement as ready_improvement_mod  # noqa: E402
 from next_action_summary import driver_next_action_summary  # noqa: E402
 from status import infer_stage  # noqa: E402
@@ -42,7 +43,7 @@ from svg_polish_delta import SvgPolishDeltaError, svg_polish_delta_is_stale  # n
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.driver.v1"
-MODES = ("authoring", "review", "release", "polish")
+MODES = ("authoring", "review", "release", "polish", "final")
 
 # Action vocabulary (Issue 8A / 8B contract).
 ACTION_CREATE_OR_FIX_SOURCE = "create_or_fix_source"
@@ -130,6 +131,14 @@ _FORBIDDEN_BY_MODE: dict[str, list[str]] = {
         FORBIDDEN_SET_ACCEPTED,
         FORBIDDEN_BYPASS_SEMANTIC_BACKPORT,
     ],
+    "final": [
+        FORBIDDEN_EDIT_SOURCE,
+        FORBIDDEN_EDIT_GENERATED_EXPORT,
+        FORBIDDEN_EDIT_POLISHED_SVG,
+        FORBIDDEN_SET_ACCEPTED,
+        FORBIDDEN_FORCE_GOLDEN,
+        FORBIDDEN_BYPASS_SEMANTIC_BACKPORT,
+    ],
 }
 
 
@@ -205,6 +214,14 @@ def _summary(
     if ready_improvement is not None:
         summary["ready_improvement_summary"] = ready_improvement
     summary["next_action_summary"] = driver_next_action_summary(summary)
+    summary["operator_guidance"] = guidance_mod.operator_guidance(summary)
+    if mode == "final":
+        summary["final_readiness_profile"] = guidance_mod.final_readiness_profile(
+            name,
+            status=status,
+            summary=summary,
+            loop_checkpoint=loop_checkpoint,
+        )
     return summary
 
 
@@ -539,7 +556,7 @@ def build_driver_summary(
     workspace_warnings = _workspace_warnings(repo_root)
     loop_checkpoint = (
         checkpoint_mod.latest_loop_checkpoint(repo_root, name, example_dir)
-        if mode in {"review", "release", "polish"}
+        if mode in {"review", "release", "polish", "final"}
         else None
     )
     closeout = closeout_mod.closeout_report(name, repo_root=repo_root) if mode == "review" else None
@@ -610,11 +627,21 @@ def _select_action(
 
     # Render gate (applies in every mode that builds toward review/release/polish).
     if render in ("MISSING", "STALE"):
+        compile_command = (
+            command_mod.strict_compile_command(name)
+            if mode == "final"
+            else command_mod.compile_command(name)
+        )
+        reason = (
+            "render is not fresh; run strict compile as the first final-readiness check."
+            if mode == "final"
+            else "render is not fresh; run /fig_compile to refresh build PDF."
+        )
         return make(
             ACTION_RUN_COMPILE,
-            safe_command=command_mod.compile_command(name),
+            safe_command=compile_command,
             stop_boundary=None,
-            reason="render is not fresh; run /fig_compile to refresh build PDF.",
+            reason=reason,
         )
 
     # Render is FRESH from here.
@@ -740,7 +767,7 @@ def _select_action(
             ),
         )
 
-    if mode == "release":
+    if mode in {"release", "final"}:
         if export in ("MISSING", "STALE"):
             if not _draft_export_is_runner_executable(status):
                 return make(
@@ -766,6 +793,16 @@ def _select_action(
                 reason=(
                     "critique.md is fresh but critique_adjudication.yaml is "
                     "missing or stale; scaffold adjudication before release."
+                ),
+            )
+        if mode == "final" and loop_checkpoint is None:
+            return make(
+                ACTION_RUN_FIG_LOOP,
+                safe_command=command_mod.fig_loop_command(name, goal),
+                stop_boundary=None,
+                reason=(
+                    "final readiness requires a current verify-only /fig_loop "
+                    "checkpoint before complete or release guidance."
                 ),
             )
         if loop_checkpoint is not None:

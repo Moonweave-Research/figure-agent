@@ -29,6 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.run.v1"
 BOUNDARY_HANDOFF_SCHEMA = "figure-agent.boundary-handoff.v1"
 DEFAULT_MAX_STEPS = 5
+RUN_MODES = tuple(mode for mode in fig_driver.MODES if mode != "final")
 EXECUTABLE_ACTIONS = frozenset(
     {
         fig_driver.ACTION_RUN_ADJUDICATE,
@@ -447,6 +448,12 @@ def run_workflow(
     max_steps: int = DEFAULT_MAX_STEPS,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
+    if mode == "final":
+        raise ValueError(
+            "final mode is driver-only; use fig_driver.py --mode final --dry-run"
+        )
+    if mode not in RUN_MODES:
+        raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
 
@@ -544,7 +551,7 @@ def run_workflow(
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser = argparse.ArgumentParser(prog="fig_run.py")
     parser.add_argument("name")
-    parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
+    parser.add_argument("--mode", choices=list(RUN_MODES), required=True)
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)

@@ -10,6 +10,7 @@ Run from the plugin root:
 
 ```bash
 uv run python3 scripts/fig_driver.py <name> --mode review --goal "<goal>" --dry-run
+uv run python3 scripts/fig_driver.py <name> --mode final --goal "final readiness" --dry-run
 ```
 
 `--dry-run` is required. The command never compiles, exports,
@@ -59,6 +60,10 @@ render, so stale render wins over stale critique.
 - `polish` — SVG final-artifact handoff after generated export is current.
   Editing generated `exports/`, treating polish as source repair, setting
   `accepted: true`, and bypassing semantic backport are forbidden.
+- `final` — non-mutating final-readiness preset. It reuses the release
+  readiness gates, surfaces a strict-compile final check, and emits explicit
+  operator guidance for the next required actor. It does not force golden,
+  set accepted state, edit SVG, export, or mutate publication evidence.
 
 ## Output JSON contract
 
@@ -68,7 +73,7 @@ render, so stale render wins over stale critique.
 |---------------------|-----------------------|--------------------------------------------------|
 | `schema`            | string                | `figure-agent.driver.v1`                         |
 | `fixture`           | string                | figure name                                      |
-| `mode`              | string                | `authoring \| review \| release \| polish`        |
+| `mode`              | string                | `authoring \| review \| release \| polish \| final` |
 | `goal`              | string                | passthrough of the `--goal` argument             |
 | `status`            | object                | compact `/fig_status` vector                     |
 | `action`            | string                | one of the 11 canonical action names             |
@@ -83,6 +88,8 @@ render, so stale render wins over stale critique.
 | `may_execute`       | bool                  | always `false`                                   |
 | `loop_checkpoint`   | object or absent      | compact latest `/fig_loop` evidence when it drives the recommendation |
 | `closeout`          | object or absent      | compact `/fig_closeout` evidence when incomplete closeout drives the recommendation |
+| `operator_guidance` | object                | plain next-step UX: state, required actor, and one operator instruction |
+| `final_readiness_profile` | object or absent | final-mode checklist for strict compile, critique, loop, export, publication, and release gates |
 
 The compact `status` object includes publication-gate fields when available:
 `publication_gate_state` and `publication_gate_failures`. In release mode,
@@ -120,6 +127,26 @@ action. It must match top-level `action` and `safe_command`; it does not
 reinterpret state, authorize mutation, or introduce a second selector. Use it
 for compact UI/handoff displays, then inspect `status_explanation`,
 `audit_evidence`, `loop_checkpoint`, or `closeout` for detailed evidence.
+
+`operator_guidance` is the user-facing answer to "what do I do next?" It names
+one required actor (`workflow_agent`, `host_llm`, `human`, `release_operator`,
+`svg_editor`, or `none`) and one next-step instruction. In `complete` states it
+explains that no required plugin action remains for the selected mode; in
+human/release states it does not surface hidden mutation commands.
+
+In `--mode final`, `final_readiness_profile` is added. It is a non-mutating
+checklist, not a second router. The strict compile row always includes:
+
+```bash
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/<name>/<name>.tex
+```
+
+If render is stale, that strict compile command becomes the selected
+`safe_command`. If render is already fresh, the command remains visible as the
+manual final render check, while release/golden/publication decisions stay
+human-only. Final mode also requires a current verify-only `/fig_loop`
+checkpoint before it can report `complete`, so final release guidance is based
+on the same loop evidence used by review, release, and polish routing.
 
 ### Schema versioning
 
@@ -329,6 +356,7 @@ uv run python3 scripts/fig_driver.py fig1_overview --mode authoring --goal 'tigh
 uv run python3 scripts/fig_driver.py fig3_trap --mode review --goal 'close review loop' --dry-run
 uv run python3 scripts/fig_driver.py fig2_band --mode release --goal 'final release check' --dry-run
 uv run python3 scripts/fig_driver.py fig4_polish --mode polish --goal 'svg polish handoff' --dry-run
+uv run python3 scripts/fig_driver.py fig1_overview --mode final --goal 'final readiness' --dry-run
 ```
 
 `/fig_drive` is the driver wrapper for the docs contract in

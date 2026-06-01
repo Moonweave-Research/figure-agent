@@ -166,3 +166,6 @@ user is intentionally operating one specific stage.
 
 `/fig_run` does not remove human gates. It only removes unnecessary manual
 copy-paste for deterministic shell work the driver already selected.
+`/fig_drive --mode final --dry-run` is intentionally driver-only; `/fig_run`
+does not execute final mode because final readiness is an explanatory
+human/release preset, not a new automation lane.

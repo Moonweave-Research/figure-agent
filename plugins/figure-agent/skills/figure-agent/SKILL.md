@@ -60,6 +60,12 @@ Canonical next-action order:
    closed enough to record a meaningful verify-only checkpoint.
 5. Run `/fig_export`, release, or SVG polish only when `/fig_status` or
    `/fig_drive --dry-run` explicitly routes there.
+6. For final submission or "am I done?" checks, use
+   `/fig_drive <name> --mode final --goal "final readiness" --dry-run`. This is
+   the non-mutating final-readiness preset: it explains the required actor,
+   surfaces the strict compile final check, requires a current verify-only
+   `/fig_loop` checkpoint before `complete`, and preserves human
+   accepted/golden/publication boundaries.
 
 If the user asks to proceed autonomously on one fixture, use
 `/fig_run <name> --mode <mode> --goal "<goal>" --execute` rather than manually
@@ -112,6 +118,10 @@ Use modes mentally:
   work is visual-only SVG finalization. Forbidden: editing generated
   `exports/`, treating polish as source repair, setting `accepted: true`,
   bypassing semantic backport.
+- `final`: non-mutating final-readiness check. It reuses release gates, shows
+  strict compile as the final render check, and emits one plain operator
+  instruction. Forbidden: forcing golden, setting accepted state, editing
+  source/SVG, or mutating publication evidence.
 
 `/fig_loop` is a verify-only checkpoint. It records state and patch handoff
 evidence; it does not compile, export, critique, patch, polish, accept, or

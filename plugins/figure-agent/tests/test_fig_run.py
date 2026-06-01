@@ -1724,3 +1724,14 @@ def test_main_rejects_invalid_max_steps(
     captured = capsys.readouterr()
     assert result == 2
     assert "max_steps must be >= 1" in captured.err
+
+
+def test_run_workflow_rejects_final_mode_as_driver_only(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="final mode is driver-only"):
+        fig_run.run_workflow(
+            "runner_demo",
+            mode="final",
+            goal="final readiness",
+            execute=True,
+            repo_root=tmp_path,
+        )

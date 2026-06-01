@@ -506,6 +506,107 @@ def test_unsupported_mode_fails_cleanly(tmp_path: Path) -> None:
     assert exc_info.value.code == 2
 
 
+# --- final mode --------------------------------------------------------------
+
+
+def test_final_mode_recommends_strict_compile_for_stale_render(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "render_state": "STALE",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "run_compile"
+    assert (
+        summary["safe_command"]
+        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+    )
+    assert summary["final_readiness_profile"]["strict_compile"]["state"] == "needs_action"
+    assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
+    assert "strict compile" in summary["operator_guidance"]["next_step"]
+
+
+def test_final_mode_explains_tracked_golden_as_release_operator_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    synthetic_status = _release_ready_status()
+    synthetic_status.update(
+        {
+            "export_state": "TRACKED_GOLDEN",
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="release is ready after human golden roll-forward",
+    )
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert summary["stop_boundary"] == "accepted_or_final_ready_required"
+    assert summary["safe_command"] is None
+    assert summary["operator_guidance"]["required_actor"] == "release_operator"
+    assert "force-golden" in summary["operator_guidance"]["next_step"]
+    assert summary["final_readiness_profile"]["release_gate"]["state"] == "human_required"
+
+
+def test_final_mode_complete_explains_no_required_plugin_action(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        recommended_next_action="release is ready",
+    )
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "complete"
+    assert summary["stop_boundary"] is None
+    assert summary["operator_guidance"]["state"] == "complete"
+    assert summary["operator_guidance"]["required_actor"] == "none"
+    assert "No required plugin action remains" in summary["operator_guidance"]["next_step"]
+    assert summary["final_readiness_profile"]["overall_state"] == "pass"
+
+
+def test_final_mode_requires_loop_checkpoint_before_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_basic_fixture(tmp_path)
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: _release_ready_status())
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda *_args: False)
+
+    summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
+
+    assert summary["action"] == "run_fig_loop"
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/fig_loop.py driver_demo --goal final --json"
+    )
+    assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
+    assert summary["final_readiness_profile"]["loop_checkpoint"]["state"] == "needs_action"
+    assert summary["final_readiness_profile"]["overall_state"] == "needs_action"
+
+
 # --- authoring mode ----------------------------------------------------------
 
 
@@ -546,6 +647,8 @@ def test_review_mode_stops_for_reference_missing(tmp_path: Path) -> None:
     assert summary["action"] == "run_critique"
     assert summary["stop_boundary"] == "reference_missing"
     assert summary["safe_command"] is None
+    assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
+    assert "reference" in summary["operator_guidance"]["next_step"]
 
 
 def test_review_mode_stops_for_host_critique_when_critique_missing(

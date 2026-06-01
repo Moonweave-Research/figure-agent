@@ -13,6 +13,10 @@ def compile_command(name: str) -> str:
     return f"bash scripts/compile.sh {_q(f'examples/{name}/{name}.tex')}"
 
 
+def strict_compile_command(name: str) -> str:
+    return f"FIGURE_AGENT_STRICT=1 {compile_command(name)}"
+
+
 def critique_command(name: str) -> str:
     return f"/fig_critique {_q(name)}"
 
