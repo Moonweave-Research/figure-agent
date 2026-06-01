@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from fig_run_journal import latest_journal_summary, main  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 def _write_fixture(repo_root: Path, name: str = "runner_demo") -> Path:
@@ -335,6 +336,10 @@ def test_latest_journal_summary_marks_hash_changed_evidence_as_stale(
             "schema": "figure-agent.fig-run-evidence-snapshot.v1",
             "items": [
                 {
+                    "path": "examples/runner_demo/runner_demo.tex",
+                    "sha256": file_sha256(example_dir / "runner_demo.tex"),
+                },
+                {
                     "path": "examples/runner_demo/briefing.md",
                     "sha256": (
                         "sha256:"
@@ -351,6 +356,41 @@ def test_latest_journal_summary_marks_hash_changed_evidence_as_stale(
 
     assert summary["state"] == "stale"
     assert summary["stale_against"] == ["examples/runner_demo/briefing.md"]
+
+
+def test_latest_journal_summary_marks_new_snapshot_evidence_as_stale_even_with_old_mtime(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    journal_time = time.time() - 10
+    _touch_fixture_evidence(example_dir, old_time)
+    _write_run_journal(
+        tmp_path,
+        run_id="20260601-010000-old",
+        mtime=journal_time,
+        evidence_snapshot={
+            "schema": "figure-agent.fig-run-evidence-snapshot.v1",
+            "items": [
+                {
+                    "path": "examples/runner_demo/runner_demo.tex",
+                    "sha256": file_sha256(example_dir / "runner_demo.tex"),
+                },
+                {
+                    "path": "examples/runner_demo/briefing.md",
+                    "sha256": file_sha256(example_dir / "briefing.md"),
+                },
+            ],
+        },
+    )
+    spec = example_dir / "spec.yaml"
+    spec.write_text("name: runner_demo\n", encoding="utf-8")
+    os.utime(spec, (old_time, old_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == ["examples/runner_demo/spec.yaml"]
 
 
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:
