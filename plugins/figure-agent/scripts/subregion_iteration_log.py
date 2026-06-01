@@ -11,6 +11,8 @@ import argparse
 import sys
 from pathlib import Path
 
+import fixture_identity
+
 SUBREGION_ITERATION_LOG_FILENAME = "subregion_iteration_log.md"
 
 
@@ -118,6 +120,39 @@ def _log_path(example_dir: Path) -> Path:
     return example_dir / SUBREGION_ITERATION_LOG_FILENAME
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise SubregionIterationLogError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise SubregionIterationLogError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise SubregionIterationLogError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SubregionIterationLogError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -135,9 +170,10 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.template is not None:
-            text = subregion_iteration_log_template(args.template)
+            example_dir = _resolve_example_dir_for_cli(args.template)
+            text = subregion_iteration_log_template(example_dir)
             if args.write_template:
-                path = _log_path(args.template)
+                path = _log_path(example_dir)
                 write_subregion_iteration_log(path, text, force=args.force)
                 print(path)
             else:
@@ -158,8 +194,9 @@ def main(argv: list[str] | None = None) -> int:
         ]
         if missing:
             parser.error("--append requires " + ", ".join(missing))
+        example_dir = _resolve_example_dir_for_cli(args.append)
         append_iteration_row(
-            _log_path(args.append),
+            _log_path(example_dir),
             iteration=args.iteration,
             subregion_id=args.subregion_id,
             problem=args.problem,
@@ -167,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
             result=args.result,
             follow_up=args.follow_up,
         )
-        print(_log_path(args.append))
+        print(_log_path(example_dir))
         return 0
     except (FileExistsError, SubregionIterationLogError) as exc:
         print(f"subregion_iteration_log.py: {exc}", file=sys.stderr)
