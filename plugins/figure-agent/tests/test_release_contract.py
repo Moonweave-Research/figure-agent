@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -384,6 +385,42 @@ def test_plugin_package_audit_removes_plugin_root_worktree_metadata(tmp_path: Pa
     assert not (plugin_root / ".claude").exists()
     assert not (plugin_root / "plugins").exists()
     assert (plugin_root / "commands" / "fig_status.md").is_file()
+
+
+def test_plugin_package_audit_does_not_remove_tracked_paths_in_dev_worktree(
+    tmp_path: Path,
+) -> None:
+    repo_root = tmp_path / "repo"
+    plugin_root = repo_root / "plugins" / "figure-agent"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / "examples" / "demo" / "build").mkdir(parents=True)
+    (plugin_root / "examples" / "demo" / "exports").mkdir(parents=True)
+    (plugin_root / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    tracked_build = plugin_root / "examples" / "demo" / "build" / ".gitkeep"
+    tracked_export = plugin_root / "examples" / "demo" / "exports" / "demo.pdf"
+    tracked_build.write_text("", encoding="utf-8")
+    tracked_export.write_bytes(b"%PDF")
+    (plugin_root / ".pytest_cache").mkdir()
+
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "add", "plugins/figure-agent/examples"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+    )
+
+    junk = find_packaging_junk(plugin_root)
+
+    assert plugin_root / ".pytest_cache" in junk
+    assert plugin_root / "examples" / "demo" / "build" not in junk
+    assert plugin_root / "examples" / "demo" / "exports" not in junk
+
+    remove_paths(junk)
+
+    assert tracked_build.is_file()
+    assert tracked_export.is_file()
+    assert not (plugin_root / ".pytest_cache").exists()
 
 
 def test_schema_module_map_covers_script_schema_constants() -> None:
