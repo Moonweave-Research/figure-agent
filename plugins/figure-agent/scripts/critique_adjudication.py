@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity  # noqa: E402
 import yaml
 from critique_contract import (  # noqa: E402
     CritiqueContractError,
@@ -587,13 +588,36 @@ def sync_adjudication(
 
 def _resolve_example_dir(value: str, repo_root: Path) -> Path:
     path = Path(value)
+    examples_root = (repo_root / "examples").resolve()
     if path.is_absolute():
-        return path
+        resolved = path.resolve()
+        if resolved.parent != examples_root:
+            raise CritiqueAdjudicationError(
+                f"invalid fixture path: {value} must be a direct child of {examples_root}"
+            )
+        _validate_fixture_name(resolved.name, value)
+        return resolved
     if path.parts and path.parts[0] == "examples":
-        return repo_root / path
+        if len(path.parts) != 2 or ".." in path.parts:
+            raise CritiqueAdjudicationError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name(path.parts[1], value)
+        return repo_root / "examples" / path.parts[1]
     if len(path.parts) == 1:
+        _validate_fixture_name(value, value)
         return repo_root / "examples" / value
-    return path
+    raise CritiqueAdjudicationError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute direct child of examples/"
+    )
+
+
+def _validate_fixture_name(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise CritiqueAdjudicationError(f"invalid fixture path: {original}: {exc}") from exc
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -625,8 +649,8 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "scaffold":
-        example_dir = _resolve_example_dir(args.example, args.repo_root)
         try:
+            example_dir = _resolve_example_dir(args.example, args.repo_root)
             path = scaffold_adjudication(example_dir, force=args.force, policy=args.policy)
         except CritiqueAdjudicationError as exc:
             print(f"critique_adjudication.py: {exc}", file=sys.stderr)
@@ -634,8 +658,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"critique_adjudication.py: wrote {path}")
         return 0
     if args.command == "sync":
-        example_dir = _resolve_example_dir(args.example, args.repo_root)
         try:
+            example_dir = _resolve_example_dir(args.example, args.repo_root)
             if args.preview:
                 preview = build_adjudication_decision_diff(
                     example_dir,
