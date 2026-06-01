@@ -182,3 +182,29 @@ def test_cli_writes_report(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "wrote SVG semantic diff report" in result.stdout
     assert (fig_dir / SVG_SEMANTIC_DIFF_RELATIVE_PATH).is_file()
+
+
+@pytest.mark.parametrize("unsafe_arg", ["examples/../outside", "outside"])
+def test_cli_rejects_traversal_or_outside_relative_fixture_path(
+    tmp_path: Path,
+    unsafe_arg: str,
+) -> None:
+    source = _base_svg('<text id="label-a">A</text>')
+    outside_dir = tmp_path / "outside"
+    (outside_dir / "exports").mkdir(parents=True)
+    (outside_dir / "polish").mkdir()
+    (outside_dir / "exports" / "outside.svg").write_text(source, encoding="utf-8")
+    (outside_dir / "polish" / "outside.polished.svg").write_text(source, encoding="utf-8")
+    script = Path(__file__).resolve().parents[1] / "scripts" / "svg_semantic_diff.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script), unsafe_arg],
+        check=False,
+        capture_output=True,
+        cwd=tmp_path,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "invalid fixture path" in result.stderr
+    assert not (outside_dir / SVG_SEMANTIC_DIFF_RELATIVE_PATH).exists()
