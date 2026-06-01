@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AR, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AS, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AR run journal evidence hash snapshot;
+- branch baseline: `main` after Issue 100AS run journal malformed-spec safe snapshot;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -102,6 +102,7 @@ the workflow together.
 | G100-37 | P2 | Run journal declared context staleness | `fig_run_journal.py` still did not consider spec-declared paper-wide aesthetic context or journal art-direction playbook packs stored outside the fixture directory. | `quality_manifest.py` includes declared context/playbook paths in critique input hashing, but the journal helper used only fixed fixture-local paths. | A continuation summary could appear available even though paper-wide or journal-specific art-direction context changed after the interrupted run. | Issue 100AP - run journal declared context pack staleness |
 | G100-38 | P2 | Run journal critique input parity | `fig_run_journal.py` still maintained its own stale evidence list instead of reusing the critique input manifest source set. | Reference images, panel reference images, `reference/reference_pack.md`, and shared style lock changes participate in critique freshness but were not guaranteed to stale a prior journal. | An interrupted run could appear resumable even though the next `/fig_critique` would be based on changed reference/style evidence. | Issue 100AQ - run journal critique input parity |
 | G100-39 | P2 | Run journal content freshness | `fig_run_journal.py` still used mtime-only stale checks for continuation evidence. | A fixture evidence file can be rewritten while preserving or restoring an older mtime than the run journal. | An interrupted run could appear available even though briefing/spec/evidence content changed since the journal was recorded. | Issue 100AR - run journal evidence hash snapshot |
+| G100-40 | P2 | Run journal malformed input safety | Issue 100AR's snapshot writer reused critique input path expansion directly, and malformed `spec.yaml.panels[]` entries could raise while recording a non-authoritative journal. | A scalar panel entry reproduces `AttributeError: 'str' object has no attribute 'get'` through `participating_panel_reference_paths()`. | `/fig_run --record` could fail to write a continuation journal exactly when malformed inputs make recovery context more important. | Issue 100AS - run journal malformed-spec safe snapshot |
 
 ## Recommended Execution Order
 
@@ -373,6 +374,12 @@ the workflow together.
     non-authoritative `evidence_snapshot` of repo-relative sha256 entries, and
     `fig_run_journal.py` marks a journal stale when a snapshotted file changes
     content even if its mtime is older than the journal.
+
+42. **Issue 100AS - run journal malformed-spec safe snapshot**
+    Completed as a malformed-input hardening slice. Snapshot generation now
+    treats critique input expansion as best-effort: malformed spec shape errors
+    skip only optional manifest expansion while preserving core fixture evidence
+    snapshot recording.
 
 ## Non-Goals
 
