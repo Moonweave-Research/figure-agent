@@ -857,8 +857,8 @@
 % hierarchy relative to companion sub-labels ('real space' / 'energy diagram'
 % at 6pt italic). Stays below panel-letter 8pt cap so no letter-tier conflict.
 \node[anchor=south,
-      font=\sffamily\bfseries\fontsize{7.5}{9}\selectfont,
-      text=cGray!85!black] at (10.40, 8.92) {localized traps};
+      font=\sffamily\fontsize{6}{7.2}\selectfont,
+      text=cGray!70!black] at (10.40, 8.92) {localized traps};
 
 % ============================================================
 % Row 2 — NC main-text Fig 1 clean white background.
@@ -956,7 +956,7 @@
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
       anchor=north] at (2.275, 4.53) {kinetic};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
-      anchor=south] at (6.975, 4.62) {ISPD};
+      fill=white, inner xsep=1.2pt, inner ysep=0.4pt, anchor=south] at (6.975, 4.62) {ISPD};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!70!black,
       anchor=north] at (11.70, 4.53) {mechanical};
 
@@ -983,9 +983,9 @@
 % Panel-loop iter L2-L3 [post-spoke]: Row 2 frame tone subdue (post-spoke removal
 % the frame became visually prominent; lighter tone + thinner stroke).
 \draw[cGray!22, line width=0.30pt, rounded corners=2pt]
-  (0.05, 0.10) rectangle (13.85, 4.50);
-\draw[cGray!22, line width=0.30pt] (4.62, 0.10) -- (4.62, 4.50);
-\draw[cGray!22, line width=0.30pt] (9.47, 0.10) -- (9.47, 4.50);
+  (0.05, 0.04) rectangle (13.85, 4.50);
+\draw[cGray!22, line width=0.30pt] (4.62, 0.04) -- (4.62, 4.50);
+\draw[cGray!22, line width=0.30pt] (9.47, 0.04) -- (9.47, 4.50);
 
 % =============== Column D — Kinetic =================
 
@@ -1010,12 +1010,11 @@
 % instrument boxes (HV+, V_s meter, V_active PSU). Previously outline-only.
 % D apparatus v8.6 [briefing relax R2, 2026-05-26]: calibrated.
 % shadow 0.40→0.25, gradient delta preserved, specular 1.2mm→0.6mm + 0.65→0.42.
-\fill[black, opacity=0.25] (0.53, 3.04) rectangle (1.33, 3.74);
-\shade[top color=cGray!4, bottom color=cGray!40, rounded corners=2pt]
+% Clean flat instrument box (NC-premium restyle 2026-06-01): no glossy gradient,
+% no specular highlight, no heavy drop shadow — crisp thin outline + flat light fill.
+\fill[cGray!6, rounded corners=1pt] (0.50, 3.07) rectangle (1.30, 3.77);
+\draw[cGray!70!black, line width=0.45pt, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
-\draw[cGray!75!black, line width=0.30pt, rounded corners=2pt]
-  (0.50, 3.07) rectangle (1.30, 3.77);
-\fill[white, opacity=0.42] (0.61, 3.71) circle (0.6mm);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
       anchor=center] at (0.90, 3.57) {SMU};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
@@ -1026,7 +1025,7 @@
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
 % Top electrode v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
 % gradient delta widened cGray!8→cGray!70 (was !18→!50).
-\shade[top color=cGray!8, bottom color=cGray!70]
+\fill[cGray!25]
   (1.70, 3.70) rectangle (3.50, 3.80);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.70) rectangle (3.50, 3.80);
@@ -1041,7 +1040,7 @@
 \draw[cAmber!70!black, line width=0.32pt]
   (1.70, 3.25) rectangle (3.50, 3.70);
 % Bottom electrode v8.5 [briefing relax R2, 2026-05-26]: matching turn-up.
-\shade[top color=cGray!8, bottom color=cGray!70]
+\fill[cGray!25]
   (1.70, 3.15) rectangle (3.50, 3.25);
 \draw[cGray!75!black, line width=0.32pt]
   (1.70, 3.15) rectangle (3.50, 3.25);
@@ -1090,7 +1089,7 @@
 \draw[cGray!65!black, line width=0.45pt] (1.70, 0.40) -- (1.70, 0.47);
 \draw[cGray!65!black, line width=0.45pt] (3.10, 0.40) -- (3.10, 0.47);
 \node[labelMute, anchor=east, rotate=90] at (0.35, 2.45) {$\log I$};
-\node[labelMute, anchor=north] at (4.10, 0.30) {$\log t$};
+\node[labelMute, anchor=north, font=\sffamily\fontsize{6}{7.2}\selectfont] at (4.10, 0.36) {$\log t$};
 
 % D-5 high-n (sulfur, paper hero) + D-6 low-n (control) power-law curves
 % 2026-05-20 framework rewrite (briefing §8.4 + §13.5):
@@ -1255,7 +1254,7 @@
 % iter E10: substrate gradient cGray!42→!22 → cGray!50→!25 (slight darken
 % for "metallic conductive substrate" feel — substrate is ground-attached
 % conductive base, deserves slightly more material weight than light gray).
-\shade[top color=cGray!50, bottom color=cGray!25]
+\fill[cGray!22]
   (5.9, 3.15) rectangle (7.45, 3.45);
 % Panel E iter 24 [round 5 NC clean, 2026-05-27]: substrate striations REMOVED.
 % 3 white opacity 0.25 lines at 0.18pt = barely-visible noise. Either too
@@ -1321,9 +1320,7 @@
 % Visual hierarchy: HV+ = compact source / V_s meter = larger read-out instrument.
 % Output terminal at (6.155, 4.13) stays inside; corona needle at x=6.155 stays
 % under box center (need slight shift: x 6.15 -> 6.155).
-\fill[black, opacity=0.18, rounded corners=1.2pt] (5.86, 4.09) rectangle (6.51, 4.34);
-\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=1.2pt]
-  (5.83, 4.12) rectangle (6.48, 4.37);
+\fill[cGray!6, rounded corners=1.2pt] (5.83, 4.12) rectangle (6.48, 4.37);
 \draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
   (5.83, 4.12) rectangle (6.48, 4.37);
 % Display — iter 50: enlarged vertically 0.07→0.16cm (was squashed 9:1 flat
@@ -1339,8 +1336,6 @@
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
   (5.90, 4.20) rectangle (6.36, 4.33);
 % iter 32: HV+ status LED — cRed dot indicating active discharge state.
-\fill[cRed!85!black] (6.41, 4.26) circle (0.018);
-\fill[cRed!50, opacity=0.6] (6.41, 4.26) circle (0.030);
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
 % DC-source schematic glyph (⎓: long bar above, short bar below).
@@ -1551,9 +1546,7 @@
 % iter8 follow-up: V_s meter box matching HV+ gradient depth + stroke.
 % iter10 follow-up: V_s meter drop shadow matching HV+.
 % iter 16 follow-up: V_s meter cool metallic to match HV+ box.
-\fill[black, opacity=0.18, rounded corners=1.2pt] (7.71, 3.55) rectangle (8.71, 4.02);
-\shade[top color=cGray!18, bottom color=cGray!50, rounded corners=1.2pt]
-  (7.68, 3.58) rectangle (8.68, 4.05);
+\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.58) rectangle (8.68, 4.05);
 \draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
   (7.68, 3.58) rectangle (8.68, 4.05);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
@@ -1727,7 +1720,7 @@
   at (4.93, 1.25) {$g(E_t)$};
 \node[labelMute, anchor=north,
       font=\sffamily\fontsize{6}{7.2}\selectfont]
-  at (8.7, 0.3) {$E_t$};
+  at (8.7, 0.36) {$E_t$};
 
 % E-7 shallow Gaussian + E-8 deep Gaussian (1.86× height per §5 Q4)
 % Column E iter 1 (2026-05-18) — T5 BLOCKER fix: deep peak y 1.30 → 1.24
@@ -1801,9 +1794,9 @@
 % E-10 — iter 49 (Codex iter 48 narrow): font 6→5pt + tone 85→70 (Codex
 % "annotations still louder than evidence shapes").
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (5.9, 0.32) {Shallow};
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (5.9, 0.36) {Shallow};
 \node[labelMute, anchor=north, text=cGray!70!black,
-      font=\sffamily\fontsize{6.5}{7.8}\selectfont] at (6.98, 0.32) {Deep};
+      font=\sffamily\fontsize{6}{7.2}\selectfont] at (6.98, 0.36) {Deep};
 
 % =============== Column F — Mechanical =================
 
@@ -1816,12 +1809,9 @@
 % horizontal gap"). New range (11.8, 3.2)..(12.65, 3.85), wire gap 0.58cm.
 % F apparatus v8.6 [briefing relax R2, 2026-05-26]: PSU calibrated.
 % shadow 0.40→0.25, gradient preserved, spec 1.0mm→0.6mm + 0.65→0.42.
-\fill[black, opacity=0.25] (11.82, 3.17) rectangle (12.67, 3.82);
-\shade[top color=cGray!2, bottom color=cGray!45]
-  (11.8, 3.2) rectangle (12.65, 3.85);
+\fill[cGray!6] (11.8, 3.2) rectangle (12.65, 3.85);
 \draw[cGray!60!black, line width=0.25pt]
   (11.8, 3.2) rectangle (12.65, 3.85);
-\fill[white, opacity=0.42] (11.88, 3.82) circle (0.6mm);
 % Inset display window (shifted right with PSU)
 \fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);
 \draw[cGray!55!black, line width=0.18pt]
@@ -1868,12 +1858,9 @@
 % MOVES under Coulomb force.
 % F-4 v8.6 [briefing relax R2, 2026-05-26]: calibrated. shadow 0.40→0.28,
 % gradient delta preserved (metallic identity), bevel 0.85→0.55.
-\fill[black, opacity=0.28] (11.88, 2.39) rectangle (12.28, 2.49);
-\shade[top color=cGray!10!white, bottom color=cGray!75!white]
-  (11.85, 2.42) rectangle (12.25, 2.52);
+\fill[cGray!10] (11.85, 2.42) rectangle (12.25, 2.52);
 \draw[cGray!75!black, line width=0.40pt]
   (11.85, 2.42) rectangle (12.25, 2.52);
-\draw[white, opacity=0.55, line width=0.35pt] (11.87, 2.515) -- (12.23, 2.515);
 \draw[cGray!50!black, line width=0.40pt] (11.75, 2.65) -- (12.35, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
   \draw[cGray!50!black, line width=0.25pt]
@@ -1897,7 +1884,6 @@
   (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
 % F-5 v8.6 [briefing relax R2, 2026-05-26]: calibrated — 1.2mm→0.6mm,
 % 0.60→0.42; reads as polymer surface highlight, not white disc.
-\fill[white, opacity=0.42] (11.965, 2.30) circle (0.6mm);
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
 % Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
@@ -1946,14 +1932,15 @@
 % F-8 v8.6 [briefing relax R2, 2026-05-26]: calibrated — shadow 0.45→0.32,
 % gradient delta preserved (metallic identity), stripe 0.85→0.70 + thinner,
 % NW spec 1.3mm→0.7mm + 0.70→0.50.
-\fill[black, opacity=0.32] (13.27, 0.36) rectangle (13.44, 2.56);
-\shade[left color=cGray!90!black, right color=cGray!25!black]
-  (13.23, 0.4) rectangle (13.4, 2.6);
+\fill[cGray!25] (13.23, 0.4) rectangle (13.4, 2.6);
 \draw[cGray!85!black, line width=0.50pt]
   (13.23, 0.4) rectangle (13.4, 2.6);
-\draw[white, opacity=0.70, line width=0.45pt]
-  (13.235, 0.45) -- (13.235, 2.55);
-\fill[white, opacity=0.50] (13.255, 2.53) circle (0.7mm);
+% Hatched-metal electrode signature (matches Panel D MIM electrode hatching) so the
+% electrode reads as a distinct material from the matte light-gray instrument boxes and
+% the black readout displays; the neutral gray value space is otherwise saturated.
+\foreach \hy in {0.55, 0.70, 0.85, 1.00, 1.15, 1.30, 1.45, 1.60, 1.75, 1.90, 2.05, 2.20, 2.35, 2.50} {
+  \draw[cGray!60!black, line width=0.22pt] (13.40, \hy) -- (13.23, {\hy-0.05});
+}
 \foreach \ey in {0.70, 1.10, 1.50, 1.90, 2.30} {
   \draw[cGray!75!black, line width=0.28pt]
     (13.40, \ey) -- (13.55, {\ey+0.08});
