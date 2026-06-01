@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from aesthetic_intent import (  # noqa: E402
     AESTHETIC_INTENT_SCHEMA_V2,
     AestheticIntentError,
@@ -2186,10 +2187,26 @@ def _resolve_example_dir(value: str, repo_root: Path) -> Path:
     if path.is_absolute():
         return path
     if path.parts and path.parts[0] == "examples":
-        return repo_root / path
+        if len(path.parts) != 2 or ".." in path.parts:
+            raise CritiqueContractError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name(path.parts[1], value)
+        return repo_root / "examples" / path.parts[1]
     if len(path.parts) == 1:
+        _validate_fixture_name(value, value)
         return repo_root / "examples" / value
-    return path
+    raise CritiqueContractError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise CritiqueContractError(f"invalid fixture path: {original}: {exc}") from exc
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -2198,7 +2215,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     args = parser.parse_args(argv)
 
-    example_dir = _resolve_example_dir(args.example, args.repo_root)
+    try:
+        example_dir = _resolve_example_dir(args.example, args.repo_root)
+    except CritiqueContractError as exc:
+        print(f"BLOCKER: critique_contract: {exc}")
+        return 1
     violations = lint_critique(example_dir)
     if not violations:
         print(f"OK: critique lint passed for {example_dir.name}")
