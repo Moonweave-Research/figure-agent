@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import fig_driver  # noqa: E402
 import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
+import fig_run_records  # noqa: E402
 
 
 def _driver_summary(
@@ -1713,7 +1714,7 @@ def test_command_failed_journal_is_non_authoritative(
     assert "Do not replay commands from this journal" in stop_text
 
 
-def test_run_journal_sanitizes_fixture_name_and_stays_within_runs_root(
+def test_main_refuses_to_record_journal_for_unsafe_fixture_name(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _install_driver_sequence(
@@ -1744,9 +1745,45 @@ def test_run_journal_sanitizes_fixture_name_and_stays_within_runs_root(
 
     assert result == 0
     payload = json.loads(capsys.readouterr().out)
-    run_dir = Path(payload["journal"]["run_dir"])
-    assert run_dir.parent == runs_root
-    assert run_dir.name.endswith("-.._bad_name_with_spaces")
+    assert "journal" not in payload
+    assert not runs_root.exists()
+    error = payload["journal_error"]
+    assert error["schema"] == "figure-agent.fig-run-journal-error.v1"
+    assert "fixture name must be a single examples/<name> directory name" in error[
+        "message"
+    ]
+
+
+def test_write_run_journal_rejects_unsafe_fixture_name_before_writing(
+    tmp_path: Path,
+) -> None:
+    runs_root = tmp_path / "fig-run-runs"
+
+    with pytest.raises(
+        ValueError, match="fixture name must be a single examples/<name> directory name"
+    ):
+        fig_run_records.write_run_journal(
+            {
+                "schema": "figure-agent.run.v1",
+                "fixture": "../bad/name with spaces",
+                "mode": "review",
+                "goal": "close loop",
+                "execute": False,
+                "max_steps": 5,
+                "executed_count": 0,
+                "final_action": fig_driver.ACTION_RUN_CRITIQUE,
+                "final_safe_command": "/fig_critique runner_demo",
+                "final_stop_boundary": fig_driver.STOP_HOST_LLM_CRITIQUE,
+                "final_stop_reason": "host_boundary",
+                "steps": [],
+            },
+            runs_root=runs_root,
+            repo_root=tmp_path,
+            started_at="run-start",
+            completed_at="run-end",
+        )
+
+    assert not runs_root.exists()
 
 
 def test_run_workflow_does_not_write_journal_directly(

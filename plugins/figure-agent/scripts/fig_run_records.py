@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import fixture_identity  # noqa: E402
 from fig_run_evidence import evidence_snapshot  # noqa: E402
 
 SCHEMA = "figure-agent.fig-run-journal.v1"
@@ -174,6 +175,7 @@ def write_run_journal(
     fixture = payload.get("fixture")
     if not isinstance(fixture, str) or fixture == "":
         raise ValueError("fig_run journal requires a fixture name")
+    fixture_identity.validate_fixture_name(fixture)
 
     run_dir = _run_dir(fixture=fixture, runs_root=runs_root)
     journalized = dict(payload)

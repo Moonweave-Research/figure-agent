@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BB, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BC, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BB fig run journal fixture name boundary;
+- branch baseline: `main` after Issue 100BC fig run journal writer fixture name boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -112,6 +112,7 @@ the workflow together.
 | G100-47 | P2 | Spec bbox helper path boundary | `spec_bbox_helper.py` accepted `name` under a custom `--examples-root` without validating that it was a single fixture identity. | `spec_bbox_helper.run(["../outside", "--examples-root", ".../examples"])` could read an escaped TeX file if the normalized path existed. | A geometry-authoring helper should not let traversal syntax become the source of panel reference coordinates. | Issue 100AZ - spec bbox helper fixture name boundary |
 | G100-48 | P2 | Detector feedback ledger path boundary | `detector_feedback_ledger.py` accepted selected fixture names without validating that each one was a single fixture identity. | `build_detector_feedback_ledger(examples_root, ["../outside"])` could include an escaped critique directory if the normalized path existed. | Detector tuning and whole-plugin review evidence should not be polluted by traversal-selected non-fixtures. | Issue 100BA - detector feedback ledger fixture name boundary |
 | G100-49 | P2 | Run journal continuation path boundary | `fig_run_journal.py` accepted raw fixture names before producing `next_live_commands`. | `fig_run_journal.py ../outside` produced normal JSON with `/fig_status ../outside` and `/fig_drive ../outside ...` commands. | A continuation helper should not generate follow-up commands for traversal syntax. | Issue 100BB - fig run journal fixture name boundary |
+| G100-50 | P2 | Run journal writer path boundary | `fig_run_records.write_run_journal()` accepted raw `payload["fixture"]`, sanitized the run directory name, and wrote non-authoritative journal evidence for traversal syntax if called directly. | Tests could bypass the driver boundary by monkeypatching the runner and still record a journal for `../bad/name with spaces`. | A write-capable continuation helper should reject unsafe fixture identity before run directory allocation, evidence snapshotting, or JSON writes. | Issue 100BC - fig run journal writer fixture name boundary |
 
 ## Recommended Execution Order
 
@@ -448,6 +449,14 @@ the workflow together.
     validates fixture names before journal lookup or `next_live_commands`
     generation, and the CLI reports unsafe names through a controlled non-zero
     error instead of emitting follow-up commands for traversal syntax.
+
+52. **Issue 100BC - fig run journal writer fixture name boundary**
+    Completed as continuation safety hardening. `fig_run_records.py` now
+    validates `payload["fixture"]` before allocating a run directory, computing
+    an evidence snapshot, or writing non-authoritative journal JSON. `/fig_run`
+    keeps its existing live-payload behavior by reporting writer validation
+    failures as `journal_error` when a caller bypasses the normal driver-side
+    fixture boundary.
 
 ## Non-Goals
 
