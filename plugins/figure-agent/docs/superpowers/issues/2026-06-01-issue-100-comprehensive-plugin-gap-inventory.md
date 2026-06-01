@@ -157,8 +157,10 @@ the workflow together.
 ### Track D - Maintainability
 
 10. **Issue 100H/I - schema and module maps**
-   Produce a compact schema capability matrix and module ownership map before
-   adding more schema fields or scripts.
+   Implemented on branch `codex/issue100hi-schema-module-map`. Added
+   `docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md`,
+   covering active schema owners, critique schema capability lineage, module
+   layer ownership, and governance rules for future schema/script changes.
 
 11. **Issue 100N/O - freshness and detector feedback**
     Add low-risk operator utilities for plugin-version freshness and detector
