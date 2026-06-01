@@ -140,9 +140,11 @@ the workflow together.
    step-out actions instead of flattening into a generic human gate.
 
 8. **Issue 100R - diagnostic artifact provenance rule**
-   Make it hard to confuse old scratch/debug crops with current manifest-bound
-   build evidence. At minimum, document and surface the rule that only
-   manifest-bound build artifacts participate in plugin truth.
+   Implemented on branch `codex/issue100r-diagnostic-provenance`. Added
+   `scripts/diagnostic_artifact_provenance.py` so extra screenshots, `/tmp`
+   crops, and `.scratch/` diagnostics can be classified before use:
+   current build renders and manifest-bound audit crops are authoritative;
+   stale, mismatched, missing, or unmanifested diagnostics are context only.
 
 9. **Issue 100J - resumable guided run checkpoint**
    Add a resume-friendly summary or command for `.scratch/fig-run-runs` so a
