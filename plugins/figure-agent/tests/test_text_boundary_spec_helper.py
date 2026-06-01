@@ -204,6 +204,38 @@ def test_main_write_updates_spec_checks_deterministically(tmp_path: Path, monkey
     assert (fixture / "spec.yaml").read_text(encoding="utf-8") == first_write
 
 
+def test_main_rejects_parent_relative_fixture_path_before_write(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    outside = tmp_path / "outside"
+    (tmp_path / "examples").mkdir()
+    outside.mkdir()
+    spec_path = outside / "spec.yaml"
+    spec_path.write_text(
+        "name: outside\n"
+        "text_boundary_layout:\n"
+        "  row_boxes:\n"
+        "    - id: row2\n"
+        "      bbox_pdf_cm: [0.0, 0.0, 13.8, 4.5]\n",
+        encoding="utf-8",
+    )
+    before = spec_path.read_text(encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["text_boundary_spec_helper.py", "examples/../outside", "--write"],
+    )
+
+    assert helper.main() == 2
+
+    captured = capsys.readouterr()
+    assert "parent-relative paths are not accepted" in captured.err
+    assert spec_path.read_text(encoding="utf-8") == before
+
+
 def test_main_returns_two_when_layout_missing(tmp_path: Path, capsys, monkeypatch) -> None:
     fixture = _write_fixture(tmp_path, "name: demo\n")
     monkeypatch.setattr(sys, "argv", ["text_boundary_spec_helper.py", str(fixture)])
