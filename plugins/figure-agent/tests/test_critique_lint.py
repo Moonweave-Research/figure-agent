@@ -4576,3 +4576,40 @@ def test_lint_critique_cli_reports_malformed_findings_without_traceback(
     assert result == 1
     assert "critique_contract" in captured.out
     assert "Traceback" not in captured.err
+
+
+def test_lint_critique_cli_accepts_examples_fixture_path(tmp_path: Path, capsys) -> None:
+    fig_dir = tmp_path / "examples" / "demo_fig"
+    fig_dir.mkdir(parents=True)
+    _write_critique(fig_dir, findings_yaml="findings: []\n")
+
+    result = critique_lint.main(["examples/demo_fig", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "OK: critique lint passed for demo_fig" in captured.out
+    assert captured.err == ""
+
+
+def test_lint_critique_cli_rejects_parent_relative_example_path(tmp_path: Path, capsys) -> None:
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    _write_critique(outside, findings_yaml="findings: []\n")
+
+    result = critique_lint.main(["examples/../outside", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert "invalid fixture path" in captured.out
+
+
+def test_lint_critique_cli_reports_controlled_error_for_invalid_fixture_name(
+    tmp_path: Path, capsys
+) -> None:
+    result = critique_lint.main([" ", "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert "invalid fixture path" in captured.out
+    assert "Traceback" not in captured.err

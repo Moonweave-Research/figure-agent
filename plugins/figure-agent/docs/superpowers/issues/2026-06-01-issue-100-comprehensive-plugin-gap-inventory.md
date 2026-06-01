@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BG, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BH, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BG critique adjudication CLI fixture path boundary;
+- branch baseline: `main` after Issue 100BH critique lint CLI fixture path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -117,6 +117,7 @@ the workflow together.
 | G100-52 | P2 | Text-boundary helper write path boundary | `text_boundary_spec_helper.py --write` accepted parent-relative relative paths such as `examples/../outside` and could rewrite a normalized `outside/spec.yaml` if it existed. | The helper is usually invoked as `examples/<name> --write`, but its parser also accepted arbitrary path-like input before rejecting traversal syntax. | A write-capable authoring helper should preserve explicit path support while rejecting accidental traversal paths before spec resolution or mutation. | Issue 100BE - text-boundary helper parent-relative path boundary |
 | G100-53 | P2 | Diagnostic provenance fixture path boundary | `diagnostic_artifact_provenance.py` accepted traversal-like fixture paths and still emitted normal provenance JSON. | `diagnostic_artifact_provenance.py examples/../outside ... --repo-root <repo>` returned schema-valid output instead of surfacing invalid fixture identity. | A tool that decides whether diagnostic images are authoritative should reject invalid fixture/path inputs instead of making wrong-fixture evidence look like a normal report. | Issue 100BF - diagnostic provenance fixture path boundary |
 | G100-54 | P1 | Critique adjudication write path boundary | `critique_adjudication.py scaffold/sync` accepted `examples/../outside` and could reach or write `critique_adjudication.yaml` outside `examples/` before failing for incidental downstream reasons. | TDD reproduced `scaffold examples/../outside --force` exiting 0 and writing an adjudication file when a normalized outside critique existed. | A write-capable human-decision helper must reject unsafe fixture/path syntax before scaffold/sync can mutate or refresh adjudication state. | Issue 100BG - critique adjudication CLI fixture path boundary |
+| G100-55 | P2 | Critique lint CLI fixture path boundary | `critique_lint.py` accepted `examples/../outside` and could report `OK: critique lint passed` for a normalized directory outside `examples/`. | TDD reproduced a valid outside `critique.md` returning exit code 0 through the traversal-like CLI path. | A read-only validity gate should not make escaped or malformed fixture identity look like normal plugin truth. | Issue 100BH - critique lint CLI fixture path boundary |
 
 ## Recommended Execution Order
 
@@ -488,6 +489,13 @@ the workflow together.
     used by diagnostic provenance: fixture name, `examples/<name>`, or a direct
     absolute child of `<repo-root>/examples`. Traversal-like or nested fixture
     paths are rejected before any adjudication scaffold/sync write.
+
+57. **Issue 100BH - critique lint CLI fixture path boundary**
+    Completed as read-only gate safety hardening. `critique_lint.py` now rejects
+    traversal-like, nested, and invalid fixture inputs before running lint, while
+    preserving fixture-name, `examples/<name>`, and explicit absolute-path
+    invocation. Invalid input is reported as a normal BLOCKER
+    `critique_contract` CLI result instead of an OK lint result or traceback.
 
 ## Non-Goals
 
