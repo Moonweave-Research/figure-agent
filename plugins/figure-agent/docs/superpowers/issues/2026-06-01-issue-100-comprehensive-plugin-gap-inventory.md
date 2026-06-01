@@ -147,8 +147,12 @@ the workflow together.
    stale, mismatched, missing, or unmanifested diagnostics are context only.
 
 9. **Issue 100J - resumable guided run checkpoint**
-   Add a resume-friendly summary or command for `.scratch/fig-run-runs` so a
-   long run can continue from the last safe boundary.
+   Implemented on branch `codex/issue100j-run-journal-summary`. Added
+   `scripts/fig_run_journal.py` to summarize the latest
+   `.scratch/fig-run-runs` journal for a fixture without replaying stored
+   commands. The summary names the previous stop, required actor, closeout
+   checks, and stale fixture evidence, then points operators back to live
+   `/fig_status` and `/fig_drive`.
 
 ### Track D - Maintainability
 

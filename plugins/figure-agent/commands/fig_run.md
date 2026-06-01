@@ -13,6 +13,7 @@ uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>"
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --no-record
+uv run python3 scripts/fig_run_journal.py <name>
 ```
 
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
@@ -108,10 +109,18 @@ not permission to execute stale state; rerun live `/fig_status` and
 If recording fails after a run, the CLI still prints the public run payload with
 `journal_error` instead of hiding the result behind a traceback.
 
-There is no `--resume` or `--resume-latest` flag. To continue after an
-interruption, inspect `stop.md` only as context, then rerun live `/fig_status`
-or `/fig_drive --dry-run`. Use `/fig_run --execute` again only for the fresh
-driver-selected action.
+There is no executable `--resume` or `--resume-latest` flag. To continue after
+an interruption, inspect `stop.md` only as context, or run:
+
+```bash
+uv run python3 scripts/fig_run_journal.py <name>
+```
+
+That summary is also non-authoritative: it names the latest journal stop,
+required actor, stale fixture evidence, and closeout checks, but it never emits
+a replay command. Continue by rerunning live `/fig_status <name>` and
+`/fig_drive <name> --mode <mode> --goal "<goal>" --dry-run`. Use
+`/fig_run --execute` again only for the fresh driver-selected action.
 
 ### `boundary_handoff`
 
