@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import NamedTuple
 
+import fixture_identity
+
 
 class PublicationGateFailure(NamedTuple):
     code: str
@@ -128,6 +130,7 @@ def publication_compliance_failure_records(
 
 
 def publication_audit_scaffold_text(fixture: str) -> str:
+    fixture_identity.validate_fixture_name(fixture)
     return (
         "# Quality Audit\n\n"
         f"fixture: {fixture}\n\n"
