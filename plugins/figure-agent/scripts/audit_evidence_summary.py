@@ -360,7 +360,20 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
     critique_schema = frontmatter.get("schema")
     critique_schema_value = critique_schema if isinstance(critique_schema, str) else None
     summary = _base_summary(example_dir, critique_schema_value)
-    if critique_schema not in VISUAL_CLASH_ACCOUNTING_SCHEMAS:
+    requires_visual_clash = critique_schema in VISUAL_CLASH_ACCOUNTING_SCHEMAS
+    requires_text_boundary = critique_schema in TEXT_BOUNDARY_ACCOUNTING_SCHEMAS
+    requires_label_path = critique_schema in LABEL_PATH_ACCOUNTING_SCHEMAS
+    requires_undeclared_geometry = critique_schema in UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS
+    requires_crop_audit = critique_schema in CROP_AUDIT_ACCOUNTING_SCHEMAS
+    if not any(
+        (
+            requires_visual_clash,
+            requires_text_boundary,
+            requires_label_path,
+            requires_undeclared_geometry,
+            requires_crop_audit,
+        )
+    ):
         return _finish(
             summary,
             state="legacy",
@@ -369,44 +382,47 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             reason="critique schema predates current audit evidence accounting",
         )
 
-    visual_report, visual_error = _load_json(example_dir / "build" / "visual_clash.json")
-    if visual_error is not None:
-        reason = "missing build/visual_clash.json"
-        if visual_error == "malformed":
-            reason = "malformed build/visual_clash.json"
-        return _finish(
-            summary,
-            state="missing_input",
-            blocking_items=["build/visual_clash.json"],
-            next_action=f"/fig_compile {example_dir.name}",
-            reason=reason,
-        )
+    missing_refs: list[str] = []
+    unknown_refs: list[str] = []
+    if requires_visual_clash:
+        visual_report, visual_error = _load_json(example_dir / "build" / "visual_clash.json")
+        if visual_error is not None:
+            reason = "missing build/visual_clash.json"
+            if visual_error == "malformed":
+                reason = "malformed build/visual_clash.json"
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/visual_clash.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason=reason,
+            )
 
-    candidate_ids, candidate_error = _visual_clash_candidate_ids(visual_report or {})
-    if candidate_error is not None:
-        return _finish(
-            summary,
-            state="missing_input",
-            blocking_items=["build/visual_clash.json"],
-            next_action=f"/fig_compile {example_dir.name}",
-            reason="malformed build/visual_clash.json candidates",
-        )
-    refs = _visual_clash_refs(frontmatter)
-    candidate_id_set = set(candidate_ids)
-    ref_set = set(refs)
-    missing_refs = [candidate_id for candidate_id in candidate_ids if candidate_id not in refs]
-    unknown_refs = sorted(ref for ref in ref_set if ref not in candidate_id_set)
-    summary["visual_clash"] = {
-        "present": True,
-        "candidate_count": len(candidate_ids),
-        "accounted_count": len(ref_set & candidate_id_set),
-        "missing_refs": missing_refs,
-        "unknown_refs": unknown_refs,
-    }
+        candidate_ids, candidate_error = _visual_clash_candidate_ids(visual_report or {})
+        if candidate_error is not None:
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/visual_clash.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason="malformed build/visual_clash.json candidates",
+            )
+        refs = _visual_clash_refs(frontmatter)
+        candidate_id_set = set(candidate_ids)
+        ref_set = set(refs)
+        missing_refs = [candidate_id for candidate_id in candidate_ids if candidate_id not in refs]
+        unknown_refs = sorted(ref for ref in ref_set if ref not in candidate_id_set)
+        summary["visual_clash"] = {
+            "present": True,
+            "candidate_count": len(candidate_ids),
+            "accounted_count": len(ref_set & candidate_id_set),
+            "missing_refs": missing_refs,
+            "unknown_refs": unknown_refs,
+        }
 
     text_missing_refs: list[str] = []
     text_unknown_refs: list[str] = []
-    if critique_schema in TEXT_BOUNDARY_ACCOUNTING_SCHEMAS:
+    if requires_text_boundary:
         text_report, text_error = _load_json(example_dir / "build" / "text_boundary_clash.json")
         if text_error is not None:
             reason = "missing build/text_boundary_clash.json"
@@ -445,7 +461,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
 
     label_path_missing_refs: list[str] = []
     label_path_unknown_refs: list[str] = []
-    if critique_schema in LABEL_PATH_ACCOUNTING_SCHEMAS:
+    if requires_label_path:
         label_report, label_error = _load_json(
             example_dir / "build" / "label_path_proximity.json"
         )
@@ -488,7 +504,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
 
     undeclared_geometry_missing_refs: list[str] = []
     undeclared_geometry_unknown_refs: list[str] = []
-    if critique_schema in UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS:
+    if requires_undeclared_geometry:
         undeclared_report, undeclared_error = _load_json(
             example_dir / "build" / "undeclared_geometry.json"
         )
@@ -533,7 +549,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             "unknown_refs": undeclared_geometry_unknown_refs,
         }
 
-    if critique_schema in CROP_AUDIT_ACCOUNTING_SCHEMAS:
+    if requires_crop_audit:
         manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
         manifest, manifest_error = _load_json(manifest_path)
         if manifest_error is not None:

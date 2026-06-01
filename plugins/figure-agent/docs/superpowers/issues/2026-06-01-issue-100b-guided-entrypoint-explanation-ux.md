@@ -41,6 +41,10 @@ This is explanatory only. It does not authorize mutation, reinterpret
 - host-vision critique boundaries name `host_llm`.
 - human and release boundaries name the appropriate human actor and do not
   expose hidden source, accepted, golden, SVG, or publication mutations.
+- tracked-golden force-golden wording is shown only when the status
+  explanation's first blocker is `export_tracked_golden` or no first blocker is
+  available; other release blockers keep generic accepted/golden/final-artifact
+  guidance.
 - runnable shell/slash recommendations continue to be selected by the existing
   top-level `action` and `safe_command`.
 
@@ -50,6 +54,8 @@ Covered in `tests/test_fig_driver.py` through final-mode tests that assert:
 
 - stale render final mode explains strict compile as a workflow-agent action;
 - tracked-golden final mode explains release-operator force-golden approval;
+- non-golden first blockers do not receive force-golden copy solely because
+  `export_state` is `TRACKED_GOLDEN`;
 - complete final mode explains that no required plugin action remains.
 
 ## Non-Goals

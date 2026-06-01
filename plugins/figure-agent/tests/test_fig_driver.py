@@ -13,6 +13,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
+import fig_driver_guidance  # noqa: E402
 import status as status_mod  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -605,6 +606,29 @@ def test_final_mode_requires_loop_checkpoint_before_complete(
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
     assert summary["final_readiness_profile"]["loop_checkpoint"]["state"] == "needs_action"
     assert summary["final_readiness_profile"]["overall_state"] == "needs_action"
+
+
+def test_operator_guidance_does_not_suggest_force_golden_for_non_golden_first_blocker() -> None:
+    summary = {
+        "fixture": "driver_demo",
+        "action": "release_blocked",
+        "safe_command": None,
+        "stop_boundary": "accepted_or_final_ready_required",
+        "status": {"export_state": "TRACKED_GOLDEN"},
+        "status_explanation": {
+            "first_blocker": {
+                "code": "not_accepted",
+                "category": "human_blocker",
+                "manual": True,
+            }
+        },
+    }
+
+    guidance = fig_driver_guidance.operator_guidance(summary)
+
+    assert guidance["required_actor"] == "release_operator"
+    assert "force-golden" not in guidance["next_step"]
+    assert "accepted" in guidance["next_step"]
 
 
 # --- authoring mode ----------------------------------------------------------

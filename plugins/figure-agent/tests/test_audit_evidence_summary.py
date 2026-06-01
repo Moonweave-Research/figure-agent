@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from audit_evidence_summary import summarize_audit_evidence  # noqa: E402
@@ -220,7 +222,7 @@ def test_summary_reports_legacy_schema_without_current_audit_blocker(tmp_path: P
     fig_dir = tmp_path / "demo_fig"
     _write_critique(
         fig_dir,
-        schema="figure-agent.critique.v1.6",
+        schema="figure-agent.critique.v1.3",
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml="",
     )
@@ -229,7 +231,7 @@ def test_summary_reports_legacy_schema_without_current_audit_blocker(tmp_path: P
 
     assert summary["evaluation_state"] == "legacy"
     assert summary["blocking_items"] == []
-    assert summary["critique_schema"] == "figure-agent.critique.v1.6"
+    assert summary["critique_schema"] == "figure-agent.critique.v1.3"
 
 
 def test_summary_reports_missing_visual_clash_report_for_current_schema(
@@ -342,6 +344,35 @@ def test_summary_reports_missing_undeclared_geometry_report_for_v1_17(
     assert summary["evaluation_state"] == "missing_input"
     assert summary["blocking_items"] == ["build/undeclared_geometry.json"]
     assert summary["next_action"] == "/fig_compile demo_fig"
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        "figure-agent.critique.v1.4",
+        "figure-agent.critique.v1.5",
+        "figure-agent.critique.v1.6",
+    ),
+)
+def test_summary_surfaces_undeclared_geometry_before_visual_clash_accounting(
+    tmp_path: Path,
+    schema: str,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_undeclared_geometry_report(fig_dir, ("UG001",))
+    _write_critique(
+        fig_dir,
+        schema=schema,
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml="",
+    )
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "needs_action"
+    assert summary["blocking_items"] == ["UG001"]
+    assert summary["undeclared_geometry"]["candidate_count"] == 1
+    assert summary["undeclared_geometry"]["missing_refs"] == ["UG001"]
 
 
 def test_summary_reports_malformed_undeclared_geometry_report(tmp_path: Path) -> None:

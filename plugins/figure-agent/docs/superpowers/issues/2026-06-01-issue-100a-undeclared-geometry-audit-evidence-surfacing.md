@@ -63,6 +63,8 @@ Added coverage in `tests/test_audit_evidence_summary.py` for:
 - unknown undeclared-geometry reference;
 - fully accounted candidate;
 - zero-candidate report.
+- v1.4-v1.6 undeclared-only critiques surface undeclared-geometry blockers even
+  though they predate visual-clash accounting.
 
 Existing audit evidence tests were updated so fixture helpers generate the
 current compile contract's empty `build/undeclared_geometry.json` by default.

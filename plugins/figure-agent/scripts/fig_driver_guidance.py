@@ -62,6 +62,17 @@ def _operator_state(action: Any, stop_boundary: Any, actor: str) -> str:
     return "next_action"
 
 
+def _first_blocker_code(summary: dict[str, Any]) -> str | None:
+    status_explanation = summary.get("status_explanation")
+    if not isinstance(status_explanation, dict):
+        return None
+    first_blocker = status_explanation.get("first_blocker")
+    if not isinstance(first_blocker, dict):
+        return None
+    code = first_blocker.get("code")
+    return code if isinstance(code, str) and code else None
+
+
 def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
     fixture = str(summary.get("fixture") or "<name>")
     action = summary.get("action")
@@ -74,7 +85,12 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
         if command.startswith("FIGURE_AGENT_STRICT=1 "):
             return f"Run strict compile final check: `{command}`."
         return f"Run the selected command: `{command}`."
-    if action == ACTION_RELEASE_BLOCKED and export_state == "TRACKED_GOLDEN":
+    first_blocker_code = _first_blocker_code(summary)
+    if (
+        action == ACTION_RELEASE_BLOCKED
+        and export_state == "TRACKED_GOLDEN"
+        and first_blocker_code in {None, "export_tracked_golden"}
+    ):
         return (
             "Human release operator must decide whether to roll forward the "
             f"tracked golden export with `/fig_export {fixture} --force-golden`."
