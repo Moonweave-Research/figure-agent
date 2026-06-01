@@ -131,6 +131,26 @@ def test_reference_aesthetic_metrics_records_missing_reference_as_skipped(
     assert result["comparisons"] == []
 
 
+def test_reference_aesthetic_metrics_summary_reports_unsafe_reference_path_invalid(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    pack_path = example_dir / "critique_reference_pack.yaml"
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8").replace(
+            "path: reference/style.png",
+            "path: ../outside.png",
+        ),
+        encoding="utf-8",
+    )
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "invalid"
+    assert "path" in summary["reason"]
+
+
 def test_reference_aesthetic_metrics_detects_silhouette_difference(tmp_path: Path) -> None:
     example_dir = _write_base_fixture(tmp_path)
     build = Image.new("RGB", (80, 60), "white")
