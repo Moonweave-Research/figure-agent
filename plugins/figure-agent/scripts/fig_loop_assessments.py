@@ -164,13 +164,23 @@ def external_vision_review_summary(example_dir: Path) -> dict[str, Any] | None:
         f"{item['external_finding_id']} vs {item['host_finding_id']}"
         for item in conflicts
     ]
+    findings = review.get("findings")
+    active_findings = []
+    if isinstance(findings, list):
+        active_findings = [
+            f"{item['id']}:{item['severity']}"
+            for item in findings
+            if isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and isinstance(item.get("severity"), str)
+            and item.get("suggested_action") != "accept_simplification"
+        ]
     if freshness["state"] != "fresh":
         evaluation_state = freshness["state"]
-    elif active_conflicts:
+    elif active_conflicts or active_findings:
         evaluation_state = "needs_human"
     else:
         evaluation_state = "passed"
-    findings = review.get("findings")
     finding_count = len(findings) if isinstance(findings, list) else 0
     return {
         "source": "external_vision_review.yaml",
@@ -178,6 +188,8 @@ def external_vision_review_summary(example_dir: Path) -> dict[str, Any] | None:
         "reviewer": review.get("reviewer"),
         "confidence": review.get("confidence"),
         "finding_count": finding_count,
+        "unresolved_finding_count": len(active_findings),
+        "active_findings": active_findings,
         "conflict_count": len(active_conflicts),
         "active_conflicts": active_conflicts,
         "freshness": freshness,

@@ -225,6 +225,48 @@ def test_external_vision_review_summary_marks_conflicts_needs_human(
     assert summary["active_conflicts"] == ["EV001 vs C001"]
 
 
+def test_external_vision_review_summary_gates_unresolved_major_findings(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+    _write_review(example_dir, conflict=False)
+
+    summary = external_vision_review_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["unresolved_finding_count"] == 1
+    assert summary["active_findings"] == ["EV001:MAJOR"]
+
+
+def test_external_vision_review_summary_accept_simplification_findings_pass(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nexternal_vision_review: true\n",
+        encoding="utf-8",
+    )
+    _write_review(
+        example_dir,
+        conflict=False,
+        suggested_action="accept_simplification",
+    )
+
+    summary = external_vision_review_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "passed"
+    assert summary["unresolved_finding_count"] == 0
+    assert summary["active_findings"] == []
+
+
 def test_external_vision_review_summary_marks_stale_review(
     tmp_path: Path,
 ) -> None:
