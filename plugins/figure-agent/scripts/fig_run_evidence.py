@@ -133,12 +133,15 @@ def _critique_manifest_paths(repo_root: Path, example_dir: Path, name: str) -> t
     spec = _load_spec_mapping(example_dir)
     if spec is None:
         return ()
-    return critique_manifest_paths(
-        example_dir,
-        name,
-        spec,
-        style_lock_path=repo_root / "styles" / "polymer-paper-preamble.sty",
-    )
+    try:
+        return critique_manifest_paths(
+            example_dir,
+            name,
+            spec,
+            style_lock_path=repo_root / "styles" / "polymer-paper-preamble.sty",
+        )
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return ()
 
 
 def _declared_context_paths(example_dir: Path) -> tuple[Path, ...]:

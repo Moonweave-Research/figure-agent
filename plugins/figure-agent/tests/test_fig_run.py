@@ -1360,6 +1360,59 @@ def test_main_records_non_authoritative_run_journal(
     assert "Required actor: host_llm" in stop_text
 
 
+def test_main_records_run_journal_when_spec_shape_is_malformed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    example_dir = tmp_path / "examples" / "runner_demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "runner_demo.tex").write_text("% source\n", encoding="utf-8")
+    (example_dir / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text(
+        "name: runner_demo\npanels:\n  - malformed panel entry\n",
+        encoding="utf-8",
+    )
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+    runs_root = tmp_path / "fig-run-runs"
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--record",
+            "--runs-root",
+            str(runs_root),
+        ],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    manifest_path = Path(payload["journal"]["manifest_path"])
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["evidence_snapshot"]["schema"] == (
+        "figure-agent.fig-run-evidence-snapshot.v1"
+    )
+    assert {
+        item["path"] for item in manifest["evidence_snapshot"]["items"]
+    } >= {
+        "examples/runner_demo/runner_demo.tex",
+        "examples/runner_demo/briefing.md",
+        "examples/runner_demo/spec.yaml",
+    }
+
+
 def test_main_plan_only_does_not_record_by_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
