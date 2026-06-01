@@ -1,6 +1,6 @@
 # Issue 100J - Resumable Guided Run Checkpoint
 
-Status: implemented on branch `codex/issue100j-run-journal-summary`
+Status: completed on main in commit `12c66c2`; merged by `8b0ff98`
 
 Type: operator UX, run journal safety, long-session continuation
 

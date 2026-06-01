@@ -1,6 +1,6 @@
 # Issue 100H/I - Schema Capability Matrix and Module Ownership Map
 
-Status: implemented on branch `codex/issue100hi-schema-module-map`
+Status: completed on main in commit `d3ccf37`; merged by `200910c`
 
 Type: maintainability, schema governance, module ownership
 

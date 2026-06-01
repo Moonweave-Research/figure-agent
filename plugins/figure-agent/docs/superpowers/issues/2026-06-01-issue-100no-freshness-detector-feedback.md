@@ -1,6 +1,6 @@
 # Issue 100N/O - Freshness Diagnostics and Detector Feedback
 
-Status: implemented on branch `codex/issue100no-freshness-detector-feedback`
+Status: completed on main in commit `d50da39`; merged by `5a51be3`
 
 Type: operator UX, freshness explainability, detector feedback
 

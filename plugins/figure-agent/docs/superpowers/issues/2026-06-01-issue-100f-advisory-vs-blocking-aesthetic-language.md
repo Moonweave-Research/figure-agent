@@ -1,7 +1,6 @@
 # Issue 100F - Advisory-Vs-Blocking Aesthetic Language
 
-Status: implemented on branch `codex/issue100f-aesthetic-language`; verified and
-pending commit
+Status: completed on main in commit `52855e1`
 
 Depends on:
 
