@@ -148,6 +148,20 @@ def test_readme_documents_plugin_package_audit() -> None:
     assert "~/.claude/plugins/cache/" in readme
 
 
+def test_docs_explain_external_review_findings_are_human_gates() -> None:
+    docs_by_path = {
+        "README.md": (REPO_ROOT / "README.md").read_text(),
+        "commands/fig_critique.md": (
+            REPO_ROOT / "commands" / "fig_critique.md"
+        ).read_text(),
+    }
+
+    for doc_path, text in docs_by_path.items():
+        assert "external_vision_review.yaml" in text, doc_path
+        assert "unresolved findings" in text, doc_path
+        assert "human gate" in text, doc_path
+
+
 def test_fig_queue_docs_cover_all_driver_modes() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
 
