@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import yaml
 from aesthetic_intent import DENSITIES, SEVERITIES, TARGET_JOURNALS, VISUAL_MATURITIES
 
@@ -73,6 +74,17 @@ def _require_safe_id(data: dict[str, Any], key: str, *, label: str) -> str:
             f"{label}.{key} must be a safe id: start with an ASCII letter or number, "
             "then use only ASCII letters, numbers, _, ., and -"
         )
+    return value
+
+
+def _require_safe_fixture_name(data: dict[str, Any], key: str, *, label: str) -> str:
+    value = _require_string(data, key, label=label)
+    try:
+        fixture_identity.validate_fixture_name(value)
+    except ValueError as exc:
+        raise PaperAestheticContextError(
+            f"{label}.{key} must be a safe fixture name: {exc}"
+        ) from exc
     return value
 
 
@@ -198,7 +210,7 @@ def _validate_figure_roles(data: dict[str, Any], shared_ids: set[str]) -> None:
     )
     for index, item in enumerate(roles):
         label = f"paper_aesthetic_context.figure_roles[{index}]"
-        _require_string(item, "fixture", label=label)
+        _require_safe_fixture_name(item, "fixture", label=label)
         _require_enum(item, "role", _FIGURE_ROLES, label=label)
         must_align_with = _string_items(item, "must_align_with", label=label)
         unknown = sorted(set(must_align_with) - shared_ids)
@@ -310,8 +322,10 @@ def paper_aesthetic_context_template(
             "paper_id must be a safe id: start with an ASCII letter or number, "
             "then use only ASCII letters, numbers, _, ., and -"
         )
-    if not isinstance(fixture, str) or not fixture.strip():
-        raise PaperAestheticContextError("fixture must be a non-empty string")
+    try:
+        fixture_identity.validate_fixture_name(fixture)
+    except ValueError as exc:
+        raise PaperAestheticContextError(f"fixture must be a safe fixture name: {exc}") from exc
     if target_journal not in TARGET_JOURNALS:
         raise PaperAestheticContextError("target_journal is not supported")
     if visual_maturity not in VISUAL_MATURITIES:

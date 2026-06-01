@@ -192,6 +192,35 @@ def test_paper_aesthetic_context_template_cli_rejects_missing_examples_dir(
     assert not missing_examples.exists()
 
 
+def test_paper_aesthetic_context_template_cli_rejects_unsafe_fixture(
+    tmp_path: Path,
+) -> None:
+    examples_dir = tmp_path / "examples"
+    examples_dir.mkdir()
+    script = Path(__file__).resolve().parents[1] / "scripts" / "paper_aesthetic_context.py"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--template",
+            "paper-demo",
+            "--fixture",
+            "../outside",
+            "--examples-dir",
+            str(examples_dir),
+            "--write-template",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "fixture must be a safe fixture name" in result.stderr
+    assert not (examples_dir / "_paper_aesthetic_contexts" / "paper-demo.yaml").exists()
+
+
 def test_load_paper_aesthetic_context_rejects_unsafe_paper_id(tmp_path: Path) -> None:
     example_dir = _example_dir(tmp_path)
     path = _write_pack(example_dir)
@@ -221,6 +250,26 @@ def test_load_paper_aesthetic_context_rejects_hidden_file_style_id(
     )
 
     with pytest.raises(paper_aesthetic_context.PaperAestheticContextError, match="safe id"):
+        paper_aesthetic_context.load_paper_aesthetic_context(path)
+
+
+def test_load_paper_aesthetic_context_rejects_unsafe_figure_role_fixture(
+    tmp_path: Path,
+) -> None:
+    example_dir = _example_dir(tmp_path)
+    path = _write_pack(example_dir)
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "fixture: fig1_demo",
+            "fixture: ../outside",
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        paper_aesthetic_context.PaperAestheticContextError,
+        match="fixture must be a safe fixture name",
+    ):
         paper_aesthetic_context.load_paper_aesthetic_context(path)
 
 
