@@ -294,7 +294,32 @@ def _blocking_reason(
     return reason
 
 
+def _basin_summary(summary: dict[str, Any]) -> dict[str, Any] | None:
+    loop_checkpoint = summary.get("loop_checkpoint")
+    if not isinstance(loop_checkpoint, dict):
+        return None
+    basin = loop_checkpoint.get("basin_summary")
+    if not isinstance(basin, dict) or basin.get("evaluation_state") != "basin_detected":
+        return None
+    return basin
+
+
 def _closeout_checks(final_stop_reason: str, summary: dict[str, Any]) -> list[str]:
+    basin = _basin_summary(summary)
+    if basin is not None:
+        actions = basin.get("recommended_step_out_actions")
+        checks = (
+            [item for item in actions if isinstance(item, str) and item]
+            if isinstance(actions, list)
+            else []
+        )
+        checks.extend(
+            [
+                "rerun live /fig_loop after step-out decision is recorded",
+                "rerun live /fig_drive",
+            ]
+        )
+        return checks
     if final_stop_reason == STOP_COMMAND_FAILED:
         return ["inspect command stderr_tail", "rerun live /fig_status"]
     if final_stop_reason in {STOP_MAX_STEPS, STOP_REPEATED_ACTION}:
@@ -399,6 +424,9 @@ def _boundary_handoff(
                 ],
             }
         )
+    basin = _basin_summary(summary)
+    if basin is not None:
+        handoff["basin_summary"] = basin
     return handoff
 
 

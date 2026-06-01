@@ -208,6 +208,10 @@ The driver translates loop evidence as follows:
   `ambiguous_patch_selection`.
 - `human_gate_required` or `escalation_level: human_review_required` ->
   `human_gate_stop` / `human_gate_required`.
+- `basin_detected` with `basin_summary` ->
+  `human_gate_stop` / `human_gate_required`, with the repeated signal and
+  history count named in `reason`. This is a step-out boundary, not a request
+  for another blind local patch.
 - `top_tier_audit_summary` with any `fail`, `needs_human`, or positive
   `blocking_high_impact_count` -> `human_gate_stop` /
   `human_gate_required`. This takes priority over export or golden

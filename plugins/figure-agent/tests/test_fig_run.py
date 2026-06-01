@@ -1069,6 +1069,63 @@ def test_stops_after_repeated_executable_command_without_progress(
     assert "command" not in handoff["continuation_guidance"]
 
 
+def test_basin_detected_handoff_preserves_step_out_actions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    summary = _driver_summary(
+        action=fig_driver.ACTION_HUMAN_GATE_STOP,
+        safe_command=None,
+        stop_boundary=fig_driver.STOP_HUMAN_GATE,
+        reason="latest /fig_loop checkpoint reports repeated loop basin.",
+    )
+    summary["loop_checkpoint"] = {
+        "final_stop_reason": "basin_detected",
+        "basin_summary": {
+            "schema": "figure-agent.loop-basin.v1",
+            "evaluation_state": "basin_detected",
+            "history_count": 3,
+            "signal": {
+                "signal_class": "reference_aesthetic_metric",
+                "signal_value": "palette_histogram_distance",
+                "signal_key": "reference_aesthetic_metric:palette_histogram_distance",
+                "source": "reference_aesthetic_metrics_summary",
+            },
+            "recommended_step_out_actions": [
+                "run external second-opinion review on the repeated issue",
+                "revise reference-learning contract if reference style conflicts with intent",
+            ],
+        },
+    }
+    summary["next_action_summary"] = {
+        "action": fig_driver.ACTION_HUMAN_GATE_STOP,
+        "safe_command": None,
+        "evidence_refs": ["loop.final_stop_reason:basin_detected"],
+    }
+    _install_driver_sequence(monkeypatch, [summary])
+
+    payload = fig_run.run_workflow(
+        "runner_demo",
+        mode="review",
+        goal="close loop",
+        execute=True,
+        repo_root=tmp_path,
+    )
+
+    assert payload["final_stop_reason"] == fig_run.STOP_NOT_EXECUTABLE
+    handoff = payload["boundary_handoff"]
+    assert handoff["required_actor"] == "human"
+    assert handoff["basin_summary"] == summary["loop_checkpoint"]["basin_summary"]
+    assert handoff["closeout_checks"][:2] == [
+        "run external second-opinion review on the repeated issue",
+        "revise reference-learning contract if reference style conflicts with intent",
+    ]
+    assert any(
+        check.startswith("rerun live /fig_loop")
+        for check in handoff["closeout_checks"]
+    )
+    assert "loop.final_stop_reason:basin_detected" in handoff["evidence_refs"]
+
+
 def test_release_blocked_handoff_requires_release_operator(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

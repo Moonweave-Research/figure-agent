@@ -176,6 +176,14 @@ If `/fig_run` previously recorded a `.scratch/fig-run-runs/` journal, treat it
 only as context. `/fig_loop` state still comes from live status and its own
 `.scratch/fig-loop-runs/` checkpoint records.
 
+`/fig_loop` also records `basin_summary` when current evidence repeats the same
+patch target, aesthetic bottleneck, or severe reference-aesthetic metric across
+fresh loop history. A basin changes the loop stop to `basin_detected`, clears
+the active patch target, and asks the operator to step out for human or
+second-opinion review before another local patch cycle. The detector is
+read-only and ignores stale loop history whose render/critique freshness no
+longer matches the current state.
+
 ## Final-Artifact Surfacing
 
 When a fixture declares `spec.yaml.final_artifact.kind: polished_svg`,

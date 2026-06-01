@@ -88,6 +88,7 @@ def _write_loop_run(
     crop_audit_summary: dict[str, Any] | None = None,
     aesthetic_lever_summary: dict[str, Any] | None = None,
     journal_art_direction_playbook_summary: dict[str, Any] | None = None,
+    basin_summary: dict[str, Any] | None = None,
     fixture_name: str | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-loop-runs" / run_id
@@ -122,6 +123,8 @@ def _write_loop_run(
         iteration["journal_art_direction_playbook_summary"] = (
             journal_art_direction_playbook_summary
         )
+    if basin_summary is not None:
+        iteration["basin_summary"] = basin_summary
     manifest_path = run_dir / "run_manifest.json"
     iteration_path = run_dir / "iteration_001.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -1049,6 +1052,48 @@ def test_review_mode_surfaces_latest_loop_human_gate(
     assert summary["action"] == "human_gate_stop"
     assert summary["stop_boundary"] == "human_gate_required"
     assert summary["safe_command"] is None
+
+
+def test_review_mode_surfaces_latest_basin_checkpoint_as_step_out_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+    basin_summary = {
+        "schema": "figure-agent.loop-basin.v1",
+        "evaluation_state": "basin_detected",
+        "threshold": 3,
+        "history_count": 4,
+        "signal": {
+            "signal_class": "patch_target",
+            "signal_value": "C001",
+            "signal_key": "patch_target:C001",
+            "source": "active_patch_target",
+        },
+        "recommended_step_out_actions": [
+            "run external second-opinion review on the repeated issue",
+            "request human art-direction review before another local patch",
+        ],
+        "next_action": "step out of the local polish loop",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="basin_detected",
+        escalation_level="human_review_required",
+        recommended_next_action="step out of the local polish loop",
+        basin_summary=basin_summary,
+    )
+
+    summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["stop_boundary"] == "human_gate_required"
+    assert summary["safe_command"] is None
+    assert summary["loop_checkpoint"]["basin_summary"] == basin_summary
+    assert "repeated loop basin" in summary["reason"]
+    assert "patch_target=C001" in summary["reason"]
+    assert "4 times" in summary["reason"]
 
 
 def test_review_mode_completes_after_latest_clean_loop_checkpoint(

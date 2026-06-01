@@ -362,6 +362,27 @@ def _loop_checkpoint_review_blocker(
     loop_action = loop_checkpoint.get("recommended_next_action")
     patch_handoff = loop_checkpoint.get("patch_handoff")
     escalation = loop_checkpoint.get("escalation_level")
+    basin = loop_checkpoint.get("basin_summary")
+    if loop_stop == "basin_detected" and isinstance(basin, dict):
+        signal = basin.get("signal")
+        signal_text = "unknown repeated signal"
+        if isinstance(signal, dict):
+            signal_class = signal.get("signal_class")
+            signal_value = signal.get("signal_value")
+            if isinstance(signal_class, str) and isinstance(signal_value, str):
+                signal_text = f"{signal_class}={signal_value}"
+        history_count = basin.get("history_count")
+        count_text = f"{history_count} times" if isinstance(history_count, int) else "repeatedly"
+        return {
+            "action": ACTION_HUMAN_GATE_STOP,
+            "safe_command": None,
+            "stop_boundary": STOP_HUMAN_GATE,
+            "reason": (
+                "latest /fig_loop checkpoint reports repeated loop basin: "
+                f"{signal_text} appeared {count_text}; step out before another "
+                "local patch loop."
+            ),
+        }
     if loop_stop in {"patch_target_recommended", "active_subregion_recommended"}:
         if isinstance(patch_handoff, dict):
             target = patch_handoff.get("target_id") or patch_handoff.get("patch_target")

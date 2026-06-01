@@ -134,6 +134,13 @@ Fields:
 | `closeout_checks` | checks to perform after the required actor acts |
 | `continuation_guidance` | always says to rerun live status and driver state first |
 
+When the final driver summary came from a `/fig_loop` `basin_detected`
+checkpoint, `boundary_handoff` also includes `basin_summary` and its
+`closeout_checks` begin with the basin's `recommended_step_out_actions`. Treat
+this as a signal to leave the local patch loop for second-opinion review,
+human art-direction/domain review, or reference/briefing contract repair before
+rerunning live `/fig_loop` and `/fig_drive`.
+
 `boundary_handoff.continuation_guidance` intentionally does not contain an
 executable resume command. Resume/replay behavior is out of scope for
 `/fig_run`.

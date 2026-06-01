@@ -52,6 +52,9 @@ def _read_loop_checkpoint(run_dir: Path, name: str) -> dict[str, Any] | None:
     journal_playbook_summary = iteration.get("journal_art_direction_playbook_summary")
     if isinstance(journal_playbook_summary, dict):
         checkpoint["journal_art_direction_playbook_summary"] = journal_playbook_summary
+    basin_summary = iteration.get("basin_summary")
+    if isinstance(basin_summary, dict):
+        checkpoint["basin_summary"] = basin_summary
     return checkpoint
 
 

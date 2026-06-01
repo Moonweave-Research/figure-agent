@@ -133,9 +133,11 @@ the workflow together.
 ### Track C - Reduce Long-Session Friction
 
 7. **Issue 100G - repeated-defect basin detector**
-   Add history-aware detection for repeated stop boundaries or repeated defect
-   classes across run journals. Route to step-out review instead of allowing
-   silent loop cycling.
+   Implemented on branch `codex/issue100g-basin-detector`. Existing
+   `fig_loop_basin.py` history detection now stays visible through
+   `/fig_drive.loop_checkpoint` and `/fig_run.boundary_handoff`: basin stops
+   name the repeated signal, preserve `basin_summary`, and begin closeout with
+   step-out actions instead of flattening into a generic human gate.
 
 8. **Issue 100R - diagnostic artifact provenance rule**
    Make it hard to confuse old scratch/debug crops with current manifest-bound
