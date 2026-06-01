@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; P0/P1 implemented, P2/P3 hardening continuing
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100V, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
