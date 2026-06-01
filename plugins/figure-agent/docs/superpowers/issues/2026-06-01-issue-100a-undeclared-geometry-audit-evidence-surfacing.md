@@ -1,6 +1,6 @@
 # Issue 100A - Undeclared Geometry Audit Evidence Surfacing
 
-Status: completed on branch `codex/issue100-evidence-surfacing`
+Status: completed; merged to main
 
 Type: audit evidence parity, operator UX, status/driver consistency
 
