@@ -20,8 +20,8 @@ from svg_polish_recipe import (  # noqa: E402
 )
 
 
-def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
-    fig_dir = tmp_path / "examples" / name
+def _make_fixture_at(root: Path, name: str = "demo_fig") -> Path:
+    fig_dir = root / name
     (fig_dir / "exports").mkdir(parents=True)
     (fig_dir / "polish").mkdir()
     (fig_dir / "exports" / f"{name}.svg").write_text(
@@ -45,8 +45,13 @@ def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
     return fig_dir
 
 
-def _recipe(fig_dir: Path, operations: list[dict]) -> dict:
+def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> Path:
+    return _make_fixture_at(tmp_path / "examples", name)
+
+
+def _recipe(fig_dir: Path, operations: list[dict], *, base_dir: Path | None = None) -> dict:
     name = fig_dir.name
+    base_dir = base_dir or fig_dir.parent.parent
     return {
         "schema": "figure-agent.svg-polish-recipe.v1",
         "fixture": name,
@@ -56,7 +61,7 @@ def _recipe(fig_dir: Path, operations: list[dict]) -> dict:
             fig_dir,
             name,
             source_svg=f"exports/{name}.svg",
-            base_dir=fig_dir.parent.parent,
+            base_dir=base_dir,
         ),
         "operations": operations,
     }
@@ -79,9 +84,11 @@ def _operation(
     }
 
 
-def _write_recipe(fig_dir: Path, operations: list[dict]) -> Path:
+def _write_recipe(
+    fig_dir: Path, operations: list[dict], *, base_dir: Path | None = None
+) -> Path:
     recipe_path = fig_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
-    write_svg_polish_recipe(recipe_path, _recipe(fig_dir, operations))
+    write_svg_polish_recipe(recipe_path, _recipe(fig_dir, operations, base_dir=base_dir))
     return recipe_path
 
 
@@ -354,3 +361,57 @@ def test_cli_write_accepts_relative_example_dir(
 
     assert exit_code == 0
     assert (fig_dir / "polish" / "demo_fig.polished.svg").is_file()
+
+
+def test_cli_write_rejects_parent_relative_fixture_before_writing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _make_fixture_at(tmp_path, "outside")
+    _write_recipe(
+        outside_dir,
+        [
+            _operation(
+                "R001",
+                selector={"kind": "element_id", "value": "label-a"},
+                action={"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
+            )
+        ],
+        base_dir=tmp_path,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(["examples/../outside", "--write", "--base-dir", str(tmp_path)])
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not (outside_dir / "polish" / "outside.polished.svg").exists()
+
+
+def test_cli_write_rejects_existing_relative_dir_outside_examples(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir = _make_fixture_at(tmp_path, "outside")
+    _write_recipe(
+        outside_dir,
+        [
+            _operation(
+                "R001",
+                selector={"kind": "element_id", "value": "label-a"},
+                action={"type": "translate", "dx": 1.0, "dy": -1.5, "unit": "px"},
+            )
+        ],
+        base_dir=tmp_path,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(["outside", "--write", "--base-dir", str(tmp_path)])
+
+    assert exit_code == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+    assert not (outside_dir / "polish" / "outside.polished.svg").exists()

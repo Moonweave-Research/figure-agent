@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BK, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BL, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BK SVG polish handoff CLI fixture path boundary;
+- branch baseline: `main` after Issue 100BL SVG polish executor CLI fixture path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -121,6 +121,7 @@ the workflow together.
 | G100-56 | P1 | Critique brief CLI fixture path boundary | `critique_brief.py` accepted `examples/../outside` and emitted a full host-vision critique brief for the normalized outside directory. | TDD reproduced the CLI printing a complete `# Critique brief` and audit crop list for `examples/../review_demo`. | The host-vision entrypoint must not make an escaped path look like the intended `/fig_critique <name>` target. | Issue 100BI - critique brief CLI fixture path boundary |
 | G100-57 | P1 | Status CLI fixture path boundary | `status.py` accepted `examples/../outside` and printed a normal stage/state summary for the normalized outside directory. | TDD reproduced `/fig_status` equivalent output `outside — stage 1/4` for `examples/../outside`. | The canonical first workflow check must not make an escaped path look like normal fixture state. | Issue 100BJ - status CLI fixture path boundary |
 | G100-58 | P1 | SVG polish handoff write path boundary | `svg_polish_handoff.py --write` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/svg_polish_audit.md` plus `polish/svg_polish_manifest.yaml` there. | TDD reproduced exit code 0 and both handoff files written for traversal-like and existing outside-relative CLI paths. | A final-artifact handoff writer must reject unsafe fixture syntax before writing audit/manifest state outside declared examples. | Issue 100BK - SVG polish handoff CLI fixture path boundary |
+| G100-59 | P1 | SVG polish executor write path boundary | `svg_polish_executor.py --write` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/<name>.polished.svg` there. | TDD reproduced exit code 0 and an outside polished SVG write for traversal-like and existing outside-relative CLI paths. | The recipe executor is the direct SVG mutation step, so it must reject unsafe fixture syntax before applying recipe operations or writing polished SVG output. | Issue 100BL - SVG polish executor CLI fixture path boundary |
 
 ## Recommended Execution Order
 
@@ -523,6 +524,15 @@ the workflow together.
     existing outside-relative paths fail with a controlled `invalid fixture path`
     error before `polish/svg_polish_audit.md` or
     `polish/svg_polish_manifest.yaml` can be written.
+
+61. **Issue 100BL - SVG polish executor CLI fixture path boundary**
+    Completed as direct SVG-mutation safety hardening. `svg_polish_executor.py`
+    now validates CLI fixture input before dry-run planning or `--write`:
+    fixture names resolve under `examples/<name>`, `examples/<name>` remains
+    valid, and explicit absolute paths remain valid. Traversal-like, nested, or
+    existing outside-relative paths fail with a controlled `invalid fixture path`
+    error before the recipe can be loaded or `polish/<name>.polished.svg` can be
+    written.
 
 ## Non-Goals
 
