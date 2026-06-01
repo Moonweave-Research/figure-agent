@@ -1,6 +1,6 @@
 # Issue 50 - Real Fixture State Sweep
 
-**Status:** implemented on branch `codex/issue50-real-fixture-state-sweep`
+**Status:** completed on main
 **Builds on:** v0.7.1 release docs sync and Issue 48 SVG polish readiness
 
 ## Problem

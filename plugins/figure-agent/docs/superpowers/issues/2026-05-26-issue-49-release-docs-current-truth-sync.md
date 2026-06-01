@@ -1,6 +1,6 @@
 # Issue 49 - Release Docs Current-Truth Sync
 
-**Status:** implemented on branch `codex/issue49-release-docs-sync`
+**Status:** completed on main
 **Builds on:** v0.7.0 release and Issue 48 SVG polish promotion readiness
 
 ## Problem

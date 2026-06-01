@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AA, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AB, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -85,6 +85,7 @@ the workflow together.
 | G100-20 | P2 | Host/subagent evidence trace | Crop accounting says what the critique claims to have inspected, but there is no durable transcript-level read log for subagent-host inspection. | Milestones often record manual Read counts, but the plugin contract stores crop audit results rather than the viewer transcript. | Independent review of "did the host actually inspect this?" still relies on session prose. | Issue 100T - optional inspection transcript artifact |
 | G100-21 | P2 | Human-decision preservation | `scaffold --force` and re-adjudication flows can be correct but still risky if operators do not see which human decisions were preserved, dropped, or rebound. | Sync paths exist, but force-scaffold remains a sharp tool in real workflows. | Human rationale can be accidentally flattened during freshness repair. | Issue 100U - adjudication decision diff preview |
 | G100-22 | P2 | Command surface drift | Command docs can be added without the README Core commands list naming the command. | `/fig_closeout` and `/fig_e2e_smoke` had command docs, but the README Core commands list omitted them. | Operators can miss important workflow and smoke-test commands even after reading the main README. | Issue 100AA - command surface drift guard |
+| G100-23 | P3 | Stale issue status headers | Completed issue docs can still claim implementation is only in a branch or working tree after merge. | Issues 16A, 44, 49, and 50 had stale branch/working-tree status headers. | Future operators can misroute already-mainline work as unfinished branch work. | Issue 100AB - stale issue status guard |
 
 ## Recommended Execution Order
 
@@ -233,28 +234,34 @@ the workflow together.
     and `/fig_e2e_smoke`, and `tests/test_release_contract.py` fails when a new
     command doc is added without README command-surface review.
 
-21. **Issue 100P - stale issue status sweep**
+21. **Issue 100AB - stale issue status guard**
+    Implemented as a broader release-contract documentation guard. Completed
+    issue headers may no longer claim `implemented on branch` or
+    `implemented in working tree`; Issues 16A, 44, 49, and 50 were normalized to
+    mainline truth.
+
+22. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-22. **Issue 100T/U - evidence trace and human-decision diff**
+23. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-23. **Issue 100Q - critique entity consistency lint**
+24. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-24. **Issue 100S - final strict profile and warning budgets**
+25. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
