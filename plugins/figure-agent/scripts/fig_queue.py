@@ -60,6 +60,17 @@ def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
     )
 
 
+def _is_safe_fixture_name(name: str) -> bool:
+    relative = Path(name)
+    return (
+        isinstance(name, str)
+        and bool(name.strip())
+        and not relative.is_absolute()
+        and len(relative.parts) == 1
+        and ".." not in relative.parts
+    )
+
+
 def _first_blocker(summary: dict[str, Any]) -> str | None:
     status_explanation = summary.get("status_explanation")
     if not isinstance(status_explanation, dict):
@@ -403,6 +414,16 @@ def build_queue(
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for name in _fixture_names(repo_root, fixtures):
+        if not _is_safe_fixture_name(name):
+            rows.append(
+                _error_row(
+                    name,
+                    mode=mode,
+                    stop_boundary="unsafe_fixture_name",
+                    error="fixture name must be a single examples/<name> directory name",
+                )
+            )
+            continue
         example_dir = repo_root / "examples" / name
         if not example_dir.is_dir():
             rows.append(

@@ -292,6 +292,55 @@ def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
     ]
 
 
+def test_build_queue_rejects_unsafe_fixture_name_before_driver(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (tmp_path / "examples").mkdir()
+    (outside / "spec.yaml").write_text("name: outside\n", encoding="utf-8")
+    calls: list[str] = []
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        calls.append(name)
+        raise AssertionError("unsafe fixture name reached driver")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=["../outside"],
+        include_command_plan=True,
+    )
+
+    assert calls == []
+    assert queue["rows"] == [
+        {
+            "fixture": "../outside",
+            "mode": "review",
+            "action": "error",
+            "stop_boundary": "unsafe_fixture_name",
+            "first_blocker": "unsafe_fixture_name",
+            "safe_command": None,
+            "render_state": None,
+            "critique_state": None,
+            "export_state": None,
+            "acceptance_state": None,
+            "publication_gate_state": None,
+            "release_ready": None,
+            "required_actor": "workflow_agent",
+            "blocking_source": "unsafe_fixture_name",
+            "requires_human": False,
+            "error": "fixture name must be a single examples/<name> directory name",
+        }
+    ]
+    assert queue["command_plan"]["blocked"][0]["reason"] == (
+        "stop_boundary:unsafe_fixture_name"
+    )
+
+
 def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]) -> None:
     queue = {
         "schema": "figure-agent.fixture-driver-queue.v1",
