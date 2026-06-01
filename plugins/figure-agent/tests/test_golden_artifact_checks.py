@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -558,6 +559,36 @@ def test_check_example_no_require_accepted_overrides_auto_escalate(tmp_path: Pat
     failures = check_example(fixture, require_accepted=False)
 
     assert failures == []
+
+
+@pytest.mark.parametrize("unsafe_arg", ["examples/../outside", "outside"])
+def test_cli_rejects_traversal_or_outside_relative_fixture_path(
+    tmp_path: Path,
+    unsafe_arg: str,
+) -> None:
+    (tmp_path / "examples").mkdir()
+    fixture = tmp_path / "outside"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text("name: outside\n", encoding="utf-8")
+    (fixture / "outside.tex").write_text("% empty\n", encoding="utf-8")
+    _write_minimal_export_set(fixture / "exports", "outside")
+    script = Path(__file__).resolve().parents[1] / "scripts" / "check_golden_artifacts.py"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            unsafe_arg,
+            "--no-require-accepted",
+        ],
+        check=False,
+        capture_output=True,
+        cwd=tmp_path,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "invalid fixture path" in result.stderr
 
 
 def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -> None:
