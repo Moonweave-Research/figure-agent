@@ -17,6 +17,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -195,6 +196,10 @@ def run_smoke(
     """Run deterministic compile/export/status/fig_loop smoke checks."""
     if repeat < 1:
         raise SmokeError("repeat must be >= 1")
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SmokeError(str(exc)) from exc
 
     repo_root = repo_root.resolve()
     runs_root = runs_root.resolve() if runs_root is not None else None

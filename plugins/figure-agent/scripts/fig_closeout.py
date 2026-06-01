@@ -12,6 +12,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     adjudication_is_stale,
@@ -376,6 +377,10 @@ def compute_closeout(
     repo_root: Path = REPO_ROOT,
     runs_root: Path | None = None,
 ) -> dict[str, Any]:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise FigCloseoutError(str(exc)) from exc
     repo_root = repo_root.resolve()
     runs_root = (runs_root or repo_root / ".scratch" / "fig-loop-runs").resolve()
     example_dir = repo_root / "examples" / name

@@ -769,3 +769,24 @@ def test_executor_cli_requires_apply_flag_and_reports_controlled_error(
     assert exit_code == 1
     captured = capsys.readouterr()
     assert "explicit --apply" in captured.err
+
+
+def test_executor_rejects_unsafe_fixture_name_before_loop_lookup(tmp_path: Path) -> None:
+    repo_root = tmp_path / "repo"
+    runs_root = repo_root / ".scratch" / "fig-loop-runs"
+    patch_path = tmp_path / "patch.diff"
+    patch_path.write_text("", encoding="utf-8")
+    (repo_root / "examples").mkdir(parents=True)
+    (repo_root / "outside").mkdir()
+
+    with pytest.raises(
+        PatchExecutorError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        apply_patch_file(
+            "../outside",
+            repo_root=repo_root,
+            runs_root=runs_root,
+            patch_path=patch_path,
+            apply=True,
+        )

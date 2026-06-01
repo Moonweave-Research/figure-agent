@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from fig_loop_patch_evidence import path_evidence
 
 PATCH_APPLY_SCHEMA = "figure-agent.patch-apply.v1"
@@ -349,6 +350,10 @@ def apply_patch_file(
 ) -> dict[str, Any]:
     if not apply:
         raise PatchExecutorError("explicit --apply is required before mutation")
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise PatchExecutorError(str(exc)) from exc
     loop_run = _latest_loop_run(name, runs_root)
     patch_handoff, _auto_patch_eligibility = _validate_loop_state(loop_run)
     _validate_loop_run_currentness(name, repo_root, loop_run, patch_handoff)

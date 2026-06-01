@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from fig_driver_editorial import (  # noqa: E402
     svg_polish_gate_from_checkpoint,
     svg_polish_readiness_from_checkpoint,
@@ -239,6 +240,10 @@ def run_loop(
     runs_root: Path | None = None,
 ) -> Path:
     """Run one verify-only loop iteration and return the run directory."""
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise FigLoopError(str(exc)) from exc
     repo_root = repo_root.resolve()
     runs_root = (runs_root or repo_root / ".scratch" / "fig-loop-runs").resolve()
     example_dir = repo_root / "examples" / name

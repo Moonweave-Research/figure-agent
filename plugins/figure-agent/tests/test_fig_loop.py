@@ -3061,6 +3061,27 @@ def test_loop_fails_for_missing_fixture(tmp_path: Path) -> None:
         )
 
 
+def test_loop_rejects_unsafe_fixture_name_before_writing_run(tmp_path: Path) -> None:
+    (tmp_path / "examples").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("name: outside\npanels: []\n", encoding="utf-8")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(
+        FigLoopError,
+        match="fixture name must be a single examples/<name> directory name",
+    ):
+        run_loop(
+            "../outside",
+            "inspect",
+            repo_root=tmp_path,
+            runs_root=runs_root,
+        )
+
+    assert not runs_root.exists()
+
+
 def test_git_mutation_commands_are_rejected() -> None:
     with pytest.raises(FigLoopError, match="git mutation"):
         ensure_safe_command(("git", "commit"))
