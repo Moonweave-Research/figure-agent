@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100Y, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100Z, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -70,7 +70,7 @@ the workflow together.
 | G100-05 | P1 | Reference learning | Reference packs and aesthetic metrics exist, but authoring high-quality reference lessons is still operator-dependent. | `critique_reference_pack.yaml` and reference-learning metrics are opt-in; the plugin can warn against copying but cannot infer the best lessons without user framing. | Poor reference packs can cause under-learning, over-learning, or generic prose. | Issue 100E - reference-learning authoring template and anti-copy checklist |
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
-| G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. | Future changes risk silent contract drift or overfitting tests to old formats. | Issue 100H - schema capability matrix and deprecation policy |
+| G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. Issue 100Z adds a release-contract guard so script schema constants cannot drift out of the module map. | Future changes now have a test-backed ownership map instead of relying on manual updates alone. | Issue 100H - schema capability matrix and deprecation policy; Issue 100Z - schema map drift guard |
 | G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 89 scripts, 100 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
@@ -191,14 +191,20 @@ the workflow together.
    covering active schema owners, critique schema capability lineage, module
    layer ownership, and governance rules for future schema/script changes.
 
-15. **Issue 100N/O - freshness and detector feedback**
+15. **Issue 100Z - schema map drift guard**
+    Implemented as a release-contract guard over `scripts/*.py` schema
+    constants. `tests/test_release_contract.py` now fails when a
+    `figure-agent.*` `SCHEMA` / `*_SCHEMA` constant is missing from the
+    schema/module map, with critique lineage shorthand preserved.
+
+16. **Issue 100N/O - freshness and detector feedback**
     Completed on main in commit `d50da39`; merged by `5a51be3`. Added
     read-only `critique_freshness` diagnostics to status output and
     `detector_feedback` counts to audit evidence so stale critique causes and
     detector tuning signals are visible without changing gates or mutating
     fixture state.
 
-16. **Issue 100X - detector feedback ledger**
+17. **Issue 100X - detector feedback ledger**
     Implemented as a read-only cross-fixture diagnostic. Added
     `scripts/detector_feedback_ledger.py` to aggregate existing
     `audit_evidence_summary.py` detector feedback across selected fixtures or
@@ -206,42 +212,42 @@ the workflow together.
     fixture-qualified unlinked micro-defect ids without changing thresholds,
     critique schema, or release gates.
 
-17. **Issue 100W - plugin install freshness check**
+18. **Issue 100W - plugin install freshness check**
     Implemented as a read-only operator diagnostic. Added
     `scripts/plugin_install_freshness.py` to compare the development plugin
     tree with the latest local Claude plugin cache, ignore generated package
     junk, and report fresh/stale/missing/invalid JSON with changed, missing, and
     extra file lists.
 
-18. **Issue 100Y - same-version install refresh guidance**
+19. **Issue 100Y - same-version install refresh guidance**
     Implemented as an additive `plugin_install_freshness.py` UX fix. The
     diagnostic now reports source/install versions plus `refresh_strategy`, and
     recommends uninstall + install when source and installed cache have the same
     version but different payloads. Different-version stale caches still
     recommend `claude plugin update`.
 
-19. **Issue 100P - stale issue status sweep**
+20. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-20. **Issue 100T/U - evidence trace and human-decision diff**
+21. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-21. **Issue 100Q - critique entity consistency lint**
+22. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-22. **Issue 100S - final strict profile and warning budgets**
+23. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
