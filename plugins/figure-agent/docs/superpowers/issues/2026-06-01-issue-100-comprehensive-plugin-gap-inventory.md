@@ -66,7 +66,7 @@ the workflow together.
 | G100-01 | P0 | Evidence parity | `undeclared_geometry` is produced by compile and accepted by critique schema, but it was not first-class in `audit_evidence_summary.py`/status/driver UX. | Issue 99 explicitly scoped out mandatory audit-evidence integration; Issue 100A adds this path to the shared summary. | A real label-frame boundary risk should now surface through the same operator summary path as visual/text/label/crop evidence. | Issue 100A - undeclared-geometry audit evidence surfacing |
 | G100-02 | P0 | Operator routing | The command surface is powerful but still confusing: users and agents can bounce among `/fig_status`, `/fig_drive`, `/fig_run`, `/fig_improve`, `/fig_loop`, `/fig_critique`, and `/fig_export` without knowing the canonical mode. | README says status/drive first and `fig_run` has no resume; repeated dogfood questions show "why does it say done?" and "which command should I run?" remains unresolved. | Correct tools exist, but operator friction makes the plugin feel less autonomous than it is. | Issue 100B - single guided entrypoint and explanation UX |
 | G100-03 | P0 | Final pass discipline | Strict/final audit mode is opt-in and spread across compile, critique, loop, driver, and export. | `FIGURE_AGENT_STRICT=1` exists, but final release confidence still depends on humans knowing which checks to run. | Top-tier closeout can miss an available strict/final pass unless the operator requests it explicitly. | Issue 100C - final-readiness preset |
-| G100-04 | P1 | SVG polish production path | SVG polish is safe and bounded, but positive-route evidence is still thin; it mostly prevents unsafe polish rather than routinely improving finish. | README still notes that more real fixtures are needed before treating `ready_for_svg_polish` as routine production handoff. | The "last 5 percent" visual polish remains more manual than guided. | Issue 100D - SVG polish positive-route dogfood and recipe templates |
+| G100-04 | P1 | SVG polish production path | SVG polish is safe and bounded, but positive-route real-figure evidence is still thin; the route mostly prevents unsafe polish rather than routinely improving finish. | Issue 100D added the fixture-aware recipe starter, and Issue 100V adds a deterministic positive harness that proves the SVG polish plumbing closes. README still keeps real-fixture promotion conservative. | The "last 5 percent" visual polish is mechanically supported but remains art-direction gated on real figures. | Issue 100D - SVG polish positive-route template; Issue 100V - SVG polish positive harness |
 | G100-05 | P1 | Reference learning | Reference packs and aesthetic metrics exist, but authoring high-quality reference lessons is still operator-dependent. | `critique_reference_pack.yaml` and reference-learning metrics are opt-in; the plugin can warn against copying but cannot infer the best lessons without user framing. | Poor reference packs can cause under-learning, over-learning, or generic prose. | Issue 100E - reference-learning authoring template and anti-copy checklist |
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
@@ -117,7 +117,14 @@ the workflow together.
    visual-only operation classes. This improves startability without changing
    executor safety or claiming SVG polish should run automatically.
 
-5. **Issue 100E - reference-learning authoring template**
+5. **Issue 100V - SVG polish positive harness**
+   Implemented as a deterministic fixture-shaped plumbing proof. Added
+   `scripts/svg_polish_positive_harness.py`, a synthetic fixture seed, and tests
+   that exercise recipe execution, delta generation, semantic diff, handoff
+   manifest/audit writing, status final-artifact freshness, and polish-driver
+   completion without mutating real examples or claiming real-figure readiness.
+
+6. **Issue 100E - reference-learning authoring template**
    Completed on main in commit `99a440e`. The reference pack tool now emits a
    v1.1 starter template and validates that v1.1 opt-in
    `reference_learning` covers concrete allowed-transfer axes (palette family,
@@ -125,7 +132,7 @@ the workflow together.
    rhythm) plus anti-copy guards (topology, exact geometry, label text, claim
    payload, panel semantics). Legacy v1 packs remain parseable.
 
-6. **Issue 100F - advisory-vs-blocking aesthetic language**
+7. **Issue 100F - advisory-vs-blocking aesthetic language**
    Completed on main in commit `52855e1`. Shared `next_action_summary` now
    includes additive `decision_boundary` metadata, and
    `/fig_drive.operator_guidance` copies it so deterministic gates,
@@ -134,27 +141,27 @@ the workflow together.
 
 ### Track C - Reduce Long-Session Friction
 
-7. **Issue 100G - repeated-defect basin detector**
+8. **Issue 100G - repeated-defect basin detector**
    Completed on main in commit `417805b`. Existing `fig_loop_basin.py`
    history detection now stays visible through
    `/fig_drive.loop_checkpoint` and `/fig_run.boundary_handoff`: basin stops
    name the repeated signal, preserve `basin_summary`, and begin closeout with
    step-out actions instead of flattening into a generic human gate.
 
-8. **Issue 100R - diagnostic artifact provenance rule**
+9. **Issue 100R - diagnostic artifact provenance rule**
    Completed on main in commit `49cb61d`; merged by `14c5b64`. Added
    `scripts/diagnostic_artifact_provenance.py` so extra screenshots, `/tmp`
    crops, and `.scratch/` diagnostics can be classified before use:
    current build renders and manifest-bound audit crops are authoritative;
    stale, mismatched, missing, or unmanifested diagnostics are context only.
 
-9. **Issue 100K - optional second-opinion route**
+10. **Issue 100K - optional second-opinion route**
    Completed. The external review validator now emits a
    hash-bound starter `external_vision_review.yaml` from the current build PNG
    and audit-crop manifest. This makes the second-opinion path first-class
    without adding provider APIs or changing external review authority.
 
-10. **Issue 100J - resumable guided run checkpoint**
+11. **Issue 100J - resumable guided run checkpoint**
    Completed on main in commit `12c66c2`; merged by `8b0ff98`. Added
    `scripts/fig_run_journal.py` to summarize the latest
    `.scratch/fig-run-runs` journal for a fixture without replaying stored
@@ -162,14 +169,14 @@ the workflow together.
    checks, and stale fixture evidence, then points operators back to live
    `/fig_status` and `/fig_drive`.
 
-11. **Issue 100L - paper-wide context template**
+12. **Issue 100L - paper-wide context template**
     Completed as paper-series workflow hardening. Added
     `scripts/paper_aesthetic_context.py --template <paper_id> --fixture <name>
     --write-template` so operators can start a valid v1 paper-wide context pack
     without manually copying catalog examples. Fixture opt-in remains explicit
     through `spec.yaml.paper_aesthetic_context`.
 
-12. **Issue 100M - subregion iteration assistant**
+13. **Issue 100M - subregion iteration assistant**
     Completed as text-form workflow hardening. Added
     `scripts/subregion_iteration_log.py` so operators can create the canonical
     `subregion_iteration_log.md` and append one patch row at a time while
@@ -178,41 +185,41 @@ the workflow together.
 
 ### Track D - Maintainability
 
-13. **Issue 100H/I - schema and module maps**
+14. **Issue 100H/I - schema and module maps**
    Completed on main in commit `d3ccf37`; merged by `200910c`. Added
    `docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md`,
    covering active schema owners, critique schema capability lineage, module
    layer ownership, and governance rules for future schema/script changes.
 
-14. **Issue 100N/O - freshness and detector feedback**
+15. **Issue 100N/O - freshness and detector feedback**
     Completed on main in commit `d50da39`; merged by `5a51be3`. Added
     read-only `critique_freshness` diagnostics to status output and
     `detector_feedback` counts to audit evidence so stale critique causes and
     detector tuning signals are visible without changing gates or mutating
     fixture state.
 
-15. **Issue 100P - stale issue status sweep**
+16. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-16. **Issue 100T/U - evidence trace and human-decision diff**
+17. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-17. **Issue 100Q - critique entity consistency lint**
+18. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-18. **Issue 100S - final strict profile and warning budgets**
+19. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests

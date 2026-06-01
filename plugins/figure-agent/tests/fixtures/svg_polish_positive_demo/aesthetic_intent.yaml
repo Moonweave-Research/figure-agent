@@ -1,0 +1,5 @@
+schema: figure-agent.aesthetic-intent.v2
+fixture: svg_polish_positive_demo
+intent:
+  maturity_restraint: restrained
+  polish_path: svg_micro_polish
