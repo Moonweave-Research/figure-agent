@@ -1,6 +1,6 @@
 # Issue 44 - SVG Polish Recipe Executor and Aesthetic Delta Gate
 
-**Status:** implemented on branch `codex/issue44-svg-polish-recipe`
+**Status:** completed on main
 **Spec:** `../specs/2026-05-25-issue44-svg-polish-recipe-executor-design.md`
 **Plan:** `../plans/2026-05-25-issue44-svg-polish-recipe-executor.md`
 **Builds on:** Issue 42 SVG polish handoff, Issue 43 aesthetic lever grammar

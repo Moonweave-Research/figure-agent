@@ -254,6 +254,18 @@ def test_v0_9_issue_statuses_are_mainline_ready() -> None:
         assert "Status: completed" in text or "Status: implemented" in text, issue_name
 
 
+def test_completed_issue_headers_do_not_claim_branch_or_worktree_only() -> None:
+    stale_phrases = ("implemented in working tree", "implemented on branch")
+    stale_headers = []
+    for issue_path in sorted((REPO_ROOT / "docs" / "superpowers" / "issues").glob("*.md")):
+        header = "\n".join(issue_path.read_text().splitlines()[:8])
+        for stale_phrase in stale_phrases:
+            if stale_phrase in header:
+                stale_headers.append(f"{issue_path.name}: {stale_phrase}")
+
+    assert stale_headers == []
+
+
 def test_readme_documents_status_and_driver_first_workflow() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 

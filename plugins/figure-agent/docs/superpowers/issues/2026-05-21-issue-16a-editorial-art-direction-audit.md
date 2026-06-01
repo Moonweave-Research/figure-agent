@@ -1,7 +1,7 @@
 # Issue 16A: Editorial Art-Direction Audit v1.5
 
 **Date:** 2026-05-21 KST
-**Status:** implemented in working tree
+**Status:** completed on main
 **Parent:** Issue 16
 **Spec:** `../specs/2026-05-21-editorial-art-direction-audit-design.md`
 
