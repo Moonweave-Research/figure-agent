@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BO, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BP, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BO subregion iteration log CLI fixture path boundary;
+- branch baseline: `main` after Issue 100BP paper aesthetic context fixture boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -125,6 +125,7 @@ the workflow together.
 | G100-60 | P2 | SVG polish recipe template write path boundary | `svg_polish_recipe.py --template ... --write-template` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `polish/svg_polish_recipe.yaml` there. | TDD reproduced exit code 0 and an outside recipe template write for traversal-like and existing outside-relative CLI paths. | The recipe starter should not create polish workflow state outside declared examples before executor/handoff boundaries run. | Issue 100BM - SVG polish recipe CLI fixture path boundary |
 | G100-61 | P2 | External vision review template write path boundary | `external_vision_review.py --template ... --write-template` accepted `examples/../outside`, and also accepted an existing single-component relative directory outside `examples/`, then wrote `external_vision_review.yaml` there. | TDD reproduced exit code 0 and an outside external review template write for traversal-like and existing outside-relative CLI paths. | External second-opinion evidence can influence loop/human gates, so its template writer must not create review state outside declared examples. | Issue 100BN - external vision review CLI fixture path boundary |
 | G100-62 | P2 | Subregion iteration log write path boundary | `subregion_iteration_log.py --template --write-template` and `--append` accepted traversal-like or existing outside-relative fixture paths, then wrote or appended `subregion_iteration_log.md` outside `examples/`. | TDD reproduced exit code 0 for `examples/../outside --write-template` and an outside append through `--append outside`. | Subregion logs drive active target context in critique/loop handoff, so helper writes must stay bound to declared examples. | Issue 100BO - subregion iteration log CLI fixture path boundary |
+| G100-63 | P2 | Paper-wide context fixture identity boundary | `paper_aesthetic_context.py --template --fixture` and the v1 pack validator accepted unsafe fixture role strings such as `../outside`. | TDD reproduced the CLI writing `figure_roles[].fixture: ../outside` into a reloadable paper-wide context pack, and the loader accepted a hand-authored unsafe role fixture. | Paper-wide style context should not make traversal syntax or non-fixture identities look like valid cross-figure design contract targets. | Issue 100BP - paper aesthetic context fixture identity boundary |
 
 ## Recommended Execution Order
 
@@ -563,6 +564,14 @@ the workflow together.
     explicit absolute paths remain valid. Traversal-like, nested, or existing
     outside-relative paths fail with a controlled `invalid fixture path` error
     before `subregion_iteration_log.md` can be written.
+
+65. **Issue 100BP - paper aesthetic context fixture identity boundary**
+    Completed as paper-wide contract identity hardening.
+    `paper_aesthetic_context.py --template --fixture` and the v1 loader now
+    validate `figure_roles[].fixture` through the shared fixture identity
+    contract. Unsafe fixture strings such as `../outside` fail before a template
+    can be written or a pack can be accepted as a normal paper-wide design
+    contract.
 
 ## Non-Goals
 
