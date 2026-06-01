@@ -230,6 +230,7 @@ def final_readiness_profile(
     status: dict[str, Any],
     summary: dict[str, Any],
     loop_checkpoint: dict[str, Any] | None,
+    warning_budget: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     render = status.get("render_state")
     critique = status.get("critique_state")
@@ -293,8 +294,33 @@ def final_readiness_profile(
             else "release requires explicit accepted/golden/final-artifact closure."
         ),
     )
+    warning_budget_check = _profile_step(
+        "not_applicable",
+        reason="warning budget is not evaluated for this final mode state.",
+    )
+    if isinstance(warning_budget, dict):
+        warning_state = warning_budget.get("state")
+        profile_state = (
+            "pass"
+            if warning_state == "pass"
+            else "needs_action"
+            if warning_state in {"needs_action", "missing_input", "invalid"}
+            else "not_applicable"
+        )
+        warning_budget_check = _profile_step(
+            profile_state,
+            reason=str(warning_budget.get("reason") or "warning budget state is unknown."),
+        )
+        warning_budget_check["budget_state"] = warning_state
+        visual_clash = warning_budget.get("visual_clash")
+        if isinstance(visual_clash, dict):
+            warning_budget_check["visual_clash"] = visual_clash
     if action == ACTION_COMPLETE:
-        overall = "pass"
+        overall = (
+            "pass"
+            if warning_budget_check["state"] in {"pass", "not_applicable"}
+            else "needs_action"
+        )
     elif actor in {"human", "release_operator"}:
         overall = "human_required"
     else:
@@ -308,5 +334,6 @@ def final_readiness_profile(
         "export": export_check,
         "publication_gate": publication_check,
         "release_gate": release_gate,
+        "warning_budget": warning_budget_check,
         "non_mutating_driver": True,
     }

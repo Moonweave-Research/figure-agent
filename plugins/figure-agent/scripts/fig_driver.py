@@ -31,6 +31,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import check_visual_clash_budget as warning_budget_mod  # noqa: E402
 import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
@@ -159,6 +160,7 @@ def _summary(
     workspace_warnings: list[str] | None = None,
     loop_checkpoint: dict[str, Any] | None = None,
     closeout: dict[str, Any] | None = None,
+    warning_budget: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     status_explanation = status.get("status_explanation")
     if isinstance(status_explanation, dict):
@@ -224,6 +226,7 @@ def _summary(
             status=status,
             summary=summary,
             loop_checkpoint=loop_checkpoint,
+            warning_budget=warning_budget,
         )
     return summary
 
@@ -546,6 +549,12 @@ def _draft_export_block_reason(status: dict[str, Any]) -> str:
     )
 
 
+def _final_warning_budget(example_dir: Path, mode: str, render_state: Any) -> dict[str, Any] | None:
+    if mode != "final" or render_state != "FRESH":
+        return None
+    return warning_budget_mod.summarize_fixture(example_dir)
+
+
 def _publication_gate_block_reason(status: dict[str, Any]) -> str:
     state = status.get("publication_gate_state")
     failures = status.get("publication_gate_failures")
@@ -622,7 +631,11 @@ def _select_action(
         reason: str,
         checkpoint: dict[str, Any] | None = None,
         closeout_report: dict[str, Any] | None = None,
+        warning_budget: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        effective_warning_budget = warning_budget
+        if effective_warning_budget is None:
+            effective_warning_budget = _final_warning_budget(example_dir, mode, render)
         return _summary(
             name=name,
             mode=mode,
@@ -635,6 +648,7 @@ def _select_action(
             workspace_warnings=workspace_warnings,
             loop_checkpoint=checkpoint,
             closeout=closeout_report,
+            warning_budget=effective_warning_budget,
         )
 
     # Stage 0/1: source must be scaffolded or authored first.
@@ -669,6 +683,31 @@ def _select_action(
         )
 
     # Render is FRESH from here.
+    warning_budget = _final_warning_budget(example_dir, mode, render)
+    if isinstance(warning_budget, dict):
+        budget_state = warning_budget.get("state")
+        if budget_state == "missing_input":
+            return make(
+                ACTION_RUN_COMPILE,
+                safe_command=command_mod.strict_compile_command(name),
+                stop_boundary=None,
+                reason=(
+                    "final warning budget input is missing; run strict compile "
+                    "to regenerate detector reports before final readiness."
+                ),
+                warning_budget=warning_budget,
+            )
+        if budget_state in {"needs_action", "invalid"}:
+            return make(
+                ACTION_HUMAN_GATE_STOP,
+                safe_command=None,
+                stop_boundary=STOP_HUMAN_GATE,
+                reason=(
+                    "final warning budget exceeded or invalid; fix detector warnings "
+                    "or update an explicit reviewed fixture cap before release."
+                ),
+                warning_budget=warning_budget,
+            )
 
     if mode == "authoring":
         return make(

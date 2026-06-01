@@ -11,6 +11,8 @@ from typing import Any
 
 from inputs import parse_spec
 
+SUMMARY_SCHEMA = "figure-agent.warning-budget.v1"
+
 
 class VisualClashBudgetError(Exception):
     """Expected user-facing visual-clash budget failure."""
@@ -38,20 +40,129 @@ def _load_total(report_path: Path) -> int:
     return total
 
 
-def check_fixture(example_dir: Path) -> dict[str, Any]:
+def summarize_fixture(example_dir: Path) -> dict[str, Any]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
-        raise VisualClashBudgetError(f"{example_dir}: missing spec.yaml")
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": example_dir.name,
+            "state": "missing_input",
+            "reason": "missing spec.yaml for warning budget",
+            "visual_clash": {
+                "present": False,
+                "total": None,
+                "cap": None,
+                "over_by": None,
+                "status": "missing_spec",
+            },
+        }
     try:
         spec = parse_spec(spec_path.read_text(encoding="utf-8"))
     except ValueError as exc:
-        raise VisualClashBudgetError(f"{example_dir.name}: invalid spec.yaml: {exc}") from exc
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": example_dir.name,
+            "state": "invalid",
+            "reason": f"invalid spec.yaml: {exc}",
+            "visual_clash": {
+                "present": False,
+                "total": None,
+                "cap": None,
+                "over_by": None,
+                "status": "invalid_spec",
+            },
+        }
     name = _fixture_name(example_dir, spec)
-    cap = _visual_clash_cap(spec)
+    try:
+        cap = _visual_clash_cap(spec)
+    except VisualClashBudgetError as exc:
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": name,
+            "state": "invalid",
+            "reason": str(exc),
+            "visual_clash": {
+                "present": False,
+                "total": None,
+                "cap": None,
+                "over_by": None,
+                "status": "invalid_cap",
+            },
+        }
     report_path = example_dir / "build" / "visual_clash.json"
     if not report_path.is_file():
-        raise VisualClashBudgetError(f"{name}: missing build/visual_clash.json")
-    total = _load_total(report_path)
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": name,
+            "state": "missing_input",
+            "reason": "missing build/visual_clash.json for warning budget",
+            "visual_clash": {
+                "present": False,
+                "total": None,
+                "cap": cap,
+                "over_by": None,
+                "status": "missing_report",
+            },
+        }
+    try:
+        total = _load_total(report_path)
+    except VisualClashBudgetError as exc:
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": name,
+            "state": "invalid",
+            "reason": str(exc),
+            "visual_clash": {
+                "present": True,
+                "total": None,
+                "cap": cap,
+                "over_by": None,
+                "status": "invalid_report",
+            },
+        }
+    over_by = max(0, total - cap)
+    if over_by:
+        return {
+            "schema": SUMMARY_SCHEMA,
+            "fixture": name,
+            "state": "needs_action",
+            "reason": "visual clash warning budget exceeded",
+            "visual_clash": {
+                "present": True,
+                "total": total,
+                "cap": cap,
+                "over_by": over_by,
+                "status": "over_budget",
+            },
+        }
+    return {
+        "schema": SUMMARY_SCHEMA,
+        "fixture": name,
+        "state": "pass",
+        "reason": "visual clash warnings are within budget",
+        "visual_clash": {
+            "present": True,
+            "total": total,
+            "cap": cap,
+            "over_by": 0,
+            "status": "within_budget",
+        },
+    }
+
+
+def check_fixture(example_dir: Path) -> dict[str, Any]:
+    summary = summarize_fixture(example_dir)
+    name = str(summary.get("fixture") or example_dir.name)
+    visual_clash = summary.get("visual_clash")
+    if not isinstance(visual_clash, dict):
+        raise VisualClashBudgetError(f"{name}: invalid warning budget summary")
+    total = visual_clash.get("total")
+    cap = visual_clash.get("cap")
+    state = summary.get("state")
+    if state in {"missing_input", "invalid"}:
+        raise VisualClashBudgetError(f"{name}: {summary.get('reason')}")
+    if not isinstance(total, int) or not isinstance(cap, int):
+        raise VisualClashBudgetError(f"{name}: invalid warning budget totals")
     if total > cap:
         raise VisualClashBudgetError(f"{name}: visual clash budget exceeded: {total} > {cap}")
     return {"fixture": name, "total": total, "cap": cap, "status": "ok"}
