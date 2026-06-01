@@ -148,7 +148,13 @@ the workflow together.
    current build renders and manifest-bound audit crops are authoritative;
    stale, mismatched, missing, or unmanifested diagnostics are context only.
 
-9. **Issue 100J - resumable guided run checkpoint**
+9. **Issue 100K - optional second-opinion route**
+   Completed. The external review validator now emits a
+   hash-bound starter `external_vision_review.yaml` from the current build PNG
+   and audit-crop manifest. This makes the second-opinion path first-class
+   without adding provider APIs or changing external review authority.
+
+10. **Issue 100J - resumable guided run checkpoint**
    Completed on main in commit `12c66c2`; merged by `8b0ff98`. Added
    `scripts/fig_run_journal.py` to summarize the latest
    `.scratch/fig-run-runs` journal for a fixture without replaying stored
@@ -158,41 +164,41 @@ the workflow together.
 
 ### Track D - Maintainability
 
-10. **Issue 100H/I - schema and module maps**
+11. **Issue 100H/I - schema and module maps**
    Completed on main in commit `d3ccf37`; merged by `200910c`. Added
    `docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md`,
    covering active schema owners, critique schema capability lineage, module
    layer ownership, and governance rules for future schema/script changes.
 
-11. **Issue 100N/O - freshness and detector feedback**
+12. **Issue 100N/O - freshness and detector feedback**
     Completed on main in commit `d50da39`; merged by `5a51be3`. Added
     read-only `critique_freshness` diagnostics to status output and
     `detector_feedback` counts to audit evidence so stale critique causes and
     detector tuning signals are visible without changing gates or mutating
     fixture state.
 
-12. **Issue 100P - stale issue status sweep**
+13. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-13. **Issue 100T/U - evidence trace and human-decision diff**
+14. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-14. **Issue 100Q - critique entity consistency lint**
+15. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-15. **Issue 100S - final strict profile and warning budgets**
+16. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
