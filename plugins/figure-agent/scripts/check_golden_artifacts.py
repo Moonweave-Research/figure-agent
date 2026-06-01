@@ -33,6 +33,7 @@ from PIL import Image
 # the scripts/ directory on sys.path; running it as a CLI does the same.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
 from publication_gate import publication_compliance_failure_records  # noqa: E402
@@ -621,6 +622,37 @@ def check_example(
     return failures
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise ValueError("invalid fixture path: expected examples/<fixture-name>")
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise ValueError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise ValueError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise ValueError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("example_dir", type=Path)
@@ -647,19 +679,24 @@ def main() -> int:
     parser.add_argument("--max-visual-clashes", type=int, default=0)
     args = parser.parse_args()
 
-    failures = check_example(
-        args.example_dir,
-        min_svg_elements=args.min_svg_elements,
-        min_png_width=args.min_png_width,
-        require_accepted=args.require_accepted,
-        max_collisions=args.max_collisions,
-        max_visual_clashes=args.max_visual_clashes,
-    )
+    try:
+        example_dir = _resolve_example_dir_for_cli(args.example_dir)
+        failures = check_example(
+            example_dir,
+            min_svg_elements=args.min_svg_elements,
+            min_png_width=args.min_png_width,
+            require_accepted=args.require_accepted,
+            max_collisions=args.max_collisions,
+            max_visual_clashes=args.max_visual_clashes,
+        )
+    except ValueError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
     if failures:
         for failure in failures:
             print(f"FAIL: {failure}", file=sys.stderr)
         return 1
-    print(f"OK: golden artifact gates passed for {args.example_dir.name}")
+    print(f"OK: golden artifact gates passed for {example_dir.name}")
     return 0
 
 
