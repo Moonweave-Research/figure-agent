@@ -92,6 +92,20 @@ def test_main_write_updates_file(tmp_path: Path, capsys) -> None:
     assert tex_path.read_text(encoding="utf-8") == r"\draw (0.75, 2.50);" "\n"
 
 
+def test_main_rejects_non_tex_file_before_write(tmp_path: Path, capsys) -> None:
+    path = tmp_path / "spec.yaml"
+    path.write_text("point: (1.00, 2.00)\n", encoding="utf-8")
+
+    assert (
+        helper.main([str(path), "--line", "1:1", "--dx", "0.10", "--dy", "0.10", "--write"])
+        == 2
+    )
+
+    captured = capsys.readouterr()
+    assert "tex_path must be a .tex file" in captured.err
+    assert path.read_text(encoding="utf-8") == "point: (1.00, 2.00)\n"
+
+
 def test_main_rejects_missing_scope(tmp_path: Path, capsys) -> None:
     tex_path = tmp_path / "demo.tex"
     tex_path.write_text(r"\draw (1.00, 2.00);" "\n", encoding="utf-8")

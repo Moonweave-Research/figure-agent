@@ -247,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         line_ranges = None if args.all else [_parse_line_range(raw) for raw in args.line]
         tex_path = Path(args.tex_path)
+        if tex_path.suffix != ".tex":
+            raise TexCoordinateShiftError("tex_path must be a .tex file")
         if not tex_path.is_file():
             raise TexCoordinateShiftError(f"missing .tex file: {tex_path}")
         original = tex_path.read_text(encoding="utf-8")
