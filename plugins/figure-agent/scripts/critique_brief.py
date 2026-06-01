@@ -1280,6 +1280,8 @@ def _undeclared_geometry_candidates_section(example_dir: Path) -> str:
         "or explicitly justify `status: accept_simplification`.",
         "Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, "
         "`label_overflows_row_box`, or `label_path_near_miss` as appropriate.",
+        "For `label_crosses_horizontal_rule` or `label_crosses_rect_boundary` "
+        "candidates, normally use `micro_defects.kind: label_crosses_panel_boundary`.",
         f"- Source JSON: `{_example_relative_path(example_dir, report_path)}`",
         f"- Total candidates from JSON: {total}",
         "",

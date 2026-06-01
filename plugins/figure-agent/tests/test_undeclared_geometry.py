@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from check_undeclared_geometry import (  # noqa: E402
+    detect_rendered_boundary_crossings,
     detect_undeclared_geometry,
     undeclared_geometry_payload,
 )
@@ -91,6 +92,138 @@ def test_label_endpoint_near_miss_is_reported() -> None:
     assert candidates[1]["kind"] == "label_endpoint_near_miss"
     assert candidates[1]["nearest_text"] == "mobility"
     assert 0 < candidates[1]["distance_pt"] < 4
+
+
+def test_label_crossing_horizontal_rule_is_reported() -> None:
+    tex = r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) -- (3.0,1.0);"
+    # Horizontal rule at y ~= 28.346 pt crosses the rendered glyph bbox.
+    words = [_word("log t", 40.0, 26.0, 70.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_horizontal_rule",
+        "label_crosses_horizontal_rule",
+    ]
+    assert candidates[1]["nearest_text"] == "log t"
+    assert candidates[1]["distance_pt"] == 0.0
+    assert candidates[1]["recommended_action"] == "add_micro_defect"
+
+
+def test_label_clear_of_horizontal_rule_is_not_reported_as_crossing() -> None:
+    tex = r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) -- (3.0,1.0);"
+    words = [_word("log t", 40.0, 34.0, 70.0, 42.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+
+    assert "label_crosses_horizontal_rule" not in [
+        candidate["kind"] for candidate in candidates
+    ]
+
+
+def test_source_label_crossing_preserves_source_coordinate_behavior() -> None:
+    tex = r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) -- (3.0,1.0);"
+    words = [_word("log t", 40.0, 26.0, 70.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(
+        tex,
+        words,
+        {},
+        page_size_pt=(100.0, 100.0),
+    )
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_horizontal_rule",
+        "label_crosses_horizontal_rule",
+    ]
+    assert candidates[1]["bbox_pt"] == [28.346457, 28.346457, 85.03937, 28.346457]
+
+
+def test_source_near_miss_preserves_existing_coordinate_behavior() -> None:
+    tex = r"\draw[cGray!70!black, line width=0.45pt] (1.0,1.0) -- (3.0,1.0);"
+    # Source-discovered near-miss candidates keep the historical coordinate
+    # behavior; exact rendered crossings are handled by PDF path coordinates.
+    words = [_word("mobility", 40.0, 30.0, 70.0, 38.0)]
+
+    candidates = detect_undeclared_geometry(
+        tex,
+        words,
+        {},
+        page_size_pt=(100.0, 100.0),
+    )
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_horizontal_rule",
+        "label_endpoint_near_miss",
+    ]
+    assert candidates[1]["nearest_text"] == "mobility"
+    assert 0 < candidates[1]["distance_pt"] < 4
+
+
+def test_rendered_boundary_crossing_uses_pdf_path_coordinates() -> None:
+    words = [_word("derive", 260.0, 280.0, 286.0, 292.0)]
+    rendered_lines = [
+        {
+            "x0": 268.0,
+            "x1": 268.0,
+            "top": 250.0,
+            "bottom": 325.0,
+            "linewidth": 0.4,
+            "stroking_color": (0.84, 0.84, 0.84),
+        }
+    ]
+
+    candidates = detect_rendered_boundary_crossings(words, rendered_lines, [])
+
+    assert [candidate["kind"] for candidate in candidates] == ["label_crosses_column_rule"]
+    assert candidates[0]["nearest_text"] == "derive"
+    assert candidates[0]["distance_pt"] == 0.0
+
+
+def test_rendered_boundary_crossing_ignores_colored_plot_lines() -> None:
+    words = [_word("shallow", 468.0, 69.0, 499.0, 77.0)]
+    rendered_lines = [
+        {
+            "x0": 484.0,
+            "x1": 484.0,
+            "top": 45.0,
+            "bottom": 128.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+
+    assert detect_rendered_boundary_crossings(words, rendered_lines, []) == []
+
+
+def test_label_crossing_ignores_non_frame_like_geometry() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[cGray!70!black, line width=0.45pt] (1.0,1.0) -- (3.0,1.0);",
+            r"\fill[cGray!22] (1.0,1.0) rectangle (5.5,4.2);",
+        ]
+    )
+    words = [_word("axis", 40.0, 26.0, 70.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+
+    assert not any(candidate["kind"].startswith("label_crosses") for candidate in candidates)
+
+
+def test_label_crossing_rect_boundary_is_reported() -> None:
+    tex = r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) rectangle (5.5,4.2);"
+    # Bottom side of the rectangle is at y ~= 28.346 pt and crosses the label.
+    words = [_word("E_t", 40.0, 26.0, 58.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "undeclared_rect_boundary",
+        "label_crosses_rect_boundary",
+    ]
+    assert candidates[1]["nearest_text"] == "E_t"
+    assert candidates[1]["distance_pt"] == 0.0
+    assert candidates[1]["recommended_action"] == "add_micro_defect"
 
 
 def test_candidate_ids_are_deterministic() -> None:

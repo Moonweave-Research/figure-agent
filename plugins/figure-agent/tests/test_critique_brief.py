@@ -820,12 +820,12 @@ def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
                 "candidates": [
                     {
                         "id": "UG002",
-                        "kind": "label_endpoint_near_miss",
-                        "evidence": "line close to mobility label",
+                        "kind": "label_crosses_horizontal_rule",
+                        "evidence": "line crosses mobility label",
                         "bbox_pt": [10.0, 20.0, 40.0, 20.0],
                         "source_line": 42,
                         "nearest_text": "mobility",
-                        "distance_pt": 2.0,
+                        "distance_pt": 0.0,
                         "recommended_action": "add_micro_defect",
                     },
                     {
@@ -852,8 +852,10 @@ def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
     assert "`UG001`" in brief
     assert "`UG002`" in brief
     assert "kind=`undeclared_column_rule`" in brief
+    assert "kind=`label_crosses_horizontal_rule`" in brief
+    assert "micro_defects.kind: label_crosses_panel_boundary" in brief
     assert "nearest_text=`mobility`" in brief
-    assert "distance_pt=2.0" in brief
+    assert "distance_pt=0.0" in brief
     assert brief.index("id=`UG001`") < brief.index("id=`UG002`")
 
 
