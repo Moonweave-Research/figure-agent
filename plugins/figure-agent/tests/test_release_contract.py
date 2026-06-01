@@ -12,6 +12,7 @@ SCRIPTS_ROOT = REPO_ROOT / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
 
 EXPECTED_RELEASE_VERSION = "0.9.2"
@@ -121,6 +122,8 @@ def test_package_descriptions_name_quality_kernel_direction() -> None:
 def test_readme_documents_plugin_package_audit() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
+    assert "scripts/plugin_install_freshness.py" in readme
+    assert INSTALL_FRESHNESS_SCHEMA in readme
     assert "scripts/plugin_package_audit.py" in readme
     assert "--max-mib" in readme
     assert "~/.claude/plugins/cache/" in readme
