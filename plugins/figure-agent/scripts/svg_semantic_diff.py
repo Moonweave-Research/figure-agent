@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
@@ -55,6 +56,37 @@ def _fixture_path(example_dir: Path, relative: str, label: str) -> Path:
     except ValueError as exc:
         raise SvgSemanticDiffError(f"{label} must stay inside the fixture") from exc
     return resolved
+
+
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise SvgSemanticDiffError("invalid fixture path: expected examples/<fixture-name>")
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise SvgSemanticDiffError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise SvgSemanticDiffError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SvgSemanticDiffError(f"invalid fixture path: {original}: {exc}") from exc
 
 
 def _require_mapping(value: Any, label: str) -> dict[str, Any]:
@@ -399,8 +431,8 @@ def main(argv: list[str] | None = None) -> int:
     if len(args) != 1:
         print("Usage: svg_semantic_diff.py examples/<name>", file=sys.stderr)
         return 2
-    example_dir = Path(args[0])
     try:
+        example_dir = _resolve_example_dir_for_cli(Path(args[0]))
         report_path = build_svg_semantic_diff_report(example_dir)
     except SvgSemanticDiffError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
