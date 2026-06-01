@@ -42,6 +42,8 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_improve  Loop-centered single-fixture improvement entry point
 /fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
 /fig_queue_run Plan or execute the queue's workflow-agent subset
+/fig_closeout Read-only post-patch closeout checklist
+/fig_e2e_smoke Deterministic compile/export/status/loop smoke harness
 ```
 
 ## A typical figure (start to finish)
