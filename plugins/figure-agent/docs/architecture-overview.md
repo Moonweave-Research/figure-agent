@@ -434,8 +434,10 @@ as a compatibility alias for `release_ready`.
 ### Layer 7.5 — Driver / Operator Routing
 
 **Files**: `scripts/fig_driver.py`, `scripts/fig_run.py`,
+`scripts/fig_improve.py`,
 `scripts/fig_queue.py`, `scripts/fig_queue_run.py`,
 `scripts/fig_closeout.py`, `commands/fig_drive.md`, `commands/fig_run.md`,
+`commands/fig_improve.md`,
 `commands/fig_queue.md`, `commands/fig_queue_run.md`,
 `commands/fig_closeout.md`.
 
@@ -451,6 +453,11 @@ then re-queries the driver. It may run compile, initial adjudication scaffold,
 verify-only loop checkpoints, and safe non-golden draft export. It stops at
 host-vision critique, existing adjudication repair, source patch, SVG polish,
 human, accepted, tracked-golden, force-golden, and release boundaries.
+
+`/fig_improve` is the loop-centered single-fixture entry point for "keep
+improving this figure" requests. It wraps `/fig_run`, summarizes the final
+actor boundary, exposes optional ready-improvement candidates, and requires the
+operator to rerun it after host/human/patch/SVG/release work is completed.
 
 `/fig_queue` is the multi-fixture operator dashboard. It scans fixtures through
 `/fig_drive`, groups work by actor/action/blocker, and adds blocked-row

@@ -39,6 +39,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_status   "Where am I?" — read-only stage check
 /fig_drive    Dry-run advisory driver — recommends one next action
 /fig_run      Bounded runner — executes safe mechanical steps, stops at gates
+/fig_improve  Loop-centered single-fixture improvement entry point
 /fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
 /fig_queue_run Plan or execute the queue's workflow-agent subset
 ```
@@ -94,6 +95,14 @@ tracked-golden, force-golden, or release boundaries.
 the previous journal if useful, then rerun live `/fig_status` or `/fig_drive`
 and let the fresh driver choose the next action.
 
+When the user asks to keep improving one fixture through repeated critical
+loops, use `/fig_improve <name> --goal "<goal>" --execute --max-loops N`.
+It wraps `/fig_run`, summarizes the final actor boundary, and exposes optional
+improvement candidates when the fixture is already safe. It still stops before
+host critique, source patching, SVG polish, human decisions, accepted/golden
+roll-forward, and release mutation; after that actor acts, rerun
+`/fig_improve`.
+
 For multi-fixture work, start with the queue rather than running fixture commands
 one by one:
 
@@ -113,7 +122,7 @@ and closeout rows stay visible as blocked operator handoffs.
 
 ---
 
-## Current state (v0.9.0)
+## Current state (v0.9.1)
 
 | Area | What's working |
 |---|---|
@@ -121,6 +130,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, optional aesthetic intent, and optional SVG-polish delta packs, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, so agents have one safe next step without hiding detailed audit evidence. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
+| **Loop-centered improvement orchestrator** | `/fig_improve` wraps `/fig_run` for repeated one-fixture improvement requests. It gives agents one default entry point for "loop until clean enough" while preserving host/human/patch/SVG/release boundaries and optional-improvement handoffs. |
 | **Operator queue** | `/fig_queue` scans real fixtures through `/fig_drive`, groups next work by actor/action/blocker, emits blocked-row `operator_handoff` packets, and `/fig_queue_run` delegates the workflow-agent subset to `/fig_run` after plan-only review. |
 | **Runner journal** | `/fig_run --execute` records `.scratch/fig-run-runs/<timestamp>-<name>/` evidence by default. Journals are not replayable and do not replace fresh `/fig_status` or `/fig_drive` checks. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
@@ -135,7 +145,8 @@ and closeout rows stay visible as blocked operator handoffs.
 ### Release boundary
 
 - **Automatic:** deterministic compile, lint, freshness, export, golden, publication, visual/text clash, crop/accounting, package validation gates, and the shared single next-action summary.
-- **Semi-automatic:** `/fig_run` for allowlisted mechanical shell work,
+- **Semi-automatic:** `/fig_improve` for loop-centered one-fixture operation,
+  `/fig_run` for allowlisted mechanical shell work,
   host-vision critique, and `/fig_loop` review checkpoints. Claude reads
   prepared images/evidence and writes structured critique; lint and loop
   contracts verify the result.

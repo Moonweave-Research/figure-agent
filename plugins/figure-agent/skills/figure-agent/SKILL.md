@@ -72,6 +72,15 @@ evidence in execute mode. There is no resume command; after any interruption,
 inspect the prior journal only as context, then rerun live `/fig_status` or
 `/fig_drive` before using `/fig_run --execute` again.
 
+If the user asks to "use figure-agent to improve this", "loop 10 times", or
+"keep reviewing and polishing until no major issues remain" for one fixture,
+prefer `/fig_improve <name> --goal "<goal>" --execute --max-loops N`. It wraps
+`/fig_run` as a loop-centered orchestrator, then stops at host critique, human,
+patch, SVG polish, release, or optional-improvement boundaries. `/fig_improve`
+does not author critiques, patch source, edit SVG, force golden, or set
+accepted state. After the required actor acts, rerun `/fig_improve`; do not
+pretend the first call can cross host/human/release boundaries by itself.
+
 If the user asks to proceed autonomously across multiple fixtures, start with
 the queue:
 
@@ -146,6 +155,9 @@ polish backport, or actions the current mode forbids.
                          bounded executor for safe mechanical steps; stops at gates
                          and writes non-authoritative .scratch/fig-run-runs/
                          evidence; no resume/replay command exists
+/fig_improve <name> --goal "<goal>" --execute --max-loops N
+                         loop-centered one-fixture orchestrator over /fig_run;
+                         stops at host/human/patch/SVG/release/optional gates
 /fig_queue --mode <mode> --goal "<goal>"
                          read-only multi-fixture driver queue with actor/action
                          filters and optional command plan
