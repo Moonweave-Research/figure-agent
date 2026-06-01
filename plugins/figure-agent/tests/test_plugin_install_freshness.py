@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+from plugin_install_freshness import compare_plugin_install, latest_installed_root  # noqa: E402
+
+
+def _write_plugin(root: Path, *, status_text: str = "status") -> None:
+    (root / ".claude-plugin").mkdir(parents=True)
+    (root / "commands").mkdir(parents=True)
+    (root / "scripts").mkdir(parents=True)
+    (root / ".claude-plugin" / "plugin.json").write_text(
+        json.dumps({"name": "figure-agent", "version": "0.1.0"}) + "\n",
+        encoding="utf-8",
+    )
+    (root / "commands" / "fig_status.md").write_text(status_text, encoding="utf-8")
+    (root / "scripts" / "status.py").write_text("print('status')\n", encoding="utf-8")
+
+
+def test_compare_plugin_install_reports_fresh_when_payloads_match(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["schema"] == "figure-agent.plugin-install-freshness.v1"
+    assert result["state"] == "fresh"
+    assert result["changed_files"] == []
+    assert result["missing_files"] == []
+    assert result["extra_files"] == []
+
+
+def test_compare_plugin_install_reports_stale_file_differences(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source, status_text="new status")
+    _write_plugin(installed, status_text="old status")
+    (source / "commands" / "fig_drive.md").write_text("drive\n", encoding="utf-8")
+    (installed / "commands" / "old.md").write_text("old\n", encoding="utf-8")
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "stale"
+    assert result["changed_files"] == ["commands/fig_status.md"]
+    assert result["missing_files"] == ["commands/fig_drive.md"]
+    assert result["extra_files"] == ["commands/old.md"]
+    assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+
+
+def test_compare_plugin_install_reports_missing_install(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    _write_plugin(source)
+
+    result = compare_plugin_install(source, None)
+
+    assert result["state"] == "missing"
+    assert result["installed_root"] is None
+    assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+
+
+def test_compare_plugin_install_reports_invalid_install_root(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "not-a-plugin"
+    _write_plugin(source)
+    installed.mkdir()
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "invalid"
+    assert result["installed_root"] == str(installed.resolve())
+    assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+
+
+def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (installed / ".venv" / "bin").mkdir(parents=True)
+    (installed / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+    (installed / "examples" / "demo" / "build").mkdir(parents=True)
+    (installed / "examples" / "demo" / "build" / "demo.pdf").write_bytes(b"%PDF")
+    (installed / ".in_use").mkdir()
+    (installed / ".in_use" / "123").write_text("active\n", encoding="utf-8")
+    (installed / "examples" / "demo" / "demo.aux").write_text("aux\n", encoding="utf-8")
+    (installed / "examples" / "demo" / "demo.log").write_text("log\n", encoding="utf-8")
+    (installed / "examples" / "demo" / "previews").mkdir()
+    (installed / "examples" / "demo" / "previews" / "dummy.png").write_bytes(b"PNG")
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "fresh"
+    assert result["extra_files"] == []
+
+
+def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (source / "examples" / "demo").mkdir(parents=True)
+    (installed / "examples" / "demo").mkdir(parents=True)
+    (source / "examples" / "demo" / "demo.tex").write_text("new figure\n", encoding="utf-8")
+    (installed / "examples" / "demo" / "demo.tex").write_text("old figure\n", encoding="utf-8")
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "fresh"
+    assert result["changed_files"] == []
+
+
+def test_latest_installed_root_selects_highest_version_with_manifest(tmp_path: Path) -> None:
+    cache = tmp_path / "cache" / "figure-agent-local" / "figure-agent"
+    _write_plugin(cache / "0.8.1")
+    _write_plugin(cache / "0.9.2")
+    (cache / "scratch").mkdir(parents=True)
+
+    assert latest_installed_root(cache) == cache / "0.9.2"
