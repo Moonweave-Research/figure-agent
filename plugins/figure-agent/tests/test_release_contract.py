@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import subprocess
 import sys
 import tomllib
@@ -296,6 +297,19 @@ def test_readme_core_commands_cover_command_docs() -> None:
         command = f"/{command_doc.stem}"
         if command not in core_commands_section:
             missing.append(command)
+
+    assert missing == []
+
+
+def test_skill_quick_command_list_covers_readme_core_commands() -> None:
+    readme = (REPO_ROOT / "README.md").read_text()
+    skill = (REPO_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text()
+    core_commands_section = readme.partition("## Core commands")[2].partition(
+        "## A typical figure"
+    )[0]
+    readme_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", core_commands_section, re.M))
+    skill_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", skill, re.M))
+    missing = sorted(readme_commands - skill_commands)
 
     assert missing == []
 

@@ -90,6 +90,7 @@ the workflow together.
 | G100-25 | P2 | SVG polish queue triage | `/fig_drive --mode polish` computes `svg_polish_gate` and readiness, but `/fig_queue --mode polish` did not copy those fields into rows or the human-readable table. | A polish-mode queue could show only `run_fig_loop` or `mode_forbidden_action`, hiding whether the blocker was missing checkpoint evidence, `continue_tikz`, crop uncertainty, human gate, or a true ready path. | Operators still had to inspect each fixture's driver JSON individually to understand SVG polish readiness across a corpus. | Issue 100AD - polish queue SVG gate surfacing |
 | G100-26 | P3 | SVG polish queue summary | After Issue 100AD, SVG polish gate details were present per row but not aggregated in `summary`. | Corpus-level polish triage still required scanning every row to know how many fixtures were ready, blocked, `continue_tikz`, or blocked by a specific source. | Operators could miss the dominant SVG-polish blocker class across a fixture set. | Issue 100AE - polish queue SVG summary counts |
 | G100-27 | P3 | Queue mode docs drift | `/fig_queue` accepts every `fig_driver.MODES` value, but its command doc listed only `authoring`, `review`, `release`, and `polish`. | `fig_driver.MODES` includes `final`, while `commands/fig_queue.md` omitted it from the mode contract and examples. | Operators could miss the final-readiness queue path even though it is supported by code. | Issue 100AF - fig_queue driver-mode documentation guard |
+| G100-28 | P3 | Skill command list drift | The README core command list included `/fig_e2e_smoke`, but the agent-facing SKILL quick command list did not. | README and command docs exposed the deterministic smoke harness while the host-agent skill inventory omitted it. | Agents could miss the smoke harness during final plugin/fixture verification even after reading the plugin skill. | Issue 100AG - skill command list drift guard |
 
 ## Recommended Execution Order
 
@@ -295,6 +296,11 @@ the workflow together.
     Completed as a release-contract docs guard. `/fig_queue` docs now list the
     full `fig_driver.MODES` set, including `final`, and the release contract
     test fails if future driver modes are added without queue documentation.
+
+30. **Issue 100AG - skill command list drift guard**
+    Completed as a command-surface docs guard. The SKILL quick command list now
+    names `/fig_e2e_smoke`, and the release contract test fails if README core
+    commands are missing from the agent-facing skill inventory.
 
 ## Non-Goals
 
