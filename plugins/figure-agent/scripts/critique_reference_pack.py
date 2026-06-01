@@ -180,6 +180,12 @@ def _require_string_list(
     return items
 
 
+def _require_safe_relative_path(value: str, label: str) -> None:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts:
+        raise CritiqueReferencePackError(f"{label}.path must be a safe relative path")
+
+
 def _missing_keyword_groups(items: list[str], groups: dict[str, tuple[str, ...]]) -> list[str]:
     text = " \n".join(items).lower()
     return [
@@ -242,7 +248,7 @@ def _validate_reference_learning(data: dict[str, Any], *, strict_authoring: bool
     all_forbidden_transfer: list[str] = []
     for index, item in enumerate(references):
         label = f"critique_reference_pack.reference_learning.references[{index}]"
-        _require_string(item, "path", label=label)
+        _require_safe_relative_path(_require_string(item, "path", label=label), label)
         _require_string_list(item, "roles", label=label, allowed=REFERENCE_LEARNING_ROLES)
         all_allowed_transfer.extend(_require_string_list(item, "allowed_transfer", label=label))
         all_forbidden_transfer.extend(_require_string_list(item, "forbidden_transfer", label=label))

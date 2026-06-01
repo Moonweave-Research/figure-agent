@@ -294,6 +294,35 @@ reference_learning:
         load_reference_pack(pack_path)
 
 
+@pytest.mark.parametrize("unsafe_path", ["../outside.png", "/tmp/outside.png"])
+def test_load_reference_pack_rejects_unsafe_reference_learning_path(
+    tmp_path: Path,
+    unsafe_path: str,
+) -> None:
+    pack_path = tmp_path / "critique_reference_pack.yaml"
+    _write_valid_pack(pack_path)
+    pack_path.write_text(
+        pack_path.read_text(encoding="utf-8")
+        + f"""
+reference_learning:
+  schema: figure-agent.reference-learning.v1
+  references:
+    - path: {unsafe_path}
+      roles:
+        - style_anchor
+      allowed_transfer:
+        - restrained palette
+      forbidden_transfer:
+        - copy component topology
+      rationale: Unsafe reference path should not be accepted as an opt-in metric anchor.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CritiqueReferencePackError, match="path"):
+        load_reference_pack(pack_path)
+
+
 def test_load_reference_pack_rejects_empty_reference_learning_transfer_lists(
     tmp_path: Path,
 ) -> None:

@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BS, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BT, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BS reference extract path boundary;
+- branch baseline: `main` after Issue 100BT reference-learning path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -129,6 +129,7 @@ the workflow together.
 | G100-64 | P2 | Publication scaffold fixture identity boundary | `publication_gate.py` scaffold helpers accepted unsafe fixture strings and embedded them into `QUALITY_AUDIT.md` as `fixture: ../outside`. | TDD reproduced `publication_audit_scaffold_text("../outside")` returning text and `write_publication_audit_scaffold(..., fixture="../outside")` writing a scaffold file. | Publication provenance scaffolds should not normalize traversal syntax or non-fixture identities into accepted/release-adjacent human audit files. | Issue 100BQ - publication scaffold fixture identity boundary |
 | G100-65 | P2 | TeX coordinate shift file-type boundary | `tex_coordinate_shift.py --write` accepted any existing file path, not only `.tex`, and could mutate non-TeX files containing coordinate-like text. | TDD reproduced `spec.yaml` being rewritten from `(1.00, 2.00)` to shifted coordinates through the TeX-only helper. | A source authoring helper should fail before mutation when the target is not a TeX source file. | Issue 100BR - TeX coordinate shift suffix boundary |
 | G100-66 | P2 | Reference extract path boundary | `reference_extract.py` accepted `spec.yaml.reference_image: ../outside.png` and read a reference image outside the fixture before writing `coordinate_hints.yaml`. | TDD reproduced an outside PNG being consumed and a fixture-local coordinate hints file being written. | Reference-derived authoring evidence must remain bound to the declared fixture; escaped references can make unrelated images look like trusted layout evidence. | Issue 100BS - reference extract path boundary |
+| G100-67 | P2 | Reference learning path boundary | `critique_reference_pack.py` validated `reference_learning.references[].path` as a non-empty string but did not reject absolute or parent-relative paths at the pack contract layer. | TDD reproduced `../outside.png` and `/tmp/outside.png` being accepted as valid reference-learning anchors; downstream metrics only skipped them later. | Unsafe reference-learning paths could make a malformed pack look like a missing/skipped metrics issue instead of an invalid contract, weakening reference-aesthetic routing. | Issue 100BT - reference-learning path boundary |
 
 ## Recommended Execution Order
 
