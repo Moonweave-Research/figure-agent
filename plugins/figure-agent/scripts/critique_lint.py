@@ -200,6 +200,9 @@ _CURRENT_ARTIFACT_EVIDENCE_MARKERS = (
     "pdf",
     "bbox",
 )
+_SYMBOLIC_ENTITY_RE = re.compile(r"\b[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9+\-]+\b")
+_TEX_TEXT_COMMAND_RE = re.compile(r"\\(?:mathrm|operatorname|text)\{([^{}]+)\}")
+_UNESCAPED_PERCENT_RE = re.compile(r"(?<!\\)%")
 
 
 @dataclass(frozen=True)
@@ -1607,6 +1610,74 @@ def _historical_visual_clash_regression_violations(
     return violations
 
 
+def _normalize_tex_symbol_text(value: str) -> str:
+    text = _TEX_TEXT_COMMAND_RE.sub(r"\1", value)
+    text = text.replace("$", "")
+    text = text.replace("{", "").replace("}", "")
+    text = text.replace("\\", "")
+    return text
+
+
+def _symbolic_entities(value: str) -> set[str]:
+    normalized = _normalize_tex_symbol_text(value)
+    return {match.group(0) for match in _SYMBOLIC_ENTITY_RE.finditer(normalized)}
+
+
+def _active_and_comment_tex_text(tex_path: Path) -> tuple[str, str]:
+    active_lines: list[str] = []
+    comment_lines: list[str] = []
+    for line in tex_path.read_text(encoding="utf-8").splitlines():
+        match = _UNESCAPED_PERCENT_RE.search(line)
+        if match is None:
+            active_lines.append(line)
+            continue
+        active_lines.append(line[: match.start()])
+        comment_lines.append(line[match.end() :])
+    return (
+        _normalize_tex_symbol_text("\n".join(active_lines)),
+        _normalize_tex_symbol_text("\n".join(comment_lines)),
+    )
+
+
+def _critique_entity_consistency_violations(
+    example_dir: Path,
+    frontmatter: dict[str, Any],
+) -> list[CritiqueLintViolation]:
+    tex_path = example_dir / f"{example_dir.name}.tex"
+    if not tex_path.is_file():
+        return []
+    audit = frontmatter.get("audit_enumeration")
+    label_matches = audit.get("label_target_matching") if isinstance(audit, dict) else None
+    if not isinstance(label_matches, list):
+        return []
+
+    active_text, comment_text = _active_and_comment_tex_text(tex_path)
+    active_entities = _symbolic_entities(active_text)
+    comment_entities = _symbolic_entities(comment_text)
+    violations: list[CritiqueLintViolation] = []
+    for index, item in enumerate(label_matches):
+        if not isinstance(item, dict) or item.get("matches") is not True:
+            continue
+        label = item.get("label")
+        if not isinstance(label, str):
+            continue
+        for entity in sorted(_symbolic_entities(label)):
+            if entity in active_entities:
+                continue
+            state = "comment-only" if entity in comment_entities else "absent"
+            violations.append(
+                CritiqueLintViolation(
+                    severity="blocker",
+                    category="critique_entity_consistency",
+                    message=(
+                        "label_target_matching "
+                        f"entry {index} entity {entity} is {state} in active TeX source"
+                    ),
+                )
+            )
+    return violations
+
+
 def _crop_manifest_required_ids(
     example_dir: Path,
     manifest_path: Path,
@@ -2049,6 +2120,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
 
     if frontmatter.get("schema") in STRUCTURED_ACCEPT_SIMPLIFICATION_SCHEMAS:
         violations.extend(_visual_clash_accept_simplification_violations(frontmatter))
+    if violations:
+        return violations
+    violations.extend(_critique_entity_consistency_violations(example_dir, frontmatter))
     if violations:
         return violations
 
