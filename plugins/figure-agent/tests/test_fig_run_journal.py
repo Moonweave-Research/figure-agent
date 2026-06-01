@@ -32,6 +32,7 @@ def _write_run_journal(
     fixture: str = "runner_demo",
     final_stop_reason: str = "host_boundary",
     mtime: float | None = None,
+    evidence_snapshot: dict | None = None,
 ) -> Path:
     run_dir = repo_root / ".scratch" / "fig-run-runs" / run_id
     run_dir.mkdir(parents=True)
@@ -59,6 +60,8 @@ def _write_run_journal(
         "rerun_live_status_first": True,
         "rerun_live_driver_first": True,
     }
+    if evidence_snapshot is not None:
+        manifest["evidence_snapshot"] = evidence_snapshot
     payload = {
         "schema": "figure-agent.run.v1",
         "fixture": fixture,
@@ -314,6 +317,40 @@ def test_latest_journal_summary_marks_reference_inputs_newer_as_stale(
         "examples/runner_demo/refs/figure-ref.png",
         "examples/runner_demo/refs/panel-a-ref.png",
     ]
+
+
+def test_latest_journal_summary_marks_hash_changed_evidence_as_stale(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_fixture(tmp_path)
+    old_time = time.time() - 20
+    journal_time = time.time() - 10
+    _touch_fixture_evidence(example_dir, old_time)
+    briefing = example_dir / "briefing.md"
+    _write_run_journal(
+        tmp_path,
+        run_id="20260601-010000-old",
+        mtime=journal_time,
+        evidence_snapshot={
+            "schema": "figure-agent.fig-run-evidence-snapshot.v1",
+            "items": [
+                {
+                    "path": "examples/runner_demo/briefing.md",
+                    "sha256": (
+                        "sha256:"
+                        "7bdef7a39d1867bb1c9e10c15af25068a8c5e39978a52919463a04bd758a22ef"
+                    ),
+                }
+            ],
+        },
+    )
+    briefing.write_text("changed without newer mtime\n", encoding="utf-8")
+    os.utime(briefing, (old_time, old_time))
+
+    summary = latest_journal_summary(tmp_path, "runner_demo")
+
+    assert summary["state"] == "stale"
+    assert summary["stale_against"] == ["examples/runner_demo/briefing.md"]
 
 
 def test_latest_journal_summary_uses_custom_runs_root(tmp_path: Path) -> None:

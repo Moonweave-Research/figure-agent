@@ -1271,6 +1271,11 @@ def test_patch_handoff_boundary_is_deferred_without_patch_scope(
 def test_main_records_non_authoritative_run_journal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    example_dir = tmp_path / "examples" / "runner_demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "runner_demo.tex").write_text("% source\n", encoding="utf-8")
+    (example_dir / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text("name: runner_demo\n", encoding="utf-8")
     _install_driver_sequence(
         monkeypatch,
         [
@@ -1336,6 +1341,15 @@ def test_main_records_non_authoritative_run_journal(
     assert manifest["run_json"] == "run.json"
     assert manifest["steps"] == ["steps/step_001.json"]
     assert manifest["stop_markdown"] == "stop.md"
+    snapshot = manifest["evidence_snapshot"]
+    assert snapshot["schema"] == "figure-agent.fig-run-evidence-snapshot.v1"
+    assert {
+        item["path"] for item in snapshot["items"]
+    } >= {
+        "examples/runner_demo/runner_demo.tex",
+        "examples/runner_demo/briefing.md",
+        "examples/runner_demo/spec.yaml",
+    }
 
     assert json.loads(run_path.read_text(encoding="utf-8")) == payload
     assert json.loads(step_path.read_text(encoding="utf-8")) == payload["steps"][0]

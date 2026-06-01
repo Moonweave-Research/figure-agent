@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from fig_run_evidence import evidence_snapshot  # noqa: E402
+
 SCHEMA = "figure-agent.fig-run-journal.v1"
 REF_SCHEMA = "figure-agent.fig-run-journal-ref.v1"
 
@@ -122,6 +124,10 @@ def _manifest(
         "commands_are_evidence_only": True,
         "rerun_live_status_first": True,
         "rerun_live_driver_first": True,
+        "evidence_snapshot": evidence_snapshot(
+            repo_root,
+            str(payload.get("fixture") or ""),
+        ),
     }
 
 

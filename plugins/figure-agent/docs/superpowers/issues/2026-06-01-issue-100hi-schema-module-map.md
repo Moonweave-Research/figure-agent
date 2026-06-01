@@ -76,6 +76,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.run.v1` | bounded execution | `fig_run.py` | `fig_run_records.py`, `fig_run_journal.py` | Executes only allowlisted deterministic shell actions |
 | `figure-agent.closeout.v1` | post-run closeout | `fig_closeout.py` | `fig_driver.py`, `next_action_summary.py` | Can block continuation until compile/critique/loop/export closeout is clean |
 | `figure-agent.fig-run-journal.v1` / `figure-agent.fig-run-journal-ref.v1` | run journal | `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative; never replay |
+| `figure-agent.fig-run-evidence-snapshot.v1` | run journal freshness | `fig_run_evidence.py`, `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative content freshness check; never replay |
 | `figure-agent.fig-run-journal-error.v1` | run journal error | `fig_run.py` | `fig_run_journal.py` | Diagnostic only; rerun live status/driver |
 | `figure-agent.fig-run-journal-summary.v1` | run continuation UX | `fig_run_journal.py` | operators | Non-authoritative; points to live status/driver |
 | `figure-agent.boundary-handoff.v1` | stop explanation | `fig_run.py`, `next_action_summary.py` | operators, outer agents | Explanation only, not a second router |

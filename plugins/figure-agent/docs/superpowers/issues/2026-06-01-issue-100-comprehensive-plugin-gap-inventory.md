@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AQ, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AR, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100AQ run journal critique input parity;
+- branch baseline: `main` after Issue 100AR run journal evidence hash snapshot;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -71,7 +71,7 @@ the workflow together.
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
 | G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. Issue 100Z adds a release-contract guard so script schema constants cannot drift out of the module map. | Future changes now have a test-backed ownership map instead of relying on manual updates alone. | Issue 100H - schema capability matrix and deprecation policy; Issue 100Z - schema map drift guard |
-| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 94 scripts, 101 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
+| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 95 scripts, 101 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
 | G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
@@ -101,6 +101,7 @@ the workflow together.
 | G100-36 | P2 | Run journal inspection/SVG polish evidence staleness | Issue 100AN still omitted `inspection_trace.yaml` and SVG polish sidecars from journal staleness checks. | Inspection traces and SVG polish delta/final-artifact sidecars can change after a run journal stops. | A continuation summary could appear available even though host-read accountability or SVG polish evidence changed after the interrupted run. | Issue 100AO - run journal inspection/SVG polish evidence staleness |
 | G100-37 | P2 | Run journal declared context staleness | `fig_run_journal.py` still did not consider spec-declared paper-wide aesthetic context or journal art-direction playbook packs stored outside the fixture directory. | `quality_manifest.py` includes declared context/playbook paths in critique input hashing, but the journal helper used only fixed fixture-local paths. | A continuation summary could appear available even though paper-wide or journal-specific art-direction context changed after the interrupted run. | Issue 100AP - run journal declared context pack staleness |
 | G100-38 | P2 | Run journal critique input parity | `fig_run_journal.py` still maintained its own stale evidence list instead of reusing the critique input manifest source set. | Reference images, panel reference images, `reference/reference_pack.md`, and shared style lock changes participate in critique freshness but were not guaranteed to stale a prior journal. | An interrupted run could appear resumable even though the next `/fig_critique` would be based on changed reference/style evidence. | Issue 100AQ - run journal critique input parity |
+| G100-39 | P2 | Run journal content freshness | `fig_run_journal.py` still used mtime-only stale checks for continuation evidence. | A fixture evidence file can be rewritten while preserving or restoring an older mtime than the run journal. | An interrupted run could appear available even though briefing/spec/evidence content changed since the journal was recorded. | Issue 100AR - run journal evidence hash snapshot |
 
 ## Recommended Execution Order
 
@@ -366,6 +367,12 @@ the workflow together.
     `quality_manifest.critique_manifest_paths()` so reference, panel reference,
     authoring reference-pack, style-lock, and future shared critique input paths
     stale prior journals through the same source set used by critique freshness.
+
+41. **Issue 100AR - run journal evidence hash snapshot**
+    Completed as a continuation-safety guard. `fig_run_records.py` now stores a
+    non-authoritative `evidence_snapshot` of repo-relative sha256 entries, and
+    `fig_run_journal.py` marks a journal stale when a snapshotted file changes
+    content even if its mtime is older than the journal.
 
 ## Non-Goals
 
