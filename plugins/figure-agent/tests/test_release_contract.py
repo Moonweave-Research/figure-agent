@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 import tomllib
@@ -356,3 +357,39 @@ def test_plugin_package_audit_removes_plugin_root_worktree_metadata(tmp_path: Pa
     assert not (plugin_root / ".claude").exists()
     assert not (plugin_root / "plugins").exists()
     assert (plugin_root / "commands" / "fig_status.md").is_file()
+
+
+def test_schema_module_map_covers_script_schema_constants() -> None:
+    module_map = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100hi-schema-module-map.md"
+    ).read_text()
+    missing: list[str] = []
+    for script_path in sorted(SCRIPTS_ROOT.glob("*.py")):
+        tree = ast.parse(script_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign):
+                continue
+            for target in node.targets:
+                if not isinstance(target, ast.Name):
+                    continue
+                if target.id != "SCHEMA" and not target.id.endswith("_SCHEMA"):
+                    continue
+                if not isinstance(node.value, ast.Constant):
+                    continue
+                schema = node.value.value
+                if not isinstance(schema, str) or not schema.startswith("figure-agent."):
+                    continue
+                critique_shorthand = schema.replace("figure-agent.critique.", "")
+                if (
+                    schema.startswith("figure-agent.critique.v")
+                    and critique_shorthand in module_map
+                ):
+                    continue
+                if schema not in module_map:
+                    missing.append(f"{schema} ({script_path.relative_to(REPO_ROOT)})")
+
+    assert missing == []

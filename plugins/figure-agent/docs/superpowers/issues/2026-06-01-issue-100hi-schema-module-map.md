@@ -63,7 +63,9 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.text-boundary-clash.v1` | deterministic detector | `check_text_boundary_clash.py` | `audit_evidence_summary.py`, `fig_closeout.py` | Can block closeout when stale/missing or malformed |
 | `figure-agent.label-path-proximity.v1` | deterministic detector | `check_label_path_proximity.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
 | `figure-agent.undeclared-geometry.v1` | deterministic detector | `check_undeclared_geometry.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
+| `figure-agent.warning-budget.v1` | deterministic detector budget | `check_visual_clash_budget.py` | `fig_driver_guidance.py`, operators | Can route final mode to strict compile or human review when warnings exceed cap |
 | `figure-agent.critique-adjudication.v1` | critique decision handoff | `critique_adjudication.py` (`scaffold`/`sync`) | `fig_loop_adjudication.py`, `fig_closeout.py` | Can create human gate, stale gate, or patch handoff |
+| `figure-agent.adjudication-decision-diff.v1` | critique decision preservation | `critique_adjudication.py sync --preview` | operators | Read-only preview; does not write adjudication decisions |
 | `figure-agent.journal-grade-assessment.v1` | critique sub-schema | `critique_brief_sections.py` | `critique_schema_validator.py`, `fig_loop_assessments.py` | Advisory score block; never overrides gates |
 | `figure-agent.journal-art-direction-playbook-audit.v1` | critique sub-schema | `critique_brief.py` | `critique_schema_validator.py`, `critique_lint.py` | Requires anchored art-direction evidence |
 | `figure-agent.top-tier-audit-summary.v1` | loop summary | `fig_loop_assessments.py` | `fig_driver.py`, `ready_improvement.py` | Can create human/art-direction stop before release |
@@ -89,6 +91,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.svg-polish-manifest.v1` | final artifact integrity | `svg_polish_manifest.py` | `status.py`, `check_golden_artifacts.py` | Can block final readiness |
 | `figure-agent.svg-polish-recipe.v1` | SVG edit intent | `svg_polish_recipe.py` | `svg_polish_executor.py`, `svg_polish_delta.py` | Executor input only |
 | `figure-agent.svg-polish-plan.v1` | SVG executor plan | `svg_polish_executor.py` | operators, tests | Plan evidence only until delta/manifest validate |
+| `figure-agent.svg-polish-positive-harness.v1` | SVG polish plumbing harness | `svg_polish_positive_harness.py` | tests, operators | Synthetic proof only; not real-figure readiness |
 | `figure-agent.svg-polish-readiness.v1` / `figure-agent.svg-polish-gate.v1` | SVG route/gate | `fig_driver_editorial.py` | `fig_driver.py`, `fig_loop.py` | Can route to SVG polish or semantic backport |
 | `figure-agent.svg-polish-delta.v1` | SVG before/after audit pack | `svg_polish_delta.py` | `critique_brief.py`, `critique_lint.py`, `fig_driver.py` | Can require semantic backport or human art direction |
 | `figure-agent.svg-semantic-diff.v1` | SVG semantic safety | `svg_semantic_diff.py` | `svg_polish_manifest.py` | Can block final artifact freshness |
@@ -98,6 +101,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.paper-aesthetic-context.v1` | paper-wide consistency | `paper_aesthetic_context.py` | `critique_brief.py`, `critique_lint.py` | Requires explicit anchor citations |
 | `figure-agent.journal-art-direction-playbook.v1` | target-journal style anchors | `journal_art_direction_playbook.py` | `critique_brief.py`, `critique_lint.py` | Requires exact anchor citations |
 | `figure-agent.external-vision-review.v1` | optional second opinion | `external_vision_review.py` | `quality_manifest.py`, `critique_lint.py` | Evidence only unless routed through findings |
+| `figure-agent.inspection-trace.v1` | host/subagent inspection trace | `inspection_trace.py` | `critique_lint.py`, operators | Optional auditability artifact; cannot prove image inspection by itself |
 | `figure-agent.diagnostic-artifact-provenance.v1` | scratch/debug artifact safety | `diagnostic_artifact_provenance.py` | operators | Prevents stale diagnostics from becoming truth |
 | `figure-agent.plugin-install-freshness.v1` | plugin install diagnostics | `plugin_install_freshness.py` | operators | Read-only source-vs-cache check; never mutates install state |
 
