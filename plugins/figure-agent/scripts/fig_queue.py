@@ -80,7 +80,7 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
     status = summary.get("status")
     if not isinstance(status, dict):
         status = {}
-    return {
+    row = {
         "fixture": summary.get("fixture"),
         "mode": mode,
         "action": summary.get("action"),
@@ -97,6 +97,40 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    row.update(_svg_polish_fields(summary, mode=mode))
+    return row
+
+
+def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
+    if mode != "polish":
+        return {}
+    fields: dict[str, Any] = {}
+    gate = summary.get("svg_polish_gate")
+    if isinstance(gate, dict):
+        fields["svg_polish_gate_state"] = gate.get("state")
+        fields["can_start_svg_polish"] = gate.get("can_start_svg_polish")
+        fields["svg_polish_next_action"] = gate.get("next_action")
+    readiness = summary.get("svg_polish_readiness")
+    if isinstance(readiness, dict):
+        fields.setdefault("can_start_svg_polish", readiness.get("can_start_svg_polish"))
+        fields.setdefault("svg_polish_next_action", readiness.get("next_action"))
+        fields["svg_polish_recommended_path"] = readiness.get("recommended_path")
+        fields["svg_polish_blocking_sources"] = _svg_polish_blocking_sources(readiness)
+    return {key: value for key, value in fields.items() if value is not None}
+
+
+def _svg_polish_blocking_sources(readiness: dict[str, Any]) -> list[str]:
+    sources: list[str] = []
+    blocking_items = readiness.get("blocking_items")
+    if not isinstance(blocking_items, list):
+        return sources
+    for item in blocking_items:
+        if not isinstance(item, dict):
+            continue
+        source = item.get("source")
+        if isinstance(source, str) and source and source not in sources:
+            sources.append(source)
+    return sources
 
 
 def _error_row(name: str, *, mode: str, stop_boundary: str, error: str) -> dict[str, Any]:
@@ -395,6 +429,10 @@ def build_queue(
 def _cell(value: Any) -> str:
     if value is None:
         return "-"
+    if isinstance(value, list):
+        if not value:
+            return "-"
+        return ",".join(str(item) for item in value)
     return str(value)
 
 
@@ -420,27 +458,59 @@ def _table_next_command(row: dict[str, Any]) -> str | None:
 
 
 def print_table(queue: dict[str, Any]) -> None:
-    print("fixture\tactor\taction\tstop_boundary\tfirst_blocker\tnext_step\tnext_command")
-    for row in queue.get("rows", []):
-        print(
-            "\t".join(
+    rows = queue.get("rows", [])
+    show_svg_columns = _has_svg_polish_columns(rows)
+    header = ["fixture", "actor", "action", "stop_boundary", "first_blocker"]
+    if show_svg_columns:
+        header.extend(
+            ["svg_gate", "can_svg", "polish_path", "polish_next", "polish_blockers"]
+        )
+    header.extend(["next_step", "next_command"])
+    print("\t".join(header))
+    for row in rows:
+        cells = [
+            _cell(row.get("fixture")),
+            _cell(row.get("required_actor")),
+            _cell(row.get("action")),
+            _cell(row.get("stop_boundary")),
+            _cell(row.get("first_blocker")),
+        ]
+        if show_svg_columns:
+            cells.extend(
                 [
-                    _cell(row.get("fixture")),
-                    _cell(row.get("required_actor")),
-                    _cell(row.get("action")),
-                    _cell(row.get("stop_boundary")),
-                    _cell(row.get("first_blocker")),
-                    _cell(_table_next_step(row)),
-                    _cell(_table_next_command(row)),
+                    _cell(row.get("svg_polish_gate_state")),
+                    _cell(row.get("can_start_svg_polish")),
+                    _cell(row.get("svg_polish_recommended_path")),
+                    _cell(row.get("svg_polish_next_action")),
+                    _cell(row.get("svg_polish_blocking_sources")),
                 ]
             )
+        cells.extend(
+            [
+                _cell(_table_next_step(row)),
+                _cell(_table_next_command(row)),
+            ]
         )
+        print("\t".join(cells))
     summary = queue.get("summary", {})
     print(
         "summary "
         f"total={summary.get('total', 0)} "
         f"errors={summary.get('errors', 0)}"
     )
+
+
+def _has_svg_polish_columns(rows: Any) -> bool:
+    if not isinstance(rows, list):
+        return False
+    keys = {
+        "svg_polish_gate_state",
+        "can_start_svg_polish",
+        "svg_polish_recommended_path",
+        "svg_polish_next_action",
+        "svg_polish_blocking_sources",
+    }
+    return any(isinstance(row, dict) and not keys.isdisjoint(row) for row in rows)
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
