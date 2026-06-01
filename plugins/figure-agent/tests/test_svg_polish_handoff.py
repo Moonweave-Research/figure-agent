@@ -20,8 +20,8 @@ from svg_polish_manifest import (  # noqa: E402
 )
 
 
-def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> tuple[Path, Path]:
-    fig_dir = tmp_path / "examples" / name
+def _make_fixture_at(root: Path, name: str = "demo_fig") -> tuple[Path, Path]:
+    fig_dir = root / name
     (fig_dir / "exports").mkdir(parents=True)
     (fig_dir / "polish").mkdir()
     (fig_dir / f"{name}.tex").write_text(
@@ -46,6 +46,10 @@ def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> tuple[Path, Path]:
     style_lock = fig_dir / "style.sty"
     style_lock.write_text("% style\n", encoding="utf-8")
     return fig_dir, style_lock
+
+
+def _make_fixture(tmp_path: Path, name: str = "demo_fig") -> tuple[Path, Path]:
+    return _make_fixture_at(tmp_path / "examples", name)
 
 
 def _write_default_handoff(
@@ -231,3 +235,108 @@ def test_cli_dry_run_does_not_write_outputs(tmp_path: Path, capsys) -> None:
     assert "polish/svg_polish_manifest.yaml" in output
     assert not (fig_dir / "polish" / "svg_polish_audit.md").exists()
     assert not (fig_dir / "polish" / "svg_polish_manifest.yaml").exists()
+
+
+def test_cli_write_rejects_parent_relative_fixture_before_writing(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir, style_lock = _make_fixture_at(tmp_path, "outside")
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "examples/../outside",
+            "--reviewer",
+            "author",
+            "--editor",
+            "human",
+            "--toolchain",
+            "Inkscape:1.4",
+            "--edit-class",
+            "label_micro_position",
+            "--reviewed-at",
+            "2026-05-23T00:00:00Z",
+            "--style-lock-path",
+            str(style_lock),
+            "--base-dir",
+            str(tmp_path),
+            "--write",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "invalid fixture path" in error
+    assert not (outside_dir / "polish" / "svg_polish_audit.md").exists()
+    assert not (outside_dir / "polish" / "svg_polish_manifest.yaml").exists()
+
+
+def test_cli_write_rejects_existing_relative_dir_outside_examples(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    (tmp_path / "examples").mkdir()
+    outside_dir, style_lock = _make_fixture_at(tmp_path, "outside")
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "outside",
+            "--reviewer",
+            "author",
+            "--editor",
+            "human",
+            "--toolchain",
+            "Inkscape:1.4",
+            "--edit-class",
+            "label_micro_position",
+            "--reviewed-at",
+            "2026-05-23T00:00:00Z",
+            "--style-lock-path",
+            str(style_lock),
+            "--base-dir",
+            str(tmp_path),
+            "--write",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "invalid fixture path" in error
+    assert not (outside_dir / "polish" / "svg_polish_audit.md").exists()
+    assert not (outside_dir / "polish" / "svg_polish_manifest.yaml").exists()
+
+
+def test_cli_write_accepts_examples_fixture_path(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    fig_dir, style_lock = _make_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = main(
+        [
+            "examples/demo_fig",
+            "--reviewer",
+            "author",
+            "--editor",
+            "human",
+            "--toolchain",
+            "Inkscape:1.4",
+            "--edit-class",
+            "label_micro_position",
+            "--reviewed-at",
+            "2026-05-23T00:00:00Z",
+            "--style-lock-path",
+            str(style_lock),
+            "--base-dir",
+            str(tmp_path),
+            "--write",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "wrote polish/svg_polish_audit.md" in output
+    assert "wrote polish/svg_polish_manifest.yaml" in output
+    assert (fig_dir / "polish" / "svg_polish_audit.md").is_file()
+    assert (fig_dir / "polish" / "svg_polish_manifest.yaml").is_file()
