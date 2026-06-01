@@ -5,9 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from fig_run_evidence import (  # noqa: E402
     fixture_evidence_paths,
     repo_relative,
@@ -159,6 +161,7 @@ def latest_journal_summary(
     *,
     runs_root: Path | None = None,
 ) -> dict[str, Any]:
+    fixture_identity.validate_fixture_name(name)
     runs_root = runs_root or repo_root / ".scratch" / "fig-run-runs"
     candidates = _candidate_journals(runs_root, name)
     if not candidates:
@@ -233,6 +236,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    try:
+        fixture_identity.validate_fixture_name(args.name)
+    except ValueError as exc:
+        print(f"fig_run_journal.py: {exc}", file=sys.stderr)
+        return 2
     summary = latest_journal_summary(args.repo_root, args.name, runs_root=args.runs_root)
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0

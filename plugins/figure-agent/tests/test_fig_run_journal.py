@@ -6,8 +6,11 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import fig_run_journal as fig_run_journal_mod  # noqa: E402
 from fig_run_journal import latest_journal_summary, main  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -105,6 +108,36 @@ def test_latest_journal_summary_reports_missing_without_runs_root(tmp_path: Path
         "/fig_status runner_demo",
         "/fig_drive runner_demo --mode review --goal 'close loop' --dry-run",
     ]
+
+
+def test_latest_journal_summary_rejects_unsafe_fixture_name_before_live_commands(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="single examples/<name> directory name"):
+        latest_journal_summary(tmp_path, "../outside")
+
+
+def test_cli_rejects_unsafe_fixture_name_cleanly(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    result = main(["../outside", "--repo-root", str(tmp_path)])
+
+    assert result == 2
+    captured = capsys.readouterr()
+    assert "single examples/<name> directory name" in captured.err
+    assert "Traceback" not in captured.err
+    assert captured.out == ""
+
+
+def test_cli_does_not_mask_later_value_errors(tmp_path: Path, monkeypatch) -> None:
+    def fail_after_name_validation(*_args, **_kwargs):
+        raise ValueError("later journal failure")
+
+    monkeypatch.setattr(fig_run_journal_mod, "latest_journal_summary", fail_after_name_validation)
+
+    with pytest.raises(ValueError, match="later journal failure"):
+        main(["runner_demo", "--repo-root", str(tmp_path)])
 
 
 def test_latest_journal_summary_selects_newest_valid_fixture_journal(
