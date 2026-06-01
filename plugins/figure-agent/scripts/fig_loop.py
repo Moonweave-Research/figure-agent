@@ -118,13 +118,19 @@ def _apply_external_vision_stop(
     state = external_summary.get("evaluation_state")
     if state == "needs_human":
         conflicts = external_summary.get("active_conflicts") or []
-        conflict_text = ", ".join(conflicts) if conflicts else "external vision review"
+        findings = external_summary.get("active_findings") or []
+        if conflicts:
+            detail_text = f"external vision conflict: {', '.join(conflicts)}"
+        elif findings:
+            detail_text = f"external vision finding: {', '.join(findings)}"
+        else:
+            detail_text = "external vision review"
         updated = dict(loop_decision)
         updated.update(
             {
                 "stop_reason": "human_gate_required",
                 "recommended_next_action": (
-                    f"human review required for external vision conflict: {conflict_text}"
+                    f"human review required for {detail_text}"
                 ),
                 "active_patch_target": None,
                 "human_gate_status": "required",

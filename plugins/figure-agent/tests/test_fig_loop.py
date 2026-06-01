@@ -1320,6 +1320,33 @@ def test_loop_surfaces_external_vision_conflict_as_human_gate(
     assert stdout_summary["external_vision_review_summary"] == summary
 
 
+def test_loop_surfaces_external_vision_finding_as_human_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _write_external_vision_review(fixture, conflict=False)
+    critique = _write_v1_2_critique(fixture)
+    _write_adjudication(fixture, file_sha256(critique))
+    _patch_fresh_status(monkeypatch)
+
+    run_dir = run_loop(
+        "loop_demo",
+        "inspect external vision finding",
+        repo_root=tmp_path,
+        runs_root=tmp_path / ".scratch" / "fig-loop-runs",
+    )
+
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    summary = iteration["external_vision_review_summary"]
+
+    assert summary["evaluation_state"] == "needs_human"
+    assert summary["active_findings"] == ["EV001:MAJOR"]
+    assert iteration["stop_reason"] == "human_gate_required"
+    assert iteration["human_gate_status"] == "required"
+    assert "external vision finding: EV001:MAJOR" in iteration["recommended_next_action"]
+
+
 def test_loop_routes_reference_aesthetic_metric_severe_divergence_to_human_gate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
