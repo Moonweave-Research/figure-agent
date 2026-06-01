@@ -16,6 +16,11 @@ DEFAULT_CACHE_PARENT = (
     Path.home() / ".claude" / "plugins" / "cache" / "figure-agent-local" / "figure-agent"
 )
 UPDATE_COMMAND = "claude plugin update figure-agent@figure-agent-local"
+INSTALL_COMMAND = "claude plugin install figure-agent@figure-agent-local"
+REINSTALL_COMMAND = (
+    "claude plugin uninstall figure-agent && "
+    "claude plugin install figure-agent@figure-agent-local"
+)
 
 EXTRA_JUNK_DIR_NAMES = {
     ".git",
@@ -35,6 +40,15 @@ EXTRA_JUNK_FILE_SUFFIXES = {
 
 def _is_plugin_root(root: Path) -> bool:
     return (root / ".claude-plugin" / "plugin.json").is_file()
+
+
+def _plugin_version(root: Path) -> str | None:
+    try:
+        payload = json.loads((root / ".claude-plugin" / "plugin.json").read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    version = payload.get("version") if isinstance(payload, dict) else None
+    return version if isinstance(version, str) and version else None
 
 
 def _version_key(path: Path) -> tuple[tuple[int, ...], str]:
@@ -116,18 +130,23 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     source_root = source_root.resolve()
     if not _is_plugin_root(source_root):
         raise ValueError(f"source_root is not a plugin root: {source_root}")
+    source_version = _plugin_version(source_root)
+    source_manifest = _payload_manifest(source_root)
     if installed_root is None:
         return {
             "schema": SCHEMA,
             "state": "missing",
             "source_root": str(source_root),
             "installed_root": None,
-            "source_fingerprint": _fingerprint(_payload_manifest(source_root)),
+            "source_version": source_version,
+            "installed_version": None,
+            "source_fingerprint": _fingerprint(source_manifest),
             "installed_fingerprint": None,
             "changed_files": [],
             "missing_files": [],
             "extra_files": [],
-            "next_action": UPDATE_COMMAND,
+            "refresh_strategy": "install_missing",
+            "next_action": INSTALL_COMMAND,
         }
 
     installed_root = installed_root.resolve()
@@ -137,16 +156,19 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "state": "invalid",
             "source_root": str(source_root),
             "installed_root": str(installed_root),
-            "source_fingerprint": _fingerprint(_payload_manifest(source_root)),
+            "source_version": source_version,
+            "installed_version": None,
+            "source_fingerprint": _fingerprint(source_manifest),
             "installed_fingerprint": None,
             "changed_files": [],
             "missing_files": [],
             "extra_files": [],
-            "next_action": UPDATE_COMMAND,
+            "refresh_strategy": "reinstall_invalid",
+            "next_action": REINSTALL_COMMAND,
         }
 
-    source_manifest = _payload_manifest(source_root)
     installed_manifest = _payload_manifest(installed_root)
+    installed_version = _plugin_version(installed_root)
     changed_files = sorted(
         path
         for path in source_manifest.keys() & installed_manifest.keys()
@@ -155,21 +177,29 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     missing_files = sorted(source_manifest.keys() - installed_manifest.keys())
     extra_files = sorted(installed_manifest.keys() - source_manifest.keys())
     state = "fresh"
+    refresh_strategy = "none"
     next_action = "installed plugin cache matches the development plugin tree"
     if changed_files or missing_files or extra_files:
         state = "stale"
+        refresh_strategy = "update"
         next_action = UPDATE_COMMAND
+        if source_version is not None and source_version == installed_version:
+            refresh_strategy = "reinstall_same_version"
+            next_action = REINSTALL_COMMAND
 
     return {
         "schema": SCHEMA,
         "state": state,
         "source_root": str(source_root),
         "installed_root": str(installed_root),
+        "source_version": source_version,
+        "installed_version": installed_version,
         "source_fingerprint": _fingerprint(source_manifest),
         "installed_fingerprint": _fingerprint(installed_manifest),
         "changed_files": changed_files,
         "missing_files": missing_files,
         "extra_files": extra_files,
+        "refresh_strategy": refresh_strategy,
         "next_action": next_action,
     }
 

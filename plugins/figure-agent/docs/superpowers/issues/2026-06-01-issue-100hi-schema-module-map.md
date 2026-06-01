@@ -99,6 +99,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.journal-art-direction-playbook.v1` | target-journal style anchors | `journal_art_direction_playbook.py` | `critique_brief.py`, `critique_lint.py` | Requires exact anchor citations |
 | `figure-agent.external-vision-review.v1` | optional second opinion | `external_vision_review.py` | `quality_manifest.py`, `critique_lint.py` | Evidence only unless routed through findings |
 | `figure-agent.diagnostic-artifact-provenance.v1` | scratch/debug artifact safety | `diagnostic_artifact_provenance.py` | operators | Prevents stale diagnostics from becoming truth |
+| `figure-agent.plugin-install-freshness.v1` | plugin install diagnostics | `plugin_install_freshness.py` | operators | Read-only source-vs-cache check; never mutates install state |
 
 ## Module Ownership Map
 
@@ -144,6 +145,16 @@ Owns official evidence packs that host vision or status consumers inspect.
 
 Add here when the feature answers "is every required evidence item present and
 accounted?"
+
+### Layer 2.5 - Operator Environment Diagnostics
+
+Owns read-only diagnostics about the local plugin/operator environment. These
+modules should not inspect or mutate figure release state.
+
+- `plugin_install_freshness.py` owns source-vs-installed plugin cache freshness
+
+Add here when the feature answers "is this local operator/plugin environment
+using the intended tool version or package?"
 
 ### Layer 3 - Critique Authoring Contract
 

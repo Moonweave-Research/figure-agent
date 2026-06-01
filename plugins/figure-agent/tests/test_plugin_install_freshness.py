@@ -9,12 +9,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from plugin_install_freshness import compare_plugin_install, latest_installed_root  # noqa: E402
 
 
-def _write_plugin(root: Path, *, status_text: str = "status") -> None:
+def _write_plugin(
+    root: Path,
+    *,
+    status_text: str = "status",
+    version: str = "0.1.0",
+) -> None:
     (root / ".claude-plugin").mkdir(parents=True)
     (root / "commands").mkdir(parents=True)
     (root / "scripts").mkdir(parents=True)
     (root / ".claude-plugin" / "plugin.json").write_text(
-        json.dumps({"name": "figure-agent", "version": "0.1.0"}) + "\n",
+        json.dumps({"name": "figure-agent", "version": version}) + "\n",
         encoding="utf-8",
     )
     (root / "commands" / "fig_status.md").write_text(status_text, encoding="utf-8")
@@ -34,23 +39,50 @@ def test_compare_plugin_install_reports_fresh_when_payloads_match(tmp_path: Path
     assert result["changed_files"] == []
     assert result["missing_files"] == []
     assert result["extra_files"] == []
+    assert result["refresh_strategy"] == "none"
 
 
 def test_compare_plugin_install_reports_stale_file_differences(tmp_path: Path) -> None:
     source = tmp_path / "source"
     installed = tmp_path / "cache" / "0.1.0"
     _write_plugin(source, status_text="new status")
-    _write_plugin(installed, status_text="old status")
+    _write_plugin(installed, status_text="old status", version="0.0.9")
     (source / "commands" / "fig_drive.md").write_text("drive\n", encoding="utf-8")
     (installed / "commands" / "old.md").write_text("old\n", encoding="utf-8")
 
     result = compare_plugin_install(source, installed)
 
     assert result["state"] == "stale"
-    assert result["changed_files"] == ["commands/fig_status.md"]
+    assert result["changed_files"] == [
+        ".claude-plugin/plugin.json",
+        "commands/fig_status.md",
+    ]
     assert result["missing_files"] == ["commands/fig_drive.md"]
     assert result["extra_files"] == ["commands/old.md"]
+    assert result["source_version"] == "0.1.0"
+    assert result["installed_version"] == "0.0.9"
+    assert result["refresh_strategy"] == "update"
     assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+
+
+def test_compare_plugin_install_recommends_reinstall_for_same_version_stale_cache(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source, status_text="new status")
+    _write_plugin(installed, status_text="old status")
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "stale"
+    assert result["source_version"] == "0.1.0"
+    assert result["installed_version"] == "0.1.0"
+    assert result["refresh_strategy"] == "reinstall_same_version"
+    assert result["next_action"] == (
+        "claude plugin uninstall figure-agent && "
+        "claude plugin install figure-agent@figure-agent-local"
+    )
 
 
 def test_compare_plugin_install_reports_missing_install(tmp_path: Path) -> None:
@@ -61,7 +93,10 @@ def test_compare_plugin_install_reports_missing_install(tmp_path: Path) -> None:
 
     assert result["state"] == "missing"
     assert result["installed_root"] is None
-    assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+    assert result["source_version"] == "0.1.0"
+    assert result["installed_version"] is None
+    assert result["refresh_strategy"] == "install_missing"
+    assert result["next_action"] == "claude plugin install figure-agent@figure-agent-local"
 
 
 def test_compare_plugin_install_reports_invalid_install_root(tmp_path: Path) -> None:
@@ -74,7 +109,13 @@ def test_compare_plugin_install_reports_invalid_install_root(tmp_path: Path) -> 
 
     assert result["state"] == "invalid"
     assert result["installed_root"] == str(installed.resolve())
-    assert "claude plugin update figure-agent@figure-agent-local" in result["next_action"]
+    assert result["source_version"] == "0.1.0"
+    assert result["installed_version"] is None
+    assert result["refresh_strategy"] == "reinstall_invalid"
+    assert result["next_action"] == (
+        "claude plugin uninstall figure-agent && "
+        "claude plugin install figure-agent@figure-agent-local"
+    )
 
 
 def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> None:
