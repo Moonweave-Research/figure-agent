@@ -39,6 +39,10 @@ from external_vision_review import (  # noqa: E402
     load_optional_external_vision_review,
 )
 from inputs import parse_spec  # noqa: E402
+from inspection_trace import (  # noqa: E402
+    InspectionTraceError,
+    load_optional_inspection_trace,
+)
 from journal_art_direction_playbook import (  # noqa: E402
     JournalArtDirectionPlaybookError,
     journal_playbook_anchors,
@@ -2070,6 +2074,20 @@ def _external_vision_review_violations(example_dir: Path) -> list[CritiqueLintVi
     ]
 
 
+def _inspection_trace_violations(example_dir: Path) -> list[CritiqueLintViolation]:
+    try:
+        load_optional_inspection_trace(example_dir)
+    except InspectionTraceError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="inspection_trace",
+                message=f"inspection_trace invalid: {exc}",
+            )
+        ]
+    return []
+
+
 def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     critique_path = example_dir / "critique.md"
     try:
@@ -2097,6 +2115,9 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
 
     violations.extend(_external_vision_review_violations(example_dir))
+    if violations:
+        return violations
+    violations.extend(_inspection_trace_violations(example_dir))
     if violations:
         return violations
 

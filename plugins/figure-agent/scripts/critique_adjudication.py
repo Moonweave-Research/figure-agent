@@ -137,6 +137,7 @@ _findings_from_critique = critique_findings
 
 POLICY_CONSERVATIVE_V1 = "conservative-v1"
 POLICY_CHOICES = frozenset({POLICY_CONSERVATIVE_V1})
+DECISION_DIFF_SCHEMA = "figure-agent.adjudication-decision-diff.v1"
 
 _AUTO_CATEGORIES = frozenset(
     {"style", "palette", "whitespace", "hierarchy", "label_placement"}
@@ -477,6 +478,77 @@ def _decision_sync_shape(adjudication: dict[str, Any]) -> list[dict[str, str]]:
     return shape
 
 
+def _decision_shape_by_id(adjudication: dict[str, Any]) -> dict[str, str]:
+    return {
+        item["finding_id"]: item["resolved_state"]
+        for item in _decision_sync_shape(adjudication)
+        if item["finding_id"]
+    }
+
+
+def build_adjudication_decision_diff(
+    example_dir: Path,
+    *,
+    policy: str | None = None,
+    repo_root: Path = REPO_ROOT,
+) -> dict[str, Any]:
+    """Build a read-only preview of adjudication sync/force consequences."""
+    mismatches = _critique_metadata_mismatches(example_dir, repo_root=repo_root)
+    if mismatches:
+        raise CritiqueAdjudicationError("; ".join(mismatches))
+
+    scaffold = build_adjudication_scaffold(example_dir, policy=policy)
+    path = example_dir / "critique_adjudication.yaml"
+    existing_present = path.exists()
+    if existing_present:
+        existing = load_adjudication(path)
+    else:
+        existing = {
+            "schema": SCHEMA,
+            "fixture": scaffold["fixture"],
+            "source_critique_hash": None,
+            "decisions": [],
+        }
+
+    existing_ids = _decision_ids(existing)
+    scaffold_ids = _decision_ids(scaffold)
+    existing_id_set = set(existing_ids)
+    scaffold_id_set = set(scaffold_ids)
+    existing_shape = _decision_shape_by_id(existing)
+    scaffold_shape = _decision_shape_by_id(scaffold)
+
+    preserved = [
+        finding_id
+        for finding_id in existing_ids
+        if finding_id in scaffold_id_set
+        and existing_shape.get(finding_id) == scaffold_shape.get(finding_id)
+    ]
+    dropped = [finding_id for finding_id in existing_ids if finding_id not in scaffold_id_set]
+    added = [finding_id for finding_id in scaffold_ids if finding_id not in existing_id_set]
+    shape_changed = [
+        finding_id
+        for finding_id in existing_ids
+        if finding_id in scaffold_id_set
+        and existing_shape.get(finding_id) != scaffold_shape.get(finding_id)
+    ]
+    normal_sync_safe = existing_ids == scaffold_ids and not shape_changed
+
+    return {
+        "schema": DECISION_DIFF_SCHEMA,
+        "fixture": scaffold["fixture"],
+        "adjudication_path": str(path),
+        "existing_adjudication_present": existing_present,
+        "existing_source_critique_hash": existing.get("source_critique_hash"),
+        "new_source_critique_hash": scaffold["source_critique_hash"],
+        "normal_sync_safe": normal_sync_safe,
+        "force_would_recreate": not normal_sync_safe or not existing_present,
+        "preserved_decision_ids": preserved,
+        "dropped_decision_ids": dropped,
+        "added_finding_ids": added,
+        "shape_changed_decision_ids": shape_changed,
+    }
+
+
 def sync_adjudication(
     example_dir: Path,
     *,
@@ -545,6 +617,11 @@ def main(argv: list[str] | None = None) -> int:
     sync_parser.add_argument("--force", action="store_true", help="recreate the scaffold")
     sync_parser.add_argument("--policy", choices=sorted(POLICY_CHOICES))
     sync_parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    sync_parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="print a read-only decision diff instead of writing adjudication",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "scaffold":
@@ -559,6 +636,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sync":
         example_dir = _resolve_example_dir(args.example, args.repo_root)
         try:
+            if args.preview:
+                preview = build_adjudication_decision_diff(
+                    example_dir,
+                    policy=args.policy,
+                    repo_root=args.repo_root,
+                )
+                print(yaml.safe_dump(preview, sort_keys=False), end="")
+                return 0
             path = sync_adjudication(
                 example_dir,
                 force=args.force,
