@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from svg_polish_recipe import (
     SVG_POLISH_RECIPE_RELATIVE_PATH,
     SvgPolishRecipeError,
@@ -185,6 +186,39 @@ def _load_recipe_for_execution(
         raise SvgPolishExecutorError(str(exc)) from exc
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    if value.is_absolute():
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise SvgPolishExecutorError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise SvgPolishExecutorError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return value
+    raise SvgPolishExecutorError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise SvgPolishExecutorError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def _plan_from_tree(recipe: dict[str, Any], root: ET.Element) -> list[dict[str, Any]]:
     changes: list[dict[str, Any]] = []
     for operation in recipe["operations"]:
@@ -275,10 +309,10 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    example_dir = args.example_dir
-    recipe_path = args.recipe or example_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
-    base_dir = args.base_dir or example_dir.parent.parent
     try:
+        example_dir = _resolve_example_dir_for_cli(args.example_dir)
+        recipe_path = args.recipe or example_dir / SVG_POLISH_RECIPE_RELATIVE_PATH
+        base_dir = args.base_dir or example_dir.parent.parent
         if args.write:
             output_path = apply_svg_polish(
                 recipe_path,
