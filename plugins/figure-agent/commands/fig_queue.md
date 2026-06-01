@@ -116,6 +116,17 @@ Each row includes:
 | `release_ready` | compact status field |
 | `error` | present only for controlled error rows |
 
+In `--mode polish`, rows also include SVG-polish gate fields when the underlying
+driver has a current loop checkpoint or gate explanation:
+
+| Field | Notes |
+|---|---|
+| `svg_polish_gate_state` | compact `svg_polish_gate.state` copied from `/fig_drive` |
+| `can_start_svg_polish` | whether the current gate permits bounded SVG polish |
+| `svg_polish_recommended_path` | latest loop editorial route, such as `continue_tikz` or `ready_for_svg_polish` |
+| `svg_polish_next_action` | next action from the SVG polish gate/readiness summary |
+| `svg_polish_blocking_sources` | unique readiness blocker sources, for example `tikz_vs_svg_polish_trigger` |
+
 `summary` includes:
 
 - `total`
@@ -136,10 +147,13 @@ Each row includes:
 | `executable` | fixture/action/safe_command/required_actor records |
 | `blocked` | fixture/action/actor/blocking_source/stop_boundary/reason records |
 
-The human-readable table prints tab-separated `next_step` and `next_command` columns. For
-blocked rows, these come from the same handoff policy used by
-`command_plan.blocked[].operator_handoff`, so the table does not show a blocked
-driver command as the next command to run.
+The human-readable table prints tab-separated `next_step` and `next_command`
+columns. When any row contains SVG-polish gate fields, the table also prints
+`svg_gate`, `can_svg`, `polish_path`, `polish_next`, and `polish_blockers`
+columns so a polish-mode queue does not hide why a fixture can or cannot enter
+the bounded SVG handoff. For blocked rows, the next-step fields come from the
+same handoff policy used by `command_plan.blocked[].operator_handoff`, so the
+table does not show a blocked driver command as the next command to run.
 
 Blocked command-plan rows include an additive
 `schema: figure-agent.queue-operator-handoff.v1` object under

@@ -20,8 +20,10 @@ def _summary(
     first_blocker: str,
     safe_command: str | None = None,
     blocking_source: str | None = None,
+    svg_polish_gate: dict[str, Any] | None = None,
+    svg_polish_readiness: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    summary = {
         "fixture": name,
         "action": action,
         "stop_boundary": stop_boundary,
@@ -46,6 +48,11 @@ def _summary(
             "requires_human": action in {"human_gate_stop", "release_blocked"},
         },
     }
+    if svg_polish_gate is not None:
+        summary["svg_polish_gate"] = svg_polish_gate
+    if svg_polish_readiness is not None:
+        summary["svg_polish_readiness"] = svg_polish_readiness
+    return summary
 
 
 def _write_fixture(root: Path, name: str) -> None:
@@ -138,6 +145,54 @@ def test_build_queue_filters_requested_fixtures(
     assert [row["fixture"] for row in queue["rows"]] == ["beta"]
 
 
+def test_polish_queue_rows_surface_svg_polish_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "polish"
+        return _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary="mode_forbidden_action",
+            first_blocker="svg_polish_not_ready",
+            svg_polish_gate={
+                "state": "blocked",
+                "can_start_svg_polish": False,
+                "next_action": "rerun_fig_loop",
+                "reason": "latest loop recommends continue_tikz",
+            },
+            svg_polish_readiness={
+                "can_start_svg_polish": False,
+                "recommended_path": "continue_tikz",
+                "next_action": "continue_tikz",
+                "blocking_items": [
+                    {
+                        "source": "tikz_vs_svg_polish_trigger",
+                        "reason": "source-level lever remains",
+                    }
+                ],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="polish triage",
+        fixtures=None,
+    )
+
+    row = queue["rows"][0]
+    assert row["svg_polish_gate_state"] == "blocked"
+    assert row["can_start_svg_polish"] is False
+    assert row["svg_polish_next_action"] == "rerun_fig_loop"
+    assert row["svg_polish_recommended_path"] == "continue_tikz"
+    assert row["svg_polish_blocking_sources"] == ["tikz_vs_svg_polish_trigger"]
+
+
 def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
     queue = fig_queue.build_queue(
         repo_root=tmp_path,
@@ -218,6 +273,49 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
         "/fig_critique alpha"
     ) in out
     assert "summary total=1 errors=0" in out
+
+
+def test_print_table_includes_svg_polish_columns_when_present(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    queue = {
+        "schema": "figure-agent.fixture-driver-queue.v1",
+        "mode": "polish",
+        "goal": "triage",
+        "rows": [
+            {
+                "fixture": "alpha",
+                "mode": "polish",
+                "action": "run_fig_loop",
+                "stop_boundary": "mode_forbidden_action",
+                "first_blocker": "svg_polish_not_ready",
+                "safe_command": None,
+                "required_actor": "workflow_agent",
+                "blocking_source": "mode_forbidden_action",
+                "requires_human": False,
+                "svg_polish_gate_state": "blocked",
+                "can_start_svg_polish": False,
+                "svg_polish_next_action": "rerun_fig_loop",
+                "svg_polish_recommended_path": "continue_tikz",
+                "svg_polish_blocking_sources": ["tikz_vs_svg_polish_trigger"],
+            }
+        ],
+        "summary": {"total": 1, "errors": 0},
+    }
+
+    fig_queue.print_table(queue)
+
+    out = capsys.readouterr().out
+    assert (
+        "fixture\tactor\taction\tstop_boundary\tfirst_blocker\t"
+        "svg_gate\tcan_svg\tpolish_path\tpolish_next\tpolish_blockers\t"
+        "next_step\tnext_command"
+    ) in out
+    assert (
+        "alpha\tworkflow_agent\trun_fig_loop\tmode_forbidden_action\t"
+        "svg_polish_not_ready\tblocked\tFalse\tcontinue_tikz\t"
+        "rerun_fig_loop\ttikz_vs_svg_polish_trigger\t"
+    ) in out
 
 
 def test_print_table_uses_handoff_command_for_blocked_rows(
