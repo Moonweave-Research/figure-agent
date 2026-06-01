@@ -14,6 +14,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import fixture_identity
+
 
 class BboxHelperError(Exception):
     """Expected user-facing error while converting source panel boxes."""
@@ -183,6 +185,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def run(argv: Sequence[str] | None = None) -> str:
     args = _build_parser().parse_args(argv)
+    try:
+        fixture_identity.validate_fixture_name(args.name)
+    except ValueError as exc:
+        raise BboxHelperError(str(exc)) from exc
     example_dir = Path(args.examples_root) / args.name
     tex_path = example_dir / f"{args.name}.tex"
     if not tex_path.is_file():
