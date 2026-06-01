@@ -1,6 +1,6 @@
 # Issue 100W - Plugin Install Freshness Check
 
-Status: implemented on branch `codex/issue100w-plugin-install-freshness`
+Status: completed; merged to main
 
 Type: operator UX, plugin cache freshness, read-only diagnostics
 
