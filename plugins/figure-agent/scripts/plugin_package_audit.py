@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,12 +38,47 @@ def _is_plugin_root(root: Path) -> bool:
     return (root / ".claude-plugin" / "plugin.json").is_file()
 
 
+def _tracked_paths(root: Path) -> set[Path]:
+    try:
+        git_root_result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return set()
+    git_root = Path(git_root_result.stdout.strip()).resolve()
+    try:
+        files_result = subprocess.run(
+            ["git", "-C", str(git_root), "ls-files", "-z", "--", str(root)],
+            check=True,
+            capture_output=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return set()
+    tracked: set[Path] = set()
+    for raw_path in files_result.stdout.split(b"\0"):
+        if not raw_path:
+            continue
+        tracked_file = (git_root / raw_path.decode()).resolve()
+        if not tracked_file.is_relative_to(root):
+            continue
+        tracked.add(tracked_file)
+        tracked.update(tracked_file.parents)
+    return tracked
+
+
 def find_packaging_junk(root: Path) -> list[Path]:
     """Return generated paths that should not live in a plugin cache package."""
     root = root.resolve()
     junk: list[Path] = []
     root_is_plugin = _is_plugin_root(root)
+    protected_tracked_paths = _tracked_paths(root)
     for path in root.rglob("*"):
+        path = path.resolve()
+        if path in protected_tracked_paths:
+            continue
         if path.name in JUNK_FILE_NAMES:
             junk.append(path)
             continue

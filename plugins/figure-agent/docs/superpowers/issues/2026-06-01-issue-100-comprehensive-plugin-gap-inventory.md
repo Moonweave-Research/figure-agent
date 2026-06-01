@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AB, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100AC, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -86,6 +86,7 @@ the workflow together.
 | G100-21 | P2 | Human-decision preservation | `scaffold --force` and re-adjudication flows can be correct but still risky if operators do not see which human decisions were preserved, dropped, or rebound. | Sync paths exist, but force-scaffold remains a sharp tool in real workflows. | Human rationale can be accidentally flattened during freshness repair. | Issue 100U - adjudication decision diff preview |
 | G100-22 | P2 | Command surface drift | Command docs can be added without the README Core commands list naming the command. | `/fig_closeout` and `/fig_e2e_smoke` had command docs, but the README Core commands list omitted them. | Operators can miss important workflow and smoke-test commands even after reading the main README. | Issue 100AA - command surface drift guard |
 | G100-23 | P3 | Stale issue status headers | Completed issue docs can still claim implementation is only in a branch or working tree after merge. | Issues 16A, 44, 49, and 50 had stale branch/working-tree status headers. | Future operators can misroute already-mainline work as unfinished branch work. | Issue 100AB - stale issue status guard |
+| G100-24 | P1 | Package cleanup safety | The installed-cache package cleanup helper could delete tracked files when accidentally run in a development checkout. | Running `plugin_package_audit.py --clean` in a feature worktree classified tracked `.gitkeep` and golden export paths under `build/`/`exports/` as junk. | A release hygiene command can damage source-controlled fixture artifacts unless tracked paths are protected. | Issue 100AC - package audit tracked-path safety |
 
 ## Recommended Execution Order
 
@@ -240,28 +241,34 @@ the workflow together.
     `implemented in working tree`; Issues 16A, 44, 49, and 50 were normalized to
     mainline truth.
 
-22. **Issue 100P - stale issue status sweep**
+22. **Issue 100AC - package audit tracked-path safety**
+    Implemented as an operations-safety fix. `plugin_package_audit.py --clean`
+    still removes generated junk from installed plugin caches, but when run
+    inside a development git worktree it protects tracked files and directories
+    containing tracked files.
+
+23. **Issue 100P - stale issue status sweep**
     Completed as a docs-only sweep. Swept current Issue 100 headers for
     `pending commit`, `pending merge`, and branch-only stale status markers.
     Updated 100F/100G from pending-commit to completed main commits and
     normalized already-merged 100E/100R/100J/100H-I/100N-O headers to main
     commit references.
 
-23. **Issue 100T/U - evidence trace and human-decision diff**
+24. **Issue 100T/U - evidence trace and human-decision diff**
     Completed as an auditability hardening slice. Added optional
     `inspection_trace.yaml` parser/validator + CLI, wired present traces into
     `critique_lint.py`, and added `critique_adjudication.py sync --preview`
     for a read-only preserved/dropped/added/shape-changed decision diff before
     operators choose normal sync or force-scaffold.
 
-24. **Issue 100Q - critique entity consistency lint**
+25. **Issue 100Q - critique entity consistency lint**
     Completed as a conservative critique-lint hardening slice.
     `critique_lint.py` now blocks matched symbolic label-target audit entries
     whose entity token is absent from active TeX or appears only in comments.
     This closes the narrow phantom-entity gap without attempting broad visual
     OCR or natural-language object detection.
 
-25. **Issue 100S - final strict profile and warning budgets**
+26. **Issue 100S - final strict profile and warning budgets**
     Completed as a final-mode warning-budget hardening slice. Reused
     `spec.yaml.visual_clash_cap` and `build/visual_clash.json` as
     `figure-agent.warning-budget.v1`; `/fig_drive --mode final` now requests
