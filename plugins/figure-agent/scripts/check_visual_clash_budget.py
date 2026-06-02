@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 from inputs import parse_spec
 
 SUMMARY_SCHEMA = "figure-agent.warning-budget.v1"
@@ -188,6 +189,56 @@ def check_targets(targets: list[Path]) -> list[dict[str, Any]]:
     return results
 
 
+def _resolve_target_for_cli(value: Path) -> Path:
+    examples_root = Path("examples").resolve()
+    if value.is_absolute():
+        resolved = value.resolve()
+        if resolved == examples_root:
+            return Path("examples")
+        try:
+            relative = resolved.relative_to(examples_root)
+        except ValueError as exc:
+            raise VisualClashBudgetError(
+                "invalid target path: expected examples/ or examples/<fixture-name>"
+            ) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise VisualClashBudgetError(
+                "invalid target path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(relative.parts[0], str(value))
+        return Path("examples") / relative.parts[0]
+    if value == Path("examples"):
+        return value
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise VisualClashBudgetError(
+                "invalid target path: expected examples/ or examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise VisualClashBudgetError(
+                "invalid target path: relative fixture names must resolve under examples/"
+            )
+        return examples_path
+    raise VisualClashBudgetError(
+        "invalid target path: expected fixture name, examples/, examples/<fixture-name>, "
+        "or an absolute path under examples/"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise VisualClashBudgetError(f"invalid target path: {original}: {exc}") from exc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fail when build/visual_clash.json exceeds spec.yaml visual_clash_cap"
@@ -201,7 +252,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        results = check_targets(args.targets)
+        results = check_targets([_resolve_target_for_cli(target) for target in args.targets])
     except VisualClashBudgetError as exc:
         print(f"check_visual_clash_budget.py: {exc}", file=sys.stderr)
         return 1
