@@ -6,7 +6,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from plugin_install_freshness import compare_plugin_install, latest_installed_root  # noqa: E402
+from plugin_install_freshness import (  # noqa: E402
+    compare_plugin_install,
+    latest_installed_root,
+    main,
+)
 
 
 def _write_plugin(
@@ -163,6 +167,42 @@ def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> 
         "examples/demo/build",
     ]
     assert "plugin_package_audit.py" in result["installed_package_hygiene"]["next_action"]
+
+
+def test_cli_returns_zero_for_fresh_clean_installed_package(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+
+    exit_code = main([str(installed), "--source-root", str(source)])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert output["state"] == "fresh"
+    assert output["installed_package_hygiene"]["state"] == "clean"
+
+
+def test_cli_returns_nonzero_for_fresh_but_dirty_installed_package(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (installed / ".venv" / "bin").mkdir(parents=True)
+    (installed / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+
+    exit_code = main([str(installed), "--source-root", str(source)])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 1
+    assert output["state"] == "fresh"
+    assert output["installed_package_hygiene"]["state"] == "dirty"
 
 
 def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path) -> None:
