@@ -1,6 +1,6 @@
 # Issue 100BX - Reference-Aesthetic Metrics CLI Fixture Path Boundary
 
-Status: implemented in branch `codex/issue-100bx-reference-metrics-path-boundary`
+Status: completed on main in merge commit `9cdd78b`
 Type: reference learning, aesthetic audit input, fixture path boundary
 Priority: P1
 

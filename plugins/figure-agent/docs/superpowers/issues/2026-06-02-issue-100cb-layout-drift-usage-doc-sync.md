@@ -1,6 +1,6 @@
 # Issue 100CB - Layout Drift CLI Usage Doc Sync
 
-Status: implemented in branch `codex/issue-100cb-layout-drift-usage-doc`
+Status: completed on main in merge commit `fd28eed`
 Type: operator UX, command contract documentation
 Priority: P3
 

@@ -1,6 +1,6 @@
 # Issue 100BV - Golden Artifact Gate CLI Fixture Path Boundary
 
-Status: implemented in branch `codex/issue-100bv-golden-artifacts-path-boundary`
+Status: completed on main in merge commit `b587c52`
 
 Type: hardening, release gate, accepted/golden boundary, path boundary
 

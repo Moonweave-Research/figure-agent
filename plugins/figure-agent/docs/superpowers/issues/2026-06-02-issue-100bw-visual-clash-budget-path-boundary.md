@@ -1,6 +1,6 @@
 # Issue 100BW - Visual-Clash Warning Budget CLI Target Boundary
 
-Status: implemented in branch `codex/issue-100bw-warning-budget-path-boundary`
+Status: completed on main in merge commit `e54bc56`
 Type: CI guardrail, release readiness, fixture path boundary
 Priority: P1
 
