@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DC, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DD, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DC status JSON CLI contract;
+- branch baseline: `main` after Issue 100DD fig_improve JSON flag compatibility;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -165,6 +165,7 @@ the workflow together.
 | G100-100 | P3 | Loop/closeout output flag compatibility | `/fig_loop` and `/fig_closeout` had automation JSON paths via `--json`, but rejected the same `--format json` spelling now accepted by queue, queue-run, driver, and run. | Live commands `fig_loop.py ... --format json` and `fig_closeout.py ... --format json` failed at argparse; TDD reproduced both. | Operators can still hit an output-flag trap at the verify-only checkpoint or post-patch closeout stage. | Issue 100DA - loop/closeout format-json compatibility |
 | G100-101 | P3 | Helper output flag compatibility | Documented helper parsers `subregion_active_set.py` and `reference_pack.py` had stdout JSON paths via `--json`, but rejected the same `--format json` spelling as the primary workflow commands. | TDD reproduced both helper CLIs failing with `unrecognized arguments: --format json`. | Operators can still hit the same output-flag trap when inspecting subregion active sets or role-typed reference packs. | Issue 100DB - helper format-json compatibility |
 | G100-102 | P2 | Status JSON argument contract | `/fig_status` is the canonical first check, but `status.py <fixture> --json` silently ignored `--json` and printed prose because `main()` only inspected `sys.argv[1]`. | Live command `status.py fig1_overview_v2_pair_001_vault --json` printed text; TDD reproduced JSON parsing failure. | Automation can believe it requested machine-readable state while receiving prose, corrupting the traffic-controller entry point. | Issue 100DC - status JSON CLI contract |
+| G100-103 | P3 | Improve output flag compatibility | `/fig_improve` emits JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced `fig_improve.py ... --format json` failing with `unrecognized arguments`. | Operators using the loop-centered entrypoint can still hit a parser trap before seeing the real improvement boundary. | Issue 100DD - fig_improve JSON flag compatibility |
 
 ## Recommended Execution Order
 
@@ -860,6 +861,11 @@ the workflow together.
      preserves default text output, and rejects unknown extra arguments instead
      of silently ignoring them.
 
+105. **Issue 100DD - fig_improve JSON flag compatibility**
+     Implemented as loop-centered CLI compatibility. `fig_improve.py` keeps its
+     JSON-only output contract while accepting explicit `--json` and
+     `--format json` no-op flags.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -926,9 +932,11 @@ without changing their artifact writes, read-only behavior, or exit-code
 semantics. Issue 100DB closes the same compatibility gap in the documented
 stdout-JSON helper parsers while leaving detector `--json-output` file-writing
 contracts alone. Issue 100DC fixes the higher-impact status entrypoint, where
-`--json` was previously accepted only by accident and produced prose.
+`--json` was previously accepted only by accident and produced prose. Issue
+100DD closes the same explicit-output-flag trap on the loop-centered
+`/fig_improve` entrypoint.
 
-After Issue 100DC, the plugin-install readiness path is now correctly able to
+After Issue 100DD, the plugin-install readiness path is now correctly able to
 say:
 
 - the registered `figure-agent-local` marketplace source matches or mismatches
@@ -937,7 +945,7 @@ say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100DC next candidates are therefore not old Issue 100A-C
+The current post-100DD next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -962,11 +970,11 @@ evidence gaps are addressed. The plugin's risk is not lack of another taste
 rubric; it is that existing evidence and command guidance are not always
 surfaced in the path the user actually runs.
 
-Issue 100DC closes the eighth defect found while starting that evidence path:
-canonical `/fig_status` accepted `--json` only accidentally and printed text
-because extra arguments were ignored. The fix does not change status inference,
-readiness policy, or next-action selection; it only makes the traffic-controller
-entrypoint honest for automation.
+Issue 100DD closes the ninth defect found while starting that evidence path:
+the loop-centered `/fig_improve` entrypoint still rejected explicit JSON-output
+flags after the rest of the workflow accepted them. The fix does not change
+improvement execution, boundary stopping, or payload shape; it only removes a
+needless parser trap.
 
 ## Edge-Case Review
 

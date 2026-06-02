@@ -244,6 +244,8 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-loops", type=int, default=DEFAULT_MAX_LOOPS)
     parser.add_argument("--max-steps-per-loop", type=int, default=fig_run.DEFAULT_MAX_STEPS)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
     try:
         payload = run_improvement(

@@ -476,3 +476,48 @@ def test_main_emits_json(tmp_path: Path, monkeypatch: Any, capsys: Any) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.improve.v1"
     assert payload["fixture"] == "demo"
+
+
+def test_main_accepts_format_json_alias(
+    tmp_path: Path, monkeypatch: Any, capsys: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_COMPLETE,
+                final_stop_reason=fig_run.STOP_COMPLETE,
+            )
+        ],
+    )
+
+    result = fig_improve.main(
+        ["demo", "--goal", "improve", "--format", "json"],
+        repo_root=tmp_path,
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.improve.v1"
+    assert payload["fixture"] == "demo"
+
+
+def test_main_accepts_json_noop_flag(
+    tmp_path: Path, monkeypatch: Any, capsys: Any
+) -> None:
+    _install_runs(
+        monkeypatch,
+        [
+            _run_payload(
+                final_action=fig_driver.ACTION_COMPLETE,
+                final_stop_reason=fig_run.STOP_COMPLETE,
+            )
+        ],
+    )
+
+    result = fig_improve.main(["demo", "--goal", "improve", "--json"], repo_root=tmp_path)
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.improve.v1"
+    assert payload["fixture"] == "demo"

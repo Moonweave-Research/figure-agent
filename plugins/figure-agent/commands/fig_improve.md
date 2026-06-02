@@ -4,18 +4,21 @@ description: Loop-centered one-fixture improvement orchestrator. Runs safe mecha
 
 Run a bounded improvement loop for one figure.
 
-**Usage**: `/fig_improve <name> --goal "<goal>" [--execute] [--max-loops N]`
+**Usage**: `/fig_improve <name> --goal "<goal>" [--execute] [--max-loops N] [--json | --format json]`
 
 Run from the plugin root:
 
 ```bash
 uv run python3 scripts/fig_improve.py <name> --goal "<goal>"
 uv run python3 scripts/fig_improve.py <name> --goal "<goal>" --execute --max-loops 10
+uv run python3 scripts/fig_improve.py <name> --goal "<goal>" --format json
 ```
 
 `/fig_improve` is the loop-centered entry point for "use figure-agent to keep
 improving this figure" requests. It does not replace `/fig_drive`; it calls the
 existing bounded `/fig_run` workflow and summarizes where the loop stopped.
+Output is JSON by default; `--json` and `--format json` are accepted as
+compatibility no-ops.
 
 This command is boundary-stopped. It may run more than one internal cycle only
 when safe mechanical work hits the per-cycle step cap. It stops immediately at
