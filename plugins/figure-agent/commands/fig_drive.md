@@ -272,9 +272,13 @@ release.
 
 For rows with `stop_boundary: mode_forbidden_action`, the selected next action
 is intentionally not executable in polish mode. Operator guidance should not run
-that command directly; rerun `/fig_drive <name> --mode review` to close
-TikZ/loop prerequisites, then return to polish mode only when the current loop
-checkpoint routes `ready_for_svg_polish`.
+that command directly. When `critique_state` is `FRESH`, rerun
+`/fig_drive <name> --mode review` to close TikZ/loop prerequisites, then return
+to polish mode only when the current loop checkpoint routes `ready_for_svg_polish`.
+When `critique_state` is `NOT_REQUIRED` (no reference is declared), a
+reference-grounded critique editorial summary — and therefore SVG polish handoff
+— can never be produced, so polish cannot close the figure; route the operator to
+`/fig_drive <name> --mode release` or `/fig_drive <name> --mode final` instead.
 
 If polish mode stops earlier than the loop checkpoint, the top-level driver
 action remains authoritative and the additive `svg_polish_gate` mirrors that

@@ -177,6 +177,15 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
         return "No required plugin action remains for this mode."
     if stop_boundary == STOP_MODE_FORBIDDEN:
         if mode == "polish":
+            critique_state = status.get("critique_state") if isinstance(status, dict) else None
+            if critique_state == "NOT_REQUIRED" and summary.get("loop_checkpoint") is None:
+                return (
+                    "Polish mode cannot close this fixture: it declares no "
+                    "reference, so a reference-grounded critique editorial "
+                    "summary can never be produced and SVG polish handoff is "
+                    f"unreachable. Run `/fig_drive {fixture} --mode release` or "
+                    f"`/fig_drive {fixture} --mode final` to close it instead."
+                )
             return (
                 "The selected next action is not executable in polish mode. "
                 f"Run `/fig_drive {fixture} --mode review` to close the "
@@ -207,10 +216,7 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
             "then rerun /fig_drive."
         )
     if actor == "host_llm":
-        return (
-            f"Run `/fig_critique {fixture}` in the host vision session, "
-            "then rerun /fig_drive."
-        )
+        return f"Run `/fig_critique {fixture}` in the host vision session, then rerun /fig_drive."
     if actor == "human":
         return "Record the required human decision, then rerun /fig_drive."
     if actor == "release_operator":
@@ -299,9 +305,7 @@ def final_readiness_profile(
         "verify_only_complete",
         "no_actionable_findings",
     }:
-        loop_state = (
-            "human_required" if actor in {"human", "release_operator"} else "needs_action"
-        )
+        loop_state = "human_required" if actor in {"human", "release_operator"} else "needs_action"
         loop_reason = f"latest loop stop is {loop_checkpoint.get('final_stop_reason')}."
     export_check = _profile_step(
         "pass"
@@ -312,7 +316,7 @@ def final_readiness_profile(
         reason=f"export_state is {export}.",
     )
     publication_check = _profile_step(
-        "pass" if publication in {None, "OK"} else "human_required",
+        "pass" if publication in {None, "PASS", "NOT_APPLICABLE"} else "human_required",
         reason=f"publication_gate_state is {publication}.",
     )
     release_gate = _profile_step(

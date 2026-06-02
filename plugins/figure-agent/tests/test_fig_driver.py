@@ -137,9 +137,7 @@ def _write_loop_run(
     if aesthetic_lever_summary is not None:
         iteration["aesthetic_lever_summary"] = aesthetic_lever_summary
     if journal_art_direction_playbook_summary is not None:
-        iteration["journal_art_direction_playbook_summary"] = (
-            journal_art_direction_playbook_summary
-        )
+        iteration["journal_art_direction_playbook_summary"] = journal_art_direction_playbook_summary
     if basin_summary is not None:
         iteration["basin_summary"] = basin_summary
     manifest_path = run_dir / "run_manifest.json"
@@ -181,7 +179,7 @@ def _release_ready_status(name: str = "driver_demo") -> dict[str, Any]:
         "golden_ready": True,
         "release_ready": True,
         "final_ready": True,
-        "publication_gate_state": "OK",
+        "publication_gate_state": "PASS",
         "publication_gate_failures": [],
     }
 
@@ -372,14 +370,10 @@ def test_review_complete_surfaces_ready_improvement_candidates(
     assert next_action["optional_candidate_count"] == 1
     assert next_action["marginal_return_state"] == "stop_recommended"
     assert next_action["ready_improvement_safe_to_ship"] is True
-    assert "ready_improvement.marginal_return:stop_recommended" in next_action[
-        "evidence_refs"
-    ]
+    assert "ready_improvement.marginal_return:stop_recommended" in next_action["evidence_refs"]
     assert next_action["decision_boundary"]["kind"] == "advisory_only"
     assert next_action["decision_boundary"]["blocks_release"] is False
-    assert payload["operator_guidance"]["decision_boundary"] == next_action[
-        "decision_boundary"
-    ]
+    assert payload["operator_guidance"]["decision_boundary"] == next_action["decision_boundary"]
 
 
 def test_release_blocked_by_manual_gate_can_still_surface_safe_optional_candidates(
@@ -628,9 +622,7 @@ def test_workspace_warnings_report_tracked_dirty_paths(tmp_path: Path) -> None:
 
     warnings = fig_driver._workspace_warnings(tmp_path)
 
-    assert warnings == [
-        "tracked_worktree_dirty: plugins/figure-agent/scripts/foo.py"
-    ]
+    assert warnings == ["tracked_worktree_dirty: plugins/figure-agent/scripts/foo.py"]
 
 
 def test_unsupported_mode_fails_cleanly(tmp_path: Path) -> None:
@@ -738,6 +730,7 @@ def test_final_mode_complete_explains_no_required_plugin_action(
     assert "No required plugin action remains" in summary["operator_guidance"]["next_step"]
     assert summary["final_readiness_profile"]["overall_state"] == "pass"
     assert summary["final_readiness_profile"]["warning_budget"]["state"] == "pass"
+    assert summary["final_readiness_profile"]["publication_gate"]["state"] == "pass"
 
 
 def test_final_mode_blocks_complete_when_warning_budget_exceeds_cap(
@@ -1561,9 +1554,7 @@ def test_release_mode_surfaces_acceptance_not_declared_first_blocker(
 
     assert summary["action"] == "release_blocked"
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
-    assert summary["status_explanation"]["first_blocker"]["code"] == (
-        "acceptance_not_declared"
-    )
+    assert summary["status_explanation"]["first_blocker"]["code"] == ("acceptance_not_declared")
     assert "first blocker acceptance_not_declared" in summary["reason"]
 
 
@@ -1952,14 +1943,69 @@ def test_polish_mode_svg_gate_points_to_export_before_loop(tmp_path: Path) -> No
     ]
 
 
-def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(
+def test_polish_mode_not_required_critique_routes_to_release_or_final(
     tmp_path: Path,
 ) -> None:
+    # NOT_REQUIRED critique: no reference declared, so an editorial
+    # art-direction summary (and thus ready_for_svg_polish) can never be
+    # produced. Guidance must route to release/final, not the unreachable
+    # ready_for_svg_polish condition.
     fixture = _write_basic_fixture(tmp_path)
     _write_fresh_build_and_exports(fixture)
 
     summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
 
+    assert summary["status"]["critique_state"] == "NOT_REQUIRED"
+    assert summary["action"] == "run_fig_loop"
+    assert summary["stop_boundary"] == "mode_forbidden_action"
+    assert summary["safe_command"] == (
+        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+    )
+    assert "ready_for_svg_polish" not in summary["reason"]
+    assert "NOT_REQUIRED" in summary["reason"]
+    assert "--mode release" in summary["reason"]
+    assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
+    assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
+    assert summary["svg_polish_gate"]["next_action"] == "rerun_fig_loop"
+    next_step = summary["operator_guidance"]["next_step"]
+    assert "Run the selected command" not in next_step
+    assert "ready_for_svg_polish" not in next_step
+    assert "--mode review" not in next_step
+    assert "--mode release" in next_step
+    assert "--mode final" in next_step
+
+
+def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # FRESH critique with no current loop checkpoint: the editorial summary is
+    # possible, so guidance correctly waits for a loop checkpoint that routes
+    # ready_for_svg_polish.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["critique_state"] == "FRESH"
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == (
@@ -1969,9 +2015,10 @@ def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
     assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
     assert summary["svg_polish_gate"]["next_action"] == "rerun_fig_loop"
-    assert "Run the selected command" not in summary["operator_guidance"]["next_step"]
-    assert "not executable in polish mode" in summary["operator_guidance"]["next_step"]
-    assert "--mode review" in summary["operator_guidance"]["next_step"]
+    next_step = summary["operator_guidance"]["next_step"]
+    assert "Run the selected command" not in next_step
+    assert "not executable in polish mode" in next_step
+    assert "--mode review" in next_step
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(

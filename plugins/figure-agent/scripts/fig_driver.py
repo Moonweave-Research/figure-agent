@@ -230,9 +230,7 @@ def _summary(
         summary["audit_evidence"] = audit_evidence
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
-        svg_polish_readiness = editorial_mod.svg_polish_readiness_from_checkpoint(
-            loop_checkpoint
-        )
+        svg_polish_readiness = editorial_mod.svg_polish_readiness_from_checkpoint(loop_checkpoint)
         if svg_polish_readiness is not None:
             summary["svg_polish_readiness"] = svg_polish_readiness
     if mode == "polish":
@@ -434,10 +432,7 @@ def _loop_checkpoint_review_blocker(
                 "action": ACTION_PATCH_HANDOFF_STOP,
                 "safe_command": None,
                 "stop_boundary": STOP_PATCH_HANDOFF,
-                "reason": (
-                    "latest /fig_loop checkpoint requires one patch handoff"
-                    f" for {target}."
-                ),
+                "reason": (f"latest /fig_loop checkpoint requires one patch handoff for {target}."),
             }
     if loop_stop == "ambiguous_patch_selection":
         return {
@@ -478,9 +473,7 @@ def _loop_checkpoint_review_blocker(
             ),
         }
     editorial_summary = loop_checkpoint.get("editorial_art_direction_summary")
-    if include_editorial and editorial_mod.editorial_review_requires_human_gate(
-        editorial_summary
-    ):
+    if include_editorial and editorial_mod.editorial_review_requires_human_gate(editorial_summary):
         return {
             "action": ACTION_HUMAN_GATE_STOP,
             "safe_command": None,
@@ -1053,6 +1046,23 @@ def _select_action(
                     reason=route_hint["reason"],
                     checkpoint=loop_checkpoint,
                 )
+    if critique == "NOT_REQUIRED":
+        # No reference is declared, so editorial_art_direction_summary() can
+        # never be produced and ready_for_svg_polish is structurally
+        # unreachable. Route the operator to the modes that actually close
+        # such a figure instead of an unsatisfiable polish prerequisite.
+        return make(
+            ACTION_RUN_FIG_LOOP,
+            safe_command=command_mod.fig_loop_command(name, goal),
+            stop_boundary=STOP_MODE_FORBIDDEN,
+            reason=(
+                "SVG polish requires a reference-grounded critique editorial "
+                "summary, but this fixture declares no reference "
+                "(critique_state NOT_REQUIRED) so SVG polish handoff can never "
+                "be reached; close it via --mode release or --mode final "
+                "instead of polish."
+            ),
+        )
     return make(
         ACTION_RUN_FIG_LOOP,
         safe_command=command_mod.fig_loop_command(name, goal),
