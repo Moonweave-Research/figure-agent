@@ -180,6 +180,8 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--json", action="store_true")
     parser.add_argument("--max-steps", type=int, default=fig_run.DEFAULT_MAX_STEPS)
     parser.add_argument("--max-fixtures", type=int, default=DEFAULT_MAX_FIXTURES)
     parser.add_argument("--actor", choices=list(fig_queue._ACTORS), dest="required_actor")

@@ -235,6 +235,38 @@ def test_main_emits_json_summary_in_dry_run(
         assert key in payload
 
 
+def test_main_accepts_json_flag_as_output_compatibility_noop(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _write_basic_fixture(tmp_path)
+
+    result = fig_driver.main(
+        [
+            "driver_demo",
+            "--mode",
+            "authoring",
+            "--goal",
+            "tighten layout",
+            "--dry-run",
+            "--json",
+        ],
+        repo_root=tmp_path,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["schema"] == "figure-agent.driver.v1"
+    assert payload["fixture"] == "driver_demo"
+    assert payload["may_execute"] is False
+    assert isinstance(payload["status"], dict)
+    assert isinstance(payload["forbidden_actions"], list)
+    assert isinstance(payload["workspace_warnings"], list)
+    assert payload["next_action_summary"]["action"] == payload["action"]
+    assert payload["next_action_summary"]["safe_command"] == payload["safe_command"]
+    for key in ("action", "safe_command", "stop_boundary", "reason"):
+        assert key in payload
+
+
 def test_build_driver_summary_rejects_unsafe_fixture_name_before_status(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

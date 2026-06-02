@@ -4,7 +4,7 @@ description: Dry-run advisory figure driver. Reads /fig_status and recommends on
 
 Run the advisory driver for one figure.
 
-**Usage**: `/fig_drive <name> --mode <mode> --goal "<goal>" --dry-run`
+**Usage**: `/fig_drive <name> --mode <mode> --goal "<goal>" --dry-run [--json]`
 
 Run from the plugin root:
 
@@ -13,7 +13,9 @@ uv run python3 scripts/fig_driver.py <name> --mode review --goal "<goal>" --dry-
 uv run python3 scripts/fig_driver.py <name> --mode final --goal "final readiness" --dry-run
 ```
 
-`--dry-run` is required. The command never compiles, exports,
+`--dry-run` is required. Output is JSON by default; `--json` is accepted as a
+compatibility no-op for operators who use it on other figure-agent commands.
+The command never compiles, exports,
 critiques, patches, polishes, accepts, stages, or commits. It reads
 `status.infer_stage()`, optionally ingests the latest valid `/fig_loop`
 checkpoint under `.scratch/fig-loop-runs/`, and emits one advisory action as

@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CU, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CV, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CU queue-run filter surface guard;
+- branch baseline: `main` after Issue 100CV JSON/dry-run CLI compatibility aliases;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -157,6 +157,7 @@ the workflow together.
 | G100-92 | P3 | Queue-run SVG filter parity | `/fig_queue` supported SVG polish readiness filters, but `/fig_queue_run` still accepted only actor/action/status filters despite claiming to share the same filter surface. | TDD reproduced `fig_queue_run.py --mode polish --can-start-svg-polish true --svg-polish-blocking-source driver_prerequisite` failing at argparse before it could plan queue execution. | Operators could inspect SVG readiness with `/fig_queue` but then lose the same filter when moving to plan-only bounded queue execution. | Issue 100CS - queue-run SVG filter parity |
 | G100-93 | P3 | Inventory version consistency | The Issue 100 Documentation Consistency Check still claimed README/plugin manifest identified the plugin as v0.9.1 after the live release metadata had moved to v0.9.2. | TDD reproduced the release-contract suite not checking the inventory's version sentence even though it already checked README, pyproject, and plugin manifest versions. | The main roadmap could give stale release-readiness evidence even while the actual release metadata was correct. | Issue 100CT - inventory version consistency guard |
 | G100-94 | P3 | Queue-run filter drift recurrence | Issue 100CS copied the current queue filters into `/fig_queue_run`, but there was no parity guard proving future `/fig_queue` filter additions are mirrored in the runner. | TDD reproduced that `fig_queue_run` had no declared filter-surface constant to compare against `fig_queue._FILTER_KEYS`. | The same filter drift could recur whenever `/fig_queue` grows a new filter, sending operators back to manual JSON filtering. | Issue 100CU - queue-run filter surface guard |
+| G100-95 | P3 | JSON/dry-run CLI compatibility | `fig_driver.py` and `fig_queue_run.py` emit JSON by default, but rejected reasonable explicit `--json` flags; `fig_queue_run.py` also rejected `--dry-run` even though it is plan-only unless `--execute` is supplied. | Live post-100CU SVG polish evidence pass hit argparse errors on `fig_driver.py ... --dry-run --json` and `fig_queue_run.py ... --dry-run --json`; TDD reproduced both. | Operators and agents can fail before reaching the actual evidence path simply by adding explicit output/dry-run flags that work conceptually for these commands. | Issue 100CV - JSON/dry-run CLI compatibility aliases |
 
 ## Recommended Execution Order
 
@@ -802,6 +803,12 @@ the workflow together.
     payloads through one helper, and tests that the two command surfaces stay
     in sync when future queue filters are added.
 
+97. **Issue 100CV - JSON/dry-run CLI compatibility aliases**
+    Implemented as operator CLI compatibility hardening. `fig_driver.py` now
+    accepts `--json` as a no-op because it always emits JSON, and
+    `fig_queue_run.py` accepts `--json` plus `--dry-run` as no-ops because it
+    always emits JSON and remains plan-only unless `--execute` is supplied.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -852,7 +859,7 @@ only in the read-only dashboard. Issue 100CT closes the next roadmap-metadata
 hole by tying the inventory's own version consistency statement to the live
 plugin manifest version. Issue 100CU then prevents the same queue/queue-run
 filter drift from recurring by making the runner filter surface test-backed.
-After Issue 100CM, the
+After Issue 100CV, the
 plugin-install readiness path is now correctly
 able to say:
 
@@ -862,7 +869,7 @@ able to say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CU next candidates are therefore not old Issue 100A-C
+The current post-100CV next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -886,6 +893,12 @@ No new broad aesthetic detector should be added before these current routing and
 evidence gaps are addressed. The plugin's risk is not lack of another taste
 rubric; it is that existing evidence and command guidance are not always
 surfaced in the path the user actually runs.
+
+Issue 100CV closes one defect found while starting that evidence path: commands
+that already emitted JSON rejected explicit `--json`, and the plan-only queue
+runner rejected explicit `--dry-run`. These aliases do not change mutation
+policy, but they remove a needless CLI trap before the operator reaches the
+real SVG-polish blockers.
 
 ## Edge-Case Review
 
