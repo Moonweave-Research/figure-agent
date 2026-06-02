@@ -818,6 +818,10 @@ def test_authoring_mode_completes_when_render_fresh(tmp_path: Path) -> None:
     assert summary["action"] == "complete"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] is None
+    assert summary["operator_guidance"]["state"] == "complete"
+    assert "authoring mode" in summary["operator_guidance"]["next_step"]
+    assert "--mode review" in summary["operator_guidance"]["next_step"]
+    assert "whole-figure" in summary["operator_guidance"]["next_step"]
 
 
 # --- review mode -------------------------------------------------------------
@@ -1251,6 +1255,9 @@ def test_review_mode_completes_after_latest_clean_loop_checkpoint(
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] is None
     assert summary["loop_checkpoint"]["final_stop_reason"] == "verify_only_complete"
+    assert "review mode" in summary["operator_guidance"]["next_step"]
+    assert "--mode release" in summary["operator_guidance"]["next_step"]
+    assert "final" in summary["operator_guidance"]["next_step"]
 
 
 def test_review_mode_surfaces_uncertain_crop_audit_from_latest_loop(

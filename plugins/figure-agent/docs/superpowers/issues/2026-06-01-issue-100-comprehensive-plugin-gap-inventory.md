@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CN, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CO, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CN inventory next-analysis freshness guard;
+- branch baseline: `main` after Issue 100CO mode-scoped completion guidance;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -150,6 +150,7 @@ the workflow together.
 | G100-85 | P3 | Installed example-source drift | Payload freshness intentionally excludes `examples/`, but installed cache examples can still be stale or dirty while payload/package/source hygiene all look clean. | TDD reproduced source and installed `examples/demo/demo.tex` differing while `state: fresh` and `changed_files: []`; the old CLI exited 0. | Claude can read or copy stale installed example sources while the install diagnostic claims readiness. | Issue 100CL - installed example-source hygiene guard |
 | G100-86 | P3 | Marketplace source-path mismatch | `plugin_install_freshness.py` could be run from a clean feature worktree while raw `claude plugin install figure-agent@figure-agent-local` still installed from the registered `figure-agent-local` marketplace source, which may point at a different checkout. | Live Claude config inspection showed `figure-agent-local` is resolved from `~/.claude/plugins/known_marketplaces.json`, not from the current shell directory. | Operators could review a clean worktree, run the printed install command, and copy a dirty or stale registered source into the installed plugin cache. | Issue 100CM - marketplace source hygiene guard |
 | G100-87 | P3 | Inventory next-analysis freshness | The Issue 100 header/table tracked through Issue 100CM, but the `Additional Update Analysis` section still told operators that the next urgent slices were Issue 100A and Issue 100B/C. | TDD reproduced the release-contract guard passing while that analysis section did not mention the latest Issue 100 suffix and still carried stale 100A-C recommendation text. | Operators could use the inventory as a live roadmap and restart already-implemented work instead of moving to the current post-100CM gap. | Issue 100CN - inventory next-analysis freshness guard |
+| G100-88 | P1 | Mode-scoped completion ambiguity | `/fig_drive --mode authoring` and review-mode clean checkpoints could return `action: complete` with generic guidance that no required plugin action remained for the selected mode. | TDD reproduced authoring/review complete states that did not explicitly point to review/release/final follow-up, even though users repeatedly asked why the agent said a figure was complete. | Operators could read a mode-local completion as whole-figure, release, or art-direction completion and stop before the next broader gate. | Issue 100CO - mode-scoped completion guidance |
 
 ## Recommended Execution Order
 
@@ -750,6 +751,13 @@ the workflow together.
     to mention the latest Issue 100 suffix and reject stale "next candidate"
     prose that points operators back to already-implemented Issue 100A-C work.
 
+90. **Issue 100CO - mode-scoped completion guidance**
+    Implemented as operator-guidance hardening. `/fig_drive` complete states
+    now explain the selected mode scope: authoring complete points to review,
+    review complete points to release/final, polish complete says it is only
+    a polish-mode closure, and final complete keeps the terminal no-action
+    wording.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -785,7 +793,9 @@ with overlapping responsibilities.
 ## Additional Update Analysis
 
 Issue 100CN makes this section itself part of the release-contract freshness
-surface. After Issue 100CM, the plugin-install readiness path is now correctly
+surface. Issue 100CO then closes the highest-priority operator explanation
+gap by making complete states explicitly mode-scoped. After Issue 100CM, the
+plugin-install readiness path is now correctly
 able to say:
 
 - the registered `figure-agent-local` marketplace source matches or mismatches
@@ -794,17 +804,17 @@ able to say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CM next candidates are therefore not old Issue 100A-C
+The current post-100CO next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
    supported and deterministic harness coverage exists, but real-figure
    promotion remains evidence-gated before it should become a routine
    production handoff.
-2. **Operator completion explanation.** The plugin can still say a loop is
-   complete when what it really means is "no automated action is available;
-   this is now a human/art-direction/release boundary." The correct direction is
-   clearer explanation and routing, not hidden auto-design.
+2. **Operator completion explanation evidence.** Mode-scoped completion wording
+   now exists for authoring/review/polish/final driver outputs, but real
+   dogfood should still verify whether agents follow the broader-mode pointer
+   instead of stopping too early.
 3. **Installed-cache refresh after dirty figure work is resolved.** With the
    current user-owned dirty `.tex`, the correct freshness answer is nonzero.
    Reinstall should wait until that source git blocker is intentionally handled.
