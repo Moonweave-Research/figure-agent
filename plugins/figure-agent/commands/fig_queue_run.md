@@ -4,7 +4,7 @@ description: Plan or execute bounded workflow-agent work from the filtered fixtu
 
 Run the executable workflow-agent subset from `/fig_queue`.
 
-**Usage**: `/fig_queue_run --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--dry-run] [--json] [--execute]`
+**Usage**: `/fig_queue_run --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--dry-run] [--json | --format json] [--execute]`
 
 Run from the plugin root:
 
@@ -12,6 +12,7 @@ Run from the plugin root:
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --max-fixtures 2
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --execute
+uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --format json
 uv run python3 scripts/fig_queue_run.py --mode polish --goal "<goal>" --can-start-svg-polish true
 ```
 
@@ -19,9 +20,10 @@ uv run python3 scripts/fig_queue_run.py --mode polish --goal "<goal>" --can-star
 `/fig_queue --command-plan` data, takes only `command_plan.executable`, and
 reports which fixture runs would be attempted.
 
-Output is JSON by default. `--json` and `--dry-run` are accepted as
-compatibility no-ops: `--dry-run` does not change behavior because plan-only is
-already the default, and only `--execute` opts into bounded execution.
+Output is JSON by default. `--json`, `--format json`, and `--dry-run` are
+accepted as compatibility no-ops: `--dry-run` does not change behavior because
+plan-only is already the default, and only `--execute` opts into bounded
+execution.
 
 Use it after inspecting `/fig_queue --actor workflow_agent --command-plan`.
 The normal order is:

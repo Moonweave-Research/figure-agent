@@ -222,6 +222,31 @@ def test_main_accepts_json_and_dry_run_flags_as_plan_only_noops(
     assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
 
 
+def test_main_accepts_format_json_as_output_compatibility_noop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+
+    assert fig_queue_run.main(
+        [
+            "--mode",
+            "review",
+            "--goal",
+            "triage",
+            "--actor",
+            "workflow_agent",
+            "--format",
+            "json",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.queue-run.v1"
+    assert payload["execute"] is False
+    assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
+
+
 def test_main_passes_svg_polish_filters_to_queue(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
