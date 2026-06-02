@@ -4,12 +4,12 @@ description: Run deterministic compile/export/status/loop smoke checks for one f
 
 Run a repeatable end-to-end plugin smoke check for one fixture.
 
-**Usage**: `/fig_e2e_smoke <name> [--repeat N] [--goal "<goal>"]`
+**Usage**: `/fig_e2e_smoke <name> [--repeat N] [--goal "<goal>"] [--json | --format json]`
 
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_e2e_smoke.py <name> --repeat 5 --goal "<goal>"
+uv run python3 scripts/fig_e2e_smoke.py <name> --repeat 5 --goal "<goal>" --format json
 ```
 
 Each repeat runs the same command sequence:
@@ -19,9 +19,10 @@ Each repeat runs the same command sequence:
 3. `uv run python3 scripts/status.py examples/<name>`
 4. `uv run python3 scripts/fig_loop.py <name> --goal "<goal> (smoke run i/N)" --json`
 
-The command emits one JSON object to stdout. Exit code is `0` only if every
-step in every repeat succeeds. On the first failed step, the runner stops,
-returns exit code `1`, and includes `failed_run` and `failed_step`.
+The command emits one JSON object to stdout. `--json` and `--format json` are
+accepted as explicit no-op output flags. Exit code is `0` only if every step in
+every repeat succeeds. On the first failed step, the runner stops, returns exit
+code `1`, and includes `failed_run` and `failed_step`.
 
 For `--repeat N`, the runner also compares the stable status/loop outcome of
 each repeat against run 1. Unique paths and command logs are not compared, but

@@ -326,6 +326,8 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-dir", type=Path, default=DEFAULT_WORK_DIR)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     return parser
 
 

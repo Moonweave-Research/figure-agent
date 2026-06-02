@@ -4,10 +4,12 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import svg_polish_positive_harness as harness_mod  # noqa: E402
 from svg_polish_positive_harness import run_positive_harness  # noqa: E402
 
 
@@ -69,3 +71,49 @@ def test_positive_harness_refuses_to_force_replace_unmarked_workdir(tmp_path: Pa
         raise AssertionError("expected unmarked work_dir replacement to fail")
 
     assert (work_dir / "keep.txt").read_text(encoding="utf-8") == "do not delete\n"
+
+
+def test_positive_harness_cli_accepts_json_noop_flag(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run_positive_harness(*, work_dir: Path, force: bool) -> dict:
+        return {
+            "schema": "figure-agent.svg-polish-positive-harness.v1",
+            "fixture": "svg_polish_positive_demo",
+            "work_dir": str(work_dir),
+            "force": force,
+        }
+
+    monkeypatch.setattr(harness_mod, "run_positive_harness", fake_run_positive_harness)
+
+    exit_code = harness_mod.main(["--work-dir", str(tmp_path / "harness"), "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.svg-polish-positive-harness.v1"
+
+
+def test_positive_harness_cli_accepts_format_json_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run_positive_harness(*, work_dir: Path, force: bool) -> dict:
+        return {
+            "schema": "figure-agent.svg-polish-positive-harness.v1",
+            "fixture": "svg_polish_positive_demo",
+            "work_dir": str(work_dir),
+            "force": force,
+        }
+
+    monkeypatch.setattr(harness_mod, "run_positive_harness", fake_run_positive_harness)
+
+    exit_code = harness_mod.main(
+        ["--work-dir", str(tmp_path / "harness"), "--format", "json"]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.svg-polish-positive-harness.v1"

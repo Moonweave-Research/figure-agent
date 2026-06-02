@@ -287,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     parser.add_argument("--runs-root", type=Path, default=None)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
 
     try:

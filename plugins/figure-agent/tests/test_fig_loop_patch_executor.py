@@ -771,6 +771,55 @@ def test_executor_cli_requires_apply_flag_and_reports_controlled_error(
     assert "explicit --apply" in captured.err
 
 
+def test_executor_cli_accepts_json_noop_flag(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root, runs_root, patch_path = _ready_repo(tmp_path)
+
+    exit_code = main(
+        [
+            "loop_demo",
+            "--repo-root",
+            str(repo_root),
+            "--runs-root",
+            str(runs_root),
+            "--patch-file",
+            str(patch_path),
+            "--json",
+        ]
+    )
+
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "explicit --apply" in captured.err
+
+
+def test_executor_cli_accepts_format_json_alias(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root, runs_root, patch_path = _ready_repo(tmp_path)
+
+    exit_code = main(
+        [
+            "loop_demo",
+            "--repo-root",
+            str(repo_root),
+            "--runs-root",
+            str(runs_root),
+            "--patch-file",
+            str(patch_path),
+            "--format",
+            "json",
+        ]
+    )
+
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "explicit --apply" in captured.err
+
+
 def test_executor_rejects_unsafe_fixture_name_before_loop_lookup(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     runs_root = repo_root / ".scratch" / "fig-loop-runs"

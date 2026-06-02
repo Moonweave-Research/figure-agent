@@ -277,7 +277,7 @@ stay outside patch-assisted automation.
 explicit, diff-driven executor:
 
 ```bash
-uv run python3 scripts/fig_loop_patch_executor.py <name> --patch-file <path> --apply
+uv run python3 scripts/fig_loop_patch_executor.py <name> --patch-file <path> --apply --format json
 ```
 
 This executor does not generate edits from prose. It applies one prepared

@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DH, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DI, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DH JSON evidence-helper flag compatibility;
+- branch baseline: `main` after Issue 100DI JSON smoke/patch/harness flag compatibility;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -170,6 +170,7 @@ the workflow together.
 | G100-105 | P3 | Match snippet CLI help contract | `match_snippet.py --help` was treated as a missing briefing file because the helper used manual argv counting. | Live command printed `missing: --help`; TDD reproduced missing argparse help and unknown-argument handling. | Operators cannot discover helper usage normally, and parser behavior remains inconsistent with the hardened workflow surface. | Issue 100DF - match_snippet CLI help contract |
 | G100-106 | P3 | Plugin install freshness output flag compatibility | `plugin_install_freshness.py` emits JSON by default but rejected explicit `--json` and `--format json` spellings. | Live commands failed at argparse; TDD reproduced both no-op output flags failing. | Operators checking "am I using the newest plugin?" can hit a parser trap before seeing the real source/install hygiene state. | Issue 100DG - plugin install freshness JSON flag compatibility |
 | G100-107 | P3 | JSON evidence-helper output flag compatibility | `fig_run_journal.py`, `detector_feedback_ledger.py`, and `diagnostic_artifact_provenance.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three helper CLIs failing at argparse on explicit JSON-output flags. | Operators can hit a parser trap while checking interrupted-run continuation, detector tuning evidence, or scratch-artifact provenance. | Issue 100DH - JSON evidence-helper flag compatibility |
+| G100-108 | P3 | JSON smoke/patch/harness output flag compatibility | `fig_e2e_smoke.py`, `fig_loop_patch_executor.py`, and `svg_polish_positive_harness.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three CLIs failing at argparse on explicit JSON-output flags. | Operators can hit the same parser trap while running deterministic smoke, explicit patch closeout, or SVG-polish plumbing evidence. | Issue 100DI - JSON smoke/patch/harness flag compatibility |
 
 ## Recommended Execution Order
 
@@ -891,6 +892,13 @@ the workflow together.
      keep their JSON-only output contracts while accepting explicit `--json`
      and `--format json` no-op flags.
 
+110. **Issue 100DI - JSON smoke/patch/harness flag compatibility**
+     Implemented as CLI compatibility for remaining JSON-only operator tools.
+     `fig_e2e_smoke.py`, `fig_loop_patch_executor.py`, and
+     `svg_polish_positive_harness.py` now accept explicit `--json` and
+     `--format json` no-op flags while preserving their existing output and
+     mutation policies.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -966,9 +974,10 @@ Issue 100DG applies the same explicit JSON-output flag compatibility to the
 plugin install freshness checker, preserving its JSON-only output and exit-code
 contract. Issue 100DH applies the same standard to the JSON-only evidence
 helpers used for interrupted-run continuation, detector tuning, and diagnostic
-artifact provenance.
+artifact provenance. Issue 100DI closes the remaining JSON-only operator tools
+on smoke, explicit patch execution, and SVG-polish plumbing evidence.
 
-After Issue 100DH, JSON-output helper tools on the active operator path are now
+After Issue 100DI, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -980,8 +989,11 @@ JSON-only:
 - interrupted-run summaries, detector feedback ledgers, and diagnostic artifact
   provenance reports can be requested with the same explicit JSON-output
   spelling as the primary driver and queue commands.
+- deterministic smoke, explicit patch-executor, and SVG-polish harness evidence
+  can also use that explicit JSON-output spelling without changing their
+  existing safety or mutation policies.
 
-The current post-100DH next candidates are therefore not old Issue 100A-C
+The current post-100DI next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1018,7 +1030,9 @@ file path instead of help. Issue 100DG closes the adjacent install-readiness
 CLI trap: a JSON-only checker rejected explicit JSON-output flags before it
 could report the real source/install hygiene state. Issue 100DH closes the
 same trap on evidence-helper CLIs that operators use after interruptions,
-detector reviews, or scratch-crop provenance checks.
+detector reviews, or scratch-crop provenance checks. Issue 100DI closes the
+same trap on deterministic smoke, explicit patch execution, and SVG-polish
+positive-harness evidence.
 
 ## Edge-Case Review
 

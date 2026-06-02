@@ -399,6 +399,8 @@ def main(argv: list[str] | None = None) -> int:
         default=Path(__file__).resolve().parent.parent / ".scratch" / "fig-loop-runs",
     )
     parser.add_argument("--apply", action="store_true", help="required opt-in to mutate files")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
 
     try:

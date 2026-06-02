@@ -488,6 +488,72 @@ def test_main_emits_json_summary_and_exit_code(
     assert captured.err == ""
 
 
+def test_main_accepts_json_noop_flag(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run_smoke(
+        name: str,
+        *,
+        goal: str,
+        repeat: int,
+        repo_root: Path,
+        runs_root: Path | None,
+    ) -> dict:
+        return {
+            "schema": "figure-agent.e2e-smoke.v1",
+            "fixture": name,
+            "goal": goal,
+            "repeat": repeat,
+            "success": True,
+            "runs": [],
+        }
+
+    monkeypatch.setattr(smoke, "run_smoke", fake_run_smoke)
+
+    exit_code = smoke.main(["loop_demo", "--repo-root", str(tmp_path), "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    payload = json.loads(captured.out)
+    assert payload["schema"] == "figure-agent.e2e-smoke.v1"
+    assert payload["success"] is True
+
+
+def test_main_accepts_format_json_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fake_run_smoke(
+        name: str,
+        *,
+        goal: str,
+        repeat: int,
+        repo_root: Path,
+        runs_root: Path | None,
+    ) -> dict:
+        return {
+            "schema": "figure-agent.e2e-smoke.v1",
+            "fixture": name,
+            "goal": goal,
+            "repeat": repeat,
+            "success": True,
+            "runs": [],
+        }
+
+    monkeypatch.setattr(smoke, "run_smoke", fake_run_smoke)
+
+    exit_code = smoke.main(["loop_demo", "--repo-root", str(tmp_path), "--format", "json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    payload = json.loads(captured.out)
+    assert payload["schema"] == "figure-agent.e2e-smoke.v1"
+    assert payload["success"] is True
+
+
 def test_main_missing_fixture_returns_json_error(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
