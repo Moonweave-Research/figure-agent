@@ -276,6 +276,10 @@ prerequisite instead of telling the operator to skip ahead. For example,
 render-missing polish mode reports `action: run_compile` and
 `svg_polish_gate.next_action: run_fig_compile`; export-missing polish mode
 reports `action: run_export` and `svg_polish_gate.next_action: run_fig_export`.
+If export is missing or stale but the fixture is already outside the safe
+draft-export predicate, polish mode stops at the accepted/final release boundary
+and reports `svg_polish_gate.next_action: resolve_release_boundary` instead of
+suggesting a loop rerun.
 
 When a current loop checkpoint is available, polish mode also emits
 `svg_polish_readiness` as an additive top-level JSON field. This is the compact

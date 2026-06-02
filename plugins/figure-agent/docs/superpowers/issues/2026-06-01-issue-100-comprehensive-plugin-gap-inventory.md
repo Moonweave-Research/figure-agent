@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DJ, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DK, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DJ queue operator-guidance projection;
+- branch baseline: `main` after Issue 100DK polish release-boundary gate alignment;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -172,6 +172,7 @@ the workflow together.
 | G100-107 | P3 | JSON evidence-helper output flag compatibility | `fig_run_journal.py`, `detector_feedback_ledger.py`, and `diagnostic_artifact_provenance.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three helper CLIs failing at argparse on explicit JSON-output flags. | Operators can hit a parser trap while checking interrupted-run continuation, detector tuning evidence, or scratch-artifact provenance. | Issue 100DH - JSON evidence-helper flag compatibility |
 | G100-108 | P3 | JSON smoke/patch/harness output flag compatibility | `fig_e2e_smoke.py`, `fig_loop_patch_executor.py`, and `svg_polish_positive_harness.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three CLIs failing at argparse on explicit JSON-output flags. | Operators can hit the same parser trap while running deterministic smoke, explicit patch closeout, or SVG-polish plumbing evidence. | Issue 100DI - JSON smoke/patch/harness flag compatibility |
 | G100-109 | P2 | Queue completion guidance projection | `/fig_drive` complete states carried mode-scoped `operator_guidance`, but `/fig_queue` dropped that guidance from compact rows, table output, and command-plan handoff. | TDD reproduced authoring complete rows with no `operator_guidance`, no `--mode review` next-step text in the queue table, and generic command-plan handoff. | Operators could read multi-fixture queue `complete` rows as whole-figure completion and stop before broader review/release/final gates. | Issue 100DJ - queue operator-guidance projection |
+| G100-110 | P2 | Polish release-boundary gate mismatch | Polish mode could stop at `accepted_or_final_ready_required` while additive SVG columns still said `no_current_checkpoint` / `rerun_fig_loop`. | Live `fig5_floating_clip_mechanism` polish queue row showed `required_actor: release_operator` but `svg_polish_next_action: rerun_fig_loop`; TDD reproduced the not-accepted missing-export edge case. | Operators could follow SVG-specific columns and rerun the loop even though release/accepted/final/publication boundary was authoritative. | Issue 100DK - polish release-boundary gate alignment |
 
 ## Recommended Execution Order
 
@@ -907,6 +908,12 @@ the workflow together.
      blocked host/human/release/SVG rows continue to use the queue
      operator-handoff policy.
 
+112. **Issue 100DK - polish release-boundary gate alignment**
+     Implemented as polish-mode gate UX hardening. When polish mode is blocked
+     by `accepted_or_final_ready_required`, additive `svg_polish_gate` now
+     reports `state: blocked` and `next_action: resolve_release_boundary`
+     instead of falling through to no-current-checkpoint loop advice.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -988,9 +995,12 @@ on smoke, explicit patch execution, and SVG-polish plumbing evidence. Issue
 inspection: complete rows now preserve the same mode-scoped follow-up guidance
 as `/fig_drive` in both table and command-plan JSON, so
 authoring/review/polish/final local completion is not flattened into ambiguous
-whole-figure completion.
+whole-figure completion. Issue 100DK closes the next SVG polish queue
+contradiction found in the same evidence pass: release-boundary rows now point
+SVG-specific `next_action` at release-boundary resolution instead of loop
+reruns.
 
-After Issue 100DJ, JSON-output helper tools on the active operator path are now
+After Issue 100DK, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1008,8 +1018,10 @@ JSON-only:
 - multi-fixture queue complete rows carry driver mode-scoped next-step guidance
   in both table and command-plan JSON instead of forcing operators to inspect
   each single-fixture driver JSON.
+- polish-mode release-boundary rows carry SVG-specific next-action guidance
+  that matches the release/operator boundary.
 
-The current post-100DJ next candidates are therefore not old Issue 100A-C
+The current post-100DK next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1038,7 +1050,8 @@ Issues 100DD-100DI close the explicit JSON-output and parser hygiene traps on
 the remaining operator path. Issue 100DJ closes the adjacent projection trap:
 queue rows, table output, and command-plan handoff now preserve the driver
 guidance that explains what a mode-local `complete` state does and does not
-mean.
+mean. Issue 100DK closes the SVG polish gate mismatch where release-boundary
+rows still looked like loop-checkpoint blockers in SVG-specific columns.
 
 ## Edge-Case Review
 

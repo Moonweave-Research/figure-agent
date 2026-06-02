@@ -148,7 +148,11 @@ def _compact_status(status: dict[str, Any]) -> dict[str, Any]:
     return {key: status.get(key) for key in _STATUS_COMPACT_KEYS}
 
 
-def _svg_polish_prerequisite_gate(action: str, reason: str) -> dict[str, Any] | None:
+def _svg_polish_prerequisite_gate(
+    action: str,
+    reason: str,
+    stop_boundary: str | None,
+) -> dict[str, Any] | None:
     next_action_by_driver_action = {
         ACTION_RUN_COMPILE: "run_fig_compile",
         ACTION_RUN_CRITIQUE: "run_fig_critique",
@@ -156,6 +160,10 @@ def _svg_polish_prerequisite_gate(action: str, reason: str) -> dict[str, Any] | 
         ACTION_RUN_EXPORT: "run_fig_export",
     }
     next_action = next_action_by_driver_action.get(action)
+    blocking_id = action
+    if next_action is None and stop_boundary == STOP_ACCEPTED_OR_FINAL_READY:
+        next_action = "resolve_release_boundary"
+        blocking_id = stop_boundary
     if next_action is None:
         return None
     return {
@@ -167,7 +175,7 @@ def _svg_polish_prerequisite_gate(action: str, reason: str) -> dict[str, Any] | 
         "next_action": next_action,
         "reason": reason,
         "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
-        "blocking_items": [{"source": "driver_prerequisite", "id": action}],
+        "blocking_items": [{"source": "driver_prerequisite", "id": blocking_id}],
     }
 
 
@@ -228,7 +236,7 @@ def _summary(
         if svg_polish_readiness is not None:
             summary["svg_polish_readiness"] = svg_polish_readiness
     if mode == "polish":
-        prerequisite_gate = _svg_polish_prerequisite_gate(action, reason)
+        prerequisite_gate = _svg_polish_prerequisite_gate(action, reason, stop_boundary)
         summary["svg_polish_gate"] = (
             prerequisite_gate
             if prerequisite_gate is not None

@@ -1639,6 +1639,12 @@ def test_polish_mode_does_not_surface_not_accepted_export_as_executable(
     assert summary["safe_command"] is None
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert "acceptance_state is NOT_DECLARED" in summary["reason"]
+    assert summary["svg_polish_gate"]["state"] == "blocked"
+    assert summary["svg_polish_gate"]["source"] == "driver_prerequisite"
+    assert summary["svg_polish_gate"]["next_action"] == "resolve_release_boundary"
+    assert summary["svg_polish_gate"]["blocking_items"] == [
+        {"source": "driver_prerequisite", "id": "accepted_or_final_ready_required"}
+    ]
 
 
 def test_release_mode_ignores_reference_calibrated_score_for_gate_selection(
