@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DS, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DS plus operator completion dogfood evidence, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,8 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DS first-blocker status context;
+- branch baseline: `main` after Issue 100DS first-blocker status context and
+  operator completion explanation dogfood;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -1101,6 +1102,8 @@ JSON-only:
   nested command-plan JSON.
 - queue first-blocker summaries are documented as status context rather than
   current-mode blocker counts.
+- live authoring queue dogfood confirms complete rows preserve broader-mode
+  review guidance while `blocked_count`/`planned_blocked` remain zero.
 
 The current post-100DS next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
@@ -1114,11 +1117,7 @@ contract gaps. They are:
    refresh, and three by no-current-checkpoint/final-boundary gates. The next
    pass should refresh the five host-vision critiques, then rerun
    `--can-start-svg-polish true`.
-2. **Operator completion explanation evidence.** Mode-scoped completion wording
-   now exists for authoring/review/polish/final driver outputs and queue rows,
-   but real dogfood should still verify whether agents follow the broader-mode
-   pointer instead of stopping too early.
-3. **Installed-cache refresh after dirty figure work is resolved.** With the
+2. **Installed-cache refresh after dirty figure work is resolved.** With the
    current user-owned dirty `.tex`, the correct freshness answer is nonzero.
    Reinstall should wait until that source git blocker is intentionally handled.
 
