@@ -311,6 +311,33 @@ def test_issue_100_inventory_header_and_surface_counts_match_current_tree() -> N
     ) in inventory
 
 
+def test_issue_100_inventory_tracks_latest_issue_file_suffix() -> None:
+    inventory = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
+    ).read_text()
+    issue_dir = REPO_ROOT / "docs" / "superpowers" / "issues"
+    issue_values: list[int] = []
+    for path in issue_dir.glob("*issue-100*.md"):
+        title = path.read_text().splitlines()[0]
+        combined_match = re.search(r"Issue 100([A-Z])/([A-Z])", title)
+        if combined_match:
+            issue_values.extend(
+                _issue_suffix_value(suffix) for suffix in combined_match.groups()
+            )
+            continue
+        if match := re.search(r"Issue 100([A-Z]+)", title):
+            issue_values.append(_issue_suffix_value(match.group(1)))
+    latest_issue_file = max(issue_values)
+    latest_issue_suffix = _issue_suffix_from_value(latest_issue_file)
+
+    assert f"through Issue 100{latest_issue_suffix}" in inventory
+    assert f"branch baseline: `main` after Issue 100{latest_issue_suffix}" in inventory
+
+
 def test_v0_9_issue_statuses_are_mainline_ready() -> None:
     issue_files = {
         "Issue 57": "2026-05-27-issue-57-real-fixture-audit-adoption.md",

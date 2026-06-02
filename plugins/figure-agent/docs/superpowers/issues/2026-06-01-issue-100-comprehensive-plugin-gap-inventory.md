@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BZ, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CC, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BZ inspection-trace CLI path boundary;
+- branch baseline: `main` after Issue 100CC inventory file freshness guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -136,6 +136,9 @@ the workflow together.
 | G100-71 | P1 | Reference-aesthetic metrics path boundary | `reference_aesthetic_metrics.py` accepted raw relative fixture paths and could write `build/reference_aesthetic_metrics.json` outside `examples/`. | TDD reproduced `examples/../outside` returning exit 0 and writing metrics for an outside fixture-shaped directory. | A reference/aesthetic critique input generator must not produce fresh-looking metrics for escaped paths before critique freshness and routing consume them. | Issue 100BX - reference-aesthetic metrics CLI fixture path boundary |
 | G100-72 | P1 | Reference extract CLI path boundary | `reference_extract.py` accepted raw relative fixture paths and could write `coordinate_hints.yaml` outside `examples/`. | TDD reproduced `examples/../outside --ocr-passes 1.0` returning exit 0 and writing outside coordinate hints. | Reference-derived authoring evidence must not be generated for escaped fixture paths before status, critique, and layout-drift consumers treat it as trusted context. | Issue 100BY - reference extract CLI fixture path boundary |
 | G100-73 | P2 | Inspection trace CLI path boundary | `inspection_trace.py validate` accepted raw relative fixture paths and could print `valid examples/../outside/inspection_trace.yaml` for a trace outside `examples/`. | TDD reproduced `examples/../outside` returning exit 0 for a valid outside trace. | Crop-read accountability evidence should not be certified for escaped fixture paths before critique/loop consumers trust it as audit proof. | Issue 100BZ - inspection trace CLI fixture path boundary |
+| G100-74 | P2 | Layout-drift CLI path boundary | `check_layout_drift.py` accepted raw relative fixture paths and could print a normal-looking `SKIP` for a normalized outside directory. | TDD reproduced `check_layout_drift.py examples/../outside` returning exit 0 for an outside fixture-shaped directory. | A compile-stage layout gate should not make escaped paths look like normal fixture state before status/export consumers rely on coordinate hints. | Issue 100CA - layout drift CLI fixture path boundary |
+| G100-75 | P3 | Layout-drift usage docs | After Issue 100CA hardened the CLI, the script docstring and argparse help still described `<example_dir>`, implying arbitrary directories were accepted. | `check_layout_drift.py --help` used the old positional name even though the hardened CLI accepted only fixture name, `examples/<name>`, absolute examples child, or compile-local `.`. | Operators could follow stale usage text and think parent-relative or sibling directories were part of the public contract. | Issue 100CB - layout drift CLI usage doc sync |
+| G100-76 | P3 | Inventory file freshness guard | The release-contract guard checked the latest Issue 100 suffix mentioned inside the inventory, but did not compare against the actual issue files on disk. | TDD reproduced the inventory passing while issue files existed through Issue 100CB and the inventory still claimed Issue 100BZ. | The whole-plugin review ledger could silently lag behind completed hardening slices. | Issue 100CC - inventory issue-file freshness guard |
 
 ## Recommended Execution Order
 
