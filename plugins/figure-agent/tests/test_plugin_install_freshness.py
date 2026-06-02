@@ -194,6 +194,25 @@ def test_compare_plugin_install_reports_dirty_source_package_hygiene(
     assert "plugin_package_audit.py" in result["source_package_hygiene"]["next_action"]
 
 
+def test_package_hygiene_next_actions_quote_shell_special_paths(tmp_path: Path) -> None:
+    source = tmp_path / "[figure-agent]" / "source"
+    installed = tmp_path / "[figure-agent]" / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (source / ".venv" / "bin").mkdir(parents=True)
+    (source / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+    (installed / ".venv" / "bin").mkdir(parents=True)
+    (installed / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+
+    result = compare_plugin_install(source, installed)
+
+    assert f"'{source.resolve()}'" in result["source_package_hygiene"]["next_action"]
+    assert (
+        f"'{installed.resolve()}'"
+        in result["installed_package_hygiene"]["next_action"]
+    )
+
+
 def test_cli_returns_zero_for_fresh_clean_installed_package(
     tmp_path: Path,
     capsys,
