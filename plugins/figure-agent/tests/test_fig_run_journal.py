@@ -496,3 +496,31 @@ def test_cli_prints_latest_journal_summary_json(
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.fig-run-journal-summary.v1"
     assert payload["run_dir"] == str(moved)
+
+
+def test_cli_accepts_json_noop_flag(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    _write_fixture(tmp_path)
+
+    result = main(["runner_demo", "--repo-root", str(tmp_path), "--json"])
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.fig-run-journal-summary.v1"
+    assert payload["state"] == "missing"
+
+
+def test_cli_accepts_format_json_alias(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    _write_fixture(tmp_path)
+
+    result = main(["runner_demo", "--repo-root", str(tmp_path), "--format", "json"])
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.fig-run-journal-summary.v1"
+    assert payload["state"] == "missing"

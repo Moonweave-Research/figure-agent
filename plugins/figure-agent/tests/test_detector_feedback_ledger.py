@@ -324,3 +324,43 @@ def test_cli_prints_ledger_json(tmp_path: Path, capsys: pytest.CaptureFixture[st
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.detector-feedback-ledger.v1"
     assert payload["fixtures"][0]["fixture"] == "alpha"
+
+
+def test_cli_accepts_json_noop_flag(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    examples_root = tmp_path / "examples"
+    _write_complete_fixture(
+        examples_root,
+        "alpha",
+        visual_candidates=(),
+        micro_defects_yaml="micro_defects: []\n",
+    )
+
+    exit_code = main(["--examples-root", str(examples_root), "--json", "alpha"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.detector-feedback-ledger.v1"
+    assert payload["fixtures"][0]["fixture"] == "alpha"
+
+
+def test_cli_accepts_format_json_alias(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    examples_root = tmp_path / "examples"
+    _write_complete_fixture(
+        examples_root,
+        "alpha",
+        visual_candidates=(),
+        micro_defects_yaml="micro_defects: []\n",
+    )
+
+    exit_code = main(["--examples-root", str(examples_root), "--format", "json", "alpha"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.detector-feedback-ledger.v1"
+    assert payload["fixtures"][0]["fixture"] == "alpha"

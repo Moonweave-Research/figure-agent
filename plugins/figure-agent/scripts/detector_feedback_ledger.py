@@ -136,6 +136,8 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("fixtures", nargs="*", help="fixture names; defaults to all critiques")
     parser.add_argument("--examples-root", type=Path, default=_default_examples_root())
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     return parser
 
 

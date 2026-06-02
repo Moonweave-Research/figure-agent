@@ -153,6 +153,53 @@ def test_cli_accepts_examples_fixture_path(
     assert str(example_dir) in payload["example_dir"]
 
 
+def test_cli_accepts_json_noop_flag(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root = tmp_path
+    _write_fixture(repo_root)
+
+    result = diagnostic_artifact_provenance.main(
+        [
+            "demo",
+            "build/demo.png",
+            "--repo-root",
+            str(repo_root),
+            "--json",
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.diagnostic-artifact-provenance.v1"
+    assert payload["fixture"] == "demo"
+
+
+def test_cli_accepts_format_json_alias(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo_root = tmp_path
+    _write_fixture(repo_root)
+
+    result = diagnostic_artifact_provenance.main(
+        [
+            "demo",
+            "build/demo.png",
+            "--repo-root",
+            str(repo_root),
+            "--format",
+            "json",
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.diagnostic-artifact-provenance.v1"
+    assert payload["fixture"] == "demo"
+
+
 def test_cli_rejects_parent_relative_fixture_path(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

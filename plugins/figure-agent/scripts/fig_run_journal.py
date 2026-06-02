@@ -231,6 +231,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("name", help="fixture name")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--runs-root", type=Path, default=None)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     return parser
 
 

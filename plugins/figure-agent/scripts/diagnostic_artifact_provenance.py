@@ -201,6 +201,8 @@ def _parser() -> argparse.ArgumentParser:
         default=Path(__file__).resolve().parent.parent,
         help="plugin root containing examples/",
     )
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     return parser
 
 
