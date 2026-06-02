@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import shlex
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -189,6 +190,73 @@ def _source_package_hygiene(source_root: Path) -> dict[str, Any]:
     }
 
 
+def _source_git_hygiene(source_root: Path) -> dict[str, Any]:
+    root = source_root.resolve()
+    try:
+        prefix_result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-prefix"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "status",
+                "--porcelain=v1",
+                "-z",
+                "--untracked-files=all",
+                "--",
+                ".",
+            ],
+            check=True,
+            capture_output=True,
+            text=False,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return {
+            "state": "unavailable",
+            "dirty_count": 0,
+            "dirty_paths": [],
+            "next_action": "source git worktree state is unavailable",
+        }
+
+    dirty_paths: list[str] = []
+    prefix = prefix_result.stdout.strip()
+    records = [record for record in result.stdout.split(b"\0") if record]
+    index = 0
+    while index < len(records):
+        record = records[index]
+        status = record[:2].decode("ascii", errors="replace")
+        raw_path = record[3:].decode("utf-8", errors="replace")
+        if prefix and raw_path.startswith(prefix):
+            raw_path = raw_path[len(prefix) :]
+        dirty_paths.append(raw_path)
+        if status[0] in {"R", "C"} or status[1] in {"R", "C"}:
+            index += 1
+        index += 1
+
+    dirty_paths = sorted(dirty_paths)
+    if not dirty_paths:
+        return {
+            "state": "clean",
+            "dirty_count": 0,
+            "dirty_paths": [],
+            "next_action": "development plugin tree has no uncommitted git changes",
+        }
+    return {
+        "state": "dirty",
+        "dirty_count": len(dirty_paths),
+        "dirty_paths": dirty_paths,
+        "next_action": (
+            "commit, stash, or move aside plugin-root changes before "
+            "reinstalling the plugin"
+        ),
+    }
+
+
 def compare_plugin_install(source_root: Path, installed_root: Path | None) -> dict[str, Any]:
     """Return a deterministic freshness comparison between source and install."""
     source_root = source_root.resolve()
@@ -197,6 +265,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     source_version = _plugin_version(source_root)
     source_manifest = _payload_manifest(source_root)
     source_package_hygiene = _source_package_hygiene(source_root)
+    source_git_hygiene = _source_git_hygiene(source_root)
     if installed_root is None:
         return {
             "schema": SCHEMA,
@@ -213,6 +282,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "refresh_strategy": "install_missing",
             "next_action": INSTALL_COMMAND,
             "source_package_hygiene": source_package_hygiene,
+            "source_git_hygiene": source_git_hygiene,
             "installed_package_hygiene": _installed_package_hygiene(None),
         }
 
@@ -233,6 +303,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "refresh_strategy": "reinstall_invalid",
             "next_action": REINSTALL_COMMAND,
             "source_package_hygiene": source_package_hygiene,
+            "source_git_hygiene": source_git_hygiene,
             "installed_package_hygiene": _installed_package_hygiene(installed_root),
         }
 
@@ -271,6 +342,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         "refresh_strategy": refresh_strategy,
         "next_action": next_action,
         "source_package_hygiene": source_package_hygiene,
+        "source_git_hygiene": source_git_hygiene,
         "installed_package_hygiene": _installed_package_hygiene(installed_root),
     }
 
@@ -305,12 +377,19 @@ def main(argv: list[str] | None = None) -> int:
     source_hygiene_state = (
         source_hygiene.get("state") if isinstance(source_hygiene, dict) else None
     )
+    source_git_hygiene = result.get("source_git_hygiene")
+    source_git_hygiene_state = (
+        source_git_hygiene.get("state")
+        if isinstance(source_git_hygiene, dict)
+        else None
+    )
     hygiene = result.get("installed_package_hygiene")
     hygiene_state = hygiene.get("state") if isinstance(hygiene, dict) else None
     return (
         0
         if result["state"] == "fresh"
         and source_hygiene_state == "clean"
+        and source_git_hygiene_state in {"clean", "unavailable"}
         and hygiene_state == "clean"
         else 1
     )

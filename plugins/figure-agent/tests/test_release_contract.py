@@ -144,6 +144,7 @@ def test_readme_documents_plugin_package_audit() -> None:
     assert "scripts/plugin_install_freshness.py" in readme
     assert INSTALL_FRESHNESS_SCHEMA in readme
     assert "source_package_hygiene" in readme
+    assert "source_git_hygiene" in readme
     assert "scripts/plugin_package_audit.py" in readme
     assert "--max-mib" in readme
     assert "~/.claude/plugins/cache/" in readme

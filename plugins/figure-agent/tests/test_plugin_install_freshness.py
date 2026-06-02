@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -248,6 +249,55 @@ def test_cli_returns_nonzero_for_fresh_but_dirty_source_package(
     assert exit_code == 1
     assert output["state"] == "fresh"
     assert output["source_package_hygiene"]["state"] == "dirty"
+    assert output["installed_package_hygiene"]["state"] == "clean"
+
+
+def test_cli_returns_nonzero_for_fresh_but_dirty_git_source(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    repo = tmp_path / "repo"
+    source = repo / "plugins" / "figure-agent"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.invalid"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "baseline"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    (source / "commands" / "fig_status.md").write_text(
+        "dirty user edit\n",
+        encoding="utf-8",
+    )
+    (installed / "commands" / "fig_status.md").write_text(
+        "dirty user edit\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main([str(installed), "--source-root", str(source)])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 1
+    assert output["state"] == "fresh"
+    assert output["source_package_hygiene"]["state"] == "clean"
+    assert output["source_git_hygiene"]["state"] == "dirty"
+    assert output["source_git_hygiene"]["dirty_paths"] == ["commands/fig_status.md"]
     assert output["installed_package_hygiene"]["state"] == "clean"
 
 
