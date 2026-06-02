@@ -1308,6 +1308,44 @@ def test_main_accepts_format_json_as_output_compatibility_noop(
     assert payload["execute"] is False
 
 
+def test_main_accepts_json_as_output_compatibility_noop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    example_dir = tmp_path / "examples" / "runner_demo"
+    example_dir.mkdir(parents=True)
+    (example_dir / "runner_demo.tex").write_text("% source\n", encoding="utf-8")
+    (example_dir / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (example_dir / "spec.yaml").write_text("name: runner_demo\n", encoding="utf-8")
+    _install_driver_sequence(
+        monkeypatch,
+        [
+            _driver_summary(
+                action=fig_driver.ACTION_RUN_CRITIQUE,
+                safe_command="/fig_critique runner_demo",
+                stop_boundary=fig_driver.STOP_HOST_LLM_CRITIQUE,
+            )
+        ],
+    )
+
+    result = fig_run.main(
+        [
+            "runner_demo",
+            "--mode",
+            "review",
+            "--goal",
+            "close loop",
+            "--json",
+        ],
+        repo_root=tmp_path,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["schema"] == "figure-agent.run.v1"
+    assert payload["fixture"] == "runner_demo"
+    assert payload["execute"] is False
+
+
 def test_main_records_non_authoritative_run_journal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DT plus operator/install evidence, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DU plus operator/install evidence, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DT polish mode-forbidden guidance,
+- branch baseline: `main` after Issue 100DU fig-run JSON flag compatibility,
   operator completion explanation dogfood, and install-refresh blocked evidence;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
@@ -183,6 +183,7 @@ the workflow together.
 | G100-117 | P3 | Queue-run complete rows hidden from summary | After Issue 100DQ, `/fig_queue_run` embedded `queue.command_plan.complete` but its top-level `summary` still omitted a complete-row count. | TDD reproduced a command plan with `complete_count: 1` where queue-run summary exposed planned executable and blocked counts but no `planned_complete`. | Plan-only batch output could make mode-scoped completion disappear unless the operator inspected nested command-plan JSON. | Issue 100DR - queue-run complete summary |
 | G100-118 | P3 | First-blocker summary context ambiguity | Complete rows no longer counted as blocked, but live authoring dogfood still showed `by_first_blocker=critique_stale:4...` because `first_blocker` is global status context. | Live table/JSON after Issue 100DR had `complete:7`, `blocked_count:0`, and `planned_complete:7`, while `by_first_blocker` still included broader workflow blockers. | Operators could read status-context first blockers as selected-mode blocked-row counts unless docs name the distinction. | Issue 100DS - first-blocker status context |
 | G100-119 | P2 | Polish mode-forbidden guidance contradiction | `/fig_driver --mode polish` could return `stop_boundary: mode_forbidden_action` while `operator_guidance.next_step` still said to run the selected `fig_loop` command. | Live `fig3_trapping_concept` and `smoke_trap_demo` polish driver output showed no-current-checkpoint rows with mode-forbidden stop boundaries and "Run the selected command" guidance. | Single-fixture driver JSON contradicted itself and could send operators to run a command the current mode declares non-executable. | Issue 100DT - polish mode-forbidden guidance |
+| G100-120 | P3 | Fig-run explicit JSON flag compatibility | `/fig_run` emitted JSON by default and accepted `--format json`, but rejected the adjacent `--json` spelling used by other JSON-first workflow commands. | TDD reproduced `fig_run.py ... --json` failing with `unrecognized arguments: --json`. | Operators can hit a parser trap when switching from `/fig_drive`, `/fig_queue_run`, or `/fig_improve` to the bounded runner and carrying the explicit JSON flag habit. | Issue 100DU - fig_run json flag compatibility |
 
 ## Recommended Execution Order
 
@@ -975,6 +976,11 @@ the workflow together.
      selected command; they route back to review mode to close TikZ/loop
      prerequisites before re-entering polish mode.
 
+122. **Issue 100DU - fig_run json flag compatibility**
+     Implemented as bounded-runner CLI compatibility. `/fig_run` keeps its
+     JSON-only output and existing `--format json` spelling while accepting
+     explicit `--json` as the same no-op output flag.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1076,9 +1082,11 @@ level as planned executable and blocked counts. Issue 100DS closes the
 remaining wording gap by naming `by_first_blocker` as status context rather
 than selected-mode blocker evidence. Issue 100DT closes the adjacent
 single-fixture driver contradiction where polish-mode mode-forbidden rows still
-told operators to run the selected command.
+told operators to run the selected command. Issue 100DU closes the last
+bounded-runner spelling gap found in this pass by allowing `/fig_run --json`
+as the same no-op output flag as `/fig_run --format json`.
 
-After Issue 100DT, JSON-output helper tools on the active operator path are now
+After Issue 100DU, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 

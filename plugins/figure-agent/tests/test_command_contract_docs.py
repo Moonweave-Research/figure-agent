@@ -55,3 +55,10 @@ def test_skill_documents_v1_17_l4_5_contract() -> None:
         "`reference_learning_accountability`",
     ):
         assert required in doc
+
+
+def test_fig_run_documents_explicit_json_output_spellings() -> None:
+    doc = _read("commands/fig_run.md")
+
+    assert "[--json | --format json]" in doc
+    assert "`--json` and `--format json` are accepted" in doc
