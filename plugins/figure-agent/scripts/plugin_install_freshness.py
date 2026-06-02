@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,13 @@ EXTRA_JUNK_FILE_SUFFIXES = {
     ".log",
     ".synctex.gz",
 }
+
+
+def _package_audit_clean_command(root: Path) -> str:
+    return (
+        "python3 scripts/plugin_package_audit.py "
+        f"{shlex.quote(str(root))} --clean --max-mib 300"
+    )
 
 
 def _is_plugin_root(root: Path) -> bool:
@@ -156,10 +164,7 @@ def _installed_package_hygiene(installed_root: Path | None) -> dict[str, Any]:
         "state": "dirty",
         "junk_count": len(junk_paths),
         "junk_paths": junk_paths,
-        "next_action": (
-            "python3 scripts/plugin_package_audit.py "
-            f"{root} --clean --max-mib 300"
-        ),
+        "next_action": _package_audit_clean_command(root),
     }
 
 
@@ -180,10 +185,7 @@ def _source_package_hygiene(source_root: Path) -> dict[str, Any]:
         "state": "dirty",
         "junk_count": len(junk_paths),
         "junk_paths": junk_paths,
-        "next_action": (
-            "python3 scripts/plugin_package_audit.py "
-            f"{root} --clean --max-mib 300"
-        ),
+        "next_action": _package_audit_clean_command(root),
     }
 
 

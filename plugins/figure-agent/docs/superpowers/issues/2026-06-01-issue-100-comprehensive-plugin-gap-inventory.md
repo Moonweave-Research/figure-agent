@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CF, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CG, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CF source package hygiene guard;
+- branch baseline: `main` after Issue 100CG plugin hygiene next-action quoting;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -142,6 +142,7 @@ the workflow together.
 | G100-77 | P3 | Plugin install package hygiene visibility | `plugin_install_freshness.py` could report `state: fresh` while the installed cache still contained generated package junk that `plugin_package_audit.py` would reject. | Live same-version reinstall copied generated build/cache paths, freshness became `fresh`, then package audit failed until the installed cache was cleaned separately. | Operators could believe the installed plugin is fully ready while package hygiene still needs cleanup. | Issue 100CD - plugin install package hygiene summary |
 | G100-78 | P3 | Plugin install hygiene exit code | After Issue 100CD surfaced `installed_package_hygiene`, the CLI still exited `0` for `state: fresh` even when hygiene was `dirty`. | TDD reproduced a matching install with `.venv` package junk returning exit code 0 while JSON said `installed_package_hygiene.state: dirty`. | CI or shell operators that only check exit status could still treat a dirty installed plugin cache as ready. | Issue 100CE - plugin install hygiene exit-code guard |
 | G100-79 | P3 | Source package hygiene visibility | After Issue 100CE, the installed cache could be fresh+clean while the development plugin tree still contained generated package junk that the next reinstall would copy. | Live `plugin_package_audit.py . --max-mib 300` failed on the source tree while `plugin_install_freshness.py` exited 0 because it checked only installed hygiene. | Operators could clean the installed cache, see readiness pass, then reintroduce the same package junk on the next same-version reinstall. | Issue 100CF - source package hygiene guard |
+| G100-80 | P3 | Plugin hygiene next-action quoting | Issue 100CF emitted a source cleanup `next_action` containing the repo path `/Users/.../[figure-agent]/...` without shell quoting. | Live zsh execution failed with `no matches found: /Users/.../[figure-agent]/plugins/figure-agent`; TDD reproduced shell-special paths in source and installed hygiene commands. | Operators could follow the emitted cleanup command and fail before reaching the actual package hygiene fix. | Issue 100CG - plugin hygiene next-action quoting |
 
 ## Recommended Execution Order
 
