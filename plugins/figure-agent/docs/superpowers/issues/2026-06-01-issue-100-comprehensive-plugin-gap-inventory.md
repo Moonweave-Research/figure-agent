@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CL, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CM, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CL installed example-source hygiene guard;
+- branch baseline: `main` after Issue 100CM marketplace source hygiene guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -148,6 +148,7 @@ the workflow together.
 | G100-83 | P3 | Source git hygiene visibility | `plugin_install_freshness.py` could report `state: fresh`, source package hygiene `clean`, and installed package hygiene `clean` while the development plugin tree still had uncommitted tracked changes that had been copied into the installed cache. | Live reproduction: user-edited `examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` was byte-identical in the installed cache, yet freshness exited 0 because payload hashing excludes `examples/` and package hygiene only detects generated junk. | Dirty user figure-source work can be installed as "fresh" plugin state, confusing Claude cache truth and release/operator checks. | Issue 100CJ - source git hygiene guard |
 | G100-84 | P3 | Install freshness next-action precedence | After Issue 100CJ, `plugin_install_freshness.py` could exit nonzero for dirty source git or dirty installed package hygiene while the top-level `next_action` still said the install matched or recommended reinstall. | TDD reproduced fresh payloads with dirty source git and dirty installed package hygiene where exit code was 1 but top-level `next_action` did not point at the blocking hygiene action. | Operators could copy the wrong top-level action and reinstall or stop early instead of fixing the actual readiness blocker. | Issue 100CK - install next-action precedence guard |
 | G100-85 | P3 | Installed example-source drift | Payload freshness intentionally excludes `examples/`, but installed cache examples can still be stale or dirty while payload/package/source hygiene all look clean. | TDD reproduced source and installed `examples/demo/demo.tex` differing while `state: fresh` and `changed_files: []`; the old CLI exited 0. | Claude can read or copy stale installed example sources while the install diagnostic claims readiness. | Issue 100CL - installed example-source hygiene guard |
+| G100-86 | P3 | Marketplace source-path mismatch | `plugin_install_freshness.py` could be run from a clean feature worktree while raw `claude plugin install figure-agent@figure-agent-local` still installed from the registered `figure-agent-local` marketplace source, which may point at a different checkout. | Live Claude config inspection showed `figure-agent-local` is resolved from `~/.claude/plugins/known_marketplaces.json`, not from the current shell directory. | Operators could review a clean worktree, run the printed install command, and copy a dirty or stale registered source into the installed plugin cache. | Issue 100CM - marketplace source hygiene guard |
 
 ## Recommended Execution Order
 
@@ -733,6 +734,14 @@ the workflow together.
     `examples/` separately from payload freshness. Payload `changed_files`
     still ignores example work products, but installed example-source drift now
     exits nonzero and points the operator at clean-source reinstall.
+
+88. **Issue 100CM - marketplace source hygiene guard**
+    Implemented as plugin-install source-resolution hardening.
+    `plugin_install_freshness.py` now emits `marketplace_source_hygiene`,
+    comparing the current repo marketplace root with the registered
+    `figure-agent-local` source in `known_marketplaces.json`, so raw Claude
+    install/update commands cannot silently install from a different checkout
+    than the one being reviewed.
 
 ## Non-Goals
 

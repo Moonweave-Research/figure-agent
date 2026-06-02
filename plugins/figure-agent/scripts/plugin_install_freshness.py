@@ -17,6 +17,11 @@ SCHEMA = "figure-agent.plugin-install-freshness.v1"
 DEFAULT_CACHE_PARENT = (
     Path.home() / ".claude" / "plugins" / "cache" / "figure-agent-local" / "figure-agent"
 )
+DEFAULT_KNOWN_MARKETPLACES = (
+    Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
+)
+MARKETPLACE_NAME = "figure-agent-local"
+PLUGIN_NAME = "figure-agent"
 UPDATE_COMMAND = "claude plugin update figure-agent@figure-agent-local"
 INSTALL_COMMAND = "claude plugin install figure-agent@figure-agent-local"
 REINSTALL_COMMAND = (
@@ -290,6 +295,99 @@ def _source_git_hygiene(source_root: Path) -> dict[str, Any]:
     }
 
 
+def _load_json_object(path: Path) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _expected_marketplace_source_root(source_root: Path) -> Path | None:
+    source_root = source_root.resolve()
+    for candidate in source_root.parents:
+        marketplace_path = candidate / ".claude-plugin" / "marketplace.json"
+        payload = _load_json_object(marketplace_path)
+        if payload is None:
+            continue
+        plugins = payload.get("plugins")
+        if not isinstance(plugins, list):
+            continue
+        for plugin in plugins:
+            if not isinstance(plugin, dict):
+                continue
+            if plugin.get("name") != PLUGIN_NAME:
+                continue
+            plugin_source = plugin.get("source")
+            if not isinstance(plugin_source, str) or not plugin_source:
+                continue
+            if (candidate / plugin_source).resolve() == source_root:
+                return candidate.resolve()
+    return None
+
+
+def _marketplace_source_hygiene(
+    source_root: Path,
+    known_marketplaces_path: Path,
+) -> dict[str, Any]:
+    expected_source = _expected_marketplace_source_root(source_root)
+    known_marketplaces_path = known_marketplaces_path.expanduser().resolve()
+    if expected_source is None:
+        return {
+            "state": "unavailable",
+            "registered_source": None,
+            "expected_source": None,
+            "known_marketplaces_path": str(known_marketplaces_path),
+            "next_action": "could not determine current repo marketplace source",
+        }
+
+    payload = _load_json_object(known_marketplaces_path)
+    if payload is None:
+        return {
+            "state": "unavailable",
+            "registered_source": None,
+            "expected_source": str(expected_source),
+            "known_marketplaces_path": str(known_marketplaces_path),
+            "next_action": "registered Claude plugin marketplaces are unavailable",
+        }
+
+    marketplace = payload.get(MARKETPLACE_NAME)
+    source = marketplace.get("source") if isinstance(marketplace, dict) else None
+    source_kind = source.get("source") if isinstance(source, dict) else None
+    source_path = source.get("path") if isinstance(source, dict) else None
+    if source_kind != "directory" or not isinstance(source_path, str) or not source_path:
+        return {
+            "state": "unavailable",
+            "registered_source": None,
+            "expected_source": str(expected_source),
+            "known_marketplaces_path": str(known_marketplaces_path),
+            "next_action": "figure-agent-local directory marketplace is unavailable",
+        }
+
+    registered_source = Path(source_path).expanduser().resolve()
+    if registered_source == expected_source:
+        return {
+            "state": "clean",
+            "registered_source": str(registered_source),
+            "expected_source": str(expected_source),
+            "known_marketplaces_path": str(known_marketplaces_path),
+            "next_action": (
+                "figure-agent-local marketplace source matches current repo root"
+            ),
+        }
+
+    return {
+        "state": "dirty",
+        "registered_source": str(registered_source),
+        "expected_source": str(expected_source),
+        "known_marketplaces_path": str(known_marketplaces_path),
+        "next_action": (
+            "claude plugin marketplace remove figure-agent-local && "
+            f"claude plugin marketplace add {shlex.quote(str(expected_source))}"
+        ),
+    }
+
+
 def _installed_example_source_hygiene(
     source_root: Path,
     installed_root: Path | None,
@@ -335,6 +433,7 @@ def _readiness_next_action(
     *,
     source_package_hygiene: dict[str, Any],
     source_git_hygiene: dict[str, Any],
+    marketplace_source_hygiene: dict[str, Any],
     installed_package_hygiene: dict[str, Any],
     installed_example_source_hygiene: dict[str, Any],
     payload_next_action: str,
@@ -342,6 +441,7 @@ def _readiness_next_action(
     for hygiene in (
         source_package_hygiene,
         source_git_hygiene,
+        marketplace_source_hygiene,
         installed_package_hygiene,
         installed_example_source_hygiene,
     ):
@@ -352,7 +452,12 @@ def _readiness_next_action(
     return payload_next_action
 
 
-def compare_plugin_install(source_root: Path, installed_root: Path | None) -> dict[str, Any]:
+def compare_plugin_install(
+    source_root: Path,
+    installed_root: Path | None,
+    *,
+    known_marketplaces_path: Path = DEFAULT_KNOWN_MARKETPLACES,
+) -> dict[str, Any]:
     """Return a deterministic freshness comparison between source and install."""
     source_root = source_root.resolve()
     if not _is_plugin_root(source_root):
@@ -361,6 +466,10 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     source_manifest = _payload_manifest(source_root)
     source_package_hygiene = _source_package_hygiene(source_root)
     source_git_hygiene = _source_git_hygiene(source_root)
+    marketplace_source_hygiene = _marketplace_source_hygiene(
+        source_root,
+        known_marketplaces_path,
+    )
     installed_package_hygiene = _installed_package_hygiene(installed_root)
     installed_example_source_hygiene = _installed_example_source_hygiene(
         source_root,
@@ -370,6 +479,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         next_action = _readiness_next_action(
             source_package_hygiene=source_package_hygiene,
             source_git_hygiene=source_git_hygiene,
+            marketplace_source_hygiene=marketplace_source_hygiene,
             installed_package_hygiene=installed_package_hygiene,
             installed_example_source_hygiene=installed_example_source_hygiene,
             payload_next_action=INSTALL_COMMAND,
@@ -390,6 +500,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "next_action": next_action,
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
+            "marketplace_source_hygiene": marketplace_source_hygiene,
             "installed_package_hygiene": installed_package_hygiene,
             "installed_example_source_hygiene": installed_example_source_hygiene,
         }
@@ -400,6 +511,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         next_action = _readiness_next_action(
             source_package_hygiene=source_package_hygiene,
             source_git_hygiene=source_git_hygiene,
+            marketplace_source_hygiene=marketplace_source_hygiene,
             installed_package_hygiene=installed_package_hygiene,
             installed_example_source_hygiene=installed_example_source_hygiene,
             payload_next_action=REINSTALL_COMMAND,
@@ -420,6 +532,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "next_action": next_action,
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
+            "marketplace_source_hygiene": marketplace_source_hygiene,
             "installed_package_hygiene": installed_package_hygiene,
             "installed_example_source_hygiene": installed_example_source_hygiene,
         }
@@ -446,6 +559,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     next_action = _readiness_next_action(
         source_package_hygiene=source_package_hygiene,
         source_git_hygiene=source_git_hygiene,
+        marketplace_source_hygiene=marketplace_source_hygiene,
         installed_package_hygiene=installed_package_hygiene,
         installed_example_source_hygiene=installed_example_source_hygiene,
         payload_next_action=next_action,
@@ -467,6 +581,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         "next_action": next_action,
         "source_package_hygiene": source_package_hygiene,
         "source_git_hygiene": source_git_hygiene,
+        "marketplace_source_hygiene": marketplace_source_hygiene,
         "installed_package_hygiene": installed_package_hygiene,
         "installed_example_source_hygiene": installed_example_source_hygiene,
     }
@@ -486,6 +601,12 @@ def _parser() -> argparse.ArgumentParser:
         help="installed plugin root, or cache parent containing version directories",
     )
     parser.add_argument("--source-root", type=Path, default=_default_source_root())
+    parser.add_argument(
+        "--known-marketplaces-path",
+        type=Path,
+        default=DEFAULT_KNOWN_MARKETPLACES,
+        help="Claude known_marketplaces.json path for marketplace source hygiene",
+    )
     return parser
 
 
@@ -493,7 +614,11 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         installed_root = latest_installed_root(args.installed_root)
-        result = compare_plugin_install(args.source_root, installed_root)
+        result = compare_plugin_install(
+            args.source_root,
+            installed_root,
+            known_marketplaces_path=args.known_marketplaces_path,
+        )
     except ValueError as exc:
         print(f"plugin_install_freshness.py: {exc}", file=sys.stderr)
         return 2
@@ -508,6 +633,12 @@ def main(argv: list[str] | None = None) -> int:
         if isinstance(source_git_hygiene, dict)
         else None
     )
+    marketplace_source_hygiene = result.get("marketplace_source_hygiene")
+    marketplace_source_hygiene_state = (
+        marketplace_source_hygiene.get("state")
+        if isinstance(marketplace_source_hygiene, dict)
+        else None
+    )
     hygiene = result.get("installed_package_hygiene")
     hygiene_state = hygiene.get("state") if isinstance(hygiene, dict) else None
     example_hygiene = result.get("installed_example_source_hygiene")
@@ -519,6 +650,7 @@ def main(argv: list[str] | None = None) -> int:
         if result["state"] == "fresh"
         and source_hygiene_state == "clean"
         and source_git_hygiene_state in {"clean", "unavailable"}
+        and marketplace_source_hygiene_state in {"clean", "unavailable"}
         and hygiene_state == "clean"
         and example_hygiene_state == "clean"
         else 1

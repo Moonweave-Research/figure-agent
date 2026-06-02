@@ -349,6 +349,134 @@ def test_compare_plugin_install_reports_installed_example_source_drift(
     assert result["next_action"] == result["installed_example_source_hygiene"]["next_action"]
 
 
+def test_cli_returns_nonzero_when_marketplace_source_points_elsewhere(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    repo = tmp_path / "repo"
+    source = repo / "plugins" / "figure-agent"
+    installed = tmp_path / "cache" / "0.1.0"
+    registered_repo = tmp_path / "registered-repo"
+    known_marketplaces = tmp_path / "known_marketplaces.json"
+    _write_plugin(source)
+    _write_plugin(installed)
+    registered_repo.mkdir()
+    (repo / ".claude-plugin").mkdir()
+    (repo / ".claude-plugin" / "marketplace.json").write_text(
+        json.dumps(
+            {
+                "name": "figure-agent-local",
+                "plugins": [
+                    {
+                        "name": "figure-agent",
+                        "source": "./plugins/figure-agent",
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    known_marketplaces.write_text(
+        json.dumps(
+            {
+                "figure-agent-local": {
+                    "source": {
+                        "source": "directory",
+                        "path": str(registered_repo),
+                    }
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            str(installed),
+            "--source-root",
+            str(source),
+            "--known-marketplaces-path",
+            str(known_marketplaces),
+        ]
+    )
+    result = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 1
+    assert result["state"] == "fresh"
+    assert result["marketplace_source_hygiene"]["state"] == "dirty"
+    assert result["marketplace_source_hygiene"]["registered_source"] == str(
+        registered_repo.resolve()
+    )
+    assert result["marketplace_source_hygiene"]["expected_source"] == str(
+        repo.resolve()
+    )
+    assert result["next_action"] == result["marketplace_source_hygiene"]["next_action"]
+
+
+def test_cli_accepts_matching_marketplace_source(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    repo = tmp_path / "repo"
+    source = repo / "plugins" / "figure-agent"
+    installed = tmp_path / "cache" / "0.1.0"
+    known_marketplaces = tmp_path / "known_marketplaces.json"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (repo / ".claude-plugin").mkdir()
+    (repo / ".claude-plugin" / "marketplace.json").write_text(
+        json.dumps(
+            {
+                "name": "figure-agent-local",
+                "plugins": [
+                    {
+                        "name": "figure-agent",
+                        "source": "./plugins/figure-agent",
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    known_marketplaces.write_text(
+        json.dumps(
+            {
+                "figure-agent-local": {
+                    "source": {
+                        "source": "directory",
+                        "path": str(repo),
+                    }
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            str(installed),
+            "--source-root",
+            str(source),
+            "--known-marketplaces-path",
+            str(known_marketplaces),
+        ]
+    )
+    result = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert result["marketplace_source_hygiene"]["state"] == "clean"
+    assert result["marketplace_source_hygiene"]["registered_source"] == str(
+        repo.resolve()
+    )
+    assert result["marketplace_source_hygiene"]["expected_source"] == str(
+        repo.resolve()
+    )
+
+
 def test_latest_installed_root_selects_highest_version_with_manifest(tmp_path: Path) -> None:
     cache = tmp_path / "cache" / "figure-agent-local" / "figure-agent"
     _write_plugin(cache / "0.8.1")
