@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CY, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CZ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CY fig_queue_run format-json compatibility;
+- branch baseline: `main` after Issue 100CZ driver/run format-json compatibility;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -161,6 +161,7 @@ the workflow together.
 | G100-96 | P3 | Package audit evidence preservation | `plugin_package_audit.py --clean` correctly removed package junk, but the same broad cleanup erased freshly compiled fixture `build/` and `exports/` evidence during development review loops. | Live SVG-polish promotion work compiled fixtures, then default package cleanup removed the generated evidence before the next queue/driver inspection. | Operators need a way to clean `.venv` and tool caches without destroying the local render/export evidence they are actively reviewing. | Issue 100CW - package audit evidence-preserving clean |
 | G100-97 | P3 | Queue output flag compatibility | `/fig_queue` supported `--json`, but rejected the common `--format json` spelling when an operator tried to inspect polish readiness as JSON. | Live command `fig_queue.py --mode polish --format json` failed with `unrecognized arguments: --format`; TDD reproduced the argparse failure. | Operators can fail before queue evidence appears just by choosing a common output flag spelling. | Issue 100CX - fig_queue format-json compatibility |
 | G100-98 | P3 | Queue-run output flag compatibility | `/fig_queue_run` emits JSON and accepts `--json`, but rejected `--format json` during plan-only polish queue continuation. | Live command `fig_queue_run.py --mode polish --goal "inspect" --format json --dry-run` failed with `unrecognized arguments: --format`; TDD reproduced the argparse failure. | Operators can fail before queue-run plan evidence appears just by using the same output flag spelling that `/fig_queue` now accepts. | Issue 100CY - fig_queue-run format-json compatibility |
+| G100-99 | P3 | Driver/run output flag compatibility | After queue commands accepted `--format json`, adjacent single-fixture commands `fig_driver.py` and `fig_run.py` still rejected the same JSON-output spelling. | Live commands `fig_driver.py ... --format json` and `fig_run.py ... --format json` failed at argparse; TDD reproduced both. | Operators can move from queue to single-fixture driver/run and hit another needless output-flag trap before seeing the real boundary state. | Issue 100CZ - driver/run format-json compatibility |
 
 ## Recommended Execution Order
 
@@ -832,6 +833,12 @@ the workflow together.
      it now also accepts `--format json` so the plan-only wrapper matches the
      JSON output spelling operators use on `/fig_queue`.
 
+101. **Issue 100CZ - driver/run format-json compatibility**
+     Implemented as single-fixture output CLI compatibility. `/fig_drive` and
+     `/fig_run` both already emit JSON by default; they now accept
+     `--format json` as an explicit output spelling without changing dry-run,
+     plan-only, execution, or journaling policy.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -890,9 +897,11 @@ package validation still treats those artifacts as generated junk. Issue 100CX
 then removes the next live queue-inspection trap: `/fig_queue --format json`
 now reaches the same JSON contract as `--json` instead of failing at argparse.
 Issue 100CY applies the same compatibility to `/fig_queue_run --format json`,
-without adding table output or changing plan/execution safety.
+without adding table output or changing plan/execution safety. Issue 100CZ
+extends that compatibility to the adjacent single-fixture driver/run commands,
+where both commands already emit JSON by default.
 
-After Issue 100CY, the plugin-install readiness path is now correctly able to
+After Issue 100CZ, the plugin-install readiness path is now correctly able to
 say:
 
 - the registered `figure-agent-local` marketplace source matches or mismatches
@@ -901,7 +910,7 @@ say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CY next candidates are therefore not old Issue 100A-C
+The current post-100CZ next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -926,11 +935,11 @@ evidence gaps are addressed. The plugin's risk is not lack of another taste
 rubric; it is that existing evidence and command guidance are not always
 surfaced in the path the user actually runs.
 
-Issue 100CY closes the fourth defect found while starting that evidence path:
-the queue-run wrapper accepted `--json` but not `--format json`. The alias does
-not change queue rows, filters, summaries, command-plan safety, or execution
-policy; it only keeps a common output spelling from blocking the plan-only
-evidence path.
+Issue 100CZ closes the fifth defect found while starting that evidence path:
+single-fixture driver/run commands rejected `--format json` after the queue
+commands accepted it. The aliases do not change driver/run payloads, dry-run
+requirements, plan-only defaults, or execution safety; they only keep the common
+JSON-output spelling from blocking the evidence path.
 
 ## Edge-Case Review
 

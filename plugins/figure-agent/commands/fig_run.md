@@ -4,12 +4,13 @@ description: Bounded workflow runner. Executes only allowlisted deterministic sh
 
 Run a bounded figure workflow until the next non-automatic boundary.
 
-**Usage**: `/fig_run <name> --mode <mode> --goal "<goal>" [--execute]`
+**Usage**: `/fig_run <name> --mode <mode> --goal "<goal>" [--execute] [--format json]`
 
 Run from the plugin root:
 
 ```bash
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>"
+uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --format json
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
 uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --no-record
@@ -26,6 +27,8 @@ any unsupported mutation.
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate fixture source, exports, accepted state, or golden
 state. Plan-only runs do not write a journal unless `--record` is passed.
+Output is JSON by default; `--format json` is accepted as an explicit output
+compatibility spelling.
 
 ## Execution Policy
 

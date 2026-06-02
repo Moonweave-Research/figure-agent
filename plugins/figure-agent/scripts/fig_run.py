@@ -586,6 +586,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
     started_at = _utc_now()
     try:

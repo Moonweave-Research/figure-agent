@@ -267,6 +267,32 @@ def test_main_accepts_json_flag_as_output_compatibility_noop(
         assert key in payload
 
 
+def test_main_accepts_format_json_as_output_compatibility_noop(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _write_basic_fixture(tmp_path)
+
+    result = fig_driver.main(
+        [
+            "driver_demo",
+            "--mode",
+            "authoring",
+            "--goal",
+            "tighten layout",
+            "--dry-run",
+            "--format",
+            "json",
+        ],
+        repo_root=tmp_path,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert payload["schema"] == "figure-agent.driver.v1"
+    assert payload["fixture"] == "driver_demo"
+    assert payload["may_execute"] is False
+
+
 def test_build_driver_summary_rejects_unsafe_fixture_name_before_status(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

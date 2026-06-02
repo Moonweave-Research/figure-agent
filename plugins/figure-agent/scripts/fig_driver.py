@@ -1064,6 +1064,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--goal", required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
     if not args.dry_run:
         print(
