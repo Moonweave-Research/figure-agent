@@ -40,6 +40,12 @@ def test_compare_plugin_install_reports_fresh_when_payloads_match(tmp_path: Path
     assert result["missing_files"] == []
     assert result["extra_files"] == []
     assert result["refresh_strategy"] == "none"
+    assert result["installed_package_hygiene"] == {
+        "state": "clean",
+        "junk_count": 0,
+        "junk_paths": [],
+        "next_action": "installed plugin cache package has no generated junk",
+    }
 
 
 def test_compare_plugin_install_reports_stale_file_differences(tmp_path: Path) -> None:
@@ -97,6 +103,12 @@ def test_compare_plugin_install_reports_missing_install(tmp_path: Path) -> None:
     assert result["installed_version"] is None
     assert result["refresh_strategy"] == "install_missing"
     assert result["next_action"] == "claude plugin install figure-agent@figure-agent-local"
+    assert result["installed_package_hygiene"] == {
+        "state": "unknown",
+        "junk_count": 0,
+        "junk_paths": [],
+        "next_action": "install plugin before auditing package hygiene",
+    }
 
 
 def test_compare_plugin_install_reports_invalid_install_root(tmp_path: Path) -> None:
@@ -116,6 +128,12 @@ def test_compare_plugin_install_reports_invalid_install_root(tmp_path: Path) -> 
         "claude plugin uninstall figure-agent && "
         "claude plugin install figure-agent@figure-agent-local"
     )
+    assert result["installed_package_hygiene"] == {
+        "state": "unknown",
+        "junk_count": 0,
+        "junk_paths": [],
+        "next_action": "reinstall plugin before auditing package hygiene",
+    }
 
 
 def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> None:
@@ -138,6 +156,13 @@ def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> 
 
     assert result["state"] == "fresh"
     assert result["extra_files"] == []
+    assert result["installed_package_hygiene"]["state"] == "dirty"
+    assert result["installed_package_hygiene"]["junk_count"] == 2
+    assert result["installed_package_hygiene"]["junk_paths"] == [
+        ".venv",
+        "examples/demo/build",
+    ]
+    assert "plugin_package_audit.py" in result["installed_package_hygiene"]["next_action"]
 
 
 def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path) -> None:
