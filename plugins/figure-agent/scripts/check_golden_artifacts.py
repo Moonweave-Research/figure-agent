@@ -126,6 +126,7 @@ def extract_pdf_text(pdf_path: Path) -> str:
         check=False,
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         raise RuntimeError(f"pdftotext failed for {pdf_path}: {result.stderr}")
@@ -308,10 +309,7 @@ def tiff_artifact_failure(path: Path) -> str | None:
                 return f"invalid TIFF artifact: {path} missing DPI metadata"
             x_dpi, y_dpi = dpi
             if x_dpi < MIN_TIFF_DPI or y_dpi < MIN_TIFF_DPI:
-                return (
-                    f"TIFF resolution below 600 dpi: {path} "
-                    f"reports {x_dpi:.1f}x{y_dpi:.1f} dpi"
-                )
+                return f"TIFF resolution below 600 dpi: {path} reports {x_dpi:.1f}x{y_dpi:.1f} dpi"
             image.verify()
     except Exception as exc:
         return f"invalid TIFF artifact: {path}: {exc}"
@@ -641,8 +639,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise ValueError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

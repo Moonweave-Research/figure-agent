@@ -23,11 +23,12 @@ def extract_word_bboxes(pdf_path: Path) -> list[dict]:
         ["pdftotext", "-bbox", str(pdf_path), str(tmp_path)],
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         raise RuntimeError(f"pdftotext failed: {result.stderr}")
 
-    html_text = tmp_path.read_text(encoding="utf-8")
+    html_text = tmp_path.read_text(encoding="utf-8", errors="replace")
     tmp_path.unlink()
 
     # pdftotext HTML can contain glyph bytes that are not strict XML.

@@ -63,6 +63,7 @@ def _run_ocr_at_scale(
             ["tesseract", str(ocr_target), str(out_base), "tsv"],
             capture_output=True,
             text=True,
+            errors="replace",
         )
         tsv_path = out_base.with_name(out_base.name + ".tsv")
         if proc.returncode != 0 or not tsv_path.exists():

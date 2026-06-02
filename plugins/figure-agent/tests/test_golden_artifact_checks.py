@@ -121,6 +121,29 @@ def test_missing_pdf_labels_invalid_entry_raises() -> None:
         missing_pdf_labels("text", required=[[]])  # empty alternative list
 
 
+def test_extract_pdf_text_tolerates_non_utf8_pdftotext_stdout(tmp_path: Path, monkeypatch) -> None:
+    """pdftotext can emit non-UTF8 bytes (symbol/Latin-1/Greek glyphs) on
+    `-layout -`; extract_pdf_text must decode-replace instead of crashing,
+    so the --require-accepted release gate returns a verdict rather than a
+    UnicodeDecodeError traceback. ASCII label tokens survive the U+FFFD
+    substitution."""
+    bin_dir = tmp_path / "fakebin"
+    bin_dir.mkdir()
+    fake_pdftotext = bin_dir / "pdftotext"
+    fake_pdftotext.write_text(
+        f'#!{sys.executable}\nimport sys\nsys.stdout.buffer.write(b"Foo\\xffBar\\n")\n',
+        encoding="utf-8",
+    )
+    fake_pdftotext.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bin_dir) + os.pathsep + os.environ["PATH"])
+
+    text = golden_checks.extract_pdf_text(tmp_path / "any.pdf")
+
+    assert isinstance(text, str)
+    assert "Foo" in text
+    assert "Bar" in text
+
+
 def test_count_svg_visible_elements_counts_namespaced_shapes(tmp_path: Path) -> None:
     svg = tmp_path / "figure.svg"
     svg.write_text(
@@ -609,9 +632,7 @@ def test_check_example_require_accepted_fails_without_contract(tmp_path: Path) -
     assert any("golden_contract block missing" in failure for failure in failures)
 
 
-def test_require_accepted_mode_requires_theory_guard(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_require_accepted_mode_requires_theory_guard(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "needsTheory"
     _write_minimal_accepted_fixture(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
@@ -639,9 +660,7 @@ def test_require_accepted_mode_rejects_failed_blocker_theory_guard(
     assert any("theory BLOCKER not passing: TG-1" in failure for failure in failures)
 
 
-def test_require_accepted_mode_requires_publication_compliance(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_require_accepted_mode_requires_publication_compliance(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "needsPublication"
     _write_minimal_accepted_fixture(fixture)
     _write_passing_theory_guard(fixture)
@@ -728,9 +747,7 @@ def test_require_accepted_mode_requires_reference_pack_for_reference_image(
     assert any("missing reference pack" in failure for failure in failures)
 
 
-def test_require_accepted_mode_validates_reference_pack(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_require_accepted_mode_validates_reference_pack(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "badReferencePack"
     _write_minimal_accepted_fixture(fixture)
     _write_passing_theory_guard(fixture)
@@ -824,8 +841,7 @@ def test_require_accepted_mode_fails_polished_svg_custom_manifest_path(
     failures = check_example(fixture, require_accepted=True)
 
     assert (
-        "final artifact invalid: final_artifact.manifest must be "
-        "polish/svg_polish_manifest.yaml"
+        "final artifact invalid: final_artifact.manifest must be polish/svg_polish_manifest.yaml"
     ) in failures
 
 
@@ -913,9 +929,7 @@ def test_check_example_accepted_mode_semantic_spec_error_fails_cleanly(
     assert not any("final artifact" in failure for failure in failures)
 
 
-def test_check_example_basic_mode_skips_semantic_spec_error(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_check_example_basic_mode_skips_semantic_spec_error(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "badStyleBasic"
     _make_passing_accepted_fixture(fixture, monkeypatch)
     spec = fixture / "spec.yaml"
@@ -985,10 +999,7 @@ def test_require_accepted_mode_fails_polished_svg_semantic_backport_required(
 
     failures = check_example(fixture, require_accepted=True)
 
-    assert (
-        "final artifact blocked: semantic backport required before acceptance"
-        in failures
-    )
+    assert "final artifact blocked: semantic backport required before acceptance" in failures
     assert not any("final artifact invalid:" in failure for failure in failures)
 
 
@@ -1088,15 +1099,11 @@ def test_require_accepted_mode_does_not_mutate_spec_or_generated_exports(
         "svg": (exports / f"{fixture.name}.svg").read_text(encoding="utf-8"),
         "tif": (exports / f"{fixture.name}.tif").read_bytes(),
         "png": (exports / f"{fixture.name}.png").read_bytes(),
-        "manifest": (fixture / "polish" / "svg_polish_manifest.yaml").read_text(
-            encoding="utf-8"
-        ),
+        "manifest": (fixture / "polish" / "svg_polish_manifest.yaml").read_text(encoding="utf-8"),
         "polished": (fixture / "polish" / f"{fixture.name}.polished.svg").read_text(
             encoding="utf-8"
         ),
-        "polish_audit": (fixture / "polish" / "svg_polish_audit.md").read_text(
-            encoding="utf-8"
-        ),
+        "polish_audit": (fixture / "polish" / "svg_polish_audit.md").read_text(encoding="utf-8"),
     }
 
     failures = check_example(fixture, require_accepted=True)
@@ -1107,18 +1114,15 @@ def test_require_accepted_mode_does_not_mutate_spec_or_generated_exports(
     assert (exports / f"{fixture.name}.svg").read_text(encoding="utf-8") == before["svg"]
     assert (exports / f"{fixture.name}.tif").read_bytes() == before["tif"]
     assert (exports / f"{fixture.name}.png").read_bytes() == before["png"]
-    assert (
-        (fixture / "polish" / "svg_polish_manifest.yaml").read_text(encoding="utf-8")
-        == before["manifest"]
-    )
-    assert (
-        (fixture / "polish" / f"{fixture.name}.polished.svg").read_text(encoding="utf-8")
-        == before["polished"]
-    )
-    assert (
-        (fixture / "polish" / "svg_polish_audit.md").read_text(encoding="utf-8")
-        == before["polish_audit"]
-    )
+    assert (fixture / "polish" / "svg_polish_manifest.yaml").read_text(encoding="utf-8") == before[
+        "manifest"
+    ]
+    assert (fixture / "polish" / f"{fixture.name}.polished.svg").read_text(
+        encoding="utf-8"
+    ) == before["polished"]
+    assert (fixture / "polish" / "svg_polish_audit.md").read_text(encoding="utf-8") == before[
+        "polish_audit"
+    ]
 
 
 def test_checker_warning_counts_reads_quality_audit() -> None:

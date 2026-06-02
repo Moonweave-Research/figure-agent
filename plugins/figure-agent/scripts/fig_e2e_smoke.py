@@ -42,7 +42,9 @@ def _default_command_runner(
     *,
     cwd: Path,
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, check=False)
+    return subprocess.run(
+        args, cwd=cwd, capture_output=True, text=True, errors="replace", check=False
+    )
 
 
 def _tail(text: str, *, limit: int = 4000) -> str:

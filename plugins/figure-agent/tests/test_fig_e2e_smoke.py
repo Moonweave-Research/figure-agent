@@ -432,6 +432,15 @@ def test_run_smoke_does_not_mutate_non_output_artifacts(
     assert snapshot() == before
 
 
+def test_default_command_runner_replaces_non_utf8_output(tmp_path: Path) -> None:
+    child = [sys.executable, "-c", 'import os; os.write(1, b"\\xff\\xfe font name\\n")']
+
+    result = smoke._default_command_runner(child, cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "�" in result.stdout
+
+
 def test_repeat_must_be_positive(tmp_path: Path) -> None:
     _make_fixture(tmp_path)
 

@@ -100,9 +100,7 @@ def _apply_aesthetic_lever_stop(
     updated.update(
         {
             "stop_reason": "human_gate_required",
-            "recommended_next_action": (
-                f"human art-direction review required for {lever_id}"
-            ),
+            "recommended_next_action": (f"human art-direction review required for {lever_id}"),
             "active_patch_target": None,
             "human_gate_status": "required",
         }
@@ -130,9 +128,7 @@ def _apply_external_vision_stop(
         updated.update(
             {
                 "stop_reason": "human_gate_required",
-                "recommended_next_action": (
-                    f"human review required for {detail_text}"
-                ),
+                "recommended_next_action": (f"human review required for {detail_text}"),
                 "active_patch_target": None,
                 "human_gate_status": "required",
             }
@@ -220,6 +216,7 @@ def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
         check=False,
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         return None

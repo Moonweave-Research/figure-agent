@@ -9,6 +9,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import svg_polish_delta  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 from svg_polish_delta import (  # noqa: E402
     SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
@@ -247,3 +248,20 @@ def test_missing_delta_manifest_fails_cleanly(tmp_path: Path) -> None:
             fig_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
             example_dir=fig_dir,
         )
+
+
+def test_default_renderer_tolerates_nonutf8_stderr(monkeypatch, tmp_path: Path) -> None:
+    # rsvg-convert/inkscape can emit non-UTF8 locale bytes on stderr; the real
+    # subprocess.run(..., text=True) decode must not crash before the renderer
+    # raises its own SvgPolishDeltaError on the non-zero exit.
+    fake_root = tmp_path / "fake_repo"
+    (fake_root / "scripts").mkdir(parents=True)
+    stub = fake_root / "scripts" / "svg_to_png.sh"
+    stub.write_text("printf '\\xff fontconfig warn\\n' >&2\nexit 1\n", encoding="utf-8")
+    monkeypatch.setattr(svg_polish_delta, "REPO_ROOT", fake_root)
+
+    source_svg = tmp_path / "in.svg"
+    source_svg.write_text("<svg/>\n", encoding="utf-8")
+
+    with pytest.raises(SvgPolishDeltaError, match="SVG render failed"):
+        svg_polish_delta._default_renderer(source_svg, tmp_path / "out.png")

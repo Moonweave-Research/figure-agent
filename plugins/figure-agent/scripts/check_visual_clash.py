@@ -44,11 +44,12 @@ def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float,
         ["pdftotext", "-f", "1", "-l", "1", "-bbox", str(pdf_path), str(tmp_path)],
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         raise RuntimeError(f"pdftotext failed: {result.stderr}")
 
-    html_text = tmp_path.read_text(encoding="utf-8")
+    html_text = tmp_path.read_text(encoding="utf-8", errors="replace")
     tmp_path.unlink()
 
     page_match = re.search(
@@ -105,6 +106,7 @@ def render_pdf_first_page(pdf_path: Path, dpi: int) -> Image.Image:
             ],
             capture_output=True,
             text=True,
+            errors="replace",
         )
         if result.returncode != 0:
             raise RuntimeError(f"pdftoppm failed: {result.stderr}")

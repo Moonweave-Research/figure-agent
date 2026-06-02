@@ -66,6 +66,7 @@ def _default_renderer(source_svg: Path, output_png: Path) -> None:
         check=False,
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
@@ -153,9 +154,7 @@ def build_svg_polish_delta_pack(
     manifest_path = example_dir / SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH
     if not force:
         existing = [
-            path
-            for path in (before_png, after_png, diff_png, manifest_path)
-            if path.exists()
+            path for path in (before_png, after_png, diff_png, manifest_path) if path.exists()
         ]
         if existing:
             joined = ", ".join(str(path) for path in existing)

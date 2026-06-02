@@ -57,6 +57,15 @@ trap cleanup_failed_build ERR
 rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -output-directory="$BUILD_DIR" "$FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
+# The PDF/PNG now exist and are valid. The remaining checkers are report-only
+# unless FIGURE_AGENT_STRICT=1. In report-only mode, a best-effort checker that
+# exits non-zero (e.g. a poppler decode hiccup on a custom-font PDF) must not
+# abort the build or trip the ERR trap that deletes the good output. Drop the
+# trap and disable -e for the report-only block; strict mode keeps the hard gate.
+if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
+  trap - ERR
+  set +e
+fi
 uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
 uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" \
   "${STRICT_ARGS[@]}" \

@@ -261,9 +261,8 @@ def _patch_strip_level(patch_path: Path) -> int:
         if line.startswith("--- ") and next_line.startswith("+++ "):
             old_path = _diff_path(line[4:])
             new_path = _diff_path(next_line[4:])
-            if (
-                (isinstance(old_path, str) and old_path.startswith("a/"))
-                or (isinstance(new_path, str) and new_path.startswith("b/"))
+            if (isinstance(old_path, str) and old_path.startswith("a/")) or (
+                isinstance(new_path, str) and new_path.startswith("b/")
             ):
                 return 1
             return 0
@@ -326,6 +325,7 @@ def _run_patch(repo_root: Path, patch_path: Path, *, dry_run: bool, strip_level:
         check=False,
         capture_output=True,
         text=True,
+        errors="replace",
     )
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
