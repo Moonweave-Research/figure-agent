@@ -241,8 +241,7 @@ must_avoid:
 def _enable_journal_art_direction_playbook(example_dir: Path) -> Path:
     spec_path = example_dir / "spec.yaml"
     spec_path.write_text(
-        spec_path.read_text(encoding="utf-8")
-        + "journal_art_direction_playbook: nc-main-text\n",
+        spec_path.read_text(encoding="utf-8") + "journal_art_direction_playbook: nc-main-text\n",
         encoding="utf-8",
     )
     pack_dir = example_dir.parent / "_journal_art_direction_playbooks"
@@ -372,6 +371,70 @@ def test_critique_brief_embeds_full_tex_source(tmp_path):
     assert "\n```\n\n## Mandatory Audit Checklists" in brief
     assert "### D. Conceptual Completeness Audit\n" in brief
     assert "\n## Critique rubric" in brief
+
+
+def test_critique_brief_reports_latin1_tex_without_traceback(tmp_path, capsys, monkeypatch):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    tex_path = example_dir / "review_demo.tex"
+    png_path = example_dir / "build" / "review_demo.png"
+    tex_path.write_bytes(b"\\node {caf\xe9};\n")
+    future = os.stat(tex_path).st_mtime + 10000
+    os.utime(png_path, (future, future))
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "invalid UTF-8" in captured.err
+    assert "review_demo.tex" in captured.err
+
+
+def test_critique_brief_reports_latin1_spec_without_traceback(tmp_path, capsys, monkeypatch):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_bytes(b"name: review_demo\ncaption: caf\xe9\n")
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "invalid UTF-8" in captured.err
+    assert "spec.yaml" in captured.err
+
+
+def test_critique_brief_reports_malformed_spec_yaml_without_traceback(
+    tmp_path, capsys, monkeypatch
+):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text("panels:\n  - {id: 1\n", encoding="utf-8")
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "invalid spec.yaml" in captured.err
+
+
+def test_critique_brief_reports_unknown_style_profile_without_traceback(
+    tmp_path, capsys, monkeypatch
+):
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        "name: review_demo\npanels: []\nstyle_profile: polymer-defualt\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
+
+    assert main() == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Unknown style_profile" in captured.err
 
 
 def test_critique_brief_uses_example_relative_png_path(tmp_path):
@@ -667,7 +730,7 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
                         "bbox_px": [1, 2, 3, 4],
                         "metric": {"dark": 0.02, "edge": 0.005},
                         "tex_lines": [10],
-                    }
+                    },
                 ],
                 "total": 2,
             }
@@ -899,8 +962,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     for axis_name in QUALITY_AXIS_NAMES:
         axis_start = quality_axes.index(f"  {axis_name}:")
         next_axis_starts = [
-            quality_axes.find(f"  {candidate}:", axis_start + 1)
-            for candidate in QUALITY_AXIS_NAMES
+            quality_axes.find(f"  {candidate}:", axis_start + 1) for candidate in QUALITY_AXIS_NAMES
         ]
         next_axis_starts = [index for index in next_axis_starts if index != -1]
         axis_end = min(next_axis_starts) if next_axis_starts else len(quality_axes)
@@ -908,8 +970,7 @@ def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
         assert "verdict: pass | needs_patch | needs_human | block | not_applicable" in axis_block
         assert "confidence: low | medium | high" in axis_block
         assert (
-            "recommended_action: none | patch | human_review | revise_briefing | "
-            "block_release"
+            "recommended_action: none | patch | human_review | revise_briefing | block_release"
         ) in axis_block
     assert brief.count("category: structural | physics | label_placement") == 2
 
@@ -941,7 +1002,7 @@ def test_critique_brief_output_format_uses_v1_17_default_schema_with_crops(
         "label_glyph_overlaps_internal_drawing",
     ):
         assert kind in brief
-    assert "linked_finding_id: \"<P001/C001 or empty when accept_simplification>\"" in brief
+    assert 'linked_finding_id: "<P001/C001 or empty when accept_simplification>"' in brief
     assert 'visual_clash_ref: "<VC001 or empty when not from visual_clash.json>"' in brief
     assert (
         'observation: "<visible micro-defect from a crop, print-scale image, or audit candidate>"'
@@ -953,7 +1014,7 @@ def test_critique_brief_output_format_uses_v1_17_default_schema_with_crops(
     assert "crop_audit_log:" in brief
     assert "crop_id: <crop id from build/audit_crops/manifest.json>" in brief
     assert "verdict: defect | no_defect | uncertain" in brief
-    assert "linked_micro_defect_id: \"<M001 when verdict=defect or empty>\"" in brief
+    assert 'linked_micro_defect_id: "<M001 when verdict=defect or empty>"' in brief
     assert "unintended_visible_anomaly:" in brief
     assert "anomaly_link:" in brief
     assert "aesthetic_antipattern_audit:" in brief
@@ -1071,9 +1132,7 @@ def test_critique_brief_cli_accepts_examples_fixture_path(tmp_path, capsys, monk
     assert captured.err == ""
 
 
-def test_critique_brief_cli_rejects_parent_relative_example_path(
-    tmp_path, capsys, monkeypatch
-):
+def test_critique_brief_cli_rejects_parent_relative_example_path(tmp_path, capsys, monkeypatch):
     (tmp_path / "examples").mkdir()
     outside = _write_example(tmp_path, section6="- invariant")
     _write_real_render_pair(outside)
@@ -1098,9 +1157,7 @@ def test_critique_brief_cli_reports_controlled_error_for_invalid_fixture_name(
     assert captured.out == ""
 
 
-def test_critique_brief_cli_rejects_unknown_extra_arguments(
-    tmp_path, capsys, monkeypatch
-):
+def test_critique_brief_cli_rejects_unknown_extra_arguments(tmp_path, capsys, monkeypatch):
     examples = tmp_path / "examples"
     example_dir = _write_example(examples, section6="- invariant")
     _write_real_render_pair(example_dir)
@@ -1116,9 +1173,7 @@ def test_critique_brief_cli_rejects_unknown_extra_arguments(
     assert captured.out == ""
 
 
-def test_critique_brief_allows_reference_image_newer_than_png(
-    tmp_path, capsys, monkeypatch
-):
+def test_critique_brief_allows_reference_image_newer_than_png(tmp_path, capsys, monkeypatch):
     """Reference image changes make critique stale, but do not make the render stale."""
     example_dir = _write_example(tmp_path, section6="- invariant")
     ref_dir = example_dir / "reference"
@@ -1996,7 +2051,7 @@ aesthetic_levers:
     assert "svg_polish_candidate_reason:" in brief
     assert "maturity_restraint" in brief
     assert "dimension=maturity priority=required route=tikz_patch" in brief
-    assert "Generic prose such as \"improve polish\" is invalid" in brief
+    assert 'Generic prose such as "improve polish" is invalid' in brief
 
 
 def test_critique_brief_uses_v1_17_for_v1_aesthetic_intent_with_crops(tmp_path):

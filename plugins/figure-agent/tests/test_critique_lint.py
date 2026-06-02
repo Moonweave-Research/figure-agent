@@ -80,8 +80,7 @@ def _quality_axes_yaml(
         "publication_readiness": publication_readiness_evidence,
     }
     return "quality_axes:\n" + "".join(
-        _quality_axis_yaml(name, evidence=evidence_by_axis.get(name))
-        for name in QUALITY_AXIS_NAMES
+        _quality_axis_yaml(name, evidence=evidence_by_axis.get(name)) for name in QUALITY_AXIS_NAMES
     )
 
 
@@ -1351,9 +1350,7 @@ def test_lint_critique_rejects_unaccounted_undeclared_geometry_candidate(
 
     violations = critique_lint.lint_critique(fig_dir)
 
-    assert [violation.category for violation in violations] == [
-        "undeclared_geometry_accounting"
-    ]
+    assert [violation.category for violation in violations] == ["undeclared_geometry_accounting"]
     assert "UG001" in violations[0].message
 
 
@@ -1379,10 +1376,10 @@ def test_lint_critique_accepts_undeclared_geometry_micro_defect_ref(
             "    kind: label_path_near_miss\n"
             "    severity: NIT\n"
             "    observation: undeclared geometry UG001 is a near miss candidate\n"
-            "    linked_finding_id: \"\"\n"
-            "    visual_clash_ref: \"\"\n"
-            "    text_boundary_ref: \"\"\n"
-            "    label_path_ref: \"\"\n"
+            '    linked_finding_id: ""\n'
+            '    visual_clash_ref: ""\n'
+            '    text_boundary_ref: ""\n'
+            '    label_path_ref: ""\n'
             "    undeclared_geometry_ref: UG001\n"
             "    status: open\n"
         ),
@@ -1412,9 +1409,7 @@ def test_lint_critique_rejects_generic_aesthetic_slots_when_intent_exists(
 
     violations = critique_lint.lint_critique(fig_dir)
 
-    assert [violation.category for violation in violations] == [
-        "aesthetic_intent_accounting"
-    ]
+    assert [violation.category for violation in violations] == ["aesthetic_intent_accounting"]
     assert "top_tier_audit.aesthetic_coherence" in violations[0].message
     assert "editorial_art_direction.visual_identity" in violations[0].message
     assert "editorial_art_direction.aesthetic_risk" in violations[0].message
@@ -1487,9 +1482,7 @@ def test_lint_critique_reports_malformed_aesthetic_intent_as_controlled_blocker(
 
     violations = critique_lint.lint_critique(fig_dir)
 
-    assert [violation.category for violation in violations] == [
-        "aesthetic_intent_accounting"
-    ]
+    assert [violation.category for violation in violations] == ["aesthetic_intent_accounting"]
     assert "aesthetic_intent.yaml invalid" in violations[0].message
 
 
@@ -1796,9 +1789,7 @@ def test_lint_critique_accepts_active_journal_trigger_visible_as_finding(
     fig_dir.mkdir()
     _write_complete_v1_12_journal_playbook_fixture(
         fig_dir,
-        journal_playbook_audit_yaml=_journal_playbook_audit_yaml(
-            human_trigger_active=True
-        ),
+        journal_playbook_audit_yaml=_journal_playbook_audit_yaml(human_trigger_active=True),
         findings_yaml=(
             "findings:\n"
             "  - id: C001\n"
@@ -2157,9 +2148,7 @@ def test_lint_critique_rejects_v1_11_required_not_applicable_lever(
     violations = critique_lint.lint_critique(fig_dir)
 
     assert [violation.category for violation in violations] == ["aesthetic_lever_accounting"]
-    assert "maturity_restraint is required and cannot be not_applicable" in (
-        violations[0].message
-    )
+    assert "maturity_restraint is required and cannot be not_applicable" in (violations[0].message)
 
 
 def test_lint_critique_rejects_v1_11_tikz_patch_without_finding_or_axis_link(
@@ -2497,9 +2486,7 @@ def test_lint_critique_requires_v1_15_when_fresh_svg_delta_exists(
 
     violations = critique_lint.lint_critique(fig_dir)
 
-    assert [violation.category for violation in violations] == [
-        "svg_polish_delta_accounting"
-    ]
+    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
     assert "figure-agent.critique.v1.16" in violations[0].message
 
 
@@ -2551,9 +2538,7 @@ def test_lint_critique_rejects_v1_16_missing_delta_image_accounting(
 
     violations = critique_lint.lint_critique(fig_dir)
 
-    assert [violation.category for violation in violations] == [
-        "svg_polish_delta_accounting"
-    ]
+    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
     assert "missing delta_image_audit_log ids: diff" in violations[0].message
 
 
@@ -3025,7 +3010,7 @@ def test_lint_critique_rejects_unlinked_v1_6_instrument_label_micro_defect(
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: MAJOR\n"
             "    observation: HV+ backdrop extends below the instrument outline\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    status: open\n"
         ),
         editorial_yaml=_editorial_yaml(),
@@ -3058,7 +3043,7 @@ def test_lint_critique_rejects_unaccounted_v1_7_visual_clash_candidate(
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: MINOR\n"
             "    observation: VC001 label backdrop candidate remains visible\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: open\n"
         ),
@@ -3092,7 +3077,7 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: MINOR\n"
             "    observation: VC001 label backdrop candidate remains visible\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: open\n"
             "  - id: M002\n"
@@ -3103,7 +3088,7 @@ def test_lint_critique_accepts_v1_7_when_all_visual_clash_candidates_are_account
             "      VC002 is a false positive: the glyph is a separate axis label,\n"
             "      not an internal instrument-box drawing, and the contact is outside\n"
             "      the apparatus.\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC002\n"
             "    status: accept_simplification\n"
         ),
@@ -3559,7 +3544,7 @@ def test_lint_critique_rejects_weak_visual_clash_accept_simplification_rationale
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: NIT\n"
             "    observation: acceptable after review\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
@@ -3597,7 +3582,7 @@ def test_lint_critique_accepts_concrete_visual_clash_accept_simplification_ratio
             "    observation: >-\n"
             "      VC001 is a false positive: the label belongs to a separate axis annotation,\n"
             "      not the instrument box, and the apparent contact is outside the apparatus.\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
@@ -3628,7 +3613,7 @@ def test_lint_critique_rejects_duplicate_v1_7_visual_clash_candidate_refs(
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: MINOR\n"
             "    observation: VC001 first accounting\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: open\n"
             "  - id: M002\n"
@@ -3636,7 +3621,7 @@ def test_lint_critique_rejects_duplicate_v1_7_visual_clash_candidate_refs(
             "    kind: label_glyph_overlaps_internal_drawing\n"
             "    severity: NIT\n"
             "    observation: VC001 duplicate accounting\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
@@ -3671,7 +3656,7 @@ def test_lint_critique_rejects_unknown_v1_7_visual_clash_candidate_ref(
             "    kind: label_backdrop_overflows_outline\n"
             "    severity: MINOR\n"
             "    observation: VC001 candidate remains visible\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: open\n"
             "  - id: M002\n"
@@ -3679,7 +3664,7 @@ def test_lint_critique_rejects_unknown_v1_7_visual_clash_candidate_ref(
             "    kind: label_glyph_overlaps_internal_drawing\n"
             "    severity: NIT\n"
             "    observation: typo candidate id should not pass\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC999\n"
             "    status: accept_simplification\n"
         ),
@@ -3716,7 +3701,7 @@ def test_lint_critique_rejects_v1_10_accept_simplification_without_structured_re
             "    severity: NIT\n"
             "    observation: VC001 is accepted because it is a false positive on a "
             "background texture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
@@ -3765,11 +3750,11 @@ def test_lint_critique_rejects_v1_10_accept_simplification_without_rationale(
             "    severity: NIT\n"
             "    observation: VC001 is accepted because it is a false positive on a "
             "background texture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
             "    accept_simplification_reason: false_positive\n"
-            "    accept_simplification_rationale: \"\"\n"
+            '    accept_simplification_rationale: ""\n'
         ),
         crop_audit_log_yaml=(
             "crop_audit_log:\n"
@@ -3815,7 +3800,7 @@ def test_lint_critique_rejects_v1_10_vague_accept_simplification_rationale(
             "    kind: line_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC001 is a detector false positive on a decorative texture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
             "    accept_simplification_reason: false_positive\n"
@@ -3865,7 +3850,7 @@ def test_lint_critique_accepts_v1_10_structured_accept_simplification(
             "    kind: line_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC001 is a detector false positive on a decorative texture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
             "    accept_simplification_reason: false_positive\n"
@@ -3911,7 +3896,7 @@ def test_lint_critique_keeps_v1_9_accept_simplification_legacy_heuristic(
             "    severity: NIT\n"
             "    observation: VC001 is an intentional schematic label on a decorative "
             "background and not a collision defect.\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
             "    status: accept_simplification\n"
         ),
@@ -4153,7 +4138,7 @@ def test_lint_critique_does_not_apply_historical_candidate_rule_to_other_fixture
             "    kind: line_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC026 is accounted for in a non-regression fixture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC026\n"
             "    status: open\n"
             "  - id: M027\n"
@@ -4161,7 +4146,7 @@ def test_lint_critique_does_not_apply_historical_candidate_rule_to_other_fixture
             "    kind: line_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC027 is accounted for in a non-regression fixture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC027\n"
             "    status: open\n"
             "  - id: M050\n"
@@ -4169,7 +4154,7 @@ def test_lint_critique_does_not_apply_historical_candidate_rule_to_other_fixture
             "    kind: wire_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC050 is accounted for in a non-regression fixture\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC050\n"
             "    status: open\n"
         ),
@@ -4445,8 +4430,7 @@ def test_lint_critique_rejects_matched_entity_that_is_comment_only(
     fig_dir = tmp_path / "entity_drift"
     fig_dir.mkdir()
     (fig_dir / "entity_drift.tex").write_text(
-        "% removed label: $F_{\\mathrm{Maxwell}}$\n"
-        "\\node at (0, 0) {$F_{\\mathrm{Coulomb}}$};\n",
+        "% removed label: $F_{\\mathrm{Maxwell}}$\n\\node at (0, 0) {$F_{\\mathrm{Coulomb}}$};\n",
         encoding="utf-8",
     )
     _write_critique(
@@ -4493,6 +4477,48 @@ def test_lint_critique_accepts_matched_entity_present_in_active_tex(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_active_and_comment_tex_text_rejects_latin1_tex_without_traceback(
+    tmp_path: Path,
+) -> None:
+    tex_path = tmp_path / "latin1.tex"
+    tex_path.write_bytes(b"\\node {caf\xe9};\n")
+
+    with pytest.raises(critique_lint.CritiqueContractError) as excinfo:
+        critique_lint._active_and_comment_tex_text(tex_path)
+
+    assert "invalid UTF-8" in str(excinfo.value)
+    assert "latin1.tex" in str(excinfo.value)
+
+
+def test_lint_critique_reports_latin1_tex_as_blocker(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "entity_latin1"
+    fig_dir.mkdir()
+    (fig_dir / "entity_latin1.tex").write_bytes(
+        b"\\node at (0, 0) {$F_{\\mathrm{Maxwell}}$ caf\xe9};\n"
+    )
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.3",
+        label_target_matching_yaml=(
+            "    - label: F_Maxwell\n"
+            "      nearest_object: neutral gray dashed rightward arrow\n"
+            "      intended_target: Maxwell force arrow\n"
+            "      matches: true\n"
+        ),
+        findings_yaml="findings: []\n",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert len(violations) == 1
+    assert violations[0].severity == "blocker"
+    assert violations[0].category == "critique_contract"
+    assert "invalid UTF-8" in violations[0].message
+    assert "entity_latin1.tex" in violations[0].message
+
+
 def test_lint_critique_reports_malformed_finding_ids_without_traceback(
     tmp_path: Path,
 ) -> None:
@@ -4500,11 +4526,7 @@ def test_lint_critique_reports_malformed_finding_ids_without_traceback(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        findings_yaml=(
-            "findings:\n"
-            "  - status: open\n"
-            "    observation: missing id\n"
-        ),
+        findings_yaml=("findings:\n  - status: open\n    observation: missing id\n"),
     )
 
     violations = critique_lint.lint_critique(fig_dir)
@@ -4531,9 +4553,7 @@ def test_lint_critique_reports_contract_validation_errors(tmp_path: Path) -> Non
     assert "first_glance_message" in violations[0].message
 
 
-def test_lint_critique_cli_returns_nonzero_for_violations(
-    tmp_path: Path, capsys
-) -> None:
+def test_lint_critique_cli_returns_nonzero_for_violations(tmp_path: Path, capsys) -> None:
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     _write_critique(
@@ -4563,11 +4583,7 @@ def test_lint_critique_cli_reports_malformed_findings_without_traceback(
     fig_dir.mkdir()
     _write_critique(
         fig_dir,
-        findings_yaml=(
-            "findings:\n"
-            "  - status: open\n"
-            "    observation: missing id\n"
-        ),
+        findings_yaml=("findings:\n  - status: open\n    observation: missing id\n"),
     )
 
     result = critique_lint.main([str(fig_dir)])

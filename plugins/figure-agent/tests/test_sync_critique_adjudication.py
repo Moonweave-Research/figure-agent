@@ -357,6 +357,27 @@ def test_sync_adjudication_cli_reports_controlled_stale_error(
     assert f"/fig_critique {example.name}" in captured.err
 
 
+def test_sync_adjudication_cli_reports_malformed_spec_error(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    repo, example = _write_repo_fixture(tmp_path)
+    (example / "spec.yaml").write_text(
+        "name: demo_fig\n"
+        "reference_image: reference/golden.png\n"
+        "panels: []\n"
+        "style_profile: polymer-defualt\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main(["sync", "demo_fig", "--repo-root", str(repo)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "invalid spec.yaml" in captured.err
+    assert "style_profile" in captured.err
+
+
 def test_adjudication_decision_diff_preview_reports_preserved_and_added_ids(
     tmp_path: Path,
 ) -> None:

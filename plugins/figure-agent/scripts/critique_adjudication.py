@@ -77,16 +77,12 @@ def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
         decision_item = _require_mapping(raw_decision, decision_label)
         finding_id = _require_non_empty_string(decision_item, "finding_id", label=decision_label)
         if finding_id in seen_finding_ids:
-            raise CritiqueAdjudicationError(
-                f"{decision_label}.duplicate finding_id: {finding_id}"
-            )
+            raise CritiqueAdjudicationError(f"{decision_label}.duplicate finding_id: {finding_id}")
         seen_finding_ids.add(finding_id)
         decision_value = _require_non_empty_string(decision_item, "decision", label=decision_label)
         if decision_value not in ALLOWED_DECISIONS:
             allowed = ", ".join(sorted(ALLOWED_DECISIONS))
-            raise CritiqueAdjudicationError(
-                f"{decision_label}.decision must be one of: {allowed}"
-            )
+            raise CritiqueAdjudicationError(f"{decision_label}.decision must be one of: {allowed}")
         _require_non_empty_string(decision_item, "reason", label=decision_label)
         if decision_value in _PATCH_EVIDENCE_REQUIRED:
             _require_non_empty_string(decision_item, "patch_target", label=decision_label)
@@ -140,9 +136,7 @@ POLICY_CONSERVATIVE_V1 = "conservative-v1"
 POLICY_CHOICES = frozenset({POLICY_CONSERVATIVE_V1})
 DECISION_DIFF_SCHEMA = "figure-agent.adjudication-decision-diff.v1"
 
-_AUTO_CATEGORIES = frozenset(
-    {"style", "palette", "whitespace", "hierarchy", "label_placement"}
-)
+_AUTO_CATEGORIES = frozenset({"style", "palette", "whitespace", "hierarchy", "label_placement"})
 _HUMAN_CATEGORIES = frozenset({"physics", "structural"})
 _HUMAN_TERMS = (
     "target_journal_fit",
@@ -417,16 +411,17 @@ def _critique_metadata_mismatches(
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
         return ["missing spec.yaml; cannot determine critique freshness"]
-    spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [f"invalid spec.yaml: {exc}"]
     reference_failures = compute_reference_input_failures(example_dir, spec)
     if reference_failures:
         return [
-            "critique_state=REFERENCE_MISSING; fix reference inputs before "
-            f"/fig_critique {name}"
+            f"critique_state=REFERENCE_MISSING; fix reference inputs before /fig_critique {name}"
         ]
-    has_reference = (
-        declared_figure_reference_path(example_dir, spec) is not None
-        or bool(participating_panel_reference_paths(example_dir, spec))
+    has_reference = declared_figure_reference_path(example_dir, spec) is not None or bool(
+        participating_panel_reference_paths(example_dir, spec)
     )
     if not has_reference:
         return [f"critique_state=NOT_REQUIRED; no /fig_critique {name} sync needed"]

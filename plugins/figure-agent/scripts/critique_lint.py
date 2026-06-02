@@ -323,18 +323,13 @@ def _links_finding_or_quality_axis(frontmatter: dict[str, Any], evidence: list[s
         for index, finding in enumerate(critique_findings(frontmatter))
     }
     return any(
-        item in finding_ids or _quality_axis_is_blocking(frontmatter, item)
-        for item in evidence
+        item in finding_ids or _quality_axis_is_blocking(frontmatter, item) for item in evidence
     )
 
 
 def _editorial_polish_trigger_path(frontmatter: dict[str, Any]) -> str:
     editorial = frontmatter.get("editorial_art_direction")
-    trigger = (
-        editorial.get("tikz_vs_svg_polish_trigger")
-        if isinstance(editorial, dict)
-        else None
-    )
+    trigger = editorial.get("tikz_vs_svg_polish_trigger") if isinstance(editorial, dict) else None
     path = trigger.get("recommended_path") if isinstance(trigger, dict) else None
     return path.strip() if isinstance(path, str) else ""
 
@@ -531,9 +526,7 @@ def _aesthetic_lever_accounting_violations(
                     ),
                 )
             ]
-        if route == "human_art_direction" and "accept_simplification" in _text_blob(
-            item
-        ).lower():
+        if route == "human_art_direction" and "accept_simplification" in _text_blob(item).lower():
             return [
                 CritiqueLintViolation(
                     severity="blocker",
@@ -570,8 +563,7 @@ def _aesthetic_lever_accounting_violations(
                     category="aesthetic_lever_accounting",
                     message=(
                         "high_impact_candidate requires passing required aesthetic levers; "
-                        "unresolved: "
-                        + ", ".join(sorted(unresolved_required))
+                        "unresolved: " + ", ".join(sorted(unresolved_required))
                     ),
                 )
             ]
@@ -623,8 +615,7 @@ def _aesthetic_intent_accounting_violations(
             message=(
                 "aesthetic intent pack exists; critique slots must cite at least "
                 "one exact aesthetic-intent anchor from target fields or item ids "
-                "with current-artifact evidence: "
-                + ", ".join(missing)
+                "with current-artifact evidence: " + ", ".join(missing)
             ),
         )
     ]
@@ -768,16 +759,13 @@ def _journal_playbook_audit_violations(
         anti_refs = item.get("anti_pattern_refs")
         if isinstance(anti_refs, list):
             unknown_anti_refs.update(
-                ref
-                for ref in anti_refs
-                if isinstance(ref, str) and ref not in anti_pattern_ids
+                ref for ref in anti_refs if isinstance(ref, str) and ref not in anti_pattern_ids
             )
     if unknown_positive_refs or unknown_anti_refs:
         details = []
         if unknown_positive_refs:
             details.append(
-                "unknown positive_signal_refs: "
-                + ", ".join(sorted(unknown_positive_refs))
+                "unknown positive_signal_refs: " + ", ".join(sorted(unknown_positive_refs))
             )
         if unknown_anti_refs:
             details.append("unknown anti_pattern_refs: " + ", ".join(sorted(unknown_anti_refs)))
@@ -839,9 +827,7 @@ def _journal_playbook_audit_violations(
     active_triggers = [
         item["id"]
         for item in raw_triggers
-        if isinstance(item, dict)
-        and isinstance(item.get("id"), str)
-        and item.get("active") is True
+        if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("active") is True
     ]
     if active_triggers:
         editorial = frontmatter.get("editorial_art_direction")
@@ -1321,8 +1307,7 @@ def _label_path_candidate_ids(
                     severity="blocker",
                     category="label_path_accounting",
                     message=(
-                        f"build/label_path_proximity.json candidates[{index}] "
-                        "must be a mapping"
+                        f"build/label_path_proximity.json candidates[{index}] must be a mapping"
                     ),
                 )
             )
@@ -1333,10 +1318,7 @@ def _label_path_candidate_ids(
                 CritiqueLintViolation(
                     severity="blocker",
                     category="label_path_accounting",
-                    message=(
-                        f"build/label_path_proximity.json candidates[{index}].id "
-                        "is required"
-                    ),
+                    message=(f"build/label_path_proximity.json candidates[{index}].id is required"),
                 )
             )
             continue
@@ -1450,8 +1432,7 @@ def _undeclared_geometry_candidate_ids(
                     severity="blocker",
                     category="undeclared_geometry_accounting",
                     message=(
-                        f"build/undeclared_geometry.json candidates[{index}] "
-                        "must be a mapping"
+                        f"build/undeclared_geometry.json candidates[{index}] must be a mapping"
                     ),
                 )
             )
@@ -1462,10 +1443,7 @@ def _undeclared_geometry_candidate_ids(
                 CritiqueLintViolation(
                     severity="blocker",
                     category="undeclared_geometry_accounting",
-                    message=(
-                        f"build/undeclared_geometry.json candidates[{index}].id "
-                        "is required"
-                    ),
+                    message=(f"build/undeclared_geometry.json candidates[{index}].id is required"),
                 )
             )
             continue
@@ -1631,7 +1609,11 @@ def _symbolic_entities(value: str) -> set[str]:
 def _active_and_comment_tex_text(tex_path: Path) -> tuple[str, str]:
     active_lines: list[str] = []
     comment_lines: list[str] = []
-    for line in tex_path.read_text(encoding="utf-8").splitlines():
+    try:
+        tex_text = tex_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise CritiqueContractError(f"invalid UTF-8 in {tex_path}: {exc}") from exc
+    for line in tex_text.splitlines():
         match = _UNESCAPED_PERCENT_RE.search(line)
         if match is None:
             active_lines.append(line)
@@ -1827,8 +1809,7 @@ def _crop_audit_accounting_violations(
     if frontmatter.get("schema") not in CROP_AUDIT_ACCOUNTING_SCHEMAS:
         return []
     required_ids, violations = _crop_manifest_required_ids(
-        example_dir,
-        example_dir / "build" / "audit_crops" / "manifest.json"
+        example_dir, example_dir / "build" / "audit_crops" / "manifest.json"
     )
     if violations or not required_ids:
         return violations
@@ -2144,7 +2125,16 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         violations.extend(_visual_clash_accept_simplification_violations(frontmatter))
     if violations:
         return violations
-    violations.extend(_critique_entity_consistency_violations(example_dir, frontmatter))
+    try:
+        violations.extend(_critique_entity_consistency_violations(example_dir, frontmatter))
+    except CritiqueContractError as exc:
+        return [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="critique_contract",
+                message=str(exc),
+            )
+        ]
     if violations:
         return violations
 
@@ -2188,17 +2178,14 @@ def _resolve_example_dir(value: str, repo_root: Path) -> Path:
         return path
     if path.parts and path.parts[0] == "examples":
         if len(path.parts) != 2 or ".." in path.parts:
-            raise CritiqueContractError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise CritiqueContractError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name(path.parts[1], value)
         return repo_root / "examples" / path.parts[1]
     if len(path.parts) == 1:
         _validate_fixture_name(value, value)
         return repo_root / "examples" / value
     raise CritiqueContractError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

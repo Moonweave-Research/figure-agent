@@ -276,8 +276,7 @@ def _crop_panel_png(
         raise CritiqueBriefError("bbox_pdf_cm must satisfy x1>x0 and y1>y0")
     if x0 < 0 or y0 < 0 or x1 > page_width_cm or y1 > page_height_cm:
         raise CritiqueBriefError(
-            "bbox_pdf_cm outside PDF page bounds "
-            f"[0, 0, {page_width_cm:.3f}, {page_height_cm:.3f}]"
+            f"bbox_pdf_cm outside PDF page bounds [0, 0, {page_width_cm:.3f}, {page_height_cm:.3f}]"
         )
 
     with Image.open(png_path) as image:
@@ -512,9 +511,7 @@ def _reference_aesthetic_metrics_section(example_dir: Path) -> str:
         lines.append("Severe metrics to explain or route:")
         for item in severe_metrics:
             lines.append(
-                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
-                    **item
-                )
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(**item)
             )
     warning_metrics = summary.get("warning_metrics") or []
     if warning_metrics:
@@ -522,9 +519,7 @@ def _reference_aesthetic_metrics_section(example_dir: Path) -> str:
         lines.append("Warning metrics to consider:")
         for item in warning_metrics:
             lines.append(
-                "- {reference_path} {metric}: value={value} threshold={threshold}".format(
-                    **item
-                )
+                "- {reference_path} {metric}: value={value} threshold={threshold}".format(**item)
             )
     next_action = summary.get("next_action")
     if next_action:
@@ -648,7 +643,7 @@ def _journal_art_direction_playbook_section(pack: dict | None) -> str:
     lines = [
         "## Journal Art-Direction Playbook",
         "Host LLM MUST use this playbook as the journal-level taste vocabulary "
-        "for the current critique. Generic claims such as \"looks polished\" are "
+        'for the current critique. Generic claims such as "looks polished" are '
         "invalid unless they cite exact playbook anchors and current-artifact evidence.",
         "The critique must cite exact playbook anchors in `top_tier_audit`, "
         "`editorial_art_direction`, `journal_grade_assessment.rationale`, and "
@@ -1026,8 +1021,8 @@ def _journal_art_direction_playbook_audit_schema(pack: dict | None) -> str:
     )
     return f"""journal_art_direction_playbook_audit:
   schema: figure-agent.journal-art-direction-playbook-audit.v1
-  playbook_id: {pack['playbook_id']}
-  venue_context: {pack['venue_context']}
+  playbook_id: {pack["playbook_id"]}
+  venue_context: {pack["venue_context"]}
   design_center:
     - id: {design_center_ids}
       verdict: pass | weak | fail | needs_human | not_applicable
@@ -1358,15 +1353,21 @@ def generate_for(example_dir: Path) -> str:
     _require_file(spec_path)
     _require_file(briefing_path)
 
-    spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-    sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as exc:
+        raise CritiqueBriefError(f"invalid UTF-8 in {spec_path}: {exc}") from exc
+    except ValueError as exc:
+        raise CritiqueBriefError(str(exc)) from exc
+    try:
+        sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as exc:
+        raise CritiqueBriefError(f"invalid UTF-8 in {briefing_path}: {exc}") from exc
     name = str(spec.get("name") or example_dir.name)
     reference_failures = compute_reference_input_failures(example_dir, spec)
     if reference_failures:
         failures = "; ".join(reference_failures)
-        raise CritiqueBriefError(
-            f"{failures}; fix declared reference inputs before /fig_critique"
-        )
+        raise CritiqueBriefError(f"{failures}; fix declared reference inputs before /fig_critique")
 
     tex_path = example_dir / f"{name}.tex"
     png_path = example_dir / "build" / f"{name}.png"
@@ -1375,7 +1376,10 @@ def generate_for(example_dir: Path) -> str:
     _require_file(png_path, "run /fig_compile first")
     _require_fresh_png(png_path, _critique_source_paths(tex_path, briefing_path, example_dir, spec))
 
-    tex = tex_path.read_text(encoding="utf-8")
+    try:
+        tex = tex_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise CritiqueBriefError(f"invalid UTF-8 in {tex_path}: {exc}") from exc
     numbered_tex = _line_numbered(tex)
     invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
     render_path = _example_relative_path(example_dir, png_path)
@@ -1444,14 +1448,10 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
     text_boundary_clash_section = _text_boundary_clash_candidates_section(example_dir)
     label_path_proximity_section = _label_path_proximity_candidates_section(example_dir)
     undeclared_geometry_section = _undeclared_geometry_candidates_section(example_dir)
-    reference_calibration_section = _reference_calibration_section(
-        reference_calibration_pack
-    )
+    reference_calibration_section = _reference_calibration_section(reference_calibration_pack)
     reference_learning_section = _reference_learning_section(reference_calibration_pack)
     reference_aesthetic_metrics_section = _reference_aesthetic_metrics_section(example_dir)
-    external_vision_review_section = _external_vision_review_section(
-        external_vision_review
-    )
+    external_vision_review_section = _external_vision_review_section(external_vision_review)
     paper_aesthetic_context_section = _paper_aesthetic_context_section(
         paper_aesthetic_context_pack,
         fixture=example_dir.name,
@@ -1678,10 +1678,12 @@ top_tier_audit:
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
 {brief_sections.editorial_art_direction_schema(require_route_detail=uses_route_detail_contract)}
-{brief_sections.journal_grade_assessment_schema(
-    critique_input_hash,
-    _reference_score_calibration(example_dir, reference_calibration_pack),
-)}
+{
+        brief_sections.journal_grade_assessment_schema(
+            critique_input_hash,
+            _reference_score_calibration(example_dir, reference_calibration_pack),
+        )
+    }
 {_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 {_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
@@ -1815,8 +1817,7 @@ def _resolve_example_dir_for_cli(value: str) -> Path:
         _validate_fixture_name(value, value)
         return path
     raise CritiqueBriefError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

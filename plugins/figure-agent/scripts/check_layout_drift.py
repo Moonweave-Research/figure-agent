@@ -449,7 +449,11 @@ def main() -> int:
         print(f"SKIP: {example_dir.name} has no spec.yaml")
         return 0
 
-    spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        print(f"SKIP: {example_dir.name} has invalid spec.yaml: {exc}")
+        return 0
     contract = spec.get("golden_contract")
     if not isinstance(contract, dict):
         if contract is not None:

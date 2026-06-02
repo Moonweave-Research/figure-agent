@@ -129,9 +129,7 @@ def _resolve_reference_path(example_dir: Path) -> Path | None:
     try:
         candidate.relative_to(root)
     except ValueError as exc:
-        raise ReferenceExtractError(
-            "reference_image must stay under example directory"
-        ) from exc
+        raise ReferenceExtractError("reference_image must stay under example directory") from exc
     return candidate
 
 
@@ -152,7 +150,7 @@ def extract_coordinate_hints(
     failures: list[str] = []
     try:
         reference_path = _resolve_reference_path(example_dir)
-    except ReferenceExtractError as exc:
+    except ValueError as exc:
         return None, [f"{example_dir.name}: {exc}"]
     if reference_path is None:
         return None, [
@@ -184,6 +182,9 @@ def extract_coordinate_hints(
         )
         ocr_status = "ok"
     except FileNotFoundError as exc:
+        failures.append(str(exc))
+    except (RuntimeError, UnicodeDecodeError) as exc:
+        ocr_status = f"failed: {exc}"
         failures.append(str(exc))
 
     structural = structural_regions_from_reference(reference_path, (width, height))
@@ -222,16 +223,12 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
                 "invalid fixture path: expected examples/<fixture-name>"
             ) from exc
         if len(relative.parts) != 1 or ".." in relative.parts:
-            raise ReferenceExtractError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise ReferenceExtractError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(relative.parts[0], str(value))
         return Path("examples") / relative.parts[0]
     if value.parts and value.parts[0] == "examples":
         if len(value.parts) != 2 or ".." in value.parts:
-            raise ReferenceExtractError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise ReferenceExtractError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(value.parts[1], str(value))
         return Path("examples") / value.parts[1]
     if len(value.parts) == 1:

@@ -316,6 +316,67 @@ def test_structural_regions_unavailable_when_vtracer_missing(tmp_path, monkeypat
     assert "palette_shape_clusters" in payload
 
 
+def test_extract_degrades_when_ocr_runtime_fails(tmp_path, monkeypatch):
+    """A tesseract runtime failure (non-zero rc) must degrade to ocr_status
+    'failed' while palette + structural extraction still write the payload."""
+
+    def _raise_runtime(*args, **kwargs):
+        raise RuntimeError("tesseract failed: rc=1 stderr=corrupt image")
+
+    monkeypatch.setattr("reference_extract.ocr_text_labels", _raise_runtime)
+
+    fixture = tmp_path / "ocrFailFixture"
+    fixture.mkdir()
+    (fixture / "reference").mkdir()
+    ref = fixture / "reference" / "synth.png"
+    Image.fromarray(_make_palette_image((200, 200), {"cAmber": (10, 10, 80, 80)})).save(ref)
+    (fixture / "spec.yaml").write_text(
+        "name: ocrFailFixture\nreference_image: reference/synth.png\n",
+        encoding="utf-8",
+    )
+
+    out, failures = extract_coordinate_hints(fixture)
+    assert out is not None
+    payload = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert payload["metadata"]["ocr_status"].startswith("failed")
+    assert payload["text_labels"] == []
+    assert "cAmber" in payload["palette_shape_clusters"]
+    assert "structural_regions" in payload
+    assert any("tesseract failed" in f for f in failures)
+
+
+def test_extract_reports_malformed_spec_as_failure_not_traceback(tmp_path: Path) -> None:
+    """A spec.yaml that parse_spec rejects (ValueError) must surface as a
+    failure message, not an uncaught traceback. The reject happens before any
+    reference-image existence check, so no image asset is needed to trigger it."""
+    fixture = tmp_path / "badStyleProfile"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text(
+        "name: badStyleProfile\nstyle_profile: polymer-defualt\n",
+        encoding="utf-8",
+    )
+    out, failures = extract_coordinate_hints(fixture)
+    assert out is None
+    assert any("style_profile" in f for f in failures)
+
+
+def test_reference_extract_cli_reports_malformed_spec(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    fixture = tmp_path / "examples" / "badspec"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "name: badspec\npanels:\n  - {id: 1\n",  # malformed YAML
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["reference_extract.py", "badspec", "--ocr-passes", "1.0"])
+    assert main() == 1
+    assert "FAIL" in capsys.readouterr().err
+
+
 def _write_cli_fixture(root: Path, name: str) -> Path:
     fixture = root / name
     fixture.mkdir(parents=True)

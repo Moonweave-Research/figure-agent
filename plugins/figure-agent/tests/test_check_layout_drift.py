@@ -410,6 +410,33 @@ def test_main_skips_when_golden_contract_is_not_a_mapping(tmp_path, monkeypatch,
     assert "golden_contract is not a mapping" in capsys.readouterr().out
 
 
+def test_main_skips_when_spec_yaml_has_invalid_syntax(tmp_path, monkeypatch, capsys):
+    """A hand-edit YAML syntax error must SKIP cleanly, not escape as a traceback."""
+    example = tmp_path / "scratch_fixture"
+    example.mkdir()
+    # Mirrors the compile.sh `.` invocation form; unterminated flow mapping.
+    (example / "spec.yaml").write_text("panels:\n  - {id: 1\n")
+    monkeypatch.chdir(example)
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "."])
+
+    assert check_layout_drift.main() == 0
+    assert "invalid spec.yaml" in capsys.readouterr().out
+
+
+def test_main_skips_when_style_profile_is_unknown(tmp_path, monkeypatch, capsys):
+    """A typo'd style_profile raises ValueError in parse_spec; must SKIP, not traceback."""
+    example = tmp_path / "scratch_fixture"
+    example.mkdir()
+    (example / "spec.yaml").write_text("style_profile: polymer-defualt\npanels: []\n")
+    monkeypatch.chdir(example)
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "."])
+
+    assert check_layout_drift.main() == 0
+    assert "invalid spec.yaml" in capsys.readouterr().out
+
+
 def test_main_handles_non_mapping_coordinate_hints(tmp_path, monkeypatch):
     """A non-dict coordinate_hints.yaml must not crash on hints.get(...)."""
     monkeypatch.chdir(tmp_path)
