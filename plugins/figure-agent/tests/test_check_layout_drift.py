@@ -286,28 +286,31 @@ def test_aspect_line_handles_missing_data():
 
 
 def test_main_skips_when_no_required_labels(tmp_path, monkeypatch, capsys):
-    example = tmp_path / "ordinary"
-    example.mkdir()
+    monkeypatch.chdir(tmp_path)
+    example = tmp_path / "examples" / "ordinary"
+    example.mkdir(parents=True)
     (example / "spec.yaml").write_text("panels: []\n")
-    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", str(example)])
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "ordinary"])
     assert check_layout_drift.main() == 0
     assert "SKIP" in capsys.readouterr().out
 
 
 def test_main_skips_when_no_hints_file(tmp_path, monkeypatch, capsys):
-    example = tmp_path / "fixture"
-    example.mkdir()
+    monkeypatch.chdir(tmp_path)
+    example = tmp_path / "examples" / "fixture"
+    example.mkdir(parents=True)
     (example / "spec.yaml").write_text(
         yaml.safe_dump({"panels": [], "golden_contract": {"required_labels": ["Energy"]}})
     )
-    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", str(example)])
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "examples/fixture"])
     assert check_layout_drift.main() == 0
     assert "no coordinate_hints.yaml" in capsys.readouterr().out
 
 
 def test_main_strict_exits_one_when_drift_exceeds_threshold(tmp_path, monkeypatch):
-    example = tmp_path / "drift_fixture"
-    example.mkdir()
+    monkeypatch.chdir(tmp_path)
+    example = tmp_path / "examples" / "drift_fixture"
+    example.mkdir(parents=True)
     (example / "spec.yaml").write_text(
         yaml.safe_dump({"panels": [], "golden_contract": {"required_labels": ["deep"]}})
     )
@@ -333,8 +336,9 @@ def test_main_strict_exits_one_when_drift_exceeds_threshold(tmp_path, monkeypatc
 
 def test_main_strict_exits_zero_when_only_uncovered(tmp_path, monkeypatch):
     """uncovered_* are not the drift gate's failure mode (other gates own coverage)."""
-    example = tmp_path / "uncov_fixture"
-    example.mkdir()
+    monkeypatch.chdir(tmp_path)
+    example = tmp_path / "examples" / "uncov_fixture"
+    example.mkdir(parents=True)
     (example / "spec.yaml").write_text(
         yaml.safe_dump({"panels": [], "golden_contract": {"required_labels": ["Experiment"]}})
     )
@@ -351,3 +355,44 @@ def test_main_strict_exits_zero_when_only_uncovered(tmp_path, monkeypatch):
     monkeypatch.setattr(check_layout_drift, "extract_pdf_words_and_page", fake_extract)
     monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", str(example), "--strict"])
     assert check_layout_drift.main() == 0
+
+
+def test_main_accepts_dot_when_running_inside_fixture_dir(tmp_path, monkeypatch, capsys):
+    example = tmp_path / "scratch_fixture"
+    example.mkdir()
+    (example / "spec.yaml").write_text("panels: []\n")
+    monkeypatch.chdir(example)
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "."])
+
+    assert check_layout_drift.main() == 0
+    assert "SKIP" in capsys.readouterr().out
+
+
+def test_main_rejects_parent_relative_fixture_path(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("panels: []\n")
+    examples = tmp_path / "examples"
+    examples.mkdir()
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "examples/../outside"])
+
+    assert check_layout_drift.main() == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+
+
+def test_main_rejects_existing_relative_directory_outside_examples(
+    tmp_path, monkeypatch, capsys
+):
+    monkeypatch.chdir(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "spec.yaml").write_text("panels: []\n")
+    (tmp_path / "examples").mkdir()
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "outside"])
+
+    assert check_layout_drift.main() == 1
+    assert "relative fixture names must resolve under examples" in capsys.readouterr().err
