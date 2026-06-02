@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CO, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CP, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CO mode-scoped completion guidance;
+- branch baseline: `main` after Issue 100CP polish prerequisite gate alignment;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -151,6 +151,7 @@ the workflow together.
 | G100-86 | P3 | Marketplace source-path mismatch | `plugin_install_freshness.py` could be run from a clean feature worktree while raw `claude plugin install figure-agent@figure-agent-local` still installed from the registered `figure-agent-local` marketplace source, which may point at a different checkout. | Live Claude config inspection showed `figure-agent-local` is resolved from `~/.claude/plugins/known_marketplaces.json`, not from the current shell directory. | Operators could review a clean worktree, run the printed install command, and copy a dirty or stale registered source into the installed plugin cache. | Issue 100CM - marketplace source hygiene guard |
 | G100-87 | P3 | Inventory next-analysis freshness | The Issue 100 header/table tracked through Issue 100CM, but the `Additional Update Analysis` section still told operators that the next urgent slices were Issue 100A and Issue 100B/C. | TDD reproduced the release-contract guard passing while that analysis section did not mention the latest Issue 100 suffix and still carried stale 100A-C recommendation text. | Operators could use the inventory as a live roadmap and restart already-implemented work instead of moving to the current post-100CM gap. | Issue 100CN - inventory next-analysis freshness guard |
 | G100-88 | P1 | Mode-scoped completion ambiguity | `/fig_drive --mode authoring` and review-mode clean checkpoints could return `action: complete` with generic guidance that no required plugin action remained for the selected mode. | TDD reproduced authoring/review complete states that did not explicitly point to review/release/final follow-up, even though users repeatedly asked why the agent said a figure was complete. | Operators could read a mode-local completion as whole-figure, release, or art-direction completion and stop before the next broader gate. | Issue 100CO - mode-scoped completion guidance |
+| G100-89 | P2 | Polish prerequisite gate mismatch | In clean checkouts with ignored build artifacts absent, `/fig_drive --mode polish` correctly returned `action: run_compile`, but additive `svg_polish_gate.next_action` still said `rerun_fig_loop` through the generic no-current-checkpoint path. | Live queue reproduction showed all real fixtures at `run_compile` while SVG-specific queue columns said `svg_polish_next_action: rerun_fig_loop`. TDD reproduced render-missing and export-missing polish modes. | Operators could follow the SVG-specific column and skip the actual first prerequisite before any loop checkpoint can prove SVG readiness. | Issue 100CP - polish prerequisite gate alignment |
 
 ## Recommended Execution Order
 
@@ -758,6 +759,13 @@ the workflow together.
     a polish-mode closure, and final complete keeps the terminal no-action
     wording.
 
+91. **Issue 100CP - polish prerequisite gate alignment**
+    Implemented as polish-mode operator UX hardening. When polish mode is
+    blocked before loop evidence is meaningful, the additive `svg_polish_gate`
+    now mirrors the authoritative prerequisite action (`run_fig_compile`,
+    `run_fig_export`, etc.) instead of telling operators to skip ahead to a loop
+    rerun.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -794,7 +802,10 @@ with overlapping responsibilities.
 
 Issue 100CN makes this section itself part of the release-contract freshness
 surface. Issue 100CO then closes the highest-priority operator explanation
-gap by making complete states explicitly mode-scoped. After Issue 100CM, the
+gap by making complete states explicitly mode-scoped. Issue 100CP closes the
+next polish-mode operator mismatch: when compile/export prerequisites block
+polish mode, the SVG-specific gate now points at the same prerequisite instead
+of the later loop checkpoint. After Issue 100CM, the
 plugin-install readiness path is now correctly
 able to say:
 
@@ -804,13 +815,14 @@ able to say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CO next candidates are therefore not old Issue 100A-C
+The current post-100CP next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
-   supported and deterministic harness coverage exists, but real-figure
-   promotion remains evidence-gated before it should become a routine
-   production handoff.
+   supported, deterministic harness coverage exists, and prerequisite gate UX
+   now points at compile/export before loop evidence. Real-figure promotion
+   still remains evidence-gated before it should become a routine production
+   handoff.
 2. **Operator completion explanation evidence.** Mode-scoped completion wording
    now exists for authoring/review/polish/final driver outputs, but real
    dogfood should still verify whether agents follow the broader-mode pointer
