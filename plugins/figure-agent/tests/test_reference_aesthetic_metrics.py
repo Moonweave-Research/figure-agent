@@ -4,12 +4,14 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from reference_aesthetic_metrics import (  # noqa: E402
     METRICS_SCHEMA,
+    ReferenceAestheticMetricsError,
     build_reference_aesthetic_metrics,
     main,
     reference_aesthetic_metrics_summary,
@@ -137,6 +139,32 @@ def test_reference_aesthetic_metrics_records_missing_reference_as_skipped(
     assert result["comparisons"] == []
 
 
+def test_reference_aesthetic_metrics_raises_on_corrupt_build_render(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    (example_dir / "build" / "demo.png").write_bytes(b"")
+
+    with pytest.raises(ReferenceAestheticMetricsError) as exc_info:
+        build_reference_aesthetic_metrics(example_dir)
+
+    assert "build/demo.png" in str(exc_info.value)
+
+
+def test_reference_aesthetic_metrics_records_corrupt_reference_as_skipped(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    (example_dir / "reference" / "style.png").write_bytes(b"")
+
+    result = build_reference_aesthetic_metrics(example_dir)
+
+    assert result is not None
+    assert result["state"] == "skipped"
+    assert "reference/style.png" in result["skip_reasons"][0]
+    assert result["comparisons"] == []
+
+
 def test_reference_aesthetic_metrics_summary_reports_unsafe_reference_path_invalid(
     tmp_path: Path,
 ) -> None:
@@ -228,6 +256,39 @@ def test_reference_aesthetic_metrics_summary_reports_stale_build_hash(
     assert summary is not None
     assert summary["evaluation_state"] == "stale"
     assert "build/demo.png" in summary["blocking_items"]
+
+
+def test_reference_aesthetic_metrics_summary_reports_stale_when_reference_readded(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    (example_dir / "reference" / "style.png").unlink()
+    payload = build_reference_aesthetic_metrics(example_dir)
+    assert payload is not None
+    assert payload["state"] == "skipped"
+    Image.new("RGB", (80, 60), "white").save(example_dir / "reference" / "style.png")
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "stale"
+    assert "reference/style.png" in summary["blocking_items"]
+    assert summary["next_action"].startswith("rerun scripts/reference_aesthetic_metrics.py")
+
+
+def test_reference_aesthetic_metrics_summary_keeps_skipped_when_readded_reference_corrupt(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    (example_dir / "reference" / "style.png").unlink()
+    build_reference_aesthetic_metrics(example_dir)
+    (example_dir / "reference" / "style.png").write_bytes(b"")
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+
+    assert summary is not None
+    assert summary["evaluation_state"] == "skipped"
+    assert summary["next_action"] == "provide at least one readable reference-learning image"
 
 
 def test_reference_aesthetic_metrics_summary_reports_invalid_metrics_json(

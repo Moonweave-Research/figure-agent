@@ -12,7 +12,7 @@ from typing import Any
 import fixture_identity
 import numpy as np
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from quality_manifest import file_sha256
 
 METRICS_SCHEMA = "figure-agent.reference-aesthetic-metrics.v1"
@@ -194,7 +194,10 @@ def build_reference_aesthetic_metrics(example_dir: Path) -> dict[str, Any] | Non
     if not build_path.is_file():
         raise ReferenceAestheticMetricsError(f"missing build render: {build_path}")
 
-    build_features = _image_features(build_path)
+    try:
+        build_features = _image_features(build_path)
+    except (UnidentifiedImageError, OSError) as exc:
+        raise ReferenceAestheticMetricsError(f"unreadable build render: {build_path}") from exc
     comparisons: list[dict[str, Any]] = []
     skip_reasons: list[str] = []
 
@@ -207,7 +210,11 @@ def build_reference_aesthetic_metrics(example_dir: Path) -> dict[str, Any] | Non
             skip_reasons.append(f"{item['path']}: reference image missing")
             continue
 
-        reference_features = _image_features(reference_path)
+        try:
+            reference_features = _image_features(reference_path)
+        except (UnidentifiedImageError, OSError):
+            skip_reasons.append(f"{item['path']}: reference image unreadable")
+            continue
         comparisons.append(
             {
                 "reference_path": _example_relative_path(example_dir, reference_path),
@@ -305,6 +312,33 @@ def _reference_stale(example_dir: Path, comparison: dict[str, Any]) -> str | Non
     return None
 
 
+def _readded_references(
+    example_dir: Path,
+    learning: dict[str, Any],
+    comparisons: list[Any],
+) -> list[str]:
+    """Find references the pack declares that are now readable but were skipped at build time."""
+    recorded = {
+        comparison.get("reference_path")
+        for comparison in comparisons
+        if isinstance(comparison, dict)
+    }
+    readded: list[str] = []
+    for item in learning.get("references", []):
+        reference_path = _safe_reference_path(example_dir, str(item["path"]))
+        if reference_path is None or not reference_path.is_file():
+            continue
+        relative = _example_relative_path(example_dir, reference_path)
+        if relative in recorded:
+            continue
+        try:
+            _image_features(reference_path)
+        except (UnidentifiedImageError, OSError):
+            continue
+        readded.append(relative)
+    return readded
+
+
 def _threshold_metrics(
     payload: dict[str, Any],
     thresholds: dict[str, float],
@@ -340,7 +374,8 @@ def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | N
         summary["reason"] = f"critique_reference_pack.yaml invalid: {exc}"
         summary["next_action"] = "fix critique_reference_pack.yaml"
         return summary
-    if pack is None or not isinstance(pack.get("reference_learning"), dict):
+    learning = pack.get("reference_learning") if pack is not None else None
+    if not isinstance(learning, dict):
         return None
 
     payload, error = _metrics_payload(example_dir)
@@ -394,6 +429,7 @@ def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | N
         stale_item = _reference_stale(example_dir, comparison)
         if stale_item is not None:
             blocking_items.append(stale_item)
+    blocking_items.extend(_readded_references(example_dir, learning, comparisons))
     if blocking_items:
         summary = _base_summary(example_dir, "stale")
         summary["comparison_count"] = len(comparisons)
@@ -415,10 +451,7 @@ def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | N
         summary["severe_metric_count"] = len(severe)
         summary["severe_metrics"] = severe
         summary["blocking_items"] = sorted(
-            {
-                f"{item['reference_path']}:{item['metric']}"
-                for item in severe
-            }
+            {f"{item['reference_path']}:{item['metric']}" for item in severe}
         )
         summary["next_action"] = (
             "review reference_aesthetic_metrics.json and route aesthetic-class "
@@ -431,8 +464,7 @@ def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | N
             summary["warning_metric_count"] = len(warnings)
             summary["warning_metrics"] = warnings
             summary["next_action"] = (
-                "review reference_aesthetic_metrics.json before declaring aesthetic "
-                "class alignment"
+                "review reference_aesthetic_metrics.json before declaring aesthetic class alignment"
             )
         elif summary["evaluation_state"] == "skipped":
             summary["next_action"] = "provide at least one readable reference-learning image"
