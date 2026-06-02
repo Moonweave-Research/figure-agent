@@ -218,6 +218,9 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_svg_path = _count(rows, "svg_polish_recommended_path")
     if by_svg_path:
         summary["by_svg_polish_recommended_path"] = by_svg_path
+    by_svg_next = _count(rows, "svg_polish_next_action")
+    if by_svg_next:
+        summary["by_svg_polish_next_action"] = by_svg_next
     by_svg_blocker = _count_list_items(rows, "svg_polish_blocking_sources")
     if by_svg_blocker:
         summary["by_svg_polish_blocking_source"] = by_svg_blocker

@@ -402,6 +402,10 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
         "continue_tikz": 1,
         "ready_for_svg_polish": 1,
     }
+    assert queue["summary"]["by_svg_polish_next_action"] == {
+        "rerun_fig_loop": 1,
+        "start_svg_polish_recipe": 1,
+    }
     assert queue["summary"]["by_svg_polish_blocking_source"] == {
         "crop_audit_summary": 1,
         "tikz_vs_svg_polish_trigger": 1,
