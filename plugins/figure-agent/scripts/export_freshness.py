@@ -13,6 +13,7 @@ Content hash uses the same metadata-strip pipeline as scripts/diff_pdf_content.p
 from __future__ import annotations
 
 import hashlib
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -62,6 +63,13 @@ def compute_export_state(example_dir: Path, name: str) -> str:
 
     if not build_pdf.is_file():
         return EXPORT_STALE  # exports exist but build/ is gone — treat as stale
-    if compute_pdf_content_hash(exports_pdf) == compute_pdf_content_hash(build_pdf):
+    try:
+        exports_hash = compute_pdf_content_hash(exports_pdf)
+        build_hash = compute_pdf_content_hash(build_pdf)
+    except (subprocess.CalledProcessError, OSError):
+        # A PDF qpdf cannot expand (corrupt/truncated) cannot be content-FRESH;
+        # STALE routes the operator to regenerate.
+        return EXPORT_STALE
+    if exports_hash == build_hash:
         return EXPORT_FRESH
     return EXPORT_STALE

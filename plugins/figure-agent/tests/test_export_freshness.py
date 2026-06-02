@@ -89,6 +89,26 @@ def test_state_stale_when_exports_pdf_differs_from_build(tmp_path: Path) -> None
     assert compute_export_state(fixture, "fix_stale_a") == EXPORT_STALE
 
 
+def test_state_stale_when_exports_pdf_is_corrupt(tmp_path: Path) -> None:
+    """A truncated/non-PDF exports/<name>.pdf must yield STALE, not crash.
+
+    qpdf exits non-zero on a damaged PDF; compute_pdf_content_hash() would
+    otherwise raise CalledProcessError up through /fig_status and /fig_export.
+    """
+    fixture = tmp_path / "examples" / "fix_corrupt"
+    (fixture / "build").mkdir(parents=True)
+    exports = fixture / "exports"
+    exports.mkdir(parents=True)
+    # All four siblings + build present so the hash branch is reached
+    # (untracked tmp dir → is_tracked() False, so no golden short-circuit).
+    (exports / "fix_corrupt.pdf").write_bytes(b"this is not a pdf, truncated garbage")
+    (exports / "fix_corrupt.svg").write_bytes(b"<svg/>")
+    (exports / "fix_corrupt.tif").write_bytes(b"TIFF")
+    (exports / "fix_corrupt.png").write_bytes(b"PNG")
+    (fixture / "build" / "fix_corrupt.pdf").write_bytes(b"%PDF-1.4 also garbage\n")
+    assert compute_export_state(fixture, "fix_corrupt") == EXPORT_STALE
+
+
 def test_state_tracked_golden_for_self_contained_git_repo(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
