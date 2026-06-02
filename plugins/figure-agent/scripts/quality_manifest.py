@@ -115,6 +115,9 @@ def critique_manifest_paths(
     label_path_proximity_path = example_dir / "build" / "label_path_proximity.json"
     if label_path_proximity_path.exists():
         paths.append(label_path_proximity_path)
+    undeclared_geometry_path = example_dir / "build" / "undeclared_geometry.json"
+    if undeclared_geometry_path.exists():
+        paths.append(undeclared_geometry_path)
     audit_crop_manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if audit_crop_manifest_path.exists():
         paths.append(audit_crop_manifest_path)
@@ -158,9 +161,8 @@ def critique_manifest_paths(
     paths.extend(svg_polish_delta_paths)
     generated_export_svg_path = example_dir / "exports" / f"{name}.svg"
     if (
-        (_uses_polished_svg_final_artifact(spec) or svg_polish_delta_paths)
-        and generated_export_svg_path.exists()
-    ):
+        _uses_polished_svg_final_artifact(spec) or svg_polish_delta_paths
+    ) and generated_export_svg_path.exists():
         paths.append(generated_export_svg_path)
     paths.extend(participating_panel_reference_paths(example_dir, spec))
     paths.extend(_authoring_context_paths(example_dir))

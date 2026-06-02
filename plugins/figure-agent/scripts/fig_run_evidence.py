@@ -49,6 +49,7 @@ def fixture_evidence_paths(repo_root: Path, name: str) -> tuple[Path, ...]:
         example_dir / "build" / "visual_clash.json",
         example_dir / "build" / "text_boundary_clash.json",
         example_dir / "build" / "label_path_proximity.json",
+        example_dir / "build" / "undeclared_geometry.json",
         example_dir / "build" / "audit_crops" / "manifest.json",
         example_dir / "build" / "reference_aesthetic_metrics.json",
         example_dir / "polish" / "svg_polish_recipe.yaml",
