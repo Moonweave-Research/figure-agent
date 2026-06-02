@@ -204,6 +204,24 @@ def test_issue_100_inventory_consistency_check_matches_plugin_version() -> None:
     assert f"current plugin as v{plugin['version']}" in normalized
 
 
+def test_issue_100_inventory_distinguishes_historical_gap_rows_from_open_backlog() -> None:
+    inventory = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
+    ).read_text()
+    before_table = inventory.partition("## Gap Inventory")[2].partition(
+        "| ID | Priority | Area | Gap | Evidence | Impact | Candidate issue |"
+    )[0]
+    normalized = " ".join(before_table.split())
+
+    assert "historical findings log" in normalized
+    assert "not a live open-backlog table" in normalized
+    assert "Implemented status is recorded in the Recommended Execution Order" in normalized
+
+
 def test_current_readme_documents_release_boundaries() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 

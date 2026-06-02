@@ -62,6 +62,11 @@ the workflow together.
 
 ## Gap Inventory
 
+This table is a historical findings log, not a live open-backlog table. It
+preserves the gap/evidence wording from the review pass that found each issue,
+so some rows intentionally describe pre-fix behavior. Implemented status is
+recorded in the Recommended Execution Order and issue-specific docs below.
+
 | ID | Priority | Area | Gap | Evidence | Impact | Candidate issue |
 | --- | --- | --- | --- | --- | --- | --- |
 | G100-01 | P0 | Evidence parity | `undeclared_geometry` is produced by compile and accepted by critique schema, but it was not first-class in `audit_evidence_summary.py`/status/driver UX. | Issue 99 explicitly scoped out mandatory audit-evidence integration; Issue 100A adds this path to the shared summary. | A real label-frame boundary risk should now surface through the same operator summary path as visual/text/label/crop evidence. | Issue 100A - undeclared-geometry audit evidence surfacing |
