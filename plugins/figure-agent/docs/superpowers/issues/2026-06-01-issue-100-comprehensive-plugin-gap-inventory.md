@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DT plus operator completion dogfood evidence, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DT plus operator/install evidence, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,8 +12,8 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DT polish mode-forbidden guidance and
-  operator completion explanation dogfood;
+- branch baseline: `main` after Issue 100DT polish mode-forbidden guidance,
+  operator completion explanation dogfood, and install-refresh blocked evidence;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -1115,6 +1115,8 @@ JSON-only:
   review guidance while `blocked_count`/`planned_blocked` remain zero.
 - polish-mode mode-forbidden driver guidance routes back to review mode instead
   of telling operators to execute the forbidden selected command.
+- install freshness diagnostics now confirm the current install refresh is
+  correctly blocked by user-owned dirty figure source, not package junk.
 
 The current post-100DT next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
@@ -1129,9 +1131,12 @@ contract gaps. They are:
    positive pass should refresh the four host-vision critiques, keep the dirty
    fig1 source separate from plugin hardening, then rerun
    `--can-start-svg-polish true`.
-2. **Installed-cache refresh after dirty figure work is resolved.** With the
-   current user-owned dirty `.tex`, the correct freshness answer is nonzero.
-   Reinstall should wait until that source git blocker is intentionally handled.
+2. **Installed-cache refresh after dirty figure work is resolved.** The
+   diagnostic path has been verified: source/package and installed package
+   hygiene are clean after cleanup, marketplace source hygiene is clean, and
+   `plugin_install_freshness.py` exits nonzero with top-level `next_action`
+   pointing at the dirty user-owned `.tex`. Reinstall should wait until that
+   source git blocker is intentionally handled.
 
 No new broad aesthetic detector should be added before these current routing and
 evidence gaps are addressed. The plugin's risk is not lack of another taste
