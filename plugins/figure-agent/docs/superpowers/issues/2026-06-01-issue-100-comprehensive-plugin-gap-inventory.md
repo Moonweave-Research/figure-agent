@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CT, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CU, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CT inventory version consistency guard;
+- branch baseline: `main` after Issue 100CU queue-run filter surface guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -156,6 +156,7 @@ the workflow together.
 | G100-91 | P2 | SVG polish gate blocker-source projection | Issue 100CQ's `--svg-polish-blocking-source` filter matched readiness blocker sources, but not gate-only blocker sources such as `driver_blocker` on no-current-checkpoint rows. | The Issue 100CR evidence pass produced three `svg_polish_gate_state: no_current_checkpoint` rows, then `--svg-polish-blocking-source driver_blocker` returned zero rows until the projection was fixed. | Operators could still miss why no real fixture was ready for SVG polish when the blocker lived in `svg_polish_gate.blocking_items` instead of `svg_polish_readiness`. | Issue 100CR - SVG polish gate blocker-source filters |
 | G100-92 | P3 | Queue-run SVG filter parity | `/fig_queue` supported SVG polish readiness filters, but `/fig_queue_run` still accepted only actor/action/status filters despite claiming to share the same filter surface. | TDD reproduced `fig_queue_run.py --mode polish --can-start-svg-polish true --svg-polish-blocking-source driver_prerequisite` failing at argparse before it could plan queue execution. | Operators could inspect SVG readiness with `/fig_queue` but then lose the same filter when moving to plan-only bounded queue execution. | Issue 100CS - queue-run SVG filter parity |
 | G100-93 | P3 | Inventory version consistency | The Issue 100 Documentation Consistency Check still claimed README/plugin manifest identified the plugin as v0.9.1 after the live release metadata had moved to v0.9.2. | TDD reproduced the release-contract suite not checking the inventory's version sentence even though it already checked README, pyproject, and plugin manifest versions. | The main roadmap could give stale release-readiness evidence even while the actual release metadata was correct. | Issue 100CT - inventory version consistency guard |
+| G100-94 | P3 | Queue-run filter drift recurrence | Issue 100CS copied the current queue filters into `/fig_queue_run`, but there was no parity guard proving future `/fig_queue` filter additions are mirrored in the runner. | TDD reproduced that `fig_queue_run` had no declared filter-surface constant to compare against `fig_queue._FILTER_KEYS`. | The same filter drift could recur whenever `/fig_queue` grows a new filter, sending operators back to manual JSON filtering. | Issue 100CU - queue-run filter surface guard |
 
 ## Recommended Execution Order
 
@@ -795,6 +796,12 @@ the workflow together.
     plugin manifest version, so the inventory cannot keep stale v0.9.x claims
     after README, pyproject, and plugin metadata advance.
 
+96. **Issue 100CU - queue-run filter surface guard**
+    Implemented as queue-run drift prevention. `fig_queue_run.py` now declares
+    `QUEUE_FILTER_KEYS`, ties it to `fig_queue._FILTER_KEYS`, builds CLI filter
+    payloads through one helper, and tests that the two command surfaces stay
+    in sync when future queue filters are added.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -843,7 +850,9 @@ sources. Issue 100CS then closes the queue-run parity gap, so the same SVG
 readiness filters work in the plan-only/bounded execution wrapper instead of
 only in the read-only dashboard. Issue 100CT closes the next roadmap-metadata
 hole by tying the inventory's own version consistency statement to the live
-plugin manifest version. After Issue 100CM, the
+plugin manifest version. Issue 100CU then prevents the same queue/queue-run
+filter drift from recurring by making the runner filter surface test-backed.
+After Issue 100CM, the
 plugin-install readiness path is now correctly
 able to say:
 
@@ -853,7 +862,7 @@ able to say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CT next candidates are therefore not old Issue 100A-C
+The current post-100CU next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically

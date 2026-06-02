@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import fig_queue  # noqa: E402
 import fig_queue_run  # noqa: E402
 
 
@@ -252,3 +253,7 @@ def test_main_passes_svg_polish_filters_to_queue(
         "svg_polish_next_action": "run_fig_critique",
         "svg_polish_blocking_sources": "driver_prerequisite",
     }
+
+
+def test_queue_run_filter_surface_matches_fig_queue() -> None:
+    assert fig_queue_run.QUEUE_FILTER_KEYS == fig_queue._FILTER_KEYS
