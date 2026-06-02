@@ -1,6 +1,6 @@
 # Issue 100CA - Layout Drift CLI Fixture Path Boundary
 
-Status: implemented in branch `codex/issue-100ca-layout-drift-cli-boundary`
+Status: completed on main in merge commit `279d487`
 Type: compile-stage layout gate, fixture path boundary
 Priority: P2
 

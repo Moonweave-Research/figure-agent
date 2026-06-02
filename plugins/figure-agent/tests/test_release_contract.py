@@ -388,7 +388,14 @@ def test_v0_9_issue_statuses_are_mainline_ready() -> None:
 
 
 def test_completed_issue_headers_do_not_claim_branch_or_worktree_only() -> None:
-    stale_phrases = ("implemented in working tree", "implemented on branch")
+    stale_phrases = (
+        "implemented in branch",
+        "implemented on branch",
+        "implemented in working tree",
+        "implemented in worktree",
+        "pending commit",
+        "pending merge",
+    )
     stale_headers = []
     for issue_path in sorted((REPO_ROOT / "docs" / "superpowers" / "issues").glob("*.md")):
         header = "\n".join(issue_path.read_text().splitlines()[:8])

@@ -1,6 +1,6 @@
 # Issue 100BY - Reference Extract CLI Fixture Path Boundary
 
-Status: implemented in branch `codex/issue-100by-reference-extract-cli-boundary`
+Status: completed on main in merge commit `7cba4ad`
 Type: reference authoring evidence, coordinate hints, fixture path boundary
 Priority: P1
 

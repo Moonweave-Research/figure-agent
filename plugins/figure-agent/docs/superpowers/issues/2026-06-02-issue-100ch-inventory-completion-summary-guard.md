@@ -1,6 +1,6 @@
 # Issue 100CH - Inventory Completion-Summary Guard
 
-Status: implemented in branch `codex/issue-100ch-inventory-completion-summary`
+Status: completed on main in merge commit `3036741`
 Type: roadmap hygiene, release-contract documentation guard
 Priority: P3
 

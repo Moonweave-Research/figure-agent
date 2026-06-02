@@ -1,6 +1,6 @@
 # Issue 100CG - Plugin Hygiene Next-Action Quoting
 
-Status: implemented in branch `codex/issue-100cg-quote-install-next-actions`
+Status: completed on main in merge commit `69f5379`
 Type: operator UX, shell safety, plugin install freshness, package hygiene
 Priority: P3
 

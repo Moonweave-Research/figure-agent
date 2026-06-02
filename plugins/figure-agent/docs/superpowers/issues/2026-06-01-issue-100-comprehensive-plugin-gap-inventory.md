@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CH, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CI, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CH inventory completion-summary guard;
+- branch baseline: `main` after Issue 100CI stale issue-status recurrence guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -144,6 +144,7 @@ the workflow together.
 | G100-79 | P3 | Source package hygiene visibility | After Issue 100CE, the installed cache could be fresh+clean while the development plugin tree still contained generated package junk that the next reinstall would copy. | Live `plugin_package_audit.py . --max-mib 300` failed on the source tree while `plugin_install_freshness.py` exited 0 because it checked only installed hygiene. | Operators could clean the installed cache, see readiness pass, then reintroduce the same package junk on the next same-version reinstall. | Issue 100CF - source package hygiene guard |
 | G100-80 | P3 | Plugin hygiene next-action quoting | Issue 100CF emitted a source cleanup `next_action` containing the repo path `/Users/.../[figure-agent]/...` without shell quoting. | Live zsh execution failed with `no matches found: /Users/.../[figure-agent]/plugins/figure-agent`; TDD reproduced shell-special paths in source and installed hygiene commands. | Operators could follow the emitted cleanup command and fail before reaching the actual package hygiene fix. | Issue 100CG - plugin hygiene next-action quoting |
 | G100-81 | P3 | Inventory completion summary freshness | The Issue 100 header/table tracked through Issue 100CG, but the Recommended Execution Order completion summaries stopped at Issue 100BS. | TDD reproduced the release-contract guard passing header/baseline freshness while the completion-summary section lacked the latest Issue 100 suffix. | Operators could use the inventory as a status briefing and miss already-completed hardening slices after 100BS. | Issue 100CH - inventory completion-summary guard |
+| G100-82 | P3 | Stale issue-status recurrence | Issue 100P/100AB swept stale branch-status wording, but the guard only caught `implemented on branch` and `implemented in working tree`; later Issues 100BV-100CH used `implemented in branch` and stayed stale after merge. | TDD reproduced `test_completed_issue_headers_do_not_claim_branch_or_worktree_only` passing while 13 Issue 100 headers still claimed branch implementation. | Operators could read merged work as branch-only work even though the roadmap and git history said it was already on main. | Issue 100CI - stale issue-status recurrence guard |
 
 ## Recommended Execution Order
 
@@ -701,6 +702,13 @@ the workflow together.
     suffix, so the inventory cannot have a fresh header/table with a stale
     completion briefing.
 
+84. **Issue 100CI - stale issue-status recurrence guard**
+    Implemented as documentation-status regression hardening. The stale-status
+    release-contract guard now rejects `implemented in branch`, `pending
+    commit`, and `pending merge` header wording in addition to earlier
+    branch/worktree variants, and recent Issue 100 headers were normalized to
+    their main merge commits.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -811,9 +819,12 @@ runs.
 
 This inventory is complete when:
 
-- every listed P0/P1 gap has a follow-up issue or explicit decision to defer;
-- Issue 100A is implemented before adding another detector family;
+- every listed gap has a follow-up issue, implementation summary, or explicit
+  decision to defer;
+- release-contract tests keep the inventory header, branch baseline, latest
+  issue-file suffix, completion summaries, and issue-status headers aligned
+  with mainline truth;
 - command docs explain status, drive, run, improve, loop, critique, export, and
   SVG polish routing in operator language;
-- final-readiness checks can be invoked as one non-mutating command path;
-- schema/module maps exist before the next schema bump beyond v1.17.
+- final-readiness checks remain invokable as one non-mutating command path;
+- schema/module maps stay current before any future schema bump.

@@ -1,6 +1,6 @@
 # Issue 100CE - Plugin Install Hygiene Exit-Code Guard
 
-Status: implemented in branch `codex/issue-100ce-install-hygiene-exit-code`
+Status: completed on main in merge commit `1e0fcab`
 Type: operator UX, plugin install freshness, package hygiene
 Priority: P3
 

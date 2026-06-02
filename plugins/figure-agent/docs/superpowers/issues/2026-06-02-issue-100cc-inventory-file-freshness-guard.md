@@ -1,6 +1,6 @@
 # Issue 100CC - Inventory Issue-File Freshness Guard
 
-Status: implemented in branch `codex/issue-100cc-inventory-file-guard`
+Status: completed on main in merge commit `58a6343`
 Type: roadmap documentation guard, release contract
 Priority: P3
 

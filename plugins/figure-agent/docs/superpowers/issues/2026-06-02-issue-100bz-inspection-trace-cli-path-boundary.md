@@ -1,6 +1,6 @@
 # Issue 100BZ - Inspection Trace CLI Fixture Path Boundary
 
-Status: implemented in branch `codex/issue-100bz-inspection-trace-cli-boundary`
+Status: completed on main in merge commit `b054992`
 Type: crop-read accountability, audit evidence validation, fixture path boundary
 Priority: P2
 

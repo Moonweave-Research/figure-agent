@@ -1,6 +1,6 @@
 # Issue 100CD - Plugin Install Package Hygiene Summary
 
-Status: implemented in branch `codex/issue-100cd-install-hygiene-summary`
+Status: completed on main in merge commit `c421a7c`
 Type: operator UX, plugin install freshness, package hygiene
 Priority: P3
 

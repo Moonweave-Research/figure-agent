@@ -1,6 +1,6 @@
 # Issue 100CF - Source Package Hygiene Guard
 
-Status: implemented in branch `codex/issue-100cf-source-package-hygiene`
+Status: completed on main in merge commit `5f80875`
 Type: operator UX, plugin install freshness, package hygiene
 Priority: P3
 
