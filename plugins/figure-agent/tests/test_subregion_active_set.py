@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from subregion_active_set import (  # noqa: E402
     active_subregion_ids,
     expand_subregion_ids,
     iteration_patch_ids,
+    main,
     parse_active_target_rows,
 )
 
@@ -71,3 +73,20 @@ def test_iteration_patch_ids_reads_observed_patch_units() -> None:
 """
 
     assert iteration_patch_ids(log) == ["D-1", "D-2", "D-3", "Row2-BR2", "G-1", "G-2"]
+
+
+def test_cli_accepts_format_json_alias(tmp_path: Path, capsys) -> None:
+    log_path = tmp_path / "subregion_iteration_log.md"
+    log_path.write_text(
+        "## Active Target Set\n\n"
+        "| State | Sub-region ID | Evidence | Notes |\n"
+        "|---|---|---|---|\n"
+        "| active target | D-1..D-2 | review | patch |\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main([str(log_path), "--format", "json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["active_targets"] == ["D-1", "D-2"]

@@ -92,6 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pack_path", type=Path)
     parser.add_argument("--json", action="store_true", help="emit parsed roles as JSON")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     failures = reference_pack_failures(args.pack_path)
@@ -101,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     entries = parse_reference_roles(args.pack_path.read_text(encoding="utf-8"))
-    if args.json:
+    if args.json or args.format == "json":
         print(json.dumps([asdict(entry) for entry in entries], indent=2, sort_keys=True))
     else:
         print(f"reference_count={len(entries)}")

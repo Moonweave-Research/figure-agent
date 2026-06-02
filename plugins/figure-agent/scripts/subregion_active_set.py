@@ -119,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("log_path", type=Path)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     if not args.log_path.is_file():
@@ -130,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     active_ids = active_subregion_ids(rows)
     patch_ids = iteration_patch_ids(text)
 
-    if args.json:
+    if args.json or args.format == "json":
         payload = {
             "active_target_count": len(active_ids),
             "active_targets": active_ids,

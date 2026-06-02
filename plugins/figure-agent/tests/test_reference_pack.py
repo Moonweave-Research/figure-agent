@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -9,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from reference_pack import (  # noqa: E402
     anti_reference_entries,
+    main,
     parse_reference_roles,
     reference_pack_failures,
 )
@@ -62,3 +64,21 @@ def test_pilot_reference_pack_has_roles_and_anti_reference_boundary() -> None:
     assert reference_pack_failures(pack) == []
     assert any("anti_reference" in entry.roles for entry in entries)
     assert any("network topology" in entry.do_not_transfer for entry in entries)
+
+
+def test_cli_accepts_format_json_alias(tmp_path: Path, capsys) -> None:
+    pack = tmp_path / "reference_pack.md"
+    pack.write_text(
+        "| File | Role | Use | Do Not Transfer |\n"
+        "|---|---|---|---|\n"
+        "| `reference/a.png` | style | palette only | Do not transfer topology. |\n"
+        "| `reference/b.png` | anti_reference | contrast | Do not transfer layout. |\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main([str(pack), "--format", "json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload[0]["source"] == "reference/a.png"
+    assert payload[1]["roles"] == ["anti_reference"]

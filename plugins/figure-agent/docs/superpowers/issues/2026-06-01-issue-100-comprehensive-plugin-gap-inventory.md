@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DA, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DB, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DA loop/closeout format-json compatibility;
+- branch baseline: `main` after Issue 100DB helper format-json compatibility;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -163,6 +163,7 @@ the workflow together.
 | G100-98 | P3 | Queue-run output flag compatibility | `/fig_queue_run` emits JSON and accepts `--json`, but rejected `--format json` during plan-only polish queue continuation. | Live command `fig_queue_run.py --mode polish --goal "inspect" --format json --dry-run` failed with `unrecognized arguments: --format`; TDD reproduced the argparse failure. | Operators can fail before queue-run plan evidence appears just by using the same output flag spelling that `/fig_queue` now accepts. | Issue 100CY - fig_queue-run format-json compatibility |
 | G100-99 | P3 | Driver/run output flag compatibility | After queue commands accepted `--format json`, adjacent single-fixture commands `fig_driver.py` and `fig_run.py` still rejected the same JSON-output spelling. | Live commands `fig_driver.py ... --format json` and `fig_run.py ... --format json` failed at argparse; TDD reproduced both. | Operators can move from queue to single-fixture driver/run and hit another needless output-flag trap before seeing the real boundary state. | Issue 100CZ - driver/run format-json compatibility |
 | G100-100 | P3 | Loop/closeout output flag compatibility | `/fig_loop` and `/fig_closeout` had automation JSON paths via `--json`, but rejected the same `--format json` spelling now accepted by queue, queue-run, driver, and run. | Live commands `fig_loop.py ... --format json` and `fig_closeout.py ... --format json` failed at argparse; TDD reproduced both. | Operators can still hit an output-flag trap at the verify-only checkpoint or post-patch closeout stage. | Issue 100DA - loop/closeout format-json compatibility |
+| G100-101 | P3 | Helper output flag compatibility | Documented helper parsers `subregion_active_set.py` and `reference_pack.py` had stdout JSON paths via `--json`, but rejected the same `--format json` spelling as the primary workflow commands. | TDD reproduced both helper CLIs failing with `unrecognized arguments: --format json`. | Operators can still hit the same output-flag trap when inspecting subregion active sets or role-typed reference packs. | Issue 100DB - helper format-json compatibility |
 
 ## Recommended Execution Order
 
@@ -846,6 +847,12 @@ the workflow together.
      `--format json` as the same automation output spelling; `--format text`
      names the existing prose/default output.
 
+103. **Issue 100DB - helper format-json compatibility**
+     Implemented as helper output CLI compatibility. `subregion_active_set.py`
+     and `reference_pack.py` keep their existing `--json` and text behavior
+     while accepting `--format json` for stdout JSON and `--format text` for
+     the default text output.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -909,9 +916,11 @@ extends that compatibility to the adjacent single-fixture driver/run commands,
 where both commands already emit JSON by default. Issue 100DA closes the
 remaining primary workflow JSON surfaces, `/fig_loop` and `/fig_closeout`,
 without changing their artifact writes, read-only behavior, or exit-code
-semantics.
+semantics. Issue 100DB closes the same compatibility gap in the documented
+stdout-JSON helper parsers while leaving detector `--json-output` file-writing
+contracts alone.
 
-After Issue 100DA, the plugin-install readiness path is now correctly able to
+After Issue 100DB, the plugin-install readiness path is now correctly able to
 say:
 
 - the registered `figure-agent-local` marketplace source matches or mismatches
@@ -920,7 +929,7 @@ say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100DA next candidates are therefore not old Issue 100A-C
+The current post-100DB next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -945,11 +954,11 @@ evidence gaps are addressed. The plugin's risk is not lack of another taste
 rubric; it is that existing evidence and command guidance are not always
 surfaced in the path the user actually runs.
 
-Issue 100DA closes the sixth defect found while starting that evidence path:
-loop and closeout still rejected `--format json` after queue, queue-run,
-driver, and run accepted it. The aliases do not change loop artifacts,
-closeout computation, output schemas, or execution policy; they only keep the
-common JSON-output spelling from blocking the evidence path.
+Issue 100DB closes the seventh defect found while starting that evidence path:
+documented helper parsers still rejected `--format json` after the primary
+workflow commands accepted it. The aliases do not change helper parsing,
+validation, detector JSON-output file contracts, or execution policy; they only
+keep the common JSON-output spelling from blocking inspection.
 
 ## Edge-Case Review
 
