@@ -35,7 +35,7 @@ uv run python3 scripts/fig_queue.py \
   --json
 ```
 
-## Current Queue Result
+## Pre-Cleanup Queue Result
 
 `--can-start-svg-polish true` returned zero rows.
 
@@ -95,6 +95,52 @@ Issue 100DT fixed the contradiction. The driver now says the selected next
 action is not executable in polish mode and routes the operator back to
 `/fig_drive <fixture> --mode review` before returning to polish mode.
 
+## Post-Package-Cleanup Queue Result
+
+After the install-refresh evidence pass, package cleanup was run with:
+
+```bash
+python3 scripts/plugin_package_audit.py . --clean --max-mib 300
+```
+
+That intentionally removed generated build/export artifacts. Re-running the
+polish queue after cleanup still returned zero `--can-start-svg-polish true`
+rows, but the blocker distribution changed to compile prerequisites:
+
+```text
+by_action:
+  run_compile: 5
+  run_critique: 1
+  run_fig_loop: 2
+
+by_required_actor:
+  host_llm: 1
+  workflow_agent: 7
+
+by_svg_polish_gate_state:
+  blocked: 6
+  no_current_checkpoint: 2
+
+by_svg_polish_next_action:
+  rerun_fig_loop: 2
+  run_fig_compile: 5
+  run_fig_critique: 1
+
+by_svg_polish_blocking_source:
+  driver_blocker: 2
+  driver_prerequisite: 6
+```
+
+Post-cleanup fixture interpretation:
+
+- `fig1_overview_v2`, `fig1_overview_v2_pair_001_vault`,
+  `fig5_floating_clip_mechanism`, `n3_trial_01_trap_depth`, and
+  `n3_trial_02_actuation_sequence` need compile/render refresh before any SVG
+  promotion evidence is meaningful.
+- `golden_trap_depth_picture` still needs host-vision critique refresh.
+- `fig3_trapping_concept` and `smoke_trap_demo` still need current loop
+  checkpoints proving `ready_for_svg_polish`.
+
 ## Judgment
 
 The positive real-fixture SVG polish path is still unproven. This is currently
@@ -105,7 +151,10 @@ an evidence/prerequisite state, not a broad design failure:
 - Release, dirty-source, host-vision, and loop-checkpoint gates remain
   independent.
 - The latest discovered guidance contradiction was fixed in Issue 100DT.
+- Post-cleanup, generated build removal correctly moves several fixtures back
+  to compile prerequisites rather than letting stale generated artifacts support
+  SVG polish promotion.
 
-The next valid positive-evidence pass must first close the host-vision critique
-refresh rows and avoid using the user-owned dirty
-`fig1_overview_v2_pair_001_vault.tex` as plugin hardening work.
+The next valid positive-evidence pass must first regenerate required build
+artifacts, close host-vision critique refresh rows, and avoid using the
+user-owned dirty `fig1_overview_v2_pair_001_vault.tex` as plugin hardening work.

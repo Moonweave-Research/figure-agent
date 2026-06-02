@@ -1125,12 +1125,15 @@ contract gaps. They are:
    supported, deterministic harness coverage exists, and prerequisite gate UX
    plus queue and queue-run filters now make the evidence query direct.
    Post-100DT evidence still finds zero real fixtures with
-   `can_start_svg_polish: true`: four are blocked by host-vision critique
-   refresh, one by compile/render prerequisite on user-owned dirty source, two
-   by no-current-checkpoint gates, and one by a release boundary. The next valid
-   positive pass should refresh the four host-vision critiques, keep the dirty
-   fig1 source separate from plugin hardening, then rerun
-   `--can-start-svg-polish true`.
+   `can_start_svg_polish: true`. Before package cleanup, blockers were four
+   host-vision critique refreshes, one compile/render prerequisite on
+   user-owned dirty source, two no-current-checkpoint gates, and one release
+   boundary. After package cleanup removed generated build artifacts, the
+   current blockers are five compile/render refreshes, one host-vision critique
+   refresh, and two no-current-checkpoint gates. The next valid positive pass
+   should regenerate required builds, refresh the remaining host-vision
+   critique, keep the dirty fig1 source separate from plugin hardening, then
+   rerun `--can-start-svg-polish true`.
 2. **Installed-cache refresh after dirty figure work is resolved.** The
    diagnostic path has been verified: source/package and installed package
    hygiene are clean after cleanup, marketplace source hygiene is clean, and
