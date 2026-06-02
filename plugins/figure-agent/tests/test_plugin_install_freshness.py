@@ -232,6 +232,34 @@ def test_cli_returns_zero_for_fresh_clean_installed_package(
     assert output["installed_package_hygiene"]["state"] == "clean"
 
 
+def test_cli_accepts_json_noop_flag(tmp_path: Path, capsys) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+
+    exit_code = main([str(installed), "--source-root", str(source), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert output["schema"] == "figure-agent.plugin-install-freshness.v1"
+    assert output["state"] == "fresh"
+
+
+def test_cli_accepts_format_json_alias(tmp_path: Path, capsys) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+
+    exit_code = main([str(installed), "--source-root", str(source), "--format", "json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert output["schema"] == "figure-agent.plugin-install-freshness.v1"
+    assert output["state"] == "fresh"
+
+
 def test_cli_returns_nonzero_for_fresh_but_dirty_source_package(
     tmp_path: Path,
     capsys,

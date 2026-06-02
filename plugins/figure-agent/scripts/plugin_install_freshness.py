@@ -607,6 +607,8 @@ def _parser() -> argparse.ArgumentParser:
         default=DEFAULT_KNOWN_MARKETPLACES,
         help="Claude known_marketplaces.json path for marketplace source hygiene",
     )
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default="json")
     return parser
 
 

@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DF, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DG, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DF match_snippet CLI help contract;
+- branch baseline: `main` after Issue 100DG plugin-install freshness JSON flag compatibility;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -168,6 +168,7 @@ the workflow together.
 | G100-103 | P3 | Improve output flag compatibility | `/fig_improve` emits JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced `fig_improve.py ... --format json` failing with `unrecognized arguments`. | Operators using the loop-centered entrypoint can still hit a parser trap before seeing the real improvement boundary. | Issue 100DD - fig_improve JSON flag compatibility |
 | G100-104 | P2 | Critique brief CLI argument contract | `critique_brief.py` read only `sys.argv[1]`, so unknown extra arguments were silently ignored while still emitting a full host-vision brief. | TDD reproduced `critique_brief.py examples/<fixture> --bogus` producing a brief instead of failing. | Operators can believe a host-critique option was applied when the generated audit prompt ignored it. | Issue 100DE - critique brief CLI argument contract |
 | G100-105 | P3 | Match snippet CLI help contract | `match_snippet.py --help` was treated as a missing briefing file because the helper used manual argv counting. | Live command printed `missing: --help`; TDD reproduced missing argparse help and unknown-argument handling. | Operators cannot discover helper usage normally, and parser behavior remains inconsistent with the hardened workflow surface. | Issue 100DF - match_snippet CLI help contract |
+| G100-106 | P3 | Plugin install freshness output flag compatibility | `plugin_install_freshness.py` emits JSON by default but rejected explicit `--json` and `--format json` spellings. | Live commands failed at argparse; TDD reproduced both no-op output flags failing. | Operators checking "am I using the newest plugin?" can hit a parser trap before seeing the real source/install hygiene state. | Issue 100DG - plugin install freshness JSON flag compatibility |
 
 ## Recommended Execution Order
 
@@ -878,6 +879,11 @@ the workflow together.
      argparse for help and unknown-argument handling while preserving snippet
      scoring and the single `briefing.md` positional contract.
 
+108. **Issue 100DG - plugin install freshness JSON flag compatibility**
+     Implemented as install-readiness CLI compatibility. `plugin_install_freshness.py`
+     keeps its JSON-only output and exit-code policy while accepting explicit
+     `--json` and `--format json` no-op flags.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -949,9 +955,12 @@ contracts alone. Issue 100DC fixes the higher-impact status entrypoint, where
 `/fig_improve` entrypoint. Issue 100DE applies the same no-silent-argument-loss
 standard to the host-vision brief generator. Issue 100DF brings the snippet
 candidate helper under the same parser hygiene without changing matching logic.
+Issue 100DG applies the same explicit JSON-output flag compatibility to the
+plugin install freshness checker, preserving its JSON-only output and exit-code
+contract.
 
-After Issue 100DF, the plugin-install readiness path is now correctly able to
-say:
+After Issue 100DG, the plugin-install readiness path is now correctly able to
+say, without forcing operators to remember that the output is JSON-only:
 
 - the registered `figure-agent-local` marketplace source matches or mismatches
   the reviewed checkout;
@@ -959,7 +968,7 @@ say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100DF next candidates are therefore not old Issue 100A-C
+The current post-100DG next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -992,7 +1001,9 @@ needless parser trap. Issue 100DE then closes the next silent CLI hazard:
 `critique_brief.py` ignored unknown extra arguments even though it prepares the
 host LLM audit prompt. Issue 100DF closes the remaining helper CLI hygiene gap
 found in the manual-argv scan: `match_snippet.py --help` was interpreted as a
-file path instead of help.
+file path instead of help. Issue 100DG closes the adjacent install-readiness
+CLI trap: a JSON-only checker rejected explicit JSON-output flags before it
+could report the real source/install hygiene state.
 
 ## Edge-Case Review
 
