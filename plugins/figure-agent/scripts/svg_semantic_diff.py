@@ -40,6 +40,7 @@ REPORT_STATES = frozenset(
 UNSUPPORTED_TAGS = frozenset({"filter", "mask", "clipPath", "foreignObject", "image"})
 UNSUPPORTED_ATTRS = frozenset({"filter", "mask", "clip-path"})
 FRAME_ATTRS = ("viewBox", "width", "height")
+OPTICAL_ATTRS = ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity")
 
 
 class SvgSemanticDiffError(ValueError):
@@ -77,8 +78,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise SvgSemanticDiffError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 
@@ -134,20 +134,20 @@ def _inventory(path: Path) -> dict[str, Any]:
     classes: set[str] = set()
     unsupported: list[str] = []
     group_transform_risks: list[str] = []
-    colors_by_id: dict[str, tuple[str | None, str | None, str | None]] = {}
+    colors_by_id: dict[str, tuple[str | None, ...]] = {}
+    optical_signatures_no_id: list[tuple[str | None, ...]] = []
     path_count = 0
     marker_count = 0
     marker_attr_count = 0
     for element in root.iter():
         tag = _strip_namespace(element.tag)
         element_id = element.attrib.get("id")
+        optical = tuple(element.attrib.get(attr) for attr in OPTICAL_ATTRS)
         if element_id:
             ids.add(element_id)
-            colors_by_id[element_id] = (
-                element.attrib.get("fill"),
-                element.attrib.get("stroke"),
-                element.attrib.get("opacity"),
-            )
+            colors_by_id[element_id] = optical
+        elif any(value is not None for value in optical):
+            optical_signatures_no_id.append(optical)
         class_attr = element.attrib.get("class")
         if class_attr:
             classes.update(token for token in class_attr.split() if token)
@@ -167,7 +167,9 @@ def _inventory(path: Path) -> dict[str, Any]:
         for attr in UNSUPPORTED_ATTRS:
             if attr in element.attrib:
                 unsupported.append(f"{tag}#{element_id or '?'}@{attr}")
-        href = element.attrib.get("href") or element.attrib.get("{http://www.w3.org/1999/xlink}href")
+        href = element.attrib.get("href") or element.attrib.get(
+            "{http://www.w3.org/1999/xlink}href"
+        )
         if href and re.match(r"^[a-z][a-z0-9+.-]*://", href, flags=re.IGNORECASE):
             unsupported.append(f"{tag}#{element_id or '?'}@external_href")
         if tag == "g" and "transform" in element.attrib:
@@ -191,6 +193,10 @@ def _inventory(path: Path) -> dict[str, Any]:
         "marker_count": marker_count,
         "marker_attr_count": marker_attr_count,
         "colors_by_id": colors_by_id,
+        "optical_signatures_no_id": sorted(
+            tuple("" if value is None else value for value in optical)
+            for optical in optical_signatures_no_id
+        ),
     }
 
 
@@ -288,10 +294,18 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             add(
                 "semantic_color_remap",
                 "MINOR",
-                f"{element_id} color/opacity changed from {source_colors} "
-                f"to {polished_colors}",
+                f"{element_id} color/opacity changed from {source_colors} to {polished_colors}",
                 SEMANTIC_DIFF_NEEDS_HUMAN,
             )
+    if source["optical_signatures_no_id"] != polished["optical_signatures_no_id"]:
+        add(
+            "semantic_color_remap",
+            "MINOR",
+            "non-id color/opacity inventory changed from "
+            f"{source['optical_signatures_no_id']} to "
+            f"{polished['optical_signatures_no_id']}",
+            SEMANTIC_DIFF_NEEDS_HUMAN,
+        )
     return findings
 
 
@@ -419,10 +433,9 @@ def svg_semantic_diff_report_is_stale(path: Path, *, example_dir: Path) -> bool:
     data = load_svg_semantic_diff_report(path, example_dir=example_dir)
     source_path = _fixture_path(example_dir, data["source_svg"], "source_svg")
     polished_path = _fixture_path(example_dir, data["polished_svg"], "polished_svg")
-    return (
-        data["source_svg_hash"] != file_sha256(source_path)
-        or data["polished_svg_hash"] != file_sha256(polished_path)
-    )
+    return data["source_svg_hash"] != file_sha256(source_path) or data[
+        "polished_svg_hash"
+    ] != file_sha256(polished_path)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -127,10 +127,51 @@ def test_group_transform_reports_group_transform_risk(tmp_path: Path) -> None:
     assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
 
 
+@pytest.mark.parametrize(
+    "attribute",
+    ("opacity", "fill-opacity", "stroke-opacity"),
+)
+def test_opacity_family_change_on_id_element_routes_to_human(
+    tmp_path: Path,
+    attribute: str,
+) -> None:
+    source = _base_svg(f'<text id="label-a" {attribute}="1">A</text>')
+    polished = _base_svg(f'<text id="label-a" {attribute}="0.5">A</text>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "needs_human"
+    assert "semantic_color_remap" in {finding["kind"] for finding in report["findings"]}
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    ("opacity", "fill-opacity", "stroke-opacity"),
+)
+def test_opacity_family_change_on_non_id_element_routes_to_human(
+    tmp_path: Path,
+    attribute: str,
+) -> None:
+    source = _base_svg(f'<text class="lbl" {attribute}="1">A</text>')
+    polished = _base_svg(f'<text class="lbl" {attribute}="0.3">A</text>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "needs_human"
+    assert "semantic_color_remap" in {finding["kind"] for finding in report["findings"]}
+
+
 def test_marker_or_path_inventory_change_reports_risk(tmp_path: Path) -> None:
     source = _base_svg(
-        '<defs><marker id="arrow"/></defs>'
-        '<path id="p" marker-end="url(#arrow)" d="M0 0 L1 1"/>'
+        '<defs><marker id="arrow"/></defs><path id="p" marker-end="url(#arrow)" d="M0 0 L1 1"/>'
     )
     polished = _base_svg('<defs><marker id="arrow"/></defs>')
     fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
