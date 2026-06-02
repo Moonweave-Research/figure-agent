@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import yaml
 from critique_contract import CritiqueContractError, require_mapping  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
@@ -135,6 +136,52 @@ def load_optional_inspection_trace(
     }
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    examples_root = Path("examples").resolve()
+    if value.is_absolute():
+        resolved = value.resolve()
+        try:
+            relative = resolved.relative_to(examples_root)
+        except ValueError as exc:
+            raise InspectionTraceError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            ) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise InspectionTraceError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(relative.parts[0], str(value))
+        return Path("examples") / relative.parts[0]
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise InspectionTraceError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise InspectionTraceError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return examples_path
+    raise InspectionTraceError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path under examples/"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise InspectionTraceError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -149,14 +196,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "validate":
         try:
-            result = load_optional_inspection_trace(args.example, filename=args.filename)
+            example_dir = _resolve_example_dir_for_cli(args.example)
+            result = load_optional_inspection_trace(example_dir, filename=args.filename)
         except InspectionTraceError as exc:
             print(f"inspection_trace.py: {exc}", file=sys.stderr)
             return 1
         if result["state"] == "not_applicable":
             print(f"inspection_trace.py: {result['reason']}")
         else:
-            print(f"inspection_trace.py: valid {args.example / args.filename}")
+            print(f"inspection_trace.py: valid {example_dir / args.filename}")
         return 0
     return 1
 
