@@ -291,6 +291,15 @@ def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
     assert "ambiguous safety conflict" in command_doc
 
 
+def test_fig_queue_run_docs_separate_complete_rows_from_blocked_summary() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
+
+    assert "planned complete" in command_doc
+    assert "`queue.command_plan.complete`" in command_doc
+    assert "`summary.planned_complete`" in command_doc
+    assert "do not count toward `summary.blocked`" in command_doc
+
+
 def test_readme_and_skill_route_journal_inspection_through_summary_script() -> None:
     docs_by_path = {
         "README.md": (REPO_ROOT / "README.md").read_text(),

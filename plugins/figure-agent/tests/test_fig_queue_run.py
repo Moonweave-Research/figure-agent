@@ -26,6 +26,7 @@ def _queue() -> dict[str, Any]:
             "schema": "figure-agent.fixture-command-plan.v1",
             "executable_count": 2,
             "blocked_count": 1,
+            "complete_count": 1,
             "executable": [
                 {
                     "fixture": "alpha",
@@ -48,6 +49,14 @@ def _queue() -> dict[str, Any]:
                     "blocking_source": "closeout_required",
                     "stop_boundary": "closeout_required",
                     "reason": "stop_boundary:closeout_required",
+                }
+            ],
+            "complete": [
+                {
+                    "fixture": "delta",
+                    "action": "complete",
+                    "required_actor": "workflow_agent",
+                    "reason": "mode_scoped_complete",
                 }
             ],
         },
@@ -82,6 +91,7 @@ def test_plan_only_reports_planned_runs_without_executing(
     assert payload["summary"] == {
         "planned_executable": 2,
         "planned_blocked": 1,
+        "planned_complete": 1,
         "attempted": 2,
         "executed_commands": 0,
         "failed": 0,

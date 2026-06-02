@@ -85,6 +85,7 @@ def _summary(
     return {
         "planned_executable": planned_executable,
         "planned_blocked": int(command_plan.get("blocked_count", 0)),
+        "planned_complete": int(command_plan.get("complete_count", 0)),
         "attempted": attempted,
         "executed_commands": executed_commands,
         "failed": failed,

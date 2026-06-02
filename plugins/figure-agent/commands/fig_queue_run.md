@@ -84,7 +84,7 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `filters` | active queue filters |
 | `queue` | source queue summary plus command plan |
 | `runs` | one record per attempted fixture |
-| `summary` | planned executable, planned blocked, attempted, unattempted executable, executed command, failed, and blocked counts |
+| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
 also include the embedded `/fig_run` result so the operator can inspect the live
@@ -93,3 +93,7 @@ revalidation stop reason.
 Blocked rows remain under `queue.command_plan.blocked`. Each blocked row carries
 `operator_handoff`, copied from `/fig_queue`, so the operator can see the next
 manual/host/release/closeout action without making that row executable.
+
+Mode-scoped complete rows remain under `queue.command_plan.complete` and are
+counted as `summary.planned_complete`. They are non-executable, but they are not
+blocked and do not count toward `summary.blocked`.
