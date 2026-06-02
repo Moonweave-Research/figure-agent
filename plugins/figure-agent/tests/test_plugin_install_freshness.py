@@ -298,6 +298,7 @@ def test_cli_returns_nonzero_for_fresh_but_dirty_git_source(
     assert output["source_package_hygiene"]["state"] == "clean"
     assert output["source_git_hygiene"]["state"] == "dirty"
     assert output["source_git_hygiene"]["dirty_paths"] == ["commands/fig_status.md"]
+    assert output["next_action"] == output["source_git_hygiene"]["next_action"]
     assert output["installed_package_hygiene"]["state"] == "clean"
 
 
@@ -319,6 +320,7 @@ def test_cli_returns_nonzero_for_fresh_but_dirty_installed_package(
     assert output["state"] == "fresh"
     assert output["source_package_hygiene"]["state"] == "clean"
     assert output["installed_package_hygiene"]["state"] == "dirty"
+    assert output["next_action"] == output["installed_package_hygiene"]["next_action"]
 
 
 def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path) -> None:
