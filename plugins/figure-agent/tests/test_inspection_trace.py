@@ -30,7 +30,7 @@ def _write_trace(fixture: Path, *, artifact_hash: str | None = None) -> Path:
         yaml.safe_dump(
             {
                 "schema": "figure-agent.inspection-trace.v1",
-                "fixture": "demo_fig",
+                "fixture": fixture.name,
                 "source": "subagent",
                 "inspected_artifacts": [
                     {
@@ -136,10 +136,12 @@ def test_load_optional_inspection_trace_rejects_malformed_yaml(tmp_path: Path) -
 
 def test_inspection_trace_cli_validates_fixture_trace(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     fixture = _write_fixture(tmp_path)
     _write_trace(fixture)
+    monkeypatch.chdir(tmp_path)
 
     exit_code = main(["validate", str(fixture)])
 
@@ -150,13 +152,34 @@ def test_inspection_trace_cli_validates_fixture_trace(
 
 def test_inspection_trace_cli_reports_controlled_error(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     fixture = _write_fixture(tmp_path)
     _write_trace(fixture, artifact_hash="sha256:bad")
+    monkeypatch.chdir(tmp_path)
 
     exit_code = main(["validate", str(fixture)])
 
     captured = capsys.readouterr()
     assert exit_code == 1
     assert "hash mismatch" in captured.err
+
+
+def test_inspection_trace_cli_rejects_traversal_or_outside_relative_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    outside = tmp_path / "outside"
+    (outside / "build" / "audit_crops").mkdir(parents=True)
+    (outside / "build" / "audit_crops" / "full_q1.png").write_bytes(b"crop")
+    _write_trace(outside)
+    _write_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["validate", "examples/../outside"]) == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+
+    assert main(["validate", "outside"]) == 1
+    assert "relative fixture names must resolve under examples/" in capsys.readouterr().err

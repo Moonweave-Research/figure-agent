@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BY, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BZ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BY reference-extract CLI path boundary;
+- branch baseline: `main` after Issue 100BZ inspection-trace CLI path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -135,6 +135,7 @@ the workflow together.
 | G100-70 | P1 | Warning-budget gate path boundary | `check_visual_clash_budget.py` accepted raw relative target paths and could print `OK outside: visual_clash total ... <= cap ...` for traversal-like or existing outside-relative directories. | TDD reproduced `examples/../outside` returning exit 0 for an outside fixture-shaped directory. The existing CLI also accepted a single-component `outside` target when that directory existed. | A CI/final-mode warning budget guardrail must only certify the repo `examples/` tree or declared fixtures under it, not arbitrary sibling directories. | Issue 100BW - visual-clash warning budget CLI target boundary |
 | G100-71 | P1 | Reference-aesthetic metrics path boundary | `reference_aesthetic_metrics.py` accepted raw relative fixture paths and could write `build/reference_aesthetic_metrics.json` outside `examples/`. | TDD reproduced `examples/../outside` returning exit 0 and writing metrics for an outside fixture-shaped directory. | A reference/aesthetic critique input generator must not produce fresh-looking metrics for escaped paths before critique freshness and routing consume them. | Issue 100BX - reference-aesthetic metrics CLI fixture path boundary |
 | G100-72 | P1 | Reference extract CLI path boundary | `reference_extract.py` accepted raw relative fixture paths and could write `coordinate_hints.yaml` outside `examples/`. | TDD reproduced `examples/../outside --ocr-passes 1.0` returning exit 0 and writing outside coordinate hints. | Reference-derived authoring evidence must not be generated for escaped fixture paths before status, critique, and layout-drift consumers treat it as trusted context. | Issue 100BY - reference extract CLI fixture path boundary |
+| G100-73 | P2 | Inspection trace CLI path boundary | `inspection_trace.py validate` accepted raw relative fixture paths and could print `valid examples/../outside/inspection_trace.yaml` for a trace outside `examples/`. | TDD reproduced `examples/../outside` returning exit 0 for a valid outside trace. | Crop-read accountability evidence should not be certified for escaped fixture paths before critique/loop consumers trust it as audit proof. | Issue 100BZ - inspection trace CLI fixture path boundary |
 
 ## Recommended Execution Order
 
