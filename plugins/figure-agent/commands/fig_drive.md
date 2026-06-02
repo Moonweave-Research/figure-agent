@@ -49,8 +49,9 @@ render, so stale render wins over stale critique.
 ## Modes
 
 - `authoring` — source/build loop. Recommends `run_compile` when render is
-  missing/stale; reports `complete` when render is fresh. Critique, export,
-  loop, polish, and release actions are forbidden in this mode.
+  missing/stale; reports mode-scoped `complete` when render is fresh, with a
+  follow-up pointer to review mode. Critique, export, loop, polish, and release
+  actions are forbidden in this mode.
 - `review` — close compile, critique, adjudication, and `/fig_loop` evidence,
   one patch target at a time. Hidden source editing, automatic host critique
   authoring, final SVG polish, and accepted/golden mutation are forbidden.
@@ -144,8 +145,10 @@ improvable"; advisory-only aesthetic candidates do not block release.
 `operator_guidance` is the user-facing answer to "what do I do next?" It names
 one required actor (`workflow_agent`, `host_llm`, `human`, `release_operator`,
 `svg_editor`, or `none`) and one next-step instruction. In `complete` states it
-explains that no required plugin action remains for the selected mode; in
-human/release states it does not surface hidden mutation commands. It copies
+explains that no required plugin action remains for the selected mode and, for
+non-final modes, names the next broader mode to run so "complete" is not
+mistaken for whole-figure release readiness. In human/release states it does
+not surface hidden mutation commands. It copies
 `next_action_summary.decision_boundary` when available so shell users can see
 the same blocking/advisory distinction without reading lower-level evidence
 objects.

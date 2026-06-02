@@ -149,10 +149,29 @@ def _first_blocker_code(summary: dict[str, Any]) -> str | None:
 def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
     fixture = str(summary.get("fixture") or "<name>")
     action = summary.get("action")
+    mode = summary.get("mode")
     command = summary.get("safe_command")
     status = summary.get("status")
     export_state = status.get("export_state") if isinstance(status, dict) else None
     if action == ACTION_COMPLETE:
+        if mode == "authoring":
+            return (
+                "authoring mode is complete: render is fresh. This is not a "
+                "whole-figure completion claim; run "
+                f"`/fig_drive {fixture} --mode review` for critique and loop review."
+            )
+        if mode == "review":
+            return (
+                "review mode is complete: no automated review blocker remains. "
+                f"Run `/fig_drive {fixture} --mode release` or "
+                f"`/fig_drive {fixture} --mode final` before release decisions."
+            )
+        if mode == "polish":
+            return (
+                "Polish mode is complete: no SVG polish handoff action remains "
+                "for this mode. Run review or final mode before treating the "
+                "fixture as release-ready."
+            )
         return "No required plugin action remains for this mode."
     if isinstance(command, str) and command:
         if command.startswith("FIGURE_AGENT_STRICT=1 "):
