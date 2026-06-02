@@ -6,7 +6,8 @@ positions (Layer 2.5 coordinate_hints.yaml), using the human-curated
 ``golden_contract.required_labels`` from spec.yaml as anchors.
 
 Usage:
-    python3 scripts/check_layout_drift.py <example_dir> [--strict]
+    python3 scripts/check_layout_drift.py <fixture-name>|examples/<fixture-name> [--strict]
+    python3 scripts/check_layout_drift.py . [--strict]  # from inside compile.sh
 
 For each required label:
   * find the phrase in the OCR text_labels (reference) → ref normalized center
@@ -407,7 +408,11 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("example_dir", type=Path)
+    parser.add_argument(
+        "fixture",
+        type=Path,
+        help="fixture name, examples/<fixture-name>, or . when run from a fixture directory",
+    )
     parser.add_argument(
         "--threshold",
         type=float,
@@ -429,7 +434,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        example_arg = _resolve_example_dir_for_cli(args.example_dir)
+        example_arg = _resolve_example_dir_for_cli(args.fixture)
     except LayoutDriftCliError as exc:
         print(f"check_layout_drift.py: {exc}", file=sys.stderr)
         return 1
