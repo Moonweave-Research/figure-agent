@@ -368,6 +368,43 @@ def test_polish_queue_filters_svg_polish_blocking_source(
     }
 
 
+def test_polish_queue_filters_svg_gate_blocking_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "polish"
+        source = "driver_blocker" if name == "alpha" else "driver_prerequisite"
+        return _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary="mode_forbidden_action",
+            first_blocker="svg_polish_not_ready",
+            svg_polish_gate={
+                "state": "no_current_checkpoint",
+                "can_start_svg_polish": False,
+                "next_action": "rerun_fig_loop",
+                "blocking_items": [{"source": source, "id": "no_current_checkpoint"}],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="polish triage",
+        fixtures=None,
+        filters={"svg_polish_blocking_sources": "driver_blocker"},
+    )
+
+    assert [row["fixture"] for row in queue["rows"]] == ["alpha"]
+    assert queue["rows"][0]["svg_polish_blocking_sources"] == ["driver_blocker"]
+    assert queue["summary"]["by_svg_polish_blocking_source"] == {"driver_blocker": 1}
+
+
 def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
     queue = fig_queue.build_queue(
         repo_root=tmp_path,

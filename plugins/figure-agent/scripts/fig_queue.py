@@ -115,13 +115,32 @@ def _svg_polish_fields(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         fields["svg_polish_gate_state"] = gate.get("state")
         fields["can_start_svg_polish"] = gate.get("can_start_svg_polish")
         fields["svg_polish_next_action"] = gate.get("next_action")
+        gate_sources = _svg_polish_blocking_sources(gate)
+        if gate_sources:
+            fields["svg_polish_blocking_sources"] = gate_sources
     readiness = summary.get("svg_polish_readiness")
     if isinstance(readiness, dict):
         fields.setdefault("can_start_svg_polish", readiness.get("can_start_svg_polish"))
         fields.setdefault("svg_polish_next_action", readiness.get("next_action"))
         fields["svg_polish_recommended_path"] = readiness.get("recommended_path")
-        fields["svg_polish_blocking_sources"] = _svg_polish_blocking_sources(readiness)
+        readiness_sources = _svg_polish_blocking_sources(readiness)
+        if readiness_sources:
+            fields["svg_polish_blocking_sources"] = _merge_unique_strings(
+                fields.get("svg_polish_blocking_sources"),
+                readiness_sources,
+            )
     return {key: value for key, value in fields.items() if value is not None}
+
+
+def _merge_unique_strings(existing: Any, incoming: list[str]) -> list[str]:
+    merged: list[str] = []
+    for values in (existing, incoming):
+        if not isinstance(values, list):
+            continue
+        for value in values:
+            if isinstance(value, str) and value and value not in merged:
+                merged.append(value)
+    return merged
 
 
 def _svg_polish_blocking_sources(readiness: dict[str, Any]) -> list[str]:

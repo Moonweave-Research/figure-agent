@@ -139,7 +139,7 @@ driver has a current loop checkpoint or gate explanation:
 | `can_start_svg_polish` | whether the current gate permits bounded SVG polish |
 | `svg_polish_recommended_path` | latest loop editorial route, such as `continue_tikz` or `ready_for_svg_polish` |
 | `svg_polish_next_action` | next action from the SVG polish gate/readiness summary |
-| `svg_polish_blocking_sources` | unique readiness blocker sources, for example `tikz_vs_svg_polish_trigger` |
+| `svg_polish_blocking_sources` | unique blocker sources copied from `svg_polish_gate.blocking_items` and `svg_polish_readiness.blocking_items`, for example `driver_prerequisite`, `driver_blocker`, or `tikz_vs_svg_polish_trigger` |
 
 `summary` includes:
 
