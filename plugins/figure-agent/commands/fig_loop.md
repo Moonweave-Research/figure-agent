@@ -4,7 +4,7 @@ description: Verify-only loop evidence runner for one figure. Writes run artifac
 
 Run one read-only figure loop iteration and record the decision evidence.
 
-**Usage**: `/fig_loop <name> --goal "<goal>"`
+**Usage**: `/fig_loop <name> --goal "<goal>" [--json | --format json]`
 
 Run from the plugin root:
 
@@ -45,8 +45,8 @@ For automation, emit a small machine-readable summary:
 uv run python3 scripts/fig_loop.py <name> --goal "<goal>" --json
 ```
 
-On success, `--json` keeps the same run artifacts and exit code `0`, but stdout
-becomes one JSON object with:
+On success, `--json` and `--format json` keep the same run artifacts and exit
+code `0`, but stdout becomes one JSON object with:
 
 - `run_dir`
 - `manifest_path`

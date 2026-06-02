@@ -414,6 +414,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--goal", required=True, help="natural-language loop goal")
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     try:
@@ -421,7 +422,7 @@ def main(argv: list[str] | None = None) -> int:
     except FigLoopError as exc:
         print(f"fig_loop.py: {exc}", file=sys.stderr)
         return 1
-    if args.json:
+    if args.json or args.format == "json":
         print(json.dumps(json_stdout_summary(run_dir), sort_keys=True))
         return 0
     print(f"fig_loop.py: wrote verify-only run to {run_dir}")

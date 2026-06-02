@@ -555,6 +555,28 @@ def test_closeout_cli_json_outputs_machine_readable_report(
     assert _steps_by_id(data)["loop_rerun"]["state"] == "needs_action"
 
 
+def test_closeout_cli_accepts_format_json_as_output_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _make_fixture(tmp_path)
+    monkeypatch.setattr(
+        fig_closeout_mod,
+        "infer_stage",
+        lambda _example_dir: _status(),
+    )
+
+    exit_code = main(["loop_demo", "--repo-root", str(tmp_path), "--format", "json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.err == ""
+    data = json.loads(captured.out)
+    assert data["fixture"] == "loop_demo"
+    assert _steps_by_id(data)["loop_rerun"]["state"] == "needs_action"
+
+
 def test_closeout_cli_reports_status_errors_without_traceback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

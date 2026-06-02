@@ -3185,6 +3185,74 @@ def test_main_json_emits_machine_readable_summary(
     }
 
 
+def test_main_accepts_format_json_as_output_compatibility_alias(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    run_dir = tmp_path / "runs" / "loop_demo"
+    run_dir.mkdir(parents=True)
+    write_json(
+        run_dir / "run_manifest.json",
+        {
+            "run_dir": str(run_dir),
+            "final_stop_reason": "status_action_required",
+        },
+    )
+    write_json(
+        run_dir / "iteration_001.json",
+        {
+            "escalation_level": "agent_action_required",
+            "patch_handoff": None,
+            "auto_patch_eligibility": None,
+            "patch_evidence": None,
+            "post_patch_evidence": None,
+            "status": {
+                "final_artifact_state": "NONE",
+                "final_artifact_kind": "generated_export",
+                "final_artifact_path": "exports/loop_demo.svg",
+            },
+            "top_tier_audit_summary": None,
+            "crop_audit_summary": None,
+            "journal_art_direction_playbook_summary": None,
+            "audit_evidence": {
+                "evaluation_state": "missing_input",
+                "blocking_items": ["build/visual_clash.json"],
+                "next_action": "/fig_compile loop_demo",
+                "reason": "missing build/visual_clash.json",
+            },
+            "recommended_next_action": "inspect figure state",
+        },
+    )
+
+    def fake_run_loop(name: str, goal: str, *, runs_root: Path | None = None) -> Path:
+        assert name == "loop_demo"
+        assert goal == "inspect json"
+        assert runs_root == tmp_path / "runs"
+        return run_dir
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", fake_run_loop)
+
+    exit_code = fig_loop_mod.main(
+        [
+            "loop_demo",
+            "--goal",
+            "inspect json",
+            "--runs-root",
+            str(tmp_path / "runs"),
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert captured.err == ""
+    assert payload["run_dir"] == str(run_dir)
+    assert payload["final_stop_reason"] == "status_action_required"
+
+
 def test_main_without_json_keeps_legacy_prose_output(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

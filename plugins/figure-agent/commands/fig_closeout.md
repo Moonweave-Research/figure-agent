@@ -4,7 +4,7 @@ description: Read-only post-patch checklist for compile, critique, adjudication,
 
 Inspect whether a patched figure has completed the required closeout steps.
 
-**Usage**: `/fig_closeout <name>`
+**Usage**: `/fig_closeout <name> [--json | --format json]`
 
 Run from the plugin root:
 
@@ -16,6 +16,7 @@ For automation:
 
 ```bash
 uv run python3 scripts/fig_closeout.py <name> --json
+uv run python3 scripts/fig_closeout.py <name> --format json
 ```
 
 The JSON report has schema `figure-agent.closeout.v1` and includes:

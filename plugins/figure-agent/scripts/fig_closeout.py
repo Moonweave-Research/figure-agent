@@ -461,6 +461,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     try:
@@ -468,7 +469,7 @@ def main(argv: list[str] | None = None) -> int:
     except FigCloseoutError as exc:
         print(f"fig_closeout.py: {exc}", file=sys.stderr)
         return 1
-    if args.json:
+    if args.json or args.format == "json":
         print(json.dumps(report, sort_keys=True))
     else:
         _print_human(report)
