@@ -44,6 +44,12 @@ def test_compare_plugin_install_reports_fresh_when_payloads_match(tmp_path: Path
     assert result["missing_files"] == []
     assert result["extra_files"] == []
     assert result["refresh_strategy"] == "none"
+    assert result["source_package_hygiene"] == {
+        "state": "clean",
+        "junk_count": 0,
+        "junk_paths": [],
+        "next_action": "development plugin tree package has no generated junk",
+    }
     assert result["installed_package_hygiene"] == {
         "state": "clean",
         "junk_count": 0,
@@ -169,6 +175,25 @@ def test_compare_plugin_install_ignores_generated_cache_junk(tmp_path: Path) -> 
     assert "plugin_package_audit.py" in result["installed_package_hygiene"]["next_action"]
 
 
+def test_compare_plugin_install_reports_dirty_source_package_hygiene(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (source / ".venv" / "bin").mkdir(parents=True)
+    (source / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+
+    result = compare_plugin_install(source, installed)
+
+    assert result["state"] == "fresh"
+    assert result["installed_package_hygiene"]["state"] == "clean"
+    assert result["source_package_hygiene"]["state"] == "dirty"
+    assert result["source_package_hygiene"]["junk_paths"] == [".venv"]
+    assert "plugin_package_audit.py" in result["source_package_hygiene"]["next_action"]
+
+
 def test_cli_returns_zero_for_fresh_clean_installed_package(
     tmp_path: Path,
     capsys,
@@ -183,6 +208,27 @@ def test_cli_returns_zero_for_fresh_clean_installed_package(
 
     assert exit_code == 0
     assert output["state"] == "fresh"
+    assert output["source_package_hygiene"]["state"] == "clean"
+    assert output["installed_package_hygiene"]["state"] == "clean"
+
+
+def test_cli_returns_nonzero_for_fresh_but_dirty_source_package(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source = tmp_path / "source"
+    installed = tmp_path / "cache" / "0.1.0"
+    _write_plugin(source)
+    _write_plugin(installed)
+    (source / ".venv" / "bin").mkdir(parents=True)
+    (source / ".venv" / "bin" / "python").write_text("generated\n", encoding="utf-8")
+
+    exit_code = main([str(installed), "--source-root", str(source)])
+    output = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 1
+    assert output["state"] == "fresh"
+    assert output["source_package_hygiene"]["state"] == "dirty"
     assert output["installed_package_hygiene"]["state"] == "clean"
 
 
@@ -202,6 +248,7 @@ def test_cli_returns_nonzero_for_fresh_but_dirty_installed_package(
 
     assert exit_code == 1
     assert output["state"] == "fresh"
+    assert output["source_package_hygiene"]["state"] == "clean"
     assert output["installed_package_hygiene"]["state"] == "dirty"
 
 
