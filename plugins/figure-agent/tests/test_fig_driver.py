@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -1863,6 +1864,28 @@ def test_polish_mode_requires_current_export_before_polish(tmp_path: Path) -> No
     summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
 
     assert summary["action"] == "run_compile"
+    assert summary["svg_polish_gate"]["state"] == "blocked"
+    assert summary["svg_polish_gate"]["source"] == "driver_prerequisite"
+    assert summary["svg_polish_gate"]["next_action"] == "run_fig_compile"
+    assert summary["svg_polish_gate"]["blocking_items"] == [
+        {"source": "driver_prerequisite", "id": "run_compile"}
+    ]
+
+
+def test_polish_mode_svg_gate_points_to_export_before_loop(tmp_path: Path) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    shutil.rmtree(fixture / "exports")
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "run_export"
+    assert summary["svg_polish_gate"]["state"] == "blocked"
+    assert summary["svg_polish_gate"]["source"] == "driver_prerequisite"
+    assert summary["svg_polish_gate"]["next_action"] == "run_fig_export"
+    assert summary["svg_polish_gate"]["blocking_items"] == [
+        {"source": "driver_prerequisite", "id": "run_export"}
+    ]
 
 
 def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(

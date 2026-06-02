@@ -267,6 +267,13 @@ handoff from export freshness alone. This keeps SVG polish subordinate to the
 same critique, adjudication, audit, and human-gate evidence used by review and
 release.
 
+If polish mode stops earlier than the loop checkpoint, the top-level driver
+action remains authoritative and the additive `svg_polish_gate` mirrors that
+prerequisite instead of telling the operator to skip ahead. For example,
+render-missing polish mode reports `action: run_compile` and
+`svg_polish_gate.next_action: run_fig_compile`; export-missing polish mode
+reports `action: run_export` and `svg_polish_gate.next_action: run_fig_export`.
+
 When a current loop checkpoint is available, polish mode also emits
 `svg_polish_readiness` as an additive top-level JSON field. This is the compact
 answer to "can SVG polish start yet?":

@@ -148,6 +148,29 @@ def _compact_status(status: dict[str, Any]) -> dict[str, Any]:
     return {key: status.get(key) for key in _STATUS_COMPACT_KEYS}
 
 
+def _svg_polish_prerequisite_gate(action: str, reason: str) -> dict[str, Any] | None:
+    next_action_by_driver_action = {
+        ACTION_RUN_COMPILE: "run_fig_compile",
+        ACTION_RUN_CRITIQUE: "run_fig_critique",
+        ACTION_RUN_ADJUDICATE: "run_fig_adjudicate",
+        ACTION_RUN_EXPORT: "run_fig_export",
+    }
+    next_action = next_action_by_driver_action.get(action)
+    if next_action is None:
+        return None
+    return {
+        "schema": editorial_mod.GATE_SCHEMA,
+        "state": "blocked",
+        "source": "driver_prerequisite",
+        "can_start_svg_polish": False,
+        "recommended_path": None,
+        "next_action": next_action,
+        "reason": reason,
+        "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
+        "blocking_items": [{"source": "driver_prerequisite", "id": action}],
+    }
+
+
 def _summary(
     *,
     name: str,
@@ -205,8 +228,11 @@ def _summary(
         if svg_polish_readiness is not None:
             summary["svg_polish_readiness"] = svg_polish_readiness
     if mode == "polish":
-        summary["svg_polish_gate"] = editorial_mod.svg_polish_gate_from_checkpoint(
-            loop_checkpoint
+        prerequisite_gate = _svg_polish_prerequisite_gate(action, reason)
+        summary["svg_polish_gate"] = (
+            prerequisite_gate
+            if prerequisite_gate is not None
+            else editorial_mod.svg_polish_gate_from_checkpoint(loop_checkpoint)
         )
     if closeout is not None:
         summary["closeout"] = closeout
