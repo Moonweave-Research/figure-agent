@@ -325,6 +325,44 @@ def test_reference_aesthetic_metrics_summary_reports_severe_divergence(
     assert summary["next_action"].startswith("review reference_aesthetic_metrics.json")
 
 
+def test_reference_aesthetic_metrics_counts_full_brightness_saturated_hues(
+    tmp_path: Path,
+) -> None:
+    hues = [
+        (255, 0, 0),
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 255, 0),
+        (0, 255, 255),
+        (255, 0, 255),
+    ]
+
+    def _swatches(scale: float) -> Image.Image:
+        image = Image.new("RGB", (120, 60), "white")
+        draw = ImageDraw.Draw(image)
+        for index, (red, green, blue) in enumerate(hues):
+            color = (round(red * scale), round(green * scale), round(blue * scale))
+            draw.rectangle((index * 20, 0, index * 20 + 19, 59), fill=color)
+        return image
+
+    example_dir = _write_base_fixture(tmp_path)
+    # Synthetic TikZ-style build rasterizes pure accents to full brightness (value == 1.0);
+    # a published reference (anti-aliased/compressed) lands just below it.
+    _swatches(1.0).save(example_dir / "build" / "demo.png")
+    _swatches(247 / 255).save(example_dir / "reference" / "style.png")
+    build_reference_aesthetic_metrics(example_dir)
+
+    summary = reference_aesthetic_metrics_summary(example_dir)
+    payload = json.loads(
+        (example_dir / "build" / "reference_aesthetic_metrics.json").read_text(encoding="utf-8")
+    )
+
+    assert summary is not None
+    assert payload["build_features"]["dominant_hue_family_count"] == 6
+    assert payload["comparisons"][0]["metrics"]["dominant_hue_family_count_delta"] == 0
+    assert summary["evaluation_state"] != "severe_divergence"
+
+
 def test_reference_aesthetic_metrics_cli_accepts_fixture_name_and_absolute_examples_path(
     tmp_path: Path,
     monkeypatch,

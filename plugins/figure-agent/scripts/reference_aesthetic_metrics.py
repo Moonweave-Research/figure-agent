@@ -94,7 +94,7 @@ def _rgb_to_hsv(rgb: np.ndarray) -> np.ndarray:
 
 def _dominant_hue_family_count(rgb: np.ndarray) -> int:
     hsv = _rgb_to_hsv(rgb)
-    mask = (hsv[..., 1] > 0.12) & (hsv[..., 2] < 0.98)
+    mask = hsv[..., 1] > 0.12
     if not bool(mask.any()):
         return 0
     hue_bins = np.floor(hsv[..., 0][mask] * 12).astype(np.int16)
