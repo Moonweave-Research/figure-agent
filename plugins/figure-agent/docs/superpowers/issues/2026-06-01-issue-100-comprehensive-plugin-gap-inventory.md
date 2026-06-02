@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CM, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CN, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CM marketplace source hygiene guard;
+- branch baseline: `main` after Issue 100CN inventory next-analysis freshness guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -149,6 +149,7 @@ the workflow together.
 | G100-84 | P3 | Install freshness next-action precedence | After Issue 100CJ, `plugin_install_freshness.py` could exit nonzero for dirty source git or dirty installed package hygiene while the top-level `next_action` still said the install matched or recommended reinstall. | TDD reproduced fresh payloads with dirty source git and dirty installed package hygiene where exit code was 1 but top-level `next_action` did not point at the blocking hygiene action. | Operators could copy the wrong top-level action and reinstall or stop early instead of fixing the actual readiness blocker. | Issue 100CK - install next-action precedence guard |
 | G100-85 | P3 | Installed example-source drift | Payload freshness intentionally excludes `examples/`, but installed cache examples can still be stale or dirty while payload/package/source hygiene all look clean. | TDD reproduced source and installed `examples/demo/demo.tex` differing while `state: fresh` and `changed_files: []`; the old CLI exited 0. | Claude can read or copy stale installed example sources while the install diagnostic claims readiness. | Issue 100CL - installed example-source hygiene guard |
 | G100-86 | P3 | Marketplace source-path mismatch | `plugin_install_freshness.py` could be run from a clean feature worktree while raw `claude plugin install figure-agent@figure-agent-local` still installed from the registered `figure-agent-local` marketplace source, which may point at a different checkout. | Live Claude config inspection showed `figure-agent-local` is resolved from `~/.claude/plugins/known_marketplaces.json`, not from the current shell directory. | Operators could review a clean worktree, run the printed install command, and copy a dirty or stale registered source into the installed plugin cache. | Issue 100CM - marketplace source hygiene guard |
+| G100-87 | P3 | Inventory next-analysis freshness | The Issue 100 header/table tracked through Issue 100CM, but the `Additional Update Analysis` section still told operators that the next urgent slices were Issue 100A and Issue 100B/C. | TDD reproduced the release-contract guard passing while that analysis section did not mention the latest Issue 100 suffix and still carried stale 100A-C recommendation text. | Operators could use the inventory as a live roadmap and restart already-implemented work instead of moving to the current post-100CM gap. | Issue 100CN - inventory next-analysis freshness guard |
 
 ## Recommended Execution Order
 
@@ -743,6 +744,12 @@ the workflow together.
     install/update commands cannot silently install from a different checkout
     than the one being reviewed.
 
+89. **Issue 100CN - inventory next-analysis freshness guard**
+    Implemented as roadmap-status hardening. The release-contract suite now
+    requires the `Additional Update Analysis` section of the Issue 100 inventory
+    to mention the latest Issue 100 suffix and reject stale "next candidate"
+    prose that points operators back to already-implemented Issue 100A-C work.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -777,29 +784,35 @@ with overlapping responsibilities.
 
 ## Additional Update Analysis
 
-After writing the inventory, the most urgent update candidate was
-**Issue 100A**. It is a narrow contract-completion fix, not a new feature:
-`check_undeclared_geometry.py` already emits evidence and the critique validator
-already accepts `undeclared_geometry` references. Issue 100A closes the missing
-operator-summary path.
+Issue 100CN makes this section itself part of the release-contract freshness
+surface. After Issue 100CM, the plugin-install readiness path is now correctly
+able to say:
 
-The second update candidate is **Issue 100B/100C together**. They should be
-designed as one UX slice before implementation so the plugin gets one coherent
-operator story:
+- the registered `figure-agent-local` marketplace source matches or mismatches
+  the reviewed checkout;
+- dirty source figure work must be committed, stashed, or moved aside before a
+  raw Claude reinstall is trusted;
+- installed example-source drift is separate from payload freshness.
 
-- "What should I run first?"
-- "Why did the agent say this is complete?"
-- "What is the final non-mutating check before human force-golden/release?"
+The current post-100CM next candidates are therefore not old Issue 100A-C
+contract gaps. They are:
 
-The third update candidate is a maintainability guard: before the next critique
-schema bump, write the schema capability matrix from Issue 100H. The validator
-is still workable, but adding more fields without a matrix will make future
-host-critique changes harder to review.
+1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
+   supported and deterministic harness coverage exists, but real-figure
+   promotion remains evidence-gated before it should become a routine
+   production handoff.
+2. **Operator completion explanation.** The plugin can still say a loop is
+   complete when what it really means is "no automated action is available;
+   this is now a human/art-direction/release boundary." The correct direction is
+   clearer explanation and routing, not hidden auto-design.
+3. **Installed-cache refresh after dirty figure work is resolved.** With the
+   current user-owned dirty `.tex`, the correct freshness answer is nonzero.
+   Reinstall should wait until that source git blocker is intentionally handled.
 
-No new broad aesthetic detector should be added before 100A-C. The plugin's
-current risk is not lack of another taste rubric; it is that existing evidence
-and command guidance are not always surfaced in the path the user actually
-runs.
+No new broad aesthetic detector should be added before these current routing and
+evidence gaps are addressed. The plugin's risk is not lack of another taste
+rubric; it is that existing evidence and command guidance are not always
+surfaced in the path the user actually runs.
 
 ## Edge-Case Review
 
