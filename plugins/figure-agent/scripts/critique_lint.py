@@ -938,6 +938,14 @@ def _visual_clash_candidate_ids(report_path: Path) -> tuple[list[str], list[Crit
                 message=f"malformed build/visual_clash.json: {exc}",
             )
         ]
+    if not isinstance(report, dict):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="visual_clash_accounting",
+                message="malformed build/visual_clash.json: top-level value must be a mapping",
+            )
+        ]
     candidates = report.get("candidates")
     if not isinstance(candidates, list):
         return [], [
@@ -1165,6 +1173,16 @@ def _text_boundary_candidate_ids(
                 message=f"malformed build/text_boundary_clash.json: {exc}",
             )
         ]
+    if not isinstance(report, dict):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="text_boundary_accounting",
+                message=(
+                    "malformed build/text_boundary_clash.json: top-level value must be a mapping"
+                ),
+            )
+        ]
     candidates = report.get("candidates")
     if not isinstance(candidates, list):
         return [], [
@@ -1286,6 +1304,16 @@ def _label_path_candidate_ids(
                 severity="blocker",
                 category="label_path_accounting",
                 message=f"malformed build/label_path_proximity.json: {exc}",
+            )
+        ]
+    if not isinstance(report, dict):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="label_path_accounting",
+                message=(
+                    "malformed build/label_path_proximity.json: top-level value must be a mapping"
+                ),
             )
         ]
     candidates = report.get("candidates")
@@ -1411,6 +1439,16 @@ def _undeclared_geometry_candidate_ids(
                 severity="blocker",
                 category="undeclared_geometry_accounting",
                 message=f"malformed build/undeclared_geometry.json: {exc}",
+            )
+        ]
+    if not isinstance(report, dict):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="undeclared_geometry_accounting",
+                message=(
+                    "malformed build/undeclared_geometry.json: top-level value must be a mapping"
+                ),
             )
         ]
     candidates = report.get("candidates")
@@ -1685,6 +1723,16 @@ def _crop_manifest_required_ids(
                 severity="blocker",
                 category="crop_audit_accounting",
                 message=f"malformed build/audit_crops/manifest.json: {exc}",
+            )
+        ]
+    if not isinstance(manifest, dict):
+        return [], [
+            CritiqueLintViolation(
+                severity="blocker",
+                category="crop_audit_accounting",
+                message=(
+                    "malformed build/audit_crops/manifest.json: top-level value must be a mapping"
+                ),
             )
         ]
     required = manifest.get("required_crop_ids")

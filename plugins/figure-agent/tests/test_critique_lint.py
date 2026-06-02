@@ -2439,6 +2439,56 @@ def test_lint_critique_accepts_complete_v1_8_crop_accounting(tmp_path: Path) -> 
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_reports_non_dict_visual_clash_report_as_controlled_blocker(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1", "VC001_A"))
+    _write_visual_clash_report(fig_dir, candidate_ids=("VC001",))
+    (fig_dir / "build" / "visual_clash.json").write_text("[1, 2, 3]\n", encoding="utf-8")
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.8",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MAJOR\n"
+            "    category: label_placement\n"
+            "    tex_lines: [10]\n"
+            "    observation: linked visual clash defect\n"
+            "    suggested_fix: fix the label\n"
+            "    status: open\n"
+            "panels: []\n"
+        ),
+        micro_defects_yaml=(
+            "micro_defects:\n"
+            "  - id: M001\n"
+            "    crop: examples/demo_fig/build/audit_crops/visual_clash/VC001_A.png\n"
+            "    kind: label_backdrop_overflows_outline\n"
+            "    severity: MAJOR\n"
+            "    observation: label backdrop overflows in VC001_A crop\n"
+            "    linked_finding_id: C001\n"
+            "    visual_clash_ref: VC001\n"
+            "    status: open\n"
+        ),
+        crop_audit_log_yaml=_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert "visual_clash_accounting" in [violation.category for violation in violations]
+    clash_violation = next(
+        violation for violation in violations if violation.category == "visual_clash_accounting"
+    )
+    assert "malformed build/visual_clash.json" in clash_violation.message
+
+
 def test_lint_critique_rejects_v1_8_missing_crop_audit_log_with_manifest(
     tmp_path: Path,
 ) -> None:
