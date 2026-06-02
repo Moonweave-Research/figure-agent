@@ -628,6 +628,26 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert payload["rows"][0]["fixture"] == "alpha"
 
 
+def test_main_accepts_format_json_alias(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        return _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    assert fig_queue.main(
+        ["--mode", "review", "--goal", "triage", "--format", "json"],
+        repo_root=tmp_path,
+    ) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema"] == "figure-agent.fixture-driver-queue.v1"
+    assert payload["rows"][0]["fixture"] == "alpha"
+
+
 def test_build_queue_filters_by_actor_and_preserves_unfiltered_total(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -598,6 +598,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--command-plan", action="store_true")
     parser.add_argument("--commands", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("table", "json"), default="table")
     args = parser.parse_args(argv)
 
     queue = build_queue(
@@ -623,7 +624,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         command_plan = queue["command_plan"]
         for item in command_plan["executable"]:
             print(item["safe_command"])
-    elif args.json:
+    elif args.json or args.format == "json":
         print(json.dumps(queue, indent=2, sort_keys=True))
     else:
         print_table(queue)

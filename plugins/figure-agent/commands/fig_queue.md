@@ -4,13 +4,14 @@ description: Read-only multi-fixture driver queue. Aggregates /fig_drive decisio
 
 Inspect the driver-selected next action for multiple fixtures.
 
-**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json]`
+**Usage**: `/fig_queue --mode <mode> --goal "<goal>" [filters] [<fixture> ...] [--json | --format json]`
 
 Run from the plugin root:
 
 ```bash
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
 uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --json
+uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --format json
 uv run python3 scripts/fig_queue.py --mode final --goal "final readiness" --json
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
 uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
@@ -77,6 +78,9 @@ uv run python3 scripts/fig_queue.py --mode polish --can-start-svg-polish true
 Use `--command-plan` to add a read-only `command_plan` object to JSON output.
 Use `--commands` to print only executable deterministic workflow commands, one
 per line. Neither mode executes anything.
+
+Output is a table by default. `--json` and `--format json` both print the same
+JSON contract; `--format table` is accepted as the explicit table form.
 
 The command plan treats a row as executable only when all of these are true:
 
