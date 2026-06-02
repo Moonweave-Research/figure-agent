@@ -271,7 +271,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"plugin_install_freshness.py: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0 if result["state"] == "fresh" else 1
+    hygiene = result.get("installed_package_hygiene")
+    hygiene_state = hygiene.get("state") if isinstance(hygiene, dict) else None
+    return 0 if result["state"] == "fresh" and hygiene_state == "clean" else 1
 
 
 if __name__ == "__main__":
