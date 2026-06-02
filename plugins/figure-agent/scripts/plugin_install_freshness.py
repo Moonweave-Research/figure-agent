@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from plugin_package_audit import JUNK_DIR_NAMES, JUNK_FILE_NAMES
+from plugin_package_audit import JUNK_DIR_NAMES, JUNK_FILE_NAMES, find_packaging_junk
 
 SCHEMA = "figure-agent.plugin-install-freshness.v1"
 DEFAULT_CACHE_PARENT = (
@@ -125,6 +125,44 @@ def _fingerprint(manifest: dict[str, str]) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
+def _installed_package_hygiene(installed_root: Path | None) -> dict[str, Any]:
+    if installed_root is None:
+        return {
+            "state": "unknown",
+            "junk_count": 0,
+            "junk_paths": [],
+            "next_action": "install plugin before auditing package hygiene",
+        }
+    root = installed_root.resolve()
+    if not _is_plugin_root(root):
+        return {
+            "state": "unknown",
+            "junk_count": 0,
+            "junk_paths": [],
+            "next_action": "reinstall plugin before auditing package hygiene",
+        }
+    junk_paths = [
+        path.resolve().relative_to(root).as_posix()
+        for path in find_packaging_junk(root)
+    ]
+    if not junk_paths:
+        return {
+            "state": "clean",
+            "junk_count": 0,
+            "junk_paths": [],
+            "next_action": "installed plugin cache package has no generated junk",
+        }
+    return {
+        "state": "dirty",
+        "junk_count": len(junk_paths),
+        "junk_paths": junk_paths,
+        "next_action": (
+            "python3 scripts/plugin_package_audit.py "
+            f"{root} --clean --max-mib 300"
+        ),
+    }
+
+
 def compare_plugin_install(source_root: Path, installed_root: Path | None) -> dict[str, Any]:
     """Return a deterministic freshness comparison between source and install."""
     source_root = source_root.resolve()
@@ -147,6 +185,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "extra_files": [],
             "refresh_strategy": "install_missing",
             "next_action": INSTALL_COMMAND,
+            "installed_package_hygiene": _installed_package_hygiene(None),
         }
 
     installed_root = installed_root.resolve()
@@ -165,6 +204,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "extra_files": [],
             "refresh_strategy": "reinstall_invalid",
             "next_action": REINSTALL_COMMAND,
+            "installed_package_hygiene": _installed_package_hygiene(installed_root),
         }
 
     installed_manifest = _payload_manifest(installed_root)
@@ -201,6 +241,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         "extra_files": extra_files,
         "refresh_strategy": refresh_strategy,
         "next_action": next_action,
+        "installed_package_hygiene": _installed_package_hygiene(installed_root),
     }
 
 

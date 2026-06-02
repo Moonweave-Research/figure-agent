@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CC, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CD, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CC inventory file freshness guard;
+- branch baseline: `main` after Issue 100CD plugin install package hygiene summary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -139,6 +139,7 @@ the workflow together.
 | G100-74 | P2 | Layout-drift CLI path boundary | `check_layout_drift.py` accepted raw relative fixture paths and could print a normal-looking `SKIP` for a normalized outside directory. | TDD reproduced `check_layout_drift.py examples/../outside` returning exit 0 for an outside fixture-shaped directory. | A compile-stage layout gate should not make escaped paths look like normal fixture state before status/export consumers rely on coordinate hints. | Issue 100CA - layout drift CLI fixture path boundary |
 | G100-75 | P3 | Layout-drift usage docs | After Issue 100CA hardened the CLI, the script docstring and argparse help still described `<example_dir>`, implying arbitrary directories were accepted. | `check_layout_drift.py --help` used the old positional name even though the hardened CLI accepted only fixture name, `examples/<name>`, absolute examples child, or compile-local `.`. | Operators could follow stale usage text and think parent-relative or sibling directories were part of the public contract. | Issue 100CB - layout drift CLI usage doc sync |
 | G100-76 | P3 | Inventory file freshness guard | The release-contract guard checked the latest Issue 100 suffix mentioned inside the inventory, but did not compare against the actual issue files on disk. | TDD reproduced the inventory passing while issue files existed through Issue 100CB and the inventory still claimed Issue 100BZ. | The whole-plugin review ledger could silently lag behind completed hardening slices. | Issue 100CC - inventory issue-file freshness guard |
+| G100-77 | P3 | Plugin install package hygiene visibility | `plugin_install_freshness.py` could report `state: fresh` while the installed cache still contained generated package junk that `plugin_package_audit.py` would reject. | Live same-version reinstall copied generated build/cache paths, freshness became `fresh`, then package audit failed until the installed cache was cleaned separately. | Operators could believe the installed plugin is fully ready while package hygiene still needs cleanup. | Issue 100CD - plugin install package hygiene summary |
 
 ## Recommended Execution Order
 
