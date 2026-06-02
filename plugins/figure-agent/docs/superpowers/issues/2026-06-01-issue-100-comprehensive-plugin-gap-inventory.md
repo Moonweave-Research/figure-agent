@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DL, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DM, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DL polish next-action summary counts;
+- branch baseline: `main` after Issue 100DM polish blocking-source doc guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -174,6 +174,7 @@ the workflow together.
 | G100-109 | P2 | Queue completion guidance projection | `/fig_drive` complete states carried mode-scoped `operator_guidance`, but `/fig_queue` dropped that guidance from compact rows, table output, and command-plan handoff. | TDD reproduced authoring complete rows with no `operator_guidance`, no `--mode review` next-step text in the queue table, and generic command-plan handoff. | Operators could read multi-fixture queue `complete` rows as whole-figure completion and stop before broader review/release/final gates. | Issue 100DJ - queue operator-guidance projection |
 | G100-110 | P2 | Polish release-boundary gate mismatch | Polish mode could stop at `accepted_or_final_ready_required` while additive SVG columns still said `no_current_checkpoint` / `rerun_fig_loop`. | Live `fig5_floating_clip_mechanism` polish queue row showed `required_actor: release_operator` but `svg_polish_next_action: rerun_fig_loop`; TDD reproduced the not-accepted missing-export edge case. | Operators could follow SVG-specific columns and rerun the loop even though release/accepted/final/publication boundary was authoritative. | Issue 100DK - polish release-boundary gate alignment |
 | G100-111 | P3 | Polish next-action summary visibility | `/fig_queue --mode polish` rows exposed `svg_polish_next_action`, but the summary did not aggregate those values. | Live polish queue had `run_fig_critique`, `run_fig_compile`, `rerun_fig_loop`, and `resolve_release_boundary` row values while summary omitted `by_svg_polish_next_action`; TDD reproduced the missing summary key. | Operators still had to scan rows manually to know the corpus-level SVG next-action distribution. | Issue 100DL - polish next-action summary counts |
+| G100-112 | P3 | Polish blocking-source doc drift | `/fig_queue` row docs said SVG blocking sources merge gate and readiness blockers, but the summary docs still described readiness-only blocker sources. | TDD reproduced the `/fig_queue` summary contract lacking `gate/readiness` wording even though implementation counts both sources. | Future operators or agents could misunderstand `by_svg_polish_blocking_source` and miss gate-only blockers. | Issue 100DM - polish blocking-source doc guard |
 
 ## Recommended Execution Order
 
@@ -921,6 +922,11 @@ the workflow together.
      next-action guidance, so operators can see the action distribution without
      row-by-row JSON post-processing.
 
+114. **Issue 100DM - polish blocking-source doc guard**
+     Implemented as documentation-contract hardening. `/fig_queue` summary docs
+     now describe `by_svg_polish_blocking_source` as gate/readiness blocker
+     aggregation, and the release-contract suite guards that wording.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1006,9 +1012,11 @@ whole-figure completion. Issue 100DK closes the next SVG polish queue
 contradiction found in the same evidence pass: release-boundary rows now point
 SVG-specific `next_action` at release-boundary resolution instead of loop
 reruns. Issue 100DL then makes those row-level SVG next actions visible at
-summary level for corpus triage.
+summary level for corpus triage. Issue 100DM fixes the adjacent docs drift so
+summary-level SVG blocking-source aggregation is described as gate/readiness
+based, matching the implementation.
 
-After Issue 100DL, JSON-output helper tools on the active operator path are now
+After Issue 100DM, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1029,8 +1037,10 @@ JSON-only:
 - polish-mode release-boundary rows carry SVG-specific next-action guidance
   that matches the release/operator boundary.
 - polish-mode queue summaries count SVG next actions directly.
+- polish-mode queue docs correctly state that blocking-source summaries merge
+  gate and readiness blocker sources.
 
-The current post-100DL next candidates are therefore not old Issue 100A-C
+The current post-100DM next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1062,7 +1072,9 @@ guidance that explains what a mode-local `complete` state does and does not
 mean. Issue 100DK closes the SVG polish gate mismatch where release-boundary
 rows still looked like loop-checkpoint blockers in SVG-specific columns. Issue
 100DL closes the follow-on summary gap so the exact SVG next-action
-distribution is visible without manual row inspection.
+distribution is visible without manual row inspection. Issue 100DM closes the
+matching documentation-contract drift for merged gate/readiness blocking-source
+summaries.
 
 ## Edge-Case Review
 

@@ -161,7 +161,7 @@ driver has a current loop checkpoint or gate explanation:
 - `by_svg_polish_gate_state` when polish rows expose SVG gate state
 - `by_svg_polish_recommended_path` when polish rows expose readiness route
 - `by_svg_polish_next_action` when polish rows expose SVG next-action guidance
-- `by_svg_polish_blocking_source` when polish readiness reports blocker sources
+- `by_svg_polish_blocking_source` when polish gate/readiness reports blocker sources
 
 `command_plan` includes:
 

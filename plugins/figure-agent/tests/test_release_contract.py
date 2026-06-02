@@ -247,6 +247,18 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
         assert required in playbook
 
 
+def test_fig_queue_docs_describe_svg_blocking_sources_from_gate_and_readiness() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "svg_polish_gate.blocking_items" in command_doc
+    assert "svg_polish_readiness.blocking_items" in command_doc
+    summary_section = command_doc.partition("`summary` includes:")[2].partition(
+        "`command_plan` includes:"
+    )[0]
+    assert "by_svg_polish_blocking_source" in summary_section
+    assert "gate/readiness" in summary_section
+
+
 def test_readme_and_skill_route_journal_inspection_through_summary_script() -> None:
     docs_by_path = {
         "README.md": (REPO_ROOT / "README.md").read_text(),
