@@ -102,6 +102,9 @@ def _row_from_summary(summary: dict[str, Any], *, mode: str) -> dict[str, Any]:
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    guidance = summary.get("operator_guidance")
+    if isinstance(guidance, dict):
+        row["operator_guidance"] = guidance
     row.update(_svg_polish_fields(summary, mode=mode))
     return row
 
@@ -301,6 +304,22 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
         "accepted/golden mutation",
         "publication state mutation",
     ]
+    if row.get("action") == fig_driver.ACTION_COMPLETE:
+        guidance = row.get("operator_guidance")
+        if isinstance(guidance, dict):
+            next_step = guidance.get("next_step")
+            if isinstance(next_step, str) and next_step.strip():
+                return {
+                    "schema": OPERATOR_HANDOFF_SCHEMA,
+                    "fixture": fixture,
+                    "required_actor": actor,
+                    "next_step": next_step,
+                    "command": None,
+                    "reason": reason,
+                    "allowed_scope": ["read-only broader-mode inspection"],
+                    "forbidden_scope": common_forbidden,
+                    "closeout_checks": ["rerun /fig_queue in the next broader mode"],
+                }
     if actor == "host_llm":
         return {
             "schema": OPERATOR_HANDOFF_SCHEMA,
@@ -505,6 +524,12 @@ def _cell(value: Any) -> str:
 
 def _table_next_step(row: dict[str, Any]) -> str:
     reason = _blocked_reason(row)
+    if row.get("action") == fig_driver.ACTION_COMPLETE:
+        guidance = row.get("operator_guidance")
+        if isinstance(guidance, dict):
+            next_step = guidance.get("next_step")
+            if isinstance(next_step, str) and next_step.strip():
+                return next_step
     if reason is None:
         return "Executable workflow-agent command."
     handoff = _operator_handoff(row, reason=reason)

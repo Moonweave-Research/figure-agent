@@ -23,7 +23,10 @@ uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workfl
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
 dry-run driver selector once per fixture, copies the selected `action`,
 `stop_boundary`, `safe_command`, required actor, blocker source, and
-`/fig_status` state fields into a compact row, then summarizes counts by
+`/fig_status` state fields into a compact row. When the driver emits
+mode-scoped `operator_guidance`, the queue preserves it so a row with
+`action: complete` still explains the next broader mode to inspect instead of
+looking like whole-figure completion. The queue then summarizes counts by
 action, stop boundary, first blocker, required actor, and blocking source.
 
 The command is read-only. It never compiles, critiques, adjudicates, loops,
@@ -132,6 +135,7 @@ Each row includes:
 | `acceptance_state` | compact status field |
 | `publication_gate_state` | compact status field |
 | `release_ready` | compact status field |
+| `operator_guidance` | copied from `/fig_drive` when present; complete rows use its `next_step` to avoid hiding mode-scoped follow-up |
 | `error` | present only for controlled error rows |
 
 In `--mode polish`, rows also include SVG-polish gate fields when the underlying
@@ -172,15 +176,20 @@ The human-readable table prints tab-separated `next_step` and `next_command`
 columns. When any row contains SVG-polish gate fields, the table also prints
 `svg_gate`, `can_svg`, `polish_path`, `polish_next`, and `polish_blockers`
 columns so a polish-mode queue does not hide why a fixture can or cannot enter
-the bounded SVG handoff. For blocked rows, the next-step fields come from the
-same handoff policy used by `command_plan.blocked[].operator_handoff`, so the
-table does not show a blocked driver command as the next command to run.
+the bounded SVG handoff. For complete rows, `next_step` uses the driver's
+mode-scoped `operator_guidance.next_step` when available. For blocked rows, the
+next-step fields come from the same handoff policy used by
+`command_plan.blocked[].operator_handoff`, so the table does not show a blocked
+driver command as the next command to run.
 
 Blocked command-plan rows include an additive
 `schema: figure-agent.queue-operator-handoff.v1` object under
 `operator_handoff`. The handoff states the required actor, next step, optional
 command, allowed scope, forbidden scope, and closeout checks. It is guidance for
-the operator; it does not make blocked rows executable.
+the operator; it does not make blocked rows executable. Complete rows are still
+non-executable in the command plan, but their handoff uses the preserved driver
+`operator_guidance.next_step` when available so mode-local completion remains
+visible in JSON as well as the table.
 
 The queue does not reinterpret driver policy. If a row looks surprising, inspect
 the corresponding single-fixture `/fig_drive <name> --mode <mode> --goal

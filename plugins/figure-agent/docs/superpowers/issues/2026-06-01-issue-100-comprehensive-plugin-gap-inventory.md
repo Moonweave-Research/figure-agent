@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DI, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DJ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DI JSON smoke/patch/harness flag compatibility;
+- branch baseline: `main` after Issue 100DJ queue operator-guidance projection;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -171,6 +171,7 @@ the workflow together.
 | G100-106 | P3 | Plugin install freshness output flag compatibility | `plugin_install_freshness.py` emits JSON by default but rejected explicit `--json` and `--format json` spellings. | Live commands failed at argparse; TDD reproduced both no-op output flags failing. | Operators checking "am I using the newest plugin?" can hit a parser trap before seeing the real source/install hygiene state. | Issue 100DG - plugin install freshness JSON flag compatibility |
 | G100-107 | P3 | JSON evidence-helper output flag compatibility | `fig_run_journal.py`, `detector_feedback_ledger.py`, and `diagnostic_artifact_provenance.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three helper CLIs failing at argparse on explicit JSON-output flags. | Operators can hit a parser trap while checking interrupted-run continuation, detector tuning evidence, or scratch-artifact provenance. | Issue 100DH - JSON evidence-helper flag compatibility |
 | G100-108 | P3 | JSON smoke/patch/harness output flag compatibility | `fig_e2e_smoke.py`, `fig_loop_patch_executor.py`, and `svg_polish_positive_harness.py` emit JSON by default but rejected explicit `--json` and `--format json` spellings. | TDD reproduced all three CLIs failing at argparse on explicit JSON-output flags. | Operators can hit the same parser trap while running deterministic smoke, explicit patch closeout, or SVG-polish plumbing evidence. | Issue 100DI - JSON smoke/patch/harness flag compatibility |
+| G100-109 | P2 | Queue completion guidance projection | `/fig_drive` complete states carried mode-scoped `operator_guidance`, but `/fig_queue` dropped that guidance from compact rows, table output, and command-plan handoff. | TDD reproduced authoring complete rows with no `operator_guidance`, no `--mode review` next-step text in the queue table, and generic command-plan handoff. | Operators could read multi-fixture queue `complete` rows as whole-figure completion and stop before broader review/release/final gates. | Issue 100DJ - queue operator-guidance projection |
 
 ## Recommended Execution Order
 
@@ -899,6 +900,13 @@ the workflow together.
      `--format json` no-op flags while preserving their existing output and
      mutation policies.
 
+111. **Issue 100DJ - queue operator-guidance projection**
+     Implemented as queue UX hardening. `/fig_queue` now preserves
+     `/fig_drive.operator_guidance` in compact rows and uses complete-row
+     `operator_guidance.next_step` in the table and command-plan handoff, while
+     blocked host/human/release/SVG rows continue to use the queue
+     operator-handoff policy.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -975,9 +983,14 @@ plugin install freshness checker, preserving its JSON-only output and exit-code
 contract. Issue 100DH applies the same standard to the JSON-only evidence
 helpers used for interrupted-run continuation, detector tuning, and diagnostic
 artifact provenance. Issue 100DI closes the remaining JSON-only operator tools
-on smoke, explicit patch execution, and SVG-polish plumbing evidence.
+on smoke, explicit patch execution, and SVG-polish plumbing evidence. Issue
+100DJ then closes the next operator interpretation gap found in real queue
+inspection: complete rows now preserve the same mode-scoped follow-up guidance
+as `/fig_drive` in both table and command-plan JSON, so
+authoring/review/polish/final local completion is not flattened into ambiguous
+whole-figure completion.
 
-After Issue 100DI, JSON-output helper tools on the active operator path are now
+After Issue 100DJ, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -992,8 +1005,11 @@ JSON-only:
 - deterministic smoke, explicit patch-executor, and SVG-polish harness evidence
   can also use that explicit JSON-output spelling without changing their
   existing safety or mutation policies.
+- multi-fixture queue complete rows carry driver mode-scoped next-step guidance
+  in both table and command-plan JSON instead of forcing operators to inspect
+  each single-fixture driver JSON.
 
-The current post-100DI next candidates are therefore not old Issue 100A-C
+The current post-100DJ next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1006,9 +1022,9 @@ contract gaps. They are:
    pass should refresh the five host-vision critiques, then rerun
    `--can-start-svg-polish true`.
 2. **Operator completion explanation evidence.** Mode-scoped completion wording
-   now exists for authoring/review/polish/final driver outputs, but real
-   dogfood should still verify whether agents follow the broader-mode pointer
-   instead of stopping too early.
+   now exists for authoring/review/polish/final driver outputs and queue rows,
+   but real dogfood should still verify whether agents follow the broader-mode
+   pointer instead of stopping too early.
 3. **Installed-cache refresh after dirty figure work is resolved.** With the
    current user-owned dirty `.tex`, the correct freshness answer is nonzero.
    Reinstall should wait until that source git blocker is intentionally handled.
@@ -1018,21 +1034,11 @@ evidence gaps are addressed. The plugin's risk is not lack of another taste
 rubric; it is that existing evidence and command guidance are not always
 surfaced in the path the user actually runs.
 
-Issue 100DD closes the ninth defect found while starting that evidence path:
-the loop-centered `/fig_improve` entrypoint still rejected explicit JSON-output
-flags after the rest of the workflow accepted them. The fix does not change
-improvement execution, boundary stopping, or payload shape; it only removes a
-needless parser trap. Issue 100DE then closes the next silent CLI hazard:
-`critique_brief.py` ignored unknown extra arguments even though it prepares the
-host LLM audit prompt. Issue 100DF closes the remaining helper CLI hygiene gap
-found in the manual-argv scan: `match_snippet.py --help` was interpreted as a
-file path instead of help. Issue 100DG closes the adjacent install-readiness
-CLI trap: a JSON-only checker rejected explicit JSON-output flags before it
-could report the real source/install hygiene state. Issue 100DH closes the
-same trap on evidence-helper CLIs that operators use after interruptions,
-detector reviews, or scratch-crop provenance checks. Issue 100DI closes the
-same trap on deterministic smoke, explicit patch execution, and SVG-polish
-positive-harness evidence.
+Issues 100DD-100DI close the explicit JSON-output and parser hygiene traps on
+the remaining operator path. Issue 100DJ closes the adjacent projection trap:
+queue rows, table output, and command-plan handoff now preserve the driver
+guidance that explains what a mode-local `complete` state does and does not
+mean.
 
 ## Edge-Case Review
 

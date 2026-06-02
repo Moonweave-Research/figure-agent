@@ -145,6 +145,154 @@ def test_build_queue_filters_requested_fixtures(
     assert [row["fixture"] for row in queue["rows"]] == ["beta"]
 
 
+def test_queue_rows_preserve_driver_operator_guidance_for_complete_modes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+        summary["operator_guidance"] = {
+            "schema": "figure-agent.operator-guidance.v1",
+            "state": "complete",
+            "required_actor": "none",
+            "next_step": (
+                "authoring mode is complete; run `/fig_drive alpha --mode review` "
+                "for whole-figure review."
+            ),
+            "decision_boundary": {
+                "schema": "figure-agent.decision-boundary.v1",
+                "kind": "none",
+            },
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="authoring",
+        goal="triage",
+        fixtures=None,
+    )
+
+    guidance = queue["rows"][0]["operator_guidance"]
+    assert guidance["schema"] == "figure-agent.operator-guidance.v1"
+    assert "authoring mode is complete" in guidance["next_step"]
+    assert "--mode review" in guidance["next_step"]
+
+
+def test_queue_table_uses_operator_guidance_for_complete_rows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+        summary["operator_guidance"] = {
+            "schema": "figure-agent.operator-guidance.v1",
+            "state": "complete",
+            "required_actor": "none",
+            "next_step": (
+                "authoring mode is complete; run `/fig_drive alpha --mode review` "
+                "for whole-figure review."
+            ),
+            "decision_boundary": {
+                "schema": "figure-agent.decision-boundary.v1",
+                "kind": "none",
+            },
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="authoring",
+        goal="triage",
+        fixtures=None,
+    )
+
+    fig_queue.print_table(queue)
+
+    table = capsys.readouterr().out
+    assert "authoring mode is complete" in table
+    assert "--mode review" in table
+
+
+def test_queue_command_plan_uses_operator_guidance_for_complete_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(name, action="complete", stop_boundary=None, first_blocker="none")
+        summary["operator_guidance"] = {
+            "schema": "figure-agent.operator-guidance.v1",
+            "state": "complete",
+            "required_actor": "none",
+            "next_step": (
+                "authoring mode is complete; run `/fig_drive alpha --mode review` "
+                "for whole-figure review."
+            ),
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="authoring",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    handoff = queue["command_plan"]["blocked"][0]["operator_handoff"]
+    assert "authoring mode is complete" in handoff["next_step"]
+    assert "--mode review" in handoff["next_step"]
+    assert handoff["command"] is None
+
+
+def test_queue_table_keeps_blocked_handoff_when_driver_guidance_is_present(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        summary = _summary(
+            name,
+            action="run_critique",
+            stop_boundary="host_llm_critique_required",
+            first_blocker="critique_stale",
+            safe_command="/fig_critique alpha",
+        )
+        summary["operator_guidance"] = {
+            "schema": "figure-agent.operator-guidance.v1",
+            "state": "blocked",
+            "required_actor": "host_llm",
+            "next_step": "driver guidance should not replace queue handoff",
+        }
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+    )
+
+    fig_queue.print_table(queue)
+
+    table = capsys.readouterr().out
+    assert "Refresh host-vision critique for this fixture." in table
+    assert "driver guidance should not replace queue handoff" not in table
+
+
 def test_polish_queue_rows_surface_svg_polish_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
