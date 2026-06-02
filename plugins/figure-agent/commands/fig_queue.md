@@ -163,6 +163,13 @@ driver has a current loop checkpoint or gate explanation:
 - `by_svg_polish_next_action` when polish rows expose SVG next-action guidance
 - `by_svg_polish_blocking_source` when polish gate/readiness reports blocker sources
 
+The human-readable table prints `summary total=... errors=...` followed by
+deterministically sorted grouped summary lines such as
+`summary by_action=run_critique:4,run_fig_loop:2` and, in polish mode,
+`summary by_svg_polish_next_action=run_fig_critique:4,rerun_fig_loop:2`.
+Those lines mirror the JSON `summary` object so operators can see the corpus
+dominant actor/action/blocker distribution without switching to JSON.
+
 `command_plan` includes:
 
 | Field | Notes |

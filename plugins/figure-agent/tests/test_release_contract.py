@@ -259,6 +259,15 @@ def test_fig_queue_docs_describe_svg_blocking_sources_from_gate_and_readiness() 
     assert "gate/readiness" in summary_section
 
 
+def test_fig_queue_docs_describe_table_grouped_summary_counts() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "human-readable table" in command_doc
+    assert "summary by_action=" in command_doc
+    assert "summary by_svg_polish_next_action=" in command_doc
+    assert "mirror the JSON `summary` object" in command_doc
+
+
 def test_readme_and_skill_route_journal_inspection_through_summary_script() -> None:
     docs_by_path = {
         "README.md": (REPO_ROOT / "README.md").read_text(),

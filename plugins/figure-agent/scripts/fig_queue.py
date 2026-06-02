@@ -593,6 +593,38 @@ def print_table(queue: dict[str, Any]) -> None:
         f"total={summary.get('total', 0)} "
         f"errors={summary.get('errors', 0)}"
     )
+    for key in _summary_table_keys():
+        formatted = _format_summary_counts(summary.get(key))
+        if formatted:
+            print(f"summary {key}={formatted}")
+
+
+def _summary_table_keys() -> tuple[str, ...]:
+    return (
+        "by_action",
+        "by_stop_boundary",
+        "by_first_blocker",
+        "by_required_actor",
+        "by_blocking_source",
+        "by_svg_polish_gate_state",
+        "by_svg_polish_recommended_path",
+        "by_svg_polish_next_action",
+        "by_svg_polish_blocking_source",
+    )
+
+
+def _format_summary_counts(value: Any) -> str | None:
+    if not isinstance(value, dict) or not value:
+        return None
+    parts: list[str] = []
+    for key in sorted(value):
+        count = value[key]
+        if not isinstance(key, str) or not isinstance(count, int):
+            continue
+        parts.append(f"{key}:{count}")
+    if not parts:
+        return None
+    return ",".join(parts)
 
 
 def _has_svg_polish_columns(rows: Any) -> bool:

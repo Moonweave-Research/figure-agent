@@ -688,6 +688,43 @@ def test_print_table_outputs_rows_and_summary(capsys: pytest.CaptureFixture[str]
     assert "summary total=1 errors=0" in out
 
 
+def test_print_table_outputs_grouped_summary_counts(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    queue = {
+        "schema": "figure-agent.fixture-driver-queue.v1",
+        "mode": "polish",
+        "goal": "triage",
+        "rows": [],
+        "summary": {
+            "total": 8,
+            "errors": 0,
+            "by_action": {"run_critique": 4, "run_compile": 1},
+            "by_required_actor": {"host_llm": 4, "workflow_agent": 3},
+            "by_svg_polish_next_action": {
+                "run_fig_critique": 4,
+                "run_fig_compile": 1,
+            },
+            "by_svg_polish_blocking_source": {
+                "driver_prerequisite": 6,
+                "driver_blocker": 2,
+            },
+        },
+    }
+
+    fig_queue.print_table(queue)
+
+    out = capsys.readouterr().out
+    assert "summary total=8 errors=0" in out
+    assert "summary by_action=run_compile:1,run_critique:4" in out
+    assert "summary by_required_actor=host_llm:4,workflow_agent:3" in out
+    assert "summary by_svg_polish_next_action=run_fig_compile:1,run_fig_critique:4" in out
+    assert (
+        "summary by_svg_polish_blocking_source=driver_blocker:2,driver_prerequisite:6"
+        in out
+    )
+
+
 def test_print_table_includes_svg_polish_columns_when_present(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
