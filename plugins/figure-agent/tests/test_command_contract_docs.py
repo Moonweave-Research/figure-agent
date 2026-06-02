@@ -6,6 +6,18 @@ from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
+JSON_OUTPUT_COMMAND_SCRIPTS = {
+    "fig_closeout.md": "fig_closeout.py",
+    "fig_drive.md": "fig_driver.py",
+    "fig_e2e_smoke.md": "fig_e2e_smoke.py",
+    "fig_improve.md": "fig_improve.py",
+    "fig_loop.md": "fig_loop.py",
+    "fig_queue.md": "fig_queue.py",
+    "fig_queue_run.md": "fig_queue_run.py",
+    "fig_run.md": "fig_run.py",
+    "fig_status.md": "status.py",
+}
+
 
 def _read(relative_path: str) -> str:
     return (PLUGIN_ROOT / relative_path).read_text(encoding="utf-8")
@@ -62,3 +74,19 @@ def test_fig_run_documents_explicit_json_output_spellings() -> None:
 
     assert "[--json | --format json]" in doc
     assert "`--json` and `--format json` are accepted" in doc
+
+
+def test_command_docs_json_output_spellings_match_scripts() -> None:
+    command_docs = sorted((PLUGIN_ROOT / "commands").glob("fig_*.md"))
+    docs_with_json_usage = {
+        path.name
+        for path in command_docs
+        if "[--json | --format json]" in path.read_text(encoding="utf-8")
+    }
+
+    assert docs_with_json_usage == set(JSON_OUTPUT_COMMAND_SCRIPTS)
+
+    for doc_name, script_name in JSON_OUTPUT_COMMAND_SCRIPTS.items():
+        script = _read(f"scripts/{script_name}")
+        assert '"--json"' in script, doc_name
+        assert '"--format"' in script, doc_name
