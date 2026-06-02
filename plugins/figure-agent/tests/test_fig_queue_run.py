@@ -194,3 +194,61 @@ def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert payload["execute"] is False
     assert payload["filters"] == {"required_actor": "workflow_agent"}
     assert [run["fixture"] for run in payload["runs"]] == ["alpha"]
+
+
+def test_main_passes_svg_polish_filters_to_queue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    seen_filters: dict[str, str | None] = {}
+
+    def fake_build_queue(**kwargs):
+        nonlocal seen_filters
+        seen_filters = dict(kwargs["filters"])
+        queue = _queue()
+        queue["filters"] = {
+            key: value for key, value in seen_filters.items() if value is not None
+        }
+        return queue
+
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", fake_build_queue)
+
+    assert fig_queue_run.main(
+        [
+            "--mode",
+            "polish",
+            "--goal",
+            "svg readiness",
+            "--can-start-svg-polish",
+            "true",
+            "--svg-polish-blocking-source",
+            "driver_prerequisite",
+            "--svg-polish-gate-state",
+            "blocked",
+            "--svg-polish-next-action",
+            "run_fig_critique",
+            "--svg-polish-recommended-path",
+            "continue_tikz",
+        ],
+        repo_root=tmp_path,
+    ) == 0
+
+    assert seen_filters == {
+        "required_actor": None,
+        "action": None,
+        "stop_boundary": None,
+        "first_blocker": None,
+        "blocking_source": None,
+        "svg_polish_gate_state": "blocked",
+        "can_start_svg_polish": "true",
+        "svg_polish_recommended_path": "continue_tikz",
+        "svg_polish_next_action": "run_fig_critique",
+        "svg_polish_blocking_sources": "driver_prerequisite",
+    }
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["filters"] == {
+        "svg_polish_gate_state": "blocked",
+        "can_start_svg_polish": "true",
+        "svg_polish_recommended_path": "continue_tikz",
+        "svg_polish_next_action": "run_fig_critique",
+        "svg_polish_blocking_sources": "driver_prerequisite",
+    }

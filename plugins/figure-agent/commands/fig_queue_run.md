@@ -12,6 +12,7 @@ Run from the plugin root:
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --max-fixtures 2
 uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --execute
+uv run python3 scripts/fig_queue_run.py --mode polish --goal "<goal>" --can-start-svg-polish true
 ```
 
 `/fig_queue_run` is plan-only by default. It builds the same
@@ -41,9 +42,19 @@ The command accepts the same filters as `/fig_queue`:
 - `--stop-boundary <boundary-id>`
 - `--first-blocker <status-first-blocker-code>`
 - `--blocking-source <next-action-blocking-source>`
+- `--svg-polish-gate-state ready|blocked|needs_human|semantic_backport|no_current_checkpoint`
+- `--can-start-svg-polish true|false`
+- `--svg-polish-recommended-path <route>`
+- `--svg-polish-next-action <svg-polish-next-action>`
+- `--svg-polish-blocking-source <source>`
 
 In normal use, pass `--actor workflow_agent`; other actors are preserved as
 blocked command-plan rows and will not be attempted.
+
+The SVG-polish filters match `/fig_queue`. They are useful for plan-only
+promotion evidence, for example checking that no real fixture can enter bounded
+SVG polish yet, or planning only fixtures whose SVG gate is ready. They do not
+make SVG polish handoff executable; `svg_editor` rows remain blocked.
 
 ## Safety
 

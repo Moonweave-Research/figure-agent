@@ -163,6 +163,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--stop-boundary")
     parser.add_argument("--first-blocker")
     parser.add_argument("--blocking-source")
+    parser.add_argument("--svg-polish-gate-state")
+    parser.add_argument("--can-start-svg-polish", choices=("true", "false"))
+    parser.add_argument("--svg-polish-recommended-path")
+    parser.add_argument("--svg-polish-next-action")
+    parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
     args = parser.parse_args(argv)
     try:
         payload = run_queue(
@@ -179,6 +184,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
                 "stop_boundary": args.stop_boundary,
                 "first_blocker": args.first_blocker,
                 "blocking_source": args.blocking_source,
+                "svg_polish_gate_state": args.svg_polish_gate_state,
+                "can_start_svg_polish": args.can_start_svg_polish,
+                "svg_polish_recommended_path": args.svg_polish_recommended_path,
+                "svg_polish_next_action": args.svg_polish_next_action,
+                "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
             },
         )
     except ValueError as exc:
