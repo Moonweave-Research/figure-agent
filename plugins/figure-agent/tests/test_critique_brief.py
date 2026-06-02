@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -1094,6 +1095,24 @@ def test_critique_brief_cli_reports_controlled_error_for_invalid_fixture_name(
     assert main() == 2
     captured = capsys.readouterr()
     assert "invalid fixture path" in captured.err
+    assert captured.out == ""
+
+
+def test_critique_brief_cli_rejects_unknown_extra_arguments(
+    tmp_path, capsys, monkeypatch
+):
+    examples = tmp_path / "examples"
+    example_dir = _write_example(examples, section6="- invariant")
+    _write_real_render_pair(example_dir)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["critique_brief.py", "examples/review_demo", "--bogus"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 2
+    assert "unrecognized arguments: --bogus" in captured.err
     assert captured.out == ""
 
 

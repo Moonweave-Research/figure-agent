@@ -12,6 +12,7 @@ Successor to the v0.1 `review_brief.py` (HALT-then-paste workflow); see
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -1826,13 +1827,17 @@ def _validate_fixture_name(name: str, original: str) -> None:
         raise CritiqueBriefError(f"invalid fixture path: {original}: {exc}") from exc
 
 
-def main() -> int:
-    if len(sys.argv) < 2:
+def main(argv: list[str] | None = None) -> int:
+    args_list = list(argv if argv is not None else sys.argv[1:])
+    if not args_list:
         print("usage: critique_brief.py <example_dir>", file=sys.stderr)
         return 2
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("example_dir")
+    args = parser.parse_args(args_list)
 
     try:
-        brief = generate_for(_resolve_example_dir_for_cli(sys.argv[1]))
+        brief = generate_for(_resolve_example_dir_for_cli(args.example_dir))
     except (FileNotFoundError, CritiqueBriefError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
