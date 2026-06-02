@@ -180,6 +180,8 @@ def test_queue_rows_preserve_driver_operator_guidance_for_complete_modes(
     assert guidance["schema"] == "figure-agent.operator-guidance.v1"
     assert "authoring mode is complete" in guidance["next_step"]
     assert "--mode review" in guidance["next_step"]
+    assert queue["rows"][0]["blocking_source"] is None
+    assert queue["summary"]["by_blocking_source"] == {}
 
 
 def test_queue_table_uses_operator_guidance_for_complete_rows(

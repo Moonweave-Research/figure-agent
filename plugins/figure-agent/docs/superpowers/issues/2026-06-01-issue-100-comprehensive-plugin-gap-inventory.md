@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DO, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DP, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DO queue-run execute/dry-run conflict guard;
+- branch baseline: `main` after Issue 100DP complete row blocking-source cleanup;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -177,6 +177,7 @@ the workflow together.
 | G100-112 | P3 | Polish blocking-source doc drift | `/fig_queue` row docs said SVG blocking sources merge gate and readiness blockers, but the summary docs still described readiness-only blocker sources. | TDD reproduced the `/fig_queue` summary contract lacking `gate/readiness` wording even though implementation counts both sources. | Future operators or agents could misunderstand `by_svg_polish_blocking_source` and miss gate-only blockers. | Issue 100DM - polish blocking-source doc guard |
 | G100-113 | P3 | Queue table summary visibility | `/fig_queue` JSON summary exposed grouped counts, but the default human-readable table printed only `summary total=... errors=...`. | Live polish queue showed 4 host critiques, 1 compile prerequisite, 2 loop reruns, and 1 release-boundary row in JSON, while table output hid those corpus-level counts. | Operators using the default table still had to scan rows manually or switch to JSON to know the dominant next action. | Issue 100DN - queue table summary counts |
 | G100-114 | P2 | Queue-run execute/dry-run ambiguity | `/fig_queue_run` accepted both `--execute` and `--dry-run`, then silently executed because only `args.execute` controlled mutation. | TDD reproduced `--execute --dry-run` returning exit 0 and calling the workflow runner. | A user or agent intending a dry run could accidentally trigger bounded workflow execution. | Issue 100DO - queue-run execute/dry-run conflict |
+| G100-115 | P3 | Complete row blocker-source noise | Mode-scoped `complete` rows preserved broader next-step guidance, but still contributed `blocking_source: driver.action` to queue summaries. | Live authoring queue showed seven complete rows and one compile row, but `by_blocking_source` reported `driver.action:8`. | Completion clusters could look like blocker clusters, making operator triage noisier. | Issue 100DP - complete row blocking-source cleanup |
 
 ## Recommended Execution Order
 
@@ -941,6 +942,11 @@ the workflow together.
      plan-only `--dry-run` compatibility while requiring unambiguous
      `--execute` for mutation.
 
+117. **Issue 100DP - complete row blocking-source cleanup**
+     Implemented as queue attribution cleanup. Mode-scoped `complete` rows now
+     use `blocking_source: null`, so `by_blocking_source` summarizes actual
+     blockers/actions instead of counting local completion as `driver.action`.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1032,9 +1038,11 @@ based, matching the implementation. Issue 100DN then closes the default-output
 gap: the same grouped summary counts now appear in the human-readable table
 instead of requiring JSON output. Issue 100DO closes the adjacent execution
 safety ambiguity: `/fig_queue_run --execute --dry-run` now fails before any
-workflow attempt instead of silently treating the call as execution.
+workflow attempt instead of silently treating the call as execution. Issue
+100DP then removes the adjacent attribution noise where mode-scoped complete
+rows were still summarized as `driver.action` blocking sources.
 
-After Issue 100DO, JSON-output helper tools on the active operator path are now
+After Issue 100DP, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1061,8 +1069,9 @@ JSON-only:
   SVG-polish next-action and blocker-source distributions.
 - queue-run execution requires an unambiguous `--execute`; explicit
   `--dry-run` cannot be combined with it.
+- mode-scoped complete rows no longer pollute blocker-source summaries.
 
-The current post-100DO next candidates are therefore not old Issue 100A-C
+The current post-100DP next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1098,7 +1107,9 @@ distribution is visible without manual row inspection. Issue 100DM closes the
 matching documentation-contract drift for merged gate/readiness blocking-source
 summaries. Issue 100DN closes the remaining default-table summary visibility
 gap by printing the same grouped counts that JSON already exposed. Issue 100DO
-closes the adjacent flag-conflict safety gap in the bounded queue runner.
+closes the adjacent flag-conflict safety gap in the bounded queue runner. Issue
+100DP closes the adjacent queue-attribution gap by removing complete rows from
+blocking-source counts.
 
 ## Edge-Case Review
 

@@ -127,7 +127,7 @@ Each row includes:
 | `first_blocker` | `status_explanation.first_blocker.code` when available |
 | `safe_command` | copied from `/fig_drive`; still advisory, not executed |
 | `required_actor` | `workflow_agent`, `host_llm`, `human`, `release_operator`, or `svg_editor` |
-| `blocking_source` | compact source from `next_action_summary.blocking_source`, stop boundary, or driver action |
+| `blocking_source` | compact source from `next_action_summary.blocking_source`, stop boundary, or driver action; mode-scoped `complete` rows use `null` so completion is not counted as a blocker |
 | `requires_human` | copied from `next_action_summary.requires_human` when available |
 | `render_state` | compact status field |
 | `critique_state` | compact status field |

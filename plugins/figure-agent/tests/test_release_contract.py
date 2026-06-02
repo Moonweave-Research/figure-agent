@@ -268,6 +268,13 @@ def test_fig_queue_docs_describe_table_grouped_summary_counts() -> None:
     assert "mirror the JSON `summary` object" in command_doc
 
 
+def test_fig_queue_docs_exclude_complete_rows_from_blocking_source() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "mode-scoped `complete` rows use `null`" in command_doc
+    assert "not counted as a blocker" in command_doc
+
+
 def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
 

@@ -89,6 +89,15 @@ def test_blocking_source_uses_next_action_summary_before_stop_boundary() -> None
     )
 
 
+def test_blocking_source_omits_mode_scoped_complete_rows() -> None:
+    assert (
+        driver_actor.blocking_source_for_driver_summary(
+            _summary(action="complete", stop_boundary=None)
+        )
+        is None
+    )
+
+
 def test_requires_human_follows_next_action_summary_when_available() -> None:
     assert (
         driver_actor.requires_human_for_driver_summary(

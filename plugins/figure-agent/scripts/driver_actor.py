@@ -14,7 +14,10 @@ def _next_action(summary: dict[str, Any]) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def blocking_source_for_driver_summary(summary: dict[str, Any]) -> str:
+def blocking_source_for_driver_summary(summary: dict[str, Any]) -> str | None:
+    action = summary.get("action")
+    if action == "complete":
+        return None
     next_action = _next_action(summary)
     blocking_source = next_action.get("blocking_source")
     if isinstance(blocking_source, str) and blocking_source:
@@ -22,7 +25,6 @@ def blocking_source_for_driver_summary(summary: dict[str, Any]) -> str:
     stop_boundary = summary.get("stop_boundary")
     if isinstance(stop_boundary, str) and stop_boundary:
         return stop_boundary
-    action = summary.get("action")
     if isinstance(action, str) and action:
         return "driver.action"
     return "driver.unknown"
