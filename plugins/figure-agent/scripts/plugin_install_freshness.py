@@ -124,6 +124,39 @@ def _payload_manifest(root: Path) -> dict[str, str]:
     }
 
 
+def _iter_example_source_files(root: Path) -> list[Path]:
+    examples_root = root.resolve() / "examples"
+    if not examples_root.is_dir():
+        return []
+    ignored_dir_names = JUNK_DIR_NAMES | EXTRA_JUNK_DIR_NAMES
+    result: list[Path] = []
+
+    def walk(directory: Path) -> None:
+        for path in sorted(directory.iterdir(), key=lambda item: item.name):
+            if path.name in JUNK_FILE_NAMES:
+                continue
+            if any(path.name.endswith(suffix) for suffix in EXTRA_JUNK_FILE_SUFFIXES):
+                continue
+            if path.is_dir():
+                if path.name in ignored_dir_names:
+                    continue
+                walk(path)
+                continue
+            if path.is_file():
+                result.append(path)
+
+    walk(examples_root)
+    return result
+
+
+def _example_source_manifest(root: Path) -> dict[str, str]:
+    root = root.resolve()
+    return {
+        path.resolve().relative_to(root).as_posix(): _file_sha256(path)
+        for path in _iter_example_source_files(root)
+    }
+
+
 def _fingerprint(manifest: dict[str, str]) -> str:
     digest = hashlib.sha256()
     for relative_path, file_hash in sorted(manifest.items()):
@@ -257,17 +290,60 @@ def _source_git_hygiene(source_root: Path) -> dict[str, Any]:
     }
 
 
+def _installed_example_source_hygiene(
+    source_root: Path,
+    installed_root: Path | None,
+) -> dict[str, Any]:
+    if installed_root is None:
+        return {
+            "state": "unknown",
+            "changed_files": [],
+            "missing_files": [],
+            "extra_files": [],
+            "next_action": "install plugin before auditing installed example source",
+        }
+    source_manifest = _example_source_manifest(source_root)
+    installed_manifest = _example_source_manifest(installed_root)
+    changed_files = sorted(
+        path
+        for path in source_manifest.keys() & installed_manifest.keys()
+        if source_manifest[path] != installed_manifest[path]
+    )
+    missing_files = sorted(source_manifest.keys() - installed_manifest.keys())
+    extra_files = sorted(installed_manifest.keys() - source_manifest.keys())
+    if not changed_files and not missing_files and not extra_files:
+        return {
+            "state": "clean",
+            "changed_files": [],
+            "missing_files": [],
+            "extra_files": [],
+            "next_action": "installed example source matches development example source",
+        }
+    return {
+        "state": "dirty",
+        "changed_files": changed_files,
+        "missing_files": missing_files,
+        "extra_files": extra_files,
+        "next_action": (
+            "reinstall plugin from a clean source tree before trusting "
+            "installed examples"
+        ),
+    }
+
+
 def _readiness_next_action(
     *,
     source_package_hygiene: dict[str, Any],
     source_git_hygiene: dict[str, Any],
     installed_package_hygiene: dict[str, Any],
+    installed_example_source_hygiene: dict[str, Any],
     payload_next_action: str,
 ) -> str:
     for hygiene in (
         source_package_hygiene,
         source_git_hygiene,
         installed_package_hygiene,
+        installed_example_source_hygiene,
     ):
         if hygiene.get("state") == "dirty":
             next_action = hygiene.get("next_action")
@@ -286,11 +362,16 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     source_package_hygiene = _source_package_hygiene(source_root)
     source_git_hygiene = _source_git_hygiene(source_root)
     installed_package_hygiene = _installed_package_hygiene(installed_root)
+    installed_example_source_hygiene = _installed_example_source_hygiene(
+        source_root,
+        installed_root,
+    )
     if installed_root is None:
         next_action = _readiness_next_action(
             source_package_hygiene=source_package_hygiene,
             source_git_hygiene=source_git_hygiene,
             installed_package_hygiene=installed_package_hygiene,
+            installed_example_source_hygiene=installed_example_source_hygiene,
             payload_next_action=INSTALL_COMMAND,
         )
         return {
@@ -310,6 +391,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
             "installed_package_hygiene": installed_package_hygiene,
+            "installed_example_source_hygiene": installed_example_source_hygiene,
         }
 
     installed_root = installed_root.resolve()
@@ -319,6 +401,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             source_package_hygiene=source_package_hygiene,
             source_git_hygiene=source_git_hygiene,
             installed_package_hygiene=installed_package_hygiene,
+            installed_example_source_hygiene=installed_example_source_hygiene,
             payload_next_action=REINSTALL_COMMAND,
         )
         return {
@@ -338,6 +421,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
             "installed_package_hygiene": installed_package_hygiene,
+            "installed_example_source_hygiene": installed_example_source_hygiene,
         }
 
     installed_manifest = _payload_manifest(installed_root)
@@ -363,6 +447,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         source_package_hygiene=source_package_hygiene,
         source_git_hygiene=source_git_hygiene,
         installed_package_hygiene=installed_package_hygiene,
+        installed_example_source_hygiene=installed_example_source_hygiene,
         payload_next_action=next_action,
     )
 
@@ -383,6 +468,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         "source_package_hygiene": source_package_hygiene,
         "source_git_hygiene": source_git_hygiene,
         "installed_package_hygiene": installed_package_hygiene,
+        "installed_example_source_hygiene": installed_example_source_hygiene,
     }
 
 
@@ -424,12 +510,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     hygiene = result.get("installed_package_hygiene")
     hygiene_state = hygiene.get("state") if isinstance(hygiene, dict) else None
+    example_hygiene = result.get("installed_example_source_hygiene")
+    example_hygiene_state = (
+        example_hygiene.get("state") if isinstance(example_hygiene, dict) else None
+    )
     return (
         0
         if result["state"] == "fresh"
         and source_hygiene_state == "clean"
         and source_git_hygiene_state in {"clean", "unavailable"}
         and hygiene_state == "clean"
+        and example_hygiene_state == "clean"
         else 1
     )
 

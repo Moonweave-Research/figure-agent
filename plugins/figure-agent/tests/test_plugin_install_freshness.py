@@ -323,7 +323,10 @@ def test_cli_returns_nonzero_for_fresh_but_dirty_installed_package(
     assert output["next_action"] == output["installed_package_hygiene"]["next_action"]
 
 
-def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path) -> None:
+def test_compare_plugin_install_reports_installed_example_source_drift(
+    tmp_path: Path,
+    capsys,
+) -> None:
     source = tmp_path / "source"
     installed = tmp_path / "cache" / "0.1.0"
     _write_plugin(source)
@@ -333,10 +336,17 @@ def test_compare_plugin_install_ignores_real_example_work_product(tmp_path: Path
     (source / "examples" / "demo" / "demo.tex").write_text("new figure\n", encoding="utf-8")
     (installed / "examples" / "demo" / "demo.tex").write_text("old figure\n", encoding="utf-8")
 
-    result = compare_plugin_install(source, installed)
+    exit_code = main([str(installed), "--source-root", str(source)])
+    result = json.loads(capsys.readouterr().out)
 
+    assert exit_code == 1
     assert result["state"] == "fresh"
     assert result["changed_files"] == []
+    assert result["installed_example_source_hygiene"]["state"] == "dirty"
+    assert result["installed_example_source_hygiene"]["changed_files"] == [
+        "examples/demo/demo.tex"
+    ]
+    assert result["next_action"] == result["installed_example_source_hygiene"]["next_action"]
 
 
 def test_latest_installed_root_selects_highest_version_with_manifest(tmp_path: Path) -> None:

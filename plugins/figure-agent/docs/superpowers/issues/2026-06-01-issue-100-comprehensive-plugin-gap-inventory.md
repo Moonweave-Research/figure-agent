@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CK, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CL, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CK install next-action precedence guard;
+- branch baseline: `main` after Issue 100CL installed example-source hygiene guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -147,6 +147,7 @@ the workflow together.
 | G100-82 | P3 | Stale issue-status recurrence | Issue 100P/100AB swept stale branch-status wording, but the guard only caught `implemented on branch` and `implemented in working tree`; later Issues 100BV-100CH used `implemented in branch` and stayed stale after merge. | TDD reproduced `test_completed_issue_headers_do_not_claim_branch_or_worktree_only` passing while 13 Issue 100 headers still claimed branch implementation. | Operators could read merged work as branch-only work even though the roadmap and git history said it was already on main. | Issue 100CI - stale issue-status recurrence guard |
 | G100-83 | P3 | Source git hygiene visibility | `plugin_install_freshness.py` could report `state: fresh`, source package hygiene `clean`, and installed package hygiene `clean` while the development plugin tree still had uncommitted tracked changes that had been copied into the installed cache. | Live reproduction: user-edited `examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` was byte-identical in the installed cache, yet freshness exited 0 because payload hashing excludes `examples/` and package hygiene only detects generated junk. | Dirty user figure-source work can be installed as "fresh" plugin state, confusing Claude cache truth and release/operator checks. | Issue 100CJ - source git hygiene guard |
 | G100-84 | P3 | Install freshness next-action precedence | After Issue 100CJ, `plugin_install_freshness.py` could exit nonzero for dirty source git or dirty installed package hygiene while the top-level `next_action` still said the install matched or recommended reinstall. | TDD reproduced fresh payloads with dirty source git and dirty installed package hygiene where exit code was 1 but top-level `next_action` did not point at the blocking hygiene action. | Operators could copy the wrong top-level action and reinstall or stop early instead of fixing the actual readiness blocker. | Issue 100CK - install next-action precedence guard |
+| G100-85 | P3 | Installed example-source drift | Payload freshness intentionally excludes `examples/`, but installed cache examples can still be stale or dirty while payload/package/source hygiene all look clean. | TDD reproduced source and installed `examples/demo/demo.tex` differing while `state: fresh` and `changed_files: []`; the old CLI exited 0. | Claude can read or copy stale installed example sources while the install diagnostic claims readiness. | Issue 100CL - installed example-source hygiene guard |
 
 ## Recommended Execution Order
 
@@ -724,6 +725,14 @@ the workflow together.
     package hygiene, dirty source git hygiene, and dirty installed package
     hygiene before payload update/reinstall actions, so the printed action
     matches the readiness blocker that made the CLI exit nonzero.
+
+87. **Issue 100CL - installed example-source hygiene guard**
+    Implemented as plugin-install cache-readiness hardening.
+    `plugin_install_freshness.py` now emits
+    `installed_example_source_hygiene`, comparing non-generated files under
+    `examples/` separately from payload freshness. Payload `changed_files`
+    still ignores example work products, but installed example-source drift now
+    exits nonzero and points the operator at clean-source reinstall.
 
 ## Non-Goals
 
