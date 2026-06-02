@@ -17,6 +17,7 @@ import fig_run  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.queue-run.v1"
 DEFAULT_MAX_FIXTURES = 10
+QUEUE_FILTER_KEYS = fig_queue._FILTER_KEYS
 
 
 def _planned_run(item: dict[str, Any]) -> dict[str, Any]:
@@ -90,6 +91,29 @@ def _summary(
         "blocked": int(command_plan.get("blocked_count", 0)),
         "unattempted_executable": max(planned_executable - attempted, 0),
     }
+
+
+def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
+    values = {
+        "required_actor": args.required_actor,
+        "action": args.action,
+        "stop_boundary": args.stop_boundary,
+        "first_blocker": args.first_blocker,
+        "blocking_source": args.blocking_source,
+        "svg_polish_gate_state": args.svg_polish_gate_state,
+        "can_start_svg_polish": args.can_start_svg_polish,
+        "svg_polish_recommended_path": args.svg_polish_recommended_path,
+        "svg_polish_next_action": args.svg_polish_next_action,
+        "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
+    }
+    missing = set(QUEUE_FILTER_KEYS) - set(values)
+    extra = set(values) - set(QUEUE_FILTER_KEYS)
+    if missing or extra:
+        raise ValueError(
+            "fig_queue_run filter surface does not match fig_queue: "
+            f"missing={sorted(missing)} extra={sorted(extra)}"
+        )
+    return values
 
 
 def run_queue(
@@ -178,18 +202,7 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             max_steps=args.max_steps,
             max_fixtures=args.max_fixtures,
             fixtures=list(args.fixtures) or None,
-            filters={
-                "required_actor": args.required_actor,
-                "action": args.action,
-                "stop_boundary": args.stop_boundary,
-                "first_blocker": args.first_blocker,
-                "blocking_source": args.blocking_source,
-                "svg_polish_gate_state": args.svg_polish_gate_state,
-                "can_start_svg_polish": args.can_start_svg_polish,
-                "svg_polish_recommended_path": args.svg_polish_recommended_path,
-                "svg_polish_next_action": args.svg_polish_next_action,
-                "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
-            },
+            filters=_queue_filters_from_args(args),
         )
     except ValueError as exc:
         print(f"fig_queue_run.py: {exc}", file=sys.stderr)
