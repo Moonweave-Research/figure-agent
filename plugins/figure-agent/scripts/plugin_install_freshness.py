@@ -257,6 +257,25 @@ def _source_git_hygiene(source_root: Path) -> dict[str, Any]:
     }
 
 
+def _readiness_next_action(
+    *,
+    source_package_hygiene: dict[str, Any],
+    source_git_hygiene: dict[str, Any],
+    installed_package_hygiene: dict[str, Any],
+    payload_next_action: str,
+) -> str:
+    for hygiene in (
+        source_package_hygiene,
+        source_git_hygiene,
+        installed_package_hygiene,
+    ):
+        if hygiene.get("state") == "dirty":
+            next_action = hygiene.get("next_action")
+            if isinstance(next_action, str) and next_action:
+                return next_action
+    return payload_next_action
+
+
 def compare_plugin_install(source_root: Path, installed_root: Path | None) -> dict[str, Any]:
     """Return a deterministic freshness comparison between source and install."""
     source_root = source_root.resolve()
@@ -266,7 +285,14 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
     source_manifest = _payload_manifest(source_root)
     source_package_hygiene = _source_package_hygiene(source_root)
     source_git_hygiene = _source_git_hygiene(source_root)
+    installed_package_hygiene = _installed_package_hygiene(installed_root)
     if installed_root is None:
+        next_action = _readiness_next_action(
+            source_package_hygiene=source_package_hygiene,
+            source_git_hygiene=source_git_hygiene,
+            installed_package_hygiene=installed_package_hygiene,
+            payload_next_action=INSTALL_COMMAND,
+        )
         return {
             "schema": SCHEMA,
             "state": "missing",
@@ -280,14 +306,21 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "missing_files": [],
             "extra_files": [],
             "refresh_strategy": "install_missing",
-            "next_action": INSTALL_COMMAND,
+            "next_action": next_action,
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
-            "installed_package_hygiene": _installed_package_hygiene(None),
+            "installed_package_hygiene": installed_package_hygiene,
         }
 
     installed_root = installed_root.resolve()
+    installed_package_hygiene = _installed_package_hygiene(installed_root)
     if not _is_plugin_root(installed_root):
+        next_action = _readiness_next_action(
+            source_package_hygiene=source_package_hygiene,
+            source_git_hygiene=source_git_hygiene,
+            installed_package_hygiene=installed_package_hygiene,
+            payload_next_action=REINSTALL_COMMAND,
+        )
         return {
             "schema": SCHEMA,
             "state": "invalid",
@@ -301,10 +334,10 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
             "missing_files": [],
             "extra_files": [],
             "refresh_strategy": "reinstall_invalid",
-            "next_action": REINSTALL_COMMAND,
+            "next_action": next_action,
             "source_package_hygiene": source_package_hygiene,
             "source_git_hygiene": source_git_hygiene,
-            "installed_package_hygiene": _installed_package_hygiene(installed_root),
+            "installed_package_hygiene": installed_package_hygiene,
         }
 
     installed_manifest = _payload_manifest(installed_root)
@@ -326,6 +359,12 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         if source_version is not None and source_version == installed_version:
             refresh_strategy = "reinstall_same_version"
             next_action = REINSTALL_COMMAND
+    next_action = _readiness_next_action(
+        source_package_hygiene=source_package_hygiene,
+        source_git_hygiene=source_git_hygiene,
+        installed_package_hygiene=installed_package_hygiene,
+        payload_next_action=next_action,
+    )
 
     return {
         "schema": SCHEMA,
@@ -343,7 +382,7 @@ def compare_plugin_install(source_root: Path, installed_root: Path | None) -> di
         "next_action": next_action,
         "source_package_hygiene": source_package_hygiene,
         "source_git_hygiene": source_git_hygiene,
-        "installed_package_hygiene": _installed_package_hygiene(installed_root),
+        "installed_package_hygiene": installed_package_hygiene,
     }
 
 
