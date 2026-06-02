@@ -34,6 +34,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
@@ -58,6 +59,10 @@ class DriftResult:
     ref_center: tuple[float, float] | None
     pdf_center: tuple[float, float] | None
     drift: float | None
+
+
+class LayoutDriftCliError(Exception):
+    """Expected user-facing CLI target validation failure."""
 
 
 def _normalize_token(text: str) -> str:
@@ -345,6 +350,61 @@ def _resolve_pdf_path(example_dir: Path) -> Path | None:
     return None
 
 
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise LayoutDriftCliError(f"invalid fixture path: {original}: {exc}") from exc
+
+
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    """Resolve public CLI fixture targets without allowing examples/ traversal.
+
+    ``compile.sh`` invokes this gate as ``check_layout_drift.py .`` after
+    changing into the fixture directory, so a literal dot is the only accepted
+    non-examples directory form.
+    """
+    if value == Path("."):
+        return value
+
+    examples_root = Path("examples").resolve()
+    if value.is_absolute():
+        resolved = value.resolve()
+        try:
+            relative = resolved.relative_to(examples_root)
+        except ValueError as exc:
+            raise LayoutDriftCliError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            ) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise LayoutDriftCliError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(relative.parts[0], str(value))
+        return Path("examples") / relative.parts[0]
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise LayoutDriftCliError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise LayoutDriftCliError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return examples_path
+    raise LayoutDriftCliError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "an absolute path under examples/, or . from inside a fixture directory"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("example_dir", type=Path)
@@ -368,13 +428,19 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.example_dir.is_dir():
-        print(f"FAIL: example directory not found: {args.example_dir}", file=sys.stderr)
+    try:
+        example_arg = _resolve_example_dir_for_cli(args.example_dir)
+    except LayoutDriftCliError as exc:
+        print(f"check_layout_drift.py: {exc}", file=sys.stderr)
+        return 1
+
+    if not example_arg.is_dir():
+        print(f"FAIL: example directory not found: {example_arg}", file=sys.stderr)
         return 1
 
     # Resolve so "." (compile.sh invocation) carries a real directory name for
     # build/<name>.pdf lookup.
-    example_dir = args.example_dir.resolve()
+    example_dir = example_arg.resolve()
     spec_path = example_dir / "spec.yaml"
     hints_path = example_dir / "coordinate_hints.yaml"
 
