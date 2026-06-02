@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CI, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CJ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CI stale issue-status recurrence guard;
+- branch baseline: `main` after Issue 100CJ source git hygiene guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -145,6 +145,7 @@ the workflow together.
 | G100-80 | P3 | Plugin hygiene next-action quoting | Issue 100CF emitted a source cleanup `next_action` containing the repo path `/Users/.../[figure-agent]/...` without shell quoting. | Live zsh execution failed with `no matches found: /Users/.../[figure-agent]/plugins/figure-agent`; TDD reproduced shell-special paths in source and installed hygiene commands. | Operators could follow the emitted cleanup command and fail before reaching the actual package hygiene fix. | Issue 100CG - plugin hygiene next-action quoting |
 | G100-81 | P3 | Inventory completion summary freshness | The Issue 100 header/table tracked through Issue 100CG, but the Recommended Execution Order completion summaries stopped at Issue 100BS. | TDD reproduced the release-contract guard passing header/baseline freshness while the completion-summary section lacked the latest Issue 100 suffix. | Operators could use the inventory as a status briefing and miss already-completed hardening slices after 100BS. | Issue 100CH - inventory completion-summary guard |
 | G100-82 | P3 | Stale issue-status recurrence | Issue 100P/100AB swept stale branch-status wording, but the guard only caught `implemented on branch` and `implemented in working tree`; later Issues 100BV-100CH used `implemented in branch` and stayed stale after merge. | TDD reproduced `test_completed_issue_headers_do_not_claim_branch_or_worktree_only` passing while 13 Issue 100 headers still claimed branch implementation. | Operators could read merged work as branch-only work even though the roadmap and git history said it was already on main. | Issue 100CI - stale issue-status recurrence guard |
+| G100-83 | P3 | Source git hygiene visibility | `plugin_install_freshness.py` could report `state: fresh`, source package hygiene `clean`, and installed package hygiene `clean` while the development plugin tree still had uncommitted tracked changes that had been copied into the installed cache. | Live reproduction: user-edited `examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex` was byte-identical in the installed cache, yet freshness exited 0 because payload hashing excludes `examples/` and package hygiene only detects generated junk. | Dirty user figure-source work can be installed as "fresh" plugin state, confusing Claude cache truth and release/operator checks. | Issue 100CJ - source git hygiene guard |
 
 ## Recommended Execution Order
 
@@ -708,6 +709,13 @@ the workflow together.
     commit`, and `pending merge` header wording in addition to earlier
     branch/worktree variants, and recent Issue 100 headers were normalized to
     their main merge commits.
+
+85. **Issue 100CJ - source git hygiene guard**
+    Implemented as plugin-install readiness hardening.
+    `plugin_install_freshness.py` now emits `source_git_hygiene` and exits
+    nonzero when the development plugin tree has uncommitted git changes, so
+    dirty user figure-source edits cannot be copied into the installed plugin
+    cache and reported as fresh plugin state.
 
 ## Non-Goals
 
