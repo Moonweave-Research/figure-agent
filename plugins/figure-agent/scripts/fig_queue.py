@@ -29,6 +29,11 @@ _FILTER_KEYS = (
     "stop_boundary",
     "first_blocker",
     "blocking_source",
+    "svg_polish_gate_state",
+    "can_start_svg_polish",
+    "svg_polish_recommended_path",
+    "svg_polish_next_action",
+    "svg_polish_blocking_sources",
 )
 _ACTORS = (
     "workflow_agent",
@@ -216,8 +221,19 @@ def _filter_rows(
     return [
         row
         for row in rows
-        if all(row.get(key) == value for key, value in filters.items())
+        if all(_filter_value_matches(row.get(key), value) for key, value in filters.items())
     ]
+
+
+def _filter_value_matches(row_value: Any, filter_value: str) -> bool:
+    if isinstance(row_value, bool):
+        lowered = filter_value.lower()
+        if lowered not in {"true", "false"}:
+            return False
+        return row_value is (lowered == "true")
+    if isinstance(row_value, list):
+        return filter_value in row_value
+    return row_value == filter_value
 
 
 def _blocked_reason(row: dict[str, Any]) -> str | None:
@@ -555,6 +571,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--stop-boundary")
     parser.add_argument("--first-blocker")
     parser.add_argument("--blocking-source")
+    parser.add_argument("--svg-polish-gate-state")
+    parser.add_argument("--can-start-svg-polish", choices=("true", "false"))
+    parser.add_argument("--svg-polish-recommended-path")
+    parser.add_argument("--svg-polish-next-action")
+    parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
     parser.add_argument("--command-plan", action="store_true")
     parser.add_argument("--commands", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -571,6 +592,11 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             "stop_boundary": args.stop_boundary,
             "first_blocker": args.first_blocker,
             "blocking_source": args.blocking_source,
+            "svg_polish_gate_state": args.svg_polish_gate_state,
+            "can_start_svg_polish": args.can_start_svg_polish,
+            "svg_polish_recommended_path": args.svg_polish_recommended_path,
+            "svg_polish_next_action": args.svg_polish_next_action,
+            "svg_polish_blocking_sources": args.svg_polish_blocking_sources,
         },
         include_command_plan=args.command_plan or args.commands,
     )

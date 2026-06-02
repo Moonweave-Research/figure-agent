@@ -260,6 +260,114 @@ def test_polish_queue_summary_counts_svg_gate_and_blockers(
     }
 
 
+def test_polish_queue_filters_ready_svg_polish_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "polish"
+        if name == "alpha":
+            return _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary="mode_forbidden_action",
+                first_blocker="svg_polish_not_ready",
+                svg_polish_gate={
+                    "state": "blocked",
+                    "can_start_svg_polish": False,
+                    "next_action": "rerun_fig_loop",
+                },
+            )
+        return _summary(
+            name,
+            action="polish_handoff_stop",
+            stop_boundary=None,
+            first_blocker="none",
+            svg_polish_gate={
+                "state": "ready",
+                "can_start_svg_polish": True,
+                "next_action": "start_svg_polish_recipe",
+            },
+            svg_polish_readiness={
+                "can_start_svg_polish": True,
+                "recommended_path": "ready_for_svg_polish",
+                "next_action": "start_svg_polish_recipe",
+                "blocking_items": [],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="polish triage",
+        fixtures=None,
+        filters={"can_start_svg_polish": "true"},
+    )
+
+    assert queue["filters"] == {"can_start_svg_polish": "true"}
+    assert queue["unfiltered_total"] == 2
+    assert [row["fixture"] for row in queue["rows"]] == ["beta"]
+    assert queue["summary"]["by_svg_polish_gate_state"] == {"ready": 1}
+    assert queue["summary"]["by_svg_polish_recommended_path"] == {
+        "ready_for_svg_polish": 1
+    }
+
+
+def test_polish_queue_filters_svg_polish_blocking_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "alpha")
+    _write_fixture(tmp_path, "beta")
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        assert mode == "polish"
+        sources = (
+            ["tikz_vs_svg_polish_trigger", "crop_audit_summary"]
+            if name == "alpha"
+            else ["driver_prerequisite"]
+        )
+        return _summary(
+            name,
+            action="run_fig_loop",
+            stop_boundary="mode_forbidden_action",
+            first_blocker="svg_polish_not_ready",
+            svg_polish_gate={
+                "state": "blocked",
+                "can_start_svg_polish": False,
+                "next_action": "rerun_fig_loop",
+            },
+            svg_polish_readiness={
+                "can_start_svg_polish": False,
+                "recommended_path": "continue_tikz",
+                "next_action": "rerun_fig_loop",
+                "blocking_items": [{"source": source} for source in sources],
+            },
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="polish",
+        goal="polish triage",
+        fixtures=None,
+        filters={"svg_polish_blocking_sources": "tikz_vs_svg_polish_trigger"},
+    )
+
+    assert queue["filters"] == {
+        "svg_polish_blocking_sources": "tikz_vs_svg_polish_trigger"
+    }
+    assert [row["fixture"] for row in queue["rows"]] == ["alpha"]
+    assert queue["summary"]["by_svg_polish_blocking_source"] == {
+        "crop_audit_summary": 1,
+        "tikz_vs_svg_polish_trigger": 1,
+    }
+
+
 def test_build_queue_records_missing_fixture_as_error(tmp_path: Path) -> None:
     queue = fig_queue.build_queue(
         repo_root=tmp_path,

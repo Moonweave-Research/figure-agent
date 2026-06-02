@@ -60,6 +60,19 @@ selection or fixture scanning. Supported filters:
 - `--stop-boundary <boundary-id>`
 - `--first-blocker <status-first-blocker-code>`
 - `--blocking-source <next-action-blocking-source>`
+- `--svg-polish-gate-state ready|blocked|needs_human|semantic_backport|no_current_checkpoint`
+- `--can-start-svg-polish true|false`
+- `--svg-polish-recommended-path <route>`
+- `--svg-polish-next-action <svg-polish-next-action>`
+- `--svg-polish-blocking-source <source>`
+
+The SVG-polish filters are meaningful in `--mode polish`. They let operators
+ask direct evidence questions such as "which real fixtures can start SVG polish
+now?" without hand-filtering JSON:
+
+```bash
+uv run python3 scripts/fig_queue.py --mode polish --can-start-svg-polish true
+```
 
 Use `--command-plan` to add a read-only `command_plan` object to JSON output.
 Use `--commands` to print only executable deterministic workflow commands, one
