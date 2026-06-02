@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -829,14 +831,25 @@ def _print_single(result: dict) -> None:
         print(f"  Notes: {', '.join(notes)}")
 
 
-def main() -> int:
-    if len(sys.argv) == 1:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("name", nargs="?")
+    parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    args = parser.parse_args(argv)
+    emit_json = args.json or args.format == "json"
+
+    if args.name is None:
         examples_dir = Path("examples")
         if not examples_dir.is_dir():
             print("no examples/ directory found", file=sys.stderr)
             return 1
+        results = []
         for entry in sorted(p for p in examples_dir.iterdir() if p.is_dir()):
             result = infer_stage(entry)
+            if emit_json:
+                results.append(result)
+                continue
             marker = _accepted_marker(result.get("accepted"))
             exports = result.get("exports_substate", "?")
             ready = str(bool(result.get("release_ready"))).lower()
@@ -855,15 +868,20 @@ def main() -> int:
             if result["notes"]:
                 line = f"{line}  notes: {', '.join(result['notes'])}"
             print(line)
+        if emit_json:
+            print(json.dumps(results, indent=2, sort_keys=True, default=str))
         return 0
 
     try:
-        example_dir = _resolve_example_dir_for_cli(sys.argv[1])
+        example_dir = _resolve_example_dir_for_cli(args.name)
     except ValueError as exc:
         print(f"invalid fixture path: {exc}", file=sys.stderr)
         return 1
     result = infer_stage(example_dir)
-    _print_single(result)
+    if emit_json:
+        print(json.dumps(result, indent=2, sort_keys=True, default=str))
+    else:
+        _print_single(result)
     return 0
 
 

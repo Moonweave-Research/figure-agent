@@ -4,7 +4,7 @@ description: Read-only stage inference from filesystem + spec.yaml; no persisten
 
 Inspect the current pipeline stage for a figure without modifying any files.
 
-**Usage**: `/fig_status [<name>]`
+**Usage**: `/fig_status [<name>] [--json | --format json]`
 
 `<name>` is optional. With no argument, prints a one-line summary for every figure under `examples/`.
 
@@ -13,7 +13,13 @@ Run from the plugin root:
 ```
 uv run python3 scripts/status.py                   # all figures (one line each)
 uv run python3 scripts/status.py examples/<name>   # one figure (check list + state vector + Next:)
+uv run python3 scripts/status.py <name> --json     # one figure as JSON
+uv run python3 scripts/status.py <name> --format json
 ```
+
+Text output is the default. `--json` and `--format json` emit the same
+machine-readable status payload; unknown extra arguments are rejected rather
+than silently ignored.
 
 ## Traffic Controller Contract
 

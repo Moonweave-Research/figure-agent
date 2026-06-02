@@ -3497,6 +3497,44 @@ def test_main_accepts_examples_fixture_path(
     assert "named_fig — stage 1/4" in captured.out
 
 
+def test_main_json_outputs_single_status_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    fixture = tmp_path / "examples" / "named_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "named_fig", "--json"])
+
+    assert status_mod.main() == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["name"] == "named_fig"
+    assert payload["stage"] == 1
+
+
+def test_main_accepts_format_json_alias(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    fixture = tmp_path / "examples" / "named_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "examples/named_fig", "--format", "json"])
+
+    assert status_mod.main() == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["name"] == "named_fig"
+    assert payload["render_state"] == "NOT_AUTHORED"
+
+
 def test_main_rejects_parent_relative_example_path(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
@@ -3529,6 +3567,27 @@ def test_main_reports_controlled_error_for_invalid_fixture_name(
 
     captured = capsys.readouterr()
     assert "invalid fixture path" in captured.err
+    assert captured.out == ""
+
+
+def test_main_rejects_unknown_extra_arguments(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import status as status_mod
+
+    fixture = tmp_path / "examples" / "named_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["status.py", "named_fig", "--bogus"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        status_mod.main()
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 2
+    assert "unrecognized arguments: --bogus" in captured.err
     assert captured.out == ""
 
 
