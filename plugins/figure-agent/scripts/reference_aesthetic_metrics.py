@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
 import numpy as np
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from PIL import Image
@@ -440,20 +441,67 @@ def reference_aesthetic_metrics_summary(example_dir: Path) -> dict[str, Any] | N
     return summary
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    examples_root = Path("examples").resolve()
+    if value.is_absolute():
+        resolved = value.resolve()
+        try:
+            relative = resolved.relative_to(examples_root)
+        except ValueError as exc:
+            raise ReferenceAestheticMetricsError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            ) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise ReferenceAestheticMetricsError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(relative.parts[0], str(value))
+        return Path("examples") / relative.parts[0]
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise ReferenceAestheticMetricsError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise ReferenceAestheticMetricsError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return examples_path
+    raise ReferenceAestheticMetricsError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path under examples/"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise ReferenceAestheticMetricsError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("example_dir", type=Path)
     args = parser.parse_args(argv)
     try:
-        payload = build_reference_aesthetic_metrics(args.example_dir)
+        example_dir = _resolve_example_dir_for_cli(args.example_dir)
+        payload = build_reference_aesthetic_metrics(example_dir)
     except ReferenceAestheticMetricsError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
     if payload is None:
-        print(f"SKIP: {args.example_dir.name} has no reference-learning contract")
+        print(f"SKIP: {example_dir.name} has no reference-learning contract")
         return 0
-    output = args.example_dir / OUTPUT_RELATIVE_PATH
-    print(f"{payload['state']}: wrote {_example_relative_path(args.example_dir, output)}")
+    output = example_dir / OUTPUT_RELATIVE_PATH
+    print(f"{payload['state']}: wrote {_example_relative_path(example_dir, output)}")
     return 0
 
 

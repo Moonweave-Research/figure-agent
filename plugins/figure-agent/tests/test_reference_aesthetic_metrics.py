@@ -11,21 +11,27 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from reference_aesthetic_metrics import (  # noqa: E402
     METRICS_SCHEMA,
     build_reference_aesthetic_metrics,
+    main,
     reference_aesthetic_metrics_summary,
 )
 
 
 def _write_base_fixture(tmp_path: Path, *, with_learning: bool = True) -> Path:
     example_dir = tmp_path / "examples" / "demo"
+    return _write_base_fixture_at(example_dir, with_learning=with_learning)
+
+
+def _write_base_fixture_at(example_dir: Path, *, with_learning: bool = True) -> Path:
+    name = example_dir.name
     build_dir = example_dir / "build"
     reference_dir = example_dir / "reference"
     build_dir.mkdir(parents=True)
     reference_dir.mkdir()
-    Image.new("RGB", (80, 60), "white").save(build_dir / "demo.png")
+    Image.new("RGB", (80, 60), "white").save(build_dir / f"{name}.png")
     Image.new("RGB", (80, 60), "white").save(reference_dir / "style.png")
-    pack = """
+    pack = f"""
 schema: figure-agent.critique-reference-pack.v1
-fixture: demo
+fixture: {name}
 target_journal: Nature Communications
 reference_class: mechanism_schematic
 visual_ambition: high_impact_candidate
@@ -256,3 +262,40 @@ def test_reference_aesthetic_metrics_summary_reports_severe_divergence(
     assert summary["evaluation_state"] == "severe_divergence"
     assert summary["severe_metric_count"] >= 1
     assert summary["next_action"].startswith("review reference_aesthetic_metrics.json")
+
+
+def test_reference_aesthetic_metrics_cli_accepts_fixture_name_and_absolute_examples_path(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    example_dir = _write_base_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["demo"]) == 0
+    assert "measured: wrote build/reference_aesthetic_metrics.json" in capsys.readouterr().out
+
+    (example_dir / "build" / "reference_aesthetic_metrics.json").unlink()
+    assert main(["examples/demo"]) == 0
+    assert "measured: wrote build/reference_aesthetic_metrics.json" in capsys.readouterr().out
+
+    (example_dir / "build" / "reference_aesthetic_metrics.json").unlink()
+    assert main([str(example_dir.resolve())]) == 0
+    assert "measured: wrote build/reference_aesthetic_metrics.json" in capsys.readouterr().out
+
+
+def test_reference_aesthetic_metrics_cli_rejects_traversal_or_outside_relative_path(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    outside = _write_base_fixture_at(tmp_path / "outside")
+    _write_base_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["examples/../outside"]) == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+
+    assert main(["outside"]) == 1
+    assert "relative fixture names must resolve under examples/" in capsys.readouterr().err
+    assert not (outside / "build" / "reference_aesthetic_metrics.json").exists()
