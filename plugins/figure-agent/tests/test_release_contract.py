@@ -10,6 +10,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_ROOT = REPO_ROOT / "scripts"
 
@@ -17,7 +19,7 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from fig_driver import MODES as FIG_DRIVER_MODES  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
-from plugin_package_audit import find_packaging_junk, remove_paths  # noqa: E402
+from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa: E402
 
 EXPECTED_RELEASE_VERSION = "0.9.2"
 EXPECTED_RELEASE_DATE = "2026-06-02"
@@ -149,6 +151,7 @@ def test_readme_documents_plugin_package_audit() -> None:
     assert "installed_example_source_hygiene" in readme
     assert "scripts/plugin_package_audit.py" in readme
     assert "--max-mib" in readme
+    assert "--preserve-fixture-artifacts" in readme
     assert "~/.claude/plugins/cache/" in readme
 
 
@@ -544,6 +547,32 @@ def test_plugin_package_audit_detects_and_removes_generated_junk(tmp_path: Path)
     assert not (plugin_root / "examples" / "demo" / "build").exists()
     assert (plugin_root / "commands" / "fig_status.md").is_file()
     assert (plugin_root / "scripts" / "status.py").is_file()
+
+
+def test_plugin_package_audit_can_preserve_fixture_artifacts_in_dev_cleanup(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    plugin_root = tmp_path / "figure-agent"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    (plugin_root / "examples" / "demo" / "build").mkdir(parents=True)
+    (plugin_root / "examples" / "demo" / "exports").mkdir(parents=True)
+    (plugin_root / "examples" / "demo" / "build" / "demo.pdf").write_bytes(b"%PDF")
+    (plugin_root / "examples" / "demo" / "exports" / "demo.pdf").write_bytes(b"%PDF")
+    (plugin_root / ".venv" / "bin").mkdir(parents=True)
+    (plugin_root / ".pytest_cache").mkdir()
+
+    result = main(
+        [str(plugin_root), "--clean", "--preserve-fixture-artifacts", "--max-mib", "300"]
+    )
+
+    output = capsys.readouterr().out
+    assert result == 0
+    assert "JUNK" in output
+    assert not (plugin_root / ".venv").exists()
+    assert not (plugin_root / ".pytest_cache").exists()
+    assert (plugin_root / "examples" / "demo" / "build" / "demo.pdf").is_file()
+    assert (plugin_root / "examples" / "demo" / "exports" / "demo.pdf").is_file()
 
 
 def test_plugin_package_audit_removes_empty_wrapper_dirs(tmp_path: Path) -> None:

@@ -38,6 +38,17 @@ def _is_plugin_root(root: Path) -> bool:
     return (root / ".claude-plugin" / "plugin.json").is_file()
 
 
+def _is_fixture_artifact_dir(root: Path, path: Path) -> bool:
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    return len(relative.parts) == 3 and relative.parts[0] == "examples" and relative.parts[2] in {
+        "build",
+        "exports",
+    }
+
+
 def _tracked_paths(root: Path) -> set[Path]:
     try:
         git_root_result = subprocess.run(
@@ -69,7 +80,7 @@ def _tracked_paths(root: Path) -> set[Path]:
     return tracked
 
 
-def find_packaging_junk(root: Path) -> list[Path]:
+def find_packaging_junk(root: Path, *, preserve_fixture_artifacts: bool = False) -> list[Path]:
     """Return generated paths that should not live in a plugin cache package."""
     root = root.resolve()
     junk: list[Path] = []
@@ -78,6 +89,8 @@ def find_packaging_junk(root: Path) -> list[Path]:
     for path in root.rglob("*"):
         path = path.resolve()
         if path in protected_tracked_paths:
+            continue
+        if preserve_fixture_artifacts and _is_fixture_artifact_dir(root, path):
             continue
         if path.name in JUNK_FILE_NAMES:
             junk.append(path)
@@ -113,6 +126,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path, help="installed plugin cache root to audit")
     parser.add_argument("--clean", action="store_true", help="remove generated package junk")
+    parser.add_argument(
+        "--preserve-fixture-artifacts",
+        action="store_true",
+        help="keep examples/<name>/build and exports while removing other junk",
+    )
     parser.add_argument("--max-mib", type=float, default=None, help="fail if package exceeds limit")
     args = parser.parse_args(argv)
 
@@ -120,7 +138,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"plugin_package_audit.py: not a directory: {args.root}", file=sys.stderr)
         return 2
 
-    junk = find_packaging_junk(args.root)
+    junk = find_packaging_junk(
+        args.root, preserve_fixture_artifacts=args.preserve_fixture_artifacts
+    )
     if junk:
         for path in junk:
             print(f"JUNK {path}")
