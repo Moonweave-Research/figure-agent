@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -212,7 +213,7 @@ def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
     assert parts is not None
     assert parts[:4] == ["PYTHONPATH=scripts", "uv", "run", "python3"]
     assert parts[4] == "-c"
-    assert "Path(\"examples/runner's demo\")" in parts[5]
+    assert 'Path("examples/runner\'s demo")' in parts[5]
 
 
 @pytest.mark.parametrize(
@@ -285,9 +286,7 @@ def test_execute_stops_immediately_at_host_critique(
                         "examples/runner_demo/build/audit_crops/",
                     ],
                     "forbidden_scope": ["hidden source edits"],
-                    "evidence_refs": [
-                        f"driver.stop_boundary:{fig_driver.STOP_HOST_LLM_CRITIQUE}"
-                    ],
+                    "evidence_refs": [f"driver.stop_boundary:{fig_driver.STOP_HOST_LLM_CRITIQUE}"],
                 }
             }
         ],
@@ -458,8 +457,7 @@ def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
                 stop_boundary=fig_driver.STOP_CLOSEOUT,
             )
@@ -705,8 +703,7 @@ def test_execute_runs_missing_adjudication_scaffold(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
             ),
             _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
@@ -844,8 +841,7 @@ def test_execute_runs_compile_and_fig_loop_then_stops_at_boundary(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
             ),
             _driver_summary(
@@ -903,8 +899,7 @@ def test_fig_loop_failure_stops_without_requery(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
             ),
             _driver_summary(action=fig_driver.ACTION_COMPLETE, safe_command=None),
@@ -940,8 +935,7 @@ def test_fig_loop_with_stop_boundary_is_not_executed(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
                 stop_boundary=fig_driver.STOP_MODE_FORBIDDEN,
             )
@@ -1021,8 +1015,7 @@ def test_stops_after_repeated_executable_command_without_progress(
             _driver_summary(
                 action=fig_driver.ACTION_RUN_FIG_LOOP,
                 safe_command=(
-                    "uv run python3 scripts/fig_loop.py runner_demo "
-                    "--goal 'close loop' --json"
+                    "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
                 ),
             )
         ],
@@ -1048,9 +1041,7 @@ def test_stops_after_repeated_executable_command_without_progress(
         repo_root=tmp_path,
     )
 
-    assert commands == [
-        "uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"
-    ]
+    assert commands == ["uv run python3 scripts/fig_loop.py runner_demo --goal 'close loop' --json"]
     assert payload["executed_count"] == 1
     assert payload["final_stop_reason"] == "repeated_executable_action"
     assert len(payload["steps"]) == 2
@@ -1120,10 +1111,7 @@ def test_basin_detected_handoff_preserves_step_out_actions(
         "run external second-opinion review on the repeated issue",
         "revise reference-learning contract if reference style conflicts with intent",
     ]
-    assert any(
-        check.startswith("rerun live /fig_loop")
-        for check in handoff["closeout_checks"]
-    )
+    assert any(check.startswith("rerun live /fig_loop") for check in handoff["closeout_checks"])
     assert "loop.final_stop_reason:basin_detected" in handoff["evidence_refs"]
 
 
@@ -1421,9 +1409,7 @@ def test_main_records_non_authoritative_run_journal(
     assert manifest["stop_markdown"] == "stop.md"
     snapshot = manifest["evidence_snapshot"]
     assert snapshot["schema"] == "figure-agent.fig-run-evidence-snapshot.v1"
-    assert {
-        item["path"] for item in snapshot["items"]
-    } >= {
+    assert {item["path"] for item in snapshot["items"]} >= {
         "examples/runner_demo/runner_demo.tex",
         "examples/runner_demo/briefing.md",
         "examples/runner_demo/spec.yaml",
@@ -1479,12 +1465,8 @@ def test_main_records_run_journal_when_spec_shape_is_malformed(
     payload = json.loads(capsys.readouterr().out)
     manifest_path = Path(payload["journal"]["manifest_path"])
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert manifest["evidence_snapshot"]["schema"] == (
-        "figure-agent.fig-run-evidence-snapshot.v1"
-    )
-    assert {
-        item["path"] for item in manifest["evidence_snapshot"]["items"]
-    } >= {
+    assert manifest["evidence_snapshot"]["schema"] == ("figure-agent.fig-run-evidence-snapshot.v1")
+    assert {item["path"] for item in manifest["evidence_snapshot"]["items"]} >= {
         "examples/runner_demo/runner_demo.tex",
         "examples/runner_demo/briefing.md",
         "examples/runner_demo/spec.yaml",
@@ -1826,9 +1808,7 @@ def test_main_refuses_to_record_journal_for_unsafe_fixture_name(
     assert not runs_root.exists()
     error = payload["journal_error"]
     assert error["schema"] == "figure-agent.fig-run-journal-error.v1"
-    assert "fixture name must be a single examples/<name> directory name" in error[
-        "message"
-    ]
+    assert "fixture name must be a single examples/<name> directory name" in error["message"]
 
 
 def test_write_run_journal_rejects_unsafe_fixture_name_before_writing(
@@ -1951,9 +1931,7 @@ def test_main_execute_runs_allowlisted_command(
     assert payload["final_stop_reason"] == "complete"
 
 
-def test_main_rejects_invalid_max_steps(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_rejects_invalid_max_steps(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     result = fig_run.main(
         ["runner_demo", "--mode", "review", "--goal", "close loop", "--max-steps", "0"],
         repo_root=tmp_path,
@@ -1989,3 +1967,28 @@ def test_run_workflow_rejects_final_mode_as_driver_only(tmp_path: Path) -> None:
             execute=True,
             repo_root=tmp_path,
         )
+
+
+def test_run_command_tolerates_nonutf8_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The bounded runner executes the allowlisted compile action (lualatex via
+    # compile.sh), whose stdout/stderr routinely carries non-UTF8 bytes (font
+    # internals, file paths). text=True without errors= would raise
+    # UnicodeDecodeError on .stdout access before _run_command returns.
+    real_run = subprocess.run
+    child = [
+        sys.executable,
+        "-c",
+        "import os,sys; os.write(1, b'\\xff\\xfe font'); sys.exit(0)",
+    ]
+
+    def _run(_args, *_pos, **kwargs):
+        return real_run(child, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", _run)
+
+    result = fig_run._run_command("bash whatever.sh", repo_root=tmp_path)
+
+    assert result.returncode == 0
+    assert "�" in result.stdout

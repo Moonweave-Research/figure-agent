@@ -82,6 +82,7 @@ def _run_command(command: str, *, repo_root: Path) -> CommandResult:
         text=True,
         capture_output=True,
         check=False,
+        errors="replace",
     )
     return CommandResult(
         returncode=result.returncode,
@@ -188,9 +189,7 @@ def _export_is_safe(summary: dict[str, Any], *, name: str) -> bool:
     )
 
 
-def _would_execute(
-    summary: dict[str, Any], *, name: str, goal: str, repo_root: Path
-) -> bool:
+def _would_execute(summary: dict[str, Any], *, name: str, goal: str, repo_root: Path) -> bool:
     if not _is_executable_action(summary):
         return False
     command = summary["safe_command"]
@@ -211,9 +210,7 @@ def _boundary_stop_reason(summary: dict[str, Any]) -> str:
     action = summary.get("action")
     if action == fig_driver.ACTION_COMPLETE:
         return STOP_COMPLETE
-    if action == fig_driver.ACTION_RUN_CRITIQUE or _is_slash_command(
-        summary.get("safe_command")
-    ):
+    if action == fig_driver.ACTION_RUN_CRITIQUE or _is_slash_command(summary.get("safe_command")):
         return STOP_HOST_BOUNDARY
     return STOP_NOT_EXECUTABLE
 
@@ -477,9 +474,7 @@ def run_workflow(
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
-        raise ValueError(
-            "final mode is driver-only; use fig_driver.py --mode final --dry-run"
-        )
+        raise ValueError("final mode is driver-only; use fig_driver.py --mode final --dry-run")
     if mode not in RUN_MODES:
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
@@ -494,9 +489,7 @@ def run_workflow(
     for index in range(1, max_steps + 1):
         summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
         final_summary = summary
-        would_execute = _would_execute(
-            summary, name=name, goal=goal, repo_root=repo_root
-        )
+        would_execute = _would_execute(summary, name=name, goal=goal, repo_root=repo_root)
 
         if not execute:
             stop_reason = STOP_PLAN_ONLY if would_execute else _boundary_stop_reason(summary)
