@@ -23,6 +23,7 @@ STOP_AMBIGUOUS_PATCH = "ambiguous_patch_selection"
 STOP_HUMAN_GATE = "human_gate_required"
 STOP_FORCE_GOLDEN = "force_golden_required"
 STOP_ACCEPTED_OR_FINAL_READY = "accepted_or_final_ready_required"
+STOP_MODE_FORBIDDEN = "mode_forbidden_action"
 
 
 def _advisory_ready_improvement(summary: dict[str, Any]) -> bool:
@@ -152,6 +153,7 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
     mode = summary.get("mode")
     command = summary.get("safe_command")
     status = summary.get("status")
+    stop_boundary = summary.get("stop_boundary")
     export_state = status.get("export_state") if isinstance(status, dict) else None
     if action == ACTION_COMPLETE:
         if mode == "authoring":
@@ -173,6 +175,18 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
                 "fixture as release-ready."
             )
         return "No required plugin action remains for this mode."
+    if stop_boundary == STOP_MODE_FORBIDDEN:
+        if mode == "polish":
+            return (
+                "The selected next action is not executable in polish mode. "
+                f"Run `/fig_drive {fixture} --mode review` to close the "
+                "TikZ/loop prerequisite, then rerun polish mode when the loop "
+                "checkpoint routes ready_for_svg_polish."
+            )
+        return (
+            "The selected next action is not executable in this mode. Rerun "
+            "/fig_drive in a mode that permits the required workflow step."
+        )
     if isinstance(command, str) and command:
         if command.startswith("FIGURE_AGENT_STRICT=1 "):
             return f"Run strict compile final check: `{command}`."

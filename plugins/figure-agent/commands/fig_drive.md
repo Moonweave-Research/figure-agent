@@ -270,6 +270,12 @@ handoff from export freshness alone. This keeps SVG polish subordinate to the
 same critique, adjudication, audit, and human-gate evidence used by review and
 release.
 
+For rows with `stop_boundary: mode_forbidden_action`, the selected next action
+is intentionally not executable in polish mode. Operator guidance should not run
+that command directly; rerun `/fig_drive <name> --mode review` to close
+TikZ/loop prerequisites, then return to polish mode only when the current loop
+checkpoint routes `ready_for_svg_polish`.
+
 If polish mode stops earlier than the loop checkpoint, the top-level driver
 action remains authoritative and the additive `svg_polish_gate` mirrors that
 prerequisite instead of telling the operator to skip ahead. For example,

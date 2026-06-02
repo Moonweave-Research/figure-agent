@@ -292,6 +292,15 @@ def test_fig_queue_docs_explain_first_blocker_is_status_context_not_mode_blocker
     assert "`by_blocking_source` and `command_plan.blocked_count`" in command_doc
 
 
+def test_fig_drive_docs_explain_polish_mode_forbidden_guidance() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_drive.md").read_text()
+
+    assert "`stop_boundary: mode_forbidden_action`" in command_doc
+    assert "not executable in polish mode" in command_doc
+    assert "`/fig_drive <name> --mode review`" in command_doc
+    assert "routes `ready_for_svg_polish`" in command_doc
+
+
 def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
 

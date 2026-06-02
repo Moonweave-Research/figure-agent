@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DS plus operator completion dogfood evidence, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DT plus operator completion dogfood evidence, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DS first-blocker status context and
+- branch baseline: `main` after Issue 100DT polish mode-forbidden guidance and
   operator completion explanation dogfood;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
@@ -182,6 +182,7 @@ the workflow together.
 | G100-116 | P2 | Command-plan complete rows counted as blocked | After Issue 100DP, table/summary attribution was fixed, but `command_plan.blocked` still contained mode-scoped complete rows. | Live authoring command-plan JSON reported `blocked_count: 7` for seven local complete rows, each with `reason: required_actor:none`. | Batch planning JSON could still make local completion look like blocked automation. | Issue 100DQ - command-plan complete bucket |
 | G100-117 | P3 | Queue-run complete rows hidden from summary | After Issue 100DQ, `/fig_queue_run` embedded `queue.command_plan.complete` but its top-level `summary` still omitted a complete-row count. | TDD reproduced a command plan with `complete_count: 1` where queue-run summary exposed planned executable and blocked counts but no `planned_complete`. | Plan-only batch output could make mode-scoped completion disappear unless the operator inspected nested command-plan JSON. | Issue 100DR - queue-run complete summary |
 | G100-118 | P3 | First-blocker summary context ambiguity | Complete rows no longer counted as blocked, but live authoring dogfood still showed `by_first_blocker=critique_stale:4...` because `first_blocker` is global status context. | Live table/JSON after Issue 100DR had `complete:7`, `blocked_count:0`, and `planned_complete:7`, while `by_first_blocker` still included broader workflow blockers. | Operators could read status-context first blockers as selected-mode blocked-row counts unless docs name the distinction. | Issue 100DS - first-blocker status context |
+| G100-119 | P2 | Polish mode-forbidden guidance contradiction | `/fig_driver --mode polish` could return `stop_boundary: mode_forbidden_action` while `operator_guidance.next_step` still said to run the selected `fig_loop` command. | Live `fig3_trapping_concept` and `smoke_trap_demo` polish driver output showed no-current-checkpoint rows with mode-forbidden stop boundaries and "Run the selected command" guidance. | Single-fixture driver JSON contradicted itself and could send operators to run a command the current mode declares non-executable. | Issue 100DT - polish mode-forbidden guidance |
 
 ## Recommended Execution Order
 
@@ -968,6 +969,12 @@ the workflow together.
      mode-scoped complete rows, and should not be used as the selected-mode
      blocker count.
 
+121. **Issue 100DT - polish mode-forbidden guidance**
+     Implemented as driver operator-guidance hardening. Polish-mode rows with
+     `stop_boundary: mode_forbidden_action` no longer tell operators to run the
+     selected command; they route back to review mode to close TikZ/loop
+     prerequisites before re-entering polish mode.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1067,9 +1074,11 @@ mode-scoped complete rows from true blocked rows. Issue 100DR closes the
 follow-on queue-run summary gap by surfacing `planned_complete` at the same
 level as planned executable and blocked counts. Issue 100DS closes the
 remaining wording gap by naming `by_first_blocker` as status context rather
-than selected-mode blocker evidence.
+than selected-mode blocker evidence. Issue 100DT closes the adjacent
+single-fixture driver contradiction where polish-mode mode-forbidden rows still
+told operators to run the selected command.
 
-After Issue 100DS, JSON-output helper tools on the active operator path are now
+After Issue 100DT, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1104,8 +1113,10 @@ JSON-only:
   current-mode blocker counts.
 - live authoring queue dogfood confirms complete rows preserve broader-mode
   review guidance while `blocked_count`/`planned_blocked` remain zero.
+- polish-mode mode-forbidden driver guidance routes back to review mode instead
+  of telling operators to execute the forbidden selected command.
 
-The current post-100DS next candidates are therefore not old Issue 100A-C
+The current post-100DT next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1144,7 +1155,9 @@ placing complete rows in `command_plan.complete` instead of
 `command_plan.blocked`. Issue 100DR closes the queue-run projection gap by
 copying that complete count into `summary.planned_complete`. Issue 100DS
 closes the last adjacent wording trap by clarifying that `by_first_blocker`
-is broader status context, not selected-mode blocker accounting.
+is broader status context, not selected-mode blocker accounting. Issue 100DT
+closes the polish driver guidance contradiction found during real SVG-promotion
+evidence refresh.
 
 ## Edge-Case Review
 

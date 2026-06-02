@@ -1969,6 +1969,9 @@ def test_polish_mode_requires_loop_checkpoint_before_svg_handoff(
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
     assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
     assert summary["svg_polish_gate"]["next_action"] == "rerun_fig_loop"
+    assert "Run the selected command" not in summary["operator_guidance"]["next_step"]
+    assert "not executable in polish mode" in summary["operator_guidance"]["next_step"]
+    assert "--mode review" in summary["operator_guidance"]["next_step"]
 
 
 def test_polish_mode_uses_editorial_ready_for_svg_polish_checkpoint(
@@ -2346,6 +2349,9 @@ def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
     )
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert "continue_tikz" in summary["reason"]
+    assert "Run the selected command" not in summary["operator_guidance"]["next_step"]
+    assert "not executable in polish mode" in summary["operator_guidance"]["next_step"]
+    assert "--mode review" in summary["operator_guidance"]["next_step"]
 
 
 def test_polish_mode_routes_editorial_human_gate_to_human_stop(
