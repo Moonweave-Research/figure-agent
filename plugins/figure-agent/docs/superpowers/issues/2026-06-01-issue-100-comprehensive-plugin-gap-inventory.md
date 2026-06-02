@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CS, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CT, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CS queue-run SVG filter parity;
+- branch baseline: `main` after Issue 100CT inventory version consistency guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -155,6 +155,7 @@ the workflow together.
 | G100-90 | P2 | SVG polish readiness filtering | `/fig_queue --mode polish` surfaced SVG gate/readiness fields, but operators still had to hand-filter JSON to find ready fixtures or a specific blocker source. | After Issue 100CP, the next real-fixture SVG promotion evidence query was still manual: `can_start_svg_polish` existed as a row field but not as a supported filter. | Positive-route evidence remains harder to reproduce, and operators can miss a ready candidate or blocker cluster in a large fixture set. | Issue 100CQ - SVG polish queue readiness filters |
 | G100-91 | P2 | SVG polish gate blocker-source projection | Issue 100CQ's `--svg-polish-blocking-source` filter matched readiness blocker sources, but not gate-only blocker sources such as `driver_blocker` on no-current-checkpoint rows. | The Issue 100CR evidence pass produced three `svg_polish_gate_state: no_current_checkpoint` rows, then `--svg-polish-blocking-source driver_blocker` returned zero rows until the projection was fixed. | Operators could still miss why no real fixture was ready for SVG polish when the blocker lived in `svg_polish_gate.blocking_items` instead of `svg_polish_readiness`. | Issue 100CR - SVG polish gate blocker-source filters |
 | G100-92 | P3 | Queue-run SVG filter parity | `/fig_queue` supported SVG polish readiness filters, but `/fig_queue_run` still accepted only actor/action/status filters despite claiming to share the same filter surface. | TDD reproduced `fig_queue_run.py --mode polish --can-start-svg-polish true --svg-polish-blocking-source driver_prerequisite` failing at argparse before it could plan queue execution. | Operators could inspect SVG readiness with `/fig_queue` but then lose the same filter when moving to plan-only bounded queue execution. | Issue 100CS - queue-run SVG filter parity |
+| G100-93 | P3 | Inventory version consistency | The Issue 100 Documentation Consistency Check still claimed README/plugin manifest identified the plugin as v0.9.1 after the live release metadata had moved to v0.9.2. | TDD reproduced the release-contract suite not checking the inventory's version sentence even though it already checked README, pyproject, and plugin manifest versions. | The main roadmap could give stale release-readiness evidence even while the actual release metadata was correct. | Issue 100CT - inventory version consistency guard |
 
 ## Recommended Execution Order
 
@@ -788,6 +789,12 @@ the workflow together.
     `--svg-polish-gate-state`, route, next-action, and blocker-source filters
     without manual JSON post-processing.
 
+95. **Issue 100CT - inventory version consistency guard**
+    Implemented as roadmap metadata hardening. The release-contract suite now
+    checks that the Issue 100 Documentation Consistency Check names the live
+    plugin manifest version, so the inventory cannot keep stale v0.9.x claims
+    after README, pyproject, and plugin metadata advance.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -834,7 +841,9 @@ defect found by using those filters on real fixtures: gate-only blocker sources
 now project into `svg_polish_blocking_sources` alongside readiness blocker
 sources. Issue 100CS then closes the queue-run parity gap, so the same SVG
 readiness filters work in the plan-only/bounded execution wrapper instead of
-only in the read-only dashboard. After Issue 100CM, the
+only in the read-only dashboard. Issue 100CT closes the next roadmap-metadata
+hole by tying the inventory's own version consistency statement to the live
+plugin manifest version. After Issue 100CM, the
 plugin-install readiness path is now correctly
 able to say:
 
@@ -844,7 +853,7 @@ able to say:
   raw Claude reinstall is trusted;
 - installed example-source drift is separate from payload freshness.
 
-The current post-100CS next candidates are therefore not old Issue 100A-C
+The current post-100CT next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -905,7 +914,7 @@ surfaced in the path the user actually runs.
 ## Documentation Consistency Check
 
 - `README.md` and `.claude-plugin/plugin.json` both identify the current plugin
-  as v0.9.1.
+  as v0.9.2.
 - `README.md` and `skills/figure-agent/SKILL.md` agree that `/fig_run` and
   `/fig_improve` are bounded and have no resume command.
 - `README.md`, `commands/fig_drive.md`, and `svg_polish_*` scripts agree that
