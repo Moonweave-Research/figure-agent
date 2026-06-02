@@ -55,6 +55,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from ocr import (  # noqa: E402
     DEFAULT_OCR_CONFIDENCE_FLOOR,
@@ -210,6 +211,52 @@ def extract_coordinate_hints(
     return hints_path, failures
 
 
+def _resolve_example_dir_for_cli(value: Path) -> Path:
+    examples_root = Path("examples").resolve()
+    if value.is_absolute():
+        resolved = value.resolve()
+        try:
+            relative = resolved.relative_to(examples_root)
+        except ValueError as exc:
+            raise ReferenceExtractError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            ) from exc
+        if len(relative.parts) != 1 or ".." in relative.parts:
+            raise ReferenceExtractError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(relative.parts[0], str(value))
+        return Path("examples") / relative.parts[0]
+    if value.parts and value.parts[0] == "examples":
+        if len(value.parts) != 2 or ".." in value.parts:
+            raise ReferenceExtractError(
+                "invalid fixture path: expected examples/<fixture-name>"
+            )
+        _validate_fixture_name_for_cli(value.parts[1], str(value))
+        return Path("examples") / value.parts[1]
+    if len(value.parts) == 1:
+        _validate_fixture_name_for_cli(str(value), str(value))
+        examples_path = Path("examples") / value
+        if examples_path.is_dir():
+            return examples_path
+        if value.exists():
+            raise ReferenceExtractError(
+                "invalid fixture path: relative fixture names must resolve under examples/"
+            )
+        return examples_path
+    raise ReferenceExtractError(
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
+        "or an absolute path under examples/"
+    )
+
+
+def _validate_fixture_name_for_cli(name: str, original: str) -> None:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise ReferenceExtractError(f"invalid fixture path: {original}: {exc}") from exc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -245,12 +292,18 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.example_dir.is_dir():
-        print(f"FAIL: example directory not found: {args.example_dir}", file=sys.stderr)
+    try:
+        example_dir = _resolve_example_dir_for_cli(args.example_dir)
+    except ReferenceExtractError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
+
+    if not example_dir.is_dir():
+        print(f"FAIL: example directory not found: {example_dir}", file=sys.stderr)
         return 1
 
     hints_path, failures = extract_coordinate_hints(
-        args.example_dir,
+        example_dir,
         rebuild=args.rebuild,
         min_component_pixels=args.min_component_pixels,
         confidence_floor=args.ocr_confidence_floor,

@@ -19,6 +19,7 @@ from reference_extract import (  # noqa: E402
     EXTRACTION_VERSION,
     PALETTE,
     extract_coordinate_hints,
+    main,
     ocr_text_labels,
     palette_shape_clusters,
 )
@@ -313,3 +314,74 @@ def test_structural_regions_unavailable_when_vtracer_missing(tmp_path, monkeypat
     # Core extractions still work
     assert "text_labels" in payload
     assert "palette_shape_clusters" in payload
+
+
+def _write_cli_fixture(root: Path, name: str) -> Path:
+    fixture = root / name
+    fixture.mkdir(parents=True)
+    (fixture / "reference").mkdir()
+    ref = fixture / "reference" / "synth.png"
+    Image.fromarray(_make_palette_image((80, 80), {"cAmber": (10, 10, 60, 60)})).save(ref)
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\nreference_image: reference/synth.png\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def test_reference_extract_cli_accepts_fixture_name_and_absolute_examples_path(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    fixture = _write_cli_fixture(tmp_path / "examples", "demo")
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(sys, "argv", ["reference_extract.py", "demo", "--ocr-passes", "1.0"])
+    assert main() == 0
+    assert "OK: extracted" in capsys.readouterr().out
+
+    (fixture / "coordinate_hints.yaml").unlink()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["reference_extract.py", "examples/demo", "--ocr-passes", "1.0"],
+    )
+    assert main() == 0
+    assert "OK: extracted" in capsys.readouterr().out
+
+    (fixture / "coordinate_hints.yaml").unlink()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["reference_extract.py", str(fixture.resolve()), "--ocr-passes", "1.0"],
+    )
+    assert main() == 0
+    assert "OK: extracted" in capsys.readouterr().out
+
+
+def test_reference_extract_cli_rejects_traversal_or_outside_relative_path(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    outside = _write_cli_fixture(tmp_path, "outside")
+    _write_cli_fixture(tmp_path / "examples", "demo")
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["reference_extract.py", "examples/../outside", "--ocr-passes", "1.0"],
+    )
+    assert main() == 1
+    assert "invalid fixture path" in capsys.readouterr().err
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["reference_extract.py", "outside", "--ocr-passes", "1.0"],
+    )
+    assert main() == 1
+    assert "relative fixture names must resolve under examples/" in capsys.readouterr().err
+    assert not (outside / "coordinate_hints.yaml").exists()
