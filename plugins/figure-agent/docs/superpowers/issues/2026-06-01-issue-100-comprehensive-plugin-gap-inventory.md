@@ -1121,12 +1121,13 @@ contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
    supported, deterministic harness coverage exists, and prerequisite gate UX
-   plus queue and queue-run filters now make the evidence query direct. The
-   Issue 100CR pass
-   advanced mechanical prerequisites and still found zero real fixtures with
-   `can_start_svg_polish: true`: five are blocked by host-vision critique
-   refresh, and three by no-current-checkpoint/final-boundary gates. The next
-   pass should refresh the five host-vision critiques, then rerun
+   plus queue and queue-run filters now make the evidence query direct.
+   Post-100DT evidence still finds zero real fixtures with
+   `can_start_svg_polish: true`: four are blocked by host-vision critique
+   refresh, one by compile/render prerequisite on user-owned dirty source, two
+   by no-current-checkpoint gates, and one by a release boundary. The next valid
+   positive pass should refresh the four host-vision critiques, keep the dirty
+   fig1 source separate from plugin hardening, then rerun
    `--can-start-svg-polish true`.
 2. **Installed-cache refresh after dirty figure work is resolved.** With the
    current user-owned dirty `.tex`, the correct freshness answer is nonzero.
