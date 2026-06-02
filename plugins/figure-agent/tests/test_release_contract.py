@@ -186,6 +186,21 @@ def test_readme_current_state_matches_plugin_version() -> None:
     assert "docs/svg-polish-pipeline.md" not in experimental_section
 
 
+def test_issue_100_inventory_consistency_check_matches_plugin_version() -> None:
+    inventory = (
+        REPO_ROOT
+        / "docs"
+        / "superpowers"
+        / "issues"
+        / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
+    ).read_text()
+    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
+    consistency_check = inventory.partition("## Documentation Consistency Check")[2]
+    normalized = " ".join(consistency_check.split())
+
+    assert f"current plugin as v{plugin['version']}" in normalized
+
+
 def test_current_readme_documents_release_boundaries() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
