@@ -11,16 +11,21 @@ import check_visual_clash_budget as budget  # noqa: E402
 
 def _write_fixture(tmp_path: Path, *, cap: int | None, total: int) -> Path:
     fixture = tmp_path / "examples" / "demo"
+    _write_fixture_at(fixture, cap=cap, total=total)
+    return fixture
+
+
+def _write_fixture_at(fixture: Path, *, cap: int | None, total: int) -> Path:
     (fixture / "build").mkdir(parents=True)
-    spec = "name: demo\n"
+    spec = f"name: {fixture.name}\n"
     if cap is not None:
         spec += f"visual_clash_cap: {cap}\n"
     (fixture / "spec.yaml").write_text(spec, encoding="utf-8")
     (fixture / "build" / "visual_clash.json").write_text(
         json.dumps(
             {
-                "fixture": "demo",
-                "render_pdf": "build/demo.pdf",
+                "fixture": fixture.name,
+                "render_pdf": f"build/{fixture.name}.pdf",
                 "candidates": [],
                 "total": total,
             }
@@ -130,9 +135,50 @@ def test_visual_clash_budget_main_returns_one_on_budget_failure(
     monkeypatch,
     capsys,
 ) -> None:
-    fixture = _write_fixture(tmp_path, cap=0, total=2)
-    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", str(fixture)])
+    _write_fixture(tmp_path, cap=0, total=2)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", "demo"])
 
     assert budget.main() == 1
     captured = capsys.readouterr()
     assert "visual clash budget exceeded: 2 > 0" in captured.err
+
+
+def test_visual_clash_budget_cli_accepts_examples_and_absolute_fixture_under_examples(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    fixture = _write_fixture(tmp_path, cap=1, total=0)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", "examples"])
+    assert budget.main() == 0
+    assert "OK demo: visual_clash total 0 <= cap 1" in capsys.readouterr().out
+
+    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", str(fixture.resolve())])
+    assert budget.main() == 0
+    assert "OK demo: visual_clash total 0 <= cap 1" in capsys.readouterr().out
+
+
+def test_visual_clash_budget_cli_rejects_traversal_or_outside_relative_target(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    outside = _write_fixture_at(tmp_path / "outside", cap=1, total=0)
+    _write_fixture_at(tmp_path / "examples" / "demo", cap=1, total=0)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_visual_clash_budget.py", "examples/../outside"],
+    )
+    assert budget.main() == 1
+    assert "invalid target path" in capsys.readouterr().err
+
+    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", outside.name])
+    assert budget.main() == 1
+    assert "relative fixture names must resolve under examples/" in capsys.readouterr().err
+    assert not (outside / "visual_clash_budget.json").exists()
