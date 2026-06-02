@@ -196,6 +196,12 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--svg-polish-next-action")
     parser.add_argument("--svg-polish-blocking-source", dest="svg_polish_blocking_sources")
     args = parser.parse_args(argv)
+    if args.execute and args.dry_run:
+        print(
+            "fig_queue_run.py: choose either --execute or --dry-run, not both",
+            file=sys.stderr,
+        )
+        return 2
     try:
         payload = run_queue(
             repo_root=repo_root,

@@ -23,7 +23,8 @@ reports which fixture runs would be attempted.
 Output is JSON by default. `--json`, `--format json`, and `--dry-run` are
 accepted as compatibility no-ops: `--dry-run` does not change behavior because
 plan-only is already the default, and only `--execute` opts into bounded
-execution.
+execution. `--execute --dry-run` is rejected as an ambiguous safety conflict;
+choose one mode explicitly.
 
 Use it after inspecting `/fig_queue --actor workflow_agent --command-plan`.
 The normal order is:

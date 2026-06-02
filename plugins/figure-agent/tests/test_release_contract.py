@@ -268,6 +268,13 @@ def test_fig_queue_docs_describe_table_grouped_summary_counts() -> None:
     assert "mirror the JSON `summary` object" in command_doc
 
 
+def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
+
+    assert "`--execute --dry-run` is rejected" in command_doc
+    assert "ambiguous safety conflict" in command_doc
+
+
 def test_readme_and_skill_route_journal_inspection_through_summary_script() -> None:
     docs_by_path = {
         "README.md": (REPO_ROOT / "README.md").read_text(),

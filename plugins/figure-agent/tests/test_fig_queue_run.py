@@ -222,6 +222,39 @@ def test_main_accepts_json_and_dry_run_flags_as_plan_only_noops(
     assert [run["fixture"] for run in payload["runs"]] == ["alpha", "beta"]
 
 
+def test_main_rejects_execute_with_dry_run_without_running(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(fig_queue_run.fig_queue, "build_queue", lambda **kwargs: _queue())
+    calls: list[str] = []
+
+    def fake_run_workflow(*args, **kwargs):
+        calls.append("called")
+        return {}
+
+    monkeypatch.setattr(fig_queue_run.fig_run, "run_workflow", fake_run_workflow)
+
+    assert fig_queue_run.main(
+        [
+            "--mode",
+            "review",
+            "--goal",
+            "triage",
+            "--actor",
+            "workflow_agent",
+            "--execute",
+            "--dry-run",
+        ],
+        repo_root=tmp_path,
+    ) == 2
+
+    captured = capsys.readouterr()
+    assert "choose either --execute or --dry-run" in captured.err
+    assert calls == []
+
+
 def test_main_accepts_format_json_as_output_compatibility_noop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
