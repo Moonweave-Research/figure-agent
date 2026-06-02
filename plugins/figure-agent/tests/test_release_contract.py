@@ -284,6 +284,14 @@ def test_fig_queue_docs_separate_complete_rows_from_command_plan_blockers() -> N
     assert "non-executable but not blocked" in command_doc
 
 
+def test_fig_queue_docs_explain_first_blocker_is_status_context_not_mode_blocker() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "`by_first_blocker` is status context" in command_doc
+    assert "can include mode-scoped complete rows" in command_doc
+    assert "`by_blocking_source` and `command_plan.blocked_count`" in command_doc
+
+
 def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
 

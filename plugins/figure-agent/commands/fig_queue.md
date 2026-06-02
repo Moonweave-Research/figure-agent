@@ -169,6 +169,10 @@ deterministically sorted grouped summary lines such as
 `summary by_svg_polish_next_action=run_fig_critique:4,rerun_fig_loop:2`.
 Those lines mirror the JSON `summary` object so operators can see the corpus
 dominant actor/action/blocker distribution without switching to JSON.
+`by_first_blocker` is status context from `/fig_status`, not proof that a row is
+blocked in the selected mode, and it can include mode-scoped complete rows. Use
+`by_blocking_source` and `command_plan.blocked_count` for true current-mode
+blockers.
 
 `command_plan` includes:
 

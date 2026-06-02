@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DR, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DS, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DR queue-run complete summary;
+- branch baseline: `main` after Issue 100DS first-blocker status context;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -180,6 +180,7 @@ the workflow together.
 | G100-115 | P3 | Complete row blocker-source noise | Mode-scoped `complete` rows preserved broader next-step guidance, but still contributed `blocking_source: driver.action` to queue summaries. | Live authoring queue showed seven complete rows and one compile row, but `by_blocking_source` reported `driver.action:8`. | Completion clusters could look like blocker clusters, making operator triage noisier. | Issue 100DP - complete row blocking-source cleanup |
 | G100-116 | P2 | Command-plan complete rows counted as blocked | After Issue 100DP, table/summary attribution was fixed, but `command_plan.blocked` still contained mode-scoped complete rows. | Live authoring command-plan JSON reported `blocked_count: 7` for seven local complete rows, each with `reason: required_actor:none`. | Batch planning JSON could still make local completion look like blocked automation. | Issue 100DQ - command-plan complete bucket |
 | G100-117 | P3 | Queue-run complete rows hidden from summary | After Issue 100DQ, `/fig_queue_run` embedded `queue.command_plan.complete` but its top-level `summary` still omitted a complete-row count. | TDD reproduced a command plan with `complete_count: 1` where queue-run summary exposed planned executable and blocked counts but no `planned_complete`. | Plan-only batch output could make mode-scoped completion disappear unless the operator inspected nested command-plan JSON. | Issue 100DR - queue-run complete summary |
+| G100-118 | P3 | First-blocker summary context ambiguity | Complete rows no longer counted as blocked, but live authoring dogfood still showed `by_first_blocker=critique_stale:4...` because `first_blocker` is global status context. | Live table/JSON after Issue 100DR had `complete:7`, `blocked_count:0`, and `planned_complete:7`, while `by_first_blocker` still included broader workflow blockers. | Operators could read status-context first blockers as selected-mode blocked-row counts unless docs name the distinction. | Issue 100DS - first-blocker status context |
 
 ## Recommended Execution Order
 
@@ -960,6 +961,12 @@ the workflow together.
      exposes `summary.planned_complete`, so plan-only batch output carries the
      same blocked-vs-complete distinction as `/fig_queue --command-plan`.
 
+120. **Issue 100DS - first-blocker status context**
+     Implemented as queue documentation hardening. `/fig_queue` now explicitly
+     says `by_first_blocker` is global status context, can include
+     mode-scoped complete rows, and should not be used as the selected-mode
+     blocker count.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1057,9 +1064,11 @@ rows were still summarized as `driver.action` blocking sources. Issue 100DQ
 then applies the same distinction to command-plan JSON by separating
 mode-scoped complete rows from true blocked rows. Issue 100DR closes the
 follow-on queue-run summary gap by surfacing `planned_complete` at the same
-level as planned executable and blocked counts.
+level as planned executable and blocked counts. Issue 100DS closes the
+remaining wording gap by naming `by_first_blocker` as status context rather
+than selected-mode blocker evidence.
 
-After Issue 100DR, JSON-output helper tools on the active operator path are now
+After Issue 100DS, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1090,8 +1099,10 @@ JSON-only:
 - command-plan JSON separates complete rows from blocked rows.
 - queue-run summaries count planned complete rows instead of hiding them inside
   nested command-plan JSON.
+- queue first-blocker summaries are documented as status context rather than
+  current-mode blocker counts.
 
-The current post-100DR next candidates are therefore not old Issue 100A-C
+The current post-100DS next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1132,7 +1143,9 @@ closes the adjacent flag-conflict safety gap in the bounded queue runner. Issue
 blocking-source counts. Issue 100DQ closes the matching command-plan gap by
 placing complete rows in `command_plan.complete` instead of
 `command_plan.blocked`. Issue 100DR closes the queue-run projection gap by
-copying that complete count into `summary.planned_complete`.
+copying that complete count into `summary.planned_complete`. Issue 100DS
+closes the last adjacent wording trap by clarifying that `by_first_blocker`
+is broader status context, not selected-mode blocker accounting.
 
 ## Edge-Case Review
 
