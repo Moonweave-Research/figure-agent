@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CG, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100CH, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100CG plugin hygiene next-action quoting;
+- branch baseline: `main` after Issue 100CH inventory completion-summary guard;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -143,6 +143,7 @@ the workflow together.
 | G100-78 | P3 | Plugin install hygiene exit code | After Issue 100CD surfaced `installed_package_hygiene`, the CLI still exited `0` for `state: fresh` even when hygiene was `dirty`. | TDD reproduced a matching install with `.venv` package junk returning exit code 0 while JSON said `installed_package_hygiene.state: dirty`. | CI or shell operators that only check exit status could still treat a dirty installed plugin cache as ready. | Issue 100CE - plugin install hygiene exit-code guard |
 | G100-79 | P3 | Source package hygiene visibility | After Issue 100CE, the installed cache could be fresh+clean while the development plugin tree still contained generated package junk that the next reinstall would copy. | Live `plugin_package_audit.py . --max-mib 300` failed on the source tree while `plugin_install_freshness.py` exited 0 because it checked only installed hygiene. | Operators could clean the installed cache, see readiness pass, then reintroduce the same package junk on the next same-version reinstall. | Issue 100CF - source package hygiene guard |
 | G100-80 | P3 | Plugin hygiene next-action quoting | Issue 100CF emitted a source cleanup `next_action` containing the repo path `/Users/.../[figure-agent]/...` without shell quoting. | Live zsh execution failed with `no matches found: /Users/.../[figure-agent]/plugins/figure-agent`; TDD reproduced shell-special paths in source and installed hygiene commands. | Operators could follow the emitted cleanup command and fail before reaching the actual package hygiene fix. | Issue 100CG - plugin hygiene next-action quoting |
+| G100-81 | P3 | Inventory completion summary freshness | The Issue 100 header/table tracked through Issue 100CG, but the Recommended Execution Order completion summaries stopped at Issue 100BS. | TDD reproduced the release-contract guard passing header/baseline freshness while the completion-summary section lacked the latest Issue 100 suffix. | Operators could use the inventory as a status briefing and miss already-completed hardening slices after 100BS. | Issue 100CH - inventory completion-summary guard |
 
 ## Recommended Execution Order
 
@@ -609,6 +610,96 @@ the workflow together.
     under the fixture directory before OCR, palette clustering, structural
     extraction, or `coordinate_hints.yaml` writes can occur. Absolute and
     parent-relative escaped references fail with a controlled message.
+
+69. **Issue 100BT - reference-learning path boundary**
+    Completed as reference-learning contract hardening.
+    `critique_reference_pack.py` now rejects absolute and parent-relative
+    reference paths at the pack validation layer instead of letting downstream
+    metrics treat escaped anchors as missing/skipped evidence.
+
+70. **Issue 100BU - SVG semantic diff CLI fixture path boundary**
+    Completed as final-artifact semantic-safety hardening.
+    `svg_semantic_diff.py` now rejects traversal-like and outside-relative
+    fixture paths before writing `polish/svg_semantic_diff.json`, keeping
+    semantic-diff reports bound to declared examples.
+
+71. **Issue 100BV - golden artifact gate CLI fixture path boundary**
+    Completed as release-adjacent gate hardening.
+    `check_golden_artifacts.py` now rejects escaped fixture paths before
+    certifying accepted/golden artifact state, so outside directories cannot be
+    reported as normal golden-ready fixtures.
+
+72. **Issue 100BW - visual-clash warning budget CLI target boundary**
+    Completed as final-mode warning-budget hardening.
+    `check_visual_clash_budget.py` now validates explicit targets so CI/final
+    warning-budget checks certify only the repo examples tree or declared
+    fixtures under it.
+
+73. **Issue 100BX - reference-aesthetic metrics CLI fixture path boundary**
+    Completed as reference/aesthetic evidence hardening.
+    `reference_aesthetic_metrics.py` now rejects escaped fixture paths before
+    writing `build/reference_aesthetic_metrics.json`, preventing fresh-looking
+    metrics from being generated outside declared examples.
+
+74. **Issue 100BY - reference extract CLI fixture path boundary**
+    Completed as reference-authoring CLI hardening.
+    `reference_extract.py` now validates the fixture argument itself before OCR,
+    palette extraction, structural hints, or `coordinate_hints.yaml` writes can
+    occur.
+
+75. **Issue 100BZ - inspection trace CLI path boundary**
+    Completed as crop-read accountability hardening.
+    `inspection_trace.py validate` now rejects traversal-like fixture paths
+    before certifying `inspection_trace.yaml` as valid audit evidence.
+
+76. **Issue 100CA - layout drift CLI fixture path boundary**
+    Completed as compile-stage layout-evidence hardening.
+    `check_layout_drift.py` now accepts fixture names, `examples/<name>`,
+    absolute direct examples children, or compile-local `.`, while rejecting
+    traversal-like fixture paths before emitting normal `SKIP`/OK output.
+
+77. **Issue 100CB - layout drift usage doc sync**
+    Completed as usage-contract cleanup.
+    `check_layout_drift.py` help/docstrings now describe the hardened fixture
+    argument contract instead of implying arbitrary `<example_dir>` paths are
+    accepted.
+
+78. **Issue 100CC - inventory issue-file freshness guard**
+    Completed as roadmap-hygiene hardening.
+    `tests/test_release_contract.py` now compares the Issue 100 inventory
+    header/baseline against actual Issue 100 files on disk, preventing the
+    roadmap from claiming an older suffix after new issue docs land.
+
+79. **Issue 100CD - plugin install package hygiene summary**
+    Completed as install-readiness visibility hardening.
+    `plugin_install_freshness.py` now emits `installed_package_hygiene` so a
+    payload-fresh install can still show dirty package cache state and the
+    package-audit cleanup action.
+
+80. **Issue 100CE - plugin install hygiene exit-code guard**
+    Completed as install-readiness gate hardening.
+    `plugin_install_freshness.py` now exits `0` only when payload freshness is
+    `fresh` and installed package hygiene is `clean`, so shell/CI consumers do
+    not silently pass dirty installed caches.
+
+81. **Issue 100CF - source package hygiene guard**
+    Completed as source-install loop hardening.
+    `plugin_install_freshness.py` now emits `source_package_hygiene` and exits
+    nonzero when the development plugin tree contains generated package junk
+    that the next reinstall would copy.
+
+82. **Issue 100CG - plugin hygiene next-action quoting**
+    Completed as shell-safety hardening.
+    `plugin_install_freshness.py` now shell-quotes package-audit cleanup paths
+    in source and installed hygiene `next_action` values, so repo paths such as
+    `[figure-agent]` can be copied into zsh without glob failure.
+
+83. **Issue 100CH - inventory completion-summary guard**
+    Completed as roadmap-status hardening.
+    `tests/test_release_contract.py` now requires the Issue 100 Recommended
+    Execution Order completion summary to mention the latest Issue 100 file
+    suffix, so the inventory cannot have a fresh header/table with a stale
+    completion briefing.
 
 ## Non-Goals
 
