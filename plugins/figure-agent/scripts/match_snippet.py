@@ -15,6 +15,7 @@ phrases; for now those entries are documentation-only.
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -87,11 +88,15 @@ def match(briefing_path: Path, index_path: Path = INDEX_PATH) -> list[tuple[str,
     )
 
 
-def main(argv: list[str]) -> int:
-    if len(argv) != 2:
-        print("usage: match_snippet.py <briefing.md>", file=sys.stderr)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("briefing_path", type=Path, metavar="briefing.md")
+    args_list = list(argv if argv is not None else sys.argv[1:])
+    if not args_list:
+        parser.print_usage(sys.stderr)
         return 2
-    briefing_path = Path(argv[1])
+    args = parser.parse_args(args_list)
+    briefing_path = args.briefing_path
     if not briefing_path.exists():
         print(f"missing: {briefing_path}", file=sys.stderr)
         return 1
@@ -111,4 +116,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main())

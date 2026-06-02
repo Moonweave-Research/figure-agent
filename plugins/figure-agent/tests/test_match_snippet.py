@@ -19,7 +19,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from match_snippet import match  # noqa: E402
+from match_snippet import main, match  # noqa: E402
 
 TRUTH_PATH = Path(__file__).parent / "snippet_match_truth.yaml"
 
@@ -45,3 +45,27 @@ def test_top_n_matches_truth(case: dict) -> None:
         f"expected={sorted(expected)}, actual={sorted(actual_top)}, "
         f"full_ranking={[(sid, r['score']) for sid, r in results]}"
     )
+
+
+def test_cli_help_uses_argparse(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 0
+    assert "usage:" in captured.out
+    assert "briefing.md" in captured.out
+
+
+def test_cli_rejects_unknown_extra_arguments(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    briefing = tmp_path / "briefing.md"
+    briefing.write_text("## 1. Topic\n\nDemo\n", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc_info:
+        main([str(briefing), "--bogus"])
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 2
+    assert "unrecognized arguments: --bogus" in captured.err
