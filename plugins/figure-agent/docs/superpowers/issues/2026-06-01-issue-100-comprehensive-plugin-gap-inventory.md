@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BW, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100BX, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100BW warning-budget target path boundary;
+- branch baseline: `main` after Issue 100BX reference-aesthetic metrics path boundary;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -133,6 +133,7 @@ the workflow together.
 | G100-68 | P1 | SVG semantic diff CLI path boundary | `svg_semantic_diff.py` accepted raw relative fixture paths and could write `polish/svg_semantic_diff.json` outside `examples/` for traversal-like or existing outside-relative paths. | TDD reproduced `examples/../outside` and `outside` returning exit 0 and writing a semantic diff report outside declared fixtures. | A final-artifact semantic safety report should not be creatable for escaped paths before SVG polish status/gates consume it. | Issue 100BU - SVG semantic diff CLI fixture path boundary |
 | G100-69 | P1 | Golden artifact gate path boundary | `check_golden_artifacts.py` accepted raw relative fixture paths and could print `OK: golden artifact gates passed` for an existing directory outside `examples/`. | TDD reproduced `examples/../outside` and `outside --no-require-accepted` returning exit 0 for a minimal outside artifact set. | A release-adjacent accepted/golden gate must not certify escaped paths as normal fixture artifacts. | Issue 100BV - golden artifact gate CLI fixture path boundary |
 | G100-70 | P1 | Warning-budget gate path boundary | `check_visual_clash_budget.py` accepted raw relative target paths and could print `OK outside: visual_clash total ... <= cap ...` for traversal-like or existing outside-relative directories. | TDD reproduced `examples/../outside` returning exit 0 for an outside fixture-shaped directory. The existing CLI also accepted a single-component `outside` target when that directory existed. | A CI/final-mode warning budget guardrail must only certify the repo `examples/` tree or declared fixtures under it, not arbitrary sibling directories. | Issue 100BW - visual-clash warning budget CLI target boundary |
+| G100-71 | P1 | Reference-aesthetic metrics path boundary | `reference_aesthetic_metrics.py` accepted raw relative fixture paths and could write `build/reference_aesthetic_metrics.json` outside `examples/`. | TDD reproduced `examples/../outside` returning exit 0 and writing metrics for an outside fixture-shaped directory. | A reference/aesthetic critique input generator must not produce fresh-looking metrics for escaped paths before critique freshness and routing consume them. | Issue 100BX - reference-aesthetic metrics CLI fixture path boundary |
 
 ## Recommended Execution Order
 
