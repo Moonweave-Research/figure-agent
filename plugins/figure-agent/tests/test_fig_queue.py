@@ -251,10 +251,14 @@ def test_queue_command_plan_uses_operator_guidance_for_complete_rows(
         include_command_plan=True,
     )
 
-    handoff = queue["command_plan"]["blocked"][0]["operator_handoff"]
+    assert queue["command_plan"]["blocked_count"] == 0
+    assert queue["command_plan"]["complete_count"] == 1
+    assert queue["command_plan"]["blocked"] == []
+    handoff = queue["command_plan"]["complete"][0]["operator_handoff"]
     assert "authoring mode is complete" in handoff["next_step"]
     assert "--mode review" in handoff["next_step"]
     assert handoff["command"] is None
+    assert queue["command_plan"]["complete"][0]["reason"] == "mode_scoped_complete"
 
 
 def test_queue_table_keeps_blocked_handoff_when_driver_guidance_is_present(

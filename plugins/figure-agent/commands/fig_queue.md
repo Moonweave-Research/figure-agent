@@ -176,9 +176,11 @@ dominant actor/action/blocker distribution without switching to JSON.
 |---|---|
 | `schema` | `figure-agent.fixture-command-plan.v1` |
 | `executable_count` | number of rows with safe deterministic commands |
-| `blocked_count` | number of rows excluded from executable commands |
+| `blocked_count` | number of rows blocked by host/human/release/closeout/unsafe workflow boundaries |
+| `complete_count` | number of mode-scoped complete rows that are non-executable but not blocked |
 | `executable` | fixture/action/safe_command/required_actor records |
 | `blocked` | fixture/action/actor/blocking_source/stop_boundary/reason records |
+| `complete` | fixture/action/actor plus mode-scoped `operator_handoff` records |
 
 The human-readable table prints tab-separated `next_step` and `next_command`
 columns. When any row contains SVG-polish gate fields, the table also prints
@@ -194,10 +196,11 @@ Blocked command-plan rows include an additive
 `schema: figure-agent.queue-operator-handoff.v1` object under
 `operator_handoff`. The handoff states the required actor, next step, optional
 command, allowed scope, forbidden scope, and closeout checks. It is guidance for
-the operator; it does not make blocked rows executable. Complete rows are still
-non-executable in the command plan, but their handoff uses the preserved driver
-`operator_guidance.next_step` when available so mode-local completion remains
-visible in JSON as well as the table.
+the operator; it does not make blocked rows executable. Complete rows are
+non-executable but not blocked; they live under `command_plan.complete`, count
+toward `complete_count`, and use preserved driver `operator_guidance.next_step`
+when available so mode-local completion remains visible in JSON as well as the
+table.
 
 The queue does not reinterpret driver policy. If a row looks surprising, inspect
 the corresponding single-fixture `/fig_drive <name> --mode <mode> --goal

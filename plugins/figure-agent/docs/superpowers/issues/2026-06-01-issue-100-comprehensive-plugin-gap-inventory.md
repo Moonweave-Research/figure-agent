@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DP, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DQ, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -12,7 +12,7 @@ audit hardening work, including Issues 90, 91, 97, and 99.
 Current baseline:
 
 - plugin root: `plugins/figure-agent`;
-- branch baseline: `main` after Issue 100DP complete row blocking-source cleanup;
+- branch baseline: `main` after Issue 100DQ command-plan complete bucket;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -178,6 +178,7 @@ the workflow together.
 | G100-113 | P3 | Queue table summary visibility | `/fig_queue` JSON summary exposed grouped counts, but the default human-readable table printed only `summary total=... errors=...`. | Live polish queue showed 4 host critiques, 1 compile prerequisite, 2 loop reruns, and 1 release-boundary row in JSON, while table output hid those corpus-level counts. | Operators using the default table still had to scan rows manually or switch to JSON to know the dominant next action. | Issue 100DN - queue table summary counts |
 | G100-114 | P2 | Queue-run execute/dry-run ambiguity | `/fig_queue_run` accepted both `--execute` and `--dry-run`, then silently executed because only `args.execute` controlled mutation. | TDD reproduced `--execute --dry-run` returning exit 0 and calling the workflow runner. | A user or agent intending a dry run could accidentally trigger bounded workflow execution. | Issue 100DO - queue-run execute/dry-run conflict |
 | G100-115 | P3 | Complete row blocker-source noise | Mode-scoped `complete` rows preserved broader next-step guidance, but still contributed `blocking_source: driver.action` to queue summaries. | Live authoring queue showed seven complete rows and one compile row, but `by_blocking_source` reported `driver.action:8`. | Completion clusters could look like blocker clusters, making operator triage noisier. | Issue 100DP - complete row blocking-source cleanup |
+| G100-116 | P2 | Command-plan complete rows counted as blocked | After Issue 100DP, table/summary attribution was fixed, but `command_plan.blocked` still contained mode-scoped complete rows. | Live authoring command-plan JSON reported `blocked_count: 7` for seven local complete rows, each with `reason: required_actor:none`. | Batch planning JSON could still make local completion look like blocked automation. | Issue 100DQ - command-plan complete bucket |
 
 ## Recommended Execution Order
 
@@ -947,6 +948,12 @@ the workflow together.
      use `blocking_source: null`, so `by_blocking_source` summarizes actual
      blockers/actions instead of counting local completion as `driver.action`.
 
+118. **Issue 100DQ - command-plan complete bucket**
+     Implemented as command-plan UX hardening. Mode-scoped `complete` rows now
+     live under additive `command_plan.complete` with `complete_count`, while
+     `blocked_count` is reserved for host/human/release/closeout/unsafe
+     workflow blockers.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1040,9 +1047,11 @@ instead of requiring JSON output. Issue 100DO closes the adjacent execution
 safety ambiguity: `/fig_queue_run --execute --dry-run` now fails before any
 workflow attempt instead of silently treating the call as execution. Issue
 100DP then removes the adjacent attribution noise where mode-scoped complete
-rows were still summarized as `driver.action` blocking sources.
+rows were still summarized as `driver.action` blocking sources. Issue 100DQ
+then applies the same distinction to command-plan JSON by separating
+mode-scoped complete rows from true blocked rows.
 
-After Issue 100DP, JSON-output helper tools on the active operator path are now
+After Issue 100DQ, JSON-output helper tools on the active operator path are now
 correctly able to say, without forcing operators to remember which commands are
 JSON-only:
 
@@ -1070,8 +1079,9 @@ JSON-only:
 - queue-run execution requires an unambiguous `--execute`; explicit
   `--dry-run` cannot be combined with it.
 - mode-scoped complete rows no longer pollute blocker-source summaries.
+- command-plan JSON separates complete rows from blocked rows.
 
-The current post-100DP next candidates are therefore not old Issue 100A-C
+The current post-100DQ next candidates are therefore not old Issue 100A-C
 contract gaps. They are:
 
 1. **Real-fixture SVG polish promotion evidence.** The route is mechanically
@@ -1109,7 +1119,9 @@ summaries. Issue 100DN closes the remaining default-table summary visibility
 gap by printing the same grouped counts that JSON already exposed. Issue 100DO
 closes the adjacent flag-conflict safety gap in the bounded queue runner. Issue
 100DP closes the adjacent queue-attribution gap by removing complete rows from
-blocking-source counts.
+blocking-source counts. Issue 100DQ closes the matching command-plan gap by
+placing complete rows in `command_plan.complete` instead of
+`command_plan.blocked`.
 
 ## Edge-Case Review
 

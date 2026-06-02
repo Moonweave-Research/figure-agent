@@ -417,7 +417,22 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
 def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
     executable: list[dict[str, Any]] = []
     blocked: list[dict[str, Any]] = []
+    complete: list[dict[str, Any]] = []
     for row in rows:
+        if row.get("action") == fig_driver.ACTION_COMPLETE:
+            reason = "mode_scoped_complete"
+            complete.append(
+                {
+                    "fixture": row.get("fixture"),
+                    "action": row.get("action"),
+                    "required_actor": row.get("required_actor"),
+                    "blocking_source": row.get("blocking_source"),
+                    "stop_boundary": row.get("stop_boundary"),
+                    "reason": reason,
+                    "operator_handoff": _operator_handoff(row, reason=reason),
+                }
+            )
+            continue
         reason = _blocked_reason(row)
         if reason is None:
             executable.append(
@@ -444,8 +459,10 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "schema": COMMAND_PLAN_SCHEMA,
         "executable_count": len(executable),
         "blocked_count": len(blocked),
+        "complete_count": len(complete),
         "executable": executable,
         "blocked": blocked,
+        "complete": complete,
     }
 
 

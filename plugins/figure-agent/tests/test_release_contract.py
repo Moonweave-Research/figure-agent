@@ -275,6 +275,15 @@ def test_fig_queue_docs_exclude_complete_rows_from_blocking_source() -> None:
     assert "not counted as a blocker" in command_doc
 
 
+def test_fig_queue_docs_separate_complete_rows_from_command_plan_blockers() -> None:
+    command_doc = (REPO_ROOT / "commands" / "fig_queue.md").read_text()
+
+    assert "`blocked_count` | number of rows blocked by" in command_doc
+    assert "`complete_count`" in command_doc
+    assert "`command_plan.complete`" in command_doc
+    assert "non-executable but not blocked" in command_doc
+
+
 def test_fig_queue_run_docs_describe_execute_dry_run_conflict() -> None:
     command_doc = (REPO_ROOT / "commands" / "fig_queue_run.md").read_text()
 
