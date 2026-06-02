@@ -383,9 +383,7 @@ def test_main_rejects_parent_relative_fixture_path(tmp_path, monkeypatch, capsys
     assert "invalid fixture path" in capsys.readouterr().err
 
 
-def test_main_rejects_existing_relative_directory_outside_examples(
-    tmp_path, monkeypatch, capsys
-):
+def test_main_rejects_existing_relative_directory_outside_examples(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     outside = tmp_path / "outside"
     outside.mkdir()
@@ -396,3 +394,38 @@ def test_main_rejects_existing_relative_directory_outside_examples(
 
     assert check_layout_drift.main() == 1
     assert "relative fixture names must resolve under examples" in capsys.readouterr().err
+
+
+def test_main_skips_when_golden_contract_is_not_a_mapping(tmp_path, monkeypatch, capsys):
+    """A scalar/list golden_contract must SKIP cleanly, not traceback on .get()."""
+    example = tmp_path / "scratch_fixture"
+    example.mkdir()
+    # Mirrors the compile.sh `.` invocation form from a fixture directory.
+    (example / "spec.yaml").write_text('golden_contract: "yes"\npanels: []\n')
+    monkeypatch.chdir(example)
+
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", "."])
+
+    assert check_layout_drift.main() == 0
+    assert "golden_contract is not a mapping" in capsys.readouterr().out
+
+
+def test_main_handles_non_mapping_coordinate_hints(tmp_path, monkeypatch):
+    """A non-dict coordinate_hints.yaml must not crash on hints.get(...)."""
+    monkeypatch.chdir(tmp_path)
+    example = tmp_path / "examples" / "hints_fixture"
+    example.mkdir(parents=True)
+    (example / "spec.yaml").write_text(
+        yaml.safe_dump({"panels": [], "golden_contract": {"required_labels": ["deep"]}})
+    )
+    (example / "coordinate_hints.yaml").write_text(yaml.safe_dump(["not", "a", "mapping"]))
+    fake_pdf = example / "build" / "hints_fixture.pdf"
+    fake_pdf.parent.mkdir()
+    fake_pdf.write_bytes(b"%PDF-1.4 stub\n")
+
+    def fake_extract(_pdf_path):
+        return ([], (1000.0, 1000.0))
+
+    monkeypatch.setattr(check_layout_drift, "extract_pdf_words_and_page", fake_extract)
+    monkeypatch.setattr(sys, "argv", ["check_layout_drift.py", str(example)])
+    assert check_layout_drift.main() == 0

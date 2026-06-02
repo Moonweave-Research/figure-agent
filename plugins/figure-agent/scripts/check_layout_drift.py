@@ -378,16 +378,12 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
                 "invalid fixture path: expected examples/<fixture-name>"
             ) from exc
         if len(relative.parts) != 1 or ".." in relative.parts:
-            raise LayoutDriftCliError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise LayoutDriftCliError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(relative.parts[0], str(value))
         return Path("examples") / relative.parts[0]
     if value.parts and value.parts[0] == "examples":
         if len(value.parts) != 2 or ".." in value.parts:
-            raise LayoutDriftCliError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise LayoutDriftCliError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(value.parts[1], str(value))
         return Path("examples") / value.parts[1]
     if len(value.parts) == 1:
@@ -454,7 +450,13 @@ def main() -> int:
         return 0
 
     spec = parse_spec(spec_path.read_text(encoding="utf-8"))
-    required = (spec.get("golden_contract") or {}).get("required_labels") or []
+    contract = spec.get("golden_contract")
+    if not isinstance(contract, dict):
+        if contract is not None:
+            print(f"SKIP: {example_dir.name} golden_contract is not a mapping")
+            return 0
+        contract = {}
+    required = contract.get("required_labels") or []
     if not required:
         print(f"SKIP: {example_dir.name} has no golden_contract.required_labels")
         return 0
@@ -467,7 +469,11 @@ def main() -> int:
         print(f"FAIL: no compiled PDF for {example_dir.name}", file=sys.stderr)
         return 1
 
-    hints = yaml.safe_load(hints_path.read_text(encoding="utf-8")) or {}
+    hints = (
+        _loaded
+        if isinstance(_loaded := yaml.safe_load(hints_path.read_text(encoding="utf-8")), dict)
+        else {}
+    )
     pdf_words, page_size = extract_pdf_words_and_page(pdf_path)
 
     results = evaluate_drift(required, hints, pdf_words, page_size)
