@@ -127,6 +127,73 @@ def test_group_transform_reports_group_transform_risk(tmp_path: Path) -> None:
     assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
 
 
+def test_element_transform_added_on_id_text_reports_group_transform_risk(
+    tmp_path: Path,
+) -> None:
+    source = _base_svg(
+        '<text id="axislabel" x="5" y="5">Voltage (V)</text><path id="p" d="M0 0 L1 1"/>'
+    )
+    polished = _base_svg(
+        '<text id="axislabel" x="5" y="5" transform="translate(480,480)">Voltage (V)</text>'
+        '<path id="p" d="M0 0 L1 1"/>'
+    )
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "semantic_backport_required"
+    assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
+
+
+def test_single_child_group_transform_reports_group_transform_risk(tmp_path: Path) -> None:
+    source = _base_svg('<g id="panel"><text id="a">A</text></g>')
+    polished = _base_svg('<g id="panel" transform="translate(480,480)"><text id="a">A</text></g>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "semantic_backport_required"
+    assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
+
+
+def test_unchanged_element_transform_does_not_report_risk(tmp_path: Path) -> None:
+    body = '<text id="axislabel" transform="translate(2,3)">A</text>'
+    source = _base_svg(body)
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=source)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "pass"
+    assert report["findings"] == []
+
+
+@pytest.mark.parametrize("transform", ("translate(1.5 -1)", "translate(10,-10)"))
+def test_bounded_translate_added_on_id_element_passes(
+    tmp_path: Path,
+    transform: str,
+) -> None:
+    source = _base_svg('<text id="label-main" x="2" y="8">demo</text>')
+    polished = _base_svg(f'<text id="label-main" x="2" y="8" transform="{transform}">demo</text>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "pass"
+    assert "group_transform_risk" not in {finding["kind"] for finding in report["findings"]}
+
+
 @pytest.mark.parametrize(
     "attribute",
     ("opacity", "fill-opacity", "stroke-opacity"),

@@ -6,6 +6,7 @@ import json
 import re
 import sys
 import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,9 @@ UNSUPPORTED_TAGS = frozenset({"filter", "mask", "clipPath", "foreignObject", "im
 UNSUPPORTED_ATTRS = frozenset({"filter", "mask", "clip-path"})
 FRAME_ATTRS = ("viewBox", "width", "height")
 OPTICAL_ATTRS = ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity")
+# Mirror of svg_polish_executor.MAX_TRANSLATE_PX (imported there would be circular:
+# executor -> recipe -> manifest -> svg_semantic_diff). Keep both in sync.
+MAX_TRANSLATE_PX = 10.0
 
 
 class SvgSemanticDiffError(ValueError):
@@ -114,6 +118,41 @@ def _strip_namespace(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
 
+def _multiset_difference(
+    polished: list[tuple[str, str]], source: list[tuple[str, str]]
+) -> list[tuple[str, str]]:
+    return list((Counter(polished) - Counter(source)).elements())
+
+
+_TRANSLATE_FUNCTION = re.compile(r"translate\(\s*([^()]*?)\s*\)")
+
+
+def _transform_within_executor_bounds(transform: str) -> bool:
+    """True only for one-or-more translate() functions within the executor's bound.
+
+    Mirrors svg_polish_executor's per-component MAX_TRANSLATE_PX gate so the
+    sanctioned bounded-translate output passes while rotate/scale/matrix and
+    over-bound translates (e.g. an undeclared off-position label) are flagged.
+    """
+    stripped = transform.strip()
+    if not stripped:
+        return False
+    remainder = _TRANSLATE_FUNCTION.sub("", stripped).strip()
+    if remainder:
+        return False
+    for match in _TRANSLATE_FUNCTION.finditer(stripped):
+        components = [token for token in re.split(r"[ ,]+", match.group(1).strip()) if token]
+        if len(components) not in (1, 2):
+            return False
+        try:
+            values = [float(token) for token in components]
+        except ValueError:
+            return False
+        if any(abs(value) > MAX_TRANSLATE_PX for value in values):
+            return False
+    return True
+
+
 def _text_content(element: ET.Element) -> str:
     return " ".join("".join(element.itertext()).split())
 
@@ -134,6 +173,8 @@ def _inventory(path: Path) -> dict[str, Any]:
     classes: set[str] = set()
     unsupported: list[str] = []
     group_transform_risks: list[str] = []
+    transforms_by_id: dict[str, tuple[str, str]] = {}
+    transforms_no_id: list[tuple[str, str]] = []
     colors_by_id: dict[str, tuple[str | None, ...]] = {}
     optical_signatures_no_id: list[tuple[str | None, ...]] = []
     path_count = 0
@@ -172,16 +213,26 @@ def _inventory(path: Path) -> dict[str, Any]:
         )
         if href and re.match(r"^[a-z][a-z0-9+.-]*://", href, flags=re.IGNORECASE):
             unsupported.append(f"{tag}#{element_id or '?'}@external_href")
-        if tag == "g" and "transform" in element.attrib:
-            semantic_children = sum(
-                1
-                for child in element.iter()
-                if child is not element and _strip_namespace(child.tag) in {"text", "path", "use"}
-            )
-            if semantic_children > 1:
-                group_transform_risks.append(
-                    f"g#{element_id or '?'} transform={element.attrib['transform']}"
+        if "transform" in element.attrib:
+            transform = element.attrib["transform"]
+            if tag == "g":
+                semantic_children = sum(
+                    1
+                    for child in element.iter()
+                    if child is not element
+                    and _strip_namespace(child.tag) in {"text", "path", "use"}
                 )
+                if semantic_children > 1:
+                    group_transform_risks.append(f"g#{element_id or '?'} transform={transform}")
+                elif element_id:
+                    transforms_by_id[element_id] = ("g", transform)
+                else:
+                    transforms_no_id.append(("g", transform))
+            elif tag in {"text", "path", "use"}:
+                if element_id:
+                    transforms_by_id[element_id] = (tag, transform)
+                else:
+                    transforms_no_id.append((tag, transform))
     return {
         "frame": {key: root.attrib.get(key, "") for key in FRAME_ATTRS},
         "texts": sorted(texts),
@@ -189,6 +240,8 @@ def _inventory(path: Path) -> dict[str, Any]:
         "classes": sorted(classes),
         "unsupported": sorted(set(unsupported)),
         "group_transform_risks": sorted(set(group_transform_risks)),
+        "transforms_by_id": transforms_by_id,
+        "transforms_no_id": sorted(transforms_no_id),
         "path_count": path_count,
         "marker_count": marker_count,
         "marker_attr_count": marker_attr_count,
@@ -261,6 +314,28 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             item,
             SEMANTIC_DIFF_BACKPORT,
         )
+    for element_id, polished_transform in sorted(polished["transforms_by_id"].items()):
+        if source["transforms_by_id"].get(
+            element_id
+        ) != polished_transform and not _transform_within_executor_bounds(polished_transform[1]):
+            tag, transform = polished_transform
+            add(
+                "group_transform_risk",
+                "MAJOR",
+                f"{tag}#{element_id} transform={transform}",
+                SEMANTIC_DIFF_BACKPORT,
+            )
+    added_transforms_no_id = _multiset_difference(
+        polished["transforms_no_id"], source["transforms_no_id"]
+    )
+    for tag, transform in sorted(added_transforms_no_id):
+        if not _transform_within_executor_bounds(transform):
+            add(
+                "group_transform_risk",
+                "MAJOR",
+                f"{tag}#? transform={transform}",
+                SEMANTIC_DIFF_BACKPORT,
+            )
     if (
         source["path_count"] != polished["path_count"]
         or source["marker_count"] != polished["marker_count"]
