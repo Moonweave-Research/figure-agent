@@ -13,6 +13,7 @@ from external_vision_review import (  # noqa: E402
     EXTERNAL_VISION_REVIEW_SCHEMA,
     ExternalVisionReviewError,
     external_vision_review_freshness,
+    external_vision_review_opted_in,
     external_vision_review_template,
     load_external_vision_review,
     load_optional_external_vision_review,
@@ -301,6 +302,29 @@ def test_external_vision_review_summary_reports_spec_parse_error(
     assert summary is not None
     assert summary["evaluation_state"] == "invalid"
     assert "Unknown style_profile" in summary["error"]
+
+
+def test_external_vision_review_opted_in_treats_false_as_opt_out() -> None:
+    assert external_vision_review_opted_in({"external_vision_review": False}) is False
+
+
+def test_external_vision_review_opted_in_rejects_non_bool() -> None:
+    with pytest.raises(ExternalVisionReviewError, match="must be true when present"):
+        external_vision_review_opted_in({"external_vision_review": "yes"})
+
+
+def test_external_vision_review_summary_none_when_explicitly_disabled(
+    tmp_path: Path,
+) -> None:
+    example_dir = tmp_path / "demo"
+    example_dir.mkdir()
+    (example_dir / "spec.yaml").write_text(
+        "name: demo\nexternal_vision_review: false\n",
+        encoding="utf-8",
+    )
+    _write_review(example_dir)
+
+    assert external_vision_review_summary(example_dir) is None
 
 
 def test_external_vision_review_template_uses_current_artifact_and_manifest_crops(

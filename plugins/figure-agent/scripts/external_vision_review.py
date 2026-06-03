@@ -18,9 +18,7 @@ EXTERNAL_VISION_REVIEW_FILENAME = "external_vision_review.yaml"
 
 CONFIDENCES = frozenset({"low", "medium", "high"})
 SEVERITIES = frozenset({"BLOCKER", "MAJOR", "MINOR", "NIT"})
-SUGGESTED_ACTIONS = frozenset(
-    {"patch", "human_review", "revise_briefing", "accept_simplification"}
-)
+SUGGESTED_ACTIONS = frozenset({"patch", "human_review", "revise_briefing", "accept_simplification"})
 
 
 class ExternalVisionReviewError(Exception):
@@ -114,9 +112,7 @@ def _mapping_items(
         if id_key is not None:
             item_id = _require_string(item, id_key, label=item_label)
             if item_id in seen_ids:
-                raise ExternalVisionReviewError(
-                    f"{item_label}.{id_key} is duplicated: {item_id}"
-                )
+                raise ExternalVisionReviewError(f"{item_label}.{id_key} is duplicated: {item_id}")
             seen_ids.add(item_id)
         items.append(item)
     return items
@@ -188,7 +184,7 @@ def _validate_conflicts(data: dict[str, Any], finding_ids: set[str]) -> None:
 
 def external_vision_review_opted_in(spec: dict[str, Any]) -> bool:
     value = spec.get("external_vision_review")
-    if value is None:
+    if value is None or value is False:
         return False
     if value is True:
         return True
@@ -321,8 +317,7 @@ def load_optional_external_vision_review(
     review = load_external_vision_review(path)
     if review.get("fixture") != example_dir.name:
         raise ExternalVisionReviewError(
-            "external_vision_review.fixture must match example directory name: "
-            f"{example_dir.name}"
+            f"external_vision_review.fixture must match example directory name: {example_dir.name}"
         )
     return review
 
@@ -378,9 +373,7 @@ def external_vision_review_freshness(
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     if manifest_path.is_file():
         try:
-            current_crop_paths = {
-                record["path"] for record in _reviewed_crop_records(example_dir)
-            }
+            current_crop_paths = {record["path"] for record in _reviewed_crop_records(example_dir)}
         except ExternalVisionReviewError as exc:
             current_crop_paths = set()
             errors.append(str(exc))
@@ -426,8 +419,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise ExternalVisionReviewError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 
