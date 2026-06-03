@@ -65,7 +65,12 @@ from svg_polish_delta import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VISUAL_CLASH_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.7"
 CROP_AUDIT_ACCOUNTING_SCHEMA = "figure-agent.critique.v1.8"
-SVG_POLISH_DELTA_AUDIT_SCHEMA = "figure-agent.critique.v1.16"
+SVG_POLISH_DELTA_AUDIT_SCHEMAS = frozenset(
+    {
+        "figure-agent.critique.v1.16",
+        "figure-agent.critique.v1.17",
+    }
+)
 VISUAL_CLASH_ACCOUNTING_SCHEMAS = frozenset(
     {
         "figure-agent.critique.v1.7",
@@ -1947,14 +1952,14 @@ def _svg_polish_delta_accounting_violations(
                 message=f"SVG polish delta manifest invalid: {exc}",
             )
         ]
-    if frontmatter.get("schema") != SVG_POLISH_DELTA_AUDIT_SCHEMA:
+    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
         return [
             CritiqueLintViolation(
                 severity="blocker",
                 category="svg_polish_delta_accounting",
                 message=(
-                    "fresh SVG polish delta requires current critique schema "
-                    f"{SVG_POLISH_DELTA_AUDIT_SCHEMA}"
+                    "fresh SVG polish delta requires an SVG-polish critique schema "
+                    f"({', '.join(sorted(SVG_POLISH_DELTA_AUDIT_SCHEMAS))})"
                 ),
             )
         ]
@@ -2038,7 +2043,7 @@ def _svg_polish_delta_accounting_violations(
 def _aesthetic_gate_accounting_violations(
     frontmatter: dict[str, Any],
 ) -> list[CritiqueLintViolation]:
-    if frontmatter.get("schema") != SVG_POLISH_DELTA_AUDIT_SCHEMA:
+    if frontmatter.get("schema") not in SVG_POLISH_DELTA_AUDIT_SCHEMAS:
         return []
     raw_items = frontmatter.get("aesthetic_gate_audit")
     if not isinstance(raw_items, list):
