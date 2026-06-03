@@ -171,7 +171,7 @@ def _parse_svg(path: Path) -> ET.Element:
 
 def _inventory(path: Path) -> dict[str, Any]:
     root = _parse_svg(path)
-    texts: set[str] = set()
+    texts: list[str] = []
     ids: set[str] = set()
     classes: set[str] = set()
     unsupported: list[str] = []
@@ -198,7 +198,7 @@ def _inventory(path: Path) -> dict[str, Any]:
         if tag == "text":
             text = _text_content(element)
             if text:
-                texts.add(text)
+                texts.append(text)
         if tag == "path":
             path_count += 1
         if tag == "marker":
@@ -286,12 +286,15 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             )
         )
 
-    missing_texts = sorted(set(source["texts"]) - set(polished["texts"]))
-    for text in missing_texts:
+    source_text_counts = Counter(source["texts"])
+    polished_text_counts = Counter(polished["texts"])
+    dropped_texts = source_text_counts - polished_text_counts
+    for text in sorted(dropped_texts):
         add(
             "text_identity_loss",
             "BLOCKER",
-            f"missing text label {text!r}",
+            f"missing text label {text!r} "
+            f"(count {source_text_counts[text]} to {polished_text_counts[text]})",
             SEMANTIC_DIFF_BACKPORT,
         )
     if source["frame"] != polished["frame"]:

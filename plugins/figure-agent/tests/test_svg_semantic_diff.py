@@ -70,6 +70,55 @@ def test_missing_text_label_reports_identity_loss(tmp_path: Path) -> None:
     assert "V_s meter" in report["findings"][0]["evidence"]
 
 
+# Mirror real dvisvgm --pdf output: per-glyph <text> nodes that share a font
+# class, carry NO id, and have NO per-node optical attrs (fill is inherited from
+# a parent <g>). Three identical "10" glyph nodes; the polished SVG drops one.
+_GLYPH_TICK = '<text class="f0">10</text>'
+
+
+def test_deleting_one_of_duplicate_text_nodes_reports_identity_loss(tmp_path: Path) -> None:
+    source = _base_svg(_GLYPH_TICK * 3)
+    polished = _base_svg(_GLYPH_TICK * 2)
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "semantic_backport_required"
+    assert {finding["kind"] for finding in report["findings"]} == {"text_identity_loss"}
+    assert "10" in report["findings"][0]["evidence"]
+
+
+def test_reordered_duplicate_text_nodes_pass(tmp_path: Path) -> None:
+    source = _base_svg(f'{_GLYPH_TICK}<text class="f0">20</text>{_GLYPH_TICK}')
+    polished = _base_svg(f'{_GLYPH_TICK}{_GLYPH_TICK}<text class="f0">20</text>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "pass"
+    assert report["findings"] == []
+
+
+def test_adding_duplicate_text_node_passes(tmp_path: Path) -> None:
+    source = _base_svg(_GLYPH_TICK * 2)
+    polished = _base_svg(_GLYPH_TICK * 3)
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "pass"
+    assert "text_identity_loss" not in {finding["kind"] for finding in report["findings"]}
+
+
 def test_changed_viewbox_reports_frame_change(tmp_path: Path) -> None:
     source = _base_svg('<text id="label-a">A</text>')
     polished = _base_svg(
