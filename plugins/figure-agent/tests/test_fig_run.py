@@ -14,6 +14,7 @@ import fig_driver  # noqa: E402
 import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
 import fig_run_records  # noqa: E402
+from next_action_summary import driver_next_action_summary  # noqa: E402
 
 
 def _driver_summary(
@@ -1183,17 +1184,16 @@ def test_reference_missing_handoff_requires_workflow_agent(
 def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _install_driver_sequence(
-        monkeypatch,
-        [
-            _driver_summary(
-                action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
-                safe_command=None,
-                stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
-                reason="polished SVG requires semantic backport to TikZ first",
-            )
-        ],
+    driver_summary = _driver_summary(
+        action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+        safe_command=None,
+        stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+        reason="polished SVG requires semantic backport to TikZ first",
     )
+    # Mirror fig_driver.py attaching the real next_action_summary so the
+    # boundary_handoff copies the source-repair allowed_scope, not the stub.
+    driver_summary["next_action_summary"] = driver_next_action_summary(driver_summary)
+    _install_driver_sequence(monkeypatch, [driver_summary])
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -1207,6 +1207,11 @@ def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
     assert handoff["required_actor"] == "workflow_agent"
     assert handoff["action"] == fig_driver.ACTION_POLISH_HANDOFF_STOP
     assert handoff["stop_boundary"] == fig_driver.STOP_SEMANTIC_BACKPORT
+    assert handoff["allowed_scope"] == [
+        "examples/runner_demo/spec.yaml",
+        "examples/runner_demo/briefing.md",
+        "examples/runner_demo/runner_demo.tex",
+    ]
     assert handoff["closeout_checks"] == [
         "backport semantic changes to source/spec",
         "rerun live /fig_status",
