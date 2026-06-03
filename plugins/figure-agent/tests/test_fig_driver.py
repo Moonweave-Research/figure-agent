@@ -2037,6 +2037,121 @@ def test_polish_mode_stale_polished_svg_routes_to_handoff_refresh(
     assert "svg_polish_handoff.py" in summary["next_action_summary"]["reason"]
 
 
+def test_polish_mode_invalid_polished_svg_routes_to_manifest_repair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The SVG polish handoff produced a manifest (final_artifact_kind is
+    # polished_svg), but the manifest is malformed at the manifest level (wrong
+    # polished.path / schema / provenance fault / semantic-diff validating the
+    # wrong SVG), so compute_final_artifact_state returns INVALID. /fig_loop is
+    # verify-only and can never clear an INVALID manifest. The driver must route
+    # to manifest repair, not fall through to run_fig_loop, and must NOT emit
+    # the editorial can_start_svg_polish=true / state=ready instruction while the
+    # final artifact is still INVALID.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "INVALID",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["final_artifact_state"] == "INVALID"
+    assert summary["status"]["final_artifact_kind"] == "polished_svg"
+    # Must not fall through to the verify-only fig_loop route.
+    assert summary["action"] != "run_fig_loop"
+    assert summary["action"] == "polish_handoff_stop"
+    # Reason names the manifest-level fault and the corrective command, and
+    # states /fig_loop cannot clear an INVALID manifest.
+    assert "invalid" in summary["reason"].lower()
+    assert "manifest" in summary["reason"].lower()
+    assert "svg_polish_handoff.py" in summary["reason"]
+    assert "--write" in summary["reason"]
+    assert "--force" in summary["reason"]
+    assert "verify-only" in summary["reason"]
+    # Operator-facing gate must route to the repair, not the no-checkpoint
+    # rerun_fig_loop default, and must not authorize starting SVG polish.
+    gate = summary["svg_polish_gate"]
+    assert gate["next_action"] == "repair_svg_polish_manifest"
+    assert gate["next_action"] != "rerun_fig_loop"
+    assert gate["can_start_svg_polish"] is False
+    assert gate["state"] == "blocked"
+    # Derived operator guidance and next_action_summary carry the repair route.
+    # Positive checks guard against an empty/generic fallback slipping past the
+    # negative assertion: this is a concrete polish-boundary svg_editor stop.
+    assert summary["operator_guidance"]["state"] == "polish_boundary"
+    assert summary["operator_guidance"]["required_actor"] == "svg_editor"
+    next_step = summary["operator_guidance"]["next_step"]
+    assert "rerun_fig_loop" not in next_step
+    assert "SVG polish handoff" in next_step
+    assert summary["next_action_summary"]["action"] == "polish_handoff_stop"
+    assert "svg_polish_handoff.py" in summary["next_action_summary"]["reason"]
+
+
+def test_polish_mode_invalid_polished_svg_overrides_ready_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Even with a fresh ready_for_svg_polish loop checkpoint present, an INVALID
+    # polished_svg final artifact must win: the editorial route would otherwise
+    # emit can_start_svg_polish=true / state=ready, a directly contradictory
+    # instruction while status.final_artifact_state is still INVALID.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "pass",
+        "polish_recommended_path": "ready_for_svg_polish",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "INVALID",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    gate = summary["svg_polish_gate"]
+    assert gate["can_start_svg_polish"] is False
+    assert gate["next_action"] == "repair_svg_polish_manifest"
+    assert gate["state"] == "blocked"
+
+
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
