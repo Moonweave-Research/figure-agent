@@ -10,7 +10,11 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import critique_brief  # noqa: E402
+import critique_evidence_lint  # noqa: E402
 import critique_lint  # noqa: E402
+import critique_schema_validator  # noqa: E402
+from critique_contract import CritiqueContractError  # noqa: E402
+from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 QUALITY_AXIS_NAMES = (
@@ -2056,6 +2060,10 @@ def test_lint_critique_accepts_v1_14_continue_tikz_with_remaining_lever(
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.14",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
         editorial_yaml=_editorial_yaml_with_route_detail(),
@@ -4880,3 +4888,103 @@ def test_lint_critique_cli_reports_controlled_error_for_invalid_fixture_name(
     assert result == 1
     assert "invalid fixture path" in captured.out
     assert "Traceback" not in captured.err
+
+
+def _passing_print_scale_frontmatter(schema: str) -> dict[str, object]:
+    return {
+        "schema": schema,
+        "quality_axes": {
+            "journal_polish": {
+                "verdict": "pass",
+                "evidence": "journal polish reads cleanly",
+            },
+            "publication_readiness": {
+                "verdict": "pass",
+                "evidence": "all upstream axes pass; artifact is figure-ready",
+            },
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ["figure-agent.critique.v1.14", "figure-agent.critique.v1.17"],
+)
+def test_print_scale_blocker_fires_for_brief_emitted_schema_without_evidence(
+    schema: str,
+) -> None:
+    violations = critique_evidence_violations(_passing_print_scale_frontmatter(schema))
+
+    assert {violation.message for violation in violations} == {
+        "journal_polish verdict is pass but evidence does not name print-scale audit evidence",
+        "publication_readiness verdict is pass but evidence does not name "
+        "print-scale audit evidence",
+    }
+
+
+# --- schema/accounting coupling coverage (folded from
+# test_critique_schema_accounting_coverage.py to keep the net test-file count
+# stable) ---
+#
+# `critique_brief` emits one of a small set of critique schema versions. The
+# audit-evidence accounting only enforces a deterministic detector
+# (visual_clash, text_boundary, label_path, undeclared_geometry, crop_audit,
+# print-scale) when the critique's schema string is a member of that detector's
+# hand-maintained accounting frozenset. If a schema the brief can emit is missing
+# from a set, the detector accounting is silently skipped and an unaccounted
+# candidate slips through with no gate. These tests fail the moment a future
+# schema bump is wired into the brief/validator but not into one of the
+# accounting frozensets, instead of letting the gap pass silently.
+
+
+def _emitted_critique_schemas() -> set[str]:
+    """The full set of schema strings `critique_brief` can stamp on a fresh
+    critique. Derived from the producer's own constants so the test tracks the
+    brief, not a hard-coded copy."""
+    return {
+        critique_brief._CRITIQUE_SCHEMA_VERSION,
+        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_14,
+        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_17,
+    }
+
+
+# Detectors whose accounting must apply to every schema the brief emits today,
+# keyed by the module that owns each accounting frozenset. (All emitted schemas
+# are >= v1.10, the version at which each of these detectors became part of the
+# accounting contract.)
+_REQUIRED_DETECTOR_ACCOUNTING_SETS = (
+    (critique_lint, "VISUAL_CLASH_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "TEXT_BOUNDARY_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "LABEL_PATH_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "CROP_AUDIT_ACCOUNTING_SCHEMAS"),
+    (critique_evidence_lint, "SCHEMAS_WITH_PRINT_SCALE_EVIDENCE"),
+)
+
+
+def test_emitted_schemas_are_in_every_detector_accounting_set() -> None:
+    emitted = _emitted_critique_schemas()
+    assert emitted, "critique_brief must declare at least one emittable schema"
+    for module, set_name in _REQUIRED_DETECTOR_ACCOUNTING_SETS:
+        accounting_set = getattr(module, set_name)
+        missing = sorted(emitted - accounting_set)
+        assert not missing, (
+            f"{set_name} does not cover brief-emitted schema(s) {missing}; "
+            "their deterministic detector accounting would be silently skipped"
+        )
+
+
+def test_emitted_schemas_are_recognized_by_validator() -> None:
+    # A schema the brief emits must route into a real validation branch, not the
+    # else: "unsupported or missing critique schema" fall-through. We probe with
+    # a bare frontmatter: a recognized schema raises a *field-level* contract
+    # error, never the unsupported-schema error.
+    for schema in sorted(_emitted_critique_schemas()):
+        try:
+            critique_schema_validator.validate_critique_schema({"schema": schema})
+        except CritiqueContractError as exc:
+            assert "unsupported or missing critique schema" not in str(exc), (
+                f"brief emits {schema} but the validator does not recognize it"
+            )
+        else:  # pragma: no cover - bare frontmatter never fully validates
+            raise AssertionError(f"bare frontmatter for {schema} unexpectedly validated clean")
