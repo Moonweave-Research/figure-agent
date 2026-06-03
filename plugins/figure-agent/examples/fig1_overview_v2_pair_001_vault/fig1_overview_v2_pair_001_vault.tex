@@ -1217,8 +1217,13 @@
   node[pos=0.55, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
        text=cRed!80!black, sloped, below=5pt, inner sep=1pt]
   {high $n$};
+% Goal-1 overnight elem-iter (2026-06-04): pos=0.40 → 0.60. 2026-05-27 Debye
+% cliff rewrite (1169-1186) raised the dash plateau-then-cliff into this
+% pre-existing label (pos=0.40 at curve point (1.93,1.98)); cliff at x=1.93 is
+% y≈2.13, passing through the label box (lown_zoom.png confirms dash under 'lo').
+% pos=0.60 lands at (2.57,1.82), right of the cliff terminus (x=2.22), clearing it.
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
-  node[pos=0.40, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
+  node[pos=0.60, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
        text=cBlue!80!black, sloped, above=6pt, inner sep=1pt]
   {low $n$};
 
