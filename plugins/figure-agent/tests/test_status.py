@@ -26,6 +26,7 @@ from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noq
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     final_artifact_source_set_hash,
+    load_svg_polish_manifest,
     write_svg_polish_manifest,
 )
 from svg_semantic_diff import build_svg_semantic_diff_report  # noqa: E402
@@ -179,7 +180,7 @@ def _write_hashed_critique(
         "      nearest_object: demo\n"
         "      intended_target: demo\n"
         "      matches: true\n"
-        "      proposed_fix: \"\"\n"
+        '      proposed_fix: ""\n'
         "  physical_plausibility:\n"
         "    - check: floating_components\n"
         "      finding: no floating components\n"
@@ -212,8 +213,8 @@ def _write_hashed_critique(
         "  subregion_integration:\n"
         "    verdict: not_applicable\n"
         "    confidence: low\n"
-        "    rationale: \"\"\n"
-        "    evidence: \"\"\n"
+        '    rationale: ""\n'
+        '    evidence: ""\n'
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  component_fidelity:\n"
@@ -254,8 +255,8 @@ def _write_hashed_critique(
         "  reference_fidelity:\n"
         "    verdict: not_applicable\n"
         "    confidence: low\n"
-        "    rationale: \"\"\n"
-        "    evidence: \"\"\n"
+        '    rationale: ""\n'
+        '    evidence: ""\n'
         "    blocking_items: []\n"
         "    recommended_action: none\n"
         "  publication_readiness:\n"
@@ -1067,10 +1068,7 @@ def _write_final_artifact_spec(
 ) -> None:
     existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
     (fig_dir / "spec.yaml").write_text(
-        existing
-        + "final_artifact:\n"
-        f"  kind: {kind}\n"
-        f"  manifest: {manifest}\n",
+        existing + f"final_artifact:\n  kind: {kind}\n  manifest: {manifest}\n",
         encoding="utf-8",
     )
 
@@ -1078,9 +1076,7 @@ def _write_final_artifact_spec(
 def _append_manifest_only_final_artifact_spec(fig_dir: Path) -> None:
     existing = (fig_dir / "spec.yaml").read_text(encoding="utf-8")
     (fig_dir / "spec.yaml").write_text(
-        existing
-        + "final_artifact:\n"
-        "  manifest: polish/svg_polish_manifest.yaml\n",
+        existing + "final_artifact:\n  manifest: polish/svg_polish_manifest.yaml\n",
         encoding="utf-8",
     )
 
@@ -1401,10 +1397,7 @@ def test_legacy_spec_parse_error_does_not_become_final_artifact_invalid(
     fig_dir = tmp_path / "bad_bbox_legacy"
     fig_dir.mkdir()
     (fig_dir / "spec.yaml").write_text(
-        "name: bad_bbox_legacy\n"
-        "panels:\n"
-        "  - id: A\n"
-        "    bbox_pdf_cm: [1, 1, 0, 0]\n",
+        "name: bad_bbox_legacy\npanels:\n  - id: A\n    bbox_pdf_cm: [1, 1, 0, 0]\n",
         encoding="utf-8",
     )
     (fig_dir / f"{fig_dir.name}.tex").write_text("% source\n", encoding="utf-8")
@@ -1994,6 +1987,37 @@ def test_declared_polished_svg_matching_manifest_reports_fresh(
     assert result["golden_ready"] is True
     assert result["release_ready"] is True
     assert result["final_ready"] is True
+
+
+def test_semantic_diff_validating_divergent_polished_path_reports_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Canonical report validates polish/<name>.polished.svg (PASS, not stale), but the
+    # manifest declares a different file under polish/. The gate must refuse to promote
+    # an artifact the semantic diff never inspected.
+    fig_dir = tmp_path / "divergent_polish"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _write_final_artifact_spec(fig_dir)
+    _write_polish_manifest(fig_dir)
+
+    polish = fig_dir / "polish"
+    alternate = polish / "alternate.svg"
+    alternate.write_text("<svg></svg>\n", encoding="utf-8")  # dropped 'polished' text label
+    manifest_path = polish / "svg_polish_manifest.yaml"
+    manifest = load_svg_polish_manifest(manifest_path, example_dir=fig_dir)
+    manifest["polished"]["path"] = "polish/alternate.svg"
+    manifest["polished"]["polished_svg_hash"] = file_sha256(alternate)
+    write_svg_polish_manifest(manifest_path, manifest)
+
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["final_artifact_state"] == "INVALID"
+    assert "final_artifact_invalid" in result["notes"]
+    assert result["final_artifact_path"] == "polish/alternate.svg"
 
 
 def test_declared_polished_svg_stale_blocks_release_not_workflow(
@@ -2842,17 +2866,13 @@ def test_no_arg_summary_shows_not_accepted_marker(tmp_path: Path, capsys, monkey
     assert "goldenfig  stage 4/4 (not accepted)" in captured.out
 
 
-def test_no_arg_summary_shows_publication_gate_state(
-    tmp_path: Path, capsys, monkeypatch
-) -> None:
+def test_no_arg_summary_shows_publication_gate_state(tmp_path: Path, capsys, monkeypatch) -> None:
     examples_dir = tmp_path / "examples"
     examples_dir.mkdir()
     fig = examples_dir / "goldenfig"
     _make_status_ready_fixture(fig, accepted=True)
     (fig / "QUALITY_AUDIT.md").write_text(
-        "# Quality Audit\n\n"
-        "## Provenance and Publication Compliance\n\n"
-        "submission-safe: false\n",
+        "# Quality Audit\n\n## Provenance and Publication Compliance\n\nsubmission-safe: false\n",
         encoding="utf-8",
     )
     _mark_sources_older_than_outputs(fig)
@@ -3150,9 +3170,7 @@ def test_infer_stage_requires_disclosure_for_polished_svg_publication_gate(
     _write_final_artifact_spec(fig_dir)
     _write_polish_manifest(fig_dir)
     (fig_dir / "QUALITY_AUDIT.md").write_text(
-        "# Quality Audit\n\n"
-        "## Provenance and Publication Compliance\n\n"
-        "submission-safe: true\n",
+        "# Quality Audit\n\n## Provenance and Publication Compliance\n\nsubmission-safe: true\n",
         encoding="utf-8",
     )
     _mark_sources_older_than_outputs(fig_dir)
@@ -3301,9 +3319,7 @@ def test_status_explanation_separates_stale_render_and_stale_critique(
     explanation = result["status_explanation"]
     assert explanation["first_blocker"]["code"] == "render_stale"
     assert explanation["first_blocker"]["category"] == "fixture_freshness"
-    freshness_codes = {
-        item["code"] for item in explanation["buckets"]["fixture_freshness"]
-    }
+    freshness_codes = {item["code"] for item in explanation["buckets"]["fixture_freshness"]}
     assert {"render_stale", "critique_stale"} <= freshness_codes
     assert explanation["buckets"]["human_blockers"] == []
 
@@ -3333,9 +3349,7 @@ def test_status_explanation_separates_tracked_golden_and_stale_critique(
 
     explanation = result["status_explanation"]
     assert explanation["first_blocker"]["code"] == "critique_stale"
-    freshness_codes = {
-        item["code"] for item in explanation["buckets"]["fixture_freshness"]
-    }
+    freshness_codes = {item["code"] for item in explanation["buckets"]["fixture_freshness"]}
     human_codes = {item["code"] for item in explanation["buckets"]["human_blockers"]}
     assert "critique_stale" in freshness_codes
     assert "export_tracked_golden" in human_codes

@@ -292,9 +292,7 @@ def _expected_hashes(
             ("base", "export_pdf_hash"): file_sha256(example_dir / "exports" / f"{name}.pdf"),
             ("base", "critique_hash"): file_sha256(example_dir / "critique.md"),
             ("polished", "polished_svg_hash"): file_sha256(polished_path),
-            ("polished", "audit_hash"): file_sha256(
-                example_dir / "polish" / "svg_polish_audit.md"
-            ),
+            ("polished", "audit_hash"): file_sha256(example_dir / "polish" / "svg_polish_audit.md"),
         }
     except FileNotFoundError as exc:
         raise SvgPolishManifestError(f"missing SVG polish input: {exc.filename}") from exc
@@ -354,7 +352,12 @@ def _missing_input_path(example_dir: Path, message: str, fallback: str) -> str:
     return _relative_or_text(example_dir, message.removeprefix(prefix))
 
 
-def _semantic_diff_gate(example_dir: Path) -> dict[str, Any] | None:
+def _semantic_diff_gate(
+    example_dir: Path,
+    *,
+    expected_polished_rel: str,
+    expected_source_rel: str,
+) -> dict[str, Any] | None:
     report_path = example_dir / SVG_SEMANTIC_DIFF_RELATIVE_PATH
     try:
         report = load_svg_semantic_diff_report(report_path, example_dir=example_dir)
@@ -373,6 +376,31 @@ def _semantic_diff_gate(example_dir: Path) -> dict[str, Any] | None:
             "state": FINAL_ARTIFACT_INVALID,
             "notes": ["final_artifact_invalid"],
             "error": message,
+        }
+    if _resolve_fixture_path(
+        example_dir, report["polished_svg"], "semantic_diff.polished_svg"
+    ) != _resolve_fixture_path(example_dir, expected_polished_rel, "polished.path"):
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "notes": ["final_artifact_invalid"],
+            "error": (
+                "SVG semantic diff report validates "
+                f"{report['polished_svg']!r}, not the manifest-declared final artifact "
+                f"{expected_polished_rel!r}; rerun scripts/svg_semantic_diff.py against the "
+                "declared polished SVG"
+            ),
+        }
+    if _resolve_fixture_path(
+        example_dir, report["source_svg"], "semantic_diff.source_svg"
+    ) != _resolve_fixture_path(example_dir, expected_source_rel, "generated export"):
+        return {
+            "state": FINAL_ARTIFACT_INVALID,
+            "notes": ["final_artifact_invalid"],
+            "error": (
+                "SVG semantic diff report compares against "
+                f"{report['source_svg']!r}, not the canonical generated export "
+                f"{expected_source_rel!r}; rerun scripts/svg_semantic_diff.py"
+            ),
         }
     try:
         stale = svg_semantic_diff_report_is_stale(report_path, example_dir=example_dir)
@@ -525,9 +553,10 @@ def compute_final_artifact_state(
             "notes": ["final_artifact_stale"],
             "error": "",
         }
-    if manifest["polished"]["semantic_change_declared"] or manifest["polished"][
-        "backport_required"
-    ]:
+    if (
+        manifest["polished"]["semantic_change_declared"]
+        or manifest["polished"]["backport_required"]
+    ):
         return {
             "state": FINAL_ARTIFACT_BLOCKED,
             "kind": FINAL_ARTIFACT_POLISHED_SVG,
@@ -535,7 +564,11 @@ def compute_final_artifact_state(
             "notes": ["final_artifact_blocked"],
             "error": "semantic backport required before acceptance",
         }
-    semantic_diff = _semantic_diff_gate(example_dir)
+    semantic_diff = _semantic_diff_gate(
+        example_dir,
+        expected_polished_rel=polished_path,
+        expected_source_rel=f"exports/{name}.svg",
+    )
     if semantic_diff is not None:
         return {
             "state": semantic_diff["state"],
