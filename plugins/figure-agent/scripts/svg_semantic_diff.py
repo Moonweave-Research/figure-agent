@@ -40,6 +40,9 @@ REPORT_STATES = frozenset(
 )
 UNSUPPORTED_TAGS = frozenset({"filter", "mask", "clipPath", "foreignObject", "image"})
 UNSUPPORTED_ATTRS = frozenset({"filter", "mask", "clip-path"})
+TRANSFORMED_LEAF_TAGS = frozenset(
+    {"text", "path", "use", "rect", "circle", "ellipse", "line", "polygon", "polyline"}
+)
 FRAME_ATTRS = ("viewBox", "width", "height")
 OPTICAL_ATTRS = ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity")
 # Mirror of svg_polish_executor.MAX_TRANSLATE_PX (imported there would be circular:
@@ -219,8 +222,7 @@ def _inventory(path: Path) -> dict[str, Any]:
                 semantic_children = sum(
                     1
                     for child in element.iter()
-                    if child is not element
-                    and _strip_namespace(child.tag) in {"text", "path", "use"}
+                    if child is not element and _strip_namespace(child.tag) in TRANSFORMED_LEAF_TAGS
                 )
                 if semantic_children > 1:
                     group_transform_risks.append(f"g#{element_id or '?'} transform={transform}")
@@ -228,7 +230,7 @@ def _inventory(path: Path) -> dict[str, Any]:
                     transforms_by_id[element_id] = ("g", transform)
                 else:
                     transforms_no_id.append(("g", transform))
-            elif tag in {"text", "path", "use"}:
+            elif tag in TRANSFORMED_LEAF_TAGS:
                 if element_id:
                     transforms_by_id[element_id] = (tag, transform)
                 else:

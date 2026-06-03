@@ -148,6 +148,34 @@ def test_element_transform_added_on_id_text_reports_group_transform_risk(
     assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
 
 
+@pytest.mark.parametrize(
+    "element",
+    (
+        '<rect id="vacuum-region" x="0" y="0" width="20" height="20" fill="#eee"',
+        '<circle id="vacuum-region" cx="10" cy="10" r="8" fill="#eee"',
+        '<ellipse id="vacuum-region" cx="10" cy="10" rx="8" ry="4" fill="#eee"',
+        '<line id="vacuum-region" x1="0" y1="0" x2="20" y2="20" stroke="#eee"',
+        '<polygon id="vacuum-region" points="0,0 20,0 20,20" fill="#eee"',
+        '<polyline id="vacuum-region" points="0,0 20,0 20,20" stroke="#eee"',
+    ),
+)
+def test_shape_primitive_transform_reports_group_transform_risk(
+    tmp_path: Path,
+    element: str,
+) -> None:
+    source = _base_svg(f"{element}/>")
+    polished = _base_svg(f'{element} transform="translate(70 0)"/>')
+    fig_dir = _make_fixture(tmp_path, source_svg=source, polished_svg=polished)
+
+    report = load_svg_semantic_diff_report(
+        build_svg_semantic_diff_report(fig_dir),
+        example_dir=fig_dir,
+    )
+
+    assert report["summary"]["state"] == "semantic_backport_required"
+    assert "group_transform_risk" in {finding["kind"] for finding in report["findings"]}
+
+
 def test_single_child_group_transform_reports_group_transform_risk(tmp_path: Path) -> None:
     source = _base_svg('<g id="panel"><text id="a">A</text></g>')
     polished = _base_svg('<g id="panel" transform="translate(480,480)"><text id="a">A</text></g>')
