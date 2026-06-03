@@ -8,6 +8,7 @@ parsers continue to read the Markdown tables from that file.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -112,8 +113,21 @@ def append_iteration_row(
         result=result,
         follow_up=follow_up,
     )
-    prefix = text.rstrip()
-    log_path.write_text(f"{prefix}\n{row}\n", encoding="utf-8")
+    # Anchor the row to the end of the ## Iteration Log section body, mirroring
+    # the parser's boundary (subregion_active_set._section_body): substring start
+    # at the heading, body ends at the next ^##\s+ heading. Appending at EOF would
+    # silently drop the row into a trailing section the parser never reads.
+    heading_start = text.find("## Iteration Log")
+    body_start = text.find("\n", heading_start)
+    next_heading = re.search(r"^##\s+", text[body_start + 1 :], re.MULTILINE)
+    if next_heading is None or body_start == -1:
+        prefix = text.rstrip()
+        log_path.write_text(f"{prefix}\n{row}\n", encoding="utf-8")
+        return
+    insert_at = body_start + 1 + next_heading.start()
+    body = text[body_start + 1 : insert_at].rstrip()
+    rebuilt = f"{text[: body_start + 1]}{body}\n{row}\n\n{text[insert_at:]}"
+    log_path.write_text(rebuilt, encoding="utf-8")
 
 
 def _log_path(example_dir: Path) -> Path:
@@ -141,8 +155,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise SubregionIterationLogError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

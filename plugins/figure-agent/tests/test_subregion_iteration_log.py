@@ -128,6 +128,57 @@ def test_append_iteration_row_preserves_parseable_iteration_ids(tmp_path: Path) 
     assert iteration_patch_ids(text) == ["D-1", "D-2", "Row2-BR2"]
 
 
+def test_append_iteration_row_lands_in_iteration_log_with_trailing_section(
+    tmp_path: Path,
+) -> None:
+    example_dir = _example_dir(tmp_path)
+    log_path = example_dir / "subregion_iteration_log.md"
+    write_subregion_iteration_log(log_path, subregion_iteration_log_template(example_dir))
+    # A human accretes a trailing section after the Iteration Log.
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8") + "\n## Notes\n\n- print at 88mm\n",
+        encoding="utf-8",
+    )
+
+    append_iteration_row(
+        log_path,
+        iteration="iter-001",
+        subregion_id="D-2",
+        problem="label hierarchy was too flat",
+        patch_summary="raised the active label",
+        result="fixed",
+        follow_up="none",
+    )
+
+    text = log_path.read_text(encoding="utf-8")
+    assert iteration_patch_ids(text) == ["D-2"]
+    assert text.index("| iter-001 |") < text.index("## Notes")
+
+
+def test_append_iteration_row_handles_iteration_log_as_final_line_without_newline(
+    tmp_path: Path,
+) -> None:
+    example_dir = _example_dir(tmp_path)
+    log_path = example_dir / "subregion_iteration_log.md"
+    # ## Iteration Log is the last line with no trailing newline. The body_start
+    # search returns -1 here; the row must still land after the heading (EOF path),
+    # never spliced before an earlier section.
+    log_path.write_text("## Active Target Set\n\n## Iteration Log", encoding="utf-8")
+
+    append_iteration_row(
+        log_path,
+        iteration="iter-001",
+        subregion_id="D-2",
+        problem="p",
+        patch_summary="s",
+        result="fixed",
+        follow_up="none",
+    )
+
+    text = log_path.read_text(encoding="utf-8")
+    assert text.index("## Iteration Log") < text.index("| iter-001 |")
+
+
 def test_append_iteration_row_escapes_pipe_without_breaking_table(tmp_path: Path) -> None:
     example_dir = _example_dir(tmp_path)
     log_path = example_dir / "subregion_iteration_log.md"
