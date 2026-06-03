@@ -1581,6 +1581,11 @@
 \fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);
 \draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
   (7.68, 3.70) rectangle (8.68, 4.22);
+% Goal-1 elem-iter (2026-06-04): inner faceplate bezel — the 2026-06-01 substance
+% pass gave V_s-meter the glass-sheen but NOT the bezel that SMU/V_active carry.
+% Matches SMU (L1033-34): cGray!35!black 0.20pt, inset 0.065cm x / 0.045cm y.
+\draw[cGray!35!black, line width=0.20pt, rounded corners=0.8pt]
+  (7.745, 3.745) rectangle (8.615, 4.175);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
