@@ -77,6 +77,12 @@ def _validate_source_svg_path(example_dir: Path, value: str) -> Path:
         raise SvgPolishRecipeError("recipe.source_svg must live under exports/")
     if resolved.suffix.lower() != ".svg":
         raise SvgPolishRecipeError("recipe.source_svg must point to an SVG file")
+    canonical = Path("exports") / f"{example_dir.name}.svg"
+    if relative != canonical:
+        raise SvgPolishRecipeError(
+            f"recipe.source_svg must be the canonical export {canonical.as_posix()}, "
+            "not a divergent alternate export"
+        )
     if not resolved.is_file():
         raise SvgPolishRecipeError(f"missing recipe.source_svg: {resolved}")
     return resolved
@@ -328,8 +334,7 @@ def svg_polish_recipe_template(
                 "semantic_guard": {
                     "allowed": True,
                     "reason": (
-                        "typography tone cleanup only; text content and label "
-                        "target unchanged."
+                        "typography tone cleanup only; text content and label target unchanged."
                     ),
                 },
             },
@@ -358,8 +363,7 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
             )
         return value
     raise SvgPolishRecipeError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, "
-        "or an absolute path"
+        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
     )
 
 

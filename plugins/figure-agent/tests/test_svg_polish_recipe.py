@@ -156,6 +156,22 @@ def test_source_svg_must_stay_under_exports(tmp_path: Path, source_svg: str) -> 
         validate_svg_polish_recipe(payload, example_dir=fig_dir)
 
 
+def test_source_svg_must_be_canonical_export(tmp_path: Path) -> None:
+    fig_dir = _make_fixture(tmp_path)
+    # A real, divergent alternate export exists under exports/, so the path passes
+    # the under-exports / suffix / is_file checks but is NOT the canonical export.
+    (fig_dir / "exports" / "alt_source.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg">'
+        '<text id="label-a" transform="translate(498,0)">A</text></svg>\n',
+        encoding="utf-8",
+    )
+    payload = _valid_recipe(fig_dir)
+    payload["source_svg"] = "exports/alt_source.svg"
+
+    with pytest.raises(SvgPolishRecipeError, match="canonical"):
+        validate_svg_polish_recipe(payload, example_dir=fig_dir)
+
+
 @pytest.mark.parametrize(
     "target_svg",
     ("../demo.svg", "exports/demo.svg", "/tmp/demo.svg", "polish/../demo.svg"),
