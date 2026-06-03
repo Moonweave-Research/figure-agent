@@ -423,18 +423,14 @@ def _valid_frontmatter(schema: str = vocab.CRITIQUE_SCHEMA_V1_4) -> dict:
         CRITIQUE_SCHEMA_V1_17,
     }:
         trigger = frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]
-        trigger["remaining_tikz_lever"] = (
-            "source-level label spacing can still be repaired in TikZ"
-        )
+        trigger["remaining_tikz_lever"] = "source-level label spacing can still be repaired in TikZ"
     if schema in {CRITIQUE_SCHEMA_V1_15, CRITIQUE_SCHEMA_V1_16, CRITIQUE_SCHEMA_V1_17}:
         frontmatter["svg_polish_delta_audit"] = _svg_polish_delta_audit()
         frontmatter["aesthetic_gate_audit"] = _aesthetic_gate_audit()
     if schema == CRITIQUE_SCHEMA_V1_17:
         frontmatter["aesthetic_antipattern_audit"] = _aesthetic_antipattern_audit()
         frontmatter["weakest_panel_coherence"] = _weakest_panel_coherence()
-        frontmatter["reference_learning_accountability"] = (
-            _reference_learning_accountability()
-        )
+        frontmatter["reference_learning_accountability"] = _reference_learning_accountability()
     return frontmatter
 
 
@@ -488,9 +484,9 @@ def test_validate_critique_schema_rejects_v1_17_unknown_antipattern_id() -> None
 
 def test_validate_critique_schema_rejects_v1_17_duplicate_antipattern_id() -> None:
     frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
-    frontmatter["aesthetic_antipattern_audit"][1]["id"] = (
-        frontmatter["aesthetic_antipattern_audit"][0]["id"]
-    )
+    frontmatter["aesthetic_antipattern_audit"][1]["id"] = frontmatter[
+        "aesthetic_antipattern_audit"
+    ][0]["id"]
 
     with pytest.raises(CritiqueContractError, match="duplicate"):
         validate_critique_schema(frontmatter)
@@ -627,7 +623,7 @@ def test_validate_critique_schema_rejects_v1_15_missing_delta_image_id() -> None
         validate_critique_schema(frontmatter)
 
 
-def test_validate_critique_schema_rejects_v1_15_regression_without_route_or_link() -> None:
+def test_validate_critique_schema_rejects_v1_15_blocking_regression_without_escalation() -> None:
     frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
     audit = frontmatter["svg_polish_delta_audit"]
     audit["evaluation_state"] = "improved"
@@ -641,7 +637,36 @@ def test_validate_critique_schema_rejects_v1_15_regression_without_route_or_link
         }
     ]
 
-    with pytest.raises(CritiqueContractError, match="regressions must link"):
+    with pytest.raises(
+        CritiqueContractError,
+        match="semantic_backport_required or needs_human_art_direction",
+    ):
+        validate_critique_schema(frontmatter)
+
+
+def test_validate_critique_schema_rejects_v1_15_blocking_regression_valid_link_non_escalation() -> (
+    None
+):
+    # Edge case 18 (issue 90): a BLOCKER/MAJOR regression must escalate to
+    # semantic_backport_required / needs_human_art_direction. A valid linked
+    # finding does NOT rescue a non-escalation route.
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_15)
+    audit = frontmatter["svg_polish_delta_audit"]
+    audit["evaluation_state"] = "improved"
+    audit["route_after_delta"] = "accept_svg_polish"
+    audit["regressions"] = [
+        {
+            "category": "semantic_drift",
+            "evidence": "diff image shifts a scientific arrow",
+            "severity": "MAJOR",
+            "linked_finding_id": "C001",
+        }
+    ]
+
+    with pytest.raises(
+        CritiqueContractError,
+        match="semantic_backport_required or needs_human_art_direction",
+    ):
         validate_critique_schema(frontmatter)
 
 
@@ -666,9 +691,7 @@ def test_validate_critique_schema_rejects_v1_15_incompatible_svg_route() -> None
 
 def test_validate_critique_schema_rejects_v1_14_continue_tikz_without_remaining_lever() -> None:
     frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_14)
-    del frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"][
-        "remaining_tikz_lever"
-    ]
+    del frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]["remaining_tikz_lever"]
 
     with pytest.raises(CritiqueContractError, match="remaining_tikz_lever"):
         validate_critique_schema(frontmatter)
@@ -1223,9 +1246,9 @@ def test_validate_critique_schema_rejects_v1_5_non_boolean_blocks_high_impact() 
 
 def test_validate_critique_schema_rejects_v1_5_invalid_polish_recommended_path() -> None:
     frontmatter = _valid_frontmatter("figure-agent.critique.v1.5")
-    frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"][
-        "recommended_path"
-    ] = "guess_from_prose"
+    frontmatter["editorial_art_direction"]["tikz_vs_svg_polish_trigger"]["recommended_path"] = (
+        "guess_from_prose"
+    )
 
     with pytest.raises(CritiqueContractError, match="recommended_path"):
         validate_critique_schema(frontmatter)

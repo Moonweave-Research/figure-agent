@@ -102,10 +102,7 @@ def _validate_v1_1_audit(frontmatter: dict[str, Any]) -> None:
     )
     _require_mapping_items(
         structural.get("missing_from_reference"),
-        (
-            "critique frontmatter.audit_enumeration."
-            "structural_completeness.missing_from_reference"
-        ),
+        ("critique frontmatter.audit_enumeration.structural_completeness.missing_from_reference"),
     )
     _require_mapping_items(
         audit.get("label_target_matching"),
@@ -276,8 +273,7 @@ def _validate_reference_calibration(assessment: dict[str, Any], label: str) -> N
     for index, trait in enumerate(traits):
         if not isinstance(trait, str) or not trait.strip():
             raise CritiqueContractError(
-                f"{calibration_label}.limiting_reference_traits[{index}] "
-                "must be a non-empty string"
+                f"{calibration_label}.limiting_reference_traits[{index}] must be a non-empty string"
             )
     _require_non_empty_string(calibration, "rationale", label=calibration_label)
 
@@ -303,9 +299,7 @@ def _validate_journal_grade_assessment(
         raise CritiqueContractError(f"{label}.schema must be {vocab.JOURNAL_ASSESSMENT_SCHEMA}")
     scoring_mode = _require_string_value(assessment, "scoring_mode", label=label)
     if scoring_mode != vocab.JOURNAL_SCORING_MODE:
-        raise CritiqueContractError(
-            f"{label}.scoring_mode must be {vocab.JOURNAL_SCORING_MODE}"
-        )
+        raise CritiqueContractError(f"{label}.scoring_mode must be {vocab.JOURNAL_SCORING_MODE}")
     assessed_hash = _require_non_empty_string(
         assessment,
         "assessed_artifact_hash",
@@ -622,11 +616,7 @@ def _validate_v1_14_editorial_route_detail(frontmatter: dict[str, Any]) -> None:
 
 def _editorial_trigger_recommended_path(frontmatter: dict[str, Any]) -> str:
     editorial = frontmatter.get("editorial_art_direction")
-    trigger = (
-        editorial.get("tikz_vs_svg_polish_trigger")
-        if isinstance(editorial, dict)
-        else None
-    )
+    trigger = editorial.get("tikz_vs_svg_polish_trigger") if isinstance(editorial, dict) else None
     path = trigger.get("recommended_path") if isinstance(trigger, dict) else None
     return path.strip() if isinstance(path, str) else ""
 
@@ -763,13 +753,9 @@ def _validate_v1_11_aesthetic_lever_audit(
                 f"{label}.observed_positive_signals must be non-empty for pass verdict"
             )
         if verdict in {"pass", "not_applicable"} and route != "none":
-            raise CritiqueContractError(
-                f"{label}.route must be none for verdict {verdict}"
-            )
+            raise CritiqueContractError(f"{label}.route must be none for verdict {verdict}")
         if verdict in {"weak", "fail", "needs_human"} and route == "none":
-            raise CritiqueContractError(
-                f"{label}.route must not be none for verdict {verdict}"
-            )
+            raise CritiqueContractError(f"{label}.route must not be none for verdict {verdict}")
         if route != "none" and not allowed_next_adjustment:
             raise CritiqueContractError(
                 f"{label}.allowed_next_adjustment must be non-empty for route {route}"
@@ -793,9 +779,7 @@ def _validate_v1_12_journal_art_direction_playbook_audit(
     label = "critique frontmatter.journal_art_direction_playbook_audit"
     schema = _require_non_empty_string(audit, "schema", label=label)
     if schema != vocab.JOURNAL_PLAYBOOK_AUDIT_SCHEMA:
-        raise CritiqueContractError(
-            f"{label}.schema must be {vocab.JOURNAL_PLAYBOOK_AUDIT_SCHEMA}"
-        )
+        raise CritiqueContractError(f"{label}.schema must be {vocab.JOURNAL_PLAYBOOK_AUDIT_SCHEMA}")
     _require_non_empty_string(audit, "playbook_id", label=label)
     _require_non_empty_string(audit, "venue_context", label=label)
     raw_design_center = _require_non_empty_list(
@@ -808,9 +792,7 @@ def _validate_v1_12_journal_art_direction_playbook_audit(
         item = require_mapping(raw_item, item_label)
         item_id = _require_non_empty_string(item, "id", label=item_label)
         if item_id in seen_ids:
-            raise CritiqueContractError(
-                f"{label}.design_center has duplicate id: {item_id}"
-            )
+            raise CritiqueContractError(f"{label}.design_center has duplicate id: {item_id}")
         seen_ids.add(item_id)
         verdict = _require_enum(
             item,
@@ -850,9 +832,7 @@ def _validate_v1_12_journal_art_direction_playbook_audit(
                 f"{item_label}.anti_pattern_refs must be non-empty for verdict {verdict}"
             )
         if verdict in {"pass", "not_applicable"} and route != "none":
-            raise CritiqueContractError(
-                f"{item_label}.route must be none for verdict {verdict}"
-            )
+            raise CritiqueContractError(f"{item_label}.route must be none for verdict {verdict}")
         if verdict in {"weak", "fail", "needs_human"} and route == "none":
             raise CritiqueContractError(
                 f"{item_label}.route must not be none for verdict {verdict}"
@@ -896,9 +876,7 @@ def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
     micro_defect_ids = {
         str(item.get("id")).strip()
         for item in frontmatter.get("micro_defects", [])
-        if isinstance(item, dict)
-        and isinstance(item.get("id"), str)
-        and item.get("id").strip()
+        if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id").strip()
     }
     for index, raw_item in enumerate(raw_items):
         label = f"critique frontmatter.crop_audit_log[{index}]"
@@ -959,9 +937,7 @@ def _validate_v1_13_crop_anomaly_accounting(frontmatter: dict[str, Any]) -> None
     micro_defect_ids = {
         str(item.get("id")).strip()
         for item in frontmatter.get("micro_defects", [])
-        if isinstance(item, dict)
-        and isinstance(item.get("id"), str)
-        and item.get("id").strip()
+        if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id").strip()
     }
     finding_ids = _finding_ids(frontmatter)
     for index, raw_item in enumerate(raw_items):
@@ -1025,9 +1001,7 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
         expected_path = f"polish/aesthetic_delta/{image_id}.png"
         path = _require_non_empty_string(item, "path", label=item_label)
         if path != expected_path:
-            raise CritiqueContractError(
-                f"{item_label}.path must be {expected_path}"
-            )
+            raise CritiqueContractError(f"{item_label}.path must be {expected_path}")
         _require_enum(
             item,
             "verdict",
@@ -1053,9 +1027,7 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
         require_non_empty=True,
     )
     if set(compared_inputs) != vocab.SVG_DELTA_IMAGE_IDS:
-        raise CritiqueContractError(
-            f"{label}.compared_inputs must contain before, after, and diff"
-        )
+        raise CritiqueContractError(f"{label}.compared_inputs must contain before, after, and diff")
     _validate_string_list(
         audit.get("improvements"),
         f"{label}.improvements",
@@ -1064,7 +1036,6 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
     route = _require_enum(audit, "route_after_delta", vocab.SVG_DELTA_ROUTES, label=label)
     _require_non_empty_string(audit, "rationale", label=label)
     regressions = _require_list(audit.get("regressions"), f"{label}.regressions")
-    finding_ids = _finding_ids(frontmatter)
     for index, raw_regression in enumerate(regressions):
         regression_label = f"{label}.regressions[{index}]"
         regression = require_mapping(raw_regression, regression_label)
@@ -1081,7 +1052,7 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
             vocab.FINDING_SEVERITIES,
             label=regression_label,
         )
-        linked_finding_id = _require_string_value(
+        _require_string_value(
             regression,
             "linked_finding_id",
             label=regression_label,
@@ -1090,11 +1061,6 @@ def _validate_v1_15_svg_polish_delta_audit(frontmatter: dict[str, Any]) -> None:
             "semantic_backport_required",
             "needs_human_art_direction",
         }:
-            if linked_finding_id not in finding_ids:
-                raise CritiqueContractError(
-                    f"{label}.regressions must link BLOCKER/MAJOR regressions "
-                    "to a visible finding or route to human/semantic backport"
-                )
             raise CritiqueContractError(
                 f"{label}.regressions with BLOCKER/MAJOR severity require "
                 "semantic_backport_required or needs_human_art_direction"
@@ -1232,8 +1198,7 @@ def _validate_v1_15_aesthetic_gate_audit(frontmatter: dict[str, Any]) -> None:
     missing_slots = [slot for slot in vocab.AESTHETIC_GATE_SLOTS if slot not in slots]
     if missing_slots:
         raise CritiqueContractError(
-            "critique frontmatter.aesthetic_gate_audit missing slots: "
-            + ", ".join(missing_slots)
+            "critique frontmatter.aesthetic_gate_audit missing slots: " + ", ".join(missing_slots)
         )
 
 
@@ -1277,13 +1242,9 @@ def _validate_v1_17_aesthetic_antipattern_audit(frontmatter: dict[str, Any]) -> 
             require_non_empty=verdict in {"present", "needs_human"} or route != "none",
         )
         if verdict in {"absent", "not_applicable"} and route != "none":
-            raise CritiqueContractError(
-                f"{label}.route must be none for verdict {verdict}"
-            )
+            raise CritiqueContractError(f"{label}.route must be none for verdict {verdict}")
         if verdict in {"present", "needs_human"} and route == "none":
-            raise CritiqueContractError(
-                f"{label}.route must not be none for verdict {verdict}"
-            )
+            raise CritiqueContractError(f"{label}.route must not be none for verdict {verdict}")
         if route == "accept_simplification" and "accept" not in rationale.lower():
             raise CritiqueContractError(
                 f"{label}.rationale must explicitly justify accept_simplification"
@@ -1327,8 +1288,7 @@ def _validate_v1_17_route_contract(
         )
     if route == "semantic_backport" and trigger_path != "semantic_backport_required":
         raise CritiqueContractError(
-            f"{label}.route semantic_backport requires recommended_path "
-            "semantic_backport_required"
+            f"{label}.route semantic_backport requires recommended_path semantic_backport_required"
         )
     if route == "human_art_direction" and (
         "editorial_art_direction.human_art_direction_gate" not in linked_evidence
@@ -1338,14 +1298,11 @@ def _validate_v1_17_route_contract(
             "editorial_art_direction.human_art_direction_gate linked_evidence"
         )
     if route == "tikz_patch" and not any(
-        ref in finding_ids
-        or ref in micro_defect_ids
-        or ref.startswith("quality_axes.")
+        ref in finding_ids or ref in micro_defect_ids or ref.startswith("quality_axes.")
         for ref in linked_evidence
     ):
         raise CritiqueContractError(
-            f"{label}.route tikz_patch must link to a finding, micro_defect, "
-            "or quality axis"
+            f"{label}.route tikz_patch must link to a finding, micro_defect, or quality axis"
         )
 
 
