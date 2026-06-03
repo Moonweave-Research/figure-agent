@@ -2152,6 +2152,68 @@ def test_polish_mode_invalid_polished_svg_overrides_ready_checkpoint(
     assert gate["state"] == "blocked"
 
 
+def test_polish_mode_missing_polished_svg_with_ready_checkpoint_starts_recipe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # final_artifact_kind is polished_svg (the author declared a polished-SVG
+    # final artifact in spec.yaml) but the manifest file does not exist yet, so
+    # compute_final_artifact_state returns MISSING. Unlike STALE/INVALID — where
+    # the handoff already ran and produced a drifted/malformed manifest — MISSING
+    # means the polish handoff has NOT yet run, so "start the polish recipe to
+    # create the manifest" is the correct, non-contradictory action. With a
+    # reference (critique FRESH) and a ready_for_svg_polish loop checkpoint
+    # present, the driver must fall through to the editorial route and emit
+    # can_start_svg_polish=true / start_svg_polish_recipe — it must NOT mirror the
+    # INVALID/STALE branches and block the handoff. This pins the un-branched
+    # polished_svg+MISSING cell against a regression that wrongly blocks the very
+    # action that would create the missing manifest.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "pass",
+        "polish_recommended_path": "ready_for_svg_polish",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "MISSING",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["final_artifact_state"] == "MISSING"
+    assert summary["status"]["final_artifact_kind"] == "polished_svg"
+    # MISSING means the handoff has not yet run: route to starting the recipe, not
+    # to the INVALID/STALE manifest-repair/refresh blocks.
+    assert summary["action"] == "polish_handoff_stop"
+    gate = summary["svg_polish_gate"]
+    assert gate["can_start_svg_polish"] is True
+    assert gate["next_action"] == "start_svg_polish_recipe"
+    assert gate["state"] == "ready"
+    assert gate["next_action"] != "repair_svg_polish_manifest"
+    assert gate["next_action"] != "refresh_svg_polish_handoff"
+
+
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
