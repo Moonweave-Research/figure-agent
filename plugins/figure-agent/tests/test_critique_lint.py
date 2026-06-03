@@ -1970,6 +1970,39 @@ def test_lint_critique_accepts_complete_v1_16_aesthetic_lever_accounting(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_typo_schema(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+    critique_path = fig_dir / "critique.md"
+    critique_path.write_text(
+        critique_path.read_text(encoding="utf-8").replace(
+            "schema: figure-agent.critique.v1.5",
+            "schema: figureagent.critique.v1.5",
+        ),
+        encoding="utf-8",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "figureagent.critique.v1.5" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_10_aesthetic_lever_accounting(
     tmp_path: Path,
 ) -> None:
