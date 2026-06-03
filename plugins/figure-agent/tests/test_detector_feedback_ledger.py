@@ -38,6 +38,7 @@ def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) ->
         encoding="utf-8",
     )
     _write_text_boundary_clash_report(fig_dir, ())
+    _write_label_path_proximity_report(fig_dir, ())
     _write_undeclared_geometry_report(fig_dir, ())
 
 
@@ -61,6 +62,38 @@ def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, .
                         "bbox_pt": [70.0, 20.0, 75.0, 30.0],
                         "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
                         "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_label_path_proximity_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fig_dir / "build" / "label_path_proximity.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "label_touches_reference_line",
+                        "text": f"label {candidate_id}",
+                        "path_id": "de_baseline",
+                        "path_role": "reference_line",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "path_pt": {"kind": "horizontal_line", "y": 25.0},
+                        "clearance_pt": 1.0,
+                        "distance_pt": 0.5,
                     }
                     for candidate_id in candidate_ids
                 ],
@@ -147,7 +180,7 @@ def _write_critique(fig_dir: Path, micro_defects_yaml: str) -> None:
         "    source: full_render\n"
         "    inspected: true\n"
         "    verdict: no_defect\n"
-        "    linked_micro_defect_id: \"\"\n"
+        '    linked_micro_defect_id: ""\n'
         "    rationale: full_q1 was inspected\n"
         "findings: []\n"
         "panels: []\n"
@@ -185,10 +218,10 @@ def test_ledger_aggregates_detector_feedback_across_selected_fixtures(
             "    kind: line_crosses_label\n"
             "    severity: NIT\n"
             "    observation: VC001 is a detector false positive.\n"
-            "    linked_finding_id: \"\"\n"
+            '    linked_finding_id: ""\n'
             "    visual_clash_ref: VC001\n"
-            "    text_boundary_ref: \"\"\n"
-            "    undeclared_geometry_ref: \"\"\n"
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
             "    status: accept_simplification\n"
             "    accept_simplification_reason: false_positive\n"
             "    accept_simplification_rationale: VC001 marks texture, not a defect.\n"
@@ -206,17 +239,17 @@ def test_ledger_aggregates_detector_feedback_across_selected_fixtures(
             "    observation: VC010 is a real defect.\n"
             "    linked_finding_id: C010\n"
             "    visual_clash_ref: VC010\n"
-            "    text_boundary_ref: \"\"\n"
-            "    undeclared_geometry_ref: \"\"\n"
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
             "    status: open\n"
             "  - id: M011\n"
             "    kind: print_scale_unreadable\n"
             "    severity: MINOR\n"
             "    observation: host vision found an unlinked defect.\n"
             "    linked_finding_id: C011\n"
-            "    visual_clash_ref: \"\"\n"
-            "    text_boundary_ref: \"\"\n"
-            "    undeclared_geometry_ref: \"\"\n"
+            '    visual_clash_ref: ""\n'
+            '    text_boundary_ref: ""\n'
+            '    undeclared_geometry_ref: ""\n'
             "    status: open\n"
         ),
     )

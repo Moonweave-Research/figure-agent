@@ -46,6 +46,7 @@ def _write_visual_clash_report(fixture: Path, candidate_ids: tuple[str, ...]) ->
         encoding="utf-8",
     )
     _write_text_boundary_clash_report(fixture, ())
+    _write_label_path_proximity_report(fixture, ())
     _write_undeclared_geometry_report(fixture, ())
 
 
@@ -223,9 +224,7 @@ def _write_critique(
                 "id": "MUG001",
                 "kind": "label_crosses_column_rule",
                 "severity": "NIT",
-                "observation": (
-                    f"{undeclared_geometry_ref} is accounted as undeclared geometry."
-                ),
+                "observation": (f"{undeclared_geometry_ref} is accounted as undeclared geometry."),
                 "linked_finding_id": "",
                 "visual_clash_ref": "",
                 "text_boundary_ref": "",
@@ -255,10 +254,7 @@ def _write_critique(
         "panels": [],
     }
     (fixture / "critique.md").write_text(
-        "---\n"
-        + yaml.safe_dump(frontmatter, sort_keys=False)
-        + "---\n"
-        "# critique\n",
+        "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n# critique\n",
         encoding="utf-8",
     )
 

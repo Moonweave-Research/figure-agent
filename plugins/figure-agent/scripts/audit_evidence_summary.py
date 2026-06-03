@@ -324,9 +324,7 @@ def _detector_feedback(frontmatter: dict[str, Any], summary: dict[str, Any]) -> 
         feedback[source]["linked_defect_count"] = len(linked_defect_refs[source])
 
     unique_unlinked_ids = sorted(dict.fromkeys(unlinked_ids))
-    false_positive_count = sum(
-        item["accepted_false_positive_count"] for item in feedback.values()
-    )
+    false_positive_count = sum(item["accepted_false_positive_count"] for item in feedback.values())
     linked_defect_count = sum(item["linked_defect_count"] for item in feedback.values())
     unlinked_count = len(unique_unlinked_ids)
     feedback["unlinked_micro_defect_count"] = unlinked_count
@@ -552,45 +550,43 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
     label_path_missing_refs: list[str] = []
     label_path_unknown_refs: list[str] = []
     if requires_label_path:
-        label_report, label_error = _load_json(
-            example_dir / "build" / "label_path_proximity.json"
-        )
-        if label_error == "malformed":
+        label_report, label_error = _load_json(example_dir / "build" / "label_path_proximity.json")
+        if label_error is not None:
+            reason = "missing build/label_path_proximity.json"
+            if label_error == "malformed":
+                reason = "malformed build/label_path_proximity.json"
             return _finish(
                 summary,
                 state="missing_input",
                 blocking_items=["build/label_path_proximity.json"],
                 next_action=f"/fig_compile {example_dir.name}",
-                reason="malformed build/label_path_proximity.json",
+                reason=reason,
             )
-        if label_report is not None:
-            label_candidate_ids, label_candidate_error = _label_path_candidate_ids(label_report)
-            if label_candidate_error is not None:
-                return _finish(
-                    summary,
-                    state="missing_input",
-                    blocking_items=["build/label_path_proximity.json"],
-                    next_action=f"/fig_compile {example_dir.name}",
-                    reason="malformed build/label_path_proximity.json candidates",
-                )
-            label_refs = _label_path_refs(frontmatter)
-            label_candidate_id_set = set(label_candidate_ids)
-            label_ref_set = set(label_refs)
-            label_path_missing_refs = [
-                candidate_id
-                for candidate_id in label_candidate_ids
-                if candidate_id not in label_refs
-            ]
-            label_path_unknown_refs = sorted(
-                ref for ref in label_ref_set if ref not in label_candidate_id_set
+        label_candidate_ids, label_candidate_error = _label_path_candidate_ids(label_report or {})
+        if label_candidate_error is not None:
+            return _finish(
+                summary,
+                state="missing_input",
+                blocking_items=["build/label_path_proximity.json"],
+                next_action=f"/fig_compile {example_dir.name}",
+                reason="malformed build/label_path_proximity.json candidates",
             )
-            summary["label_path"] = {
-                "present": True,
-                "candidate_count": len(label_candidate_ids),
-                "accounted_count": len(label_ref_set & label_candidate_id_set),
-                "missing_refs": label_path_missing_refs,
-                "unknown_refs": label_path_unknown_refs,
-            }
+        label_refs = _label_path_refs(frontmatter)
+        label_candidate_id_set = set(label_candidate_ids)
+        label_ref_set = set(label_refs)
+        label_path_missing_refs = [
+            candidate_id for candidate_id in label_candidate_ids if candidate_id not in label_refs
+        ]
+        label_path_unknown_refs = sorted(
+            ref for ref in label_ref_set if ref not in label_candidate_id_set
+        )
+        summary["label_path"] = {
+            "present": True,
+            "candidate_count": len(label_candidate_ids),
+            "accounted_count": len(label_ref_set & label_candidate_id_set),
+            "missing_refs": label_path_missing_refs,
+            "unknown_refs": label_path_unknown_refs,
+        }
 
     undeclared_geometry_missing_refs: list[str] = []
     undeclared_geometry_unknown_refs: list[str] = []
@@ -609,8 +605,8 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
                 next_action=f"/fig_compile {example_dir.name}",
                 reason=reason,
             )
-        undeclared_candidate_ids, undeclared_candidate_error = (
-            _undeclared_geometry_candidate_ids(undeclared_report or {})
+        undeclared_candidate_ids, undeclared_candidate_error = _undeclared_geometry_candidate_ids(
+            undeclared_report or {}
         )
         if undeclared_candidate_error is not None:
             return _finish(
@@ -751,8 +747,7 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
             blocking_items=accept_gaps,
             next_action=f"/fig_critique {example_dir.name}",
             reason=(
-                "accepted visual-clash candidates need accept_simplification_reason "
-                "and rationale"
+                "accepted visual-clash candidates need accept_simplification_reason and rationale"
             ),
         )
     if summary["crop_audit"]["uncertain_crop_ids"]:
