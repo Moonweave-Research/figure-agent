@@ -1975,6 +1975,68 @@ def test_polish_mode_not_required_critique_routes_to_release_or_final(
     assert "--mode final" in next_step
 
 
+def test_polish_mode_stale_polished_svg_routes_to_handoff_refresh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The SVG polish handoff already completed (manifest + polished SVG exist,
+    # so final_artifact_kind is polished_svg), then a base input drifted (e.g. a
+    # critique.md edit changed base.critique_hash), making the polished artifact
+    # STALE. The corrective action is to rebuild the manifest base hashes via
+    # scripts/svg_polish_handoff.py --write --force; fig_loop is verify-only and
+    # can never clear this. Guidance must NOT claim the handoff "can never be
+    # reached" nor route to fig_loop.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "STALE",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["final_artifact_state"] == "STALE"
+    assert summary["status"]["final_artifact_kind"] == "polished_svg"
+    # Must not fall through to the false "handoff can never be reached" / fig_loop route.
+    assert summary["action"] != "run_fig_loop"
+    assert "can never be reached" not in summary["reason"]
+    assert "handoff can never" not in summary["reason"]
+    # Must name the actual corrective command and the STALE diagnosis.
+    assert "svg_polish_handoff.py" in summary["reason"]
+    assert "--write" in summary["reason"]
+    assert "--force" in summary["reason"]
+    assert "stale" in summary["reason"].lower()
+    # Verdict stays not-release-ready: this is a handoff stop, not completion.
+    assert summary["action"] == "polish_handoff_stop"
+    # The operator-facing gate must not surface the false fig_loop route; it is
+    # the same defect one field over (fig_queue reads gate.next_action).
+    gate = summary["svg_polish_gate"]
+    assert gate["next_action"] == "refresh_svg_polish_handoff"
+    assert gate["next_action"] != "rerun_fig_loop"
+    assert gate["can_start_svg_polish"] is False
+    # Derived operator guidance must not reproduce the false "can never" message.
+    next_step = summary["operator_guidance"]["next_step"]
+    assert "can never" not in next_step
+    assert "rerun_fig_loop" not in next_step
+    # next_action_summary carries the corrected reason, not the fig_loop route.
+    assert summary["next_action_summary"]["action"] == "polish_handoff_stop"
+    assert "svg_polish_handoff.py" in summary["next_action_summary"]["reason"]
+
+
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

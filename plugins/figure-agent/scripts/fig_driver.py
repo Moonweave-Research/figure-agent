@@ -152,7 +152,28 @@ def _svg_polish_prerequisite_gate(
     action: str,
     reason: str,
     stop_boundary: str | None,
+    final_state: Any = None,
+    final_kind: Any = None,
 ) -> dict[str, Any] | None:
+    if (
+        action == ACTION_POLISH_HANDOFF_STOP
+        and final_kind == "polished_svg"
+        and final_state == "STALE"
+    ):
+        # Handoff already completed but the polish manifest base drifted; the
+        # refresh is a handoff, not a /fig_loop rerun, so the gate must not fall
+        # back to the no-checkpoint "rerun_fig_loop" default.
+        return {
+            "schema": editorial_mod.GATE_SCHEMA,
+            "state": "blocked",
+            "source": "driver_prerequisite",
+            "can_start_svg_polish": False,
+            "recommended_path": None,
+            "next_action": "refresh_svg_polish_handoff",
+            "reason": reason,
+            "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
+            "blocking_items": [{"source": "driver_prerequisite", "id": "final_artifact_stale"}],
+        }
     next_action_by_driver_action = {
         ACTION_RUN_COMPILE: "run_fig_compile",
         ACTION_RUN_CRITIQUE: "run_fig_critique",
@@ -234,7 +255,13 @@ def _summary(
         if svg_polish_readiness is not None:
             summary["svg_polish_readiness"] = svg_polish_readiness
     if mode == "polish":
-        prerequisite_gate = _svg_polish_prerequisite_gate(action, reason, stop_boundary)
+        prerequisite_gate = _svg_polish_prerequisite_gate(
+            action,
+            reason,
+            stop_boundary,
+            final_state=status.get("final_artifact_state"),
+            final_kind=status.get("final_artifact_kind"),
+        )
         summary["svg_polish_gate"] = (
             prerequisite_gate
             if prerequisite_gate is not None
@@ -983,6 +1010,27 @@ def _select_action(
             safe_command=None,
             stop_boundary=None,
             reason="polished_svg final artifact is FRESH; polish loop is closed.",
+        )
+    if final_kind == "polished_svg" and final_state == "STALE":
+        # The SVG polish handoff already completed (manifest + polished SVG
+        # exist), but a manifest base input drifted (e.g. a critique.md edit
+        # changed base.critique_hash), so the polished artifact is STALE. The
+        # corrective action is to rebuild the manifest base hashes — /fig_loop
+        # is verify-only and can never clear this. The refresh requires reviewer
+        # and editor handoff metadata the driver cannot supply, so name the
+        # command instead of emitting a runnable safe_command.
+        return make(
+            ACTION_POLISH_HANDOFF_STOP,
+            safe_command=None,
+            stop_boundary=None,
+            reason=(
+                "polished_svg final artifact is STALE because the polish "
+                "manifest base drifted after the SVG polish handoff already "
+                f"completed; rerun scripts/svg_polish_handoff.py examples/{name} "
+                "--write --force to rebuild the manifest base hashes (including "
+                "critique_hash) and clear the STALE. /fig_loop is verify-only "
+                "and cannot refresh the manifest."
+            ),
         )
     if loop_checkpoint is not None:
         editorial_summary = loop_checkpoint.get("editorial_art_direction_summary")
