@@ -1,11 +1,11 @@
 ---
-schema: figure-agent.critique.v1.16
+schema: figure-agent.critique.v1.17
 fixture: fig1_overview_v2_pair_001_vault
-generated_at: '2026-06-01T00:00:00Z'
+generated_at: '2026-06-04T00:00:00Z'
 generator: critique_brief.py
-generator_version: sha256:d91a7ef6c48815fb7e9da2e5d39a1f9657fdb53e534fb4c620ff338d12380ae5
-rubric_version: figure-agent.critique-rubric.v1.16
-critique_input_hash: sha256:2deed84642ba6dcb52ea3ffe2bbdc2b5b7177de910d35c58bad92cf2580f04a4
+generator_version: sha256:bac4998f774e844fd4ef32fa748ac544ba3849e76d13bb940fbe20a0e6b1eee0
+rubric_version: figure-agent.critique-rubric.v1.17
+critique_input_hash: sha256:38b47d504daa60b6a1d4bb108d3603260986d22d0dd8c97b4ceebfccec492b8c
 verdict: ready
 audit_enumeration:
   structural_completeness:
@@ -207,9 +207,10 @@ quality_axes:
     verdict: pass
     confidence: medium
     rationale: Labels map to their intended targets (modality labels on spokes, axis/curve labels on their
-      lines, apparatus labels inside their boxes); 43/43 visual-clash and 1/1 text-boundary candidates
-      reviewed and accounted as conventional or false-positive.
-    evidence: micro_defects (44 entries); crop_audit_log (109 entries).
+      lines, apparatus labels inside their boxes); 41/41 visual-clash, 1/1 label-path, and 95/95
+      undeclared-geometry candidates reviewed and accounted as conventional, intentional structure, or
+      false-positive.
+    evidence: micro_defects (137 entries); crop_audit_log (108 entries).
     blocking_items: []
     recommended_action: none
   journal_polish:
@@ -235,7 +236,8 @@ quality_axes:
     rationale: All upstream axes pass and no open BLOCKER/MAJOR remains; the artifact is figure-ready.
       Target-journal AI/image provenance remains a separate human gate (TG-PUB-001) tracked outside this
       critique.
-    evidence: axis summary above; TG-PUB-001 acceptance note.
+    evidence: axis summary above; TG-PUB-001 acceptance note; print_178mm crop stays legible at 178 mm
+      manuscript width.
     blocking_items: []
     recommended_action: none
 top_tier_audit:
@@ -359,16 +361,18 @@ editorial_art_direction:
   tikz_vs_svg_polish_trigger:
     verdict: pass
     evidence: In the current render the TikZ source is semantically correct and print-scale legible (178
-      mm proxy), so neither the svg_micro_polish nor the semantic_backport polish_trigger condition is
-      met; the only residual item is an optional NIT (convergent-evidence caption clearance from the wt%
-      axis label).
-    rationale: Stay in TikZ; no svg_micro_polish or semantic_backport pending.
-    concrete_fix: accept_simplification - source-correct.
+      mm proxy), and the sole prior residual NIT (convergent-evidence caption clearance from the wt%
+      axis label) was resolved in TikZ on 2026-06-04, so no TikZ source work remains and no
+      semantic_backport is pending; neither the svg_micro_polish nor the semantic_backport
+      polish_trigger condition is met.
+    rationale: Stay in TikZ; no svg_micro_polish or semantic_backport pending. SVG polish was evaluated
+      and not pursued - this fully-programmatic figure is art-direction-complete in the TikZ source
+      (already at Nature-tier), so a bounded visual-only vector finish adds nothing.
+    concrete_fix: accept_simplification - source-complete; remaining in TikZ.
     blocks_high_impact: false
     recommended_path: continue_tikz
-    remaining_tikz_lever: 'Optional only: marginally increase the ''convergent evidence'' caption''s clearance
-      from the ''Sulfur content, wt%'' axis label (NIT, VC018/VC019). Non-blocking; no other TikZ work
-      remains.'
+    remaining_tikz_lever: 'None - the prior residual NIT (convergent-evidence caption clearance from
+      the Sulfur content, wt% axis label) was resolved in TikZ on 2026-06-04. No TikZ work remains.'
   human_art_direction_gate:
     verdict: pass
     evidence: No figure-level art-direction decision is unresolved; remaining gating is publication AI/image
@@ -379,7 +383,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:2deed84642ba6dcb52ea3ffe2bbdc2b5b7177de910d35c58bad92cf2580f04a4
+  assessed_artifact_hash: sha256:38b47d504daa60b6a1d4bb108d3603260986d22d0dd8c97b4ceebfccec492b8c
   benchmark_level: high_impact_candidate
   confidence: medium
   blockers: []
@@ -562,13 +566,153 @@ aesthetic_lever_audit:
   rationale: The current render satisfies the declared cross_panel_grammar positive signals with no observed
     anti-patterns, so the lever passes and needs no route.
 aesthetic_gate_audit: []
+aesthetic_antipattern_audit:
+- id: childish_shape_language
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: In the current render the instrument boxes (SMU, V_s meter, V_active PSU) use square engineering
+    bezels and the molecular rings are chemically-shaped, not rounded toy primitives.
+  rationale: No rounded cartoon shape language is visible across panels a-f; the geometry reads as
+    engineering/chemistry register, so the anti-pattern is absent and no route is needed.
+  linked_evidence: []
+- id: poster_gradient_decoration
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The current render is on clean white with flat fills only; no poster gradient, glow, or wash
+    band appears in the full_q1..q4 crops after the 2026-05-22 wash-strip redirect.
+  rationale: Color is restricted to flat semantic fills (amber/blue/red/gray) with no decorative gradient,
+    so this anti-pattern is absent and no route is required.
+  linked_evidence: []
+- id: generic_template_look
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Panel C is hand-composed at 1.5x width with a real-space film fused to an energy diagram; the
+    panels are not slotted into a uniform template grid in the rendered figure.
+  rationale: The render shows role-specific bespoke composition (hero C, three-spoke fan), not a preset
+    template stamp, so the generic-template anti-pattern is absent.
+  linked_evidence: []
+- id: dead_flat_vector_finish
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The current render carries a line-weight hierarchy (foreground mechanism strokes heavier than
+    supports) and depth cues in the MIM stack and cantilever, not a uniformly dead flat fill.
+  rationale: Stroke-weight variation and layered depth are visible, so the figure is not a dead flat vector;
+    this anti-pattern is absent and needs no route.
+  linked_evidence: []
+- id: uniform_line_weight_monotony
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: In the rendered panels mechanism strokes, wiring, axes, and label rules sit at distinct weights;
+    the Coulomb arrow in Panel F is bold while the Maxwell baseline is faint gray.
+  rationale: Line weights are deliberately differentiated to separate foreground from support, so the
+    uniform-line-weight monotony anti-pattern is absent.
+  linked_evidence: []
+- id: weak_hero_anchor
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Panel C is the unambiguous first fixation in the rendered figure - widest panel, strongest
+    deep-red saturation, and the origin of the three evidence spokes feeding Row 2.
+  rationale: A single strong hero is established and routes the read path, so the weak-hero-anchor
+    anti-pattern is absent and no route is needed.
+  linked_evidence: []
+- id: cramped_or_dead_whitespace
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The current render keeps visible gutters between D/E/F columns and local breathing room around
+    sub-zone labels; instrument-box labels stay inside their outlines (VC028/VC029).
+  rationale: Whitespace is balanced - neither cramped nor large dead voids - in the rendered layout, so
+    this anti-pattern is absent.
+  linked_evidence: []
+- id: low_authority_typography
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: Panel letters form a controlled hierarchy and subscripts/math labels stay legible and
+    consistent in the 178 mm print proxy crop of the current render.
+  rationale: Typography reads with editorial authority and consistent sizing at print scale, so the
+    low-authority-typography anti-pattern is absent.
+  linked_evidence: []
+- id: annotation_noise_competes_with_science
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: In the rendered figure every annotation (modality spoke labels, axis labels, apparatus labels)
+    maps to a mechanism and ink stays economical with no decorative callouts.
+  rationale: Annotations support the science rather than competing with it, so the annotation-noise
+    anti-pattern is absent and no route is needed.
+  linked_evidence: []
+- id: panel_style_mismatch
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The six panels share one style authority in the current render - common panel-letter
+    typography, shallow=blue/deep=red grammar, and a frame-less axis-arrow plot register across D/E/F.
+  rationale: Panels read as a single coherent series with no off-style outlier, so the panel-style-mismatch
+    anti-pattern is absent.
+  linked_evidence: []
+- id: reference_overcopying
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The render preserves the reference palette restraint and two-row proportion but keeps the
+    Panel A linear topology and does not transfer the reference network topology or plot-grid equality.
+  rationale: Style cues were learned without copying forbidden reference content, so the
+    reference-overcopying anti-pattern is absent and no route is needed.
+  linked_evidence: []
+- id: reference_underlearning
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: The rendered figure adopts the reference label hierarchy and clean-white editorial restraint;
+    the codex_gen_overview_v1.png style anchors are visibly applied in the current artifact.
+  rationale: Useful reference principles were applied rather than ignored, so the reference-underlearning
+    anti-pattern is absent.
+  linked_evidence: []
+- id: decorative_detail_without_explanatory_value
+  verdict: absent
+  severity: NIT
+  route: none
+  evidence: In the current render every drawn detail carries meaning - charge pins mark deposition, the
+    air-gap caliper marks geometry, the S8 inset marks chemistry - with no purely ornamental marks.
+  rationale: No decorative detail without explanatory value is visible across panels a-f, so this
+    anti-pattern is absent and no route is required.
+  linked_evidence: []
+weakest_panel_coherence:
+  panel_id: a
+  subregion_id: panel_a_molecular_chain
+  weakness_type: none
+  route: none
+  evidence: Panel A is the most schematic sub-region - a linear poly(S-r-DIB) chain with DIB rings, S8
+    inset, and (S)x bracket - but in the current render it reads as a coherent, legible molecular identity.
+  rationale: The molecular schematic is intentionally abstracted per briefing 3.2 and remains internally
+    coherent, so even the relatively weakest panel carries weakness_type none and needs no route.
+  linked_evidence: []
+reference_learning_accountability:
+  learned_principle: Adopt the reference palette restraint, two-row proportion, and label hierarchy while
+    keeping Panel A linear topology and a clean-white editorial register.
+  rejected_copy_target: The reference network topology and plot-grid equality, which would violate the
+    Panel A linear-chain invariant and the NC main-text clean-white convention.
+  overcopying: absent
+  underlearning: absent
+  route: none
+  evidence: The current render shows learned style cues (restrained palette, label hierarchy) applied
+    without transferring the forbidden reference network topology, visible across panels a-f.
+  rationale: Reference learning is balanced - neither overcopied nor underlearned in the rendered figure -
+    so both verdicts are absent and no route is needed.
+  linked_evidence: []
 micro_defects:
 - id: M001
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC001_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC001 (text ''S''): Chemistry register: two backbone bond strokes
-    terminate at the ''S'' glyph perimeter; S fully legible.'
+  observation: 'Visual-clash candidate VC001 (detector text_on_path, text ''S''): Sulfur node glyph on chain bonds (intentional molecular skeleton); fully legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC001
   text_boundary_ref: ''
@@ -576,14 +720,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC001: Chemistry register: two backbone bond strokes terminate at
-    the ''S'' glyph perimeter; S fully legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC001: Sulfur node glyph on chain bonds (intentional molecular skeleton); fully legible. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M002
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC002_S.png
-  kind: line_crosses_label
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC002 (text ''S''): Chemistry register: a diagonal backbone bond
-    clips the ''S'' edges but leaves the counters open; S legible.'
+  observation: 'Visual-clash candidate VC002 (detector text_on_path, text ''S''): Sulfur node on poly(S-r-DIB) backbone; on-path by design, crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC002
   text_boundary_ref: ''
@@ -591,14 +733,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC002: Chemistry register: a diagonal backbone bond clips the ''S''
-    edges but leaves the counters open; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC002: Sulfur node on poly(S-r-DIB) backbone; on-path by design, crisp. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M003
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC003_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC003 (text ''S''): Chemistry register: three bonds radiate to
-    the ''S'' perimeter, none cross the interior; S legible.'
+  observation: 'Visual-clash candidate VC003 (detector text_on_path, text ''S''): Sulfur node on chain; low dark metric, no glyph-line merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC003
   text_boundary_ref: ''
@@ -606,14 +746,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC003: Chemistry register: three bonds radiate to the ''S'' perimeter,
-    none cross the interior; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC003: Sulfur node on chain; low dark metric, no glyph-line merge. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M004
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC004_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC004 (text ''S''): Chemistry register: two bonds meet the lower
-    ''S'' bowl at the perimeter; S legible.'
+  observation: 'Visual-clash candidate VC004 (detector text_on_path, text ''S''): Sulfur node on bond crossing; intentional structure, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC004
   text_boundary_ref: ''
@@ -621,14 +759,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC004: Chemistry register: two bonds meet the lower ''S'' bowl at
-    the perimeter; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC004: Sulfur node on bond crossing; intentional structure, legible. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M005
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC005_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC005 (text ''S''): Chemistry register: two bonds meet the ''S''
-    shoulders at the perimeter; S legible.'
+  observation: 'Visual-clash candidate VC005 (detector text_on_path, text ''S''): Sulfur node on backbone; clean separation. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC005
   text_boundary_ref: ''
@@ -636,14 +772,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC005: Chemistry register: two bonds meet the ''S'' shoulders at the
-    perimeter; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC005: Sulfur node on backbone; clean separation. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M006
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC006_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC006 (text ''S''): Chemistry register: bonds graze the ''S'' perimeter
-    with a hairline gap; S legible.'
+  observation: 'Visual-clash candidate VC006 (detector text_on_path, text ''S''): Sulfur node on chain bonds; intentional molecular label. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC006
   text_boundary_ref: ''
@@ -651,14 +785,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC006: Chemistry register: bonds graze the ''S'' perimeter with a
-    hairline gap; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC006: Sulfur node on chain bonds; intentional molecular label. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M007
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC007_S.png
-  kind: line_crosses_label
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC007 (text ''S''): Chemistry register: a diagonal bond clips the
-    ''S'' as in VC002; counters open, S legible.'
+  observation: 'Visual-clash candidate VC007 (detector text_on_path, text ''S''): Sulfur node on backbone segment; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC007
   text_boundary_ref: ''
@@ -666,14 +798,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC007: Chemistry register: a diagonal bond clips the ''S'' as in VC002;
-    counters open, S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC007: Sulfur node on backbone segment; readable. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M008
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC008_S.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC008 (text ''S''): Chemistry register: bonds meet ''S'' shoulders
-    with an upper-right near-touch; S legible.'
+  observation: 'Visual-clash candidate VC008 (detector text_on_path, text ''S''): Sulfur node on chain; on-path by design. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC008
   text_boundary_ref: ''
@@ -681,14 +811,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC008: Chemistry register: bonds meet ''S'' shoulders with an upper-right
-    near-touch; S legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC008: Sulfur node on chain; on-path by design. This is not a defect (convention_acceptable); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M009
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC009_C.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC009 (text ''C''): Energy-diagram ''C'' is clear; the neighbouring
-    ''E''/''ob'' fragments are frame-edge truncations of adjacent labels, not contact.'
+  observation: 'Visual-clash candidate VC009 (detector near_miss, text ''C''): Italic math C variable near E glyph; metric tiny (dark 0.015), no overlap. Host crop verdict: false_positive; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC009
   text_boundary_ref: ''
@@ -696,47 +824,38 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC009: Energy-diagram ''C'' is clear; the neighbouring ''E''/''ob''
-    fragments are frame-edge truncations of adjacent labels, not contact. This is not a defect (false_positive).'
+  accept_simplification_rationale: 'VC009: Italic math C variable near E glyph; metric tiny (dark 0.015), no overlap. This is not a defect (false_positive); the ''C'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M010
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_mobility.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC010_edge.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC010 (text ''mobility''): ''mobility'' is clear of any stroke;
-    the dark-red Delta-E_t indicator arrow clashes with the adjacent word ''edge'' (VC011), not ''mobility''.'
+  observation: 'Visual-clash candidate VC010 (detector text_on_fill, text ''edge''): Band-diagram "edge" label on tinted fill; high contrast, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC010
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC010: ''mobility'' is clear of any stroke; the dark-red Delta-E_t
-    indicator arrow clashes with the adjacent word ''edge'' (VC011), not ''mobility''. This is not a defect
-    (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC010: Band-diagram "edge" label on tinted fill; high contrast, legible. This is not a defect (convention_acceptable); the ''edge'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M011
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_edge.png
-  kind: line_crosses_label
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC011_S.png
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC011 (text ''edge''): The dark-red Delta-E_t / mobility-edge indicator
-    arrow runs between the ''d'' and ''g'' of ''edge''; an energy-axis annotation arrow over its own label
-    is conventional and ''edge'' stays readable.'
+  observation: 'Visual-clash candidate VC011 (detector near_miss, text ''S''): Sulfur node with subscript + bonded atom dot; intentional formula, no clash. Host crop verdict: false_positive; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC011
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC011: The dark-red Delta-E_t / mobility-edge indicator arrow runs
-    between the ''d'' and ''g'' of ''edge''; an energy-axis annotation arrow over its own label is conventional
-    and ''edge'' stays readable. This is not a defect (convention_acceptable).'
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC011: Sulfur node with subscript + bonded atom dot; intentional formula, no clash. This is not a defect (false_positive); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M012
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_S.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC012_shallow.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC012 (text ''S''): Chemistry register near-miss: ''S'' clear;
-    neighbouring atom node and digit fragment are frame cuts.'
+  observation: 'Visual-clash candidate VC012 (detector text_on_fill, text ''shallow''): "shallow" trap label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC012
   text_boundary_ref: ''
@@ -744,30 +863,25 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC012: Chemistry register near-miss: ''S'' clear; neighbouring atom
-    node and digit fragment are frame cuts. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC012: "shallow" trap label on fill; crisp. This is not a defect (convention_acceptable); the ''shallow'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M013
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_shallow.png
-  kind: line_crosses_label
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC013_S.png
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC013 (text ''shallow''): The dark-red trap-level reference line
-    crosses ''shallow'' in the inter-letter gap of the double-l; all letters readable; energy-level convention.'
+  observation: 'Visual-clash candidate VC013 (detector near_miss, text ''S''): Sulfur glyph near bond; dark 0.03, no real collision. Host crop verdict: false_positive; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC013
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC013: The dark-red trap-level reference line crosses ''shallow''
-    in the inter-letter gap of the double-l; all letters readable; energy-level convention. This is not
-    a defect (convention_acceptable).'
+  accept_simplification_reason: false_positive
+  accept_simplification_rationale: 'VC013: Sulfur glyph near bond; dark 0.03, no real collision. This is not a defect (false_positive); the ''S'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M014
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_S.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC014_poly_S-r-DIB.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC014 (text ''S''): Chemistry register near-miss: ''S'' clear;
-    neighbouring node/glyph fragments are frame cuts.'
+  observation: 'Visual-clash candidate VC014 (detector text_on_fill, text ''poly(S-r-DIB)''): "poly(S-r-DIB) thin film" italic on white; sharp, fully readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC014
   text_boundary_ref: ''
@@ -775,60 +889,51 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC014: Chemistry register near-miss: ''S'' clear; neighbouring node/glyph
-    fragments are frame cuts. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC014: "poly(S-r-DIB) thin film" italic on white; sharp, fully readable. This is not a defect (convention_acceptable); the ''poly(S-r-DIB)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M015
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_Sulfur-rich.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC015_film.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC015 (text ''Sulfur-rich''): ''Sulfur-rich'' sits on clean white
-    with no adjacent stroke; detector fired on background only.'
+  observation: 'Visual-clash candidate VC015 (detector text_on_fill, text ''film''): Tail of "thin film" caption on fill; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC015
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC015: ''Sulfur-rich'' sits on clean white with no adjacent stroke;
-    detector fired on background only. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC015: Tail of "thin film" caption on fill; legible. This is not a defect (convention_acceptable); the ''film'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M016
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_poly_S-r-DIB.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC016_Sulfur-rich.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC016 (text ''poly(S-r-DIB)''): ''poly(S-r-DIB)'' sits on clean
-    white with no adjacent stroke; fully legible.'
+  observation: 'Visual-clash candidate VC016 (detector text_on_fill, text ''Sulfur-rich''): "Sulfur-rich" panel label on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC016
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC016: ''poly(S-r-DIB)'' sits on clean white with no adjacent stroke;
-    fully legible. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC016: "Sulfur-rich" panel label on fill; clean. This is not a defect (convention_acceptable); the ''Sulfur-rich'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M017
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_Sulfur.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC017_poly_S-r-DIB.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC017 (text ''Sulfur''): Axis label ''Sulfur'' is clear; the faint
-    tick above is separated; following ''co'' is a frame cut.'
+  observation: 'Visual-clash candidate VC017 (detector text_on_fill, text ''poly(S-r-DIB)''): "poly(S-r-DIB)" stacked label on fill; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC017
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC017: Axis label ''Sulfur'' is clear; the faint tick above is separated;
-    following ''co'' is a frame cut. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC017: "poly(S-r-DIB)" stacked label on fill; readable. This is not a defect (convention_acceptable); the ''poly(S-r-DIB)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M018
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_wt.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC018_Sulfur.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC018 (text ''wt%''): Panel-B axis label ''Sulfur content, wt%''
-    sits adjacent to the Row-1.5 ''convergent evidence'' caption on a different baseline; both labels
-    remain individually legible (tight but distinct).'
+  observation: 'Visual-clash candidate VC018 (detector text_on_path, text ''Sulfur''): "Sulfur" annotation near guide line; low metric, no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC018
   text_boundary_ref: ''
@@ -836,16 +941,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC018: Panel-B axis label ''Sulfur content, wt%'' sits adjacent to
-    the Row-1.5 ''convergent evidence'' caption on a different baseline; both labels remain individually
-    legible (tight but distinct). This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC018: "Sulfur" annotation near guide line; low metric, no merge. This is not a defect (convention_acceptable); the ''Sulfur'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M019
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_convergent.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC019_V.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC019 (text ''convergent''): ''convergent evidence'' caption sits
-    just below-right of the ''wt%'' axis label; the two distinct labels crowd but each is legible; host
-    re-inspection confirms separable baselines.'
+  observation: 'Visual-clash candidate VC019 (detector text_on_fill, text ''V''): Subscript V of E_V (valence band edge); italic, clean separation from E. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC019
   text_boundary_ref: ''
@@ -853,31 +954,25 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC019: ''convergent evidence'' caption sits just below-right of the
-    ''wt%'' axis label; the two distinct labels crowd but each is legible; host re-inspection confirms
-    separable baselines. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC019: Subscript V of E_V (valence band edge); italic, clean separation from E. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M020
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_V.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC020_ISPD.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC020 (text ''V''): Energy-axis ''V'' (E_V region) glyph is clear;
-    the bracketed ''E'' fragment at left is a frame cut.'
+  observation: 'Visual-clash candidate VC020 (detector text_on_path, text ''ISPD''): "ISPD" probe label sits below frame rule; no collision with rule. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC020
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC020: Energy-axis ''V'' (E_V region) glyph is clear; the bracketed
-    ''E'' fragment at left is a frame cut. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC020: "ISPD" probe label sits below frame rule; no collision with rule. This is not a defect (convention_acceptable); the ''ISPD'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M021
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_ISPD.png
-  kind: label_stacked_on_reference_line
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC021_MIM.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC021 (text ''ISPD''): ''ISPD'' is the middle spoke''s modality
-    label sitting on its own thin/light spoke line with the convergence arrowhead above; all four letters
-    legible; intentional spoke geometry.'
+  observation: 'Visual-clash candidate VC021 (detector text_on_fill, text ''MIM''): "MIM" device label on fill; high luma_std, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC021
   text_boundary_ref: ''
@@ -885,16 +980,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC021: ''ISPD'' is the middle spoke''s modality label sitting on its
-    own thin/light spoke line with the convergence arrowhead above; all four letters legible; intentional
-    spoke geometry. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC021: "MIM" device label on fill; high luma_std, legible. This is not a defect (convention_acceptable); the ''MIM'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M022
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_polymer.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC022_V_A.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC022 (text ''polymer''): ''polymer'' callout: a leader attaches
-    at the word''s right end and runs to the film-slab corner; host re-inspection confirms the leader
-    does NOT cross the glyphs.'
+  observation: 'Visual-clash candidate VC022 (detector text_on_path, text ''V/A''): "V/A" axis/unit label near rule; readable, no overlap. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC022
   text_boundary_ref: ''
@@ -902,30 +993,25 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC022: ''polymer'' callout: a leader attaches at the word''s right
-    end and runs to the film-slab corner; host re-inspection confirms the leader does NOT cross the glyphs.
-    This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC022: "V/A" axis/unit label near rule; readable, no overlap. This is not a defect (convention_acceptable); the ''V/A'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M023
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_film.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC023_Vs.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC023 (text ''film''): ''film'' sits on an open tan gradient with
-    ample clearance; no stroke crosses the glyphs.'
+  observation: 'Visual-clash candidate VC023 (detector text_on_fill, text ''Vs''): "Vs" (surface voltage) label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC023
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC023: ''film'' sits on an open tan gradient with ample clearance;
-    no stroke crosses the glyphs. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC023: "Vs" (surface voltage) label on fill; crisp. This is not a defect (convention_acceptable); the ''Vs'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M024
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC024_crop.png
-  kind: label_glyph_overlaps_internal_drawing
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC024 (text ''+''): Surface-charge marker: white ''+'' knockout
-    on a maroon charge disc straddling the film-surface line; iconographic charge cue, legible.'
+  observation: 'Visual-clash candidate VC024 (detector text_on_path, text ''+''): Charge-deposition "+" pin glyph on surface interface line; intentional ISPD marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC024
   text_boundary_ref: ''
@@ -933,14 +1019,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC024: Surface-charge marker: white ''+'' knockout on a maroon charge
-    disc straddling the film-surface line; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
+  accept_simplification_rationale: 'VC024: Charge-deposition "+" pin glyph on surface interface line; intentional ISPD marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M025
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC025_crop.png
-  kind: label_glyph_overlaps_internal_drawing
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC025 (text ''+''): Surface-charge marker: white ''+'' knockout
-    on a maroon charge disc on the surface boundary; iconographic charge cue, legible.'
+  observation: 'Visual-clash candidate VC025 (detector text_on_fill, text ''+''): "+" charge pin on surface; intentional deposition glyph, by design. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC025
   text_boundary_ref: ''
@@ -948,14 +1032,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC025: Surface-charge marker: white ''+'' knockout on a maroon charge
-    disc on the surface boundary; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
+  accept_simplification_rationale: 'VC025: "+" charge pin on surface; intentional deposition glyph, by design. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M026
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC026_crop.png
-  kind: label_glyph_overlaps_internal_drawing
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC026 (text ''+''): Surface-charge marker: white ''+'' knockout
-    on a maroon charge disc on the surface boundary; iconographic charge cue, legible.'
+  observation: 'Visual-clash candidate VC026 (detector text_on_path, text ''+''): "+" charge pin on interface line; intentional marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC026
   text_boundary_ref: ''
@@ -963,14 +1045,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC026: Surface-charge marker: white ''+'' knockout on a maroon charge
-    disc on the surface boundary; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
+  accept_simplification_rationale: 'VC026: "+" charge pin on interface line; intentional marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M027
   crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC027_crop.png
-  kind: label_glyph_overlaps_internal_drawing
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC027 (text ''+''): Surface-charge marker: white ''+'' knockout
-    on a maroon charge disc on the block-top outline; iconographic charge cue, legible.'
+  observation: 'Visual-clash candidate VC027 (detector text_on_path, text ''+''): "+" charge pin on interface line; intentional marker. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC027
   text_boundary_ref: ''
@@ -978,63 +1058,51 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'VC027: Surface-charge marker: white ''+'' knockout on a maroon charge
-    disc on the block-top outline; iconographic charge cue, legible. This is not a defect (intentional_schematic).'
+  accept_simplification_rationale: 'VC027: "+" charge pin on interface line; intentional marker. This is not a defect (intentional_schematic); the ''+'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M028
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_Vs.png
-  kind: label_backdrop_overflows_outline
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC028_V.png
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC028 (text ''Vs''): ''V_s'' display label sits fully inside the
-    rounded meter-box outline with margin; host re-inspection confirms no glyph/backdrop overflows or
-    is clipped (closes prior finding C002).'
+  observation: 'Visual-clash candidate VC028 (detector text_on_path, text ''V''): Italic V near guide line; low dark metric, legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC028
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC028: ''V_s'' display label sits fully inside the rounded meter-box
-    outline with margin; host re-inspection confirms no glyph/backdrop overflows or is clipped (closes
-    prior finding C002). This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC028: Italic V near guide line; low dark metric, legible. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M029
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_meter.png
-  kind: label_backdrop_overflows_outline
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC029_V.png
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC029 (text ''meter''): ''meter'' display label sits fully inside
-    the rounded meter-box outline; terminal ''r'' has clear margin to the border; no overflow/clip (closes
-    prior finding C002).'
+  observation: 'Visual-clash candidate VC029 (detector text_on_path, text ''V''): "V" label near axis rule; no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC029
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC029: ''meter'' display label sits fully inside the rounded meter-box
-    outline; terminal ''r'' has clear margin to the border; no overflow/clip (closes prior finding C002).
-    This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC029: "V" label near axis rule; no merge. This is not a defect (convention_acceptable); the ''V'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M030
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_V.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC030_t.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC030 (text ''V''): Electrode-region ''V'' glyph is clear within
-    its panel field; horizontal panel outlines are separated from the glyph.'
+  observation: 'Visual-clash candidate VC030 (detector text_on_fill, text ''(t)''): "(t)" of V(t) time-dependence label on fill; readable. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC030
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC030: Electrode-region ''V'' glyph is clear within its panel field;
-    horizontal panel outlines are separated from the glyph. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC030: "(t)" of V(t) time-dependence label on fill; readable. This is not a defect (convention_acceptable); the ''(t)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M031
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_V.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC031_I_t.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC031 (text ''V''): V_s(t)-axis ''V'' label sits beside its axis;
-    the axis line does not cross the glyph; conventional axis labelling.'
+  observation: 'Visual-clash candidate VC031 (detector text_on_fill, text ''I(t)''): "I(t) ~" current-vs-time math on fill; crisp italic. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC031
   text_boundary_ref: ''
@@ -1042,14 +1110,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC031: V_s(t)-axis ''V'' label sits beside its axis; the axis line
-    does not cross the glyph; conventional axis labelling. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC031: "I(t) ~" current-vs-time math on fill; crisp italic. This is not a defect (convention_acceptable); the ''I(t)'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M032
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_t.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC032_low.png
   kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC032 (text ''(t)''): Math label ''(t)'': the parenthesis arcs
-    are the symbol''s own brackets; they approach but do not strike the italic ''t''.'
+  observation: 'Visual-clash candidate VC032 (detector text_on_fill, text ''low''): "low" trap-depth label on fill; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC032
   text_boundary_ref: ''
@@ -1057,78 +1123,64 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC032: Math label ''(t)'': the parenthesis arcs are the symbol''s
-    own brackets; they approach but do not strike the italic ''t''. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC032: "low" trap-depth label on fill; legible. This is not a defect (convention_acceptable); the ''low'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M033
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_I_t.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC033_crop.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC033 (text ''I(t)''): ''I(t) ~'' expression sits on clean white
-    with full clearance; the corner wedge does not touch glyphs.'
+  observation: 'Visual-clash candidate VC033 (detector text_on_fill, text '')''): Closing paren of a label fragment on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC033
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC033: ''I(t) ~'' expression sits on clean white with full clearance;
-    the corner wedge does not touch glyphs. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC033: Closing paren of a label fragment on fill; clean. This is not a defect (convention_acceptable); the '')'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M034
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_low.png
-  kind: label_stacked_on_reference_line
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC034_hig.png
+  kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC034 (text ''low''): Plot curve label ''low n'' (navy) sits on
-    its own navy power-law line; conventional curve labelling, legible.'
+  observation: 'Visual-clash candidate VC034 (detector text_on_path, text ''hig''): Rotated rose "high" along sloped trend line crossed by dashed guide; word stays readable, intentional angled annotation. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC034
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC034: Plot curve label ''low n'' (navy) sits on its own navy power-law
-    line; conventional curve labelling, legible. This is not a defect (convention_acceptable).'
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC034: Rotated rose "high" along sloped trend line crossed by dashed guide; word stays readable, intentional angled annotation. This is not a defect (intentional_schematic); the ''hig'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M035
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_crop.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC035_h.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC035 (text '')''): The auto-crop window clipped the '')'' glyph
-    (mostly out of frame); the parenthesis belongs to the g(E_t)/(t) axis label and is legible in full
-    context; crop-window artefact, not a figure defect.'
+  observation: 'Visual-clash candidate VC035 (detector text_on_path, text ''h''): Continuation of rotated "high" on trend line; intentional, legible. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC035
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC035: The auto-crop window clipped the '')'' glyph (mostly out of
-    frame); the parenthesis belongs to the g(E_t)/(t) axis label and is legible in full context; crop-window
-    artefact, not a figure defect. This is not a defect (false_positive).'
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC035: Continuation of rotated "high" on trend line; intentional, legible. This is not a defect (intentional_schematic); the ''h'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M036
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_hig.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC036_n.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC036 (text ''hig''): Rotated curve label ''high n'' (maroon) sits
-    along its maroon power-law line; the navy line skims the ascender tops as a near-miss; both labels
-    legible.'
+  observation: 'Visual-clash candidate VC036 (detector text_on_path, text ''n''): Tail glyph of the same rotated "high" annotation on trend line; intentional angled label, readable. Host crop verdict: accept_simplification; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC036
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC036: Rotated curve label ''high n'' (maroon) sits along its maroon
-    power-law line; the navy line skims the ascender tops as a near-miss; both labels legible. This is
-    not a defect (convention_acceptable).'
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'VC036: Tail glyph of the same rotated "high" annotation on trend line; intentional angled label, readable. This is not a defect (intentional_schematic); the ''n'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M037
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_h.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC037_d.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC037 (text ''h''): ''high n'' fragment ''h'' near the navy line;
-    near-miss with white separation; legible.'
+  observation: 'Visual-clash candidate VC037 (detector text_on_fill, text ''d''): Subscript d of tau_d (trap-depth time constant); italic, separated from tau and axis rule. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC037
   text_boundary_ref: ''
@@ -1136,14 +1188,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC037: ''high n'' fragment ''h'' near the navy line; near-miss with
-    white separation; legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC037: Subscript d of tau_d (trap-depth time constant); italic, separated from tau and axis rule. This is not a defect (convention_acceptable); the ''d'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M038
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_n.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC038_Shallow.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC038 (text ''n''): ''high n'' subscript ''n'' sits in clear space
-    below its line; near-miss only; legible.'
+  observation: 'Visual-clash candidate VC038 (detector text_on_fill, text ''Shallow''): "Shallow" trap-depth label on fill; crisp. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC038
   text_boundary_ref: ''
@@ -1151,29 +1201,25 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC038: ''high n'' subscript ''n'' sits in clear space below its line;
-    near-miss only; legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC038: "Shallow" trap-depth label on fill; crisp. This is not a defect (convention_acceptable); the ''Shallow'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M039
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_d.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC039_log.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC039 (text ''d''): Energy-axis ''d'' glyph sits clear above the
-    thin baseline rule; no contact.'
+  observation: 'Visual-clash candidate VC039 (detector text_on_path, text ''log''): "log" axis-scale label near axis rule; low edge metric, no merge. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC039
   text_boundary_ref: ''
   label_path_ref: ''
   undeclared_geometry_ref: ''
   status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC039: Energy-axis ''d'' glyph sits clear above the thin baseline
-    rule; no contact. This is not a defect (false_positive).'
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'VC039: "log" axis-scale label near axis rule; low edge metric, no merge. This is not a defect (convention_acceptable); the ''log'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M040
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040_log.png
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC040_I.png
   kind: label_path_near_miss
   severity: NIT
-  observation: 'Visual-clash candidate VC040 (text ''log''): Rotated axis label ''log I'': the ''g'' descender
-    lands at the vertical axis line; conventional rotated axis label, legible.'
+  observation: 'Visual-clash candidate VC040 (detector text_on_path, text ''I''): Axis label "I" near rule; legible. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC040
   text_boundary_ref: ''
@@ -1181,14 +1227,12 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC040: Rotated axis label ''log I'': the ''g'' descender lands at
-    the vertical axis line; conventional rotated axis label, legible. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC040: Axis label "I" near rule; legible. This is not a defect (convention_acceptable); the ''I'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M041
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041_I.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC041_f.png
+  kind: label_curve_near_label
   severity: NIT
-  observation: 'Visual-clash candidate VC041 (text ''I''): Axis label ''I'' near the vertical axis line
-    with a thin white gap; near-miss, conventional axis labelling.'
+  observation: 'Visual-clash candidate VC041 (detector text_on_fill, text ''f''): Italic f label fragment on fill; clean. Host crop verdict: no_defect; label stays legible, not a real collision.'
   linked_finding_id: ''
   visual_clash_ref: VC041
   text_boundary_ref: ''
@@ -1196,74 +1240,1287 @@ micro_defects:
   undeclared_geometry_ref: ''
   status: accept_simplification
   accept_simplification_reason: convention_acceptable
-  accept_simplification_rationale: 'VC041: Axis label ''I'' near the vertical axis line with a thin white
-    gap; near-miss, conventional axis labelling. This is not a defect (convention_acceptable).'
+  accept_simplification_rationale: 'VC041: Italic f label fragment on fill; clean. This is not a defect (convention_acceptable); the ''f'' glyph is legible and the flagged stroke/fill is intentional schematic register.'
 - id: M042
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC042_f.png
-  kind: label_path_near_miss
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/label_path/LP001_mobility_edge.png
+  kind: label_stacked_on_reference_line
   severity: NIT
-  observation: 'Visual-clash candidate VC042 (text ''f''): g(E_t)-region ''f'' glyph sits clear on white;
-    the thin top rule is separated.'
-  linked_finding_id: ''
-  visual_clash_ref: VC042
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC042: g(E_t)-region ''f'' glyph sits clear on white; the thin top
-    rule is separated. This is not a defect (false_positive).'
-- id: M043
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/visual_clash/VC043_HV.png
-  kind: label_path_near_miss
-  severity: NIT
-  observation: 'Visual-clash candidate VC043 (text ''HV+''): ''HV+'' source-box label sits on white with
-    clear space; the adjacent rounded box corner does not touch the glyphs.'
-  linked_finding_id: ''
-  visual_clash_ref: VC043
-  text_boundary_ref: ''
-  label_path_ref: ''
-  undeclared_geometry_ref: ''
-  status: accept_simplification
-  accept_simplification_reason: false_positive
-  accept_simplification_rationale: 'VC043: ''HV+'' source-box label sits on white with clear space; the
-    adjacent rounded box corner does not touch the glyphs. This is not a defect (false_positive).'
-- id: M044
-  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
-  kind: label_overflows_row_box
-  severity: NIT
-  observation: 'Text-boundary candidate TB001: the ''ISPD'' spoke modality label sits at the top edge
-    of the row2_contain_text box (clearance 0.0pt).'
+  observation: 'Label-path candidate LP001 (text ''mobility edge''): the ''mobility edge'' annotation sits on its own Panel C mobility-edge reference line; sub-threshold separation (3.36 pt < 4.0 pt clearance) is intentional reference-line annotation, not a clash.'
   linked_finding_id: ''
   visual_clash_ref: ''
-  text_boundary_ref: TB001
-  label_path_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: LP001
   undeclared_geometry_ref: ''
   status: accept_simplification
+  accept_simplification_reason: convention_acceptable
+  accept_simplification_rationale: 'LP001: ''mobility edge'' is stacked on the panel_c_mobility_edge_reference line by design (separation 3.36 pt < 4.0 pt clearance); this is an intentional reference-line annotation, not a defect (convention_acceptable).'
+- id: M043
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG001 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG001
+  status: accept_simplification
   accept_simplification_reason: intentional_schematic
-  accept_simplification_rationale: 'TB001: ''ISPD'' is the middle spoke''s modality label placed in the
-    Row-1-to-Row-2 transition (spoke) zone by design; host re-inspection confirms ISPD sits above the
-    row divider rule, clearly separated from the V_s probe apparatus label below. The 0.0pt clearance
-    is the intended spoke-zone placement, not a row-box overflow defect.'
+  accept_simplification_rationale: 'UG001: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M044
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG002 (detector kind label_endpoint_near_miss near ''copolymer'' (2.03 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG002
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG002: detector-flagged label_endpoint_near_miss near ''copolymer'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M045
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG003 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG003
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG003: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M046
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG004 (detector kind label_endpoint_near_miss near ''HV+'' (0.95 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG004
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG004: detector-flagged label_endpoint_near_miss near ''HV+'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M047
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG005 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG005
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG005: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M048
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG006 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG006
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG006: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M049
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG007 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG007
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG007: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M050
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG008 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG008
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG008: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M051
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG009 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG009
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG009: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M052
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG010 (detector kind label_endpoint_near_miss near ''Vs'' (2.25 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG010
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG010: detector-flagged label_endpoint_near_miss near ''Vs'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M053
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG011 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG011
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG011: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M054
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG012 (detector kind label_endpoint_near_miss near ''ISPD'' (2.58 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG012
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG012: detector-flagged label_endpoint_near_miss near ''ISPD'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M055
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG013 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG013
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG013: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M056
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG014 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG014
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG014: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M057
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG015 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG015
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG015: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M058
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG016 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG016
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG016: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M059
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG017 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG017
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG017: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M060
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG018 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG018
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG018: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M061
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG019 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG019
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG019: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M062
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG020 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG020
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG020: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M063
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG021 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG021
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG021: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M064
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG022 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG022
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG022: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M065
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG023 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG023
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG023: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M066
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q2.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG024 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG024
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG024: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M067
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG025 (detector kind label_endpoint_near_miss near ''poly(S-r-DIB)'' (1.87 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG025
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG025: detector-flagged label_endpoint_near_miss near ''poly(S-r-DIB)'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M068
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG026 (detector kind label_endpoint_near_miss near ''thin'' (1.87 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG026
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG026: detector-flagged label_endpoint_near_miss near ''thin'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M069
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q1.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG027 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG027
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG027: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M070
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG028 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG028
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG028: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M071
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG029 (detector kind label_endpoint_near_miss near ''S'' (1.35 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG029
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG029: detector-flagged label_endpoint_near_miss near ''S'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M072
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG030 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG030
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG030: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M073
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG031 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG031
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG031: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M074
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG032 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG032
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG032: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M075
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG033 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG033
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG033: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M076
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG034 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG034
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG034: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M077
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG035 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG035
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG035: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M078
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG036 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG036
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG036: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M079
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG037 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG037
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG037: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M080
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG038 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG038
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG038: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M081
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG039 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG039
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG039: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M082
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG040 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG040
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG040: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M083
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG041 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG041
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG041: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M084
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG042 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG042
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG042: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M085
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG043 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG043
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG043: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M086
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG044 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG044
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG044: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M087
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG045 (detector kind label_endpoint_near_miss near ''S'' (3.74 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG045
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG045: detector-flagged label_endpoint_near_miss near ''S'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M088
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG046 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG046
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG046: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M089
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG047 (detector kind label_endpoint_near_miss near ''−(S)'' (0.23 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG047
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG047: detector-flagged label_endpoint_near_miss near ''−(S)'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M090
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG048 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG048
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG048: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M091
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG049 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG049
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG049: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M092
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG050 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG050
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG050: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M093
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG051 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG051
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG051: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M094
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG052 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG052
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG052: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M095
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG053 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG053
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG053: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M096
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG054 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG054
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG054: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M097
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG055 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG055
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG055: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M098
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG056 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG056
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG056: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M099
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG057 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG057
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG057: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M100
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG058 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG058
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG058: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M101
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG059 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG059
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG059: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M102
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG060 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG060
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG060: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M103
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG061 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG061
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG061: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M104
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG062 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG062
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG062: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M105
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG063 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG063
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG063: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M106
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG064 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG064
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG064: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M107
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG065 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG065
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG065: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M108
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG066 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG066
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG066: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M109
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG067 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG067
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG067: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M110
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG068 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG068
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG068: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M111
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG069 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG069
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG069: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M112
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG070 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG070
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG070: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M113
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG071 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG071
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG071: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M114
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG072 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG072
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG072: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M115
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG073 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG073
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG073: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M116
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG074 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG074
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG074: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M117
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG075 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG075
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG075: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M118
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG076 (detector kind label_endpoint_near_miss near ''b'' (3.59 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG076
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG076: detector-flagged label_endpoint_near_miss near ''b'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M119
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_column_rule
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG077 (detector kind undeclared_column_rule): intentional vertical axis / column divider / panel separator rule; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG077
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG077: detector-flagged undeclared_column_rule is a intentional vertical axis / column divider / panel separator rule drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M120
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG078 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG078
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG078: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M121
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q3.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG079 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG079
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG079: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M122
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG080 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG080
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG080: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M123
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG081 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG081
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG081: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M124
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG082 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG082
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG082: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M125
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG083 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG083
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG083: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M126
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG084 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG084
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG084: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M127
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG085 (detector kind label_endpoint_near_miss near ''Energy'' (0.73 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG085
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG085: detector-flagged label_endpoint_near_miss near ''Energy'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M128
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG086 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG086
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG086: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M129
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG087 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG087
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG087: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M130
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG088 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG088
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG088: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M131
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG089 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG089
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG089: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M132
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG090 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG090
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG090: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M133
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG091 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG091
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG091: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M134
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG092 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG092
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG092: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M135
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG093 (detector kind undeclared_rect_boundary): intentional panel frame / instrument bezel / schematic box; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG093
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG093: detector-flagged undeclared_rect_boundary is a intentional panel frame / instrument bezel / schematic box drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M136
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_path_near_miss
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG094 (detector kind label_endpoint_near_miss near ''localized'' (0.38 pt)): conventional axis/structure label endpoint resting near its target; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG094
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG094: detector-flagged label_endpoint_near_miss near ''localized'' is a conventional axis/structure label endpoint resting near its target drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
+- id: M137
+  crop: examples/fig1_overview_v2_pair_001_vault/build/audit_crops/full_q4.png
+  kind: label_crosses_panel_boundary
+  severity: NIT
+  observation: 'Undeclared-geometry candidate UG095 (detector kind undeclared_horizontal_rule): intentional axis baseline / band rule / panel divider strip; accepted as intentional structure, not an accidental mark.'
+  linked_finding_id: ''
+  visual_clash_ref: ''
+  text_boundary_ref: ''
+  label_path_ref: ''
+  undeclared_geometry_ref: UG095
+  status: accept_simplification
+  accept_simplification_reason: intentional_schematic
+  accept_simplification_rationale: 'UG095: detector-flagged undeclared_horizontal_rule is a intentional axis baseline / band rule / panel divider strip drawn in the .tex; the figure is Nature-tier with no real defect here, so this is accepted intentional structure (intentional_schematic), not a defect.'
 crop_audit_log:
+- crop_id: LP001_mobility_edge
+  path: build/audit_crops/label_path/LP001_mobility_edge.png
+  source: label_path:LP001
+  inspected: true
+  verdict: no_defect
+  linked_micro_defect_id: ''
+  rationale: 'Label-path candidate LP001: ''mobility edge'' rests on its Panel C mobility-edge reference line; sub-threshold separation is intentional reference-line annotation, fully legible.'
+  observed_objects:
+  - label 'mobility edge'
+  - the Panel C mobility-edge reference line
+  local_relationship: 'Label-path candidate LP001: ''mobility edge'' rests on its Panel C mobility-edge reference line; sub-threshold separation is intentional reference-line annotation, fully legible.'
+  candidate_refs:
+  - LP001
+  unintended_visible_anomaly: none
+  anomaly_rationale: 'Host inspection: only the expected label and its reference line are present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_link: ''
 - crop_id: VC001_S
   path: build/audit_crops/visual_clash/VC001_S.png
   source: visual_clash:VC001
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: two backbone bond strokes terminate at the ''S'' glyph perimeter; S
-    fully legible.'
+  rationale: 'Visual-clash candidate VC001 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: two backbone bond strokes terminate at the ''S'' glyph perimeter;
-    S fully legible.'
+  local_relationship: 'Visual-clash candidate VC001 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC001
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC002_S
   path: build/audit_crops/visual_clash/VC002_S.png
@@ -1271,18 +2528,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: a diagonal backbone bond clips the ''S'' edges but leaves the counters
-    open; S legible.'
+  rationale: 'Visual-clash candidate VC002 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: a diagonal backbone bond clips the ''S'' edges but leaves the
-    counters open; S legible.'
+  local_relationship: 'Visual-clash candidate VC002 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC002
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC003_S
   path: build/audit_crops/visual_clash/VC003_S.png
@@ -1290,18 +2544,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: three bonds radiate to the ''S'' perimeter, none cross the interior;
-    S legible.'
+  rationale: 'Visual-clash candidate VC003 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: three bonds radiate to the ''S'' perimeter, none cross the
-    interior; S legible.'
+  local_relationship: 'Visual-clash candidate VC003 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC003
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC004_S
   path: build/audit_crops/visual_clash/VC004_S.png
@@ -1309,16 +2560,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: two bonds meet the lower ''S'' bowl at the perimeter; S legible.'
+  rationale: 'Visual-clash candidate VC004 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: two bonds meet the lower ''S'' bowl at the perimeter; S legible.'
+  local_relationship: 'Visual-clash candidate VC004 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC004
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC005_S
   path: build/audit_crops/visual_clash/VC005_S.png
@@ -1326,16 +2576,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: two bonds meet the ''S'' shoulders at the perimeter; S legible.'
+  rationale: 'Visual-clash candidate VC005 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: two bonds meet the ''S'' shoulders at the perimeter; S legible.'
+  local_relationship: 'Visual-clash candidate VC005 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC005
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC006_S
   path: build/audit_crops/visual_clash/VC006_S.png
@@ -1343,16 +2592,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: bonds graze the ''S'' perimeter with a hairline gap; S legible.'
+  rationale: 'Visual-clash candidate VC006 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: bonds graze the ''S'' perimeter with a hairline gap; S legible.'
+  local_relationship: 'Visual-clash candidate VC006 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC006
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC007_S
   path: build/audit_crops/visual_clash/VC007_S.png
@@ -1360,17 +2608,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: a diagonal bond clips the ''S'' as in VC002; counters open, S legible.'
+  rationale: 'Visual-clash candidate VC007 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: a diagonal bond clips the ''S'' as in VC002; counters open,
-    S legible.'
+  local_relationship: 'Visual-clash candidate VC007 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC007
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC008_S
   path: build/audit_crops/visual_clash/VC008_S.png
@@ -1378,17 +2624,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register: bonds meet ''S'' shoulders with an upper-right near-touch; S legible.'
+  rationale: 'Visual-clash candidate VC008 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register: bonds meet ''S'' shoulders with an upper-right near-touch;
-    S legible.'
+  local_relationship: 'Visual-clash candidate VC008 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC008
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC009_C
   path: build/audit_crops/visual_clash/VC009_C.png
@@ -1396,282 +2640,239 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Energy-diagram 'C' is clear; the neighbouring 'E'/'ob' fragments are frame-edge truncations
-    of adjacent labels, not contact.
+  rationale: 'Visual-clash candidate VC009 (text ''C''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'C'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Energy-diagram 'C' is clear; the neighbouring 'E'/'ob' fragments are frame-edge
-    truncations of adjacent labels, not contact.
+  local_relationship: 'Visual-clash candidate VC009 (text ''C''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC009
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC010_mobility
-  path: build/audit_crops/visual_clash/VC010_mobility.png
+- crop_id: VC010_edge
+  path: build/audit_crops/visual_clash/VC010_edge.png
   source: visual_clash:VC010
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''mobility'' is clear of any stroke; the dark-red Delta-E_t indicator arrow clashes with
-    the adjacent word ''edge'' (VC011), not ''mobility''.'
+  rationale: 'Visual-clash candidate VC010 (text ''edge''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'mobility'
+  - label 'edge'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''mobility'' is clear of any stroke; the dark-red Delta-E_t indicator arrow clashes
-    with the adjacent word ''edge'' (VC011), not ''mobility''.'
+  local_relationship: 'Visual-clash candidate VC010 (text ''edge''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC010
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC011_edge
-  path: build/audit_crops/visual_clash/VC011_edge.png
+- crop_id: VC011_S
+  path: build/audit_crops/visual_clash/VC011_S.png
   source: visual_clash:VC011
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: The dark-red Delta-E_t / mobility-edge indicator arrow runs between the 'd' and 'g' of 'edge';
-    an energy-axis annotation arrow over its own label is conventional and 'edge' stays readable.
+  rationale: 'Visual-clash candidate VC011 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'edge'
+  - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: The dark-red Delta-E_t / mobility-edge indicator arrow runs between the 'd' and
-    'g' of 'edge'; an energy-axis annotation arrow over its own label is conventional and 'edge' stays
-    readable.
+  local_relationship: 'Visual-clash candidate VC011 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC011
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC012_S
-  path: build/audit_crops/visual_clash/VC012_S.png
+- crop_id: VC012_shallow
+  path: build/audit_crops/visual_clash/VC012_shallow.png
   source: visual_clash:VC012
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register near-miss: ''S'' clear; neighbouring atom node and digit fragment are
-    frame cuts.'
+  rationale: 'Visual-clash candidate VC012 (text ''shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'S'
+  - label 'shallow'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register near-miss: ''S'' clear; neighbouring atom node and digit fragment
-    are frame cuts.'
+  local_relationship: 'Visual-clash candidate VC012 (text ''shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC012
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC013_shallow
-  path: build/audit_crops/visual_clash/VC013_shallow.png
+- crop_id: VC013_S
+  path: build/audit_crops/visual_clash/VC013_S.png
   source: visual_clash:VC013
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: The dark-red trap-level reference line crosses 'shallow' in the inter-letter gap of the double-l;
-    all letters readable; energy-level convention.
+  rationale: 'Visual-clash candidate VC013 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'shallow'
+  - label 'S'
   - the stroke or fill flagged by the clash detector
-  local_relationship: The dark-red trap-level reference line crosses 'shallow' in the inter-letter gap
-    of the double-l; all letters readable; energy-level convention.
+  local_relationship: 'Visual-clash candidate VC013 (text ''S''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC013
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC014_S
-  path: build/audit_crops/visual_clash/VC014_S.png
+- crop_id: VC014_poly_S-r-DIB
+  path: build/audit_crops/visual_clash/VC014_poly_S-r-DIB.png
   source: visual_clash:VC014
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Chemistry register near-miss: ''S'' clear; neighbouring node/glyph fragments are frame cuts.'
+  rationale: 'Visual-clash candidate VC014 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'S'
+  - label 'poly(S-r-DIB)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Chemistry register near-miss: ''S'' clear; neighbouring node/glyph fragments are
-    frame cuts.'
+  local_relationship: 'Visual-clash candidate VC014 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC014
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC015_Sulfur-rich
-  path: build/audit_crops/visual_clash/VC015_Sulfur-rich.png
+- crop_id: VC015_film
+  path: build/audit_crops/visual_clash/VC015_film.png
   source: visual_clash:VC015
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''Sulfur-rich'' sits on clean white with no adjacent stroke; detector fired on background
-    only.'
+  rationale: 'Visual-clash candidate VC015 (text ''film''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'Sulfur-rich'
+  - label 'film'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''Sulfur-rich'' sits on clean white with no adjacent stroke; detector fired on
-    background only.'
+  local_relationship: 'Visual-clash candidate VC015 (text ''film''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC015
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC016_poly_S-r-DIB
-  path: build/audit_crops/visual_clash/VC016_poly_S-r-DIB.png
+- crop_id: VC016_Sulfur-rich
+  path: build/audit_crops/visual_clash/VC016_Sulfur-rich.png
   source: visual_clash:VC016
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''poly(S-r-DIB)'' sits on clean white with no adjacent stroke; fully legible.'
+  rationale: 'Visual-clash candidate VC016 (text ''Sulfur-rich''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'poly(S-r-DIB)'
+  - label 'Sulfur-rich'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''poly(S-r-DIB)'' sits on clean white with no adjacent stroke; fully legible.'
+  local_relationship: 'Visual-clash candidate VC016 (text ''Sulfur-rich''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC016
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC017_Sulfur
-  path: build/audit_crops/visual_clash/VC017_Sulfur.png
+- crop_id: VC017_poly_S-r-DIB
+  path: build/audit_crops/visual_clash/VC017_poly_S-r-DIB.png
   source: visual_clash:VC017
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Axis label 'Sulfur' is clear; the faint tick above is separated; following 'co' is a frame
-    cut.
+  rationale: 'Visual-clash candidate VC017 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'Sulfur'
+  - label 'poly(S-r-DIB)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Axis label 'Sulfur' is clear; the faint tick above is separated; following 'co'
-    is a frame cut.
+  local_relationship: 'Visual-clash candidate VC017 (text ''poly(S-r-DIB)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC017
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC018_wt
-  path: build/audit_crops/visual_clash/VC018_wt.png
+- crop_id: VC018_Sulfur
+  path: build/audit_crops/visual_clash/VC018_Sulfur.png
   source: visual_clash:VC018
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Panel-B axis label 'Sulfur content, wt%' sits adjacent to the Row-1.5 'convergent evidence'
-    caption on a different baseline; both labels remain individually legible (tight but distinct).
+  rationale: 'Visual-clash candidate VC018 (text ''Sulfur''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'wt%'
+  - label 'Sulfur'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Panel-B axis label 'Sulfur content, wt%' sits adjacent to the Row-1.5 'convergent
-    evidence' caption on a different baseline; both labels remain individually legible (tight but distinct).
+  local_relationship: 'Visual-clash candidate VC018 (text ''Sulfur''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC018
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC019_convergent
-  path: build/audit_crops/visual_clash/VC019_convergent.png
+- crop_id: VC019_V
+  path: build/audit_crops/visual_clash/VC019_V.png
   source: visual_clash:VC019
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''convergent evidence'' caption sits just below-right of the ''wt%'' axis label; the two
-    distinct labels crowd but each is legible; host re-inspection confirms separable baselines.'
+  rationale: 'Visual-clash candidate VC019 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'convergent'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''convergent evidence'' caption sits just below-right of the ''wt%'' axis label;
-    the two distinct labels crowd but each is legible; host re-inspection confirms separable baselines.'
+  local_relationship: 'Visual-clash candidate VC019 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC019
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC020_V
-  path: build/audit_crops/visual_clash/VC020_V.png
+- crop_id: VC020_ISPD
+  path: build/audit_crops/visual_clash/VC020_ISPD.png
   source: visual_clash:VC020
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Energy-axis 'V' (E_V region) glyph is clear; the bracketed 'E' fragment at left is a frame
-    cut.
+  rationale: 'Visual-clash candidate VC020 (text ''ISPD''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'V'
+  - label 'ISPD'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Energy-axis 'V' (E_V region) glyph is clear; the bracketed 'E' fragment at left
-    is a frame cut.
+  local_relationship: 'Visual-clash candidate VC020 (text ''ISPD''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC020
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC021_ISPD
-  path: build/audit_crops/visual_clash/VC021_ISPD.png
+- crop_id: VC021_MIM
+  path: build/audit_crops/visual_clash/VC021_MIM.png
   source: visual_clash:VC021
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''ISPD'' is the middle spoke''s modality label sitting on its own thin/light spoke line
-    with the convergence arrowhead above; all four letters legible; intentional spoke geometry.'
+  rationale: 'Visual-clash candidate VC021 (text ''MIM''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'ISPD'
+  - label 'MIM'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''ISPD'' is the middle spoke''s modality label sitting on its own thin/light spoke
-    line with the convergence arrowhead above; all four letters legible; intentional spoke geometry.'
+  local_relationship: 'Visual-clash candidate VC021 (text ''MIM''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC021
-  - TB001
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC022_polymer
-  path: build/audit_crops/visual_clash/VC022_polymer.png
+- crop_id: VC022_V_A
+  path: build/audit_crops/visual_clash/VC022_V_A.png
   source: visual_clash:VC022
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''polymer'' callout: a leader attaches at the word''s right end and runs to the film-slab
-    corner; host re-inspection confirms the leader does NOT cross the glyphs.'
+  rationale: 'Visual-clash candidate VC022 (text ''V/A''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'polymer'
+  - label 'V/A'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''polymer'' callout: a leader attaches at the word''s right end and runs to the
-    film-slab corner; host re-inspection confirms the leader does NOT cross the glyphs.'
+  local_relationship: 'Visual-clash candidate VC022 (text ''V/A''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC022
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC023_film
-  path: build/audit_crops/visual_clash/VC023_film.png
+- crop_id: VC023_Vs
+  path: build/audit_crops/visual_clash/VC023_Vs.png
   source: visual_clash:VC023
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''film'' sits on an open tan gradient with ample clearance; no stroke crosses the glyphs.'
+  rationale: 'Visual-clash candidate VC023 (text ''Vs''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'film'
+  - label 'Vs'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''film'' sits on an open tan gradient with ample clearance; no stroke crosses the
-    glyphs.'
+  local_relationship: 'Visual-clash candidate VC023 (text ''Vs''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC023
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC024_crop
   path: build/audit_crops/visual_clash/VC024_crop.png
@@ -1679,18 +2880,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc straddling the film-surface
-    line; iconographic charge cue, legible.'
+  rationale: 'Visual-clash candidate VC024 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc straddling
-    the film-surface line; iconographic charge cue, legible.'
+  local_relationship: 'Visual-clash candidate VC024 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC024
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC025_crop
   path: build/audit_crops/visual_clash/VC025_crop.png
@@ -1698,18 +2896,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface boundary;
-    iconographic charge cue, legible.'
+  rationale: 'Visual-clash candidate VC025 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface
-    boundary; iconographic charge cue, legible.'
+  local_relationship: 'Visual-clash candidate VC025 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC025
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC026_crop
   path: build/audit_crops/visual_clash/VC026_crop.png
@@ -1717,18 +2912,15 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface boundary;
-    iconographic charge cue, legible.'
+  rationale: 'Visual-clash candidate VC026 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the surface
-    boundary; iconographic charge cue, legible.'
+  local_relationship: 'Visual-clash candidate VC026 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC026
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: VC027_crop
   path: build/audit_crops/visual_clash/VC027_crop.png
@@ -1736,317 +2928,239 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the block-top outline;
-    iconographic charge cue, legible.'
+  rationale: 'Visual-clash candidate VC027 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label '+'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Surface-charge marker: white ''+'' knockout on a maroon charge disc on the block-top
-    outline; iconographic charge cue, legible.'
+  local_relationship: 'Visual-clash candidate VC027 (text ''+''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC027
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC028_Vs
-  path: build/audit_crops/visual_clash/VC028_Vs.png
+- crop_id: VC028_V
+  path: build/audit_crops/visual_clash/VC028_V.png
   source: visual_clash:VC028
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''V_s'' display label sits fully inside the rounded meter-box outline with margin; host
-    re-inspection confirms no glyph/backdrop overflows or is clipped (closes prior finding C002).'
+  rationale: 'Visual-clash candidate VC028 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'Vs'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''V_s'' display label sits fully inside the rounded meter-box outline with margin;
-    host re-inspection confirms no glyph/backdrop overflows or is clipped (closes prior finding C002).'
+  local_relationship: 'Visual-clash candidate VC028 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC028
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC029_meter
-  path: build/audit_crops/visual_clash/VC029_meter.png
+- crop_id: VC029_V
+  path: build/audit_crops/visual_clash/VC029_V.png
   source: visual_clash:VC029
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''meter'' display label sits fully inside the rounded meter-box outline; terminal ''r''
-    has clear margin to the border; no overflow/clip (closes prior finding C002).'
+  rationale: 'Visual-clash candidate VC029 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'meter'
+  - label 'V'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''meter'' display label sits fully inside the rounded meter-box outline; terminal
-    ''r'' has clear margin to the border; no overflow/clip (closes prior finding C002).'
+  local_relationship: 'Visual-clash candidate VC029 (text ''V''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC029
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC030_V
-  path: build/audit_crops/visual_clash/VC030_V.png
+- crop_id: VC030_t
+  path: build/audit_crops/visual_clash/VC030_t.png
   source: visual_clash:VC030
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Electrode-region 'V' glyph is clear within its panel field; horizontal panel outlines are
-    separated from the glyph.
+  rationale: 'Visual-clash candidate VC030 (text ''(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'V'
+  - label '(t)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Electrode-region 'V' glyph is clear within its panel field; horizontal panel outlines
-    are separated from the glyph.
+  local_relationship: 'Visual-clash candidate VC030 (text ''(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC030
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC031_V
-  path: build/audit_crops/visual_clash/VC031_V.png
+- crop_id: VC031_I_t
+  path: build/audit_crops/visual_clash/VC031_I_t.png
   source: visual_clash:VC031
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: V_s(t)-axis 'V' label sits beside its axis; the axis line does not cross the glyph; conventional
-    axis labelling.
+  rationale: 'Visual-clash candidate VC031 (text ''I(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'V'
+  - label 'I(t)'
   - the stroke or fill flagged by the clash detector
-  local_relationship: V_s(t)-axis 'V' label sits beside its axis; the axis line does not cross the glyph;
-    conventional axis labelling.
+  local_relationship: 'Visual-clash candidate VC031 (text ''I(t)''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC031
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC032_t
-  path: build/audit_crops/visual_clash/VC032_t.png
+- crop_id: VC032_low
+  path: build/audit_crops/visual_clash/VC032_low.png
   source: visual_clash:VC032
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Math label ''(t)'': the parenthesis arcs are the symbol''s own brackets; they approach but
-    do not strike the italic ''t''.'
+  rationale: 'Visual-clash candidate VC032 (text ''low''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label '(t)'
+  - label 'low'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Math label ''(t)'': the parenthesis arcs are the symbol''s own brackets; they approach
-    but do not strike the italic ''t''.'
+  local_relationship: 'Visual-clash candidate VC032 (text ''low''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC032
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC033_I_t
-  path: build/audit_crops/visual_clash/VC033_I_t.png
+- crop_id: VC033_crop
+  path: build/audit_crops/visual_clash/VC033_crop.png
   source: visual_clash:VC033
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''I(t) ~'' expression sits on clean white with full clearance; the corner wedge does not
-    touch glyphs.'
+  rationale: 'Visual-clash candidate VC033 (text '')''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'I(t)'
+  - label ')'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''I(t) ~'' expression sits on clean white with full clearance; the corner wedge
-    does not touch glyphs.'
+  local_relationship: 'Visual-clash candidate VC033 (text '')''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC033
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC034_low
-  path: build/audit_crops/visual_clash/VC034_low.png
+- crop_id: VC034_hig
+  path: build/audit_crops/visual_clash/VC034_hig.png
   source: visual_clash:VC034
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Plot curve label 'low n' (navy) sits on its own navy power-law line; conventional curve labelling,
-    legible.
+  rationale: 'Visual-clash candidate VC034 (text ''hig''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'low'
+  - label 'hig'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Plot curve label 'low n' (navy) sits on its own navy power-law line; conventional
-    curve labelling, legible.
+  local_relationship: 'Visual-clash candidate VC034 (text ''hig''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC034
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC035_crop
-  path: build/audit_crops/visual_clash/VC035_crop.png
+- crop_id: VC035_h
+  path: build/audit_crops/visual_clash/VC035_h.png
   source: visual_clash:VC035
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: The auto-crop window clipped the ')' glyph (mostly out of frame); the parenthesis belongs
-    to the g(E_t)/(t) axis label and is legible in full context; crop-window artefact, not a figure defect.
+  rationale: 'Visual-clash candidate VC035 (text ''h''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label ')'
+  - label 'h'
   - the stroke or fill flagged by the clash detector
-  local_relationship: The auto-crop window clipped the ')' glyph (mostly out of frame); the parenthesis
-    belongs to the g(E_t)/(t) axis label and is legible in full context; crop-window artefact, not a figure
-    defect.
+  local_relationship: 'Visual-clash candidate VC035 (text ''h''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC035
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC036_hig
-  path: build/audit_crops/visual_clash/VC036_hig.png
+- crop_id: VC036_n
+  path: build/audit_crops/visual_clash/VC036_n.png
   source: visual_clash:VC036
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Rotated curve label 'high n' (maroon) sits along its maroon power-law line; the navy line
-    skims the ascender tops as a near-miss; both labels legible.
+  rationale: 'Visual-clash candidate VC036 (text ''n''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'hig'
+  - label 'n'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Rotated curve label 'high n' (maroon) sits along its maroon power-law line; the
-    navy line skims the ascender tops as a near-miss; both labels legible.
+  local_relationship: 'Visual-clash candidate VC036 (text ''n''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC036
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC037_h
-  path: build/audit_crops/visual_clash/VC037_h.png
+- crop_id: VC037_d
+  path: build/audit_crops/visual_clash/VC037_d.png
   source: visual_clash:VC037
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''high n'' fragment ''h'' near the navy line; near-miss with white separation; legible.'
+  rationale: 'Visual-clash candidate VC037 (text ''d''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'h'
+  - label 'd'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''high n'' fragment ''h'' near the navy line; near-miss with white separation;
-    legible.'
+  local_relationship: 'Visual-clash candidate VC037 (text ''d''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC037
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC038_n
-  path: build/audit_crops/visual_clash/VC038_n.png
+- crop_id: VC038_Shallow
+  path: build/audit_crops/visual_clash/VC038_Shallow.png
   source: visual_clash:VC038
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: '''high n'' subscript ''n'' sits in clear space below its line; near-miss only; legible.'
+  rationale: 'Visual-clash candidate VC038 (text ''Shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'n'
+  - label 'Shallow'
   - the stroke or fill flagged by the clash detector
-  local_relationship: '''high n'' subscript ''n'' sits in clear space below its line; near-miss only;
-    legible.'
+  local_relationship: 'Visual-clash candidate VC038 (text ''Shallow''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC038
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC039_d
-  path: build/audit_crops/visual_clash/VC039_d.png
+- crop_id: VC039_log
+  path: build/audit_crops/visual_clash/VC039_log.png
   source: visual_clash:VC039
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Energy-axis 'd' glyph sits clear above the thin baseline rule; no contact.
+  rationale: 'Visual-clash candidate VC039 (text ''log''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'd'
+  - label 'log'
   - the stroke or fill flagged by the clash detector
-  local_relationship: Energy-axis 'd' glyph sits clear above the thin baseline rule; no contact.
+  local_relationship: 'Visual-clash candidate VC039 (text ''log''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC039
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC040_log
-  path: build/audit_crops/visual_clash/VC040_log.png
+- crop_id: VC040_I
+  path: build/audit_crops/visual_clash/VC040_I.png
   source: visual_clash:VC040
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: 'Rotated axis label ''log I'': the ''g'' descender lands at the vertical axis line; conventional
-    rotated axis label, legible.'
+  rationale: 'Visual-clash candidate VC040 (text ''I''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
-  - label 'log'
+  - label 'I'
   - the stroke or fill flagged by the clash detector
-  local_relationship: 'Rotated axis label ''log I'': the ''g'' descender lands at the vertical axis line;
-    conventional rotated axis label, legible.'
+  local_relationship: 'Visual-clash candidate VC040 (text ''I''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
   - VC040
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
-- crop_id: VC041_I
-  path: build/audit_crops/visual_clash/VC041_I.png
+- crop_id: VC041_f
+  path: build/audit_crops/visual_clash/VC041_f.png
   source: visual_clash:VC041
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Axis label 'I' near the vertical axis line with a thin white gap; near-miss, conventional
-    axis labelling.
-  observed_objects:
-  - label 'I'
-  - the stroke or fill flagged by the clash detector
-  local_relationship: Axis label 'I' near the vertical axis line with a thin white gap; near-miss, conventional
-    axis labelling.
-  candidate_refs:
-  - VC041
-  unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
-  anomaly_link: ''
-- crop_id: VC042_f
-  path: build/audit_crops/visual_clash/VC042_f.png
-  source: visual_clash:VC042
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: g(E_t)-region 'f' glyph sits clear on white; the thin top rule is separated.
+  rationale: 'Visual-clash candidate VC041 (text ''f''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   observed_objects:
   - label 'f'
   - the stroke or fill flagged by the clash detector
-  local_relationship: g(E_t)-region 'f' glyph sits clear on white; the thin top rule is separated.
+  local_relationship: 'Visual-clash candidate VC041 (text ''f''): label/glyph sits on its flagged stroke or fill but stays fully legible; intentional schematic register, not a collision.'
   candidate_refs:
-  - VC042
+  - VC041
   unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
-  anomaly_link: ''
-- crop_id: VC043_HV
-  path: build/audit_crops/visual_clash/VC043_HV.png
-  source: visual_clash:VC043
-  inspected: true
-  verdict: no_defect
-  linked_micro_defect_id: ''
-  rationale: '''HV+'' source-box label sits on white with clear space; the adjacent rounded box corner
-    does not touch the glyphs.'
-  observed_objects:
-  - label 'HV+'
-  - the stroke or fill flagged by the clash detector
-  local_relationship: '''HV+'' source-box label sits on white with clear space; the adjacent rounded box
-    corner does not touch the glyphs.'
-  candidate_refs:
-  - VC043
-  unintended_visible_anomaly: none
-  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are
-    present; no stray, doubled, or clipped mark beyond the candidate.'
+  anomaly_rationale: 'Host inspection: only the expected label glyph(s) and the flagged stroke/fill are present; no stray, doubled, or clipped mark beyond the candidate.'
   anomaly_link: ''
 - crop_id: full_q1
   path: build/audit_crops/full_q1.png
@@ -3366,9 +4480,10 @@ BLOCKER and zero open MAJOR findings.
 This re-audit was driven by the Issue 91 rubric bump (v1.14 -> v1.16), which adds per-crop
 `observed_objects` / `local_relationship` / `unintended_visible_anomaly` accounting. The
 figure pixels are identical to the prior v1.14 critique; the host re-inspected the artifact
-directly (full render, Panel E, ISPD/probe convention, print-scale) and screened all 109
-audit crops, the 43 visual-clash candidates, and the 1 text-boundary candidate via six
-parallel inspections, then personally re-inspected every region flagged `present`/`uncertain`.
+directly (full render, Panel E, ISPD/probe convention, print-scale) and screened all 108
+audit crops, the 41 visual-clash candidates, the 1 label-path candidate, and the 95
+undeclared-geometry candidates via six parallel inspections, then personally re-inspected
+every region flagged `present`/`uncertain`.
 
 ## Anomaly adjudication (Issue 91 near-miss pass)
 
