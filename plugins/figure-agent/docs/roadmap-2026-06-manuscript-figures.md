@@ -47,7 +47,7 @@ friction for that. No tool-as-product building.
       EXACT values (palette hex cBlue #4477AA / cRed #CC6677 / cTeal #44AA99 / cAmber #997A1E; 7pt-max
       typography; 0.9/0.7/0.55 weight tiers) + the codified 13 `aesthetic_antipattern_audit` ids +
       hard-won lessons + canon (Bang Wong, Tufte, Ten Rules, Paul Tol). CONVENTIONS not taste; fence stated up front.
-   - [ ] 1.1a (optional) external research pass to ground it (canonical refs + any machine-readable figure design systems).
+   - [x] 1.1a external research pass DONE (workflow wcl1r5kg8, 6 agents, real URLs + adversarial verify). Folded verified canon (Bang Wong/Cleveland-McGill/Wilke/Ten Rules/Tufte small-multiples/Tol/Crameri) + machine-readable systems (SciencePlots/khroma/ColorBrewer) into §7. Caught 2 corrections: (a) cBlue #4477AA is Tol BRIGHT not muted; (b) schematics submit as VECTOR PDF/EPS, not raster TIFF/PNG (new §4b). Confirmed 178mm = ACS double-col max.
 - [ ] 1.2 (just-in-time, WITH fig2 — not all upfront) shared style IMPLEMENTATION layer:
       line-weight TIER system (fix the 25-inlined-weights / no-tier problem),
       shared named styles (interArrow, label tiers, panel letters) + reusable macros
