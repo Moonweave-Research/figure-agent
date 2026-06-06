@@ -80,6 +80,12 @@ uv run python3 scripts/critique_lint.py fig3_trap_concept
 /fig_export fig3_trap_concept
 ```
 
+**Iterating an existing figure.** For an already-scaffolded figure, the single
+canonical entry point is `/fig_improve <name> --goal "<goal>"`. It wraps the
+compile / critique / loop steps and stops at human or taste boundaries;
+`/fig_status <name>` remains the read-only "where am I?" check to run first,
+especially when resuming after a break.
+
 For agent-driven work, use `/fig_status <name>` or
 `/fig_drive <name> --mode review --goal "<goal>" --dry-run` as the canonical
 first check and follow the printed `Next:` / driver action. Export, release, or
