@@ -43,11 +43,10 @@ friction for that. No tool-as-product building.
 > Codex-builds / Claude-reviews mechanism VALIDATED on 0.3: `command codex --dangerously-bypass-approvals-and-sandbox exec - < task.txt` (headless, ChatGPT auth) implements a bounded spec; Claude reviews the full diff for over-reach + spec compliance before commit. Scale this to Phase 1.2 (shared `.sty`) and mechanical TikZ patches. NOT for Phase 2 figure taste (user-as-master).
 
 ## Phase 1 — The 기준점 (shared foundation, PRINCIPLE layer)
-- [ ] 1.1 `figure-design-philosophy.md` — consolidate the scattered aesthetic principles + fig1's PROVEN
-      conventions (Paul Tol palette, line-weight intent, clean-white-NC, instrument-substance lessons,
-      the binary/blocked-lever findings) + external canon (Bang Wong "Points of View", Tufte,
-      "Ten Simple Rules for Better Figures", Paul Tol palettes). CONVENTIONS not taste.
-      This is THE cross-figure reference + checklist (avoids single-ref lock-in: principles > one image).
+- [x] 1.1 `figure-design-philosophy.md` — DONE (lean skeleton, grows per-figure). Grounded in fig1's
+      EXACT values (palette hex cBlue #4477AA / cRed #CC6677 / cTeal #44AA99 / cAmber #997A1E; 7pt-max
+      typography; 0.9/0.7/0.55 weight tiers) + the codified 13 `aesthetic_antipattern_audit` ids +
+      hard-won lessons + canon (Bang Wong, Tufte, Ten Rules, Paul Tol). CONVENTIONS not taste; fence stated up front.
    - [ ] 1.1a (optional) external research pass to ground it (canonical refs + any machine-readable figure design systems).
 - [ ] 1.2 (just-in-time, WITH fig2 — not all upfront) shared style IMPLEMENTATION layer:
       line-weight TIER system (fix the 25-inlined-weights / no-tier problem),
