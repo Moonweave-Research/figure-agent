@@ -112,6 +112,8 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.quality-patch-plan.v1` | quality improvement loop | `quality_patch_plan.py` | `quality_patch_apply.py`, MCP quality tools | Proposal evidence only until explicit apply |
 | `figure-agent.quality-patch-result.v1` | quality improvement loop | `quality_patch_apply.py` | operators, MCP quality tools | Records explicit apply/dry-run result and rollback path |
 | `figure-agent.intent-model.v1` | candidate search | `figure_intent_model.py` | `candidate_generator.py`, MCP candidate tools | Read-only fixture intent model; missing optional inputs downgrade authority instead of inventing claims |
+| `figure-agent.candidate-tex-index.v1` | candidate search | `candidate_tex_index.py` | `candidate_panel_model.py`, `candidate_families.py` | Read-only TeX selector index; panel hints and active command ranges only |
+| `figure-agent.candidate-panel-model.v1` | candidate search | `candidate_panel_model.py` | `candidate_families.py`, MCP panel tools | Read-only panel model joining intent, bbox hints, selectors, and visual-review state |
 | `figure-agent.candidate-set.v1` | candidate search | `candidate_generator.py` | `candidate_render.py`, `candidate_rank.py`, MCP candidate tools | Bounded improvement alternatives; pre-render apply authority ceiling only |
 | `figure-agent.candidate-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py` | Fixture-local sandbox evidence; never final exports or source truth |
 | `figure-agent.candidate-render-result.v1` | candidate search | `candidate_render.py` | CLI/MCP candidate workflow | Records rendered candidate sandbox manifests and artifacts |
@@ -213,8 +215,9 @@ executor paths.
 - `quality_defect_ledger.py`, `quality_patch_policy.py`,
   `quality_patch_plan.py`, `quality_patch_apply.py`
 - `figure_intent_model.py`, `candidate_contracts.py`,
-  `candidate_generator.py`, `candidate_render.py`, `candidate_rank.py`,
-  `candidate_review_packet.py`, `candidate_apply.py`
+  `candidate_tex_index.py`, `candidate_panel_model.py`,
+  `candidate_families.py`, `candidate_generator.py`, `candidate_render.py`,
+  `candidate_rank.py`, `candidate_review_packet.py`, `candidate_apply.py`
 
 Add here when the feature changes what `/fig_loop` sees or how it stops.
 Candidate-search modules also belong here when they propose or rank bounded
