@@ -44,6 +44,8 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
                 },
                 "apply_authority": "apply_eligible",
                 "effective_apply_authority": "review_only",
+                "risk": "low",
+                "rollback": {"strategy": "reverse_operations"},
             },
             sort_keys=True,
         )
@@ -81,6 +83,8 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "operation_count": 1,
         "artifact_count": 1,
         "source_commit": "abc123",
+        "risk": "low",
+        "rollback_strategy": "reverse_operations",
     }
     assert packet["artifacts"] == [
         {
@@ -91,6 +95,11 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         }
     ]
     assert packet["human_decision_required"] is True
+    assert packet["source_changes"][0]["kind"] == "replace_text"
+    assert packet["score_report"]["status"] == "not_available"
+    assert packet["semantic_invariant_report"]["required_before_apply"] is True
+    assert packet["rollback"]["status"] == "manual_reverse_operations"
+    assert packet["recommended_next_action"] == "human_review_required"
     assert packet["human_decision_fields"] == [
         "decision",
         "reviewer",
@@ -123,6 +132,72 @@ def test_review_packet_rejects_artifact_path_escape(tmp_path: Path) -> None:
     with pytest.raises(
         candidate_review_packet.CandidateReviewPacketError,
         match="path_escape",
+    ):
+        candidate_review_packet.build_review_packet(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+        )
+
+
+def test_review_packet_rejects_sandbox_root_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    candidates = fixture / "build" / "candidates"
+    for path in sorted(candidates.rglob("*"), reverse=True):
+        if path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            path.rmdir()
+    candidates.rmdir()
+    candidates.symlink_to(exports)
+
+    with pytest.raises(
+        candidate_review_packet.CandidateReviewPacketError,
+        match="sandbox_symlink_forbidden",
+    ):
+        candidate_review_packet.build_review_packet(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+        )
+
+
+def test_review_packet_rejects_manifest_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    outside = fixture / "outside.json"
+    outside.write_text("{}", encoding="utf-8")
+    manifest.unlink()
+    manifest.symlink_to(outside)
+
+    with pytest.raises(
+        candidate_review_packet.CandidateReviewPacketError,
+        match="sandbox_symlink_forbidden",
+    ):
+        candidate_review_packet.build_review_packet(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+        )
+
+
+def test_review_packet_rejects_artifact_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    outside = fixture / "outside.tex"
+    outside.write_text("outside\n", encoding="utf-8")
+    artifact = sandbox / "candidate_demo.tex"
+    artifact.unlink()
+    artifact.symlink_to(outside)
+
+    with pytest.raises(
+        candidate_review_packet.CandidateReviewPacketError,
+        match="sandbox_symlink_forbidden",
     ):
         candidate_review_packet.build_review_packet(
             "candidate_demo",

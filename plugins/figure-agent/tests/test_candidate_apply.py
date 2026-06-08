@@ -22,7 +22,9 @@ def test_apply_refuses_human_required_effective_authority(tmp_path: Path) -> Non
     fixture = _fixture(workspace)
     manifest = {
         "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
         "effective_apply_authority": "review_only",
+        "verification": {"hard_gate_state": "human_required"},
         "operations": [
             {
                 "kind": "replace_text",
@@ -51,7 +53,9 @@ def test_apply_eligible_dry_run_does_not_mutate_source(tmp_path: Path) -> None:
     fixture = _fixture(workspace)
     manifest = {
         "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
         "effective_apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "pass"},
         "operations": [
             {
                 "kind": "replace_text",
@@ -81,7 +85,9 @@ def test_apply_eligible_apply_path_is_explicitly_not_implemented_yet(
     fixture = _fixture(workspace)
     manifest = {
         "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
         "effective_apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "pass"},
         "operations": [
             {
                 "kind": "replace_text",
@@ -111,7 +117,34 @@ def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="fixture name"):
         candidate_apply.apply_candidate(
             "../candidate_demo",
-            {"candidate_id": "CAND001", "effective_apply_authority": "review_only"},
+            {
+                "candidate_id": "CAND001",
+                "apply_authority": "review_only",
+                "effective_apply_authority": "review_only",
+                "verification": {"hard_gate_state": "pass"},
+            },
             workspace_root=workspace,
             apply=True,
         )
+
+
+def test_apply_rejects_tampered_effective_authority(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    manifest = {
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "effective_apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "human_required"},
+        "operations": [],
+    }
+
+    with pytest.raises(ValueError, match="effective_apply_authority_mismatch"):
+        candidate_apply.apply_candidate(
+            "candidate_demo",
+            manifest,
+            workspace_root=workspace,
+            apply=True,
+        )
+
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "old\n"

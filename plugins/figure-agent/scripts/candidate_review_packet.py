@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-import candidate_contracts
 import fixture_identity
 import runtime_paths
 
@@ -23,11 +22,28 @@ def _candidate_id(value: str) -> str:
     return value
 
 
+def _candidate_sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
+    build_dir = example_dir / "build"
+    if build_dir.is_symlink():
+        raise CandidateReviewPacketError("sandbox_symlink_forbidden: build")
+    root = build_dir / "candidates"
+    if root.is_symlink():
+        raise CandidateReviewPacketError("sandbox_symlink_forbidden: candidates")
+    sandbox = root / candidate_id
+    if sandbox.is_symlink():
+        raise CandidateReviewPacketError(f"sandbox_symlink_forbidden: {candidate_id}")
+    try:
+        sandbox.resolve().relative_to(root.resolve())
+    except ValueError as exc:
+        raise CandidateReviewPacketError("candidate_id path_escape") from exc
+    return sandbox
+
+
 def _load_manifest(example_dir: Path, candidate_id: str) -> tuple[Path, dict[str, Any]]:
-    manifest_path = candidate_contracts.fixture_relative_path(
-        example_dir,
-        f"build/candidates/{candidate_id}/candidate_manifest.json",
-    )
+    sandbox = _candidate_sandbox_dir(example_dir, candidate_id)
+    manifest_path = sandbox / "candidate_manifest.json"
+    if manifest_path.is_symlink():
+        raise CandidateReviewPacketError("sandbox_symlink_forbidden: candidate_manifest.json")
     try:
         data = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -43,6 +59,9 @@ def _artifact_path(manifest_dir: Path, value: Any) -> Path:
     path = Path(value)
     if path.is_absolute():
         raise CandidateReviewPacketError("path_escape")
+    lexical_path = manifest_dir / path
+    if lexical_path.is_symlink():
+        raise CandidateReviewPacketError(f"sandbox_symlink_forbidden: {path.name}")
     candidate = (manifest_dir / path).resolve()
     try:
         candidate.relative_to(manifest_dir.resolve())
@@ -93,7 +112,39 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "operation_count": len(operations) if isinstance(operations, list) else 0,
         "artifact_count": len(artifacts) if isinstance(artifacts, list) else 0,
         "source_commit": base.get("source_commit") if isinstance(base, dict) else None,
+        "risk": manifest.get("risk"),
+        "rollback_strategy": (
+            manifest.get("rollback", {}).get("strategy")
+            if isinstance(manifest.get("rollback"), dict)
+            else None
+        ),
     }
+
+
+def _source_change_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    operations = manifest.get("operations")
+    if not isinstance(operations, list):
+        return []
+    changes: list[dict[str, Any]] = []
+    for operation in operations:
+        if not isinstance(operation, dict):
+            continue
+        changes.append(
+            {
+                "kind": operation.get("kind"),
+                "path": operation.get("path"),
+                "original": operation.get("original"),
+                "replacement": operation.get("replacement"),
+            }
+        )
+    return changes
+
+
+def _rank_command(name: str) -> str:
+    return (
+        f"fig-agent rank-candidates {name} "
+        "--candidate-set build/candidates/candidate_set.json --json"
+    )
 
 
 def build_review_packet(
@@ -117,6 +168,20 @@ def build_review_packet(
         "candidate_id": safe_candidate_id,
         "manifest_summary": _manifest_summary(manifest),
         "artifacts": _artifact_descriptors(manifest_path, manifest.get("artifacts")),
+        "source_changes": _source_change_summary(manifest),
+        "score_report": {
+            "status": "not_available",
+            "recommended_command": _rank_command(name),
+        },
+        "semantic_invariant_report": {
+            "status": "not_run",
+            "required_before_apply": True,
+        },
+        "rollback": {
+            "status": "manual_reverse_operations",
+            "command": None,
+        },
+        "recommended_next_action": "human_review_required",
         "human_decision_required": True,
         "human_decision_fields": HUMAN_DECISION_FIELDS,
     }

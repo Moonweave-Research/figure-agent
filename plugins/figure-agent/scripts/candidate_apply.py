@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import candidate_contracts
 import fixture_identity
 import runtime_paths
 
@@ -18,6 +19,23 @@ def _base_result(name: str, manifest: dict[str, Any]) -> dict[str, Any]:
         "candidate_id": manifest.get("candidate_id"),
         "applied": False,
     }
+
+
+def _effective_authority(manifest: dict[str, Any]) -> str:
+    verification = manifest.get("verification")
+    hard_gate_state = (
+        verification.get("hard_gate_state")
+        if isinstance(verification, dict)
+        else "rejected"
+    )
+    effective = candidate_contracts.effective_apply_authority(
+        str(manifest.get("apply_authority", "rejected")),
+        str(hard_gate_state),
+    )
+    declared = manifest.get("effective_apply_authority")
+    if declared is not None and declared != effective:
+        raise candidate_contracts.CandidateContractError("effective_apply_authority_mismatch")
+    return effective
 
 
 def apply_candidate(
@@ -34,7 +52,7 @@ def apply_candidate(
         workspace_root=workspace_root,
     )
     result = _base_result(name, manifest)
-    if manifest.get("effective_apply_authority") != "apply_eligible":
+    if _effective_authority(manifest) != "apply_eligible":
         result["error"] = {"code": "not_apply_eligible"}
         return result
     if not apply:

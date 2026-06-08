@@ -107,17 +107,28 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
         "build/candidates/candidate_set.json",
         "--json",
     )
+    review = _run(
+        workspace,
+        "review-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--json",
+    )
 
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     assert candidates.returncode == 0, candidates.stderr
     assert render.returncode == 0, render.stderr
     assert rank.returncode == 0, rank.stderr
+    assert review.returncode == 0, review.stderr
     assert manifest.exists()
     assert json.loads(render.stdout)["schema"] == "figure-agent.candidate-render-result.v1"
     payload = json.loads(rank.stdout)
     assert payload["schema"] == "figure-agent.candidate-rank-result.v1"
     assert payload["scores"][0]["schema"] == "figure-agent.candidate-score.v1"
     assert payload["scores"][0]["candidate_id"] == "CAND001"
+    review_payload = json.loads(review.stdout)
+    assert review_payload["schema"] == "figure-agent.candidate-review-packet.v1"
+    assert review_payload["candidate_id"] == "CAND001"
 
 
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:

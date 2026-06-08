@@ -455,6 +455,29 @@ def _rank_candidates(argv: list[str]) -> int:
     return 0
 
 
+def _review_candidate(argv: list[str]) -> int:
+    import candidate_review_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent review-candidate")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_review_packet.build_review_packet(
+            name,
+            args.candidate_id,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_review_packet.CandidateReviewPacketError) as exc:
+        print(f"fig-agent review-candidate: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _apply_plan(argv: list[str]) -> int:
     import quality_patch_apply
 
@@ -557,6 +580,8 @@ def main(argv: list[str] | None = None) -> int:
         return _render_candidates(rest)
     if command == "rank-candidates":
         return _rank_candidates(rest)
+    if command == "review-candidate":
+        return _review_candidate(rest)
     if command == "apply-plan":
         return _apply_plan(rest)
     if command == "verify-plan":
