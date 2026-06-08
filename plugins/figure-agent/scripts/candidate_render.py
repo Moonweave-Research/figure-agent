@@ -49,6 +49,12 @@ def _sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
     return out_dir
 
 
+def _write_sandbox_file(path: Path, text: str) -> None:
+    if path.is_symlink():
+        raise CandidateRenderError(f"sandbox_symlink_forbidden: {path.name}")
+    path.write_text(text, encoding="utf-8")
+
+
 def _fixture_path(example_dir: Path, fixture_name: str, value: Any) -> Path:
     if not isinstance(value, str) or not value.strip():
         raise CandidateRenderError("operation path missing")
@@ -102,7 +108,7 @@ def _write_candidate_source_copy(
         return []
     filename, text = source_copy
     destination = out_dir / filename
-    destination.write_text(text, encoding="utf-8")
+    _write_sandbox_file(destination, text)
     return [{"kind": "candidate_source", "path": destination.name}]
 
 
@@ -132,7 +138,7 @@ def render_candidate_set(
             candidate=candidate,
             out_dir=out_dir,
         )
-        hard_gate_state = "pass"
+        hard_gate_state = "human_required"
         effective = candidate_contracts.effective_apply_authority(
             str(candidate.get("apply_authority")),
             hard_gate_state,
@@ -166,9 +172,9 @@ def render_candidate_set(
             "effective_apply_authority": effective,
         }
         path = out_dir / "candidate_manifest.json"
-        path.write_text(
+        _write_sandbox_file(
+            path,
             json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
         )
         rendered.append({"candidate_id": candidate_id, "manifest": str(path)})
     return {"schema": RESULT_SCHEMA, "fixture": name, "rendered": rendered}

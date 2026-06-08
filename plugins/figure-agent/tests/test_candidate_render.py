@@ -65,7 +65,8 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert data["base"]["source_commit"]
     assert data["tool_versions"]["fig_agent"]
     assert data["tool_versions"]["tex_engine"] == "not_run"
-    assert data["effective_apply_authority"] == "apply_eligible"
+    assert data["verification"]["hard_gate_state"] == "human_required"
+    assert data["effective_apply_authority"] == "review_only"
     after_exports = {
         path.relative_to(exports).as_posix(): path.read_bytes()
         for path in sorted(exports.rglob("*"))
@@ -143,3 +144,51 @@ def test_render_rejects_candidate_id_path_escape(tmp_path: Path) -> None:
             candidate_set,
             workspace_root=workspace,
         )
+
+
+def test_render_rejects_sandbox_source_copy_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    source = fixture / "candidate_demo.tex"
+    before = source.read_text(encoding="utf-8")
+    (sandbox / "candidate_demo.tex").symlink_to(source)
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+    assert source.read_text(encoding="utf-8") == before
+
+
+def test_render_rejects_sandbox_manifest_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    export = exports / "candidate_demo.svg"
+    export.write_text("<svg />\n", encoding="utf-8")
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    (sandbox / "candidate_manifest.json").symlink_to(export)
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+    assert export.read_text(encoding="utf-8") == "<svg />\n"
