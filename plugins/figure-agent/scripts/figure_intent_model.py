@@ -8,12 +8,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 import fixture_identity
 import runtime_paths
+import yaml
 
 SCHEMA = "figure-agent.intent-model.v1"
+
+
+class IntentModelError(ValueError):
+    """Raised when the intent model cannot safely resolve fixture inputs."""
 
 
 def _state(path: Path, *, required: bool) -> dict[str, Any]:
@@ -46,6 +49,41 @@ def _load_spec(spec_path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _reference_state(reasons: list[str], *, has_present: bool) -> str:
+    if "path_escape" in reasons:
+        return "blocked"
+    if reasons:
+        return "missing_optional"
+    return "present" if has_present else "missing_optional"
+
+
+def _resolve_paths(
+    *,
+    plugin_root: Path | None,
+    workspace_root: Path | None,
+) -> runtime_paths.RuntimePaths:
+    plugin = (
+        plugin_root
+        if plugin_root is not None
+        else runtime_paths.default_plugin_root()
+    ).expanduser().resolve()
+    if workspace_root is not None:
+        return runtime_paths.resolve_runtime_paths(
+            plugin_root=plugin,
+            workspace_root=workspace_root,
+        )
+    workspace, _source = runtime_paths.workspace_root_with_source(plugin)
+    if workspace is None:
+        raise IntentModelError(
+            "workspace_missing: set FIGURE_AGENT_WORKSPACE or run from a project "
+            "root containing examples/"
+        )
+    return runtime_paths.resolve_runtime_paths(
+        plugin_root=plugin,
+        workspace_root=workspace,
+    )
+
+
 def build_intent_model(
     name: str,
     *,
@@ -53,7 +91,7 @@ def build_intent_model(
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
-    paths = runtime_paths.resolve_runtime_paths(
+    paths = _resolve_paths(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )
@@ -63,21 +101,24 @@ def build_intent_model(
     panels_raw = spec.get("panels")
     panels = panels_raw if isinstance(panels_raw, list) else []
 
-    panel_reference_state = "missing_optional"
+    figure_reference_path, figure_reference_reasons = _fixture_relative_path(
+        example_dir,
+        spec.get("reference_image"),
+    )
     panel_reference_reasons: list[str] = []
+    panel_reference_present = False
     output_panels: list[dict[str, Any]] = []
     for index, raw_panel in enumerate(panels):
         panel = raw_panel if isinstance(raw_panel, dict) else {}
+        panel_reference_value = panel.get("reference_image") or spec.get("reference_image")
         reference_path, reference_reasons = _fixture_relative_path(
             example_dir,
-            panel.get("reference_image"),
+            panel_reference_value,
         )
         if reference_reasons:
             panel_reference_reasons.extend(reference_reasons)
-            if "path_escape" in reference_reasons:
-                panel_reference_state = "blocked"
         else:
-            panel_reference_state = "present"
+            panel_reference_present = True
         role = str(panel.get("caption") or panel.get("role") or "unknown")
         output_panels.append(
             {
@@ -110,8 +151,19 @@ def build_intent_model(
             "briefing": _state(example_dir / "briefing.md", required=True),
             "source": _state(example_dir / f"{name}.tex", required=True),
             "caption": _state(example_dir / "caption.md", required=False),
+            "figure_reference": {
+                "state": _reference_state(
+                    figure_reference_reasons,
+                    has_present=not figure_reference_reasons,
+                ),
+                "path": figure_reference_path,
+                "reasons": sorted(set(figure_reference_reasons)),
+            },
             "panel_references": {
-                "state": panel_reference_state,
+                "state": _reference_state(
+                    panel_reference_reasons,
+                    has_present=panel_reference_present,
+                ),
                 "reasons": sorted(set(panel_reference_reasons)),
             },
             "coordinate_hints": _state(
@@ -137,7 +189,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("name")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
-    print(json.dumps(build_intent_model(args.name), indent=2, sort_keys=True))
+    try:
+        payload = build_intent_model(args.name)
+    except (IntentModelError, ValueError) as exc:
+        print(f"figure_intent_model: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
 
