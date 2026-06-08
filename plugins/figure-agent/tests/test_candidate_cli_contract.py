@@ -20,7 +20,17 @@ def _env(workspace: Path) -> dict[str, str]:
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text("name: candidate_demo\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    caption: Energy diagram
+    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
     (fixture / f"{name}.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
@@ -57,6 +67,39 @@ def test_fig_agent_intent_and_candidates_are_read_only(tmp_path: Path) -> None:
     assert json.loads(intent.stdout)["schema"] == "figure-agent.intent-model.v1"
     assert json.loads(candidates.stdout)["schema"] == "figure-agent.candidate-set.v1"
     assert _tree(workspace) == before
+
+
+def test_fig_agent_analyze_panel_is_read_only_json(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% Panel C\n"
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    before = _tree(workspace)
+
+    result = _run(workspace, "analyze-panel", "candidate_demo", "C", "--json")
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "figure-agent.candidate-panel-model.v1"
+    assert payload["panel"]["id"] == "C"
+    assert payload["panel"]["bbox_pdf_cm"] == [0.0, 0.0, 1.0, 1.0]
+    assert payload["selector_count"] == 1
+    assert payload["visual_review"]["status"] == "missing_render"
+    assert _tree(workspace) == before
+
+
+def test_fig_agent_analyze_panel_rejects_unsafe_panel_id(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    result = _run(workspace, "analyze-panel", "candidate_demo", "../C", "--json")
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "invalid_panel_id" in result.stderr
 
 
 def test_fig_agent_candidates_output_is_fixture_local(tmp_path: Path) -> None:

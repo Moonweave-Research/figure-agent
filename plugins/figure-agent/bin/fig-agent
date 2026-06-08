@@ -330,6 +330,29 @@ def _intent(argv: list[str]) -> int:
     return 0
 
 
+def _analyze_panel(argv: list[str]) -> int:
+    import candidate_panel_model
+
+    parser = argparse.ArgumentParser(prog="fig-agent analyze-panel")
+    parser.add_argument("name")
+    parser.add_argument("panel_id")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_panel_model.build_panel_model(
+            name,
+            args.panel_id,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_panel_model.CandidatePanelModelError) as exc:
+        print(f"fig-agent analyze-panel: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _candidates(argv: list[str]) -> int:
     import candidate_contracts
     import candidate_generator
@@ -574,6 +597,8 @@ def main(argv: list[str] | None = None) -> int:
         return _propose(rest)
     if command == "intent":
         return _intent(rest)
+    if command == "analyze-panel":
+        return _analyze_panel(rest)
     if command == "candidates":
         return _candidates(rest)
     if command == "render-candidates":
