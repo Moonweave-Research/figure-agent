@@ -27,6 +27,12 @@ def _sha256_file(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def _sha256_fixture_file(path: Path, label: str) -> str | None:
+    if path.is_symlink():
+        raise GoldenAcceptanceError(f"sandbox_symlink_forbidden: {label}")
+    return _sha256_file(path) if path.is_file() else None
+
+
 def _canonical_hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return "sha256:" + sha256(encoded).hexdigest()
@@ -83,7 +89,7 @@ def _allowed_pre_acceptance_blocks(readiness: dict[str, Any]) -> list[dict[str, 
         if check_id == "release" and reason == "release_ready is false":
             allowed.append(check)
             continue
-        return [check]
+        continue
     return allowed
 
 
@@ -153,12 +159,15 @@ def write_golden_acceptance(
         ),
         "rationale": rationale,
         "accept_golden": accept_golden,
-        "source_sha256": _sha256_file(tex_path) if tex_path.is_file() else None,
+        "source_sha256": _sha256_fixture_file(tex_path, f"{name}.tex"),
         "exports": _export_hashes(example_dir, name),
-        "critique_sha256": _sha256_file(critique_path) if critique_path.is_file() else None,
+        "critique_sha256": _sha256_fixture_file(critique_path, "critique.md"),
         "closeout_readiness_sha256": _canonical_hash(readiness),
-        "latest_apply_result_sha256": _sha256_file(apply_path)
-        if apply_path is not None and apply_path.is_file()
+        "latest_apply_result_sha256": _sha256_fixture_file(
+            apply_path,
+            str(apply_path_value),
+        )
+        if apply_path is not None
         else None,
     }
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

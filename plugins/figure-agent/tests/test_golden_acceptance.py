@@ -160,6 +160,50 @@ def test_closeout_accept_allows_first_time_tracked_golden_acceptance(
     assert result["path"] == "build/closeout/golden_acceptance.json"
 
 
+def test_closeout_accept_blocks_auto_detected_stale_candidate_apply(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text("changed\n", encoding="utf-8")
+
+    def fake_closeout(_name, repo_root, runs_root=None):
+        return {
+            "schema": "figure-agent.closeout.v1",
+            "fixture": "candidate_demo",
+            "closeout_complete": True,
+            "next_action": "closeout complete",
+            "blocking_step_ids": [],
+            "status": {
+                "render_state": "FRESH",
+                "critique_state": "FRESH",
+                "export_state": "FRESH",
+                "workflow_ready": True,
+                "release_ready": True,
+                "final_ready": True,
+                "final_artifact_state": "NONE",
+                "final_artifact_kind": "generated_export",
+                "final_artifact_path": "exports/candidate_demo.svg",
+                "publication_gate_state": "NOT_APPLICABLE",
+                "publication_gate_failures": [],
+            },
+            "steps": [],
+        }
+
+    monkeypatch.setattr(golden_acceptance.closeout_readiness, "_compute_closeout", fake_closeout)
+
+    with pytest.raises(golden_acceptance.GoldenAcceptanceError, match="closeout_not_ready"):
+        golden_acceptance.write_golden_acceptance(
+            "candidate_demo",
+            decision="accept",
+            reviewer="local-user",
+            rationale="Reviewed tracked golden export.",
+            accept_golden=True,
+            workspace_root=workspace,
+        )
+
+
 def test_closeout_accept_requires_accept_golden_for_tracked_golden(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -239,6 +283,31 @@ def test_closeout_accept_rejects_symlinked_export(tmp_path: Path, monkeypatch) -
     outside = tmp_path / "outside.pdf"
     outside.write_bytes(b"outside")
     (exports / "candidate_demo.pdf").symlink_to(outside)
+    monkeypatch.setattr(
+        golden_acceptance.closeout_readiness,
+        "build_closeout_readiness",
+        lambda *args, **kwargs: _ready_payload(),
+    )
+
+    with pytest.raises(golden_acceptance.GoldenAcceptanceError, match="sandbox_symlink"):
+        golden_acceptance.write_golden_acceptance(
+            "candidate_demo",
+            decision="accept",
+            reviewer="local-user",
+            rationale="Reviewed tracked golden export.",
+            accept_golden=True,
+            workspace_root=workspace,
+        )
+
+
+def test_closeout_accept_rejects_symlinked_source(tmp_path: Path, monkeypatch) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = fixture / "candidate_demo.tex"
+    source.unlink()
+    outside = tmp_path / "outside.tex"
+    outside.write_text("outside\n", encoding="utf-8")
+    source.symlink_to(outside)
     monkeypatch.setattr(
         golden_acceptance.closeout_readiness,
         "build_closeout_readiness",

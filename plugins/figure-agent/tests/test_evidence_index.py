@@ -142,6 +142,34 @@ def test_evidence_index_reports_candidate_apply_source_drift(tmp_path: Path) -> 
     assert "candidate_apply_stale:candidate_demo.tex" in index["diagnostics"]
 
 
+def test_evidence_index_auto_detects_latest_applied_candidate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    index = evidence_index.build_evidence_index("candidate_demo", workspace_root=workspace)
+
+    assert index["candidate"]["candidate_id"] == "CAND001"
+    assert index["candidate"]["apply_status"] == "applied"
+
+
+def test_evidence_index_marks_malformed_changed_files_stale(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    apply_path = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result = json.loads(apply_path.read_text(encoding="utf-8"))
+    apply_result["changed_files"] = [{"path": "candidate_demo.tex"}]
+    apply_path.write_text(json.dumps(apply_result, sort_keys=True) + "\n", encoding="utf-8")
+
+    index = evidence_index.build_evidence_index(
+        "candidate_demo",
+        candidate_id="CAND001",
+        workspace_root=workspace,
+    )
+
+    assert index["candidate"]["apply_status"] == "stale"
+    assert "candidate_apply_changed_files_invalid" in index["diagnostics"]
+
+
 def test_evidence_index_reports_render_manifest_candidate_id_mismatch(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

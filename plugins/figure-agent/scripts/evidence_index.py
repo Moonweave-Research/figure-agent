@@ -106,23 +106,51 @@ def _apply_status(
     if not isinstance(changed_files, list):
         diagnostics.append("candidate_apply_changed_files_missing")
         return "stale"
+    validated_files = 0
     for item in changed_files:
         if not isinstance(item, dict):
-            continue
+            diagnostics.append("candidate_apply_changed_files_invalid")
+            return "stale"
         relative = item.get("path")
         expected = item.get("after_sha256")
         if not isinstance(relative, str) or not isinstance(expected, str):
-            continue
+            diagnostics.append("candidate_apply_changed_files_invalid")
+            return "stale"
         target = example_dir / relative
         try:
             target.resolve().relative_to(example_dir.resolve())
         except ValueError:
             diagnostics.append(f"candidate_apply_path_escape:{relative}")
             return "stale"
+        if target.is_symlink():
+            diagnostics.append(f"candidate_apply_symlink:{relative}")
+            return "stale"
         if not target.is_file() or _sha256_file(target) != expected:
             diagnostics.append(f"candidate_apply_stale:{relative}")
             return "stale"
+        validated_files += 1
+    if validated_files == 0:
+        diagnostics.append("candidate_apply_changed_files_missing")
+        return "stale"
     return "applied"
+
+
+def _latest_apply_candidate_id(example_dir: Path) -> str | None:
+    build_dir = example_dir / "build"
+    candidates_root = build_dir / "candidates"
+    if build_dir.is_symlink() or candidates_root.is_symlink() or not candidates_root.is_dir():
+        return None
+    candidates = [
+        path
+        for path in candidates_root.glob("*/apply_result.json")
+        if path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
+    ]
+    latest = max(candidates, key=lambda path: path.stat().st_mtime, default=None)
+    if latest is None:
+        return None
+    candidate_id = latest.parent.name
+    fixture_identity.validate_fixture_name(candidate_id)
+    return candidate_id
 
 
 def _status_summary(example_dir: Path, name: str) -> dict[str, Any]:
@@ -167,6 +195,8 @@ def build_evidence_index(
     }
     diagnostics: list[str] = []
     candidate_payload: dict[str, Any] | None = None
+    if candidate_id is None:
+        candidate_id = _latest_apply_candidate_id(example_dir)
     if candidate_id is not None:
         fixture_identity.validate_fixture_name(candidate_id)
         sandbox = _candidate_sandbox(example_dir, candidate_id)
