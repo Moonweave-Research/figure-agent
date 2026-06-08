@@ -114,6 +114,25 @@ def test_candidate_generator_refuses_symlinked_source(tmp_path: Path) -> None:
         raise AssertionError("expected source symlink to be rejected")
 
 
+def test_candidate_generator_refuses_symlinked_fixture_dir(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    external_workspace = tmp_path / "external"
+    external_fixture = _fixture(external_workspace)
+    fixture_link = workspace / "examples" / "candidate_demo"
+    fixture_link.parent.mkdir(parents=True)
+    fixture_link.symlink_to(external_fixture)
+
+    try:
+        candidate_generator.build_candidate_set(
+            "candidate_demo",
+            workspace_root=workspace,
+        )
+    except candidate_generator.CandidateGeneratorError as exc:
+        assert "fixture_symlink_forbidden" in str(exc)
+    else:
+        raise AssertionError("expected fixture directory symlink to be rejected")
+
+
 def test_candidates_downgrade_apply_authority_from_intent_floor(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

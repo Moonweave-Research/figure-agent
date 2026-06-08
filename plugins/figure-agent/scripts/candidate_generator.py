@@ -46,6 +46,8 @@ def _validate_output_path(
 
 def _fixture_source_path(paths: runtime_paths.RuntimePaths, name: str) -> Path:
     fixture = paths.examples_dir / name
+    if fixture.is_symlink():
+        raise CandidateGeneratorError("fixture_symlink_forbidden")
     lexical_source = fixture / f"{name}.tex"
     if lexical_source.is_symlink():
         raise CandidateGeneratorError("source_symlink_forbidden")
