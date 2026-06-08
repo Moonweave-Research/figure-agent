@@ -10,6 +10,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import candidate_contracts  # noqa: E402
 
 
+def test_canonical_hash_is_order_insensitive_for_json_payloads() -> None:
+    left = {"b": [2, 1], "a": {"z": True, "m": None}}
+    right = {"a": {"m": None, "z": True}, "b": [2, 1]}
+
+    digest = candidate_contracts.canonical_hash(left)
+
+    assert digest == candidate_contracts.canonical_hash(right)
+    assert digest.startswith("sha256:")
+    assert len(digest) == len("sha256:") + 64
+
+
 def test_effective_authority_downgrades_hard_gate_states() -> None:
     assert (
         candidate_contracts.effective_apply_authority("apply_eligible", "pass")
@@ -70,3 +81,10 @@ def test_fixture_local_output_path_rejects_escape(tmp_path: Path) -> None:
 
     with pytest.raises(candidate_contracts.CandidateContractError, match="path_escape"):
         candidate_contracts.fixture_local_output_path(workspace, "demo", "../candidate_set.json")
+
+
+def test_fixture_local_output_path_rejects_fixture_name_escape(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+
+    with pytest.raises(ValueError, match="fixture name must be a single"):
+        candidate_contracts.fixture_local_output_path(workspace, "../outside", "build/out.json")

@@ -7,6 +7,8 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import fixture_identity
+
 APPLY_AUTHORITIES = frozenset({"apply_eligible", "review_only", "rejected"})
 HARD_GATE_STATES = frozenset({"pass", "human_required", "rejected"})
 
@@ -30,6 +32,7 @@ def fixture_relative_path(example_dir: Path, value: str) -> Path:
 
 
 def fixture_local_output_path(workspace_root: Path, fixture_name: str, value: str) -> Path:
+    fixture_identity.validate_fixture_name(fixture_name)
     example_dir = workspace_root / "examples" / fixture_name
     return fixture_relative_path(example_dir, value)
 
