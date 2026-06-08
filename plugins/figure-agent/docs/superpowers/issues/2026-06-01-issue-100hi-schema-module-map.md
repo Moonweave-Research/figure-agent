@@ -12,8 +12,8 @@ belongs.
 
 Current inventory on 2026-06-01:
 
-- `scripts/*.py`: 89
-- `tests/test*.py`: 96
+- `scripts/*.py`: 104
+- `tests/test*.py`: 116
 - `commands/*.md`: 15
 - critique schema lineage: `figure-agent.critique.v1` through
   `figure-agent.critique.v1.17`
@@ -59,6 +59,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 |---|---|---|---|---|
 | `figure-agent.audit-crop-manifest.v1` | audit evidence | `critique_zoom_crops.py` | `critique_lint.py`, `audit_evidence_summary.py` | Blocks critique evidence if required crops mismatch |
 | `figure-agent.audit-evidence-summary.v1` | audit evidence | `audit_evidence_summary.py` | `status.py`, `fig_loop.py`, `fig_driver.py` | Advisory until state is `missing_input`, `needs_action`, or `stale_or_mismatched` |
+| `figure-agent.audit-evidence-graph.v1` | audit evidence | `audit_evidence_graph.py` | operators, MCP resource metadata | Read-only provenance graph; never mutates fixture state |
 | `figure-agent.detector-feedback-ledger.v1` | detector tuning diagnostics | `detector_feedback_ledger.py` | operators | Read-only cross-fixture summary; no threshold or gate authority |
 | `figure-agent.text-boundary-clash.v1` | deterministic detector | `check_text_boundary_clash.py` | `audit_evidence_summary.py`, `fig_closeout.py` | Can block closeout when stale/missing or malformed |
 | `figure-agent.label-path-proximity.v1` | deterministic detector | `check_label_path_proximity.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
@@ -105,6 +106,11 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.inspection-trace.v1` | host/subagent inspection trace | `inspection_trace.py` | `critique_lint.py`, operators | Optional auditability artifact; cannot prove image inspection by itself |
 | `figure-agent.diagnostic-artifact-provenance.v1` | scratch/debug artifact safety | `diagnostic_artifact_provenance.py` | operators | Prevents stale diagnostics from becoming truth |
 | `figure-agent.plugin-install-freshness.v1` | plugin install diagnostics | `plugin_install_freshness.py` | operators | Read-only source-vs-cache check; never mutates install state |
+| `figure-agent.release-gate.v1` | package/release gate | `release_gate.py` | operators, CI | Builds and audits Cowork ZIP; skips missing host validators explicitly |
+| `figure-agent.quality-defect-ledger.v1` | quality improvement loop | `quality_defect_ledger.py` | `quality_patch_plan.py`, MCP quality tools | Read-only defect ledger; no source mutation |
+| `figure-agent.quality-patch-policy.v1` | quality improvement loop | `quality_patch_policy.py` | `quality_defect_ledger.py`, `quality_patch_plan.py` | Classifies patchability; `may_edit` remains false |
+| `figure-agent.quality-patch-plan.v1` | quality improvement loop | `quality_patch_plan.py` | `quality_patch_apply.py`, MCP quality tools | Proposal evidence only until explicit apply |
+| `figure-agent.quality-patch-result.v1` | quality improvement loop | `quality_patch_apply.py` | operators, MCP quality tools | Records explicit apply/dry-run result and rollback path |
 
 ## Module Ownership Map
 
@@ -144,6 +150,7 @@ Owns official evidence packs that host vision or status consumers inspect.
 
 - `critique_zoom_crops.py` owns `build/audit_crops/manifest.json`
 - `audit_evidence_summary.py` owns compact accounting state
+- `audit_evidence_graph.py` owns deterministic read-only provenance graph output
 - `detector_feedback_ledger.py` owns cross-fixture detector feedback rollups
 - `diagnostic_artifact_provenance.py` owns ad hoc/scratch artifact classification
 - `critique_evidence_lint.py` owns narrow evidence-specific lint helpers
@@ -195,6 +202,8 @@ executor paths.
 - `fig_loop_basin.py`, `fig_loop_handoff.py`, `fig_loop_records.py`
 - `fig_loop_patch_evidence.py`, `fig_loop_patch_executor.py`,
   `fig_loop_auto_patch.py`
+- `quality_defect_ledger.py`, `quality_patch_policy.py`,
+  `quality_patch_plan.py`, `quality_patch_apply.py`
 
 Add here when the feature changes what `/fig_loop` sees or how it stops.
 
@@ -234,7 +243,7 @@ publication compliance, SVG polish, or final-artifact readiness.
 
 Owns package integrity and helper tools that do not affect fixture state.
 
-- `plugin_package_audit.py`, `match_snippet.py`, `vtrace.py`
+- `plugin_package_audit.py`, `release_gate.py`, `match_snippet.py`, `vtrace.py`
 
 ## Governance Rules
 

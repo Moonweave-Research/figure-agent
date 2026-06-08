@@ -1,0 +1,274 @@
+"""Run deterministic figure-agent Cowork release checks."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+from typing import Any
+
+SCRIPT_ROOT = Path(__file__).resolve().parent
+PLUGIN_ROOT = SCRIPT_ROOT.parent
+
+sys.path.insert(0, str(SCRIPT_ROOT))
+
+import package_cowork_plugin  # noqa: E402
+
+SCHEMA = "figure-agent.release-gate.v1"
+
+TARGETED_TESTS = [
+    "tests/test_quality_defect_ledger.py",
+    "tests/test_quality_patch_policy.py",
+    "tests/test_quality_patch_plan.py",
+    "tests/test_quality_patch_apply.py",
+    "tests/test_quality_cli_contract.py",
+    "tests/test_mcp_facade.py",
+    "tests/test_package_cowork_plugin.py",
+    "tests/test_command_contract_docs.py",
+    "tests/test_release_contract.py",
+]
+
+REQUIRED_PACKAGE_PATHS = {
+    ".claude-plugin/plugin.json",
+    ".mcp.json",
+    "mcp/figure_agent_server.py",
+    "bin/fig-agent",
+    "scripts",
+    "styles",
+    "commands",
+    "skills",
+}
+
+
+def _step(
+    name: str,
+    state: str,
+    *,
+    command: list[str] | None = None,
+    stdout: str = "",
+    stderr: str = "",
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"name": name, "state": state}
+    if command is not None:
+        payload["command"] = command
+    if stdout:
+        payload["stdout"] = _bounded(stdout)
+    if stderr:
+        payload["stderr"] = _bounded(stderr)
+    if details:
+        payload["details"] = details
+    return payload
+
+
+def _bounded(text: str, limit: int = 4000) -> str:
+    if len(text) <= limit:
+        return text
+    return text[:limit] + "\n...[truncated]"
+
+
+def _run_command(name: str, command: list[str], *, cwd: Path = PLUGIN_ROOT) -> dict[str, Any]:
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return _step(
+        name,
+        "passed" if result.returncode == 0 else "failed",
+        command=command,
+        stdout=result.stdout,
+        stderr=result.stderr,
+        details={"returncode": result.returncode},
+    )
+
+
+def _zip_names(zip_path: Path) -> set[str]:
+    with zipfile.ZipFile(zip_path) as archive:
+        return set(archive.namelist())
+
+
+def _verify_required_paths(names: set[str]) -> dict[str, Any]:
+    missing = []
+    for required in sorted(REQUIRED_PACKAGE_PATHS):
+        if required.endswith("/"):
+            prefix = required
+        else:
+            prefix = required + "/"
+        if required not in names and not any(name.startswith(prefix) for name in names):
+            missing.append(required)
+    return _step(
+        "package_required_paths",
+        "passed" if not missing else "failed",
+        details={"missing": missing},
+    )
+
+
+def _verify_excluded_paths(names: set[str]) -> dict[str, Any]:
+    bad = sorted(
+        name
+        for name in names
+        if "/build/" in name
+        or name.startswith("build/")
+        or "/exports/" in name
+        or name.startswith("exports/")
+        or ".venv/" in name
+        or ".pytest_cache/" in name
+        or ".ruff_cache/" in name
+        or name.startswith("examples/fig1_overview_v2")
+        or name.startswith("examples/golden_trap_depth_picture")
+        or name.startswith("examples/n3_trial_")
+        or name.startswith("examples/fig5_floating_clip_mechanism")
+    )
+    return _step(
+        "package_excluded_paths",
+        "passed" if not bad else "failed",
+        details={"unexpected": bad[:50], "unexpected_count": len(bad)},
+    )
+
+
+def _package_size_mib(root: Path) -> float:
+    total = sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
+    return total / (1024 * 1024)
+
+
+def run_release_gate(
+    *,
+    output_dir: Path,
+    max_mib: float,
+    run_targeted_tests: bool = True,
+    run_full_pytest: bool = True,
+    run_ruff: bool = True,
+    run_claude_validate: bool = True,
+) -> dict[str, Any]:
+    steps: list[dict[str, Any]] = []
+
+    if run_targeted_tests:
+        steps.append(_run_command("targeted_tests", ["uv", "run", "pytest", "-q", *TARGETED_TESTS]))
+    else:
+        steps.append(_step("targeted_tests", "skipped", details={"reason": "explicit skip"}))
+
+    if run_full_pytest:
+        steps.append(_run_command("full_pytest", ["uv", "run", "pytest", "-q"]))
+    else:
+        steps.append(_step("full_pytest", "skipped", details={"reason": "explicit skip"}))
+
+    if run_ruff:
+        steps.append(_run_command("ruff", ["uv", "run", "ruff", "check", "."]))
+    else:
+        steps.append(_step("ruff", "skipped", details={"reason": "explicit skip"}))
+
+    zip_path = package_cowork_plugin.build_zip(output_dir)
+    steps.append(_step("build_zip", "passed", details={"zip_path": str(zip_path)}))
+
+    names = _zip_names(zip_path)
+    steps.append(_verify_required_paths(names))
+    steps.append(_verify_excluded_paths(names))
+
+    with tempfile.TemporaryDirectory(prefix="figure-agent-release-gate-") as raw_unpack:
+        unpack_dir = Path(raw_unpack)
+        with zipfile.ZipFile(zip_path) as archive:
+            archive.extractall(unpack_dir)
+        audit_command = [
+            sys.executable,
+            str(SCRIPT_ROOT / "plugin_package_audit.py"),
+            str(unpack_dir),
+            "--max-mib",
+            str(max_mib),
+        ]
+        steps.append(_run_command("package_audit", audit_command))
+        size_mib = _package_size_mib(unpack_dir)
+
+        claude = shutil.which("claude")
+        if not run_claude_validate:
+            steps.append(
+                _step(
+                    "claude_validate_package",
+                    "skipped",
+                    details={"reason": "explicit skip"},
+                )
+            )
+            steps.append(
+                _step("claude_validate_marketplace", "skipped", details={"reason": "explicit skip"})
+            )
+        elif claude is None:
+            steps.append(
+                _step(
+                    "claude_validate_package",
+                    "skipped",
+                    details={"reason": "claude not found"},
+                )
+            )
+            steps.append(
+                _step(
+                    "claude_validate_marketplace",
+                    "skipped",
+                    details={"reason": "claude not found"},
+                )
+            )
+        else:
+            steps.append(
+                _run_command(
+                    "claude_validate_package",
+                    [claude, "plugin", "validate", str(unpack_dir), "--strict"],
+                )
+            )
+            marketplace = PLUGIN_ROOT.parents[1] / ".claude-plugin" / "marketplace.json"
+            steps.append(
+                _run_command(
+                    "claude_validate_marketplace",
+                    [claude, "plugin", "validate", str(marketplace)],
+                    cwd=PLUGIN_ROOT.parents[1],
+                )
+            )
+
+    failed = [step for step in steps if step["state"] == "failed"]
+    return {
+        "schema": SCHEMA,
+        "success": not failed,
+        "zip_path": str(zip_path),
+        "package_size_mib": round(size_mib, 3),
+        "steps": steps,
+        "failure_categories": [step["name"] for step in failed],
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=Path("dist/cowork"))
+    parser.add_argument("--max-mib", type=float, default=50.0)
+    parser.add_argument("--json", action="store_true", help="emit JSON report")
+    parser.add_argument("--skip-targeted-tests", action="store_true")
+    parser.add_argument("--skip-full-pytest", action="store_true")
+    parser.add_argument("--skip-ruff", action="store_true")
+    parser.add_argument("--skip-claude-validate", action="store_true")
+    args = parser.parse_args(argv)
+
+    report = run_release_gate(
+        output_dir=args.output,
+        max_mib=args.max_mib,
+        run_targeted_tests=not args.skip_targeted_tests,
+        run_full_pytest=not args.skip_full_pytest,
+        run_ruff=not args.skip_ruff,
+        run_claude_validate=not args.skip_claude_validate,
+    )
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(f"success={str(report['success']).lower()}")
+        print(f"zip_path={report['zip_path']}")
+        print(f"package_size_mib={report['package_size_mib']}")
+        for step in report["steps"]:
+            print(f"{step['state']} {step['name']}")
+    return 0 if report["success"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

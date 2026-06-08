@@ -55,6 +55,11 @@ def _tool_payload(response: dict) -> dict:
     return json.loads(text)
 
 
+def _resource_payload(response: dict) -> dict:
+    text = response["result"]["contents"][0]["text"]
+    return json.loads(text)
+
+
 def _write_minimal_fixture(workspace: Path, name: str = "smoke_trap_demo") -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
@@ -117,6 +122,9 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_status",
         "figure_agent_compile",
         "figure_agent_export",
+        "figure_agent_quality_map",
+        "figure_agent_propose_patch",
+        "figure_agent_verify_plan",
         "figure_agent_next_action",
         "figure_agent_loop_checkpoint",
     } <= tool_names
@@ -143,8 +151,16 @@ def test_mcp_doctor_reports_plugin_cwd_as_workspace_missing() -> None:
     _assert_common_envelope(payload)
     assert payload["schema"] == "figure-agent.mcp.doctor.v1"
     assert payload["bundle"]["state"] == "ok"
+    assert payload["bundle"]["plugin_root_kind"] in {
+        "source_tree",
+        "installed_cache",
+        "unpacked_zip",
+        "unknown",
+    }
+    assert isinstance(payload["bundle"]["unexpected_cache_state"], list)
     assert payload["workspace"]["state"] == "missing"
     assert payload["workspace"]["workspace_root"] is None
+    assert payload["workspace"]["workspace_source"] == "missing"
 
 
 def test_mcp_status_rejects_invalid_fixture_before_path_join(tmp_path: Path) -> None:
@@ -242,6 +258,190 @@ def test_mcp_resource_patterns_are_templates_not_literal_resources() -> None:
     assert any(
         template["uriTemplate"] == "figure://{name}/build/png" for template in templates
     )
+    assert any(
+        template["uriTemplate"] == "figure://{name}/exports/pdf" for template in templates
+    )
+    assert any(
+        template["uriTemplate"] == "figure://{name}/exports/tif" for template in templates
+    )
+    assert any(
+        template["uriTemplate"] == "figure://{name}/audit/undeclared-geometry"
+        for template in templates
+    )
+    assert any(
+        template["uriTemplate"] == "figure://{name}/audit/evidence-graph"
+        for template in templates
+    )
+
+
+def test_mcp_resource_read_returns_metadata_for_existing_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_minimal_fixture(workspace)
+    export = fixture / "exports" / "smoke_trap_demo.pdf"
+    export.parent.mkdir()
+    export.write_bytes(b"%PDF-1.7\n")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://smoke_trap_demo/exports/pdf"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.resource-metadata.v1"
+    assert payload["success"] is True
+    assert payload["exists"] is True
+    assert payload["path"] == "examples/smoke_trap_demo/exports/smoke_trap_demo.pdf"
+    assert payload["media_type"] == "application/pdf"
+    assert payload["size_bytes"] == len(b"%PDF-1.7\n")
+    assert payload["sha256"].startswith("sha256:")
+
+
+def test_mcp_resource_read_returns_missing_metadata_without_error(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://smoke_trap_demo/audit/undeclared-geometry"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["success"] is True
+    assert payload["exists"] is False
+    assert payload["path"] == "examples/smoke_trap_demo/build/undeclared_geometry.json"
+
+
+def test_mcp_resource_read_exposes_virtual_evidence_graph_metadata(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://smoke_trap_demo/audit/evidence-graph"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["success"] is True
+    assert payload["virtual"] is True
+    assert payload["content_schema"] == "figure-agent.audit-evidence-graph.v1"
+
+
+def test_mcp_resource_read_blocks_symlink_escape(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_minimal_fixture(workspace)
+    outside = tmp_path / "outside.pdf"
+    outside.write_bytes(b"secret")
+    export_dir = fixture / "exports"
+    export_dir.mkdir()
+    (export_dir / "smoke_trap_demo.pdf").symlink_to(outside)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://smoke_trap_demo/exports/pdf"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["success"] is False
+    assert payload["blocked"] is True
+    assert payload["reason"] == "path_escape"
+    assert "sha256" not in payload
+
+
+def test_mcp_resource_read_rejects_unknown_resource_uri(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    (workspace / "examples").mkdir(parents=True)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://smoke_trap_demo/raw/tex"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "unsupported_operation"
+
+
+def test_mcp_quality_map_and_propose_patch_are_read_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_minimal_fixture(workspace, name="quality_demo")
+    (fixture / "quality_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    report = fixture / "build" / "text_boundary_clash.json"
+    report.parent.mkdir()
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": "quality_demo",
+                "candidates": [{"id": "TB001", "text": "label-a"}],
+                "total": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {"name": "figure_agent_quality_map", "arguments": {"name": "quality_demo"}},
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {"name": "figure_agent_propose_patch", "arguments": {"name": "quality_demo"}},
+                request_id=2,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    quality_payload = _tool_payload(_response_lines(result)[0])
+    propose_payload = _tool_payload(_response_lines(result)[1])
+    assert quality_payload["schema"] == "figure-agent.mcp.quality-map.v1"
+    assert quality_payload["success"] is True
+    assert quality_payload["ledger"]["schema"] == "figure-agent.quality-defect-ledger.v1"
+    assert propose_payload["schema"] == "figure-agent.mcp.propose-patch.v1"
+    assert propose_payload["success"] is True
+    assert propose_payload["plan"]["schema"] == "figure-agent.quality-patch-plan.v1"
+    after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    assert after == before
 
 
 def test_mcp_notifications_do_not_emit_response_frames() -> None:

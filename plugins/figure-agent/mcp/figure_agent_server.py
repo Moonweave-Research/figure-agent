@@ -15,8 +15,16 @@ import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_DIR = PLUGIN_ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import runtime_paths  # noqa: E402
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "figure-agent"
@@ -41,17 +49,12 @@ def _plugin_root() -> Path:
     value = os.environ.get("FIGURE_AGENT_PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
     if value:
         return Path(value).expanduser().resolve()
-    return Path(__file__).resolve().parents[1]
+    return PLUGIN_ROOT
 
 
 def _workspace_root(plugin_root: Path) -> Path | None:
-    value = os.environ.get("FIGURE_AGENT_WORKSPACE") or os.environ.get("CLAUDE_PROJECT_DIR")
-    if value:
-        return Path(value).expanduser().resolve()
-    cwd = Path.cwd().resolve()
-    if cwd == plugin_root:
-        return None
-    return cwd
+    workspace_root, _source = runtime_paths.workspace_root_with_source(plugin_root)
+    return workspace_root
 
 
 def _examples_dir(workspace_root: Path) -> Path:
@@ -129,37 +132,18 @@ def _fixture_lock(
 
 
 def _bundle_diagnostics(plugin_root: Path) -> dict[str, Any]:
-    required = [
-        plugin_root / ".claude-plugin" / "plugin.json",
-        plugin_root / "scripts",
-        plugin_root / "styles",
-        plugin_root / "styles" / "polymer-paper-preamble.sty",
-    ]
-    missing = [str(path.relative_to(plugin_root)) for path in required if not path.exists()]
-    return {
-        "state": "ok" if not missing else "missing",
-        "plugin_root": str(plugin_root),
-        "missing": missing,
-    }
+    paths = runtime_paths.resolve_runtime_paths(plugin_root=plugin_root, workspace_root=Path.cwd())
+    return runtime_paths.bundle_diagnostics(paths)
 
 
 def _workspace_diagnostics(plugin_root: Path) -> dict[str, Any]:
-    workspace_root = _workspace_root(plugin_root)
-    if workspace_root is None:
-        return {
-            "state": "missing",
-            "workspace_root": None,
-            "missing": ["examples"],
-            "reason": "no FIGURE_AGENT_WORKSPACE or CLAUDE_PROJECT_DIR; cwd is plugin root",
-        }
-    missing = []
-    if not _examples_dir(workspace_root).is_dir():
-        missing.append("examples")
-    return {
-        "state": "ok" if not missing else "missing",
-        "workspace_root": str(workspace_root),
-        "missing": missing,
-    }
+    paths = runtime_paths.resolve_runtime_paths(plugin_root=plugin_root, workspace_root=Path.cwd())
+    diagnostics = runtime_paths.workspace_diagnostics(paths)
+    if diagnostics["workspace_root"] is None:
+        diagnostics["reason"] = (
+            "no FIGURE_AGENT_WORKSPACE or CLAUDE_PROJECT_DIR; cwd is plugin root"
+        )
+    return diagnostics
 
 
 def _dependency_diagnostics() -> dict[str, Any]:
@@ -258,57 +242,164 @@ def _artifact_descriptor(
     }
 
 
+def _resource_specs(name: str) -> dict[tuple[str, ...], tuple[Path, str]]:
+    fixture = Path("examples") / name
+    return {
+        ("build", "png"): (fixture / "build" / f"{name}.png", "image/png"),
+        ("build", "pdf"): (fixture / "build" / f"{name}.pdf", "application/pdf"),
+        ("exports", "pdf"): (fixture / "exports" / f"{name}.pdf", "application/pdf"),
+        ("exports", "svg"): (fixture / "exports" / f"{name}.svg", "image/svg+xml"),
+        ("exports", "png"): (fixture / "exports" / f"{name}.png", "image/png"),
+        ("exports", "tif"): (fixture / "exports" / f"{name}.tif", "image/tiff"),
+        ("audit", "visual-clash"): (
+            fixture / "build" / "visual_clash.json",
+            "application/json",
+        ),
+        ("audit", "text-boundary"): (
+            fixture / "build" / "text_boundary_clash.json",
+            "application/json",
+        ),
+        ("audit", "label-path"): (
+            fixture / "build" / "label_path_proximity.json",
+            "application/json",
+        ),
+        ("audit", "undeclared-geometry"): (
+            fixture / "build" / "undeclared_geometry.json",
+            "application/json",
+        ),
+        ("perception", "extract"): (
+            fixture / "build" / "perception" / "extract.yaml",
+            "application/yaml",
+        ),
+    }
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _path_metadata(
+    *,
+    workspace_root: Path,
+    relative_path: Path,
+    uri: str,
+    media_type: str,
+) -> dict[str, Any]:
+    path = workspace_root / relative_path
+    payload: dict[str, Any] = {
+        "schema": "figure-agent.mcp.resource-metadata.v1",
+        "success": True,
+        "uri": uri,
+        "path": relative_path.as_posix(),
+        "exists": path.exists(),
+        "media_type": media_type,
+    }
+    if not path.exists():
+        return payload
+    try:
+        resolved = path.resolve(strict=True)
+        workspace_resolved = workspace_root.resolve(strict=True)
+    except OSError as exc:
+        payload.update(
+            {
+                "success": False,
+                "blocked": True,
+                "reason": f"resolve_failed:{exc.__class__.__name__}",
+            }
+        )
+        return payload
+    if not (
+        resolved == workspace_resolved
+        or resolved.is_relative_to(workspace_resolved)
+    ):
+        payload.update({"success": False, "blocked": True, "reason": "path_escape"})
+        return payload
+    if resolved.is_file():
+        payload["size_bytes"] = resolved.stat().st_size
+        payload["sha256"] = _sha256_file(resolved)
+    return payload
+
+
+def _parse_figure_uri(uri: str) -> tuple[str, tuple[str, ...]] | None:
+    parsed = urlparse(uri)
+    if parsed.scheme != "figure" or not _is_safe_fixture_name(parsed.netloc):
+        return None
+    parts = tuple(part for part in parsed.path.split("/") if part)
+    if not parts:
+        return None
+    return parsed.netloc, parts
+
+
+def _resource_metadata(uri: str) -> dict[str, Any]:
+    parsed = _parse_figure_uri(uri)
+    if parsed is None:
+        return {
+            "schema": "figure-agent.mcp.resource-metadata.v1",
+            "success": False,
+            "uri": uri,
+            "error": _error(
+                "invalid_request",
+                "resource uri must match a supported figure://{name}/... template",
+            ),
+        }
+    name, resource_key = parsed
+    plugin_root = _plugin_root()
+    workspace_root = _workspace_root(plugin_root)
+    if workspace_root is None or not _examples_dir(workspace_root).is_dir():
+        return {
+            "schema": "figure-agent.mcp.resource-metadata.v1",
+            "success": False,
+            "uri": uri,
+            "error": _error(
+                "workspace_missing",
+                "workspace examples/ directory not found",
+                "Set FIGURE_AGENT_WORKSPACE or CLAUDE_PROJECT_DIR to a project with examples/.",
+            ),
+        }
+    if resource_key == ("audit", "evidence-graph"):
+        return {
+            "schema": "figure-agent.mcp.resource-metadata.v1",
+            "success": True,
+            "uri": uri,
+            "path": f"examples/{name}/build/audit_evidence_graph.json",
+            "exists": False,
+            "media_type": "application/json",
+            "virtual": True,
+            "content_schema": "figure-agent.audit-evidence-graph.v1",
+        }
+    specs = _resource_specs(name)
+    if resource_key not in specs:
+        return {
+            "schema": "figure-agent.mcp.resource-metadata.v1",
+            "success": False,
+            "uri": uri,
+            "error": _error(
+                "unsupported_operation",
+                f"unsupported resource uri: {uri}",
+            ),
+        }
+    relative_path, media_type = specs[resource_key]
+    return _path_metadata(
+        workspace_root=workspace_root,
+        relative_path=relative_path,
+        uri=uri,
+        media_type=media_type,
+    )
+
+
 def _status_artifacts(workspace_root: Path, name: str) -> list[dict[str, Any]]:
-    fixture = _examples_dir(workspace_root) / name
     return [
         _artifact_descriptor(
             workspace_root,
-            fixture / "build" / f"{name}.png",
-            f"figure://{name}/build/png",
-            "image/png",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "build" / f"{name}.pdf",
-            f"figure://{name}/build/pdf",
-            "application/pdf",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "exports" / f"{name}.svg",
-            f"figure://{name}/exports/svg",
-            "image/svg+xml",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "exports" / f"{name}.png",
-            f"figure://{name}/exports/png",
-            "image/png",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "build" / "visual_clash.json",
-            f"figure://{name}/audit/visual-clash",
-            "application/json",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "build" / "text_boundary_clash.json",
-            f"figure://{name}/audit/text-boundary",
-            "application/json",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "build" / "label_path_proximity.json",
-            f"figure://{name}/audit/label-path",
-            "application/json",
-        ),
-        _artifact_descriptor(
-            workspace_root,
-            fixture / "build" / "perception" / "extract.yaml",
-            f"figure://{name}/perception/extract",
-            "application/yaml",
-        ),
+            workspace_root / path,
+            f"figure://{name}/{'/'.join(key)}",
+            mime_type,
+        )
+        for key, (path, mime_type) in _resource_specs(name).items()
     ]
 
 
@@ -405,6 +496,105 @@ def _status(arguments: dict[str, Any]) -> dict[str, Any]:
         name=name,
         status=status_payload,
         artifacts=_status_artifacts(workspace_root, name),
+    )
+
+
+def _run_json_fig_agent_tool(
+    *,
+    arguments: dict[str, Any],
+    schema: str,
+    command: list[str],
+    payload_key: str,
+    failure_message: str,
+) -> dict[str, Any]:
+    started = time.monotonic()
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root, name = resolved
+    try:
+        result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=120)
+    except FileNotFoundError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("dependency_missing", "Python executable for fig-agent not found"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            stdout=_bounded(exc.stdout or ""),
+            stderr=_bounded(exc.stderr or ""),
+            error=_error("timeout", f"{failure_message} timed out"),
+        )
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", failure_message),
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", f"{failure_message} returned invalid JSON"),
+        )
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        name=name,
+        **{payload_key: payload},
+    )
+
+
+def _quality_map(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.quality-map.v1",
+        command=["quality-map", name, "--json"],
+        payload_key="ledger",
+        failure_message="fig-agent quality-map failed",
+    )
+
+
+def _propose_patch(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.propose-patch.v1",
+        command=["propose", name, "--json"],
+        payload_key="plan",
+        failure_message="fig-agent propose failed",
+    )
+
+
+def _verify_plan(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    plan = str(arguments.get("plan") or "build/quality/patch_plan.json")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.verify-plan.v1",
+        command=["verify-plan", name, "--plan", plan, "--json"],
+        payload_key="result",
+        failure_message="fig-agent verify-plan failed",
     )
 
 
@@ -660,6 +850,39 @@ TOOLS: dict[str, dict[str, Any]] = {
         },
         "handler": _export,
     },
+    "figure_agent_quality_map": {
+        "description": "Return a read-only quality defect ledger for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _quality_map,
+    },
+    "figure_agent_propose_patch": {
+        "description": "Return a read-only safe mechanical patch proposal.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _propose_patch,
+    },
+    "figure_agent_verify_plan": {
+        "description": "Return the latest explicit patch verification result.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "plan": {"type": "string"},
+            },
+        },
+        "handler": _verify_plan,
+    },
     "figure_agent_next_action": {
         "description": "Summarize the next structured figure-agent action.",
         "inputSchema": {
@@ -700,6 +923,11 @@ def _resource_templates() -> list[dict[str, str]]:
             "mimeType": "application/json",
         },
         {
+            "uriTemplate": "figure://{name}/exports/pdf",
+            "name": "Export PDF",
+            "mimeType": "application/json",
+        },
+        {
             "uriTemplate": "figure://{name}/exports/svg",
             "name": "Export SVG",
             "mimeType": "application/json",
@@ -707,6 +935,11 @@ def _resource_templates() -> list[dict[str, str]]:
         {
             "uriTemplate": "figure://{name}/exports/png",
             "name": "Export PNG",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/exports/tif",
+            "name": "Export TIFF",
             "mimeType": "application/json",
         },
         {
@@ -722,6 +955,16 @@ def _resource_templates() -> list[dict[str, str]]:
         {
             "uriTemplate": "figure://{name}/audit/label-path",
             "name": "Label path audit",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/audit/undeclared-geometry",
+            "name": "Undeclared geometry audit",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/audit/evidence-graph",
+            "name": "Audit evidence graph",
             "mimeType": "application/json",
         },
         {
@@ -806,23 +1049,21 @@ def _handle(method: str, params: dict[str, Any]) -> dict[str, Any] | None:
     if method == "resources/templates/list":
         return {"resourceTemplates": _resource_templates()}
     if method == "resources/read":
+        uri = params.get("uri") if isinstance(params, dict) else None
+        if not isinstance(uri, str):
+            payload = {
+                "schema": "figure-agent.mcp.resource-metadata.v1",
+                "success": False,
+                "error": _error("invalid_request", "resources/read requires string uri"),
+            }
+        else:
+            payload = _resource_metadata(uri)
         return {
             "contents": [
                 {
-                    "uri": str(params.get("uri", "")),
+                    "uri": uri if isinstance(uri, str) else "",
                     "mimeType": "application/json",
-                    "text": json.dumps(
-                        {
-                            "schema": "figure-agent.mcp.resource.v1",
-                            "success": False,
-                            "error": _error(
-                                "unsupported_operation",
-                                "Phase 1 resources expose descriptors only; "
-                                "use figure_agent_status.",
-                            ),
-                        },
-                        sort_keys=True,
-                    ),
+                    "text": json.dumps(payload, sort_keys=True),
                 }
             ]
         }

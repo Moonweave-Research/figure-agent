@@ -168,6 +168,7 @@ HELPER_SCRIPTS = {
     "check_layout_drift.py",
     "check_text_boundary_clash.py",
     "check_visual_clash.py",
+    "audit_evidence_graph.py",
     "critique_brief.py",
     "critique_lint.py",
     "critique_reference_pack.py",
@@ -180,6 +181,7 @@ HELPER_SCRIPTS = {
     "plugin_install_freshness.py",
     "plugin_package_audit.py",
     "reference_extract.py",
+    "release_gate.py",
     "spec_bbox_helper.py",
     "subregion_iteration_log.py",
     "svg_polish_executor.py",
@@ -204,7 +206,7 @@ def _helper(argv: list[str]) -> int:
 def _closeout(argv: list[str]) -> int:
     import fig_closeout
 
-    return fig_closeout.main(argv, repo_root=_paths().workspace_root)
+    return fig_closeout.main(argv)
 
 
 def _text_boundary(argv: list[str]) -> int:
@@ -252,6 +254,112 @@ def _svg_polish_delta(argv: list[str]) -> int:
     return _run([sys.executable, "-c", script], cwd=_paths().workspace_root)
 
 
+def _quality_map(argv: list[str]) -> int:
+    import quality_defect_ledger
+
+    parser = argparse.ArgumentParser(prog="fig-agent quality-map")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    payload = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts:
+        parser.error("plan_output_forbidden: output must stay under build/quality/")
+    if len(path.parts) < 3 or path.parts[0] != "build" or path.parts[1] != "quality":
+        parser.error("plan_output_forbidden: output must stay under build/quality/")
+    return path
+
+
+def _propose(argv: list[str]) -> int:
+    import quality_defect_ledger
+    import quality_patch_plan
+
+    parser = argparse.ArgumentParser(prog="fig-agent propose")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    parser.add_argument("--scope", choices=("safe-mechanics",), default="safe-mechanics")
+    parser.add_argument("--output")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    plan = quality_patch_plan.build_quality_patch_plan(
+        name,
+        ledger,
+        workspace_root=paths.workspace_root,
+    )
+    if args.output:
+        output = _safe_quality_output_path(parser, args.output)
+        output_path = paths.examples_dir / name / output
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(plan, indent=2, sort_keys=True))
+    return 0
+
+
+def _apply_plan(argv: list[str]) -> int:
+    import quality_patch_apply
+
+    parser = argparse.ArgumentParser(prog="fig-agent apply-plan")
+    parser.add_argument("name")
+    parser.add_argument("--plan", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        payload = quality_patch_apply.apply_quality_patch_plan(
+            name,
+            plan_path=paths.examples_dir / name / args.plan,
+            workspace_root=paths.workspace_root,
+            apply=args.apply,
+        )
+    except quality_patch_apply.QualityPatchApplyError as exc:
+        print(f"fig-agent apply-plan: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _verify_plan(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent verify-plan")
+    parser.add_argument("name")
+    parser.add_argument("--plan", required=True)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    result_path = _paths().examples_dir / name / "build" / "quality" / "patch_result.json"
+    if not result_path.is_file():
+        print(
+            "fig-agent verify-plan: verification_failed: patch_result.json missing",
+            file=sys.stderr,
+        )
+        return 1
+    print(result_path.read_text(encoding="utf-8"), end="")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args:
@@ -295,6 +403,14 @@ def main(argv: list[str] | None = None) -> int:
         return _svg_polish_exec(rest)
     if command == "svg-polish-delta":
         return _svg_polish_delta(rest)
+    if command == "quality-map":
+        return _quality_map(rest)
+    if command == "propose":
+        return _propose(rest)
+    if command == "apply-plan":
+        return _apply_plan(rest)
+    if command == "verify-plan":
+        return _verify_plan(rest)
     print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
     return 2
 
