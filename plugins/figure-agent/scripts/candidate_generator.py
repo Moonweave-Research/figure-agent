@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import figure_intent_model
 import fixture_identity
 import runtime_paths
 from quality_manifest import file_sha256
@@ -33,11 +34,46 @@ def _validate_output_path(
 ) -> None:
     if output_path is None:
         return
-    example_dir = paths.examples_dir / name
     try:
-        output_path.expanduser().resolve().relative_to(example_dir.resolve())
-    except ValueError as exc:
-        raise CandidateGeneratorError("path_escape") from exc
+        candidate_contracts.fixture_local_output_path(
+            paths.workspace_root,
+            name,
+            output_path.as_posix(),
+        )
+    except (ValueError, candidate_contracts.CandidateContractError) as exc:
+        raise CandidateGeneratorError(str(exc)) from exc
+
+
+def _fixture_source_path(paths: runtime_paths.RuntimePaths, name: str) -> Path:
+    fixture = paths.examples_dir / name
+    lexical_source = fixture / f"{name}.tex"
+    if lexical_source.is_symlink():
+        raise CandidateGeneratorError("source_symlink_forbidden")
+    source = candidate_contracts.fixture_relative_path(fixture, f"{name}.tex")
+    return source
+
+
+def _authority_floor(name: str, paths: runtime_paths.RuntimePaths) -> str:
+    intent = figure_intent_model.build_intent_model(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    panels = intent.get("panels")
+    if not isinstance(panels, list) or not panels:
+        return "review_only"
+    floors = [
+        panel.get("apply_authority_floor")
+        for panel in panels
+        if isinstance(panel, dict)
+    ]
+    if "rejected" in floors:
+        return "rejected"
+    if "review_only" in floors:
+        return "review_only"
+    if "apply_eligible" in floors:
+        return "apply_eligible"
+    return "review_only"
 
 
 def _label_offset_candidate(
@@ -45,6 +81,7 @@ def _label_offset_candidate(
     name: str,
     source_rel: Path,
     line: str,
+    apply_authority: str,
 ) -> dict[str, Any]:
     replacement = line.replace("(0,0)", "(0.2,0)", 1)
     return {
@@ -77,7 +114,7 @@ def _label_offset_candidate(
                 f"fig-agent status {name} --json",
             ]
         },
-        "apply_authority": "apply_eligible",
+        "apply_authority": apply_authority,
         "blocked_if": ["semantic_invariant_failed", "render_failed"],
     }
 
@@ -97,7 +134,8 @@ def build_candidate_set(
     _validate_output_path(paths=paths, name=name, output_path=output_path)
 
     source_rel = Path("examples") / name / f"{name}.tex"
-    source = paths.workspace_root / source_rel
+    source = _fixture_source_path(paths, name)
+    apply_authority = _authority_floor(name, paths)
     base = {
         "tex_hash": _source_hash(source),
         "status_hash": ZERO_HASH,
@@ -121,6 +159,7 @@ def build_candidate_set(
                 name=name,
                 source_rel=source_rel,
                 line=lines[0],
+                apply_authority=apply_authority,
             )
         )
 
