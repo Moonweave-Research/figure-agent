@@ -118,3 +118,80 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     assert payload["schema"] == "figure-agent.candidate-rank-result.v1"
     assert payload["scores"][0]["schema"] == "figure-agent.candidate-score.v1"
     assert payload["scores"][0]["candidate_id"] == "CAND001"
+
+
+def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    result = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "../escape.json",
+    )
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "path_escape" in result.stderr
+    assert not (workspace / "examples" / "escape.json").exists()
+
+
+def test_fig_agent_render_invalid_json_is_user_error(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set.parent.mkdir(parents=True)
+    candidate_set.write_text("{not-json", encoding="utf-8")
+
+    result = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+    )
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "render-candidates" in result.stderr
+
+
+def test_fig_agent_rank_rejects_candidate_id_escape(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = fixture / "build" / "candidates" / "candidate_set.json"
+    secret_manifest = fixture / "build" / "secret" / "candidate_manifest.json"
+    candidate_set.parent.mkdir(parents=True)
+    secret_manifest.parent.mkdir(parents=True)
+    candidate_set.write_text(
+        json.dumps({"candidates": [{"id": "../secret"}]}) + "\n",
+        encoding="utf-8",
+    )
+    secret_manifest.write_text(
+        json.dumps(
+            {
+                "candidate_id": "SECRET",
+                "apply_authority": "apply_eligible",
+                "verification": {"hard_gate_state": "pass"},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run(
+        workspace,
+        "rank-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--json",
+    )
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "fixture name must be a single" in result.stderr
+    assert result.stdout == ""

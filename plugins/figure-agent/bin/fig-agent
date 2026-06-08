@@ -338,28 +338,32 @@ def _candidates(argv: list[str]) -> int:
     parser.add_argument("name")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--output")
-    parser.add_argument(
-        "--scope",
-        choices=("safe-mechanics", "label-offsets"),
-        default="safe-mechanics",
-    )
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
-    payload = candidate_generator.build_candidate_set(
-        name,
-        plugin_root=paths.plugin_root,
-        workspace_root=paths.workspace_root,
-    )
-    text = json.dumps(payload, indent=2, sort_keys=True)
-    if args.output:
-        output = candidate_contracts.fixture_local_output_path(
-            paths.workspace_root,
+    try:
+        payload = candidate_generator.build_candidate_set(
             name,
-            args.output,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
         )
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(text + "\n", encoding="utf-8")
+        text = json.dumps(payload, indent=2, sort_keys=True)
+        if args.output:
+            output = candidate_contracts.fixture_local_output_path(
+                paths.workspace_root,
+                name,
+                args.output,
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(text + "\n", encoding="utf-8")
+    except (
+        OSError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+        candidate_generator.CandidateGeneratorError,
+    ) as exc:
+        print(f"fig-agent candidates: {exc}", file=sys.stderr)
+        return 1
     print(text)
     return 0
 
@@ -367,12 +371,23 @@ def _candidates(argv: list[str]) -> int:
 def _load_fixture_json(name: str, fixture_path: str) -> dict:
     import candidate_contracts
 
-    path = candidate_contracts.fixture_local_output_path(
-        _paths().workspace_root,
-        name,
-        fixture_path,
-    )
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        path = candidate_contracts.fixture_local_output_path(
+            _paths().workspace_root,
+            name,
+            fixture_path,
+        )
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (
+        OSError,
+        json.JSONDecodeError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+    ) as exc:
+        raise RuntimeError(str(exc)) from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("expected JSON object")
+    return payload
 
 
 def _render_candidates(argv: list[str]) -> int:
@@ -384,19 +399,25 @@ def _render_candidates(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
-    candidate_set = _load_fixture_json(name, args.candidate_set)
-    payload = candidate_render.render_candidate_set(
-        name,
-        candidate_set,
-        plugin_root=paths.plugin_root,
-        workspace_root=paths.workspace_root,
-    )
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        payload = candidate_render.render_candidate_set(
+            name,
+            candidate_set,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
+    except (RuntimeError, candidate_render.CandidateRenderError) as exc:
+        print(f"fig-agent render-candidates: {exc}", file=sys.stderr)
+        return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
 
 def _rank_candidates(argv: list[str]) -> int:
+    import candidate_contracts
     import candidate_rank
+    import fixture_identity
 
     parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
     parser.add_argument("name")
@@ -404,17 +425,26 @@ def _rank_candidates(argv: list[str]) -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
-    candidate_set = _load_fixture_json(name, args.candidate_set)
-    scores = []
-    for candidate in candidate_set.get("candidates", []):
-        if not isinstance(candidate, dict):
-            continue
-        candidate_id = str(candidate.get("id"))
-        manifest = _load_fixture_json(
-            name,
-            f"build/candidates/{candidate_id}/candidate_manifest.json",
-        )
-        scores.append(candidate_rank.score_manifest(manifest))
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        scores = []
+        for candidate in candidate_set.get("candidates", []):
+            if not isinstance(candidate, dict):
+                continue
+            candidate_id = str(candidate.get("id"))
+            fixture_identity.validate_fixture_name(candidate_id)
+            manifest = _load_fixture_json(
+                name,
+                f"build/candidates/{candidate_id}/candidate_manifest.json",
+            )
+            scores.append(candidate_rank.score_manifest(manifest))
+    except (
+        RuntimeError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+    ) as exc:
+        print(f"fig-agent rank-candidates: {exc}", file=sys.stderr)
+        return 1
     scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
     payload = {
         "schema": "figure-agent.candidate-rank-result.v1",
