@@ -104,3 +104,108 @@ def test_rendered_candidate_scores_above_dependency_missing_without_apply_promot
         "compile:dependency_missing",
         "evaluate:dependency_missing",
     ]
+    assert "memory_prior" not in rendered_score["scores"]
+
+
+def test_memory_prior_changes_reviewable_candidate_score() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "edit_class": "label_offset",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    memory_index = {
+        "schema": "figure-agent.quality-memory-index.v1",
+        "families": {
+            "label_offset": {
+                "attempts": 3,
+                "recommended_prior": 0.2,
+            }
+        },
+    }
+
+    score = candidate_rank.score_manifest(manifest, memory_index=memory_index)
+
+    assert score["scores"]["memory_prior"] == 0.2
+    assert score["rank_score"] == 0.7
+    assert "memory_prior:label_offset:+0.2000" in score["evidence"]["positive"]
+    assert score["effective_apply_authority"] == "apply_eligible"
+
+
+def test_negative_memory_prior_lowers_score_and_adds_negative_evidence() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "edit_class": "label_offset",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    memory_index = {
+        "schema": "figure-agent.quality-memory-index.v1",
+        "families": {
+            "label_offset": {
+                "attempts": 3,
+                "recommended_prior": -0.1,
+            }
+        },
+    }
+
+    score = candidate_rank.score_manifest(manifest, memory_index=memory_index)
+
+    assert score["scores"]["memory_prior"] == -0.1
+    assert score["rank_score"] == 0.4
+    assert "memory_prior:label_offset:-0.1000" in score["evidence"]["negative"]
+
+
+def test_memory_prior_cannot_promote_rejected_candidate() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "edit_class": "label_offset",
+        "verification": {"hard_gate_state": "rejected"},
+    }
+    memory_index = {
+        "schema": "figure-agent.quality-memory-index.v1",
+        "families": {
+            "label_offset": {
+                "attempts": 3,
+                "recommended_prior": 0.25,
+            }
+        },
+    }
+
+    score = candidate_rank.score_manifest(manifest, memory_index=memory_index)
+
+    assert score["scores"]["memory_prior"] == 0.0
+    assert score["rank_score"] == 0.0
+    assert score["verdict"] == "rejected"
+    assert score["effective_apply_authority"] == "rejected"
+
+
+def test_memory_prior_can_use_candidate_set_family_metadata() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    candidate = {"edit_class": "label_offset"}
+    memory_index = {
+        "schema": "figure-agent.quality-memory-index.v1",
+        "families": {
+            "label_offset": {
+                "attempts": 3,
+                "recommended_prior": 0.1,
+            }
+        },
+    }
+
+    score = candidate_rank.score_manifest(
+        manifest,
+        candidate=candidate,
+        memory_index=memory_index,
+    )
+
+    assert score["scores"]["memory_prior"] == 0.1

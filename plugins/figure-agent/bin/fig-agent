@@ -516,11 +516,13 @@ def _rank_candidates(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
     parser.add_argument("name")
     parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--use-memory", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     try:
         candidate_set = _load_fixture_json(name, args.candidate_set)
+        memory_index = _load_memory_index(name) if args.use_memory else None
         scores = []
         for candidate in candidate_set.get("candidates", []):
             if not isinstance(candidate, dict):
@@ -541,7 +543,9 @@ def _rank_candidates(argv: list[str]) -> int:
             scores.append(
                 candidate_rank.score_manifest(
                     manifest,
+                    candidate=candidate,
                     render_manifest=render_manifest,
+                    memory_index=memory_index,
                 )
             )
     except (
@@ -559,6 +563,31 @@ def _rank_candidates(argv: list[str]) -> int:
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
+
+
+def _load_memory_index(name: str) -> dict | None:
+    import candidate_contracts
+
+    paths = _paths()
+    example_dir = paths.examples_dir / name
+    build_dir = example_dir / "build"
+    memory_dir = build_dir / "memory"
+    for label, path in (("build", build_dir), ("memory", memory_dir)):
+        if path.is_symlink():
+            raise RuntimeError(f"memory_index_symlink_forbidden: {label}")
+    path = candidate_contracts.fixture_local_output_path(
+        paths.workspace_root,
+        name,
+        "build/memory/quality_memory_index.json",
+    )
+    if path.is_symlink():
+        raise RuntimeError("memory_index_symlink_forbidden: output")
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError("memory_index_invalid")
+    return payload
 
 
 def _review_candidate(argv: list[str]) -> int:
