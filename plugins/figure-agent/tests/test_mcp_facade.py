@@ -728,6 +728,34 @@ def test_mcp_panel_candidate_tools_and_resources(tmp_path: Path) -> None:
     assert "figure://{name}/candidates/{candidate_id}/review" in templates
 
 
+def test_mcp_candidate_manifest_resource_rejects_manifest_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    outside = fixture / "outside.json"
+    outside.write_text('{"secret": true}\n', encoding="utf-8")
+    (sandbox / "candidate_manifest.json").symlink_to(outside)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://candidate_demo/candidates/CAND001/manifest"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.resource-metadata.v1"
+    assert payload["success"] is False
+    assert payload["blocked"] is True
+    assert payload["reason"] == "sandbox_symlink_forbidden:candidate_manifest.json"
+    assert "sha256" not in payload
+
+
 def test_mcp_candidate_render_reports_operation_in_progress(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_candidate_fixture(workspace)

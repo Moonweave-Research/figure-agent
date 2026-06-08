@@ -125,6 +125,7 @@ def render_candidate_set(
     *,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
     paths = runtime_paths.resolve_runtime_paths(
@@ -156,6 +157,9 @@ def render_candidate_set(
             "candidate_id": candidate_id,
             "candidate_hash": candidate.get("candidate_hash"),
             "fixture": name,
+            "candidate_set_path": candidate_set_path.as_posix()
+            if candidate_set_path is not None
+            else "build/candidates/candidate_set.json",
             "panel": (
                 candidate.get("target", {}).get("panel")
                 if isinstance(candidate.get("target"), dict)

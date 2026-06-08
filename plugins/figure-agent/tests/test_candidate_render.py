@@ -61,6 +61,7 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
         "candidate_demo",
         candidate_set,
         workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/panel_C_candidate_set.json"),
     )
 
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
@@ -74,6 +75,7 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert data["candidate_hash"] == "sha256:" + "3" * 64
     assert data["panel"] == "C"
     assert data["selectors"] == [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 1}]
+    assert data["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
     assert data["stages"] == {
         "prepare": "passed",
         "compile": "not_run",

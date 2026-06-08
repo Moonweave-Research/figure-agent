@@ -76,6 +76,30 @@ def _candidate(
     replacement = _offset_label(original)
     if replacement is None:
         raise ValueError("selector_not_offsettable")
+    stable_hash_payload = {
+        "family": SUPPORTED_FAMILY,
+        "target": {"panel": SUPPORTED_PANEL, "subregion": "energy-trap-labels"},
+        "edit_class": "label_offset",
+        "affected_files": [source_rel],
+        "selector": {
+            "kind": "tex_selector.v1",
+            "path": source_rel,
+            "panel": selector.get("panel"),
+            "line_start": selector.get("line_start"),
+            "line_end": selector.get("line_end"),
+            "source_hash": selector.get("source_hash"),
+            "selector_text_hash": selector.get("selector_text_hash"),
+        },
+        "operations": [
+            {
+                "kind": "replace_text",
+                "path": source_rel,
+                "original": original,
+                "replacement": replacement,
+            }
+        ],
+        "apply_authority": "review_only",
+    }
     candidate: dict[str, Any] = {
         "id": "CAND001",
         "family": SUPPORTED_FAMILY,
@@ -118,7 +142,7 @@ def _candidate(
         "panel": panel_model.get("panel"),
         "visual_review": panel_model.get("visual_review"),
     }
-    candidate["candidate_hash"] = candidate_contracts.canonical_hash(candidate)
+    candidate["candidate_hash"] = candidate_contracts.canonical_hash(stable_hash_payload)
     return candidate
 
 
@@ -148,6 +172,8 @@ def build_family_candidates(
         workspace_root=paths.workspace_root,
         plugin_root=paths.plugin_root,
     )
+    if {"code": "panel_not_declared"} in panel_model.get("refusals", []):
+        return _refusal(name, source, "panel_not_declared")
     selectors = [
         item
         for item in panel_model.get("selectors", [])

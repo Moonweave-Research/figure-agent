@@ -36,6 +36,25 @@ panels:
     return fixture
 
 
+def _energy_fixture_with_reference(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = _energy_fixture(workspace, name)
+    (fixture / "reference").mkdir()
+    (fixture / "reference" / "panel_c.png").write_bytes(b"fake")
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    caption: Energy diagram
+    bbox_pdf_cm: [0.0, 0.0, 4.0, 3.0]
+    reference_image: reference/panel_c.png
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def test_energy_trap_family_emits_review_only_panel_candidate(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _energy_fixture(workspace)
@@ -106,6 +125,49 @@ def test_plot_marker_hierarchy_on_panel_c_is_panel_family_refusal(tmp_path: Path
 
     assert payload["candidates"] == []
     assert payload["refusals"] == [{"code": "unsupported_panel_family"}]
+
+
+def test_declared_panel_required_for_family_candidates(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _energy_fixture(workspace)
+    (fixture / "spec.yaml").write_text("name: candidate_demo\npanels: []\n", encoding="utf-8")
+
+    payload = candidate_families.build_family_candidates(
+        "candidate_demo",
+        panel="C",
+        family="energy-trap-alignment",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "panel_not_declared"}]
+
+
+def test_candidate_hash_excludes_absolute_reference_paths(tmp_path: Path) -> None:
+    workspace_a = tmp_path / "workspace_a"
+    workspace_b = tmp_path / "nested" / "workspace_b"
+    _energy_fixture_with_reference(workspace_a)
+    _energy_fixture_with_reference(workspace_b)
+
+    payload_a = candidate_families.build_family_candidates(
+        "candidate_demo",
+        panel="C",
+        family="energy-trap-alignment",
+        workspace_root=workspace_a,
+    )
+    payload_b = candidate_families.build_family_candidates(
+        "candidate_demo",
+        panel="C",
+        family="energy-trap-alignment",
+        workspace_root=workspace_b,
+    )
+
+    assert payload_a["candidates"][0]["panel"]["reference_image"] != (
+        payload_b["candidates"][0]["panel"]["reference_image"]
+    )
+    assert payload_a["candidates"][0]["candidate_hash"] == (
+        payload_b["candidates"][0]["candidate_hash"]
+    )
 
 
 def test_generator_delegates_panel_family_without_breaking_default(tmp_path: Path) -> None:

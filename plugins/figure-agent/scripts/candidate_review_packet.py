@@ -146,10 +146,11 @@ def _source_change_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return changes
 
 
-def _rank_command(name: str) -> str:
+def _rank_command(name: str, manifest: dict[str, Any]) -> str:
+    candidate_set = str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
     return (
         f"fig-agent rank-candidates {name} "
-        "--candidate-set build/candidates/candidate_set.json --json"
+        f"--candidate-set {candidate_set} --json"
     )
 
 
@@ -187,7 +188,7 @@ def build_review_packet(
         "source_changes": _source_change_summary(manifest),
         "score_report": {
             "status": "not_available",
-            "recommended_command": _rank_command(name),
+            "recommended_command": _rank_command(name, manifest),
         },
         "semantic_invariant_report": {
             "status": "not_run",

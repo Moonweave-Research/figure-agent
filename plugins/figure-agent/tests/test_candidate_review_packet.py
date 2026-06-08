@@ -41,6 +41,7 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
                     }
                 ],
                 "artifacts": [{"kind": "candidate_source", "path": f"{name}.tex"}],
+                "candidate_set_path": "build/candidates/panel_C_candidate_set.json",
                 "stages": {
                     "prepare": "passed",
                     "compile": "not_run",
@@ -120,6 +121,10 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert packet["human_decision_required"] is True
     assert packet["source_changes"][0]["kind"] == "replace_text"
     assert packet["score_report"]["status"] == "not_available"
+    assert packet["score_report"]["recommended_command"] == (
+        "fig-agent rank-candidates candidate_demo "
+        "--candidate-set build/candidates/panel_C_candidate_set.json --json"
+    )
     assert packet["semantic_invariant_report"]["required_before_apply"] is True
     assert packet["rollback"]["status"] == "manual_reverse_operations"
     assert packet["recommended_next_action"] == "human_review_required"

@@ -433,6 +433,7 @@ def _render_candidates(argv: list[str]) -> int:
             candidate_set,
             plugin_root=paths.plugin_root,
             workspace_root=paths.workspace_root,
+            candidate_set_path=Path(args.candidate_set),
         )
     except (RuntimeError, candidate_render.CandidateRenderError) as exc:
         print(f"fig-agent render-candidates: {exc}", file=sys.stderr)

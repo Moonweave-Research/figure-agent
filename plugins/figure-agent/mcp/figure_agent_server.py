@@ -330,6 +330,66 @@ def _path_metadata(
     return payload
 
 
+def _candidate_manifest_metadata(
+    *,
+    workspace_root: Path,
+    name: str,
+    candidate_id: str,
+    uri: str,
+) -> dict[str, Any]:
+    relative_path = (
+        Path("examples")
+        / name
+        / "build"
+        / "candidates"
+        / candidate_id
+        / "candidate_manifest.json"
+    )
+    path = workspace_root / relative_path
+    payload: dict[str, Any] = {
+        "schema": "figure-agent.mcp.resource-metadata.v1",
+        "success": True,
+        "uri": uri,
+        "path": relative_path.as_posix(),
+        "exists": path.exists(),
+        "media_type": "application/json",
+    }
+    sandbox = path.parent
+    if path.is_symlink():
+        payload.update(
+            {
+                "success": False,
+                "blocked": True,
+                "reason": "sandbox_symlink_forbidden:candidate_manifest.json",
+            }
+        )
+        return payload
+    if not path.exists():
+        return payload
+    try:
+        resolved = path.resolve(strict=True)
+        sandbox_resolved = sandbox.resolve(strict=True)
+    except OSError as exc:
+        payload.update(
+            {
+                "success": False,
+                "blocked": True,
+                "reason": f"resolve_failed:{exc.__class__.__name__}",
+            }
+        )
+        return payload
+    if not (
+        resolved == sandbox_resolved
+        or resolved.is_relative_to(sandbox_resolved)
+    ):
+        payload.update({"success": False, "blocked": True, "reason": "path_escape"})
+        return payload
+    if resolved.is_file():
+        payload["size_bytes"] = resolved.stat().st_size
+        payload["sha256"] = _sha256_file(resolved)
+    return payload
+
+
 def _parse_figure_uri(uri: str) -> tuple[str, tuple[str, ...]] | None:
     parsed = urlparse(uri)
     if parsed.scheme != "figure" or not _is_safe_fixture_name(parsed.netloc):
@@ -419,16 +479,11 @@ def _resource_metadata(uri: str) -> dict[str, Any]:
                 "recommended_tool": "figure_agent_compare_candidate",
                 "arguments": {"name": name, "candidate_id": candidate_id},
             }
-        return _path_metadata(
+        return _candidate_manifest_metadata(
             workspace_root=workspace_root,
-            relative_path=Path("examples")
-            / name
-            / "build"
-            / "candidates"
-            / candidate_id
-            / "candidate_manifest.json",
+            name=name,
+            candidate_id=candidate_id,
             uri=uri,
-            media_type="application/json",
         )
     if resource_key not in specs:
         return {
