@@ -76,6 +76,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.driver.v1` | routing | `fig_driver.py` | `fig_run.py`, queue tools, operators | Advisory only; `may_execute` remains false |
 | `figure-agent.run.v1` | bounded execution | `fig_run.py` | `fig_run_records.py`, `fig_run_journal.py` | Executes only allowlisted deterministic shell actions |
 | `figure-agent.closeout.v1` | post-run closeout | `fig_closeout.py` | `fig_driver.py`, `next_action_summary.py` | Can block continuation until compile/critique/loop/export closeout is clean |
+| `figure-agent.closeout-readiness.v1` | post-run closeout | `closeout_readiness.py` | operators, MCP closeout tools | Read-only readiness envelope; cannot accept golden/publication state |
 | `figure-agent.fig-run-journal.v1` / `figure-agent.fig-run-journal-ref.v1` | run journal | `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative; never replay |
 | `figure-agent.fig-run-evidence-snapshot.v1` | run journal freshness | `fig_run_evidence.py`, `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative content freshness check; never replay |
 | `figure-agent.fig-run-journal-error.v1` | run journal error | `fig_run.py` | `fig_run_journal.py` | Diagnostic only; rerun live status/driver |
@@ -111,16 +112,25 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.quality-patch-policy.v1` | quality improvement loop | `quality_patch_policy.py` | `quality_defect_ledger.py`, `quality_patch_plan.py` | Classifies patchability; `may_edit` remains false |
 | `figure-agent.quality-patch-plan.v1` | quality improvement loop | `quality_patch_plan.py` | `quality_patch_apply.py`, MCP quality tools | Proposal evidence only until explicit apply |
 | `figure-agent.quality-patch-result.v1` | quality improvement loop | `quality_patch_apply.py` | operators, MCP quality tools | Records explicit apply/dry-run result and rollback path |
+| `figure-agent.quality-memory-event.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Fixture-local event derived from existing artifacts; cannot invent outcomes |
+| `figure-agent.quality-memory-log.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Read-only event list for one fixture |
+| `figure-agent.quality-memory-index.v1` | quality memory | `quality_memory_index.py` | future memory-aware ranking, operators | Conservative priors only; cannot upgrade hard gates or apply authority |
 | `figure-agent.intent-model.v1` | candidate search | `figure_intent_model.py` | `candidate_generator.py`, MCP candidate tools | Read-only fixture intent model; missing optional inputs downgrade authority instead of inventing claims |
 | `figure-agent.candidate-tex-index.v1` | candidate search | `candidate_tex_index.py` | `candidate_panel_model.py`, `candidate_families.py` | Read-only TeX selector index; panel hints and active command ranges only |
 | `figure-agent.candidate-panel-model.v1` | candidate search | `candidate_panel_model.py` | `candidate_families.py`, MCP panel tools | Read-only panel model joining intent, bbox hints, selectors, and visual-review state |
 | `figure-agent.candidate-set.v1` | candidate search | `candidate_generator.py` | `candidate_render.py`, `candidate_rank.py`, MCP candidate tools | Bounded improvement alternatives; pre-render apply authority ceiling only |
 | `figure-agent.candidate-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py` | Fixture-local sandbox evidence; never final exports or source truth |
+| `figure-agent.candidate-render-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py`, `quality_memory_events.py` | Per-candidate render evidence; human review still required |
 | `figure-agent.candidate-render-result.v1` | candidate search | `candidate_render.py` | CLI/MCP candidate workflow | Records rendered candidate sandbox manifests and artifacts |
 | `figure-agent.candidate-score.v1` | candidate search | `candidate_rank.py` | `candidate_review_packet.py`, operators | Hard gates and scores may preserve or downgrade authority, never upgrade it |
 | `figure-agent.candidate-rank-result.v1` | candidate search | `candidate_rank.py` | CLI/MCP candidate workflow | Ordered candidate scores for human or later CLI review |
 | `figure-agent.candidate-review-packet.v1` | candidate search | `candidate_review_packet.py` | operators, MCP candidate tools | Read-only packet for human review of one rendered candidate |
+| `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
+| `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
 | `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
+| `figure-agent.evidence-index.v1` | candidate/evidence sync | `evidence_index.py` | `evidence_sync.py`, `closeout_readiness.py`, `quality_memory_events.py` | Fixture-local evidence summary; stale source checks can block acceptance |
+| `figure-agent.evidence-sync.v1` | candidate/evidence sync | `evidence_sync.py` | operators, closeout tools | Writes only fixture evidence index when explicitly requested |
+| `figure-agent.golden-acceptance.v1` | closeout acceptance | `golden_acceptance.py` | `closeout_readiness.py`, `quality_memory_events.py` | Explicit human/golden acceptance artifact; never inferred by MCP |
 
 ## Module Ownership Map
 

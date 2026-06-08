@@ -1,0 +1,10 @@
+schema: figure-agent.quality-benchmark-suites.v1
+suites:
+  smoke:
+    description: Fast synthetic fixtures for ranking and safety contracts.
+    fixtures:
+      - smoke_trap_demo
+  dogfood:
+    description: Local dogfood fixtures with real manuscript complexity.
+    fixtures:
+      - fig1_overview_v2_pair_001_vault
