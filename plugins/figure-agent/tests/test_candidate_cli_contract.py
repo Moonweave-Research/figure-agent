@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -274,6 +275,85 @@ def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) ->
     ] in {"dependency_missing", "blocked", "rendered_needs_human_review"}
     rank_payload = json.loads(rank.stdout)
     assert rank_payload["scores"][0]["render_status"] != "not_rendered"
+
+
+def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source_hash = "sha256:" + sha256(
+        (fixture / "candidate_demo.tex").read_bytes()
+    ).hexdigest()
+
+    candidates = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    render = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--candidate-id",
+        "CAND001",
+        "--compile",
+        "--export",
+        "--evaluate",
+        "--json",
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    render_manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"][0]["source_sha256"] = source_hash
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    render_manifest = json.loads(render_manifest_path.read_text(encoding="utf-8"))
+    render_manifest["stages"] = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "crop": {"status": "success"},
+        "evaluate": {"status": "rendered_needs_human_review"},
+    }
+    render_manifest_path.write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    ready = _run(
+        workspace,
+        "apply-candidate-ready",
+        "candidate_demo",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--json",
+    )
+    accept = _run(
+        workspace,
+        "accept-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--decision",
+        "accept",
+        "--reviewer",
+        "local-user",
+        "--rationale",
+        "Rendered evidence reviewed.",
+        "--json",
+    )
+
+    assert candidates.returncode == 0, candidates.stderr
+    assert render.returncode == 0, render.stderr
+    assert ready.returncode == 0, ready.stderr
+    assert accept.returncode == 0, accept.stderr
+    assert json.loads(ready.stdout)["status"] == "ready_for_local_acceptance"
+    assert json.loads(accept.stdout)["path"] == "build/candidates/CAND001/acceptance.json"
+    assert (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").is_file()
 
 
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:

@@ -533,6 +533,62 @@ def _compare_candidate(argv: list[str]) -> int:
     return _review_candidate(argv)
 
 
+def _apply_candidate_ready(argv: list[str]) -> int:
+    import candidate_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent apply-candidate-ready")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_acceptance.build_apply_readiness(
+            name,
+            args.candidate_id,
+            candidate_set_path=Path(args.candidate_set),
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
+        print(f"fig-agent apply-candidate-ready: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _accept_candidate(argv: list[str]) -> int:
+    import candidate_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent accept-candidate")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--decision", choices=("accept",), required=True)
+    parser.add_argument("--reviewer", required=True)
+    parser.add_argument("--rationale", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_acceptance.write_acceptance(
+            name,
+            args.candidate_id,
+            candidate_set_path=Path(args.candidate_set),
+            decision=args.decision,
+            reviewer=args.reviewer,
+            rationale=args.rationale,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
+        print(f"fig-agent accept-candidate: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _apply_plan(argv: list[str]) -> int:
     import quality_patch_apply
 
@@ -641,6 +697,10 @@ def main(argv: list[str] | None = None) -> int:
         return _review_candidate(rest)
     if command == "compare-candidate":
         return _compare_candidate(rest)
+    if command == "apply-candidate-ready":
+        return _apply_candidate_ready(rest)
+    if command == "accept-candidate":
+        return _accept_candidate(rest)
     if command == "apply-plan":
         return _apply_plan(rest)
     if command == "verify-plan":
