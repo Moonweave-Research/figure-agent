@@ -26,6 +26,9 @@ that keeps human approval mandatory and makes every source mutation auditable.
   only when the acceptance artifact, candidate manifest, render manifest, and
   current source state all match.
 - Rebuild the fixture after apply and produce a post-apply verification report.
+  Post-apply verification is allowed to write the normal fixture `build/` and
+  `exports/` artifacts owned by `fig-agent compile`, `fig-agent export`, and
+  `fig-agent status`.
 - Create a reversible rollback patch before mutating source.
 - Keep MCP/Cowork in review mode: MCP can prepare acceptance packets and report
   apply readiness, but it must not apply source changes.
@@ -93,6 +96,28 @@ MCP remains non-applying.
 - MCP returns the exact CLI commands needed for local explicit apply.
 - MCP must not create `acceptance.json`; acceptance is a local CLI act.
 
+MCP tool schema:
+
+```json
+{
+  "name": "figure_agent_candidate_apply_readiness",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "candidate_id", "candidate_set"],
+    "properties": {
+      "name": {"type": "string"},
+      "candidate_id": {"type": "string"},
+      "candidate_set": {"type": "string"}
+    }
+  }
+}
+```
+
+The MCP response embeds the same
+`figure-agent.candidate-apply-readiness.v1` payload returned by
+`fig-agent apply-candidate-ready`.
+
 ## Required Gates
 
 `apply-candidate` must verify all gates before editing any source file:
@@ -107,18 +132,30 @@ MCP remains non-applying.
   candidate hash, candidate set path, and render manifest hash.
 - Candidate hash in acceptance, candidate manifest, and candidate set match.
 - Render manifest status has:
-  - `compile.status: success`
-  - `export.status: success`
-  - `crop.status: success`
-  - `evaluate.status: rendered_needs_human_review`
+  - `stages.compile.status: success`
+  - `stages.export.status: success`
+  - `stages.crop.status: success`
+  - `stages.evaluate.status: rendered_needs_human_review`
 - Candidate effective apply authority remains `review_only` before acceptance;
-  acceptance grants one explicit source mutation, not ongoing auto-apply.
+  acceptance grants one explicit source mutation, not ongoing auto-apply. The
+  apply engine must use a new accepted-state evaluator and must not rely on the
+  existing `effective_apply_authority()` result as the final permission check.
 - Every operation is supported by the apply engine.
 - For every `replace_text` operation, the exact `original` text appears once in
   the current source file.
 - The target source path resolves inside the fixture and is not a symlink.
-- The source file hash matches the candidate selector/source hash when present.
-- The fixture tree has no active candidate apply lock.
+- Every target source file has a drift hash. The hash is read from
+  `operation.source_sha256` when present, otherwise from exactly one
+  `tex_selector.v1` selector whose `path` matches the operation path and whose
+  `source_hash` is present. Readiness is blocked when a target operation has no
+  drift hash.
+- The current target source hash matches the drift hash before mutation.
+- `apply_result.json` does not already record `status: applied` or
+  `status: applied_with_failed_verification`.
+- The fixture tree has no active mutation lock at:
+  - `build/.candidate-apply-locks/mutation.lock`
+  - `build/.mcp-locks/mutation.lock`
+  - `build/.quality-locks/mutation.lock`
 
 ## Data Contracts
 
@@ -260,16 +297,30 @@ Ranking remains advisory.
   `build/candidates/<candidate_id>/acceptance.json`,
   `build/candidates/<candidate_id>/rollback.patch`, and
   `build/candidates/<candidate_id>/apply_result.json`.
+- Post-apply verification writes are limited to the normal fixture-owned
+  `build/` and `exports/` outputs created by `fig-agent compile`,
+  `fig-agent export`, and `fig-agent status`.
 - Source path symlinks, candidate sandbox symlinks, and ancestor symlink escapes
   are rejected.
 - Acceptance and apply paths reject absolute paths and `..`.
-- The command must acquire a fixture-local apply lock before mutation.
+- The command must acquire `build/.candidate-apply-locks/mutation.lock` before
+  mutation and must refuse to run when existing MCP or quality mutation locks
+  are present.
 - If post-apply compile/export fails, the source remains changed but the result
   must be `applied_with_failed_verification` and the rollback patch must be
   present. The command must not silently roll back because that hides state from
   the operator.
 - Rollback execution is out of scope for this slice. This slice creates the
   rollback patch and reports its path.
+- `rollback.patch` is a fixture-relative unified diff generated before source
+  mutation from in-memory before/after source snapshots. For each changed file,
+  the rollback diff direction is candidate-applied text back to original text:
+  `fromfile` is `a/<relative-path>` for the candidate-applied version and
+  `tofile` is `b/<relative-path>` for the original version. Multi-file rollback
+  patches concatenate file diffs in operation order.
+- Applying a candidate is not idempotent. A second apply attempt against a
+  candidate sandbox with an applied apply result must fail with
+  `already_applied`.
 
 ## Dogfood Scenario
 
@@ -337,8 +388,13 @@ Pass condition:
   paths.
 - Reject source mutation when render manifest is missing or failed.
 - Reject source mutation when acceptance hash does not match current manifests.
+- Reject source mutation when target source drift hash is absent.
+- Reject source mutation when target source drift hash does not match.
 - Reject source mutation when `original` text is missing or appears more than
   once.
+- Reject source mutation when `apply_result.json` already records an applied
+  state.
+- Reject source mutation when candidate, MCP, or quality mutation locks exist.
 
 ### Runtime Tests
 
@@ -346,9 +402,14 @@ Pass condition:
 - Generate acceptance artifact.
 - Apply candidate and verify source text changed once.
 - Verify rollback patch is created before source mutation.
+- Verify rollback patch uses fixture-relative unified diff paths and reverses
+  candidate-applied text back to original text.
 - Mock compile/export/status for deterministic unit coverage.
 - Verify failed post-apply compile records failure without deleting source
   evidence or hiding the changed state.
+- Rewrite the existing refusal-only candidate apply tests so they assert the
+  new gated apply contract instead of
+  `apply_not_implemented_for_non_refusal_path`.
 
 ### Dogfood Verification
 
