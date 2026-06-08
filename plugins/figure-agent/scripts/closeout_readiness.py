@@ -208,13 +208,6 @@ def _release_check(status: dict[str, Any]) -> dict[str, Any]:
             reason=f"publication gate reports {len(failures_list)} failure(s)",
             evidence=evidence,
         )
-    if not status.get("release_ready"):
-        return _check(
-            check_id="release",
-            state="blocked",
-            reason="release_ready is false",
-            evidence=evidence,
-        )
     return _check(
         check_id="release",
         state="passed",

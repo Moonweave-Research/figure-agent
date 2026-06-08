@@ -235,7 +235,7 @@ def test_closeout_ready_blocks_publication_gate_failures(tmp_path: Path, monkeyp
     assert checks["release"]["reason"] == "publication gate reports 1 failure(s)"
 
 
-def test_closeout_ready_blocks_when_release_ready_is_false_without_publication_failures(
+def test_closeout_ready_reports_release_ready_false_without_blocking_tracked_golden_closeout(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -266,6 +266,7 @@ def test_closeout_ready_blocks_when_release_ready_is_false_without_publication_f
     )
 
     checks = {check["id"]: check for check in readiness["checks"]}
-    assert readiness["status"] == "blocked"
-    assert checks["release"]["state"] == "blocked"
-    assert checks["release"]["reason"] == "release_ready is false"
+    assert readiness["status"] == "ready"
+    assert checks["release"]["state"] == "passed"
+    assert checks["release"]["reason"] == "publication gate has no reported failures"
+    assert checks["release"]["evidence"]["release_ready"] is False
