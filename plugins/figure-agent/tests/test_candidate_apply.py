@@ -1,150 +1,207 @@
 from __future__ import annotations
 
+import json
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import candidate_acceptance  # noqa: E402
 import candidate_apply  # noqa: E402
 
 
-def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
-    fixture = workspace / "examples" / name
-    fixture.mkdir(parents=True)
-    (fixture / f"{name}.tex").write_text("old\n", encoding="utf-8")
-    return fixture
+def _sha256_text(text: str) -> str:
+    return "sha256:" + sha256(text.encode("utf-8")).hexdigest()
 
 
-def test_apply_refuses_human_required_effective_authority(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
+def _rendered_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
+    fixture = workspace / "examples" / "candidate_demo"
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    (fixture / "candidate_demo.tex").write_text("source\n", encoding="utf-8")
+    candidate_hash = "sha256:" + "1" * 64
+    operation_path = "examples/candidate_demo/candidate_demo.tex"
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "candidates": [{"id": "CAND001", "candidate_hash": candidate_hash}],
+    }
     manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "fixture": "candidate_demo",
         "candidate_id": "CAND001",
-        "apply_authority": "apply_eligible",
+        "candidate_hash": candidate_hash,
+        "candidate_set_path": "build/candidates/candidate_set.json",
         "effective_apply_authority": "review_only",
         "verification": {"hard_gate_state": "human_required"},
         "operations": [
             {
                 "kind": "replace_text",
-                "path": "examples/candidate_demo/candidate_demo.tex",
-                "original": "old",
-                "replacement": "new",
+                "path": operation_path,
+                "source_sha256": _sha256_text("source\n"),
+                "original": "source\n",
+                "replacement": "candidate\n",
+            }
+        ],
+        "selectors": [
+            {
+                "kind": "tex_selector.v1",
+                "path": operation_path,
+                "source_hash": _sha256_text("source\n"),
             }
         ],
     }
+    render_manifest = {
+        "schema": "figure-agent.candidate-render-manifest.v1",
+        "figure_name": "candidate_demo",
+        "candidate_id": "CAND001",
+        "candidate_hash": candidate_hash,
+        "candidate_set_path": "build/candidates/candidate_set.json",
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        },
+    }
+    (fixture / "build" / "candidates" / "candidate_set.json").write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "candidate_manifest.json").write_text(
+        json.dumps(manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "render_manifest.json").write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return fixture, manifest
+
+
+def _accepted_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+    return fixture, manifest
+
+
+def test_apply_candidate_requires_acceptance_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture, manifest = _rendered_candidate_fixture(workspace)
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
         manifest,
         workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
     )
 
     assert result["schema"] == "figure-agent.candidate-apply-result.v1"
-    assert result["applied"] is False
-    assert result["error"]["code"] == "not_apply_eligible"
-    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "old\n"
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "acceptance_missing"
 
 
-def test_apply_eligible_dry_run_does_not_mutate_source(tmp_path: Path) -> None:
+def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-    manifest = {
-        "candidate_id": "CAND001",
-        "apply_authority": "apply_eligible",
-        "effective_apply_authority": "apply_eligible",
-        "verification": {"hard_gate_state": "pass"},
-        "operations": [
-            {
-                "kind": "replace_text",
-                "path": "examples/candidate_demo/candidate_demo.tex",
-                "original": "old",
-                "replacement": "new",
-            }
-        ],
-    }
+    fixture, manifest = _accepted_candidate_fixture(workspace)
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
         manifest,
         workspace_root=workspace,
-        apply=False,
-    )
-
-    assert result["applied"] is False
-    assert result["dry_run"] is True
-    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "old\n"
-
-
-def test_apply_eligible_apply_path_is_explicitly_not_implemented_yet(
-    tmp_path: Path,
-) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-    manifest = {
-        "candidate_id": "CAND001",
-        "apply_authority": "apply_eligible",
-        "effective_apply_authority": "apply_eligible",
-        "verification": {"hard_gate_state": "pass"},
-        "operations": [
-            {
-                "kind": "replace_text",
-                "path": "examples/candidate_demo/candidate_demo.tex",
-                "original": "old",
-                "replacement": "new",
-            }
-        ],
-    }
-
-    result = candidate_apply.apply_candidate(
-        "candidate_demo",
-        manifest,
-        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
     )
 
-    assert result["applied"] is False
-    assert result["error"]["code"] == "apply_not_implemented_for_non_refusal_path"
-    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "old\n"
+    assert result["status"] == "applied"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "candidate\n"
+    assert result["changed_files"][0]["path"] == "candidate_demo.tex"
+    assert (fixture / "build" / "candidates" / "CAND001" / "rollback.patch").is_file()
+    assert (fixture / "build" / "candidates" / "CAND001" / "apply_result.json").is_file()
+
+
+def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result.write_text(
+        json.dumps({"schema": "figure-agent.candidate-apply-result.v1", "status": "applied"})
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "already_applied"
+
+
+def test_apply_candidate_refuses_existing_mcp_or_quality_lock(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    lock = fixture / "build" / ".mcp-locks" / "mutation.lock"
+    lock.parent.mkdir()
+    lock.write_text("{}", encoding="utf-8")
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "mutation_lock_active"
+
+
+def test_apply_candidate_rejects_source_drift(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text("changed\n", encoding="utf-8")
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "source_drift_hash_mismatch"
 
 
 def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    _fixture(workspace)
+    _rendered_candidate_fixture(workspace)
 
     with pytest.raises(ValueError, match="fixture name"):
         candidate_apply.apply_candidate(
             "../candidate_demo",
-            {
-                "candidate_id": "CAND001",
-                "apply_authority": "review_only",
-                "effective_apply_authority": "review_only",
-                "verification": {"hard_gate_state": "pass"},
-            },
+            {"candidate_id": "CAND001"},
             workspace_root=workspace,
             apply=True,
         )
-
-
-def test_apply_rejects_tampered_effective_authority(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-    manifest = {
-        "candidate_id": "CAND001",
-        "apply_authority": "apply_eligible",
-        "effective_apply_authority": "apply_eligible",
-        "verification": {"hard_gate_state": "human_required"},
-        "operations": [],
-    }
-
-    with pytest.raises(ValueError, match="effective_apply_authority_mismatch"):
-        candidate_apply.apply_candidate(
-            "candidate_demo",
-            manifest,
-            workspace_root=workspace,
-            apply=True,
-        )
-
-    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "old\n"
