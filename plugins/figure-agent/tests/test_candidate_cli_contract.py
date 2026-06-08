@@ -346,13 +346,27 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
         "Rendered evidence reviewed.",
         "--json",
     )
+    apply = _run(
+        workspace,
+        "apply-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--acceptance",
+        "build/candidates/CAND001/acceptance.json",
+        "--json",
+    )
 
     assert candidates.returncode == 0, candidates.stderr
     assert render.returncode == 0, render.stderr
     assert ready.returncode == 0, ready.stderr
     assert accept.returncode == 0, accept.stderr
+    assert apply.returncode == 0, apply.stderr
     assert json.loads(ready.stdout)["status"] == "ready_for_local_acceptance"
     assert json.loads(accept.stdout)["path"] == "build/candidates/CAND001/acceptance.json"
+    assert json.loads(apply.stdout)["schema"] == "figure-agent.candidate-apply-result.v1"
+    assert json.loads(apply.stdout)["status"] == "applied"
     assert (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").is_file()
 
 

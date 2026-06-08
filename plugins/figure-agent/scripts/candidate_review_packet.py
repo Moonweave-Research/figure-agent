@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import candidate_acceptance
 import fixture_identity
 import runtime_paths
 
@@ -270,6 +271,65 @@ def _rank_command(name: str, manifest: dict[str, Any]) -> str:
     )
 
 
+def _apply_readiness(
+    name: str,
+    candidate_id: str,
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    *,
+    workspace_root: Path,
+    plugin_root: Path | None,
+) -> dict[str, Any]:
+    apply_result_path = manifest_path.parent / "apply_result.json"
+    if apply_result_path.is_file() and not apply_result_path.is_symlink():
+        try:
+            apply_result = json.loads(apply_result_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            apply_result = {}
+        if isinstance(apply_result, dict) and apply_result.get("status") in {
+            "applied",
+            "applied_with_failed_verification",
+        }:
+            return {
+                "status": str(apply_result["status"]),
+                "blocking_reasons": [],
+                "required_commands": [],
+            }
+    acceptance_path = manifest_path.parent / "acceptance.json"
+    if acceptance_path.is_file() and not acceptance_path.is_symlink():
+        return {
+            "status": "accepted_ready_to_apply",
+            "blocking_reasons": [],
+            "required_commands": [
+                (
+                    f"fig-agent apply-candidate {name} {candidate_id} "
+                    f"--candidate-set {manifest.get('candidate_set_path')} "
+                    f"--acceptance build/candidates/{candidate_id}/acceptance.json --json"
+                )
+            ],
+        }
+    candidate_set_path = Path(
+        str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
+    )
+    try:
+        return candidate_acceptance.build_apply_readiness(
+            name,
+            candidate_id,
+            candidate_set_path=candidate_set_path,
+            workspace_root=workspace_root,
+            plugin_root=plugin_root,
+        )
+    except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
+        return {
+            "schema": "figure-agent.candidate-apply-readiness.v1",
+            "figure_name": name,
+            "candidate_id": candidate_id,
+            "status": "blocked",
+            "blocking_reasons": [str(exc)],
+            "required_commands": [],
+        }
+
+
 def build_review_packet(
     name: str,
     candidate_id: str,
@@ -333,4 +393,12 @@ def build_review_packet(
         "human_decision_fields": HUMAN_DECISION_FIELDS,
     }
     packet.update(render_evidence)
+    packet["apply_readiness"] = _apply_readiness(
+        name,
+        safe_candidate_id,
+        manifest_path,
+        manifest,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+    )
     return packet

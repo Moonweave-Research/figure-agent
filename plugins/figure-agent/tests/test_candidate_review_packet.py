@@ -185,6 +185,12 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "changed_bbox": [1, 2, 3, 4],
     }
     assert packet["hard_gates"]["render"] == "rendered_needs_human_review"
+    assert packet["apply_readiness"]["status"] in {
+        "blocked",
+        "ready_for_local_acceptance",
+        "accepted_ready_to_apply",
+        "applied",
+    }
     assert packet["human_review_required"] is True
     assert packet["human_decision_required"] is True
     assert packet["source_changes"][0]["kind"] == "replace_text"

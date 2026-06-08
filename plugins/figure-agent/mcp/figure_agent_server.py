@@ -954,6 +954,45 @@ def _rank_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _candidate_apply_readiness(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    candidate_id = str(arguments.get("candidate_id") or "")
+    candidate_set = str(arguments.get("candidate_set") or "")
+    if not candidate_set:
+        return _tool_envelope(
+            "figure-agent.mcp.candidate-apply-readiness.v1",
+            success=False,
+            started=time.monotonic(),
+            name=name,
+            error=_error("invalid_request", "candidate_set is required"),
+        )
+    if not _is_safe_fixture_name(candidate_id):
+        return _tool_envelope(
+            "figure-agent.mcp.candidate-apply-readiness.v1",
+            success=False,
+            started=time.monotonic(),
+            name=name,
+            error=_error(
+                "invalid_fixture_name",
+                "candidate_id must be a single build/candidates/<id> directory name",
+            ),
+        )
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.candidate-apply-readiness.v1",
+        command=[
+            "apply-candidate-ready",
+            name,
+            candidate_id,
+            "--candidate-set",
+            candidate_set,
+            "--json",
+        ],
+        payload_key="apply_readiness",
+        failure_message="fig-agent apply-candidate-ready failed",
+    )
+
+
 def _prepare_human_review(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     candidate_id = str(arguments.get("candidate_id") or "")
@@ -1373,6 +1412,20 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _prepare_human_review,
+    },
+    "figure_agent_candidate_apply_readiness": {
+        "description": "Return read-only apply readiness for one rendered candidate.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "candidate_id", "candidate_set"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+                "candidate_set": {"type": "string"},
+            },
+        },
+        "handler": _candidate_apply_readiness,
     },
     "figure_agent_compare_candidate": {
         "description": "Return a read-only comparison packet for one rendered candidate.",
