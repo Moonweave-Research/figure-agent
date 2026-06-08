@@ -84,6 +84,33 @@ Interpretation:
 
 Use a two-track architecture.
 
+### Boundary Definitions
+
+The implementation must keep three write classes separate:
+
+| Write class | Allowed in this phase? | Notes |
+|---|---:|---|
+| Candidate evidence under `examples/<name>/build/candidates/` | yes | Generated sandbox state; safe even when the fixture is accepted/golden. |
+| Normal build/cache files outside `build/candidates/` | only through existing compile/export commands | Candidate commands must not refresh accepted exports or publication artifacts as a side effect. |
+| Source, accepted exports, golden exports, final artifacts, publication files | no | Requires explicit human-approved CLI apply/export flow outside MCP. |
+
+For an accepted/golden fixture such as `fig1_overview_v2_pair_001_vault`,
+candidate search is allowed to create sandbox evidence, but every candidate must
+default to `review_only` unless the apply path later proves that accepted/golden
+roll-forward approval has been granted.
+
+The source trust boundary is content-hash based, not git-commit based. A dirty
+worktree is allowed for read-only candidate exploration, but every candidate and
+review packet must record:
+
+- source file hash at candidate generation time;
+- selected range hash;
+- whether the workspace had uncommitted changes in the fixture;
+- whether any uncommitted change is in an affected file.
+
+Apply preparation must refuse or downgrade when the affected source file changed
+after candidate generation.
+
 ### Track A: Real-Figure Candidate Core
 
 The core owns candidate creation, sandbox rendering, scoring, and apply
@@ -141,6 +168,27 @@ MCP source mutation remains unsupported:
 
 Implement candidate families incrementally. Each family must have synthetic unit
 tests and one real-figure dogfood fixture check.
+
+Candidate family names are stable public strings:
+
+| Family | Public name |
+|---|---|
+| Plot marker and curve hierarchy | `plot-marker-hierarchy` |
+| Energy diagram and trap marker alignment | `energy-trap-alignment` |
+| Apparatus label and callout routing | `apparatus-callout-routing` |
+
+A command with an unknown family fails as `unsupported_candidate_family`. A
+known family that does not support the selected panel fails as
+`unsupported_panel_family`.
+
+Candidate ids must be deterministic within a candidate set. The id seed is:
+
+```text
+fixture + panel + family + selector_text_hash + operation_payload_hash
+```
+
+The display form remains `CAND001`, `CAND002`, ... ordered by deterministic
+sort key, but each candidate also carries a stable `candidate_hash`.
 
 ### Family 1: Plot Marker and Curve Hierarchy
 
@@ -248,6 +296,78 @@ Selector rules:
   fixture.
 - A panel-scoped candidate must not modify another panel unless the review
   packet marks it as cross-panel and downgrades to `review_only`.
+- Selectors must be derived from active source text only; comments can define
+  panel boundaries but cannot by themselves prove a drawable element exists.
+- If a TeX command spans multiple lines, the selector must include the full
+  command range, not just the anchor line.
+- Candidate operations must be structured. Free-form `replace_text` is allowed
+  only as a compatibility fallback when the selector range hash proves the
+  replacement is local.
+
+Initial selector extraction may use existing source comments such as
+`% Panel C ...` and `Panel C bbox` as panel-boundary hints, but the indexer must
+also verify that the selected lines fall inside the declared `spec.yaml` panel
+or are explicitly marked cross-panel.
+
+## Coordinate and Crop Contract
+
+`spec.yaml.panels[].bbox_pdf_cm` is the canonical panel crop input. Because PDF
+coordinate systems, TikZ coordinates, and PNG pixel coordinates differ, the
+panel model must record the coordinate system for every bbox and crop:
+
+```json
+{
+  "bbox_pdf_cm": [8.914, 0.141, 17.878, 5.227],
+  "coordinate_system": "pdf_cm_bottom_left",
+  "render_size_px": [1920, 1280],
+  "crop_px": [x0, y0, x1, y1]
+}
+```
+
+Before/after panel crops must be generated through one shared crop helper so
+ranking, review packets, and MCP resources cannot disagree about panel bounds.
+If no current render exists, review packets may include source-only evidence but
+must mark `visual_review.status = "missing_render"`.
+
+## Render Sandbox Contract
+
+The current `render-candidates` command writes candidate source copies and
+manifests. This spec requires a second render stage:
+
+1. `prepare`: write candidate source copy and manifest.
+2. `compile`: compile the candidate source in the sandbox.
+3. `export`: produce candidate PDF/SVG/PNG artifacts in the sandbox.
+4. `crop`: produce before/after panel crops for visual review.
+
+Each stage must be explicit in the render result:
+
+```json
+{
+  "candidate_id": "CAND001",
+  "stages": {
+    "prepare": "passed",
+    "compile": "passed",
+    "export": "passed",
+    "crop": "passed"
+  }
+}
+```
+
+If compile/export is unavailable on the host, render may return a partial
+manifest but rank must downgrade the candidate to `review_only` or `rejected`
+with a dependency-specific reason.
+
+Sandbox compile rules:
+
+- all candidate aux/build/export files must remain under
+  `examples/<name>/build/candidates/<candidate_id>/`;
+- bundled styles are read from `plugin_root/styles`;
+- fixture-local inputs are read from `examples/<name>`;
+- the candidate source copy overlays only the affected source file for compile;
+- accepted/golden exports under `examples/<name>/exports/` are read-only inputs
+  at most and must never be overwritten;
+- a failed sandbox compile records stderr/stdout in bounded form and produces no
+  normal fixture build artifacts.
 
 ## Data Flow
 
@@ -352,11 +472,14 @@ Required refusal codes:
 | Code | Meaning |
 |---|---|
 | `no_supported_candidate` | Source parsed, but no implemented family found a candidate. |
+| `unsupported_candidate_family` | Operator requested a family name the plugin does not know. |
 | `unsupported_panel_family` | Operator requested a family not implemented for that panel. |
 | `source_selector_unstable` | Selector hash or line range changed before render/rank. |
+| `affected_source_dirty` | Candidate targets a file with uncommitted changes that were not part of the candidate base hash. |
 | `accepted_golden_boundary` | Candidate would require accepted/golden/export roll-forward. |
-| `semantic_invariant_missing` | Candidate is semantic-risky and no invariant file exists. |
+| `semantic_invariant_missing` | Candidate is semantic-risky and no invariant file exists; generation may continue only as `review_only`. |
 | `panel_scope_ambiguous` | Candidate cannot be tied to one panel or declared cross-panel scope. |
+| `candidate_render_dependency_missing` | Host lacks a dependency needed for sandbox compile/export/crop. |
 
 `explain_no_candidate` must convert these codes into actionable next work:
 
@@ -418,6 +541,12 @@ Candidate family tests:
 - synthetic Panel C energy diagram yields at least two bounded candidates;
 - synthetic Panel D plot marker hierarchy yields at least two candidates;
 - synthetic Panel F callout route yields at least two candidates;
+- multiline TeX command selectors include the full command range;
+- comment-only matches do not produce drawable candidates;
+- PDF-cm bboxes map to deterministic PNG crop rectangles;
+- dirty affected source files downgrade apply preparation;
+- accepted/golden fixtures still allow `build/candidates/` evidence writes but
+  do not permit source/export mutation;
 - selector hash drift blocks render/rank;
 - cross-panel edits downgrade to `review_only`.
 
@@ -443,8 +572,11 @@ The upgrade is accepted when:
 1. On a synthetic fixture, each new family produces multiple candidates.
 2. On `fig1_overview_v2_pair_001_vault`, at least one panel-scoped command
    produces a non-empty candidate set.
-3. The candidate renders in `build/candidates/<candidate_id>/`.
-4. The review packet exposes before/after artifact descriptors.
+3. The candidate prepare/compile/export/crop stages are represented in
+   `build/candidates/<candidate_id>/`; host dependency gaps are explicit.
+4. On the real Panel C dogfood path, the review packet exposes before/after
+   artifact descriptors. `missing_render` is acceptable only in a dedicated
+   host-dependency-negative test, not as the success path.
 5. MCP can drive analyze/propose/render/compare/review without source mutation.
 6. `figure_agent_apply_candidate` still refuses MCP-side apply.
 7. Full targeted tests and release gate pass.
@@ -454,12 +586,15 @@ The upgrade is accepted when:
 1. Build `candidate_tex_index.py` with read-only TeX selector extraction.
 2. Build `candidate_panel_model.py` and `fig-agent analyze-panel`.
 3. Add `--panel` and `--family` filters to `fig-agent candidates`.
-4. Implement Family 2 first for Panel C energy/trap alignment because the
+4. Add shared PDF-cm to PNG crop conversion and source dirty-state recording.
+5. Implement Family 2 first for Panel C energy/trap alignment because the
    dogfood image shows a clear, high-value panel-local target.
-5. Add visual review packet artifact descriptors.
-6. Add MCP panel tools and candidate resources.
-7. Dogfood on Panel C of `fig1_overview_v2_pair_001_vault`.
-8. Add Family 1 or Family 3 based on the Panel C dogfood result.
+6. Extend `render-candidates` from manifest-only prepare to staged
+   prepare/compile/export/crop.
+7. Add visual review packet artifact descriptors.
+8. Add MCP panel tools and candidate resources.
+9. Dogfood on Panel C of `fig1_overview_v2_pair_001_vault`.
+10. Add Family 1 or Family 3 based on the Panel C dogfood result.
 
 ## Risks and Mitigations
 
@@ -470,6 +605,8 @@ The upgrade is accepted when:
 | MCP hides important boundaries | MCP tools return structured refusal codes and never mutate source. |
 | Real fig1 accepted state is accidentally changed | Dogfood writes only under `build/candidates/`; export roll-forward remains human-gated. |
 | Review packet overwhelms Claude/Cowork | Use resource descriptors and panel-scoped packets instead of embedding large artifacts. |
+| Panel crops disagree across tools | Use one shared crop helper and record coordinate systems in every panel model. |
+| Dirty user work is overwritten or mis-ranked | Record dirty-state, affected file hashes, and downgrade apply preparation on drift. |
 
 ## Self-Review Notes
 
@@ -480,3 +617,6 @@ The upgrade is accepted when:
 - MCP improvements are valuable only after candidate evidence exists; this is
   reflected in the implementation order.
 - Source mutation remains out of scope for MCP in this phase.
+- Review pass 2 closed gaps around accepted/golden write boundaries, dirty
+  source state, coordinate/crop contracts, staged sandbox rendering, and
+  comment-only TeX selector false positives.
