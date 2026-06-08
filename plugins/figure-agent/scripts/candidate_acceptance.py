@@ -182,6 +182,8 @@ def _source_drift_blocks(
     operations = manifest.get("operations")
     if not isinstance(operations, list):
         return ["operations_missing"]
+    if not operations:
+        return ["operations_empty"]
     blocking: list[str] = []
     for operation in operations:
         if not isinstance(operation, dict):

@@ -7,6 +7,7 @@ import os
 import platform
 import shutil
 import subprocess
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +56,14 @@ def _source_commit(workspace_root: Path) -> str:
         check=False,
     )
     return result.stdout.strip() if result.returncode == 0 else "unavailable"
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 def _safe_candidate_id(value: Any) -> str:
@@ -172,6 +181,27 @@ def _candidate_source_text(
         raise CandidateRenderError("multiple source copies are not supported")
     source_path, text = next(iter(sources.items()))
     return source_path.name, text
+
+
+def _operations_with_source_hashes(
+    example_dir: Path,
+    fixture_name: str,
+    candidate: dict[str, Any],
+) -> list[Any]:
+    operations = candidate.get("operations")
+    if not isinstance(operations, list):
+        return []
+    enriched: list[Any] = []
+    for operation in operations:
+        if not isinstance(operation, dict):
+            enriched.append(operation)
+            continue
+        copied = dict(operation)
+        if copied.get("kind") == "replace_text" and "source_sha256" not in copied:
+            source_path = _fixture_path(example_dir, fixture_name, copied.get("path"))
+            copied["source_sha256"] = _sha256_file(source_path)
+        enriched.append(copied)
+    return enriched
 
 
 def _write_candidate_source_copy(
@@ -483,6 +513,7 @@ def render_candidate_set(
             hard_gate_state,
         )
         base = candidate_set.get("base") if isinstance(candidate_set.get("base"), dict) else {}
+        operations = _operations_with_source_hashes(example_dir, name, candidate)
         manifest = {
             "schema": SCHEMA,
             "candidate_id": current_candidate_id,
@@ -506,7 +537,7 @@ def render_candidate_set(
                 "python": platform.python_version(),
                 "tex_engine": "not_run",
             },
-            "operations": candidate.get("operations", []),
+            "operations": operations,
             "artifacts": artifacts,
             "stages": {
                 "prepare": "passed",

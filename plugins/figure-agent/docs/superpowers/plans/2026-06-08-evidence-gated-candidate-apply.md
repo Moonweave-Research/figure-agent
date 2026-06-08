@@ -18,7 +18,7 @@ The implementation must close these reviewed holes:
 - Treat pre-acceptance `effective_apply_authority: review_only` as expected. The explicit acceptance artifact is the one-time apply permission.
 - Block readiness/apply when an operation target lacks a drift hash. Accept either `operation.source_sha256` or exactly one matching `tex_selector.v1.source_hash`.
 - Refuse a second apply when `apply_result.json` already records `applied` or `applied_with_failed_verification`.
-- Acquire `build/.candidate-apply-locks/mutation.lock` and refuse when `build/.mcp-locks/mutation.lock` or `build/.quality-locks/mutation.lock` exists.
+- Acquire shared `build/.mcp-locks/mutation.lock` and refuse when that lock or `build/.quality-locks/mutation.lock` exists.
 - Generate `rollback.patch` before mutation as a fixture-relative unified diff from candidate-applied text back to original text.
 - Define MCP readiness schema with required `name`, `candidate_id`, and `candidate_set`.
 - Rewrite old refusal-only candidate apply tests instead of preserving `apply_not_implemented_for_non_refusal_path`.
@@ -906,7 +906,7 @@ Modify `plugins/figure-agent/scripts/candidate_apply.py`:
 - Refuse if `apply_result.json` already records `applied` or
   `applied_with_failed_verification`.
 - Refuse if `.mcp-locks/mutation.lock` or `.quality-locks/mutation.lock` exists.
-- Acquire `.candidate-apply-locks/mutation.lock` before writing rollback/source/apply result.
+- Acquire `.mcp-locks/mutation.lock` before writing rollback/source/apply result.
 - Before source mutation, write `rollback.patch` with unified diff content using `difflib.unified_diff`.
 - Apply exact `replace_text` operations only when `original` appears exactly once.
 - Write `apply_result.json` under `build/candidates/<candidate_id>/`.

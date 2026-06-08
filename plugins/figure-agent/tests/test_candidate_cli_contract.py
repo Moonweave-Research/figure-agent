@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 from hashlib import sha256
 from pathlib import Path
 
@@ -42,7 +41,7 @@ panels:
 
 def _run(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(FIG_AGENT), *args],
+        ["uv", "run", "--project", str(PLUGIN_ROOT), "python", str(FIG_AGENT), *args],
         cwd=workspace,
         env=_env(workspace),
         text=True,
@@ -280,9 +279,6 @@ def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) ->
 def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    source_hash = "sha256:" + sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
 
     candidates = _run(
         workspace,
@@ -307,6 +303,19 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     )
     manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     render_manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    (fixture / "candidate_demo.tex").write_text(
+        "\\documentclass[border=8pt]{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\n"
+        "\\begin{tikzpicture}\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\end{tikzpicture}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    source_hash = "sha256:" + sha256(
+        (fixture / "candidate_demo.tex").read_bytes()
+    ).hexdigest()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["operations"][0]["source_sha256"] = source_hash
     manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
@@ -367,7 +376,102 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     assert json.loads(accept.stdout)["path"] == "build/candidates/CAND001/acceptance.json"
     assert json.loads(apply.stdout)["schema"] == "figure-agent.candidate-apply-result.v1"
     assert json.loads(apply.stdout)["status"] == "applied"
+    assert json.loads(apply.stdout)["post_apply"]["compile"]["status"] == "success"
+    assert json.loads(apply.stdout)["post_apply"]["export"]["status"] == "success"
+    assert json.loads(apply.stdout)["post_apply"]["status"]["status"] == "success"
     assert (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").is_file()
+
+
+def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidates = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    render = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--candidate-id",
+        "CAND001",
+        "--compile",
+        "--export",
+        "--evaluate",
+        "--json",
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    render_manifest_path = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    (fixture / "candidate_demo.tex").write_text(
+        "\\documentclass[border=8pt]{standalone}\n"
+        "\\usepackage{tikz}\n"
+        "\\begin{document}\n"
+        "\\begin{tikzpicture}\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\end{tikzpicture}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    source_hash = "sha256:" + sha256(
+        (fixture / "candidate_demo.tex").read_bytes()
+    ).hexdigest()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"][0]["source_sha256"] = source_hash
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    render_manifest = json.loads(render_manifest_path.read_text(encoding="utf-8"))
+    render_manifest["stages"] = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "crop": {"status": "success"},
+        "evaluate": {"status": "rendered_needs_human_review"},
+    }
+    render_manifest_path.write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    accept = _run(
+        workspace,
+        "accept-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--decision",
+        "accept",
+        "--reviewer",
+        "local-user",
+        "--rationale",
+        "Rendered evidence reviewed.",
+        "--json",
+    )
+    apply = _run(
+        workspace,
+        "apply-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--acceptance",
+        "build/candidates/CAND001/acceptance.json",
+        "--json",
+    )
+
+    assert candidates.returncode == 0, candidates.stderr
+    assert render.returncode == 0, render.stderr
+    assert accept.returncode == 0, accept.stderr
+    assert apply.returncode == 1
+    payload = json.loads(apply.stdout)
+    assert payload["status"] == "applied_with_failed_verification"
+    assert payload["post_apply"]["compile"]["status"] == "failed"
 
 
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:

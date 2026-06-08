@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_acceptance
+import candidate_apply
 import fixture_identity
 import runtime_paths
 
@@ -297,6 +298,28 @@ def _apply_readiness(
             }
     acceptance_path = manifest_path.parent / "acceptance.json"
     if acceptance_path.is_file() and not acceptance_path.is_symlink():
+        candidate_set_path = Path(
+            str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
+        )
+        dry_run = candidate_apply.apply_candidate(
+            name,
+            manifest,
+            workspace_root=workspace_root,
+            plugin_root=plugin_root,
+            candidate_set_path=candidate_set_path,
+            acceptance_path=Path(f"build/candidates/{candidate_id}/acceptance.json"),
+            apply=False,
+        )
+        if dry_run.get("status") != "ready":
+            return {
+                "status": "blocked",
+                "blocking_reasons": [
+                    str(item.get("code", "unknown"))
+                    for item in dry_run.get("diagnostics", [])
+                    if isinstance(item, dict)
+                ],
+                "required_commands": [],
+            }
         return {
             "status": "accepted_ready_to_apply",
             "blocking_reasons": [],

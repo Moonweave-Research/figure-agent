@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -344,6 +345,28 @@ def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> 
         "\\node (label-a) at (0.2,0) {Old Label};\n"
     )
     assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == original
+
+
+def test_render_records_operation_source_hash_for_apply_drift_gate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+    )
+
+    manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    source_hash = "sha256:" + hashlib.sha256(
+        (fixture / "candidate_demo.tex").read_bytes()
+    ).hexdigest()
+    assert data["operations"][0]["source_sha256"] == source_hash
 
 
 def test_render_preserves_review_only_authority(tmp_path: Path) -> None:

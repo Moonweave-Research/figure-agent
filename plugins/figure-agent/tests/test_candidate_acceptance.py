@@ -159,3 +159,22 @@ def test_readiness_blocks_missing_source_drift_hash(tmp_path: Path) -> None:
 
     assert readiness["status"] == "blocked"
     assert "source_drift_hash_missing:candidate_demo.tex" in readiness["blocking_reasons"]
+
+
+def test_readiness_blocks_empty_operations(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"] = []
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "blocked"
+    assert "operations_empty" in readiness["blocking_reasons"]

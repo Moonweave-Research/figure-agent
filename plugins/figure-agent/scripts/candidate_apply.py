@@ -5,6 +5,8 @@ from __future__ import annotations
 import difflib
 import json
 import os
+import subprocess
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from hashlib import sha256
@@ -150,10 +152,7 @@ def _render_gate_failures(render_manifest: dict[str, Any]) -> list[str]:
 
 
 def _active_mutation_lock(example_dir: Path) -> Path | None:
-    for relative in (
-        Path("build") / ".mcp-locks" / "mutation.lock",
-        Path("build") / ".quality-locks" / "mutation.lock",
-    ):
+    for relative in (Path("build") / ".quality-locks" / "mutation.lock",):
         lock = example_dir / relative
         if lock.exists():
             return lock
@@ -162,9 +161,9 @@ def _active_mutation_lock(example_dir: Path) -> Path | None:
 
 @contextmanager
 def _candidate_apply_lock(example_dir: Path) -> Iterator[Path | None]:
-    lock_dir = example_dir / "build" / ".candidate-apply-locks"
+    lock_dir = example_dir / "build" / ".mcp-locks"
     if lock_dir.is_symlink():
-        raise CandidateApplyError("sandbox_symlink_forbidden: .candidate-apply-locks")
+        raise CandidateApplyError("sandbox_symlink_forbidden: .mcp-locks")
     lock_dir.mkdir(parents=True, exist_ok=True)
     lock_path = lock_dir / "mutation.lock"
     try:
@@ -230,6 +229,8 @@ def _build_changes(
     operations = manifest.get("operations")
     if not isinstance(operations, list):
         return [], [_diagnostic("operations_missing", "candidate operations are missing")]
+    if not operations:
+        return [], [_diagnostic("operations_empty", "candidate operations are empty")]
     diagnostics: list[dict[str, str]] = []
     by_path: dict[Path, dict[str, Any]] = {}
     for operation in operations:
@@ -291,6 +292,53 @@ def _rollback_patch(changes: list[dict[str, Any]]) -> str:
     return "".join(chunks)
 
 
+def _output_tail(text: str, limit: int = 1200) -> str:
+    return text[-limit:] if len(text) > limit else text
+
+
+def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str, dict[str, Any]]:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
+    env["FIGURE_AGENT_WORKSPACE"] = str(paths.workspace_root)
+    commands = {
+        "compile": [
+            "bash",
+            str(paths.scripts_dir / "compile.sh"),
+            str(paths.examples_dir / name / f"{name}.tex"),
+        ],
+        "export": [
+            sys.executable,
+            str(paths.scripts_dir / "run_export.py"),
+            name,
+            "--force-golden",
+            "--skip-critique",
+        ],
+        "status": [
+            sys.executable,
+            str(paths.scripts_dir / "status.py"),
+            name,
+            "--json",
+        ],
+    }
+    checks: dict[str, dict[str, Any]] = {}
+    for stage, command in commands.items():
+        completed = subprocess.run(
+            command,
+            cwd=paths.workspace_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        checks[stage] = {
+            "status": "success" if completed.returncode == 0 else "failed",
+            "returncode": completed.returncode,
+            "stdout_tail": _output_tail(completed.stdout),
+            "stderr_tail": _output_tail(completed.stderr),
+        }
+    return checks
+
+
 def apply_candidate(
     name: str,
     manifest: dict[str, Any],
@@ -300,6 +348,7 @@ def apply_candidate(
     candidate_set_path: Path | None = None,
     acceptance_path: Path | None = None,
     apply: bool = False,
+    post_apply: bool = True,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
     paths = runtime_paths.resolve_runtime_paths(
@@ -309,6 +358,14 @@ def apply_candidate(
     example_dir = paths.examples_dir / name
     candidate_id = _candidate_id(manifest)
     sandbox = _candidate_sandbox(example_dir, candidate_id)
+    candidate_manifest_path = sandbox / "candidate_manifest.json"
+    manifest = _load_json(candidate_manifest_path, "candidate_manifest")
+    if _candidate_id(manifest) != candidate_id:
+        return _blocked(
+            name,
+            candidate_id,
+            [_diagnostic("candidate_id_mismatch", "candidate manifest id mismatch")],
+        )
     diagnostics: list[dict[str, str]] = []
     candidate_set_path = candidate_set_path or Path(str(manifest.get("candidate_set_path", "")))
     acceptance_path = acceptance_path or Path(f"build/candidates/{candidate_id}/acceptance.json")
@@ -330,7 +387,6 @@ def apply_candidate(
         diagnostics.append(_diagnostic("candidate_hash_mismatch", "candidate hash mismatch"))
 
     render_manifest_path = sandbox / "render_manifest.json"
-    candidate_manifest_path = sandbox / "candidate_manifest.json"
     render_manifest = _load_json(render_manifest_path, "render_manifest")
     for failure in _render_gate_failures(render_manifest):
         diagnostics.append(_diagnostic("render_gate_failed", failure))
@@ -418,14 +474,20 @@ def apply_candidate(
                     "after_sha256": _sha256_file(target),
                 }
             )
+        post_apply_result = _post_apply_checks(name, paths) if post_apply else {}
+        result_status = (
+            "applied_with_failed_verification"
+            if any(item.get("status") != "success" for item in post_apply_result.values())
+            else "applied"
+        )
         result = {
             "schema": SCHEMA,
             "figure_name": name,
             "candidate_id": candidate_id,
-            "status": "applied",
+            "status": result_status,
             "changed_files": changed_files,
             "rollback_patch": _fixture_relative(example_dir, rollback_path),
-            "post_apply": {},
+            "post_apply": post_apply_result,
             "diagnostics": [],
         }
         if apply_result_path.is_symlink():

@@ -153,7 +153,6 @@ The MCP response embeds the same
 - `apply_result.json` does not already record `status: applied` or
   `status: applied_with_failed_verification`.
 - The fixture tree has no active mutation lock at:
-  - `build/.candidate-apply-locks/mutation.lock`
   - `build/.mcp-locks/mutation.lock`
   - `build/.quality-locks/mutation.lock`
 
@@ -303,9 +302,9 @@ Ranking remains advisory.
 - Source path symlinks, candidate sandbox symlinks, and ancestor symlink escapes
   are rejected.
 - Acceptance and apply paths reject absolute paths and `..`.
-- The command must acquire `build/.candidate-apply-locks/mutation.lock` before
-  mutation and must refuse to run when existing MCP or quality mutation locks
-  are present.
+- The command must acquire the shared `build/.mcp-locks/mutation.lock` before
+  mutation and must refuse to run when that lock already exists or when a
+  quality mutation lock is present.
 - If post-apply compile/export fails, the source remains changed but the result
   must be `applied_with_failed_verification` and the rollback patch must be
   present. The command must not silently roll back because that hides state from

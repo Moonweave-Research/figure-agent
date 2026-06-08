@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
 
@@ -15,6 +16,14 @@ import candidate_apply  # noqa: E402
 
 def _sha256_text(text: str) -> str:
     return "sha256:" + sha256(text.encode("utf-8")).hexdigest()
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 def _rendered_candidate_fixture(workspace: Path) -> tuple[Path, dict]:
@@ -106,6 +115,7 @@ def test_apply_candidate_requires_acceptance_artifact(tmp_path: Path) -> None:
         candidate_set_path=Path("build/candidates/candidate_set.json"),
         acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
+        post_apply=False,
     )
 
     assert result["schema"] == "figure-agent.candidate-apply-result.v1"
@@ -124,6 +134,7 @@ def test_apply_candidate_exact_replace_writes_source_and_result(tmp_path: Path) 
         candidate_set_path=Path("build/candidates/candidate_set.json"),
         acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
+        post_apply=False,
     )
 
     assert result["status"] == "applied"
@@ -150,6 +161,7 @@ def test_apply_candidate_refuses_already_applied_result(tmp_path: Path) -> None:
         candidate_set_path=Path("build/candidates/candidate_set.json"),
         acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
+        post_apply=False,
     )
 
     assert result["status"] == "blocked"
@@ -170,10 +182,43 @@ def test_apply_candidate_refuses_existing_mcp_or_quality_lock(tmp_path: Path) ->
         candidate_set_path=Path("build/candidates/candidate_set.json"),
         acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
+        post_apply=False,
     )
 
     assert result["status"] == "blocked"
     assert result["diagnostics"][0]["code"] == "mutation_lock_active"
+
+
+def test_apply_candidate_uses_shared_mcp_mutation_lock(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    lock_path = fixture / "build" / ".mcp-locks" / "mutation.lock"
+    lock_path.parent.mkdir()
+
+    original_lock = candidate_apply._candidate_apply_lock
+
+    @contextmanager
+    def observing_lock(example_dir: Path):
+        with original_lock(example_dir) as active:
+            assert lock_path.exists()
+            yield active
+
+    candidate_apply._candidate_apply_lock = observing_lock
+    try:
+        result = candidate_apply.apply_candidate(
+            "candidate_demo",
+            manifest,
+            workspace_root=workspace,
+            candidate_set_path=Path("build/candidates/candidate_set.json"),
+            acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+            apply=True,
+        post_apply=False,
+        )
+    finally:
+        candidate_apply._candidate_apply_lock = original_lock
+
+    assert result["status"] == "applied"
+    assert not lock_path.exists()
 
 
 def test_apply_candidate_rejects_source_drift(tmp_path: Path) -> None:
@@ -188,10 +233,140 @@ def test_apply_candidate_rejects_source_drift(tmp_path: Path) -> None:
         candidate_set_path=Path("build/candidates/candidate_set.json"),
         acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
         apply=True,
+        post_apply=False,
     )
 
     assert result["status"] == "blocked"
     assert result["diagnostics"][0]["code"] == "source_drift_hash_mismatch"
+
+
+def test_apply_candidate_rejects_empty_operations_with_crafted_acceptance(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _rendered_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"] = []
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    acceptance = {
+        "schema": "figure-agent.candidate-acceptance.v1",
+        "figure_name": "candidate_demo",
+        "candidate_id": "CAND001",
+        "candidate_hash": manifest["candidate_hash"],
+        "candidate_set_path": "build/candidates/candidate_set.json",
+        "candidate_manifest_path": "build/candidates/CAND001/candidate_manifest.json",
+        "candidate_manifest_sha256": _sha256_file(manifest_path),
+        "render_manifest_path": "build/candidates/CAND001/render_manifest.json",
+        "render_manifest_sha256": _sha256_file(sandbox / "render_manifest.json"),
+        "decision": "accept",
+        "reviewer": "local-user",
+        "reviewed_at": "2026-06-08T00:00:00Z",
+        "rationale": "crafted fixture",
+        "human_review_required": True,
+    }
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(acceptance, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == "operations_empty"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "source\n"
+
+
+def test_apply_candidate_uses_stored_manifest_not_caller_manifest(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    tampered_manifest = dict(manifest)
+    tampered_manifest["operations"] = []
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        tampered_manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=False,
+    )
+
+    assert result["status"] == "applied"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "candidate\n"
+
+
+def test_apply_candidate_records_failed_post_apply_verification(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+
+    def fake_post_apply(_name, _paths):
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "failed", "returncode": 1},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "applied_with_failed_verification"
+    assert result["post_apply"]["export"]["status"] == "failed"
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == "candidate\n"
+
+
+def test_apply_candidate_runs_post_apply_verification_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture, manifest = _accepted_candidate_fixture(workspace)
+    calls: list[str] = []
+
+    def fake_post_apply(name, _paths):
+        calls.append(name)
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+    )
+
+    assert result["status"] == "applied"
+    assert calls == ["candidate_demo"]
+    assert result["post_apply"]["compile"]["status"] == "success"
 
 
 def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
@@ -204,4 +379,5 @@ def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
             {"candidate_id": "CAND001"},
             workspace_root=workspace,
             apply=True,
+        post_apply=False,
         )

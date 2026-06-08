@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,14 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_review_packet  # noqa: E402
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -107,6 +116,33 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
         encoding="utf-8",
     )
     return fixture
+
+
+def _write_acceptance(fixture: Path, name: str = "candidate_demo") -> None:
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    render_manifest_path = sandbox / "render_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload = {
+        "schema": "figure-agent.candidate-acceptance.v1",
+        "figure_name": name,
+        "candidate_id": "CAND001",
+        "candidate_hash": manifest["candidate_hash"],
+        "candidate_set_path": "build/candidates/panel_C_candidate_set.json",
+        "candidate_manifest_path": "build/candidates/CAND001/candidate_manifest.json",
+        "candidate_manifest_sha256": _sha256_file(manifest_path),
+        "render_manifest_path": "build/candidates/CAND001/render_manifest.json",
+        "render_manifest_sha256": _sha256_file(render_manifest_path),
+        "decision": "accept",
+        "reviewer": "local-user",
+        "reviewed_at": "2026-06-08T00:00:00Z",
+        "rationale": "reviewed",
+        "human_review_required": True,
+    }
+    (sandbox / "acceptance.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _tree(workspace: Path) -> list[str]:
@@ -265,6 +301,38 @@ def test_review_packet_rejects_sandbox_root_symlink(tmp_path: Path) -> None:
             "CAND001",
             workspace_root=workspace,
         )
+
+
+def test_review_packet_revalidates_stale_acceptance_before_apply_command(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "candidates": [{"id": "CAND001", "candidate_hash": "sha256:" + "3" * 64}],
+    }
+    candidate_set_path = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"][0]["source_sha256"] = _sha256_file(fixture / "candidate_demo.tex")
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _write_acceptance(fixture)
+    (fixture / "candidate_demo.tex").write_text("changed\n", encoding="utf-8")
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["apply_readiness"]["status"] == "blocked"
+    assert "source_drift_hash_mismatch" in packet["apply_readiness"]["blocking_reasons"]
+    assert packet["apply_readiness"]["required_commands"] == []
 
 
 def test_review_packet_rejects_manifest_symlink(tmp_path: Path) -> None:
