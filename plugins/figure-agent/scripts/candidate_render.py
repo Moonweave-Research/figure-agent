@@ -72,6 +72,22 @@ def _fixture_path(example_dir: Path, fixture_name: str, value: Any) -> Path:
     return candidate_contracts.fixture_relative_path(example_dir, path.as_posix())
 
 
+def _candidate_set_path_value(
+    example_dir: Path,
+    candidate_set_path: Path | None,
+) -> str:
+    if candidate_set_path is None:
+        return "build/candidates/candidate_set.json"
+    if candidate_set_path.is_absolute():
+        resolved = candidate_set_path.resolve()
+    else:
+        resolved = (example_dir / candidate_set_path).resolve()
+    try:
+        return resolved.relative_to(example_dir.resolve()).as_posix()
+    except ValueError as exc:
+        raise CandidateRenderError("candidate_set path_escape") from exc
+
+
 def _candidate_source_text(
     example_dir: Path,
     fixture_name: str,
@@ -133,6 +149,7 @@ def render_candidate_set(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
+    source_candidate_set_path = _candidate_set_path_value(example_dir, candidate_set_path)
     rendered: list[dict[str, Any]] = []
     for candidate in candidate_set.get("candidates", []):
         if not isinstance(candidate, dict):
@@ -157,9 +174,7 @@ def render_candidate_set(
             "candidate_id": candidate_id,
             "candidate_hash": candidate.get("candidate_hash"),
             "fixture": name,
-            "candidate_set_path": candidate_set_path.as_posix()
-            if candidate_set_path is not None
-            else "build/candidates/candidate_set.json",
+            "candidate_set_path": source_candidate_set_path,
             "panel": (
                 candidate.get("target", {}).get("panel")
                 if isinstance(candidate.get("target"), dict)

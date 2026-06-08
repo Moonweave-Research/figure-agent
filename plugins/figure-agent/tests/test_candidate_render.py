@@ -93,6 +93,26 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert after_exports == before_exports
 
 
+def test_render_canonicalizes_candidate_set_path(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    candidate_render.render_candidate_set(
+        "candidate_demo",
+        candidate_set,
+        workspace_root=workspace,
+        candidate_set_path=fixture / "build" / "candidates" / "panel_C_candidate_set.json",
+    )
+
+    manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    assert data["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
+
+
 def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

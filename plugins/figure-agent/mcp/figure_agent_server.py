@@ -354,7 +354,23 @@ def _candidate_manifest_metadata(
         "exists": path.exists(),
         "media_type": "application/json",
     }
+    build_dir = workspace_root / "examples" / name / "build"
+    root = build_dir / "candidates"
     sandbox = path.parent
+    for label, candidate in (
+        ("build", build_dir),
+        ("candidates", root),
+        (candidate_id, sandbox),
+    ):
+        if candidate.is_symlink():
+            payload.update(
+                {
+                    "success": False,
+                    "blocked": True,
+                    "reason": f"sandbox_symlink_forbidden:{label}",
+                }
+            )
+            return payload
     if path.is_symlink():
         payload.update(
             {

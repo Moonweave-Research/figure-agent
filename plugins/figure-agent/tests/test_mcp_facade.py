@@ -756,6 +756,38 @@ def test_mcp_candidate_manifest_resource_rejects_manifest_symlink(tmp_path: Path
     assert "sha256" not in payload
 
 
+def test_mcp_candidate_manifest_resource_rejects_sandbox_ancestor_symlink(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_candidate_fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    build = fixture / "build"
+    build.symlink_to(exports)
+    sandbox = exports / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    (sandbox / "candidate_manifest.json").write_text('{"secret": true}\n', encoding="utf-8")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://candidate_demo/candidates/CAND001/manifest"},
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _resource_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.resource-metadata.v1"
+    assert payload["success"] is False
+    assert payload["blocked"] is True
+    assert payload["reason"] == "sandbox_symlink_forbidden:build"
+    assert "sha256" not in payload
+
+
 def test_mcp_candidate_render_reports_operation_in_progress(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_candidate_fixture(workspace)
