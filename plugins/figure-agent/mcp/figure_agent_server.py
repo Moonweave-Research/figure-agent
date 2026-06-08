@@ -234,6 +234,26 @@ def _validated_workspace_and_name(
     return workspace_root, str(name)
 
 
+def _validated_workspace(
+    started: float,
+    schema: str,
+) -> Path | dict[str, Any]:
+    plugin_root = _plugin_root()
+    workspace_root = _workspace_root(plugin_root)
+    if workspace_root is None or not _examples_dir(workspace_root).is_dir():
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            error=_error(
+                "workspace_missing",
+                "workspace examples/ directory not found",
+                "Set FIGURE_AGENT_WORKSPACE or CLAUDE_PROJECT_DIR to a project with examples/.",
+            ),
+        )
+    return workspace_root
+
+
 def _artifact_descriptor(
     workspace_root: Path,
     path: Path,
@@ -693,6 +713,65 @@ def _run_json_fig_agent_tool(
     )
 
 
+def _run_workspace_json_fig_agent_tool(
+    *,
+    schema: str,
+    command: list[str],
+    payload_key: str,
+    failure_message: str,
+) -> dict[str, Any]:
+    started = time.monotonic()
+    resolved = _validated_workspace(started, schema)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root = resolved
+    try:
+        result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=120)
+    except FileNotFoundError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            error=_error("dependency_missing", "Python executable for fig-agent not found"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            stdout=_bounded(exc.stdout or ""),
+            stderr=_bounded(exc.stderr or ""),
+            error=_error("timeout", f"{failure_message} timed out"),
+        )
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", failure_message),
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", f"{failure_message} returned invalid JSON"),
+        )
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        **{payload_key: payload},
+    )
+
+
 def _quality_map(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     return _run_json_fig_agent_tool(
@@ -951,6 +1030,83 @@ def _rank_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
         command=["rank-candidates", name, "--candidate-set", candidate_set, "--json"],
         payload_key="rank_result",
         failure_message="fig-agent rank-candidates failed",
+    )
+
+
+def _memory_summary(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.memory-summary.v1",
+        command=["memory-index", "--fixture", name, "--json"],
+        payload_key="memory_index",
+        failure_message="fig-agent memory-index failed",
+    )
+
+
+def _benchmark_list(arguments: dict[str, Any]) -> dict[str, Any]:
+    del arguments
+    return _run_workspace_json_fig_agent_tool(
+        schema="figure-agent.mcp.benchmark-list.v1",
+        command=["benchmark-list", "--json"],
+        payload_key="benchmark_list",
+        failure_message="fig-agent benchmark-list failed",
+    )
+
+
+def _benchmark_run_preview(arguments: dict[str, Any]) -> dict[str, Any]:
+    suite = arguments.get("suite")
+    if not _is_safe_fixture_name(suite):
+        return _tool_envelope(
+            "figure-agent.mcp.benchmark-run-preview.v1",
+            success=False,
+            started=time.monotonic(),
+            error=_error(
+                "invalid_fixture_name",
+                "suite must be a single benchmark suite name",
+            ),
+        )
+    command = ["benchmark-run", "--suite", str(suite), "--json"]
+    limit = arguments.get("limit")
+    if limit is not None:
+        try:
+            parsed_limit = int(limit)
+        except (TypeError, ValueError):
+            return _tool_envelope(
+                "figure-agent.mcp.benchmark-run-preview.v1",
+                success=False,
+                started=time.monotonic(),
+                error=_error("invalid_request", "limit must be an integer"),
+            )
+        command.extend(["--limit", str(parsed_limit)])
+    return _run_workspace_json_fig_agent_tool(
+        schema="figure-agent.mcp.benchmark-run-preview.v1",
+        command=command,
+        payload_key="benchmark_run",
+        failure_message="fig-agent benchmark-run failed",
+    )
+
+
+def _benchmark_compare(arguments: dict[str, Any]) -> dict[str, Any]:
+    baseline_run = arguments.get("baseline_run")
+    candidate_run = arguments.get("candidate_run")
+    if not _is_safe_fixture_name(baseline_run) or not _is_safe_fixture_name(candidate_run):
+        return _tool_envelope(
+            "figure-agent.mcp.benchmark-compare.v1",
+            success=False,
+            started=time.monotonic(),
+            error=_error("invalid_fixture_name", "benchmark run ids must be single names"),
+        )
+    return _run_workspace_json_fig_agent_tool(
+        schema="figure-agent.mcp.benchmark-compare.v1",
+        command=[
+            "benchmark-compare",
+            str(baseline_run),
+            str(candidate_run),
+            "--json",
+        ],
+        payload_key="benchmark_comparison",
+        failure_message="fig-agent benchmark-compare failed",
     )
 
 
@@ -1464,6 +1620,51 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _rank_candidates,
+    },
+    "figure_agent_memory_summary": {
+        "description": "Return a read-only quality memory index preview for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _memory_summary,
+    },
+    "figure_agent_benchmark_list": {
+        "description": "Return read-only quality benchmark suites.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {},
+        },
+        "handler": _benchmark_list,
+    },
+    "figure_agent_benchmark_run_preview": {
+        "description": "Run a read-only lightweight benchmark preview.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["suite"],
+            "properties": {
+                "suite": {"type": "string"},
+                "limit": {"type": "integer"},
+            },
+        },
+        "handler": _benchmark_run_preview,
+    },
+    "figure_agent_benchmark_compare": {
+        "description": "Compare two saved benchmark runs without writing.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["baseline_run", "candidate_run"],
+            "properties": {
+                "baseline_run": {"type": "string"},
+                "candidate_run": {"type": "string"},
+            },
+        },
+        "handler": _benchmark_compare,
     },
     "figure_agent_prepare_human_review": {
         "description": "Return a read-only human review packet for one candidate.",

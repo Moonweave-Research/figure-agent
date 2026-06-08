@@ -183,6 +183,10 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_candidate_apply_readiness",
         "figure_agent_evidence_sync_preview",
         "figure_agent_closeout_ready",
+        "figure_agent_memory_summary",
+        "figure_agent_benchmark_list",
+        "figure_agent_benchmark_run_preview",
+        "figure_agent_benchmark_compare",
         "figure_agent_apply_candidate",
     } <= tool_names
     assert "figure_agent_closeout_accept" not in tool_names
@@ -244,6 +248,62 @@ def test_mcp_evidence_and_closeout_schemas_are_read_only(tmp_path: Path) -> None
     assert "write" not in evidence_schema["properties"]
     assert "accept_golden" not in closeout_schema["properties"]
     assert "force_golden" not in export_schema["properties"]
+
+
+def test_mcp_memory_and_benchmark_schemas_are_read_only(tmp_path: Path) -> None:
+    result = _run_mcp_server(
+        [_mcp_request("tools/list", request_id=1)],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(tmp_path / "workspace")},
+    )
+
+    response = _response_lines(result)[0]
+    tools = {tool["name"]: tool for tool in response["result"]["tools"]}
+    for name in (
+        "figure_agent_memory_summary",
+        "figure_agent_benchmark_list",
+        "figure_agent_benchmark_run_preview",
+        "figure_agent_benchmark_compare",
+    ):
+        schema = tools[name]["inputSchema"]
+        assert schema["additionalProperties"] is False
+        properties = schema.get("properties", {})
+        assert "write" not in properties
+        assert "overwrite" not in properties
+        assert "path" not in properties
+
+
+def test_mcp_benchmark_run_preview_does_not_create_benchmark_scratch(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = workspace / "examples" / "smoke_trap_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: smoke_trap_demo\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "smoke_trap_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_benchmark_run_preview",
+                    "arguments": {"suite": "smoke", "limit": 1},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.benchmark-run-preview.v1"
+    assert payload["success"] is True
+    assert payload["benchmark_run"]["schema"] == "figure-agent.quality-benchmark-run.v1"
+    assert not (workspace / ".scratch" / "figure-agent-benchmarks").exists()
 
 
 def test_mcp_export_rejects_force_golden_argument(tmp_path: Path) -> None:
