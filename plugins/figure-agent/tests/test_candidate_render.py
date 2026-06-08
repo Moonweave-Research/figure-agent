@@ -215,3 +215,24 @@ def test_render_rejects_sandbox_root_symlink_to_exports(tmp_path: Path) -> None:
         )
 
     assert list(exports.rglob("*")) == []
+
+
+def test_render_rejects_build_dir_symlink_to_exports(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    (fixture / "build").symlink_to(exports)
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+    assert list(exports.rglob("*")) == []

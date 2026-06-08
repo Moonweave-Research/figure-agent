@@ -40,6 +40,9 @@ def _safe_candidate_id(value: Any) -> str:
 
 
 def _sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
+    build_dir = example_dir / "build"
+    if build_dir.is_symlink():
+        raise CandidateRenderError("sandbox_symlink_forbidden: build")
     root = example_dir / "build" / "candidates"
     if root.is_symlink():
         raise CandidateRenderError("sandbox_symlink_forbidden: candidates")
