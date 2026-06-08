@@ -50,6 +50,12 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
         "candidate_demo",
         workspace_root=workspace,
     )
+    candidate_set["candidates"][0]["candidate_hash"] = "sha256:" + "3" * 64
+    candidate_set["candidates"][0]["target"]["panel"] = "C"
+    candidate_set["candidates"][0]["selectors"] = [
+        {"kind": "tex_selector.v1", "line_start": 1, "line_end": 1}
+    ]
+    candidate_set["candidates"][0]["visual_review"] = {"status": "missing_render"}
 
     result = candidate_render.render_candidate_set(
         "candidate_demo",
@@ -65,6 +71,16 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert data["base"]["source_commit"]
     assert data["tool_versions"]["fig_agent"]
     assert data["tool_versions"]["tex_engine"] == "not_run"
+    assert data["candidate_hash"] == "sha256:" + "3" * 64
+    assert data["panel"] == "C"
+    assert data["selectors"] == [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 1}]
+    assert data["stages"] == {
+        "prepare": "passed",
+        "compile": "not_run",
+        "export": "not_run",
+        "crop": "not_run",
+    }
+    assert data["visual_review"] == {"status": "missing_render"}
     assert data["verification"]["hard_gate_state"] == "human_required"
     assert data["effective_apply_authority"] == "review_only"
     after_exports = {

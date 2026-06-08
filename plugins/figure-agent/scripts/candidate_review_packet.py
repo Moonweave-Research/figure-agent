@@ -102,6 +102,8 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     artifacts = manifest.get("artifacts")
     return {
         "schema": manifest.get("schema"),
+        "candidate_hash": manifest.get("candidate_hash"),
+        "panel": manifest.get("panel"),
         "apply_authority": manifest.get("apply_authority"),
         "effective_apply_authority": manifest.get("effective_apply_authority"),
         "hard_gate_state": (
@@ -113,6 +115,10 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "artifact_count": len(artifacts) if isinstance(artifacts, list) else 0,
         "source_commit": base.get("source_commit") if isinstance(base, dict) else None,
         "risk": manifest.get("risk"),
+        "stages": manifest.get("stages") if isinstance(manifest.get("stages"), dict) else {},
+        "visual_review": manifest.get("visual_review")
+        if isinstance(manifest.get("visual_review"), dict)
+        else {},
         "rollback_strategy": (
             manifest.get("rollback", {}).get("strategy")
             if isinstance(manifest.get("rollback"), dict)
@@ -166,6 +172,16 @@ def build_review_packet(
         "schema": SCHEMA,
         "fixture": name,
         "candidate_id": safe_candidate_id,
+        "candidate_hash": manifest.get("candidate_hash"),
+        "panel": manifest.get("panel"),
+        "selectors": (
+            manifest.get("selectors")
+            if isinstance(manifest.get("selectors"), list)
+            else []
+        ),
+        "visual_review": manifest.get("visual_review")
+        if isinstance(manifest.get("visual_review"), dict)
+        else {"status": "missing_render"},
         "manifest_summary": _manifest_summary(manifest),
         "artifacts": _artifact_descriptors(manifest_path, manifest.get("artifacts")),
         "source_changes": _source_change_summary(manifest),

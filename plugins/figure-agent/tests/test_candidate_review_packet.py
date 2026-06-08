@@ -22,7 +22,10 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
             {
                 "schema": "figure-agent.candidate-manifest.v1",
                 "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "3" * 64,
                 "fixture": name,
+                "panel": "C",
+                "selectors": [{"kind": "tex_selector.v1", "line_start": 10, "line_end": 11}],
                 "base": {
                     "source_commit": "abc123",
                     "tex_hash": "sha256:" + "1" * 64,
@@ -38,6 +41,13 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
                     }
                 ],
                 "artifacts": [{"kind": "candidate_source", "path": f"{name}.tex"}],
+                "stages": {
+                    "prepare": "passed",
+                    "compile": "not_run",
+                    "export": "not_run",
+                    "crop": "not_run",
+                },
+                "visual_review": {"status": "missing_render"},
                 "verification": {
                     "commands": ["fig-agent status candidate_demo --json"],
                     "hard_gate_state": "human_required",
@@ -75,8 +85,14 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert packet["schema"] == "figure-agent.candidate-review-packet.v1"
     assert packet["fixture"] == "candidate_demo"
     assert packet["candidate_id"] == "CAND001"
+    assert packet["candidate_hash"] == "sha256:" + "3" * 64
+    assert packet["panel"] == "C"
+    assert packet["selectors"] == [{"kind": "tex_selector.v1", "line_start": 10, "line_end": 11}]
+    assert packet["visual_review"] == {"status": "missing_render"}
     assert packet["manifest_summary"] == {
         "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_hash": "sha256:" + "3" * 64,
+        "panel": "C",
         "apply_authority": "apply_eligible",
         "effective_apply_authority": "review_only",
         "hard_gate_state": "human_required",
@@ -84,6 +100,13 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "artifact_count": 1,
         "source_commit": "abc123",
         "risk": "low",
+        "stages": {
+            "prepare": "passed",
+            "compile": "not_run",
+            "export": "not_run",
+            "crop": "not_run",
+        },
+        "visual_review": {"status": "missing_render"},
         "rollback_strategy": "reverse_operations",
     }
     assert packet["artifacts"] == [

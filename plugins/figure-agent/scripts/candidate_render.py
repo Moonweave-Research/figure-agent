@@ -154,7 +154,14 @@ def render_candidate_set(
         manifest = {
             "schema": SCHEMA,
             "candidate_id": candidate_id,
+            "candidate_hash": candidate.get("candidate_hash"),
             "fixture": name,
+            "panel": (
+                candidate.get("target", {}).get("panel")
+                if isinstance(candidate.get("target"), dict)
+                else candidate.get("panel")
+            ),
+            "selectors": candidate.get("selectors", []),
             "base": {
                 "source_commit": _source_commit(paths.workspace_root),
                 "tex_hash": base.get("tex_hash", ZERO_HASH),
@@ -168,6 +175,19 @@ def render_candidate_set(
             },
             "operations": candidate.get("operations", []),
             "artifacts": artifacts,
+            "stages": {
+                "prepare": "passed",
+                "compile": "not_run",
+                "export": "not_run",
+                "crop": "not_run",
+            },
+            "visual_review": candidate.get(
+                "visual_review",
+                {
+                    "status": "missing_render",
+                    "reason": "candidate compile/export/crop has not run",
+                },
+            ),
             "verification": {
                 "commands": candidate.get("verification", {}).get(
                     "required_commands",
@@ -177,6 +197,8 @@ def render_candidate_set(
             },
             "apply_authority": candidate.get("apply_authority"),
             "effective_apply_authority": effective,
+            "risk": candidate.get("risk"),
+            "rollback": candidate.get("rollback"),
         }
         path = out_dir / "candidate_manifest.json"
         _write_sandbox_file(

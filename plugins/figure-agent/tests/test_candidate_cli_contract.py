@@ -192,12 +192,20 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
         "CAND001",
         "--json",
     )
+    compare = _run(
+        workspace,
+        "compare-candidate",
+        "candidate_demo",
+        "CAND001",
+        "--json",
+    )
 
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     assert candidates.returncode == 0, candidates.stderr
     assert render.returncode == 0, render.stderr
     assert rank.returncode == 0, rank.stderr
     assert review.returncode == 0, review.stderr
+    assert compare.returncode == 0, compare.stderr
     assert manifest.exists()
     assert json.loads(render.stdout)["schema"] == "figure-agent.candidate-render-result.v1"
     payload = json.loads(rank.stdout)
@@ -207,6 +215,10 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     review_payload = json.loads(review.stdout)
     assert review_payload["schema"] == "figure-agent.candidate-review-packet.v1"
     assert review_payload["candidate_id"] == "CAND001"
+    compare_payload = json.loads(compare.stdout)
+    assert compare_payload["schema"] == "figure-agent.candidate-review-packet.v1"
+    assert compare_payload["candidate_id"] == "CAND001"
+    assert compare_payload["visual_review"]["status"] == "missing_render"
 
 
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:

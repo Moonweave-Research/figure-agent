@@ -505,6 +505,10 @@ def _review_candidate(argv: list[str]) -> int:
     return 0
 
 
+def _compare_candidate(argv: list[str]) -> int:
+    return _review_candidate(argv)
+
+
 def _apply_plan(argv: list[str]) -> int:
     import quality_patch_apply
 
@@ -611,6 +615,8 @@ def main(argv: list[str] | None = None) -> int:
         return _rank_candidates(rest)
     if command == "review-candidate":
         return _review_candidate(rest)
+    if command == "compare-candidate":
+        return _compare_candidate(rest)
     if command == "apply-plan":
         return _apply_plan(rest)
     if command == "verify-plan":
