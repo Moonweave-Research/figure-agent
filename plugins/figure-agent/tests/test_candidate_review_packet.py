@@ -1,0 +1,131 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+import candidate_review_packet  # noqa: E402
+
+
+def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    (fixture / f"{name}.tex").write_text("source\n", encoding="utf-8")
+    (sandbox / f"{name}.tex").write_text("candidate\n", encoding="utf-8")
+    (sandbox / "candidate_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-manifest.v1",
+                "candidate_id": "CAND001",
+                "fixture": name,
+                "base": {
+                    "source_commit": "abc123",
+                    "tex_hash": "sha256:" + "1" * 64,
+                    "status_hash": "sha256:" + "2" * 64,
+                    "render_hash": "sha256:" + "0" * 64,
+                },
+                "operations": [
+                    {
+                        "kind": "replace_text",
+                        "path": f"examples/{name}/{name}.tex",
+                        "original": "source",
+                        "replacement": "candidate",
+                    }
+                ],
+                "artifacts": [{"kind": "candidate_source", "path": f"{name}.tex"}],
+                "verification": {
+                    "commands": ["fig-agent status candidate_demo --json"],
+                    "hard_gate_state": "human_required",
+                },
+                "apply_authority": "apply_eligible",
+                "effective_apply_authority": "review_only",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def _tree(workspace: Path) -> list[str]:
+    return sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+
+def test_review_packet_reads_manifest_and_artifact_descriptors(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    before = _tree(workspace)
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["schema"] == "figure-agent.candidate-review-packet.v1"
+    assert packet["fixture"] == "candidate_demo"
+    assert packet["candidate_id"] == "CAND001"
+    assert packet["manifest_summary"] == {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "apply_authority": "apply_eligible",
+        "effective_apply_authority": "review_only",
+        "hard_gate_state": "human_required",
+        "operation_count": 1,
+        "artifact_count": 1,
+        "source_commit": "abc123",
+    }
+    assert packet["artifacts"] == [
+        {
+            "kind": "candidate_source",
+            "path": "candidate_demo.tex",
+            "exists": True,
+            "size_bytes": len(b"candidate\n"),
+        }
+    ]
+    assert packet["human_decision_required"] is True
+    assert packet["human_decision_fields"] == [
+        "decision",
+        "reviewer",
+        "reviewed_at",
+        "rationale",
+    ]
+    assert _tree(workspace) == before
+
+
+def test_review_packet_validates_fixture_name(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    with pytest.raises(ValueError, match="fixture name"):
+        candidate_review_packet.build_review_packet(
+            "../candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+        )
+
+
+def test_review_packet_rejects_artifact_path_escape(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    data["artifacts"] = [{"kind": "candidate_source", "path": "../escape.tex"}]
+    manifest.write_text(json.dumps(data) + "\n", encoding="utf-8")
+
+    with pytest.raises(
+        candidate_review_packet.CandidateReviewPacketError,
+        match="path_escape",
+    ):
+        candidate_review_packet.build_review_packet(
+            "candidate_demo",
+            "CAND001",
+            workspace_root=workspace,
+        )
