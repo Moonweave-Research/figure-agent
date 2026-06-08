@@ -3,22 +3,47 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import candidate_visual_eval
 import fixture_identity
 import runtime_paths
 
 SCHEMA = "figure-agent.candidate-manifest.v1"
 RESULT_SCHEMA = "figure-agent.candidate-render-result.v1"
 ZERO_HASH = "sha256:" + "0" * 64
+RENDER_MANIFEST_SCHEMA = "figure-agent.candidate-render-manifest.v1"
 
 
 class CandidateRenderError(ValueError):
     """Raised when candidate rendering would escape the manifest sandbox."""
+
+
+def _which(name: str) -> str | None:
+    return shutil.which(name)
+
+
+def _run_process(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=120,
+    )
 
 
 def _source_commit(workspace_root: Path) -> str:
@@ -39,6 +64,14 @@ def _safe_candidate_id(value: Any) -> str:
     return candidate_id
 
 
+def _safe_panel_id(value: str | None) -> str | None:
+    if value is None:
+        return None
+    if not value or not all(char.isalnum() or char in {"_", "-"} for char in value):
+        raise CandidateRenderError(f"invalid crop_panel: {value}")
+    return value
+
+
 def _sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
     build_dir = example_dir / "build"
     if build_dir.is_symlink():
@@ -57,9 +90,31 @@ def _sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
 
 
 def _write_sandbox_file(path: Path, text: str) -> None:
+    if path.parent.is_symlink():
+        raise CandidateRenderError(f"sandbox_symlink_forbidden: {path.parent.name}")
     if path.is_symlink():
         raise CandidateRenderError(f"sandbox_symlink_forbidden: {path.name}")
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _sandbox_child_dir(out_dir: Path, name: str) -> Path:
+    child = out_dir / name
+    if child.is_symlink():
+        raise CandidateRenderError(f"sandbox_symlink_forbidden: {name}")
+    try:
+        child.resolve().relative_to(out_dir.resolve())
+    except ValueError as exc:
+        raise CandidateRenderError(f"sandbox path_escape: {name}") from exc
+    child.mkdir(parents=True, exist_ok=True)
+    return child
+
+
+def _fixture_relative(example_dir: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(example_dir.resolve()).as_posix()
+    except ValueError as exc:
+        raise CandidateRenderError("candidate artifact path_escape") from exc
 
 
 def _fixture_path(example_dir: Path, fixture_name: str, value: Any) -> Path:
@@ -135,6 +190,249 @@ def _write_candidate_source_copy(
     return [{"kind": "candidate_source", "path": destination.name}]
 
 
+def _write_render_source_copy(
+    *,
+    example_dir: Path,
+    fixture_name: str,
+    candidate: dict[str, Any],
+    out_dir: Path,
+) -> str | None:
+    source_copy = _candidate_source_text(example_dir, fixture_name, candidate)
+    if source_copy is None:
+        return None
+    _filename, text = source_copy
+    source_dir = _sandbox_child_dir(out_dir, "source")
+    destination = source_dir / "candidate.tex"
+    _write_sandbox_file(destination, text)
+    return _fixture_relative(example_dir, destination)
+
+
+def _render_manifest(
+    *,
+    example_dir: Path,
+    fixture_name: str,
+    candidate: dict[str, Any],
+    candidate_id: str,
+    out_dir: Path,
+    candidate_set_path: str,
+    source_copy: str | None,
+    compile_requested: bool,
+    export_requested: bool,
+    crop_panel: str | None,
+    evaluate_requested: bool,
+    plugin_root: Path,
+) -> dict[str, Any]:
+    diagnostics: list[dict[str, str]] = []
+    compile_status = "not_run"
+    export_status = "not_run"
+    crop_status = "not_run"
+    evaluate_status = "not_run"
+    tex_engine = "lualatex"
+    render_dir = _sandbox_child_dir(out_dir, "render")
+    crops_dir = _sandbox_child_dir(out_dir, "crops") if crop_panel else None
+    if compile_requested:
+        if _which(tex_engine) is None:
+            compile_status = "dependency_missing"
+            diagnostics.append(
+                {
+                    "stage": "compile",
+                    "category": "dependency_missing",
+                    "dependency": tex_engine,
+                    "message": f"{tex_engine} not found",
+                }
+            )
+        else:
+            env = {
+                **os.environ,
+                "TEXINPUTS": (
+                    f"{plugin_root / 'styles'}:"
+                    f"{example_dir}:"
+                    f"{out_dir / 'source'}:"
+                    f"{os.environ.get('TEXINPUTS', '')}"
+                ),
+            }
+            result = _run_process(
+                [
+                    tex_engine,
+                    "-interaction=nonstopmode",
+                    "-halt-on-error",
+                    "-output-directory=render",
+                    "source/candidate.tex",
+                ],
+                cwd=out_dir,
+                env=env,
+            )
+            compile_status = "success" if result.returncode == 0 else "failed"
+            if result.returncode != 0:
+                diagnostics.append(
+                    {
+                        "stage": "compile",
+                        "category": "failed",
+                        "dependency": tex_engine,
+                        "message": "candidate TeX compile failed",
+                    }
+                )
+    if export_requested and compile_status == "success":
+        if _which("pdftocairo") is None:
+            export_status = "dependency_missing"
+            diagnostics.append(
+                {
+                    "stage": "export",
+                    "category": "dependency_missing",
+                    "dependency": "pdftocairo",
+                    "message": "pdftocairo not found",
+                }
+            )
+        else:
+            result = _run_process(
+                [
+                    "pdftocairo",
+                    "-png",
+                    "-r",
+                    "600",
+                    "-singlefile",
+                    "render/candidate.pdf",
+                    "render/candidate",
+                ],
+                cwd=out_dir,
+                env=os.environ.copy(),
+            )
+            export_status = "success" if result.returncode == 0 else "failed"
+            if result.returncode != 0:
+                diagnostics.append(
+                    {
+                        "stage": "export",
+                        "category": "failed",
+                        "dependency": "pdftocairo",
+                        "message": "candidate PNG export failed",
+                    }
+                )
+    if crop_panel and export_status == "success":
+        original_png = example_dir / "build" / f"{fixture_name}.png"
+        candidate_png = render_dir / "candidate.png"
+        if crops_dir is None:
+            raise CandidateRenderError("crop sandbox missing")
+        before_crop = crops_dir / f"original_panel_{crop_panel}.png"
+        after_crop = crops_dir / f"candidate_panel_{crop_panel}.png"
+        if not original_png.is_file():
+            crop_status = "blocked"
+            diagnostics.append(
+                {
+                    "stage": "crop",
+                    "category": "missing_original",
+                    "dependency": "build_png",
+                    "message": f"build/{fixture_name}.png not found",
+                }
+            )
+        elif not candidate_png.is_file():
+            crop_status = "blocked"
+            diagnostics.append(
+                {
+                    "stage": "crop",
+                    "category": "missing_candidate",
+                    "dependency": "candidate_png",
+                    "message": "candidate PNG not found",
+                }
+            )
+        elif before_crop.is_symlink() or after_crop.is_symlink():
+            raise CandidateRenderError("sandbox_symlink_forbidden: crop")
+        else:
+            shutil.copyfile(original_png, before_crop)
+            shutil.copyfile(candidate_png, after_crop)
+            crop_status = "success"
+    visual_deltas: dict[str, Any] = {
+        "pixel_diff_mean": None,
+        "pixel_diff_max": None,
+        "changed_bbox": None,
+    }
+    if evaluate_requested:
+        if compile_status == "dependency_missing":
+            evaluate_status = "dependency_missing"
+        elif compile_status in {"failed", "not_run"}:
+            evaluate_status = "blocked"
+        elif crop_panel and crop_status != "success":
+            evaluate_status = "blocked"
+        elif crop_panel and crop_status == "success":
+            before_crop = out_dir / "crops" / f"original_panel_{crop_panel}.png"
+            after_crop = out_dir / "crops" / f"candidate_panel_{crop_panel}.png"
+            try:
+                comparison = candidate_visual_eval.compare_image_pair(before_crop, after_crop)
+            except (OSError, ValueError) as exc:
+                evaluate_status = "blocked"
+                diagnostics.append(
+                    {
+                        "stage": "evaluate",
+                        "category": "blocked",
+                        "dependency": "image_compare",
+                        "message": str(exc),
+                    }
+                )
+            else:
+                evaluate_status = str(comparison.get("status") or "blocked")
+                if isinstance(comparison.get("visual_deltas"), dict):
+                    visual_deltas = comparison["visual_deltas"]
+                for diagnostic in comparison.get("diagnostics", []):
+                    if isinstance(diagnostic, dict):
+                        diagnostics.append(
+                            {key: str(value) for key, value in diagnostic.items()}
+                        )
+        else:
+            evaluate_status = "rendered_needs_human_review"
+    before_crop_path = (
+        out_dir / "crops" / f"original_panel_{crop_panel}.png"
+        if crop_panel
+        else None
+    )
+    after_crop_path = (
+        out_dir / "crops" / f"candidate_panel_{crop_panel}.png"
+        if crop_panel
+        else None
+    )
+    artifacts = {
+        "source_copy": source_copy,
+        "pdf": _fixture_relative(example_dir, render_dir / "candidate.pdf")
+        if (render_dir / "candidate.pdf").is_file()
+        else None,
+        "png": _fixture_relative(example_dir, render_dir / "candidate.png")
+        if (render_dir / "candidate.png").is_file()
+        else None,
+        "before_crop": _fixture_relative(example_dir, before_crop_path)
+        if before_crop_path is not None and before_crop_path.is_file()
+        else None,
+        "after_crop": _fixture_relative(example_dir, after_crop_path)
+        if after_crop_path is not None and after_crop_path.is_file()
+        else None,
+    }
+    return {
+        "schema": RENDER_MANIFEST_SCHEMA,
+        "schema_version": 1,
+        "figure_name": fixture_name,
+        "candidate_id": candidate_id,
+        "candidate_hash": candidate.get("candidate_hash"),
+        "candidate_set_path": candidate_set_path,
+        "sandbox_path": _fixture_relative(example_dir, out_dir),
+        "panel": (
+            crop_panel
+            or (
+                candidate.get("target", {}).get("panel")
+                if isinstance(candidate.get("target"), dict)
+                else candidate.get("panel")
+            )
+        ),
+        "stages": {
+            "prepare": {"status": "success"},
+            "compile": {"status": compile_status},
+            "export": {"status": export_status},
+            "crop": {"status": crop_status},
+            "evaluate": {"status": evaluate_status},
+        },
+        "artifacts": artifacts,
+        "visual_deltas": visual_deltas,
+        "diagnostics": diagnostics,
+        "human_review_required": True,
+    }
+
+
 def render_candidate_set(
     name: str,
     candidate_set: dict[str, Any],
@@ -142,8 +440,14 @@ def render_candidate_set(
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
     candidate_set_path: Path | None = None,
+    candidate_id: str | None = None,
+    compile: bool = False,
+    export: bool = False,
+    crop_panel: str | None = None,
+    evaluate: bool = False,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
+    crop_panel = _safe_panel_id(crop_panel)
     paths = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
@@ -154,8 +458,10 @@ def render_candidate_set(
     for candidate in candidate_set.get("candidates", []):
         if not isinstance(candidate, dict):
             continue
-        candidate_id = _safe_candidate_id(candidate.get("id"))
-        out_dir = _sandbox_dir(example_dir, candidate_id)
+        current_candidate_id = _safe_candidate_id(candidate.get("id"))
+        if candidate_id is not None and current_candidate_id != _safe_candidate_id(candidate_id):
+            continue
+        out_dir = _sandbox_dir(example_dir, current_candidate_id)
         out_dir.mkdir(parents=True, exist_ok=True)
         artifacts = _write_candidate_source_copy(
             example_dir=example_dir,
@@ -163,6 +469,14 @@ def render_candidate_set(
             candidate=candidate,
             out_dir=out_dir,
         )
+        render_source_copy = None
+        if compile or export or crop_panel or evaluate:
+            render_source_copy = _write_render_source_copy(
+                example_dir=example_dir,
+                fixture_name=name,
+                candidate=candidate,
+                out_dir=out_dir,
+            )
         hard_gate_state = "human_required"
         effective = candidate_contracts.effective_apply_authority(
             str(candidate.get("apply_authority")),
@@ -171,7 +485,7 @@ def render_candidate_set(
         base = candidate_set.get("base") if isinstance(candidate_set.get("base"), dict) else {}
         manifest = {
             "schema": SCHEMA,
-            "candidate_id": candidate_id,
+            "candidate_id": current_candidate_id,
             "candidate_hash": candidate.get("candidate_hash"),
             "fixture": name,
             "candidate_set_path": source_candidate_set_path,
@@ -224,5 +538,33 @@ def render_candidate_set(
             path,
             json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         )
-        rendered.append({"candidate_id": candidate_id, "manifest": str(path)})
+        rendered_item = {
+            "candidate_id": current_candidate_id,
+            "manifest": _fixture_relative(example_dir, path),
+        }
+        if compile or export or crop_panel or evaluate:
+            render_manifest = _render_manifest(
+                example_dir=example_dir,
+                fixture_name=name,
+                candidate=candidate,
+                candidate_id=current_candidate_id,
+                out_dir=out_dir,
+                candidate_set_path=source_candidate_set_path,
+                source_copy=render_source_copy,
+                compile_requested=compile,
+                export_requested=export,
+                crop_panel=crop_panel,
+                evaluate_requested=evaluate,
+                plugin_root=paths.plugin_root,
+            )
+            render_manifest_path = out_dir / "render_manifest.json"
+            _write_sandbox_file(
+                render_manifest_path,
+                json.dumps(render_manifest, indent=2, sort_keys=True) + "\n",
+            )
+            rendered_item["render_manifest"] = _fixture_relative(
+                example_dir,
+                render_manifest_path,
+            )
+        rendered.append(rendered_item)
     return {"schema": RESULT_SCHEMA, "fixture": name, "rendered": rendered}

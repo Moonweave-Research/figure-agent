@@ -53,6 +53,21 @@ def _load_manifest(example_dir: Path, candidate_id: str) -> tuple[Path, dict[str
     return manifest_path, data
 
 
+def _load_render_manifest(manifest_path: Path) -> tuple[Path, dict[str, Any]] | None:
+    render_manifest_path = manifest_path.parent / "render_manifest.json"
+    if render_manifest_path.is_symlink():
+        raise CandidateReviewPacketError("sandbox_symlink_forbidden: render_manifest.json")
+    if not render_manifest_path.exists():
+        return None
+    try:
+        data = json.loads(render_manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CandidateReviewPacketError("render_manifest_unreadable") from exc
+    if not isinstance(data, dict):
+        raise CandidateReviewPacketError("render_manifest_invalid")
+    return render_manifest_path, data
+
+
 def _artifact_path(manifest_dir: Path, value: Any) -> Path:
     if not isinstance(value, str) or not value.strip():
         raise CandidateReviewPacketError("artifact_path_missing")
@@ -93,6 +108,107 @@ def _artifact_descriptors(
             }
         )
     return descriptors
+
+
+def _fixture_artifact_descriptor(
+    example_dir: Path,
+    value: Any,
+    *,
+    kind: str,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise CandidateReviewPacketError("artifact_path_missing")
+    path = Path(value)
+    if path.is_absolute():
+        raise CandidateReviewPacketError("path_escape")
+    lexical_path = example_dir / path
+    if lexical_path.is_symlink():
+        raise CandidateReviewPacketError(f"sandbox_symlink_forbidden: {path.name}")
+    candidate = lexical_path.resolve()
+    try:
+        candidate.relative_to(example_dir.resolve())
+    except ValueError as exc:
+        raise CandidateReviewPacketError("path_escape") from exc
+    exists = candidate.is_file()
+    return {
+        "kind": kind,
+        "path": path.as_posix(),
+        "exists": exists,
+        "size_bytes": candidate.stat().st_size if exists else 0,
+    }
+
+
+def _render_evidence(
+    example_dir: Path,
+    render_manifest_path: Path,
+    render_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    stages = (
+        render_manifest.get("stages")
+        if isinstance(render_manifest.get("stages"), dict)
+        else {}
+    )
+    evaluate_stage = stages.get("evaluate") if isinstance(stages.get("evaluate"), dict) else {}
+    render_status = str(evaluate_stage.get("status") or "not_rendered")
+    artifacts = (
+        render_manifest.get("artifacts")
+        if isinstance(render_manifest.get("artifacts"), dict)
+        else {}
+    )
+    before_artifacts = [
+        item
+        for item in [
+            _fixture_artifact_descriptor(
+                example_dir,
+                artifacts.get("before_crop"),
+                kind="before_crop",
+            )
+        ]
+        if item is not None
+    ]
+    after_artifacts = [
+        item
+        for item in [
+            _fixture_artifact_descriptor(
+                example_dir,
+                artifacts.get("after_crop"),
+                kind="after_crop",
+            )
+        ]
+        if item is not None
+    ]
+    return {
+        "render_status": render_status,
+        "render_manifest_path": render_manifest_path.relative_to(example_dir).as_posix(),
+        "before_artifacts": before_artifacts,
+        "after_artifacts": after_artifacts,
+        "visual_deltas": (
+            render_manifest.get("visual_deltas")
+            if isinstance(render_manifest.get("visual_deltas"), dict)
+            else {}
+        ),
+        "hard_gates": {
+            "render": render_status,
+            "compile": (
+                stages.get("compile", {}).get("status")
+                if isinstance(stages.get("compile"), dict)
+                else None
+            ),
+            "export": (
+                stages.get("export", {}).get("status")
+                if isinstance(stages.get("export"), dict)
+                else None
+            ),
+            "crop": (
+                stages.get("crop", {}).get("status")
+                if isinstance(stages.get("crop"), dict)
+                else None
+            ),
+        },
+        "human_review_required": bool(render_manifest.get("human_review_required", True)),
+    }
 
 
 def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -169,7 +285,21 @@ def build_review_packet(
     )
     example_dir = paths.examples_dir / name
     manifest_path, manifest = _load_manifest(example_dir, safe_candidate_id)
-    return {
+    render_manifest = _load_render_manifest(manifest_path)
+    render_evidence = (
+        _render_evidence(example_dir, render_manifest[0], render_manifest[1])
+        if render_manifest is not None
+        else {
+            "render_status": "not_rendered",
+            "render_manifest_path": None,
+            "before_artifacts": [],
+            "after_artifacts": [],
+            "visual_deltas": {},
+            "hard_gates": {"render": "not_rendered"},
+            "human_review_required": True,
+        }
+    )
+    packet = {
         "schema": SCHEMA,
         "fixture": name,
         "candidate_id": safe_candidate_id,
@@ -202,3 +332,5 @@ def build_review_packet(
         "human_decision_required": True,
         "human_decision_fields": HUMAN_DECISION_FIELDS,
     }
+    packet.update(render_evidence)
+    return packet

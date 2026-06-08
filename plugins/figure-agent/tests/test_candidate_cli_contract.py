@@ -221,6 +221,61 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     assert compare_payload["visual_review"]["status"] == "missing_render"
 
 
+def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+
+    candidates = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    render = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--candidate-id",
+        "CAND001",
+        "--compile",
+        "--export",
+        "--crop-panel",
+        "C",
+        "--evaluate",
+        "--json",
+    )
+    rank = _run(
+        workspace,
+        "rank-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--json",
+    )
+
+    assert candidates.returncode == 0, candidates.stderr
+    assert render.returncode == 0, render.stderr
+    assert rank.returncode == 0, rank.stderr
+    payload = json.loads(render.stdout)
+    assert payload["rendered"] == [
+        {
+            "candidate_id": "CAND001",
+            "manifest": "build/candidates/CAND001/candidate_manifest.json",
+            "render_manifest": "build/candidates/CAND001/render_manifest.json",
+        }
+    ]
+    render_manifest = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    assert json.loads(render_manifest.read_text(encoding="utf-8"))["stages"]["evaluate"][
+        "status"
+    ] in {"dependency_missing", "blocked", "rendered_needs_human_review"}
+    rank_payload = json.loads(rank.stdout)
+    assert rank_payload["scores"][0]["render_status"] != "not_rendered"
+
+
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)

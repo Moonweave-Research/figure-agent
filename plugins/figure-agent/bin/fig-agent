@@ -423,6 +423,12 @@ def _render_candidates(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent render-candidates")
     parser.add_argument("name")
     parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--compile", action="store_true")
+    parser.add_argument("--export", action="store_true")
+    parser.add_argument("--crop-panel")
+    parser.add_argument("--evaluate", action="store_true")
+    parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
@@ -434,6 +440,11 @@ def _render_candidates(argv: list[str]) -> int:
             plugin_root=paths.plugin_root,
             workspace_root=paths.workspace_root,
             candidate_set_path=Path(args.candidate_set),
+            candidate_id=args.candidate_id,
+            compile=args.compile,
+            export=args.export,
+            crop_panel=args.crop_panel,
+            evaluate=args.evaluate,
         )
     except (RuntimeError, candidate_render.CandidateRenderError) as exc:
         print(f"fig-agent render-candidates: {exc}", file=sys.stderr)
@@ -465,7 +476,19 @@ def _rank_candidates(argv: list[str]) -> int:
                 name,
                 f"build/candidates/{candidate_id}/candidate_manifest.json",
             )
-            scores.append(candidate_rank.score_manifest(manifest))
+            try:
+                render_manifest = _load_fixture_json(
+                    name,
+                    f"build/candidates/{candidate_id}/render_manifest.json",
+                )
+            except RuntimeError:
+                render_manifest = None
+            scores.append(
+                candidate_rank.score_manifest(
+                    manifest,
+                    render_manifest=render_manifest,
+                )
+            )
     except (
         RuntimeError,
         ValueError,

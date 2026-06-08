@@ -17,6 +17,11 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
     sandbox.mkdir(parents=True)
     (fixture / f"{name}.tex").write_text("source\n", encoding="utf-8")
     (sandbox / f"{name}.tex").write_text("candidate\n", encoding="utf-8")
+    (sandbox / "source").mkdir()
+    (sandbox / "source" / "candidate.tex").write_text("candidate\n", encoding="utf-8")
+    (sandbox / "crops").mkdir()
+    (sandbox / "crops" / "original_panel_C.png").write_bytes(b"before")
+    (sandbox / "crops" / "candidate_panel_C.png").write_bytes(b"after")
     (sandbox / "candidate_manifest.json").write_text(
         json.dumps(
             {
@@ -57,6 +62,44 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
                 "effective_apply_authority": "review_only",
                 "risk": "low",
                 "rollback": {"strategy": "reverse_operations"},
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (sandbox / "render_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-render-manifest.v1",
+                "schema_version": 1,
+                "figure_name": name,
+                "candidate_id": "CAND001",
+                "candidate_hash": "sha256:" + "3" * 64,
+                "candidate_set_path": "build/candidates/panel_C_candidate_set.json",
+                "sandbox_path": "build/candidates/CAND001",
+                "panel": "C",
+                "stages": {
+                    "prepare": {"status": "success"},
+                    "compile": {"status": "success"},
+                    "export": {"status": "success"},
+                    "crop": {"status": "success"},
+                    "evaluate": {"status": "rendered_needs_human_review"},
+                },
+                "artifacts": {
+                    "source_copy": "build/candidates/CAND001/source/candidate.tex",
+                    "pdf": None,
+                    "png": None,
+                    "before_crop": "build/candidates/CAND001/crops/original_panel_C.png",
+                    "after_crop": "build/candidates/CAND001/crops/candidate_panel_C.png",
+                },
+                "visual_deltas": {
+                    "pixel_diff_mean": 0.12,
+                    "pixel_diff_max": 10,
+                    "changed_bbox": [1, 2, 3, 4],
+                },
+                "diagnostics": [],
+                "human_review_required": True,
             },
             sort_keys=True,
         )
@@ -118,6 +161,31 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
             "size_bytes": len(b"candidate\n"),
         }
     ]
+    assert packet["render_status"] == "rendered_needs_human_review"
+    assert packet["render_manifest_path"] == "build/candidates/CAND001/render_manifest.json"
+    assert packet["before_artifacts"] == [
+        {
+            "kind": "before_crop",
+            "path": "build/candidates/CAND001/crops/original_panel_C.png",
+            "exists": True,
+            "size_bytes": len(b"before"),
+        }
+    ]
+    assert packet["after_artifacts"] == [
+        {
+            "kind": "after_crop",
+            "path": "build/candidates/CAND001/crops/candidate_panel_C.png",
+            "exists": True,
+            "size_bytes": len(b"after"),
+        }
+    ]
+    assert packet["visual_deltas"] == {
+        "pixel_diff_mean": 0.12,
+        "pixel_diff_max": 10,
+        "changed_bbox": [1, 2, 3, 4],
+    }
+    assert packet["hard_gates"]["render"] == "rendered_needs_human_review"
+    assert packet["human_review_required"] is True
     assert packet["human_decision_required"] is True
     assert packet["source_changes"][0]["kind"] == "replace_text"
     assert packet["score_report"]["status"] == "not_available"

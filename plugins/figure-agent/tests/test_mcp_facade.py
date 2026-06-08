@@ -186,6 +186,26 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
     assert after == before
 
 
+def test_mcp_render_candidates_schema_exposes_evaluation_arguments(tmp_path: Path) -> None:
+    result = _run_mcp_server(
+        [_mcp_request("tools/list", request_id=1)],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(tmp_path / "workspace")},
+    )
+
+    response = _response_lines(result)[0]
+    tools = {tool["name"]: tool for tool in response["result"]["tools"]}
+    schema = tools["figure_agent_render_candidates"]["inputSchema"]
+    properties = schema["properties"]
+    assert schema["additionalProperties"] is False
+    assert {"candidate_id", "compile", "export", "crop_panel", "evaluate"} <= set(properties)
+    assert properties["candidate_id"]["type"] == "string"
+    assert properties["compile"]["type"] == "boolean"
+    assert properties["export"]["type"] == "boolean"
+    assert properties["crop_panel"]["type"] == "string"
+    assert properties["evaluate"]["type"] == "boolean"
+
+
 def test_mcp_doctor_reports_plugin_cwd_as_workspace_missing() -> None:
     result = _run_mcp_server(
         [
@@ -561,6 +581,11 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
                     "arguments": {
                         "name": "candidate_demo",
                         "candidate_set": "build/candidates/candidate_set.json",
+                        "candidate_id": "CAND001",
+                        "compile": True,
+                        "export": True,
+                        "crop_panel": "C",
+                        "evaluate": True,
                     },
                 },
                 request_id=1,
@@ -596,12 +621,19 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert render["schema"] == "figure-agent.mcp.render-candidates.v1"
     assert render["success"] is True
     assert render["render_result"]["schema"] == "figure-agent.candidate-render-result.v1"
+    assert render["render_result"]["rendered"][0]["render_manifest"] == (
+        "build/candidates/CAND001/render_manifest.json"
+    )
     assert rank["schema"] == "figure-agent.mcp.rank-candidates.v1"
     assert rank["success"] is True
     assert rank["rank_result"]["schema"] == "figure-agent.candidate-rank-result.v1"
+    assert rank["rank_result"]["scores"][0]["render_status"] != "not_rendered"
     assert review["schema"] == "figure-agent.mcp.prepare-human-review.v1"
     assert review["success"] is True
     assert review["review_packet"]["schema"] == "figure-agent.candidate-review-packet.v1"
+    assert review["review_packet"]["render_manifest_path"] == (
+        "build/candidates/CAND001/render_manifest.json"
+    )
 
 
 def test_mcp_panel_candidate_tools_and_resources(tmp_path: Path) -> None:

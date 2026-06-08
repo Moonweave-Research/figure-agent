@@ -804,8 +804,29 @@ def _compare_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
 def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
+    candidate_id = arguments.get("candidate_id")
+    crop_panel = arguments.get("crop_panel")
     schema = "figure-agent.mcp.render-candidates.v1"
     started = time.monotonic()
+    if candidate_id is not None and not _is_safe_fixture_name(candidate_id):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error(
+                "invalid_fixture_name",
+                "candidate_id must be a single build/candidates/<id> directory name",
+            ),
+        )
+    if crop_panel is not None and not _is_safe_panel_id(crop_panel):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("invalid_request", "crop_panel must match [A-Za-z0-9_-]+"),
+        )
     resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
     if isinstance(resolved, dict):
         return resolved
@@ -851,8 +872,20 @@ def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
                             "fig-agent candidates failed",
                         ),
                     )
+            command = ["render-candidates", name, "--candidate-set", candidate_set]
+            if candidate_id is not None:
+                command.extend(["--candidate-id", str(candidate_id)])
+            if bool(arguments.get("compile")):
+                command.append("--compile")
+            if bool(arguments.get("export")):
+                command.append("--export")
+            if crop_panel is not None:
+                command.extend(["--crop-panel", str(crop_panel)])
+            if bool(arguments.get("evaluate")):
+                command.append("--evaluate")
+            command.append("--json")
             result = _run_fig_agent(
-                ["render-candidates", name, "--candidate-set", candidate_set],
+                command,
                 workspace_root=workspace_root,
                 timeout_seconds=120,
             )
@@ -1306,6 +1339,11 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {
                 "name": {"type": "string"},
                 "candidate_set": {"type": "string"},
+                "candidate_id": {"type": "string"},
+                "compile": {"type": "boolean"},
+                "export": {"type": "boolean"},
+                "crop_panel": {"type": "string"},
+                "evaluate": {"type": "boolean"},
             },
         },
         "handler": _render_candidates,
