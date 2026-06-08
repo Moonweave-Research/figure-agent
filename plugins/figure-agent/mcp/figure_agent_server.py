@@ -68,6 +68,12 @@ def _is_safe_fixture_name(name: Any) -> bool:
     return not relative.is_absolute() and len(relative.parts) == 1 and ".." not in relative.parts
 
 
+def _is_safe_panel_id(panel_id: Any) -> bool:
+    if not isinstance(panel_id, str) or not panel_id.strip():
+        return False
+    return all(char.isalnum() or char in {"_", "-"} for char in panel_id)
+
+
 def _tool_envelope(
     schema: str,
     *,
@@ -372,6 +378,58 @@ def _resource_metadata(uri: str) -> dict[str, Any]:
             "content_schema": "figure-agent.audit-evidence-graph.v1",
         }
     specs = _resource_specs(name)
+    if len(resource_key) == 3 and resource_key[0] == "panel" and resource_key[2] == "intent":
+        panel_id = resource_key[1]
+        if not _is_safe_panel_id(panel_id):
+            return {
+                "schema": "figure-agent.mcp.resource-metadata.v1",
+                "success": False,
+                "uri": uri,
+                "error": _error("invalid_request", "invalid panel id"),
+            }
+        return {
+            "schema": "figure-agent.mcp.resource-metadata.v1",
+            "success": True,
+            "uri": uri,
+            "virtual": True,
+            "content_schema": "figure-agent.candidate-panel-model.v1",
+            "recommended_tool": "figure_agent_analyze_panel",
+            "arguments": {"name": name, "panel_id": panel_id},
+        }
+    if (
+        len(resource_key) == 3
+        and resource_key[0] == "candidates"
+        and resource_key[2] in {"manifest", "review"}
+    ):
+        candidate_id = resource_key[1]
+        if not _is_safe_fixture_name(candidate_id):
+            return {
+                "schema": "figure-agent.mcp.resource-metadata.v1",
+                "success": False,
+                "uri": uri,
+                "error": _error("invalid_request", "invalid candidate id"),
+            }
+        if resource_key[2] == "review":
+            return {
+                "schema": "figure-agent.mcp.resource-metadata.v1",
+                "success": True,
+                "uri": uri,
+                "virtual": True,
+                "content_schema": "figure-agent.candidate-review-packet.v1",
+                "recommended_tool": "figure_agent_compare_candidate",
+                "arguments": {"name": name, "candidate_id": candidate_id},
+            }
+        return _path_metadata(
+            workspace_root=workspace_root,
+            relative_path=Path("examples")
+            / name
+            / "build"
+            / "candidates"
+            / candidate_id
+            / "candidate_manifest.json",
+            uri=uri,
+            media_type="application/json",
+        )
     if resource_key not in specs:
         return {
             "schema": "figure-agent.mcp.resource-metadata.v1",
@@ -605,6 +663,70 @@ def _propose_improvements(arguments: dict[str, Any]) -> dict[str, Any]:
         command=["candidates", name, "--json"],
         payload_key="candidate_set",
         failure_message="fig-agent candidates failed",
+    )
+
+
+def _analyze_panel(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    panel_id = str(arguments.get("panel_id") or "")
+    if not _is_safe_panel_id(panel_id):
+        return _tool_envelope(
+            "figure-agent.mcp.analyze-panel.v1",
+            success=False,
+            started=time.monotonic(),
+            name=name,
+            error=_error("invalid_request", "panel_id must match [A-Za-z0-9_-]+"),
+        )
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.analyze-panel.v1",
+        command=["analyze-panel", name, panel_id, "--json"],
+        payload_key="panel_model",
+        failure_message="fig-agent analyze-panel failed",
+    )
+
+
+def _propose_panel_improvements(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    panel_id = str(arguments.get("panel_id") or "")
+    family = str(arguments.get("family") or "")
+    if not _is_safe_panel_id(panel_id):
+        return _tool_envelope(
+            "figure-agent.mcp.propose-panel-improvements.v1",
+            success=False,
+            started=time.monotonic(),
+            name=name,
+            error=_error("invalid_request", "panel_id must match [A-Za-z0-9_-]+"),
+        )
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.propose-panel-improvements.v1",
+        command=["candidates", name, "--panel", panel_id, "--family", family, "--json"],
+        payload_key="candidate_set",
+        failure_message="fig-agent candidates failed",
+    )
+
+
+def _compare_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    candidate_id = str(arguments.get("candidate_id") or "")
+    if not _is_safe_fixture_name(candidate_id):
+        return _tool_envelope(
+            "figure-agent.mcp.compare-candidate.v1",
+            success=False,
+            started=time.monotonic(),
+            name=name,
+            error=_error(
+                "invalid_fixture_name",
+                "candidate_id must be a single build/candidates/<id> directory name",
+            ),
+        )
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.compare-candidate.v1",
+        command=["compare-candidate", name, candidate_id, "--json"],
+        payload_key="review_packet",
+        failure_message="fig-agent compare-candidate failed",
     )
 
 
@@ -1077,6 +1199,33 @@ TOOLS: dict[str, dict[str, Any]] = {
         },
         "handler": _propose_improvements,
     },
+    "figure_agent_analyze_panel": {
+        "description": "Return a read-only panel model with TeX selectors.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "panel_id"],
+            "properties": {
+                "name": {"type": "string"},
+                "panel_id": {"type": "string"},
+            },
+        },
+        "handler": _analyze_panel,
+    },
+    "figure_agent_propose_panel_improvements": {
+        "description": "Return deterministic read-only candidates for one panel family.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "panel_id", "family"],
+            "properties": {
+                "name": {"type": "string"},
+                "panel_id": {"type": "string"},
+                "family": {"type": "string"},
+            },
+        },
+        "handler": _propose_panel_improvements,
+    },
     "figure_agent_render_candidates": {
         "description": "Render candidate manifests in the fixture-local sandbox.",
         "inputSchema": {
@@ -1115,6 +1264,19 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _prepare_human_review,
+    },
+    "figure_agent_compare_candidate": {
+        "description": "Return a read-only comparison packet for one rendered candidate.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "candidate_id"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+            },
+        },
+        "handler": _compare_candidate,
     },
     "figure_agent_apply_candidate": {
         "description": "Deterministically refuse MCP candidate mutation.",
@@ -1229,6 +1391,21 @@ def _resource_templates() -> list[dict[str, str]]:
         {
             "uriTemplate": "figure://{name}/perception/extract",
             "name": "Perception extract",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/panel/{panel_id}/intent",
+            "name": "Panel intent model",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/candidates/{candidate_id}/manifest",
+            "name": "Candidate manifest",
+            "mimeType": "application/json",
+        },
+        {
+            "uriTemplate": "figure://{name}/candidates/{candidate_id}/review",
+            "name": "Candidate review packet",
             "mimeType": "application/json",
         },
     ]

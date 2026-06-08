@@ -86,6 +86,33 @@ def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> P
     return fixture
 
 
+def _write_panel_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    caption: Energy diagram
+    bbox_pdf_cm: [0.0, 0.0, 4.0, 3.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(
+        "% Panel C\n"
+        "\\coordinate (siteS1) at (1.0, 2.0);\n"
+        "\\coordinate (siteD1) at (1.0, 1.0);\n"
+        "\\node[anchor=west] at (3.0, 2.4) {mobility edge};\n"
+        "\\node[anchor=west] at (3.0, 2.0) {shallow};\n"
+        "\\node[anchor=west] at (3.0, 1.0) {deep};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def _assert_common_envelope(payload: dict) -> None:
     assert isinstance(payload["schema"], str)
     assert isinstance(payload["success"], bool)
@@ -147,9 +174,12 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_loop_checkpoint",
         "figure_agent_analyze_figure",
         "figure_agent_propose_improvements",
+        "figure_agent_analyze_panel",
+        "figure_agent_propose_panel_improvements",
         "figure_agent_render_candidates",
         "figure_agent_rank_candidates",
         "figure_agent_prepare_human_review",
+        "figure_agent_compare_candidate",
         "figure_agent_apply_candidate",
     } <= tool_names
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
@@ -572,6 +602,130 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert review["schema"] == "figure-agent.mcp.prepare-human-review.v1"
     assert review["success"] is True
     assert review["review_packet"]["schema"] == "figure-agent.candidate-review-packet.v1"
+
+
+def test_mcp_panel_candidate_tools_and_resources(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_panel_candidate_fixture(workspace)
+    candidate_set = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    subprocess.run(
+        [
+            sys.executable,
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "candidates",
+            "candidate_demo",
+            "--panel",
+            "C",
+            "--family",
+            "energy-trap-alignment",
+            "--json",
+            "--output",
+            "build/candidates/panel_C_candidate_set.json",
+        ],
+        cwd=workspace,
+        env={
+            **os.environ,
+            "FIGURE_AGENT_PLUGIN_ROOT": str(PLUGIN_ROOT),
+            "FIGURE_AGENT_WORKSPACE": str(workspace),
+        },
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    subprocess.run(
+        [
+            sys.executable,
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "render-candidates",
+            "candidate_demo",
+            "--candidate-set",
+            "build/candidates/panel_C_candidate_set.json",
+        ],
+        cwd=workspace,
+        env={
+            **os.environ,
+            "FIGURE_AGENT_PLUGIN_ROOT": str(PLUGIN_ROOT),
+            "FIGURE_AGENT_WORKSPACE": str(workspace),
+        },
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_analyze_panel",
+                    "arguments": {"name": "candidate_demo", "panel_id": "C"},
+                },
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_panel_improvements",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "panel_id": "C",
+                        "family": "energy-trap-alignment",
+                    },
+                },
+                request_id=2,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_compare_candidate",
+                    "arguments": {"name": "candidate_demo", "candidate_id": "CAND001"},
+                },
+                request_id=3,
+            ),
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://candidate_demo/panel/C/intent"},
+                request_id=4,
+            ),
+            _mcp_request(
+                "resources/read",
+                {"uri": "figure://candidate_demo/candidates/CAND001/manifest"},
+                request_id=5,
+            ),
+            _mcp_request(
+                "resources/templates/list",
+                request_id=6,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    responses = _response_lines(result)
+    analyze = _tool_payload(responses[0])
+    propose = _tool_payload(responses[1])
+    compare = _tool_payload(responses[2])
+    panel_resource = _resource_payload(responses[3])
+    manifest_resource = _resource_payload(responses[4])
+    templates = {item["uriTemplate"] for item in responses[5]["result"]["resourceTemplates"]}
+    assert candidate_set.is_file()
+    assert analyze["schema"] == "figure-agent.mcp.analyze-panel.v1"
+    assert analyze["success"] is True
+    assert analyze["panel_model"]["schema"] == "figure-agent.candidate-panel-model.v1"
+    assert analyze["panel_model"]["selector_count"] == 5
+    assert propose["schema"] == "figure-agent.mcp.propose-panel-improvements.v1"
+    assert propose["success"] is True
+    assert propose["candidate_set"]["candidates"][0]["family"] == "energy-trap-alignment"
+    assert compare["schema"] == "figure-agent.mcp.compare-candidate.v1"
+    assert compare["success"] is True
+    assert compare["review_packet"]["panel"] == "C"
+    assert compare["review_packet"]["visual_review"]["status"] == "missing_render"
+    assert panel_resource["virtual"] is True
+    assert panel_resource["recommended_tool"] == "figure_agent_analyze_panel"
+    assert manifest_resource["exists"] is True
+    assert "figure://{name}/panel/{panel_id}/intent" in templates
+    assert "figure://{name}/candidates/{candidate_id}/manifest" in templates
+    assert "figure://{name}/candidates/{candidate_id}/review" in templates
 
 
 def test_mcp_candidate_render_reports_operation_in_progress(tmp_path: Path) -> None:
