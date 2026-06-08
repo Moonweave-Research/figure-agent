@@ -101,6 +101,33 @@ panels:
     assert "path_escape" in payload["inputs"]["panel_references"]["reasons"]
 
 
+def test_intent_model_keeps_present_state_with_optional_missing_reference(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: intent_demo
+panels:
+  - id: A
+    reference_image: reference/panel_a.png
+  - id: B
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = figure_intent_model.build_intent_model(
+        "intent_demo",
+        workspace_root=workspace,
+        plugin_root=Path("plugins/figure-agent").resolve(),
+    )
+
+    assert payload["inputs"]["panel_references"]["state"] == "present"
+    assert "missing" in payload["inputs"]["panel_references"]["reasons"]
+
+
 def test_intent_model_inherits_figure_reference_for_panels(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

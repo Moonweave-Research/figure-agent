@@ -52,9 +52,11 @@ def _load_spec(spec_path: Path) -> dict[str, Any]:
 def _reference_state(reasons: list[str], *, has_present: bool) -> str:
     if "path_escape" in reasons:
         return "blocked"
+    if has_present:
+        return "present"
     if reasons:
         return "missing_optional"
-    return "present" if has_present else "missing_optional"
+    return "missing_optional"
 
 
 def _resolve_paths(
