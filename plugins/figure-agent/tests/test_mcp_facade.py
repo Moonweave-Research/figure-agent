@@ -32,8 +32,14 @@ def _run_mcp_server(
     merged_env = os.environ.copy()
     merged_env.update(env or {})
     merged_env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    virtual_env = merged_env.pop("VIRTUAL_ENV", None)
+    if virtual_env:
+        virtual_bin = str(Path(virtual_env) / "bin")
+        merged_env["PATH"] = os.pathsep.join(
+            entry for entry in merged_env.get("PATH", "").split(os.pathsep) if entry != virtual_bin
+        )
     return subprocess.run(
-        [sys.executable, str(MCP_SERVER)],
+        ["python3", str(MCP_SERVER)],
         input="\n".join(requests) + "\n",
         cwd=cwd,
         env=merged_env,
@@ -65,6 +71,18 @@ def _write_minimal_fixture(workspace: Path, name: str = "smoke_trap_demo") -> Pa
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text("name: smoke_trap_demo\n", encoding="utf-8")
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    return fixture
+
+
+def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: candidate_demo\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -127,6 +145,12 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_verify_plan",
         "figure_agent_next_action",
         "figure_agent_loop_checkpoint",
+        "figure_agent_analyze_figure",
+        "figure_agent_propose_improvements",
+        "figure_agent_render_candidates",
+        "figure_agent_rank_candidates",
+        "figure_agent_prepare_human_review",
+        "figure_agent_apply_candidate",
     } <= tool_names
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
     assert after == before
@@ -435,13 +459,150 @@ def test_mcp_quality_map_and_propose_patch_are_read_only(tmp_path: Path) -> None
     quality_payload = _tool_payload(_response_lines(result)[0])
     propose_payload = _tool_payload(_response_lines(result)[1])
     assert quality_payload["schema"] == "figure-agent.mcp.quality-map.v1"
-    assert quality_payload["success"] is True
+    assert quality_payload["success"] is True, quality_payload
     assert quality_payload["ledger"]["schema"] == "figure-agent.quality-defect-ledger.v1"
     assert propose_payload["schema"] == "figure-agent.mcp.propose-patch.v1"
     assert propose_payload["success"] is True
     assert propose_payload["plan"]["schema"] == "figure-agent.quality-patch-plan.v1"
     after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     assert after == before
+
+
+def test_mcp_candidate_read_only_tools_and_apply_refusal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_candidate_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_analyze_figure",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_improvements",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=2,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_apply_candidate",
+                    "arguments": {"name": "candidate_demo", "candidate_id": "CAND001"},
+                },
+                request_id=3,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    analyze = _tool_payload(_response_lines(result)[0])
+    propose = _tool_payload(_response_lines(result)[1])
+    apply = _tool_payload(_response_lines(result)[2])
+    assert analyze["schema"] == "figure-agent.mcp.analyze-figure.v1"
+    assert analyze["success"] is True
+    assert analyze["intent"]["schema"] == "figure-agent.intent-model.v1"
+    assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
+    assert propose["success"] is True
+    assert propose["candidate_set"]["schema"] == "figure-agent.candidate-set.v1"
+    assert apply["schema"] == "figure-agent.mcp.apply-candidate.v1"
+    assert apply["success"] is False
+    assert apply["error"]["category"] == "unsupported_operation"
+    assert apply["error"]["message"] == "apply_requires_cli_opt_in"
+
+
+def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_candidate_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_render_candidates",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/candidate_set.json",
+                    },
+                },
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_rank_candidates",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/candidate_set.json",
+                    },
+                },
+                request_id=2,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_prepare_human_review",
+                    "arguments": {"name": "candidate_demo", "candidate_id": "CAND001"},
+                },
+                request_id=3,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    render = _tool_payload(_response_lines(result)[0])
+    rank = _tool_payload(_response_lines(result)[1])
+    review = _tool_payload(_response_lines(result)[2])
+    assert (fixture / "build" / "candidates" / "candidate_set.json").is_file()
+    assert render["schema"] == "figure-agent.mcp.render-candidates.v1"
+    assert render["success"] is True
+    assert render["render_result"]["schema"] == "figure-agent.candidate-render-result.v1"
+    assert rank["schema"] == "figure-agent.mcp.rank-candidates.v1"
+    assert rank["success"] is True
+    assert rank["rank_result"]["schema"] == "figure-agent.candidate-rank-result.v1"
+    assert review["schema"] == "figure-agent.mcp.prepare-human-review.v1"
+    assert review["success"] is True
+    assert review["review_packet"]["schema"] == "figure-agent.candidate-review-packet.v1"
+
+
+def test_mcp_candidate_render_reports_operation_in_progress(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_candidate_fixture(workspace)
+    lock_root = fixture / "build" / ".mcp-locks"
+    lock_root.mkdir(parents=True)
+    (lock_root / "mutation.lock").write_text(
+        json.dumps({"operation": "export"}),
+        encoding="utf-8",
+    )
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_render_candidates",
+                    "arguments": {"name": "candidate_demo"},
+                },
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.render-candidates.v1"
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "operation_in_progress"
+    assert payload["operation"] == "export"
 
 
 def test_mcp_notifications_do_not_emit_response_frames() -> None:

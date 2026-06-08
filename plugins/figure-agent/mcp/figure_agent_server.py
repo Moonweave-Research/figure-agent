@@ -586,6 +586,193 @@ def _propose_patch(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _analyze_figure(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.analyze-figure.v1",
+        command=["intent", name, "--json"],
+        payload_key="intent",
+        failure_message="fig-agent intent failed",
+    )
+
+
+def _propose_improvements(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.propose-improvements.v1",
+        command=["candidates", name, "--json"],
+        payload_key="candidate_set",
+        failure_message="fig-agent candidates failed",
+    )
+
+
+def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
+    schema = "figure-agent.mcp.render-candidates.v1"
+    started = time.monotonic()
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root, name = resolved
+    with _fixture_lock(workspace_root, name, "render_candidates") as lock:
+        if lock is not None:
+            return _tool_envelope(
+                schema,
+                success=False,
+                started=started,
+                name=name,
+                operation=lock["active_operation"],
+                error=_error(
+                    "operation_in_progress",
+                    f"another mutating operation is active for examples/{name}",
+                    "Retry after the active operation finishes.",
+                ),
+            )
+        try:
+            if candidate_set == "build/candidates/candidate_set.json":
+                seed = _run_fig_agent(
+                    [
+                        "candidates",
+                        name,
+                        "--json",
+                        "--output",
+                        candidate_set,
+                    ],
+                    workspace_root=workspace_root,
+                    timeout_seconds=120,
+                )
+                if seed.returncode != 0:
+                    return _tool_envelope(
+                        schema,
+                        success=False,
+                        started=started,
+                        name=name,
+                        exit_code=seed.returncode,
+                        stdout=_bounded(seed.stdout),
+                        stderr=_bounded(seed.stderr),
+                        error=_error(
+                            "unsupported_operation",
+                            "fig-agent candidates failed",
+                        ),
+                    )
+            result = _run_fig_agent(
+                ["render-candidates", name, "--candidate-set", candidate_set],
+                workspace_root=workspace_root,
+                timeout_seconds=120,
+            )
+        except FileNotFoundError:
+            return _tool_envelope(
+                schema,
+                success=False,
+                started=started,
+                name=name,
+                error=_error("dependency_missing", "Python executable for fig-agent not found"),
+            )
+        except subprocess.TimeoutExpired as exc:
+            return _tool_envelope(
+                schema,
+                success=False,
+                started=started,
+                name=name,
+                stdout=_bounded(exc.stdout or ""),
+                stderr=_bounded(exc.stderr or ""),
+                error=_error("timeout", "fig-agent render-candidates timed out"),
+            )
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", "fig-agent render-candidates failed"),
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error(
+                "unsupported_operation",
+                "fig-agent render-candidates returned invalid JSON",
+            ),
+        )
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        name=name,
+        render_result=payload,
+    )
+
+
+def _rank_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.rank-candidates.v1",
+        command=["rank-candidates", name, "--candidate-set", candidate_set, "--json"],
+        payload_key="rank_result",
+        failure_message="fig-agent rank-candidates failed",
+    )
+
+
+def _prepare_human_review(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    candidate_id = str(arguments.get("candidate_id") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.prepare-human-review.v1",
+        command=["review-candidate", name, candidate_id, "--json"],
+        payload_key="review_packet",
+        failure_message="fig-agent review-candidate failed",
+    )
+
+
+def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    schema = "figure-agent.mcp.apply-candidate.v1"
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    _workspace_root, name = resolved
+    candidate_id = arguments.get("candidate_id")
+    if not _is_safe_fixture_name(candidate_id):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error(
+                "invalid_fixture_name",
+                "candidate_id must be a single build/candidates/<id> directory name",
+            ),
+        )
+    return _tool_envelope(
+        schema,
+        success=False,
+        started=started,
+        name=name,
+        candidate_id=str(candidate_id),
+        error=_error(
+            "unsupported_operation",
+            "apply_requires_cli_opt_in",
+            "Use fig-agent apply-candidate only after an explicit CLI apply path exists.",
+        ),
+    )
+
+
 def _verify_plan(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     plan = str(arguments.get("plan") or "build/quality/patch_plan.json")
@@ -869,6 +1056,78 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"name": {"type": "string"}},
         },
         "handler": _propose_patch,
+    },
+    "figure_agent_analyze_figure": {
+        "description": "Return the read-only candidate-search intent model for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _analyze_figure,
+    },
+    "figure_agent_propose_improvements": {
+        "description": "Return deterministic read-only candidate improvements.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _propose_improvements,
+    },
+    "figure_agent_render_candidates": {
+        "description": "Render candidate manifests in the fixture-local sandbox.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_set": {"type": "string"},
+            },
+        },
+        "handler": _render_candidates,
+    },
+    "figure_agent_rank_candidates": {
+        "description": "Rank rendered candidate manifests without applying changes.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_set": {"type": "string"},
+            },
+        },
+        "handler": _rank_candidates,
+    },
+    "figure_agent_prepare_human_review": {
+        "description": "Return a read-only human review packet for one candidate.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "candidate_id"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+            },
+        },
+        "handler": _prepare_human_review,
+    },
+    "figure_agent_apply_candidate": {
+        "description": "Deterministically refuse MCP candidate mutation.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "candidate_id"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+            },
+        },
+        "handler": _apply_candidate,
     },
     "figure_agent_verify_plan": {
         "description": "Return the latest explicit patch verification result.",
