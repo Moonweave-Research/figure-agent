@@ -361,6 +361,8 @@ def _candidates(argv: list[str]) -> int:
     parser.add_argument("name")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--output")
+    parser.add_argument("--panel")
+    parser.add_argument("--family")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
@@ -369,6 +371,8 @@ def _candidates(argv: list[str]) -> int:
             name,
             plugin_root=paths.plugin_root,
             workspace_root=paths.workspace_root,
+            panel=args.panel,
+            family=args.family,
         )
         text = json.dumps(payload, indent=2, sort_keys=True)
         if args.output:

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import candidate_families
 import figure_intent_model
 import fixture_identity
 import runtime_paths
@@ -127,6 +128,8 @@ def build_candidate_set(
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
     output_path: Path | None = None,
+    panel: str | None = None,
+    family: str | None = None,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
     paths = runtime_paths.resolve_runtime_paths(
@@ -134,6 +137,14 @@ def build_candidate_set(
         workspace_root=workspace_root,
     )
     _validate_output_path(paths=paths, name=name, output_path=output_path)
+    if panel is not None or family is not None:
+        return candidate_families.build_family_candidates(
+            name,
+            panel=panel,
+            family=family,
+            workspace_root=paths.workspace_root,
+            plugin_root=paths.plugin_root,
+        )
 
     source_rel = Path("examples") / name / f"{name}.tex"
     source = _fixture_source_path(paths, name)
@@ -178,9 +189,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--panel")
+    parser.add_argument("--family")
     args = parser.parse_args(argv)
     try:
-        payload = build_candidate_set(args.name)
+        payload = build_candidate_set(args.name, panel=args.panel, family=args.family)
     except (CandidateGeneratorError, ValueError) as exc:
         print(f"candidate_generator: {exc}", file=sys.stderr)
         return 1

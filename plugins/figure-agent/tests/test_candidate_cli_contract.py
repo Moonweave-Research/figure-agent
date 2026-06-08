@@ -123,6 +123,41 @@ def test_fig_agent_candidates_output_is_fixture_local(tmp_path: Path) -> None:
     )
 
 
+def test_fig_agent_candidates_accepts_panel_family_filters(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% Panel C\n"
+        "\\coordinate (siteS1) at (1.0, 2.0);\n"
+        "\\coordinate (siteD1) at (1.0, 1.0);\n"
+        "\\node[anchor=west] at (3.0, 2.4) {mobility edge};\n"
+        "\\node[anchor=west] at (3.0, 2.0) {shallow};\n"
+        "\\node[anchor=west] at (3.0, 1.0) {deep};\n",
+        encoding="utf-8",
+    )
+
+    result = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--panel",
+        "C",
+        "--family",
+        "energy-trap-alignment",
+        "--json",
+        "--output",
+        "build/candidates/panel_C_candidate_set.json",
+    )
+
+    output = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["candidates"][0]["family"] == "energy-trap-alignment"
+    assert payload["candidates"][0]["target"]["panel"] == "C"
+    assert payload["candidates"][0]["candidate_hash"].startswith("sha256:")
+    assert output.is_file()
+
+
 def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
