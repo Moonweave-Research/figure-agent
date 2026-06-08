@@ -9,7 +9,7 @@ Run one read-only figure loop iteration and record the decision evidence.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_loop.py <name> --goal "<goal>"
+fig-agent loop <name> --goal "<goal>"
 ```
 
 ## When To Use
@@ -42,7 +42,7 @@ Canonical pre-loop order:
 For automation, emit a small machine-readable summary:
 
 ```bash
-uv run python3 scripts/fig_loop.py <name> --goal "<goal>" --json
+fig-agent loop <name> --goal "<goal>" --json
 ```
 
 On success, `--json` and `--format json` keep the same run artifacts and exit
@@ -240,9 +240,9 @@ exactly one target. The target is either:
   `subregion_iteration_log.md`
 
 If a fixture needs a log, start the canonical text-form file with
-`uv run python3 scripts/subregion_iteration_log.py --template examples/<name> --write-template`.
+`fig-agent helper subregion_iteration_log.py --template examples/<name> --write-template`.
 After each one-target patch, append the result with
-`uv run python3 scripts/subregion_iteration_log.py --append examples/<name> ...`.
+`fig-agent helper subregion_iteration_log.py --append examples/<name> ...`.
 
 The outer agent must keep the patch scope inside `patch_handoff.allowed_edit_scope`.
 By default that means `examples/<name>/<name>.tex`, with optional updates to
@@ -277,7 +277,7 @@ stay outside patch-assisted automation.
 explicit, diff-driven executor:
 
 ```bash
-uv run python3 scripts/fig_loop_patch_executor.py <name> --patch-file <path> --apply --format json
+fig-agent helper fig_loop_patch_executor.py <name> --patch-file <path> --apply --format json
 ```
 
 This executor does not generate edits from prose. It applies one prepared
@@ -391,14 +391,14 @@ before handoff. The executor defaults to dry-run and writes only
 `polish/<name>.polished.svg` in `--write` mode:
 
 ```bash
-uv run python3 scripts/svg_polish_executor.py examples/<name>
-uv run python3 scripts/svg_polish_executor.py examples/<name> --write
+fig-agent helper svg_polish_executor.py examples/<name>
+fig-agent helper svg_polish_executor.py examples/<name> --write
 ```
 
 Use the handoff scaffolder after `polish/<name>.polished.svg` exists:
 
 ```bash
-uv run python3 scripts/svg_polish_handoff.py examples/<name> \
+fig-agent helper svg_polish_handoff.py examples/<name> \
   --reviewer author \
   --editor human \
   --toolchain "Inkscape:1.4" \
@@ -473,7 +473,7 @@ reset the comparison point.
 When `stop_reason` is `missing_adjudication`, run:
 
 ```bash
-uv run python3 scripts/critique_adjudication.py scaffold <name>
+fig-agent adjudicate <name>
 ```
 
 Then review `examples/<name>/critique_adjudication.yaml` manually. Leave

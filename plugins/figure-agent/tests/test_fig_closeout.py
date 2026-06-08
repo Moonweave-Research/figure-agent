@@ -214,7 +214,7 @@ def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
 
     assert step["state"] == "needs_action"
     assert step["command"] == (
-        "uv run python3 scripts/text_boundary_spec_helper.py examples/loop_demo --write"
+        "fig-agent text-boundary loop_demo --write"
     )
     assert report["next_action"] == step["command"]
     assert report["next_action_summary"]["action"] == "create_or_fix_source"

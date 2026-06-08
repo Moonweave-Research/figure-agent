@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
 import fig_run  # noqa: E402
+import runtime_paths  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.improve.v1"
@@ -248,13 +249,18 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
     try:
+        resolved_repo_root = (
+            runtime_paths.resolve_runtime_paths().workspace_root
+            if repo_root == REPO_ROOT
+            else repo_root
+        )
         payload = run_improvement(
             args.name,
             goal=args.goal,
             execute=args.execute,
             max_loops=args.max_loops,
             max_steps_per_loop=args.max_steps_per_loop,
-            repo_root=repo_root,
+            repo_root=resolved_repo_root,
         )
     except ValueError as exc:
         print(f"fig_improve.py: {exc}", file=sys.stderr)

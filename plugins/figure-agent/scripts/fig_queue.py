@@ -13,6 +13,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
+import runtime_paths  # noqa: E402
 from driver_actor import (  # noqa: E402
     blocking_source_for_driver_summary,
     required_actor_for_driver_summary,
@@ -291,7 +292,7 @@ def _export_row_is_safe(row: dict[str, Any]) -> bool:
     except ValueError:
         return False
     return (
-        parts == ["uv", "run", "python3", "scripts/run_export.py", fixture]
+        parts == ["fig-agent", "export", fixture]
         and row.get("acceptance_state") == "NOT_DECLARED"
         and row.get("export_state") in {"MISSING", "STALE"}
         and row.get("critique_state") in {"FRESH", "NOT_REQUIRED"}
@@ -391,7 +392,7 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
             "fixture": fixture,
             "required_actor": actor,
             "next_step": "Run read-only closeout inspection before continuing automation.",
-            "command": f"uv run python3 scripts/fig_closeout.py {shlex.quote(fixture)} --json",
+            "command": f"fig-agent closeout {shlex.quote(fixture)} --json",
             "reason": reason,
             "allowed_scope": ["read-only closeout inspection"],
             "forbidden_scope": common_forbidden,
@@ -678,8 +679,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--format", choices=("table", "json"), default="table")
     args = parser.parse_args(argv)
 
+    resolved_repo_root = (
+        runtime_paths.resolve_runtime_paths().workspace_root
+        if repo_root == REPO_ROOT
+        else repo_root
+    )
     queue = build_queue(
-        repo_root=repo_root,
+        repo_root=resolved_repo_root,
         mode=args.mode,
         goal=args.goal,
         fixtures=list(args.fixtures) or None,

@@ -15,10 +15,7 @@ from fig_driver_commands import (  # noqa: E402
 
 
 def test_compile_command_matches_driver_contract() -> None:
-    assert (
-        compile_command("driver_demo")
-        == "bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
-    )
+    assert compile_command("driver_demo") == "fig-agent compile driver_demo"
 
 
 def test_critique_command_matches_driver_contract() -> None:
@@ -28,23 +25,23 @@ def test_critique_command_matches_driver_contract() -> None:
 def test_adjudicate_command_matches_driver_contract() -> None:
     assert (
         adjudicate_command("driver_demo")
-        == "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+        == "fig-agent adjudicate driver_demo"
     )
 
 
 def test_fig_loop_command_matches_driver_contract() -> None:
     assert (
         fig_loop_command("driver_demo", "review")
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+        == "fig-agent loop driver_demo --goal review --json"
     )
 
 
 def test_fig_loop_command_shell_quotes_goal() -> None:
     assert (
         fig_loop_command("driver_demo", "it's a goal")
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal 'it'\"'\"'s a goal' --json"
+        == "fig-agent loop driver_demo --goal 'it'\"'\"'s a goal' --json"
     )
 
 
 def test_export_command_matches_driver_contract() -> None:
-    assert export_command("driver_demo") == "uv run python3 scripts/run_export.py driver_demo"
+    assert export_command("driver_demo") == "fig-agent export driver_demo"

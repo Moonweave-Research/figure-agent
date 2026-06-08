@@ -788,7 +788,7 @@ def test_print_table_uses_handoff_command_for_blocked_rows(
                 "action": "run_export",
                 "stop_boundary": "closeout_required",
                 "first_blocker": "export_missing",
-                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "safe_command": "fig-agent export beta",
                 "required_actor": "workflow_agent",
                 "blocking_source": "closeout_required",
                 "requires_human": False,
@@ -801,8 +801,8 @@ def test_print_table_uses_handoff_command_for_blocked_rows(
 
     out = capsys.readouterr().out
     assert "Run read-only closeout inspection before continuing automation." in out
-    assert "uv run python3 scripts/fig_closeout.py beta --json" in out
-    assert "uv run python3 scripts/run_export.py beta" not in out
+    assert "fig-agent closeout beta --json" in out
+    assert "fig-agent export beta" not in out
 
 
 def test_main_prints_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
@@ -965,7 +965,7 @@ def test_build_queue_can_include_command_plan(
                 action="run_fig_loop",
                 stop_boundary=None,
                 first_blocker="acceptance_not_declared",
-                safe_command="uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+                safe_command="fig-agent loop alpha --goal triage --json",
             )
         if name == "beta":
             return _summary(
@@ -973,7 +973,7 @@ def test_build_queue_can_include_command_plan(
                 action="run_export",
                 stop_boundary="closeout_required",
                 first_blocker="export_missing",
-                safe_command="uv run python3 scripts/run_export.py beta",
+                safe_command="fig-agent export beta",
             )
         return _summary(
             name,
@@ -1000,7 +1000,7 @@ def test_build_queue_can_include_command_plan(
         {
             "fixture": "alpha",
             "action": "run_fig_loop",
-            "safe_command": "uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+            "safe_command": "fig-agent loop alpha --goal triage --json",
             "required_actor": "workflow_agent",
         }
     ]
@@ -1015,7 +1015,7 @@ def test_build_queue_can_include_command_plan(
         "fixture": "beta",
         "required_actor": "workflow_agent",
         "next_step": "Run read-only closeout inspection before continuing automation.",
-        "command": "uv run python3 scripts/fig_closeout.py beta --json",
+        "command": "fig-agent closeout beta --json",
         "reason": "stop_boundary:closeout_required",
         "allowed_scope": ["read-only closeout inspection"],
         "forbidden_scope": [
@@ -1062,7 +1062,7 @@ def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> Non
                 "fixture": "beta demo",
                 "action": "run_export",
                 "required_actor": "workflow_agent",
-                "safe_command": "uv run python3 scripts/run_export.py 'beta demo'",
+                "safe_command": "fig-agent export 'beta demo'",
                 "stop_boundary": "closeout_required",
                 "blocking_source": "closeout_required",
                 "requires_human": False,
@@ -1071,7 +1071,7 @@ def test_command_plan_quotes_closeout_handoff_fixture_names_with_spaces() -> Non
     )
 
     assert plan["blocked"][0]["operator_handoff"]["command"] == (
-        "uv run python3 scripts/fig_closeout.py 'beta demo' --json"
+        "fig-agent closeout 'beta demo' --json"
     )
 
 
@@ -1113,7 +1113,7 @@ def test_command_plan_does_not_mark_unsafe_export_rows_executable(
                 "action": "run_export",
                 "required_actor": "workflow_agent",
                 "requires_human": False,
-                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "safe_command": "fig-agent export beta",
                 "stop_boundary": None,
                 "blocking_source": "driver.action",
                 "acceptance_state": acceptance_state,
@@ -1135,7 +1135,7 @@ def test_command_plan_marks_safe_draft_export_row_executable() -> None:
                 "action": "run_export",
                 "required_actor": "workflow_agent",
                 "requires_human": False,
-                "safe_command": "uv run python3 scripts/run_export.py beta",
+                "safe_command": "fig-agent export beta",
                 "stop_boundary": None,
                 "blocking_source": "driver.action",
                 "acceptance_state": "NOT_DECLARED",
@@ -1150,7 +1150,7 @@ def test_command_plan_marks_safe_draft_export_row_executable() -> None:
         {
             "fixture": "beta",
             "action": "run_export",
-            "safe_command": "uv run python3 scripts/run_export.py beta",
+            "safe_command": "fig-agent export beta",
             "required_actor": "workflow_agent",
         }
     ]
@@ -1164,7 +1164,7 @@ def test_command_plan_accepts_quoted_safe_draft_export_fixture_with_spaces() -> 
                 "action": "run_export",
                 "required_actor": "workflow_agent",
                 "requires_human": False,
-                "safe_command": "uv run python3 scripts/run_export.py 'beta demo'",
+                "safe_command": "fig-agent export 'beta demo'",
                 "stop_boundary": None,
                 "blocking_source": "driver.action",
                 "acceptance_state": "NOT_DECLARED",
@@ -1176,7 +1176,7 @@ def test_command_plan_accepts_quoted_safe_draft_export_fixture_with_spaces() -> 
 
     assert plan["blocked"] == []
     assert plan["executable"][0]["safe_command"] == (
-        "uv run python3 scripts/run_export.py 'beta demo'"
+        "fig-agent export 'beta demo'"
     )
 
 
@@ -1228,7 +1228,7 @@ def test_command_plan_uses_filtered_rows(
             action="run_fig_loop",
             stop_boundary=None,
             first_blocker="acceptance_not_declared",
-            safe_command=f"uv run python3 scripts/fig_loop.py {name} --goal triage --json",
+            safe_command=f"fig-agent loop {name} --goal triage --json",
         )
 
     monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
@@ -1261,7 +1261,7 @@ def test_main_commands_prints_executable_commands_only(
                 action="run_fig_loop",
                 stop_boundary=None,
                 first_blocker="acceptance_not_declared",
-                safe_command="uv run python3 scripts/fig_loop.py alpha --goal triage --json",
+                safe_command="fig-agent loop alpha --goal triage --json",
             )
         return _summary(
             name,
@@ -1278,5 +1278,5 @@ def test_main_commands_prints_executable_commands_only(
     ) == 0
 
     assert capsys.readouterr().out.splitlines() == [
-        "uv run python3 scripts/fig_loop.py alpha --goal triage --json"
+        "fig-agent loop alpha --goal triage --json"
     ]

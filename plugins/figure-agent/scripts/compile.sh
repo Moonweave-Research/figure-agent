@@ -8,6 +8,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOW_DIR="$(dirname "$SCRIPT_DIR")"
+UV_RUN=(uv run --project "$WORKFLOW_DIR")
 export TEXINPUTS="${WORKFLOW_DIR}/styles/:${TEXINPUTS:-}"
 
 if [[ $# -lt 1 ]]; then
@@ -23,7 +24,7 @@ if [[ ! -f "$TEX_INPUT" ]]; then
 fi
 
 echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
-uv run python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
 
 # Opt-in strict mode: when FIGURE_AGENT_STRICT=1, propagate --strict to the
 # collision/clash checkers so non-zero findings fail the compile (default
@@ -66,28 +67,28 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
   trap - ERR
   set +e
 fi
-uv run python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_text_boundary_clash.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_text_boundary_clash.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_label_path_proximity.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_label_path_proximity.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
-uv run python3 "$WORKFLOW_DIR/scripts/check_undeclared_geometry.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_undeclared_geometry.py" \
   "${STRICT_ARGS[@]}" \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
 if [[ -f "coordinate_hints.yaml" ]]; then
-  uv run python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
+  "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi
-uv run python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

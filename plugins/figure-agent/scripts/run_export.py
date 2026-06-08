@@ -12,6 +12,7 @@ Usage: uv run python scripts/run_export.py <name> [--force-golden] [--skip-criti
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
 from critique_lint import lint_critique  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
@@ -38,7 +40,10 @@ from status import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _regenerate(example_dir: Path, name: str) -> None:
+def _regenerate(example_dir: Path, name: str, plugin_root: Path | None = None) -> None:
+    plugin_root = runtime_paths.resolve_runtime_paths(
+        plugin_root=plugin_root or REPO_ROOT
+    ).plugin_root
     build_pdf = example_dir / "build" / f"{name}.pdf"
     exports_dir = example_dir / "exports"
     exports_dir.mkdir(parents=True, exist_ok=True)
@@ -49,23 +54,28 @@ def _regenerate(example_dir: Path, name: str) -> None:
 
     subprocess.run(
         ["bash", "scripts/export_svg.sh", str(build_pdf), str(exports_svg)],
-        cwd=REPO_ROOT,
+        cwd=plugin_root,
         check=True,
     )
     subprocess.run(
         ["pdftocairo", "-tiff", "-r", "600", "-singlefile", str(build_pdf), exports_tif_stem],
-        cwd=REPO_ROOT,
+        cwd=plugin_root,
         check=True,
     )
     subprocess.run(
         ["bash", "scripts/svg_to_png.sh", str(exports_svg), str(exports_png)],
-        cwd=REPO_ROOT,
+        cwd=plugin_root,
         check=True,
     )
     shutil.copy(build_pdf, exports_pdf)
 
 
-def main() -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    plugin_root: Path | None = None,
+    workspace_root: Path | None = None,
+) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name", help="fixture name under examples/")
     parser.add_argument(
@@ -76,7 +86,19 @@ def main() -> int:
         action="store_true",
         help="export even when reference-grounded critique is missing or stale",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if (
+        plugin_root is None
+        and workspace_root is None
+        and "FIGURE_AGENT_WORKSPACE" not in os.environ
+        and "CLAUDE_PROJECT_DIR" not in os.environ
+    ):
+        paths = runtime_paths.resolve_runtime_paths(plugin_root=REPO_ROOT, workspace_root=REPO_ROOT)
+    else:
+        paths = runtime_paths.resolve_runtime_paths(
+            plugin_root=plugin_root,
+            workspace_root=workspace_root,
+        )
 
     try:
         fixture_identity.validate_fixture_name(args.name)
@@ -84,7 +106,7 @@ def main() -> int:
         print(f"run_export.py: {exc}", file=sys.stderr)
         return 1
 
-    example_dir = REPO_ROOT / "examples" / args.name
+    example_dir = paths.examples_dir / args.name
     if not example_dir.is_dir():
         print(f"run_export.py: examples/{args.name}/ not found", file=sys.stderr)
         return 1
@@ -146,7 +168,7 @@ def main() -> int:
         )
         return 1
 
-    _regenerate(example_dir, args.name)
+    _regenerate(example_dir, args.name, plugin_root=paths.plugin_root)
     print(f"run_export.py: regenerated exports/ for {args.name} (was {state})")
     return 0
 

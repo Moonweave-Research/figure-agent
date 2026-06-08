@@ -179,7 +179,9 @@ def _action_from_command(command: str | None) -> str | None:
         return None
     if command.startswith("/fig_compile ") or command.startswith("bash scripts/compile.sh "):
         return ACTION_RUN_COMPILE
-    if "scripts/text_boundary_spec_helper.py" in command:
+    if "scripts/text_boundary_spec_helper.py" in command or command.startswith(
+        "fig-agent text-boundary "
+    ):
         return ACTION_CREATE_OR_FIX_SOURCE
     if command.startswith("/fig_critique "):
         return ACTION_RUN_CRITIQUE

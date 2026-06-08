@@ -9,13 +9,13 @@ Run a bounded figure workflow until the next non-automatic boundary.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>"
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --json
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --format json
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --execute
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
-uv run python3 scripts/fig_run.py <name> --mode review --goal "<goal>" --no-record
-uv run python3 scripts/fig_run_journal.py <name>
+fig-agent run <name> --mode review --goal "<goal>"
+fig-agent run <name> --mode review --goal "<goal>" --json
+fig-agent run <name> --mode review --goal "<goal>" --format json
+fig-agent run <name> --mode review --goal "<goal>" --execute
+fig-agent run <name> --mode review --goal "<goal>" --record --runs-root /tmp/fig-run-runs
+fig-agent run <name> --mode review --goal "<goal>" --no-record
+fig-agent helper fig_run_journal.py <name>
 ```
 
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
@@ -38,14 +38,14 @@ The executable actions are allowed only when the driver attaches no
 the current fixture before executing; an allowlisted action with a mismatched
 or malformed command stops as `not_executable_action`.
 
-- `run_compile` -> `bash scripts/compile.sh examples/<name>/<name>.tex`
-- `run_adjudicate` -> `uv run python3 scripts/critique_adjudication.py scaffold <name>`
+- `run_compile` -> `fig-agent compile <name>`
+- `run_adjudicate` -> `fig-agent adjudicate <name>`
   only when `critique_adjudication.yaml` is missing
-- `run_export` -> `uv run python3 scripts/run_export.py <name>` only for
+- `run_export` -> `fig-agent export <name>` only for
   that exact fixture command and only for draft generated exports where
   `acceptance_state: NOT_DECLARED`, `export_state: MISSING | STALE`, and
   `critique_state: FRESH | NOT_REQUIRED`
-- `run_fig_loop` -> `uv run python3 scripts/fig_loop.py <name> --goal ... --json`
+- `run_fig_loop` -> `fig-agent loop <name> --goal ... --json`
 
 `run_adjudicate` is allowed only for initial scaffold; existing adjudication
 files, including stale or invalid files, still require manual repair.
@@ -117,7 +117,7 @@ There is no executable `--resume` or `--resume-latest` flag. To continue after
 an interruption, inspect `stop.md` only as context, or run:
 
 ```bash
-uv run python3 scripts/fig_run_journal.py <name>
+fig-agent helper fig_run_journal.py <name>
 ```
 
 That summary is also non-authoritative: it names the latest journal stop,

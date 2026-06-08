@@ -184,25 +184,25 @@ def test_runner_accepts_quoted_fixture_name_commands(
 
 def test_driver_command_helpers_quote_fixture_names() -> None:
     assert fig_driver_commands.compile_command("runner demo") == (
-        "bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"
+        "fig-agent compile 'runner demo'"
     )
     assert fig_driver_commands.adjudicate_command("runner demo") == (
-        "uv run python3 scripts/critique_adjudication.py scaffold 'runner demo'"
+        "fig-agent adjudicate 'runner demo'"
     )
     assert fig_driver_commands.export_command("runner demo") == (
-        "uv run python3 scripts/run_export.py 'runner demo'"
+        "fig-agent export 'runner demo'"
     )
     assert fig_driver_commands.fig_loop_command("runner demo", "close loop") == (
-        "uv run python3 scripts/fig_loop.py 'runner demo' --goal 'close loop' --json"
+        "fig-agent loop 'runner demo' --goal 'close loop' --json"
     )
     assert fig_driver_commands.svg_polish_executor_dry_run_command("runner demo") == (
-        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --dry-run"
+        "fig-agent svg-polish-exec 'runner demo' --dry-run"
     )
     assert fig_driver_commands.svg_polish_executor_write_command("runner demo") == (
-        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --write"
+        "fig-agent svg-polish-exec 'runner demo' --write"
     )
-    assert fig_driver_commands.svg_polish_delta_command("runner demo").startswith(
-        "PYTHONPATH=scripts uv run python3 -c "
+    assert fig_driver_commands.svg_polish_delta_command("runner demo") == (
+        "fig-agent svg-polish-delta 'runner demo'"
     )
 
 
@@ -212,9 +212,7 @@ def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
     parts = fig_run._command_parts(command)
 
     assert parts is not None
-    assert parts[:4] == ["PYTHONPATH=scripts", "uv", "run", "python3"]
-    assert parts[4] == "-c"
-    assert 'Path("examples/runner\'s demo")' in parts[5]
+    assert parts == ["fig-agent", "svg-polish-delta", "runner's demo"]
 
 
 @pytest.mark.parametrize(
@@ -445,7 +443,7 @@ def test_export_with_stop_boundary_is_not_executed(
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
     assert payload["boundary_handoff"]["closeout_checks"][0] == (
-        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+            "run fig-agent closeout runner_demo --json"
     )
 
 
@@ -477,7 +475,7 @@ def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
     assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
     assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
     assert payload["boundary_handoff"]["closeout_checks"][0] == (
-        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+            "run fig-agent closeout runner_demo --json"
     )
 
 

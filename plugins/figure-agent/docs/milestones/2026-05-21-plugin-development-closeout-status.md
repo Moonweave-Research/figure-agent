@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-06-02 KST
-**Status:** current release-candidate truth through v0.9.2 / Issues 95-100
+**Status:** current release-candidate truth through v0.9.3 / Issues 95-100
 
 ## Bottom Line
 
@@ -147,7 +147,7 @@ Results:
 Read-only status sweep on 2026-05-29:
 
 ```bash
-uv run python3 scripts/status.py
+fig-agent status
 ```
 
 Result: the plugin code is current, but the checked-in example fixture states are

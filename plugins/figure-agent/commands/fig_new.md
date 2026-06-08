@@ -36,7 +36,7 @@ After each answer, **write the answer into the corresponding section of `briefin
 (strip the HTML-comment TODO when overwriting). For §3, also propagate panel structure into
 `spec.yaml`. If the user already has fixed per-panel references, optionally record each
 panel's `reference_image` path under `panels[]`; leave `bbox_pdf_cm` absent until the user
-runs `uv run python3 scripts/spec_bbox_helper.py <name> --panel id=<id> x=<x0>,<x1> y=<y0>,<y1>`.
+runs `fig-agent helper spec_bbox_helper.py <name> --panel id=<id> x=<x0>,<x1> y=<y0>,<y1>`.
 
 1. **§1 Topic** — "이 figure가 무엇을 보여주나요? (1-2 문장으로 한 줄 요지)"
 2. **§2 Domain vocabulary** — "어떤 도메인 용어를 써야 하나요? (재료/메커니즘/구조/물리 용어)"

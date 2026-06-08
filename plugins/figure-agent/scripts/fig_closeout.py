@@ -13,6 +13,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     adjudication_is_stale,
@@ -130,7 +131,7 @@ def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
         step_id="text_boundary_checks",
         state="needs_action",
         reason=reason,
-        command=f"uv run python3 scripts/text_boundary_spec_helper.py examples/{name} --write",
+        command=f"fig-agent text-boundary {name} --write",
         evidence_path=spec_path,
         evidence={"expected_check_count": len(expected_checks)},
     )
@@ -465,7 +466,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        report = compute_closeout(args.name, repo_root=args.repo_root, runs_root=args.runs_root)
+        resolved_repo_root = (
+            runtime_paths.resolve_runtime_paths().workspace_root
+            if args.repo_root == REPO_ROOT
+            else args.repo_root
+        )
+        report = compute_closeout(
+            args.name,
+            repo_root=resolved_repo_root,
+            runs_root=args.runs_root,
+        )
     except FigCloseoutError as exc:
         print(f"fig_closeout.py: {exc}", file=sys.stderr)
         return 1

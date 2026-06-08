@@ -6,13 +6,20 @@ Compile the final TikZ source.
 
 **Usage**: `/fig_compile <name>`
 
-Run from the plugin root:
+Run from the user workspace:
 
-`bash scripts/compile.sh examples/<name>/<name>.tex`
+`fig-agent compile <name>`
+
+Cowork path preflight:
+
+Do not infer that the installed plugin bundle is missing just because the user
+workspace has no `scripts/` or `styles/` directory. `fig-agent` reads bundled
+tools/styles from `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`, and reads
+figure work from `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR`.
 
 Strict opt-in:
 
-`FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/<name>/<name>.tex`
+`fig-agent compile <name> --strict`
 
 `<name>` maps to `examples/<name>/`.
 
@@ -28,17 +35,17 @@ Steps:
    filled labels that may be overpainted by later draw/path commands, and short
    double-headed arrows whose tips may fuse at manuscript scale.
    If the last edit was a fixed panel/subregion move, run
-   `uv run python3 scripts/tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`
+   `fig-agent helper tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`
    first and inspect the dry-run diff before applying `--write`.
 3. If the fixture declares `spec.yaml.text_boundary_layout`, refresh the
    generated checker contract before compiling:
-   `uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write`.
+   `fig-agent text-boundary <name> --write`.
    The helper only rewrites `spec.yaml.text_boundary_checks`; `compile.sh`
    consumes `text_boundary_checks`, not the author-facing layout block.
-4. Run `bash scripts/compile.sh examples/<name>/<name>.tex` (lualatex via shared chain).
-5. Run `uv run python3 scripts/check_collisions.py` on `examples/<name>/build/<name>.pdf`.
-6. Run `uv run python3 scripts/check_visual_clash.py` and
-   `uv run python3 scripts/check_text_boundary_clash.py` on
+4. Run `fig-agent compile <name>` (lualatex via shared chain).
+5. Run `fig-agent helper check_collisions.py` on `examples/<name>/build/<name>.pdf`.
+6. Run `fig-agent helper check_visual_clash.py` and
+   `fig-agent helper check_text_boundary_clash.py` on
    `examples/<name>/build/<name>.pdf`.
    - Default mode is report-only: collision/clash findings print WARN output
      and the checker exits 0.
@@ -48,7 +55,7 @@ Steps:
      Fixtures declaring `golden_contract` are gated by
      `scripts/check_golden_artifacts.py --require-accepted`, which enforces
      unresolved collision/clash budgets and rejects `accepted: false`.
-7. (Optional) Run `uv run python3 scripts/check_layout_drift.py examples/<name>` —
+7. (Optional) Run `fig-agent helper check_layout_drift.py examples/<name>` —
    only when `examples/<name>/coordinate_hints.yaml` exists. Reports per-label
    drift between the reference PNG OCR positions and the build PDF text
    positions, anchored on `spec.yaml.golden_contract.required_labels`.

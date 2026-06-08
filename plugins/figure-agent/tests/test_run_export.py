@@ -219,7 +219,7 @@ def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "../outside", "--skip-critique"])
 
@@ -241,7 +241,7 @@ def test_run_export_blocks_declared_missing_reference_before_regenerate(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig"])
 
@@ -264,7 +264,7 @@ def test_run_export_skip_critique_still_blocks_declared_missing_reference(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig", "--skip-critique"])
 
@@ -287,7 +287,7 @@ def test_run_export_skip_critique_allows_regenerate(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
@@ -297,6 +297,31 @@ def test_run_export_skip_critique_allows_regenerate(
     assert rc == 0
     assert regenerated == [(repo / "examples" / "ref_fig", "ref_fig")]
     assert "regenerated exports/ for ref_fig" in captured.out
+
+
+def test_run_export_regenerate_uses_explicit_plugin_root(
+    tmp_path: Path, monkeypatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = workspace / "examples" / "ref_fig"
+    (fixture / "build").mkdir(parents=True)
+    (fixture / "build" / "ref_fig.pdf").write_bytes(b"%PDF")
+    plugin_root = tmp_path / "installed-plugin"
+    plugin_root.mkdir()
+    calls: list[tuple[list[str], Path, bool]] = []
+
+    def fake_run(cmd: list[str], *, cwd: Path, check: bool) -> None:
+        calls.append((cmd, cwd, check))
+
+    monkeypatch.setattr(run_export.subprocess, "run", fake_run)
+
+    run_export._regenerate(fixture, "ref_fig", plugin_root=plugin_root)
+
+    assert [cwd for _cmd, cwd, _check in calls] == [plugin_root, plugin_root, plugin_root]
+    assert all(check for _cmd, _cwd, check in calls)
+    assert calls[0][0][:2] == ["bash", "scripts/export_svg.sh"]
+    assert calls[2][0][:2] == ["bash", "scripts/svg_to_png.sh"]
+    assert (fixture / "exports" / "ref_fig.pdf").read_bytes() == b"%PDF"
 
 
 def test_run_export_blocks_hash_stale_critique(
@@ -313,7 +338,7 @@ def test_run_export_blocks_hash_stale_critique(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
 
@@ -352,7 +377,7 @@ def test_run_export_blocks_hash_fresh_but_invalid_critique(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
 
@@ -379,7 +404,7 @@ def test_run_export_skip_critique_allows_hash_stale_regenerate(
     monkeypatch.setattr(
         run_export,
         "_regenerate",
-        lambda example, name: regenerated.append((example, name)),
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 

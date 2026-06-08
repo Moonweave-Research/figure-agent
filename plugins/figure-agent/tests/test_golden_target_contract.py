@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = REPO_ROOT / "examples" / "golden_trap_depth_picture"
+
+pytestmark = pytest.mark.skipif(
+    not FIXTURE.is_dir(),
+    reason="optional golden_trap_depth_picture real fixture is not present in this plugin tree",
+)
 
 REQUIRED_SOURCE_TOKENS = [
     "Experiment",

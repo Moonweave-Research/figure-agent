@@ -8,6 +8,7 @@ keeps the cache package focused on commands, skills, scripts, styles, and docs.
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -106,6 +107,43 @@ def find_packaging_junk(root: Path, *, preserve_fixture_artifacts: bool = False)
     return sorted(junk, key=lambda item: (len(item.parts), str(item)))
 
 
+def find_mcp_config_issues(root: Path) -> list[str]:
+    """Return MCP config issues that make an installed plugin unsafe/nonportable."""
+    config_path = root / ".mcp.json"
+    if not config_path.is_file():
+        return []
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f".mcp.json is not valid JSON: {exc}"]
+    servers = data.get("mcpServers")
+    if not isinstance(servers, dict):
+        return [".mcp.json missing object mcpServers"]
+    issues: list[str] = []
+    for server_name, config in servers.items():
+        if not isinstance(config, dict):
+            issues.append(f"{server_name}: server config must be an object")
+            continue
+        command = config.get("command")
+        args = config.get("args", [])
+        values = [command] + (args if isinstance(args, list) else [])
+        for value in values:
+            if not isinstance(value, str):
+                continue
+            if value.startswith("scripts/") or value.startswith("./scripts/"):
+                issues.append(
+                    f"{server_name}: MCP config uses workspace-relative script path {value!r}"
+                )
+            if " scripts/" in value or " ./scripts/" in value:
+                issues.append(
+                    f"{server_name}: MCP config embeds workspace-relative script path {value!r}"
+                )
+        cwd = config.get("cwd")
+        if isinstance(cwd, str) and cwd in {".", ""}:
+            issues.append(f"{server_name}: MCP cwd must not depend on user workspace")
+    return issues
+
+
 def remove_paths(paths: list[Path]) -> None:
     for path in sorted(paths, key=lambda item: len(item.parts), reverse=True):
         if path.is_dir() and not path.is_symlink():
@@ -150,6 +188,12 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print("run with --clean to remove generated package junk", file=sys.stderr)
             return 1
+
+    mcp_issues = find_mcp_config_issues(args.root)
+    if mcp_issues:
+        for issue in mcp_issues:
+            print(f"MCP_CONFIG_ISSUE {issue}", file=sys.stderr)
+        return 1
 
     size_mib = _directory_size_mib(args.root)
     print(f"package_size_mib={size_mib:.1f}")

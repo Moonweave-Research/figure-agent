@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import importlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def _plugin_root() -> Path:
+    return Path(
+        os.environ.get("FIGURE_AGENT_PLUGIN_ROOT")
+        or os.environ.get("CLAUDE_PLUGIN_ROOT")
+        or Path(__file__).resolve().parent.parent
+    ).resolve()
+
+
+CODE_ROOT = Path(__file__).resolve().parent.parent
+PLUGIN_ROOT = _plugin_root()
+SCRIPTS_DIR = CODE_ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
+
+
+def _paths() -> runtime_paths.RuntimePaths:
+    return runtime_paths.resolve_runtime_paths(plugin_root=PLUGIN_ROOT)
+
+
+def _with_runtime_env() -> dict[str, str]:
+    paths = _paths()
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
+    env["FIGURE_AGENT_WORKSPACE"] = str(paths.workspace_root)
+    return env
+
+
+def _run(args: list[str], *, cwd: Path) -> int:
+    return subprocess.run(args, cwd=cwd, env=_with_runtime_env(), check=False).returncode
+
+
+def _validated_fixture_name(parser: argparse.ArgumentParser, name: str) -> str:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        parser.error(str(exc))
+    return name
+
+
+def _doctor(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent doctor")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    args = parser.parse_args(argv)
+    paths = _paths()
+    deps = _dependency_diagnostics()
+    payload = {
+        "schema": "figure-agent.doctor.v1",
+        "bundle": runtime_paths.bundle_diagnostics(paths),
+        "workspace": runtime_paths.workspace_diagnostics(paths),
+        "dependencies": deps,
+    }
+    ok = (
+        payload["bundle"]["state"] == "ok"
+        and payload["workspace"]["state"] == "ok"
+        and deps["state"] == "ok"
+    )
+    if args.json or args.format == "json":
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"bundle: {payload['bundle']['state']} ({paths.plugin_root})")
+        print(f"workspace: {payload['workspace']['state']} ({paths.workspace_root})")
+        print(f"dependencies: {deps['state']}")
+        for item in payload["bundle"]["missing"]:
+            print(f"missing bundle: {item}")
+        for item in payload["workspace"]["missing"]:
+            print(f"missing workspace: {item}")
+        for item in deps["missing"]:
+            print(f"missing dependency: {item}")
+    return 0 if ok else 1
+
+
+def _dependency_diagnostics() -> dict:
+    tex_engine = os.environ.get("LATEX_ENGINE") or "lualatex"
+    binaries = ("uv", "python3", tex_engine, "pdftocairo", "rsvg-convert")
+    missing = [name for name in binaries if shutil.which(name) is None]
+    py_modules = ("yaml", "PIL")
+    for module_name in py_modules:
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            missing.append(f"python:{module_name}")
+    return {"state": "ok" if not missing else "missing", "missing": missing}
+
+
+def _status(argv: list[str]) -> int:
+    import status
+
+    return status.main(argv, workspace_root=_paths().workspace_root)
+
+
+def _compile(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent compile")
+    parser.add_argument("name")
+    parser.add_argument("--strict", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    tex = paths.examples_dir / name / f"{name}.tex"
+    env = _with_runtime_env()
+    if args.strict:
+        env["FIGURE_AGENT_STRICT"] = "1"
+    return subprocess.run(
+        ["bash", str(paths.scripts_dir / "compile.sh"), str(tex)],
+        cwd=paths.plugin_root,
+        env=env,
+        check=False,
+    ).returncode
+
+
+def _export(argv: list[str]) -> int:
+    import run_export
+
+    return run_export.main(
+        argv,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
+def _adjudicate(argv: list[str]) -> int:
+    if argv and argv[0] in {"scaffold", "sync"}:
+        sub_args = argv
+    else:
+        sub_args = ["scaffold", *argv]
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / "critique_adjudication.py"), *sub_args],
+        cwd=_paths().workspace_root,
+    )
+
+
+def _loop(argv: list[str]) -> int:
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *argv],
+        cwd=_paths().workspace_root,
+    )
+
+
+def _script_main(module_name: str, argv: list[str]) -> int:
+    module = importlib.import_module(module_name)
+    return module.main(argv, repo_root=_paths().workspace_root)
+
+
+def _script_process(script_name: str, argv: list[str]) -> int:
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / script_name), *argv],
+        cwd=_paths().workspace_root,
+    )
+
+
+HELPER_SCRIPTS = {
+    "check_collisions.py",
+    "check_layout_drift.py",
+    "check_text_boundary_clash.py",
+    "check_visual_clash.py",
+    "critique_brief.py",
+    "critique_lint.py",
+    "critique_reference_pack.py",
+    "detector_feedback_ledger.py",
+    "diagnostic_artifact_provenance.py",
+    "external_vision_review.py",
+    "fig_loop_patch_executor.py",
+    "fig_run_journal.py",
+    "paper_aesthetic_context.py",
+    "plugin_install_freshness.py",
+    "plugin_package_audit.py",
+    "reference_extract.py",
+    "spec_bbox_helper.py",
+    "subregion_iteration_log.py",
+    "svg_polish_executor.py",
+    "svg_polish_handoff.py",
+    "svg_polish_recipe.py",
+    "tex_coordinate_shift.py",
+    "text_boundary_spec_helper.py",
+}
+
+
+def _helper(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent helper")
+    parser.add_argument("script")
+    parser.add_argument("args", nargs=argparse.REMAINDER)
+    args = parser.parse_args(argv)
+    script = args.script if args.script.endswith(".py") else f"{args.script}.py"
+    if "/" in script or script not in HELPER_SCRIPTS:
+        parser.error(f"unsupported helper script: {args.script}")
+    return _script_process(script, args.args)
+
+
+def _closeout(argv: list[str]) -> int:
+    import fig_closeout
+
+    return fig_closeout.main(argv, repo_root=_paths().workspace_root)
+
+
+def _text_boundary(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent text-boundary")
+    parser.add_argument("name")
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    fixture = _paths().examples_dir / name
+    command = [sys.executable, str(SCRIPTS_DIR / "text_boundary_spec_helper.py"), str(fixture)]
+    if args.write:
+        command.append("--write")
+    return _run(command, cwd=_paths().workspace_root)
+
+
+def _svg_polish_exec(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-exec")
+    parser.add_argument("name")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    command = [
+        sys.executable,
+        str(SCRIPTS_DIR / "svg_polish_executor.py"),
+        str(_paths().examples_dir / name),
+    ]
+    if args.dry_run:
+        command.append("--dry-run")
+    if args.write:
+        command.append("--write")
+    return _run(command, cwd=_paths().workspace_root)
+
+
+def _svg_polish_delta(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-delta")
+    parser.add_argument("name")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    script = (
+        "from pathlib import Path; "
+        "from svg_polish_delta import build_svg_polish_delta_pack; "
+        f"build_svg_polish_delta_pack(Path('examples') / {name!r}, base_dir=Path('.'))"
+    )
+    return _run([sys.executable, "-c", script], cwd=_paths().workspace_root)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = list(argv if argv is not None else sys.argv[1:])
+    if not args:
+        print(
+            "usage: fig-agent <doctor|status|compile|export|adjudicate|loop|closeout|helper> ...",
+            file=sys.stderr,
+        )
+        return 2
+    command, rest = args[0], args[1:]
+    if command == "doctor":
+        return _doctor(rest)
+    if command == "status":
+        return _status(rest)
+    if command == "compile":
+        return _compile(rest)
+    if command == "export":
+        return _export(rest)
+    if command == "adjudicate":
+        return _adjudicate(rest)
+    if command == "loop":
+        return _loop(rest)
+    if command == "run":
+        return _script_main("fig_run", rest)
+    if command == "drive":
+        return _script_main("fig_driver", rest)
+    if command == "queue":
+        return _script_main("fig_queue", rest)
+    if command == "queue-run":
+        return _script_main("fig_queue_run", rest)
+    if command == "improve":
+        return _script_main("fig_improve", rest)
+    if command == "e2e-smoke":
+        return _script_process("fig_e2e_smoke.py", rest)
+    if command == "closeout":
+        return _closeout(rest)
+    if command == "helper":
+        return _helper(rest)
+    if command == "text-boundary":
+        return _text_boundary(rest)
+    if command == "svg-polish-exec":
+        return _svg_polish_exec(rest)
+    if command == "svg-polish-delta":
+        return _svg_polish_delta(rest)
+    print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

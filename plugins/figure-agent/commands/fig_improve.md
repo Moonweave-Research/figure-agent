@@ -9,9 +9,9 @@ Run a bounded improvement loop for one figure.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_improve.py <name> --goal "<goal>"
-uv run python3 scripts/fig_improve.py <name> --goal "<goal>" --execute --max-loops 10
-uv run python3 scripts/fig_improve.py <name> --goal "<goal>" --format json
+fig-agent improve <name> --goal "<goal>"
+fig-agent improve <name> --goal "<goal>" --execute --max-loops 10
+fig-agent improve <name> --goal "<goal>" --format json
 ```
 
 `/fig_improve` is the loop-centered entry point for "use figure-agent to keep

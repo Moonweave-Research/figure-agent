@@ -20,6 +20,7 @@ from pathlib import Path
 
 import critique_brief_sections as brief_sections
 import fixture_identity
+import runtime_paths
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
     AestheticIntentError,
@@ -66,7 +67,9 @@ MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
-STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
+STYLE_LOCK_PATH = (
+    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+)
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
@@ -1805,20 +1808,10 @@ subscription tokens.)
 
 
 def _resolve_example_dir_for_cli(value: str) -> Path:
-    path = Path(value)
-    if path.is_absolute():
-        return path
-    if path.parts and path.parts[0] == "examples":
-        if len(path.parts) != 2 or ".." in path.parts:
-            raise CritiqueBriefError("invalid fixture path: expected examples/<fixture-name>")
-        _validate_fixture_name(path.parts[1], value)
-        return Path("examples") / path.parts[1]
-    if len(path.parts) == 1:
-        _validate_fixture_name(value, value)
-        return path
-    raise CritiqueBriefError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
-    )
+    try:
+        return runtime_paths.resolve_example_dir_for_cli(value)
+    except ValueError as exc:
+        raise CritiqueBriefError(f"invalid fixture path: {exc}") from exc
 
 
 def _validate_fixture_name(name: str, original: str) -> None:

@@ -496,7 +496,7 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
 
     assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
     assert "first blocker export_missing" in summary["reason"]
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
 
 
 def test_driver_summary_copies_critique_freshness_diagnostics(
@@ -668,7 +668,7 @@ def test_final_mode_recommends_strict_compile_for_stale_render(
     assert summary["action"] == "run_compile"
     assert (
         summary["safe_command"]
-        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+        == "fig-agent compile driver_demo --strict"
     )
     assert summary["final_readiness_profile"]["strict_compile"]["state"] == "needs_action"
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
@@ -781,7 +781,7 @@ def test_final_mode_requests_strict_compile_when_warning_budget_report_missing(
     assert summary["action"] == "run_compile"
     assert (
         summary["safe_command"]
-        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+        == "fig-agent compile driver_demo --strict"
     )
     assert "warning budget input is missing" in summary["reason"]
     assert summary["final_readiness_profile"]["warning_budget"]["state"] == "needs_action"
@@ -800,7 +800,7 @@ def test_final_mode_requires_loop_checkpoint_before_complete(
 
     assert summary["action"] == "run_fig_loop"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal final --json"
+        "fig-agent loop driver_demo --goal final --json"
     )
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
     assert summary["final_readiness_profile"]["loop_checkpoint"]["state"] == "needs_action"
@@ -857,7 +857,7 @@ def test_authoring_mode_recommends_compile_when_render_missing(tmp_path: Path) -
     summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
 
     assert summary["action"] == "run_compile"
-    assert summary["safe_command"] == "bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+    assert summary["safe_command"] == "fig-agent compile driver_demo"
     assert summary["stop_boundary"] is None
 
 
@@ -947,7 +947,7 @@ def test_review_mode_recommends_adjudicate_when_critique_fresh(
     assert summary["stop_boundary"] is None
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+        == "fig-agent adjudicate driver_demo"
     )
 
 
@@ -963,7 +963,7 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+            == "fig-agent loop driver_demo --goal review --json"
     )
     assert summary["stop_boundary"] is None
 
@@ -996,7 +996,7 @@ def test_review_mode_uses_closeout_next_action_before_rerunning_loop(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+            == "fig-agent loop driver_demo --goal review --json"
     )
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["blocking_step_ids"] == ["loop_rerun"]
@@ -1025,7 +1025,7 @@ def test_review_mode_uses_closeout_export_action_before_rerunning_loop(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_export"
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["next_action"] == "/fig_export driver_demo"
 
@@ -1041,7 +1041,7 @@ def test_review_mode_detects_real_closeout_export_gap(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_export"
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["blocking_step_ids"] == ["export", "loop_rerun"]
 
@@ -1146,7 +1146,7 @@ def test_review_mode_fig_loop_goal_is_shell_safe(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal 'it'\"'\"'s a goal' --json"
+        == "fig-agent loop driver_demo --goal 'it'\"'\"'s a goal' --json"
     )
 
 
@@ -1782,7 +1782,7 @@ def test_release_mode_requires_adjudication_before_completion(
 
     assert summary["action"] == "run_adjudicate"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+        "fig-agent adjudicate driver_demo"
     )
     assert summary["stop_boundary"] is None
     assert "critique_adjudication.yaml is missing or stale" in summary["reason"]
@@ -1959,7 +1959,7 @@ def test_polish_mode_not_required_critique_routes_to_release_or_final(
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert "ready_for_svg_polish" not in summary["reason"]
     assert "NOT_REQUIRED" in summary["reason"]
@@ -2248,7 +2248,7 @@ def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert "ready_for_svg_polish" in summary["reason"]
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
@@ -2381,9 +2381,9 @@ def test_polish_mode_with_recipe_returns_executor_dry_run_command(
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] == (
-        "uv run python3 scripts/svg_polish_executor.py examples/driver_demo --dry-run"
+        "fig-agent svg-polish-exec driver_demo --dry-run"
     )
-    assert "svg_polish_executor.py" in summary["reason"]
+    assert "fig-agent svg-polish-exec" in summary["reason"]
 
 
 def test_polish_mode_with_polished_svg_returns_delta_pack_command(
@@ -2412,7 +2412,7 @@ def test_polish_mode_with_polished_svg_returns_delta_pack_command(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
-    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert summary["safe_command"] == "fig-agent svg-polish-delta driver_demo"
     assert "aesthetic delta" in summary["reason"]
 
 
@@ -2515,7 +2515,7 @@ def test_polish_mode_with_invalid_delta_pack_returns_delta_pack_command(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
-    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert summary["safe_command"] == "fig-agent svg-polish-delta driver_demo"
     assert "delta pack is invalid" in summary["reason"]
 
 
@@ -2631,7 +2631,7 @@ def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
 
     assert summary["action"] == "run_fig_loop"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert "continue_tikz" in summary["reason"]

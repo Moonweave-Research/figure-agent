@@ -12,6 +12,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 pytestmark = pytest.mark.render
 
 
+def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'UV_RUN=(uv run --project "$WORKFLOW_DIR")' in script
+    assert 'uv run python3 "$WORKFLOW_DIR/scripts/perception_pack.py"' not in script
+    assert '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"' in script
+
+
 @pytest.mark.skipif(
     shutil.which("lualatex") is None
     or shutil.which("pdftocairo") is None
@@ -113,6 +121,10 @@ def test_golden_trap_depth_picture_compiles_with_shared_preamble() -> None:
         / "golden_trap_depth_picture"
         / "golden_trap_depth_picture.tex"
     )
+    if not tex_path.is_file():
+        pytest.skip(
+            "optional golden_trap_depth_picture real fixture is not present in this plugin tree"
+        )
 
     result = subprocess.run(
         ["bash", "scripts/compile.sh", str(tex_path)],

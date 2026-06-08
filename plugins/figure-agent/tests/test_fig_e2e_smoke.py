@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_e2e_smoke as smoke  # noqa: E402
 
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
     fixture = repo / "examples" / name
@@ -51,6 +53,33 @@ def _completed(
     return subprocess.CompletedProcess(args, returncode, stdout=stdout, stderr="")
 
 
+def test_default_command_runner_uses_bundled_fig_agent_for_internal_steps(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[list[str], Path]] = []
+
+    def fake_run(
+        args: list[str],
+        *,
+        cwd: Path,
+        capture_output: bool,
+        text: bool,
+        errors: str,
+        check: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append((args, cwd))
+        return _completed(args)
+
+    monkeypatch.setenv("FIGURE_AGENT_PLUGIN_ROOT", str(PLUGIN_ROOT))
+    monkeypatch.setattr(smoke.subprocess, "run", fake_run)
+
+    result = smoke._default_command_runner(["fig-agent", "status", "loop_demo"], cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert calls == [([str(PLUGIN_ROOT / "bin" / "fig-agent"), "status", "loop_demo"], tmp_path)]
+
+
 def test_run_smoke_repeats_compile_export_status_loop_in_order(tmp_path: Path) -> None:
     _make_fixture(tmp_path)
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
@@ -59,8 +88,8 @@ def test_run_smoke_repeats_compile_export_status_loop_in_order(tmp_path: Path) -
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
         assert cwd == tmp_path
         commands.append(args)
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
-            run_index = len([command for command in commands if "scripts/fig_loop.py" in command])
+        if args[:2] == ["fig-agent", "loop"]:
+            run_index = len([command for command in commands if "loop" in command])
             return _completed(args, stdout=_loop_stdout(runs_root, index=run_index))
         return _completed(args)
 
@@ -81,14 +110,12 @@ def test_run_smoke_repeats_compile_export_status_loop_in_order(tmp_path: Path) -
         "status_action_required",
     ]
     assert commands == [
-        ["bash", "scripts/compile.sh", "examples/loop_demo/loop_demo.tex"],
-        ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"],
-        ["uv", "run", "python3", "scripts/status.py", "examples/loop_demo"],
+        ["fig-agent", "compile", "loop_demo"],
+        ["fig-agent", "export", "loop_demo"],
+        ["fig-agent", "status", "loop_demo"],
         [
-            "uv",
-            "run",
-            "python3",
-            "scripts/fig_loop.py",
+            "fig-agent",
+            "loop",
             "loop_demo",
             "--goal",
             "dogfood (smoke run 1/2)",
@@ -96,14 +123,12 @@ def test_run_smoke_repeats_compile_export_status_loop_in_order(tmp_path: Path) -
             "--runs-root",
             str(runs_root),
         ],
-        ["bash", "scripts/compile.sh", "examples/loop_demo/loop_demo.tex"],
-        ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"],
-        ["uv", "run", "python3", "scripts/status.py", "examples/loop_demo"],
+        ["fig-agent", "compile", "loop_demo"],
+        ["fig-agent", "export", "loop_demo"],
+        ["fig-agent", "status", "loop_demo"],
         [
-            "uv",
-            "run",
-            "python3",
-            "scripts/fig_loop.py",
+            "fig-agent",
+            "loop",
             "loop_demo",
             "--goal",
             "dogfood (smoke run 2/2)",
@@ -120,7 +145,7 @@ def test_run_smoke_stops_on_first_failed_step(tmp_path: Path) -> None:
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
         commands.append(args)
-        if args == ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"]:
+        if args == ["fig-agent", "export", "loop_demo"]:
             return subprocess.CompletedProcess(args, 1, stdout="", stderr="critique_stale\n")
         return _completed(args)
 
@@ -137,8 +162,8 @@ def test_run_smoke_stops_on_first_failed_step(tmp_path: Path) -> None:
     assert summary["runs"][0]["export"]["returncode"] == 1
     assert summary["runs"][0]["export"]["stderr_tail"] == "critique_stale\n"
     assert commands == [
-        ["bash", "scripts/compile.sh", "examples/loop_demo/loop_demo.tex"],
-        ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"],
+        ["fig-agent", "compile", "loop_demo"],
+        ["fig-agent", "export", "loop_demo"],
     ]
 
 
@@ -168,7 +193,7 @@ def test_run_smoke_manual_approval_loop_outcome_is_still_success(tmp_path: Path)
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             return _completed(
                 args,
                 stdout=_loop_stdout(
@@ -196,14 +221,14 @@ def test_run_smoke_tracked_golden_export_noop_is_success(tmp_path: Path) -> None
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args == ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"]:
+        if args == ["fig-agent", "export", "loop_demo"]:
             return subprocess.CompletedProcess(
                 args,
                 0,
                 stdout="",
                 stderr="run_export.py: exports/ for loop_demo is TRACKED_GOLDEN\n",
             )
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             return _completed(args, stdout=_loop_stdout(runs_root))
         return _completed(args)
 
@@ -225,7 +250,7 @@ def test_run_smoke_invalid_fig_loop_json_fails_fig_loop_step(tmp_path: Path) -> 
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
         commands.append(args)
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             return _completed(args, stdout="not json\n")
         return _completed(args)
 
@@ -247,7 +272,7 @@ def test_run_smoke_missing_fig_loop_json_key_fails_fig_loop_step(tmp_path: Path)
     _make_fixture(tmp_path)
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             return _completed(
                 args,
                 stdout=json.dumps({"run_dir": "missing required keys"}) + "\n",
@@ -265,7 +290,7 @@ def test_run_smoke_wrong_fig_loop_json_type_fails_fig_loop_step(tmp_path: Path) 
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             payload = json.loads(_loop_stdout(runs_root))
             payload["patch_handoff_present"] = "false"
             return _completed(args, stdout=json.dumps(payload) + "\n")
@@ -287,7 +312,7 @@ def test_run_smoke_parses_full_fig_loop_stdout_not_tail(tmp_path: Path) -> None:
     runs_root = tmp_path / ".scratch" / "fig-loop-runs"
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             payload = json.loads(_loop_stdout(runs_root))
             payload["padding"] = "x" * 5000
             return _completed(args, stdout=json.dumps(payload) + "\n")
@@ -332,7 +357,7 @@ def test_run_smoke_fails_when_repeat_outcome_drifts(tmp_path: Path) -> None:
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
         nonlocal loop_calls
-        if args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        if args[:2] == ["fig-agent", "loop"]:
             loop_calls += 1
             stop_reason = "status_action_required" if loop_calls == 1 else "verify_only_complete"
             return _completed(
@@ -404,19 +429,19 @@ def test_run_smoke_does_not_mutate_non_output_artifacts(
     )
 
     def runner(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-        if args[0:2] == ["bash", "scripts/compile.sh"]:
+        if args[0:2] == ["fig-agent", "compile"]:
             build = fixture / "build"
             build.mkdir()
             (build / "loop_demo.pdf").write_bytes(b"%PDF")
             (build / "loop_demo.png").write_bytes(b"\x89PNG")
-        elif args == ["uv", "run", "python3", "scripts/run_export.py", "loop_demo"]:
+        elif args == ["fig-agent", "export", "loop_demo"]:
             exports = fixture / "exports"
             exports.mkdir()
             (exports / "loop_demo.pdf").write_bytes(b"%PDF")
             (exports / "loop_demo.svg").write_text("<svg/>", encoding="utf-8")
             (exports / "loop_demo.tif").write_bytes(b"TIFF")
             (exports / "loop_demo.png").write_bytes(b"\x89PNG")
-        elif args[:4] == ["uv", "run", "python3", "scripts/fig_loop.py"]:
+        elif args[:2] == ["fig-agent", "loop"]:
             (runs_root / "run-1").mkdir(parents=True)
             return _completed(args, stdout=_loop_stdout(runs_root))
         return _completed(args)

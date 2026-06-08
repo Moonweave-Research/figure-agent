@@ -90,3 +90,58 @@ def test_command_docs_json_output_spellings_match_scripts() -> None:
         script = _read(f"scripts/{script_name}")
         assert '"--json"' in script, doc_name
         assert '"--format"' in script, doc_name
+
+
+def test_operator_docs_and_safe_commands_prefer_fig_agent_entrypoint() -> None:
+    docs = {
+        "README.md": _read("README.md"),
+        "skills/figure-agent/SKILL.md": _read("skills/figure-agent/SKILL.md"),
+        "docs/v0.9-operator-playbook.md": _read("docs/v0.9-operator-playbook.md"),
+    }
+    docs.update(
+        {
+            f"commands/{path.name}": path.read_text(encoding="utf-8")
+            for path in (PLUGIN_ROOT / "commands").glob("fig_*.md")
+        }
+    )
+    forbidden_patterns = [
+        "bash scripts/compile.sh",
+        "uv run python3 scripts/fig_driver.py",
+        "uv run python3 scripts/fig_run.py",
+        "uv run python3 scripts/fig_improve.py",
+        "uv run python3 scripts/fig_queue.py",
+        "uv run python3 scripts/fig_queue_run.py",
+        "uv run python3 scripts/fig_closeout.py",
+        "uv run python3 scripts/fig_e2e_smoke.py",
+        "uv run python3 scripts/fig_loop.py",
+        "uv run python3 scripts/status.py",
+        "uv run python3 scripts/run_export.py",
+        "uv run python scripts/run_export.py",
+        "uv run python3 scripts/",
+        "uv run python scripts/",
+        "python3 scripts/",
+        "PYTHONPATH=scripts",
+    ]
+    for doc_path, doc in docs.items():
+        for forbidden in forbidden_patterns:
+            assert forbidden not in doc, f"{doc_path} exposes {forbidden}"
+
+    safe_commands = _read("scripts/fig_driver_commands.py")
+    assert "fig-agent compile" in safe_commands
+    assert "fig-agent export" in safe_commands
+    assert "bash scripts/compile.sh" not in safe_commands
+    assert "uv run python3 scripts/" not in safe_commands
+
+
+def test_runtime_docs_define_cowork_entrypoint_fallback_and_root_split() -> None:
+    docs = {
+        "README.md": _read("README.md"),
+        "skills/figure-agent/SKILL.md": _read("skills/figure-agent/SKILL.md"),
+        "commands/fig_status.md": _read("commands/fig_status.md"),
+    }
+
+    for doc_path, doc in docs.items():
+        assert '"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent"' in doc, doc_path
+        assert "FIGURE_AGENT_PLUGIN_ROOT" in doc, doc_path
+        assert "FIGURE_AGENT_WORKSPACE" in doc, doc_path
+        assert "CLAUDE_PROJECT_DIR" in doc, doc_path

@@ -9,14 +9,14 @@ Inspect whether a patched figure has completed the required closeout steps.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_closeout.py <name>
+fig-agent closeout <name>
 ```
 
 For automation:
 
 ```bash
-uv run python3 scripts/fig_closeout.py <name> --json
-uv run python3 scripts/fig_closeout.py <name> --format json
+fig-agent closeout <name> --json
+fig-agent closeout <name> --format json
 ```
 
 The JSON report has schema `figure-agent.closeout.v1` and includes:
@@ -55,7 +55,7 @@ verifies that generated `text_boundary_checks` are present and current. When
 they are missing or stale, the report emits:
 
 ```bash
-uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write
+fig-agent text-boundary <name> --write
 ```
 
 Run that helper, inspect the spec diff, then continue to `/fig_compile`.
