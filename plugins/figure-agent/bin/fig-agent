@@ -369,6 +369,28 @@ def _benchmark_run(argv: list[str]) -> int:
     return 0
 
 
+def _benchmark_compare(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-compare")
+    parser.add_argument("baseline_run")
+    parser.add_argument("candidate_run")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        payload = quality_benchmark.compare_benchmark_runs(
+            args.baseline_run,
+            args.candidate_run,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-compare: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
     path = Path(value)
     if path.is_absolute() or ".." in path.parts:
@@ -929,6 +951,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_list(rest)
     if command == "benchmark-run":
         return _benchmark_run(rest)
+    if command == "benchmark-compare":
+        return _benchmark_compare(rest)
     if command == "propose":
         return _propose(rest)
     if command == "intent":

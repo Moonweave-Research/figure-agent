@@ -16,6 +16,7 @@ import runtime_paths
 
 LIST_SCHEMA = "figure-agent.quality-benchmark-list.v1"
 RUN_SCHEMA = "figure-agent.quality-benchmark-run.v1"
+COMPARE_SCHEMA = "figure-agent.quality-benchmark-comparison.v1"
 
 
 class QualityBenchmarkError(ValueError):
@@ -220,6 +221,132 @@ def _ensure_run_output(workspace_root: Path, run_id: str) -> Path:
     return output
 
 
+def _load_run(workspace_root: Path, run_id: str) -> dict[str, Any]:
+    try:
+        fixture_identity.validate_fixture_name(run_id)
+    except ValueError as exc:
+        raise QualityBenchmarkError(str(exc)) from exc
+    scratch_root = workspace_root / ".scratch"
+    benchmark_root = scratch_root / "figure-agent-benchmarks"
+    run_dir = benchmark_root / run_id
+    output = run_dir / "run.json"
+    for label, path in (
+        ("scratch", scratch_root),
+        ("benchmark", benchmark_root),
+        ("run", run_dir),
+        ("output", output),
+    ):
+        if path.is_symlink():
+            raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {label}")
+    if not output.is_file():
+        raise QualityBenchmarkError(f"benchmark_run_missing: {run_id}")
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise QualityBenchmarkError(f"benchmark_run_invalid: {run_id}")
+    return payload
+
+
+def _result_by_fixture(run: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    results = run.get("results")
+    if not isinstance(results, list):
+        return {}
+    mapped: dict[str, dict[str, Any]] = {}
+    for result in results:
+        if isinstance(result, dict) and isinstance(result.get("fixture"), str):
+            mapped[result["fixture"]] = result
+    return mapped
+
+
+def _metric(result: dict[str, Any], key: str) -> float:
+    metrics = result.get("metrics")
+    if not isinstance(metrics, dict):
+        return 0.0
+    try:
+        return float(metrics.get(key) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _compare_fixture(
+    fixture: str,
+    baseline: dict[str, Any] | None,
+    candidate: dict[str, Any] | None,
+) -> dict[str, Any]:
+    regressions: list[str] = []
+    if baseline is None:
+        regressions.append("new_fixture_without_baseline")
+    if candidate is None:
+        regressions.append("missing_candidate_fixture")
+        return {
+            "fixture": fixture,
+            "baseline_status": baseline.get("status") if baseline else None,
+            "candidate_status": None,
+            "regressions": regressions,
+        }
+    baseline_failures = set(baseline.get("hard_gate_failures", []) if baseline else [])
+    candidate_failures = set(candidate.get("hard_gate_failures", []))
+    new_failures = sorted(candidate_failures - baseline_failures)
+    if new_failures:
+        regressions.append(f"new_hard_gate_failures:{','.join(new_failures)}")
+    if (
+        baseline
+        and baseline.get("status") == "completed"
+        and candidate.get("status") != "completed"
+    ):
+        regressions.append(f"status_regression:{candidate.get('status')}")
+    if (
+        not new_failures
+        and _metric(candidate, "new_blocker_count") > _metric(baseline or {}, "new_blocker_count")
+    ):
+        regressions.append("new_blocker_count_increased")
+    return {
+        "fixture": fixture,
+        "baseline_status": baseline.get("status") if baseline else None,
+        "candidate_status": candidate.get("status"),
+        "baseline_rank_score": _metric(baseline or {}, "mean_rank_score"),
+        "candidate_rank_score": _metric(candidate, "mean_rank_score"),
+        "regressions": regressions,
+    }
+
+
+def compare_benchmark_runs(
+    baseline_run: str,
+    candidate_run: str,
+    *,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> dict[str, Any]:
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    baseline = _load_run(paths.workspace_root, baseline_run)
+    candidate = _load_run(paths.workspace_root, candidate_run)
+    baseline_results = _result_by_fixture(baseline)
+    candidate_results = _result_by_fixture(candidate)
+    fixtures = sorted(set(baseline_results) | set(candidate_results))
+    comparisons = [
+        _compare_fixture(
+            fixture,
+            baseline_results.get(fixture),
+            candidate_results.get(fixture),
+        )
+        for fixture in fixtures
+    ]
+    regression_count = sum(len(item["regressions"]) for item in comparisons)
+    return {
+        "schema": COMPARE_SCHEMA,
+        "generated_at": _utc_now(),
+        "baseline_run": baseline_run,
+        "candidate_run": candidate_run,
+        "fixture_comparisons": comparisons,
+        "summary": {
+            "fixture_count": len(fixtures),
+            "regression_count": regression_count,
+        },
+    }
+
+
 def run_benchmark_suite(
     suite: str,
     *,
@@ -291,10 +418,14 @@ def main(
     run_parser.add_argument("--render", action="store_true")
     run_parser.add_argument("--write", action="store_true")
     run_parser.add_argument("--json", action="store_true")
+    compare_parser = subparsers.add_parser("compare")
+    compare_parser.add_argument("baseline_run")
+    compare_parser.add_argument("candidate_run")
+    compare_parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "list":
         payload = build_benchmark_list(plugin_root=plugin_root)
-    else:
+    elif args.command == "run":
         payload = run_benchmark_suite(
             args.suite,
             plugin_root=plugin_root,
@@ -302,6 +433,13 @@ def main(
             limit=args.limit,
             render=args.render,
             write=args.write,
+        )
+    else:
+        payload = compare_benchmark_runs(
+            args.baseline_run,
+            args.candidate_run,
+            plugin_root=plugin_root,
+            workspace_root=workspace_root,
         )
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0

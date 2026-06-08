@@ -117,6 +117,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.quality-memory-index.v1` | quality memory | `quality_memory_index.py` | future memory-aware ranking, operators | Conservative priors only; cannot upgrade hard gates or apply authority |
 | `figure-agent.quality-benchmark-list.v1` | quality benchmark | `quality_benchmark.py` | operators, future MCP benchmark tools | Read-only suite manifest view |
 | `figure-agent.quality-benchmark-run.v1` | quality benchmark | `quality_benchmark.py` | benchmark compare, operators | Local benchmark report; writes only repo/workspace-local scratch when explicit |
+| `figure-agent.quality-benchmark-comparison.v1` | quality benchmark | `quality_benchmark.py` | operators, future release gate checks | Compares local benchmark reports and surfaces regressions |
 | `figure-agent.intent-model.v1` | candidate search | `figure_intent_model.py` | `candidate_generator.py`, MCP candidate tools | Read-only fixture intent model; missing optional inputs downgrade authority instead of inventing claims |
 | `figure-agent.candidate-tex-index.v1` | candidate search | `candidate_tex_index.py` | `candidate_panel_model.py`, `candidate_families.py` | Read-only TeX selector index; panel hints and active command ranges only |
 | `figure-agent.candidate-panel-model.v1` | candidate search | `candidate_panel_model.py` | `candidate_families.py`, MCP panel tools | Read-only panel model joining intent, bbox hints, selectors, and visual-review state |
