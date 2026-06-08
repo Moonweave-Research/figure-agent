@@ -192,3 +192,26 @@ def test_render_rejects_sandbox_manifest_symlink(tmp_path: Path) -> None:
         )
 
     assert export.read_text(encoding="utf-8") == "<svg />\n"
+
+
+def test_render_rejects_sandbox_root_symlink_to_exports(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    exports = fixture / "exports"
+    exports.mkdir()
+    candidates_parent = fixture / "build"
+    candidates_parent.mkdir()
+    (candidates_parent / "candidates").symlink_to(exports)
+    candidate_set = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
+        candidate_render.render_candidate_set(
+            "candidate_demo",
+            candidate_set,
+            workspace_root=workspace,
+        )
+
+    assert list(exports.rglob("*")) == []

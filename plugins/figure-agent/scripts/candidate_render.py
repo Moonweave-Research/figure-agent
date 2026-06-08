@@ -41,9 +41,13 @@ def _safe_candidate_id(value: Any) -> str:
 
 def _sandbox_dir(example_dir: Path, candidate_id: str) -> Path:
     root = example_dir / "build" / "candidates"
-    out_dir = (root / candidate_id).resolve()
+    if root.is_symlink():
+        raise CandidateRenderError("sandbox_symlink_forbidden: candidates")
+    out_dir = root / candidate_id
+    if out_dir.is_symlink():
+        raise CandidateRenderError(f"sandbox_symlink_forbidden: {candidate_id}")
     try:
-        out_dir.relative_to(root.resolve())
+        out_dir.resolve().relative_to(root.resolve())
     except ValueError as exc:
         raise CandidateRenderError(f"candidate_id path_escape: {candidate_id}") from exc
     return out_dir
