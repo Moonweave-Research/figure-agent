@@ -22,6 +22,14 @@ import package_cowork_plugin  # noqa: E402
 SCHEMA = "figure-agent.release-gate.v1"
 
 TARGETED_TESTS = [
+    "tests/test_figure_intent_model.py",
+    "tests/test_candidate_contracts.py",
+    "tests/test_candidate_generator.py",
+    "tests/test_candidate_render.py",
+    "tests/test_candidate_rank.py",
+    "tests/test_candidate_review_packet.py",
+    "tests/test_candidate_apply.py",
+    "tests/test_candidate_cli_contract.py",
     "tests/test_quality_defect_ledger.py",
     "tests/test_quality_patch_policy.py",
     "tests/test_quality_patch_plan.py",
