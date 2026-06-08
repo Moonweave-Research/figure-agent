@@ -313,6 +313,118 @@ def _propose(argv: list[str]) -> int:
     return 0
 
 
+def _intent(argv: list[str]) -> int:
+    import figure_intent_model
+
+    parser = argparse.ArgumentParser(prog="fig-agent intent")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    payload = figure_intent_model.build_intent_model(
+        name,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _candidates(argv: list[str]) -> int:
+    import candidate_contracts
+    import candidate_generator
+
+    parser = argparse.ArgumentParser(prog="fig-agent candidates")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--output")
+    parser.add_argument(
+        "--scope",
+        choices=("safe-mechanics", "label-offsets"),
+        default="safe-mechanics",
+    )
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    payload = candidate_generator.build_candidate_set(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    text = json.dumps(payload, indent=2, sort_keys=True)
+    if args.output:
+        output = candidate_contracts.fixture_local_output_path(
+            paths.workspace_root,
+            name,
+            args.output,
+        )
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text + "\n", encoding="utf-8")
+    print(text)
+    return 0
+
+
+def _load_fixture_json(name: str, fixture_path: str) -> dict:
+    import candidate_contracts
+
+    path = candidate_contracts.fixture_local_output_path(
+        _paths().workspace_root,
+        name,
+        fixture_path,
+    )
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _render_candidates(argv: list[str]) -> int:
+    import candidate_render
+
+    parser = argparse.ArgumentParser(prog="fig-agent render-candidates")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    candidate_set = _load_fixture_json(name, args.candidate_set)
+    payload = candidate_render.render_candidate_set(
+        name,
+        candidate_set,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _rank_candidates(argv: list[str]) -> int:
+    import candidate_rank
+
+    parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    candidate_set = _load_fixture_json(name, args.candidate_set)
+    scores = []
+    for candidate in candidate_set.get("candidates", []):
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("id"))
+        manifest = _load_fixture_json(
+            name,
+            f"build/candidates/{candidate_id}/candidate_manifest.json",
+        )
+        scores.append(candidate_rank.score_manifest(manifest))
+    scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
+    payload = {
+        "schema": "figure-agent.candidate-rank-result.v1",
+        "fixture": name,
+        "scores": scores,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _apply_plan(argv: list[str]) -> int:
     import quality_patch_apply
 
@@ -407,6 +519,14 @@ def main(argv: list[str] | None = None) -> int:
         return _quality_map(rest)
     if command == "propose":
         return _propose(rest)
+    if command == "intent":
+        return _intent(rest)
+    if command == "candidates":
+        return _candidates(rest)
+    if command == "render-candidates":
+        return _render_candidates(rest)
+    if command == "rank-candidates":
+        return _rank_candidates(rest)
     if command == "apply-plan":
         return _apply_plan(rest)
     if command == "verify-plan":
