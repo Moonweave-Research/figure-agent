@@ -369,6 +369,41 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
     assert result["post_apply"]["compile"]["status"] == "success"
 
 
+def test_post_apply_export_does_not_force_golden_roll_forward(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture, manifest = _accepted_candidate_fixture(workspace)
+    commands: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def fake_run(command, **_kwargs):
+        commands.append([str(item) for item in command])
+        return Completed()
+
+    monkeypatch.setattr(candidate_apply.subprocess, "run", fake_run)
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+    )
+
+    assert result["status"] == "applied"
+    export_command = commands[1]
+    assert "run_export.py" in export_command[1]
+    assert "--skip-critique" in export_command
+    assert "--force-golden" not in export_command
+
+
 def test_apply_validates_fixture_name_before_result(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _rendered_candidate_fixture(workspace)

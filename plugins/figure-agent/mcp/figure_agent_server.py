@@ -993,6 +993,66 @@ def _candidate_apply_readiness(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _evidence_sync_preview(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    command = ["evidence-sync", name]
+    candidate_id = arguments.get("candidate_id")
+    candidate_set = arguments.get("candidate_set")
+    if candidate_id is not None:
+        if not _is_safe_fixture_name(candidate_id):
+            return _tool_envelope(
+                "figure-agent.mcp.evidence-sync-preview.v1",
+                success=False,
+                started=time.monotonic(),
+                name=name,
+                error=_error(
+                    "invalid_fixture_name",
+                    "candidate_id must be a single build/candidates/<id> directory name",
+                ),
+            )
+        command.extend(["--candidate-id", str(candidate_id)])
+    if candidate_set is not None:
+        command.extend(["--candidate-set", str(candidate_set)])
+    command.append("--json")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.evidence-sync-preview.v1",
+        command=command,
+        payload_key="evidence_sync",
+        failure_message="fig-agent evidence-sync preview failed",
+    )
+
+
+def _closeout_ready(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    command = ["closeout-ready", name]
+    candidate_id = arguments.get("candidate_id")
+    candidate_set = arguments.get("candidate_set")
+    if candidate_id is not None:
+        if not _is_safe_fixture_name(candidate_id):
+            return _tool_envelope(
+                "figure-agent.mcp.closeout-ready.v1",
+                success=False,
+                started=time.monotonic(),
+                name=name,
+                error=_error(
+                    "invalid_fixture_name",
+                    "candidate_id must be a single build/candidates/<id> directory name",
+                ),
+            )
+        command.extend(["--candidate-id", str(candidate_id)])
+    if candidate_set is not None:
+        command.extend(["--candidate-set", str(candidate_set)])
+    command.append("--json")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.closeout-ready.v1",
+        command=command,
+        payload_key="closeout_ready",
+        failure_message="fig-agent closeout-ready failed",
+    )
+
+
 def _prepare_human_review(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     candidate_id = str(arguments.get("candidate_id") or "")
@@ -1116,9 +1176,15 @@ def _export(arguments: dict[str, Any]) -> dict[str, Any]:
     if isinstance(resolved, dict):
         return resolved
     workspace_root, name = resolved
+    if "force_golden" in arguments:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("unsupported_operation", "force_golden_requires_cli_closeout_accept"),
+        )
     command = ["export", name]
-    if bool(arguments.get("force_golden")):
-        command.append("--force-golden")
     if bool(arguments.get("skip_critique")):
         command.append("--skip-critique")
     with _fixture_lock(workspace_root, name, "export") as lock:
@@ -1296,7 +1362,6 @@ TOOLS: dict[str, dict[str, Any]] = {
             "required": ["name"],
             "properties": {
                 "name": {"type": "string"},
-                "force_golden": {"type": "boolean"},
                 "skip_critique": {"type": "boolean"},
             },
         },
@@ -1426,6 +1491,34 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _candidate_apply_readiness,
+    },
+    "figure_agent_evidence_sync_preview": {
+        "description": "Preview read-only evidence index sync for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+                "candidate_set": {"type": "string"},
+            },
+        },
+        "handler": _evidence_sync_preview,
+    },
+    "figure_agent_closeout_ready": {
+        "description": "Return read-only closeout readiness for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+                "candidate_set": {"type": "string"},
+            },
+        },
+        "handler": _closeout_ready,
     },
     "figure_agent_compare_candidate": {
         "description": "Return a read-only comparison packet for one rendered candidate.",

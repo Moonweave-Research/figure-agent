@@ -622,6 +622,87 @@ def _apply_candidate(argv: list[str]) -> int:
     return 0 if payload.get("status") == "applied" else 1
 
 
+def _evidence_sync(argv: list[str]) -> int:
+    import evidence_sync
+
+    parser = argparse.ArgumentParser(prog="fig-agent evidence-sync")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-id", default=None)
+    parser.add_argument("--candidate-set", default=None)
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = evidence_sync.sync_evidence(
+            name,
+            candidate_id=args.candidate_id,
+            candidate_set_path=Path(args.candidate_set) if args.candidate_set else None,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            write=args.write,
+        )
+    except (ValueError, evidence_sync.EvidenceSyncError) as exc:
+        print(f"fig-agent evidence-sync: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if not payload.get("blocking_reasons") else 1
+
+
+def _closeout_ready(argv: list[str]) -> int:
+    import closeout_readiness
+
+    parser = argparse.ArgumentParser(prog="fig-agent closeout-ready")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-id", default=None)
+    parser.add_argument("--candidate-set", default=None)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = closeout_readiness.build_closeout_readiness(
+            name,
+            candidate_id=args.candidate_id,
+            candidate_set_path=Path(args.candidate_set) if args.candidate_set else None,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, closeout_readiness.CloseoutReadinessError) as exc:
+        print(f"fig-agent closeout-ready: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("status") == "ready" else 1
+
+
+def _closeout_accept(argv: list[str]) -> int:
+    import golden_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent closeout-accept")
+    parser.add_argument("name")
+    parser.add_argument("--decision", choices=("accept",), required=True)
+    parser.add_argument("--reviewer", required=True)
+    parser.add_argument("--rationale", required=True)
+    parser.add_argument("--accept-golden", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = golden_acceptance.write_golden_acceptance(
+            name,
+            decision=args.decision,
+            reviewer=args.reviewer,
+            rationale=args.rationale,
+            accept_golden=args.accept_golden,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, golden_acceptance.GoldenAcceptanceError) as exc:
+        print(f"fig-agent closeout-accept: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _apply_plan(argv: list[str]) -> int:
     import quality_patch_apply
 
@@ -736,6 +817,12 @@ def main(argv: list[str] | None = None) -> int:
         return _accept_candidate(rest)
     if command == "apply-candidate":
         return _apply_candidate(rest)
+    if command == "evidence-sync":
+        return _evidence_sync(rest)
+    if command == "closeout-ready":
+        return _closeout_ready(rest)
+    if command == "closeout-accept":
+        return _closeout_accept(rest)
     if command == "apply-plan":
         return _apply_plan(rest)
     if command == "verify-plan":

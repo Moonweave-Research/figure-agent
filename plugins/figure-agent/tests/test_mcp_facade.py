@@ -181,8 +181,12 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_prepare_human_review",
         "figure_agent_compare_candidate",
         "figure_agent_candidate_apply_readiness",
+        "figure_agent_evidence_sync_preview",
+        "figure_agent_closeout_ready",
         "figure_agent_apply_candidate",
     } <= tool_names
+    assert "figure_agent_closeout_accept" not in tool_names
+    assert "figure_agent_force_golden" not in tool_names
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
     assert after == before
 
@@ -220,6 +224,51 @@ def test_mcp_candidate_apply_readiness_schema_is_read_only(tmp_path: Path) -> No
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["name", "candidate_id", "candidate_set"]
     assert schema["properties"]["candidate_set"]["type"] == "string"
+
+
+def test_mcp_evidence_and_closeout_schemas_are_read_only(tmp_path: Path) -> None:
+    result = _run_mcp_server(
+        [_mcp_request("tools/list", request_id=1)],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(tmp_path / "workspace")},
+    )
+
+    response = _response_lines(result)[0]
+    tools = {tool["name"]: tool for tool in response["result"]["tools"]}
+    evidence_schema = tools["figure_agent_evidence_sync_preview"]["inputSchema"]
+    closeout_schema = tools["figure_agent_closeout_ready"]["inputSchema"]
+    export_schema = tools["figure_agent_export"]["inputSchema"]
+    assert evidence_schema["additionalProperties"] is False
+    assert closeout_schema["additionalProperties"] is False
+    assert export_schema["additionalProperties"] is False
+    assert "write" not in evidence_schema["properties"]
+    assert "accept_golden" not in closeout_schema["properties"]
+    assert "force_golden" not in export_schema["properties"]
+
+
+def test_mcp_export_rejects_force_golden_argument(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_export",
+                    "arguments": {"name": "smoke_trap_demo", "force_golden": True},
+                },
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    _assert_common_envelope(payload)
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "unsupported_operation"
+    assert payload["error"]["message"] == "force_golden_requires_cli_closeout_accept"
 
 
 def test_mcp_doctor_reports_plugin_cwd_as_workspace_missing() -> None:

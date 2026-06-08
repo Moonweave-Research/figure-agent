@@ -474,6 +474,64 @@ def test_fig_agent_apply_candidate_exits_nonzero_when_post_apply_fails(
     assert payload["post_apply"]["compile"]["status"] == "failed"
 
 
+def test_fig_agent_evidence_sync_preview_and_write(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidates = _run(
+        workspace,
+        "candidates",
+        "candidate_demo",
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    render = _run(
+        workspace,
+        "render-candidates",
+        "candidate_demo",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--candidate-id",
+        "CAND001",
+        "--compile",
+        "--export",
+        "--evaluate",
+        "--json",
+    )
+
+    preview = _run(
+        workspace,
+        "evidence-sync",
+        "candidate_demo",
+        "--candidate-id",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--json",
+    )
+    write = _run(
+        workspace,
+        "evidence-sync",
+        "candidate_demo",
+        "--candidate-id",
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--write",
+        "--json",
+    )
+
+    assert candidates.returncode == 0, candidates.stderr
+    assert render.returncode == 0, render.stderr
+    assert preview.returncode == 0, preview.stderr
+    assert write.returncode == 0, write.stderr
+    assert json.loads(preview.stdout)["mode"] == "preview"
+    payload = json.loads(write.stdout)
+    assert payload["mode"] == "write"
+    assert payload["writes"] == ["build/evidence/evidence_index.json"]
+    assert (fixture / "build" / "evidence" / "evidence_index.json").is_file()
+
+
 def test_fig_agent_candidates_output_escape_is_user_error(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)

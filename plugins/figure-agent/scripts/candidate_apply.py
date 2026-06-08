@@ -310,7 +310,6 @@ def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str
             sys.executable,
             str(paths.scripts_dir / "run_export.py"),
             name,
-            "--force-golden",
             "--skip-critique",
         ],
         "status": [
