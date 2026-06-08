@@ -327,6 +327,48 @@ def _memory_index(argv: list[str]) -> int:
     return 0
 
 
+def _benchmark_list(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-list")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    try:
+        payload = quality_benchmark.build_benchmark_list(plugin_root=_paths().plugin_root)
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-list: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _benchmark_run(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-run")
+    parser.add_argument("--suite", required=True)
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--render", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    suite = _validated_fixture_name(parser, args.suite)
+    try:
+        payload = quality_benchmark.run_benchmark_suite(
+            suite,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            limit=args.limit,
+            render=args.render,
+            write=args.write,
+        )
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-run: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
     path = Path(value)
     if path.is_absolute() or ".." in path.parts:
@@ -883,6 +925,10 @@ def main(argv: list[str] | None = None) -> int:
         return _memory_log(rest)
     if command == "memory-index":
         return _memory_index(rest)
+    if command == "benchmark-list":
+        return _benchmark_list(rest)
+    if command == "benchmark-run":
+        return _benchmark_run(rest)
     if command == "propose":
         return _propose(rest)
     if command == "intent":
