@@ -391,6 +391,20 @@ def _benchmark_compare(argv: list[str]) -> int:
     return 0
 
 
+def _quality_next_experiment(argv: list[str]) -> int:
+    import quality_next_experiment
+
+    parser = argparse.ArgumentParser(prog="fig-agent quality-next-experiment")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    payload = quality_next_experiment.build_next_experiment(
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
     path = Path(value)
     if path.is_absolute() or ".." in path.parts:
@@ -953,6 +967,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_run(rest)
     if command == "benchmark-compare":
         return _benchmark_compare(rest)
+    if command == "quality-next-experiment":
+        return _quality_next_experiment(rest)
     if command == "propose":
         return _propose(rest)
     if command == "intent":

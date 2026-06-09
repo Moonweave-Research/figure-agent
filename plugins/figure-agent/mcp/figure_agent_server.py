@@ -1110,6 +1110,68 @@ def _benchmark_compare(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _quality_next_experiment(arguments: dict[str, Any]) -> dict[str, Any]:
+    del arguments
+    started = time.monotonic()
+    schema = "figure-agent.mcp.quality-next-experiment.v1"
+    plugin_root = _plugin_root()
+    workspace_root = _workspace_root(plugin_root)
+    if workspace_root is None or not _examples_dir(workspace_root).is_dir():
+        workspace_root = plugin_root
+    try:
+        result = _run_fig_agent(
+            ["quality-next-experiment", "--json"],
+            workspace_root=workspace_root,
+            timeout_seconds=120,
+        )
+    except FileNotFoundError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            error=_error("dependency_missing", "Python executable for fig-agent not found"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            stdout=_bounded(exc.stdout or ""),
+            stderr=_bounded(exc.stderr or ""),
+            error=_error("timeout", "fig-agent quality-next-experiment timed out"),
+        )
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", "fig-agent quality-next-experiment failed"),
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error(
+                "unsupported_operation",
+                "fig-agent quality-next-experiment returned invalid JSON",
+            ),
+        )
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        next_experiment=payload,
+    )
+
+
 def _candidate_apply_readiness(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     candidate_id = str(arguments.get("candidate_id") or "")
@@ -1665,6 +1727,15 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _benchmark_compare,
+    },
+    "figure_agent_quality_next_experiment": {
+        "description": "Return the next read-only quality benchmark experiment.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {},
+        },
+        "handler": _quality_next_experiment,
     },
     "figure_agent_prepare_human_review": {
         "description": "Return a read-only human review packet for one candidate.",

@@ -19,6 +19,20 @@ SUPPORTED_PANEL = "C"
 ZERO_HASH = "sha256:" + "0" * 64
 ENERGY_TERMS = ("mobility edge", "{shallow}", "{deep}", "siteS", "siteD")
 NODE_AT_RE = re.compile(r"at\s*\((?P<x>-?\d+(?:\.\d+)?),\s*(?P<y>-?\d+(?:\.\d+)?)\)")
+CANONICAL_FAMILY_EDIT_CLASS = {
+    "label-repair": "label_offset",
+    "connector-routing": "leader_line_reroute",
+    "panel-layout": "panel_spacing_adjust",
+    "contrast-repair": "contrast_boost",
+    "annotation-box-layout": "annotation_box_resize",
+}
+CANONICAL_EXPECTED_DELTA = {
+    "label_offset": "improve label clearance",
+    "leader_line_reroute": "reduce leader-line label collision risk",
+    "panel_spacing_adjust": "increase panel boundary clearance",
+    "contrast_boost": "increase low-contrast element legibility",
+    "annotation_box_resize": "reduce annotation-box internal collision risk",
+}
 
 
 def _source_path(paths: runtime_paths.RuntimePaths, name: str) -> Path:
@@ -146,6 +160,105 @@ def _candidate(
     return candidate
 
 
+def _canonical_candidate(
+    *,
+    name: str,
+    source: Path,
+    source_rel: str,
+    family: str,
+    panel: str | None,
+) -> dict[str, Any] | None:
+    if not source.is_file():
+        return None
+    lines = source.read_text(encoding="utf-8").splitlines()
+    if len(lines) != 1 or _offset_label(lines[0]) is None:
+        return None
+    original = lines[0]
+    replacement = _offset_label(original)
+    if replacement is None:
+        return None
+    edit_class = CANONICAL_FAMILY_EDIT_CLASS[family]
+    stable_hash_payload = {
+        "family": family,
+        "target": {"panel": panel or "unknown", "subregion": edit_class},
+        "edit_class": edit_class,
+        "affected_files": [source_rel],
+        "operation": {
+            "kind": "replace_text",
+            "path": source_rel,
+            "original": original,
+            "replacement": replacement,
+        },
+        "apply_authority": "review_only",
+    }
+    return {
+        "id": "CAND001",
+        "family": family,
+        "target": {"panel": panel or "unknown", "subregion": edit_class},
+        "edit_class": edit_class,
+        "affected_files": [source_rel],
+        "selector": {
+            "kind": "line_range_with_hash",
+            "path": source_rel,
+            "start_line": 1,
+            "end_line": 1,
+            "original_hash": candidate_contracts.canonical_hash(original),
+        },
+        "operations": [
+            {
+                "kind": "replace_text",
+                "path": source_rel,
+                "original": original,
+                "replacement": replacement,
+            }
+        ],
+        "risk": "medium" if edit_class != "label_offset" else "low",
+        "expected_delta": [CANONICAL_EXPECTED_DELTA[edit_class]],
+        "semantic_risks": [
+            "synthetic smoke candidate needs human visual review before apply"
+        ],
+        "rollback": {"strategy": "reverse_operations"},
+        "verification": {
+            "required_commands": [
+                f"fig-agent compile {name} --strict",
+                f"fig-agent status {name} --json",
+            ]
+        },
+        "apply_authority": "review_only",
+        "blocked_if": ["semantic_invariant_failed", "render_failed", "human_rejected"],
+        "candidate_hash": candidate_contracts.canonical_hash(stable_hash_payload),
+    }
+
+
+def _canonical_family_candidates(
+    name: str,
+    *,
+    source: Path,
+    panel: str | None,
+    family: str,
+) -> dict[str, Any]:
+    source_rel = f"examples/{name}/{name}.tex"
+    candidate = _canonical_candidate(
+        name=name,
+        source=source,
+        source_rel=source_rel,
+        family=family,
+        panel=panel,
+    )
+    if candidate is None:
+        code = "source_missing" if not source.is_file() else "no_supported_candidate"
+        return _refusal(name, source, code)
+    return {
+        "schema": SCHEMA,
+        "fixture": name,
+        "base": _base(source),
+        "panel": panel,
+        "family": family,
+        "candidates": [candidate],
+        "refusals": [],
+    }
+
+
 def build_family_candidates(
     name: str,
     *,
@@ -161,6 +274,13 @@ def build_family_candidates(
     source = _source_path(paths, name)
     if family in KNOWN_UNSUPPORTED_PANEL_FAMILIES:
         return _refusal(name, source, "unsupported_panel_family")
+    if family in CANONICAL_FAMILY_EDIT_CLASS:
+        return _canonical_family_candidates(
+            name,
+            source=source,
+            panel=panel,
+            family=family,
+        )
     if family != SUPPORTED_FAMILY:
         return _refusal(name, source, "unsupported_candidate_family")
     if panel != SUPPORTED_PANEL:

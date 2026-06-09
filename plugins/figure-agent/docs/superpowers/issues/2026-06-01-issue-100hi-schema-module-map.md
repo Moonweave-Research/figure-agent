@@ -115,9 +115,11 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.quality-memory-event.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Fixture-local event derived from existing artifacts; cannot invent outcomes |
 | `figure-agent.quality-memory-log.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Read-only event list for one fixture |
 | `figure-agent.quality-memory-index.v1` | quality memory | `quality_memory_index.py` | future memory-aware ranking, operators | Conservative priors only; cannot upgrade hard gates or apply authority |
+| `figure-agent.benchmark-contract.v1` | quality benchmark | `benchmark_contracts.py` | `quality_benchmark.py`, release gate | Fixture-local benchmark contract; separates defect, family, edit-class, detector, and source-policy axes |
 | `figure-agent.quality-benchmark-list.v1` | quality benchmark | `quality_benchmark.py` | operators, future MCP benchmark tools | Read-only suite manifest view |
 | `figure-agent.quality-benchmark-run.v1` | quality benchmark | `quality_benchmark.py` | benchmark compare, operators | Local benchmark report; writes only repo/workspace-local scratch when explicit |
 | `figure-agent.quality-benchmark-comparison.v1` | quality benchmark | `quality_benchmark.py` | operators, future release gate checks | Compares local benchmark reports and surfaces regressions |
+| `figure-agent.quality-next-experiment.v1` | quality benchmark | `quality_next_experiment.py` | MCP benchmark tools, operators | Read-only preview recommendation; command is allowlisted and contains no write/apply/accept flags |
 | `figure-agent.intent-model.v1` | candidate search | `figure_intent_model.py` | `candidate_generator.py`, MCP candidate tools | Read-only fixture intent model; missing optional inputs downgrade authority instead of inventing claims |
 | `figure-agent.candidate-tex-index.v1` | candidate search | `candidate_tex_index.py` | `candidate_panel_model.py`, `candidate_families.py` | Read-only TeX selector index; panel hints and active command ranges only |
 | `figure-agent.candidate-panel-model.v1` | candidate search | `candidate_panel_model.py` | `candidate_families.py`, MCP panel tools | Read-only panel model joining intent, bbox hints, selectors, and visual-review state |

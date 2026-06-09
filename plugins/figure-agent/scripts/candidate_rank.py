@@ -82,12 +82,45 @@ def _memory_prior(
     return max(-0.25, min(0.25, prior))
 
 
+def _detector_prior(
+    detector_evaluation: dict[str, Any] | None,
+    *,
+    hard_gate_state: str,
+) -> tuple[float, dict[str, list[str]]]:
+    evidence: dict[str, list[str]] = {"positive": [], "negative": []}
+    if hard_gate_state == "rejected" or not isinstance(detector_evaluation, dict):
+        return 0.0, evidence
+    movements = detector_evaluation.get("movements")
+    if not isinstance(movements, list) or not movements:
+        return 0.0, evidence
+    passed = 0
+    failed = 0
+    for movement in movements:
+        if not isinstance(movement, dict):
+            continue
+        metric = str(movement.get("metric") or "unknown")
+        operator = str(movement.get("operator") or "unknown")
+        state = str(movement.get("state") or "unknown")
+        if state == "passed":
+            passed += 1
+            evidence["positive"].append(f"detector:{metric}:{operator}")
+        elif state == "failed":
+            failed += 1
+            evidence["negative"].append(f"detector:{metric}:failed")
+    if failed:
+        return -0.2, evidence
+    if passed:
+        return 0.15, evidence
+    return 0.0, evidence
+
+
 def score_manifest(
     manifest: dict[str, Any],
     *,
     render_manifest: dict[str, Any] | None = None,
     candidate: dict[str, Any] | None = None,
     memory_index: dict[str, Any] | None = None,
+    detector_evaluation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     hard_gate_state = str(
         (manifest.get("verification") or {}).get("hard_gate_state", "rejected")
@@ -104,9 +137,15 @@ def score_manifest(
         memory_index=memory_index,
         hard_gate_state=hard_gate_state,
     )
+    detector_prior, detector_evidence = _detector_prior(
+        detector_evaluation,
+        hard_gate_state=hard_gate_state,
+    )
+    evidence["positive"].extend(detector_evidence["positive"])
+    evidence["negative"].extend(detector_evidence["negative"])
     rank_score = 0.0 if hard_gate_state == "rejected" else max(
         0.0,
-        0.5 + render_bonus + memory_prior,
+        0.5 + render_bonus + memory_prior + detector_prior,
     )
     if memory_index is not None:
         if memory_prior > 0:
@@ -121,6 +160,8 @@ def score_manifest(
     }
     if memory_index is not None:
         scores["memory_prior"] = memory_prior
+    if detector_evaluation is not None:
+        scores["detector_prior"] = detector_prior
     return {
         "schema": SCHEMA,
         "candidate_id": str(manifest.get("candidate_id")),

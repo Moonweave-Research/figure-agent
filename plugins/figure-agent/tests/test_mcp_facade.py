@@ -187,6 +187,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_benchmark_list",
         "figure_agent_benchmark_run_preview",
         "figure_agent_benchmark_compare",
+        "figure_agent_quality_next_experiment",
         "figure_agent_apply_candidate",
     } <= tool_names
     assert "figure_agent_closeout_accept" not in tool_names
@@ -264,6 +265,7 @@ def test_mcp_memory_and_benchmark_schemas_are_read_only(tmp_path: Path) -> None:
         "figure_agent_benchmark_list",
         "figure_agent_benchmark_run_preview",
         "figure_agent_benchmark_compare",
+        "figure_agent_quality_next_experiment",
     ):
         schema = tools[name]["inputSchema"]
         assert schema["additionalProperties"] is False
@@ -304,6 +306,32 @@ def test_mcp_benchmark_run_preview_does_not_create_benchmark_scratch(tmp_path: P
     assert payload["success"] is True
     assert payload["benchmark_run"]["schema"] == "figure-agent.quality-benchmark-run.v1"
     assert not (workspace / ".scratch" / "figure-agent-benchmarks").exists()
+
+
+def test_mcp_quality_next_experiment_is_read_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_quality_next_experiment",
+                    "arguments": {},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.quality-next-experiment.v1"
+    assert payload["success"] is True
+    command = payload["next_experiment"]["recommendation"]["command"]
+    assert command == "fig-agent benchmark-run --suite smoke --json"
+    assert not (workspace / ".scratch").exists()
 
 
 def test_mcp_export_rejects_force_golden_argument(tmp_path: Path) -> None:

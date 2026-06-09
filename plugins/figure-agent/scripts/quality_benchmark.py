@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import benchmark_contracts
 import candidate_generator
 import candidate_rank
 import fixture_identity
@@ -116,18 +117,160 @@ def _load_fixture_memory_index(example_dir: Path) -> dict[str, Any] | None:
     return payload
 
 
+def _metric_value(report: dict[str, Any], metric: str, key: str) -> float | None:
+    metrics = report.get("metrics")
+    if isinstance(metrics, dict):
+        metric_payload = metrics.get(metric)
+        if isinstance(metric_payload, dict):
+            try:
+                return float(metric_payload.get(key))
+            except (TypeError, ValueError):
+                return None
+    bucket = report.get(key)
+    if isinstance(bucket, dict):
+        try:
+            return float(bucket.get(metric))
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _movement_passes(baseline: float, candidate: float, operator: str) -> bool:
+    if operator == "decrease":
+        return candidate < baseline
+    if operator == "decrease_or_equal":
+        return candidate <= baseline
+    if operator == "increase":
+        return candidate > baseline
+    if operator == "increase_or_equal":
+        return candidate >= baseline
+    if operator == "unchanged":
+        return candidate == baseline
+    return False
+
+
+def _detector_evaluation(example_dir: Path, contract: dict[str, Any]) -> dict[str, Any]:
+    if contract.get("state") != "present":
+        return {"state": "not_available", "movements": [], "missing": []}
+    expected = contract.get("expected_movement")
+    if not isinstance(expected, dict) or not expected:
+        return {"state": "not_required", "movements": [], "missing": []}
+    reports = contract.get("detector_reports")
+    reports = reports if isinstance(reports, dict) else {}
+    loaded_reports: dict[str, dict[str, Any]] = {}
+    movements: list[dict[str, Any]] = []
+    missing: list[str] = []
+    failed = False
+    for metric, operator in expected.items():
+        metric_name = str(metric)
+        detector = metric_name.split(".", 1)[0]
+        report_rel = reports.get(detector)
+        if not isinstance(report_rel, str):
+            missing.append(f"{detector}:report_path")
+            failed = True
+            continue
+        report_path = example_dir / report_rel
+        if report_path.is_symlink():
+            missing.append(f"{detector}:report_symlink")
+            failed = True
+            continue
+        if not report_path.is_file():
+            missing.append(f"{detector}:report_missing")
+            failed = True
+            continue
+        if detector not in loaded_reports:
+            payload = json.loads(report_path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                missing.append(f"{detector}:report_invalid")
+                failed = True
+                continue
+            loaded_reports[detector] = payload
+        baseline = _metric_value(loaded_reports[detector], metric_name, "baseline")
+        candidate = _metric_value(loaded_reports[detector], metric_name, "candidate")
+        if baseline is None or candidate is None:
+            missing.append(f"{metric_name}:metric_missing")
+            failed = True
+            continue
+        passed = _movement_passes(baseline, candidate, str(operator))
+        failed = failed or not passed
+        movements.append(
+            {
+                "metric": metric_name,
+                "baseline": baseline,
+                "candidate": candidate,
+                "operator": str(operator),
+                "state": "passed" if passed else "failed",
+            }
+        )
+    if missing:
+        state = "missing"
+    elif failed:
+        state = "failed"
+    else:
+        state = "passed"
+    return {"state": state, "movements": movements, "missing": missing}
+
+
+def _detector_failure_reason(
+    detector_evaluation: dict[str, Any],
+    *,
+    contract: dict[str, Any],
+    suite_role: str | None,
+) -> str | None:
+    release = contract.get("release") if isinstance(contract.get("release"), dict) else {}
+    release_blocking = suite_role == "smoke" or bool(release.get("release_blocking"))
+    if not release_blocking:
+        return None
+    state = str(detector_evaluation.get("state") or "")
+    if state == "missing":
+        return "required_detector_missing"
+    if state == "failed":
+        return "expected_detector_movement_failed"
+    return None
+
+
 def _run_fixture(
     fixture: str,
     *,
     paths: runtime_paths.RuntimePaths,
     render: bool,
+    suite_role: str | None = None,
 ) -> dict[str, Any]:
     example_dir = paths.examples_dir / fixture
+    try:
+        contract = benchmark_contracts.load_contract(
+            fixture,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+            suite_role=suite_role,
+        )
+    except benchmark_contracts.BenchmarkContractError as exc:
+        return {
+            "fixture": fixture,
+            "status": "failed",
+            "reason": str(exc),
+            "contract": {
+                "schema": benchmark_contracts.SCHEMA,
+                "state": "invalid",
+                "fixture": fixture,
+                "reason": str(exc),
+            },
+            "candidate_count": 0,
+            "rendered_count": 0,
+            "ranked_count": 0,
+            "render_mode": "none",
+            "hard_gate_failures": [],
+            "best_candidate": None,
+            "memory_prior_used": False,
+            "detector_evaluation": {"state": "unavailable", "movements": [], "missing": []},
+            "metrics": {},
+        }
     if not example_dir.is_dir():
         return {
             "fixture": fixture,
             "status": "skipped",
             "reason": "missing_fixture",
+            "contract": contract,
             "candidate_count": 0,
             "rendered_count": 0,
             "ranked_count": 0,
@@ -139,6 +282,7 @@ def _run_fixture(
         }
     status_payload = _status_summary(example_dir)
     try:
+        detector_evaluation = _detector_evaluation(example_dir, contract)
         candidate_set = candidate_generator.build_candidate_set(
             fixture,
             plugin_root=paths.plugin_root,
@@ -153,6 +297,7 @@ def _run_fixture(
                 _candidate_manifest_from_candidate(candidate),
                 candidate=candidate,
                 memory_index=memory_index,
+                detector_evaluation=detector_evaluation,
             )
             scores.append(score)
         scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
@@ -166,9 +311,16 @@ def _run_fixture(
             if scores
             else 0.0
         )
+        detector_failure_reason = _detector_failure_reason(
+            detector_evaluation,
+            contract=contract,
+            suite_role=suite_role,
+        )
         return {
             "fixture": fixture,
-            "status": "completed",
+            "status": "failed" if detector_failure_reason else "completed",
+            **({"reason": detector_failure_reason} if detector_failure_reason else {}),
+            "contract": contract,
             "candidate_count": len(candidate_set.get("candidates", [])),
             "rendered_count": 0 if not render else 0,
             "ranked_count": len(scores),
@@ -176,6 +328,7 @@ def _run_fixture(
             "hard_gate_failures": hard_gate_failures,
             "best_candidate": scores[0]["candidate_id"] if scores else None,
             "memory_prior_used": memory_index is not None,
+            "detector_evaluation": detector_evaluation,
             "status_summary": status_payload,
             "metrics": {
                 "compile_success_rate": 1.0 if status_payload.get("state") == "available" else 0.0,
@@ -189,6 +342,7 @@ def _run_fixture(
             "fixture": fixture,
             "status": "failed",
             "reason": str(exc),
+            "contract": contract,
             "candidate_count": 0,
             "rendered_count": 0,
             "ranked_count": 0,
@@ -196,6 +350,7 @@ def _run_fixture(
             "hard_gate_failures": [],
             "best_candidate": None,
             "memory_prior_used": False,
+            "detector_evaluation": {"state": "unavailable", "movements": [], "missing": []},
             "metrics": {},
         }
 
@@ -370,7 +525,7 @@ def run_benchmark_suite(
         fixtures = fixtures[:limit]
     run_id = run_id or _run_id(suite)
     results = [
-        _run_fixture(fixture, paths=paths, render=render)
+        _run_fixture(fixture, paths=paths, render=render, suite_role=suite)
         for fixture in fixtures
     ]
     summary = {

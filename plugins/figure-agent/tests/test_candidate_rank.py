@@ -209,3 +209,86 @@ def test_memory_prior_can_use_candidate_set_family_metadata() -> None:
     )
 
     assert score["scores"]["memory_prior"] == 0.1
+
+
+def test_detector_improvement_adds_soft_prior_and_evidence() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    detector_evaluation = {
+        "state": "passed",
+        "movements": [
+            {
+                "metric": "text_boundary.blocker_count",
+                "operator": "decrease_or_equal",
+                "state": "passed",
+                "baseline": 3,
+                "candidate": 1,
+            }
+        ],
+    }
+
+    score = candidate_rank.score_manifest(manifest, detector_evaluation=detector_evaluation)
+
+    assert score["scores"]["detector_prior"] == 0.15
+    assert score["rank_score"] == 0.65
+    assert "detector:text_boundary.blocker_count:decrease_or_equal" in (
+        score["evidence"]["positive"]
+    )
+
+
+def test_detector_regression_lowers_soft_score() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    detector_evaluation = {
+        "state": "failed",
+        "movements": [
+            {
+                "metric": "text_boundary.blocker_count",
+                "operator": "decrease_or_equal",
+                "state": "failed",
+                "baseline": 1,
+                "candidate": 3,
+            }
+        ],
+    }
+
+    score = candidate_rank.score_manifest(manifest, detector_evaluation=detector_evaluation)
+
+    assert score["scores"]["detector_prior"] == -0.2
+    assert score["rank_score"] == 0.3
+    assert "detector:text_boundary.blocker_count:failed" in score["evidence"]["negative"]
+
+
+def test_detector_improvement_cannot_promote_rejected_candidate() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "verification": {"hard_gate_state": "rejected"},
+    }
+    detector_evaluation = {
+        "state": "passed",
+        "movements": [
+            {
+                "metric": "text_boundary.blocker_count",
+                "operator": "decrease_or_equal",
+                "state": "passed",
+                "baseline": 3,
+                "candidate": 1,
+            }
+        ],
+    }
+
+    score = candidate_rank.score_manifest(manifest, detector_evaluation=detector_evaluation)
+
+    assert score["scores"]["detector_prior"] == 0.0
+    assert score["rank_score"] == 0.0
+    assert score["effective_apply_authority"] == "rejected"

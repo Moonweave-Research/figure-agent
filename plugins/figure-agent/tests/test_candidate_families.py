@@ -55,6 +55,27 @@ panels:
     return fixture
 
 
+def _simple_fixture(workspace: Path, name: str = "smoke_label_overlap_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"""
+name: {name}
+panels:
+  - id: A
+    caption: Synthetic fixture
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text(
+        "\\node (label-a) at (0,0) {Synthetic Label};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def test_energy_trap_family_emits_review_only_panel_candidate(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _energy_fixture(workspace)
@@ -80,6 +101,36 @@ def test_energy_trap_family_emits_review_only_panel_candidate(tmp_path: Path) ->
         "\\node[anchor=west] at (3.0, 1.0) {deep};",
     )
     assert candidate["operations"][0]["original"] != candidate["operations"][0]["replacement"]
+
+
+def test_canonical_smoke_families_emit_expected_edit_classes(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    cases = [
+        ("smoke_label_overlap_demo", "label-repair", "label_offset"),
+        ("smoke_leader_line_demo", "connector-routing", "leader_line_reroute"),
+        ("smoke_panel_spacing_demo", "panel-layout", "panel_spacing_adjust"),
+        ("smoke_contrast_demo", "contrast-repair", "contrast_boost"),
+        ("smoke_annotation_box_demo", "annotation-box-layout", "annotation_box_resize"),
+    ]
+    for fixture_name, family, edit_class in cases:
+        _simple_fixture(workspace, fixture_name)
+
+        payload = candidate_families.build_family_candidates(
+            fixture_name,
+            panel="A",
+            family=family,
+            workspace_root=workspace,
+        )
+
+        assert payload["refusals"] == []
+        candidate = payload["candidates"][0]
+        assert candidate["family"] == family
+        assert candidate["edit_class"] == edit_class
+        assert candidate["apply_authority"] == "review_only"
+        assert candidate["verification"]["required_commands"] == [
+            f"fig-agent compile {fixture_name} --strict",
+            f"fig-agent status {fixture_name} --json",
+        ]
 
 
 def test_unknown_family_refuses_with_structured_code(tmp_path: Path) -> None:

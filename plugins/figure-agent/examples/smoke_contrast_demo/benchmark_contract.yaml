@@ -1,0 +1,18 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: smoke_contrast_demo
+defect_class: low_contrast
+candidate_families:
+  - contrast-repair
+candidate_edit_classes:
+  - contrast_boost
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+  - candidate_hard_gate_rejected
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+release:
+  release_blocking: true

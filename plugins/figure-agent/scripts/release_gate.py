@@ -12,12 +12,16 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 SCRIPT_ROOT = Path(__file__).resolve().parent
 PLUGIN_ROOT = SCRIPT_ROOT.parent
 
 sys.path.insert(0, str(SCRIPT_ROOT))
 
+import benchmark_contracts  # noqa: E402
 import package_cowork_plugin  # noqa: E402
+import quality_benchmark  # noqa: E402
 
 SCHEMA = "figure-agent.release-gate.v1"
 
@@ -34,6 +38,10 @@ TARGETED_TESTS = [
     "tests/test_closeout_readiness.py",
     "tests/test_golden_acceptance.py",
     "tests/test_candidate_cli_contract.py",
+    "tests/test_benchmark_contracts.py",
+    "tests/test_quality_benchmark.py",
+    "tests/test_quality_benchmark_compare.py",
+    "tests/test_quality_next_experiment.py",
     "tests/test_quality_defect_ledger.py",
     "tests/test_quality_patch_policy.py",
     "tests/test_quality_patch_plan.py",
@@ -48,6 +56,7 @@ TARGETED_TESTS = [
 REQUIRED_PACKAGE_PATHS = {
     ".claude-plugin/plugin.json",
     ".mcp.json",
+    "benchmarks/quality_suites.yaml",
     "mcp/figure_agent_server.py",
     "bin/fig-agent",
     "scripts",
@@ -146,6 +155,89 @@ def _verify_excluded_paths(names: set[str]) -> dict[str, Any]:
     )
 
 
+def _smoke_fixture_names() -> list[str]:
+    suites_path = PLUGIN_ROOT / "benchmarks" / "quality_suites.yaml"
+    payload = yaml.safe_load(suites_path.read_text(encoding="utf-8")) or {}
+    suites = payload.get("suites") if isinstance(payload, dict) else {}
+    smoke = suites.get("smoke") if isinstance(suites, dict) else {}
+    fixtures = smoke.get("fixtures") if isinstance(smoke, dict) else []
+    if not isinstance(fixtures, list):
+        return []
+    return [fixture for fixture in fixtures if isinstance(fixture, str)]
+
+
+def _verify_smoke_fixture_paths(names: set[str]) -> dict[str, Any]:
+    missing: list[str] = []
+    for fixture in _smoke_fixture_names():
+        required = [
+            f"examples/{fixture}/spec.yaml",
+            f"examples/{fixture}/briefing.md",
+            f"examples/{fixture}/{fixture}.tex",
+            f"examples/{fixture}/benchmark_contract.yaml",
+        ]
+        try:
+            contract = benchmark_contracts.load_contract(
+                fixture,
+                plugin_root=PLUGIN_ROOT,
+                workspace_root=PLUGIN_ROOT,
+                suite_role="smoke",
+            )
+        except benchmark_contracts.BenchmarkContractError:
+            contract = {}
+        reports = contract.get("detector_reports") if isinstance(contract, dict) else {}
+        if isinstance(reports, dict):
+            required.extend(
+                f"examples/{fixture}/{report_path}"
+                for report_path in reports.values()
+                if isinstance(report_path, str)
+            )
+        missing.extend(path for path in required if path not in names)
+    return _step(
+        "package_smoke_fixtures",
+        "passed" if not missing else "failed",
+        details={"missing": missing},
+    )
+
+
+def _run_smoke_benchmark() -> dict[str, Any]:
+    try:
+        payload = quality_benchmark.run_benchmark_suite(
+            "smoke",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=PLUGIN_ROOT,
+        )
+    except Exception as exc:  # noqa: BLE001 - release report should classify the failure.
+        return _step("smoke_benchmark", "failed", stderr=str(exc))
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    failed = int(summary.get("failed") or 0)
+    regressions = int(summary.get("regression_count") or 0)
+    state = "passed" if failed == 0 and regressions == 0 else "failed"
+    return _step(
+        "smoke_benchmark",
+        state,
+        details={
+            "run_id": payload.get("run_id"),
+            "suite": payload.get("suite"),
+            "summary": summary,
+        },
+    )
+
+
+def _benchmark_baseline_step() -> dict[str, Any]:
+    baseline = PLUGIN_ROOT / "benchmarks" / "baselines" / "smoke.json"
+    if not baseline.is_file():
+        return _step(
+            "benchmark_baseline",
+            "warning",
+            details={"reason": "benchmark_baseline_missing"},
+        )
+    return _step(
+        "benchmark_baseline",
+        "passed",
+        details={"path": str(baseline.relative_to(PLUGIN_ROOT))},
+    )
+
+
 def _package_size_mib(root: Path) -> float:
     total = sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
     return total / (1024 * 1024)
@@ -177,11 +269,15 @@ def run_release_gate(
     else:
         steps.append(_step("ruff", "skipped", details={"reason": "explicit skip"}))
 
+    steps.append(_run_smoke_benchmark())
+    steps.append(_benchmark_baseline_step())
+
     zip_path = package_cowork_plugin.build_zip(output_dir)
     steps.append(_step("build_zip", "passed", details={"zip_path": str(zip_path)}))
 
     names = _zip_names(zip_path)
     steps.append(_verify_required_paths(names))
+    steps.append(_verify_smoke_fixture_paths(names))
     steps.append(_verify_excluded_paths(names))
 
     with tempfile.TemporaryDirectory(prefix="figure-agent-release-gate-") as raw_unpack:

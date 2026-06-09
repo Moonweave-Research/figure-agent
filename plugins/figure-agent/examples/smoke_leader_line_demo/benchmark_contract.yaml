@@ -1,0 +1,18 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: smoke_leader_line_demo
+defect_class: leader_line_collision
+candidate_families:
+  - connector-routing
+candidate_edit_classes:
+  - leader_line_reroute
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+  - candidate_hard_gate_rejected
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+release:
+  release_blocking: true

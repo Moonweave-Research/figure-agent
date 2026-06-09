@@ -1,0 +1,18 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: smoke_annotation_box_demo
+defect_class: annotation_box_collision
+candidate_families:
+  - annotation-box-layout
+candidate_edit_classes:
+  - annotation_box_resize
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+  - candidate_hard_gate_rejected
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+release:
+  release_blocking: true

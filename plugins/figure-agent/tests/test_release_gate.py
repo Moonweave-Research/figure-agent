@@ -31,7 +31,10 @@ def test_release_gate_builds_and_audits_package_with_skipped_heavy_checks(tmp_pa
     assert states["targeted_tests"] == "skipped"
     assert states["full_pytest"] == "skipped"
     assert states["ruff"] == "skipped"
+    assert states["smoke_benchmark"] == "passed"
+    assert states["benchmark_baseline"] == "warning"
     assert states["package_required_paths"] == "passed"
+    assert states["package_smoke_fixtures"] == "passed"
     assert states["package_excluded_paths"] == "passed"
     assert states["package_audit"] == "passed"
     assert states["claude_validate_package"] == "skipped"
@@ -93,6 +96,38 @@ def test_release_gate_reports_missing_required_package_path() -> None:
 
     assert step["state"] == "failed"
     assert ".claude-plugin/plugin.json" in step["details"]["missing"]
+    assert "benchmarks/quality_suites.yaml" in step["details"]["missing"]
+
+
+def test_release_gate_reports_missing_smoke_fixture_package_paths() -> None:
+    names = {
+        "benchmarks/quality_suites.yaml",
+        "examples/smoke_label_overlap_demo/spec.yaml",
+    }
+
+    step = release_gate._verify_smoke_fixture_paths(names)
+
+    assert step["state"] == "failed"
+    assert "examples/smoke_label_overlap_demo/benchmark_contract.yaml" in (
+        step["details"]["missing"]
+    )
+
+
+def test_release_gate_reports_missing_smoke_detector_report_package_paths() -> None:
+    names = {
+        "benchmarks/quality_suites.yaml",
+        "examples/smoke_label_overlap_demo/spec.yaml",
+        "examples/smoke_label_overlap_demo/briefing.md",
+        "examples/smoke_label_overlap_demo/smoke_label_overlap_demo.tex",
+        "examples/smoke_label_overlap_demo/benchmark_contract.yaml",
+    }
+
+    step = release_gate._verify_smoke_fixture_paths(names)
+
+    assert step["state"] == "failed"
+    assert "examples/smoke_label_overlap_demo/benchmark_reports/text_boundary.json" in (
+        step["details"]["missing"]
+    )
 
 
 def test_release_gate_reports_excluded_package_paths() -> None:

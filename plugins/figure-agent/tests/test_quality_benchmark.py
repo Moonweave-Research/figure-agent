@@ -56,6 +56,27 @@ panels:
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: candidate_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -90,6 +111,43 @@ def test_benchmark_list_reads_suite_manifest(tmp_path: Path) -> None:
     assert payload["suites"]["smoke"]["fixtures"] == ["candidate_demo", "missing_demo"]
 
 
+def test_installed_smoke_suite_has_five_contract_fixtures() -> None:
+    payload = quality_benchmark.build_benchmark_list(plugin_root=PLUGIN_ROOT)
+    smoke_fixtures = payload["suites"]["smoke"]["fixtures"]
+
+    assert smoke_fixtures == [
+        "smoke_label_overlap_demo",
+        "smoke_leader_line_demo",
+        "smoke_panel_spacing_demo",
+        "smoke_contrast_demo",
+        "smoke_annotation_box_demo",
+    ]
+    for fixture in smoke_fixtures:
+        fixture_dir = PLUGIN_ROOT / "examples" / fixture
+        assert (fixture_dir / "spec.yaml").is_file()
+        assert (fixture_dir / "briefing.md").is_file()
+        assert (fixture_dir / f"{fixture}.tex").is_file()
+        assert (fixture_dir / "benchmark_contract.yaml").is_file()
+
+
+def test_installed_smoke_suite_has_at_least_one_detector_contract() -> None:
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    detector_results = [
+        result
+        for result in payload["results"]
+        if result.get("detector_evaluation", {}).get("state") == "passed"
+    ]
+    assert detector_results
+    first = detector_results[0]["detector_evaluation"]["movements"][0]
+    assert first["operator"] == "decrease_or_equal"
+    assert first["candidate"] <= first["baseline"]
+
+
 def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: Path) -> None:
     plugin_root = _plugin_root(tmp_path)
     workspace = tmp_path / "workspace"
@@ -111,8 +169,217 @@ def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: 
     assert payload["results"][0]["rendered_count"] == 0
     assert payload["results"][0]["candidate_count"] == 1
     assert payload["results"][0]["ranked_count"] == 1
+    assert payload["results"][0]["contract"]["state"] == "present"
+    assert payload["results"][1]["contract"]["state"] == "missing"
     assert payload["writes"] == []
     assert _tree(workspace) == before
+
+
+def test_benchmark_run_evaluates_detector_movement_for_contract(tmp_path: Path) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: candidate_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors:
+  - text_boundary
+detector_reports:
+  text_boundary: build/reports/text_boundary.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    report_dir = fixture / "build" / "reports"
+    report_dir.mkdir(parents=True)
+    (report_dir / "text_boundary.json").write_text(
+        json.dumps(
+            {
+                "metrics": {
+                    "text_boundary.blocker_count": {
+                        "baseline": 3,
+                        "candidate": 1,
+                    }
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+    )
+
+    result = payload["results"][0]
+    assert result["detector_evaluation"]["state"] == "passed"
+    assert result["detector_evaluation"]["movements"][0] == {
+        "metric": "text_boundary.blocker_count",
+        "baseline": 3.0,
+        "candidate": 1.0,
+        "operator": "decrease_or_equal",
+        "state": "passed",
+    }
+    assert result["metrics"]["mean_rank_score"] == 0.65
+
+
+def test_benchmark_run_fails_release_blocking_missing_detector_report(tmp_path: Path) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: candidate_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors:
+  - text_boundary
+detector_reports:
+  text_boundary: build/reports/text_boundary.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+    )
+
+    assert payload["summary"] == {"completed": 0, "skipped": 0, "failed": 1, "regression_count": 0}
+    result = payload["results"][0]
+    assert result["status"] == "failed"
+    assert result["reason"] == "required_detector_missing"
+    assert result["detector_evaluation"]["state"] == "missing"
+
+
+def test_benchmark_run_fails_release_blocking_detector_regression(tmp_path: Path) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: candidate_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors:
+  - text_boundary
+detector_reports:
+  text_boundary: build/reports/text_boundary.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    report_dir = fixture / "build" / "reports"
+    report_dir.mkdir(parents=True)
+    (report_dir / "text_boundary.json").write_text(
+        json.dumps(
+            {
+                "metrics": {
+                    "text_boundary.blocker_count": {
+                        "baseline": 1,
+                        "candidate": 3,
+                    }
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+    )
+
+    assert payload["summary"] == {"completed": 0, "skipped": 0, "failed": 1, "regression_count": 0}
+    result = payload["results"][0]
+    assert result["status"] == "failed"
+    assert result["reason"] == "expected_detector_movement_failed"
+    assert result["detector_evaluation"]["state"] == "failed"
+
+
+def test_benchmark_run_reports_malformed_contract_per_fixture(tmp_path: Path) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: candidate_demo
+defect_class: label_overlap
+candidate_families:
+  - label_offset
+candidate_edit_classes:
+  - label_offset
+required_detectors: []
+expected_movement: {}
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+    )
+
+    assert payload["summary"] == {"completed": 0, "skipped": 1, "failed": 1, "regression_count": 0}
+    assert payload["results"][0]["status"] == "failed"
+    assert payload["results"][0]["reason"].startswith("candidate_family_invalid")
+    assert payload["results"][1]["status"] == "skipped"
 
 
 def test_benchmark_run_write_writes_only_run_manifest(tmp_path: Path) -> None:
@@ -178,11 +445,11 @@ def test_benchmark_run_limit_one_runs_one_fixture(tmp_path: Path) -> None:
 
 def test_fig_agent_benchmark_list_and_run_cli(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    fixture = workspace / "examples" / "smoke_trap_demo"
+    fixture = workspace / "examples" / "smoke_label_overlap_demo"
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text("name: smoke_trap_demo\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text("name: smoke_label_overlap_demo\n", encoding="utf-8")
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
-    (fixture / "smoke_trap_demo.tex").write_text(
+    (fixture / "smoke_label_overlap_demo.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )

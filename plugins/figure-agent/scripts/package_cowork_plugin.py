@@ -7,6 +7,8 @@ import json
 import zipfile
 from pathlib import Path
 
+import yaml
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -44,9 +46,23 @@ def _included_doc_files() -> list[Path]:
     return files
 
 
+def _smoke_fixture_names() -> list[str]:
+    suites_path = PLUGIN_ROOT / "benchmarks" / "quality_suites.yaml"
+    if not suites_path.is_file():
+        return []
+    payload = yaml.safe_load(suites_path.read_text(encoding="utf-8")) or {}
+    suites = payload.get("suites") if isinstance(payload, dict) else {}
+    smoke = suites.get("smoke") if isinstance(suites, dict) else {}
+    fixtures = smoke.get("fixtures") if isinstance(smoke, dict) else []
+    if not isinstance(fixtures, list):
+        return []
+    return [fixture for fixture in fixtures if isinstance(fixture, str)]
+
+
 def _included_files() -> list[Path]:
     roots = [
         PLUGIN_ROOT / ".claude-plugin",
+        PLUGIN_ROOT / "benchmarks",
         PLUGIN_ROOT / "mcp",
         PLUGIN_ROOT / "skills",
         PLUGIN_ROOT / "commands",
@@ -66,8 +82,10 @@ def _included_files() -> list[Path]:
     mcp_config = PLUGIN_ROOT / ".mcp.json"
     if mcp_config.is_file():
         files.append(mcp_config)
-    smoke_root = PLUGIN_ROOT / "examples" / "smoke_trap_demo"
-    if smoke_root.is_dir():
+    for fixture in _smoke_fixture_names():
+        smoke_root = PLUGIN_ROOT / "examples" / fixture
+        if not smoke_root.is_dir():
+            continue
         files.extend(
             path
             for path in smoke_root.rglob("*")
