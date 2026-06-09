@@ -40,3 +40,7 @@ __pycache__/
 .superpowers/
 .claude/
 .worktrees/
+
+# Local agent-native MCP registration (machine-specific absolute paths).
+# Root-anchored so the tracked bundle config plugins/figure-agent/.mcp.json stays committed.
+/.mcp.json
