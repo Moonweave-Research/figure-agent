@@ -5,8 +5,12 @@ candidate_families:
   - annotation-box-layout
 candidate_edit_classes:
   - annotation_box_resize
-required_detectors: []
-expected_movement: {}
+required_detectors:
+  - annotation_box
+detector_reports:
+  annotation_box: benchmark_reports/annotation_box.json
+expected_movement:
+  annotation_box.internal_collision_count: decrease_or_equal
 hard_regressions:
   - source_compile_failure
   - candidate_hard_gate_rejected

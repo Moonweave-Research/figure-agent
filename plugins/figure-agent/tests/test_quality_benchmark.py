@@ -148,6 +148,27 @@ def test_installed_smoke_suite_has_at_least_one_detector_contract() -> None:
     assert first["candidate"] <= first["baseline"]
 
 
+def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() -> None:
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    states = {
+        result["fixture"]: result.get("detector_evaluation", {}).get("state")
+        for result in payload["results"]
+    }
+
+    assert states == {
+        "smoke_label_overlap_demo": "passed",
+        "smoke_leader_line_demo": "passed",
+        "smoke_panel_spacing_demo": "passed",
+        "smoke_contrast_demo": "passed",
+        "smoke_annotation_box_demo": "passed",
+    }
+
+
 def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: Path) -> None:
     plugin_root = _plugin_root(tmp_path)
     workspace = tmp_path / "workspace"

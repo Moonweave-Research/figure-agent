@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "contrast.low_contrast_count": {
+      "baseline": 3,
+      "candidate": 1
+    }
+  }
+}

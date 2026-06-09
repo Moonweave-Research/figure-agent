@@ -5,8 +5,12 @@ candidate_families:
   - contrast-repair
 candidate_edit_classes:
   - contrast_boost
-required_detectors: []
-expected_movement: {}
+required_detectors:
+  - contrast
+detector_reports:
+  contrast: benchmark_reports/contrast.json
+expected_movement:
+  contrast.low_contrast_count: decrease_or_equal
 hard_regressions:
   - source_compile_failure
   - candidate_hard_gate_rejected

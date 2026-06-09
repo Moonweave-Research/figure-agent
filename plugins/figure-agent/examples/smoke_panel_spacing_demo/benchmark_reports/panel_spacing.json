@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "panel_spacing.boundary_overlap_count": {
+      "baseline": 2,
+      "candidate": 1
+    }
+  }
+}
