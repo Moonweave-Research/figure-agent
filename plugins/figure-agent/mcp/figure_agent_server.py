@@ -588,6 +588,92 @@ def _bounded(text: str, limit: int = 4000) -> str:
     return text[:limit] + "\n...[truncated]"
 
 
+def _operation_in_progress(
+    *,
+    schema: str,
+    started: float,
+    name: str,
+    lock: dict[str, Any],
+) -> dict[str, Any]:
+    return _tool_envelope(
+        schema,
+        success=False,
+        started=started,
+        name=name,
+        operation=lock["active_operation"],
+        error=_error(
+            "operation_in_progress",
+            f"another mutating operation is active for examples/{name}",
+            "Retry after the active operation finishes.",
+        ),
+    )
+
+
+def _run_fig_agent_enveloped(
+    *,
+    schema: str,
+    started: float,
+    command: list[str],
+    workspace_root: Path,
+    timeout_seconds: int,
+    timeout_message: str,
+    name: str | None = None,
+) -> subprocess.CompletedProcess[str] | dict[str, Any]:
+    payload = {"name": name} if name is not None else {}
+    try:
+        return _run_fig_agent(
+            command,
+            workspace_root=workspace_root,
+            timeout_seconds=timeout_seconds,
+        )
+    except FileNotFoundError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            **payload,
+            error=_error("dependency_missing", "Python executable for fig-agent not found"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            **payload,
+            stdout=_bounded(exc.stdout or ""),
+            stderr=_bounded(exc.stderr or ""),
+            error=_error("timeout", timeout_message),
+        )
+
+
+def _json_payload_from_result(
+    *,
+    result: subprocess.CompletedProcess[str],
+    schema: str,
+    started: float,
+    invalid_json_message: str,
+    name: str | None = None,
+    required: bool = True,
+) -> tuple[Any, dict[str, Any] | None]:
+    if not result.stdout.strip() and not required:
+        return {}, None
+    try:
+        return json.loads(result.stdout), None
+    except json.JSONDecodeError:
+        if not required:
+            return {"stdout": _bounded(result.stdout)}, None
+        payload = {"name": name} if name is not None else {}
+        return None, _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            **payload,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", invalid_json_message),
+        )
+
+
 def _status(arguments: dict[str, Any]) -> dict[str, Any]:
     started = time.monotonic()
     schema = "figure-agent.mcp.status.v1"
@@ -661,26 +747,17 @@ def _run_json_fig_agent_tool(
     if isinstance(resolved, dict):
         return resolved
     workspace_root, name = resolved
-    try:
-        result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=120)
-    except FileNotFoundError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            error=_error("dependency_missing", "Python executable for fig-agent not found"),
-        )
-    except subprocess.TimeoutExpired as exc:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            stdout=_bounded(exc.stdout or ""),
-            stderr=_bounded(exc.stderr or ""),
-            error=_error("timeout", f"{failure_message} timed out"),
-        )
+    result = _run_fig_agent_enveloped(
+        schema=schema,
+        started=started,
+        command=command,
+        workspace_root=workspace_root,
+        timeout_seconds=120,
+        timeout_message=f"{failure_message} timed out",
+        name=name,
+    )
+    if isinstance(result, dict):
+        return result
     if result.returncode != 0:
         return _tool_envelope(
             schema,
@@ -692,18 +769,15 @@ def _run_json_fig_agent_tool(
             stderr=_bounded(result.stderr),
             error=_error("unsupported_operation", failure_message),
         )
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            stdout=_bounded(result.stdout),
-            stderr=_bounded(result.stderr),
-            error=_error("unsupported_operation", f"{failure_message} returned invalid JSON"),
-        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message=f"{failure_message} returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
     return _tool_envelope(
         schema,
         success=True,
@@ -725,24 +799,16 @@ def _run_workspace_json_fig_agent_tool(
     if isinstance(resolved, dict):
         return resolved
     workspace_root = resolved
-    try:
-        result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=120)
-    except FileNotFoundError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            error=_error("dependency_missing", "Python executable for fig-agent not found"),
-        )
-    except subprocess.TimeoutExpired as exc:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            stdout=_bounded(exc.stdout or ""),
-            stderr=_bounded(exc.stderr or ""),
-            error=_error("timeout", f"{failure_message} timed out"),
-        )
+    result = _run_fig_agent_enveloped(
+        schema=schema,
+        started=started,
+        command=command,
+        workspace_root=workspace_root,
+        timeout_seconds=120,
+        timeout_message=f"{failure_message} timed out",
+    )
+    if isinstance(result, dict):
+        return result
     if result.returncode != 0:
         return _tool_envelope(
             schema,
@@ -753,17 +819,14 @@ def _run_workspace_json_fig_agent_tool(
             stderr=_bounded(result.stderr),
             error=_error("unsupported_operation", failure_message),
         )
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            stdout=_bounded(result.stdout),
-            stderr=_bounded(result.stderr),
-            error=_error("unsupported_operation", f"{failure_message} returned invalid JSON"),
-        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        invalid_json_message=f"{failure_message} returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
     return _tool_envelope(
         schema,
         success=True,
@@ -912,80 +975,62 @@ def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
     workspace_root, name = resolved
     with _fixture_lock(workspace_root, name, "render_candidates") as lock:
         if lock is not None:
-            return _tool_envelope(
-                schema,
-                success=False,
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        if candidate_set == "build/candidates/candidate_set.json":
+            seed = _run_fig_agent_enveloped(
+                schema=schema,
                 started=started,
-                name=name,
-                operation=lock["active_operation"],
-                error=_error(
-                    "operation_in_progress",
-                    f"another mutating operation is active for examples/{name}",
-                    "Retry after the active operation finishes.",
-                ),
-            )
-        try:
-            if candidate_set == "build/candidates/candidate_set.json":
-                seed = _run_fig_agent(
-                    [
-                        "candidates",
-                        name,
-                        "--json",
-                        "--output",
-                        candidate_set,
-                    ],
-                    workspace_root=workspace_root,
-                    timeout_seconds=120,
-                )
-                if seed.returncode != 0:
-                    return _tool_envelope(
-                        schema,
-                        success=False,
-                        started=started,
-                        name=name,
-                        exit_code=seed.returncode,
-                        stdout=_bounded(seed.stdout),
-                        stderr=_bounded(seed.stderr),
-                        error=_error(
-                            "unsupported_operation",
-                            "fig-agent candidates failed",
-                        ),
-                    )
-            command = ["render-candidates", name, "--candidate-set", candidate_set]
-            if candidate_id is not None:
-                command.extend(["--candidate-id", str(candidate_id)])
-            if bool(arguments.get("compile")):
-                command.append("--compile")
-            if bool(arguments.get("export")):
-                command.append("--export")
-            if crop_panel is not None:
-                command.extend(["--crop-panel", str(crop_panel)])
-            if bool(arguments.get("evaluate")):
-                command.append("--evaluate")
-            command.append("--json")
-            result = _run_fig_agent(
-                command,
+                command=[
+                    "candidates",
+                    name,
+                    "--json",
+                    "--output",
+                    candidate_set,
+                ],
                 workspace_root=workspace_root,
                 timeout_seconds=120,
-            )
-        except FileNotFoundError:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
+                timeout_message="fig-agent render-candidates timed out",
                 name=name,
-                error=_error("dependency_missing", "Python executable for fig-agent not found"),
             )
-        except subprocess.TimeoutExpired as exc:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                stdout=_bounded(exc.stdout or ""),
-                stderr=_bounded(exc.stderr or ""),
-                error=_error("timeout", "fig-agent render-candidates timed out"),
-            )
+            if isinstance(seed, dict):
+                return seed
+            if seed.returncode != 0:
+                return _tool_envelope(
+                    schema,
+                    success=False,
+                    started=started,
+                    name=name,
+                    exit_code=seed.returncode,
+                    stdout=_bounded(seed.stdout),
+                    stderr=_bounded(seed.stderr),
+                    error=_error(
+                        "unsupported_operation",
+                        "fig-agent candidates failed",
+                    ),
+                )
+        command = ["render-candidates", name, "--candidate-set", candidate_set]
+        if candidate_id is not None:
+            command.extend(["--candidate-id", str(candidate_id)])
+        if bool(arguments.get("compile")):
+            command.append("--compile")
+        if bool(arguments.get("export")):
+            command.append("--export")
+        if crop_panel is not None:
+            command.extend(["--crop-panel", str(crop_panel)])
+        if bool(arguments.get("evaluate")):
+            command.append("--evaluate")
+        command.append("--json")
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=command,
+            workspace_root=workspace_root,
+            timeout_seconds=120,
+            timeout_message="fig-agent render-candidates timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
     if result.returncode != 0:
         return _tool_envelope(
             schema,
@@ -997,21 +1042,15 @@ def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
             stderr=_bounded(result.stderr),
             error=_error("unsupported_operation", "fig-agent render-candidates failed"),
         )
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            stdout=_bounded(result.stdout),
-            stderr=_bounded(result.stderr),
-            error=_error(
-                "unsupported_operation",
-                "fig-agent render-candidates returned invalid JSON",
-            ),
-        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message="fig-agent render-candidates returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
     return _tool_envelope(
         schema,
         success=True,
@@ -1155,28 +1194,16 @@ def _quality_next_experiment(arguments: dict[str, Any]) -> dict[str, Any]:
     workspace_root = _workspace_root(plugin_root)
     if workspace_root is None or not _examples_dir(workspace_root).is_dir():
         workspace_root = plugin_root
-    try:
-        result = _run_fig_agent(
-            ["quality-next-experiment", "--json"],
-            workspace_root=workspace_root,
-            timeout_seconds=120,
-        )
-    except FileNotFoundError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            error=_error("dependency_missing", "Python executable for fig-agent not found"),
-        )
-    except subprocess.TimeoutExpired as exc:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            stdout=_bounded(exc.stdout or ""),
-            stderr=_bounded(exc.stderr or ""),
-            error=_error("timeout", "fig-agent quality-next-experiment timed out"),
-        )
+    result = _run_fig_agent_enveloped(
+        schema=schema,
+        started=started,
+        command=["quality-next-experiment", "--json"],
+        workspace_root=workspace_root,
+        timeout_seconds=120,
+        timeout_message="fig-agent quality-next-experiment timed out",
+    )
+    if isinstance(result, dict):
+        return result
     if result.returncode != 0:
         return _tool_envelope(
             schema,
@@ -1187,20 +1214,14 @@ def _quality_next_experiment(arguments: dict[str, Any]) -> dict[str, Any]:
             stderr=_bounded(result.stderr),
             error=_error("unsupported_operation", "fig-agent quality-next-experiment failed"),
         )
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            stdout=_bounded(result.stdout),
-            stderr=_bounded(result.stderr),
-            error=_error(
-                "unsupported_operation",
-                "fig-agent quality-next-experiment returned invalid JSON",
-            ),
-        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        invalid_json_message="fig-agent quality-next-experiment returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
     return _tool_envelope(
         schema,
         success=True,
@@ -1388,38 +1409,18 @@ def _compile(arguments: dict[str, Any]) -> dict[str, Any]:
         command.append("--strict")
     with _fixture_lock(workspace_root, name, "compile") as lock:
         if lock is not None:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                operation=lock["active_operation"],
-                error=_error(
-                    "operation_in_progress",
-                    f"another mutating operation is active for examples/{name}",
-                    "Retry after the active operation finishes.",
-                ),
-            )
-        try:
-            result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=300)
-        except FileNotFoundError:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                error=_error("dependency_missing", "Python executable for fig-agent not found"),
-            )
-        except subprocess.TimeoutExpired as exc:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                stdout=_bounded(exc.stdout or ""),
-                stderr=_bounded(exc.stderr or ""),
-                error=_error("timeout", "fig-agent compile timed out"),
-            )
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=command,
+            workspace_root=workspace_root,
+            timeout_seconds=300,
+            timeout_message="fig-agent compile timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
     success = result.returncode == 0
     return _tool_envelope(
         schema,
@@ -1455,38 +1456,18 @@ def _export(arguments: dict[str, Any]) -> dict[str, Any]:
         command.append("--skip-critique")
     with _fixture_lock(workspace_root, name, "export") as lock:
         if lock is not None:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                operation=lock["active_operation"],
-                error=_error(
-                    "operation_in_progress",
-                    f"another mutating operation is active for examples/{name}",
-                    "Retry after the active operation finishes.",
-                ),
-            )
-        try:
-            result = _run_fig_agent(command, workspace_root=workspace_root, timeout_seconds=300)
-        except FileNotFoundError:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                error=_error("dependency_missing", "Python executable for fig-agent not found"),
-            )
-        except subprocess.TimeoutExpired as exc:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                stdout=_bounded(exc.stdout or ""),
-                stderr=_bounded(exc.stderr or ""),
-                error=_error("timeout", "fig-agent export timed out"),
-            )
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=command,
+            workspace_root=workspace_root,
+            timeout_seconds=300,
+            timeout_message="fig-agent export timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
     success = result.returncode == 0
     return _tool_envelope(
         schema,
@@ -1511,48 +1492,26 @@ def _loop_checkpoint(arguments: dict[str, Any]) -> dict[str, Any]:
     goal = str(arguments.get("goal") or "verify current figure state")
     with _fixture_lock(workspace_root, name, "loop_checkpoint") as lock:
         if lock is not None:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                operation=lock["active_operation"],
-                error=_error(
-                    "operation_in_progress",
-                    f"another mutating operation is active for examples/{name}",
-                    "Retry after the active operation finishes.",
-                ),
-            )
-        try:
-            result = _run_fig_agent(
-                ["loop", name, "--goal", goal, "--json"],
-                workspace_root=workspace_root,
-                timeout_seconds=300,
-            )
-        except FileNotFoundError:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                error=_error("dependency_missing", "Python executable for fig-agent not found"),
-            )
-        except subprocess.TimeoutExpired as exc:
-            return _tool_envelope(
-                schema,
-                success=False,
-                started=started,
-                name=name,
-                stdout=_bounded(exc.stdout or ""),
-                stderr=_bounded(exc.stderr or ""),
-                error=_error("timeout", "fig-agent loop checkpoint timed out"),
-            )
-    payload: dict[str, Any] = {}
-    if result.stdout.strip():
-        try:
-            payload = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            payload = {"stdout": _bounded(result.stdout)}
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=["loop", name, "--goal", goal, "--json"],
+            workspace_root=workspace_root,
+            timeout_seconds=300,
+            timeout_message="fig-agent loop checkpoint timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
+    payload, _ = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message="fig-agent loop returned invalid JSON",
+        required=False,
+    )
     success = result.returncode == 0
     return _tool_envelope(
         schema,

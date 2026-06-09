@@ -337,6 +337,65 @@ def test_mcp_quality_next_experiment_is_read_only(tmp_path: Path) -> None:
     assert not (workspace / ".scratch").exists()
 
 
+def test_mcp_export_rejects_force_golden_before_running_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="export_demo")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_export",
+                    "arguments": {"name": "export_demo", "force_golden": True},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.export.v1"
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "unsupported_operation"
+    assert payload["error"]["message"] == "force_golden_requires_cli_closeout_accept"
+    assert "stdout" not in payload
+
+
+def test_mcp_compile_reports_operation_in_progress(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_minimal_fixture(workspace, name="compile_demo")
+    lock_root = fixture / "build" / ".mcp-locks"
+    lock_root.mkdir(parents=True)
+    (lock_root / "mutation.lock").write_text(
+        json.dumps({"operation": "export"}),
+        encoding="utf-8",
+    )
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_compile",
+                    "arguments": {"name": "compile_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.compile.v1"
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "operation_in_progress"
+    assert payload["operation"] == "export"
+
+
 def test_mcp_next_returns_read_only_state_router_payload(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_minimal_fixture(workspace, name="next_demo")
