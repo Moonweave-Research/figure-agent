@@ -84,6 +84,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.boundary-handoff.v1` | stop explanation | `fig_run.py`, `next_action_summary.py` | operators, outer agents | Explanation only, not a second router |
 | `figure-agent.decision-boundary.v1` | advisory/blocking language | `next_action_summary.py`, `fig_driver_guidance.py` | command output, docs | Clarifies who may decide; does not execute |
 | `figure-agent.next-action-summary.v1` | operator UX | `next_action_summary.py` | `fig_driver.py`, queue/run outputs | Explanation only; not a state owner |
+| `figure-agent.next.v1` | agent state router | `agent_next.py` | `fig-agent next`, MCP next tool | Read-only envelope that wraps existing status and next-action policies; not a second router |
 | `figure-agent.operator-guidance.v1` / `figure-agent.final-readiness.v1` | operator UX | `fig_driver_guidance.py` | command output | Guidance only; does not bypass status/export gates |
 | `figure-agent.loop-basin.v1` | loop progress detection | `fig_loop_basin.py` | `fig_loop.py`, `fig_driver.py`, `fig_run.py` | Step-out advisory/handoff, not auto-patch |
 | `figure-agent.improve.v1` | bounded improvement loop | `fig_improve.py` | operators | Runs bounded commands; stops at gates |

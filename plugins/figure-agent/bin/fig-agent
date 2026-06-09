@@ -163,6 +163,20 @@ def _script_process(script_name: str, argv: list[str]) -> int:
     )
 
 
+def _release_gate_helper(argv: list[str]) -> int:
+    paths = _paths()
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
+    env.pop("FIGURE_AGENT_WORKSPACE", None)
+    env.pop("CLAUDE_PROJECT_DIR", None)
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "release_gate.py"), *argv],
+        cwd=paths.plugin_root,
+        env=env,
+        check=False,
+    ).returncode
+
+
 HELPER_SCRIPTS = {
     "check_collisions.py",
     "check_layout_drift.py",
@@ -200,6 +214,8 @@ def _helper(argv: list[str]) -> int:
     script = args.script if args.script.endswith(".py") else f"{args.script}.py"
     if "/" in script or script not in HELPER_SCRIPTS:
         parser.error(f"unsupported helper script: {args.script}")
+    if script == "release_gate.py":
+        return _release_gate_helper(args.args)
     return _script_process(script, args.args)
 
 
@@ -403,6 +419,27 @@ def _quality_next_experiment(argv: list[str]) -> int:
     )
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
+
+
+def _next(argv: list[str]) -> int:
+    import agent_next
+
+    parser = argparse.ArgumentParser(prog="fig-agent next")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = agent_next.build_next(
+            name,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except ValueError as exc:
+        print(f"fig-agent next: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("success") is True else 1
 
 
 def _benchmark_detectors(argv: list[str]) -> int:
@@ -996,6 +1033,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_compare(rest)
     if command == "quality-next-experiment":
         return _quality_next_experiment(rest)
+    if command == "next":
+        return _next(rest)
     if command == "benchmark-detectors":
         return _benchmark_detectors(rest)
     if command == "propose":

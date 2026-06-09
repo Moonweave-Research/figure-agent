@@ -49,6 +49,7 @@ TARGETED_TESTS = [
     "tests/test_quality_patch_plan.py",
     "tests/test_quality_patch_apply.py",
     "tests/test_quality_cli_contract.py",
+    "tests/test_agent_next.py",
     "tests/test_mcp_facade.py",
     "tests/test_package_cowork_plugin.py",
     "tests/test_command_contract_docs.py",

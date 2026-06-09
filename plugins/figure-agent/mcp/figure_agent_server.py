@@ -1209,6 +1209,17 @@ def _quality_next_experiment(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _next(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.next.v1",
+        command=["next", name, "--json"],
+        payload_key="next_result",
+        failure_message="fig-agent next failed",
+    )
+
+
 def _candidate_apply_readiness(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     candidate_id = str(arguments.get("candidate_id") or "")
@@ -1598,6 +1609,16 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"name": {"type": "string"}},
         },
         "handler": _status,
+    },
+    "figure_agent_next": {
+        "description": "Return one read-only next action using the CLI state router.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _next,
     },
     "figure_agent_compile": {
         "description": "Run the existing compile chain for one fixture.",

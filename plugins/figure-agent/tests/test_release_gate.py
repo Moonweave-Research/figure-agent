@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +71,39 @@ def test_release_gate_cli_emits_json_report(tmp_path: Path) -> None:
     assert payload["schema"] == release_gate.SCHEMA
     assert payload["success"] is True
     assert Path(payload["zip_path"]).is_file()
+
+
+def test_fig_agent_release_gate_helper_ignores_workspace_env(tmp_path: Path) -> None:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "helper",
+            "release_gate.py",
+            "--output",
+            str(tmp_path / "dist"),
+            "--max-mib",
+            "50",
+            "--skip-targeted-tests",
+            "--skip-full-pytest",
+            "--skip-ruff",
+            "--skip-claude-validate",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == release_gate.SCHEMA
+    assert payload["success"] is True
 
 
 def test_release_gate_zip_contains_release_gate_script(tmp_path: Path) -> None:

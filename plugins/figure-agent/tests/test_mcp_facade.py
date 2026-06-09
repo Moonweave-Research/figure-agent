@@ -165,6 +165,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
     assert {
         "figure_agent_doctor",
         "figure_agent_status",
+        "figure_agent_next",
         "figure_agent_compile",
         "figure_agent_export",
         "figure_agent_quality_map",
@@ -334,6 +335,38 @@ def test_mcp_quality_next_experiment_is_read_only(tmp_path: Path) -> None:
     command = payload["next_experiment"]["recommendation"]["command"]
     assert command == "fig-agent benchmark-run --suite smoke --json"
     assert not (workspace / ".scratch").exists()
+
+
+def test_mcp_next_returns_read_only_state_router_payload(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="next_demo")
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_next",
+                    "arguments": {"name": "next_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    assert payload["schema"] == "figure-agent.mcp.next.v1"
+    assert payload["success"] is True
+    assert payload["next_result"]["schema"] == "figure-agent.next.v1"
+    assert payload["next_result"]["writes"] == []
+    assert payload["next_result"]["alternatives"][0]["command"] == (
+        "fig-agent status next_demo --json"
+    )
+    assert after == before
 
 
 def test_mcp_benchmark_detectors_preview_is_read_only(tmp_path: Path) -> None:
