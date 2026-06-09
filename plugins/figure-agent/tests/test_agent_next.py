@@ -61,6 +61,19 @@ def test_build_next_returns_read_only_envelope(tmp_path: Path) -> None:
     assert _tree(workspace) == before
 
 
+def test_build_next_normalizes_compile_to_public_fig_agent_command(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _workspace_fixture(workspace)
+    (fixture / "next_demo.tex").write_text("\\node at (0,0) {demo};\n", encoding="utf-8")
+
+    payload = agent_next.build_next("next_demo", plugin_root=PLUGIN_ROOT, workspace_root=workspace)
+
+    assert payload["status"]["safe_command"] == "/fig_compile next_demo"
+    assert payload["next"]["action"] == "run_compile"
+    assert payload["next"]["command"] == "fig-agent compile next_demo"
+    assert payload["next"]["writes"] is True
+
+
 def test_build_next_missing_fixture_returns_workspace_diagnostic(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     (workspace / "examples").mkdir(parents=True)

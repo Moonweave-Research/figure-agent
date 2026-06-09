@@ -428,6 +428,35 @@ def test_mcp_next_returns_read_only_state_router_payload(tmp_path: Path) -> None
     assert after == before
 
 
+def test_mcp_next_returns_public_command_and_write_metadata(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_minimal_fixture(workspace, name="next_demo")
+    (fixture / "next_demo.tex").write_text("\\node at (0,0) {demo};\n", encoding="utf-8")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_next",
+                    "arguments": {"name": "next_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    next_payload = payload["next_result"]["next"]
+    assert payload["schema"] == "figure-agent.mcp.next.v1"
+    assert payload["success"] is True
+    assert next_payload["action"] == "run_compile"
+    assert next_payload["command"] == "fig-agent compile next_demo"
+    assert next_payload["writes"] is True
+
+
 def test_mcp_benchmark_detectors_preview_is_read_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
 

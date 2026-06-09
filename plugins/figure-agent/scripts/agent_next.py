@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 import time
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,36 @@ import runtime_paths
 import status
 
 SCHEMA = "figure-agent.next.v1"
+_SLASH_COMMANDS = {
+    "/fig_adjudicate": "adjudicate",
+    "/fig_closeout": "closeout",
+    "/fig_compile": "compile",
+    "/fig_drive": "drive",
+    "/fig_e2e_smoke": "e2e-smoke",
+    "/fig_export": "export",
+    "/fig_improve": "improve",
+    "/fig_loop": "loop",
+    "/fig_queue": "queue",
+    "/fig_queue_run": "queue-run",
+    "/fig_run": "run",
+    "/fig_status": "status",
+}
+_WRITING_COMMANDS = {
+    "accept-candidate",
+    "adjudicate",
+    "apply-candidate",
+    "apply-plan",
+    "closeout-accept",
+    "compile",
+    "e2e-smoke",
+    "export",
+    "improve",
+    "loop",
+    "queue-run",
+    "render-candidates",
+    "run",
+}
+_WRITE_FLAGS = {"--accept", "--apply", "--execute", "--force-golden", "--write"}
 
 
 def _diagnostic(code: str, message: str) -> dict[str, str]:
@@ -21,7 +52,19 @@ def _diagnostic(code: str, message: str) -> dict[str, str]:
 def _command_writes(command: str | None) -> bool:
     if not command:
         return False
-    return any(token in command for token in (" --write", " --apply", " --accept"))
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return True
+    if not parts:
+        return False
+    if any(flag in parts for flag in _WRITE_FLAGS):
+        return True
+    if parts[0] == "fig-agent" and len(parts) > 1:
+        return parts[1] in _WRITING_COMMANDS
+    if parts[0].startswith("/fig_"):
+        return _SLASH_COMMANDS.get(parts[0], parts[0].removeprefix("/fig_")) in _WRITING_COMMANDS
+    return False
 
 
 def _state(summary: dict[str, Any]) -> str:
@@ -35,7 +78,20 @@ def _state(summary: dict[str, Any]) -> str:
 
 def _safe_command(summary: dict[str, Any]) -> str | None:
     command = summary.get("safe_command")
-    return command if isinstance(command, str) and command else None
+    if not isinstance(command, str) or not command:
+        return None
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return None
+    if not parts:
+        return None
+    if parts[0] == "fig-agent":
+        return command
+    mapped = _SLASH_COMMANDS.get(parts[0])
+    if mapped is None:
+        return None if parts[0].startswith("/fig_") else command
+    return shlex.join(["fig-agent", mapped, *parts[1:]])
 
 
 def _next_payload(summary: dict[str, Any]) -> dict[str, Any]:
