@@ -14,6 +14,12 @@ import runtime_paths
 
 SCHEMA = "figure-agent.benchmark-detectors-preview.v1"
 REPORT_SCHEMA = "figure-agent.benchmark-detector-report.v1"
+CHECKER_METRIC_ALIASES = {
+    "text_boundary.blocker_count": "total",
+    "visual_clash.blocker_count": "total",
+    "label_path.near_miss_count": "total",
+    "undeclared_geometry.candidate_count": "total",
+}
 
 
 class BenchmarkDetectorReportError(ValueError):
@@ -36,6 +42,31 @@ def _metric_value(report: dict[str, Any], metric: str, key: str) -> float | None
         except (TypeError, ValueError):
             return None
     return None
+
+
+def metric_value(report: dict[str, Any], metric: str, key: str) -> float | None:
+    """Return benchmark metric value, adapting checker-native totals when needed."""
+    value = _metric_value(report, metric, key)
+    if value is not None:
+        return value
+    alias = CHECKER_METRIC_ALIASES.get(metric)
+    if alias is None or alias not in report:
+        return None
+    try:
+        return float(report[alias])
+    except (TypeError, ValueError):
+        return None
+
+
+def _checker_source(report: dict[str, Any], report_rel: str) -> dict[str, Any]:
+    source: dict[str, Any] = {
+        "kind": "checker_report",
+        "checker_report": report_rel,
+    }
+    schema = report.get("schema")
+    if isinstance(schema, str) and schema:
+        source["checker_schema"] = schema
+    return source
 
 
 def _workspace_relative(path: Path, workspace_root: Path) -> str:
@@ -123,8 +154,8 @@ def _read_seed_report(
     for metric in sorted(expected_movement):
         if metric.split(".", 1)[0] != detector:
             continue
-        baseline = _metric_value(payload, metric, "baseline")
-        candidate = _metric_value(payload, metric, "candidate")
+        baseline = metric_value(payload, metric, "baseline")
+        candidate = metric_value(payload, metric, "candidate")
         if baseline is None or candidate is None:
             diagnostics.append({"code": "metric_missing", "metric": metric})
             continue
@@ -135,6 +166,14 @@ def _read_seed_report(
             "state": "artifact_missing",
             "diagnostics": diagnostics or [{"code": "detector_metric_missing"}],
         }
+    source = (
+        _checker_source(payload, report_rel)
+        if "metrics" not in payload and any(metric in CHECKER_METRIC_ALIASES for metric in metrics)
+        else {
+            "kind": "seed_report",
+            "seed_report": report_rel,
+        }
+    )
     return {
         "detector": detector,
         "state": "available",
@@ -142,10 +181,7 @@ def _read_seed_report(
             "schema": REPORT_SCHEMA,
             "fixture": fixture_dir.name,
             "detector": detector,
-            "source": {
-                "kind": "seed_report",
-                "seed_report": report_rel,
-            },
+            "source": source,
             "metrics": metrics,
             "diagnostics": [],
         },

@@ -148,6 +148,24 @@ def test_installed_smoke_suite_has_at_least_one_detector_contract() -> None:
     assert first["candidate"] <= first["baseline"]
 
 
+def test_installed_dogfood_checker_report_feeds_detector_evaluation() -> None:
+    payload = quality_benchmark.run_benchmark_suite(
+        "dogfood",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+        limit=1,
+    )
+
+    assert payload["summary"]["failed"] == 0
+    result = payload["results"][0]
+    assert result["fixture"] == "fig1_overview_v2_pair_001_vault"
+    assert result["status"] == "completed"
+    assert result["detector_evaluation"]["state"] == "passed"
+    movement = result["detector_evaluation"]["movements"][0]
+    assert movement["metric"] == "text_boundary.blocker_count"
+    assert movement["baseline"] == movement["candidate"]
+
+
 def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() -> None:
     payload = quality_benchmark.run_benchmark_suite(
         "smoke",

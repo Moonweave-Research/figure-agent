@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import benchmark_contracts
+import benchmark_detector_reports
 import candidate_generator
 import candidate_rank
 import fixture_identity
@@ -185,8 +186,16 @@ def _detector_evaluation(example_dir: Path, contract: dict[str, Any]) -> dict[st
                 failed = True
                 continue
             loaded_reports[detector] = payload
-        baseline = _metric_value(loaded_reports[detector], metric_name, "baseline")
-        candidate = _metric_value(loaded_reports[detector], metric_name, "candidate")
+        baseline = benchmark_detector_reports.metric_value(
+            loaded_reports[detector],
+            metric_name,
+            "baseline",
+        )
+        candidate = benchmark_detector_reports.metric_value(
+            loaded_reports[detector],
+            metric_name,
+            "candidate",
+        )
         if baseline is None or candidate is None:
             missing.append(f"{metric_name}:metric_missing")
             failed = True

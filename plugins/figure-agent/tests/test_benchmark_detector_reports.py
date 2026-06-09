@@ -132,11 +132,81 @@ def test_dogfood_detector_preview_is_read_only_and_non_blocking() -> None:
     assert payload["suite"] == "dogfood"
     assert payload["write_mode"] is False
     assert payload["writes"] == []
-    assert {report["state"] for report in payload["reports"]} <= {
-        "available",
-        "artifact_missing",
-    }
+    assert [(report["detector"], report["state"]) for report in payload["reports"]] == [
+        ("text_boundary", "available")
+    ]
+    report = payload["reports"][0]["report"]
+    assert report["source"]["kind"] == "checker_report"
+    assert report["source"]["checker_schema"] == "figure-agent.text-boundary-clash.v1"
+    assert report["metrics"]["text_boundary.blocker_count"]["baseline"] == (
+        report["metrics"]["text_boundary.blocker_count"]["candidate"]
+    )
     assert _tree(fixture) == before
+
+
+def test_checker_total_report_adapts_to_benchmark_metric(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = workspace / "examples" / "checker_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: checker_demo\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "checker_demo.tex").write_text("\\node at (0,0) {Demo};\n", encoding="utf-8")
+    (fixture / "benchmark_contract.yaml").write_text(
+        """
+schema: figure-agent.benchmark-contract.v1
+fixture: checker_demo
+defect_class: label_overlap
+candidate_families:
+  - label-repair
+candidate_edit_classes:
+  - label_offset
+required_detectors:
+  - text_boundary
+detector_reports:
+  text_boundary: build/text_boundary_clash.json
+expected_movement:
+  text_boundary.blocker_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+reference_policy:
+  kind: user_owned_dogfood
+  external_images_allowed: true
+  golden_target_allowed: false
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    report = fixture / "build" / "text_boundary_clash.json"
+    report.parent.mkdir()
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": "checker_demo",
+                "render_pdf": "build/checker_demo.pdf",
+                "source": "spec.yaml:text_boundary_checks",
+                "total": 3,
+                "candidates": [{"id": "TB001"}, {"id": "TB002"}, {"id": "TB003"}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = benchmark_detector_reports.build_detector_reports(
+        "checker_demo",
+        suite="dogfood",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    detector_report = payload["reports"][0]["report"]
+    assert payload["reports"][0]["state"] == "available"
+    assert detector_report["source"]["kind"] == "checker_report"
+    assert detector_report["metrics"]["text_boundary.blocker_count"] == {
+        "baseline": 3.0,
+        "candidate": 3.0,
+    }
 
 
 def test_fig_agent_benchmark_detectors_cli_preview(tmp_path: Path) -> None:
