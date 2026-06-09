@@ -171,9 +171,7 @@ def _doctor(_: dict[str, Any]) -> dict[str, Any]:
     workspace = _workspace_diagnostics(plugin_root)
     dependencies = _dependency_diagnostics()
     success = (
-        bundle["state"] == "ok"
-        and workspace["state"] == "ok"
-        and dependencies["state"] == "ok"
+        bundle["state"] == "ok" and workspace["state"] == "ok" and dependencies["state"] == "ok"
     )
     return _tool_envelope(
         "figure-agent.mcp.doctor.v1",
@@ -182,9 +180,7 @@ def _doctor(_: dict[str, Any]) -> dict[str, Any]:
         bundle=bundle,
         workspace=workspace,
         dependencies=dependencies,
-        error=None
-        if success
-        else _error("doctor_failed", "One or more doctor checks failed."),
+        error=None if success else _error("doctor_failed", "One or more doctor checks failed."),
     )
 
 
@@ -338,10 +334,7 @@ def _path_metadata(
             }
         )
         return payload
-    if not (
-        resolved == workspace_resolved
-        or resolved.is_relative_to(workspace_resolved)
-    ):
+    if not (resolved == workspace_resolved or resolved.is_relative_to(workspace_resolved)):
         payload.update({"success": False, "blocked": True, "reason": "path_escape"})
         return payload
     if resolved.is_file():
@@ -358,12 +351,7 @@ def _candidate_manifest_metadata(
     uri: str,
 ) -> dict[str, Any]:
     relative_path = (
-        Path("examples")
-        / name
-        / "build"
-        / "candidates"
-        / candidate_id
-        / "candidate_manifest.json"
+        Path("examples") / name / "build" / "candidates" / candidate_id / "candidate_manifest.json"
     )
     path = workspace_root / relative_path
     payload: dict[str, Any] = {
@@ -414,10 +402,7 @@ def _candidate_manifest_metadata(
             }
         )
         return payload
-    if not (
-        resolved == sandbox_resolved
-        or resolved.is_relative_to(sandbox_resolved)
-    ):
+    if not (resolved == sandbox_resolved or resolved.is_relative_to(sandbox_resolved)):
         payload.update({"success": False, "blocked": True, "reason": "path_escape"})
         return payload
     if resolved.is_file():
@@ -654,6 +639,7 @@ def _json_payload_from_result(
     invalid_json_message: str,
     name: str | None = None,
     required: bool = True,
+    error_category: str = "unsupported_operation",
 ) -> tuple[Any, dict[str, Any] | None]:
     if not result.stdout.strip() and not required:
         return {}, None
@@ -670,7 +656,7 @@ def _json_payload_from_result(
             **payload,
             stdout=_bounded(result.stdout),
             stderr=_bounded(result.stderr),
-            error=_error("unsupported_operation", invalid_json_message),
+            error=_error(error_category, invalid_json_message),
         )
 
 
@@ -681,26 +667,17 @@ def _status(arguments: dict[str, Any]) -> dict[str, Any]:
     if isinstance(resolved, dict):
         return resolved
     workspace_root, name = resolved
-    try:
-        result = _run_fig_agent(["status", name, "--json"], workspace_root=workspace_root)
-    except FileNotFoundError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            error=_error("dependency_missing", "Python executable for fig-agent not found"),
-        )
-    except subprocess.TimeoutExpired as exc:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            stdout=_bounded(exc.stdout or ""),
-            stderr=_bounded(exc.stderr or ""),
-            error=_error("timeout", "fig-agent status timed out"),
-        )
+    result = _run_fig_agent_enveloped(
+        schema=schema,
+        started=started,
+        command=["status", name, "--json"],
+        workspace_root=workspace_root,
+        timeout_seconds=120,
+        timeout_message="fig-agent status timed out",
+        name=name,
+    )
+    if isinstance(result, dict):
+        return result
     if result.returncode != 0:
         return _tool_envelope(
             schema,
@@ -712,18 +689,16 @@ def _status(arguments: dict[str, Any]) -> dict[str, Any]:
             stderr=_bounded(result.stderr),
             error=_error("status_failed", "fig-agent status failed"),
         )
-    try:
-        status_payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return _tool_envelope(
-            schema,
-            success=False,
-            started=started,
-            name=name,
-            stdout=_bounded(result.stdout),
-            stderr=_bounded(result.stderr),
-            error=_error("status_failed", "fig-agent status returned invalid JSON"),
-        )
+    status_payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message="fig-agent status returned invalid JSON",
+        error_category="status_failed",
+    )
+    if json_error is not None:
+        return json_error
     return _tool_envelope(
         schema,
         success=True,
