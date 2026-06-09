@@ -158,12 +158,44 @@ def test_doctor_reports_plugin_root_cwd_as_source_tree_workspace() -> None:
         check=False,
     )
 
-    assert result.returncode == 0
     payload = json.loads(result.stdout)
+    assert result.returncode == (0 if payload["dependencies"]["state"] == "ok" else 1)
     assert payload["bundle"]["state"] == "ok"
     assert payload["workspace"]["state"] == "ok"
     assert payload["workspace"]["workspace_root"] == str(PLUGIN_ROOT)
     assert payload["workspace"]["workspace_source"] == "cwd"
+
+
+def test_doctor_does_not_treat_unpacked_plugin_root_cwd_as_cli_workspace(
+    tmp_path: Path,
+) -> None:
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / "scripts").mkdir()
+    (plugin_root / "styles").mkdir()
+    (plugin_root / "examples").mkdir()
+    (plugin_root / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    (plugin_root / "styles" / "polymer-paper-preamble.sty").write_text("% style", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(PLUGIN_ROOT / "bin" / "fig-agent"), "doctor", "--json"],
+        cwd=plugin_root,
+        env={
+            "FIGURE_AGENT_PLUGIN_ROOT": str(plugin_root),
+            "PATH": "",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert payload["bundle"]["state"] == "ok"
+    assert payload["bundle"]["plugin_root_kind"] == "unpacked_zip"
+    assert payload["workspace"]["state"] == "missing"
+    assert payload["workspace"]["workspace_root"] is None
+    assert payload["workspace"]["workspace_source"] == "missing"
 
 
 def test_doctor_reports_bundle_missing_styles(tmp_path: Path) -> None:

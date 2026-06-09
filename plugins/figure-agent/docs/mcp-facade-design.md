@@ -172,6 +172,10 @@ The server must still resolve the workspace through `FIGURE_AGENT_WORKSPACE`,
 `CLAUDE_PROJECT_DIR`, or a non-plugin-root current working directory.
 The `.mcp.json` file should not hard-code `FIGURE_AGENT_WORKSPACE`; a package
 uploaded to Cowork must be reusable across projects.
+This is intentionally stricter than the shell `fig-agent doctor` source-tree
+developer path: direct CLI runs from a checked-out `plugins/figure-agent` tree
+may diagnose that source tree's `examples/`, but MCP must not treat an
+installed plugin cache root as the user's workspace.
 
 If the implementation chooses the official Python MCP SDK or another package,
 that is a new runtime dependency and must be approved explicitly before landing.

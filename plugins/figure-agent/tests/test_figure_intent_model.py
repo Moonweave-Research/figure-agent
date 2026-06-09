@@ -9,6 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import figure_intent_model  # noqa: E402
 
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _fixture(workspace: Path, name: str = "intent_demo") -> Path:
     fixture = workspace / "examples" / name
@@ -39,7 +41,7 @@ def test_intent_model_reads_fixture_local_inputs(tmp_path: Path) -> None:
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["schema"] == "figure-agent.intent-model.v1"
@@ -67,7 +69,7 @@ panels:
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["panels"][0]["apply_authority_floor"] == "review_only"
@@ -94,7 +96,7 @@ panels:
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["inputs"]["panel_references"]["state"] == "blocked"
@@ -121,7 +123,7 @@ panels:
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["inputs"]["panel_references"]["state"] == "present"
@@ -146,7 +148,7 @@ panels:
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["inputs"]["figure_reference"]["state"] == "present"
@@ -171,7 +173,7 @@ def test_intent_model_missing_caption_does_not_invent_claims(tmp_path: Path) -> 
     payload = figure_intent_model.build_intent_model(
         "intent_demo",
         workspace_root=workspace,
-        plugin_root=Path("plugins/figure-agent").resolve(),
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["inputs"]["caption"]["state"] == "missing_optional"

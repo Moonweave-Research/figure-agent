@@ -8,6 +8,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import candidate_families  # noqa: E402
 import candidate_generator  # noqa: E402
 
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _energy_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
     fixture = workspace / "examples" / name
@@ -236,14 +238,12 @@ def test_generator_delegates_panel_family_without_breaking_default(tmp_path: Pat
 
 
 def test_real_panel_c_energy_family_produces_candidate() -> None:
-    workspace = Path("plugins/figure-agent").resolve()
-
     payload = candidate_generator.build_candidate_set(
         "fig1_overview_v2_pair_001_vault",
         panel="C",
         family="energy-trap-alignment",
-        workspace_root=workspace,
-        plugin_root=workspace,
+        workspace_root=PLUGIN_ROOT,
+        plugin_root=PLUGIN_ROOT,
     )
 
     assert payload["candidates"]

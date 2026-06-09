@@ -166,6 +166,12 @@ def workspace_source_for_cli(_: RuntimePaths) -> str:
 
 
 def workspace_diagnostics_for_cli(paths: RuntimePaths) -> dict:
+    if (
+        workspace_source_for_cli(paths) == "cwd"
+        and paths.workspace_root == paths.plugin_root
+        and plugin_root_kind(paths.plugin_root) != "source_tree"
+    ):
+        return workspace_diagnostics(paths)
     missing = []
     if not paths.examples_dir.is_dir():
         missing.append("examples")

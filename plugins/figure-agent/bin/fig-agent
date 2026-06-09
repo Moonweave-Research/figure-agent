@@ -28,6 +28,43 @@ import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
 
 
+def _missing_project_python_modules() -> list[str]:
+    missing = []
+    for module_name in ("yaml", "PIL"):
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            missing.append(module_name)
+    return missing
+
+
+def _maybe_reexec_with_uv_project() -> None:
+    if os.environ.get("FIGURE_AGENT_UV_BOOTSTRAPPED"):
+        return
+    if not (CODE_ROOT / "pyproject.toml").is_file():
+        return
+    if not _missing_project_python_modules():
+        return
+    uv = shutil.which("uv")
+    if uv is None:
+        return
+    env = os.environ.copy()
+    env["FIGURE_AGENT_UV_BOOTSTRAPPED"] = "1"
+    os.execvpe(
+        uv,
+        [
+            uv,
+            "run",
+            "--project",
+            str(CODE_ROOT),
+            "python3",
+            str(Path(__file__).resolve()),
+            *sys.argv[1:],
+        ],
+        env,
+    )
+
+
 def _paths() -> runtime_paths.RuntimePaths:
     return runtime_paths.resolve_runtime_paths(plugin_root=PLUGIN_ROOT)
 
@@ -977,6 +1014,8 @@ def _verify_plan(argv: list[str]) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        _maybe_reexec_with_uv_project()
     args = list(argv if argv is not None else sys.argv[1:])
     if not args:
         print(
