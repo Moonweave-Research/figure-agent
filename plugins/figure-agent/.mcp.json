@@ -4,6 +4,8 @@
       "command": "uv",
       "args": [
         "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
         "python3",
         "${CLAUDE_PLUGIN_ROOT}/mcp/figure_agent_server.py"
       ],
