@@ -327,15 +327,13 @@ Purpose:
 - Preserve critique freshness gates and tracked-golden protection.
 - Write only generated export artifacts under `examples/<name>/exports`.
 
-### `figure_agent_next_action`
+### `figure_agent_next`
 
 Input:
 
 ```json
 {
-  "name": "smoke_trap_demo",
-  "mode": "review",
-  "goal": "resolve the next safe critique target"
+  "name": "smoke_trap_demo"
 }
 ```
 
@@ -343,28 +341,34 @@ Output:
 
 ```json
 {
-  "schema": "figure-agent.mcp.next-action.v1",
-  "action": "run_loop_checkpoint",
-  "stop_boundary": null,
-  "safe_command": null,
-  "mcp_tool": {
-    "name": "figure_agent_loop_checkpoint",
-    "arguments": {
-      "name": "smoke_trap_demo",
-      "goal": "resolve the next safe critique target"
+  "schema": "figure-agent.mcp.next.v1",
+  "success": true,
+  "exit_code": 0,
+  "next_result": {
+    "schema": "figure-agent.next.v1",
+    "fixture": "smoke_trap_demo",
+    "state": "compiled",
+    "next": {
+      "action": "run_export",
+      "command": "fig-agent export smoke_trap_demo",
+      "requires_human": false,
+      "writes": [
+        "examples/smoke_trap_demo/exports/"
+      ]
     }
-  },
-  "requires_human": false,
-  "requires_host_vision": false
+  }
 }
 ```
 
 Purpose:
 
-- Wrap the existing driver summary.
-- Keep `safe_command` for auditability, but make structured fields primary.
-- Convert non-public internal commands into structured MCP tool recommendations
-  instead of exposing them as operator shell commands.
+- Provide the single MCP front door for the next agent action.
+- Keep `figure_agent_status` focused on the full status vector and
+  `figure_agent_next` focused on one compact action decision.
+- Wrap the read-only CLI contract from `fig-agent next`; it must not mutate the
+  workspace.
+- Leave checkpoint writes behind the explicit `figure_agent_loop_checkpoint`
+  tool instead of auto-selecting it as the next action.
 
 ### `figure_agent_loop_checkpoint`
 
@@ -539,7 +543,7 @@ The first implementation should prioritize artifact and finding visibility over 
 - Add `figure_agent_status`.
 - Add `figure_agent_compile`.
 - Add `figure_agent_export`.
-- Add `figure_agent_next_action`.
+- Add `figure_agent_next`.
 - Add `figure_agent_loop_checkpoint`.
 
 Acceptance:

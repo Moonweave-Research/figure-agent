@@ -171,7 +171,6 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_quality_map",
         "figure_agent_propose_patch",
         "figure_agent_verify_plan",
-        "figure_agent_next_action",
         "figure_agent_loop_checkpoint",
         "figure_agent_analyze_figure",
         "figure_agent_propose_improvements",
@@ -192,6 +191,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_benchmark_detectors_preview",
         "figure_agent_apply_candidate",
     } <= tool_names
+    assert "figure_agent_next_action" not in tool_names
     assert "figure_agent_closeout_accept" not in tool_names
     assert "figure_agent_force_golden" not in tool_names
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))

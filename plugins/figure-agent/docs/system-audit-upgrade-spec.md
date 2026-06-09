@@ -100,9 +100,9 @@ Extend existing tools without renaming them:
 
 - `figure_agent_doctor`
 - `figure_agent_status`
+- `figure_agent_next`
 - `figure_agent_compile`
 - `figure_agent_export`
-- `figure_agent_next_action`
 - `figure_agent_loop_checkpoint`
 
 Extend `figure_agent_doctor` output with boundary fields:

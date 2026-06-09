@@ -1501,34 +1501,6 @@ def _export(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-def _next_action(arguments: dict[str, Any]) -> dict[str, Any]:
-    started = time.monotonic()
-    schema = "figure-agent.mcp.next-action.v1"
-    status_payload = _status(arguments)
-    if not status_payload.get("success"):
-        status_payload["schema"] = schema
-        return status_payload
-    name = str(arguments["name"])
-    status = status_payload.get("status", {})
-    goal = str(arguments.get("goal") or "review current figure state")
-    next_hint = status.get("next") if isinstance(status, dict) else None
-    return _tool_envelope(
-        schema,
-        success=True,
-        started=started,
-        action="run_loop_checkpoint",
-        stop_boundary=next_hint,
-        safe_command=None,
-        mcp_tool={
-            "name": "figure_agent_loop_checkpoint",
-            "arguments": {"name": name, "goal": goal},
-        },
-        requires_human=False,
-        requires_host_vision=False,
-        status=status,
-    )
-
-
 def _loop_checkpoint(arguments: dict[str, Any]) -> dict[str, Any]:
     started = time.monotonic()
     schema = "figure-agent.mcp.loop-checkpoint.v1"
@@ -1901,20 +1873,6 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _verify_plan,
-    },
-    "figure_agent_next_action": {
-        "description": "Summarize the next structured figure-agent action.",
-        "inputSchema": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["name"],
-            "properties": {
-                "name": {"type": "string"},
-                "mode": {"type": "string"},
-                "goal": {"type": "string"},
-            },
-        },
-        "handler": _next_action,
     },
     "figure_agent_loop_checkpoint": {
         "description": "Record a verify-only loop checkpoint for one fixture.",
