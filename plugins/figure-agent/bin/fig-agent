@@ -405,6 +405,33 @@ def _quality_next_experiment(argv: list[str]) -> int:
     return 0
 
 
+def _benchmark_detectors(argv: list[str]) -> int:
+    import benchmark_detector_reports
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-detectors")
+    parser.add_argument("name")
+    parser.add_argument("--suite", default="smoke")
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    suite = _validated_fixture_name(parser, args.suite)
+    try:
+        payload = benchmark_detector_reports.build_detector_reports(
+            name,
+            suite=suite,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            write=args.write,
+        )
+    except (ValueError, benchmark_detector_reports.BenchmarkDetectorReportError) as exc:
+        print(f"fig-agent benchmark-detectors: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
     path = Path(value)
     if path.is_absolute() or ".." in path.parts:
@@ -969,6 +996,8 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark_compare(rest)
     if command == "quality-next-experiment":
         return _quality_next_experiment(rest)
+    if command == "benchmark-detectors":
+        return _benchmark_detectors(rest)
     if command == "propose":
         return _propose(rest)
     if command == "intent":

@@ -32,6 +32,7 @@ def test_release_gate_builds_and_audits_package_with_skipped_heavy_checks(tmp_pa
     assert states["full_pytest"] == "skipped"
     assert states["ruff"] == "skipped"
     assert states["smoke_benchmark"] == "passed"
+    assert states["smoke_detector_generation"] == "passed"
     assert states["benchmark_baseline"] == "warning"
     assert states["package_required_paths"] == "passed"
     assert states["package_smoke_fixtures"] == "passed"

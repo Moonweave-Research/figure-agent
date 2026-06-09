@@ -1110,6 +1110,43 @@ def _benchmark_compare(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _benchmark_detectors_preview(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = arguments.get("name")
+    suite = arguments.get("suite", "smoke")
+    if not _is_safe_fixture_name(name):
+        return _tool_envelope(
+            "figure-agent.mcp.benchmark-detectors-preview.v1",
+            success=False,
+            started=time.monotonic(),
+            error=_error(
+                "invalid_fixture_name",
+                "name must be a single fixture name",
+            ),
+        )
+    if not _is_safe_fixture_name(suite):
+        return _tool_envelope(
+            "figure-agent.mcp.benchmark-detectors-preview.v1",
+            success=False,
+            started=time.monotonic(),
+            error=_error(
+                "invalid_fixture_name",
+                "suite must be a single benchmark suite name",
+            ),
+        )
+    return _run_workspace_json_fig_agent_tool(
+        schema="figure-agent.mcp.benchmark-detectors-preview.v1",
+        command=[
+            "benchmark-detectors",
+            str(name),
+            "--suite",
+            str(suite),
+            "--json",
+        ],
+        payload_key="detector_reports",
+        failure_message="fig-agent benchmark-detectors failed",
+    )
+
+
 def _quality_next_experiment(arguments: dict[str, Any]) -> dict[str, Any]:
     del arguments
     started = time.monotonic()
@@ -1736,6 +1773,19 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {},
         },
         "handler": _quality_next_experiment,
+    },
+    "figure_agent_benchmark_detectors_preview": {
+        "description": "Preview benchmark detector report generation without writing files.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "suite": {"type": "string"},
+            },
+        },
+        "handler": _benchmark_detectors_preview,
     },
     "figure_agent_prepare_human_review": {
         "description": "Return a read-only human review packet for one candidate.",

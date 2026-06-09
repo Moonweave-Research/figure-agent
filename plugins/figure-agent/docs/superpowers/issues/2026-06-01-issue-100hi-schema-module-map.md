@@ -116,6 +116,8 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.quality-memory-log.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Read-only event list for one fixture |
 | `figure-agent.quality-memory-index.v1` | quality memory | `quality_memory_index.py` | future memory-aware ranking, operators | Conservative priors only; cannot upgrade hard gates or apply authority |
 | `figure-agent.benchmark-contract.v1` | quality benchmark | `benchmark_contracts.py` | `quality_benchmark.py`, release gate | Fixture-local benchmark contract; separates defect, family, edit-class, detector, and source-policy axes |
+| `figure-agent.benchmark-detectors-preview.v1` | quality benchmark | `benchmark_detector_reports.py` | `fig-agent benchmark-detectors`, MCP benchmark tools, release gate | Read-only-by-default detector report generation envelope; write mode stays fixture-local |
+| `figure-agent.benchmark-detector-report.v1` | quality benchmark | `benchmark_detector_reports.py` | `quality_benchmark.py`, release gate, candidate ranking | Explicit normalized detector report schema for seed and future render-derived metrics |
 | `figure-agent.quality-benchmark-list.v1` | quality benchmark | `quality_benchmark.py` | operators, future MCP benchmark tools | Read-only suite manifest view |
 | `figure-agent.quality-benchmark-run.v1` | quality benchmark | `quality_benchmark.py` | benchmark compare, operators | Local benchmark report; writes only repo/workspace-local scratch when explicit |
 | `figure-agent.quality-benchmark-comparison.v1` | quality benchmark | `quality_benchmark.py` | operators, future release gate checks | Compares local benchmark reports and surfaces regressions |

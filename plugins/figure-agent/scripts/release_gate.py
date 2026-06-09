@@ -20,6 +20,7 @@ PLUGIN_ROOT = SCRIPT_ROOT.parent
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 import benchmark_contracts  # noqa: E402
+import benchmark_detector_reports  # noqa: E402
 import package_cowork_plugin  # noqa: E402
 import quality_benchmark  # noqa: E402
 
@@ -39,6 +40,7 @@ TARGETED_TESTS = [
     "tests/test_golden_acceptance.py",
     "tests/test_candidate_cli_contract.py",
     "tests/test_benchmark_contracts.py",
+    "tests/test_benchmark_detector_reports.py",
     "tests/test_quality_benchmark.py",
     "tests/test_quality_benchmark_compare.py",
     "tests/test_quality_next_experiment.py",
@@ -223,6 +225,38 @@ def _run_smoke_benchmark() -> dict[str, Any]:
     )
 
 
+def _run_smoke_detector_generation() -> dict[str, Any]:
+    failed: list[dict[str, Any]] = []
+    previews: list[dict[str, Any]] = []
+    for fixture in _smoke_fixture_names():
+        try:
+            payload = benchmark_detector_reports.build_detector_reports(
+                fixture,
+                suite="smoke",
+                plugin_root=PLUGIN_ROOT,
+                workspace_root=PLUGIN_ROOT,
+                write=False,
+            )
+        except Exception as exc:  # noqa: BLE001 - release report should classify the failure.
+            failed.append({"fixture": fixture, "reason": str(exc)})
+            continue
+        states = [
+            str(report.get("state"))
+            for report in payload.get("reports", [])
+            if isinstance(report, dict)
+        ]
+        previews.append({"fixture": fixture, "states": states})
+        if not states or any(state != "available" for state in states):
+            failed.append({"fixture": fixture, "states": states})
+        if payload.get("writes"):
+            failed.append({"fixture": fixture, "reason": "preview_wrote_files"})
+    return _step(
+        "smoke_detector_generation",
+        "passed" if not failed else "failed",
+        details={"previews": previews, "failed": failed},
+    )
+
+
 def _benchmark_baseline_step() -> dict[str, Any]:
     baseline = PLUGIN_ROOT / "benchmarks" / "baselines" / "smoke.json"
     if not baseline.is_file():
@@ -270,6 +304,7 @@ def run_release_gate(
         steps.append(_step("ruff", "skipped", details={"reason": "explicit skip"}))
 
     steps.append(_run_smoke_benchmark())
+    steps.append(_run_smoke_detector_generation())
     steps.append(_benchmark_baseline_step())
 
     zip_path = package_cowork_plugin.build_zip(output_dir)
