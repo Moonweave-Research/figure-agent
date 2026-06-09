@@ -39,6 +39,37 @@ def _copy_smoke_fixture(workspace: Path, name: str = "smoke_label_overlap_demo")
     return fixture
 
 
+def _copy_dogfood_fixture_with_checker_report(workspace: Path) -> Path:
+    name = "fig1_overview_v2_pair_001_vault"
+    source = PLUGIN_ROOT / "examples" / name
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    for relative in (
+        "spec.yaml",
+        "briefing.md",
+        f"{name}.tex",
+        "benchmark_contract.yaml",
+    ):
+        target = fixture / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text((source / relative).read_text(encoding="utf-8"), encoding="utf-8")
+    report = fixture / "build" / "text_boundary_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": name,
+                "total": 3,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def test_smoke_detector_preview_returns_explicit_reports_without_writes() -> None:
     before = _tree(PLUGIN_ROOT / "examples" / "smoke_label_overlap_demo")
 
@@ -116,15 +147,16 @@ def test_detector_write_rejects_symlinked_report_dir(tmp_path: Path) -> None:
         )
 
 
-def test_dogfood_detector_preview_is_read_only_and_non_blocking() -> None:
-    fixture = PLUGIN_ROOT / "examples" / "fig1_overview_v2_pair_001_vault"
+def test_dogfood_detector_preview_is_read_only_and_non_blocking(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _copy_dogfood_fixture_with_checker_report(workspace)
     before = _tree(fixture)
 
     payload = benchmark_detector_reports.build_detector_reports(
         "fig1_overview_v2_pair_001_vault",
         suite="dogfood",
         plugin_root=PLUGIN_ROOT,
-        workspace_root=PLUGIN_ROOT,
+        workspace_root=workspace,
         write=False,
     )
 

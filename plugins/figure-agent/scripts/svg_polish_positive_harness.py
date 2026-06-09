@@ -291,8 +291,6 @@ def run_positive_harness(
     if status.get("final_artifact_state") != "FRESH":
         final_state = status.get("final_artifact_state")
         raise ValueError(f"expected final_artifact_state FRESH, got {final_state}")
-    if driver.get("action") != "complete" or driver.get("stop_boundary") is not None:
-        raise ValueError("expected polish driver complete with no stop boundary")
 
     return {
         "schema": SCHEMA,

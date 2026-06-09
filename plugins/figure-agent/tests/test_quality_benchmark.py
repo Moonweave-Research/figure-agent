@@ -80,6 +80,37 @@ reference_policy:
     return fixture
 
 
+def _dogfood_fixture_with_checker_report(workspace: Path) -> Path:
+    name = "fig1_overview_v2_pair_001_vault"
+    source = PLUGIN_ROOT / "examples" / name
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    for relative in (
+        "spec.yaml",
+        "briefing.md",
+        f"{name}.tex",
+        "benchmark_contract.yaml",
+    ):
+        target = fixture / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text((source / relative).read_text(encoding="utf-8"), encoding="utf-8")
+    report = fixture / "build" / "text_boundary_clash.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": name,
+                "total": 3,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def _tree(root: Path) -> list[str]:
     return sorted(path.relative_to(root).as_posix() for path in root.rglob("*"))
 
@@ -148,11 +179,14 @@ def test_installed_smoke_suite_has_at_least_one_detector_contract() -> None:
     assert first["candidate"] <= first["baseline"]
 
 
-def test_installed_dogfood_checker_report_feeds_detector_evaluation() -> None:
+def test_installed_dogfood_checker_report_feeds_detector_evaluation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _dogfood_fixture_with_checker_report(workspace)
+
     payload = quality_benchmark.run_benchmark_suite(
         "dogfood",
         plugin_root=PLUGIN_ROOT,
-        workspace_root=PLUGIN_ROOT,
+        workspace_root=workspace,
         limit=1,
     )
 
