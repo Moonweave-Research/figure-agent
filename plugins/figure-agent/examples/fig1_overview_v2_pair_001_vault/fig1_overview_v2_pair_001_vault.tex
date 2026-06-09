@@ -1904,37 +1904,37 @@
 % MOVES under Coulomb force.
 % F-4 v8.6 [briefing relax R2, 2026-05-26]: calibrated. shadow 0.40→0.28,
 % gradient delta preserved (metallic identity), bevel 0.85→0.55.
-\fill[cGray!10] (11.85, 2.42) rectangle (12.25, 2.52);
+\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);
 \draw[cGray!75!black, line width=0.40pt]
-  (11.85, 2.42) rectangle (12.25, 2.52);
-\draw[cGray!50!black, line width=0.40pt] (11.75, 2.65) -- (12.35, 2.65);
+  (11.785, 2.42) rectangle (12.185, 2.52);
+\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
   \draw[cGray!50!black, line width=0.25pt]
-    ({11.75+\dx}, 2.65) -- ({11.70+\dx}, 2.72);
+    ({11.685+\dx}, 2.65) -- ({11.635+\dx}, 2.72);
 }
-\draw[cGray!75!black, line width=0.40pt] (12.05, 2.52) -- (12.05, 2.65);
+\draw[cGray!75!black, line width=0.40pt] (11.985, 2.52) -- (11.985, 2.65);
 
 % F-5 bent cantilever polymer (root x=12.45, bent LEFT toward 11.75)
 % v8.7 iter 4: root + tip shifted to align with new clip position.
 \shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
-  (11.92, 2.42) .. controls (11.92, 1.85) and (11.65, 1.35) ..
-  (11.35, 0.85) -- (11.5, 0.85) .. controls (11.8, 1.35) and
-  (12.05, 1.85) .. (12.05, 2.42) -- cycle;
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
 \draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]
-  (11.92, 2.42) .. controls (11.92, 1.85) and (11.65, 1.35) ..
-  (11.35, 0.85) -- (11.5, 0.85) .. controls (11.8, 1.35) and
-  (12.05, 1.85) .. (12.05, 2.42) -- cycle;
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
-  (11.855, 2.35) .. controls (11.855, 1.85) and (11.585, 1.35) .. (11.285, 0.88);
+  (11.94, 2.28) .. controls (11.955, 1.78) and (11.565, 1.23) .. (11.125, 0.95);
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
-  (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
+  (11.995, 2.35) .. controls (12.015, 1.80) and (11.66, 1.20) .. (11.20, 0.86);
 % F-5 v8.6 [briefing relax R2, 2026-05-26]: calibrated — 1.2mm→0.6mm,
 % 0.60→0.42; reads as polymer surface highlight, not white disc.
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
 % Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
 % trap dots + Panel E surface ⊕ charges aesthetic).
-\foreach \cx/\cy in {11.85/2.00, 11.75/1.55, 11.60/1.10} {
+\foreach \cx/\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {
   \shade[ball color=cRed!70!black] (\cx, \cy) circle (0.07);
   \draw[cRed!95!black, line width=0.22pt] (\cx, \cy) circle (0.07);
 }
@@ -1961,7 +1961,7 @@
 % which still reads as 'on cantilever' (cantilever right edge at this y is
 % around x=11.70).
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
-  (11.75, 1.3) -- (10.85, 1.3);
+  (11.55, 1.3) -- (10.85, 1.3);
 % Panel-loop iter L8: Coulomb tone cRed!75 → !80!black (match arrow stroke tone).
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!80!black,
       anchor=south east] at (10.85, 1.35) {Coulomb};
