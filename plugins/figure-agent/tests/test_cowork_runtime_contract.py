@@ -145,25 +145,25 @@ def test_doctor_reports_workspace_missing_without_bundle_false_positive(
     assert "lualatex" in payload["dependencies"]["missing"]
 
 
-def test_doctor_reports_plugin_root_cwd_as_missing_workspace() -> None:
+def test_doctor_reports_plugin_root_cwd_as_source_tree_workspace() -> None:
     result = subprocess.run(
         [sys.executable, str(PLUGIN_ROOT / "bin" / "fig-agent"), "doctor", "--json"],
         cwd=PLUGIN_ROOT,
         env={
             "FIGURE_AGENT_PLUGIN_ROOT": str(PLUGIN_ROOT),
-            "PATH": "",
+            "PATH": os.environ.get("PATH", ""),
         },
         text=True,
         capture_output=True,
         check=False,
     )
 
-    assert result.returncode == 1
+    assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["bundle"]["state"] == "ok"
-    assert payload["workspace"]["state"] == "missing"
-    assert payload["workspace"]["workspace_root"] is None
-    assert payload["workspace"]["workspace_source"] == "missing"
+    assert payload["workspace"]["state"] == "ok"
+    assert payload["workspace"]["workspace_root"] == str(PLUGIN_ROOT)
+    assert payload["workspace"]["workspace_source"] == "cwd"
 
 
 def test_doctor_reports_bundle_missing_styles(tmp_path: Path) -> None:

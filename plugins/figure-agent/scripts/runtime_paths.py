@@ -157,6 +157,26 @@ def workspace_diagnostics(paths: RuntimePaths) -> dict:
     }
 
 
+def workspace_source_for_cli(_: RuntimePaths) -> str:
+    if os.environ.get("FIGURE_AGENT_WORKSPACE"):
+        return "FIGURE_AGENT_WORKSPACE"
+    if os.environ.get("CLAUDE_PROJECT_DIR"):
+        return "CLAUDE_PROJECT_DIR"
+    return "cwd"
+
+
+def workspace_diagnostics_for_cli(paths: RuntimePaths) -> dict:
+    missing = []
+    if not paths.examples_dir.is_dir():
+        missing.append("examples")
+    return {
+        "state": "ok" if not missing else "missing",
+        "workspace_root": str(paths.workspace_root),
+        "workspace_source": workspace_source_for_cli(paths),
+        "missing": missing,
+    }
+
+
 def unexpected_cache_state(plugin_root: Path, *, kind: str | None = None) -> list[str]:
     """Return unexpected installed/unpacked package paths without deleting anything."""
     root = plugin_root.expanduser().resolve()

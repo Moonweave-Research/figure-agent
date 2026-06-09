@@ -144,8 +144,12 @@ Recommended `.mcp.json` shape:
 {
   "mcpServers": {
     "figure-agent": {
-      "command": "python3",
+      "command": "uv",
       "args": [
+        "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "python3",
         "${CLAUDE_PLUGIN_ROOT}/mcp/figure_agent_server.py"
       ],
       "cwd": "${CLAUDE_PLUGIN_ROOT}",
@@ -157,15 +161,12 @@ Recommended `.mcp.json` shape:
 }
 ```
 
-This keeps server bootstrap independent from `uv` and project Python packages.
-If `.mcp.json` uses `uv` to start the MCP server, then a missing `uv` binary
-becomes an MCP startup failure and `figure_agent_doctor` cannot report it as a
-structured `dependency_missing` result. The server process should therefore be a
-dependency-light stdio wrapper that can start with only host `python3` and the
-Python standard library.
+This pins MCP startup to the plugin bundle's `pyproject.toml` even when the host
+ignores `.mcp.json` `cwd`. The server module should remain dependency-light at
+import time, but the launch command intentionally uses `uv run --project` so
+tool subprocesses have the same Python dependency set as `fig-agent`.
 Tool subprocesses should invoke `${CLAUDE_PLUGIN_ROOT}/bin/fig-agent` through
-the running Python interpreter rather than `uv run --project`, so normal MCP
-tool calls do not create virtualenv state inside the installed plugin cache.
+the running Python interpreter rather than nesting another `uv run --project`.
 
 The server must still resolve the workspace through `FIGURE_AGENT_WORKSPACE`,
 `CLAUDE_PROJECT_DIR`, or a non-plugin-root current working directory.
@@ -584,7 +585,7 @@ Acceptance:
 Add focused tests:
 
 - `.mcp.json` exists and references only plugin-root server paths.
-- `.mcp.json` does not require `uv` for MCP server startup.
+- `.mcp.json` pins `uv run --project ${CLAUDE_PLUGIN_ROOT}` for MCP server startup.
 - MCP tool schemas return stable JSON.
 - invalid fixture names are rejected before path joins.
 - temp workspace fixtures are used instead of plugin examples.

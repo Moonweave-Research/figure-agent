@@ -123,12 +123,12 @@ def _assert_common_envelope(payload: dict) -> None:
         assert isinstance(payload["error"]["message"], str)
 
 
-def test_mcp_json_starts_server_without_uv() -> None:
+def test_mcp_json_starts_server_with_pinned_uv_project() -> None:
     config = json.loads((PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
     server = config["mcpServers"]["figure-agent"]
 
-    assert server["command"] == "python3"
-    assert "uv" not in server["args"]
+    assert server["command"] == "uv"
+    assert server["args"][:4] == ["run", "--project", "${CLAUDE_PLUGIN_ROOT}", "python3"]
     assert "${CLAUDE_PLUGIN_ROOT}/mcp/figure_agent_server.py" in server["args"]
     assert server["cwd"] == "${CLAUDE_PLUGIN_ROOT}"
     assert server["env"]["FIGURE_AGENT_PLUGIN_ROOT"] == "${CLAUDE_PLUGIN_ROOT}"

@@ -62,7 +62,7 @@ def _doctor(argv: list[str]) -> int:
     payload = {
         "schema": "figure-agent.doctor.v1",
         "bundle": runtime_paths.bundle_diagnostics(paths),
-        "workspace": runtime_paths.workspace_diagnostics(paths),
+        "workspace": runtime_paths.workspace_diagnostics_for_cli(paths),
         "dependencies": deps,
     }
     ok = (
