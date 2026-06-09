@@ -103,9 +103,11 @@ fig-agent candidates <name> --json
 fig-agent render-candidates <name> --candidate-set <path> --json
 fig-agent rank-candidates <name> --candidate-set <path> --json
 fig-agent review-candidate <name> <candidate-id> --json
-fig-agent apply-candidate-ready <name> <candidate-id> --json
-fig-agent accept-candidate <name> <candidate-id> --write
-fig-agent apply-candidate <name> <candidate-id> --apply
+fig-agent apply-candidate-ready <name> <candidate-id> --candidate-set <path> --json
+fig-agent accept-candidate <name> <candidate-id> --candidate-set <path> \
+  --decision accept --reviewer <id> --rationale <text> --json
+fig-agent apply-candidate <name> <candidate-id> --candidate-set <path> \
+  --acceptance <path> --json
 fig-agent benchmark-run --suite smoke --json
 fig-agent benchmark-detectors <name> --suite smoke --json
 ```
@@ -115,6 +117,11 @@ work. It should inspect fixture state and return the single safest next command
 plus alternatives and blockers. This reduces agent thrash because the agent can
 ask the tool what state machine transition is legal instead of reconstructing
 that logic from docs.
+
+`fig-agent next` must not create a second routing policy. It should consolidate
+the existing next-action modules and command surfaces, including
+`next_action_summary.py`, `status_next_policy.py`, and
+`quality-next-experiment`, behind one public state-router response.
 
 ## JSON Envelope
 
@@ -126,8 +133,6 @@ New JSON outputs should converge on this envelope:
   "success": true,
   "state": "ready",
   "name": "smoke_trap_demo",
-  "workspace_root": null,
-  "plugin_root": null,
   "artifacts": [],
   "diagnostics": [],
   "writes": [],
@@ -147,8 +152,9 @@ Rules:
 - `diagnostics` is always a list.
 - `writes` is always a list and must be empty for read-only commands.
 - Stable fields must not expose absolute local paths.
-- Absolute paths are allowed only in explicitly local diagnostic fields or
-  human-readable debug sections.
+- Absolute paths are allowed only in explicitly local diagnostic sections, such
+  as `doctor.bundle.plugin_root` and `doctor.workspace.workspace_root`, where
+  local path diagnosis is the point of the command.
 - Artifact paths should be fixture-relative where possible.
 - Error responses should use the same envelope shape with `success: false`.
 
@@ -160,12 +166,15 @@ and an explicit write/apply flag.
 Read-only commands must not write source or durable review state. Commands that
 produce derived artifacts must make the write explicit in the command name,
 flag, or output contract, such as candidate sandbox rendering, detector report
-generation with `--write`, or benchmark report generation.
+generation with `--write`, benchmark report generation with `--write`, or
+benchmark render execution with `--render`.
 
 Source mutation is allowed only through acceptance/apply commands:
 
-- `accept-candidate` records human approval evidence;
-- `apply-candidate` mutates fixture source only after acceptance hashes match;
+- `accept-candidate` records human approval evidence and requires
+  `--candidate-set`, `--decision accept`, `--reviewer`, and `--rationale`;
+- `apply-candidate` mutates fixture source only after acceptance hashes match
+  and requires `--candidate-set` plus `--acceptance`;
 - apply must create rollback metadata before mutation;
 - MCP apply remains refused unless a future spec explicitly enables an
   operator-gated write mode.
@@ -241,6 +250,18 @@ observable defects under fixed contracts.
 
 ## Next Implementation Targets
 
+Implementation order matters. Do not start by adding MCP tools or new apply
+behavior. The dependency chain is:
+
+1. normalize CLI JSON envelopes and tests for existing commands;
+2. build `fig-agent next` as a wrapper over existing next-action policy modules;
+3. expose the same state-router response through MCP;
+4. tighten candidate evidence and benchmark deltas;
+5. promote additional dogfood fixtures only after detector reports exist.
+
+Each target must leave the previous public commands working. New code should
+reuse existing modules before adding new policy logic.
+
 ### Target 1: Unified Output Envelope
 
 Normalize the highest-value CLI/MCP responses first:
@@ -261,6 +282,19 @@ Acceptance:
 ### Target 2: `fig-agent next`
 
 Add a read-only state-router command for agents.
+
+Implementation source of truth:
+
+- `status.py` already emits `next`, `status_explanation`, and
+  `next_action_summary`;
+- `next_action_summary.py` compresses status, driver, loop, and closeout state;
+- `status_next_policy.py` owns per-state status hints;
+- `quality_next_experiment.py` owns the read-only benchmark experiment
+  recommendation.
+
+`fig-agent next` should orchestrate these existing policies. It should not
+invent a parallel enum, duplicate transition tables, or replace existing status
+semantics.
 
 It should return:
 
@@ -323,6 +357,12 @@ uv run pytest -q plugins/figure-agent/tests/test_command_contract_docs.py \
   plugins/figure-agent/tests/test_fig_driver_commands.py \
   plugins/figure-agent/tests/test_release_contract.py
 
+uv run pytest -q plugins/figure-agent/tests/test_candidate_cli_contract.py \
+  plugins/figure-agent/tests/test_quality_cli_contract.py \
+  plugins/figure-agent/tests/test_next_action_summary.py \
+  plugins/figure-agent/tests/test_status_next_policy.py \
+  plugins/figure-agent/tests/test_quality_next_experiment.py
+
 uv run pytest -q plugins/figure-agent/tests/test_mcp_facade.py \
   plugins/figure-agent/tests/test_benchmark_contracts.py \
   plugins/figure-agent/tests/test_quality_benchmark.py
@@ -333,8 +373,8 @@ uv run ruff check plugins/figure-agent
 Package/release checks:
 
 ```bash
-python3 scripts/package_cowork_plugin.py --output dist/cowork
-python3 scripts/plugin_package_audit.py plugins/figure-agent --max-mib 50
+python3 plugins/figure-agent/scripts/package_cowork_plugin.py --output dist/cowork
+python3 plugins/figure-agent/scripts/plugin_package_audit.py plugins/figure-agent --max-mib 50
 plugins/figure-agent/bin/fig-agent release-gate --dry-run --json
 ```
 
