@@ -75,12 +75,97 @@ rules:
       locator: commit 0a6e308; examples/fig1_overview_v2_pair_001_vault/spec.yaml:115-123
       quote: "panel_c_deep_escape_curve"
     transfer_policy: use_as_constraint
+  - id: pair001.nc-clean-white-background
+    category: style_lock
+    rule: For an NC main-text Fig 1, keep a clean white background; remove wash ellipses, background fills, wavy chain hints, and dotted column dividers.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:57-59
+      quote: "NC main-text Fig 1 convention = clean white"
+    transfer_policy: use_as_constraint
+  - id: pair001.molecule-atoms-and-bonds
+    category: physics_semantics
+    rule: Draw molecules such as S8 as atoms-and-bonds that carry molecular identity, not as a graphic icon, and drop redundant center identity labels.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:271
+      quote: "S₈ molecule drawn as atoms-and-bonds, not graphic icon"
+    transfer_policy: use_as_constraint
+  - id: pair001.atom-label-adjacent-bond-terminus
+    category: label_binding
+    rule: Place atom labels adjacent to the bond terminus rather than on the bond line, and originate reaction arrows from the molecule exterior.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:304-305
+      quote: "atom label adjacent to bond terminus rather than on bond line"
+    transfer_policy: use_as_constraint
+  - id: pair001.energy-reference-levels-horizontal
+    category: physics_semantics
+    rule: Draw energy-diagram reference levels such as vacuum and band edges as band-spanning horizontal lines that read as reference levels, not as quantitative measurements.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:621-625
+      quote: "Vacuum is a *reference level*, not a quantitative measurement"
+    transfer_policy: use_as_constraint
+  - id: pair001.instrument-faceplate-bezel
+    category: instrument_standard
+    rule: Give instrument boxes a dark-glass display plus an inner faceplate bezel for machined-panel weight; avoid flat or gizmo-style boxes.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1029
+      quote: "inner faceplate bezel for machined-panel weight"
+    transfer_policy: use_as_constraint
+  - id: pair001.print-scale-registration
+    category: style_lock
+    rule: Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:670
+      quote: "registers at 178mm print scale as a visible"
+    transfer_policy: use_as_question
+  - id: pair001.hero-saturation-hierarchy
+    category: style_lock
+    rule: Preserve panel visual hierarchy; the HERO panel must out-saturate secondary panels and the loudest color is reserved for the hero claim. Audit when a non-hero color reads as too prominent.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:675
+      quote: "Panel C HERO must out-saturate Panel E"
+    transfer_policy: use_as_constraint
+  - id: pair001.label-tone-and-rotation-legibility
+    category: label_binding
+    rule: Keep labels legible; avoid a same-tone label on a same-tone fill, and avoid near-vertical rotated labels because a sloped label on a near-vertical element is unreadable.
+    source:
+      kind: iteration_comment
+      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:1188
+      quote: "sloped label would itself be near-vertical — unreadable"
+    transfer_policy: use_as_constraint
+  - id: pair001.iconic-register-is-intentional
+    category: style_lock
+    rule: Iconic-cartoon abstraction of apparatus references in the evidence panels is briefing intent; do not treat iconic simplification as a defect to fix toward photorealism.
+    source:
+      kind: critique_adjudication
+      locator: examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P001-P003
+      quote: "accept_simplification — iconic-cartoon register is briefing intent"
+    transfer_policy: use_as_constraint
+  - id: pair001.no-actuator-framing-transfer
+    category: physics_semantics
+    rule: Do not transfer actuator or MEMS framing into the charge-trap mechanical panel; the apparatus reference is borrowed for grammar only.
+    source:
+      kind: critique_adjudication
+      locator: examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P003
+      quote: "actuator framing transfer forbidden by TG-G-001"
+    transfer_policy: use_as_constraint
 ---
 
 # Pair 001 Authoring Rules
 
 This catalog records source-anchored hypotheses extracted from the first
-accepted Fig 1 pair-001 vault fixture. These rules are intentionally not a
-general polymer-physics style guide. They are authoring-time checks and
-constraints that remain in `n1_hypotheses` until another figure validates
-transfer.
+accepted Fig 1 pair-001 vault fixture. Rules are distilled from two source
+kinds: the figure's own iteration comments and hand-patch commits in
+`fig1_overview_v2_pair_001_vault.tex`, and the dismissals/decisions in
+`critique_adjudication.yaml`. Each rule cites the exact comment, commit, or
+adjudication entry it came from; nothing here is invented best practice.
+
+These rules are intentionally not a general polymer-physics style guide. They
+are authoring-time checks and constraints that remain in `n1_hypotheses` until
+another figure validates transfer.
