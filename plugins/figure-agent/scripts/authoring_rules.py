@@ -30,6 +30,8 @@ class AuthoringRuleError(ValueError):
 
 
 def _front_matter(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise AuthoringRuleError("catalog_missing")
     text = path.read_text(encoding="utf-8")
     match = _FRONT_MATTER_RE.match(text)
     if match is None:
