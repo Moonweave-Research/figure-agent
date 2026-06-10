@@ -55,6 +55,7 @@ from quality_manifest import (
 )
 from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
+from semantic_contracts import SemanticContractError, semantic_claim_questions
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 from svg_polish_delta import (
     SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
@@ -229,6 +230,22 @@ def _optional_authoring_context(example_dir: Path) -> str:
     if not blocks:
         return ""
     return "\n\n## Reference-conditioned authoring context\n" + "\n\n".join(blocks)
+
+
+def _semantic_claim_questions_section(spec: dict) -> str:
+    try:
+        questions = semantic_claim_questions(spec)
+    except SemanticContractError as exc:
+        raise CritiqueBriefError(f"spec.yaml authoring semantic contracts invalid: {exc}") from exc
+    if not questions:
+        return ""
+    lines = [
+        "## Narrow semantic claim checks",
+        "Answer each claim as a visual verification question. Do not broaden this into "
+        "open-ended physics judgment.",
+    ]
+    lines.extend(f"- {question}" for question in questions)
+    return "\n\n" + "\n".join(lines)
 
 
 def _subregion_active_context(example_dir: Path) -> str:
@@ -1521,6 +1538,7 @@ zoom/reference review.
         crop_anomaly_schema = ""
         crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
+    semantic_claim_questions_section = _semantic_claim_questions_section(spec)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
     )
@@ -1550,6 +1568,7 @@ zoom/reference review.
 ## Physics invariants the figure MUST honor
 {invariants}
 {authoring_context_section}
+{semantic_claim_questions_section}
 
 ## Source under review (TikZ)
 ```tex

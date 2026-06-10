@@ -821,6 +821,17 @@ def _quality_map(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _context_pack(arguments: dict[str, Any]) -> dict[str, Any]:
+    name = str(arguments.get("name") or "")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema="figure-agent.mcp.context-pack.v1",
+        command=["context-pack", name, "--json"],
+        payload_key="context_pack",
+        failure_message="fig-agent context-pack failed",
+    )
+
+
 def _propose_patch(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     return _run_json_fig_agent_tool(
@@ -1558,6 +1569,16 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"name": {"type": "string"}},
         },
         "handler": _quality_map,
+    },
+    "figure_agent_context_pack": {
+        "description": "Return a read-only authoring context pack for one fixture.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "handler": _context_pack,
     },
     "figure_agent_propose_patch": {
         "description": "Return a read-only safe mechanical patch proposal.",

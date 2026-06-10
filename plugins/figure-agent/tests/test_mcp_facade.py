@@ -169,6 +169,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_compile",
         "figure_agent_export",
         "figure_agent_quality_map",
+        "figure_agent_context_pack",
         "figure_agent_propose_patch",
         "figure_agent_verify_plan",
         "figure_agent_loop_checkpoint",
@@ -195,6 +196,37 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
     assert "figure_agent_closeout_accept" not in tool_names
     assert "figure_agent_force_golden" not in tool_names
     after = sorted(path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*"))
+    assert after == before
+
+
+def test_mcp_context_pack_preview_is_read_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="context_demo")
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    result = _run_mcp_server(
+        [
+            _mcp_request("initialize", request_id=1),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_context_pack",
+                    "arguments": {"name": "context_demo"},
+                },
+                request_id=2,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    responses = _response_lines(result)
+    payload = _tool_payload(responses[1])
+    assert payload["schema"] == "figure-agent.mcp.context-pack.v1"
+    assert payload["success"] is True
+    assert payload["context_pack"]["schema"] == "figure-agent.authoring-context-pack.v1"
+    assert payload["context_pack"]["read_only"] is True
+    after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
     assert after == before
 
 
