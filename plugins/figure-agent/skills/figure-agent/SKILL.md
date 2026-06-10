@@ -26,6 +26,11 @@ Durable responsibilities:
 
 Prompt/image-gen orchestration from v0.1 is historical only in this plugin line.
 Do not route users to deleted commands.
+Read-only authoring context packs are durable paper-specific knowledge
+compilation in scope when they compile explicit paper-local files, Style Lock
+tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
+They are not prompt-loop revival, generation execution, or automatic physics
+detection.
 Active direction: `docs/quality-kernel-goal.md`.
 
 ## Runtime Entrypoint
@@ -167,6 +172,9 @@ polish backport, or actions the current mode forbids.
                          verify-only loop evidence record under .scratch/fig-loop-runs/
 /fig_closeout <name>    read-only post-patch checklist for compile, critique,
                          adjudication, export, and loop rerun freshness
+/fig_context_pack <name>
+                         read-only authoring context pack for explicit
+                         briefing/spec/design/style/rule/semantic contracts
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference

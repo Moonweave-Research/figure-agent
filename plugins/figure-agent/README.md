@@ -43,6 +43,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
 /fig_queue_run Plan or execute the queue's workflow-agent subset
 /fig_closeout Read-only post-patch closeout checklist
+/fig_context_pack Read-only authoring context pack (JSON; accepts --json / --format json)
 /fig_e2e_smoke Deterministic compile/export/status/loop smoke harness (JSON; accepts --json / --format json)
 ```
 
@@ -165,6 +166,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale reviews, unresolved findings, or conflicting second opinions surface as a human gate, not automatic truth. Start a hash-bound review file with `fig-agent helper external_vision_review.py --template examples/<name> --write-template`. |
 | **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. Start a v1.1 pack with `fig-agent helper critique_reference_pack.py --template <fixture>`; validation requires concrete allowed-transfer axes and anti-copy guards before `/fig_critique` can use the pack. Legacy v1 packs remain parseable. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
 | **Paper-wide context** | Optional `spec.yaml.paper_aesthetic_context` grounds a figure against explicit paper-series style anchors. Start a pack with `fig-agent helper paper_aesthetic_context.py --template <paper_id> --fixture <name> --write-template`, then opt fixtures in deliberately through `spec.yaml`. |
+| **Authoring context pack** | `fig-agent context-pack <name> [--json | --format json]` compiles design philosophy, Style Lock tokens, the source-anchored fig1 rule catalog, paper-local briefing/spec context, and opt-in `authoring_context_pack.enabled`, `panels[].semantic_claims`, and `panels[].locked_invariants`. This is durable paper-specific knowledge compilation, not LLM prompt plumbing: it is read-only and does not call a model, execute generation, or act as automatic physics detection. |
 | **Sub-region iteration log** | Optional `subregion_iteration_log.md` evidence narrows critique and loop handoff to the current one-line patch unit. Start a canonical log with `fig-agent helper subregion_iteration_log.py --template examples/<name> --write-template`, then append one row per patch with `--append examples/<name> ...`. The helper records evidence only; it does not infer regions or edit source. |
 
 ### Release boundary
@@ -175,8 +177,13 @@ and closeout rows stay visible as blocked operator handoffs.
   host-vision critique, and `/fig_loop` review checkpoints. Claude reads
   prepared images/evidence and writes structured critique; lint and loop
   contracts verify the result.
-- **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, reference-learning aesthetic metrics, SVG-polish delta packs, and external vision review evidence.
-- **Manual:** source drawing, semantic patch choices, human art direction, accepted/golden roll-forward, and final SVG/vector editing.
+- **Opt-in:** authoring context packs, semantic claims/locked invariants,
+  paper-wide context, aesthetic intent, journal style-pack catalog,
+  reference-calibrated packs, reference-learning aesthetic metrics,
+  SVG-polish delta packs, and external vision review evidence.
+- **Manual:** source drawing, semantic patch choices, human art direction,
+  accepted/golden roll-forward, final SVG/vector editing, and any decision to
+  promote an N=1 authoring rule beyond a narrow question or constraint.
 
 The plugin is a quality/audit kernel, not a hidden auto-designer. It can make
 bad or under-audited figure states much harder to ship, but it cannot certify
