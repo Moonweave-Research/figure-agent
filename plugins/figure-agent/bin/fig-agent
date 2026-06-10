@@ -325,6 +325,27 @@ def _quality_map(argv: list[str]) -> int:
     return 0
 
 
+def _context_pack(argv: list[str]) -> int:
+    import authoring_context_pack
+
+    parser = argparse.ArgumentParser(prog="fig-agent context-pack")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    pass_args = [name]
+    if args.json:
+        pass_args.append("--json")
+    if args.format != "text":
+        pass_args.extend(["--format", args.format])
+    return authoring_context_pack.main(
+        pass_args,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
 def _memory_log(argv: list[str]) -> int:
     import quality_memory_events
 
@@ -1060,6 +1081,8 @@ def main(argv: list[str] | None = None) -> int:
         return _svg_polish_delta(rest)
     if command == "quality-map":
         return _quality_map(rest)
+    if command == "context-pack":
+        return _context_pack(rest)
     if command == "memory-log":
         return _memory_log(rest)
     if command == "memory-index":

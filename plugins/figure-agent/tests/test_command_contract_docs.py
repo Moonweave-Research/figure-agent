@@ -8,6 +8,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 JSON_OUTPUT_COMMAND_SCRIPTS = {
     "fig_closeout.md": "fig_closeout.py",
+    "fig_context_pack.md": "authoring_context_pack.py",
     "fig_drive.md": "fig_driver.py",
     "fig_e2e_smoke.md": "fig_e2e_smoke.py",
     "fig_improve.md": "fig_improve.py",
