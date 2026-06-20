@@ -1,6 +1,6 @@
 # Issue 100 - Comprehensive Figure-Agent Gap Inventory
 
-Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DU plus operator/install evidence, with real-fixture SVG polish promotion still evidence-gated
+Status: active roadmap; listed P0-P3 hardening slices implemented through Issue 100DU plus operator/install evidence and the reference-aware candidate-search vertical slice, with real-fixture SVG polish promotion still evidence-gated
 
 Type: architecture review, operator workflow, audit coverage, roadmap
 
@@ -13,7 +13,8 @@ Current baseline:
 
 - plugin root: `plugins/figure-agent`;
 - branch baseline: `main` after Issue 100DU fig-run JSON flag compatibility,
-  operator completion explanation dogfood, and install-refresh blocked evidence;
+  operator completion explanation dogfood, install-refresh blocked evidence, and
+  the reference-aware candidate-search vertical slice;
 - user figure-source edits may be dirty and must not be treated as plugin work;
 - shipped command surface includes `/fig_status`, `/fig_drive`, `/fig_run`,
   `/fig_improve`, `/fig_compile`, `/fig_critique`, `/fig_loop`,
@@ -60,6 +61,12 @@ the workflow together.
    steps, then stop at host critique, patch handoff, human adjudication, SVG
    polish handoff, accepted/golden, force-golden, and publication boundaries.
 
+6. **Reference-aware candidate search**
+   `fig-agent intent`, `candidates`, `render-candidates`, `rank-candidates`,
+   and `review-candidate` now form a CLI-first search loop. The loop creates
+   fixture-local candidate evidence, renders sandbox copies, ranks with hard
+   gates, exposes read-only MCP tools, and refuses MCP-side source mutation.
+
 ## Gap Inventory
 
 This table is a historical findings log, not a live open-backlog table. It
@@ -77,7 +84,7 @@ recorded in the Recommended Execution Order and issue-specific docs below.
 | G100-06 | P1 | Aesthetic guidance | Aesthetic scores/signals are advisory by design, but the UX does not always distinguish "measurable defect", "style recommendation", and "human taste decision" clearly enough. | Issue 97 added anti-pattern and marginal-return audits, but release still cannot be blocked on taste alone. | Users may expect the plugin to autonomously make Nature/Science art-direction calls it should only surface. | Issue 100F - advisory-vs-blocking aesthetic language |
 | G100-07 | P1 | Loop basin detection | The system has basin summaries, but they are not yet paired with resumable long-run UX and durable defect-class history across interrupted sessions. | `/fig_run` records journals but has no resume command; current basin surfacing is useful but not a full continuation model. | Long polish sessions can still require human reconstruction after interruptions or repeated subjective loops. | Issue 100G - run-history basin and repeated-defect detector |
 | G100-08 | P2 | Schema/version sprawl | Critique schemas now span v1 through v1.17. Backward compatibility is valuable, but the mental model is heavy. | `critique_schema_vocab.py` lists many active schema versions and validators carry optional legacy paths. Issue 100Z adds a release-contract guard so script schema constants cannot drift out of the module map. | Future changes now have a test-backed ownership map instead of relying on manual updates alone. | Issue 100H - schema capability matrix and deprecation policy; Issue 100Z - schema map drift guard |
-| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 96 scripts, 106 tests, and 15 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
+| G100-09 | P2 | Code surface size | The plugin has many scripts and commands; boundaries are mostly documented but not summarized as an ownership map. | Current inventory is 134 scripts, 149 tests, and 16 command docs. | New contributors or agents can pick the wrong module and duplicate logic. | Issue 100I - module ownership map |
 | G100-10 | P2 | Queue and resume UX | Multi-fixture queue support exists, but single-fixture long-loop resume remains manual. | README states there is no resume command; continuation requires inspecting journal JSON. | Real dogfood sessions lose time reconstructing state after interruption. | Issue 100J - resumable guided run checkpoint |
 | G100-11 | P2 | External second opinion | External review evidence is supported, but second-opinion routing is not a simple first-class queue mode. | External vision support exists as evidence, not as a default loop actor. | Hard subjective defects may still require ad hoc advisor/subagent orchestration. | Issue 100K - optional second-opinion route |
 | G100-12 | P2 | Paper-wide style propagation | Paper-wide aesthetic context existed, but starting a new pack required manual copying from catalog examples. | README marked paper-wide context as opt-in but did not provide a starter command. | A single figure can pass while the paper series remains visually inconsistent, and operators may skip the pack because it is too manual to start. | Issue 100L - paper-wide context template |
@@ -189,6 +196,7 @@ recorded in the Recommended Execution Order and issue-specific docs below.
 | G100-118 | P3 | First-blocker summary context ambiguity | Complete rows no longer counted as blocked, but live authoring dogfood still showed `by_first_blocker=critique_stale:4...` because `first_blocker` is global status context. | Live table/JSON after Issue 100DR had `complete:7`, `blocked_count:0`, and `planned_complete:7`, while `by_first_blocker` still included broader workflow blockers. | Operators could read status-context first blockers as selected-mode blocked-row counts unless docs name the distinction. | Issue 100DS - first-blocker status context |
 | G100-119 | P2 | Polish mode-forbidden guidance contradiction | `/fig_driver --mode polish` could return `stop_boundary: mode_forbidden_action` while `operator_guidance.next_step` still said to run the selected `fig_loop` command. | Live `fig3_trapping_concept` and `smoke_trap_demo` polish driver output showed no-current-checkpoint rows with mode-forbidden stop boundaries and "Run the selected command" guidance. | Single-fixture driver JSON contradicted itself and could send operators to run a command the current mode declares non-executable. | Issue 100DT - polish mode-forbidden guidance |
 | G100-120 | P3 | Fig-run explicit JSON flag compatibility | `/fig_run` emitted JSON by default and accepted `--format json`, but rejected the adjacent `--json` spelling used by other JSON-first workflow commands. | TDD reproduced `fig_run.py ... --json` failing with `unrecognized arguments: --json`. | Operators can hit a parser trap when switching from `/fig_drive`, `/fig_queue_run`, or `/fig_improve` to the bounded runner and carrying the explicit JSON flag habit. | Issue 100DU - fig_run json flag compatibility |
+| G100-121 | P1 | Better-drawing search layer | The plugin could block stale/unsafe figures and propose narrow quality patches, but it lacked a first-class way to explore multiple bounded alternatives before source mutation. | The reference-aware candidate-search slice adds intent/candidate/render/rank/review/apply-boundary modules, CLI commands, MCP read-only tools, release-gate coverage, and synthetic dogfood. | Figure-agent can now make "better drawing" measurable as candidate evidence and ranking, while accepted/golden and semantic changes remain human-gated. | Reference-aware candidate-search vertical slice |
 
 ## Recommended Execution Order
 
@@ -986,6 +994,15 @@ recorded in the Recommended Execution Order and issue-specific docs below.
      JSON-only output and existing `--format json` spelling while accepting
      explicit `--json` as the same no-op output flag.
 
+123. **Reference-aware candidate-search vertical slice**
+     Completed as the first search-layer upgrade beyond single safe-mechanical
+     patch proposals. Added fixture intent modeling, deterministic candidate-set
+     generation, sandbox rendering, ranking authority, human review packets,
+     explicit apply refusal/guarding, CLI commands, read-only MCP facade tools,
+     release-gate coverage, and synthetic dogfood evidence. This does not make
+     the plugin a taste oracle; it makes alternatives inspectable and rankable
+     before any source mutation is considered.
+
 ## Non-Goals
 
 - Do not create hidden auto-editing or hidden auto-design behavior.
@@ -1217,7 +1234,7 @@ evidence refresh.
 ## Documentation Consistency Check
 
 - `README.md` and `.claude-plugin/plugin.json` both identify the current plugin
-  as v0.9.2.
+  as v0.9.3.
 - `README.md` and `skills/figure-agent/SKILL.md` agree that `/fig_run` and
   `/fig_improve` are bounded and have no resume command.
 - `README.md`, `commands/fig_drive.md`, and `svg_polish_*` scripts agree that

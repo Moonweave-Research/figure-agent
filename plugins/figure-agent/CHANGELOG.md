@@ -2,6 +2,22 @@
 
 All notable changes to figure-agent are documented here.
 
+## [0.9.3] - 2026-06-07
+
+Patch release for Cowork plugin packaging and runtime path separation.
+
+### Added
+
+- `bin/fig-agent` as the Cowork-facing command entrypoint for doctor, status,
+  compile, and export.
+- Deterministic Cowork ZIP packaging with bundled scripts, styles, docs, and
+  smoke fixtures while excluding manuscript fixtures and generated artifacts.
+
+### Changed
+
+- Runtime path resolution now separates installed plugin resources from the
+  user workspace containing `examples/`.
+
 ## [0.9.2] - 2026-06-02
 
 Patch release for the first Issue 100 hardening wave after v0.9.1.

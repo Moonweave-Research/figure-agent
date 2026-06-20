@@ -105,6 +105,71 @@ fixtures:
       Critique is not required by spec and no low-noise deterministic
       boundary/path checks are declared for the current schematic.
 
+  - fixture: smoke_annotation_box_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Synthetic benchmark fixture is part of the smoke corpus, but it does not
+      yet declare spec-level boundary/path check geometry for audit adoption.
+
+  - fixture: smoke_contrast_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Synthetic benchmark fixture is part of the smoke corpus, but it does not
+      yet declare spec-level boundary/path check geometry for audit adoption.
+
+  - fixture: smoke_label_overlap_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Synthetic benchmark fixture is part of the smoke corpus, but it does not
+      yet declare spec-level boundary/path check geometry for audit adoption.
+
+  - fixture: smoke_leader_line_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Synthetic benchmark fixture is part of the smoke corpus, but it does not
+      yet declare spec-level boundary/path check geometry for audit adoption.
+
+  - fixture: smoke_panel_spacing_demo
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Synthetic benchmark fixture is part of the smoke corpus, but it does not
+      yet declare spec-level boundary/path check geometry for audit adoption.
+
   - fixture: fig5_floating_clip_mechanism
     reference_image: false
     text_boundary_check_ids: []

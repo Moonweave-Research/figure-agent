@@ -1,0 +1,5 @@
+name: smoke_panel_spacing_demo
+panels:
+  - id: A
+    caption: panel spacing smoke fixture
+style_profile: polymer-default

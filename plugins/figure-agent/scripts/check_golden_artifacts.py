@@ -37,6 +37,7 @@ import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 from lint_tex import strip_tex_comment  # noqa: E402
 from publication_gate import publication_compliance_failure_records  # noqa: E402
+from quality_manifest import input_manifest_hash, yaml_frontmatter  # noqa: E402
 from reference_pack import reference_pack_failures  # noqa: E402
 from svg_polish_manifest import (  # noqa: E402
     FINAL_ARTIFACT_BLOCKED,
@@ -396,12 +397,88 @@ def source_inventory_failures(tex_path: Path, patterns: dict | None) -> list[str
     return failures
 
 
+AUDIT_INPUT_HASH_KEY = "audit_input_hash"
+
+
+def audit_source_paths(example_dir: Path) -> tuple[Path, ...]:
+    """The source set whose content the QUALITY_AUDIT.md freshness reflects.
+
+    Single definition shared by the freshness gate and the stamper so the stored
+    hash and the recomputed hash always cover the same files."""
+    name = example_dir.name
+    exports = example_dir / "exports"
+    return (
+        example_dir / "spec.yaml",
+        example_dir / "briefing.md",
+        example_dir / f"{name}.tex",
+        exports / f"{name}.pdf",
+        exports / f"{name}.svg",
+        tiff_artifact_path(exports, name),
+        exports / f"{name}.png",
+    )
+
+
+def audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> str:
+    """Content hash over the audit's source set using the quality_manifest
+    primitive. base_dir=example_dir keeps the manifest path strings relative to
+    the fixture so the hash is invariant to where the repo is checked out."""
+    return input_manifest_hash(source_paths, base_dir=example_dir)
+
+
 def audit_is_fresh(example_dir: Path, source_paths: tuple[Path, ...]) -> bool:
+    """Freshness of QUALITY_AUDIT.md against its source set.
+
+    Content-based when the audit front-matter carries an `audit_input_hash`: the
+    hash is recomputed over the same sources and compared, closing the gap where
+    timestamp-preserving restores (git clone, cp -p, rsync --times) leave a stale
+    audit mtime-fresh. Falls back to the legacy mtime check for audits that carry
+    no hash (e.g. the committed golden fixture)."""
     audit = example_dir / "QUALITY_AUDIT.md"
     if not audit.exists():
         return False
+    stored_hash = yaml_frontmatter(audit).get(AUDIT_INPUT_HASH_KEY)
+    if isinstance(stored_hash, str) and stored_hash.strip():
+        if not all(path.exists() for path in source_paths):
+            return False
+        return stored_hash.strip() == audit_input_hash(example_dir, source_paths)
     audit_mtime = audit.stat().st_mtime
     return all(path.exists() and path.stat().st_mtime <= audit_mtime for path in source_paths)
+
+
+def stamp_audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> Path:
+    """Write the content hash into QUALITY_AUDIT.md front-matter so future
+    freshness checks are content-based. Call after all sources exist in final
+    form (post-export, post human/host finalization), not at scaffold time."""
+    audit = example_dir / "QUALITY_AUDIT.md"
+    digest = audit_input_hash(example_dir, source_paths)
+    body = audit.read_text(encoding="utf-8") if audit.exists() else ""
+    audit.write_text(_with_audit_input_hash(body, digest), encoding="utf-8")
+    return audit
+
+
+def _with_audit_input_hash(body: str, digest: str) -> str:
+    """Return audit text with `audit_input_hash` set in a leading YAML
+    front-matter block, updating the key in place if a block already exists."""
+    hash_line = f"{AUDIT_INPUT_HASH_KEY}: {digest}"
+    lines = body.splitlines()
+    if lines and lines[0].strip() == "---":
+        end_index = next(
+            (index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+            None,
+        )
+        if end_index is not None:
+            front = lines[1:end_index]
+            replaced = False
+            for index, line in enumerate(front):
+                if line.split(":", 1)[0].strip() == AUDIT_INPUT_HASH_KEY:
+                    front[index] = hash_line
+                    replaced = True
+                    break
+            if not replaced:
+                front.append(hash_line)
+            return "\n".join(["---", *front, "---", *lines[end_index + 1 :]]) + "\n"
+    rest = f"\n{body}" if body else ""
+    return f"---\n{hash_line}\n---\n{rest}"
 
 
 def checker_warning_counts(audit_text: str) -> tuple[int | None, int | None]:
@@ -528,12 +605,10 @@ def check_example(
     exports = example_dir / "exports"
     spec = example_dir / "spec.yaml"
     tex = example_dir / f"{name}.tex"
-    briefing = example_dir / "briefing.md"
     audit = example_dir / "QUALITY_AUDIT.md"
     pdf = exports / f"{name}.pdf"
     svg = exports / f"{name}.svg"
     png = exports / f"{name}.png"
-    tif = tiff_artifact_path(exports, name)
     failures: list[str] = []
     try:
         _load_spec_mapping(spec)
@@ -598,7 +673,7 @@ def check_example(
 
         failures.extend(source_inventory_failures(tex, contract.get("source_inventory")))
 
-        if not audit_is_fresh(example_dir, (spec, briefing, tex, pdf, svg, tif, png)):
+        if not audit_is_fresh(example_dir, audit_source_paths(example_dir)):
             failures.append("QUALITY_AUDIT.md is stale or missing")
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
         failures.extend(
@@ -674,7 +749,37 @@ def main() -> int:
     )
     parser.add_argument("--max-collisions", type=int, default=0)
     parser.add_argument("--max-visual-clashes", type=int, default=0)
+    parser.add_argument(
+        "--stamp-audit-hash",
+        action="store_true",
+        help=(
+            "stamp the content hash of the audit source set into "
+            "QUALITY_AUDIT.md front-matter; run after exports and the finalized "
+            "audit exist, then exit"
+        ),
+    )
     args = parser.parse_args()
+
+    if args.stamp_audit_hash:
+        try:
+            example_dir = _resolve_example_dir_for_cli(args.example_dir)
+        except ValueError as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
+        sources = audit_source_paths(example_dir)
+        missing = [str(path) for path in sources if not path.exists()]
+        if missing:
+            print(
+                f"FAIL: cannot stamp audit hash, missing sources: {', '.join(missing)}",
+                file=sys.stderr,
+            )
+            return 1
+        if not (example_dir / "QUALITY_AUDIT.md").exists():
+            print("FAIL: cannot stamp audit hash, missing QUALITY_AUDIT.md", file=sys.stderr)
+            return 1
+        stamp_audit_input_hash(example_dir, sources)
+        print(f"OK: stamped audit_input_hash for {example_dir.name}")
+        return 0
 
     try:
         example_dir = _resolve_example_dir_for_cli(args.example_dir)

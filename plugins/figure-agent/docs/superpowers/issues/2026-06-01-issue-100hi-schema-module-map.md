@@ -12,8 +12,8 @@ belongs.
 
 Current inventory on 2026-06-01:
 
-- `scripts/*.py`: 89
-- `tests/test*.py`: 96
+- `scripts/*.py`: 104
+- `tests/test*.py`: 116
 - `commands/*.md`: 15
 - critique schema lineage: `figure-agent.critique.v1` through
   `figure-agent.critique.v1.17`
@@ -59,10 +59,13 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 |---|---|---|---|---|
 | `figure-agent.audit-crop-manifest.v1` | audit evidence | `critique_zoom_crops.py` | `critique_lint.py`, `audit_evidence_summary.py` | Blocks critique evidence if required crops mismatch |
 | `figure-agent.audit-evidence-summary.v1` | audit evidence | `audit_evidence_summary.py` | `status.py`, `fig_loop.py`, `fig_driver.py` | Advisory until state is `missing_input`, `needs_action`, or `stale_or_mismatched` |
+| `figure-agent.audit-evidence-graph.v1` | audit evidence | `audit_evidence_graph.py` | operators, MCP resource metadata | Read-only provenance graph; never mutates fixture state |
 | `figure-agent.detector-feedback-ledger.v1` | detector tuning diagnostics | `detector_feedback_ledger.py` | operators | Read-only cross-fixture summary; no threshold or gate authority |
 | `figure-agent.text-boundary-clash.v1` | deterministic detector | `check_text_boundary_clash.py` | `audit_evidence_summary.py`, `fig_closeout.py` | Can block closeout when stale/missing or malformed |
 | `figure-agent.label-path-proximity.v1` | deterministic detector | `check_label_path_proximity.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
 | `figure-agent.undeclared-geometry.v1` | deterministic detector | `check_undeclared_geometry.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
+| `figure-agent.label-hyphenation.v1` | deterministic detector | `check_label_hyphenation.py` | none (report-only) | Report-only WARN for hyphenated label line breaks; no consumer or gate |
+| `figure-agent.semantic-assertions.v1` | deterministic detector | `semantic_assertions.py` | none (report-only) | Report-only WARN; verifies spec-declared spatial relations (above/below/left/right) against rendered text geometry |
 | `figure-agent.warning-budget.v1` | deterministic detector budget | `check_visual_clash_budget.py` | `fig_driver_guidance.py`, operators | Can route final mode to strict compile or human review when warnings exceed cap |
 | `figure-agent.critique-adjudication.v1` | critique decision handoff | `critique_adjudication.py` (`scaffold`/`sync`) | `fig_loop_adjudication.py`, `fig_closeout.py` | Can create human gate, stale gate, or patch handoff |
 | `figure-agent.adjudication-decision-diff.v1` | critique decision preservation | `critique_adjudication.py sync --preview` | operators | Read-only preview; does not write adjudication decisions |
@@ -75,6 +78,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.driver.v1` | routing | `fig_driver.py` | `fig_run.py`, queue tools, operators | Advisory only; `may_execute` remains false |
 | `figure-agent.run.v1` | bounded execution | `fig_run.py` | `fig_run_records.py`, `fig_run_journal.py` | Executes only allowlisted deterministic shell actions |
 | `figure-agent.closeout.v1` | post-run closeout | `fig_closeout.py` | `fig_driver.py`, `next_action_summary.py` | Can block continuation until compile/critique/loop/export closeout is clean |
+| `figure-agent.closeout-readiness.v1` | post-run closeout | `closeout_readiness.py` | operators, MCP closeout tools | Read-only readiness envelope; cannot accept golden/publication state |
 | `figure-agent.fig-run-journal.v1` / `figure-agent.fig-run-journal-ref.v1` | run journal | `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative; never replay |
 | `figure-agent.fig-run-evidence-snapshot.v1` | run journal freshness | `fig_run_evidence.py`, `fig_run_records.py` | `fig_run_journal.py` | Non-authoritative content freshness check; never replay |
 | `figure-agent.fig-run-journal-error.v1` | run journal error | `fig_run.py` | `fig_run_journal.py` | Diagnostic only; rerun live status/driver |
@@ -82,6 +86,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.boundary-handoff.v1` | stop explanation | `fig_run.py`, `next_action_summary.py` | operators, outer agents | Explanation only, not a second router |
 | `figure-agent.decision-boundary.v1` | advisory/blocking language | `next_action_summary.py`, `fig_driver_guidance.py` | command output, docs | Clarifies who may decide; does not execute |
 | `figure-agent.next-action-summary.v1` | operator UX | `next_action_summary.py` | `fig_driver.py`, queue/run outputs | Explanation only; not a state owner |
+| `figure-agent.next.v1` | agent state router | `agent_next.py` | `fig-agent next`, MCP next tool | Read-only envelope that wraps existing status and next-action policies; not a second router |
 | `figure-agent.operator-guidance.v1` / `figure-agent.final-readiness.v1` | operator UX | `fig_driver_guidance.py` | command output | Guidance only; does not bypass status/export gates |
 | `figure-agent.loop-basin.v1` | loop progress detection | `fig_loop_basin.py` | `fig_loop.py`, `fig_driver.py`, `fig_run.py` | Step-out advisory/handoff, not auto-patch |
 | `figure-agent.improve.v1` | bounded improvement loop | `fig_improve.py` | operators | Runs bounded commands; stops at gates |
@@ -101,10 +106,45 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.aesthetic-intent.v1` / `figure-agent.aesthetic-intent.v2` | aesthetic direction | `aesthetic_intent.py` | `critique_brief.py`, `critique_lint.py`, `quality_manifest.py` | Grounding input; not acceptance |
 | `figure-agent.paper-aesthetic-context.v1` | paper-wide consistency | `paper_aesthetic_context.py` | `critique_brief.py`, `critique_lint.py` | Requires explicit anchor citations |
 | `figure-agent.journal-art-direction-playbook.v1` | target-journal style anchors | `journal_art_direction_playbook.py` | `critique_brief.py`, `critique_lint.py` | Requires exact anchor citations |
+| `figure-agent.authoring-rules.v1` | source-anchored authoring rules | `authoring_rules.py` | `authoring_context_pack.py`, tests | N=1 hypotheses until transfer is validated |
+| `figure-agent.semantic-contracts.v1` | opt-in semantic claims/invariants | `semantic_contracts.py` | `authoring_context_pack.py`, `critique_brief.py` | Narrow authoring/critique questions only; no automatic physics detection |
+| `figure-agent.authoring-context-pack.v1` | read-only authoring context | `authoring_context_pack.py` | `fig-agent context-pack`, MCP context-pack tool | Read-only durable context compilation; no model calls or generation executor |
+| `figure-agent.convention-receipt.v1` | injected convention surfacing | `convention_receipt.py` | `compile.sh` (report-only `--write`), tests | Surfaces injected `use_as_constraint` rules with source quotes on every figure; report-only injection half, no render verification |
 | `figure-agent.external-vision-review.v1` | optional second opinion | `external_vision_review.py` | `quality_manifest.py`, `critique_lint.py` | Evidence only unless routed through findings |
 | `figure-agent.inspection-trace.v1` | host/subagent inspection trace | `inspection_trace.py` | `critique_lint.py`, operators | Optional auditability artifact; cannot prove image inspection by itself |
 | `figure-agent.diagnostic-artifact-provenance.v1` | scratch/debug artifact safety | `diagnostic_artifact_provenance.py` | operators | Prevents stale diagnostics from becoming truth |
 | `figure-agent.plugin-install-freshness.v1` | plugin install diagnostics | `plugin_install_freshness.py` | operators | Read-only source-vs-cache check; never mutates install state |
+| `figure-agent.release-gate.v1` | package/release gate | `release_gate.py` | operators, CI | Builds and audits Cowork ZIP; skips missing host validators explicitly |
+| `figure-agent.quality-defect-ledger.v1` | quality improvement loop | `quality_defect_ledger.py` | `quality_patch_plan.py`, MCP quality tools | Read-only defect ledger; no source mutation |
+| `figure-agent.quality-patch-policy.v1` | quality improvement loop | `quality_patch_policy.py` | `quality_defect_ledger.py`, `quality_patch_plan.py` | Classifies patchability; `may_edit` remains false |
+| `figure-agent.quality-patch-plan.v1` | quality improvement loop | `quality_patch_plan.py` | `quality_patch_apply.py`, MCP quality tools | Proposal evidence only until explicit apply |
+| `figure-agent.quality-patch-result.v1` | quality improvement loop | `quality_patch_apply.py` | operators, MCP quality tools | Records explicit apply/dry-run result and rollback path |
+| `figure-agent.quality-memory-event.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Fixture-local event derived from existing artifacts; cannot invent outcomes |
+| `figure-agent.quality-memory-log.v1` | quality memory | `quality_memory_events.py` | `quality_memory_index.py`, operators | Read-only event list for one fixture |
+| `figure-agent.quality-memory-index.v1` | quality memory | `quality_memory_index.py` | future memory-aware ranking, operators | Conservative priors only; cannot upgrade hard gates or apply authority |
+| `figure-agent.benchmark-contract.v1` | quality benchmark | `benchmark_contracts.py` | `quality_benchmark.py`, release gate | Fixture-local benchmark contract; separates defect, family, edit-class, detector, and source-policy axes |
+| `figure-agent.benchmark-detectors-preview.v1` | quality benchmark | `benchmark_detector_reports.py` | `fig-agent benchmark-detectors`, MCP benchmark tools, release gate | Read-only-by-default detector report generation envelope; write mode stays fixture-local |
+| `figure-agent.benchmark-detector-report.v1` | quality benchmark | `benchmark_detector_reports.py` | `quality_benchmark.py`, release gate, candidate ranking | Explicit normalized detector report schema for seed and future render-derived metrics |
+| `figure-agent.quality-benchmark-list.v1` | quality benchmark | `quality_benchmark.py` | operators, future MCP benchmark tools | Read-only suite manifest view |
+| `figure-agent.quality-benchmark-run.v1` | quality benchmark | `quality_benchmark.py` | benchmark compare, operators | Local benchmark report; writes only repo/workspace-local scratch when explicit |
+| `figure-agent.quality-benchmark-comparison.v1` | quality benchmark | `quality_benchmark.py` | operators, future release gate checks | Compares local benchmark reports and surfaces regressions |
+| `figure-agent.quality-next-experiment.v1` | quality benchmark | `quality_next_experiment.py` | MCP benchmark tools, operators | Read-only preview recommendation; command is allowlisted and contains no write/apply/accept flags |
+| `figure-agent.intent-model.v1` | candidate search | `figure_intent_model.py` | `candidate_generator.py`, MCP candidate tools | Read-only fixture intent model; missing optional inputs downgrade authority instead of inventing claims |
+| `figure-agent.candidate-tex-index.v1` | candidate search | `candidate_tex_index.py` | `candidate_panel_model.py`, `candidate_families.py` | Read-only TeX selector index; panel hints and active command ranges only |
+| `figure-agent.candidate-panel-model.v1` | candidate search | `candidate_panel_model.py` | `candidate_families.py`, MCP panel tools | Read-only panel model joining intent, bbox hints, selectors, and visual-review state |
+| `figure-agent.candidate-set.v1` | candidate search | `candidate_generator.py` | `candidate_render.py`, `candidate_rank.py`, MCP candidate tools | Bounded improvement alternatives; pre-render apply authority ceiling only |
+| `figure-agent.candidate-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py` | Fixture-local sandbox evidence; never final exports or source truth |
+| `figure-agent.candidate-render-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py`, `quality_memory_events.py` | Per-candidate render evidence; human review still required |
+| `figure-agent.candidate-render-result.v1` | candidate search | `candidate_render.py` | CLI/MCP candidate workflow | Records rendered candidate sandbox manifests and artifacts |
+| `figure-agent.candidate-score.v1` | candidate search | `candidate_rank.py` | `candidate_review_packet.py`, operators | Hard gates and scores may preserve or downgrade authority, never upgrade it |
+| `figure-agent.candidate-rank-result.v1` | candidate search | `candidate_rank.py` | CLI/MCP candidate workflow | Ordered candidate scores for human or later CLI review |
+| `figure-agent.candidate-review-packet.v1` | candidate search | `candidate_review_packet.py` | operators, MCP candidate tools | Read-only packet for human review of one rendered candidate |
+| `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
+| `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
+| `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
+| `figure-agent.evidence-index.v1` | candidate/evidence sync | `evidence_index.py` | `evidence_sync.py`, `closeout_readiness.py`, `quality_memory_events.py` | Fixture-local evidence summary; stale source checks can block acceptance |
+| `figure-agent.evidence-sync.v1` | candidate/evidence sync | `evidence_sync.py` | operators, closeout tools | Writes only fixture evidence index when explicitly requested |
+| `figure-agent.golden-acceptance.v1` | closeout acceptance | `golden_acceptance.py` | `closeout_readiness.py`, `quality_memory_events.py` | Explicit human/golden acceptance artifact; never inferred by MCP |
 
 ## Module Ownership Map
 
@@ -117,6 +157,8 @@ not decide release readiness.
   `reference_pack.py`, `critique_reference_pack.py`
 - `aesthetic_intent.py`, `paper_aesthetic_context.py`,
   `journal_art_direction_playbook.py`
+- `authoring_rules.py`, `semantic_contracts.py`,
+  `authoring_context_pack.py`, `convention_receipt.py`
 - `subregion_active_set.py`, `text_boundary_spec_helper.py`,
   `spec_bbox_helper.py`, `tex_coordinate_shift.py`
 
@@ -144,6 +186,7 @@ Owns official evidence packs that host vision or status consumers inspect.
 
 - `critique_zoom_crops.py` owns `build/audit_crops/manifest.json`
 - `audit_evidence_summary.py` owns compact accounting state
+- `audit_evidence_graph.py` owns deterministic read-only provenance graph output
 - `detector_feedback_ledger.py` owns cross-fixture detector feedback rollups
 - `diagnostic_artifact_provenance.py` owns ad hoc/scratch artifact classification
 - `critique_evidence_lint.py` owns narrow evidence-specific lint helpers
@@ -195,8 +238,17 @@ executor paths.
 - `fig_loop_basin.py`, `fig_loop_handoff.py`, `fig_loop_records.py`
 - `fig_loop_patch_evidence.py`, `fig_loop_patch_executor.py`,
   `fig_loop_auto_patch.py`
+- `quality_defect_ledger.py`, `quality_patch_policy.py`,
+  `quality_patch_plan.py`, `quality_patch_apply.py`
+- `figure_intent_model.py`, `candidate_contracts.py`,
+  `candidate_tex_index.py`, `candidate_panel_model.py`,
+  `candidate_families.py`, `candidate_generator.py`, `candidate_render.py`,
+  `candidate_rank.py`, `candidate_review_packet.py`, `candidate_apply.py`
 
 Add here when the feature changes what `/fig_loop` sees or how it stops.
+Candidate-search modules also belong here when they propose or rank bounded
+improvement alternatives; they remain evidence/proposal owners until an
+explicit CLI apply path mutates source.
 
 ### Layer 5 - Status, Driver, Runner, Queue
 
@@ -234,7 +286,7 @@ publication compliance, SVG polish, or final-artifact readiness.
 
 Owns package integrity and helper tools that do not affect fixture state.
 
-- `plugin_package_audit.py`, `match_snippet.py`, `vtrace.py`
+- `plugin_package_audit.py`, `release_gate.py`, `match_snippet.py`, `vtrace.py`
 
 ## Governance Rules
 

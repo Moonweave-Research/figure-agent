@@ -8,14 +8,27 @@ Inspect the current pipeline stage for a figure without modifying any files.
 
 `<name>` is optional. With no argument, prints a one-line summary for every figure under `examples/`.
 
-Run from the plugin root:
+Run from the user workspace:
 
 ```
-uv run python3 scripts/status.py                   # all figures (one line each)
-uv run python3 scripts/status.py examples/<name>   # one figure (check list + state vector + Next:)
-uv run python3 scripts/status.py <name> --json     # one figure as JSON
-uv run python3 scripts/status.py <name> --format json
+fig-agent status                   # all figures (one line each)
+fig-agent status examples/<name>   # one figure (check list + state vector + Next:)
+fig-agent status <name> --json     # one figure as JSON
+fig-agent status <name> --format json
 ```
+
+Fallback when `fig-agent` is not on `PATH`:
+
+```
+"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" status <name> --json
+```
+
+Cowork path preflight:
+
+Do not infer that the installed plugin bundle is incomplete just because the
+user workspace has no `scripts/` or `styles/` directory. `fig-agent` reads
+bundled tools/styles from `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`,
+and reads figures from `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR`.
 
 Text output is the default. `--json` and `--format json` emit the same
 machine-readable status payload; unknown extra arguments are rejected rather

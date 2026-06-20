@@ -14,6 +14,7 @@ import fig_driver  # noqa: E402
 import fig_driver_commands  # noqa: E402
 import fig_run  # noqa: E402
 import fig_run_records  # noqa: E402
+from next_action_summary import driver_next_action_summary  # noqa: E402
 
 
 def _driver_summary(
@@ -183,25 +184,25 @@ def test_runner_accepts_quoted_fixture_name_commands(
 
 def test_driver_command_helpers_quote_fixture_names() -> None:
     assert fig_driver_commands.compile_command("runner demo") == (
-        "bash scripts/compile.sh 'examples/runner demo/runner demo.tex'"
+        "fig-agent compile 'runner demo'"
     )
     assert fig_driver_commands.adjudicate_command("runner demo") == (
-        "uv run python3 scripts/critique_adjudication.py scaffold 'runner demo'"
+        "fig-agent adjudicate 'runner demo'"
     )
     assert fig_driver_commands.export_command("runner demo") == (
-        "uv run python3 scripts/run_export.py 'runner demo'"
+        "fig-agent export 'runner demo'"
     )
     assert fig_driver_commands.fig_loop_command("runner demo", "close loop") == (
-        "uv run python3 scripts/fig_loop.py 'runner demo' --goal 'close loop' --json"
+        "fig-agent loop 'runner demo' --goal 'close loop' --json"
     )
     assert fig_driver_commands.svg_polish_executor_dry_run_command("runner demo") == (
-        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --dry-run"
+        "fig-agent svg-polish-exec 'runner demo' --dry-run"
     )
     assert fig_driver_commands.svg_polish_executor_write_command("runner demo") == (
-        "uv run python3 scripts/svg_polish_executor.py 'examples/runner demo' --write"
+        "fig-agent svg-polish-exec 'runner demo' --write"
     )
-    assert fig_driver_commands.svg_polish_delta_command("runner demo").startswith(
-        "PYTHONPATH=scripts uv run python3 -c "
+    assert fig_driver_commands.svg_polish_delta_command("runner demo") == (
+        "fig-agent svg-polish-delta 'runner demo'"
     )
 
 
@@ -211,9 +212,7 @@ def test_svg_polish_delta_command_quotes_python_fixture_path() -> None:
     parts = fig_run._command_parts(command)
 
     assert parts is not None
-    assert parts[:4] == ["PYTHONPATH=scripts", "uv", "run", "python3"]
-    assert parts[4] == "-c"
-    assert 'Path("examples/runner\'s demo")' in parts[5]
+    assert parts == ["fig-agent", "svg-polish-delta", "runner's demo"]
 
 
 @pytest.mark.parametrize(
@@ -444,7 +443,7 @@ def test_export_with_stop_boundary_is_not_executed(
     assert payload["final_stop_reason"] == "not_executable_action"
     assert payload["steps"][0]["would_execute"] is False
     assert payload["boundary_handoff"]["closeout_checks"][0] == (
-        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+            "run fig-agent closeout runner_demo --json"
     )
 
 
@@ -476,7 +475,7 @@ def test_closeout_boundary_uses_closeout_command_even_when_action_is_fig_loop(
     assert payload["final_action"] == fig_driver.ACTION_RUN_FIG_LOOP
     assert payload["final_stop_boundary"] == fig_driver.STOP_CLOSEOUT
     assert payload["boundary_handoff"]["closeout_checks"][0] == (
-        "run uv run python3 scripts/fig_closeout.py runner_demo --json"
+            "run fig-agent closeout runner_demo --json"
     )
 
 
@@ -1183,17 +1182,16 @@ def test_reference_missing_handoff_requires_workflow_agent(
 def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _install_driver_sequence(
-        monkeypatch,
-        [
-            _driver_summary(
-                action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
-                safe_command=None,
-                stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
-                reason="polished SVG requires semantic backport to TikZ first",
-            )
-        ],
+    driver_summary = _driver_summary(
+        action=fig_driver.ACTION_POLISH_HANDOFF_STOP,
+        safe_command=None,
+        stop_boundary=fig_driver.STOP_SEMANTIC_BACKPORT,
+        reason="polished SVG requires semantic backport to TikZ first",
     )
+    # Mirror fig_driver.py attaching the real next_action_summary so the
+    # boundary_handoff copies the source-repair allowed_scope, not the stub.
+    driver_summary["next_action_summary"] = driver_next_action_summary(driver_summary)
+    _install_driver_sequence(monkeypatch, [driver_summary])
 
     payload = fig_run.run_workflow(
         "runner_demo",
@@ -1207,6 +1205,11 @@ def test_semantic_backport_handoff_requires_workflow_agent_not_svg_editor(
     assert handoff["required_actor"] == "workflow_agent"
     assert handoff["action"] == fig_driver.ACTION_POLISH_HANDOFF_STOP
     assert handoff["stop_boundary"] == fig_driver.STOP_SEMANTIC_BACKPORT
+    assert handoff["allowed_scope"] == [
+        "examples/runner_demo/spec.yaml",
+        "examples/runner_demo/briefing.md",
+        "examples/runner_demo/runner_demo.tex",
+    ]
     assert handoff["closeout_checks"] == [
         "backport semantic changes to source/spec",
         "rerun live /fig_status",

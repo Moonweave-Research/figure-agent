@@ -18,6 +18,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
 from status import infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -42,8 +43,12 @@ def _default_command_runner(
     *,
     cwd: Path,
 ) -> subprocess.CompletedProcess[str]:
+    command = list(args)
+    if command and command[0] == "fig-agent":
+        plugin_root = runtime_paths.resolve_runtime_paths().plugin_root
+        command[0] = str(plugin_root / "bin" / "fig-agent")
     return subprocess.run(
-        args, cwd=cwd, capture_output=True, text=True, errors="replace", check=False
+        command, cwd=cwd, capture_output=True, text=True, errors="replace", check=False
     )
 
 
@@ -108,10 +113,8 @@ def _fig_loop_command(
     runs_root: Path | None,
 ) -> list[str]:
     command = [
-        "uv",
-        "run",
-        "python3",
-        "scripts/fig_loop.py",
+        "fig-agent",
+        "loop",
         name,
         "--goal",
         goal,
@@ -227,7 +230,7 @@ def run_smoke(
         summary["runs"].append(run)
 
         run["compile"] = _run_step(
-            ["bash", "scripts/compile.sh", f"examples/{name}/{name}.tex"],
+            ["fig-agent", "compile", name],
             repo_root=repo_root,
             command_runner=command_runner,
         )
@@ -235,7 +238,7 @@ def run_smoke(
             return _failure(summary, run, "compile")
 
         run["export"] = _run_step(
-            ["uv", "run", "python3", "scripts/run_export.py", name],
+            ["fig-agent", "export", name],
             repo_root=repo_root,
             command_runner=command_runner,
         )
@@ -243,7 +246,7 @@ def run_smoke(
             return _failure(summary, run, "export")
 
         run["status_command"] = _run_step(
-            ["uv", "run", "python3", "scripts/status.py", f"examples/{name}"],
+            ["fig-agent", "status", name],
             repo_root=repo_root,
             command_runner=command_runner,
         )
@@ -287,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("name", help="fixture name under examples/")
     parser.add_argument("--goal", default="deterministic E2E smoke")
     parser.add_argument("--repeat", type=int, default=1)
-    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    parser.add_argument("--repo-root", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default="json")
@@ -298,7 +301,7 @@ def main(argv: list[str] | None = None) -> int:
             args.name,
             goal=args.goal,
             repeat=args.repeat,
-            repo_root=args.repo_root,
+            repo_root=args.repo_root or runtime_paths.resolve_runtime_paths().workspace_root,
             runs_root=args.runs_root,
         )
     except SmokeError as exc:

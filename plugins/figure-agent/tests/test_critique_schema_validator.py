@@ -25,8 +25,23 @@ def test_validate_critique_schema_warns_for_v1_legacy() -> None:
 
 
 def test_validate_critique_schema_rejects_future_unsupported_schema() -> None:
-    with pytest.raises(CritiqueContractError, match="unsupported critique schema"):
+    with pytest.raises(CritiqueContractError, match="unsupported or missing critique schema"):
         validate_critique_schema({"schema": "figure-agent.critique.v99"})
+
+
+def test_validate_critique_schema_rejects_missing_schema() -> None:
+    with pytest.raises(CritiqueContractError, match="unsupported or missing critique schema"):
+        validate_critique_schema({})
+
+
+def test_validate_critique_schema_rejects_none_schema() -> None:
+    with pytest.raises(CritiqueContractError, match="unsupported or missing critique schema"):
+        validate_critique_schema({"schema": None})
+
+
+def test_validate_critique_schema_rejects_foreign_prefix_typo_schema() -> None:
+    with pytest.raises(CritiqueContractError, match="unsupported or missing critique schema"):
+        validate_critique_schema({"schema": "figureagent.critique.v1.17"})
 
 
 QUALITY_AXIS_NAMES = (

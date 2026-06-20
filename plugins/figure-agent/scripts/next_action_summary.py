@@ -20,6 +20,8 @@ ACTION_POLISH_HANDOFF_STOP = "polish_handoff_stop"
 ACTION_RELEASE_BLOCKED = "release_blocked"
 ACTION_COMPLETE = "complete"
 
+STOP_SEMANTIC_BACKPORT = "semantic_backport_required"
+
 _HUMAN_ACTIONS = {
     ACTION_HUMAN_GATE_STOP,
     ACTION_RELEASE_BLOCKED,
@@ -99,8 +101,7 @@ def _decision_boundary(
             "blocks_progress": True,
             "blocks_release": True,
             "explanation": (
-                "Release, accepted, golden, or final-artifact state needs "
-                "explicit human closure."
+                "Release, accepted, golden, or final-artifact state needs explicit human closure."
             ),
         }
     if requires_human:
@@ -113,6 +114,18 @@ def _decision_boundary(
             "explanation": "A human domain or art-direction decision is required.",
         }
     if action == ACTION_POLISH_HANDOFF_STOP:
+        if blocking_source == STOP_SEMANTIC_BACKPORT:
+            return {
+                "schema": DECISION_BOUNDARY_SCHEMA,
+                "kind": "deterministic_plugin_gate",
+                "authority": "plugin",
+                "blocks_progress": True,
+                "blocks_release": True,
+                "explanation": (
+                    "A polish-mode semantic backport repairs source/spec semantics "
+                    "and is release-blocking, not a bounded SVG editor handoff."
+                ),
+            }
         return {
             "schema": DECISION_BOUNDARY_SCHEMA,
             "kind": "polish_handoff",
@@ -166,7 +179,9 @@ def _action_from_command(command: str | None) -> str | None:
         return None
     if command.startswith("/fig_compile ") or command.startswith("bash scripts/compile.sh "):
         return ACTION_RUN_COMPILE
-    if "scripts/text_boundary_spec_helper.py" in command:
+    if "scripts/text_boundary_spec_helper.py" in command or command.startswith(
+        "fig-agent text-boundary "
+    ):
         return ACTION_CREATE_OR_FIX_SOURCE
     if command.startswith("/fig_critique "):
         return ACTION_RUN_CRITIQUE
@@ -203,8 +218,15 @@ def _action_from_status(status: Mapping[str, Any]) -> str:
     return ACTION_RUN_FIG_LOOP
 
 
-def _allowed_scope(action: str, fixture: str, patch_handoff: Mapping[str, Any] | None) -> list[str]:
-    if action == ACTION_CREATE_OR_FIX_SOURCE:
+def _allowed_scope(
+    action: str,
+    fixture: str,
+    patch_handoff: Mapping[str, Any] | None,
+    blocking_source: str = "",
+) -> list[str]:
+    if action == ACTION_CREATE_OR_FIX_SOURCE or (
+        action == ACTION_POLISH_HANDOFF_STOP and blocking_source == STOP_SEMANTIC_BACKPORT
+    ):
         return [
             f"examples/{fixture}/spec.yaml",
             f"examples/{fixture}/briefing.md",
@@ -265,7 +287,7 @@ def _summary(
             blocking_source=blocking_source,
             requires_human=requires_human,
         ),
-        "allowed_scope": _allowed_scope(action, fixture, patch_handoff),
+        "allowed_scope": _allowed_scope(action, fixture, patch_handoff, blocking_source),
         "forbidden_scope": _forbidden_scope(action, patch_handoff),
         "evidence_refs": evidence_refs,
     }
@@ -275,11 +297,7 @@ def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
     """Compress a /fig_status result without changing status.next semantics."""
     fixture = _fixture(status)
     explanation = status.get("status_explanation")
-    first_blocker = (
-        explanation.get("first_blocker")
-        if isinstance(explanation, Mapping)
-        else None
-    )
+    first_blocker = explanation.get("first_blocker") if isinstance(explanation, Mapping) else None
     safe_command = None
     blocking_source = "status.next"
     reason = _string(status.get("next"), "inspect figure status")
@@ -311,9 +329,7 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
     action = _string(driver_summary.get("action"), ACTION_RUN_FIG_LOOP)
     stop_boundary = driver_summary.get("stop_boundary")
     blocking_source = (
-        stop_boundary
-        if isinstance(stop_boundary, str) and stop_boundary
-        else "driver.action"
+        stop_boundary if isinstance(stop_boundary, str) and stop_boundary else "driver.action"
     )
     safe_command = driver_summary.get("safe_command")
     if not isinstance(safe_command, str):
@@ -355,8 +371,7 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
         reason=_string(driver_summary.get("reason"), "follow selected driver action"),
         blocking_source=blocking_source,
         safe_command=safe_command,
-        requires_human=action in _HUMAN_ACTIONS
-        or blocking_source in _HUMAN_STOP_BOUNDARIES,
+        requires_human=action in _HUMAN_ACTIONS or blocking_source in _HUMAN_STOP_BOUNDARIES,
         evidence_refs=evidence_refs,
     )
     if isinstance(ready_improvement, Mapping):
@@ -364,9 +379,7 @@ def driver_next_action_summary(driver_summary: Mapping[str, Any]) -> dict[str, A
             ready_improvement.get("state"),
             "unknown",
         )
-        summary["ready_improvement_safe_to_ship"] = ready_improvement.get(
-            "safe_to_ship"
-        ) is True
+        summary["ready_improvement_safe_to_ship"] = ready_improvement.get("safe_to_ship") is True
         if (
             action == ACTION_COMPLETE
             and summary["ready_improvement_state"] == "ready_but_improvable"
@@ -442,9 +455,7 @@ def closeout_next_action_summary(report: Mapping[str, Any]) -> dict[str, Any]:
                     break
     next_action = report.get("next_action")
     safe_command = (
-        next_action
-        if isinstance(next_action, str) and next_action.startswith("/")
-        else None
+        next_action if isinstance(next_action, str) and next_action.startswith("/") else None
     )
     action = _action_from_command(safe_command)
     blocking_source = "closeout.complete"

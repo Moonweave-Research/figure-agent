@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fig_driver  # noqa: E402
 import fig_queue  # noqa: E402
 import fig_run  # noqa: E402
+import runtime_paths  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.queue-run.v1"
@@ -204,8 +205,13 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         )
         return 2
     try:
+        resolved_repo_root = (
+            runtime_paths.resolve_runtime_paths().workspace_root
+            if repo_root == REPO_ROOT
+            else repo_root
+        )
         payload = run_queue(
-            repo_root=repo_root,
+            repo_root=resolved_repo_root,
             mode=args.mode,
             goal=args.goal,
             execute=args.execute,

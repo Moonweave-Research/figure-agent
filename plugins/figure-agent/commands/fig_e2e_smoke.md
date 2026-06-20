@@ -9,15 +9,15 @@ Run a repeatable end-to-end plugin smoke check for one fixture.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_e2e_smoke.py <name> --repeat 5 --goal "<goal>" --format json
+fig-agent e2e-smoke <name> --repeat 5 --goal "<goal>" --format json
 ```
 
 Each repeat runs the same command sequence:
 
-1. `bash scripts/compile.sh examples/<name>/<name>.tex`
-2. `uv run python3 scripts/run_export.py <name>`
-3. `uv run python3 scripts/status.py examples/<name>`
-4. `uv run python3 scripts/fig_loop.py <name> --goal "<goal> (smoke run i/N)" --json`
+1. `fig-agent compile <name>`
+2. `fig-agent export <name>`
+3. `fig-agent status examples/<name>`
+4. `fig-agent loop <name> --goal "<goal> (smoke run i/N)" --json`
 
 The command emits one JSON object to stdout. `--json` and `--format json` are
 accepted as explicit no-op output flags. Exit code is `0` only if every step in

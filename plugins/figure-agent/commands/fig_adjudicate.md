@@ -9,7 +9,7 @@ Create a conservative adjudication scaffold for one figure.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/critique_lint.py <name>
+fig-agent helper critique_lint.py <name>
 ```
 
 Stop and repair `critique.md` if lint returns non-zero. The lint preflight
@@ -22,19 +22,19 @@ skipped lint run cannot promote malformed critique evidence into
 manifest-backed visual-clash and crop-accounting state.
 
 ```bash
-uv run python3 scripts/critique_adjudication.py scaffold <name>
+fig-agent adjudicate <name>
 ```
 
 To intentionally replace an existing adjudication file:
 
 ```bash
-uv run python3 scripts/critique_adjudication.py scaffold <name> --force
+fig-agent adjudicate <name> --force
 ```
 
 To opt into deterministic policy-assisted adjudication:
 
 ```bash
-uv run python3 scripts/critique_adjudication.py scaffold <name> --force --policy conservative-v1
+fig-agent adjudicate <name> --force --policy conservative-v1
 ```
 
 `conservative-v1` can auto-dismiss accepted simplifications, auto-defer
@@ -46,7 +46,7 @@ semantic-backport questions.
 To refresh only the adjudication hash after a freshly regenerated critique:
 
 ```bash
-uv run python3 scripts/critique_adjudication.py sync <name>
+fig-agent adjudicate sync <name>
 ```
 
 `sync` first verifies that `critique.md` is already fresh against the current

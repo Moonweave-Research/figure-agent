@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "leader_line.collision_count": {
+      "baseline": 2,
+      "candidate": 1
+    }
+  }
+}

@@ -43,8 +43,21 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
 /fig_queue_run Plan or execute the queue's workflow-agent subset
 /fig_closeout Read-only post-patch closeout checklist
+/fig_context_pack Read-only authoring context pack (JSON; accepts --json / --format json)
 /fig_e2e_smoke Deterministic compile/export/status/loop smoke harness (JSON; accepts --json / --format json)
 ```
+
+## Runtime Entrypoint
+
+Preferred shell form is `fig-agent ...`. If the host does not put plugin
+`bin/` on `PATH`, use `"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...`.
+
+Runtime roots are explicit:
+
+- `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`: installed plugin bundle
+  root containing `.claude-plugin/`, `bin/`, `scripts/`, and `styles/`.
+- `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR`: user project root
+  containing `examples/`.
 
 ## A typical figure (start to finish)
 
@@ -71,7 +84,7 @@ You (or any LLM) draw the figure. The plugin handles the boring-but-critical par
 /fig_critique fig3_trap_concept   # writes critique.md
 
 # 6. For loop work, lint critique.md, scaffold adjudication, then record state.
-uv run python3 scripts/critique_lint.py fig3_trap_concept
+fig-agent helper critique_lint.py fig3_trap_concept
 /fig_adjudicate fig3_trap_concept
 /fig_loop fig3_trap_concept --goal "resolve the next safe critique target"
 
@@ -79,6 +92,12 @@ uv run python3 scripts/critique_lint.py fig3_trap_concept
 #    When the critique and loop state look clean, export.
 /fig_export fig3_trap_concept
 ```
+
+**Iterating an existing figure.** For an already-scaffolded figure, the single
+canonical entry point is `/fig_improve <name> --goal "<goal>"`. It wraps the
+compile / critique / loop steps and stops at human or taste boundaries;
+`/fig_status <name>` remains the read-only "where am I?" check to run first,
+especially when resuming after a break.
 
 For agent-driven work, use `/fig_status <name>` or
 `/fig_drive <name> --mode review --goal "<goal>" --dry-run` as the canonical
@@ -94,7 +113,7 @@ tracked-golden, force-golden, or release boundaries.
 
 `/fig_run --execute` records non-authoritative evidence under
 `.scratch/fig-run-runs/`. There is no resume command. To continue later, run
-`uv run python3 scripts/fig_run_journal.py <name>` to summarize the previous
+`fig-agent helper fig_run_journal.py <name>` to summarize the previous
 stop, then rerun live `/fig_status` or `/fig_drive` and let the fresh driver
 choose the next action. Do not replay commands from a journal. The journal
 summary emits JSON; `--json` and `--format json` are accepted as explicit
@@ -112,10 +131,10 @@ For multi-fixture work, start with the queue rather than running fixture command
 one by one:
 
 ```bash
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
-uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent
+fig-agent queue --mode review --goal "<goal>"
+fig-agent queue --mode review --goal "<goal>" --actor host_llm
+fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
+fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent
 ```
 
 Add `--execute` to `/fig_queue_run` only after inspecting the plan-only output.
@@ -127,7 +146,7 @@ and closeout rows stay visible as blocked operator handoffs.
 
 ---
 
-## Current state (v0.9.2)
+## Current state (v0.9.3)
 
 | Area | What's working |
 |---|---|
@@ -142,12 +161,13 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Perception pack** | `/fig_compile` emits descriptive data (`extract.yaml`, `overlay.png`) under `build/perception/` for downstream inspection. |
 | **Reproducibility** | `/fig_status` separates render freshness (`.tex`, briefing, spec, Style Lock) from critique freshness (reference images, hints, authoring context, audit evidence, aesthetic intent, and SVG-polish delta inputs), and reports workflow/golden/release readiness separately. Routine generated export SVGs do not make critiques stale unless the fixture opts into polished-SVG/final-artifact evidence. |
 | **Golden fixtures** | Accepted figures declare `accepted: true` + `golden_contract`; `check_golden_artifacts.py --require-accepted` is the hard gate and rejects low-resolution TIFF exports. |
-| **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, `svg_polish_handoff.py`, and `svg_polish_positive_harness.py` provide a bounded, non-mutating route for final visual-only SVG polish. Start a bounded recipe with `uv run python3 scripts/svg_polish_recipe.py --template examples/<name> --write-template` after the loop proves `ready_for_svg_polish`. The deterministic positive harness proves recipe execution, delta evidence, semantic diff, handoff files, status, and polish-driver closure without editing real examples; it emits JSON and accepts `--json` / `--format json` as no-op output flags. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
+| **SVG polish handoff** | `/fig_drive --mode polish`, `svg_polish_readiness`, `svg_polish_recipe.py`, `svg_polish_executor.py`, `svg_polish_delta.py`, `svg_polish_handoff.py`, and `svg_polish_positive_harness.py` provide a bounded, non-mutating route for final visual-only SVG polish. Start a bounded recipe with `fig-agent helper svg_polish_recipe.py --template examples/<name> --write-template` after the loop proves `ready_for_svg_polish`. The deterministic positive harness proves recipe execution, delta evidence, semantic diff, handoff files, status, and polish-driver closure without editing real examples; it emits JSON and accepts `--json` / `--format json` as no-op output flags. The plugin does not invent polish edits; it requires the latest loop checkpoint to route `ready_for_svg_polish` without human, top-tier, crop, aesthetic, or semantic-backport blockers. |
 | **Style packs** | `docs/style-pack-catalog.md` and the opt-in journal style-pack catalog provide reusable Nature Communications, Nature Materials, Science, and graphical-abstract restraint/playbook anchors without applying them globally. |
-| **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale reviews, unresolved findings, or conflicting second opinions surface as a human gate, not automatic truth. Start a hash-bound review file with `uv run python3 scripts/external_vision_review.py --template examples/<name> --write-template`. |
-| **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. Start a v1.1 pack with `uv run python3 scripts/critique_reference_pack.py --template <fixture>`; validation requires concrete allowed-transfer axes and anti-copy guards before `/fig_critique` can use the pack. Legacy v1 packs remain parseable. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
-| **Paper-wide context** | Optional `spec.yaml.paper_aesthetic_context` grounds a figure against explicit paper-series style anchors. Start a pack with `uv run python3 scripts/paper_aesthetic_context.py --template <paper_id> --fixture <name> --write-template`, then opt fixtures in deliberately through `spec.yaml`. |
-| **Sub-region iteration log** | Optional `subregion_iteration_log.md` evidence narrows critique and loop handoff to the current one-line patch unit. Start a canonical log with `uv run python3 scripts/subregion_iteration_log.py --template examples/<name> --write-template`, then append one row per patch with `--append examples/<name> ...`. The helper records evidence only; it does not infer regions or edit source. |
+| **External vision review** | Optional `external_vision_review.yaml` evidence can be imported when `spec.yaml.external_vision_review: true`; stale reviews, unresolved findings, or conflicting second opinions surface as a human gate, not automatic truth. Start a hash-bound review file with `fig-agent helper external_vision_review.py --template examples/<name> --write-template`. |
+| **Reference learning** | Optional `critique_reference_pack.yaml.reference_learning` lets references teach editorial principles without becoming copy targets. Start a v1.1 pack with `fig-agent helper critique_reference_pack.py --template <fixture>`; validation requires concrete allowed-transfer axes and anti-copy guards before `/fig_critique` can use the pack. Legacy v1 packs remain parseable. `reference_aesthetic_metrics.py` adds non-model aesthetic-class divergence signals for palette, density, silhouette, and line density; severe divergence routes to review, not release bypass. |
+| **Paper-wide context** | Optional `spec.yaml.paper_aesthetic_context` grounds a figure against explicit paper-series style anchors. Start a pack with `fig-agent helper paper_aesthetic_context.py --template <paper_id> --fixture <name> --write-template`, then opt fixtures in deliberately through `spec.yaml`. |
+| **Authoring context pack** | `fig-agent context-pack <name> [--json | --format json]` compiles design philosophy, Style Lock tokens, the source-anchored fig1 rule catalog, paper-local briefing/spec context, and opt-in `authoring_context_pack.enabled`, `panels[].semantic_claims`, and `panels[].locked_invariants`. This is durable paper-specific knowledge compilation, not LLM prompt plumbing: it is read-only and does not call a model, execute generation, or act as automatic physics detection. |
+| **Sub-region iteration log** | Optional `subregion_iteration_log.md` evidence narrows critique and loop handoff to the current one-line patch unit. Start a canonical log with `fig-agent helper subregion_iteration_log.py --template examples/<name> --write-template`, then append one row per patch with `--append examples/<name> ...`. The helper records evidence only; it does not infer regions or edit source. |
 
 ### Release boundary
 
@@ -157,8 +177,13 @@ and closeout rows stay visible as blocked operator handoffs.
   host-vision critique, and `/fig_loop` review checkpoints. Claude reads
   prepared images/evidence and writes structured critique; lint and loop
   contracts verify the result.
-- **Opt-in:** paper-wide context, aesthetic intent, journal style-pack catalog, reference-calibrated packs, reference-learning aesthetic metrics, SVG-polish delta packs, and external vision review evidence.
-- **Manual:** source drawing, semantic patch choices, human art direction, accepted/golden roll-forward, and final SVG/vector editing.
+- **Opt-in:** authoring context packs, semantic claims/locked invariants,
+  paper-wide context, aesthetic intent, journal style-pack catalog,
+  reference-calibrated packs, reference-learning aesthetic metrics,
+  SVG-polish delta packs, and external vision review evidence.
+- **Manual:** source drawing, semantic patch choices, human art direction,
+  accepted/golden roll-forward, final SVG/vector editing, and any decision to
+  promote an N=1 authoring rule beyond a narrow question or constraint.
 
 The plugin is a quality/audit kernel, not a hidden auto-designer. It can make
 bad or under-audited figure states much harder to ship, but it cannot certify
@@ -204,11 +229,11 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 
 - **Strict mode.** `FIGURE_AGENT_STRICT=1` promotes collision/clash findings to hard fail. Useful in CI; off by default so build PNG stays available during iteration.
 - **Golden fixture gate.** `check_golden_artifacts.py` auto-escalates when `spec.yaml` declares the `accepted` key (`true` or `false`). Override with `--no-require-accepted` for ad-hoc inspection.
-- **Skip critique on export.** `scripts/run_export.py <name> --skip-critique` for intentional drafts. Otherwise, when a declared reference image is usable, missing/stale `critique.md` blocks export. Declared-but-missing references are configuration errors and are not bypassed by `--skip-critique`.
+- **Skip critique on export.** `fig-agent export <name> --skip-critique` for intentional drafts. Otherwise, when a declared reference image is usable, missing/stale `critique.md` blocks export. Declared-but-missing references are configuration errors and are not bypassed by `--skip-critique`.
 - **Status vector.** `/fig_status` prints `render_state`, `critique_state`, `export_state`, `acceptance_state`, `final_artifact_state/kind/path`, `workflow_ready`, `golden_ready`, `release_ready`, and `final_ready`. Treat `final_ready` as a compatibility alias for `release_ready`; use `workflow_ready` when checking ordinary draft closure. For polished-SVG fixtures, `release_ready` also requires the declared final artifact to be fresh and unblocked.
 - **Plugin install.** Validate with `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`, and `claude plugin validate ../../.claude-plugin/marketplace.json`. Test with `uv run pytest` and `uv run ruff check .`. `uv build` is *not* a release gate.
-- **Plugin install freshness.** Local installs copy the registered marketplace working directory into `~/.claude/plugins/cache/`. Run `python3 scripts/plugin_install_freshness.py` to compare the development plugin tree with the latest local cache and emit `figure-agent.plugin-install-freshness.v1` JSON (`fresh`, `stale`, `missing`, or `invalid`) plus `source_package_hygiene`, `source_git_hygiene`, `marketplace_source_hygiene`, `installed_package_hygiene`, and `installed_example_source_hygiene`; `--json` and `--format json` are accepted as explicit no-op output flags. The command exits `0` only when source/install freshness is `fresh`, source package hygiene is `clean`, source git hygiene is `clean` or unavailable outside git, marketplace source hygiene is `clean` or unavailable, installed package hygiene is `clean`, and installed example source hygiene is `clean`. Follow the emitted `next_action`: different-version stale installs use `claude plugin update figure-agent@figure-agent-local`; same-version stale installs need uninstall + install because Claude does not recopy an already-latest version. If a package hygiene block is `dirty`, run its shell-quoted emitted `next_action`, which calls `scripts/plugin_package_audit.py ... --clean --max-mib 300`, to remove generated build/cache paths and confirm future installs will not copy package junk. During an evidence pass, use `scripts/plugin_package_audit.py ... --clean --preserve-fixture-artifacts --max-mib 300` only when you want to remove cache/virtualenv junk while keeping current `examples/<name>/build` and `exports` evidence for queue or driver inspection; do not use that narrower mode as final package validation. If `source_git_hygiene` is `dirty`, commit, stash, or move aside plugin-root changes before reinstalling so user figure-source edits are not copied into the installed plugin cache as "fresh" plugin state. If `marketplace_source_hygiene` is `dirty`, update the `figure-agent-local` marketplace registration before trusting a raw `claude plugin install`, because Claude installs from the registered marketplace source rather than the current shell directory. If `installed_example_source_hygiene` is `dirty`, reinstall from a clean source tree before trusting installed examples; payload freshness intentionally ignores `examples/`, so this separate hygiene block catches installed example-source drift without treating generated example build products as payload drift. The package audit is conservative in a development git worktree: tracked files and tracked-containing directories are protected from `--clean`.
-- **Detector tuning ledger.** Run `python3 scripts/detector_feedback_ledger.py [fixture ...]` to aggregate existing audit-evidence detector feedback across selected fixtures, or across all `examples/*/critique.md` files when no fixture is selected. The output is read-only `figure-agent.detector-feedback-ledger.v1` JSON that separates detector candidates, accepted false positives, detector-linked defects, and unlinked micro-defects for tuning review; `--json` and `--format json` are accepted as explicit no-op output flags.
+- **Plugin install freshness.** Local installs copy the registered marketplace working directory into `~/.claude/plugins/cache/`. Run `fig-agent helper plugin_install_freshness.py` to compare the development plugin tree with the latest local cache and emit `figure-agent.plugin-install-freshness.v1` JSON (`fresh`, `stale`, `missing`, or `invalid`) plus `source_package_hygiene`, `source_git_hygiene`, `marketplace_source_hygiene`, `installed_package_hygiene`, and `installed_example_source_hygiene`; `--json` and `--format json` are accepted as explicit no-op output flags. The command exits `0` only when source/install freshness is `fresh`, source package hygiene is `clean`, source git hygiene is `clean` or unavailable outside git, marketplace source hygiene is `clean` or unavailable, installed package hygiene is `clean`, and installed example source hygiene is `clean`. Follow the emitted `next_action`: different-version stale installs use `claude plugin update figure-agent@figure-agent-local`; same-version stale installs need uninstall + install because Claude does not recopy an already-latest version. If a package hygiene block is `dirty`, run its shell-quoted emitted `next_action`, which calls `fig-agent helper plugin_package_audit.py ... --clean --max-mib 300`, to remove generated build/cache paths and confirm future installs will not copy package junk. During an evidence pass, use `fig-agent helper plugin_package_audit.py ... --clean --preserve-fixture-artifacts --max-mib 300` only when you want to remove cache/virtualenv junk while keeping current `examples/<name>/build` and `exports` evidence for queue or driver inspection; do not use that narrower mode as final package validation. If `source_git_hygiene` is `dirty`, commit, stash, or move aside plugin-root changes before reinstalling so user figure-source edits are not copied into the installed plugin cache as "fresh" plugin state. If `marketplace_source_hygiene` is `dirty`, update the `figure-agent-local` marketplace registration before trusting a raw `claude plugin install`, because Claude installs from the registered marketplace source rather than the current shell directory. If `installed_example_source_hygiene` is `dirty`, reinstall from a clean source tree before trusting installed examples; payload freshness intentionally ignores `examples/`, so this separate hygiene block catches installed example-source drift without treating generated example build products as payload drift. The package audit is conservative in a development git worktree: tracked files and tracked-containing directories are protected from `--clean`.
+- **Detector tuning ledger.** Run `fig-agent helper detector_feedback_ledger.py [fixture ...]` to aggregate existing audit-evidence detector feedback across selected fixtures, or across all `examples/*/critique.md` files when no fixture is selected. The output is read-only `figure-agent.detector-feedback-ledger.v1` JSON that separates detector candidates, accepted false positives, detector-linked defects, and unlinked micro-defects for tuning review; `--json` and `--format json` are accepted as explicit no-op output flags.
 - **Repo location.** Lives under `~/workspace/ResearchOS/` as a sibling to `[Athena]/` and `[Graph_making_hub]/` for development proximity. Plugin install copies to `~/.claude/plugins/cache/…` regardless.
 
 ---

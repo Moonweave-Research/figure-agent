@@ -496,7 +496,7 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
 
     assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
     assert "first blocker export_missing" in summary["reason"]
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
 
 
 def test_driver_summary_copies_critique_freshness_diagnostics(
@@ -668,7 +668,7 @@ def test_final_mode_recommends_strict_compile_for_stale_render(
     assert summary["action"] == "run_compile"
     assert (
         summary["safe_command"]
-        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+        == "fig-agent compile driver_demo --strict"
     )
     assert summary["final_readiness_profile"]["strict_compile"]["state"] == "needs_action"
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
@@ -781,7 +781,7 @@ def test_final_mode_requests_strict_compile_when_warning_budget_report_missing(
     assert summary["action"] == "run_compile"
     assert (
         summary["safe_command"]
-        == "FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+        == "fig-agent compile driver_demo --strict"
     )
     assert "warning budget input is missing" in summary["reason"]
     assert summary["final_readiness_profile"]["warning_budget"]["state"] == "needs_action"
@@ -800,7 +800,7 @@ def test_final_mode_requires_loop_checkpoint_before_complete(
 
     assert summary["action"] == "run_fig_loop"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal final --json"
+        "fig-agent loop driver_demo --goal final --json"
     )
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
     assert summary["final_readiness_profile"]["loop_checkpoint"]["state"] == "needs_action"
@@ -857,7 +857,7 @@ def test_authoring_mode_recommends_compile_when_render_missing(tmp_path: Path) -
     summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
 
     assert summary["action"] == "run_compile"
-    assert summary["safe_command"] == "bash scripts/compile.sh examples/driver_demo/driver_demo.tex"
+    assert summary["safe_command"] == "fig-agent compile driver_demo"
     assert summary["stop_boundary"] is None
 
 
@@ -947,7 +947,7 @@ def test_review_mode_recommends_adjudicate_when_critique_fresh(
     assert summary["stop_boundary"] is None
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+        == "fig-agent adjudicate driver_demo"
     )
 
 
@@ -963,7 +963,7 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+            == "fig-agent loop driver_demo --goal review --json"
     )
     assert summary["stop_boundary"] is None
 
@@ -996,7 +996,7 @@ def test_review_mode_uses_closeout_next_action_before_rerunning_loop(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal review --json"
+            == "fig-agent loop driver_demo --goal review --json"
     )
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["blocking_step_ids"] == ["loop_rerun"]
@@ -1025,7 +1025,7 @@ def test_review_mode_uses_closeout_export_action_before_rerunning_loop(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_export"
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["next_action"] == "/fig_export driver_demo"
 
@@ -1041,7 +1041,7 @@ def test_review_mode_detects_real_closeout_export_gap(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_export"
-    assert summary["safe_command"] == "uv run python3 scripts/run_export.py driver_demo"
+    assert summary["safe_command"] == "fig-agent export driver_demo"
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["blocking_step_ids"] == ["export", "loop_rerun"]
 
@@ -1146,7 +1146,7 @@ def test_review_mode_fig_loop_goal_is_shell_safe(
     assert summary["action"] == "run_fig_loop"
     assert (
         summary["safe_command"]
-        == "uv run python3 scripts/fig_loop.py driver_demo --goal 'it'\"'\"'s a goal' --json"
+        == "fig-agent loop driver_demo --goal 'it'\"'\"'s a goal' --json"
     )
 
 
@@ -1782,7 +1782,7 @@ def test_release_mode_requires_adjudication_before_completion(
 
     assert summary["action"] == "run_adjudicate"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/critique_adjudication.py scaffold driver_demo"
+        "fig-agent adjudicate driver_demo"
     )
     assert summary["stop_boundary"] is None
     assert "critique_adjudication.yaml is missing or stale" in summary["reason"]
@@ -1959,7 +1959,7 @@ def test_polish_mode_not_required_critique_routes_to_release_or_final(
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert "ready_for_svg_polish" not in summary["reason"]
     assert "NOT_REQUIRED" in summary["reason"]
@@ -2037,6 +2037,183 @@ def test_polish_mode_stale_polished_svg_routes_to_handoff_refresh(
     assert "svg_polish_handoff.py" in summary["next_action_summary"]["reason"]
 
 
+def test_polish_mode_invalid_polished_svg_routes_to_manifest_repair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The SVG polish handoff produced a manifest (final_artifact_kind is
+    # polished_svg), but the manifest is malformed at the manifest level (wrong
+    # polished.path / schema / provenance fault / semantic-diff validating the
+    # wrong SVG), so compute_final_artifact_state returns INVALID. /fig_loop is
+    # verify-only and can never clear an INVALID manifest. The driver must route
+    # to manifest repair, not fall through to run_fig_loop, and must NOT emit
+    # the editorial can_start_svg_polish=true / state=ready instruction while the
+    # final artifact is still INVALID.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "INVALID",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["final_artifact_state"] == "INVALID"
+    assert summary["status"]["final_artifact_kind"] == "polished_svg"
+    # Must not fall through to the verify-only fig_loop route.
+    assert summary["action"] != "run_fig_loop"
+    assert summary["action"] == "polish_handoff_stop"
+    # Reason names the manifest-level fault and the corrective command, and
+    # states /fig_loop cannot clear an INVALID manifest.
+    assert "invalid" in summary["reason"].lower()
+    assert "manifest" in summary["reason"].lower()
+    assert "svg_polish_handoff.py" in summary["reason"]
+    assert "--write" in summary["reason"]
+    assert "--force" in summary["reason"]
+    assert "verify-only" in summary["reason"]
+    # Operator-facing gate must route to the repair, not the no-checkpoint
+    # rerun_fig_loop default, and must not authorize starting SVG polish.
+    gate = summary["svg_polish_gate"]
+    assert gate["next_action"] == "repair_svg_polish_manifest"
+    assert gate["next_action"] != "rerun_fig_loop"
+    assert gate["can_start_svg_polish"] is False
+    assert gate["state"] == "blocked"
+    # Derived operator guidance and next_action_summary carry the repair route.
+    # Positive checks guard against an empty/generic fallback slipping past the
+    # negative assertion: this is a concrete polish-boundary svg_editor stop.
+    assert summary["operator_guidance"]["state"] == "polish_boundary"
+    assert summary["operator_guidance"]["required_actor"] == "svg_editor"
+    next_step = summary["operator_guidance"]["next_step"]
+    assert "rerun_fig_loop" not in next_step
+    assert "SVG polish handoff" in next_step
+    assert summary["next_action_summary"]["action"] == "polish_handoff_stop"
+    assert "svg_polish_handoff.py" in summary["next_action_summary"]["reason"]
+
+
+def test_polish_mode_invalid_polished_svg_overrides_ready_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Even with a fresh ready_for_svg_polish loop checkpoint present, an INVALID
+    # polished_svg final artifact must win: the editorial route would otherwise
+    # emit can_start_svg_polish=true / state=ready, a directly contradictory
+    # instruction while status.final_artifact_state is still INVALID.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "pass",
+        "polish_recommended_path": "ready_for_svg_polish",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "INVALID",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["action"] == "polish_handoff_stop"
+    gate = summary["svg_polish_gate"]
+    assert gate["can_start_svg_polish"] is False
+    assert gate["next_action"] == "repair_svg_polish_manifest"
+    assert gate["state"] == "blocked"
+
+
+def test_polish_mode_missing_polished_svg_with_ready_checkpoint_starts_recipe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # final_artifact_kind is polished_svg (the author declared a polished-SVG
+    # final artifact in spec.yaml) but the manifest file does not exist yet, so
+    # compute_final_artifact_state returns MISSING. Unlike STALE/INVALID — where
+    # the handoff already ran and produced a drifted/malformed manifest — MISSING
+    # means the polish handoff has NOT yet run, so "start the polish recipe to
+    # create the manifest" is the correct, non-contradictory action. With a
+    # reference (critique FRESH) and a ready_for_svg_polish loop checkpoint
+    # present, the driver must fall through to the editorial route and emit
+    # can_start_svg_polish=true / start_svg_polish_recipe — it must NOT mirror the
+    # INVALID/STALE branches and block the handoff. This pins the un-branched
+    # polished_svg+MISSING cell against a regression that wrongly blocks the very
+    # action that would create the missing manifest.
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    editorial_summary = {
+        "source": "critique.editorial_art_direction",
+        "worst_verdict": "pass",
+        "polish_recommended_path": "ready_for_svg_polish",
+    }
+    _write_loop_run(
+        tmp_path,
+        stop_reason="verify_only_complete",
+        editorial_art_direction_summary=editorial_summary,
+    )
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "FRESH",
+        "export_state": "FRESH",
+        "acceptance_state": "NOT_DECLARED",
+        "final_artifact_state": "MISSING",
+        "final_artifact_kind": "polished_svg",
+        "final_artifact_path": "polish/driver_demo.polished.svg",
+        "workflow_ready": True,
+        "golden_ready": False,
+        "release_ready": False,
+        "final_ready": False,
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+    monkeypatch.setattr(fig_driver, "_adjudication_needs_action", lambda _ex, _st: False)
+
+    summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
+
+    assert summary["status"]["final_artifact_state"] == "MISSING"
+    assert summary["status"]["final_artifact_kind"] == "polished_svg"
+    # MISSING means the handoff has not yet run: route to starting the recipe, not
+    # to the INVALID/STALE manifest-repair/refresh blocks.
+    assert summary["action"] == "polish_handoff_stop"
+    gate = summary["svg_polish_gate"]
+    assert gate["can_start_svg_polish"] is True
+    assert gate["next_action"] == "start_svg_polish_recipe"
+    assert gate["state"] == "ready"
+    assert gate["next_action"] != "repair_svg_polish_manifest"
+    assert gate["next_action"] != "refresh_svg_polish_handoff"
+
+
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -2071,7 +2248,7 @@ def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert "ready_for_svg_polish" in summary["reason"]
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
@@ -2204,9 +2381,9 @@ def test_polish_mode_with_recipe_returns_executor_dry_run_command(
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] == (
-        "uv run python3 scripts/svg_polish_executor.py examples/driver_demo --dry-run"
+        "fig-agent svg-polish-exec driver_demo --dry-run"
     )
-    assert "svg_polish_executor.py" in summary["reason"]
+    assert "fig-agent svg-polish-exec" in summary["reason"]
 
 
 def test_polish_mode_with_polished_svg_returns_delta_pack_command(
@@ -2235,7 +2412,7 @@ def test_polish_mode_with_polished_svg_returns_delta_pack_command(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
-    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert summary["safe_command"] == "fig-agent svg-polish-delta driver_demo"
     assert "aesthetic delta" in summary["reason"]
 
 
@@ -2338,7 +2515,7 @@ def test_polish_mode_with_invalid_delta_pack_returns_delta_pack_command(
 
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
-    assert "build_svg_polish_delta_pack" in summary["safe_command"]
+    assert summary["safe_command"] == "fig-agent svg-polish-delta driver_demo"
     assert "delta pack is invalid" in summary["reason"]
 
 
@@ -2454,7 +2631,7 @@ def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
 
     assert summary["action"] == "run_fig_loop"
     assert summary["safe_command"] == (
-        "uv run python3 scripts/fig_loop.py driver_demo --goal polish --json"
+            "fig-agent loop driver_demo --goal polish --json"
     )
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert "continue_tikz" in summary["reason"]

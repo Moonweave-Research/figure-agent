@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import tomllib
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -18,11 +19,12 @@ SCRIPTS_ROOT = REPO_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from fig_driver import MODES as FIG_DRIVER_MODES  # noqa: E402
+from package_cowork_plugin import build_zip  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.9.2"
-EXPECTED_RELEASE_DATE = "2026-06-02"
+EXPECTED_RELEASE_VERSION = "0.9.3"
+EXPECTED_RELEASE_DATE = "2026-06-07"
 
 
 def _issue_suffix_value(suffix: str) -> int:
@@ -121,6 +123,22 @@ def test_public_docs_do_not_route_to_deleted_legacy_commands() -> None:
             assert forbidden not in doc_text, f"{doc_path} still contains {forbidden!r}"
 
 
+def test_authoring_context_pack_docs_preserve_quality_kernel_boundary() -> None:
+    docs_by_path = {
+        "docs/quality-kernel-goal.md": (
+            REPO_ROOT / "docs" / "quality-kernel-goal.md"
+        ).read_text(),
+        "README.md": (REPO_ROOT / "README.md").read_text(),
+        "skills/figure-agent/SKILL.md": (
+            REPO_ROOT / "skills" / "figure-agent" / "SKILL.md"
+        ).read_text(),
+    }
+    for doc_path, text in docs_by_path.items():
+        assert "durable paper-specific" in text, doc_path
+        assert "not LLM prompt plumbing" in text or "not prompt-loop revival" in text, doc_path
+        assert "automatic physics" in text, doc_path
+
+
 def test_package_descriptions_name_quality_kernel_direction() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
@@ -143,13 +161,13 @@ def test_package_descriptions_name_quality_kernel_direction() -> None:
 def test_readme_documents_plugin_package_audit() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
-    assert "scripts/plugin_install_freshness.py" in readme
+    assert "fig-agent helper plugin_install_freshness.py" in readme
     assert INSTALL_FRESHNESS_SCHEMA in readme
     assert "source_package_hygiene" in readme
     assert "source_git_hygiene" in readme
     assert "marketplace_source_hygiene" in readme
     assert "installed_example_source_hygiene" in readme
-    assert "scripts/plugin_package_audit.py" in readme
+    assert "fig-agent helper plugin_package_audit.py" in readme
     assert "--max-mib" in readme
     assert "--preserve-fixture-artifacts" in readme
     assert "~/.claude/plugins/cache/" in readme
@@ -245,6 +263,30 @@ def test_current_readme_documents_release_boundaries() -> None:
     assert "Semi-automatic" in boundary_section
     assert "Opt-in" in boundary_section
     assert "Manual" in boundary_section
+
+
+def test_cowork_package_includes_authoring_context_pack_runtime_and_docs(
+    tmp_path: Path,
+) -> None:
+    zip_path = build_zip(tmp_path)
+
+    with zipfile.ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+
+    for required in {
+        "scripts/authoring_rules.py",
+        "scripts/semantic_contracts.py",
+        "scripts/authoring_context_pack.py",
+        "docs/authoring-rules-pair001.md",
+        "commands/fig_context_pack.md",
+    }:
+        assert required in names
+    for forbidden in {
+        "dist/",
+        "examples/fig1_overview_v2_pair_001_vault/caption.md",
+        "examples/fig1_overview_v2_pair_001_vault/exports/fig1_overview_v2_pair_001_vault.pdf",
+    }:
+        assert forbidden not in names
 
 
 def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> None:

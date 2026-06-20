@@ -1,0 +1,5 @@
+name: smoke_leader_line_demo
+panels:
+  - id: A
+    caption: leader line smoke fixture
+style_profile: polymer-default

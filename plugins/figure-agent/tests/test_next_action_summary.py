@@ -132,6 +132,51 @@ def test_driver_summary_marks_reference_missing_as_workflow_blocker_not_host_vis
     assert summary["decision_boundary"]["authority"] == "plugin"
 
 
+def test_driver_summary_marks_semantic_backport_polish_as_source_blocker_not_svg_editor() -> None:
+    summary = driver_next_action_summary(
+        {
+            "fixture": "demo",
+            "action": "polish_handoff_stop",
+            "safe_command": None,
+            "stop_boundary": "semantic_backport_required",
+            "reason": "polished SVG requires semantic backport to TikZ first.",
+        }
+    )
+
+    _assert_summary_shape(summary)
+    assert summary["blocking_source"] == "semantic_backport_required"
+    boundary = summary["decision_boundary"]
+    assert boundary["kind"] == "deterministic_plugin_gate"
+    assert boundary["authority"] == "plugin"
+    assert boundary["blocks_progress"] is True
+    assert boundary["blocks_release"] is True
+    assert summary["allowed_scope"] == [
+        "examples/demo/spec.yaml",
+        "examples/demo/briefing.md",
+        "examples/demo/demo.tex",
+    ]
+
+
+def test_driver_summary_keeps_ready_for_svg_polish_as_non_blocking_editor_handoff() -> None:
+    summary = driver_next_action_summary(
+        {
+            "fixture": "demo",
+            "action": "polish_handoff_stop",
+            "safe_command": None,
+            "stop_boundary": None,
+            "reason": "generated export is current; ready for SVG polish handoff.",
+        }
+    )
+
+    _assert_summary_shape(summary)
+    boundary = summary["decision_boundary"]
+    assert boundary["kind"] == "polish_handoff"
+    assert boundary["authority"] == "svg_editor"
+    assert boundary["blocks_progress"] is True
+    assert boundary["blocks_release"] is False
+    assert summary["allowed_scope"] == ["examples/demo/polish/"]
+
+
 def test_driver_summary_marks_ready_improvement_as_advisory_only() -> None:
     summary = driver_next_action_summary(
         {

@@ -174,6 +174,26 @@ def _svg_polish_prerequisite_gate(
             "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
             "blocking_items": [{"source": "driver_prerequisite", "id": "final_artifact_stale"}],
         }
+    if (
+        action == ACTION_POLISH_HANDOFF_STOP
+        and final_kind == "polished_svg"
+        and final_state == "INVALID"
+    ):
+        # The polish manifest is malformed at the manifest level; the repair is a
+        # manifest rebuild, not a /fig_loop rerun, so the gate must not fall back
+        # to the no-checkpoint "rerun_fig_loop" default and must keep SVG polish
+        # un-startable while the final artifact is INVALID.
+        return {
+            "schema": editorial_mod.GATE_SCHEMA,
+            "state": "blocked",
+            "source": "driver_prerequisite",
+            "can_start_svg_polish": False,
+            "recommended_path": None,
+            "next_action": "repair_svg_polish_manifest",
+            "reason": reason,
+            "required_inputs": list(editorial_mod.REQUIRED_GATE_INPUTS),
+            "blocking_items": [{"source": "driver_prerequisite", "id": "final_artifact_invalid"}],
+        }
     next_action_by_driver_action = {
         ACTION_RUN_COMPILE: "run_fig_compile",
         ACTION_RUN_CRITIQUE: "run_fig_critique",
@@ -1030,6 +1050,31 @@ def _select_action(
                 "--write --force to rebuild the manifest base hashes (including "
                 "critique_hash) and clear the STALE. /fig_loop is verify-only "
                 "and cannot refresh the manifest."
+            ),
+        )
+    if final_kind == "polished_svg" and final_state == "INVALID":
+        # The SVG polish handoff produced a manifest (final_artifact_kind is
+        # polished_svg), but the manifest itself is malformed at the manifest
+        # level: wrong polished.path, bad schema or provenance, or a semantic
+        # diff that validates the wrong SVG. compute_final_artifact_state returns
+        # INVALID for these faults. /fig_loop is verify-only and can never clear
+        # an INVALID manifest, and the editorial ready_for_svg_polish route below
+        # would emit a directly contradictory can_start_svg_polish=true while the
+        # final artifact is still broken. Route to manifest repair instead. The
+        # rebuild requires reviewer and editor handoff metadata the driver cannot
+        # supply, so name the command rather than emitting a runnable safe_command.
+        return make(
+            ACTION_POLISH_HANDOFF_STOP,
+            safe_command=None,
+            stop_boundary=None,
+            reason=(
+                "polished_svg final artifact is INVALID because the polish "
+                "manifest is malformed at the manifest level (wrong polished.path, "
+                "schema, or provenance, or a semantic diff that validates the "
+                f"wrong SVG); rerun scripts/svg_polish_handoff.py examples/{name} "
+                "--write --force to rebuild a well-formed manifest and clear the "
+                "INVALID. /fig_loop is verify-only and cannot clear an INVALID "
+                "manifest."
             ),
         )
     if loop_checkpoint is not None:

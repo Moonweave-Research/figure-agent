@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "figure-agent": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "python3",
+        "${CLAUDE_PLUGIN_ROOT}/mcp/figure_agent_server.py"
+      ],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "FIGURE_AGENT_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}

@@ -9,11 +9,11 @@ placement and color reconstruction; structural hints are authoring evidence, not
 
 **Usage**: `/fig_extract <name>`
 
-Run from the plugin root:
+Run from the workspace root:
 
 ```
-uv run python3 scripts/reference_extract.py examples/<name>
-uv run python3 scripts/reference_extract.py examples/<name> --rebuild
+fig-agent helper reference_extract.py examples/<name>
+fig-agent helper reference_extract.py examples/<name> --rebuild
 ```
 
 `<name>` maps to `examples/<name>/`. The fixture must declare `reference_image` in `spec.yaml`. Ordinary fixtures (no reference_image) skip cleanly with a clear message — `/fig_extract` is intended for golden-class fixtures.

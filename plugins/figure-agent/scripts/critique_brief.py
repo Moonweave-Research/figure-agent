@@ -20,6 +20,7 @@ from pathlib import Path
 
 import critique_brief_sections as brief_sections
 import fixture_identity
+import runtime_paths
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
     AestheticIntentError,
@@ -54,6 +55,7 @@ from quality_manifest import (
 )
 from reference_aesthetic_metrics import reference_aesthetic_metrics_summary
 from reference_contract import compute_reference_input_failures, declared_figure_reference_path
+from semantic_contracts import SemanticContractError, semantic_claim_questions
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 from svg_polish_delta import (
     SVG_POLISH_DELTA_MANIFEST_RELATIVE_PATH,
@@ -66,7 +68,9 @@ MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
-STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
+STYLE_LOCK_PATH = (
+    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+)
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
@@ -226,6 +230,22 @@ def _optional_authoring_context(example_dir: Path) -> str:
     if not blocks:
         return ""
     return "\n\n## Reference-conditioned authoring context\n" + "\n\n".join(blocks)
+
+
+def _semantic_claim_questions_section(spec: dict) -> str:
+    try:
+        questions = semantic_claim_questions(spec)
+    except SemanticContractError as exc:
+        raise CritiqueBriefError(f"spec.yaml authoring semantic contracts invalid: {exc}") from exc
+    if not questions:
+        return ""
+    lines = [
+        "## Narrow semantic claim checks",
+        "Answer each claim as a visual verification question. Do not broaden this into "
+        "open-ended physics judgment.",
+    ]
+    lines.extend(f"- {question}" for question in questions)
+    return "\n\n" + "\n".join(lines)
 
 
 def _subregion_active_context(example_dir: Path) -> str:
@@ -1518,6 +1538,7 @@ zoom/reference review.
         crop_anomaly_schema = ""
         crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
+    semantic_claim_questions_section = _semantic_claim_questions_section(spec)
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
     )
@@ -1547,6 +1568,7 @@ zoom/reference review.
 ## Physics invariants the figure MUST honor
 {invariants}
 {authoring_context_section}
+{semantic_claim_questions_section}
 
 ## Source under review (TikZ)
 ```tex
@@ -1805,20 +1827,10 @@ subscription tokens.)
 
 
 def _resolve_example_dir_for_cli(value: str) -> Path:
-    path = Path(value)
-    if path.is_absolute():
-        return path
-    if path.parts and path.parts[0] == "examples":
-        if len(path.parts) != 2 or ".." in path.parts:
-            raise CritiqueBriefError("invalid fixture path: expected examples/<fixture-name>")
-        _validate_fixture_name(path.parts[1], value)
-        return Path("examples") / path.parts[1]
-    if len(path.parts) == 1:
-        _validate_fixture_name(value, value)
-        return path
-    raise CritiqueBriefError(
-        "invalid fixture path: expected fixture name, examples/<fixture-name>, or an absolute path"
-    )
+    try:
+        return runtime_paths.resolve_example_dir_for_cli(value)
+    except ValueError as exc:
+        raise CritiqueBriefError(f"invalid fixture path: {exc}") from exc
 
 
 def _validate_fixture_name(name: str, original: str) -> None:

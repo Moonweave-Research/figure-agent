@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "annotation_box.internal_collision_count": {
+      "baseline": 2,
+      "candidate": 1
+    }
+  }
+}

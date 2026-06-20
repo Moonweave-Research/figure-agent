@@ -1,0 +1,5 @@
+name: smoke_annotation_box_demo
+panels:
+  - id: A
+    caption: annotation box smoke fixture
+style_profile: polymer-default

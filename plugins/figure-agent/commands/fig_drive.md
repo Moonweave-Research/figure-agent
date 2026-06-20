@@ -9,8 +9,8 @@ Run the advisory driver for one figure.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_driver.py <name> --mode review --goal "<goal>" --dry-run
-uv run python3 scripts/fig_driver.py <name> --mode final --goal "final readiness" --dry-run
+fig-agent drive <name> --mode review --goal "<goal>" --dry-run
+fig-agent drive <name> --mode final --goal "final readiness" --dry-run
 ```
 
 `--dry-run` is required. Output is JSON by default; `--json` and
@@ -160,7 +160,7 @@ In `--mode final`, `final_readiness_profile` is added. It is a non-mutating
 checklist, not a second router. The strict compile row always includes:
 
 ```bash
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/<name>/<name>.tex
+fig-agent compile <name> --strict
 ```
 
 If render is stale, that strict compile command becomes the selected
@@ -181,7 +181,7 @@ a documented field.
 
 When `safe_command` is non-null it falls into one of two namespaces:
 
-- **shell** (`uv run python3 ...`, `bash scripts/...`) — runnable by a generic
+- **entrypoint** (`fig-agent ...`) — runnable by a generic
   shell or `subprocess.run`.
 - **slash** (`/fig_critique <name>`, etc.) — requires a Claude host loop
   (e.g. `/fig_critique` invokes host vision); a non-Claude executor must
@@ -326,7 +326,7 @@ surfaces. The canonical recipe path is:
    bounded recipe template:
 
 ```bash
-uv run python3 scripts/svg_polish_recipe.py --template examples/<name> --write-template
+fig-agent helper svg_polish_recipe.py --template examples/<name> --write-template
 ```
 
    Then replace placeholder selectors with real SVG IDs/classes/text before
@@ -334,23 +334,23 @@ uv run python3 scripts/svg_polish_recipe.py --template examples/<name> --write-t
 2. If the recipe exists, inspect the executor plan:
 
 ```bash
-uv run python3 scripts/svg_polish_executor.py examples/<name> --dry-run
+fig-agent svg-polish-exec <name> --dry-run
 ```
 
 3. After reviewing the dry-run plan, write the polished SVG only for
    visual-only edits:
 
 ```bash
-uv run python3 scripts/svg_polish_executor.py examples/<name> --write
+fig-agent svg-polish-exec <name> --write
 ```
 
 4. Generate before/after/diff evidence for critique:
 
 ```bash
-PYTHONPATH=scripts uv run python3 -c "from pathlib import Path; from svg_polish_delta import build_svg_polish_delta_pack; build_svg_polish_delta_pack(Path('examples/<name>'), base_dir=Path('.'))"
+fig-agent svg-polish-delta <name>
 ```
 
-5. Use `scripts/svg_polish_handoff.py` after the delta pack exists to scaffold
+5. Use `fig-agent helper svg_polish_handoff.py examples/<name> ...` after the delta pack exists to scaffold
    audit and manifest metadata.
 
 ## Workspace Warnings
@@ -407,11 +407,11 @@ any other command. Identifiers:
 ## Examples
 
 ```bash
-uv run python3 scripts/fig_driver.py fig1_overview --mode authoring --goal 'tighten layout' --dry-run
-uv run python3 scripts/fig_driver.py fig3_trap --mode review --goal 'close review loop' --dry-run
-uv run python3 scripts/fig_driver.py fig2_band --mode release --goal 'final release check' --dry-run
-uv run python3 scripts/fig_driver.py fig4_polish --mode polish --goal 'svg polish handoff' --dry-run
-uv run python3 scripts/fig_driver.py fig1_overview --mode final --goal 'final readiness' --dry-run
+fig-agent drive fig1_overview --mode authoring --goal 'tighten layout' --dry-run
+fig-agent drive fig3_trap --mode review --goal 'close review loop' --dry-run
+fig-agent drive fig2_band --mode release --goal 'final release check' --dry-run
+fig-agent drive fig4_polish --mode polish --goal 'svg polish handoff' --dry-run
+fig-agent drive fig1_overview --mode final --goal 'final readiness' --dry-run
 ```
 
 `/fig_drive` is the driver wrapper for the docs contract in

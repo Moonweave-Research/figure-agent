@@ -1,0 +1,5 @@
+name: smoke_contrast_demo
+panels:
+  - id: A
+    caption: contrast smoke fixture
+style_profile: polymer-default

@@ -141,6 +141,9 @@ def test_closeout_reports_compile_critique_and_loop_actions(
 
     assert report["schema"] == "figure-agent.closeout.v1"
     assert report["closeout_complete"] is False
+    assert report["evidence_index_path"] == "build/evidence/evidence_index.json"
+    assert report["candidate_apply"]["status"] == "not_required"
+    assert report["golden_acceptance"]["state"] == "missing"
     assert steps["text_boundary_checks"]["state"] == "not_required"
     assert steps["compile"]["state"] == "needs_action"
     assert steps["compile"]["command"] == "/fig_compile loop_demo"
@@ -158,6 +161,64 @@ def test_closeout_reports_compile_critique_and_loop_actions(
     ]
     assert report["next_action_summary"]["action"] == "run_compile"
     assert report["next_action_summary"]["safe_command"] == "/fig_compile loop_demo"
+
+
+def test_closeout_reports_latest_candidate_apply_and_golden_acceptance(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    sandbox.mkdir(parents=True)
+    (sandbox / "apply_result.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "candidate_id": "CAND001",
+                "status": "applied",
+                "post_apply": {
+                    "compile": {"status": "success"},
+                    "export": {"status": "success"},
+                    "status": {"status": "success"},
+                },
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    closeout_dir = fixture / "build" / "closeout"
+    closeout_dir.mkdir()
+    (closeout_dir / "golden_acceptance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.golden-acceptance.v1",
+                "decision": "accept",
+                "reviewer": "local-user",
+                "reviewed_at": "2026-06-08T00:00:00Z",
+                "accept_golden": True,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+
+    assert report["candidate_apply"] == {
+        "status": "applied",
+        "candidate_id": "CAND001",
+        "apply_result_path": "build/candidates/CAND001/apply_result.json",
+        "post_apply": {
+            "compile": "success",
+            "export": "success",
+            "status": "success",
+        },
+    }
+    assert report["golden_acceptance"]["state"] == "present"
+    assert report["golden_acceptance"]["accept_golden"] is True
 
 
 def test_closeout_passes_matching_text_boundary_checks(
@@ -214,7 +275,7 @@ def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
 
     assert step["state"] == "needs_action"
     assert step["command"] == (
-        "uv run python3 scripts/text_boundary_spec_helper.py examples/loop_demo --write"
+        "fig-agent text-boundary loop_demo --write"
     )
     assert report["next_action"] == step["command"]
     assert report["next_action_summary"]["action"] == "create_or_fix_source"
@@ -531,6 +592,50 @@ def test_closeout_tracks_golden_roll_forward_as_manual_approval(
     assert export_step["command"] is None
     assert export_step["evidence"]["approval_command"] == "/fig_export loop_demo --force-golden"
     assert report["next_action"] == "tracked golden export requires deliberate manual approval"
+
+
+def test_closeout_passes_current_tracked_golden_acceptance(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    tex_path = fixture / "loop_demo.tex"
+    tex_path.write_text("\\node {accepted};\n", encoding="utf-8")
+    export_path = fixture / "exports" / "loop_demo.pdf"
+    export_path.parent.mkdir()
+    export_path.write_bytes(b"%PDF-accepted\n")
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(fixture, critique)
+    closeout_dir = fixture / "build" / "closeout"
+    closeout_dir.mkdir(parents=True)
+    (closeout_dir / "golden_acceptance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.golden-acceptance.v1",
+                "decision": "accept",
+                "reviewer": "local-user",
+                "reviewed_at": "2026-06-08T00:00:00Z",
+                "accept_golden": True,
+                "source_sha256": fig_closeout_mod._sha256_file(tex_path),
+                "exports": {"pdf": fig_closeout_mod._sha256_file(export_path)},
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        fig_closeout_mod,
+        "infer_stage",
+        lambda _example_dir: _status(critique_state="FRESH", export_state="TRACKED_GOLDEN"),
+    )
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    export_step = _steps_by_id(report)["export"]
+
+    assert export_step["state"] == "passed"
+    assert export_step["reason"] == "tracked golden export has current explicit acceptance"
 
 
 def test_closeout_cli_json_outputs_machine_readable_report(

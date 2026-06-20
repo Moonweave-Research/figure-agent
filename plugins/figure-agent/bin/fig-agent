@@ -1,0 +1,1139 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import importlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def _plugin_root() -> Path:
+    return Path(
+        os.environ.get("FIGURE_AGENT_PLUGIN_ROOT")
+        or os.environ.get("CLAUDE_PLUGIN_ROOT")
+        or Path(__file__).resolve().parent.parent
+    ).resolve()
+
+
+CODE_ROOT = Path(__file__).resolve().parent.parent
+PLUGIN_ROOT = _plugin_root()
+SCRIPTS_DIR = CODE_ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
+
+
+def _missing_project_python_modules() -> list[str]:
+    missing = []
+    for module_name in ("yaml", "PIL"):
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            missing.append(module_name)
+    return missing
+
+
+def _maybe_reexec_with_uv_project() -> None:
+    if os.environ.get("FIGURE_AGENT_UV_BOOTSTRAPPED"):
+        return
+    if not (CODE_ROOT / "pyproject.toml").is_file():
+        return
+    if not _missing_project_python_modules():
+        return
+    uv = shutil.which("uv")
+    if uv is None:
+        return
+    env = os.environ.copy()
+    env["FIGURE_AGENT_UV_BOOTSTRAPPED"] = "1"
+    os.execvpe(
+        uv,
+        [
+            uv,
+            "run",
+            "--project",
+            str(CODE_ROOT),
+            "python3",
+            str(Path(__file__).resolve()),
+            *sys.argv[1:],
+        ],
+        env,
+    )
+
+
+def _paths() -> runtime_paths.RuntimePaths:
+    return runtime_paths.resolve_runtime_paths(plugin_root=PLUGIN_ROOT)
+
+
+def _with_runtime_env() -> dict[str, str]:
+    paths = _paths()
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
+    env["FIGURE_AGENT_WORKSPACE"] = str(paths.workspace_root)
+    return env
+
+
+def _run(args: list[str], *, cwd: Path) -> int:
+    return subprocess.run(args, cwd=cwd, env=_with_runtime_env(), check=False).returncode
+
+
+def _validated_fixture_name(parser: argparse.ArgumentParser, name: str) -> str:
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        parser.error(str(exc))
+    return name
+
+
+def _doctor(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent doctor")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    args = parser.parse_args(argv)
+    paths = _paths()
+    deps = _dependency_diagnostics()
+    payload = {
+        "schema": "figure-agent.doctor.v1",
+        "bundle": runtime_paths.bundle_diagnostics(paths),
+        "workspace": runtime_paths.workspace_diagnostics_for_cli(paths),
+        "dependencies": deps,
+    }
+    ok = (
+        payload["bundle"]["state"] == "ok"
+        and payload["workspace"]["state"] == "ok"
+        and deps["state"] == "ok"
+    )
+    if args.json or args.format == "json":
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"bundle: {payload['bundle']['state']} ({paths.plugin_root})")
+        print(f"workspace: {payload['workspace']['state']} ({paths.workspace_root})")
+        print(f"dependencies: {deps['state']}")
+        for item in payload["bundle"]["missing"]:
+            print(f"missing bundle: {item}")
+        for item in payload["workspace"]["missing"]:
+            print(f"missing workspace: {item}")
+        for item in deps["missing"]:
+            print(f"missing dependency: {item}")
+    return 0 if ok else 1
+
+
+def _dependency_diagnostics() -> dict:
+    tex_engine = os.environ.get("LATEX_ENGINE") or "lualatex"
+    binaries = ("uv", "python3", tex_engine, "pdftocairo", "rsvg-convert")
+    missing = [name for name in binaries if shutil.which(name) is None]
+    py_modules = ("yaml", "PIL")
+    for module_name in py_modules:
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            missing.append(f"python:{module_name}")
+    return {"state": "ok" if not missing else "missing", "missing": missing}
+
+
+def _status(argv: list[str]) -> int:
+    import status
+
+    return status.main(argv, workspace_root=_paths().workspace_root)
+
+
+def _compile(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent compile")
+    parser.add_argument("name")
+    parser.add_argument("--strict", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    tex = paths.examples_dir / name / f"{name}.tex"
+    env = _with_runtime_env()
+    if args.strict:
+        env["FIGURE_AGENT_STRICT"] = "1"
+    return subprocess.run(
+        ["bash", str(paths.scripts_dir / "compile.sh"), str(tex)],
+        cwd=paths.plugin_root,
+        env=env,
+        check=False,
+    ).returncode
+
+
+def _export(argv: list[str]) -> int:
+    import run_export
+
+    return run_export.main(
+        argv,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
+def _adjudicate(argv: list[str]) -> int:
+    if argv and argv[0] in {"scaffold", "sync"}:
+        sub_args = argv
+    else:
+        sub_args = ["scaffold", *argv]
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / "critique_adjudication.py"), *sub_args],
+        cwd=_paths().workspace_root,
+    )
+
+
+def _loop(argv: list[str]) -> int:
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *argv],
+        cwd=_paths().workspace_root,
+    )
+
+
+def _script_main(module_name: str, argv: list[str]) -> int:
+    module = importlib.import_module(module_name)
+    return module.main(argv, repo_root=_paths().workspace_root)
+
+
+def _script_process(script_name: str, argv: list[str]) -> int:
+    return _run(
+        [sys.executable, str(SCRIPTS_DIR / script_name), *argv],
+        cwd=_paths().workspace_root,
+    )
+
+
+def _release_gate_helper(argv: list[str]) -> int:
+    paths = _paths()
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
+    env.pop("FIGURE_AGENT_WORKSPACE", None)
+    env.pop("CLAUDE_PROJECT_DIR", None)
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "release_gate.py"), *argv],
+        cwd=paths.plugin_root,
+        env=env,
+        check=False,
+    ).returncode
+
+
+HELPER_SCRIPTS = {
+    "check_collisions.py",
+    "check_layout_drift.py",
+    "check_text_boundary_clash.py",
+    "check_visual_clash.py",
+    "audit_evidence_graph.py",
+    "critique_brief.py",
+    "critique_lint.py",
+    "critique_reference_pack.py",
+    "detector_feedback_ledger.py",
+    "diagnostic_artifact_provenance.py",
+    "external_vision_review.py",
+    "fig_loop_patch_executor.py",
+    "fig_run_journal.py",
+    "paper_aesthetic_context.py",
+    "plugin_install_freshness.py",
+    "plugin_package_audit.py",
+    "reference_extract.py",
+    "release_gate.py",
+    "spec_bbox_helper.py",
+    "subregion_iteration_log.py",
+    "svg_polish_executor.py",
+    "svg_polish_handoff.py",
+    "svg_polish_recipe.py",
+    "tex_coordinate_shift.py",
+    "text_boundary_spec_helper.py",
+}
+
+
+def _helper(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent helper")
+    parser.add_argument("script")
+    parser.add_argument("args", nargs=argparse.REMAINDER)
+    args = parser.parse_args(argv)
+    script = args.script if args.script.endswith(".py") else f"{args.script}.py"
+    if "/" in script or script not in HELPER_SCRIPTS:
+        parser.error(f"unsupported helper script: {args.script}")
+    if script == "release_gate.py":
+        return _release_gate_helper(args.args)
+    return _script_process(script, args.args)
+
+
+def _closeout(argv: list[str]) -> int:
+    import fig_closeout
+
+    return fig_closeout.main(argv)
+
+
+def _text_boundary(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent text-boundary")
+    parser.add_argument("name")
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    fixture = _paths().examples_dir / name
+    command = [sys.executable, str(SCRIPTS_DIR / "text_boundary_spec_helper.py"), str(fixture)]
+    if args.write:
+        command.append("--write")
+    return _run(command, cwd=_paths().workspace_root)
+
+
+def _svg_polish_exec(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-exec")
+    parser.add_argument("name")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    command = [
+        sys.executable,
+        str(SCRIPTS_DIR / "svg_polish_executor.py"),
+        str(_paths().examples_dir / name),
+    ]
+    if args.dry_run:
+        command.append("--dry-run")
+    if args.write:
+        command.append("--write")
+    return _run(command, cwd=_paths().workspace_root)
+
+
+def _svg_polish_delta(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent svg-polish-delta")
+    parser.add_argument("name")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    script = (
+        "from pathlib import Path; "
+        "from svg_polish_delta import build_svg_polish_delta_pack; "
+        f"build_svg_polish_delta_pack(Path('examples') / {name!r}, base_dir=Path('.'))"
+    )
+    return _run([sys.executable, "-c", script], cwd=_paths().workspace_root)
+
+
+def _quality_map(argv: list[str]) -> int:
+    import quality_defect_ledger
+
+    parser = argparse.ArgumentParser(prog="fig-agent quality-map")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    payload = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _context_pack(argv: list[str]) -> int:
+    import authoring_context_pack
+
+    parser = argparse.ArgumentParser(prog="fig-agent context-pack")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    pass_args = [name]
+    if args.json:
+        pass_args.append("--json")
+    if args.format != "text":
+        pass_args.extend(["--format", args.format])
+    return authoring_context_pack.main(
+        pass_args,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+
+
+def _memory_log(argv: list[str]) -> int:
+    import quality_memory_events
+
+    parser = argparse.ArgumentParser(prog="fig-agent memory-log")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = quality_memory_events.build_memory_log(
+            name,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, quality_memory_events.QualityMemoryEventError) as exc:
+        print(f"fig-agent memory-log: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _memory_index(argv: list[str]) -> int:
+    import quality_memory_index
+
+    parser = argparse.ArgumentParser(prog="fig-agent memory-index")
+    scope = parser.add_mutually_exclusive_group(required=True)
+    scope.add_argument("--fixture")
+    scope.add_argument("--suite")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        if args.fixture:
+            name = _validated_fixture_name(parser, args.fixture)
+            payload = quality_memory_index.build_fixture_index(
+                name,
+                write=args.write,
+                plugin_root=_paths().plugin_root,
+                workspace_root=_paths().workspace_root,
+            )
+        else:
+            suite = _validated_fixture_name(parser, args.suite)
+            payload = quality_memory_index.build_suite_index(
+                suite,
+                write=args.write,
+                plugin_root=_paths().plugin_root,
+                workspace_root=_paths().workspace_root,
+            )
+    except (ValueError, quality_memory_index.QualityMemoryIndexError) as exc:
+        print(f"fig-agent memory-index: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _benchmark_list(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-list")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    try:
+        payload = quality_benchmark.build_benchmark_list(plugin_root=_paths().plugin_root)
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-list: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _benchmark_run(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-run")
+    parser.add_argument("--suite", required=True)
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--render", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    suite = _validated_fixture_name(parser, args.suite)
+    try:
+        payload = quality_benchmark.run_benchmark_suite(
+            suite,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            limit=args.limit,
+            render=args.render,
+            write=args.write,
+        )
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-run: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _benchmark_compare(argv: list[str]) -> int:
+    import quality_benchmark
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-compare")
+    parser.add_argument("baseline_run")
+    parser.add_argument("candidate_run")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        payload = quality_benchmark.compare_benchmark_runs(
+            args.baseline_run,
+            args.candidate_run,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, quality_benchmark.QualityBenchmarkError) as exc:
+        print(f"fig-agent benchmark-compare: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _quality_next_experiment(argv: list[str]) -> int:
+    import quality_next_experiment
+
+    parser = argparse.ArgumentParser(prog="fig-agent quality-next-experiment")
+    parser.add_argument("--json", action="store_true")
+    parser.parse_args(argv)
+    payload = quality_next_experiment.build_next_experiment(
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _next(argv: list[str]) -> int:
+    import agent_next
+
+    parser = argparse.ArgumentParser(prog="fig-agent next")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = agent_next.build_next(
+            name,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except ValueError as exc:
+        print(f"fig-agent next: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("success") is True else 1
+
+
+def _benchmark_detectors(argv: list[str]) -> int:
+    import benchmark_detector_reports
+
+    parser = argparse.ArgumentParser(prog="fig-agent benchmark-detectors")
+    parser.add_argument("name")
+    parser.add_argument("--suite", default="smoke")
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    suite = _validated_fixture_name(parser, args.suite)
+    try:
+        payload = benchmark_detector_reports.build_detector_reports(
+            name,
+            suite=suite,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            write=args.write,
+        )
+    except (ValueError, benchmark_detector_reports.BenchmarkDetectorReportError) as exc:
+        print(f"fig-agent benchmark-detectors: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _safe_quality_output_path(parser: argparse.ArgumentParser, value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts:
+        parser.error("plan_output_forbidden: output must stay under build/quality/")
+    if len(path.parts) < 3 or path.parts[0] != "build" or path.parts[1] != "quality":
+        parser.error("plan_output_forbidden: output must stay under build/quality/")
+    return path
+
+
+def _propose(argv: list[str]) -> int:
+    import quality_defect_ledger
+    import quality_patch_plan
+
+    parser = argparse.ArgumentParser(prog="fig-agent propose")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    parser.add_argument("--scope", choices=("safe-mechanics",), default="safe-mechanics")
+    parser.add_argument("--output")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    plan = quality_patch_plan.build_quality_patch_plan(
+        name,
+        ledger,
+        workspace_root=paths.workspace_root,
+    )
+    if args.output:
+        output = _safe_quality_output_path(parser, args.output)
+        output_path = paths.examples_dir / name / output
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(plan, indent=2, sort_keys=True))
+    return 0
+
+
+def _intent(argv: list[str]) -> int:
+    import figure_intent_model
+
+    parser = argparse.ArgumentParser(prog="fig-agent intent")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    payload = figure_intent_model.build_intent_model(
+        name,
+        plugin_root=_paths().plugin_root,
+        workspace_root=_paths().workspace_root,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _analyze_panel(argv: list[str]) -> int:
+    import candidate_panel_model
+
+    parser = argparse.ArgumentParser(prog="fig-agent analyze-panel")
+    parser.add_argument("name")
+    parser.add_argument("panel_id")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_panel_model.build_panel_model(
+            name,
+            args.panel_id,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_panel_model.CandidatePanelModelError) as exc:
+        print(f"fig-agent analyze-panel: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _candidates(argv: list[str]) -> int:
+    import candidate_contracts
+    import candidate_generator
+
+    parser = argparse.ArgumentParser(prog="fig-agent candidates")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--output")
+    parser.add_argument("--panel")
+    parser.add_argument("--family")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        payload = candidate_generator.build_candidate_set(
+            name,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+            panel=args.panel,
+            family=args.family,
+        )
+        text = json.dumps(payload, indent=2, sort_keys=True)
+        if args.output:
+            output = candidate_contracts.fixture_local_output_path(
+                paths.workspace_root,
+                name,
+                args.output,
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(text + "\n", encoding="utf-8")
+    except (
+        OSError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+        candidate_generator.CandidateGeneratorError,
+    ) as exc:
+        print(f"fig-agent candidates: {exc}", file=sys.stderr)
+        return 1
+    print(text)
+    return 0
+
+
+def _load_fixture_json(name: str, fixture_path: str) -> dict:
+    import candidate_contracts
+
+    try:
+        path = candidate_contracts.fixture_local_output_path(
+            _paths().workspace_root,
+            name,
+            fixture_path,
+        )
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (
+        OSError,
+        json.JSONDecodeError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+    ) as exc:
+        raise RuntimeError(str(exc)) from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("expected JSON object")
+    return payload
+
+
+def _render_candidates(argv: list[str]) -> int:
+    import candidate_render
+
+    parser = argparse.ArgumentParser(prog="fig-agent render-candidates")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--compile", action="store_true")
+    parser.add_argument("--export", action="store_true")
+    parser.add_argument("--crop-panel")
+    parser.add_argument("--evaluate", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        payload = candidate_render.render_candidate_set(
+            name,
+            candidate_set,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+            candidate_set_path=Path(args.candidate_set),
+            candidate_id=args.candidate_id,
+            compile=args.compile,
+            export=args.export,
+            crop_panel=args.crop_panel,
+            evaluate=args.evaluate,
+        )
+    except (RuntimeError, candidate_render.CandidateRenderError) as exc:
+        print(f"fig-agent render-candidates: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _rank_candidates(argv: list[str]) -> int:
+    import candidate_contracts
+    import candidate_rank
+    import fixture_identity
+
+    parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--use-memory", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        memory_index = _load_memory_index(name) if args.use_memory else None
+        scores = []
+        for candidate in candidate_set.get("candidates", []):
+            if not isinstance(candidate, dict):
+                continue
+            candidate_id = str(candidate.get("id"))
+            fixture_identity.validate_fixture_name(candidate_id)
+            manifest = _load_fixture_json(
+                name,
+                f"build/candidates/{candidate_id}/candidate_manifest.json",
+            )
+            try:
+                render_manifest = _load_fixture_json(
+                    name,
+                    f"build/candidates/{candidate_id}/render_manifest.json",
+                )
+            except RuntimeError:
+                render_manifest = None
+            scores.append(
+                candidate_rank.score_manifest(
+                    manifest,
+                    candidate=candidate,
+                    render_manifest=render_manifest,
+                    memory_index=memory_index,
+                )
+            )
+    except (
+        RuntimeError,
+        ValueError,
+        candidate_contracts.CandidateContractError,
+    ) as exc:
+        print(f"fig-agent rank-candidates: {exc}", file=sys.stderr)
+        return 1
+    scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
+    payload = {
+        "schema": "figure-agent.candidate-rank-result.v1",
+        "fixture": name,
+        "scores": scores,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _load_memory_index(name: str) -> dict | None:
+    import candidate_contracts
+
+    paths = _paths()
+    example_dir = paths.examples_dir / name
+    build_dir = example_dir / "build"
+    memory_dir = build_dir / "memory"
+    for label, path in (("build", build_dir), ("memory", memory_dir)):
+        if path.is_symlink():
+            raise RuntimeError(f"memory_index_symlink_forbidden: {label}")
+    path = candidate_contracts.fixture_local_output_path(
+        paths.workspace_root,
+        name,
+        "build/memory/quality_memory_index.json",
+    )
+    if path.is_symlink():
+        raise RuntimeError("memory_index_symlink_forbidden: output")
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError("memory_index_invalid")
+    return payload
+
+
+def _review_candidate(argv: list[str]) -> int:
+    import candidate_review_packet
+
+    parser = argparse.ArgumentParser(prog="fig-agent review-candidate")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_review_packet.build_review_packet(
+            name,
+            args.candidate_id,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_review_packet.CandidateReviewPacketError) as exc:
+        print(f"fig-agent review-candidate: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _compare_candidate(argv: list[str]) -> int:
+    return _review_candidate(argv)
+
+
+def _apply_candidate_ready(argv: list[str]) -> int:
+    import candidate_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent apply-candidate-ready")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_acceptance.build_apply_readiness(
+            name,
+            args.candidate_id,
+            candidate_set_path=Path(args.candidate_set),
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
+        print(f"fig-agent apply-candidate-ready: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _accept_candidate(argv: list[str]) -> int:
+    import candidate_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent accept-candidate")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--decision", choices=("accept",), required=True)
+    parser.add_argument("--reviewer", required=True)
+    parser.add_argument("--rationale", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = candidate_acceptance.write_acceptance(
+            name,
+            args.candidate_id,
+            candidate_set_path=Path(args.candidate_set),
+            decision=args.decision,
+            reviewer=args.reviewer,
+            rationale=args.rationale,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, candidate_acceptance.CandidateAcceptanceError) as exc:
+        print(f"fig-agent accept-candidate: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _apply_candidate(argv: list[str]) -> int:
+    import candidate_apply
+
+    parser = argparse.ArgumentParser(prog="fig-agent apply-candidate")
+    parser.add_argument("name")
+    parser.add_argument("candidate_id")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--acceptance", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        manifest = _load_fixture_json(
+            name,
+            f"build/candidates/{args.candidate_id}/candidate_manifest.json",
+        )
+        payload = candidate_apply.apply_candidate(
+            name,
+            manifest,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            candidate_set_path=Path(args.candidate_set),
+            acceptance_path=Path(args.acceptance),
+            apply=True,
+            post_apply=True,
+        )
+    except (RuntimeError, ValueError, candidate_apply.CandidateApplyError) as exc:
+        print(f"fig-agent apply-candidate: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("status") == "applied" else 1
+
+
+def _evidence_sync(argv: list[str]) -> int:
+    import evidence_sync
+
+    parser = argparse.ArgumentParser(prog="fig-agent evidence-sync")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-id", default=None)
+    parser.add_argument("--candidate-set", default=None)
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = evidence_sync.sync_evidence(
+            name,
+            candidate_id=args.candidate_id,
+            candidate_set_path=Path(args.candidate_set) if args.candidate_set else None,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+            write=args.write,
+        )
+    except (ValueError, evidence_sync.EvidenceSyncError) as exc:
+        print(f"fig-agent evidence-sync: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if not payload.get("blocking_reasons") else 1
+
+
+def _closeout_ready(argv: list[str]) -> int:
+    import closeout_readiness
+
+    parser = argparse.ArgumentParser(prog="fig-agent closeout-ready")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-id", default=None)
+    parser.add_argument("--candidate-set", default=None)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = closeout_readiness.build_closeout_readiness(
+            name,
+            candidate_id=args.candidate_id,
+            candidate_set_path=Path(args.candidate_set) if args.candidate_set else None,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, closeout_readiness.CloseoutReadinessError) as exc:
+        print(f"fig-agent closeout-ready: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("status") == "ready" else 1
+
+
+def _closeout_accept(argv: list[str]) -> int:
+    import golden_acceptance
+
+    parser = argparse.ArgumentParser(prog="fig-agent closeout-accept")
+    parser.add_argument("name")
+    parser.add_argument("--decision", choices=("accept",), required=True)
+    parser.add_argument("--reviewer", required=True)
+    parser.add_argument("--rationale", required=True)
+    parser.add_argument("--accept-golden", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = golden_acceptance.write_golden_acceptance(
+            name,
+            decision=args.decision,
+            reviewer=args.reviewer,
+            rationale=args.rationale,
+            accept_golden=args.accept_golden,
+            plugin_root=_paths().plugin_root,
+            workspace_root=_paths().workspace_root,
+        )
+    except (ValueError, golden_acceptance.GoldenAcceptanceError) as exc:
+        print(f"fig-agent closeout-accept: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _apply_plan(argv: list[str]) -> int:
+    import quality_patch_apply
+
+    parser = argparse.ArgumentParser(prog="fig-agent apply-plan")
+    parser.add_argument("name")
+    parser.add_argument("--plan", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        payload = quality_patch_apply.apply_quality_patch_plan(
+            name,
+            plan_path=paths.examples_dir / name / args.plan,
+            workspace_root=paths.workspace_root,
+            apply=args.apply,
+        )
+    except quality_patch_apply.QualityPatchApplyError as exc:
+        print(f"fig-agent apply-plan: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _verify_plan(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent verify-plan")
+    parser.add_argument("name")
+    parser.add_argument("--plan", required=True)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--format", choices=("json",), default=None)
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    result_path = _paths().examples_dir / name / "build" / "quality" / "patch_result.json"
+    if not result_path.is_file():
+        print(
+            "fig-agent verify-plan: verification_failed: patch_result.json missing",
+            file=sys.stderr,
+        )
+        return 1
+    print(result_path.read_text(encoding="utf-8"), end="")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        _maybe_reexec_with_uv_project()
+    args = list(argv if argv is not None else sys.argv[1:])
+    if not args:
+        print(
+            "usage: fig-agent <doctor|status|compile|export|adjudicate|loop|closeout|helper> ...",
+            file=sys.stderr,
+        )
+        return 2
+    command, rest = args[0], args[1:]
+    if command == "doctor":
+        return _doctor(rest)
+    if command == "status":
+        return _status(rest)
+    if command == "compile":
+        return _compile(rest)
+    if command == "export":
+        return _export(rest)
+    if command == "adjudicate":
+        return _adjudicate(rest)
+    if command == "loop":
+        return _loop(rest)
+    if command == "run":
+        return _script_main("fig_run", rest)
+    if command == "drive":
+        return _script_main("fig_driver", rest)
+    if command == "queue":
+        return _script_main("fig_queue", rest)
+    if command == "queue-run":
+        return _script_main("fig_queue_run", rest)
+    if command == "improve":
+        return _script_main("fig_improve", rest)
+    if command == "e2e-smoke":
+        return _script_process("fig_e2e_smoke.py", rest)
+    if command == "closeout":
+        return _closeout(rest)
+    if command == "helper":
+        return _helper(rest)
+    if command == "text-boundary":
+        return _text_boundary(rest)
+    if command == "svg-polish-exec":
+        return _svg_polish_exec(rest)
+    if command == "svg-polish-delta":
+        return _svg_polish_delta(rest)
+    if command == "quality-map":
+        return _quality_map(rest)
+    if command == "context-pack":
+        return _context_pack(rest)
+    if command == "memory-log":
+        return _memory_log(rest)
+    if command == "memory-index":
+        return _memory_index(rest)
+    if command == "benchmark-list":
+        return _benchmark_list(rest)
+    if command == "benchmark-run":
+        return _benchmark_run(rest)
+    if command == "benchmark-compare":
+        return _benchmark_compare(rest)
+    if command == "quality-next-experiment":
+        return _quality_next_experiment(rest)
+    if command == "next":
+        return _next(rest)
+    if command == "benchmark-detectors":
+        return _benchmark_detectors(rest)
+    if command == "propose":
+        return _propose(rest)
+    if command == "intent":
+        return _intent(rest)
+    if command == "analyze-panel":
+        return _analyze_panel(rest)
+    if command == "candidates":
+        return _candidates(rest)
+    if command == "render-candidates":
+        return _render_candidates(rest)
+    if command == "rank-candidates":
+        return _rank_candidates(rest)
+    if command == "review-candidate":
+        return _review_candidate(rest)
+    if command == "compare-candidate":
+        return _compare_candidate(rest)
+    if command == "apply-candidate-ready":
+        return _apply_candidate_ready(rest)
+    if command == "accept-candidate":
+        return _accept_candidate(rest)
+    if command == "apply-candidate":
+        return _apply_candidate(rest)
+    if command == "evidence-sync":
+        return _evidence_sync(rest)
+    if command == "closeout-ready":
+        return _closeout_ready(rest)
+    if command == "closeout-accept":
+        return _closeout_accept(rest)
+    if command == "apply-plan":
+        return _apply_plan(rest)
+    if command == "verify-plan":
+        return _verify_plan(rest)
+    print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -26,7 +26,21 @@ Durable responsibilities:
 
 Prompt/image-gen orchestration from v0.1 is historical only in this plugin line.
 Do not route users to deleted commands.
+Read-only authoring context packs are durable paper-specific knowledge
+compilation in scope when they compile explicit paper-local files, Style Lock
+tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
+They are not prompt-loop revival, generation execution, or automatic physics
+detection.
 Active direction: `docs/quality-kernel-goal.md`.
+
+## Runtime Entrypoint
+
+Use `fig-agent ...` for shell commands. If `fig-agent` is not on `PATH`, use
+`"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...`.
+
+The installed plugin bundle and user figure workspace are separate. Bundled
+tools/styles come from `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`;
+figure fixtures come from `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR`.
 
 ## Workflow shape
 
@@ -75,7 +89,7 @@ and non-golden draft export, then stops at host critique, existing adjudication
 repair, patch, polish, human, accepted, tracked-golden, force-golden, and
 release boundaries. It records non-authoritative `.scratch/fig-run-runs/`
 evidence in execute mode. There is no resume command; after any interruption,
-run `uv run python3 scripts/fig_run_journal.py <name>` to summarize the prior
+run `fig-agent helper fig_run_journal.py <name>` to summarize the prior
 stop, then rerun live `/fig_status` or `/fig_drive` before using
 `/fig_run --execute` again. Do not replay commands from a journal.
 
@@ -91,10 +105,10 @@ pretend the first call can cross host/human/release boundaries by itself.
 If the user asks to proceed autonomously across multiple fixtures, start with
 the queue:
 
-1. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"`
-2. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm`
-3. `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json`
-4. `uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent`
+1. `fig-agent queue --mode review --goal "<goal>"`
+2. `fig-agent queue --mode review --goal "<goal>" --actor host_llm`
+3. `fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --command-plan --json`
+4. `fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent`
 5. Add `--execute` only after reading the plan-only queue-run output.
 
 `/fig_queue_run` never executes queue commands directly. It delegates each
@@ -139,7 +153,7 @@ polish backport, or actions the current mode forbids.
                          [for multi-panel target matching, user may save panel
                           reference PNGs under reference/ and record
                           panels[].reference_image plus panels[].bbox_pdf_cm;
-                          run scripts/spec_bbox_helper.py to compute bboxes]
+                          run `fig-agent helper spec_bbox_helper.py` to compute bboxes]
 /fig_extract <name>      reference PNG -> OCR + palette clusters + optional vtracer structural hints
                          -> coordinate_hints.yaml
                          [human/LLM authors semantic TikZ from briefing intent,
@@ -152,12 +166,15 @@ polish backport, or actions the current mode forbids.
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>     required before export when usable reference grounding exists
 /fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
-                         after `uv run python3 scripts/critique_lint.py <name>`;
+                         after `fig-agent helper critique_lint.py <name>`;
                          unresolved findings default to needs_human
 /fig_loop <name> --goal "<goal>"
                          verify-only loop evidence record under .scratch/fig-loop-runs/
 /fig_closeout <name>    read-only post-patch checklist for compile, critique,
                          adjudication, export, and loop rerun freshness
+/fig_context_pack <name>
+                         read-only authoring context pack for explicit
+                         briefing/spec/design/style/rule/semantic contracts
 /fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
 /fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
@@ -187,7 +204,7 @@ is `coordinate_hints.yaml -> semantic TikZ authoring`.
 
 When moving a panel/subregion by a fixed offset, prefer the scoped dry-run
 helper over ad-hoc regex scripts:
-`uv run python3 scripts/tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`.
+`fig-agent helper tex_coordinate_shift.py examples/<name>/<name>.tex --line START:END --dx <cm> --dy <cm>`.
 Inspect the diff first; add `--write` only after confirming the selected line
 range is exactly the intended patch scope. The helper intentionally does not
 infer visual scope or parse arbitrary TikZ expressions.
@@ -217,7 +234,7 @@ authoring or drift review.
 
 When a usable figure-level reference image or panel reference+bbox pair exists,
 `/fig_status` and `/fig_export` promote missing/stale `critique.md` to a
-pre-export checkpoint. Use `scripts/run_export.py <name> --skip-critique` only
+pre-export checkpoint. Use `fig-agent export <name> --skip-critique` only
 for intentional draft exports.
 
 `/fig_loop <name> --goal "<goal>"` records a single verify-only loop checkpoint
@@ -226,7 +243,7 @@ records `critique_adjudication.yaml` as missing, fresh, stale, or invalid when
 present. It does not patch source, compile, export, accept artifacts, or mutate
 git state.
 
-Use `uv run python3 scripts/critique_lint.py <name>` after `/fig_critique
+Use `fig-agent helper critique_lint.py <name>` after `/fig_critique
 <name>` and before `/fig_adjudicate <name>` when `critique_adjudication.yaml`
 is missing or stale. The lint preflight catches duplicate finding ids,
 malformed critique frontmatter, and missing top-tier finding links before they
@@ -244,7 +261,7 @@ box. Use `label_crosses_column_rule`, `label_crosses_panel_boundary`, and
 `label_overflows_row_box` for declared text-boundary candidates from
 `build/text_boundary_clash.json`. Author or refresh verbose
 `spec.yaml.text_boundary_checks` from `spec.yaml.text_boundary_layout` with
-`uv run python3 scripts/text_boundary_spec_helper.py examples/<name> --write`
+`fig-agent text-boundary <name> --write`
 after adding row boxes, column rules, horizontal rules, or forbidden internal
 rectangles. `BLOCKER` and `MAJOR` instances must link to a normal finding or
 be explicitly marked `accept_simplification`. When the brief lists Visual Clash
@@ -358,6 +375,11 @@ redirect to matplotlib?"):
 
 ## Asset references
 
+- Cowork path rule: run the automated pipeline from the source plugin root
+  (`plugins/figure-agent`) or another workspace where `scripts/`, `styles/`,
+  and `examples/` are siblings. If those directories are missing from the
+  current working directory, treat it as a mount/working-directory issue, not as
+  a missing installed-plugin bundle.
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
 - Compile chain: `scripts/compile.sh` (lualatex; optional `FIGURE_AGENT_STRICT=1`
   hard gate)

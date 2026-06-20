@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "text_boundary.blocker_count": {
+      "baseline": 2,
+      "candidate": 1
+    }
+  }
+}

@@ -1,0 +1,14 @@
+schema: figure-agent.quality-benchmark-suites.v1
+suites:
+  smoke:
+    description: Fast synthetic fixtures for release-blocking mechanics.
+    fixtures:
+      - smoke_label_overlap_demo
+      - smoke_leader_line_demo
+      - smoke_panel_spacing_demo
+      - smoke_contrast_demo
+      - smoke_annotation_box_demo
+  dogfood:
+    description: Local dogfood fixtures with real manuscript complexity.
+    fixtures:
+      - fig1_overview_v2_pair_001_vault

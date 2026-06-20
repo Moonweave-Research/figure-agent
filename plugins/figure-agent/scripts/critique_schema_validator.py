@@ -1664,5 +1664,5 @@ def validate_critique_schema(frontmatter: dict[str, Any]) -> None:
             allow_reference_calibration=True,
         )
         _validate_v1_2_audit_to_finding(frontmatter)
-    elif isinstance(critique_schema, str) and critique_schema.startswith("figure-agent.critique."):
-        raise CritiqueContractError(f"unsupported critique schema: {critique_schema}")
+    else:
+        raise CritiqueContractError(f"unsupported or missing critique schema: {critique_schema!r}")

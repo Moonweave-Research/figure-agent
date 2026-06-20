@@ -9,7 +9,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import critique_brief  # noqa: E402
+import critique_evidence_lint  # noqa: E402
 import critique_lint  # noqa: E402
+import critique_schema_validator  # noqa: E402
+from critique_contract import CritiqueContractError  # noqa: E402
+from critique_evidence_lint import critique_evidence_violations  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 QUALITY_AXIS_NAMES = (
@@ -1970,6 +1975,39 @@ def test_lint_critique_accepts_complete_v1_16_aesthetic_lever_accounting(
     assert critique_lint.lint_critique(fig_dir) == []
 
 
+def test_lint_critique_rejects_typo_schema(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+    critique_path = fig_dir / "critique.md"
+    critique_path.write_text(
+        critique_path.read_text(encoding="utf-8").replace(
+            "schema: figure-agent.critique.v1.5",
+            "schema: figureagent.critique.v1.5",
+        ),
+        encoding="utf-8",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["critique_contract"]
+    assert "figureagent.critique.v1.5" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_10_aesthetic_lever_accounting(
     tmp_path: Path,
 ) -> None:
@@ -2022,6 +2060,10 @@ def test_lint_critique_accepts_v1_14_continue_tikz_with_remaining_lever(
     _write_critique(
         fig_dir,
         schema="figure-agent.critique.v1.14",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
         micro_defects_yaml="micro_defects: []\n",
         crop_audit_log_yaml=_single_crop_audit_log_yaml(),
         editorial_yaml=_editorial_yaml_with_route_detail(),
@@ -2621,6 +2663,102 @@ def test_lint_critique_rejects_v1_16_generic_aesthetic_gate_prose(
     assert "generic aesthetic_gate_audit evidence" in violations[0].message
 
 
+def test_svg_polish_delta_audit_schemas_track_brief_emitted_version() -> None:
+    # The brief emits v1.17 for any SVG polish delta; the lint accounting set must
+    # cover that emitted version so the pin can never silently drift behind it.
+    assert (
+        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_17
+        in critique_lint.SVG_POLISH_DELTA_AUDIT_SCHEMAS
+    )
+
+
+def test_lint_critique_accepts_v1_17_svg_delta_audit(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_svg_polish_delta_manifest(fig_dir)
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    critique_path = _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(),
+        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness cites print-scale evidence",
+    )
+
+    # A complete v1.17 SVG-polish critique no longer draws the spurious version
+    # blocker. Assert the two accounting functions directly so the check is
+    # isolated from orthogonal full-v1.17-contract requirements (antipattern
+    # audit, weakest panel coherence) validated elsewhere.
+    frontmatter = critique_lint.load_critique_frontmatter(critique_path)
+    assert critique_lint._svg_polish_delta_accounting_violations(fig_dir, frontmatter) == []
+    assert critique_lint._aesthetic_gate_accounting_violations(frontmatter) == []
+
+
+def test_lint_critique_rejects_v1_17_missing_delta_image_accounting(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_svg_polish_delta_manifest(fig_dir)
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(),
+        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(include_diff=False),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness cites print-scale evidence",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["svg_polish_delta_accounting"]
+    assert "missing delta_image_audit_log ids: diff" in violations[0].message
+
+
+def test_lint_critique_rejects_v1_17_generic_aesthetic_gate_prose(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_svg_polish_delta_manifest(fig_dir)
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.17",
+        findings_yaml="findings: []\npanels: []\n",
+        micro_defects_yaml="micro_defects: []\n",
+        crop_audit_log_yaml=_single_crop_audit_log_yaml(),
+        editorial_yaml=_editorial_yaml_with_route_detail(),
+        svg_polish_delta_audit_yaml=_svg_polish_delta_audit_yaml(),
+        aesthetic_gate_audit_yaml=_aesthetic_gate_audit_yaml(generic=True),
+        journal_polish_evidence="print-scale audit: print_178mm.png passes",
+        publication_readiness_evidence="publication readiness cites print-scale evidence",
+    )
+
+    violations = critique_lint.lint_critique(fig_dir)
+
+    assert [violation.category for violation in violations] == ["aesthetic_gate_accounting"]
+    assert "generic aesthetic_gate_audit evidence" in violations[0].message
+
+
 def test_lint_critique_rejects_v1_13_missing_unintended_visible_anomaly(
     tmp_path: Path,
 ) -> None:
@@ -3039,6 +3177,77 @@ def test_lint_critique_accepts_valid_v1_5_editorial_art_direction(tmp_path: Path
     )
 
     assert critique_lint.lint_critique(fig_dir) == []
+
+
+def _remove_frontmatter_block(critique_path: Path, key: str) -> None:
+    lines = critique_path.read_text(encoding="utf-8").splitlines()
+    start = next(index for index, line in enumerate(lines) if line.strip() == f"{key}:")
+    end = start + 1
+    while end < len(lines) and (lines[end].startswith(" ") or lines[end] == ""):
+        end += 1
+    critique_path.write_text("\n".join(lines[:start] + lines[end:]) + "\n", encoding="utf-8")
+
+
+def test_lint_critique_rejects_v1_3_missing_top_tier_audit_block(tmp_path: Path) -> None:
+    # Invariant: the export-gate path (run_export.py -> lint_critique) must reject a
+    # critique whose schema mandates top_tier_audit but omits the block. The rejection
+    # is only reachable because lint_critique -> build_adjudication_scaffold ->
+    # validate_critique_schema raises CritiqueContractError, which lint catches via
+    # `except CritiqueAdjudicationError` (an alias of CritiqueContractError). Pin it so a
+    # future split of that exception alias cannot silently let a contract-incomplete
+    # FRESH critique export as if its audit ran.
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_visual_clash_report(fig_dir, candidate_ids=())
+    _write_text_boundary_clash_report(fig_dir, candidate_ids=())
+    _write_label_path_proximity_report(fig_dir, candidate_ids=())
+    _write_crop_manifest(fig_dir, crop_ids=("full_q1",))
+    _write_critique(
+        fig_dir,
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    status: open\n"
+            "    tex_lines: [10, 20]\n"
+            "    observation: ordinary finding\n"
+        ),
+    )
+    assert critique_lint.lint_critique(fig_dir) == []
+
+    _remove_frontmatter_block(fig_dir / "critique.md", "top_tier_audit")
+    violations = critique_lint.lint_critique(fig_dir)
+    assert violations
+    assert violations[0].severity == "blocker"
+    assert violations[0].category == "critique_contract"
+    assert "top_tier_audit" in violations[0].message
+
+
+def test_lint_critique_rejects_v1_5_missing_editorial_art_direction_block(
+    tmp_path: Path,
+) -> None:
+    # Same export-gate invariant for the v1.5 schema's mandated editorial_art_direction
+    # block; see test_lint_critique_rejects_v1_3_missing_top_tier_audit_block.
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_critique(
+        fig_dir,
+        schema="figure-agent.critique.v1.5",
+        journal_polish_evidence="print-scale audit: print_178mm.png and print_thumbnail.png pass",
+        publication_readiness_evidence=(
+            "publication readiness includes print-scale evidence from print_178mm.png"
+        ),
+        micro_defects_yaml="micro_defects: []\n",
+        editorial_yaml=_editorial_yaml(),
+        findings_yaml="findings: []\n",
+    )
+    assert critique_lint.lint_critique(fig_dir) == []
+
+    _remove_frontmatter_block(fig_dir / "critique.md", "editorial_art_direction")
+    violations = critique_lint.lint_critique(fig_dir)
+    assert violations
+    assert violations[0].severity == "blocker"
+    assert violations[0].category == "critique_contract"
+    assert "editorial_art_direction" in violations[0].message
 
 
 def test_lint_critique_rejects_unlinked_v1_6_instrument_label_micro_defect(
@@ -4679,3 +4888,103 @@ def test_lint_critique_cli_reports_controlled_error_for_invalid_fixture_name(
     assert result == 1
     assert "invalid fixture path" in captured.out
     assert "Traceback" not in captured.err
+
+
+def _passing_print_scale_frontmatter(schema: str) -> dict[str, object]:
+    return {
+        "schema": schema,
+        "quality_axes": {
+            "journal_polish": {
+                "verdict": "pass",
+                "evidence": "journal polish reads cleanly",
+            },
+            "publication_readiness": {
+                "verdict": "pass",
+                "evidence": "all upstream axes pass; artifact is figure-ready",
+            },
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ["figure-agent.critique.v1.14", "figure-agent.critique.v1.17"],
+)
+def test_print_scale_blocker_fires_for_brief_emitted_schema_without_evidence(
+    schema: str,
+) -> None:
+    violations = critique_evidence_violations(_passing_print_scale_frontmatter(schema))
+
+    assert {violation.message for violation in violations} == {
+        "journal_polish verdict is pass but evidence does not name print-scale audit evidence",
+        "publication_readiness verdict is pass but evidence does not name "
+        "print-scale audit evidence",
+    }
+
+
+# --- schema/accounting coupling coverage (folded from
+# test_critique_schema_accounting_coverage.py to keep the net test-file count
+# stable) ---
+#
+# `critique_brief` emits one of a small set of critique schema versions. The
+# audit-evidence accounting only enforces a deterministic detector
+# (visual_clash, text_boundary, label_path, undeclared_geometry, crop_audit,
+# print-scale) when the critique's schema string is a member of that detector's
+# hand-maintained accounting frozenset. If a schema the brief can emit is missing
+# from a set, the detector accounting is silently skipped and an unaccounted
+# candidate slips through with no gate. These tests fail the moment a future
+# schema bump is wired into the brief/validator but not into one of the
+# accounting frozensets, instead of letting the gap pass silently.
+
+
+def _emitted_critique_schemas() -> set[str]:
+    """The full set of schema strings `critique_brief` can stamp on a fresh
+    critique. Derived from the producer's own constants so the test tracks the
+    brief, not a hard-coded copy."""
+    return {
+        critique_brief._CRITIQUE_SCHEMA_VERSION,
+        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_14,
+        critique_brief._CRITIQUE_SCHEMA_VERSION_V1_17,
+    }
+
+
+# Detectors whose accounting must apply to every schema the brief emits today,
+# keyed by the module that owns each accounting frozenset. (All emitted schemas
+# are >= v1.10, the version at which each of these detectors became part of the
+# accounting contract.)
+_REQUIRED_DETECTOR_ACCOUNTING_SETS = (
+    (critique_lint, "VISUAL_CLASH_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "TEXT_BOUNDARY_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "LABEL_PATH_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "UNDECLARED_GEOMETRY_ACCOUNTING_SCHEMAS"),
+    (critique_lint, "CROP_AUDIT_ACCOUNTING_SCHEMAS"),
+    (critique_evidence_lint, "SCHEMAS_WITH_PRINT_SCALE_EVIDENCE"),
+)
+
+
+def test_emitted_schemas_are_in_every_detector_accounting_set() -> None:
+    emitted = _emitted_critique_schemas()
+    assert emitted, "critique_brief must declare at least one emittable schema"
+    for module, set_name in _REQUIRED_DETECTOR_ACCOUNTING_SETS:
+        accounting_set = getattr(module, set_name)
+        missing = sorted(emitted - accounting_set)
+        assert not missing, (
+            f"{set_name} does not cover brief-emitted schema(s) {missing}; "
+            "their deterministic detector accounting would be silently skipped"
+        )
+
+
+def test_emitted_schemas_are_recognized_by_validator() -> None:
+    # A schema the brief emits must route into a real validation branch, not the
+    # else: "unsupported or missing critique schema" fall-through. We probe with
+    # a bare frontmatter: a recognized schema raises a *field-level* contract
+    # error, never the unsupported-schema error.
+    for schema in sorted(_emitted_critique_schemas()):
+        try:
+            critique_schema_validator.validate_critique_schema({"schema": schema})
+        except CritiqueContractError as exc:
+            assert "unsupported or missing critique schema" not in str(exc), (
+                f"brief emits {schema} but the validator does not recognize it"
+            )
+        else:  # pragma: no cover - bare frontmatter never fully validates
+            raise AssertionError(f"bare frontmatter for {schema} unexpectedly validated clean")

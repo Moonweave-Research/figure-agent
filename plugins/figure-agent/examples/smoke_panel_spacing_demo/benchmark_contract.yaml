@@ -1,0 +1,22 @@
+schema: figure-agent.benchmark-contract.v1
+fixture: smoke_panel_spacing_demo
+defect_class: panel_boundary_overlap
+candidate_families:
+  - panel-layout
+candidate_edit_classes:
+  - panel_spacing_adjust
+required_detectors:
+  - panel_spacing
+detector_reports:
+  panel_spacing: benchmark_reports/panel_spacing.json
+expected_movement:
+  panel_spacing.boundary_overlap_count: decrease_or_equal
+hard_regressions:
+  - source_compile_failure
+  - candidate_hard_gate_rejected
+reference_policy:
+  kind: repo_authored_synthetic
+  external_images_allowed: false
+  golden_target_allowed: true
+release:
+  release_blocking: true

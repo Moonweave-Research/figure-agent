@@ -649,8 +649,11 @@
 % spec.yaml panel_c_mobility_edge_reference declares clearance_pt=4.0 — still
 % violates. Bumped to y=8.00 → 0.15cm TikZ shift = 5.4pt PDF clear > 4.0pt.
 % Panel-loop iter L7b: mobility edge !65 → !60 (unify with vacuum tier).
+% Goal-1 elem-iter [2026-06-04]: y 8.10 -> 8.00. E_C label (8.30) and 'mobility
+% edge' nearly touched at zoom; -0.10 widens the E_C gap 0.20->0.30 while keeping
+% iter-28's 5.4pt clearance (>4.0pt req) above the dashed line at 7.85.
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!60!black,
-      anchor=west] at (12.15, 8.10) {mobility edge};
+      anchor=west] at (12.25, 8.00) {mobility edge};
 \draw[cGray!60!black, line width=0.45pt] (10.55, 5.30) -- (12.10, 5.30);
 \node[font=\sffamily\fontsize{6.5}{7.8}\selectfont, text=cGray!75!black,
       anchor=west] at (12.15, 5.30) {$E_V$};
@@ -931,8 +934,10 @@
 % extended (tip 5.02→5.12). Now the convergence VECTOR is distinctly heavier
 % than the thin (0.35pt) grouping bracket — visual hierarchy: thin bracket =
 % "3 evidence grouped", bold up arrow = "converge on the model".
-\draw[-{Stealth[length=5pt,width=3.5pt]}, cGray!70!black, line width=0.70pt]
-  (6.975, 4.85) -- (6.975, 5.12);
+% Goal-1 elem-iter [2026-06-04]: arrow tip 5.12 -> 5.02 + head 5/3.5 -> 4/3pt so
+% the caption can drop to 5.05 (off row-1) without the tip merging into glyphs.
+\draw[-{Stealth[length=4pt,width=3pt]}, cGray!70!black, line width=0.70pt]
+  (6.975, 4.85) -- (6.975, 5.02);
 % Paper-context iter PL1: restore briefing §2 frame 5 "convergent evidence"
 % semantic gate caption. Subtle 6pt italic cGray!60 placed ABOVE up arrow tip
 % in inter-row gap, NOT bold dominant — integrated with bracket geometry as
@@ -944,8 +949,11 @@
 % AGENT+ADVISOR FIX: caption y 5.05 → 5.15 so heavier up-arrow tip (now 5.12)
 % sits just below caption baseline (0.03cm gap) instead of merging into glyphs.
 % Caption top 5.29; Sulfur axis label bottom ~5.40 → 0.11cm gap (still clear).
+% Goal-1 elem-iter [2026-06-04]: caption y 5.15 -> 5.05 — user flagged it 'stuck
+% against row 1'. Glyph 5.05..5.19; gap to Panel B Sulfur axis label (~5.40) now
+% 0.21cm (was 0.11cm). Sits just above the shortened arrow tip (5.02).
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!60!black,
-      anchor=south, inner sep=0pt] at (6.975, 5.15) {convergent evidence};
+      anchor=south, inner sep=0pt] at (6.975, 5.05) {convergent evidence};
 % Modality labels: connector tier 6pt cGray!70 in inter-row gap.
 % kinetic + mechanical sit below their down-verticals (y=4.53 anchor=north).
 % AGENT+ADVISOR FIX: ISPD moved UP to (6.975, 4.62) anchor=south — now in the
@@ -1015,12 +1023,23 @@
 \fill[cGray!6, rounded corners=1pt] (0.50, 3.07) rectangle (1.30, 3.77);
 \draw[cGray!70!black, line width=0.45pt, rounded corners=1pt]
   (0.50, 3.07) rectangle (1.30, 3.77);
+% Instrument-substance pass (2026-06-01, user art direction): SMU was the only
+% source box WITHOUT a display, reading as a flimsy labeled rectangle. Brought to
+% the figure's own instrument standard (HV+/V_s meter/V_active each carry a
+% dark-glass display) + inner faceplate bezel for machined-panel weight. Flat —
+% no gloss, no hue, no fake readout data (empty dark glass like the others).
+% Reverses C007's minimalist readout deletion now that the art direction wants
+% substance over bare minimalism.
+\draw[cGray!35!black, line width=0.20pt, rounded corners=0.8pt]
+  (0.565, 3.115) rectangle (1.235, 3.725);
+\fill[cGray!70!black, rounded corners=0.6pt] (0.62, 3.58) rectangle (1.18, 3.70);
+\draw[cGray!85!black, line width=0.12pt, rounded corners=0.6pt]
+  (0.62, 3.58) rectangle (1.18, 3.70);
+\fill[cGray!45!black, opacity=0.5] (0.64, 3.685) rectangle (1.16, 3.692);
 \node[font=\sffamily\itshape\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=center] at (0.90, 3.57) {SMU};
+      anchor=center] at (0.90, 3.45) {SMU};
 \node[font=\sffamily\fontsize{6}{7.2}\selectfont, text=cGray!75!black,
-      anchor=center] at (0.90, 3.27) {V\,/\,A};
-% v8.7 critique C007: tiny SMU readout indicator deleted — V/A + SMU label
-% already carry source-meter identity; rectangle was decorative noise.
+      anchor=center] at (0.90, 3.23) {V\,/\,A};
 
 % MIM sample stack (CENTER, ENLARGED to be visual hero)
 % Top electrode v8.5 [briefing relax R2, 2026-05-26]: dial turn-up.
@@ -1196,10 +1215,15 @@
 % !80!black for cross-line consistency (matching Coulomb iter L8 + Panel C trap).
 \path[draw=none] (0.65, 2.30) -- (3.85, 0.55)
   node[pos=0.55, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
-       text=cRed!80!black, sloped, above=6pt, inner sep=1pt]
+       text=cRed!80!black, sloped, below=5pt, inner sep=1pt]
   {high $n$};
+% Goal-1 overnight elem-iter (2026-06-04): pos=0.40 → 0.60. 2026-05-27 Debye
+% cliff rewrite (1169-1186) raised the dash plateau-then-cliff into this
+% pre-existing label (pos=0.40 at curve point (1.93,1.98)); cliff at x=1.93 is
+% y≈2.13, passing through the label box (lown_zoom.png confirms dash under 'lo').
+% pos=0.60 lands at (2.57,1.82), right of the cliff terminus (x=2.22), clearing it.
 \path[draw=none] (0.65, 2.30) -- (3.85, 1.50)
-  node[pos=0.40, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
+  node[pos=0.60, font=\sffamily\bfseries\itshape\fontsize{6.5}{7.8}\selectfont,
        text=cBlue!80!black, sloped, above=6pt, inner sep=1pt]
   {low $n$};
 
@@ -1335,6 +1359,9 @@
 \fill[cGray!70!black, rounded corners=1pt] (5.90, 4.20) rectangle (6.36, 4.33);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
   (5.90, 4.20) rectangle (6.36, 4.33);
+% Instrument-substance pass (2026-06-01): glass-sheen highlight so the dark
+% display reads as a powered screen, consistent with the SMU upgrade.
+\fill[cGray!45!black, opacity=0.5] (5.92, 4.318) rectangle (6.34, 4.324);
 % iter 32: HV+ status LED — cRed dot indicating active discharge state.
 % iter E16 (M1 Panel E critical review): square-wave pulse trace read as
 % "pulse generator". Corona discharge is DC HV. Replaced with the standard
@@ -1490,10 +1517,13 @@
 % iter E3 outline 0.45pt cGray!75 - too prominent for tertiary tier.
 % Reduced to 0.28pt cGray!55!black + disk gradient muted (cGray!30/!55/!28
 % → cGray!25/!42/!22). Less metallic shine.
-\shade[left color=cGray!25, middle color=cGray!42,
-       right color=cGray!22]
+% Instrument-substance pass (2026-06-01): disk un-muted one notch (was iter-34
+% tertiary-tier demote) so the ISPD probe head reads as a defined metal sensor,
+% not a faint afterthought. Still below corona-primary tier.
+\shade[left color=cGray!32, middle color=cGray!52,
+       right color=cGray!30]
   (6.8, 3.8) rectangle (7.2, 3.87);
-\draw[cGray!55!black, line width=0.28pt] (6.8, 3.8) rectangle (7.2, 3.87);
+\draw[cGray!65!black, line width=0.30pt] (6.8, 3.8) rectangle (7.2, 3.87);
 \fill[white, opacity=0.40] (6.81, 3.868) rectangle (7.18, 3.87);
 % iter E16 (2026-05-21, user clarification): vertical-oscillation glyph
 % removed. Keyence SK-series surface voltmeter uses induction sensing, not
@@ -1546,16 +1576,25 @@
 % iter8 follow-up: V_s meter box matching HV+ gradient depth + stroke.
 % iter10 follow-up: V_s meter drop shadow matching HV+.
 % iter 16 follow-up: V_s meter cool metallic to match HV+ box.
-\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.58) rectangle (8.68, 4.05);
+% Layout fix (2026-06-01, user): box raised +0.12 to fill top space and sit
+% above the slab/probe; internal display re-centered + shrunk so the label fits.
+\fill[cGray!6, rounded corners=1.2pt] (7.68, 3.70) rectangle (8.68, 4.22);
 \draw[cGray!60!black, line width=0.30pt, rounded corners=1.2pt]
-  (7.68, 3.58) rectangle (8.68, 4.05);
+  (7.68, 3.70) rectangle (8.68, 4.22);
+% Goal-1 elem-iter (2026-06-04): inner faceplate bezel — the 2026-06-01 substance
+% pass gave V_s-meter the glass-sheen but NOT the bezel that SMU/V_active carry.
+% Matches SMU (L1033-34): cGray!35!black 0.20pt, inset 0.065cm x / 0.045cm y.
+\draw[cGray!35!black, line width=0.20pt, rounded corners=0.8pt]
+  (7.745, 3.745) rectangle (8.615, 4.175);
 % (2) Dark glass display — iter 38: oscilloscope aesthetic (dark bg, glowing trace)
 % iter 44 (Gemini Top 3): bg lightened cGray!85→!70 black, axis arrowheads
 % smaller (2pt→1.5pt), decay curve single-bezier (no kink).
 % Display — iter 50: enlarged vertically 0.15→0.22cm (decay curve room).
-\fill[cGray!70!black, rounded corners=1pt] (7.72, 3.78) rectangle (8.56, 4);
+\fill[cGray!70!black, rounded corners=1pt] (7.80, 4.05) rectangle (8.56, 4.17);
 \draw[cGray!85!black, line width=0.15pt, rounded corners=1pt]
-  (7.72, 3.78) rectangle (8.56, 4);
+  (7.80, 4.05) rectangle (8.56, 4.17);
+% Instrument-substance pass (2026-06-01): glass-sheen highlight (matches SMU/HV+).
+\fill[cGray!45!black, opacity=0.5] (7.82, 4.158) rectangle (8.54, 4.165);
 % Panel E iter 12 [Panel E full-loop, 2026-05-27]: V_s meter display readout.
 % Removed empty x-y axes (left a vacant "scope ready" feel — schematic).
 % Added digital readout matching ESVM real instrument convention.
@@ -1574,10 +1613,12 @@
 % 5pt cGray!75 (match Probe / HV+ / polymer film apparatus tier). Bold + larger
 % size was outlier among E apparatus labels.
 % iter 38: V_s meter label inside box bottom (revert to box-internal convention).
-% Box: x=7.68..8.68, y=3.58..4.05. Display: x=7.72..8.56, y=3.78..4.00.
-% Label sits at box bottom area (y=3.66, between box bottom 3.58 and display 3.78).
+% Layout fix (2026-06-01): display re-centered (was shifted left, asymmetric
+% margins) + shrunk; box raised. Box: x=7.68..8.68, y=3.70..4.22. Display:
+% x=7.80..8.56, y=4.05..4.17 (margins 0.12/0.12). Label centered at y=3.86,
+% clear of display bottom 4.05 and box bottom 3.70 (no longer colliding).
 \node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray!55!black]
-  at (8.14, 3.68) {$V_s$ meter};
+  at (8.18, 3.86) {$V_s$ meter};
 % (6) Bezier cable from probe — iter 17 (S4 fix): control points reversed
 % from upward arc (y=4.10/4.05) to gentle droop (y=3.95/3.85). Cable now
 % reads as physical wire going horizontal from probe top then curving down
@@ -1588,9 +1629,11 @@
 % iter14 follow-up: bezier cable thickness 0.30 -> 0.35pt + start at probe dome
 % (now at 7.00, 4.085 — iter13 added dome at 7.00, 4.06+0.025=4.085).
 % Cable now connects cleanly to dome, not raw shaft top. Input port ball-shaded.
+% Cable re-aimed to the raised meter; input port now sits on the box left wall,
+% clear of the display (was overlapping the display corner).
 \draw[cGray!75!black, line width=0.35pt]
-  (7.00, 4.085) .. controls (7.15, 4.07) and (7.52, 3.9) .. (7.72, 3.85);
-\shade[ball color=cGray!85!black] (7.72, 3.85) circle (0.028);
+  (7.00, 4.085) .. controls (7.22, 4.12) and (7.52, 4.11) .. (7.72, 4.11);
+\shade[ball color=cGray!85!black] (7.72, 4.11) circle (0.026);
 
 % Polymer film label — iter 48 (Codex): demoted to cGray!65 + position
 % (5.75, 3.525)→(5.6, 3.5). Secondary apparatus annotation tier.
@@ -1812,6 +1855,9 @@
 \fill[cGray!6] (11.8, 3.2) rectangle (12.65, 3.85);
 \draw[cGray!60!black, line width=0.25pt]
   (11.8, 3.2) rectangle (12.65, 3.85);
+% Instrument-substance pass (2026-06-01): inner faceplate bezel (matches SMU)
+% for machined-panel weight; V_active keeps its lit waveform display.
+\draw[cGray!35!black, line width=0.18pt] (11.85, 3.25) rectangle (12.60, 3.81);
 % Inset display window (shifted right with PSU)
 \fill[cGray!18] (11.9, 3.55) rectangle (12.55, 3.78);
 \draw[cGray!55!black, line width=0.18pt]
@@ -1858,37 +1904,37 @@
 % MOVES under Coulomb force.
 % F-4 v8.6 [briefing relax R2, 2026-05-26]: calibrated. shadow 0.40→0.28,
 % gradient delta preserved (metallic identity), bevel 0.85→0.55.
-\fill[cGray!10] (11.85, 2.42) rectangle (12.25, 2.52);
+\fill[cGray!10] (11.785, 2.42) rectangle (12.185, 2.52);
 \draw[cGray!75!black, line width=0.40pt]
-  (11.85, 2.42) rectangle (12.25, 2.52);
-\draw[cGray!50!black, line width=0.40pt] (11.75, 2.65) -- (12.35, 2.65);
+  (11.785, 2.42) rectangle (12.185, 2.52);
+\draw[cGray!50!black, line width=0.40pt] (11.685, 2.65) -- (12.285, 2.65);
 \foreach \dx in {0,0.10,0.20,0.30,0.40,0.50} {
   \draw[cGray!50!black, line width=0.25pt]
-    ({11.75+\dx}, 2.65) -- ({11.70+\dx}, 2.72);
+    ({11.685+\dx}, 2.65) -- ({11.635+\dx}, 2.72);
 }
-\draw[cGray!75!black, line width=0.40pt] (12.05, 2.52) -- (12.05, 2.65);
+\draw[cGray!75!black, line width=0.40pt] (11.985, 2.52) -- (11.985, 2.65);
 
 % F-5 bent cantilever polymer (root x=12.45, bent LEFT toward 11.75)
 % v8.7 iter 4: root + tip shifted to align with new clip position.
 \shade[top color=cAmber!22, bottom color=cAmber!42, rounded corners=0.3mm]
-  (11.92, 2.42) .. controls (11.92, 1.85) and (11.65, 1.35) ..
-  (11.35, 0.85) -- (11.5, 0.85) .. controls (11.8, 1.35) and
-  (12.05, 1.85) .. (12.05, 2.42) -- cycle;
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
 \draw[cAmber!80!black, line width=0.55pt, rounded corners=0.3mm]
-  (11.92, 2.42) .. controls (11.92, 1.85) and (11.65, 1.35) ..
-  (11.35, 0.85) -- (11.5, 0.85) .. controls (11.8, 1.35) and
-  (12.05, 1.85) .. (12.05, 2.42) -- cycle;
+  (11.92, 2.42) .. controls (11.94, 1.80) and (11.55, 1.22) ..
+  (11.11, 0.93) -- (11.21, 0.84) .. controls (11.74, 1.16) and
+  (12.07, 1.80) .. (12.05, 2.42) -- cycle;
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
-  (11.855, 2.35) .. controls (11.855, 1.85) and (11.585, 1.35) .. (11.285, 0.88);
+  (11.94, 2.28) .. controls (11.955, 1.78) and (11.565, 1.23) .. (11.125, 0.95);
 \draw[cAmber!65!black, line width=0.28pt, opacity=0.38]
-  (11.985, 2.35) .. controls (11.985, 1.85) and (11.715, 1.35) .. (11.415, 0.88);
+  (11.995, 2.35) .. controls (12.015, 1.80) and (11.66, 1.20) .. (11.20, 0.86);
 % F-5 v8.6 [briefing relax R2, 2026-05-26]: calibrated — 1.2mm→0.6mm,
 % 0.60→0.42; reads as polymer surface highlight, not white disc.
 
 % F-6 3 q_tr markers along polymer (shifted with polymer)
 % Iter 10: q_tr markers upgraded to ball-shaded spheres (matches Panel C
 % trap dots + Panel E surface ⊕ charges aesthetic).
-\foreach \cx/\cy in {11.85/2.00, 11.75/1.55, 11.60/1.10} {
+\foreach \cx/\cy in {11.90/2.00, 11.66/1.48, 11.34/1.07} {
   \shade[ball color=cRed!70!black] (\cx, \cy) circle (0.07);
   \draw[cRed!95!black, line width=0.22pt] (\cx, \cy) circle (0.07);
 }
@@ -1915,7 +1961,7 @@
 % which still reads as 'on cantilever' (cantilever right edge at this y is
 % around x=11.70).
 \draw[-{Stealth[length=6pt,width=4.5pt]}, cRed!80!black, line width=0.7pt]
-  (11.75, 1.3) -- (10.85, 1.3);
+  (11.55, 1.3) -- (10.85, 1.3);
 % Panel-loop iter L8: Coulomb tone cRed!75 → !80!black (match arrow stroke tone).
 \node[font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont, text=cRed!80!black,
       anchor=south east] at (10.85, 1.35) {Coulomb};

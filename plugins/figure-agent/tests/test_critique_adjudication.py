@@ -281,7 +281,7 @@ def _complete_v1_1_audit_yaml() -> str:
         "      nearest_object: polymer band\n"
         "      intended_target: polymer film\n"
         "      matches: true\n"
-        "      proposed_fix: \"\"\n"
+        '      proposed_fix: ""\n'
         "  physical_plausibility:\n"
         "    - check: cable_gravity\n"
         "      finding: cable is schematic-straight consistently\n"
@@ -464,7 +464,7 @@ def _micro_defects_yaml(*, linked_finding_id: str = "C001", status: str = "open"
         "    kind: wire_crosses_label\n"
         "    severity: MAJOR\n"
         "    observation: wire_crosses_label visible across the trap label\n"
-        f"    linked_finding_id: \"{linked_finding_id}\"\n"
+        f'    linked_finding_id: "{linked_finding_id}"\n'
         f"    status: {status}\n"
     )
 
@@ -817,9 +817,7 @@ def test_policy_auto_dismisses_accepted_simplification_style_finding(
 
     assert scaffold["decisions"][0]["decision"] == "dismiss"
     assert scaffold["decisions"][0]["patch_target"] == ""
-    assert scaffold["decisions"][0]["reason"].startswith(
-        "AUTO_DISMISS_ACCEPTED_SIMPLIFICATION:"
-    )
+    assert scaffold["decisions"][0]["reason"].startswith("AUTO_DISMISS_ACCEPTED_SIMPLIFICATION:")
     assert "critique.md finding P001" in scaffold["decisions"][0]["evidence"]
 
 
@@ -1024,9 +1022,7 @@ def test_policy_auto_applies_at_most_one_safe_nit_style_patch(tmp_path: Path) ->
     decisions = {item["finding_id"]: item for item in scaffold["decisions"]}
     assert decisions["C001"]["decision"] == "apply"
     assert decisions["C001"]["patch_target"] == "examples/demo_fig/demo_fig.tex lines 10-12"
-    assert decisions["C001"]["reason"].startswith(
-        "AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH:"
-    )
+    assert decisions["C001"]["reason"].startswith("AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH:")
     assert decisions["C002"]["decision"] == "defer"
     assert decisions["C002"]["reason"].startswith("AUTO_DEFER_APPLY_LIMIT_ONE_TARGET:")
 
@@ -1073,8 +1069,7 @@ def test_build_adjudication_scaffold_rejects_v1_4_major_micro_defect_without_lin
         fig_dir,
         critique_schema="figure-agent.critique.v1.4",
         extra_frontmatter_yaml=(
-            _complete_v1_3_top_tier_audit_yaml()
-            + _micro_defects_yaml(linked_finding_id="")
+            _complete_v1_3_top_tier_audit_yaml() + _micro_defects_yaml(linked_finding_id="")
         ),
     )
 
@@ -1114,7 +1109,7 @@ def test_build_adjudication_scaffold_rejects_v1_10_vague_visual_clash_simplifica
         "    kind: label_backdrop_overflows_outline\n"
         "    severity: NIT\n"
         "    observation: VC001 is a detector false positive on a decorative texture\n"
-        "    linked_finding_id: \"\"\n"
+        '    linked_finding_id: ""\n'
         "    visual_clash_ref: VC001\n"
         "    status: accept_simplification\n"
         "    accept_simplification_reason: false_positive\n"
@@ -1127,7 +1122,7 @@ def test_build_adjudication_scaffold_rejects_v1_10_vague_visual_clash_simplifica
         "    source: visual_clash:VC001\n"
         "    inspected: true\n"
         "    verdict: no_defect\n"
-        "    linked_micro_defect_id: \"\"\n"
+        '    linked_micro_defect_id: ""\n'
         "    rationale: crop inspected and accounted through micro defect M001\n"
     )
     _write_v1_2_critique_with_quality_axes(
@@ -1186,7 +1181,7 @@ def test_build_adjudication_scaffold_rejects_v1_3_empty_top_tier_finding(
     fig_dir.mkdir()
     top_tier_yaml = _complete_v1_3_top_tier_audit_yaml().replace(
         "    finding: first_glance_message is acceptable for the current artifact\n",
-        "    finding: \"\"\n",
+        '    finding: ""\n',
     )
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
@@ -1392,8 +1387,8 @@ def test_build_adjudication_scaffold_accepts_v1_3_accept_simplification_link_exc
         "    blocks_high_impact: false\n",
         "    verdict: needs_human\n"
         "    finding: first-glance story depends on target-journal art direction\n"
-        "    concrete_fix: \"accept_simplification: keep current schematic until target "
-        "journal is known\"\n"
+        '    concrete_fix: "accept_simplification: keep current schematic until target '
+        'journal is known"\n'
         "    blocks_high_impact: false\n",
         1,
     )
@@ -1464,8 +1459,7 @@ def test_build_adjudication_scaffold_rejects_out_of_range_sub_score(
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
         critique_input_hash=critique_hash,
-        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
-        + score_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash) + score_yaml,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="sub_scores.polish"):
@@ -1482,8 +1476,7 @@ def test_build_adjudication_scaffold_rejects_boolean_score(
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
         critique_input_hash=critique_hash,
-        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
-        + score_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash) + score_yaml,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="overall_score"):
@@ -1503,8 +1496,7 @@ def test_build_adjudication_scaffold_rejects_empty_score_rationale(
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
         critique_input_hash=critique_hash,
-        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
-        + score_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash) + score_yaml,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="score_rationale"):
@@ -1539,8 +1531,7 @@ def test_build_adjudication_scaffold_rejects_missing_sub_score_key(
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
         critique_input_hash=critique_hash,
-        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
-        + score_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash) + score_yaml,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="sub_scores"):
@@ -1560,8 +1551,7 @@ def test_build_adjudication_scaffold_rejects_extra_sub_score_key(
     _write_v1_2_critique_with_quality_axes(
         fig_dir,
         critique_input_hash=critique_hash,
-        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash)
-        + score_yaml,
+        journal_assessment_yaml=_journal_assessment_yaml(assessed_hash=critique_hash) + score_yaml,
     )
 
     with pytest.raises(CritiqueAdjudicationError, match="sub_scores"):
@@ -1598,8 +1588,7 @@ def test_build_adjudication_scaffold_allows_lower_score_after_regression(
         assessed_hash=critique_hash,
         level="draft",
     ).replace(
-        "  regression_detected: false\n"
-        "  regressions: []\n",
+        "  regression_detected: false\n  regressions: []\n",
         "  regression_detected: true\n"
         "  regressions:\n"
         "    - axis: polish\n"
@@ -1778,8 +1767,8 @@ def test_build_adjudication_scaffold_rejects_v1_2_empty_evidence_for_pass(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     quality_axes_yaml = _complete_v1_2_quality_axes_yaml().replace(
-        "    evidence: \"message_storyline evidence\"\n",
-        "    evidence: \"\"\n",
+        '    evidence: "message_storyline evidence"\n',
+        '    evidence: ""\n',
         1,
     )
     _write_v1_2_critique_with_quality_axes(fig_dir, quality_axes_yaml=quality_axes_yaml)
@@ -2204,7 +2193,7 @@ def test_build_adjudication_scaffold_rejects_v1_1_empty_audit_block(
         "      nearest_object: polymer band\n"
         "      intended_target: polymer film\n"
         "      matches: true\n"
-        "      proposed_fix: \"\"\n",
+        '      proposed_fix: ""\n',
         "  label_target_matching: []\n",
     )
     _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
@@ -2223,8 +2212,7 @@ def test_build_adjudication_scaffold_rejects_v1_1_malformed_audit_item(
         "    - check: cable_gravity\n"
         "      finding: cable is schematic-straight consistently\n"
         "      verdict: convention_acceptable\n",
-        "  physical_plausibility:\n"
-        "    - null\n",
+        "  physical_plausibility:\n    - null\n",
     )
     _write_v1_1_critique_with_audit(fig_dir, audit_yaml)
 
@@ -2261,7 +2249,7 @@ def test_build_adjudication_scaffold_rejects_unsupported_critique_schema(
         encoding="utf-8",
     )
 
-    with pytest.raises(CritiqueAdjudicationError, match="unsupported critique schema"):
+    with pytest.raises(CritiqueAdjudicationError, match="unsupported or missing critique schema"):
         build_adjudication_scaffold(fig_dir)
 
 
@@ -2339,9 +2327,7 @@ def test_build_adjudication_scaffold_fails_cleanly_for_malformed_critique_yaml(
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
-        "---\n"
-        "schema: [unterminated\n"
-        "---\n",
+        "---\nschema: [unterminated\n---\n",
         encoding="utf-8",
     )
 
@@ -2361,11 +2347,7 @@ def test_build_adjudication_scaffold_rejects_non_list_findings(tmp_path: Path) -
     fig_dir = tmp_path / "demo_fig"
     fig_dir.mkdir()
     (fig_dir / "critique.md").write_text(
-        "---\n"
-        "schema: figure-agent.critique.v1\n"
-        "fixture: demo_fig\n"
-        "findings: C001\n"
-        "---\n",
+        "---\nschema: figure-agent.critique.v1\nfixture: demo_fig\nfindings: C001\n---\n",
         encoding="utf-8",
     )
 

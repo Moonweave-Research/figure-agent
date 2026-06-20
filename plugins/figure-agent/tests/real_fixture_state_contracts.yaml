@@ -52,7 +52,7 @@ fixtures:
     driver:
       review:
         action: run_fig_loop
-        safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'contract matrix' --json
+        safe_command: fig-agent loop smoke_trap_demo --goal 'contract matrix' --json
         stop_boundary:
       release:
         action: release_blocked
@@ -60,7 +60,7 @@ fixtures:
         stop_boundary: accepted_or_final_ready_required
       polish:
         action: run_fig_loop
-        safe_command: uv run python3 scripts/fig_loop.py smoke_trap_demo --goal 'contract matrix' --json
+        safe_command: fig-agent loop smoke_trap_demo --goal 'contract matrix' --json
         stop_boundary: mode_forbidden_action
 
   - fixture: fig5_floating_clip_mechanism

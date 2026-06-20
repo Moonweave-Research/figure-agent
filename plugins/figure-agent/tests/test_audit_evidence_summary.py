@@ -55,6 +55,8 @@ def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) ->
         _write_text_boundary_clash_report(fig_dir, ())
     if not (fig_dir / "build" / "undeclared_geometry.json").exists():
         _write_undeclared_geometry_report(fig_dir, ())
+    if not (fig_dir / "build" / "label_path_proximity.json").exists():
+        _write_label_path_report(fig_dir, ())
 
 
 def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
@@ -77,6 +79,38 @@ def _write_text_boundary_clash_report(fig_dir: Path, candidate_ids: tuple[str, .
                         "bbox_pt": [70.0, 20.0, 75.0, 30.0],
                         "boundary_pt": {"x": 72.0, "y_range": [0.0, 144.0]},
                         "clearance_pt": 0.5,
+                    }
+                    for candidate_id in candidate_ids
+                ],
+                "total": len(candidate_ids),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_label_path_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:
+    report = fig_dir / "build" / "label_path_proximity.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.label-path-proximity.v1",
+                "fixture": fig_dir.name,
+                "render_pdf": f"build/{fig_dir.name}.pdf",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "candidates": [
+                    {
+                        "id": candidate_id,
+                        "kind": "label_touches_reference_line",
+                        "text": f"label {candidate_id}",
+                        "path_id": "de_baseline",
+                        "path_role": "reference_line",
+                        "bbox_pt": [70.0, 20.0, 75.0, 30.0],
+                        "path_pt": {"kind": "horizontal_line", "y": 25.0},
+                        "clearance_pt": 1.0,
+                        "distance_pt": 0.5,
                     }
                     for candidate_id in candidate_ids
                 ],
@@ -164,7 +198,7 @@ def _micro_defect_yaml(
         "    kind: line_crosses_label\n"
         "    severity: NIT\n"
         f"    observation: {visual_clash_ref} is accepted as a detector false positive\n"
-        "    linked_finding_id: \"\"\n"
+        '    linked_finding_id: ""\n'
         f"    visual_clash_ref: {visual_clash_ref}\n"
         f"    text_boundary_ref: {text_boundary_ref!r}\n"
         f"    undeclared_geometry_ref: {undeclared_geometry_ref!r}\n"
@@ -191,7 +225,7 @@ def _crop_audit_log_yaml(
         "    source: full_render\n"
         "    inspected: true\n"
         f"    verdict: {verdict}\n"
-        f"    linked_micro_defect_id: \"{linked}\"\n"
+        f'    linked_micro_defect_id: "{linked}"\n'
         f"    rationale: {crop_id} was inspected\n"
     )
 
@@ -264,6 +298,22 @@ def test_summary_reports_missing_text_boundary_report_for_current_schema(
     assert summary["next_action"] == "/fig_compile demo_fig"
 
 
+def test_summary_reports_missing_label_path_report_for_current_schema(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "demo_fig"
+    _write_visual_clash_report(fig_dir, ("VC001",))
+    (fig_dir / "build" / "label_path_proximity.json").unlink()
+    _write_crop_manifest(fig_dir, ("full_q1",))
+    _write_critique(fig_dir)
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    assert summary["evaluation_state"] == "missing_input"
+    assert summary["blocking_items"] == ["build/label_path_proximity.json"]
+    assert summary["next_action"] == "/fig_compile demo_fig"
+
+
 def test_summary_reports_malformed_visual_clash_report(tmp_path: Path) -> None:
     fig_dir = tmp_path / "demo_fig"
     _write_crop_manifest(fig_dir, ("full_q1",))
@@ -308,7 +358,7 @@ def test_summary_reports_detector_feedback_for_false_positive_and_defect_refs(
         "    kind: line_crosses_label\n"
         "    severity: NIT\n"
         "    observation: VC001 is texture, not a defect.\n"
-        "    linked_finding_id: \"\"\n"
+        '    linked_finding_id: ""\n'
         "    visual_clash_ref: VC001\n"
         "    status: accept_simplification\n"
         "    accept_simplification_reason: false_positive\n"
@@ -629,7 +679,7 @@ def test_summary_counts_duplicate_visual_clash_refs_once(tmp_path: Path) -> None
         "    kind: line_crosses_label\n"
         "    severity: NIT\n"
         "    observation: first accounting\n"
-        "    linked_finding_id: \"\"\n"
+        '    linked_finding_id: ""\n'
         "    visual_clash_ref: VC001\n"
         "    status: accept_simplification\n"
         "    accept_simplification_reason: false_positive\n"
@@ -638,7 +688,7 @@ def test_summary_counts_duplicate_visual_clash_refs_once(tmp_path: Path) -> None
         "    kind: line_crosses_label\n"
         "    severity: NIT\n"
         "    observation: duplicate accounting\n"
-        "    linked_finding_id: \"\"\n"
+        '    linked_finding_id: ""\n'
         "    visual_clash_ref: VC001\n"
         "    status: accept_simplification\n"
         "    accept_simplification_reason: false_positive\n"

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import fixture_identity
+import runtime_paths
 import status_next_policy
 import status_readiness_policy
 from audit_evidence_summary import summarize_audit_evidence
@@ -38,7 +38,9 @@ from svg_polish_manifest import (
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
 # critique-only panel-reference edits.
-STYLE_LOCK_PATH = Path(__file__).resolve().parent.parent / "styles" / "polymer-paper-preamble.sty"
+STYLE_LOCK_PATH = (
+    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+)
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 CRITIQUE_NOT_REQUIRED = "NOT_REQUIRED"
@@ -831,16 +833,17 @@ def _print_single(result: dict) -> None:
         print(f"  Notes: {', '.join(notes)}")
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, workspace_root: Path | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", nargs="?")
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
     emit_json = args.json or args.format == "json"
+    paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace_root)
 
     if args.name is None:
-        examples_dir = Path("examples")
+        examples_dir = paths.examples_dir
         if not examples_dir.is_dir():
             print("no examples/ directory found", file=sys.stderr)
             return 1
@@ -873,7 +876,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        example_dir = _resolve_example_dir_for_cli(args.name)
+        example_dir = _resolve_example_dir_for_cli(args.name, workspace_root=paths.workspace_root)
     except ValueError as exc:
         print(f"invalid fixture path: {exc}", file=sys.stderr)
         return 1
@@ -885,21 +888,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _resolve_example_dir_for_cli(value: str) -> Path:
-    path = Path(value)
-    if path.is_absolute():
-        return path
-    if path.parts and path.parts[0] == "examples":
-        if len(path.parts) != 2 or ".." in path.parts:
-            raise ValueError("expected examples/<fixture-name>")
-        fixture_identity.validate_fixture_name(path.parts[1])
-        return Path("examples") / path.parts[1]
-    if len(path.parts) == 1:
-        fixture_identity.validate_fixture_name(value)
-        if not path.exists() and (Path("examples") / path).is_dir():
-            return Path("examples") / path
-        return path
-    raise ValueError("expected fixture name, examples/<fixture-name>, or an absolute path")
+def _resolve_example_dir_for_cli(value: str, *, workspace_root: Path | None = None) -> Path:
+    return runtime_paths.resolve_example_dir_for_cli(value, workspace_root=workspace_root)
 
 
 if __name__ == "__main__":

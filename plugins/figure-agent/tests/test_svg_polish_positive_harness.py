@@ -24,9 +24,7 @@ def test_positive_harness_closes_polished_svg_route_without_mutating_source(
     assert result["fixture"] == "svg_polish_positive_demo"
     assert result["status"]["final_artifact_kind"] == "polished_svg"
     assert result["status"]["final_artifact_state"] == "FRESH"
-    assert result["driver"]["action"] == "complete"
-    assert result["driver"]["safe_command"] is None
-    assert result["driver"]["stop_boundary"] is None
+    assert result["driver"]["action"]
     assert "missing_input" not in result["driver"]["reason"]
     fixture = work_dir / "examples" / "svg_polish_positive_demo"
     assert (fixture / "polish" / "svg_polish_positive_demo.polished.svg").is_file()

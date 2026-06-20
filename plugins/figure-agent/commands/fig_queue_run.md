@@ -9,11 +9,11 @@ Run the executable workflow-agent subset from `/fig_queue`.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent
-uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --max-fixtures 2
-uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --execute
-uv run python3 scripts/fig_queue_run.py --mode review --goal "<goal>" --actor workflow_agent --format json
-uv run python3 scripts/fig_queue_run.py --mode polish --goal "<goal>" --can-start-svg-polish true
+fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent
+fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent --max-fixtures 2
+fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent --execute
+fig-agent queue-run --mode review --goal "<goal>" --actor workflow_agent --format json
+fig-agent queue-run --mode polish --goal "<goal>" --can-start-svg-polish true
 ```
 
 `/fig_queue_run` is plan-only by default. It builds the same

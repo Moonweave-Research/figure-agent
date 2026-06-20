@@ -29,12 +29,15 @@ The plugin owns:
 - Honest status reporting when examples or exports are stale.
 - The final-artifact contract when a generated export is manually polished for
   manuscript use.
+- Durable paper-specific authoring context compilation from explicit source
+  files, style locks, rule catalogs, and opt-in semantic contracts.
 
 The plugin does not own:
 
 - Choosing the best frontier LLM.
 - Calling image-generation or vision APIs.
-- Teaching an LLM how to create every figure.
+- Transient LLM prompt plumbing: prompt loops, model selection, hidden prompt
+  rewrites, or automatic generation execution.
 - Automatic PNG-to-SVG or PNG-to-TikZ reconstruction.
 - Acting as an SVG editor or automatically polishing SVG paths.
 - More orchestration steps whose value depends on today's model weaknesses.
@@ -47,11 +50,20 @@ The earlier v0.1 identity mixed two concerns:
    authoring prompts, preview selection, HALT/paste/resume loops.
 2. **Durable infrastructure**: Style Lock, compile/export, visual checks,
    reproducibility, status and stale-artifact detection.
+3. **Durable authoring context**: explicit paper-local contracts, source-anchored
+   rule catalogs, style tokens, and semantic claims/invariants that can be read
+   before authoring or critique without calling a model or writing files.
 
 The transient layer may become less valuable as frontier models improve. The
 durable layer remains necessary because manuscripts need consistent style,
 repeatable artifacts, and quality gates that do not depend on memory or model
 behavior.
+
+Authoring context packs belong to the durable layer only when they are compiled
+read-only from committed or user-authored files. They are durable paper-specific
+knowledge compilation, not LLM prompt plumbing and not a return to the v0.1
+prompt-template workflow: no hidden prompts, no preview selection loop, no
+generation executor, and no automatic physics detector.
 
 ## Frozen Legacy Helpers (post-v0.2 cleanup)
 
@@ -112,6 +124,14 @@ Future work should improve this kernel:
    - Clear `fig_status` diagnostics for stale or unreplayable examples.
    - Provenance for any declared polished SVG final artifact, including base
      export hashes, polish audit hash, editor/toolchain, and human reviewer.
+
+6. **Authoring Context**
+   - `fig-agent context-pack <name>` compiles read-only authoring context from
+     explicit source files.
+   - Fig1-derived rule catalogs remain source-anchored N=1 hypotheses until a
+     second figure validates transfer.
+   - Opt-in `spec.yaml` semantic claims and locked invariants become narrow
+     authoring and critique checks, not broad model judgment.
 
 ## Export Tracking Policy
 

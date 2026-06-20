@@ -34,6 +34,8 @@ def _helper_module():
 def test_fig1_overview_v2_tex_geometry_matches_spec_sanity_values():
     helper = _helper_module()
     tex_path = REPO_ROOT / "examples" / "fig1_overview_v2" / "fig1_overview_v2.tex"
+    if not tex_path.is_file():
+        pytest.skip("optional fig1_overview_v2 real fixture is not present in this plugin tree")
 
     geometry = helper.parse_tex_geometry(tex_path.read_text(encoding="utf-8"))
 
@@ -45,6 +47,8 @@ def test_fig1_overview_v2_tex_geometry_matches_spec_sanity_values():
 def test_fig1_overview_v2_source_bbox_converts_to_pdf_cm_top_left_y_down():
     helper = _helper_module()
     tex_path = REPO_ROOT / "examples" / "fig1_overview_v2" / "fig1_overview_v2.tex"
+    if not tex_path.is_file():
+        pytest.skip("optional fig1_overview_v2 real fixture is not present in this plugin tree")
     geometry = helper.parse_tex_geometry(tex_path.read_text(encoding="utf-8"))
 
     bbox = helper.convert_source_bbox_to_pdf_cm((0.0, 5.0, 3.5, 9.0), geometry)

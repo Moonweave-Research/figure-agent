@@ -9,15 +9,15 @@ Inspect the driver-selected next action for multiple fixtures.
 Run from the plugin root:
 
 ```bash
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"
-uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --json
-uv run python3 scripts/fig_queue.py --mode release --goal "<goal>" --format json
-uv run python3 scripts/fig_queue.py --mode final --goal "final readiness" --json
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --action run_fig_loop
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
-uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor workflow_agent --commands
+fig-agent queue --mode review --goal "<goal>"
+fig-agent queue --mode release --goal "<goal>" --json
+fig-agent queue --mode release --goal "<goal>" --format json
+fig-agent queue --mode final --goal "final readiness" --json
+fig-agent queue --mode review --goal "<goal>" fig1_overview_v2_pair_001_vault
+fig-agent queue --mode review --goal "<goal>" --actor host_llm
+fig-agent queue --mode review --goal "<goal>" --action run_fig_loop
+fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --command-plan --json
+fig-agent queue --mode review --goal "<goal>" --actor workflow_agent --commands
 ```
 
 `/fig_queue` is an operator dashboard over `/fig_drive`. It calls the existing
@@ -39,9 +39,9 @@ inspecting the queue.
 For multi-fixture work, use the queue before running any fixture command:
 
 1. Inspect the whole queue:
-   `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>"`.
+   `fig-agent queue --mode review --goal "<goal>"`.
 2. Filter host-vision rows:
-   `uv run python3 scripts/fig_queue.py --mode review --goal "<goal>" --actor host_llm`.
+   `fig-agent queue --mode review --goal "<goal>" --actor host_llm`.
 3. Refresh those critiques in the host LLM environment, then re-check the
    queue.
 4. Inspect deterministic workflow-agent work with
@@ -75,7 +75,7 @@ ask direct evidence questions such as "which real fixtures can start SVG polish
 now?" without hand-filtering JSON:
 
 ```bash
-uv run python3 scripts/fig_queue.py --mode polish --can-start-svg-polish true
+fig-agent queue --mode polish --can-start-svg-polish true
 ```
 
 Use `--command-plan` to add a read-only `command_plan` object to JSON output.

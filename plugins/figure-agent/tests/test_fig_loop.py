@@ -1261,6 +1261,12 @@ def test_loop_does_not_create_new_stop_boundary_for_journal_playbook_summary(
     critique = _write_v1_2_critique(
         fixture,
         schema="figure-agent.critique.v1.12",
+        axis_overrides={
+            "journal_polish": _quality_axis("journal_polish", verdict="pass")
+            | {"evidence": "print-scale audit: print_178mm.png passes"},
+            "publication_readiness": _quality_axis("publication_readiness", verdict="pass")
+            | {"evidence": "print-scale audit: print_thumbnail.png passes"},
+        },
         top_tier_audit=_top_tier_audit(),
         editorial_art_direction=_editorial_art_direction(trigger_path="continue_tikz"),
         micro_defects=[],

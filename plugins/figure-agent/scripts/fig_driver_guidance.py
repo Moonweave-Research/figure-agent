@@ -197,7 +197,9 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
             "/fig_drive in a mode that permits the required workflow step."
         )
     if isinstance(command, str) and command:
-        if command.startswith("FIGURE_AGENT_STRICT=1 "):
+        if command.startswith("FIGURE_AGENT_STRICT=1 ") or (
+            command.startswith("fig-agent compile ") and command.endswith(" --strict")
+        ):
             return f"Run strict compile final check: `{command}`."
         return f"Run the selected command: `{command}`."
     first_blocker_code = _first_blocker_code(summary)

@@ -22,6 +22,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fig_driver  # noqa: E402
+import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
 from fig_run_records import write_run_journal  # noqa: E402
 
@@ -76,8 +77,12 @@ def _driver_summary(
 
 
 def _run_command(command: str, *, repo_root: Path) -> CommandResult:
+    parts = shlex.split(command)
+    if parts and parts[0] == "fig-agent":
+        plugin_root = runtime_paths.resolve_runtime_paths(workspace_root=repo_root).plugin_root
+        parts[0] = str(plugin_root / "bin" / "fig-agent")
     result = subprocess.run(
-        shlex.split(command),
+        parts,
         cwd=repo_root,
         text=True,
         capture_output=True,
@@ -135,7 +140,7 @@ def _command_parts(command: str) -> list[str] | None:
 
 def _compile_command_matches_fixture(command: str, name: str) -> bool:
     parts = _command_parts(command)
-    return parts == [
+    return parts == ["fig-agent", "compile", name] or parts == [
         "bash",
         "scripts/compile.sh",
         f"examples/{name}/{name}.tex",
@@ -144,7 +149,7 @@ def _compile_command_matches_fixture(command: str, name: str) -> bool:
 
 def _adjudicate_command_matches_fixture(command: str, name: str) -> bool:
     parts = _command_parts(command)
-    return parts == [
+    return parts == ["fig-agent", "adjudicate", name] or parts == [
         "uv",
         "run",
         "python3",
@@ -156,7 +161,7 @@ def _adjudicate_command_matches_fixture(command: str, name: str) -> bool:
 
 def _fig_loop_command_matches_fixture(command: str, name: str, goal: str) -> bool:
     parts = _command_parts(command)
-    return parts == [
+    return parts == ["fig-agent", "loop", name, "--goal", goal, "--json"] or parts == [
         "uv",
         "run",
         "python3",
@@ -170,7 +175,13 @@ def _fig_loop_command_matches_fixture(command: str, name: str, goal: str) -> boo
 
 def _export_command_matches_fixture(command: str, name: str) -> bool:
     parts = _command_parts(command)
-    return parts == ["uv", "run", "python3", "scripts/run_export.py", name]
+    return parts == ["fig-agent", "export", name] or parts == [
+        "uv",
+        "run",
+        "python3",
+        "scripts/run_export.py",
+        name,
+    ]
 
 
 def _export_is_safe(summary: dict[str, Any], *, name: str) -> bool:
@@ -343,7 +354,7 @@ def _closeout_checks(final_stop_reason: str, summary: dict[str, Any]) -> list[st
         if isinstance(fixture, str) and fixture:
             quoted_fixture = shlex.quote(fixture)
             return [
-                f"run uv run python3 scripts/fig_closeout.py {quoted_fixture} --json",
+                f"run fig-agent closeout {quoted_fixture} --json",
                 "read JSON output even when exit code is 1",
                 "follow closeout.next_action",
                 "rerun live /fig_drive",

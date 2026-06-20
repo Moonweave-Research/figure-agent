@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -13,13 +14,13 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
+import runtime_paths  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     adjudication_is_stale,
     load_adjudication,
 )
 from next_action_summary import closeout_next_action_summary  # noqa: E402
-from status import infer_stage  # noqa: E402
 from text_boundary_spec_helper import (  # noqa: E402
     TextBoundarySpecHelperError,
     build_text_boundary_checks,
@@ -32,6 +33,12 @@ FIG_LOOP_SCHEMA = "figure-agent.fig-loop-run.v1"
 
 class FigCloseoutError(ValueError):
     """Expected user-facing error for closeout preflight failures."""
+
+
+def infer_stage(example_dir: Path) -> dict[str, Any]:
+    from status import infer_stage as _infer_stage
+
+    return _infer_stage(example_dir)
 
 
 def _step(
@@ -130,7 +137,7 @@ def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
         step_id="text_boundary_checks",
         state="needs_action",
         reason=reason,
-        command=f"uv run python3 scripts/text_boundary_spec_helper.py examples/{name} --write",
+        command=f"fig-agent text-boundary {name} --write",
         evidence_path=spec_path,
         evidence={"expected_check_count": len(expected_checks)},
     )
@@ -230,9 +237,11 @@ def _adjudication_step(
 
 def _export_step(
     name: str,
+    example_dir: Path,
     status_result: dict[str, Any],
     compile_step: dict[str, Any],
     critique_step: dict[str, Any],
+    golden_acceptance: dict[str, Any],
 ) -> dict[str, Any]:
     export_state = status_result.get("export_state")
     prerequisite_steps = (compile_step, critique_step)
@@ -256,13 +265,31 @@ def _export_step(
             evidence={"export_state": export_state},
         )
     if export_state == "TRACKED_GOLDEN":
+        accepted, reason = _golden_acceptance_covers_current_state(
+            name,
+            example_dir,
+            golden_acceptance,
+        )
+        if accepted:
+            return _step(
+                step_id="export",
+                state="passed",
+                reason="tracked golden export has current explicit acceptance",
+                evidence={
+                    "export_state": export_state,
+                    "golden_acceptance": golden_acceptance,
+                },
+            )
         return _step(
             step_id="export",
             state="blocked",
-            reason="tracked golden export requires deliberate manual approval",
+            reason="tracked golden export requires deliberate manual approval"
+            if reason == "missing"
+            else f"tracked golden export acceptance is invalid: {reason}",
             evidence={
                 "export_state": export_state,
                 "approval_command": f"/fig_export {name} --force-golden",
+                "golden_acceptance": golden_acceptance,
             },
         )
     return _step(
@@ -323,6 +350,130 @@ def _tracked_closeout_inputs(example_dir: Path, name: str) -> list[Path]:
         if folder.is_dir():
             candidates.extend(path for path in folder.rglob("*") if path.is_file())
     return [path for path in candidates if path.is_file()]
+
+
+def _fixture_relative(example_dir: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(example_dir.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _latest_apply_result_path(example_dir: Path) -> Path | None:
+    build_dir = example_dir / "build"
+    if build_dir.is_symlink():
+        return None
+    candidates_root = example_dir / "build" / "candidates"
+    if not candidates_root.is_dir() or candidates_root.is_symlink():
+        return None
+    candidates = [
+        path
+        for path in candidates_root.glob("*/apply_result.json")
+        if path.is_file() and not path.is_symlink()
+    ]
+    return max(candidates, key=lambda path: path.stat().st_mtime, default=None)
+
+
+def _candidate_apply_summary(example_dir: Path) -> dict[str, Any]:
+    apply_result_path = _latest_apply_result_path(example_dir)
+    if apply_result_path is None:
+        return {"status": "not_required", "apply_result_path": None}
+    try:
+        apply_result = json.loads(apply_result_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {
+            "status": "unreadable",
+            "apply_result_path": _fixture_relative(example_dir, apply_result_path),
+        }
+    post_apply = apply_result.get("post_apply")
+    post_apply_summary: dict[str, str] = {}
+    if isinstance(post_apply, dict):
+        for stage in ("compile", "export", "status"):
+            value = post_apply.get(stage)
+            if isinstance(value, dict):
+                post_apply_summary[stage] = str(value.get("status") or "missing")
+            elif value is not None:
+                post_apply_summary[stage] = str(value)
+    return {
+        "status": str(apply_result.get("status") or "unknown"),
+        "candidate_id": str(apply_result.get("candidate_id") or ""),
+        "apply_result_path": _fixture_relative(example_dir, apply_result_path),
+        "post_apply": post_apply_summary,
+    }
+
+
+def _golden_acceptance_summary(example_dir: Path) -> dict[str, Any]:
+    build_dir = example_dir / "build"
+    closeout_dir = build_dir / "closeout"
+    path = example_dir / "build" / "closeout" / "golden_acceptance.json"
+    relative = _fixture_relative(example_dir, path)
+    for label, candidate in (
+        ("build", build_dir),
+        ("closeout", closeout_dir),
+        ("golden_acceptance.json", path),
+    ):
+        if candidate.is_symlink():
+            return {"state": "invalid", "path": relative, "reason": f"{label} symlink"}
+    if not path.is_file():
+        return {"state": "missing", "path": relative}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {"state": "invalid", "path": relative, "reason": "unreadable"}
+    return {
+        "state": "present",
+        "path": relative,
+        "decision": payload.get("decision"),
+        "reviewer": payload.get("reviewer"),
+        "reviewed_at": payload.get("reviewed_at"),
+        "accept_golden": bool(payload.get("accept_golden")),
+        "source_sha256": payload.get("source_sha256"),
+        "exports": payload.get("exports") if isinstance(payload.get("exports"), dict) else {},
+    }
+
+
+def _current_export_hashes(example_dir: Path, name: str) -> dict[str, str]:
+    exports_dir = example_dir / "exports"
+    hashes: dict[str, str] = {}
+    for ext in ("pdf", "svg", "png", "tif", "tiff"):
+        path = exports_dir / f"{name}.{ext}"
+        if path.is_file() and not path.is_symlink():
+            hashes["tif" if ext == "tiff" else ext] = _sha256_file(path)
+    return hashes
+
+
+def _golden_acceptance_covers_current_state(
+    name: str,
+    example_dir: Path,
+    acceptance: dict[str, Any],
+) -> tuple[bool, str | None]:
+    if acceptance.get("state") != "present":
+        return False, str(acceptance.get("reason") or "missing")
+    if acceptance.get("decision") != "accept" or not acceptance.get("accept_golden"):
+        return False, "acceptance is not an explicit golden acceptance"
+    source_path = example_dir / f"{name}.tex"
+    if not source_path.is_file():
+        return False, "source file is missing"
+    if acceptance.get("source_sha256") != _sha256_file(source_path):
+        return False, "accepted source hash is stale"
+    accepted_exports = acceptance.get("exports")
+    if not isinstance(accepted_exports, dict) or not accepted_exports:
+        return False, "accepted export hashes are missing"
+    current_exports = _current_export_hashes(example_dir, name)
+    if set(accepted_exports) != set(current_exports):
+        return False, "accepted export set is stale"
+    for ext, accepted_hash in accepted_exports.items():
+        if current_exports.get(str(ext)) != accepted_hash:
+            return False, f"accepted {ext} export hash is stale"
+    return True, None
 
 
 def _loop_rerun_step(
@@ -395,11 +546,14 @@ def compute_closeout(
     compile_step = _compile_step(name, status_result)
     critique_step = _critique_step(name, status_result, example_dir)
     adjudication_step = _adjudication_step(name, status_result, example_dir)
+    golden_acceptance = _golden_acceptance_summary(example_dir)
     export_step = _export_step(
         name,
+        example_dir,
         status_result,
         compile_step,
         critique_step,
+        golden_acceptance,
     )
     loop_rerun_step = _loop_rerun_step(
         name,
@@ -439,8 +593,19 @@ def compute_closeout(
             "critique_state": status_result.get("critique_state"),
             "export_state": status_result.get("export_state"),
             "workflow_ready": status_result.get("workflow_ready"),
+            "golden_ready": status_result.get("golden_ready"),
+            "release_ready": status_result.get("release_ready"),
+            "final_ready": status_result.get("final_ready"),
+            "final_artifact_state": status_result.get("final_artifact_state"),
+            "final_artifact_kind": status_result.get("final_artifact_kind"),
+            "final_artifact_path": status_result.get("final_artifact_path"),
+            "publication_gate_state": status_result.get("publication_gate_state"),
+            "publication_gate_failures": status_result.get("publication_gate_failures", []),
             "next": status_result.get("next"),
         },
+        "evidence_index_path": "build/evidence/evidence_index.json",
+        "candidate_apply": _candidate_apply_summary(example_dir),
+        "golden_acceptance": golden_acceptance,
         "steps": steps,
     }
     report["next_action_summary"] = closeout_next_action_summary(report)
@@ -465,7 +630,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        report = compute_closeout(args.name, repo_root=args.repo_root, runs_root=args.runs_root)
+        resolved_repo_root = (
+            runtime_paths.resolve_runtime_paths().workspace_root
+            if args.repo_root == REPO_ROOT
+            else args.repo_root
+        )
+        report = compute_closeout(
+            args.name,
+            repo_root=resolved_repo_root,
+            runs_root=args.runs_root,
+        )
     except FigCloseoutError as exc:
         print(f"fig_closeout.py: {exc}", file=sys.stderr)
         return 1
