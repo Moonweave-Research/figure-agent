@@ -1,0 +1,25 @@
+NOTICE
+======
+
+Scope of the LICENSE
+--------------------
+The MIT License in this repository's LICENSE file covers this project's OWN
+source code only (scripts, tooling, documentation, and authored fixtures
+produced by this project).
+
+Third-party reference images (NOT licensed by this repo)
+--------------------------------------------------------
+The directories matching `examples/*/reference/` contain third-party
+copyrighted reference images — figures from published papers. These images are
+NOT licensed by this repository and are NOT covered by the LICENSE. They exist
+solely for internal reference while authoring figures, and no redistribution
+right is granted or implied.
+
+Repository status: PRIVATE
+--------------------------
+This repository is PRIVATE. Making it public is a separate decision that is OUT
+OF SCOPE for v0.10. Going public would first require purging the third-party
+reference images from the git HISTORY (e.g. via git filter-repo, a history
+rewrite with its own risk gate) — not merely deleting them from the working
+tree. Adding this LICENSE to a private repo does not authorize public
+distribution of those images.
