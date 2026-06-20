@@ -90,6 +90,14 @@ def build_context_pack(
 
     catalog_path = paths.plugin_root / "docs" / "authoring-rules-pair001.md"
     catalog = authoring_rules.load_rule_catalog(catalog_path)
+    # Optional project-scope catalog: cross-figure conventions (e.g. cantilever
+    # orientation) inherited by every figure, not locked to the fig1 pilot.
+    project_catalog_path = paths.plugin_root / "docs" / "authoring-rules-project.md"
+    project_catalog = (
+        authoring_rules.load_rule_catalog(project_catalog_path)
+        if project_catalog_path.is_file()
+        else None
+    )
     philosophy_path = paths.plugin_root / "docs" / "figure-design-philosophy.md"
     style_path = paths.styles_dir / "polymer-paper-preamble.sty"
     return {
@@ -102,6 +110,9 @@ def build_context_pack(
             "design_philosophy": _relative(paths.plugin_root, philosophy_path),
             "style_lock": _relative(paths.plugin_root, style_path),
             "rule_catalog": _relative(paths.plugin_root, catalog_path),
+            "project_rule_catalog": (
+                _relative(paths.plugin_root, project_catalog_path) if project_catalog else ""
+            ),
         },
         "fixture": {
             "title": spec.get("title", ""),
@@ -119,6 +130,7 @@ def build_context_pack(
         "design_philosophy": _read_optional_text(philosophy_path),
         "style_lock": _style_lock_tokens(style_path),
         "rule_catalog": catalog,
+        "project_rule_catalog": project_catalog,
         "semantic_contracts": semantic_contracts,
         "paper_context": _paper_context(example_dir),
         "scope_boundary": {
@@ -151,6 +163,11 @@ def render_text(payload: dict[str, Any]) -> str:
                 f"- Locked invariant {invariant['panel_id']} {invariant['id']}: "
                 f"{invariant['invariant']}"
             )
+    project = payload.get("project_rule_catalog")
+    if project:
+        lines.extend(["", "## Project Rule Catalog (cross-figure conventions)"])
+        for rule in project["rules"]:
+            lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")
     lines.extend(["", "## Fig1 Rule Catalog"])
     for rule in payload["rule_catalog"]["rules"]:
         lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")

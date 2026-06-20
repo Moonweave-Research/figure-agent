@@ -88,3 +88,45 @@ def test_context_pack_accepts_format_json_spelling(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["name"] == "context_demo"
+
+
+def test_context_pack_injects_project_scope_conventions(tmp_path: Path) -> None:
+    # cross-figure conventions (e.g. vertical cantilever) must reach every figure's
+    # context pack, not stay locked to the fig1 pilot catalog
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo", "--json"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    project = payload["project_rule_catalog"]
+    assert project is not None
+    rule_ids = [rule["id"] for rule in project["rules"]]
+    assert "polymer_paper_project.cantilever-vertical-clip-top" in rule_ids
+    assert payload["sources"]["project_rule_catalog"].endswith("authoring-rules-project.md")
+
+
+def test_context_pack_text_renders_project_conventions(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Project Rule Catalog" in result.stdout
+    assert "cantilever vertical" in result.stdout.lower()
