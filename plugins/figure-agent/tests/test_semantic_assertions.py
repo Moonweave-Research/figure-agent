@@ -75,6 +75,35 @@ def test_left_right_relations():
     assert issues[0]["status"] == "violated"
 
 
+def test_near_tie_is_indeterminate():
+    # centres differ by 1pt along y (< default 2.0pt tolerance) -> too close to call
+    words = [_word("shallow", 100, 20.0), _word("deep", 100, 21.0)]
+    assertions = [{"id": "sd", "relation": "above", "subject": "shallow", "reference": "deep"}]
+    issues = check_semantic_assertions(words, assertions)
+    assert len(issues) == 1 and issues[0]["status"] == "indeterminate"
+
+
+def test_per_assertion_tolerance_overrides_default():
+    # 3pt margin: clears the 2.0pt default (satisfied) but a 5pt band calls it indeterminate
+    words = [_word("shallow", 100, 20.0), _word("deep", 100, 23.0)]
+    base = {"id": "sd", "relation": "above", "subject": "shallow", "reference": "deep"}
+    assert check_semantic_assertions(words, [base]) == []
+
+    widened = parse_assertions({"semantic_assertions": [{**base, "tolerance_pt": 5.0}]})
+    issues = check_semantic_assertions(words, widened)
+    assert len(issues) == 1 and issues[0]["status"] == "indeterminate"
+
+
+def test_parse_rejects_non_positive_tolerance():
+    spec = {
+        "semantic_assertions": [
+            {"id": "a", "relation": "above", "subject": "s", "reference": "d", "tolerance_pt": 0}
+        ]
+    }
+    with pytest.raises(SemanticAssertionError, match="tolerance_pt"):
+        parse_assertions(spec)
+
+
 def test_missing_anchor_reported():
     words = [_word("shallow", 100, 20)]
     issues = check_semantic_assertions(

@@ -34,23 +34,24 @@ from check_visual_clash import extract_pdf_words_and_page
 
 SCHEMA = "figure-agent.semantic-assertions.v1"
 RELATIONS = ("above", "below", "left_of", "right_of")
+DEFAULT_TOLERANCE_PT = 2.0
 
 
 class SemanticAssertionError(ValueError):
     """Raised when declared semantic_assertions are malformed."""
 
 
-def parse_assertions(spec: dict[str, Any]) -> list[dict[str, str]]:
+def parse_assertions(spec: dict[str, Any]) -> list[dict[str, Any]]:
     raw = spec.get("semantic_assertions")
     if raw is None:
         return []
     if not isinstance(raw, list):
         raise SemanticAssertionError("semantic_assertions must be a list")
-    assertions: list[dict[str, str]] = []
+    assertions: list[dict[str, Any]] = []
     for index, item in enumerate(raw):
         if not isinstance(item, dict):
             raise SemanticAssertionError(f"semantic_assertions[{index}] must be a mapping")
-        parsed = {}
+        parsed: dict[str, Any] = {}
         for field in ("id", "relation", "subject", "reference"):
             value = item.get(field)
             if not isinstance(value, str) or not value.strip():
@@ -60,6 +61,17 @@ def parse_assertions(spec: dict[str, Any]) -> list[dict[str, str]]:
             raise SemanticAssertionError(
                 f"semantic_assertions[{index}].relation must be one of {RELATIONS}"
             )
+        if "tolerance_pt" in item:
+            tolerance = item["tolerance_pt"]
+            if isinstance(tolerance, bool) or not isinstance(tolerance, (int, float)):
+                raise SemanticAssertionError(
+                    f"semantic_assertions[{index}].tolerance_pt must be a number"
+                )
+            if tolerance <= 0:
+                raise SemanticAssertionError(
+                    f"semantic_assertions[{index}].tolerance_pt must be > 0"
+                )
+            parsed["tolerance_pt"] = float(tolerance)
         assertions.append(parsed)
     return assertions
 
@@ -79,10 +91,27 @@ def _find(words: list[dict[str, Any]], token: str) -> dict[str, Any] | None:
     return None
 
 
+def _signed_margin(relation: str, sx: float, sy: float, rx: float, ry: float) -> float:
+    """Signed margin along the relevant axis; positive when the relation holds."""
+    if relation == "above":
+        return ry - sy
+    if relation == "below":
+        return sy - ry
+    if relation == "left_of":
+        return rx - sx
+    return sx - rx  # right_of
+
+
 def check_semantic_assertions(
-    words: list[dict[str, Any]], assertions: list[dict[str, str]]
+    words: list[dict[str, Any]], assertions: list[dict[str, Any]]
 ) -> list[dict[str, str]]:
-    """Return one issue per assertion that is violated or whose anchor is missing."""
+    """Return one issue per assertion that is violated, indeterminate, or anchor-missing.
+
+    The margin is signed along the relevant axis (positive when the relation holds).
+    Within ``tolerance_pt`` of zero the relation is too close to call between
+    local-native and Docker renders, so it is reported as ``indeterminate``
+    (report-only, distinct from ``violated``).
+    """
     issues: list[dict[str, str]] = []
     for assertion in assertions:
         subject = _find(words, assertion["subject"])
@@ -100,13 +129,21 @@ def check_semantic_assertions(
         sx, sy = _center(subject)
         rx, ry = _center(reference)
         relation = assertion["relation"]
-        satisfied = (
-            (relation == "above" and sy < ry)
-            or (relation == "below" and sy > ry)
-            or (relation == "left_of" and sx < rx)
-            or (relation == "right_of" and sx > rx)
-        )
-        if not satisfied:
+        tolerance = assertion.get("tolerance_pt", DEFAULT_TOLERANCE_PT)
+        margin = _signed_margin(relation, sx, sy, rx, ry)
+        if abs(margin) < tolerance:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "indeterminate",
+                    "message": (
+                        f"assertion {assertion['id']!r} indeterminate: "
+                        f"{assertion['subject']!r} vs {assertion['reference']!r} "
+                        f"margin {margin:.2f}pt within tolerance {tolerance:.2f}pt for {relation}"
+                    ),
+                }
+            )
+        elif margin <= 0:
             issues.append(
                 {
                     "id": assertion["id"],
@@ -176,10 +213,14 @@ def main(argv: list[str] | None = None) -> int:
         encoding="utf-8",
     )
     for issue in issues:
-        print(f"WARN semantic_assertion: {issue['message']}", file=sys.stderr)
+        if issue["status"] == "indeterminate":
+            print(f"INFO semantic_assertion: {issue['message']}", file=sys.stderr)
+        else:
+            print(f"WARN semantic_assertion: {issue['message']}", file=sys.stderr)
+    strict_issues = [issue for issue in issues if issue["status"] != "indeterminate"]
     if issues:
         print(f"{len(issues)} semantic assertion issue(s)", file=sys.stderr)
-        if args.strict:
+        if args.strict and strict_issues:
             return 1
     else:
         print(f"OK: {len(assertions)} semantic assertion(s) hold", file=sys.stderr)
