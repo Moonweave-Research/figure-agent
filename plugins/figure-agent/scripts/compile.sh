@@ -97,6 +97,11 @@ if [[ -f "coordinate_hints.yaml" ]]; then
   "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
+# Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint
+# conventions with their source quotes so the author sees them on every figure.
+# Report-only; best-effort — must never fail the build (no FIGURE_AGENT_WORKSPACE
+# in some invocations means the fixture is unresolvable, which is fine to skip).
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/convention_receipt.py" "$BASE" --write >/dev/null || true
 trap - ERR
 
 echo "Generated: ${BUILD_DIR}/${BASE}.pdf, ${BUILD_DIR}/${BASE}.png (engine: $ENGINE)"

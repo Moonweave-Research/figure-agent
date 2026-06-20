@@ -14,10 +14,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
 from check_visual_clash import extract_pdf_words_and_page
+from detector_log import log_detector_run
 
 SCHEMA = "figure-agent.label-hyphenation.v1"
 
@@ -70,7 +72,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
+    start = time.perf_counter()
     issues = detect_label_hyphenation(words)
+    duration_ms = (time.perf_counter() - start) * 1000.0
     output = args.json_output or pdf_path.parent / "label_hyphenation.json"
     output.write_text(
         json.dumps(label_hyphenation_payload(pdf_path, issues), indent=2, sort_keys=True) + "\n",
@@ -81,6 +85,13 @@ def main(argv: list[str] | None = None) -> int:
             f"WARN label_hyphenation: {issue['text']!r} — {issue['message']}",
             file=sys.stderr,
         )
+    log_detector_run(
+        "label_hyphenation",
+        fired=bool(issues),
+        finding_count=len(issues),
+        duration_ms=duration_ms,
+        log_path=pdf_path.parent / "detector_log.jsonl",
+    )
     if issues:
         print(f"{len(issues)} label hyphenation artifact(s)", file=sys.stderr)
         if args.strict:
