@@ -22,6 +22,11 @@ VALID_SOURCE_KINDS = {
     "hand_patch_commit",
 }
 VALID_TRANSFER_POLICIES = {"use_as_question", "use_as_constraint"}
+# Rule ids are namespaced "<namespace>.<local_id>". The namespace was historically
+# hard-coded to "pair001", which locked conventions to one pilot fixture; any
+# lowercase namespace is now allowed so a project-scope catalog can carry
+# cross-figure conventions (e.g. "polymer_paper_project.cantilever-vertical-clip").
+VALID_RULE_ID_PATTERN = re.compile(r"^[a-z_][a-z0-9_]*\.[a-z0-9_.-]+$")
 _FRONT_MATTER_RE = re.compile(r"\A---\n(.*?)\n---\n?", re.DOTALL)
 
 
@@ -52,7 +57,7 @@ def _validate_rule(rule: object) -> dict[str, Any]:
     if not isinstance(rule, dict):
         raise AuthoringRuleError("rule_invalid")
     rule_id = _require_text(rule.get("id"), "rule_id_missing")
-    if not rule_id.startswith("pair001."):
+    if not VALID_RULE_ID_PATTERN.match(rule_id):
         raise AuthoringRuleError("rule_id_invalid")
     category = _require_text(rule.get("category"), "rule_category_missing")
     if category not in VALID_CATEGORIES:

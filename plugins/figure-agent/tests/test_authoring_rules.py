@@ -12,9 +12,7 @@ import authoring_rules  # noqa: E402
 
 
 def test_pair001_rule_catalog_requires_source_anchored_rules() -> None:
-    catalog = authoring_rules.load_rule_catalog(
-        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
-    )
+    catalog = authoring_rules.load_rule_catalog(PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md")
 
     assert catalog["schema"] == "figure-agent.authoring-rules.v1"
     assert catalog["fixture"] == "fig1_overview_v2_pair_001_vault"
@@ -60,4 +58,54 @@ def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> Non
     )
 
     with pytest.raises(authoring_rules.AuthoringRuleError, match="source_anchor_missing"):
+        authoring_rules.load_rule_catalog(path)
+
+
+def test_rule_catalog_accepts_project_namespace(tmp_path: Path) -> None:
+    # a project-scope catalog (non-pair001 namespace) carries cross-figure conventions
+    path = tmp_path / "project.md"
+    path.write_text(
+        "---\n"
+        "schema: figure-agent.authoring-rules.v1\n"
+        "fixture: polymer_paper_project\n"
+        "promotion_state: n1_hypotheses\n"
+        "rules:\n"
+        "  - id: polymer_paper_project.cantilever-vertical-clip\n"
+        "    category: instrument_standard\n"
+        "    rule: Cantilever is vertical; clip on top, polymer hangs down.\n"
+        "    source:\n"
+        "      kind: hand_patch_commit\n"
+        "      locator: fig3_floating_clip_protocol\n"
+        "      quote: clip on TOP, polymer hangs down\n"
+        "    transfer_policy: use_as_constraint\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    catalog = authoring_rules.load_rule_catalog(path)
+    assert catalog["rules"][0]["id"] == "polymer_paper_project.cantilever-vertical-clip"
+    assert catalog["rules"][0]["category"] == "instrument_standard"
+
+
+def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
+    path = tmp_path / "badid.md"
+    path.write_text(
+        "---\n"
+        "schema: figure-agent.authoring-rules.v1\n"
+        "fixture: polymer_paper_project\n"
+        "promotion_state: n1_hypotheses\n"
+        "rules:\n"
+        "  - id: NoNamespaceDot\n"
+        "    category: instrument_standard\n"
+        "    rule: A rule whose id has no namespace dot.\n"
+        "    source:\n"
+        "      kind: hand_patch_commit\n"
+        "      locator: x\n"
+        "      quote: y\n"
+        "    transfer_policy: use_as_constraint\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(authoring_rules.AuthoringRuleError, match="rule_id_invalid"):
         authoring_rules.load_rule_catalog(path)
