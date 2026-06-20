@@ -89,7 +89,11 @@ def build_context_pack(
         raise AuthoringContextPackError(str(exc)) from exc
 
     catalog_path = paths.plugin_root / "docs" / "authoring-rules-pair001.md"
-    catalog = authoring_rules.load_rule_catalog(catalog_path)
+    loaded_catalog = authoring_rules.load_rule_catalog(catalog_path)
+    # The per-fixture catalog applies only to its own fixture. Other figures keep
+    # the universal project catalog but get no per-fixture catalog (rule_catalog is
+    # None) so fig1-specific pair001 rules never leak into unrelated figures.
+    fixture_catalog = loaded_catalog if loaded_catalog["fixture"] == name else None
     # Optional project-scope catalog: cross-figure conventions (e.g. cantilever
     # orientation) inherited by every figure, not locked to the fig1 pilot.
     project_catalog_path = paths.plugin_root / "docs" / "authoring-rules-project.md"
@@ -109,7 +113,7 @@ def build_context_pack(
             "briefing": _relative(paths.workspace_root, example_dir / "briefing.md"),
             "design_philosophy": _relative(paths.plugin_root, philosophy_path),
             "style_lock": _relative(paths.plugin_root, style_path),
-            "rule_catalog": _relative(paths.plugin_root, catalog_path),
+            "rule_catalog": (_relative(paths.plugin_root, catalog_path) if fixture_catalog else ""),
             "project_rule_catalog": (
                 _relative(paths.plugin_root, project_catalog_path) if project_catalog else ""
             ),
@@ -129,7 +133,7 @@ def build_context_pack(
         },
         "design_philosophy": _read_optional_text(philosophy_path),
         "style_lock": _style_lock_tokens(style_path),
-        "rule_catalog": catalog,
+        "rule_catalog": fixture_catalog,
         "project_rule_catalog": project_catalog,
         "semantic_contracts": semantic_contracts,
         "paper_context": _paper_context(example_dir),
@@ -168,9 +172,11 @@ def render_text(payload: dict[str, Any]) -> str:
         lines.extend(["", "## Project Rule Catalog (cross-figure conventions)"])
         for rule in project["rules"]:
             lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")
-    lines.extend(["", "## Fig1 Rule Catalog"])
-    for rule in payload["rule_catalog"]["rules"]:
-        lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")
+    fixture_catalog = payload.get("rule_catalog")
+    if fixture_catalog:
+        lines.extend(["", "## Fig1 Rule Catalog"])
+        for rule in fixture_catalog["rules"]:
+            lines.append(f"- {rule['id']} ({rule['category']}): {rule['rule']}")
     return "\n".join(lines) + "\n"
 
 

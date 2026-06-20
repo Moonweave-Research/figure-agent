@@ -63,8 +63,38 @@ def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> Non
     assert payload["scope_boundary"]["durable_paper_specific_knowledge_compilation"] is True
     assert payload["semantic_contracts"]["enabled"] is True
     assert payload["semantic_contracts"]["semantic_claims"][0]["id"] == "trap-depth"
-    assert payload["rule_catalog"]["promotion_state"] == "n1_hypotheses"
+    # context_demo != fig1_overview_v2_pair_001_vault: the per-fixture catalog is
+    # scoped to its own fixture, so a non-matching fixture gets no per-fixture catalog
+    assert payload["rule_catalog"] is None
+    assert payload["sources"]["rule_catalog"] == ""
     assert "briefing" in payload["paper_context"]
+
+
+def test_context_pack_scopes_per_fixture_catalog_to_its_own_fixture() -> None:
+    # the per-fixture pair001 catalog must reach only its own fixture; any other
+    # figure inherits the universal project catalog but no per-fixture rules
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "fig1_overview_v2_pair_001_vault",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=_env(PLUGIN_ROOT),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    catalog = payload["rule_catalog"]
+    assert catalog is not None
+    assert catalog["fixture"] == "fig1_overview_v2_pair_001_vault"
+    assert payload["sources"]["rule_catalog"].endswith("authoring-rules-pair001.md")
+    rule_ids = [rule["id"] for rule in catalog["rules"]]
+    assert "pair001.panel-c-hero-split" in rule_ids
 
 
 def test_context_pack_accepts_format_json_spelling(tmp_path: Path) -> None:
