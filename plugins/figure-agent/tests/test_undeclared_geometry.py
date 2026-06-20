@@ -6,9 +6,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+
+import pytest  # noqa: E402
 from check_undeclared_geometry import (  # noqa: E402
+    UndeclaredGeometryError,
+    _undeclared_geometry_profile,
     detect_rendered_boundary_crossings,
     detect_undeclared_geometry,
+    partition_candidates_by_profile,
     undeclared_geometry_payload,
 )
 
@@ -116,9 +121,7 @@ def test_label_clear_of_horizontal_rule_is_not_reported_as_crossing() -> None:
 
     candidates = detect_undeclared_geometry(tex, words, {})
 
-    assert "label_crosses_horizontal_rule" not in [
-        candidate["kind"] for candidate in candidates
-    ]
+    assert "label_crosses_horizontal_rule" not in [candidate["kind"] for candidate in candidates]
 
 
 def test_source_label_crossing_preserves_source_coordinate_behavior() -> None:
@@ -226,6 +229,65 @@ def test_label_crossing_rect_boundary_is_reported() -> None:
     assert candidates[1]["recommended_action"] == "add_micro_defect"
 
 
+def test_undeclared_geometry_profile_reads_schematic() -> None:
+    assert _undeclared_geometry_profile({}) is None
+    assert _undeclared_geometry_profile({"undeclared_geometry_profile": None}) is None
+    assert _undeclared_geometry_profile({"undeclared_geometry_profile": "schematic"}) == "schematic"
+
+
+def test_undeclared_geometry_profile_rejects_unknown_value() -> None:
+    with pytest.raises(UndeclaredGeometryError):
+        _undeclared_geometry_profile({"undeclared_geometry_profile": "fixed_grid"})
+
+
+def test_schematic_profile_downranks_conceptual_geometry() -> None:
+    # Mix conceptual geometry (undeclared rect + column rule) with an actual
+    # defect (a frame rule that crosses a label).
+    tex = "\n".join(
+        [
+            r"\draw[cGray] (1.0,2.0) rectangle (3.0,2.5);",
+            r"\draw[cGray] (4.62,1.0) -- (4.62,6.0);",
+            r"\draw[cGray!22, line width=0.30pt] (1.0,1.0) -- (3.0,1.0);",
+        ]
+    )
+    # Word sits on the y~=28.346 pt rule so the third draw crosses it.
+    words = [_word("log t", 40.0, 26.0, 70.0, 34.0)]
+
+    candidates = detect_undeclared_geometry(tex, words, {})
+    kinds = {candidate["kind"] for candidate in candidates}
+    assert "undeclared_rect_boundary" in kinds
+    assert "undeclared_column_rule" in kinds
+    assert "label_crosses_horizontal_rule" in kinds
+
+    downranked, actionable = partition_candidates_by_profile(candidates, "schematic")
+
+    downranked_kinds = {candidate["kind"] for candidate in downranked}
+    actionable_kinds = {candidate["kind"] for candidate in actionable}
+    assert downranked_kinds == {
+        "undeclared_rect_boundary",
+        "undeclared_column_rule",
+        "undeclared_horizontal_rule",
+    }
+    assert actionable_kinds == {"label_crosses_horizontal_rule"}
+    # Nothing is dropped: partition is a complete split of the input.
+    assert len(downranked) + len(actionable) == len(candidates)
+
+
+def test_default_profile_leaves_all_candidates_actionable() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[cGray] (1.0,2.0) rectangle (3.0,2.5);",
+            r"\draw[cGray] (4.62,1.0) -- (4.62,6.0);",
+        ]
+    )
+    candidates = detect_undeclared_geometry(tex, [], {})
+
+    downranked, actionable = partition_candidates_by_profile(candidates, None)
+
+    assert downranked == []
+    assert actionable == candidates
+
+
 def test_candidate_ids_are_deterministic() -> None:
     tex = "\n".join(
         [
@@ -238,3 +300,24 @@ def test_candidate_ids_are_deterministic() -> None:
     second = detect_undeclared_geometry(tex, [], {})
 
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+
+
+def test_schematic_profile_excludes_downranked_from_accounted_candidates() -> None:
+    # main() writes the actionable partition as the accounted `candidates` under the
+    # schematic profile, so downranked conceptual geometry is NOT subject to the
+    # critique undeclared-geometry accounting gate; real defects (label crossings) are.
+    candidates = [
+        {"kind": "undeclared_column_rule", "id": "UG001"},
+        {"kind": "label_crosses_horizontal_rule", "id": "UG002"},
+        {"kind": "undeclared_rect_boundary", "id": "UG003"},
+    ]
+
+    downranked, actionable = partition_candidates_by_profile(candidates, "schematic")
+    payload = undeclared_geometry_payload(Path("fixture/build/fig.pdf"), actionable)
+
+    accounted_kinds = {candidate["kind"] for candidate in payload["candidates"]}
+    assert accounted_kinds == {"label_crosses_horizontal_rule"}
+    assert {candidate["kind"] for candidate in downranked} == {
+        "undeclared_column_rule",
+        "undeclared_rect_boundary",
+    }

@@ -36,6 +36,19 @@ RENDERED_FRAME_RECT_MIN_HEIGHT_PT = 3.0 * CM_TO_PT
 RENDERED_FRAME_GRAY_MIN = 0.55
 RENDERED_FRAME_NEUTRAL_DELTA_MAX = 0.04
 
+# Conceptual-geometry kinds a pure schematic declares on purpose: axes, dividers,
+# region rectangles, and plot frames are intentional, not layout regions to police.
+# Under the schematic profile these are reported as INFO rather than actionable WARN.
+# Label/frame crossings (label_crosses_*) are real defects and stay WARN.
+_SCHEMATIC_PROFILE_DOWNRANK_KINDS = frozenset(
+    {
+        "undeclared_column_rule",
+        "undeclared_horizontal_rule",
+        "undeclared_rect_boundary",
+        "label_endpoint_near_miss",
+    }
+)
+
 
 class UndeclaredGeometryError(ValueError):
     """Controlled error for malformed undeclared-geometry inputs."""
@@ -473,8 +486,7 @@ def detect_undeclared_geometry(
                 _base_candidate(
                     kind="undeclared_rect_boundary",
                     evidence=(
-                        f"source line {geometry['source_line']} rectangle "
-                        "lacks text_boundary_check"
+                        f"source line {geometry['source_line']} rectangle lacks text_boundary_check"
                     ),
                     bbox_pt=geometry["bbox_pt"],
                     source_line=geometry["source_line"],
@@ -607,6 +619,32 @@ def _load_spec(spec_path: Path) -> dict[str, Any]:
     return spec
 
 
+def _undeclared_geometry_profile(spec: dict[str, Any]) -> str | None:
+    raw_profile = spec.get("undeclared_geometry_profile")
+    if raw_profile is None:
+        return None
+    if raw_profile != "schematic":
+        raise UndeclaredGeometryError("undeclared_geometry_profile must be 'schematic' or absent")
+    return raw_profile
+
+
+def partition_candidates_by_profile(
+    candidates: list[dict[str, Any]],
+    profile: str | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Split candidates into (downranked, actionable) for the given profile.
+
+    Under the schematic profile, intentional conceptual geometry is downranked to
+    INFO; label/frame crossings stay actionable. Any other profile leaves every
+    candidate actionable.
+    """
+    if profile != "schematic":
+        return [], list(candidates)
+    downranked = [c for c in candidates if c["kind"] in _SCHEMATIC_PROFILE_DOWNRANK_KINDS]
+    actionable = [c for c in candidates if c["kind"] not in _SCHEMATIC_PROFILE_DOWNRANK_KINDS]
+    return downranked, actionable
+
+
 def _infer_tex_path(pdf_path: Path) -> Path:
     fixture_dir = pdf_path.parent.parent
     return fixture_dir / f"{fixture_dir.name}.tex"
@@ -632,10 +670,12 @@ def main(argv: list[str] | None = None) -> int:
         if not tex_path.is_file():
             raise UndeclaredGeometryError(f"missing TeX source: {tex_path}")
         words, page_size = extract_pdf_words_and_page(pdf_path)
+        spec = _load_spec(spec_path)
+        profile = _undeclared_geometry_profile(spec)
         candidates = detect_undeclared_geometry(
             tex_path.read_text(encoding="utf-8"),
             words,
-            _load_spec(spec_path),
+            spec,
             page_size_pt=page_size,
             source_crossings=False,
         )
@@ -650,21 +690,36 @@ def main(argv: list[str] | None = None) -> int:
         )
         for index, candidate in enumerate(candidates, start=1):
             candidate["id"] = f"UG{index:03d}"
-        payload = undeclared_geometry_payload(pdf_path, candidates)
+        downranked, actionable = partition_candidates_by_profile(candidates, profile)
+        # Under the schematic profile the downranked conceptual geometry (axes,
+        # dividers, region rects) is recorded under a separate key but kept OUT of
+        # `candidates`, so the critique undeclared-geometry accounting gate does not
+        # require it to be hand-accounted. Non-schematic fixtures are unchanged.
+        accounted = actionable if profile == "schematic" else candidates
+        payload = undeclared_geometry_payload(pdf_path, accounted)
+        if profile == "schematic":
+            payload["profile"] = "schematic"
+            payload["downranked"] = downranked
         output = args.json_output or pdf_path.parent / "undeclared_geometry.json"
         _write_json(output, payload)
     except (UndeclaredGeometryError, OSError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
-    for candidate in candidates:
+    for candidate in downranked:
+        print(
+            f"INFO {candidate['kind']}: {candidate['id']} "
+            f"text={candidate['nearest_text']!r} distance={candidate['distance_pt']}",
+            file=sys.stderr,
+        )
+    for candidate in actionable:
         print(
             f"WARN {candidate['kind']}: {candidate['id']} "
             f"text={candidate['nearest_text']!r} distance={candidate['distance_pt']}",
             file=sys.stderr,
         )
-    if candidates:
-        print(f"{len(candidates)} undeclared geometry candidate(s)", file=sys.stderr)
-    if args.strict and candidates:
+    if actionable:
+        print(f"{len(actionable)} undeclared geometry candidate(s)", file=sys.stderr)
+    if args.strict and actionable:
         return 1
     return 0
 
