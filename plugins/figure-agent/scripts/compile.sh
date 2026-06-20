@@ -85,6 +85,10 @@ fi
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_label_hyphenation.py" \
+  "${STRICT_ARGS[@]}" \
+  --json-output "${BUILD_DIR}/label_hyphenation.json" \
+  "$PDF_OUT"
 if [[ -f "coordinate_hints.yaml" ]]; then
   "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi

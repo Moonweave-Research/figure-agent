@@ -64,6 +64,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.text-boundary-clash.v1` | deterministic detector | `check_text_boundary_clash.py` | `audit_evidence_summary.py`, `fig_closeout.py` | Can block closeout when stale/missing or malformed |
 | `figure-agent.label-path-proximity.v1` | deterministic detector | `check_label_path_proximity.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
 | `figure-agent.undeclared-geometry.v1` | deterministic detector | `check_undeclared_geometry.py` | `audit_evidence_summary.py`, `critique_brief.py` | Candidate evidence until critique/adjudication acts |
+| `figure-agent.label-hyphenation.v1` | deterministic detector | `check_label_hyphenation.py` | none (report-only) | Report-only WARN for hyphenated label line breaks; no consumer or gate |
 | `figure-agent.warning-budget.v1` | deterministic detector budget | `check_visual_clash_budget.py` | `fig_driver_guidance.py`, operators | Can route final mode to strict compile or human review when warnings exceed cap |
 | `figure-agent.critique-adjudication.v1` | critique decision handoff | `critique_adjudication.py` (`scaffold`/`sync`) | `fig_loop_adjudication.py`, `fig_closeout.py` | Can create human gate, stale gate, or patch handoff |
 | `figure-agent.adjudication-decision-diff.v1` | critique decision preservation | `critique_adjudication.py sync --preview` | operators | Read-only preview; does not write adjudication decisions |
