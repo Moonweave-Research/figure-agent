@@ -246,6 +246,9 @@ def _ship_svg_path(
     Single source of truth (compute_final_artifact_state) so render-ship and the
     final-artifact gate provably target the same byte stream — instead of a
     hardcoded stem that could silently diverge from the manifest."""
+    # parse_spec mirrors the sibling final-artifact gate's source of truth: both only
+    # read spec["final_artifact"] via compute_final_artifact_state, so they cannot
+    # disagree on which polished SVG ships.
     try:
         spec = parse_spec(spec_path.read_text(encoding="utf-8"))
     except Exception:
@@ -281,12 +284,12 @@ def render_ship_gate_failures(
     mirror compute_final_artifact_state's overrides (used in tests; default = prod)."""
     import shutil
 
+    if not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")):
+        return []
     svg_path = _ship_svg_path(
         example_dir, spec_path, base_dir=base_dir, style_lock_path=style_lock_path
     )
     if svg_path is None:
-        return []
-    if not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")):
         return []
     try:
         findings = build_render_ship_findings(svg_path, dpi=dpi)
