@@ -109,6 +109,44 @@ def _bbox_coverage(
     return _axis_coverage(tx0, tx1, ox0, ox1) * _axis_coverage(ty0, ty1, oy0, oy1)
 
 
+def _parse_points(raw: str) -> list[complex]:
+    coords = [float(token) for token in re.split(r"[\s,]+", raw.strip()) if token]
+    return [complex(coords[i], coords[i + 1]) for i in range(0, len(coords) - 1, 2)]
+
+
+def _shape_bbox(tag: str, element: ET.Element) -> tuple[float, float, float, float] | None:
+    """Axis-aligned bbox for an occlusion-capable overlay shape, from its
+    attributes. Returns None for elements with no resolvable extent (e.g. <use>,
+    whose bbox needs href resolution — a documented gap) or no geometry."""
+    if tag == "path":
+        d = element.attrib.get("d")
+        return _polyline_bbox(canonical_polyline(d)) if d else None
+    if tag == "rect":
+        x = _float_attr(element, "x", 0.0)
+        y = _float_attr(element, "y", 0.0)
+        return (
+            x,
+            y,
+            x + _float_attr(element, "width", 0.0),
+            y + _float_attr(element, "height", 0.0),
+        )
+    if tag == "circle":
+        cx, cy, r = (
+            _float_attr(element, "cx", 0.0),
+            _float_attr(element, "cy", 0.0),
+            _float_attr(element, "r", 0.0),
+        )
+        return (cx - r, cy - r, cx + r, cy + r)
+    if tag == "ellipse":
+        cx, cy = _float_attr(element, "cx", 0.0), _float_attr(element, "cy", 0.0)
+        rx, ry = _float_attr(element, "rx", 0.0), _float_attr(element, "ry", 0.0)
+        return (cx - rx, cy - ry, cx + rx, cy + ry)
+    if tag in ("polygon", "polyline"):
+        points = _parse_points(element.attrib.get("points", ""))
+        return _polyline_bbox(points) if points else None
+    return None
+
+
 class SvgSemanticDiffError(ValueError):
     """Expected user-facing error for SVG semantic diff reports."""
 
@@ -272,13 +310,15 @@ def _inventory(path: Path) -> dict[str, Any]:
                     "bbox": _polyline_bbox(polyline),
                     "order": order,
                 }
-            if d and _is_hand_namespaced(element_id, class_attr):
+        if _is_hand_namespaced(element_id, class_attr):
+            overlay_bbox = _shape_bbox(tag, element)
+            if overlay_bbox is not None:
                 opacity = _float_attr(element, "opacity", 1.0) * _float_attr(
                     element, "fill-opacity", 1.0
                 )
                 hand_overlays.append(
                     {
-                        "bbox": _polyline_bbox(canonical_polyline(d)),
+                        "bbox": overlay_bbox,
                         "opacity": opacity,
                         "fill": element.attrib.get("fill", ""),
                         "order": order,
@@ -505,6 +545,13 @@ def _compare(
                 SEMANTIC_DIFF_BACKPORT,
             )
     truth_geo = polished.get("truth_geometry", {})
+    # Occlusion is a deterministic bbox + effective-opacity + paint-order proxy.
+    # Known gaps (a covering element of these forms is NOT flagged here; the
+    # Plan 3 shipped-artifact pixel gate is the backstop): <use> (extent needs
+    # href resolution), wide stroke-only overlays (stroke geometry not modelled),
+    # and opacity from an ancestor <g> or a CSS `style=`/class (not resolved).
+    # The bbox proxy also over-counts coverage for L-shaped/frame overlays
+    # (errs toward over-blocking — the safe direction for a truth guard).
     for overlay in polished.get("hand_overlays", []):
         if overlay["fill"] == "none" or overlay["opacity"] < OCCLUSION_OPACITY:
             continue  # stroke-only or translucent overlay cannot hide truth

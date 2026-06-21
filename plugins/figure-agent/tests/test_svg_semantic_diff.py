@@ -585,3 +585,47 @@ def test_opaque_overlay_over_axis_aligned_truth_line_is_blocked(tmp_path):
     )
     findings = _compare(src, pol)
     assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_opaque_rect_hand_overlay_over_truth_is_blocked(tmp_path):
+    overlay = (
+        '<rect id="hand:cover" data-truth-bearing="false"'
+        ' fill="#fff" x="0" y="0" width="10" height="5"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_opaque_polygon_hand_overlay_over_truth_is_blocked(tmp_path):
+    overlay = (
+        '<polygon class="hand:cover" data-truth-bearing="false"'
+        ' fill="#fff" points="0,0 10,0 10,5 0,5"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_low_coverage_overlay_below_threshold_passes(tmp_path):
+    # overlay covers only ~40% of the truth bbox width -> below OCCLUSION_COVERAGE
+    overlay = (
+        '<rect id="hand:cover" data-truth-bearing="false"'
+        ' fill="#fff" x="0" y="0" width="4" height="5"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    assert not [f for f in _compare(src, pol) if f["kind"] == "truth_path_occluded"]
+
+
+def test_just_translucent_overlay_below_opacity_threshold_passes(tmp_path):
+    # opacity 0.94 < OCCLUSION_OPACITY 0.95 -> not opaque enough to occlude
+    overlay = (
+        '<rect id="hand:cover" data-truth-bearing="false"'
+        ' fill="#fff" opacity="0.94" x="0" y="0" width="10" height="5"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    assert not [f for f in _compare(src, pol) if f["kind"] == "truth_path_occluded"]
