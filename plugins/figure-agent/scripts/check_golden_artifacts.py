@@ -49,6 +49,7 @@ from svg_polish_manifest import (  # noqa: E402
     SVG_POLISH_MANIFEST_RELATIVE_PATH,
     compute_final_artifact_state,
 )
+from svg_ship_gate import render_ship_gate_failures  # noqa: E402
 
 VISIBLE_SVG_TAGS = frozenset(
     {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect", "text", "use"}
@@ -684,6 +685,7 @@ def check_example(
         )
         failures.extend(reference_pack_gate_failures(example_dir, spec))
         failures.extend(final_artifact_gate_failures(example_dir, spec))
+        failures.extend(render_ship_gate_failures(example_dir))
         failures.extend(
             checker_budget_failures(
                 audit,

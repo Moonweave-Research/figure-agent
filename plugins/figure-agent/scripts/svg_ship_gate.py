@@ -7,9 +7,13 @@ needs system tools.
 from __future__ import annotations
 
 import re
+import subprocess
+import tempfile
+from pathlib import Path
 from typing import Any
 
 import numpy as np
+from svg_semantic_diff import _inventory
 
 _NAMED_COLORS = {
     "white": (255, 255, 255),
@@ -132,3 +136,120 @@ def detect_render_ship_divergence(
                 }
             )
     return findings
+
+
+# svg_semantic_diff.OPTICAL_ATTRS order: (fill, stroke, opacity, fill-opacity, stroke-opacity)
+
+
+def _numeric(value: str | None) -> float | None:
+    """Leading number of a length string ('20', '20px' -> 20.0; '100%'/None -> None)."""
+    if not value:
+        return None
+    match = re.match(r"\s*([0-9]*\.?[0-9]+)", value)
+    return float(match.group(1)) if match else None
+
+
+def _opacity(value: str | None) -> float:
+    parsed = _numeric(value)
+    return 1.0 if parsed is None else max(0.0, min(1.0, parsed))
+
+
+def _blend_to_white(color: tuple[int, int, int], opacity: float) -> tuple[int, int, int]:
+    """A semi-transparent colour over the white render page renders as this blend.
+    Verified empirically: a stroke-opacity=0.5 red renders (255,127,127), not pure
+    red, so the declared colour alone would false-BLOCKER without this variant."""
+    return tuple(round(channel * opacity + 255 * (1 - opacity)) for channel in color)
+
+
+def _parse_viewbox(frame: dict[str, str]) -> tuple[float, float, float, float] | None:
+    raw = frame.get("viewBox", "").split()
+    if len(raw) != 4:
+        return None
+    try:
+        min_x, min_y, width, height = (float(value) for value in raw)
+    except ValueError:
+        return None
+    if width <= 0 or height <= 0:
+        return None
+    # If the SVG forces width/height with a DIFFERENT aspect ratio, rsvg letterboxes
+    # the content (preserveAspectRatio meet) and our linear viewBox->raster mapping
+    # mis-locates off-centre features. Skip rather than risk false divergence (the
+    # geometry + occlusion locks still guard; this gate is an additive backstop).
+    canvas_w, canvas_h = _numeric(frame.get("width")), _numeric(frame.get("height"))
+    if (
+        canvas_w
+        and canvas_h
+        and abs(canvas_w / canvas_h - width / height) > 0.01 * (width / height)
+    ):
+        return None
+    return (min_x, min_y, width, height)
+
+
+def _truth_samples(inventory: dict[str, Any]) -> list[dict[str, Any]]:
+    samples: list[dict[str, Any]] = []
+    for element_id, geometry in inventory["truth_geometry"].items():
+        fill_raw, stroke_raw, opacity_raw, fill_op_raw, stroke_op_raw = inventory[
+            "colors_by_id"
+        ].get(element_id) or (None, None, None, None, None)
+        base = _opacity(opacity_raw)
+        colors: set[tuple[int, int, int]] = set()
+        fill = _parse_color(fill_raw)
+        if fill is not None:
+            colors.add(fill)
+            colors.add(_blend_to_white(fill, base * _opacity(fill_op_raw)))
+        stroke = _parse_color(stroke_raw)
+        if stroke is not None:
+            colors.add(stroke)
+            colors.add(_blend_to_white(stroke, base * _opacity(stroke_op_raw)))
+        samples.append({"id": element_id, "polyline": geometry["polyline"], "colors": colors})
+    return samples
+
+
+def _render_svg_to_raster(svg_path: Path, dpi: int) -> np.ndarray:
+    """SVG -> PDF (rsvg-convert) -> RGB raster (pdftoppm). Needs system tools."""
+    with tempfile.TemporaryDirectory() as tmp:
+        pdf_path = Path(tmp) / "ship.pdf"
+        subprocess.run(
+            ["rsvg-convert", "-f", "pdf", "-o", str(pdf_path), str(svg_path)],
+            check=True,
+            capture_output=True,
+        )
+        # Reuse the repo's PDF->PIL rasteriser (pdftoppm) from check_visual_clash.
+        from check_visual_clash import render_pdf_first_page
+
+        image = render_pdf_first_page(pdf_path, dpi).convert("RGB")
+        return np.asarray(image)
+
+
+def build_render_ship_findings(svg_path: Path, *, dpi: int = 600) -> list[dict[str, str]]:
+    """Render `svg_path` through the PDF ship pipeline and return divergence findings."""
+    inventory = _inventory(svg_path)
+    viewbox = _parse_viewbox(inventory["frame"])
+    if viewbox is None:
+        return []  # no viewBox -> cannot map coords; nothing to check
+    raster = _render_svg_to_raster(svg_path, dpi)
+    return detect_render_ship_divergence(raster, _truth_samples(inventory), viewbox)
+
+
+def render_ship_gate_failures(
+    example_dir: Path, *, dpi: int = 600, polished_svg: str | None = None
+) -> list[str]:
+    """Terminal-gate adapter: returns human-readable failure strings (empty = pass).
+    Skips silently if the polished SVG or the render tools are unavailable."""
+    import shutil
+
+    name = example_dir.name
+    svg_rel = polished_svg or f"polish/{name}.polished.svg"
+    svg_path = example_dir / svg_rel
+    if not svg_path.is_file():
+        return []
+    if not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")):
+        return []
+    try:
+        findings = build_render_ship_findings(svg_path, dpi=dpi)
+    except Exception:
+        # Fail-safe: a render/parse error must never crash the whole golden-artifact
+        # check. This gate is an additive backstop (Plans 1-2 still guard); a tooling
+        # hiccup degrades to "no findings", it does not block or explode.
+        return []
+    return [finding["evidence"] for finding in findings]

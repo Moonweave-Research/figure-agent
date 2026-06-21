@@ -1,7 +1,9 @@
+import shutil
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -74,3 +76,38 @@ def test_uncheckable_color_is_skipped():
     raster = _solid((255, 255, 255))
     truth = [{"id": "grad", "polyline": [1 + 1j, 9 + 9j], "colors": set()}]
     assert detect_render_ship_divergence(raster, truth, VIEWBOX) == []
+
+
+from svg_ship_gate import build_render_ship_findings  # noqa: E402
+
+_RENDER_TOOLS = shutil.which("rsvg-convert") and shutil.which("pdftoppm")
+
+
+@pytest.mark.render
+@pytest.mark.skipif(not _RENDER_TOOLS, reason="needs rsvg-convert + pdftoppm")
+def test_opaque_overlay_over_truth_is_caught_in_real_render(tmp_path: Path):
+    # A red truth boundary fully covered by an opaque white rect -> the shipped
+    # raster shows white where the boundary should be -> render_ship_divergence.
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">'
+        '<path id="boundary" fill="none" stroke="#ff0000" stroke-width="3" d="M2,10 L18,10"/>'
+        '<rect id="hand:cover" fill="#ffffff" x="0" y="0" width="20" height="20"/>'
+        "</svg>"
+    )
+    svg_path = tmp_path / "fig.svg"
+    svg_path.write_text(svg, encoding="utf-8")
+    findings = build_render_ship_findings(svg_path, dpi=150)
+    assert any(f["kind"] == "render_ship_divergence" for f in findings)
+
+
+@pytest.mark.render
+@pytest.mark.skipif(not _RENDER_TOOLS, reason="needs rsvg-convert + pdftoppm")
+def test_faithful_figure_renders_clean(tmp_path: Path):
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">'
+        '<path id="boundary" fill="none" stroke="#ff0000" stroke-width="3" d="M2,10 L18,10"/>'
+        "</svg>"
+    )
+    svg_path = tmp_path / "fig.svg"
+    svg_path.write_text(svg, encoding="utf-8")
+    assert build_render_ship_findings(svg_path, dpi=150) == []
