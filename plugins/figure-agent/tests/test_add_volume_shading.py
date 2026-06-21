@@ -252,3 +252,11 @@ def test_op_does_not_mutate_target_paint():
 def test_op_emits_no_filter():
     root = ET.fromstring(_polished())
     assert root.find(f".//{{{_NS}}}filter") is None
+
+
+def test_op_idempotent_gradient_id():
+    once = _polished()
+    twice = add_volume_shading(once, "bead", light_direction=45.0, hero_strength=0.5)
+    root = ET.fromstring(twice)
+    grads = [g for g in root.iter(f"{{{_NS}}}linearGradient") if g.get("id") == "hand:vshade-bead"]
+    assert len(grads) == 1

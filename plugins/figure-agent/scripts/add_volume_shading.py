@@ -100,26 +100,26 @@ def add_volume_shading(
         defs = ET.Element(_svg("defs"))
         root.insert(0, defs)
 
-    x1, y1, x2, y2 = _gradient_vector(light_direction)
-    gradient = ET.SubElement(
-        defs,
-        _svg("linearGradient"),
-        {
-            "id": f"hand:vshade-{target_id}",
-            "x1": str(x1),
-            "y1": str(y1),
-            "x2": str(x2),
-            "y2": str(y2),
-        },
-    )
-    # Filter-free Lambert ramp: lit highlight -> shadow.
-    ET.SubElement(gradient, _svg("stop"), {"offset": "0", "stop-color": "#ffffff"})
-    ET.SubElement(gradient, _svg("stop"), {"offset": "1", "stop-color": "#000000"})
+    # Idempotent: a repeat call on the same target must not emit a duplicate
+    # gradient id (duplicate ids are invalid SVG).
+    gradient_id = f"hand:vshade-{target_id}"
+    if defs.find(f'{_svg("linearGradient")}[@id="{gradient_id}"]') is None:
+        x1, y1, x2, y2 = _gradient_vector(light_direction)
+        gradient = ET.SubElement(
+            defs,
+            _svg("linearGradient"),
+            {"id": gradient_id, "x1": str(x1), "y1": str(y1), "x2": str(x2), "y2": str(y2)},
+        )
+        # Filter-free Lambert ramp: lit highlight -> shadow.
+        ET.SubElement(gradient, _svg("stop"), {"offset": "0", "stop-color": "#ffffff"})
+        ET.SubElement(gradient, _svg("stop"), {"offset": "1", "stop-color": "#000000"})
 
     # Inset the overlay so it covers the INTERIOR fill, not the truth outline stroke.
     # Load-bearing: keeping the translucent overlay off the truth path's polyline
     # points lets the render-ship gate still see the outline's declared colour in
     # >=50% of on-path samples (COLOR_DELTA tolerance).
+    # For sub-~2px targets, width-2*inset clamps to 0 -> a zero-size (no-op) overlay:
+    # an intentional silent floor for degenerate tiny objects, not a crash.
     inset = max(1.0, 0.08 * min(width, height))
     overlay_w = max(0.0, width - 2 * inset)
     overlay_h = max(0.0, height - 2 * inset)
@@ -132,7 +132,7 @@ def add_volume_shading(
             "y": str(bbox_y + inset),
             "width": str(overlay_w),
             "height": str(overlay_h),
-            "fill": f"url(#hand:vshade-{target_id})",
+            "fill": f"url(#{gradient_id})",
             "opacity": str(_opacity_for(hero_strength)),
         },
     )
