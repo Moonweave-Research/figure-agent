@@ -61,6 +61,15 @@ def _strip_hand_overlay(names: list[str]) -> list[str]:
     return [name for name in names if not name.startswith(HAND_OVERLAY_PREFIX)]
 
 
+def _is_hand_namespaced(element_id: str | None, class_attr: str | None) -> bool:
+    """An element is a hand:* overlay if its id or any class token is hand:-prefixed."""
+    if element_id and element_id.startswith(HAND_OVERLAY_PREFIX):
+        return True
+    if class_attr:
+        return any(token.startswith(HAND_OVERLAY_PREFIX) for token in class_attr.split())
+    return False
+
+
 OCCLUSION_OPACITY = 0.95  # effective opacity at/above which an overlay hides what's beneath
 OCCLUSION_COVERAGE = 0.5  # bbox-coverage fraction of a truth path that counts as occlusion
 
@@ -78,22 +87,26 @@ def _polyline_bbox(points: list[complex]) -> tuple[float, float, float, float]:
     return (min(xs), min(ys), max(xs), max(ys))
 
 
+def _axis_coverage(t0: float, t1: float, o0: float, o1: float) -> float:
+    """Fraction of truth interval [t0,t1] covered by overlay interval [o0,o1].
+    A degenerate (zero-length) truth interval is covered (1.0) iff its point lies
+    within the overlay interval."""
+    if t1 <= t0:
+        return 1.0 if o0 <= t0 <= o1 else 0.0
+    lo, hi = max(t0, o0), min(t1, o1)
+    return max(0.0, hi - lo) / (t1 - t0)
+
+
 def _bbox_coverage(
     overlay: tuple[float, float, float, float],
     truth: tuple[float, float, float, float],
 ) -> float:
-    """Fraction of the truth bbox area covered by the overlay bbox (0 if disjoint
-    or the truth bbox is degenerate)."""
+    """Fraction of the truth bbox covered by the overlay bbox. Degenerate
+    (zero-area, e.g. axis-aligned line) truth bboxes use per-axis point
+    containment so a covered horizontal/vertical truth segment is still detected."""
     ox0, oy0, ox1, oy1 = overlay
     tx0, ty0, tx1, ty1 = truth
-    ix0, iy0 = max(ox0, tx0), max(oy0, ty0)
-    ix1, iy1 = min(ox1, tx1), min(oy1, ty1)
-    if ix1 <= ix0 or iy1 <= iy0:
-        return 0.0
-    truth_area = (tx1 - tx0) * (ty1 - ty0)
-    if truth_area <= 0:
-        return 0.0
-    return ((ix1 - ix0) * (iy1 - iy0)) / truth_area
+    return _axis_coverage(tx0, tx1, ox0, ox1) * _axis_coverage(ty0, ty1, oy0, oy1)
 
 
 class SvgSemanticDiffError(ValueError):
@@ -259,7 +272,7 @@ def _inventory(path: Path) -> dict[str, Any]:
                     "bbox": _polyline_bbox(polyline),
                     "order": order,
                 }
-            if d and element_id and element_id.startswith(HAND_OVERLAY_PREFIX):
+            if d and _is_hand_namespaced(element_id, class_attr):
                 opacity = _float_attr(element, "opacity", 1.0) * _float_attr(
                     element, "fill-opacity", 1.0
                 )

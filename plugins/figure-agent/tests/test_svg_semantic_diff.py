@@ -559,3 +559,29 @@ def test_hand_overlay_beneath_truth_passes(tmp_path):
     src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
     pol = _inv(tmp_path, "p.svg", svg)
     assert not [f for f in _compare(src, pol) if f["kind"] == "truth_path_occluded"]
+
+
+def test_class_namespaced_opaque_overlay_over_truth_is_blocked(tmp_path):
+    overlay = (
+        '<path class="hand:cover" data-truth-bearing="false" '
+        'fill="#fff" d="M0,0 L10,0 L10,5 L0,5 Z"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_opaque_overlay_over_axis_aligned_truth_line_is_blocked(tmp_path):
+    # a horizontal truth line has a zero-height bbox; an opaque box on top must still flag
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,5 L10,5"))
+    pol = _inv(
+        tmp_path,
+        "p.svg",
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="boundary" d="M0,5 L10,5"/>'
+        '<path id="hand:cover" data-truth-bearing="false" fill="#fff" '
+        'd="M0,0 L10,0 L10,10 L0,10 Z"/></svg>',
+    )
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
