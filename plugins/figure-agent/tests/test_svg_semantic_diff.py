@@ -451,3 +451,34 @@ def test_decorative_reshape_allowed(tmp_path: Path) -> None:
     src = _inv(tmp_path, "s.svg", dec.format(d="M0,0 L5,5 L10,0"))
     pol = _inv(tmp_path, "p.svg", dec.format(d="M0,0 Q5,5 10,0"))
     assert not [f for f in _compare(src, pol) if f["kind"] == "geometry_truth_violation"]
+
+
+def test_hand_overlay_additions_do_not_trip_inventory_change(tmp_path: Path) -> None:
+    src = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="boundary" d="M0,0 L5,5 L10,0"/></svg>'
+    )
+    pol = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<defs><linearGradient id="hand:grad"/></defs>'
+        '<path id="boundary" d="M0,0 L5,5 L10,0"/>'
+        '<path id="hand:shadow" data-truth-bearing="false" opacity="0.3" d="M0,0 L10,10"/></svg>'
+    )
+    s = _inv(tmp_path, "s.svg", src)
+    p = _inv(tmp_path, "p.svg", pol)
+    assert not [f for f in _compare(s, p) if f["kind"] == "element_inventory_change"]
+
+
+def test_non_hand_addition_still_trips_inventory_change(tmp_path: Path) -> None:
+    src = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="boundary" d="M0,0 L5,5 L10,0"/></svg>'
+    )
+    pol = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="boundary" d="M0,0 L5,5 L10,0"/>'
+        '<path id="extra-real" data-truth-bearing="false" d="M0,0 L10,10"/></svg>'
+    )
+    s = _inv(tmp_path, "s.svg", src)
+    p = _inv(tmp_path, "p.svg", pol)
+    assert [f for f in _compare(s, p) if f["kind"] == "element_inventory_change"]

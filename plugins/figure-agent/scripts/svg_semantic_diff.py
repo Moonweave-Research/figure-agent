@@ -50,6 +50,13 @@ OPTICAL_ATTRS = ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity")
 # Mirror of svg_polish_executor.MAX_TRANSLATE_PX (imported there would be circular:
 # executor -> recipe -> manifest -> svg_semantic_diff). Keep both in sync.
 MAX_TRANSLATE_PX = 10.0
+HAND_OVERLAY_PREFIX = "hand:"
+
+
+def _strip_hand_overlay(names: list[str]) -> list[str]:
+    """Drop hand:* overlay names. Added/removed hand overlays are sanctioned
+    decoration (spec §6 overlay-safe), not a structural inventory change."""
+    return [name for name in names if not name.startswith(HAND_OVERLAY_PREFIX)]
 
 
 class SvgSemanticDiffError(ValueError):
@@ -369,10 +376,10 @@ def _compare(
             f"marker_attr={polished['marker_attr_count']}",
             SEMANTIC_DIFF_NEEDS_HUMAN,
         )
-    removed_ids = sorted(set(source["ids"]) - set(polished["ids"]))
-    added_ids = sorted(set(polished["ids"]) - set(source["ids"]))
-    removed_classes = sorted(set(source["classes"]) - set(polished["classes"]))
-    added_classes = sorted(set(polished["classes"]) - set(source["classes"]))
+    removed_ids = _strip_hand_overlay(sorted(set(source["ids"]) - set(polished["ids"])))
+    added_ids = _strip_hand_overlay(sorted(set(polished["ids"]) - set(source["ids"])))
+    removed_classes = _strip_hand_overlay(sorted(set(source["classes"]) - set(polished["classes"])))
+    added_classes = _strip_hand_overlay(sorted(set(polished["classes"]) - set(source["classes"])))
     if removed_ids or added_ids or removed_classes or added_classes:
         add(
             "element_inventory_change",
