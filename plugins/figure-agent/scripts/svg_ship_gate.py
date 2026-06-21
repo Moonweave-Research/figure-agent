@@ -7,6 +7,7 @@ needs system tools.
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import numpy as np
 
@@ -54,7 +55,10 @@ def _svg_to_pixel(
     return (px, py)
 
 
-COLOR_DELTA = 60  # per-channel tolerance for "this pixel matches a declared colour"
+# per-channel L-infinity tolerance. 60 is intentionally tight: it passes pure
+# rendered colours while rejecting semi-transparent variants (e.g. stroke-opacity=0.5
+# red renders channel-127 over white). Task 3 adds _blend_to_white to match those.
+COLOR_DELTA = 60
 
 
 def _color_present_near(
@@ -82,3 +86,49 @@ def _color_present_near(
             ):
                 return True
     return False
+
+
+MIN_MATCH_FRACTION = 0.5  # at least this fraction of on-path samples must match
+
+
+def detect_render_ship_divergence(
+    raster: np.ndarray,
+    truth_paths: list[dict[str, Any]],
+    viewbox: tuple[float, float, float, float],
+    *,
+    min_match_fraction: float = MIN_MATCH_FRACTION,
+) -> list[dict[str, str]]:
+    """BLOCKER findings for truth paths whose rendered on-path colours diverge from
+    every declared colour. `truth_paths` items: {id, polyline (list[complex]), colors
+    (set of RGB triples — declared fill/stroke PLUS their opacity-blended variants,
+    assembled in `_truth_samples`)}. Each polyline point is matched via a small window
+    (`_color_present_near`) so a filled region's outline samples still match. Paths
+    with an empty `colors` set are skipped (not checkable, not a crash)."""
+    raster_h, raster_w = raster.shape[0], raster.shape[1]
+    findings: list[dict[str, str]] = []
+    for entry in sorted(truth_paths, key=lambda item: item["id"]):
+        colors = entry["colors"]
+        polyline = entry["polyline"]
+        if not colors or not polyline:
+            continue
+        matched = 0
+        for point in polyline:
+            pixel = _svg_to_pixel(point, viewbox, raster_w=raster_w, raster_h=raster_h)
+            if _color_present_near(raster, pixel, colors):
+                matched += 1
+        fraction = matched / len(polyline)
+        if fraction < min_match_fraction:
+            findings.append(
+                {
+                    "id": f"RS{len(findings) + 1:03d}",
+                    "kind": "render_ship_divergence",
+                    "severity": "BLOCKER",
+                    "evidence": (
+                        f"truth path #{entry['id']} renders unfaithfully: only "
+                        f"{matched}/{len(polyline)} on-path samples match a declared "
+                        "colour (covered, filtered, or renderer-shifted)"
+                    ),
+                    "recommended_route": "semantic_backport_required",
+                }
+            )
+    return findings

@@ -40,3 +40,38 @@ def test_color_present_near_window_absorbs_edges():
     assert _color_present_near(raster, (5, 5), {(0, 0, 255)}) is False
     # empty colour set never matches
     assert _color_present_near(raster, (25, 25), set()) is False
+
+
+# tests/test_svg_ship_gate.py  (append)
+from svg_ship_gate import detect_render_ship_divergence  # noqa: E402
+
+VIEWBOX = (0.0, 0.0, 10.0, 10.0)
+
+
+def _solid(color):
+    raster = np.zeros((100, 100, 3), dtype=np.uint8)
+    raster[:, :] = color
+    return raster
+
+
+def test_faithful_render_passes():
+    # truth path declared red, rendered red along its whole polyline -> no finding.
+    raster = _solid((255, 0, 0))
+    truth = [{"id": "boundary", "polyline": [1 + 1j, 5 + 5j, 9 + 9j], "colors": {(255, 0, 0)}}]
+    assert detect_render_ship_divergence(raster, truth, VIEWBOX) == []
+
+
+def test_occluded_or_shifted_render_is_blocked():
+    # truth declared red but the raster shows white where it should be -> divergence.
+    raster = _solid((255, 255, 255))
+    truth = [{"id": "boundary", "polyline": [1 + 1j, 5 + 5j, 9 + 9j], "colors": {(255, 0, 0)}}]
+    findings = detect_render_ship_divergence(raster, truth, VIEWBOX)
+    assert any(
+        f["kind"] == "render_ship_divergence" and f["severity"] == "BLOCKER" for f in findings
+    )
+
+
+def test_uncheckable_color_is_skipped():
+    raster = _solid((255, 255, 255))
+    truth = [{"id": "grad", "polyline": [1 + 1j, 9 + 9j], "colors": set()}]
+    assert detect_render_ship_divergence(raster, truth, VIEWBOX) == []
