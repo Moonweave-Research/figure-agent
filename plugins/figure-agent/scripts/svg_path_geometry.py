@@ -73,3 +73,25 @@ def shape_signature(d: str, *, samples: int = 256) -> ShapeSignature:
         if not pattern or pattern[-1] != sign:
             pattern.append(sign)
     return ShapeSignature(corner_count=corner_count, sign_pattern=tuple(pattern))
+
+
+def frechet_distance(p: list[complex], q: list[complex]) -> float:
+    """Discrete Fréchet distance between two polylines (iterative, O(n*m))."""
+    n, m = len(p), len(q)
+    if n == 0 or m == 0:
+        return float("inf")
+    prev = [0.0] * m
+    for i in range(n):
+        cur = [0.0] * m
+        for j in range(m):
+            d = abs(p[i] - q[j])
+            if i == 0 and j == 0:
+                cur[j] = d
+            elif i == 0:
+                cur[j] = max(cur[j - 1], d)
+            elif j == 0:
+                cur[j] = max(prev[j], d)
+            else:
+                cur[j] = max(min(prev[j], prev[j - 1], cur[j - 1]), d)
+        prev = cur
+    return prev[-1]
