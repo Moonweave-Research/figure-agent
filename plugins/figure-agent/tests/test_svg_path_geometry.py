@@ -1,4 +1,3 @@
-import math  # noqa: F401  — used by Task 2 shape-signature tests
 import sys
 from pathlib import Path
 
