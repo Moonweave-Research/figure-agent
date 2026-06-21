@@ -482,3 +482,36 @@ def test_non_hand_addition_still_trips_inventory_change(tmp_path: Path) -> None:
     s = _inv(tmp_path, "s.svg", src)
     p = _inv(tmp_path, "p.svg", pol)
     assert [f for f in _compare(s, p) if f["kind"] == "element_inventory_change"]
+
+
+def test_truth_path_removed_is_blocked(tmp_path: Path) -> None:
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(
+        tmp_path,
+        "p.svg",
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"></svg>',
+    )
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_removed" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_truth_path_renamed_is_blocked(tmp_path: Path) -> None:
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(
+        tmp_path,
+        "p.svg",
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="renamed" d="M0,0 L5,5 L10,0"/></svg>',
+    )
+    assert any(f["kind"] == "truth_path_removed" for f in _compare(src, pol))
+
+
+def test_truth_path_downgraded_to_decorative_is_blocked(tmp_path: Path) -> None:
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(
+        tmp_path,
+        "p.svg",
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="boundary" data-truth-bearing="false" d="M0,0 L5,5 L10,0"/></svg>',
+    )
+    assert any(f["kind"] == "truth_path_removed" for f in _compare(src, pol))

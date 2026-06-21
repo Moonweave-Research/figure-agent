@@ -26,6 +26,7 @@ FINDING_KINDS = frozenset(
         "element_inventory_change",
         "frame_change",
         "geometry_truth_violation",
+        "truth_path_removed",
         "unsupported_svg_feature",
         "group_transform_risk",
         "marker_or_path_change",
@@ -411,10 +412,14 @@ def _compare(
     for element_id, src_entry in sorted(src_geo.items()):
         pol_entry = pol_geo.get(element_id)
         if pol_entry is None:
-            # Truth path dropped its id (or vanished): reported only as a MINOR
-            # element_inventory_change, NOT a BLOCKER. A BLOCKER-level
-            # no-truth-replacement guard is Plan 2 scope, so a renamed/stripped id
-            # is a known gap in this geometry lock, not a covered case.
+            add(
+                "truth_path_removed",
+                "BLOCKER",
+                f"truth path #{element_id} is gone from the polished SVG "
+                "(removed, renamed, or downgraded to decorative); no overlay may "
+                "replace a truth path",
+                SEMANTIC_DIFF_BACKPORT,
+            )
             continue
         if src_entry["signature"] != pol_entry["signature"]:
             add(
