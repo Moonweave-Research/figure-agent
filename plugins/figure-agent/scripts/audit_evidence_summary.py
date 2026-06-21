@@ -100,6 +100,7 @@ def _base_summary(example_dir: Path, critique_schema: str | None) -> dict[str, A
             },
             "unlinked_micro_defect_count": 0,
             "unlinked_micro_defect_ids": [],
+            "unadjudicated_candidate_count": 0,
             "summary": "no detector feedback",
         },
     }
@@ -212,6 +213,30 @@ def _undeclared_geometry_candidate_ids(report: dict[str, Any]) -> tuple[list[str
         seen.add(candidate_id)
         ids.append(candidate_id)
     return ids, None
+
+
+_DETECTOR_REPORTS = (
+    ("visual_clash", "visual_clash.json", _visual_clash_candidate_ids),
+    ("text_boundary", "text_boundary_clash.json", _text_boundary_candidate_ids),
+    ("label_path", "label_path_proximity.json", _label_path_candidate_ids),
+    ("undeclared_geometry", "undeclared_geometry.json", _undeclared_geometry_candidate_ids),
+)
+
+
+def _raw_detector_candidate_counts(example_dir: Path) -> dict[str, int]:
+    """Per-detector raw candidate counts from the build/*.json reports (0 when a
+    report is missing or malformed). Detectors write these during compile even when
+    no critique.md exists to account for them; surfacing the counts keeps the default
+    status view from reading "clean" while unadjudicated flags sit in build/."""
+    counts: dict[str, int] = {}
+    for key, filename, id_fn in _DETECTOR_REPORTS:
+        report, _error = _load_json(example_dir / "build" / filename)
+        if report is None:
+            counts[key] = 0
+            continue
+        ids, parse_error = id_fn(report)
+        counts[key] = 0 if parse_error else len(ids)
+    return counts
 
 
 def _micro_defects(frontmatter: dict[str, Any]) -> list[dict[str, Any]]:
@@ -436,6 +461,15 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
     critique_path = example_dir / "critique.md"
     if not critique_path.is_file():
         summary = _base_summary(example_dir, None)
+        counts = _raw_detector_candidate_counts(example_dir)
+        total = sum(counts.values())
+        for key, count in counts.items():
+            summary["detector_feedback"][key]["candidate_count"] = count
+        summary["detector_feedback"]["unadjudicated_candidate_count"] = total
+        if total:
+            summary["detector_feedback"]["summary"] = (
+                f"{total} detector candidate(s) present but unadjudicated (no critique.md)"
+            )
         return _finish(
             summary,
             state="not_applicable",
