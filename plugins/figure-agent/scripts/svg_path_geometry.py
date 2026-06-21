@@ -10,8 +10,6 @@ import cmath
 import math
 from dataclasses import dataclass
 
-from svgpathtools import parse_path
-
 CORNER_TURN_THRESHOLD = math.radians(35.0)  # turning angle that counts as a corner
 _FLAT = 1e-3  # below this |turn| the segment is treated as straight
 
@@ -23,6 +21,9 @@ def canonical_polyline(d: str, *, samples: int = 256) -> list[complex]:
     the same curve return near-identical point lists regardless of how many
     segments or control points each uses. Subpaths are concatenated in order.
     """
+    # lazy import: keep svg_semantic_diff importable without svgpathtools for non-geometry CLI paths
+    from svgpathtools import parse_path
+
     path = parse_path(d)
     if path.length() == 0:
         # Degenerate (point/empty): repeat the start so callers get `samples` pts.
