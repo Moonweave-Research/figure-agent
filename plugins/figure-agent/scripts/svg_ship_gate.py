@@ -142,8 +142,10 @@ def detect_render_ship_divergence(
 
 
 def _numeric(value: str | None) -> float | None:
-    """Leading number of a length string ('20', '20px' -> 20.0; '100%'/None -> None)."""
-    if not value:
+    """Leading number of an ABSOLUTE length string ('20', '20px' -> 20.0).
+    None, non-numeric, or a percentage ('100%' -> None) yield None: a percentage
+    is not an absolute length, so callers must not treat it as a canvas dimension."""
+    if not value or "%" in value:
         return None
     match = re.match(r"\s*([0-9]*\.?[0-9]+)", value)
     return float(match.group(1)) if match else None

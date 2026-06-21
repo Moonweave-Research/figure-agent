@@ -9,7 +9,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from svg_ship_gate import (  # noqa: E402
     _color_present_near,
+    _numeric,
     _parse_color,
+    _parse_viewbox,
     _svg_to_pixel,
 )
 
@@ -76,6 +78,17 @@ def test_uncheckable_color_is_skipped():
     raster = _solid((255, 255, 255))
     truth = [{"id": "grad", "polyline": [1 + 1j, 9 + 9j], "colors": set()}]
     assert detect_render_ship_divergence(raster, truth, VIEWBOX) == []
+
+
+def test_numeric_rejects_percentage_so_viewbox_gate_still_runs():
+    # '100%' is not an absolute length -> None (documented contract).
+    assert _numeric("100%") is None
+    assert _numeric("20px") == 20.0
+    assert _numeric("20") == 20.0
+    # percentage canvas dims must NOT trigger the letterbox skip: the gate should
+    # run using the viewBox (percentages don't letterbox), so _parse_viewbox returns it.
+    frame = {"viewBox": "0 0 40 20", "width": "100%", "height": "100%"}
+    assert _parse_viewbox(frame) == (0.0, 0.0, 40.0, 20.0)
 
 
 from svg_ship_gate import build_render_ship_findings  # noqa: E402
