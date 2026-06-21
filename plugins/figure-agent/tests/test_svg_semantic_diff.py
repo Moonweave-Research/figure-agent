@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from svg_semantic_diff import (  # noqa: E402
     SVG_SEMANTIC_DIFF_RELATIVE_PATH,
     SvgSemanticDiffError,
+    _compare,
     _inventory,
     build_svg_semantic_diff_report,
     load_svg_semantic_diff_report,
@@ -411,3 +412,42 @@ def test_inventory_signs_only_truth_paths(tmp_path: Path) -> None:
     assert "boundary" in inv["truth_geometry"]
     assert "decor" not in inv["truth_geometry"]
     assert inv["truth_geometry"]["boundary"]["signature"].corner_count == 1
+
+
+def _inv(tmp_path: Path, name: str, svg: str) -> dict:
+    f = tmp_path / name
+    f.write_text(svg)
+    return _inventory(f)
+
+
+BASE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+    '<path id="boundary" d="{d}"/></svg>'
+)
+
+
+def test_cusp_falsehood_is_blocked(tmp_path: Path) -> None:
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))  # cusp
+    pol = _inv(tmp_path, "p.svg", BASE.format(d="M0,0 Q5,5 10,0"))  # smoothed
+    findings = _compare(src, pol)
+    kinds = {f["kind"] for f in findings}
+    assert "geometry_truth_violation" in kinds
+    assert any(
+        f["severity"] == "BLOCKER" for f in findings if f["kind"] == "geometry_truth_violation"
+    )
+
+
+def test_pure_resample_passes(tmp_path: Path) -> None:
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", BASE.format(d="M0,0 L2.5,2.5 L5,5 L7.5,2.5 L10,0"))
+    assert not [f for f in _compare(src, pol) if f["kind"] == "geometry_truth_violation"]
+
+
+def test_decorative_reshape_allowed(tmp_path: Path) -> None:
+    dec = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="d1" data-truth-bearing="false" d="{d}"/></svg>'
+    )
+    src = _inv(tmp_path, "s.svg", dec.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", dec.format(d="M0,0 Q5,5 10,0"))
+    assert not [f for f in _compare(src, pol) if f["kind"] == "geometry_truth_violation"]

@@ -12,7 +12,7 @@ from typing import Any
 
 import fixture_identity
 from quality_manifest import file_sha256
-from svg_path_geometry import canonical_polyline, shape_signature
+from svg_path_geometry import canonical_polyline, frechet_distance, shape_signature
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
 SVG_SEMANTIC_DIFF_RELATIVE_PATH = "polish/svg_semantic_diff.json"
@@ -25,6 +25,7 @@ FINDING_KINDS = frozenset(
         "text_identity_loss",
         "element_inventory_change",
         "frame_change",
+        "geometry_truth_violation",
         "unsupported_svg_feature",
         "group_transform_risk",
         "marker_or_path_change",
@@ -282,7 +283,9 @@ def _finding(
     }
 
 
-def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str, str]]:
+def _compare(
+    source: dict[str, Any], polished: dict[str, Any], *, frechet_bound: float = 0.5
+) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
 
     def add(kind: str, severity: str, evidence: str, route: str) -> None:
@@ -396,6 +399,29 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             f"{polished['optical_signatures_no_id']}",
             SEMANTIC_DIFF_NEEDS_HUMAN,
         )
+    src_geo = source.get("truth_geometry", {})
+    pol_geo = polished.get("truth_geometry", {})
+    for element_id, src_entry in sorted(src_geo.items()):
+        pol_entry = pol_geo.get(element_id)
+        if pol_entry is None:
+            continue  # disappearance handled by the existing inventory/text findings
+        if src_entry["signature"] != pol_entry["signature"]:
+            add(
+                "geometry_truth_violation",
+                "BLOCKER",
+                f"truth path #{element_id} shape signature changed "
+                f"({src_entry['signature']} -> {pol_entry['signature']})",
+                SEMANTIC_DIFF_BACKPORT,
+            )
+            continue
+        drift = frechet_distance(src_entry["polyline"], pol_entry["polyline"])
+        if drift > frechet_bound:
+            add(
+                "geometry_truth_violation",
+                "BLOCKER",
+                f"truth path #{element_id} drifted {drift:.3f} > bound {frechet_bound}",
+                SEMANTIC_DIFF_BACKPORT,
+            )
     return findings
 
 
@@ -412,6 +438,7 @@ def build_svg_semantic_diff_report(
     *,
     source_svg: str | None = None,
     polished_svg: str | None = None,
+    frechet_bound: float = 0.5,
 ) -> Path:
     """Write a semantic SVG diff report and return its path."""
     source_rel = source_svg or f"exports/{example_dir.name}.svg"
@@ -420,7 +447,7 @@ def build_svg_semantic_diff_report(
     polished_path = _fixture_path(example_dir, polished_rel, "polished_svg")
     source_inventory = _inventory(source_path)
     polished_inventory = _inventory(polished_path)
-    findings = _compare(source_inventory, polished_inventory)
+    findings = _compare(source_inventory, polished_inventory, frechet_bound=frechet_bound)
     blocker_count = sum(1 for finding in findings if finding["severity"] in {"BLOCKER", "MAJOR"})
     warning_count = len(findings) - blocker_count
     report = {
