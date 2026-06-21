@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from add_volume_shading import _element_bbox, _gradient_vector, _opacity_for  # noqa: E402
+from add_volume_shading import (  # noqa: E402
+    _element_bbox,
+    _gradient_vector,
+    _opacity_for,
+    add_volume_shading,
+)
+from svg_semantic_diff import _compare, _inventory  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # _element_bbox
@@ -74,6 +81,16 @@ def test_not_found_raises():
         _element_bbox(_MISSING_SVG, "missing")
 
 
+_LINE_SVG = f"""<svg xmlns="{_NS}">
+  <line id="ln" x1="0" y1="0" x2="10" y2="10"/>
+</svg>"""
+
+
+def test_unsupported_shape_raises():
+    with pytest.raises(ValueError, match="unsupported shape for bbox: line id=ln"):
+        _element_bbox(_LINE_SVG, "ln")
+
+
 # ---------------------------------------------------------------------------
 # _opacity_for
 # ---------------------------------------------------------------------------
@@ -132,3 +149,106 @@ def test_gradient_vector_in_unit_range():
         coords = _gradient_vector(float(deg))
         for v in coords:
             assert 0.0 <= v <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# add_volume_shading (the public op)
+# ---------------------------------------------------------------------------
+
+# A truth-bearing dark-outline target (default truth-bearing) plus a second truth
+# path, mirroring the demo-fixture shape.
+_OP_BASE_SVG = (
+    f'<svg xmlns="{_NS}" viewBox="0 0 100 100" width="100" height="100">'
+    '<rect id="bead" x="20" y="20" width="40" height="40" fill="#cccccc" stroke="#222222"/>'
+    '<path id="axis" d="M0,80 L100,80"/>'
+    "</svg>"
+)
+
+
+def _polished(svg: str = _OP_BASE_SVG) -> str:
+    return add_volume_shading(svg, "bead", light_direction=45.0, hero_strength=0.5)
+
+
+def test_op_requires_light_direction():
+    with pytest.raises(ValueError):
+        add_volume_shading(_OP_BASE_SVG, "bead", light_direction=None, hero_strength=0.5)
+
+
+def test_op_requires_hero_strength():
+    with pytest.raises(ValueError):
+        add_volume_shading(_OP_BASE_SVG, "bead", light_direction=45.0, hero_strength=None)
+
+
+def test_op_missing_target_raises():
+    with pytest.raises(ValueError, match="target id not found: nope"):
+        add_volume_shading(_OP_BASE_SVG, "nope", light_direction=45.0, hero_strength=0.5)
+
+
+def test_op_emits_gradient_in_defs():
+    root = ET.fromstring(_polished())
+    defs = root.find(f"{{{_NS}}}defs")
+    assert defs is not None
+    grads = defs.findall(f"{{{_NS}}}linearGradient")
+    assert any(g.get("id") == "hand:vshade-bead" for g in grads)
+    grad = next(g for g in grads if g.get("id") == "hand:vshade-bead")
+    stops = grad.findall(f"{{{_NS}}}stop")
+    assert len(stops) == 2
+    assert stops[0].get("stop-color") == "#ffffff"
+    assert stops[1].get("stop-color") == "#000000"
+
+
+def _find_by_id(root: ET.Element, target_id: str) -> ET.Element | None:
+    for elem in root.iter():
+        if elem.get("id") == target_id:
+            return elem
+    return None
+
+
+def test_op_emits_overlay_after_target():
+    root = ET.fromstring(_polished())
+    overlay = _find_by_id(root, "hand:vshade-overlay-bead")
+    assert overlay is not None
+    assert overlay.get("data-truth-bearing") == "false"
+    assert overlay.get("fill") == "url(#hand:vshade-bead)"
+    assert float(overlay.get("opacity")) < 0.95
+
+    # overlay paints AFTER the target in document order (same parent)
+    siblings = list(root)
+    ids = [child.get("id") for child in siblings]
+    assert ids.index("hand:vshade-overlay-bead") > ids.index("bead")
+
+
+def test_op_overlay_safe_no_inventory_change(tmp_path):
+    base = tmp_path / "base.svg"
+    polished = tmp_path / "polished.svg"
+    base.write_text(_OP_BASE_SVG, encoding="utf-8")
+    polished.write_text(_polished(), encoding="utf-8")
+    findings = _compare(_inventory(base), _inventory(polished))
+    assert not [f for f in findings if f["kind"] == "element_inventory_change"]
+
+
+def test_op_no_occlusion_blocker(tmp_path):
+    base = tmp_path / "base.svg"
+    polished = tmp_path / "polished.svg"
+    base.write_text(_OP_BASE_SVG, encoding="utf-8")
+    polished.write_text(_polished(), encoding="utf-8")
+    findings = _compare(_inventory(base), _inventory(polished))
+    blockers = {
+        f["kind"]
+        for f in findings
+        if f["severity"] == "BLOCKER" and f["kind"] in {"truth_path_removed", "truth_path_occluded"}
+    }
+    assert not blockers
+
+
+def test_op_does_not_mutate_target_paint():
+    root = ET.fromstring(_polished())
+    bead = _find_by_id(root, "bead")
+    assert bead is not None
+    assert bead.get("fill") == "#cccccc"
+    assert bead.get("stroke") == "#222222"
+
+
+def test_op_emits_no_filter():
+    root = ET.fromstring(_polished())
+    assert root.find(f".//{{{_NS}}}filter") is None
