@@ -3,7 +3,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from svg_path_geometry import canonical_polyline  # noqa: E402
+from svg_path_geometry import (
+    canonical_polyline,  # noqa: E402
+    shape_signature,  # noqa: E402
+)
 
 
 def test_canonical_polyline_is_resample_invariant():
@@ -14,3 +17,18 @@ def test_canonical_polyline_is_resample_invariant():
     # Arc-length sampling makes them point-wise near-identical.
     max_dev = max(abs(a - b) for a, b in zip(coarse, fine))
     assert max_dev < 1e-6
+
+
+def test_signature_detects_cusp_removal():
+    # A sharp V (cusp) vs a smoothed arc between the same endpoints.
+    cusp = shape_signature("M0,0 L5,5 L10,0")  # one sharp corner
+    smooth = shape_signature("M0,0 Q5,5 10,0")  # no corner
+    assert cusp.corner_count == 1
+    assert smooth.corner_count == 0
+    assert cusp != smooth
+
+
+def test_signature_is_resample_invariant():
+    a = shape_signature("M0,0 L5,5 L10,0")
+    b = shape_signature("M0,0 L2.5,2.5 L5,5 L7.5,2.5 L10,0")  # same shape, more pts
+    assert a == b
