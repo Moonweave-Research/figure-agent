@@ -26,8 +26,23 @@ ACTION_TYPES = frozenset(
 )
 
 
+CENTERLINE_ALTERING = frozenset(
+    {"smooth", "simplify", "roughen", "jitter", "soften_corners", "resample"}
+)
+
+
 class SvgPolishRecipeError(ValueError):
     """Expected user-facing error for malformed SVG polish recipe files."""
+
+
+def reject_centerline_op_on_truth(*, action_type: str, target_truth_bearing: bool) -> None:
+    """Plan-time gate (spec §5 gate 1): a centerline-altering op on a truth path
+    is forbidden outright — overlay is not an escape (H1)."""
+    if action_type in CENTERLINE_ALTERING and target_truth_bearing:
+        raise SvgPolishRecipeError(
+            f"action {action_type!r} alters the centerline of a truth-bearing path; "
+            "only centerline-preserving stroke ops are allowed on truth paths"
+        )
 
 
 def _require_mapping(value: Any, label: str) -> dict[str, Any]:
