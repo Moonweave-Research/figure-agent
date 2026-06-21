@@ -12,7 +12,7 @@ from typing import Any
 
 import fixture_identity
 from quality_manifest import file_sha256
-from svg_path_geometry import canonical_polyline, shape_signature  # noqa: F401
+from svg_path_geometry import canonical_polyline, shape_signature
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
 SVG_SEMANTIC_DIFF_RELATIVE_PATH = "polish/svg_semantic_diff.json"
