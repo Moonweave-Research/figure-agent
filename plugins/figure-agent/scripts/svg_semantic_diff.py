@@ -12,6 +12,7 @@ from typing import Any
 
 import fixture_identity
 from quality_manifest import file_sha256
+from svg_path_geometry import canonical_polyline, shape_signature  # noqa: F401
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
 SVG_SEMANTIC_DIFF_RELATIVE_PATH = "polish/svg_semantic_diff.json"
@@ -183,6 +184,7 @@ def _inventory(path: Path) -> dict[str, Any]:
     path_count = 0
     marker_count = 0
     marker_attr_count = 0
+    truth_geometry: dict[str, dict[str, Any]] = {}
     for element in root.iter():
         tag = _strip_namespace(element.tag)
         element_id = element.attrib.get("id")
@@ -201,6 +203,13 @@ def _inventory(path: Path) -> dict[str, Any]:
                 texts.append(text)
         if tag == "path":
             path_count += 1
+            d = element.attrib.get("d")
+            truth_bearing = element.attrib.get("data-truth-bearing") != "false"
+            if d and truth_bearing and element_id:
+                truth_geometry[element_id] = {
+                    "signature": shape_signature(d),
+                    "polyline": canonical_polyline(d),
+                }
         if tag == "marker":
             marker_count += 1
         marker_attr_count += sum(
@@ -252,6 +261,7 @@ def _inventory(path: Path) -> dict[str, Any]:
             tuple("" if value is None else value for value in optical)
             for optical in optical_signatures_no_id
         ),
+        "truth_geometry": truth_geometry,
     }
 
 

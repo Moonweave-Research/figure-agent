@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from svg_semantic_diff import (  # noqa: E402
     SVG_SEMANTIC_DIFF_RELATIVE_PATH,
     SvgSemanticDiffError,
+    _inventory,
     build_svg_semantic_diff_report,
     load_svg_semantic_diff_report,
     svg_semantic_diff_report_is_stale,
@@ -393,3 +394,20 @@ def test_cli_rejects_traversal_or_outside_relative_fixture_path(
     assert result.returncode == 1
     assert "invalid fixture path" in result.stderr
     assert not (outside_dir / SVG_SEMANTIC_DIFF_RELATIVE_PATH).exists()
+
+
+SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+    '<path id="boundary" d="M0,0 L5,5 L10,0"/>'
+    '<path id="decor" data-truth-bearing="false" d="M0,9 L10,9"/>'
+    "</svg>"
+)
+
+
+def test_inventory_signs_only_truth_paths(tmp_path: Path) -> None:
+    f = tmp_path / "a.svg"
+    f.write_text(SVG)
+    inv = _inventory(f)
+    assert "boundary" in inv["truth_geometry"]
+    assert "decor" not in inv["truth_geometry"]
+    assert inv["truth_geometry"]["boundary"]["signature"].corner_count == 1
