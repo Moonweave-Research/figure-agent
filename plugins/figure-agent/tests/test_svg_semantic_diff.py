@@ -503,7 +503,9 @@ def test_truth_path_renamed_is_blocked(tmp_path: Path) -> None:
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
         '<path id="renamed" d="M0,0 L5,5 L10,0"/></svg>',
     )
-    assert any(f["kind"] == "truth_path_removed" for f in _compare(src, pol))
+    assert any(
+        f["kind"] == "truth_path_removed" and f["severity"] == "BLOCKER" for f in _compare(src, pol)
+    )
 
 
 def test_truth_path_downgraded_to_decorative_is_blocked(tmp_path: Path) -> None:
@@ -514,4 +516,6 @@ def test_truth_path_downgraded_to_decorative_is_blocked(tmp_path: Path) -> None:
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
         '<path id="boundary" data-truth-bearing="false" d="M0,0 L5,5 L10,0"/></svg>',
     )
-    assert any(f["kind"] == "truth_path_removed" for f in _compare(src, pol))
+    assert any(
+        f["kind"] == "truth_path_removed" and f["severity"] == "BLOCKER" for f in _compare(src, pol)
+    )
