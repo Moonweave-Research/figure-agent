@@ -404,7 +404,11 @@ def _compare(
     for element_id, src_entry in sorted(src_geo.items()):
         pol_entry = pol_geo.get(element_id)
         if pol_entry is None:
-            continue  # disappearance handled by the existing inventory/text findings
+            # Truth path dropped its id (or vanished): reported only as a MINOR
+            # element_inventory_change, NOT a BLOCKER. A BLOCKER-level
+            # no-truth-replacement guard is Plan 2 scope, so a renamed/stripped id
+            # is a known gap in this geometry lock, not a covered case.
+            continue
         if src_entry["signature"] != pol_entry["signature"]:
             add(
                 "geometry_truth_violation",
