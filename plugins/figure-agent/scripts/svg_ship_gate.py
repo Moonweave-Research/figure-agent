@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from inputs import parse_spec
+from svg_polish_manifest import FINAL_ARTIFACT_POLISHED_SVG, compute_final_artifact_state
 from svg_semantic_diff import _inventory
 
 _NAMED_COLORS = {
@@ -233,17 +235,56 @@ def build_render_ship_findings(svg_path: Path, *, dpi: int = 600) -> list[dict[s
     return detect_render_ship_divergence(raster, _truth_samples(inventory), viewbox)
 
 
+def _ship_svg_path(
+    example_dir: Path,
+    spec_path: Path,
+    *,
+    base_dir: Path | None = None,
+    style_lock_path: Path | None = None,
+) -> Path | None:
+    """Resolve the polished SVG the final-artifact gate validates, or None.
+    Single source of truth (compute_final_artifact_state) so render-ship and the
+    final-artifact gate provably target the same byte stream — instead of a
+    hardcoded stem that could silently diverge from the manifest."""
+    try:
+        spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(spec, dict):
+        return None
+    overrides: dict[str, Any] = {}
+    if base_dir is not None:
+        overrides["base_dir"] = base_dir
+    if style_lock_path is not None:
+        overrides["style_lock_path"] = style_lock_path
+    state = compute_final_artifact_state(example_dir, example_dir.name, spec, **overrides)
+    if state.get("kind") != FINAL_ARTIFACT_POLISHED_SVG:
+        return None
+    candidate = (example_dir / state["path"]).resolve()
+    if candidate.suffix != ".svg" or not candidate.is_file():
+        return None
+    return candidate
+
+
 def render_ship_gate_failures(
-    example_dir: Path, *, dpi: int = 600, polished_svg: str | None = None
+    example_dir: Path,
+    spec_path: Path,
+    *,
+    dpi: int = 600,
+    base_dir: Path | None = None,
+    style_lock_path: Path | None = None,
 ) -> list[str]:
-    """Terminal-gate adapter: returns human-readable failure strings (empty = pass).
-    Skips silently if the polished SVG or the render tools are unavailable."""
+    """Terminal-gate adapter: human-readable failure strings (empty = pass). Renders
+    the SAME polished SVG the final-artifact gate validates (manifest-driven path), so
+    'the figure you verify is the figure you ship'. No-ops when there is no polished
+    SVG, the render tools are absent, or the render raises. `base_dir`/`style_lock_path`
+    mirror compute_final_artifact_state's overrides (used in tests; default = prod)."""
     import shutil
 
-    name = example_dir.name
-    svg_rel = polished_svg or f"polish/{name}.polished.svg"
-    svg_path = example_dir / svg_rel
-    if not svg_path.is_file():
+    svg_path = _ship_svg_path(
+        example_dir, spec_path, base_dir=base_dir, style_lock_path=style_lock_path
+    )
+    if svg_path is None:
         return []
     if not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")):
         return []

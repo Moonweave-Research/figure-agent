@@ -124,3 +124,72 @@ def test_faithful_figure_renders_clean(tmp_path: Path):
     svg_path = tmp_path / "fig.svg"
     svg_path.write_text(svg, encoding="utf-8")
     assert build_render_ship_findings(svg_path, dpi=150) == []
+
+
+from quality_manifest import file_sha256 as _file_sha256  # noqa: E402
+from svg_polish_manifest import write_svg_polish_manifest  # noqa: E402
+from svg_ship_gate import _ship_svg_path, render_ship_gate_failures  # noqa: E402
+from test_svg_polish_manifest import _make_fixture, _valid_manifest  # noqa: E402
+
+
+def test_generated_export_fixture_is_a_render_ship_noop(tmp_path: Path):
+    # A spec with no final_artifact -> kind=generated_export -> no polished SVG to
+    # render-ship; the gate must no-op (and resolve no path), not target exports/.
+    example_dir = tmp_path / "examples" / "x"
+    example_dir.mkdir(parents=True)
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text("name: x\n", encoding="utf-8")
+    assert _ship_svg_path(example_dir, spec_path) is None
+    assert render_ship_gate_failures(example_dir, spec_path) == []
+
+
+def test_polished_svg_declared_but_manifest_missing_is_a_noop(tmp_path: Path):
+    # final_artifact declares a polished_svg but the manifest file is absent ->
+    # MISSING state, path is the .yaml -> the .svg suffix guard skips it (no crash).
+    example_dir = tmp_path / "examples" / "demo_fig"
+    example_dir.mkdir(parents=True)
+    spec_path = example_dir / "spec.yaml"
+    spec_path.write_text(
+        "name: demo_fig\n"
+        "final_artifact:\n"
+        "  kind: polished_svg\n"
+        "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+    assert _ship_svg_path(example_dir, spec_path) is None
+    assert render_ship_gate_failures(example_dir, spec_path) == []
+
+
+def test_ship_path_is_manifest_driven_not_hardcoded_stem(tmp_path: Path):
+    # THE KEY TEST: the polished SVG lives at a stem != {name}.polished.svg. The old
+    # hardcoded f"polish/{name}.polished.svg" would miss it; the manifest-driven path
+    # must resolve the file the final-artifact gate actually validates.
+    fig_dir = _make_fixture(tmp_path)
+    name = fig_dir.name
+    style_lock = fig_dir / "style.sty"
+
+    custom_svg = fig_dir / "polish" / "custom_polished.svg"
+    custom_svg.write_text("<svg><text>polished</text></svg>\n", encoding="utf-8")
+
+    manifest_data = _valid_manifest(fig_dir, style_lock_path=style_lock)
+    manifest_data["polished"]["path"] = "polish/custom_polished.svg"
+    manifest_data["polished"]["polished_svg_hash"] = _file_sha256(custom_svg)
+    write_svg_polish_manifest(fig_dir / "polish" / "svg_polish_manifest.yaml", manifest_data)
+
+    spec_path = fig_dir / "spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8") + "final_artifact:\n"
+        "  kind: polished_svg\n"
+        "  manifest: polish/svg_polish_manifest.yaml\n",
+        encoding="utf-8",
+    )
+
+    resolved = _ship_svg_path(
+        fig_dir,
+        spec_path,
+        base_dir=fig_dir.parent.parent,
+        style_lock_path=style_lock,
+    )
+    assert resolved == custom_svg.resolve()
+    # and NOT the hardcoded {name} stem
+    assert resolved != (fig_dir / "polish" / f"{name}.polished.svg").resolve()

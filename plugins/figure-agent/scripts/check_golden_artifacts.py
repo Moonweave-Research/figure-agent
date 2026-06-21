@@ -685,7 +685,7 @@ def check_example(
         )
         failures.extend(reference_pack_gate_failures(example_dir, spec))
         failures.extend(final_artifact_gate_failures(example_dir, spec))
-        failures.extend(render_ship_gate_failures(example_dir))
+        failures.extend(render_ship_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
                 audit,
