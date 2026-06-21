@@ -88,7 +88,7 @@ def _color_present_near(
     return False
 
 
-MIN_MATCH_FRACTION = 0.5  # at least this fraction of on-path samples must match
+MIN_MATCH_FRACTION = 0.5  # >=0.5 passes; <0.5 is a BLOCKER (exactly-half is intentionally a pass)
 
 
 def detect_render_ship_divergence(

@@ -42,13 +42,12 @@ def test_color_present_near_window_absorbs_edges():
     assert _color_present_near(raster, (25, 25), set()) is False
 
 
-# tests/test_svg_ship_gate.py  (append)
 from svg_ship_gate import detect_render_ship_divergence  # noqa: E402
 
 VIEWBOX = (0.0, 0.0, 10.0, 10.0)
 
 
-def _solid(color):
+def _solid(color: tuple[int, int, int]) -> np.ndarray:
     raster = np.zeros((100, 100, 3), dtype=np.uint8)
     raster[:, :] = color
     return raster
