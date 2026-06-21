@@ -25,6 +25,18 @@
 
 ---
 
+## Review hardening (empirical, 2026-06-21)
+
+A pre-execution adversarial review ran this plan's logic through the REAL `rsvg-convert → pdf → pdftoppm` chain on cases the plan's own (square, stroked, opaque) test SVGs hid. Three real holes were found and are already folded into the code above:
+
+1. **Filled truth regions false-BLOCKERed (serious, confirmed).** A truth path's polyline traces its *outline*; for a FILLED region the on-line pixels straddle the antialiased fill/background edge (probe: a faithfully-rendered filled square scored `match_frac 0.492` → false BLOCK; top sampled colours = 130 background + 126 fill). **Fix: window sampling** (`_color_present_near`, radius 2) — verified to lift the filled square to `1.0` (pass) while the opaque-cover case stays `0.0` (still BLOCK). Occlusion detection is NOT weakened.
+2. **Semi-transparent truth paths false-BLOCKERed (confirmed).** A `stroke-opacity=0.5` red renders `(255,127,127)` over the white page, not pure red (channel delta 127 > tolerance 60 → false BLOCK). **Fix: `_blend_to_white`** adds the opacity-blended variant of each declared colour to the match set.
+3. **Letterbox coordinate mapping (edge case).** When the SVG forces `width`/`height` at a different aspect ratio than the `viewBox`, rsvg letterboxes (preserveAspectRatio meet) and the linear viewBox→raster mapping mis-locates off-centre features. **Fix: `_parse_viewbox` skips** (returns None → gate no-op) on an aspect mismatch rather than risk a false divergence. (A viewBox `min-x`/`min-y` offset IS handled correctly — verified.)
+
+Also hardened: the terminal-gate adapter wraps the render in `try/except` (a backstop gate must never crash the golden-artifact check), and renders only when a `polish/*.polished.svg` exists AND the tools are present (per-figure cost is bounded; polished SVGs are rare).
+
+---
+
 ## File Structure
 
 - **Create** `scripts/svg_ship_gate.py` — colour/coord/sampling helpers + the `render_ship_divergence` detector + the render adapter + the public gate. One responsibility: "does the shipped render faithfully show the truth paths?"
@@ -53,7 +65,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from svg_ship_gate import (  # noqa: E402
     _parse_color,
     _svg_to_pixel,
-    _sample_rendered_colors,
+    _color_present_near,
 )
 
 
@@ -76,17 +88,20 @@ def test_svg_to_pixel_maps_viewbox_to_raster():
     assert _svg_to_pixel(100 + 100j, viewbox, raster_w=100, raster_h=50) == (99, 49)
 
 
-def test_sample_rendered_colors_reads_pixels_along_points():
-    raster = np.zeros((50, 100, 3), dtype=np.uint8)
-    raster[25, 50] = (255, 0, 0)  # row=y=25, col=x=50
-    viewbox = (0.0, 0.0, 10.0, 10.0)
-    colors = _sample_rendered_colors(raster, [5 + 5j], viewbox)
-    assert colors == [(255, 0, 0)]
+def test_color_present_near_window_absorbs_edges():
+    raster = np.zeros((50, 50, 3), dtype=np.uint8)  # all black
+    raster[25, 25] = (0, 0, 255)  # one blue pixel
+    # a point mapping near the blue pixel (within radius 2) -> present
+    assert _color_present_near(raster, (24, 24), {(0, 0, 255)}) is True
+    # a point far from any blue -> absent
+    assert _color_present_near(raster, (5, 5), {(0, 0, 255)}) is False
+    # empty colour set never matches
+    assert _color_present_near(raster, (25, 25), set()) is False
 ```
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `uv run pytest tests/test_svg_ship_gate.py -k "parse_color or svg_to_pixel or sample_rendered" -v`
+Run: `uv run pytest tests/test_svg_ship_gate.py -k "parse_color or svg_to_pixel or color_present" -v`
 Expected: FAIL — `ModuleNotFoundError` / names not importable.
 
 - [ ] **Step 3: Implement the helpers**
@@ -148,24 +163,40 @@ def _svg_to_pixel(
     return (px, py)
 
 
-def _sample_rendered_colors(
+COLOR_DELTA = 60  # per-channel tolerance for "this pixel matches a declared colour"
+
+
+def _color_present_near(
     raster: np.ndarray,
-    points: list[complex],
-    viewbox: tuple[float, float, float, float],
-) -> list[tuple[int, int, int]]:
-    """RGB of the rendered raster at each SVG point (raster is HxWx3, row=y/col=x)."""
+    pixel: tuple[int, int],
+    colors: set[tuple[int, int, int]],
+    *,
+    radius: int = 2,
+    delta: int = COLOR_DELTA,
+) -> bool:
+    """True if any declared colour appears within a `radius`-pixel window of `pixel`.
+    The window is ESSENTIAL (verified empirically, see "Review hardening"): a truth
+    path's polyline traces the path *outline*, so for a FILLED region the on-line
+    pixels straddle the antialiased fill/background edge (~50% background). A single
+    centre sample false-BLOCKERs a faithfully-rendered filled region; the window
+    catches the fill colour 1-2px inside the edge. It does NOT weaken occlusion
+    detection — an opaque cover leaves no declared colour anywhere near the point."""
+    px, py = pixel
     raster_h, raster_w = raster.shape[0], raster.shape[1]
-    samples: list[tuple[int, int, int]] = []
-    for point in points:
-        px, py = _svg_to_pixel(point, viewbox, raster_w=raster_w, raster_h=raster_h)
-        pixel = raster[py, px]
-        samples.append((int(pixel[0]), int(pixel[1]), int(pixel[2])))
-    return samples
+    for yy in range(max(0, py - radius), min(raster_h, py + radius + 1)):
+        for xx in range(max(0, px - radius), min(raster_w, px + radius + 1)):
+            sample = raster[yy, xx]
+            if any(
+                all(abs(int(sample[i]) - color[i]) <= delta for i in range(3))
+                for color in colors
+            ):
+                return True
+    return False
 ```
 
 - [ ] **Step 4: Run to verify they pass**
 
-Run: `uv run pytest tests/test_svg_ship_gate.py -k "parse_color or svg_to_pixel or sample_rendered" -v`
+Run: `uv run pytest tests/test_svg_ship_gate.py -k "parse_color or svg_to_pixel or color_present" -v`
 Expected: PASS (all three).
 
 - [ ] **Step 5: Commit**
@@ -231,17 +262,8 @@ Expected: FAIL — `cannot import name 'detect_render_ship_divergence'`.
 - [ ] **Step 3: Implement the detector**
 
 ```python
-# scripts/svg_ship_gate.py  (append)
-from typing import Any
-
-COLOR_DELTA = 60  # per-channel tolerance for "this pixel matches a declared colour"
+# scripts/svg_ship_gate.py  (append; `from typing import Any` goes in the top import block)
 MIN_MATCH_FRACTION = 0.5  # at least this fraction of on-path samples must match
-
-
-def _matches_any(sample: tuple[int, int, int], colors: set[tuple[int, int, int]]) -> bool:
-    return any(
-        all(abs(sample[i] - color[i]) <= COLOR_DELTA for i in range(3)) for color in colors
-    )
 
 
 def detect_render_ship_divergence(
@@ -253,17 +275,23 @@ def detect_render_ship_divergence(
 ) -> list[dict[str, str]]:
     """BLOCKER findings for truth paths whose rendered on-path colours diverge from
     every declared colour. `truth_paths` items: {id, polyline (list[complex]), colors
-    (set of RGB triples)}. Paths with an empty `colors` set are skipped."""
+    (set of RGB triples — declared fill/stroke PLUS their opacity-blended variants,
+    assembled in `_truth_samples`)}. Each polyline point is matched via a small window
+    (`_color_present_near`) so a filled region's outline samples still match. Paths
+    with an empty `colors` set are skipped (not checkable, not a crash)."""
+    raster_h, raster_w = raster.shape[0], raster.shape[1]
     findings: list[dict[str, str]] = []
     for entry in sorted(truth_paths, key=lambda item: item["id"]):
         colors = entry["colors"]
-        if not colors:
+        polyline = entry["polyline"]
+        if not colors or not polyline:
             continue
-        samples = _sample_rendered_colors(raster, entry["polyline"], viewbox)
-        if not samples:
-            continue
-        matched = sum(1 for sample in samples if _matches_any(sample, colors))
-        fraction = matched / len(samples)
+        matched = 0
+        for point in polyline:
+            pixel = _svg_to_pixel(point, viewbox, raster_w=raster_w, raster_h=raster_h)
+            if _color_present_near(raster, pixel, colors):
+                matched += 1
+        fraction = matched / len(polyline)
         if fraction < min_match_fraction:
             findings.append(
                 {
@@ -272,7 +300,7 @@ def detect_render_ship_divergence(
                     "severity": "BLOCKER",
                     "evidence": (
                         f"truth path #{entry['id']} renders unfaithfully: only "
-                        f"{matched}/{len(samples)} on-path samples match a declared "
+                        f"{matched}/{len(polyline)} on-path samples match a declared "
                         "colour (covered, filtered, or renderer-shifted)"
                     ),
                     "recommended_route": "semantic_backport_required",
@@ -280,6 +308,8 @@ def detect_render_ship_divergence(
             )
     return findings
 ```
+
+(`from typing import Any` is a module-level import → top of the file; `MIN_MATCH_FRACTION` and the detector are appended. `_color_present_near` and `COLOR_DELTA` were added in Task 1.)
 
 - [ ] **Step 4: Run to verify they pass**
 
@@ -355,15 +385,31 @@ Expected: FAIL — `cannot import name 'build_render_ship_findings'` (or, if rsv
 - [ ] **Step 3: Implement the render adapter + assembly + gate**
 
 ```python
-# scripts/svg_ship_gate.py  (append)
-import subprocess
-import tempfile
-from pathlib import Path
+# scripts/svg_ship_gate.py
+# Module-level imports (subprocess, tempfile, pathlib.Path, svg_semantic_diff._inventory)
+# go in the TOP import block; the functions below are appended.
 
-from svg_semantic_diff import _inventory
+# svg_semantic_diff.OPTICAL_ATTRS order: (fill, stroke, opacity, fill-opacity, stroke-opacity)
 
-_FILL_INDEX = 0  # OPTICAL_ATTRS order in svg_semantic_diff: fill, stroke, ...
-_STROKE_INDEX = 1
+
+def _numeric(value: str | None) -> float | None:
+    """Leading number of a length string ('20', '20px' -> 20.0; '100%'/None -> None)."""
+    if not value:
+        return None
+    match = re.match(r"\s*([0-9]*\.?[0-9]+)", value)
+    return float(match.group(1)) if match else None
+
+
+def _opacity(value: str | None) -> float:
+    parsed = _numeric(value)
+    return 1.0 if parsed is None else max(0.0, min(1.0, parsed))
+
+
+def _blend_to_white(color: tuple[int, int, int], opacity: float) -> tuple[int, int, int]:
+    """A semi-transparent colour over the white render page renders as this blend.
+    Verified empirically: a stroke-opacity=0.5 red renders (255,127,127), not pure
+    red, so the declared colour alone would false-BLOCKER without this variant."""
+    return tuple(round(channel * opacity + 255 * (1 - opacity)) for channel in color)
 
 
 def _parse_viewbox(frame: dict[str, str]) -> tuple[float, float, float, float] | None:
@@ -376,21 +422,32 @@ def _parse_viewbox(frame: dict[str, str]) -> tuple[float, float, float, float] |
         return None
     if width <= 0 or height <= 0:
         return None
+    # If the SVG forces width/height with a DIFFERENT aspect ratio, rsvg letterboxes
+    # the content (preserveAspectRatio meet) and our linear viewBox->raster mapping
+    # mis-locates off-centre features. Skip rather than risk false divergence (the
+    # geometry + occlusion locks still guard; this gate is an additive backstop).
+    canvas_w, canvas_h = _numeric(frame.get("width")), _numeric(frame.get("height"))
+    if canvas_w and canvas_h and abs(canvas_w / canvas_h - width / height) > 0.01 * (width / height):
+        return None
     return (min_x, min_y, width, height)
 
 
 def _truth_samples(inventory: dict[str, Any]) -> list[dict[str, Any]]:
     samples: list[dict[str, Any]] = []
     for element_id, geometry in inventory["truth_geometry"].items():
-        optical = inventory["colors_by_id"].get(element_id, ())
-        colors = {
-            color
-            for color in (
-                _parse_color(optical[_FILL_INDEX] if len(optical) > _FILL_INDEX else None),
-                _parse_color(optical[_STROKE_INDEX] if len(optical) > _STROKE_INDEX else None),
-            )
-            if color is not None
-        }
+        fill_raw, stroke_raw, opacity_raw, fill_op_raw, stroke_op_raw = inventory[
+            "colors_by_id"
+        ].get(element_id) or (None, None, None, None, None)
+        base = _opacity(opacity_raw)
+        colors: set[tuple[int, int, int]] = set()
+        fill = _parse_color(fill_raw)
+        if fill is not None:
+            colors.add(fill)
+            colors.add(_blend_to_white(fill, base * _opacity(fill_op_raw)))
+        stroke = _parse_color(stroke_raw)
+        if stroke is not None:
+            colors.add(stroke)
+            colors.add(_blend_to_white(stroke, base * _opacity(stroke_op_raw)))
         samples.append({"id": element_id, "polyline": geometry["polyline"], "colors": colors})
     return samples
 
@@ -447,7 +504,13 @@ def render_ship_gate_failures(
         return []
     if not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")):
         return []
-    findings = build_render_ship_findings(svg_path, dpi=dpi)
+    try:
+        findings = build_render_ship_findings(svg_path, dpi=dpi)
+    except Exception:
+        # Fail-safe: a render/parse error must never crash the whole golden-artifact
+        # check. This gate is an additive backstop (Plans 1-2 still guard); a tooling
+        # hiccup degrades to "no findings", it does not block or explode.
+        return []
     return [finding["evidence"] for finding in findings]
 ```
 
@@ -483,7 +546,16 @@ git commit -m "feat(ship): render-ship equivalence gate wired into the terminal 
 
 - `uv run pytest tests/ -q` green; `uv run pytest tests/test_svg_ship_gate.py -m render` green on a machine with `rsvg-convert` + `pdftoppm`.
 - A truth path covered by an opaque overlay, blurred by a filter, or colour-shifted by the renderer → BLOCKER `render_ship_divergence` from the real shipped raster (this is the pixel-exact backstop Plan 2's bbox/opacity occlusion proxy deferred).
-- A faithfully-rendered figure → clean.
-- The gate plugs into `check_golden_artifacts.check_example` and degrades to a no-op when the polished SVG or render tools are absent.
+- A faithfully-rendered figure — including a FILLED truth region and a semi-transparent (opacity) truth path (both verified false-positives without the Review-hardening fixes) — → clean.
+- The gate plugs into `check_golden_artifacts.check_example`, wraps the render in `try/except`, and degrades to a no-op when the polished SVG or render tools are absent.
 
-**Documented scope boundaries (out of this plan):** accurate RGB→CMYK gamut detection (needs a bundled ICC profile + `PIL.ImageCms` — Pillow's profile-free CMYK round-trip is lossless, verified) → Plan 3B; composite CVD/grayscale/contrast on the rendered raster (§5 gate 3, H6) → separate plan; truth paths with a `transform` are sampled at pre-transform coords (semantic_diff already flags transformed truth elements as `group_transform_risk`) → known limitation; truth paths whose declared colour is `url(#grad)`/CSS/unparseable are skipped, not checked. Plan 4 (`add_volume_shading`) remains the first overlay producer, which must pass both Plan 2's occlusion guard and this render-ship gate.
+**Documented scope boundaries / known limitations (out of this plan):**
+- Accurate RGB→CMYK gamut detection (needs a bundled ICC profile + `PIL.ImageCms` — Pillow's profile-free CMYK round-trip is lossless, verified) → Plan 3B.
+- Composite CVD/grayscale/contrast on the rendered raster (§5 gate 3, H6) → separate plan.
+- Truth paths with a `transform` are sampled at pre-transform coords (semantic_diff already flags transformed truth elements as `group_transform_risk`) → known limitation.
+- Truth paths whose declared colour is `url(#grad)`/CSS/named-outside-the-small-set/unparseable are skipped, not checked (additive gate — it checks what it can parse).
+- **Letterboxed SVGs** (declared width/height aspect ≠ viewBox aspect) are skipped (coordinate mapping unreliable). Most pipeline SVGs set matching dimensions.
+- **A semi-transparent truth path over a non-white fill** blends toward that fill, not white; `_blend_to_white` assumes the white render page, so such a path could still mis-match (uncommon; truth paths are normally opaque on the page).
+- **No render tools / no polished SVG = no protection (silent no-op).** This gate is an additive backstop — Plans 1-2's geometry/occlusion locks still apply. For the ship gate to actually run, CI/dev must have `rsvg-convert` + `pdftoppm`.
+
+Plan 4 (`add_volume_shading`) remains the first overlay producer, which must pass both Plan 2's occlusion guard and this render-ship gate.
