@@ -114,30 +114,33 @@ def add_volume_shading(
         ET.SubElement(gradient, _svg("stop"), {"offset": "0", "stop-color": "#ffffff"})
         ET.SubElement(gradient, _svg("stop"), {"offset": "1", "stop-color": "#000000"})
 
-    # Inset the overlay so it covers the INTERIOR fill, not the truth outline stroke.
-    # Load-bearing: keeping the translucent overlay off the truth path's polyline
-    # points lets the render-ship gate still see the outline's declared colour in
-    # >=50% of on-path samples (COLOR_DELTA tolerance).
-    # For sub-~2px targets, width-2*inset clamps to 0 -> a zero-size (no-op) overlay:
-    # an intentional silent floor for degenerate tiny objects, not a crash.
-    inset = max(1.0, 0.08 * min(width, height))
-    overlay_w = max(0.0, width - 2 * inset)
-    overlay_h = max(0.0, height - 2 * inset)
-    overlay = ET.Element(
-        _svg("rect"),
-        {
-            "id": f"hand:vshade-overlay-{target_id}",
-            "data-truth-bearing": "false",
-            "x": str(bbox_x + inset),
-            "y": str(bbox_y + inset),
-            "width": str(overlay_w),
-            "height": str(overlay_h),
-            "fill": f"url(#{gradient_id})",
-            "opacity": str(_opacity_for(hero_strength)),
-        },
-    )
-
-    parent = parent_of.get(target, root)
-    parent.insert(list(parent).index(target) + 1, overlay)
+    # Idempotent: a repeat call on the same target must not emit a duplicate
+    # overlay rect id (symmetric to the gradient guard above).
+    overlay_id = f"hand:vshade-overlay-{target_id}"
+    if not any(elem.get("id") == overlay_id for elem in root.iter()):
+        # Inset the overlay so it covers the INTERIOR fill, not the truth outline stroke.
+        # Load-bearing: keeping the translucent overlay off the truth path's polyline
+        # points lets the render-ship gate still see the outline's declared colour in
+        # >=50% of on-path samples (COLOR_DELTA tolerance).
+        # For sub-~2px targets, width-2*inset clamps to 0 -> a zero-size (no-op) overlay:
+        # an intentional silent floor for degenerate tiny objects, not a crash.
+        inset = max(1.0, 0.08 * min(width, height))
+        overlay_w = max(0.0, width - 2 * inset)
+        overlay_h = max(0.0, height - 2 * inset)
+        overlay = ET.Element(
+            _svg("rect"),
+            {
+                "id": overlay_id,
+                "data-truth-bearing": "false",
+                "x": str(bbox_x + inset),
+                "y": str(bbox_y + inset),
+                "width": str(overlay_w),
+                "height": str(overlay_h),
+                "fill": f"url(#{gradient_id})",
+                "opacity": str(_opacity_for(hero_strength)),
+            },
+        )
+        parent = parent_of.get(target, root)
+        parent.insert(list(parent).index(target) + 1, overlay)
 
     return ET.tostring(root, encoding="unicode")

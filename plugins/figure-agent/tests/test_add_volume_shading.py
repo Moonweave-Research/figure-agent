@@ -264,6 +264,14 @@ def test_op_idempotent_gradient_id():
     assert len(grads) == 1
 
 
+def test_op_idempotent_overlay_id():
+    once = _polished()
+    twice = add_volume_shading(once, "bead", light_direction=45.0, hero_strength=0.5)
+    root = ET.fromstring(twice)
+    overlays = [e for e in root.iter() if e.get("id") == "hand:vshade-overlay-bead"]
+    assert len(overlays) == 1
+
+
 # ---------------------------------------------------------------------------
 # First polished-SVG fixture: exercises Plan 2 (occlusion) + Plan 3 (render-ship)
 # gates LIVE — both are dormant until a real *.polished.svg exists.
