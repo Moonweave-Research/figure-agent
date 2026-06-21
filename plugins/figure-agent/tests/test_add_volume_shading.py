@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -15,6 +16,7 @@ from add_volume_shading import (  # noqa: E402
     add_volume_shading,
 )
 from svg_semantic_diff import _compare, _inventory  # noqa: E402
+from svg_ship_gate import build_render_ship_findings  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # _element_bbox
@@ -260,3 +262,53 @@ def test_op_idempotent_gradient_id():
     root = ET.fromstring(twice)
     grads = [g for g in root.iter(f"{{{_NS}}}linearGradient") if g.get("id") == "hand:vshade-bead"]
     assert len(grads) == 1
+
+
+# ---------------------------------------------------------------------------
+# First polished-SVG fixture: exercises Plan 2 (occlusion) + Plan 3 (render-ship)
+# gates LIVE — both are dormant until a real *.polished.svg exists.
+# ---------------------------------------------------------------------------
+
+FIXTURE = Path(__file__).resolve().parents[1] / "examples" / "_volume_shading_demo"
+_DEMO_BASE = FIXTURE / "exports" / "_volume_shading_demo.svg"
+_DEMO_POLISHED = FIXTURE / "polish" / "_volume_shading_demo.polished.svg"
+
+
+def test_demo_polished_matches_op_output():
+    # The committed polished.svg must be exactly the op output, so the live gate
+    # proof below validates the real artifact, not a hand-edited copy.
+    base = _DEMO_BASE.read_text(encoding="utf-8")
+    produced = add_volume_shading(base, "electrode", light_direction=315, hero_strength=0.6)
+    assert produced == _DEMO_POLISHED.read_text(encoding="utf-8")
+
+
+def test_demo_fixture_passes_occlusion_guard():
+    findings = _compare(_inventory(_DEMO_BASE), _inventory(_DEMO_POLISHED))
+    assert not [f for f in findings if f["kind"] in {"truth_path_occluded", "truth_path_removed"}]
+    assert not [f for f in findings if f["kind"] == "element_inventory_change"]
+
+
+@pytest.mark.render
+@pytest.mark.skipif(
+    not (shutil.which("rsvg-convert") and shutil.which("pdftoppm")),
+    reason="requires rsvg-convert and pdftoppm",
+)
+def test_demo_fixture_passes_render_ship_gate():
+    # The translucent inset leaves the truth outline's colour intact, so the
+    # shipped raster renders faithfully -> no divergence.
+    assert build_render_ship_findings(_DEMO_POLISHED, dpi=150) == []
+
+
+def test_opaque_overlay_variant_is_blocked(tmp_path):
+    # The lie the op refuses to emit: an OPAQUE hand:* rect drawn AFTER (on top of)
+    # the electrode, covering its bbox. The occlusion guard must BLOCK it.
+    base = _DEMO_BASE.read_text(encoding="utf-8")
+    opaque = base.replace(
+        "</svg>",
+        '<rect id="hand:cover" data-truth-bearing="false" '
+        'x="18" y="8" width="44" height="64" fill="#1f2a36" opacity="1.0"/></svg>',
+    )
+    opaque_path = tmp_path / "opaque.svg"
+    opaque_path.write_text(opaque, encoding="utf-8")
+    findings = _compare(_inventory(_DEMO_BASE), _inventory(opaque_path))
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
