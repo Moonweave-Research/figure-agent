@@ -27,6 +27,7 @@ FINDING_KINDS = frozenset(
         "frame_change",
         "geometry_truth_violation",
         "truth_path_removed",
+        "truth_path_occluded",
         "unsupported_svg_feature",
         "group_transform_risk",
         "marker_or_path_change",
@@ -58,6 +59,41 @@ def _strip_hand_overlay(names: list[str]) -> list[str]:
     """Drop hand:* overlay names. Added/removed hand overlays are sanctioned
     decoration (spec §6 overlay-safe), not a structural inventory change."""
     return [name for name in names if not name.startswith(HAND_OVERLAY_PREFIX)]
+
+
+OCCLUSION_OPACITY = 0.95  # effective opacity at/above which an overlay hides what's beneath
+OCCLUSION_COVERAGE = 0.5  # bbox-coverage fraction of a truth path that counts as occlusion
+
+
+def _float_attr(element: ET.Element, name: str, default: float) -> float:
+    try:
+        return float(element.attrib.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _polyline_bbox(points: list[complex]) -> tuple[float, float, float, float]:
+    xs = [point.real for point in points]
+    ys = [point.imag for point in points]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _bbox_coverage(
+    overlay: tuple[float, float, float, float],
+    truth: tuple[float, float, float, float],
+) -> float:
+    """Fraction of the truth bbox area covered by the overlay bbox (0 if disjoint
+    or the truth bbox is degenerate)."""
+    ox0, oy0, ox1, oy1 = overlay
+    tx0, ty0, tx1, ty1 = truth
+    ix0, iy0 = max(ox0, tx0), max(oy0, ty0)
+    ix1, iy1 = min(ox1, tx1), min(oy1, ty1)
+    if ix1 <= ix0 or iy1 <= iy0:
+        return 0.0
+    truth_area = (tx1 - tx0) * (ty1 - ty0)
+    if truth_area <= 0:
+        return 0.0
+    return ((ix1 - ix0) * (iy1 - iy0)) / truth_area
 
 
 class SvgSemanticDiffError(ValueError):
@@ -194,7 +230,8 @@ def _inventory(path: Path) -> dict[str, Any]:
     marker_count = 0
     marker_attr_count = 0
     truth_geometry: dict[str, dict[str, Any]] = {}
-    for element in root.iter():
+    hand_overlays: list[dict[str, Any]] = []
+    for order, element in enumerate(root.iter()):
         tag = _strip_namespace(element.tag)
         element_id = element.attrib.get("id")
         optical = tuple(element.attrib.get(attr) for attr in OPTICAL_ATTRS)
@@ -215,10 +252,25 @@ def _inventory(path: Path) -> dict[str, Any]:
             d = element.attrib.get("d")
             truth_bearing = element.attrib.get("data-truth-bearing") != "false"
             if d and truth_bearing and element_id:
+                polyline = canonical_polyline(d)
                 truth_geometry[element_id] = {
                     "signature": shape_signature(d),
-                    "polyline": canonical_polyline(d),
+                    "polyline": polyline,
+                    "bbox": _polyline_bbox(polyline),
+                    "order": order,
                 }
+            if d and element_id and element_id.startswith(HAND_OVERLAY_PREFIX):
+                opacity = _float_attr(element, "opacity", 1.0) * _float_attr(
+                    element, "fill-opacity", 1.0
+                )
+                hand_overlays.append(
+                    {
+                        "bbox": _polyline_bbox(canonical_polyline(d)),
+                        "opacity": opacity,
+                        "fill": element.attrib.get("fill", ""),
+                        "order": order,
+                    }
+                )
         if tag == "marker":
             marker_count += 1
         marker_attr_count += sum(
@@ -271,6 +323,7 @@ def _inventory(path: Path) -> dict[str, Any]:
             for optical in optical_signatures_no_id
         ),
         "truth_geometry": truth_geometry,
+        "hand_overlays": hand_overlays,
     }
 
 
@@ -438,6 +491,22 @@ def _compare(
                 f"truth path #{element_id} drifted {drift:.3f} > bound {frechet_bound}",
                 SEMANTIC_DIFF_BACKPORT,
             )
+    truth_geo = polished.get("truth_geometry", {})
+    for overlay in polished.get("hand_overlays", []):
+        if overlay["fill"] == "none" or overlay["opacity"] < OCCLUSION_OPACITY:
+            continue  # stroke-only or translucent overlay cannot hide truth
+        for occluded_id, truth in sorted(truth_geo.items()):
+            if overlay["order"] <= truth["order"]:
+                continue  # overlay painted beneath the truth path
+            if _bbox_coverage(overlay["bbox"], truth["bbox"]) >= OCCLUSION_COVERAGE:
+                add(
+                    "truth_path_occluded",
+                    "BLOCKER",
+                    f"opaque hand overlay covers >= {int(OCCLUSION_COVERAGE * 100)}% of "
+                    f"truth path #{occluded_id} and is painted on top; "
+                    "an overlay must not visually replace a truth path",
+                    SEMANTIC_DIFF_BACKPORT,
+                )
     return findings
 
 

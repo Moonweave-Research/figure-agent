@@ -519,3 +519,43 @@ def test_truth_path_downgraded_to_decorative_is_blocked(tmp_path: Path) -> None:
     assert any(
         f["kind"] == "truth_path_removed" and f["severity"] == "BLOCKER" for f in _compare(src, pol)
     )
+
+
+OVR = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+    '<path id="boundary" d="M0,0 L5,5 L10,0"/>'
+    "{overlay}</svg>"
+)
+
+
+def test_opaque_hand_overlay_over_truth_is_blocked(tmp_path):
+    overlay = (
+        '<path id="hand:cover" data-truth-bearing="false" fill="#fff" d="M0,0 L10,0 L10,5 L0,5 Z"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    findings = _compare(src, pol)
+    assert any(f["kind"] == "truth_path_occluded" and f["severity"] == "BLOCKER" for f in findings)
+
+
+def test_translucent_hand_overlay_over_truth_passes(tmp_path):
+    overlay = (
+        '<path id="hand:shade" data-truth-bearing="false" '
+        'fill="#fff" opacity="0.3" d="M0,0 L10,0 L10,5 L0,5 Z"/>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", OVR.format(overlay=overlay))
+    assert not [f for f in _compare(src, pol) if f["kind"] == "truth_path_occluded"]
+
+
+def test_hand_overlay_beneath_truth_passes(tmp_path):
+    # overlay declared BEFORE the truth path -> painted beneath -> cannot occlude
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<path id="hand:cover" data-truth-bearing="false" '
+        'fill="#fff" d="M0,0 L10,0 L10,5 L0,5 Z"/>'
+        '<path id="boundary" d="M0,0 L5,5 L10,0"/></svg>'
+    )
+    src = _inv(tmp_path, "s.svg", BASE.format(d="M0,0 L5,5 L10,0"))
+    pol = _inv(tmp_path, "p.svg", svg)
+    assert not [f for f in _compare(src, pol) if f["kind"] == "truth_path_occluded"]
