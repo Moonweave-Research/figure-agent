@@ -91,6 +91,15 @@ def _post_apply_summary(apply_result: dict[str, Any]) -> dict[str, str]:
     return summary
 
 
+def _required_commands(apply_result: dict[str, Any] | None) -> list[str]:
+    if apply_result is None:
+        return []
+    commands = apply_result.get("required_commands")
+    if not isinstance(commands, list):
+        return []
+    return [command for command in commands if isinstance(command, str)]
+
+
 def _apply_status(
     *,
     example_dir: Path,
@@ -260,6 +269,7 @@ def build_evidence_index(
             "render_status": _render_status(render_manifest),
             "apply_status": apply_status,
             "post_apply": _post_apply_summary(apply_result or {}),
+            "required_commands": _required_commands(apply_result),
         }
     return {
         "schema": SCHEMA,

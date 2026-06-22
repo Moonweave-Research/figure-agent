@@ -142,6 +142,36 @@ def test_evidence_index_reports_candidate_apply_source_drift(tmp_path: Path) -> 
     assert "candidate_apply_stale:candidate_demo.tex" in index["diagnostics"]
 
 
+def test_evidence_index_surfaces_unverified_apply_required_commands(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    apply_path = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result = json.loads(apply_path.read_text(encoding="utf-8"))
+    apply_result["status"] = "applied_unverified"
+    apply_result["post_apply"] = {}
+    apply_result["required_commands"] = [
+        "/fig_compile candidate_demo",
+        "/fig_export candidate_demo --skip-critique",
+        "/fig_status candidate_demo --json",
+    ]
+    apply_path.write_text(json.dumps(apply_result, sort_keys=True) + "\n", encoding="utf-8")
+
+    index = evidence_index.build_evidence_index(
+        "candidate_demo",
+        candidate_id="CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert index["candidate"]["apply_status"] == "applied_unverified"
+    assert index["candidate"]["post_apply"] == {}
+    assert index["candidate"]["required_commands"] == [
+        "/fig_compile candidate_demo",
+        "/fig_export candidate_demo --skip-critique",
+        "/fig_status candidate_demo --json",
+    ]
+
+
 def test_evidence_index_auto_detects_latest_applied_candidate(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)
