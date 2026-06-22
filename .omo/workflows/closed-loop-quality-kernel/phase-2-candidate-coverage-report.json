@@ -1,0 +1,129 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-2",
+  "phase_name": "Multi-Candidate Generation",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T15:36:05Z",
+  "objective": "Remove first-match-only default candidate generation, enumerate all supported fresh safe defects, emit candidate/refusal metrics, and keep candidate ids stable under identical source and ledger hashes.",
+  "candidate_metrics": {
+    "safe_candidate_defect_count": "emitted by candidate_generator.metrics",
+    "candidate_count": "emitted by candidate_generator.metrics",
+    "candidate_defect_coverage": "emitted by candidate_generator.metrics; synthetic supported fixture asserts 1.0",
+    "candidate_with_panel_count": "emitted by candidate_generator.metrics",
+    "candidate_with_family_count": "emitted by candidate_generator.metrics",
+    "candidate_with_source_hash_count": "emitted by candidate_generator.metrics",
+    "variant_count": "emitted by candidate_generator.metrics"
+  },
+  "refusal_metrics": {
+    "refusal_count": "emitted by candidate_generator.metrics",
+    "explicit_refusal_codes": [
+      "stale_detector_evidence",
+      "unknown_panel",
+      "missing_selector_hash",
+      "unsupported_candidate_family",
+      "no_bounded_operation",
+      "no_supported_candidate",
+      "source_missing"
+    ],
+    "unsupported_safe_defect_behavior": "unsupported safe defects emit unsupported_candidate_family refusal instead of disappearing"
+  },
+  "stable_id_evidence": {
+    "sort_order": [
+      "severity_rank",
+      "panel_id",
+      "source_file_path",
+      "selector_start_line",
+      "source_fingerprint",
+      "edit_family",
+      "variant_id"
+    ],
+    "id_format": "CAND%03d assigned after deterministic sort",
+    "test": "test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes"
+  },
+  "safety_checks": {
+    "fixture_source_mutation": false,
+    "candidate_acceptance_or_apply": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "path_escape_rejected": true,
+    "fixture_symlink_rejected": true,
+    "source_symlink_rejected": true,
+    "source_hash_mismatch_blocks_operation": true
+  },
+  "implemented_behaviors": [
+    "Default candidate generation iterates every safe_candidate defect instead of returning after the first supported target.",
+    "Supported fresh safe defects with bounded coordinate-offset operations emit one candidate each in the default path.",
+    "Candidate manifests include panel, subregion, edit_family, family, source_defect with ledger_hash, source_hash, selector.source_hash, variant_id, variant, and candidate_hash.",
+    "Candidate ids are assigned after deterministic sorting and remain stable under identical source and ledger hashes.",
+    "Unsupported safe defects produce explicit unsupported_candidate_family refusals.",
+    "Actionability gaps and per-defect source hash mismatches produce explicit refusals and no operation.",
+    "Candidate metrics expose candidate/refusal coverage denominators required by the Phase 2 spec."
+  ],
+  "changed_files": [
+    "plugins/figure-agent/scripts/candidates/candidate_generator.py",
+    "plugins/figure-agent/tests/test_candidate_generator.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_candidate_generator.py -k \"multi_candidate or unsupported_safe_defect or stable_ids or source_hash_mismatch\"",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "failed for first-match-only and source-hash fail-open behavior",
+      "green_result_after_implementation": "2 passed, 15 deselected"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_generator.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "17 passed in 0.43s"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_defect_ledger.py tests/test_candidate_generator.py tests/test_candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "48 passed in 1.53s"
+    },
+    {
+      "command": "uv run ruff check tests/test_quality_defect_ledger.py tests/test_candidate_generator.py tests/test_candidate_families.py scripts/quality/quality_defect_ledger.py scripts/candidates/candidate_generator.py scripts/candidates/candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/quality/quality_defect_ledger.py scripts/candidates/candidate_generator.py scripts/candidates/candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "session_id": "ses_1100a47aeffe7ln42j3U42S6Vo",
+    "result": "passed",
+    "summary": "No blocking findings. Reviewer verified multi-candidate iteration, metrics, required metadata, stable sort and ids, explicit refusals, source hash mismatch blocking, and retained path/symlink protections."
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "check-no-excuse-rules.py",
+      "result": "not_available",
+      "summary": "rg --files -g 'check-no-excuse-rules.py' returned no matching script in this repository."
+    }
+  ],
+  "exit_criteria": {
+    "first_match_only_generation_removed_from_closed_loop": true,
+    "candidate_refusal_coverage_metrics_pass": true,
+    "stable_id_tests_pass": true,
+    "synthetic_candidate_defect_coverage_equals_1": true
+  },
+  "next_phase": {
+    "phase_id": "phase-3",
+    "phase_name": "Benchmark Render And Candidate-Specific Ranking",
+    "entry_criteria_met": true
+  }
+}

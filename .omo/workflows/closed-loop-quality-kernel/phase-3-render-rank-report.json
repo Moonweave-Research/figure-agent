@@ -1,0 +1,142 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-3",
+  "phase_name": "Benchmark Render And Candidate-Specific Ranking",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T16:31:59Z",
+  "objective": "Make benchmark render use the candidate render sandbox, report honest render modes, and bind ranking evidence to candidate-specific candidate and render manifests.",
+  "render_modes": {
+    "allowed": [
+      "rendered",
+      "dependency_missing",
+      "blocked",
+      "failed",
+      "not_requested"
+    ],
+    "tested": [
+      "rendered",
+      "dependency_missing",
+      "blocked",
+      "not_requested"
+    ],
+    "forbidden": [
+      "requested_not_implemented",
+      "none"
+    ],
+    "result": "passed"
+  },
+  "render_dependency_probe": {
+    "schema": "figure-agent.render-dependency-probe.v1.inline",
+    "tools": [
+      "lualatex",
+      "pdftocairo"
+    ],
+    "states": [
+      "pass",
+      "fail",
+      "not_requested"
+    ],
+    "behavior": "benchmark payload includes render_dependency_probe; missing tools produce dependency_missing render mode rather than success or requested_not_implemented"
+  },
+  "rank_basis_counts": {
+    "keys": [
+      "candidate_specific_render",
+      "dependency_missing",
+      "blocked",
+      "failed",
+      "unrendered"
+    ],
+    "candidate_specific_rank_rate": "computed as candidate_specific_render_count / ranked_count, with partial-render regression coverage asserting 0.5 for one rendered candidate among two ranked candidates",
+    "result": "passed"
+  },
+  "sandbox_verifier_status": "passed",
+  "implemented_behaviors": [
+    "quality_benchmark.run_benchmark_suite(render=True) invokes candidate_render.render_candidate_set for fixture-local candidate sandbox rendering.",
+    "Benchmark render no longer emits requested_not_implemented.",
+    "Benchmark results use honest render modes: rendered, dependency_missing, blocked, failed, or not_requested.",
+    "Candidate scores are bound to matching candidate_id candidate_manifest.json and render_manifest.json files from build/candidates/<candidate_id>/.",
+    "Scores include rank_basis, candidate_manifest_path, render_manifest_path, and candidate_hash evidence fields.",
+    "Dependency-missing render manifests produce negative render evidence and no positive rendered_before_after_available evidence.",
+    "Unrendered or partially rendered candidates are counted separately in rank_basis_counts and cannot inflate candidate_specific_rank_rate.",
+    "Benchmark render tests assert fixture source and exports are not mutated."
+  ],
+  "changed_files": [
+    "plugins/figure-agent/scripts/quality/quality_benchmark.py",
+    "plugins/figure-agent/tests/test_quality_benchmark.py",
+    "plugins/figure-agent/tests/test_candidate_render.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_quality_benchmark.py -k \"benchmark_render or requested_not_implemented or candidate_specific_rank_rate\"",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "failed because benchmark render emitted requested_not_implemented and did not expose candidate-specific render metrics",
+      "green_result_after_implementation": "2 passed, 14 deselected"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_benchmark.py -k \"benchmark_render or requested_not_implemented or candidate_specific_rank_rate or missing_fixture_uses_blocked_mode or partial_render_basis\"",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "4 passed, 14 deselected"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_benchmark.py tests/test_candidate_render.py tests/test_candidate_rank.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "50 passed in 1.74s"
+    },
+    {
+      "command": "uv run ruff check tests/test_quality_benchmark.py tests/test_candidate_render.py tests/test_candidate_rank.py scripts/quality/quality_benchmark.py scripts/candidates/candidate_render.py scripts/candidates/candidate_rank.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/quality/quality_benchmark.py scripts/candidates/candidate_render.py scripts/candidates/candidate_rank.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "initial_session_id": "ses_10fe04b4dffed7VZqUZfWtIxzb",
+    "final_session_id": "ses_10fd79531ffeE66IdM5Znn7XcW",
+    "result": "passed",
+    "summary": "Initial review found residual render_mode none paths and incorrect candidate_specific_rank_rate denominator. Both blockers were fixed and locked with regressions. Final review reported no blocking findings."
+  },
+  "safety_checks": {
+    "fixture_source_mutation": false,
+    "fixture_exports_mutation": false,
+    "candidate_acceptance_or_apply": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "sandbox_writes_confined_to_build_candidates": true,
+    "path_escape_and_symlink_protections_preserved": true
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "check-no-excuse-rules.py",
+      "result": "not_available",
+      "summary": "rg --files -g 'check-no-excuse-rules.py' returned no matching script in this repository."
+    }
+  ],
+  "exit_criteria": {
+    "benchmark_render_calls_candidate_rendering": true,
+    "requested_not_implemented_never_appears": true,
+    "render_modes_are_honest": true,
+    "candidate_specific_rank_rate_is_computed": true,
+    "render_sandbox_verifier_has_no_blocking_findings": true
+  },
+  "next_phase": {
+    "phase_id": "phase-4",
+    "phase_name": "Apply, Status, Closeout Hardening",
+    "entry_criteria_met": true
+  }
+}

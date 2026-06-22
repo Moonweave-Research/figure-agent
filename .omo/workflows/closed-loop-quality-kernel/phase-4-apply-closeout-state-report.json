@@ -1,0 +1,133 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-4",
+  "phase_name": "Apply, Status, Closeout Hardening",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T17:29:07Z",
+  "objective": "Make apply, status, evidence, and closeout states truthful after candidate application, especially for unverified applies and stale historical acceptance.",
+  "apply_states": {
+    "truthful_statuses": [
+      "applied",
+      "applied_unverified",
+      "applied_with_failed_verification"
+    ],
+    "terminal_statuses": [
+      "applied",
+      "applied_unverified",
+      "applied_with_failed_verification"
+    ],
+    "required_commands_for_unverified_apply": [
+      "/fig_compile <name>",
+      "/fig_export <name> --skip-critique",
+      "/fig_status <name> --json"
+    ],
+    "result": "passed"
+  },
+  "status_freshness": {
+    "field": "acceptance_freshness_state",
+    "stale_value": "accepted_but_stale",
+    "stale_reason": "accepted_but_stale: fixture has an accepted historical state, but current source, render, critique, or export evidence is stale. Re-run compile/critique/export and refresh acceptance before closeout.",
+    "behavior": "Historical acceptance remains visible, but stale current evidence prevents ready status and closeout.",
+    "result": "passed"
+  },
+  "closeout_gates": {
+    "applied_unverified_blocks_ready": true,
+    "accepted_but_stale_blocks_ready": true,
+    "tracked_golden_stale_acceptance_has_precise_blocker": true,
+    "manual_approval_or_tracked_golden_messages_do_not_override_stale_acceptance": true,
+    "result": "passed"
+  },
+  "implemented_behaviors": [
+    "candidate_apply records post_apply=False outcomes as applied_unverified instead of applied.",
+    "candidate_apply attaches required follow-up commands for unverified applies.",
+    "applied_unverified is terminal in apply replay prevention and candidate acceptance readiness.",
+    "Executed verification failures remain applied_with_failed_verification.",
+    "evidence_index propagates candidate.required_commands from apply results.",
+    "status_readiness_policy exposes acceptance_freshness_state with accepted_but_stale for stale historical acceptance.",
+    "closeout_readiness blocks applied_unverified and stale accepted current evidence with deterministic reasons.",
+    "fig_closeout exposes acceptance freshness and blocks stale tracked-golden acceptance without contradictory manual approval messaging.",
+    "CLI and MCP contract fixtures provide fresh source hashes and declared panel evidence instead of weakening candidate evidence gates."
+  ],
+  "changed_files": [
+    "plugins/figure-agent/scripts/candidates/candidate_apply.py",
+    "plugins/figure-agent/scripts/candidates/candidate_acceptance.py",
+    "plugins/figure-agent/scripts/evidence_index.py",
+    "plugins/figure-agent/scripts/closeout_readiness.py",
+    "plugins/figure-agent/scripts/status_readiness_policy.py",
+    "plugins/figure-agent/scripts/fig_closeout.py",
+    "plugins/figure-agent/tests/test_candidate_apply.py",
+    "plugins/figure-agent/tests/test_candidate_acceptance.py",
+    "plugins/figure-agent/tests/test_evidence_index.py",
+    "plugins/figure-agent/tests/test_closeout_readiness.py",
+    "plugins/figure-agent/tests/test_status_readiness_policy.py",
+    "plugins/figure-agent/tests/test_status.py",
+    "plugins/figure-agent/tests/test_fig_closeout.py",
+    "plugins/figure-agent/tests/test_candidate_cli_contract.py",
+    "plugins/figure-agent/tests/test_mcp_facade.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_candidate_apply.py tests/test_candidate_acceptance.py tests/test_evidence_index.py tests/test_closeout_readiness.py tests/test_status_readiness_policy.py tests/test_fig_closeout.py tests/test_status.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "failed because no-verification apply reported applied, stale historical acceptance could remain closeout-ready, and required follow-up commands were not propagated through evidence/status surfaces",
+      "green_result_after_implementation": "224 passed in 2.69s"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_cli_contract.py tests/test_mcp_facade.py -q",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "61 passed in 34.39s"
+    },
+    {
+      "command": "uv run ruff check scripts/candidates/candidate_apply.py scripts/candidates/candidate_acceptance.py scripts/evidence_index.py scripts/closeout_readiness.py scripts/status_readiness_policy.py scripts/status.py scripts/fig_closeout.py tests/test_candidate_apply.py tests/test_candidate_acceptance.py tests/test_evidence_index.py tests/test_closeout_readiness.py tests/test_status_readiness_policy.py tests/test_status.py tests/test_fig_closeout.py tests/test_candidate_cli_contract.py tests/test_mcp_facade.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/candidates/candidate_apply.py scripts/candidates/candidate_acceptance.py scripts/evidence_index.py scripts/closeout_readiness.py scripts/status_readiness_policy.py scripts/status.py scripts/fig_closeout.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "session_id": "ses_10fa42978ffeeOh42fQv4pzvJ5",
+    "result": "passed",
+    "summary": "No findings. Reviewer verified truthful apply states, terminal replay blocking, failed-verification status preservation, required command propagation, closeout blockers for applied_unverified and accepted_but_stale, and non-weakening CLI/MCP fixture updates."
+  },
+  "safety_checks": {
+    "fixture_source_mutation": false,
+    "fixture_exports_mutation": false,
+    "candidate_acceptance_or_apply": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "manual_or_human_gate_bypassed": false
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "check-no-excuse-rules.py",
+      "result": "not_available",
+      "summary": "rg --files -g 'check-no-excuse-rules.py' returned no matching script in this repository."
+    }
+  ],
+  "exit_criteria": {
+    "apply_states_are_truthful": true,
+    "applied_unverified_cannot_close_out": true,
+    "stale_accepted_or_pass_does_not_report_ready": true,
+    "blocker_precedence_is_deterministic": true
+  },
+  "next_phase": {
+    "phase_id": "phase-5",
+    "phase_name": "Memory Outcomes",
+    "entry_criteria_met": true
+  }
+}

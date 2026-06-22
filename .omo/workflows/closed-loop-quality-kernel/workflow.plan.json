@@ -1,0 +1,598 @@
+{
+  "schema_version": "0.5",
+  "plan_id": "closed-loop-quality-kernel",
+  "created_by": "keelplane",
+  "source_prompt": "전체 워크 플로우 수행하자",
+  "activation": {
+    "decision": "activate",
+    "matched_thresholds": [
+      "downstream-consumer",
+      "resumable-handoffs",
+      "planned-fanout",
+      "adversarial-verification",
+      "human-gates"
+    ],
+    "downgrade_target": null,
+    "reason": "Implementing the closed-loop quality kernel hardening spec spans multiple subsystems, requires resumable handoffs, adversarial verification, and human-gated risky actions."
+  },
+  "objective": "Implement the figure-agent closed-loop quality kernel hardening workflow from spec to dogfood gate without weakening safety boundaries or touching unrelated dirty worktree changes.",
+  "surfaces": [
+    {
+      "id": "repo",
+      "kind": "repo",
+      "locator": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "hardening_spec",
+      "kind": "document",
+      "locator": "plugins/figure-agent/docs/superpowers/specs/2026-06-22-closed-loop-quality-kernel-hardening-design.md",
+      "access_mode": "read-only"
+    },
+    {
+      "id": "workflow_schema",
+      "kind": "document",
+      "locator": "/Users/choemun-yeong/workspace/projects/agent-tools/ai-skills-dev/my-skills/dynamic-workflow-designer-skill/references/workflow-plan-schema.md",
+      "access_mode": "read-only"
+    },
+    {
+      "id": "workflow_patterns",
+      "kind": "document",
+      "locator": "/Users/choemun-yeong/workspace/projects/agent-tools/ai-skills-dev/my-skills/dynamic-workflow-designer-skill/references/workflow-patterns.md",
+      "access_mode": "read-only"
+    },
+    {
+      "id": "workflow_artifacts",
+      "kind": "artifact",
+      "locator": ".omo/workflows/closed-loop-quality-kernel/",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "figure_agent_scripts",
+      "kind": "package",
+      "locator": "plugins/figure-agent/scripts/",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "figure_agent_tests",
+      "kind": "package",
+      "locator": "plugins/figure-agent/tests/",
+      "access_mode": "write-approved"
+    }
+  ],
+  "assumptions": [
+    {
+      "claim": "The hardening spec is the controlling product contract for this workflow.",
+      "verification_step": "Check the spec hash in baseline.lock.json before each phase."
+    },
+    {
+      "claim": "The worktree contains unrelated user or previous-agent changes that must be preserved.",
+      "verification_step": "Compare before/after git status snapshots and stage only explicit workflow or phase paths."
+    },
+    {
+      "claim": "First slice may write only workflow artifacts, not plugin source or tests.",
+      "verification_step": "Run git status and confirm only .omo/workflows/closed-loop-quality-kernel/ changed after Wave 1."
+    },
+    {
+      "claim": "Source/test edits require a human gate after the workflow artifacts are reviewed.",
+      "verification_step": "Do not start Phase 1 implementation until the user approves source/test mutation."
+    },
+    {
+      "claim": "Render-enabled gates require local render dependencies.",
+      "verification_step": "Phase 3 must implement and record render_dependency_probe before treating dependency_missing as pass."
+    }
+  ],
+  "patterns": [
+    "Sequential",
+    "Pipeline",
+    "Parallel Fan-Out / Fan-In",
+    "Adversarial Verify",
+    "Human Gate",
+    "Resume And Cache"
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Baseline And Spec Lock",
+      "entry_criteria": ["workflow artifact directory exists", "spec and schema hashes captured"],
+      "exit_criteria": ["workflow.plan.json exists", "blueprint.md exists", "baseline.lock.json exists", "phase-1-tdd-design.md exists"],
+      "owner_worker": "workflow_author",
+      "parallelizable": false,
+      "max_retries": 1
+    },
+    {
+      "id": "phase-1",
+      "name": "Eyes Actionability Metrics",
+      "entry_criteria": ["phase-0 complete", "human approval for source/test edits"],
+      "exit_criteria": ["quality-map actionability metrics implemented", "stale or unknown-panel safe defects do not produce operations", "Phase 1 verifier report has no blocking findings"],
+      "owner_worker": "phase_coder",
+      "parallelizable": true,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-2",
+      "name": "Multi-Candidate Generation",
+      "entry_criteria": ["phase-1 complete"],
+      "exit_criteria": ["first-match-only generation removed from closed loop", "candidate/refusal coverage metrics pass", "stable id tests pass"],
+      "owner_worker": "phase_coder",
+      "parallelizable": false,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-3",
+      "name": "Benchmark Render And Candidate-Specific Ranking",
+      "entry_criteria": ["phase-2 complete"],
+      "exit_criteria": ["benchmark --render uses candidate render sandbox", "requested_not_implemented never appears", "candidate_specific_rank_rate is computed", "render sandbox verifier has no blocking findings"],
+      "owner_worker": "integration_synthesizer",
+      "parallelizable": true,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-4",
+      "name": "Apply, Status, Closeout Hardening",
+      "entry_criteria": ["phase-3 complete"],
+      "exit_criteria": ["apply states are truthful", "applied_unverified cannot close out", "stale accepted/PASS does not report ready", "blocker precedence is deterministic"],
+      "owner_worker": "phase_coder",
+      "parallelizable": true,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-5",
+      "name": "Memory Outcomes",
+      "entry_criteria": ["phase-3 complete", "phase-4 complete"],
+      "exit_criteria": ["memory events include candidate attribution", "unknown events excluded from priors", "authority invariants hold"],
+      "owner_worker": "phase_coder",
+      "parallelizable": true,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-6",
+      "name": "Semantic Reviewer",
+      "entry_criteria": ["phase-3 complete", "phase-4 complete"],
+      "exit_criteria": ["semantic review validator is local and hash-bound", "stale hashes become invalid_or_stale", "semantic review cannot grant authority"],
+      "owner_worker": "phase_coder",
+      "parallelizable": true,
+      "max_retries": 2
+    },
+    {
+      "id": "phase-7",
+      "name": "Dogfood Release Gate",
+      "entry_criteria": ["phases 1 through 6 complete"],
+      "exit_criteria": ["smoke and dogfood metrics satisfy spec thresholds", "independent verifier has no blocking refutations", "no release/golden action without explicit approval"],
+      "owner_worker": "integration_synthesizer",
+      "parallelizable": false,
+      "max_retries": 1
+    }
+  ],
+  "workers": [
+    {
+      "id": "workflow_author",
+      "role": "Maintains DWM artifacts and keeps JSON/blueprint/resume records aligned.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent read-only status and benchmark previews"],
+        "requires_escalation_for": ["editing plugin source", "editing tests", "git commit", "external network"]
+      },
+      "forbidden_actions": ["mutate fixture source", "create acceptance artifacts", "update golden exports", "commit", "push", "destructive git"],
+      "context_budget": {
+        "max_files": 12,
+        "max_tokens": 24000,
+        "must_include": ["hardening spec", "workflow schema", "workflow patterns", "baseline.lock.json"],
+        "must_exclude": ["unrelated untracked examples unless phase owns them"]
+      },
+      "prompt_contract": {
+        "inputs": ["workflow.plan.json", "blueprint.md", "baseline.lock.json"],
+        "required_output_schema": "workflow-artifact-update.v1",
+        "stop_conditions": ["schema mismatch", "write outside allowed artifact directory", "human gate reached"]
+      },
+      "ownership": [".omo/workflows/closed-loop-quality-kernel/"]
+    },
+    {
+      "id": "phase_coder",
+      "role": "Implements one approved phase with tests first and narrow file ownership.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent local tools when read-only or phase-approved"],
+        "requires_escalation_for": ["fixture source mutation", "acceptance", "golden", "release", "dependency install"]
+      },
+      "forbidden_actions": ["skip failing tests", "weaken safety gates", "LLM-primary repair", "MCP source apply", "commit without approval"],
+      "context_budget": {
+        "max_files": 20,
+        "max_tokens": 36000,
+        "must_include": ["phase section of spec", "owning source files", "owning test files", "prior handoff"],
+        "must_exclude": ["later-phase files unless needed for compile errors"]
+      },
+      "prompt_contract": {
+        "inputs": ["phase handoff", "spec phase section", "existing tests"],
+        "required_output_schema": "phase-implementation-report.v1",
+        "stop_conditions": ["two failed implementation retries", "unexpected broad refactor needed", "risk gate reached"]
+      },
+      "ownership": ["phase-owned scripts", "phase-owned tests", "phase report"]
+    },
+    {
+      "id": "adversarial_verifier",
+      "role": "Attempts to refute phase claims against real source, tests, and artifacts.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent read-only tools"],
+        "requires_escalation_for": ["source edits", "test edits", "fixture mutation"]
+      },
+      "forbidden_actions": ["rubber-stamp producer claims", "edit implementation", "accept ungrounded evidence", "commit"],
+      "context_budget": {
+        "max_files": 16,
+        "max_tokens": 28000,
+        "must_include": ["producer report", "changed files", "relevant tests", "spec acceptance criteria"],
+        "must_exclude": ["unrelated docs"]
+      },
+      "prompt_contract": {
+        "inputs": ["producer report", "diff", "test output"],
+        "required_output_schema": "adversarial-verification-report.v1",
+        "stop_conditions": ["blocking refutation found", "evidence missing", "scope exceeds phase"]
+      },
+      "ownership": ["verification reports under .omo/workflows/closed-loop-quality-kernel/"]
+    },
+    {
+      "id": "safety_gatekeeper",
+      "role": "Checks path, symlink, hash, source mutation, human gate, and external-action boundaries.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent read-only status"],
+        "requires_escalation_for": ["any mutation except safety report"]
+      },
+      "forbidden_actions": ["apply patches", "create acceptance artifacts", "modify golden", "install dependencies", "network calls"],
+      "context_budget": {
+        "max_files": 16,
+        "max_tokens": 26000,
+        "must_include": ["risk gates", "changed files", "phase report", "git status"],
+        "must_exclude": ["unrelated generated artifacts"]
+      },
+      "prompt_contract": {
+        "inputs": ["phase diff", "risk gates", "test output"],
+        "required_output_schema": "safety-gate-report.v1",
+        "stop_conditions": ["unapproved risky action", "missing safety test", "path escape ambiguity"]
+      },
+      "ownership": ["safety reports under .omo/workflows/closed-loop-quality-kernel/"]
+    },
+    {
+      "id": "integration_synthesizer",
+      "role": "Fans in completed phase reports, updates workflow status, and prepares dogfood synthesis.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent benchmark/status previews"],
+        "requires_escalation_for": ["release", "golden", "commit", "push", "external calls"]
+      },
+      "forbidden_actions": ["hide residual failures", "mark dependency_missing as pass", "release without approval", "commit without approval"],
+      "context_budget": {
+        "max_files": 24,
+        "max_tokens": 40000,
+        "must_include": ["all phase reports", "benchmark outputs", "verification reports", "spec acceptance metrics"],
+        "must_exclude": ["stale benchmark reports unless labeled stale"]
+      },
+      "prompt_contract": {
+        "inputs": ["phase reports", "verification reports", "benchmark outputs"],
+        "required_output_schema": "dogfood-release-gate-report.v1",
+        "stop_conditions": ["blocking refutation", "unresolved regression", "human gate reached"]
+      },
+      "ownership": ["dogfood synthesis", "workflow status artifacts"]
+    }
+  ],
+  "handoffs": [
+    {
+      "from_phase": "phase-0",
+      "to_phase": "phase-1",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/baseline.lock.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["spec_sha256", "schema_sha256", "git_status_short", "known_gaps", "first_slice_forbidden_actions"],
+        "validation_command": "python -m json.tool .omo/workflows/closed-loop-quality-kernel/baseline.lock.json"
+      }
+    },
+    {
+      "from_phase": "phase-1",
+      "to_phase": "phase-2",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-1-eyes-actionability-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["metrics", "tests", "changed_files", "verifier_status"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_quality_defect_ledger.py"
+      }
+    },
+    {
+      "from_phase": "phase-2",
+      "to_phase": "phase-3",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-2-candidate-coverage-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["candidate_metrics", "refusal_metrics", "stable_id_evidence", "safety_checks"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_candidate_generator.py plugins/figure-agent/tests/test_candidate_cli_contract.py"
+      }
+    },
+    {
+      "from_phase": "phase-3",
+      "to_phase": "phase-4",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-3-render-rank-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["render_modes", "render_dependency_probe", "rank_basis_counts", "sandbox_verifier_status"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_quality_benchmark.py plugins/figure-agent/tests/test_candidate_render.py plugins/figure-agent/tests/test_candidate_rank.py"
+      }
+    },
+    {
+      "from_phase": "phase-4",
+      "to_phase": "phase-5",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-4-apply-closeout-state-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["apply_states", "stale_accepted_cases", "blocker_precedence", "verification_results"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_quality_patch_apply.py plugins/figure-agent/tests/test_candidate_apply.py plugins/figure-agent/tests/test_status.py plugins/figure-agent/tests/test_closeout_readiness.py plugins/figure-agent/tests/test_fig_closeout.py"
+      }
+    },
+    {
+      "from_phase": "phase-5",
+      "to_phase": "phase-7",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-5-memory-outcome-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["unknown_event_rate", "eligible_prior_count", "authority_invariant", "tests"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_quality_memory_events.py plugins/figure-agent/tests/test_quality_memory_index.py"
+      }
+    },
+    {
+      "from_phase": "phase-6",
+      "to_phase": "phase-7",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/phase-6-semantic-review-report.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema_validation", "stale_hash_cases", "authority_invariant", "external_call_check"],
+        "validation_command": "uv run pytest plugins/figure-agent/tests/test_semantic_contracts.py plugins/figure-agent/tests/test_semantic_assertions.py"
+      }
+    },
+    {
+      "from_phase": "phase-7",
+      "to_phase": "close",
+      "artifact": ".omo/workflows/closed-loop-quality-kernel/dogfood-release-gate-report.md",
+      "artifact_schema": {
+        "format": "markdown",
+        "required_fields": ["smoke metrics", "dogfood metrics", "residual refusals", "adversarial verification", "risk gates"],
+        "validation_command": "manual review plus targeted benchmark commands recorded in report"
+      }
+    }
+  ],
+  "parallelism": {
+    "shape": "pipeline-plus-fanout",
+    "concurrency_cap": 3,
+    "fan_in_rule": "Each implementation branch fans in only after its tests, safety report, and adversarial verifier report are present.",
+    "barriers": [
+      {
+        "after_phase": "phase-0",
+        "reason": "User must approve source/test edits after reviewing workflow artifacts."
+      },
+      {
+        "after_phase": "phase-2",
+        "reason": "Benchmark render/rank depends on candidate manifest and coverage contracts."
+      },
+      {
+        "after_phase": "phase-4",
+        "reason": "Memory and semantic gates consume stable apply/status/readiness semantics."
+      },
+      {
+        "after_phase": "phase-6",
+        "reason": "Dogfood synthesis requires all subsystem reports."
+      }
+    ]
+  },
+  "verification": [
+    {
+      "claim_or_output": "workflow.plan.json follows schema 0.5 required fields",
+      "falsifier": "Run python -m json.tool and manually check required top-level fields against workflow-plan-schema.md.",
+      "evidence_required": "Valid JSON plus checklist in blueprint.md."
+    },
+    {
+      "claim_or_output": "Dirty worktree was preserved during first slice",
+      "falsifier": "Compare before and after git status snapshots for changes outside .omo/workflows/closed-loop-quality-kernel/.",
+      "evidence_required": "git status --short snapshots in baseline.lock.json or blueprint.md."
+    },
+    {
+      "claim_or_output": "Eyes metrics prevent stale or unknown-panel defects from producing candidates",
+      "falsifier": "Create synthetic stale and unknown-panel defects and show candidates still emit operations.",
+      "evidence_required": "Phase 1 tests and verifier report."
+    },
+    {
+      "claim_or_output": "Candidate generation is not first-match-only",
+      "falsifier": "Multi-defect fixture emits one candidate or silently skips supported safe defects.",
+      "evidence_required": "Phase 2 candidate coverage tests."
+    },
+    {
+      "claim_or_output": "Benchmark render is honest",
+      "falsifier": "--render reports completed with requested_not_implemented or zero rendered candidates while candidates exist in render-enabled context.",
+      "evidence_required": "Phase 3 benchmark render tests and render_dependency_probe."
+    },
+    {
+      "claim_or_output": "Ranking is candidate-specific when render exists",
+      "falsifier": "Rank improves from missing or mismatched render manifest.",
+      "evidence_required": "Candidate rank tests with mismatched hashes."
+    },
+    {
+      "claim_or_output": "Apply verification states are truthful",
+      "falsifier": "Apply records verification failure without executed command results or closes out applied_unverified.",
+      "evidence_required": "Phase 4 apply/status/closeout tests."
+    },
+    {
+      "claim_or_output": "Memory is soft only",
+      "falsifier": "Memory prior changes hard_gate_state, apply_authority, effective_apply_authority, acceptance, golden, or release readiness.",
+      "evidence_required": "Phase 5 authority invariant tests."
+    },
+    {
+      "claim_or_output": "Semantic review is local and non-authoritative",
+      "falsifier": "Semantic review grants apply authority, overrides deterministic gates, or calls external/cloud service.",
+      "evidence_required": "Phase 6 validator tests and external-call check."
+    },
+    {
+      "claim_or_output": "Dogfood progress is real",
+      "falsifier": "Metrics improve without candidate-specific render/rank evidence or with hidden stale evidence.",
+      "evidence_required": "Phase 7 smoke/dogfood report and adversarial verifier report."
+    }
+  ],
+  "risk_gates": [
+    {
+      "trigger": "Writing outside .omo/workflows/closed-loop-quality-kernel/ during first slice",
+      "safe_default": "Stop and ask the user before continuing.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Editing plugin source or tests",
+      "safe_default": "Stop after workflow artifacts and ask for Phase 1 implementation approval.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Mutating fixture .tex source or generated fixture artifacts",
+      "safe_default": "Block the action.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Creating acceptance artifacts or applying candidates",
+      "safe_default": "Block the action.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Updating accepted, tracked golden, release, publication, or final artifacts",
+      "safe_default": "Block the action.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Installing dependencies or using external/cloud APIs",
+      "safe_default": "Block the action and report dependency_missing if relevant.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Running destructive git, history rewrite, reset, checkout, clean, commit, push, or PR",
+      "safe_default": "Block the action.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Treating LLM or semantic review as primary repair or authority grant",
+      "safe_default": "Block and require deterministic evidence plus human gate.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Render dependency missing in render-enabled gate",
+      "safe_default": "Fail closed; do not report benchmark PASS.",
+      "requires_user_approval": false
+    }
+  ],
+  "budget": {
+    "time": {
+      "first_slice_minutes": 45,
+      "phase_session_limit": "one focused work session before checkpoint"
+    },
+    "tokens": {
+      "workflow_author_max": 24000,
+      "phase_coder_max": 36000,
+      "verifier_max": 28000,
+      "integration_max": 40000
+    },
+    "model": {
+      "default_category": "deep for implementation, unspecified-high for verification, writing for artifacts",
+      "oracle_use": "only for architecture/debugging after two failed implementation approaches"
+    },
+    "retry": {
+      "implementation_retries_per_phase": 2,
+      "verification_reruns_after_fix": 1
+    },
+    "file_touch": {
+      "first_slice": [".omo/workflows/closed-loop-quality-kernel/"],
+      "phase_scope": "phase-owned files only",
+      "forbidden_without_gate": ["fixture source", "acceptance artifacts", "golden exports", "release artifacts", "git history"]
+    },
+    "parallel_workers": {
+      "implementation": 3,
+      "read_only_verifiers": 2
+    }
+  },
+  "resume": {
+    "cache_records": [
+      ".omo/workflows/closed-loop-quality-kernel/baseline.lock.json",
+      ".omo/workflows/closed-loop-quality-kernel/phase-*-report.json",
+      ".omo/workflows/closed-loop-quality-kernel/*-verification-report.json"
+    ],
+    "input_hashes": {
+      "spec_sha256": "5048cff532366fb846eed3a7042e8942dbfbdb9b1a4a407dcd39b8021630bc3f",
+      "workflow_schema_sha256": "e7587611134ee9916cb635325e0448f9a004ccab6c6df4abccf51bfaf5ced245",
+      "workflow_patterns_sha256": "8e53058097661e0b2ab065151e71f2c6ea2002b2dfe5ccbc7368cfa745564ff5"
+    },
+    "invalidation_rules": [
+      "Spec hash change invalidates all implementation phases.",
+      "Defect schema change invalidates phases 2 through 7.",
+      "Candidate manifest schema change invalidates phases 3 through 7.",
+      "Render or rank schema change invalidates phases 4 through 7.",
+      "Apply/readiness semantics change invalidates phases 5 through 7.",
+      "Benchmark dependency probe change invalidates dogfood gate evidence."
+    ],
+    "restart_points": [
+      "phase-0",
+      "phase-1",
+      "phase-2",
+      "phase-3",
+      "phase-4",
+      "phase-5",
+      "phase-6",
+      "phase-7"
+    ],
+    "skip_rules": [
+      "Skip a completed phase only when its input hashes and verifier report still match.",
+      "Never replay stale .scratch benchmark output as current gate evidence."
+    ]
+  },
+  "execution_path": {
+    "mode": "subagent-plan",
+    "consumer": "ultrawork",
+    "first_slice": {
+      "instruction": "Capture baseline evidence and draft Phase 1 failing-test design under .omo/workflows/closed-loop-quality-kernel/ only; do not modify plugin source, tests, fixture source, acceptance, golden, release, external/cloud state, git history, or commits.",
+      "inputs": [
+        "repository path: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+        "plugins/figure-agent/docs/superpowers/specs/2026-06-22-closed-loop-quality-kernel-hardening-design.md",
+        "workflow-plan-schema.md",
+        "workflow-patterns.md",
+        "current git status",
+        "plugins/figure-agent/scripts/quality/quality_defect_ledger.py",
+        "plugins/figure-agent/scripts/candidates/candidate_generator.py",
+        "plugins/figure-agent/scripts/quality/quality_benchmark.py",
+        "plugins/figure-agent/tests/test_quality_defect_ledger.py",
+        "plugins/figure-agent/tests/test_candidate_generator.py",
+        "plugins/figure-agent/tests/test_quality_benchmark.py"
+      ],
+      "expected_output": "baseline.lock.json, phase-1-tdd-design.md, workflow.plan.json, and blueprint.md under .omo/workflows/closed-loop-quality-kernel/.",
+      "completion_check": "python -m json.tool validates JSON artifacts and git status shows first-slice writes isolated to .omo/workflows/closed-loop-quality-kernel/ plus pre-existing dirty files.",
+      "forbidden_actions": [
+        "source mutation outside .omo/workflows/closed-loop-quality-kernel/",
+        "plugin source edit",
+        "test edit",
+        "fixture source mutation",
+        "candidate acceptance",
+        "candidate apply",
+        "golden mutation",
+        "release mutation",
+        "external/cloud calls",
+        "dependency install",
+        "destructive git",
+        "commit",
+        "push"
+      ]
+    }
+  }
+}

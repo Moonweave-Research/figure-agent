@@ -1,0 +1,169 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-6",
+  "phase_name": "Semantic Reviewer",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T18:22:53Z",
+  "objective": "Add a local, host-mediated semantic candidate review gate that validates review artifacts, exposes semantic state in review packets, and blocks acceptance or apply only when semantic evidence requires it without granting authority.",
+  "semantic_review_artifact": {
+    "schema": "figure-agent.semantic-candidate-review.v1",
+    "state_schema": "figure-agent.semantic-review-state.v1",
+    "allowed_verdicts": [
+      "pass",
+      "needs_human",
+      "semantic_risk",
+      "invalid_or_stale"
+    ],
+    "artifact_path": "build/candidates/<candidate_id>/semantic_review.json",
+    "validator_scope": "local fixture artifacts only",
+    "result": "passed"
+  },
+  "implemented_behaviors": [
+    "semantic_candidate_review validates fixture, candidate_id, candidate_hash, verdict, reviewed artifacts, and artifact hashes for local semantic review JSON.",
+    "Stale reviewed artifact hashes produce invalid_or_stale semantic state with reviewed_artifact_stale blocking evidence.",
+    "Unknown candidate ids and candidate hash mismatches produce invalid_or_stale semantic state.",
+    "Semantic review artifacts containing apply authority or operation-generating fields are invalid and cannot grant apply authority.",
+    "Missing semantic review is non-blocking for pure mechanical coordinate-only candidates with no semantic risks, no locked invariants, and no required spec setting.",
+    "Semantic risks, locked invariants, explicit semantic_review_required config, non-mechanical candidates, malformed spec.yaml, and symlinked spec.yaml fail closed and require semantic review.",
+    "Explicit semantic review verdicts needs_human and semantic_risk block acceptance/apply even when the review was optional before the artifact existed.",
+    "candidate_review_packet exposes semantic_invariant_report from the validator instead of a hardcoded not_run state.",
+    "candidate_acceptance.build_apply_readiness suppresses accept/apply commands when semantic_review blocks apply.",
+    "candidate_apply.apply_candidate checks semantic review state before mutation and returns blocked diagnostics before writing source changes.",
+    "Semantic pass never weakens deterministic apply readiness and never changes effective apply authority."
+  ],
+  "review_state_policy": {
+    "missing_optional_review_blocks_apply": false,
+    "missing_required_review_blocks_apply": true,
+    "stale_optional_review_blocks_apply": false,
+    "stale_required_review_blocks_apply": true,
+    "explicit_needs_human_blocks_apply": true,
+    "explicit_semantic_risk_blocks_apply": true,
+    "malformed_or_symlinked_spec_fails_closed": true,
+    "result": "passed"
+  },
+  "authority_boundary": {
+    "semantic_review_can_grant_apply_authority": false,
+    "semantic_review_can_create_acceptance": false,
+    "semantic_review_can_mutate_source": false,
+    "semantic_review_can_override_deterministic_gates": false,
+    "semantic_pass_changes_apply_readiness": false,
+    "result": "passed"
+  },
+  "changed_files": [
+    "plugins/figure-agent/scripts/semantic_candidate_review.py",
+    "plugins/figure-agent/scripts/candidates/candidate_review_packet.py",
+    "plugins/figure-agent/scripts/candidates/candidate_acceptance.py",
+    "plugins/figure-agent/scripts/candidates/candidate_apply.py",
+    "plugins/figure-agent/tests/test_semantic_candidate_review.py",
+    "plugins/figure-agent/tests/test_candidate_review_packet.py",
+    "plugins/figure-agent/tests/test_candidate_acceptance.py",
+    "plugins/figure-agent/tests/test_candidate_apply.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_semantic_candidate_review.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "error during collection: ModuleNotFoundError: No module named 'semantic_candidate_review'",
+      "green_result_after_implementation": "9 passed in 0.07s before review-fix expansions"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_review_packet.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "4 failed, 7 passed; packet still returned hardcoded semantic_invariant_report and one fixture setup issue was corrected before implementation",
+      "green_result_after_implementation": "11 passed in 0.12s before review-fix expansions"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_acceptance.py tests/test_candidate_apply.py tests/test_candidate_review_packet.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_after_initial_review": "3 failed, 32 passed; semantic blockers were not enforced in readiness/apply and malformed spec failed open",
+      "green_result_after_review_fixes": "included in final focused suite: 50 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_review_packet.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_after_symlink_review": "1 failed, 12 passed; broken spec.yaml symlink failed open",
+      "green_result_after_symlink_fix": "included in final focused suite: 50 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_semantic_candidate_review.py tests/test_candidate_acceptance.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_after_final_review": "2 failed, 16 passed; explicit optional semantic_risk verdict did not block apply/readiness",
+      "green_result_after_final_fix": "included in final focused suite: 50 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_candidate_acceptance.py tests/test_candidate_apply.py tests/test_candidate_review_packet.py tests/test_semantic_candidate_review.py tests/test_semantic_contracts.py -q",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "50 passed in 0.34s"
+    },
+    {
+      "command": "uv run ruff check scripts/semantic_candidate_review.py scripts/candidates/candidate_review_packet.py scripts/candidates/candidate_acceptance.py scripts/candidates/candidate_apply.py tests/test_semantic_candidate_review.py tests/test_candidate_review_packet.py tests/test_candidate_acceptance.py tests/test_candidate_apply.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/semantic_candidate_review.py scripts/candidates/candidate_review_packet.py scripts/candidates/candidate_acceptance.py scripts/candidates/candidate_apply.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "session_id": "ses_10f7a6155ffeBinUFckhqJ06W1",
+    "initial_result": "failed",
+    "initial_findings": [
+      "Required semantic-review blockers were visible in packets but not enforced by acceptance/apply readiness.",
+      "Malformed or unreadable spec.yaml silently disabled locked-invariant requirements."
+    ],
+    "second_result": "failed",
+    "second_findings": [
+      "Broken symlink spec.yaml still failed open."
+    ],
+    "third_result": "failed",
+    "third_findings": [
+      "Optional candidates could still apply after a valid semantic review verdict of semantic_risk or needs_human."
+    ],
+    "final_result": "passed",
+    "summary": "Final re-review reported no remaining Phase 6 blockers and confirmed semantic state validation, packet integration, stale hash invalidation, candidate mismatch invalidation, semantic-risk blocking, fail-closed spec handling, authority non-override, no external calls, and no fixture source mutation before the semantic gate."
+  },
+  "safety_checks": {
+    "fixture_source_mutation": false,
+    "fixture_exports_mutation": false,
+    "candidate_acceptance_or_apply_performed_on_real_fixture": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "semantic_review_report_only": true,
+    "authority_boundary_preserved": true
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "module_size",
+      "result": "noted",
+      "summary": "New semantic_candidate_review.py is under the 200 pure-LOC healthy threshold. Existing candidate_review_packet.py remains oversized and was already above the strict 250 pure-LOC threshold before Phase 6."
+    }
+  ],
+  "exit_criteria": {
+    "local_semantic_review_artifact_schema_and_validator": true,
+    "candidate_review_packet_includes_semantic_review_state": true,
+    "stale_reviewed_artifact_hash_produces_invalid_or_stale": true,
+    "unknown_candidate_id_is_invalid": true,
+    "semantic_risk_requires_human_review": true,
+    "missing_review_non_blocking_for_pure_mechanical_without_locked_invariants": true,
+    "stale_required_semantic_review_blocks_acceptance_and_apply": true,
+    "semantic_review_never_overrides_deterministic_gates_or_grants_authority": true
+  },
+  "next_phase": {
+    "phase_id": "phase-7",
+    "phase_name": "Dogfood Release Gate",
+    "entry_criteria_met": true
+  }
+}

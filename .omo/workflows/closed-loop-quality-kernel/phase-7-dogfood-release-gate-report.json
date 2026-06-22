@@ -1,0 +1,180 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-7",
+  "phase_name": "Dogfood Release Gate",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T19:00:17Z",
+  "objective": "Add render-aware smoke and dogfood benchmark evidence to the release boundary, fail deterministic release steps on hard benchmark regressions, and document the operator-visible states without mutating accepted, golden, publication, or fixture source state.",
+  "implemented_behaviors": [
+    "quality_benchmark.run_benchmark_suite emits render_dependency_probe for render-aware runs.",
+    "Benchmark fixture results expose render_mode, rank_basis_counts, rendered_count, candidate_specific_rank_rate, render_success_rate, candidate_refusals, per-score source_defect attribution, and candidate-specific render manifest paths.",
+    "compare_benchmark_runs reports render_success_rate_decreased, candidate_specific_rank_rate_decreased, and best_candidate_render_evidence_missing regressions.",
+    "Dogfood benchmark tests prove the real dogfood fixture can produce multiple attributed candidates or explicit refusal details in a temp-only workspace with stubbed render dependencies.",
+    "release_gate runs both smoke_benchmark and dogfood_benchmark through run_benchmark_suite(..., render=True).",
+    "release_gate fails smoke or dogfood benchmark steps when benchmark summaries report failed fixtures or regressions.",
+    "release_gate step details now carry render_dependency_probe, per-fixture benchmark_results, best-candidate render evidence, and residual_refusals so dependency_missing and missing render evidence are visible instead of hidden behind a passing summary.",
+    "Operator playbook documents dogfood_benchmark, render_mode, candidate_specific_render, dependency_missing, residual refusals, and no accepted/golden/publication mutation.",
+    "Schema inventory docs were updated for Phase 6 semantic review schemas and the current script/test counts surfaced by the widened release contract run.",
+    "The older benchmark engine schema example no longer uses legacy render_mode none for active benchmark output."
+  ],
+  "changed_files": [
+    "plugins/figure-agent/scripts/quality/quality_benchmark.py",
+    "plugins/figure-agent/scripts/release_gate.py",
+    "plugins/figure-agent/tests/test_quality_benchmark.py",
+    "plugins/figure-agent/tests/test_quality_benchmark_compare.py",
+    "plugins/figure-agent/tests/test_release_gate.py",
+    "plugins/figure-agent/tests/test_release_contract.py",
+    "plugins/figure-agent/docs/v0.9-operator-playbook.md",
+    "plugins/figure-agent/docs/superpowers/issues/2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md",
+    "plugins/figure-agent/docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md",
+    "plugins/figure-agent/docs/superpowers/specs/2026-06-08-quality-memory-benchmark-engine-design.md"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest -q tests/test_quality_benchmark_compare.py::test_benchmark_compare_reports_render_evidence_regression",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "failed: regressions was [] instead of render_success_rate_decreased, candidate_specific_rank_rate_decreased, and best_candidate_render_evidence_missing",
+      "green_result_after_implementation": "1 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_benchmark.py::test_dogfood_render_benchmark_exposes_attribution_or_refusal_details -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "failed: refusal_count was present but candidate_refusals/source_defect attribution details were not exposed",
+      "green_result_after_implementation": "1 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_release_contract.py::test_v0_9_operator_playbook_documents_command_sequence_and_boundaries -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_docs_update": "failed: dogfood_benchmark missing from v0.9 operator playbook",
+      "green_result_after_docs_update": "1 passed"
+    },
+    {
+      "command": "uv run pytest -q tests/test_release_gate.py::test_release_gate_runs_render_aware_smoke_and_dogfood_benchmarks tests/test_release_gate.py::test_release_gate_fails_dogfood_benchmark_with_hard_regression",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_release_gate_update": "failed: _run_dogfood_benchmark did not exist",
+      "green_result_after_release_gate_update": "2 passed"
+    },
+    {
+      "command": "uv run pytest -q tests/test_release_gate.py::test_release_gate_runs_render_aware_smoke_and_dogfood_benchmarks tests/test_release_gate.py::test_release_gate_surfaces_dependency_missing_render_evidence",
+      "workdir": "plugins/figure-agent",
+      "red_result_after_code_review": "failed: release step details lacked render_dependency_probe and benchmark_results",
+      "green_result_after_review_fix": "2 passed"
+    },
+    {
+      "command": "uv run pytest -q tests/test_quality_benchmark_compare.py tests/test_quality_benchmark.py tests/test_release_gate.py tests/test_release_contract.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "81 passed in 13.53s"
+    },
+    {
+      "command": "uv run ruff check scripts/quality/quality_benchmark.py scripts/release_gate.py tests/test_quality_benchmark.py tests/test_quality_benchmark_compare.py tests/test_release_gate.py tests/test_release_contract.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/quality/quality_benchmark.py scripts/release_gate.py tests/test_quality_benchmark.py tests/test_quality_benchmark_compare.py tests/test_release_gate.py tests/test_release_contract.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    },
+    {
+      "command": "GIT_MASTER=1 git diff --check -- <phase-7-focused-files>",
+      "workdir": "repo root",
+      "result": "passed",
+      "summary": "No output; focused diff whitespace check succeeded."
+    }
+  ],
+  "review": {
+    "goal_verification": {
+      "background_task_id": "bg_d0041021",
+      "session_id": "ses_10f5485a6ffesoS7xjmU1DRv3N",
+      "initial_model_retry": "openai/gpt-5.5-pro unsupported; retried on openai/gpt-5.5",
+      "result": "passed",
+      "summary": "Goal verifier found no blocking Phase 7 gaps and confirmed no acceptance/apply/golden/release mutation path was introduced."
+    },
+    "qa_execution": {
+      "background_task_id": "bg_4c4daa28",
+      "session_id": "ses_10f54940affexM9hsoTOtLjlGN",
+      "result": "passed",
+      "summary": "QA reran the targeted test suite, confirmed 80 tests collected before review fixes, and found no worktree status changes from the QA commands. Final local verification after review fixes is 81 passed."
+    },
+    "code_quality": {
+      "background_task_id": "bg_004fc51a",
+      "session_id": "ses_10f54919dffeMFSdbrGQfkKpuR",
+      "initial_result": "failed",
+      "initial_findings": [
+        "release_gate step details dropped render_dependency_probe, per-fixture render evidence, render metrics, rank_basis_counts, and score-level render manifest evidence",
+        "residual_refusals could include zero-refusal empty-list entries"
+      ],
+      "final_result": "passed",
+      "summary": "Focused re-review confirmed release_gate now propagates render evidence and skips zero-refusal residuals."
+    },
+    "security_review": {
+      "background_task_id": "bg_43b1b299",
+      "session_id": "ses_10f54831fffexludIpSBDOw7L0",
+      "initial_model_retry": "openai/gpt-5.5-pro unsupported; retried on openai/gpt-5.5",
+      "result": "passed",
+      "summary": "Security review found no HIGH/CRITICAL blockers; artifact loading remains fixture-local, candidate render writes use existing symlink-rejecting sandbox paths, and no external/cloud calls or shell=True subprocesses were added."
+    },
+    "context_mining": {
+      "background_task_id": "bg_00f0bf98",
+      "session_id": "ses_10f548fbfffeHtcrKB2ruBQE2G",
+      "initial_result": "failed",
+      "initial_findings": [
+        "active benchmark comparison helper still used legacy render_mode none",
+        "quality-memory benchmark engine schema example still documented render_mode none with inconsistent render_success_rate"
+      ],
+      "final_result": "passed",
+      "summary": "Focused re-check found no remaining tracked render_mode none references."
+    }
+  },
+  "safety_checks": {
+    "fixture_source_mutation_performed_by_phase_7": false,
+    "fixture_exports_mutation_performed_by_phase_7": false,
+    "candidate_acceptance_or_apply_performed_on_real_fixture": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "release_gate_runs_acceptance_or_apply": false,
+    "release_gate_runs_golden_or_publication_mutation": false,
+    "benchmark_render_artifacts_are_candidate_sandbox_only": true,
+    "focused_diff_contains_generated_build_or_export_paths": false
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "module_size",
+      "result": "noted",
+      "summary": "quality_benchmark.py, release_gate.py, test_quality_benchmark.py, and test_release_contract.py are existing oversized modules above the strict 250 pure-LOC preference. Phase 7 made narrow additions to existing oversized release/benchmark surfaces rather than splitting broad modules inside this release-gate slice."
+    },
+    {
+      "tool": "worktree_status",
+      "result": "dirty_preexisting_and_phase_changes",
+      "summary": "The worktree remains broadly dirty from Phases 1-6 and unrelated/pre-existing example/doc changes. Phase 7 did not revert or stage unrelated work."
+    }
+  ],
+  "exit_criteria": {
+    "smoke_suite_includes_render_aware_metrics": true,
+    "dogfood_suite_includes_render_aware_metrics": true,
+    "benchmark_comparison_detects_render_regression": true,
+    "dogfood_fixture_produces_multiple_attributed_candidates_or_explicit_refusals": true,
+    "best_ranked_candidate_has_candidate_specific_render_evidence_when_rendered": true,
+    "release_gate_fails_on_new_hard_regressions": true,
+    "release_gate_surfaces_dependency_missing_render_evidence": true,
+    "documentation_describes_new_states": true,
+    "dogfood_passes_with_no_new_hard_blockers_and_documented_residual_refusals": true,
+    "no_release_or_golden_action_without_explicit_approval": true,
+    "independent_verifiers_have_no_remaining_blocking_refutations": true
+  },
+  "workflow_closeout": {
+    "phases_1_through_7_complete": true,
+    "remaining_required_phase": null,
+    "ready_for_user_review": true
+  }
+}
