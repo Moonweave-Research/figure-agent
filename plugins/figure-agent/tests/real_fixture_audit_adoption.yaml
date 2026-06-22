@@ -182,3 +182,55 @@ fixtures:
     rationale: >
       Fixture has panel boxes but no reference image; deterministic checks would
       need explicit fixture geometry before adoption.
+
+  - fixture: fig2_trap_design_space
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Newly tracked real fixture has panel geometry but no adopted deterministic
+      boundary/path checks yet.
+
+  - fixture: fig3_floating_clip_protocol
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Newly tracked real fixture has timeline panel geometry but no adopted
+      deterministic boundary/path checks yet.
+
+  - fixture: fig4_trap_energy_diagram
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Newly tracked real fixture declares semantic assertions, but audit adoption
+      still needs explicit deterministic geometry checks.
+
+  - fixture: fig5_actuation_mechanism
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Newly tracked real fixture has not yet adopted deterministic boundary/path
+      checks.
