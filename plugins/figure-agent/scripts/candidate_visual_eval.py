@@ -97,7 +97,7 @@ def compare_image_pair(before_path: Path, after_path: Path) -> dict[str, Any]:
     }
     if (before_width, before_height) != (after_width, after_height):
         return {
-            "status": "blocked",
+            "status": "rendered_needs_human_review",
             "before": before,
             "after": after,
             "visual_deltas": {},

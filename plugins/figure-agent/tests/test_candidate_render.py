@@ -278,9 +278,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(
-                _ppm(2, 1, [(255, 255, 255), (0, 0, 0)])
-            )
+            (cwd / "render" / "candidate.png").write_bytes(_ppm(2, 1, [(255, 255, 255), (0, 0, 0)]))
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
@@ -338,11 +336,9 @@ def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> 
         workspace_root=workspace,
     )
 
-    sandbox_source = (
-        fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
-    )
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
     assert sandbox_source.read_text(encoding="utf-8") == (
-        "\\node (label-a) at (0.2,0) {Old Label};\n"
+        "\\node (label-a) at (0.10, 0) {Old Label};\n"
     )
     assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == original
 
@@ -363,9 +359,9 @@ def test_render_records_operation_source_hash_for_apply_drift_gate(tmp_path: Pat
 
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     data = json.loads(manifest.read_text(encoding="utf-8"))
-    source_hash = "sha256:" + hashlib.sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = (
+        "sha256:" + hashlib.sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
+    )
     assert data["operations"][0]["source_sha256"] == source_hash
 
 

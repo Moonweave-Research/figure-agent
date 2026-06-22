@@ -91,6 +91,117 @@ def test_patch_plan_is_deterministic_and_contains_verification_commands(
     ]
 
 
+def _multiline_fixture(workspace: Path, name: str = "quality_multiline_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / f"{name}.tex").write_text(
+        "% Panel A\n\\draw (0.45,6.15) -- (4.78,6.15);\n\\node at (1.0, 2.0) {label};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def _multiline_ledger(fixture: Path) -> dict:
+    source = fixture / f"{fixture.name}.tex"
+    return {
+        "schema": "figure-agent.quality-defect-ledger.v1",
+        "fixture": fixture.name,
+        "ledger_hash": "sha256:" + "c" * 64,
+        "defects": [
+            {
+                "id": "QD001",
+                "defect_class": "text_overlap",
+                "owner": "tool",
+                "affected_files": [f"examples/{fixture.name}/{fixture.name}.tex"],
+                "evidence": [{"uri": f"figure://{fixture.name}/audit/text-boundary"}],
+                "patchability": {
+                    "state": "safe_candidate",
+                    "reasons": ["mechanical_text_overlap"],
+                    "blocked_codes": [],
+                    "may_edit": False,
+                    "policy_version": "figure-agent.quality-patch-policy.v1",
+                },
+                "selector_hint": {"kind": "line_range", "value": "2:2"},
+                "suggested_change": {
+                    "operation_type": "tikz_coordinate_adjust",
+                    "summary": "Clear the dashed baseline endpoint by a bounded amount",
+                },
+                "freshness": {
+                    "audit_evidence_graph_hash": "sha256:" + "d" * 64,
+                    "source_hashes": {
+                        f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(source)
+                    },
+                },
+            }
+        ],
+    }
+
+
+def test_patch_from_selector_emits_bounded_offset_on_target_line(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _multiline_fixture(workspace)
+    ledger = _multiline_ledger(fixture)
+
+    plan = quality_patch_plan.build_quality_patch_plan(
+        "quality_multiline_demo",
+        ledger,
+        workspace_root=workspace,
+    )
+
+    operation = plan["operations"][0]
+    patch = operation["proposed_change"]["patch"]
+    assert patch != ""
+    assert "@@ -2 +2 @@" in patch
+    assert "-\\draw (0.45,6.15) -- (4.78,6.15);" in patch
+    assert "+\\draw (0.55, 6.15) -- (4.78,6.15);" in patch
+
+
+def test_patch_from_selector_handoff_summary_when_no_coordinate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    name = "quality_no_coord_demo"
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / f"{name}.tex").write_text(
+        "% Panel A\n\\node {pure text label};\n",
+        encoding="utf-8",
+    )
+    source = fixture / f"{name}.tex"
+    ledger = {
+        "schema": "figure-agent.quality-defect-ledger.v1",
+        "fixture": name,
+        "ledger_hash": "sha256:" + "e" * 64,
+        "defects": [
+            {
+                "id": "QD001",
+                "defect_class": "text_overlap",
+                "owner": "tool",
+                "affected_files": [f"examples/{name}/{name}.tex"],
+                "evidence": [{"uri": f"figure://{name}/audit/text-boundary"}],
+                "patchability": {
+                    "state": "safe_candidate",
+                    "reasons": ["mechanical_text_overlap"],
+                    "blocked_codes": [],
+                    "may_edit": False,
+                    "policy_version": "figure-agent.quality-patch-policy.v1",
+                },
+                "selector_hint": {"kind": "line_range", "value": "2:2"},
+                "suggested_change": {"operation_type": "tikz_coordinate_adjust"},
+                "freshness": {
+                    "audit_evidence_graph_hash": "sha256:" + "f" * 64,
+                    "source_hashes": {f"examples/{name}/{name}.tex": file_sha256(source)},
+                },
+            }
+        ],
+    }
+
+    plan = quality_patch_plan.build_quality_patch_plan(name, ledger, workspace_root=workspace)
+
+    proposed = plan["operations"][0]["proposed_change"]
+    assert proposed["patch"] == ""
+    assert proposed.get("manual_only") is True
+    assert f"examples/{name}/{name}.tex:2" in proposed["summary"]
+
+
 def test_patch_plan_refuses_forbidden_targets(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)

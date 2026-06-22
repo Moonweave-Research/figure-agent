@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
+import quality_defect_ledger  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -153,3 +155,50 @@ panels:
     )
 
     assert payload["candidates"][0]["apply_authority"] == "review_only"
+
+
+def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    # First offsettable line is line 1 (the panel-letter node); the real defect is line 3.
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {a};\n"
+        "\\node (title) {Origin of traps};\n"
+        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        encoding="utf-8",
+    )
+    build_dir = fixture / "build"
+    build_dir.mkdir()
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 3,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+    first_defect = ledger["defects"][0]
+    assert first_defect["patchability"]["state"] == "safe_candidate"
+    assert first_defect["selector_hint"] == {"kind": "line_range", "value": "3:3"}
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    candidate = payload["candidates"][0]
+    assert candidate["id"] == "CAND001"
+    assert candidate["selector"]["kind"] == "line_range_with_hash"
+    assert candidate["selector"]["start_line"] == 3
+    assert candidate["selector"]["end_line"] == 3

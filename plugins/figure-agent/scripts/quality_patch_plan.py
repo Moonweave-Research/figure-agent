@@ -9,6 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import bounded_coordinate_offset
 import fixture_identity
 import yaml
 
@@ -39,18 +40,46 @@ def _is_allowed_target(path_text: str, fixture: str) -> bool:
     )
 
 
-def _default_patch(workspace_root: Path, source_file: str) -> str:
+def _resolve_line(selector: dict[str, Any], lines: list[str]) -> int | None:
+    kind = selector.get("kind")
+    value = selector.get("value")
+    if kind == "line_range" and isinstance(value, str) and ":" in value:
+        start = value.split(":", 1)[0].strip()
+        if start.isdigit() and int(start) >= 1:
+            return int(start)
+        return None
+    if kind == "node_name" and isinstance(value, str) and value:
+        needle = f"({value})"
+        for index, line in enumerate(lines):
+            if needle in line and bounded_coordinate_offset.offset_first_coordinate(line):
+                return index + 1
+    return None
+
+
+def _selector_line(selector: dict[str, Any]) -> int | None:
+    return _resolve_line(selector, [])
+
+
+def _patch_from_selector(
+    workspace_root: Path,
+    source_file: str,
+    selector: dict[str, Any],
+) -> str:
     source_path = workspace_root / source_file
     try:
         text = source_path.read_text(encoding="utf-8")
     except OSError:
         return ""
     lines = text.splitlines()
-    if len(lines) != 1 or "(0,0)" not in lines[0]:
+    line_number = _resolve_line(selector, lines)
+    if line_number is None or line_number > len(lines):
         return ""
-    old = lines[0]
-    new = old.replace("(0,0)", "(0.2,0)", 1)
-    return f"--- {source_file}\n+++ {source_file}\n@@ -1 +1 @@\n-{old}\n+{new}\n"
+    old = lines[line_number - 1]
+    new = bounded_coordinate_offset.offset_first_coordinate(old)
+    if new is None:
+        return ""
+    header = f"@@ -{line_number} +{line_number} @@"
+    return f"--- {source_file}\n+++ {source_file}\n{header}\n-{old}\n+{new}\n"
 
 
 def _operation_from_defect(
@@ -71,6 +100,23 @@ def _operation_from_defect(
     selector = defect.get("selector_hint")
     if not isinstance(selector, dict):
         selector = {"kind": "line_range", "value": "1:1"}
+    patch = suggested.get("patch") or _patch_from_selector(workspace_root, source_file, selector)
+    if patch:
+        proposed_change = {
+            "summary": suggested.get("summary") or f"Address {defect['id']}",
+            "patch": patch,
+        }
+    else:
+        line_number = _selector_line(selector)
+        location = f"{source_file}:{line_number}" if line_number else source_file
+        proposed_change = {
+            "summary": (
+                suggested.get("summary")
+                or f"Manual edit required at {location} to address {defect['id']}"
+            ),
+            "patch": "",
+            "manual_only": True,
+        }
     return {
         "id": "OP001",
         "defect_id": defect["id"],
@@ -81,10 +127,7 @@ def _operation_from_defect(
             "value": selector.get("value") or "1:1",
             "confidence": "exact",
         },
-        "proposed_change": {
-            "summary": suggested.get("summary") or f"Address {defect['id']}",
-            "patch": suggested.get("patch") or _default_patch(workspace_root, source_file),
-        },
+        "proposed_change": proposed_change,
         "bounds": {"max_translate_px": 10, "allowed_style_names": []},
         "semantic_guard": {
             "allowed": True,

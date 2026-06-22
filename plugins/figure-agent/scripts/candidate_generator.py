@@ -8,10 +8,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import bounded_coordinate_offset
 import candidate_contracts
 import candidate_families
 import figure_intent_model
 import fixture_identity
+import quality_defect_ledger
 import runtime_paths
 from quality_manifest import file_sha256
 
@@ -65,11 +67,7 @@ def _authority_floor(name: str, paths: runtime_paths.RuntimePaths) -> str:
     panels = intent.get("panels")
     if not isinstance(panels, list) or not panels:
         return "review_only"
-    floors = [
-        panel.get("apply_authority_floor")
-        for panel in panels
-        if isinstance(panel, dict)
-    ]
+    floors = [panel.get("apply_authority_floor") for panel in panels if isinstance(panel, dict)]
     if "rejected" in floors:
         return "rejected"
     if "review_only" in floors:
@@ -83,10 +81,11 @@ def _label_offset_candidate(
     *,
     name: str,
     source_rel: Path,
+    line_number: int,
     line: str,
+    replacement: str,
     apply_authority: str,
 ) -> dict[str, Any]:
-    replacement = line.replace("(0,0)", "(0.2,0)", 1)
     return {
         "id": "CAND001",
         "target": {"panel": "unknown", "subregion": "label-a"},
@@ -95,8 +94,8 @@ def _label_offset_candidate(
         "selector": {
             "kind": "line_range_with_hash",
             "path": source_rel.as_posix(),
-            "start_line": 1,
-            "end_line": 1,
+            "start_line": line_number,
+            "end_line": line_number,
             "original_hash": candidate_contracts.canonical_hash(line),
         },
         "operations": [
@@ -120,6 +119,44 @@ def _label_offset_candidate(
         "apply_authority": apply_authority,
         "blocked_if": ["semantic_invariant_failed", "render_failed"],
     }
+
+
+def _defect_target_line(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    lines: list[str],
+) -> tuple[int, str, str] | None:
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    defects = ledger.get("defects")
+    if not isinstance(defects, list):
+        return None
+    for defect in defects:
+        if not isinstance(defect, dict):
+            continue
+        if (defect.get("patchability") or {}).get("state") != "safe_candidate":
+            continue
+        selector = defect.get("selector_hint")
+        if not isinstance(selector, dict) or selector.get("kind") != "line_range":
+            continue
+        value = selector.get("value")
+        if not isinstance(value, str) or ":" not in value:
+            continue
+        start = value.split(":", 1)[0].strip()
+        if not start.isdigit():
+            continue
+        line_number = int(start)
+        if line_number < 1 or line_number > len(lines):
+            continue
+        line = lines[line_number - 1]
+        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
+        if replacement is None:
+            continue
+        return line_number, line, replacement
+    return None
 
 
 def build_candidate_set(
@@ -166,12 +203,18 @@ def build_candidate_set(
     text = source.read_text(encoding="utf-8")
     lines = text.splitlines()
     candidates: list[dict[str, Any]] = []
-    if len(lines) == 1 and "(0,0)" in lines[0]:
+    target = _defect_target_line(name, paths, lines)
+    if target is None:
+        target = candidate_families._first_offsettable_line(lines)
+    if target is not None:
+        line_number, line, replacement = target
         candidates.append(
             _label_offset_candidate(
                 name=name,
                 source_rel=source_rel,
-                line=lines[0],
+                line_number=line_number,
+                line=line,
+                replacement=replacement,
                 apply_authority=apply_authority,
             )
         )
