@@ -139,6 +139,8 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.candidate-score.v1` | candidate search | `candidate_rank.py` | `candidate_review_packet.py`, operators | Hard gates and scores may preserve or downgrade authority, never upgrade it |
 | `figure-agent.candidate-rank-result.v1` | candidate search | `candidate_rank.py` | CLI/MCP candidate workflow | Ordered candidate scores for human or later CLI review |
 | `figure-agent.candidate-review-packet.v1` | candidate search | `candidate_review_packet.py` | operators, MCP candidate tools | Read-only packet for human review of one rendered candidate |
+| `figure-agent.semantic-candidate-review.v1` | candidate search | `semantic_candidate_review.py` | `candidate_review_packet.py`, `candidate_acceptance.py`, `candidate_apply.py` | Local semantic review artifact; can block apply but cannot grant authority |
+| `figure-agent.semantic-review-state.v1` | candidate search | `semantic_candidate_review.py` | `candidate_review_packet.py`, `candidate_acceptance.py`, `candidate_apply.py` | Derived gate state; invalid, stale, or risky reviews fail closed |
 | `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
 | `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
 | `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
