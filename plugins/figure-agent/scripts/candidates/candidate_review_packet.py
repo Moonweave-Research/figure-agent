@@ -10,6 +10,7 @@ import candidate_acceptance
 import candidate_apply
 import fixture_identity
 import runtime_paths
+import semantic_candidate_review
 
 SCHEMA = "figure-agent.candidate-review-packet.v1"
 HUMAN_DECISION_FIELDS = ["decision", "reviewer", "reviewed_at", "rationale"]
@@ -403,10 +404,12 @@ def build_review_packet(
             "status": "not_available",
             "recommended_command": _rank_command(name, manifest),
         },
-        "semantic_invariant_report": {
-            "status": "not_run",
-            "required_before_apply": True,
-        },
+        "semantic_invariant_report": semantic_candidate_review.build_semantic_review_state(
+            example_dir,
+            manifest_path,
+            manifest,
+            spec=semantic_candidate_review.load_spec(example_dir),
+        ),
         "rollback": {
             "status": "manual_reverse_operations",
             "command": None,

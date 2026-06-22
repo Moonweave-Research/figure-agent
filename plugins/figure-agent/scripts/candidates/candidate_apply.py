@@ -16,8 +16,14 @@ from typing import Any
 import candidate_contracts
 import fixture_identity
 import runtime_paths
+import semantic_candidate_review
 
 SCHEMA = "figure-agent.candidate-apply-result.v1"
+TERMINAL_APPLY_STATUSES = {
+    "applied",
+    "applied_unverified",
+    "applied_with_failed_verification",
+}
 
 
 class CandidateApplyError(ValueError):
@@ -358,6 +364,14 @@ def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str
     return checks
 
 
+def _required_post_apply_commands(name: str) -> list[str]:
+    return [
+        f"/fig_compile {name}",
+        f"/fig_export {name} --skip-critique",
+        f"/fig_status {name} --json",
+    ]
+
+
 def _post_apply_detector_recheck(
     name: str,
     paths: runtime_paths.RuntimePaths,
@@ -455,7 +469,6 @@ def apply_candidate(
     render_manifest = _load_json(render_manifest_path, "render_manifest")
     for failure in _render_gate_failures(render_manifest):
         diagnostics.append(_diagnostic("render_gate_failed", failure))
-
     resolved_acceptance_path = candidate_contracts.fixture_local_output_path(
         paths.workspace_root,
         name,
@@ -483,7 +496,7 @@ def apply_candidate(
     apply_result_path = sandbox / "apply_result.json"
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in {"applied", "applied_with_failed_verification"}:
+        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
             diagnostics.append(_diagnostic("already_applied", "candidate is already applied"))
 
     active_lock = _active_mutation_lock(example_dir)
@@ -502,6 +515,14 @@ def apply_candidate(
         manifest=manifest,
     )
     diagnostics.extend(change_diagnostics)
+    semantic_state = semantic_candidate_review.build_semantic_review_state(
+        example_dir,
+        candidate_manifest_path,
+        manifest,
+        spec=semantic_candidate_review.load_spec(example_dir),
+    )
+    for reason in semantic_candidate_review.semantic_blocking_reasons(semantic_state):
+        diagnostics.append(_diagnostic("semantic_review", reason))
     if diagnostics:
         return _blocked(name, candidate_id, diagnostics)
     if not apply:
@@ -545,11 +566,16 @@ def apply_candidate(
         )
         if detector_recheck is not None:
             post_apply_result["detector_recheck"] = detector_recheck
-        result_status = (
-            "applied_with_failed_verification"
-            if any(item.get("status") != "success" for item in post_apply_result.values())
-            else "applied"
-        )
+        if post_apply:
+            result_status = (
+                "applied_with_failed_verification"
+                if any(item.get("status") != "success" for item in post_apply_result.values())
+                else "applied"
+            )
+            required_commands = []
+        else:
+            result_status = "applied_unverified"
+            required_commands = _required_post_apply_commands(name)
         result = {
             "schema": SCHEMA,
             "figure_name": name,
@@ -558,6 +584,7 @@ def apply_candidate(
             "changed_files": changed_files,
             "rollback_patch": _fixture_relative(example_dir, rollback_path),
             "post_apply": post_apply_result,
+            "required_commands": required_commands,
             "diagnostics": [],
         }
         if apply_result_path.is_symlink():

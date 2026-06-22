@@ -11,9 +11,15 @@ from typing import Any
 import candidate_contracts
 import fixture_identity
 import runtime_paths
+import semantic_candidate_review
 
 READINESS_SCHEMA = "figure-agent.candidate-apply-readiness.v1"
 ACCEPTANCE_SCHEMA = "figure-agent.candidate-acceptance.v1"
+TERMINAL_APPLY_STATUSES = {
+    "applied",
+    "applied_unverified",
+    "applied_with_failed_verification",
+}
 
 
 class CandidateAcceptanceError(ValueError):
@@ -211,7 +217,7 @@ def build_apply_readiness(
         example_dir,
         candidate_set_file,
         candidate_set,
-        _manifest_path,
+        manifest_path,
         manifest,
         _render_manifest_path,
         render_manifest,
@@ -231,6 +237,16 @@ def build_apply_readiness(
         blocking.append("candidate_hash_mismatch")
     if manifest.get("candidate_hash") != render_manifest.get("candidate_hash"):
         blocking.append("render_candidate_hash_mismatch")
+    semantic_state = semantic_candidate_review.build_semantic_review_state(
+        example_dir,
+        manifest_path,
+        manifest,
+        spec=semantic_candidate_review.load_spec(example_dir),
+    )
+    blocking.extend(
+        f"semantic_review:{reason}"
+        for reason in semantic_candidate_review.semantic_blocking_reasons(semantic_state)
+    )
     effective = manifest.get("effective_apply_authority")
     if effective != "review_only":
         blocking.append(f"effective_apply_authority:{effective}")
@@ -241,7 +257,7 @@ def build_apply_readiness(
     )
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
-        if apply_result.get("status") in {"applied", "applied_with_failed_verification"}:
+        if apply_result.get("status") in TERMINAL_APPLY_STATUSES:
             blocking.append("already_applied")
     candidate_set_relative = _fixture_relative(example_dir, candidate_set_file)
     status = "ready_for_local_acceptance" if not blocking else "blocked"

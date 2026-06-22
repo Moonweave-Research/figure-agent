@@ -88,7 +88,14 @@ def _write_candidate_fixture(
 ) -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text("name: candidate_demo\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        "name: candidate_demo\n"
+        "panels:\n"
+        "  - id: C\n"
+        "    caption: Energy diagram\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]\n",
+        encoding="utf-8",
+    )
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
     (fixture / f"{name}.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
@@ -105,11 +112,16 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
     (build / "undeclared_geometry.json").write_text(
         json.dumps(
             {
+                "source_hashes": {
+                    f"examples/{fixture.name}/{fixture.name}.tex": "sha256:"
+                    + sha256((fixture / f"{fixture.name}.tex").read_bytes()).hexdigest()
+                },
                 "candidates": [
                     {
                         "id": "UG001",
                         "recommended_action": "add_micro_defect",
                         "source_line": 1,
+                        "panel": "C",
                     }
                 ]
             }
@@ -172,13 +184,14 @@ def _write_full_candidate_fixture(workspace: Path, name: str = "candidate_demo")
         "\\usepackage{polymer-paper-preamble}\n"
         "\\begin{document}\n"
         "\\begin{tikzpicture}\n"
+        "% Panel C\n"
         "\\node (label-a) at (0,0) {Old Label};\n"
         "\\end{tikzpicture}\n"
         "\\end{document}\n",
         encoding="utf-8",
     )
     _write_undeclared_candidate_defect(fixture)
-    _write_keep_critique_gate(fixture, tex_line=5)
+    _write_keep_critique_gate(fixture, tex_line=6)
     return fixture
 
 
@@ -1101,7 +1114,12 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
                 "tools/call",
                 {
                     "name": "figure_agent_materialize_candidate_set",
-                    "arguments": {"name": "candidate_demo"},
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
+                        "panel_id": "C",
+                        "family": "label-repair",
+                    },
                 },
                 request_id=2,
             ),
@@ -1111,7 +1129,7 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
                     "name": "figure_agent_render_candidates",
                     "arguments": {
                         "name": "candidate_demo",
-                        "candidate_set": "build/candidates/candidate_set.json",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
                         "candidate_id": "CAND001",
                         "compile": True,
                         "export": True,
@@ -1128,7 +1146,7 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
                     "arguments": {
                         "name": "candidate_demo",
                         "candidate_id": "CAND001",
-                        "candidate_set": "build/candidates/candidate_set.json",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
                         "decision": "accept",
                         "reviewer": "mcp-test",
                         "rationale": "Rendered candidate evidence reviewed in the MCP-only chain.",
@@ -1140,7 +1158,11 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
                 "tools/call",
                 {
                     "name": "figure_agent_apply_candidate",
-                    "arguments": {"name": "candidate_demo", "candidate_id": "CAND001"},
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_id": "CAND001",
+                        "candidate_set_path": "build/candidates/panel_C_candidate_set.json",
+                    },
                 },
                 request_id=5,
             ),
@@ -1157,8 +1179,8 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert compiled["success"] is True
     assert materialized["schema"] == "figure-agent.mcp.materialize-candidate-set.v1"
     assert materialized["success"] is True
-    assert materialized["candidate_set_path"] == "build/candidates/candidate_set.json"
-    assert (fixture / "build" / "candidates" / "candidate_set.json").is_file()
+    assert materialized["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
+    assert (fixture / "build" / "candidates" / "panel_C_candidate_set.json").is_file()
     assert rendered["schema"] == "figure-agent.mcp.render-candidates.v1"
     assert rendered["success"] is True
     assert (fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json").is_file()

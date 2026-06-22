@@ -145,6 +145,50 @@ def _write_acceptance(fixture: Path, name: str = "candidate_demo") -> None:
     )
 
 
+def _write_semantic_review(
+    fixture: Path,
+    *,
+    name: str = "candidate_demo",
+    artifact_hash: str | None = None,
+    verdict: str = "pass",
+    human_required: bool = False,
+) -> None:
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    render_manifest_path = sandbox / "render_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload = {
+        "schema": "figure-agent.semantic-candidate-review.v1",
+        "fixture": name,
+        "candidate_id": "CAND001",
+        "candidate_hash": manifest["candidate_hash"],
+        "reviewed_artifacts": [
+            {
+                "path": render_manifest_path.relative_to(fixture).as_posix(),
+                "sha256": artifact_hash or _sha256_file(render_manifest_path),
+            }
+        ],
+        "semantic_invariants": [],
+        "findings": [],
+        "conflicts": [],
+        "verdict": verdict,
+        "human_required": human_required,
+        "reviewed_at": "2026-06-22T00:00:00Z",
+        "reviewer": "host",
+    }
+    (sandbox / "semantic_review.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _update_manifest(fixture: Path, updates: dict, name: str = "candidate_demo") -> None:
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest.update(updates)
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def _tree(workspace: Path) -> list[str]:
     return sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
 
@@ -245,6 +289,166 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
         "rationale",
     ]
     assert _tree(workspace) == before
+
+
+def test_review_packet_includes_semantic_review_state(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["schema"] == (
+        "figure-agent.semantic-review-state.v1"
+    )
+    assert packet["semantic_invariant_report"]["status"] == "pass"
+    assert packet["semantic_invariant_report"]["verdict"] == "pass"
+    assert packet["semantic_invariant_report"]["blocks_apply"] is False
+
+
+def test_review_packet_reports_optional_missing_semantic_review(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _update_manifest(
+        fixture,
+        {
+            "edit_family": "bounded_coordinate_offset",
+            "semantic_risks": [],
+            "operations": [{"kind": "coordinate_offset"}],
+        },
+    )
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["status"] == "missing"
+    assert packet["semantic_invariant_report"]["required_before_apply"] is False
+    assert packet["semantic_invariant_report"]["blocks_apply"] is False
+
+
+def test_review_packet_reports_stale_required_semantic_review_as_invalid_or_stale(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _update_manifest(
+        fixture,
+        {
+            "edit_family": "semantic_rewrite",
+            "semantic_risks": ["candidate changes a locked claim"],
+        },
+    )
+    _write_semantic_review(fixture)
+    render_manifest = fixture / "build" / "candidates" / "CAND001" / "render_manifest.json"
+    render_manifest.write_text('{"changed": true}\n', encoding="utf-8")
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["status"] == "invalid_or_stale"
+    assert packet["semantic_invariant_report"]["required_before_apply"] is True
+    assert packet["semantic_invariant_report"]["blocks_apply"] is True
+    assert "reviewed_artifact_stale" in packet["semantic_invariant_report"]["blocking_reasons"]
+
+
+def test_review_packet_malformed_spec_fails_closed_for_semantic_state(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _update_manifest(
+        fixture,
+        {
+            "edit_family": "bounded_coordinate_offset",
+            "semantic_risks": [],
+            "operations": [{"kind": "coordinate_offset"}],
+        },
+    )
+    (fixture / "spec.yaml").write_text("panels: [\n", encoding="utf-8")
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["status"] == "missing"
+    assert packet["semantic_invariant_report"]["required_before_apply"] is True
+    assert packet["semantic_invariant_report"]["blocks_apply"] is True
+    assert "spec_unreadable" in packet["semantic_invariant_report"]["blocking_reasons"]
+
+
+def test_review_packet_broken_spec_symlink_fails_closed_for_semantic_state(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _update_manifest(
+        fixture,
+        {
+            "edit_family": "bounded_coordinate_offset",
+            "semantic_risks": [],
+            "operations": [{"kind": "coordinate_offset"}],
+        },
+    )
+    (fixture / "spec.yaml").symlink_to(fixture / "missing-spec.yaml")
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["status"] == "missing"
+    assert packet["semantic_invariant_report"]["required_before_apply"] is True
+    assert packet["semantic_invariant_report"]["blocks_apply"] is True
+    assert "spec_unreadable" in packet["semantic_invariant_report"]["blocking_reasons"]
+
+
+def test_review_packet_semantic_pass_does_not_override_deterministic_apply_block(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set = {
+        "schema": "figure-agent.candidate-set.v1",
+        "candidates": [{"id": "CAND001", "candidate_hash": "sha256:" + "3" * 64}],
+    }
+    candidate_set_path = fixture / "build" / "candidates" / "panel_C_candidate_set.json"
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"][0]["source_sha256"] = _sha256_file(fixture / "candidate_demo.tex")
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    _write_semantic_review(fixture)
+    _write_acceptance(fixture)
+    (fixture / "candidate_demo.tex").write_text("changed\n", encoding="utf-8")
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["semantic_invariant_report"]["status"] == "pass"
+    assert packet["semantic_invariant_report"]["blocks_apply"] is False
+    assert packet["apply_readiness"]["status"] == "blocked"
+    assert "source_drift_hash_mismatch" in packet["apply_readiness"]["blocking_reasons"]
 
 
 def test_review_packet_validates_fixture_name(tmp_path: Path) -> None:
