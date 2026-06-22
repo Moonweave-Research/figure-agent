@@ -111,7 +111,8 @@ def test_stage_4_final_artifact_blocked_beats_not_accepted_after_core_outputs_re
         "final artifact requires semantic backport (semantic_backport_required)"
         " or SVG semantic diff resolution — patch TikZ/briefing/spec,"
         " rerun compile/export/critique as needed, then rerun"
-        " scripts/svg_semantic_diff.py and scripts/svg_polish_handoff.py."
+        " fig-agent helper svg_semantic_diff.py and"
+        " fig-agent helper svg_polish_handoff.py."
     )
 
 
@@ -119,13 +120,13 @@ def test_stage_4_missing_final_artifact_names_handoff_scaffolder() -> None:
     hint = _hint(stage=4, final_artifact_state="MISSING")
 
     assert "polish/demo.polished.svg" in hint
-    assert "scripts/svg_polish_handoff.py" in hint
+    assert "fig-agent helper svg_polish_handoff.py" in hint
 
 
 def test_stage_4_stale_final_artifact_names_handoff_scaffolder() -> None:
     hint = _hint(stage=4, final_artifact_state="STALE")
 
-    assert "scripts/svg_polish_handoff.py" in hint
+    assert "fig-agent helper svg_polish_handoff.py" in hint
 
 
 def test_stage_4_not_accepted_beats_done_when_final_artifact_ready() -> None:

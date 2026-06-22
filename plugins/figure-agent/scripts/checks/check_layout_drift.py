@@ -33,7 +33,19 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+        SCRIPTS_DIR / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
 from check_visual_clash import extract_pdf_words_and_page  # noqa: E402

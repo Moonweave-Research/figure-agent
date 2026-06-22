@@ -23,7 +23,7 @@ from svg_semantic_diff import (
     svg_semantic_diff_report_is_stale,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 STYLE_LOCK_PATH = REPO_ROOT / "styles" / "polymer-paper-preamble.sty"
 SCHEMA = "figure-agent.svg-polish-manifest.v1"
 SVG_POLISH_MANIFEST_RELATIVE_PATH = "polish/svg_polish_manifest.yaml"

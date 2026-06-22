@@ -31,7 +31,19 @@ from PIL import Image
 # Reuse the shared TeX comment stripper so source_inventory counts ignore
 # commented-out macro calls. Running this module via the pytest harness puts
 # the scripts/ directory on sys.path; running it as a CLI does the same.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+        SCRIPTS_DIR / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402

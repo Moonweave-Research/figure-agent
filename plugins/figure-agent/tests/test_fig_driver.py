@@ -2481,7 +2481,7 @@ def test_polish_mode_with_delta_pack_returns_handoff_guidance(
     assert summary["action"] == "polish_handoff_stop"
     assert summary["stop_boundary"] is None
     assert summary["safe_command"] is None
-    assert "scripts/svg_polish_handoff.py" in summary["reason"]
+    assert "fig-agent helper svg_polish_handoff.py" in summary["reason"]
 
 
 def test_polish_mode_with_invalid_delta_pack_returns_delta_pack_command(

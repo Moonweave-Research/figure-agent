@@ -20,7 +20,7 @@ from reference_contract import (
     participating_panel_reference_paths,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 CRITIQUE_RUBRIC_VERSION = "figure-agent.critique-rubric.v1.10"
 CRITIQUE_RUBRIC_VERSION_V1_11 = "figure-agent.critique-rubric.v1.11"
 CRITIQUE_RUBRIC_VERSION_V1_12 = "figure-agent.critique-rubric.v1.12"

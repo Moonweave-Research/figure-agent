@@ -67,25 +67,25 @@ if [[ ${#STRICT_ARGS[@]} -eq 0 ]]; then
   trap - ERR
   set +e
 fi
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_visual_clash.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" "${STRICT_ARGS[@]}" "$PDF_OUT"
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_text_boundary_clash.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_label_path_proximity.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_undeclared_geometry.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
   "${STRICT_ARGS[@]}" \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_label_hyphenation.py" \
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
   "${STRICT_ARGS[@]}" \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \
   "$PDF_OUT"
@@ -94,7 +94,7 @@ fi
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
 if [[ -f "coordinate_hints.yaml" ]]; then
-  "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/check_layout_drift.py" "${STRICT_ARGS[@]}" .
+    "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" "${STRICT_ARGS[@]}" .
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"
 # Injection receipt (spec §4 Phase 1a): surface the injected use_as_constraint

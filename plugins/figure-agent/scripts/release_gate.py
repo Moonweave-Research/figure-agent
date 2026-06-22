@@ -17,7 +17,18 @@ import yaml
 SCRIPT_ROOT = Path(__file__).resolve().parent
 PLUGIN_ROOT = SCRIPT_ROOT.parent
 
-sys.path.insert(0, str(SCRIPT_ROOT))
+for script_dir in reversed(
+    (
+        SCRIPT_ROOT,
+        SCRIPT_ROOT / "checks",
+        SCRIPT_ROOT / "candidates",
+        SCRIPT_ROOT / "quality",
+        SCRIPT_ROOT / "loop",
+        SCRIPT_ROOT / "driver",
+        SCRIPT_ROOT / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
 
 import benchmark_contracts  # noqa: E402
 import benchmark_detector_reports  # noqa: E402

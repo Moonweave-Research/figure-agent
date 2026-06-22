@@ -83,7 +83,7 @@ _NEXT_STYLE_PROFILE_UNKNOWN = (
 )
 _NEXT_FINAL_ARTIFACT_MISSING = (
     "final artifact is missing — create or restore polish/<name>.polished.svg,"
-    " then run scripts/svg_polish_handoff.py to scaffold"
+    " then run fig-agent helper svg_polish_handoff.py to scaffold"
     " polish/svg_polish_audit.md and polish/svg_polish_manifest.yaml."
 )
 _NEXT_FINAL_ARTIFACT_INVALID = (
@@ -92,15 +92,15 @@ _NEXT_FINAL_ARTIFACT_INVALID = (
 )
 _NEXT_FINAL_ARTIFACT_STALE = (
     "final artifact is stale — manifest must be refreshed by rerunning"
-    " scripts/svg_polish_handoff.py after source/export/critique/polish/audit"
+    " fig-agent helper svg_polish_handoff.py after source/export/critique/polish/audit"
     " changes; if polish/svg_semantic_diff.json is stale, rerun"
-    " scripts/svg_semantic_diff.py, then rerun /fig_status <name>."
+    " fig-agent helper svg_semantic_diff.py, then rerun /fig_status <name>."
 )
 _NEXT_FINAL_ARTIFACT_BLOCKED = (
     "final artifact requires semantic backport (semantic_backport_required)"
     " or SVG semantic diff resolution — patch TikZ/briefing/spec, rerun"
-    " compile/export/critique as needed, then rerun scripts/svg_semantic_diff.py"
-    " and scripts/svg_polish_handoff.py."
+    " compile/export/critique as needed, then rerun fig-agent helper svg_semantic_diff.py"
+    " and fig-agent helper svg_polish_handoff.py."
 )
 
 

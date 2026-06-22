@@ -73,7 +73,7 @@ jobs:
               bash scripts/compile.sh "$tex"
             fi
           done
-          uv run python3 scripts/check_visual_clash_budget.py examples
+          uv run python3 scripts/checks/check_visual_clash_budget.py examples
 
       - name: Pre-build smoke export (required by stage-assertion test)
         run: |

@@ -10,9 +10,27 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-import fixture_identity
-from quality_manifest import file_sha256
-from svg_path_geometry import canonical_polyline, frechet_distance, shape_signature
+SCRIPTS_DIR = Path(__file__).resolve().parent
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+        SCRIPTS_DIR / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
+
+import fixture_identity  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
+from svg_path_geometry import (  # noqa: E402
+    canonical_polyline,
+    frechet_distance,
+    shape_signature,
+)
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
 SVG_SEMANTIC_DIFF_RELATIVE_PATH = "polish/svg_semantic_diff.json"
@@ -703,8 +721,11 @@ def svg_semantic_diff_report_is_stale(path: Path, *, example_dir: Path) -> bool:
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for rebuilding the semantic SVG diff report."""
     args = list(argv if argv is not None else sys.argv[1:])
+    if args in (["-h"], ["--help"]):
+        print("usage: svg_semantic_diff.py examples/<name>")
+        return 0
     if len(args) != 1:
-        print("Usage: svg_semantic_diff.py examples/<name>", file=sys.stderr)
+        print("usage: svg_semantic_diff.py examples/<name>", file=sys.stderr)
         return 2
     try:
         example_dir = _resolve_example_dir_for_cli(Path(args[0]))

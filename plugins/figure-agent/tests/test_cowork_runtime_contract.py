@@ -295,6 +295,39 @@ def test_fig_agent_helper_allows_whitelisted_scripts_from_plugin_root(tmp_path: 
     assert "usage: critique_lint.py" in result.stdout
 
 
+@pytest.mark.parametrize(
+    ("script_name", "usage"),
+    [
+        ("check_golden_artifacts.py", "usage: check_golden_artifacts.py"),
+        ("svg_semantic_diff.py", "usage: svg_semantic_diff.py"),
+    ],
+)
+def test_fig_agent_helper_allows_public_gate_helpers(
+    tmp_path: Path,
+    script_name: str,
+    usage: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    (workspace / "examples").mkdir(parents=True)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "helper",
+            script_name,
+            "--help",
+        ],
+        cwd=tmp_path,
+        env=_public_entry_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert usage in result.stdout
+
+
 def test_fig_agent_helper_rejects_unlisted_or_path_scripts(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     (workspace / "examples").mkdir(parents=True)
