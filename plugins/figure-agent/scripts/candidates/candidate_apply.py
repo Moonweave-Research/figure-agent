@@ -296,10 +296,30 @@ def _output_tail(text: str, limit: int = 1200) -> str:
     return text[-limit:] if len(text) > limit else text
 
 
-def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str, dict[str, Any]]:
+def _post_apply_env(paths: runtime_paths.RuntimePaths) -> dict[str, str]:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
     env["FIGURE_AGENT_WORKSPACE"] = str(paths.workspace_root)
+    script_import_dirs = (
+        paths.scripts_dir,
+        paths.scripts_dir / "checks",
+        paths.scripts_dir / "candidates",
+        paths.scripts_dir / "quality",
+        paths.scripts_dir / "loop",
+        paths.scripts_dir / "driver",
+        paths.scripts_dir / "svg_polish",
+    )
+    import_path = os.pathsep.join(str(path) for path in script_import_dirs)
+    existing_pythonpath = env.get("PYTHONPATH")
+    if existing_pythonpath:
+        env["PYTHONPATH"] = f"{import_path}{os.pathsep}{existing_pythonpath}"
+    else:
+        env["PYTHONPATH"] = import_path
+    return env
+
+
+def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str, dict[str, Any]]:
+    env = _post_apply_env(paths)
     commands = {
         "compile": [
             "bash",
