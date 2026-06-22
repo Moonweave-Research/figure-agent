@@ -17,7 +17,10 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 def _write_fixture(workspace: Path, name: str = "quality_demo") -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text("name: quality_demo\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\npanels:\n  - id: A\n",
+        encoding="utf-8",
+    )
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
     (fixture / f"{name}.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
@@ -34,12 +37,18 @@ def _write_text_boundary_report(fixture: Path, candidate_id: str = "TB001") -> N
             {
                 "schema": "figure-agent.text-boundary-clash.v1",
                 "fixture": fixture.name,
+                "source_hashes": {
+                    f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
+                        fixture / f"{fixture.name}.tex"
+                    )
+                },
                 "candidates": [
                     {
                         "id": candidate_id,
                         "kind": "text_crosses_vertical_boundary",
                         "text": "Old Label",
                         "boundary_id": "column_rule",
+                        "panel": "A",
                     }
                 ],
                 "total": 1,
@@ -53,21 +62,19 @@ def _write_text_boundary_report(fixture: Path, candidate_id: str = "TB001") -> N
 def _write_undeclared_geometry_report(
     fixture: Path,
     candidates: list[dict[str, object]],
+    source_hashes: dict[str, str] | None = None,
 ) -> None:
+    payload: dict[str, object] = {
+        "schema": "figure-agent.undeclared-geometry.v1",
+        "fixture": fixture.name,
+        "candidates": candidates,
+        "total": len(candidates),
+    }
+    if source_hashes is not None:
+        payload["source_hashes"] = source_hashes
     report = fixture / "build" / "undeclared_geometry.json"
     report.parent.mkdir(parents=True, exist_ok=True)
-    report.write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.undeclared-geometry.v1",
-                "fixture": fixture.name,
-                "candidates": candidates,
-                "total": len(candidates),
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    report.write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
 
 def test_quality_defect_ledger_ingests_undeclared_geometry_near_miss(tmp_path: Path) -> None:
@@ -110,7 +117,9 @@ def test_quality_defect_ledger_ingests_undeclared_geometry_near_miss(tmp_path: P
     defect = defects[0]
     assert defect["affected_files"] == ["examples/quality_demo/quality_demo.tex"]
     assert defect["defect_class"] == "text_overlap"
-    assert defect["selector_hint"] == {"kind": "line_range", "value": "1:1"}
+    assert defect["selector_hint"]["kind"] == "line_range"
+    assert defect["selector_hint"]["value"] == "1:1"
+    assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
     assert defect["evidence"] == [
         {
             "uri": "figure://quality_demo/audit/undeclared-geometry",
@@ -132,6 +141,11 @@ def _write_visual_clash_report(fixture: Path, candidates: list[dict[str, object]
             {
                 "fixture": fixture.name,
                 "render_pdf": f"build/{fixture.name}.pdf",
+                "source_hashes": {
+                    f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
+                        fixture / f"{fixture.name}.tex"
+                    )
+                },
                 "candidates": candidates,
                 "total": len(candidates),
             }
@@ -146,7 +160,16 @@ def _write_empty_detector_reports(fixture: Path) -> None:
     # summarize_audit_evidence short-circuits to missing_input otherwise.
     build = fixture / "build"
     build.mkdir(parents=True, exist_ok=True)
-    empty = {"fixture": fixture.name, "candidates": [], "total": 0}
+    empty = {
+        "fixture": fixture.name,
+        "source_hashes": {
+            f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
+                fixture / f"{fixture.name}.tex"
+            )
+        },
+        "candidates": [],
+        "total": 0,
+    }
     for filename, schema in (
         ("text_boundary_clash.json", "figure-agent.text-boundary-clash.v1"),
         ("label_path_proximity.json", "figure-agent.label-path-proximity.v1"),
@@ -290,7 +313,9 @@ def test_quality_defect_ledger_ingests_kept_bounded_critique_finding(
 
     defect = ledger["defects"][0]
     assert defect["source"] == "critique_adjudication"
-    assert defect["selector_hint"] == {"kind": "line_range", "value": "1:1"}
+    assert defect["selector_hint"]["kind"] == "line_range"
+    assert defect["selector_hint"]["value"] == "1:1"
+    assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
     assert defect["patchability"]["state"] == "safe_candidate"
     assert defect["evidence"] == [
         {
@@ -407,7 +432,9 @@ def test_quality_defect_ledger_ingests_adjudicated_visual_clash(tmp_path: Path) 
     assert len(defects) == 1, defects
     defect = defects[0]
     assert defect["affected_files"] == ["examples/quality_demo/quality_demo.tex"]
-    assert defect["selector_hint"] == {"kind": "line_range", "value": "1:1"}
+    assert defect["selector_hint"]["kind"] == "line_range"
+    assert defect["selector_hint"]["value"] == "1:1"
+    assert defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
     assert defect["patchability"]["state"] == "safe_candidate"
     assert defect["evidence"] == [
         {
@@ -632,3 +659,232 @@ def test_quality_defect_ledger_blocks_symlink_escape(tmp_path: Path) -> None:
 
     assert ledger["defects"][0]["patchability"]["state"] == "unsupported"
     assert "path_escape" in ledger["defects"][0]["patchability"]["blocked_codes"]
+
+
+def test_quality_defect_ledger_emits_actionability_metrics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        "name: quality_demo\npanels:\n  - id: A\n",
+        encoding="utf-8",
+    )
+    source_hash = file_sha256(fixture / "quality_demo.tex")
+
+    def fake_detector_defects(
+        _example_dir: Path,
+        name: str,
+        _graph_hash: str,
+    ) -> list[dict[str, object]]:
+        base = {
+            "source": "deterministic_audit",
+            "evidence": [{"node_id": "synthetic"}],
+            "severity": "action",
+            "owner": "tool",
+            "affected_files": [f"examples/{name}/{name}.tex"],
+            "freshness": {
+                "status_input_hash": "sha256:" + "0" * 64,
+                "critique_input_hash": "sha256:" + "0" * 64,
+                "audit_evidence_graph_hash": "sha256:" + "1" * 64,
+                "source_hashes": {f"examples/{name}/{name}.tex": source_hash},
+            },
+            "selector_hint": {
+                "kind": "line_range",
+                "value": "1:1",
+                "selector_text_hash": "sha256:" + "1" * 64,
+            },
+            "target": {"panel": "A", "subregion": "label-a"},
+            "patchability": {"state": "safe_candidate", "blocked_codes": []},
+        }
+        stale = {
+            **base,
+            "id": "QD003",
+            "defect_class": "text_overlap",
+            "freshness": {**base["freshness"], "state": "stale"},
+        }
+        unsupported = {**base, "id": "QD004", "defect_class": "line_weight_style"}
+        unknown_panel = {
+            **base,
+            "id": "QD005",
+            "defect_class": "text_overlap",
+            "target": {"panel": "unknown", "subregion": "label-a"},
+        }
+        return [
+            {**base, "id": "QD001", "defect_class": "text_overlap"},
+            {**base, "id": "QD002", "defect_class": "label_offset"},
+            stale,
+            unsupported,
+            unknown_panel,
+        ]
+
+    monkeypatch.setattr(quality_defect_ledger, "_detector_defects", fake_detector_defects)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    metrics = ledger["actionability_metrics"]
+    assert metrics["safe_candidate_defect_count"] == 5
+    assert metrics["candidate_supported_defect_count"] == 2
+    assert metrics["unsupported_safe_defect_count"] == 1
+    assert metrics["unknown_panel_defect_count"] == 1
+    assert metrics["stale_detector_evidence_count"] == 1
+    assert metrics["missing_selector_hash_count"] == 0
+
+
+def test_quality_defect_ledger_blocks_missing_selector_hash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    source_hash = file_sha256(fixture / "quality_demo.tex")
+
+    def fake_detector_defects(
+        _example_dir: Path,
+        name: str,
+        _graph_hash: str,
+    ) -> list[dict[str, object]]:
+        return [
+            {
+                "id": "QD001",
+                "source": "deterministic_audit",
+                "evidence": [{"node_id": "synthetic"}],
+                "severity": "action",
+                "owner": "tool",
+                "defect_class": "text_overlap",
+                "affected_files": [f"examples/{name}/{name}.tex"],
+                "freshness": {
+                    "status_input_hash": "sha256:" + "0" * 64,
+                    "critique_input_hash": "sha256:" + "0" * 64,
+                    "audit_evidence_graph_hash": "sha256:" + "1" * 64,
+                    "source_hashes": {f"examples/{name}/{name}.tex": source_hash},
+                },
+                "selector_hint": {"kind": "line_range", "value": "1:1"},
+                "target": {"panel": "A", "subregion": "label-a"},
+                "patchability": {"state": "safe_candidate", "blocked_codes": []},
+            }
+        ]
+
+    monkeypatch.setattr(quality_defect_ledger, "_detector_defects", fake_detector_defects)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    defect = ledger["defects"][0]
+    assert defect["actionability"] == {
+        "state": "blocked",
+        "gaps": ["missing_selector_hash"],
+    }
+    assert ledger["actionability_metrics"]["candidate_supported_defect_count"] == 0
+    assert ledger["actionability_metrics"]["missing_selector_hash_count"] == 1
+
+
+def test_quality_defect_ledger_marks_detector_source_hash_mismatch_stale(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    source_rel = "examples/quality_demo/quality_demo.tex"
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "panel": "A",
+            }
+        ],
+        source_hashes={source_rel: "sha256:" + "9" * 64},
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    defect = ledger["defects"][0]
+    assert defect["freshness"]["state"] == "stale"
+    assert "stale_detector_evidence" in defect["actionability"]["gaps"]
+    assert ledger["actionability_metrics"]["stale_detector_evidence_count"] == 1
+
+
+def test_quality_defect_ledger_marks_missing_detector_source_hashes_stale(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "panel": "A",
+            }
+        ],
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    defect = ledger["defects"][0]
+    assert defect["freshness"]["state"] == "stale"
+    assert defect["freshness"]["missing_source_hashes"] is True
+    assert defect["actionability"] == {
+        "state": "blocked",
+        "gaps": ["stale_detector_evidence"],
+    }
+    assert ledger["actionability_metrics"]["candidate_supported_defect_count"] == 0
+    assert ledger["actionability_metrics"]["stale_detector_evidence_count"] == 1
+
+
+def test_quality_defect_ledger_blocks_undeclared_target_panel(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    source_rel = "examples/quality_demo/quality_demo.tex"
+    _write_undeclared_geometry_report(
+        fixture,
+        [
+            {
+                "id": "UG001",
+                "kind": "label_endpoint_near_miss",
+                "recommended_action": "add_micro_defect",
+                "source_line": 1,
+                "panel": "Z",
+            }
+        ],
+        source_hashes={source_rel: file_sha256(fixture / "quality_demo.tex")},
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    defect = ledger["defects"][0]
+    assert defect["target"]["panel"] == "Z"
+    assert defect["actionability"] == {
+        "state": "blocked",
+        "gaps": ["unknown_panel"],
+    }
+    assert ledger["actionability_metrics"]["candidate_supported_defect_count"] == 0
+    assert ledger["actionability_metrics"]["unknown_panel_defect_count"] == 1
