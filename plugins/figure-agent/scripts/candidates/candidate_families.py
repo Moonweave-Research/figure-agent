@@ -172,37 +172,44 @@ def _candidate(
     return candidate
 
 
-def _first_offsettable_line(lines: list[str]) -> tuple[int, str, str] | None:
-    for index, line in enumerate(lines):
-        replacement = bounded_coordinate_offset.offset_first_coordinate(line)
-        if replacement is not None:
-            return index + 1, line, replacement
+def _first_offsettable_selector(selectors: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for selector in selectors:
+        text = str(selector.get("text", ""))
+        if bounded_coordinate_offset.offset_first_coordinate(text) is not None:
+            return selector
     return None
 
 
 def _canonical_candidate(
     *,
     name: str,
-    source: Path,
-    source_rel: str,
     family: str,
     panel: str | None,
+    selector: dict[str, Any],
 ) -> dict[str, Any] | None:
-    if not source.is_file():
+    source_rel = str(selector.get("path") or "")
+    original = str(selector.get("text") or "")
+    replacement = bounded_coordinate_offset.offset_first_coordinate(original)
+    if replacement is None:
         return None
-    lines = source.read_text(encoding="utf-8").splitlines()
-    target = _first_offsettable_line(lines)
-    if target is None:
-        return None
-    line_number, original, replacement = target
     edit_class = CANONICAL_FAMILY_EDIT_CLASS[family]
     stable_hash_payload = {
         "family": family,
-        "target": {"panel": panel or "unknown", "subregion": edit_class},
+        "target": {"panel": panel, "subregion": edit_class},
         "edit_class": edit_class,
         "affected_files": [source_rel],
+        "selector": {
+            "kind": "tex_selector.v1",
+            "path": source_rel,
+            "panel": selector.get("panel"),
+            "line_start": selector.get("line_start"),
+            "line_end": selector.get("line_end"),
+            "source_hash": selector.get("source_hash"),
+            "selector_text_hash": selector.get("selector_text_hash"),
+        },
         "operation": {
             "kind": "replace_text",
+            "semantic_kind": "bounded_coordinate_offset",
             "path": source_rel,
             "original": original,
             "replacement": replacement,
@@ -212,19 +219,23 @@ def _canonical_candidate(
     return {
         "id": "CAND001",
         "family": family,
-        "target": {"panel": panel or "unknown", "subregion": edit_class},
+        "target": {"panel": panel, "subregion": edit_class},
         "edit_class": edit_class,
         "affected_files": [source_rel],
         "selector": {
-            "kind": "line_range_with_hash",
+            "kind": "tex_selector.v1",
             "path": source_rel,
-            "start_line": line_number,
-            "end_line": line_number,
-            "original_hash": candidate_contracts.canonical_hash(original),
+            "panel": selector.get("panel"),
+            "line_start": selector.get("line_start"),
+            "line_end": selector.get("line_end"),
+            "source_hash": selector.get("source_hash"),
+            "selector_text_hash": selector.get("selector_text_hash"),
         },
+        "selectors": [selector],
         "operations": [
             {
                 "kind": "replace_text",
+                "semantic_kind": "bounded_coordinate_offset",
                 "path": source_rel,
                 "original": original,
                 "replacement": replacement,
@@ -232,7 +243,9 @@ def _canonical_candidate(
         ],
         "risk": "medium" if edit_class != "label_offset" else "low",
         "expected_delta": [CANONICAL_EXPECTED_DELTA[edit_class]],
-        "semantic_risks": ["synthetic smoke candidate needs human visual review before apply"],
+        "semantic_risks": []
+        if edit_class == "label_offset"
+        else ["synthetic smoke candidate needs human visual review before apply"],
         "rollback": {"strategy": "reverse_operations"},
         "verification": {
             "required_commands": [
@@ -252,14 +265,17 @@ def _canonical_family_candidates(
     source: Path,
     panel: str | None,
     family: str,
+    panel_model: dict[str, Any],
 ) -> dict[str, Any]:
-    source_rel = f"examples/{name}/{name}.tex"
+    selectors = [item for item in panel_model.get("selectors", []) if isinstance(item, dict)]
+    selector = _first_offsettable_selector(selectors)
+    if selector is None:
+        return _refusal(name, source, "no_supported_candidate")
     candidate = _canonical_candidate(
         name=name,
-        source=source,
-        source_rel=source_rel,
         family=family,
         panel=panel,
+        selector=selector,
     )
     if candidate is None:
         code = "source_missing" if not source.is_file() else "no_supported_candidate"
@@ -288,17 +304,23 @@ def build_family_candidates(
         workspace_root=workspace_root,
     )
     source = _source_path(paths, name)
+    if not source.is_file():
+        return _refusal(name, source, "source_missing")
 
     panel_model: dict[str, Any] | None = None
+    if panel is None:
+        return _refusal(name, source, "unknown_panel")
+
+    panel_model = candidate_panel_model.build_panel_model(
+        name,
+        panel,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+    )
+    if {"code": "panel_not_declared"} in panel_model.get("refusals", []):
+        return _refusal(name, source, "panel_not_declared")
+
     if family is None and panel is not None:
-        panel_model = candidate_panel_model.build_panel_model(
-            name,
-            panel,
-            workspace_root=paths.workspace_root,
-            plugin_root=paths.plugin_root,
-        )
-        if {"code": "panel_not_declared"} in panel_model.get("refusals", []):
-            return _refusal(name, source, "panel_not_declared")
         selectors = [item for item in panel_model.get("selectors", []) if isinstance(item, dict)]
         family = derive_panel_family(
             name,
@@ -315,21 +337,13 @@ def build_family_candidates(
             source=source,
             panel=panel,
             family=family,
+            panel_model=panel_model,
         )
     if family != SUPPORTED_FAMILY:
         return _refusal(name, source, "unsupported_candidate_family")
     if panel != SUPPORTED_PANEL:
         return _refusal(name, source, "unsupported_panel_family")
 
-    if panel_model is None:
-        panel_model = candidate_panel_model.build_panel_model(
-            name,
-            panel,
-            workspace_root=paths.workspace_root,
-            plugin_root=paths.plugin_root,
-        )
-    if {"code": "panel_not_declared"} in panel_model.get("refusals", []):
-        return _refusal(name, source, "panel_not_declared")
     selectors = [item for item in panel_model.get("selectors", []) if isinstance(item, dict)]
     selector = _candidate_selector(selectors)
     if selector is None:

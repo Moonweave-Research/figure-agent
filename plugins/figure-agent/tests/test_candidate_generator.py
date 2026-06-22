@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
 import quality_defect_ledger  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -33,23 +34,54 @@ panels:
     return fixture
 
 
-def _write_undeclared_candidate_defect(fixture: Path, source_line: int = 1) -> None:
+def _write_undeclared_candidate_defect(
+    fixture: Path,
+    source_line: int = 1,
+    source_hashes: dict[str, str] | None = None,
+) -> None:
+    payload: dict[str, object] = {
+        "candidates": [
+            {
+                "id": "UG001",
+                "recommended_action": "add_micro_defect",
+                "source_line": source_line,
+                "panel": "A",
+            }
+        ]
+    }
+    payload["source_hashes"] = source_hashes or {
+        f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
+            fixture / f"{fixture.name}.tex"
+        )
+    }
     build_dir = fixture / "build"
     build_dir.mkdir(exist_ok=True)
-    (build_dir / "undeclared_geometry.json").write_text(
-        json.dumps(
+    (build_dir / "undeclared_geometry.json").write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _write_undeclared_candidate_defects(
+    fixture: Path,
+    source_lines: list[int],
+) -> None:
+    payload = {
+        "source_hashes": {
+            f"examples/{fixture.name}/{fixture.name}.tex": file_sha256(
+                fixture / f"{fixture.name}.tex"
+            )
+        },
+        "candidates": [
             {
-                "candidates": [
-                    {
-                        "id": "UG001",
-                        "recommended_action": "add_micro_defect",
-                        "source_line": source_line,
-                    }
-                ]
+                "id": f"UG{index:03d}",
+                "recommended_action": "add_micro_defect",
+                "source_line": source_line,
+                "panel": "A",
             }
-        ),
-        encoding="utf-8",
-    )
+            for index, source_line in enumerate(source_lines, start=1)
+        ],
+    }
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "undeclared_geometry.json").write_text(json.dumps(payload), encoding="utf-8")
 
 
 def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
@@ -75,6 +107,7 @@ def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
     assert candidate["apply_authority"] == "apply_eligible"
     source_defect = candidate["source_defect"]
     assert source_defect.pop("source_fingerprint").startswith("sha256:")
+    assert source_defect.pop("ledger_hash").startswith("sha256:")
     assert source_defect == {
         "id": "QD001",
         "source": "deterministic_audit",
@@ -220,11 +253,17 @@ def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Pa
     (build_dir / "undeclared_geometry.json").write_text(
         json.dumps(
             {
+                "source_hashes": {
+                    "examples/candidate_demo/candidate_demo.tex": file_sha256(
+                        fixture / "candidate_demo.tex"
+                    )
+                },
                 "candidates": [
                     {
                         "id": "UG001",
                         "recommended_action": "add_micro_defect",
                         "source_line": 3,
+                        "panel": "A",
                     }
                 ]
             }
@@ -238,7 +277,9 @@ def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Pa
     )
     first_defect = ledger["defects"][0]
     assert first_defect["patchability"]["state"] == "safe_candidate"
-    assert first_defect["selector_hint"] == {"kind": "line_range", "value": "3:3"}
+    assert first_defect["selector_hint"]["kind"] == "line_range"
+    assert first_defect["selector_hint"]["value"] == "3:3"
+    assert first_defect["selector_hint"]["selector_text_hash"].startswith("sha256:")
 
     payload = candidate_generator.build_candidate_set(
         "candidate_demo",
@@ -286,4 +327,308 @@ def test_candidate_generator_skips_line_weight_style_safe_defect(
     )
 
     assert payload["candidates"] == []
-    assert payload["refusals"] == [{"code": "no_supported_candidate"}]
+    assert payload["refusals"] == [
+        {"code": "unsupported_candidate_family", "defect_id": "QD001"}
+    ]
+
+
+def test_candidate_generator_refuses_unknown_panel_safe_defect(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "UG001"}],
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "1:1",
+                        "selector_text_hash": "sha256:" + "1" * 64,
+                    },
+                    "target": {"panel": "unknown", "subregion": "label-a"},
+                    "patchability": {"state": "safe_candidate"},
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert {item["code"] for item in payload["refusals"]} == {"unknown_panel"}
+
+
+def test_candidate_generator_refuses_stale_detector_defect(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "UG001"}],
+                    "freshness": {"state": "stale"},
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "1:1",
+                        "selector_text_hash": "sha256:" + "1" * 64,
+                    },
+                    "target": {"panel": "A", "subregion": "label-a"},
+                    "patchability": {"state": "safe_candidate"},
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert {item["code"] for item in payload["refusals"]} == {"stale_detector_evidence"}
+
+
+def test_candidate_generator_refuses_real_stale_detector_source_hash(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source_rel = "examples/candidate_demo/candidate_demo.tex"
+    _write_undeclared_candidate_defect(
+        fixture,
+        source_hashes={source_rel: "sha256:" + "9" * 64},
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert {item["code"] for item in payload["refusals"]} == {"stale_detector_evidence"}
+
+
+def test_candidate_generator_skips_unsupported_defect_and_reaches_supported(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {a};\n"
+        "\\node (title) {Origin of traps};\n"
+        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        encoding="utf-8",
+    )
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "UG001"}],
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "1:1",
+                        "selector_text_hash": "sha256:" + "1" * 64,
+                    },
+                    "target": {"panel": "unknown", "subregion": "label-a"},
+                    "patchability": {"state": "safe_candidate"},
+                },
+                {
+                    "id": "QD002",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "b" * 64,
+                    "evidence": [{"node_id": "UG002"}],
+                    "freshness": {
+                        "source_hashes": {
+                            "examples/candidate_demo/candidate_demo.tex": source_hash
+                        }
+                    },
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "3:3",
+                        "selector_text_hash": "sha256:" + "3" * 64,
+                    },
+                    "target": {"panel": "A", "subregion": "label-a"},
+                    "patchability": {"state": "safe_candidate"},
+                },
+            ]
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    candidate = payload["candidates"][0]
+    assert candidate["selector"]["start_line"] == 3
+    assert candidate["target"] == {"panel": "A", "subregion": "label-a"}
+    assert candidate["source_defect"]["id"] == "QD002"
+    assert {item["code"] for item in payload["refusals"]} == {"unknown_panel"}
+
+
+def test_multi_candidate_generation_enumerates_supported_defects_with_metrics(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {A};\n"
+        "\\node (title) {Origin of traps};\n"
+        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defects(fixture, [3, 1])
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    candidates = payload["candidates"]
+    assert [candidate["id"] for candidate in candidates] == ["CAND001", "CAND002"]
+    assert [candidate["selector"]["start_line"] for candidate in candidates] == [1, 3]
+    for candidate in candidates:
+        assert candidate["target"] == {"panel": "A", "subregion": "label-a"}
+        assert candidate["edit_family"] == "bounded_coordinate_offset"
+        assert candidate["family"] == "bounded-coordinate-offset"
+        assert candidate["variant"] == {"id": "dx+0.10cm", "dx_cm": 0.1}
+        assert candidate["variant_id"] == "dx+0.10cm"
+        assert candidate["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
+        assert candidate["source_hash"].startswith("sha256:")
+        assert candidate["selector"]["source_hash"] == candidate["source_hash"]
+        assert candidate["source_defect"]["ledger_hash"].startswith("sha256:")
+        assert candidate["candidate_hash"].startswith("sha256:")
+    assert payload["metrics"] == {
+        "safe_candidate_defect_count": 2,
+        "candidate_count": 2,
+        "candidate_defect_coverage": 1.0,
+        "refusal_count": 0,
+        "candidate_with_panel_count": 2,
+        "candidate_with_family_count": 2,
+        "candidate_with_source_hash_count": 2,
+        "variant_count": 1,
+    }
+
+
+def test_candidate_ids_are_stable_for_identical_source_and_ledger_hashes(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {A};\n"
+        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defects(fixture, [2, 1])
+
+    first = candidate_generator.build_candidate_set("candidate_demo", workspace_root=workspace)
+    second = candidate_generator.build_candidate_set("candidate_demo", workspace_root=workspace)
+
+    first_identity = [
+        (candidate["id"], candidate["candidate_hash"], candidate["selector"]["start_line"])
+        for candidate in first["candidates"]
+    ]
+    second_identity = [
+        (candidate["id"], candidate["candidate_hash"], candidate["selector"]["start_line"])
+        for candidate in second["candidates"]
+    ]
+    assert first_identity == second_identity
+
+
+def test_candidate_generator_refuses_source_hash_mismatch_when_ledger_claims_supported(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "ledger_hash": "sha256:" + "1" * 64,
+            "actionability_metrics": {
+                "safe_candidate_defect_count": 1,
+                "candidate_supported_defect_count": 1,
+                "unsupported_safe_defect_count": 0,
+            },
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "deterministic_audit",
+                    "defect_class": "text_overlap",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "UG001"}],
+                    "freshness": {
+                        "source_hashes": {
+                            "examples/candidate_demo/candidate_demo.tex": "sha256:" + "9" * 64
+                        }
+                    },
+                    "selector_hint": {
+                        "kind": "line_range",
+                        "value": "1:1",
+                        "selector_text_hash": "sha256:" + "1" * 64,
+                    },
+                    "target": {"panel": "A", "subregion": "label-a"},
+                    "actionability": {"state": "candidate_supported", "gaps": []},
+                    "patchability": {"state": "safe_candidate"},
+                }
+            ],
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "stale_detector_evidence", "defect_id": "QD001"}]
+    assert payload["metrics"]["candidate_count"] == 0
+    assert payload["metrics"]["refusal_count"] == 1
