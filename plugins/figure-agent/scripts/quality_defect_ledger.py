@@ -10,10 +10,12 @@ from pathlib import Path
 from typing import Any
 
 import audit_evidence_graph
+import audit_evidence_summary
 import fixture_identity
 import quality_patch_policy
 import runtime_paths
-from quality_manifest import file_sha256
+from critique_contract import CritiqueContractError, critique_finding_id, critique_findings
+from quality_manifest import file_sha256, yaml_frontmatter
 
 SCHEMA = "figure-agent.quality-defect-ledger.v1"
 
@@ -124,6 +126,203 @@ def _text_boundary_defect(example_dir: Path, name: str, graph_hash: str) -> dict
     return defect
 
 
+def _normalize_detector_defect(defect: dict[str, Any]) -> dict[str, Any]:
+    patchability = quality_patch_policy.classify_patchability(defect)
+    defect["patchability"] = patchability
+    defect["policy"] = {
+        "version": quality_patch_policy.SCHEMA,
+        "blocked_codes": patchability["blocked_codes"],
+    }
+    return defect
+
+
+def _undeclared_geometry_defects(
+    example_dir: Path,
+    name: str,
+    graph_hash: str,
+) -> list[dict[str, Any]]:
+    report = example_dir / "build" / "undeclared_geometry.json"
+    if not report.is_file():
+        return []
+    try:
+        data = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return []
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    source_hashes = _source_hashes(example_dir, name)
+    defects: list[dict[str, Any]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        # add_micro_defect candidates are real label-near-text near-misses; the
+        # add_spec_check subset (undeclared column/horizontal rules, rect bounds)
+        # is spec-hygiene noise that carries no concrete overlap to patch.
+        if candidate.get("recommended_action") != "add_micro_defect":
+            continue
+        source_line = candidate.get("source_line")
+        if not isinstance(source_line, int) or isinstance(source_line, bool):
+            continue
+        candidate_id = candidate.get("id")
+        defect = {
+            "source": "deterministic_audit",
+            "evidence": [
+                {
+                    "uri": f"figure://{name}/audit/undeclared-geometry",
+                    "node_id": candidate_id,
+                }
+            ],
+            "severity": "action",
+            "owner": "tool",
+            "defect_class": "text_overlap",
+            "affected_files": [f"examples/{name}/{name}.tex"],
+            "freshness": {
+                "status_input_hash": "sha256:" + "0" * 64,
+                "critique_input_hash": "sha256:" + "0" * 64,
+                "audit_evidence_graph_hash": graph_hash,
+                "source_hashes": source_hashes,
+            },
+            "selector_hint": {"kind": "line_range", "value": f"{source_line}:{source_line}"},
+            "suggested_change": {
+                "operation_type": "tikz_coordinate_adjust",
+                "summary": "Clear the label endpoint from the nearby text by a bounded amount",
+                "patch": "",
+            },
+        }
+        defects.append(defect)
+    return defects
+
+
+def _two_int_tex_lines(finding: dict[str, Any]) -> tuple[int, int] | None:
+    tex_lines = finding.get("tex_lines")
+    if (
+        not isinstance(tex_lines, list)
+        or len(tex_lines) != 2
+        or not all(isinstance(value, int) and not isinstance(value, bool) for value in tex_lines)
+    ):
+        return None
+    start, end = tex_lines
+    return start, end
+
+
+def _kept_visual_clash_finding_ids(frontmatter: dict[str, Any]) -> dict[str, str]:
+    """Map each kept (not false-positive) visual_clash candidate to its linked finding id.
+
+    Mirrors the audit_evidence_summary kept-vs-dismissed predicate: a micro_defect is a
+    detector false positive iff status==accept_simplification AND reason==false_positive.
+    """
+    raw_items = frontmatter.get("micro_defects")
+    if not isinstance(raw_items, list):
+        return {}
+    kept: dict[str, str] = {}
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        ref = item.get("visual_clash_ref")
+        if not isinstance(ref, str) or not ref.strip():
+            continue
+        if (
+            item.get("status") == "accept_simplification"
+            and item.get("accept_simplification_reason") == "false_positive"
+        ):
+            continue
+        linked_finding_id = item.get("linked_finding_id")
+        if isinstance(linked_finding_id, str) and linked_finding_id.strip():
+            kept[ref.strip()] = linked_finding_id.strip()
+    return kept
+
+
+def _visual_clash_defects(example_dir: Path, name: str, graph_hash: str) -> list[dict[str, Any]]:
+    report = example_dir / "build" / "visual_clash.json"
+    critique_path = example_dir / "critique.md"
+    if not report.is_file() or not critique_path.is_file():
+        return []
+    try:
+        data = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return []
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    try:
+        frontmatter = yaml_frontmatter(critique_path)
+        kept_finding_ids = _kept_visual_clash_finding_ids(frontmatter)
+        findings = critique_findings(frontmatter)
+    except CritiqueContractError:
+        return []
+    finding_by_id: dict[str, dict[str, Any]] = {}
+    for index, finding in enumerate(findings):
+        try:
+            finding_by_id[critique_finding_id(finding, f"critique finding {index}")] = finding
+        except CritiqueContractError:
+            continue
+    source_hashes = _source_hashes(example_dir, name)
+    defects: list[dict[str, Any]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str):
+            continue
+        linked_finding_id = kept_finding_ids.get(candidate_id.strip())
+        if linked_finding_id is None:
+            continue
+        finding = finding_by_id.get(linked_finding_id)
+        if finding is None:
+            continue
+        tex_lines = _two_int_tex_lines(finding)
+        if tex_lines is None:
+            # Never fabricate a line for a line-less adjudication.
+            continue
+        start, end = tex_lines
+        defect = {
+            "source": "deterministic_audit",
+            "evidence": [
+                {
+                    "uri": f"figure://{name}/audit/visual-clash",
+                    "node_id": candidate_id.strip(),
+                }
+            ],
+            "severity": "action",
+            "owner": "tool",
+            "defect_class": "text_overlap",
+            "affected_files": [f"examples/{name}/{name}.tex"],
+            "freshness": {
+                "status_input_hash": "sha256:" + "0" * 64,
+                "critique_input_hash": "sha256:" + "0" * 64,
+                "audit_evidence_graph_hash": graph_hash,
+                "source_hashes": source_hashes,
+            },
+            "selector_hint": {"kind": "line_range", "value": f"{start}:{end}"},
+            "suggested_change": {
+                "operation_type": "tikz_coordinate_adjust",
+                "summary": "Move the clashing label off the underlying fill by a bounded amount",
+                "patch": "",
+            },
+        }
+        defects.append(defect)
+    return defects
+
+
+def _detector_defects(example_dir: Path, name: str, graph_hash: str) -> list[dict[str, Any]]:
+    # summarize_audit_evidence is the existing detector-adjudication gate: it reads
+    # build/*.json and (when critique.md exists) the micro_defect accounting. It yields
+    # linked_defect_count 0 whenever audit evidence is incomplete -- no critique, missing
+    # detector reports or crop manifest (e.g. git clean), or an out-of-scope critique
+    # schema -- which suppresses the visual_clash path and prevents fabricating a defect
+    # from stale evidence. (The undeclared_geometry path below is self-adjudicating via
+    # recommended_action and does not depend on this gate.)
+    summary = audit_evidence_summary.summarize_audit_evidence(example_dir)
+    defects = _undeclared_geometry_defects(example_dir, name, graph_hash)
+    if summary.get("detector_feedback", {}).get("visual_clash", {}).get("linked_defect_count"):
+        defects += _visual_clash_defects(example_dir, name, graph_hash)
+    for index, defect in enumerate(defects, start=1):
+        defect["id"] = f"QD{index:03d}"
+        _normalize_detector_defect(defect)
+    return defects
+
+
 def build_quality_defect_ledger(
     name: str,
     *,
@@ -158,8 +357,14 @@ def build_quality_defect_ledger(
         }
         defects = [defect]
     else:
-        text_defect = _text_boundary_defect(example_dir, name, graph_hash)
-        defects = [text_defect] if text_defect is not None else [_first_blocker_defect(graph, name)]
+        detector_defects = _detector_defects(example_dir, name, graph_hash)
+        if detector_defects:
+            defects = detector_defects
+        else:
+            text_defect = _text_boundary_defect(example_dir, name, graph_hash)
+            defects = (
+                [text_defect] if text_defect is not None else [_first_blocker_defect(graph, name)]
+            )
 
     payload = {
         "schema": SCHEMA,
