@@ -1344,7 +1344,7 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
     if isinstance(resolved, dict):
         return resolved
-    _workspace_root, name = resolved
+    workspace_root, name = resolved
     candidate_id = arguments.get("candidate_id")
     if not _is_safe_fixture_name(candidate_id):
         return _tool_envelope(
@@ -1357,17 +1357,85 @@ def _apply_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
                 "candidate_id must be a single build/candidates/<id> directory name",
             ),
         )
+    candidate_set_path = str(
+        arguments.get("candidate_set_path") or "build/candidates/candidate_set.json"
+    )
+    acceptance_path = str(
+        arguments.get("acceptance_path") or f"build/candidates/{candidate_id}/acceptance.json"
+    )
+    result = _run_fig_agent_enveloped(
+        schema=schema,
+        started=started,
+        command=[
+            "apply-candidate",
+            name,
+            str(candidate_id),
+            "--candidate-set",
+            candidate_set_path,
+            "--acceptance",
+            acceptance_path,
+            "--json",
+        ],
+        workspace_root=workspace_root,
+        timeout_seconds=300,
+        timeout_message="fig-agent apply-candidate timed out",
+        name=name,
+    )
+    if isinstance(result, dict):
+        return result
+    # apply-candidate prints the candidate-apply-result payload on stdout even when
+    # the acceptance/drift/lock gate blocks the candidate (CLI exit 1), so derive
+    # success from the apply status rather than the process return code. Hard errors
+    # raised before the payload is emitted (e.g. candidate_set_missing) leave stdout
+    # empty and exit non-zero; surface the CLI stderr as the diagnostic in that case.
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            candidate_id=str(candidate_id),
+            status=None,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error(
+                "unsupported_operation",
+                _bounded(result.stderr.strip() or "fig-agent apply-candidate failed"),
+            ),
+        )
+    status = payload.get("status") if isinstance(payload, dict) else None
+    success = status == "applied"
+    if success:
+        error = None
+    elif status == "applied_with_failed_verification":
+        # The .tex was mutated and a rollback.patch was produced, but the
+        # post-apply compile/export/status verification failed: the working tree
+        # is modified and the caller may need to roll back via apply_result.
+        error = _error(
+            "unsupported_operation",
+            "apply-candidate mutated the working tree but post-apply verification "
+            "failed (status applied_with_failed_verification); roll back via "
+            "apply_result.rollback_patch.",
+        )
+    else:
+        # blocked/ready and any other non-applied status: the gate refused the
+        # candidate before mutating; the working tree is unchanged.
+        error = _error(
+            "unsupported_operation",
+            f"apply-candidate refused before mutation (status {status}); working tree unchanged.",
+        )
     return _tool_envelope(
         schema,
-        success=False,
+        success=success,
         started=started,
         name=name,
         candidate_id=str(candidate_id),
-        error=_error(
-            "unsupported_operation",
-            "apply_requires_cli_opt_in",
-            "Use fig-agent apply-candidate only after an explicit CLI apply path exists.",
-        ),
+        status=status,
+        apply_result=payload,
+        artifacts=_status_artifacts(workspace_root, name),
+        error=error,
     )
 
 
@@ -1804,7 +1872,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": _compare_candidate,
     },
     "figure_agent_apply_candidate": {
-        "description": "Deterministically refuse MCP candidate mutation.",
+        "description": "Apply an accepted candidate through the acceptance/drift/lock gate.",
         "inputSchema": {
             "type": "object",
             "additionalProperties": False,
@@ -1812,6 +1880,8 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {
                 "name": {"type": "string"},
                 "candidate_id": {"type": "string"},
+                "candidate_set_path": {"type": "string"},
+                "acceptance_path": {"type": "string"},
             },
         },
         "handler": _apply_candidate,
