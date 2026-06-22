@@ -46,6 +46,7 @@ def _status(
         "critique_state": critique_state,
         "export_state": export_state,
         "acceptance_state": "NOT_DECLARED",
+        "acceptance_freshness_state": "not_accepted",
         "workflow_ready": workflow_ready,
         "golden_ready": False,
         "release_ready": False,
@@ -636,6 +637,62 @@ def test_closeout_passes_current_tracked_golden_acceptance(
 
     assert export_step["state"] == "passed"
     assert export_step["reason"] == "tracked golden export has current explicit acceptance"
+
+
+def test_closeout_reports_stale_tracked_golden_acceptance_as_accepted_but_stale(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    tex_path = fixture / "loop_demo.tex"
+    tex_path.write_text("\\node {accepted};\n", encoding="utf-8")
+    export_path = fixture / "exports" / "loop_demo.pdf"
+    export_path.parent.mkdir()
+    export_path.write_bytes(b"%PDF-accepted\n")
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(fixture, critique)
+    closeout_dir = fixture / "build" / "closeout"
+    closeout_dir.mkdir(parents=True)
+    (closeout_dir / "golden_acceptance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.golden-acceptance.v1",
+                "decision": "accept",
+                "reviewer": "local-user",
+                "reviewed_at": "2026-06-08T00:00:00Z",
+                "accept_golden": True,
+                "source_sha256": "sha256:" + "0" * 64,
+                "exports": {"pdf": fig_closeout_mod._sha256_file(export_path)},
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        fig_closeout_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            **_status(critique_state="FRESH", export_state="TRACKED_GOLDEN"),
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_but_stale",
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    export_step = _steps_by_id(report)["export"]
+
+    assert report["status"]["acceptance_freshness_state"] == "accepted_but_stale"
+    assert export_step["state"] == "blocked"
+    assert export_step["reason"] == (
+        "accepted_but_stale: fixture has an accepted historical state, but current "
+        "source, render, critique, or export evidence is stale. Re-run "
+        "compile/critique/export and refresh acceptance before closeout."
+    )
+    assert "manual approval" not in export_step["reason"]
 
 
 def test_closeout_cli_json_outputs_machine_readable_report(

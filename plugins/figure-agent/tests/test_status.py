@@ -2852,6 +2852,44 @@ def test_stage_4_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
     assert "QUALITY_AUDIT" not in result["next"]
 
 
+def test_stage_4_stale_accepted_surfaces_accepted_but_stale(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    briefing = fig_dir / "briefing.md"
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    pdf = exports / "myfig.pdf"
+    svg = exports / "myfig.svg"
+    tif = exports / "myfig.tif"
+    png = exports / "myfig.png"
+    for path, content in (
+        (pdf, b"%PDF"),
+        (svg, b"<svg/>"),
+        (tif, b"TIFF"),
+        (png, b"\x89PNG"),
+    ):
+        path.write_bytes(content)
+    old_time = time.time() - 100
+    for path in (pdf, svg, tif, png, briefing):
+        os.utime(path, (old_time, old_time))
+    new_time = time.time() - 5
+    os.utime(tex, (new_time, new_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["accepted"] is True
+    assert result["acceptance_state"] == "ACCEPTED"
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+    assert "stale_export" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+
+
 def test_print_single_shows_not_accepted_marker(tmp_path: Path, capsys) -> None:
     fig_dir = tmp_path / "goldenfig"
     fig_dir.mkdir()

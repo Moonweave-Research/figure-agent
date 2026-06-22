@@ -94,6 +94,7 @@ def test_closeout_ready_preserves_existing_closeout_blockers(
         "candidate_apply",
         "text_boundary_checks",
         "golden_acceptance",
+        "accepted_state",
         "final_artifact",
         "release",
         "loop_rerun",
@@ -121,6 +122,40 @@ def test_closeout_ready_blocks_failed_candidate_apply(tmp_path: Path, monkeypatc
     assert candidate_check["id"] == "candidate_apply"
     assert candidate_check["state"] == "blocked"
     assert candidate_check["reason"] == "candidate apply status is applied_with_failed_verification"
+
+
+def test_closeout_ready_blocks_unverified_candidate_apply(tmp_path: Path, monkeypatch) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    monkeypatch.setattr(closeout_readiness, "_compute_closeout", _passing_closeout)
+    apply_path = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result = json.loads(apply_path.read_text(encoding="utf-8"))
+    apply_result["status"] = "applied_unverified"
+    apply_result["post_apply"] = {}
+    apply_result["required_commands"] = [
+        "/fig_compile candidate_demo",
+        "/fig_export candidate_demo --skip-critique",
+        "/fig_status candidate_demo --json",
+    ]
+    apply_path.write_text(json.dumps(apply_result, sort_keys=True) + "\n", encoding="utf-8")
+
+    readiness = closeout_readiness.build_closeout_readiness(
+        "candidate_demo",
+        candidate_id="CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    candidate_check = readiness["checks"][0]
+    assert readiness["status"] == "blocked"
+    assert candidate_check["id"] == "candidate_apply"
+    assert candidate_check["state"] == "blocked"
+    assert candidate_check["reason"] == "candidate apply verification has not run"
+    assert candidate_check["evidence"]["required_commands"] == [
+        "/fig_compile candidate_demo",
+        "/fig_export candidate_demo --skip-critique",
+        "/fig_status candidate_demo --json",
+    ]
 
 
 def test_closeout_ready_blocks_malformed_applied_candidate_result(
@@ -233,6 +268,47 @@ def test_closeout_ready_blocks_publication_gate_failures(tmp_path: Path, monkeyp
     assert readiness["status"] == "blocked"
     assert checks["release"]["state"] == "blocked"
     assert checks["release"]["reason"] == "publication gate reports 1 failure(s)"
+
+
+def test_closeout_ready_blocks_accepted_but_stale_even_when_publication_gate_passes(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_closeout(_name, repo_root, runs_root=None):
+        payload = _passing_closeout(_name, repo_root, runs_root)
+        payload["status"] = {
+            **payload["status"],
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_but_stale",
+            "workflow_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        }
+        return payload
+
+    monkeypatch.setattr(closeout_readiness, "_compute_closeout", fake_closeout)
+
+    readiness = closeout_readiness.build_closeout_readiness(
+        "candidate_demo",
+        candidate_id="CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    checks = {check["id"]: check for check in readiness["checks"]}
+    assert readiness["status"] == "blocked"
+    assert checks["accepted_state"]["state"] == "blocked"
+    assert checks["accepted_state"]["reason"] == (
+        "accepted_but_stale: fixture has an accepted historical state, but current "
+        "source, render, critique, or export evidence is stale. Re-run "
+        "compile/critique/export and refresh acceptance before closeout."
+    )
+    assert readiness["next_action"] != "closeout ready"
 
 
 def test_closeout_ready_reports_release_ready_false_without_blocking_tracked_golden_closeout(

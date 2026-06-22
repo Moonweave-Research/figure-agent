@@ -10,6 +10,11 @@ import fixture_identity
 import runtime_paths
 
 SCHEMA = "figure-agent.closeout-readiness.v1"
+ACCEPTED_BUT_STALE_REASON = (
+    "accepted_but_stale: fixture has an accepted historical state, but current "
+    "source, render, critique, or export evidence is stale. Re-run "
+    "compile/critique/export and refresh acceptance before closeout."
+)
 
 
 class CloseoutReadinessError(ValueError):
@@ -94,6 +99,19 @@ def _candidate_apply_check(index: dict[str, Any]) -> dict[str, Any]:
             evidence_path=apply_path,
             evidence={"post_apply": post_apply},
         )
+    if apply_status == "applied_unverified":
+        required_commands = candidate.get("required_commands")
+        return _check(
+            check_id="candidate_apply",
+            state="blocked",
+            reason="candidate apply verification has not run",
+            evidence_path=apply_path,
+            evidence={
+                "required_commands": required_commands
+                if isinstance(required_commands, list)
+                else [],
+            },
+        )
     if apply_status == "stale":
         return _check(
             check_id="candidate_apply",
@@ -106,6 +124,28 @@ def _candidate_apply_check(index: dict[str, Any]) -> dict[str, Any]:
         state="blocked",
         reason=f"candidate apply status is {apply_status}",
         evidence_path=apply_path,
+    )
+
+
+def _accepted_state_check(status: dict[str, Any]) -> dict[str, Any]:
+    freshness_state = status.get("acceptance_freshness_state")
+    evidence = {
+        "acceptance_state": status.get("acceptance_state"),
+        "acceptance_freshness_state": freshness_state,
+        "workflow_ready": bool(status.get("workflow_ready")),
+    }
+    if freshness_state == "accepted_but_stale":
+        return _check(
+            check_id="accepted_state",
+            state="blocked",
+            reason=ACCEPTED_BUT_STALE_REASON,
+            evidence=evidence,
+        )
+    return _check(
+        check_id="accepted_state",
+        state="passed" if status.get("acceptance_state") == "ACCEPTED" else "not_required",
+        reason=f"acceptance_freshness_state is {freshness_state or 'not reported'}",
+        evidence=evidence,
     )
 
 
@@ -226,6 +266,7 @@ def _ordered_checks(
     checks = [candidate_check]
     checks.extend(check for check_id in ordered_ids if (check := closeout_by_id.get(check_id)))
     checks.append(_golden_acceptance_check(status=status, closeout_checks=closeout_by_id))
+    checks.append(_accepted_state_check(status))
     checks.append(_final_artifact_check(status))
     checks.append(_release_check(status))
     if loop_rerun := closeout_by_id.get("loop_rerun"):
