@@ -70,6 +70,10 @@ def _rank_score(event: dict[str, Any]) -> float | None:
         return None
 
 
+def _is_unknown(value: str) -> bool:
+    return value.strip() == "" or value == "unknown"
+
+
 def _recommended_prior(bucket: dict[str, Any]) -> float:
     attempts = int(bucket["improved"]) + int(bucket["neutral"]) + int(bucket["regressed"])
     if attempts < 3:
@@ -79,7 +83,7 @@ def _recommended_prior(bucket: dict[str, Any]) -> float:
         + 0.5 * int(bucket["neutral"])
         - int(bucket["regressed"])
     ) / attempts
-    return round(_clamp(raw, -0.25, 0.25), 4)
+    return round(_clamp(raw * 0.25, -0.25, 0.25), 4)
 
 
 def build_memory_index(
@@ -91,10 +95,13 @@ def build_memory_index(
     panel_patterns: dict[str, dict[str, Any]] = defaultdict(_safe_count_bucket)
     rank_scores: dict[str, list[float]] = defaultdict(list)
     eligible_prior_count = 0
+    candidate_event_count = 0
+    unknown_event_count = 0
 
     for event in events:
         if not event.get("candidate_id"):
             continue
+        candidate_event_count += 1
         family = str(event.get("edit_family") or "unknown")
         target = event.get("target") if isinstance(event.get("target"), dict) else {}
         panel = str(target.get("panel") or "unknown")
@@ -103,24 +110,37 @@ def build_memory_index(
         state = _outcome_state(event)
         event_type = str(event.get("event_type") or "")
         is_attempt = event_type in ATTEMPT_EVENT_TYPES
-        for bucket in (families[family], panel_patterns[pattern_key]):
+        family_known = not _is_unknown(family)
+        target_known = not _is_unknown(panel) and not _is_unknown(subregion)
+        unknown_outcome = is_attempt and state == "unknown"
+        if not family_known or not target_known or unknown_outcome:
+            unknown_event_count += 1
+        buckets = []
+        if family_known:
+            buckets.append(families[family])
+        if family_known and target_known:
+            buckets.append(panel_patterns[pattern_key])
+        eligible_attempt = (
+            is_attempt and family_known and target_known and state in ELIGIBLE_OUTCOMES
+        )
+        for bucket in buckets:
             bucket["event_count"] += 1
-            if is_attempt and state != "unknown":
+            if eligible_attempt:
                 bucket["attempts"] += 1
-            if state == "improved":
+            if eligible_attempt and state == "improved":
                 bucket["improved"] += 1
-            elif state == "neutral":
+            elif eligible_attempt and state == "neutral":
                 bucket["neutral"] += 1
-            elif state == "regressed":
+            elif eligible_attempt and state == "regressed":
                 bucket["regressed"] += 1
             elif state.startswith("blocked"):
                 bucket["blocked"] += 1
             else:
                 bucket["unknown"] += 1
-        if state in ELIGIBLE_OUTCOMES:
+        if eligible_attempt:
             eligible_prior_count += 1
         rank_score = _rank_score(event)
-        if rank_score is not None:
+        if rank_score is not None and family_known:
             rank_scores[family].append(rank_score)
 
     for family, bucket in families.items():
@@ -135,6 +155,11 @@ def build_memory_index(
         "generated_at": _utc_now(),
         "scope": scope or {"kind": "events"},
         "event_count": len(events),
+        "candidate_event_count": candidate_event_count,
+        "unknown_event_count": unknown_event_count,
+        "unknown_event_rate": round(unknown_event_count / candidate_event_count, 4)
+        if candidate_event_count
+        else 0.0,
         "eligible_prior_count": eligible_prior_count if eligible_prior_count >= 3 else 0,
         "families": dict(sorted(families.items())),
         "panel_patterns": dict(sorted(panel_patterns.items())),

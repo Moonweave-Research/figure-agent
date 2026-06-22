@@ -133,6 +133,32 @@ def test_memory_prior_changes_reviewable_candidate_score() -> None:
     assert score["effective_apply_authority"] == "apply_eligible"
 
 
+def test_memory_prior_does_not_change_effective_apply_authority() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "review_only",
+        "edit_class": "label_offset",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    memory_index = {
+        "schema": "figure-agent.quality-memory-index.v1",
+        "families": {
+            "label_offset": {
+                "attempts": 3,
+                "recommended_prior": 0.25,
+            }
+        },
+    }
+
+    score = candidate_rank.score_manifest(manifest, memory_index=memory_index)
+
+    assert score["scores"]["memory_prior"] == 0.25
+    assert score["rank_score"] == 0.75
+    assert score["effective_apply_authority"] == "review_only"
+    assert "effective_apply_authority" not in memory_index["families"]["label_offset"]
+
+
 def test_negative_memory_prior_lowers_score_and_adds_negative_evidence() -> None:
     manifest = {
         "schema": "figure-agent.candidate-manifest.v1",
