@@ -6,12 +6,184 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_ROOT = PLUGIN_ROOT / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
 import release_gate  # noqa: E402
+
+
+def _benchmark_payload(
+    suite: str,
+    *,
+    failed: int = 0,
+    regressions: int = 0,
+    render_probe_state: str = "pass",
+    render_mode: str = "rendered",
+    refusal_count: int = 1,
+) -> dict:
+    refusals = (
+        [{"code": "manual_review", "defect_id": "D1"}]
+        if refusal_count
+        else []
+    )
+    return {
+        "run_id": f"TEST-{suite}",
+        "suite": suite,
+        "render_dependency_probe": {
+            "state": render_probe_state,
+            "tools": {},
+            "missing": ["lualatex"] if render_probe_state == "fail" else [],
+        },
+        "summary": {
+            "completed": 1,
+            "skipped": 0,
+            "failed": failed,
+            "regression_count": regressions,
+        },
+        "results": [
+            {
+                "fixture": f"{suite}_fixture",
+                "status": "completed",
+                "render_mode": render_mode,
+                "candidate_count": 1,
+                "rendered_count": 1 if render_mode == "rendered" else 0,
+                "ranked_count": 1,
+                "rank_basis_counts": {render_mode: 1},
+                "best_candidate": "CAND001",
+                "scores": [
+                    {
+                        "candidate_id": "CAND001",
+                        "rank_basis": "candidate_specific_render"
+                        if render_mode == "rendered"
+                        else render_mode,
+                        "render_manifest_path": "build/candidates/CAND001/render_manifest.json"
+                        if render_mode == "rendered"
+                        else None,
+                    }
+                ],
+                "candidate_refusals": refusals,
+                "metrics": {
+                    "refusal_count": refusal_count,
+                    "render_success_rate": 1.0 if render_mode == "rendered" else 0.0,
+                    "candidate_specific_rank_rate": 1.0 if render_mode == "rendered" else 0.0,
+                },
+            }
+        ],
+    }
+
+
+def test_release_gate_runs_render_aware_smoke_and_dogfood_benchmarks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    def fake_run_benchmark_suite(
+        suite: str,
+        *,
+        plugin_root: Path,
+        workspace_root: Path,
+        render: bool = False,
+    ) -> dict:
+        calls.append(
+            {
+                "suite": suite,
+                "plugin_root": plugin_root,
+                "workspace_root": workspace_root,
+                "render": render,
+            }
+        )
+        return _benchmark_payload(suite)
+
+    monkeypatch.setattr(
+        release_gate.quality_benchmark,
+        "run_benchmark_suite",
+        fake_run_benchmark_suite,
+    )
+
+    smoke_step = release_gate._run_smoke_benchmark()
+    dogfood_step = release_gate._run_dogfood_benchmark()
+
+    assert smoke_step["state"] == "passed"
+    assert dogfood_step["state"] == "passed"
+    assert [call["suite"] for call in calls] == ["smoke", "dogfood"]
+    assert all(call["render"] is True for call in calls)
+    assert all(call["plugin_root"] == release_gate.PLUGIN_ROOT for call in calls)
+    assert all(call["workspace_root"] == release_gate.PLUGIN_ROOT for call in calls)
+    assert dogfood_step["details"]["render_dependency_probe"] == {
+        "state": "pass",
+        "tools": {},
+        "missing": [],
+    }
+    assert dogfood_step["details"]["benchmark_results"] == [
+        {
+            "fixture": "dogfood_fixture",
+            "status": "completed",
+            "render_mode": "rendered",
+            "candidate_count": 1,
+            "rendered_count": 1,
+            "ranked_count": 1,
+            "best_candidate": "CAND001",
+            "metrics": {
+                "render_success_rate": 1.0,
+                "candidate_specific_rank_rate": 1.0,
+                "refusal_count": 1,
+            },
+            "rank_basis_counts": {"rendered": 1},
+            "best_candidate_render_evidence": {
+                "rank_basis": "candidate_specific_render",
+                "render_manifest_path": "build/candidates/CAND001/render_manifest.json",
+            },
+        }
+    ]
+    assert dogfood_step["details"]["residual_refusals"] == [
+        {
+            "fixture": "dogfood_fixture",
+            "refusal_count": 1,
+            "refusals": [{"code": "manual_review", "defect_id": "D1"}],
+        }
+    ]
+
+
+def test_release_gate_fails_dogfood_benchmark_with_hard_regression(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        release_gate.quality_benchmark,
+        "run_benchmark_suite",
+        lambda suite, **_kwargs: _benchmark_payload(suite, regressions=1),
+    )
+
+    step = release_gate._run_dogfood_benchmark()
+
+    assert step["state"] == "failed"
+    assert step["details"]["summary"]["regression_count"] == 1
+
+
+def test_release_gate_surfaces_dependency_missing_render_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        release_gate.quality_benchmark,
+        "run_benchmark_suite",
+        lambda suite, **_kwargs: _benchmark_payload(
+            suite,
+            render_probe_state="fail",
+            render_mode="dependency_missing",
+            refusal_count=0,
+        ),
+    )
+
+    step = release_gate._run_dogfood_benchmark()
+
+    assert step["state"] == "passed"
+    assert step["details"]["render_dependency_probe"]["state"] == "fail"
+    assert step["details"]["benchmark_results"][0]["render_mode"] == "dependency_missing"
+    assert step["details"]["benchmark_results"][0]["metrics"]["render_success_rate"] == 0.0
+    assert step["details"]["residual_refusals"] == []
 
 
 def test_release_gate_builds_and_audits_package_with_skipped_heavy_checks(tmp_path: Path) -> None:
@@ -33,6 +205,7 @@ def test_release_gate_builds_and_audits_package_with_skipped_heavy_checks(tmp_pa
     assert states["full_pytest"] == "skipped"
     assert states["ruff"] == "skipped"
     assert states["smoke_benchmark"] == "passed"
+    assert states["dogfood_benchmark"] == "passed"
     assert states["smoke_detector_generation"] == "passed"
     assert states["benchmark_baseline"] == "warning"
     assert states["package_required_paths"] == "passed"

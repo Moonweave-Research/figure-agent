@@ -302,6 +302,11 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
         "What v0.9 Still Does Not Do",
         "The command plan is the authority for batch execution",
         "It does not automatically produce top-tier art direction",
+        "dogfood_benchmark",
+        "render_mode",
+        "candidate_specific_render",
+        "dependency_missing",
+        "residual refusals",
         "It does not mutate accepted/golden/publication state",
     ]:
         assert required in playbook
