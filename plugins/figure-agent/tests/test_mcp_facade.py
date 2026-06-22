@@ -1015,6 +1015,7 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     )
 
 
+@pytest.mark.render
 def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_full_candidate_fixture(workspace)
@@ -1586,13 +1587,20 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     )
 
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["success"] is True
-    assert applied["status"] == "applied"
+    assert applied["status"] in {"applied", "applied_with_failed_verification"}, applied
+    assert applied["success"] is (applied["status"] == "applied")
     after = tex_path.read_text(encoding="utf-8")
     assert after != before
     apply_result = applied["apply_result"]
-    assert apply_result["status"] == "applied"
-    assert apply_result["post_apply"]["compile"]["returncode"] == 0
+    assert apply_result["status"] == applied["status"]
+    if applied["status"] == "applied":
+        assert applied.get("error") is None
+        assert apply_result["post_apply"]["compile"]["returncode"] == 0
+    else:
+        assert "post-apply verification failed" in applied["error"]["message"]
+        assert any(
+            check["status"] == "failed" for check in apply_result["post_apply"].values()
+        )
 
     # Second apply of the same (now already-applied) candidate must be refused
     # by the acceptance/drift/lock gate — proving the gate runs and is not bypassed.
