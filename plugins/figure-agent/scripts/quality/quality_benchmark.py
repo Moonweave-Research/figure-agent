@@ -12,6 +12,7 @@ import benchmark_contracts
 import benchmark_detector_reports
 import candidate_generator
 import candidate_rank
+import candidate_render
 import fixture_identity
 import quality_memory_index
 import runtime_paths
@@ -101,6 +102,138 @@ def _candidate_manifest_from_candidate(candidate: dict[str, Any]) -> dict[str, A
         "family": candidate.get("family"),
         "verification": {"hard_gate_state": hard_gate_state},
     }
+
+
+def _render_dependency_probe() -> dict[str, Any]:
+    tools = {
+        "lualatex": candidate_render._which("lualatex"),  # noqa: SLF001
+        "pdftocairo": candidate_render._which("pdftocairo"),  # noqa: SLF001
+    }
+    missing = [name for name, path in tools.items() if path is None]
+    return {
+        "state": "fail" if missing else "pass",
+        "tools": {
+            name: {"available": path is not None, "path": path}
+            for name, path in tools.items()
+        },
+        "missing": missing,
+    }
+
+
+def _fixture_artifact_path(example_dir: Path, relative: str) -> Path:
+    path = candidate_render.candidate_contracts.fixture_relative_path(example_dir, relative)
+    if path.is_symlink():
+        raise QualityBenchmarkError(f"sandbox_symlink_forbidden: {relative}")
+    return path
+
+
+def _load_fixture_json(example_dir: Path, relative: str | None) -> dict[str, Any] | None:
+    if relative is None:
+        return None
+    path = _fixture_artifact_path(example_dir, relative)
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise QualityBenchmarkError(f"candidate_artifact_invalid: {relative}")
+    return payload
+
+
+def _stage_status(render_manifest: dict[str, Any] | None, stage: str) -> str:
+    if not isinstance(render_manifest, dict):
+        return "unrendered"
+    stages = render_manifest.get("stages")
+    if not isinstance(stages, dict):
+        return "unrendered"
+    value = stages.get(stage)
+    if not isinstance(value, dict):
+        return "unrendered"
+    return str(value.get("status") or "unrendered")
+
+
+def _rank_basis(render_manifest: dict[str, Any] | None, *, render_requested: bool) -> str:
+    if not render_requested:
+        return "unrendered"
+    if not isinstance(render_manifest, dict):
+        return "blocked"
+    statuses = [
+        _stage_status(render_manifest, stage)
+        for stage in ("compile", "export", "evaluate")
+    ]
+    if "dependency_missing" in statuses:
+        return "dependency_missing"
+    if "failed" in statuses:
+        return "failed"
+    if "blocked" in statuses:
+        return "blocked"
+    if _stage_status(render_manifest, "evaluate") == "rendered_needs_human_review":
+        return "candidate_specific_render"
+    return "blocked"
+
+
+def _render_mode(
+    rank_basis_counts: dict[str, int],
+    *,
+    render_requested: bool,
+    candidate_count: int,
+) -> str:
+    if not render_requested:
+        return "not_requested"
+    if candidate_count == 0:
+        return "blocked"
+    if rank_basis_counts.get("dependency_missing", 0):
+        return "dependency_missing"
+    if rank_basis_counts.get("failed", 0):
+        return "failed"
+    if rank_basis_counts.get("blocked", 0):
+        return "blocked"
+    if rank_basis_counts.get("candidate_specific_render", 0) == candidate_count:
+        return "rendered"
+    return "blocked"
+
+
+def _empty_render_mode(render_requested: bool) -> str:
+    return "blocked" if render_requested else "not_requested"
+
+
+def _rank_basis_counts() -> dict[str, int]:
+    return {
+        "candidate_specific_render": 0,
+        "dependency_missing": 0,
+        "blocked": 0,
+        "failed": 0,
+        "unrendered": 0,
+    }
+
+
+def _rendered_by_candidate(
+    example_dir: Path,
+    render_result: dict[str, Any],
+) -> dict[str, tuple[dict[str, Any] | None, dict[str, Any] | None]]:
+    rendered = render_result.get("rendered")
+    if not isinstance(rendered, list):
+        return {}
+    mapped: dict[str, tuple[dict[str, Any] | None, dict[str, Any] | None]] = {}
+    for item in rendered:
+        if not isinstance(item, dict):
+            continue
+        candidate_id = item.get("candidate_id")
+        if not isinstance(candidate_id, str) or not candidate_id:
+            continue
+        candidate_manifest = _load_fixture_json(example_dir, item.get("manifest"))
+        render_manifest = _load_fixture_json(example_dir, item.get("render_manifest"))
+        if (
+            isinstance(candidate_manifest, dict)
+            and candidate_manifest.get("candidate_id") != candidate_id
+        ):
+            candidate_manifest = None
+        if (
+            isinstance(render_manifest, dict)
+            and render_manifest.get("candidate_id") != candidate_id
+        ):
+            render_manifest = None
+        mapped[candidate_id] = (candidate_manifest, render_manifest)
+    return mapped
 
 
 def _load_fixture_memory_index(example_dir: Path) -> dict[str, Any] | None:
@@ -243,6 +376,7 @@ def _run_fixture(
     *,
     paths: runtime_paths.RuntimePaths,
     render: bool,
+    render_dependency_probe: dict[str, Any] | None = None,
     suite_role: str | None = None,
 ) -> dict[str, Any]:
     example_dir = paths.examples_dir / fixture
@@ -267,7 +401,7 @@ def _run_fixture(
             "candidate_count": 0,
             "rendered_count": 0,
             "ranked_count": 0,
-            "render_mode": "none",
+            "render_mode": _empty_render_mode(render),
             "hard_gate_failures": [],
             "best_candidate": None,
             "memory_prior_used": False,
@@ -283,7 +417,7 @@ def _run_fixture(
             "candidate_count": 0,
             "rendered_count": 0,
             "ranked_count": 0,
-            "render_mode": "none",
+            "render_mode": _empty_render_mode(render),
             "hard_gate_failures": [],
             "best_candidate": None,
             "memory_prior_used": False,
@@ -297,17 +431,64 @@ def _run_fixture(
             plugin_root=paths.plugin_root,
             workspace_root=paths.workspace_root,
         )
+        candidates = [
+            candidate
+            for candidate in candidate_set.get("candidates", [])
+            if isinstance(candidate, dict)
+        ]
+        rendered_by_candidate: dict[
+            str,
+            tuple[dict[str, Any] | None, dict[str, Any] | None],
+        ] = {}
+        if render:
+            render_result = candidate_render.render_candidate_set(
+                fixture,
+                candidate_set,
+                plugin_root=paths.plugin_root,
+                workspace_root=paths.workspace_root,
+                compile=True,
+                export=True,
+                evaluate=True,
+            )
+            rendered_by_candidate = _rendered_by_candidate(example_dir, render_result)
         memory_index = _load_fixture_memory_index(example_dir)
         scores = []
-        for candidate in candidate_set.get("candidates", []):
-            if not isinstance(candidate, dict):
-                continue
+        rank_basis_counts = _rank_basis_counts()
+        for candidate in candidates:
+            candidate_id = str(candidate.get("id") or "")
+            candidate_manifest, render_manifest = rendered_by_candidate.get(
+                candidate_id,
+                (None, None),
+            )
+            basis = _rank_basis(render_manifest, render_requested=render)
+            rank_basis_counts[basis] += 1
+            score_manifest = (
+                candidate_manifest
+                if isinstance(candidate_manifest, dict)
+                else _candidate_manifest_from_candidate(candidate)
+            )
             score = candidate_rank.score_manifest(
-                _candidate_manifest_from_candidate(candidate),
+                score_manifest,
+                render_manifest=render_manifest if render else None,
                 candidate=candidate,
                 memory_index=memory_index,
                 detector_evaluation=detector_evaluation,
             )
+            score["candidate_hash"] = candidate.get("candidate_hash")
+            score["candidate_manifest_path"] = (
+                f"build/candidates/{candidate_id}/candidate_manifest.json"
+                if isinstance(candidate_manifest, dict)
+                else None
+            )
+            score["render_manifest_path"] = (
+                f"build/candidates/{candidate_id}/render_manifest.json"
+                if isinstance(render_manifest, dict)
+                else None
+            )
+            score["rank_basis"] = basis
+            source_defect = candidate.get("source_defect")
+            if isinstance(source_defect, dict):
+                score["source_defect"] = source_defect
             scores.append(score)
         scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
         hard_gate_failures = [
@@ -325,25 +506,50 @@ def _run_fixture(
             contract=contract,
             suite_role=suite_role,
         )
+        candidate_count = len(candidates)
+        rendered_count = rank_basis_counts["candidate_specific_render"]
+        render_mode = _render_mode(
+            rank_basis_counts,
+            render_requested=render,
+            candidate_count=candidate_count,
+        )
+        render_success_rate = rendered_count / candidate_count if candidate_count else 0.0
+        candidate_specific_rank_rate = rendered_count / len(scores) if scores else 0.0
         return {
             "fixture": fixture,
             "status": "failed" if detector_failure_reason else "completed",
             **({"reason": detector_failure_reason} if detector_failure_reason else {}),
             "contract": contract,
-            "candidate_count": len(candidate_set.get("candidates", [])),
-            "rendered_count": 0 if not render else 0,
+            "candidate_count": candidate_count,
+            "rendered_count": rendered_count,
             "ranked_count": len(scores),
-            "render_mode": "none" if not render else "requested_not_implemented",
+            "render_mode": render_mode,
+            "rank_basis_counts": rank_basis_counts,
+            "scores": scores,
+            "candidate_refusals": candidate_set.get("refusals", []),
             "hard_gate_failures": hard_gate_failures,
             "best_candidate": scores[0]["candidate_id"] if scores else None,
             "memory_prior_used": memory_index is not None,
             "detector_evaluation": detector_evaluation,
             "status_summary": status_payload,
             "metrics": {
+                "candidate_count": candidate_count,
+                "safe_candidate_defect_count": candidate_set.get("metrics", {}).get(
+                    "safe_candidate_defect_count",
+                    0,
+                ),
+                "safe_candidate_coverage": candidate_set.get("metrics", {}).get(
+                    "candidate_defect_coverage",
+                    0.0,
+                ),
+                "refusal_count": len(candidate_set.get("refusals", [])),
                 "compile_success_rate": 1.0 if status_payload.get("state") == "available" else 0.0,
-                "render_success_rate": 0.0,
+                "render_success_rate": render_success_rate,
+                "candidate_specific_rank_rate": candidate_specific_rank_rate,
                 "new_blocker_count": len(hard_gate_failures),
+                "stale_evidence_block_count": 0,
                 "mean_rank_score": mean_rank,
+                "regression_count": len(hard_gate_failures),
             },
         }
     except Exception as exc:  # noqa: BLE001 - one fixture must not abort the suite.
@@ -355,7 +561,7 @@ def _run_fixture(
             "candidate_count": 0,
             "rendered_count": 0,
             "ranked_count": 0,
-            "render_mode": "none",
+            "render_mode": _empty_render_mode(render),
             "hard_gate_failures": [],
             "best_candidate": None,
             "memory_prior_used": False,
@@ -431,6 +637,26 @@ def _metric(result: dict[str, Any], key: str) -> float:
         return 0.0
 
 
+def _best_candidate_has_render_evidence(result: dict[str, Any]) -> bool:
+    rank_basis = result.get("best_candidate_rank_basis")
+    render_manifest_path = result.get("best_candidate_render_manifest_path")
+    if isinstance(rank_basis, str) or isinstance(render_manifest_path, str):
+        return rank_basis == "candidate_specific_render" and bool(render_manifest_path)
+
+    best_candidate = result.get("best_candidate")
+    scores = result.get("scores")
+    if not isinstance(best_candidate, str) or not isinstance(scores, list):
+        return False
+    for score in scores:
+        if not isinstance(score, dict) or score.get("candidate_id") != best_candidate:
+            continue
+        return (
+            score.get("rank_basis") == "candidate_specific_render"
+            and bool(score.get("render_manifest_path"))
+        )
+    return False
+
+
 def _compare_fixture(
     fixture: str,
     baseline: dict[str, Any] | None,
@@ -463,6 +689,22 @@ def _compare_fixture(
         and _metric(candidate, "new_blocker_count") > _metric(baseline or {}, "new_blocker_count")
     ):
         regressions.append("new_blocker_count_increased")
+    if baseline and _metric(candidate, "render_success_rate") < _metric(
+        baseline,
+        "render_success_rate",
+    ):
+        regressions.append("render_success_rate_decreased")
+    if baseline and _metric(candidate, "candidate_specific_rank_rate") < _metric(
+        baseline,
+        "candidate_specific_rank_rate",
+    ):
+        regressions.append("candidate_specific_rank_rate_decreased")
+    if (
+        baseline
+        and _best_candidate_has_render_evidence(baseline)
+        and not _best_candidate_has_render_evidence(candidate)
+    ):
+        regressions.append("best_candidate_render_evidence_missing")
     return {
         "fixture": fixture,
         "baseline_status": baseline.get("status") if baseline else None,
@@ -533,8 +775,19 @@ def run_benchmark_suite(
     if limit is not None:
         fixtures = fixtures[:limit]
     run_id = run_id or _run_id(suite)
+    render_dependency_probe = _render_dependency_probe() if render else {
+        "state": "not_requested",
+        "tools": {},
+        "missing": [],
+    }
     results = [
-        _run_fixture(fixture, paths=paths, render=render, suite_role=suite)
+        _run_fixture(
+            fixture,
+            paths=paths,
+            render=render,
+            render_dependency_probe=render_dependency_probe,
+            suite_role=suite,
+        )
         for fixture in fixtures
     ]
     summary = {
@@ -553,6 +806,7 @@ def run_benchmark_suite(
         "suite": suite,
         "generated_at": _utc_now(),
         "fixture_count": len(fixtures),
+        "render_dependency_probe": render_dependency_probe,
         "results": results,
         "summary": summary,
         "writes": [],
