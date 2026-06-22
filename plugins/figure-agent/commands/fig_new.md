@@ -2,6 +2,9 @@
 description: Conversational interview to scaffold a new figure (schematic) and auto-fill briefing.md + spec.yaml.
 ---
 
+> **한국어 지원.** Briefing interview 질문은 한국어로 제공됩니다.
+> 명령어 설명과 인프라 문서는 영어로 유지됩니다.
+
 > **Shared entry point.** `/fig_new` scaffolds the per-figure folder for the
 > active quality-kernel workflow. After this command, author `<name>.tex`
 > directly from briefing intent plus optional `reference_image`,

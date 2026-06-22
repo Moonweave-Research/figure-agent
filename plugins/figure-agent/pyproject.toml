@@ -28,6 +28,8 @@ markers = [
 [tool.setuptools]
 packages = []
 py-modules = []
+# Intentional: figure-agent is not pip-installable.
+# It is distributed as a Claude Code plugin via claude plugin install.
 
 [dependency-groups]
 dev = [

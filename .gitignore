@@ -34,6 +34,9 @@ __pycache__/
 !plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.tif
 !plugins/figure-agent/examples/golden_trap_depth_picture/exports/golden_trap_depth_picture.png
 
+# Build artifacts (ZIP bundles from cowork/)
+dist/
+
 # Editor
 .vscode/
 .idea/
