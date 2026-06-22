@@ -1480,3 +1480,19 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
     assert any(
         diagnostic["code"] == "already_applied" for diagnostic in blocked_result["diagnostics"]
     )
+
+
+class TestVersionConsistency:
+    """SERVER_VERSION in server code matches pyproject.toml."""
+
+    def test_server_version_matches_pyproject(self) -> None:
+        import tomllib
+
+        pyproject = PLUGIN_ROOT / "pyproject.toml"
+        pyproject_version = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"][
+            "version"
+        ]
+        assert figure_agent_server.SERVER_VERSION == pyproject_version, (
+            f"figure_agent_server.SERVER_VERSION={figure_agent_server.SERVER_VERSION!r} "
+            f"≠ pyproject.toml version={pyproject_version!r}"
+        )
