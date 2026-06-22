@@ -62,7 +62,7 @@ slice set.
 ## Evidence
 
 - Milestone:
-  `docs/milestones/2026-05-31-issue-91-regression-fixture-and-dogfood-evidence.md`
+  `docs/milestones-archive/2026-05-31-issue-91-regression-fixture-and-dogfood-evidence.md`
 - Targeted command:
   `uv run pytest -q tests/test_svg_polish_delta.py tests/test_svg_semantic_diff.py tests/test_undeclared_geometry.py tests/test_critique_schema_validator.py tests/test_critique_lint.py`
 - Result: 216 passed.

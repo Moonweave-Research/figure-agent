@@ -210,7 +210,7 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
   single-fixture, queue, host critique, closeout, and release/golden operation.
 - `docs/quality-kernel-goal.md` — current product direction.
 - `docs/architecture-v0.5-per-panel-reference-workflow.md` — how `/fig_critique` works now.
-- `docs/milestones/2026-05-17-quality-state-hardening.md` — current issue record for reference contracts, readiness states, manifest hashes, and TIFF quality gates.
+- `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — current issue record for reference contracts, readiness states, manifest hashes, and TIFF quality gates.
 
 **Topic deep-dives:**
 - `docs/architecture-v0.4.2-perception-data-only.md` — the perception data pack.

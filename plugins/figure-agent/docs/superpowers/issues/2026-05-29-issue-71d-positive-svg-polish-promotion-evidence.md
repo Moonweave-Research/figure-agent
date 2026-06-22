@@ -4,7 +4,7 @@ Status: completed
 
 Completion milestone:
 
-- `docs/milestones/2026-05-29-positive-svg-polish-promotion-evidence.md`
+- `docs/milestones-archive/2026-05-29-positive-svg-polish-promotion-evidence.md`
 
 Follow-up:
 

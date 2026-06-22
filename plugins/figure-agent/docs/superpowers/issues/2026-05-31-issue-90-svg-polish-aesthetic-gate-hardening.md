@@ -506,4 +506,4 @@ Verification record:
 - Targeted tests passed for driver/loop readiness, critique schema/lint/brief,
   quality manifest, and SVG polish delta.
 - Full verification and plugin validation are recorded in
-  `docs/milestones/2026-05-31-issue-90-svg-polish-aesthetic-gate-closeout.md`.
+  `docs/milestones-archive/2026-05-31-issue-90-svg-polish-aesthetic-gate-closeout.md`.

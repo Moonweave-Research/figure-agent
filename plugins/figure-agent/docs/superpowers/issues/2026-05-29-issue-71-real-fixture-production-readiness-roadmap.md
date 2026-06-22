@@ -137,11 +137,11 @@ The 2026-05-29 sweep produced these important buckets:
 
 All child issues have milestone evidence:
 
-- 71A: `docs/milestones/2026-05-29-real-fixture-production-readiness-baseline.md`
-- 71B: `docs/milestones/2026-05-29-issue-71b-host-vision-critique-closeout.md`
-- 71C: `docs/milestones/2026-05-29-non-critique-export-closeout-rehearsal.md`
-- 71D: `docs/milestones/2026-05-29-positive-svg-polish-promotion-evidence.md`
-- 71E: `docs/milestones/2026-05-29-release-golden-publication-gate-rehearsal.md`
+- 71A: `docs/milestones-archive/2026-05-29-real-fixture-production-readiness-baseline.md`
+- 71B: `docs/milestones-archive/2026-05-29-issue-71b-host-vision-critique-closeout.md`
+- 71C: `docs/milestones-archive/2026-05-29-non-critique-export-closeout-rehearsal.md`
+- 71D: `docs/milestones-archive/2026-05-29-positive-svg-polish-promotion-evidence.md`
+- 71E: `docs/milestones-archive/2026-05-29-release-golden-publication-gate-rehearsal.md`
 
 Final judgment:
 

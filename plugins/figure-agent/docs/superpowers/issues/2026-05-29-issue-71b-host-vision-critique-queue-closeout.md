@@ -23,7 +23,7 @@ state without source edits or hidden release decisions.
 
 Completed in milestone:
 
-- `docs/milestones/2026-05-29-issue-71b-host-vision-critique-closeout.md`
+- `docs/milestones-archive/2026-05-29-issue-71b-host-vision-critique-closeout.md`
 
 Outcome:
 

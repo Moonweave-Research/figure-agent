@@ -32,7 +32,7 @@ Rationale:
 - `README.md`
 - `CHANGELOG.md`
 - `tests/test_release_contract.py`
-- `docs/milestones/2026-05-21-plugin-development-closeout-status.md`
+- `docs/milestones-archive/2026-05-21-plugin-development-closeout-status.md`
 
 ## Package Audit
 

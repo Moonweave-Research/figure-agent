@@ -6,8 +6,8 @@ Related:
 
 - Issue: `docs/superpowers/issues/2026-05-29-issue-74-post-v1-14-host-critique-refresh-queue.md`
 - Plan: `docs/superpowers/plans/2026-05-29-issue-74-post-v1-14-host-critique-refresh-queue.md`
-- Predecessor: `docs/milestones/2026-05-29-issue-71b-host-vision-critique-closeout.md` (the v1.10/v1.11 critiques refreshed here were authored in commit `42e70cf`)
-- Cause: `docs/milestones/2026-05-29-svg-polish-trigger-semantics.md` / commit `4a3e73b` "Harden SVG polish trigger semantics" (Issue 73 / v1.14)
+- Predecessor: `docs/milestones-archive/2026-05-29-issue-71b-host-vision-critique-closeout.md` (the v1.10/v1.11 critiques refreshed here were authored in commit `42e70cf`)
+- Cause: `docs/milestones-archive/2026-05-29-svg-polish-trigger-semantics.md` / commit `4a3e73b` "Harden SVG polish trigger semantics" (Issue 73 / v1.14)
 
 Status: completed
 

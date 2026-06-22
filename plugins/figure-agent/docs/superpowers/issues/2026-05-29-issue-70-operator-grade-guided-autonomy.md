@@ -92,7 +92,7 @@ behavior can be proven safer than live status/driver reruns.
 ```
 
 70A result:
-`docs/milestones/2026-05-29-guided-autonomy-readiness-matrix.md` found no
+`docs/milestones-archive/2026-05-29-guided-autonomy-readiness-matrix.md` found no
 current `/fig_run --execute` opportunity in review mode, no live patch/pending
 closeout coverage, and no positive SVG-polish route. The strongest next
 implementation candidate is 70C patch freshness hardening. 70B remains allowed
@@ -101,25 +101,25 @@ replay/resume; later slices therefore kept 70D to non-authoritative evidence
 journals and 70E to docs-only resume deferral.
 
 70C result:
-`docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` implements
+`docs/milestones-archive/2026-05-29-patch-executor-freshness-hardening.md` implements
 stale loop checkpoint refusal, iteration fixture mismatch refusal, and pending
 patch closeout refusal for the existing opt-in patch executor. This still does
 not expose patch execution through `/fig_run`.
 
 70B result:
-`docs/milestones/2026-05-29-boundary-handoff-packet.md` implements an additive
+`docs/milestones-archive/2026-05-29-boundary-handoff-packet.md` implements an additive
 `boundary_handoff` object for `/fig_run` non-complete stops. The packet is
 explanatory only: no executable resume command, no patch edit scope leakage,
 and no expansion of the runner allowlist.
 
 70D result:
-`docs/milestones/2026-05-29-fig-run-journal-contract.md` implements a
+`docs/milestones-archive/2026-05-29-fig-run-journal-contract.md` implements a
 gitignored `.scratch/fig-run-runs/` journal for `/fig_run` stdout payloads. The
 journal is non-authoritative evidence only: it records what happened, but never
 allows command replay or resume without fresh status/driver checks.
 
 70E result:
-`docs/milestones/2026-05-29-safe-resume-operator-ux-closeout.md` closes the
+`docs/milestones-archive/2026-05-29-safe-resume-operator-ux-closeout.md` closes the
 roadmap with resume deferred. Current behavior is guided autonomy, not replay:
 read the last journal if helpful, then rerun live `/fig_status` or
 `/fig_drive`, and use `/fig_run --execute` only for freshly selected

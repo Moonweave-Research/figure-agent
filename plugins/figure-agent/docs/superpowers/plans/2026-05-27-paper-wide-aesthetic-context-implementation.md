@@ -288,7 +288,7 @@ Expected: targeted tests pass and ruff is clean.
 
 **Files:**
 - Modify: `plugins/figure-agent/docs/superpowers/issues/2026-05-27-issue-55-paper-wide-aesthetic-context.md`
-- Create or modify: `plugins/figure-agent/docs/milestones/2026-05-27-paper-wide-aesthetic-context-closeout.md`
+- Create or modify: `plugins/figure-agent/docs/milestones-archive/2026-05-27-paper-wide-aesthetic-context-closeout.md`
 
 - [ ] **Step 1: Run synthetic dogfood without mutating real figure source**
 

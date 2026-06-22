@@ -162,7 +162,7 @@ Expected: PASS.
 ### Task 3: Add The Human-Readable Milestone
 
 **Files:**
-- Create: `plugins/figure-agent/docs/milestones/2026-05-28-real-fixture-audit-adoption.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-28-real-fixture-audit-adoption.md`
 
 - [ ] **Step 1: Write the milestone**
 

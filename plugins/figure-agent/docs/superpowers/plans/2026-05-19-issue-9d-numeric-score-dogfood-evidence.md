@@ -17,7 +17,7 @@ Read first:
 - `plugins/figure-agent/docs/superpowers/issues/2026-05-19-issue-9d-numeric-score-dogfood-evidence.md`
 - `plugins/figure-agent/docs/superpowers/issues/2026-05-19-issue-9-journal-grade-benchmark-scoring.md`
 - `plugins/figure-agent/docs/superpowers/specs/2026-05-19-issue-9b-numeric-quality-score-calibration-design.md`
-- `plugins/figure-agent/docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md`
+- `plugins/figure-agent/docs/milestones-archive/2026-05-19-fresh-reaudit-dogfood-evidence.md`
 - `plugins/figure-agent/commands/fig_critique.md`
 
 ## Dirty Worktree Guard
@@ -40,7 +40,7 @@ Do not stage or modify that file for Issue 9D unless the user explicitly asks.
 
 **Files:**
 
-- Create: `plugins/figure-agent/docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md`
 
 - [ ] **Step 1: Add the milestone header**
 
@@ -123,7 +123,7 @@ Expected: exit 0.
 
 **Files:**
 
-- Modify: `plugins/figure-agent/docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md`
+- Modify: `plugins/figure-agent/docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md`
 - May modify through slash command only: `plugins/figure-agent/examples/<name>/critique.md`
 - May modify through scaffold only: `plugins/figure-agent/examples/<name>/critique_adjudication.yaml`
 
@@ -183,7 +183,7 @@ Expected for a valid score run:
 - [ ] **Step 4: Append evidence row**
 
 Append the full row to
-`docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md`.
+`docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md`.
 
 - [ ] **Step 5: Repeat until 5 fixture attempts are recorded**
 
@@ -194,7 +194,7 @@ blocker row.
 
 **Files:**
 
-- Modify: `plugins/figure-agent/docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md`
+- Modify: `plugins/figure-agent/docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md`
 
 - [ ] **Step 1: Score usefulness review**
 

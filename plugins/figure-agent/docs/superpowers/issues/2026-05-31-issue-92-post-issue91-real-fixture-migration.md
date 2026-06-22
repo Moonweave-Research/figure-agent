@@ -90,7 +90,7 @@ Out of scope:
 ## Closeout
 
 - Milestone:
-  `docs/milestones/2026-05-31-post-issue91-real-fixture-migration.md`
+  `docs/milestones-archive/2026-05-31-post-issue91-real-fixture-migration.md`
 - Defect fixed during dogfood:
   `docs/superpowers/issues/2026-05-31-issue-93-content-fresh-export-status-next-ux.md`
 - Verification:

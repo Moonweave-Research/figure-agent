@@ -44,7 +44,7 @@ questions remain `needs_human`.
 ## Dogfood
 
 Recorded in
-`../../milestones/2026-05-20-auto-adjudication-policy-dogfood.md`.
+`../../milestones-archive/2026-05-20-auto-adjudication-policy-dogfood.md`.
 
 ## Out of Scope
 

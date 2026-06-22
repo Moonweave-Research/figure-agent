@@ -61,7 +61,7 @@ Out of scope:
 ## Completion
 
 Completed in milestone:
-`docs/milestones/2026-05-29-non-critique-export-closeout-rehearsal.md`.
+`docs/milestones-archive/2026-05-29-non-critique-export-closeout-rehearsal.md`.
 
 The rehearsal found one driver/runner contract gap and split it into
 `docs/superpowers/issues/2026-05-29-issue-72-align-export-driver-runner-contract.md`.

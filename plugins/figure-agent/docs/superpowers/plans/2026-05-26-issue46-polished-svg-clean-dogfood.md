@@ -36,7 +36,7 @@ new route behavior speculatively.
 ### Task 3: Milestone Evidence
 
 **Files:**
-- Add: `docs/milestones/2026-05-26-polished-svg-clean-dogfood.md`
+- Add: `docs/milestones-archive/2026-05-26-polished-svg-clean-dogfood.md`
 
 Record:
 

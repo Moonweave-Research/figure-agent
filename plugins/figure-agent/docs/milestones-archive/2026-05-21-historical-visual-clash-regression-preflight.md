@@ -93,7 +93,7 @@ Repository:
 
 Source of truth:
 - `plugins/figure-agent/docs/superpowers/issues/2026-05-21-issue-21b-historical-visual-clash-regression-dogfood.md`
-- `plugins/figure-agent/docs/milestones/2026-05-21-historical-visual-clash-regression-preflight.md`
+- `plugins/figure-agent/docs/milestones-archive/2026-05-21-historical-visual-clash-regression-preflight.md`
 
 Scratch fixture:
 - `.scratch/issue-21b/preflight-20260521-212042/fig1_visual_clash_regression`

@@ -12,7 +12,7 @@
 
 ## File Structure
 
-- Create: `docs/milestones/2026-05-31-post-issue91-real-fixture-migration.md`
+- Create: `docs/milestones-archive/2026-05-31-post-issue91-real-fixture-migration.md`
   - Records commands, fixture classifications, and any follow-up issue links.
 - Modify: `docs/superpowers/issues/2026-05-31-issue-92-post-issue91-real-fixture-migration.md`
   - Close status and checklist after evidence is complete.
@@ -138,7 +138,7 @@ it as `host_critique_required`, not `plugin_defect`.
 
 - [x] **Step 1: Create milestone**
 
-Create `docs/milestones/2026-05-31-post-issue91-real-fixture-migration.md`
+Create `docs/milestones-archive/2026-05-31-post-issue91-real-fixture-migration.md`
 with:
 
 ```markdown
@@ -242,7 +242,7 @@ Update `docs/superpowers/issues/2026-05-31-issue-92-post-issue91-real-fixture-mi
 Status: completed
 
 Closeout:
-- milestone: docs/milestones/2026-05-31-post-issue91-real-fixture-migration.md
+- milestone: docs/milestones-archive/2026-05-31-post-issue91-real-fixture-migration.md
 - verification: <commands and results>
 - protected mutation: no source/export/golden/accepted/publication/SVG mutation
 ```

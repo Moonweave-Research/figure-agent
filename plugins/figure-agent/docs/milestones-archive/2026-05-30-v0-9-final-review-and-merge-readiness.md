@@ -46,7 +46,7 @@ scan`; no secret value or private key was present.
 Finding: closeout status still said final full verification was pending after
 the full suite had passed.
 
-Fix: update `docs/milestones/2026-05-21-plugin-development-closeout-status.md`
+Fix: update `docs/milestones-archive/2026-05-21-plugin-development-closeout-status.md`
 with the exact v0.9 verification result.
 
 Post-fix status: clean. Manifest, `pyproject.toml`, `uv.lock`, README,

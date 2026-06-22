@@ -89,6 +89,6 @@ remains the existing state vector and loop checkpoint contracts.
   changing `/fig_drive` action selection, action vocabulary, stop boundaries,
   or mutation behavior.
 - Updated command docs and added
-  `docs/milestones/2026-05-28-single-next-action-ux.md`.
+  `docs/milestones-archive/2026-05-28-single-next-action-ux.md`.
 - No figure source, export, accepted, golden, or generated build artifact was
   changed.

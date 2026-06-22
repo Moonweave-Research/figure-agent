@@ -143,5 +143,5 @@ Commits:
 - `fc3a07a` Dogfood SVG polish recipe workflow
 
 The 44E fixture did not start from a clean polish-ready release route on this
-branch; see `../../milestones/2026-05-25-svg-polish-recipe-dogfood.md` for the
+branch; see `../../milestones-archive/2026-05-25-svg-polish-recipe-dogfood.md` for the
 route precondition caveat and the two CLI defects found during dogfood.

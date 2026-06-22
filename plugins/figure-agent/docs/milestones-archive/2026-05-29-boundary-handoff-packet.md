@@ -8,7 +8,7 @@ Related issue:
 Status: implemented
 
 Dogfood evidence:
-`docs/milestones/2026-05-29-boundary-handoff-dogfood.md`
+`docs/milestones-archive/2026-05-29-boundary-handoff-dogfood.md`
 
 ## Goal
 

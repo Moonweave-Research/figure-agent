@@ -21,7 +21,7 @@ Implementation commits:
 - `8a865a6` — Issue 43F, fixture-level aesthetic lever grammar dogfood.
 
 Issue 43F dogfood evidence:
-`../../milestones/2026-05-24-aesthetic-lever-grammar-dogfood.md`.
+`../../milestones-archive/2026-05-24-aesthetic-lever-grammar-dogfood.md`.
 
 The dogfood upgraded one intentionally selected real fixture to
 `aesthetic_intent.yaml` v2, refreshed its critique to schema v1.11, and verified

@@ -28,11 +28,11 @@ the way we expect?
 
 ## File Structure
 
-- Create: `plugins/figure-agent/docs/milestones/2026-05-18-fig-loop-dogfood-evidence-matrix.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-18-fig-loop-dogfood-evidence-matrix.md`
   - Records the seven scenario outcomes and the readiness verdict.
 - Modify: `plugins/figure-agent/docs/superpowers/specs/2026-05-17-fig-loop-contract-design.md`
   - Adds Issue 5A.2 as a required checkpoint between Issue 5A.1 and Issue 5B.
-- Modify: `plugins/figure-agent/docs/milestones/2026-05-18-fig-loop-dogfood-usability-findings.md`
+- Modify: `plugins/figure-agent/docs/milestones-archive/2026-05-18-fig-loop-dogfood-usability-findings.md`
   - Adds a pointer from the earlier dogfood notes to the evidence matrix.
 
 No runner behavior changes are required for this slice.
@@ -56,7 +56,7 @@ The matrix must cover at least these states:
 
 **Files:**
 
-- Create: `plugins/figure-agent/docs/milestones/2026-05-18-fig-loop-dogfood-evidence-matrix.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-18-fig-loop-dogfood-evidence-matrix.md`
 
 - [x] **Step 1: Run temporary-root evidence scenarios**
 
@@ -100,7 +100,7 @@ real-fixture prerequisite to ten apply-handoff dogfood runs.
 
 **Files:**
 
-- Modify: `plugins/figure-agent/docs/milestones/2026-05-18-fig-loop-dogfood-usability-findings.md`
+- Modify: `plugins/figure-agent/docs/milestones-archive/2026-05-18-fig-loop-dogfood-usability-findings.md`
 
 - [x] **Step 1: Add a follow-up pointer**
 

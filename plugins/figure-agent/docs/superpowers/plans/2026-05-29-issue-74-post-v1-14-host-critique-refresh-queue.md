@@ -16,7 +16,7 @@
   - Host vision writes refreshed critique content.
 - Modify: `plugins/figure-agent/examples/<fixture>/critique_adjudication.yaml`
   - Codex/Claude syncs or scaffolds adjudication against the refreshed critique.
-- Create: `plugins/figure-agent/docs/milestones/2026-05-29-post-v1-14-host-critique-refresh-queue.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-29-post-v1-14-host-critique-refresh-queue.md`
   - Records commands, evidence, fixture outcomes, reviews, and verification.
 - Modify: `plugins/figure-agent/docs/superpowers/issues/2026-05-29-issue-74-post-v1-14-host-critique-refresh-queue.md`
   - Set status to completed and link the milestone after closeout.
@@ -161,7 +161,7 @@ Expected: no command stops first on `critique_stale`. Any remaining stop is a re
 Create:
 
 ```text
-plugins/figure-agent/docs/milestones/2026-05-29-post-v1-14-host-critique-refresh-queue.md
+plugins/figure-agent/docs/milestones-archive/2026-05-29-post-v1-14-host-critique-refresh-queue.md
 ```
 
 Required sections:
@@ -255,7 +255,7 @@ git add plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/critique.m
   plugins/figure-agent/examples/golden_trap_depth_picture/critique_adjudication.yaml \
   plugins/figure-agent/examples/fig1_overview_v2/critique.md \
   plugins/figure-agent/examples/fig1_overview_v2/critique_adjudication.yaml \
-  plugins/figure-agent/docs/milestones/2026-05-29-post-v1-14-host-critique-refresh-queue.md \
+  plugins/figure-agent/docs/milestones-archive/2026-05-29-post-v1-14-host-critique-refresh-queue.md \
   plugins/figure-agent/docs/superpowers/issues/2026-05-29-issue-74-post-v1-14-host-critique-refresh-queue.md
 git commit -m "Refresh post-v1.14 host critique queue"
 ```

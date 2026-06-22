@@ -269,7 +269,7 @@ it does not patch source or update critique/adjudication files.
 ## Issue 5A.2 Direction: Dogfood Evidence Matrix
 
 The follow-up checkpoint is recorded in
-`docs/milestones/2026-05-18-fig-loop-dogfood-evidence-matrix.md`.
+`docs/milestones-archive/2026-05-18-fig-loop-dogfood-evidence-matrix.md`.
 
 That matrix covers safe candidate, unresolved, resolved, ambiguous,
 mechanism-blocked, human-gated, and regressed loop states. Its judgment is

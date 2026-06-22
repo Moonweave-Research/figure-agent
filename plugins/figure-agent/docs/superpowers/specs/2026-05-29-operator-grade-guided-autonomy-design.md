@@ -69,7 +69,7 @@ The readiness matrix should answer:
 If the evidence shows a different bottleneck, 70B/70D/70E should be deferred.
 
 Current 70A evidence:
-`docs/milestones/2026-05-29-guided-autonomy-readiness-matrix.md` found that
+`docs/milestones-archive/2026-05-29-guided-autonomy-readiness-matrix.md` found that
 review-mode `/fig_run` would execute zero steps across the eight spec-backed
 fixtures because all sampled fixtures stopped at host or closeout boundaries.
 It also found no live patch/pending-closeout shape and no positive SVG-polish
@@ -80,12 +80,12 @@ Later slices kept 70D to non-authoritative evidence journals and 70E to
 docs-only resume deferral rather than command replay.
 
 Current 70C implementation:
-`docs/milestones/2026-05-29-patch-executor-freshness-hardening.md` hardens the
+`docs/milestones-archive/2026-05-29-patch-executor-freshness-hardening.md` hardens the
 existing opt-in patch executor so it refuses stale loop checkpoints, iteration
 fixture mismatch, and pending patch closeout evidence before mutation.
 
 Current 70B implementation:
-`docs/milestones/2026-05-29-boundary-handoff-packet.md` adds an explanatory
+`docs/milestones-archive/2026-05-29-boundary-handoff-packet.md` adds an explanatory
 `boundary_handoff` object to `/fig_run` non-complete results. It derives from
 existing driver/runner evidence, omits executable resume commands, and defers
 patch/source-mutation scope.

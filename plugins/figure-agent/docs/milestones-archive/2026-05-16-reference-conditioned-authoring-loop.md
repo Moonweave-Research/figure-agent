@@ -555,7 +555,7 @@ git diff --cached --stat
 
 **Files:**
 
-- Create: `plugins/figure-agent/docs/milestones/2026-05-16-reference-conditioned-authoring-loop-decision.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-16-reference-conditioned-authoring-loop-decision.md`
 
 **Steps:**
 
@@ -575,8 +575,8 @@ git diff --cached --stat
 
 ```bash
 git status --short
-rg "Decision|Evidence|Next implementation" plugins/figure-agent/docs/milestones/2026-05-16-reference-conditioned-authoring-loop-decision.md
-rg "manual artifacts affected|parser|tooling" plugins/figure-agent/docs/milestones/2026-05-16-reference-conditioned-authoring-loop-decision.md
+rg "Decision|Evidence|Next implementation" plugins/figure-agent/docs/milestones-archive/2026-05-16-reference-conditioned-authoring-loop-decision.md
+rg "manual artifacts affected|parser|tooling" plugins/figure-agent/docs/milestones-archive/2026-05-16-reference-conditioned-authoring-loop-decision.md
 git diff --cached --stat
 ```
 

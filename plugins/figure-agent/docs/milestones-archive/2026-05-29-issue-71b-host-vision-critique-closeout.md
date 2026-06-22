@@ -6,7 +6,7 @@ Related issues:
 
 - `docs/superpowers/issues/2026-05-29-issue-71-real-fixture-production-readiness-roadmap.md`
 - `docs/superpowers/issues/2026-05-29-issue-71a-real-fixture-baseline-and-queue-freeze.md`
-- Milestone: `docs/milestones/2026-05-29-real-fixture-production-readiness-baseline.md` (71A baseline that assigned these fixtures to 71B)
+- Milestone: `docs/milestones-archive/2026-05-29-real-fixture-production-readiness-baseline.md` (71A baseline that assigned these fixtures to 71B)
 
 Status: completed
 

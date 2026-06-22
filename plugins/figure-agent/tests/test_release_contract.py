@@ -414,7 +414,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     closeout = (
         REPO_ROOT
         / "docs"
-        / "milestones"
+        / "milestones-archive"
         / "2026-05-21-plugin-development-closeout-status.md"
     ).read_text()
     issue_48 = (
