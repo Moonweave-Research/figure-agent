@@ -1,0 +1,38 @@
+name: fig4_trap_energy_diagram
+title: "Fig 4 — Bimodal trap-state energy landscape of sulfur polymer (schematic)"
+style_profile: polymer-paper
+undeclared_geometry_profile: schematic
+semantic_assertions:
+  - id: shallow-above-deep
+    relation: above
+    subject: shallow
+    reference: deep
+panels:
+  - id: A
+    caption: Energy-level diagram — mobility edge, valence band, shallow tail traps and deep S–S-radical traps in the gap
+    bbox_pdf_cm: [0.30, 0.40, 10.6, 9.60]
+  - id: B
+    caption: Bimodal trap density of states g(Et) aligned to the same energy axis (shallow + deep peaks)
+    bbox_pdf_cm: [10.9, 1.80, 17.40, 8.20]
+notes: |
+  figure-agent figure #4 — 3rd diagnostic E2E run (2026-06-20). Genre: ENERGY-
+  LEVEL diagram + DOS — distinct from fig1 (concept grid), fig2 (design-space map),
+  fig3 (process timeline). SCHEMATIC ONLY (energy values are illustrative ranges,
+  not measured ticks).
+
+  Chosen to STRESS lever B (figure-vs-claim consistency): an energy diagram is a
+  bundle of RELATIONAL/quantitative claims that no geometric detector can check —
+  if any is reversed the figure is silently WRONG. Declared relational invariants
+  (a deterministic semantic-assertion check would guard these):
+   - shallow traps lie ABOVE (shallower than) deep traps; depths order preserved.
+   - mobility edge (Ec) above valence band (Ev); gap Eg ≈ 2 eV (poly(S-r-DIB) ~2.08).
+   - shallow = tail states near Ec (0.1–0.3 eV, theory: physical kinks);
+     deep = S–S radical defects (>1 eV, theory: chemical). Mark schematic.
+   - g(Et) is BIMODAL; its shallow peak aligns to the shallow band and its deep
+     peak to the deep levels (real-space levels == spectroscopic DOS peaks).
+   - colour convention shared with fig1: shallow = blue-ish, deep = red.
+
+  KNOWN SOURCE TENSION to confirm (a real lever-B catch): theory says deep >1 eV
+  but ISPD-measured CvS E_t ≈ 0.74–0.80 eV. Figure stays qualitative ("deep")
+  to avoid committing to a number that contradicts a source. Per Fig 1(e) caption
+  hazard: never present a schematic depth ratio as a measured result.
