@@ -1,0 +1,21 @@
+name: fig2_trap_design_space
+title: "Fig 2 — Composition-tunable charge-trap design space beyond canonical dielectrics (schematic)"
+style_profile: polymer-paper
+panels:
+  - id: A
+    caption: Origin of deep traps — S–S homolytic-cleavage radical + low-ε wide Coulomb well vs conventional shallow well
+    bbox_pdf_cm: [0.20, 0.10, 4.95, 9.55]
+  - id: B
+    caption: Composition-tunable charge-trap design space — sulfur S60→S85 trajectory beyond the conventional-dielectric (PI/PDMS/PET) cluster
+    bbox_pdf_cm: [5.10, 0.20, 17.45, 6.00]
+  - id: C
+    caption: Kinetic charge-trapping signature (schematic) — I(t)~t^-n high-n persistence vs conventional; n vs sulfur content
+    bbox_pdf_cm: [5.10, 6.55, 17.45, 9.30]
+notes: |
+  figure-agent figure #2 — first end-to-end dogfood (2026-06-20). SCHEMATIC ONLY.
+  Story slot: Option 1 (discovery-forward) per 2026-06-20 decision — Fig 2 leads
+  with the composition-tunable trap discovery; ISPD spectroscopy → Fig 3,
+  mechanism synthesis → Fig 4 (re-deal of the v10 figure architecture).
+  Evidence icons in Panel C are number-free qualitative shapes (no data plot) —
+  honors the "schematic 같은 그래프" constraint. Bboxes approximate (first pass);
+  expected to move during element-iteration.
