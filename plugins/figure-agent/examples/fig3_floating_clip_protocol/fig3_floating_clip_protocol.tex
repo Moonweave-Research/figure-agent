@@ -1,0 +1,146 @@
+% fig3_floating_clip_protocol — floating-clip measurement protocol (schematic).
+% figure-agent figure #3 (E2E + diagnostic run, 2026-06-20). SCHEMATIC ONLY.
+% 4-phase timeline: Pole -> Float -> +V drive -> -V drive, with a qualitative V(t)
+% waveform strip on top. Polarity-dependent bending is the point: P3/P4 deflect
+% in OPPOSITE directions.
+% ORIENTATION: cantilever is VERTICAL (clip on TOP, polymer hangs DOWN), per the
+% lab/experiment convention. Horizontal is WRONG (AI default-orientation bias).
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{decorations.pathmorphing}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{7}{8.4}\selectfont},
+  beam/.style={line width=2.6pt, cAmber!80!black, line cap=round},
+  trapCharge/.style={circle, fill=cBlue!70, draw=cBlue!55!black, line width=0.3pt,
+                     inner sep=0pt, minimum size=1.7mm},
+  injArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray!70!black, line width=0.6pt},
+  forceArr/.style={-{Stealth[length=6pt,width=4.5pt]}, cRed!75!black, line width=1.4pt},
+  waveLine/.style={line width=1.2pt, cRed!70!black},
+  thinArr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, cGray!70!black, line width=0.6pt},
+  phaseLabel/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont, text=cGray!90!black},
+  bStrong/.style={font=\sffamily\bfseries\fontsize{7}{8.4}\selectfont},
+  bMute/.style={font=\sffamily\itshape\fontsize{7}{8.4}\selectfont, text=cGray!80!black},
+]
+
+% ============================ TOP: V(t) waveform strip =====================
+\draw[thinArr] (1.00,6.95) -- (1.00,8.70);
+\node[bMute, anchor=south, rotate=90] at (0.72,7.85) {applied $V$};
+\draw[line width=0.5pt, cGray!50, dash pattern=on 2pt off 1.5pt] (1.00,7.50) -- (17.25,7.50);
+\node[bMute, anchor=east] at (0.95,7.50) {$0$};
+\draw[waveLine]
+  (1.05,8.35) -- (4.65,8.35) -- (4.65,7.50) -- (8.90,7.50)
+  -- (8.90,8.05) -- (13.15,8.05) -- (13.15,6.95) -- (17.20,6.95);
+
+% phase dividers (light)
+\foreach \dx in {4.65, 8.90, 13.15}{%
+  \draw[line width=0.4pt, cGray!30, dash pattern=on 1.5pt off 1.5pt] (\dx,0.75) -- (\dx,6.55);}
+
+% phase titles
+\node[phaseLabel] at (2.50,6.65) {1 \, Pole};
+\node[phaseLabel] at (6.75,6.65) {2 \, Float};
+\node[phaseLabel] at (11.00,6.65) {3 \, $+V$ drive};
+\node[phaseLabel] at (15.25,6.65) {4 \, $-V$ drive};
+
+% legend (bottom-left, clear of apparatus)
+\node[trapCharge] at (0.55,0.95) {};
+\node[bMute, anchor=west] at (0.73,0.95) {trapped charge};
+
+% ===== reusable vertical apparatus is drawn explicitly per phase below =====
+% Convention per phase: clip/clamp on TOP, polymer cantilever hangs DOWN,
+% drive electrode is a vertical plate to the RIGHT (air gap between).
+
+% ---------------------------- PHASE 1 — Pole (sx=2.0) ---------------------
+% clip clamp (top) + ground
+\fill[cGray!55, draw=cGray!70!black, line width=0.4pt] (1.55,5.48) rectangle (2.45,5.78);
+\node[bMute, anchor=east] at (1.50,5.63) {clip};
+\draw[line width=0.7pt, cGray!70!black] (2.00,5.78) -- (2.00,6.22);
+\draw[line width=0.7pt, cGray!70!black] (1.83,6.22) -- (2.17,6.22);
+\draw[line width=0.7pt, cGray!70!black] (1.88,6.13) -- (2.12,6.13);
+\draw[line width=0.7pt, cGray!70!black] (1.93,6.04) -- (2.07,6.04);
+% polymer cantilever hangs DOWN (neutral)
+\draw[beam] (2.00,5.48) -- (2.00,2.75);
+\node[bMute, rotate=90, anchor=south] at (1.55,3.95) {polymer cantilever};
+% drive electrode (vertical plate, right) + air gap + injection
+\fill[cGray!35, draw=cGray!65!black, line width=0.5pt] (3.35,2.95) rectangle (3.58,5.30);
+\node[bStrong, text=cGray!80!black, rotate=90] at (3.47,4.55) {HV};
+\node[bMute, anchor=west, text width=1.7cm] at (3.66,4.20) {drive\\electrode};
+\node[bMute] at (2.82,5.05) {air gap};
+\draw[injArr] (3.30,4.45) -- (2.18,4.45);
+\draw[injArr] (3.30,3.55) -- (2.18,3.55);
+\node[bMute, anchor=west] at (2.55,3.05) {inject};
+% trapped charges
+\node[trapCharge] at (2.00,4.55) {};
+\node[trapCharge] at (2.00,3.90) {};
+\node[trapCharge] at (2.00,3.25) {};
+% bottom label
+\node[bStrong] at (2.50,1.95) {Pole};
+\node[bMute, anchor=north, text width=3.8cm, align=center] at (2.50,1.70)
+  {clip grounded\\inject + trap charge};
+
+% ---------------------------- PHASE 2 — Float (sx=6.25) -------------------
+\fill[cGray!55, draw=cGray!70!black, line width=0.4pt] (5.80,5.48) rectangle (6.70,5.78);
+% float switch (open) above clamp
+\draw[line width=0.7pt, cGray!70!black] (6.25,5.78) -- (6.25,6.00);
+\fill[cGray!70!black] (6.25,6.02) circle (0.028);
+\fill[cGray!70!black] (6.25,6.24) circle (0.028);
+\draw[line width=0.7pt, cGray!70!black] (6.25,6.02) -- (6.43,6.17);
+\draw[line width=0.7pt, cGray!70!black] (6.25,6.24) -- (6.25,6.42);
+\node[bMute, anchor=west] at (6.43,6.22) {float};
+\draw[beam] (6.25,5.48) -- (6.25,2.75);
+\fill[cGray!35, draw=cGray!65!black, line width=0.5pt] (7.60,2.95) rectangle (7.83,5.30);
+\node[trapCharge] at (6.25,4.55) {};
+\node[trapCharge] at (6.25,3.90) {};
+\node[trapCharge] at (6.25,3.25) {};
+\node[bMute, anchor=west] at (6.45,3.25) {locked};
+\node[bStrong] at (6.75,1.95) {Float};
+\node[bMute, anchor=north, text width=3.8cm, align=center] at (6.75,1.70)
+  {clip disconnected\\charge locked};
+
+% ---------------------------- PHASE 3 — +V drive (sx=10.5) ----------------
+\fill[cGray!55, draw=cGray!70!black, line width=0.4pt] (10.05,5.48) rectangle (10.95,5.78);
+\draw[line width=0.7pt, cGray!70!black] (10.50,5.78) -- (10.50,6.00);
+\fill[cGray!70!black] (10.50,6.02) circle (0.028);
+\fill[cGray!70!black] (10.50,6.24) circle (0.028);
+\draw[line width=0.7pt, cGray!70!black] (10.50,6.02) -- (10.68,6.17);
+\draw[line width=0.7pt, cGray!70!black] (10.50,6.24) -- (10.50,6.42);
+\node[bMute, anchor=west] at (10.68,6.22) {float};
+% cantilever deflects RIGHT toward + electrode (curvature + tilted tip)
+\draw[beam] (10.50,5.48) .. controls (10.55,4.55) and (10.80,3.55) .. (11.22,2.82);
+\fill[cGray!35, draw=cGray!65!black, line width=0.5pt] (11.85,2.95) rectangle (12.08,5.30);
+\node[bStrong, text=cRed!70!black, rotate=90] at (11.97,4.45) {$+$};
+\node[trapCharge] at (10.56,4.55) {};
+\node[trapCharge] at (10.71,3.88) {};
+\node[trapCharge] at (10.98,3.22) {};
+\draw[forceArr] (11.05,3.55) -- (11.62,3.55);
+\node[bMute, text=cRed!70!black, anchor=south] at (11.35,3.62) {$qE$};
+\node[bStrong] at (11.00,1.95) {$+V$ drive};
+\node[bMute, anchor=north, text width=3.9cm, align=center] at (11.00,1.70)
+  {Coulomb force $\rightarrow$ bends right};
+
+% ---------------------------- PHASE 4 — -V drive (sx=14.75) ---------------
+\fill[cGray!55, draw=cGray!70!black, line width=0.4pt] (14.30,5.48) rectangle (15.20,5.78);
+\draw[line width=0.7pt, cGray!70!black] (14.75,5.78) -- (14.75,6.00);
+\fill[cGray!70!black] (14.75,6.02) circle (0.028);
+\fill[cGray!70!black] (14.75,6.24) circle (0.028);
+\draw[line width=0.7pt, cGray!70!black] (14.75,6.02) -- (14.93,6.17);
+\draw[line width=0.7pt, cGray!70!black] (14.75,6.24) -- (14.75,6.42);
+\node[bMute, anchor=west] at (14.93,6.22) {float};
+% cantilever deflects LEFT (opposite — polarity-dependent)
+\draw[beam] (14.75,5.48) .. controls (14.70,4.55) and (14.45,3.55) .. (14.03,2.82);
+\fill[cGray!35, draw=cGray!65!black, line width=0.5pt] (16.10,2.95) rectangle (16.33,5.30);
+\node[bStrong, text=cBlue!65!black, rotate=90] at (16.22,4.45) {$-$};
+\node[trapCharge] at (14.69,4.55) {};
+\node[trapCharge] at (14.54,3.88) {};
+\node[trapCharge] at (14.27,3.22) {};
+\draw[forceArr] (14.20,3.55) -- (13.63,3.55);
+\node[bMute, text=cRed!70!black, anchor=south] at (13.90,3.62) {$qE$};
+\node[bStrong] at (15.25,1.95) {$-V$ drive};
+\node[bMute, anchor=north, text width=3.9cm, align=center] at (15.25,1.70)
+  {force reversed $\rightarrow$ bends left};
+
+\end{tikzpicture}%
+}
+\end{document}
