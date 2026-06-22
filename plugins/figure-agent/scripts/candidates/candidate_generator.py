@@ -19,6 +19,9 @@ from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.candidate-set.v1"
 ZERO_HASH = "sha256:" + "0" * 64
+COORDINATE_OFFSET_DEFECT_CLASSES = frozenset(
+    {"label_offset", "text_overlap", "whitespace_balance"}
+)
 
 
 class CandidateGeneratorError(ValueError):
@@ -85,8 +88,9 @@ def _label_offset_candidate(
     line: str,
     replacement: str,
     apply_authority: str,
+    source_defect: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    candidate = {
         "id": "CAND001",
         "target": {"panel": "unknown", "subregion": "label-a"},
         "edit_class": "label_offset",
@@ -119,13 +123,16 @@ def _label_offset_candidate(
         "apply_authority": apply_authority,
         "blocked_if": ["semantic_invariant_failed", "render_failed"],
     }
+    if source_defect is not None:
+        candidate["source_defect"] = source_defect
+    return candidate
 
 
 def _defect_target_line(
     name: str,
     paths: runtime_paths.RuntimePaths,
     lines: list[str],
-) -> tuple[int, str, str] | None:
+) -> tuple[int, str, str, dict[str, Any]] | None:
     ledger = quality_defect_ledger.build_quality_defect_ledger(
         name,
         plugin_root=paths.plugin_root,
@@ -138,6 +145,9 @@ def _defect_target_line(
         if not isinstance(defect, dict):
             continue
         if (defect.get("patchability") or {}).get("state") != "safe_candidate":
+            continue
+        defect_class = str(defect.get("defect_class") or "")
+        if defect_class not in COORDINATE_OFFSET_DEFECT_CLASSES:
             continue
         selector = defect.get("selector_hint")
         if not isinstance(selector, dict) or selector.get("kind") != "line_range":
@@ -155,7 +165,14 @@ def _defect_target_line(
         replacement = bounded_coordinate_offset.offset_first_coordinate(line)
         if replacement is None:
             continue
-        return line_number, line, replacement
+        source_defect = {
+            "id": str(defect.get("id") or ""),
+            "source": str(defect.get("source") or ""),
+            "defect_class": defect_class,
+            "evidence": defect.get("evidence") or [],
+            "source_fingerprint": str(defect.get("source_fingerprint") or ""),
+        }
+        return line_number, line, replacement, source_defect
     return None
 
 
@@ -204,10 +221,8 @@ def build_candidate_set(
     lines = text.splitlines()
     candidates: list[dict[str, Any]] = []
     target = _defect_target_line(name, paths, lines)
-    if target is None:
-        target = candidate_families._first_offsettable_line(lines)
     if target is not None:
-        line_number, line, replacement = target
+        line_number, line, replacement, source_defect = target
         candidates.append(
             _label_offset_candidate(
                 name=name,
@@ -216,6 +231,7 @@ def build_candidate_set(
                 line=line,
                 replacement=replacement,
                 apply_authority=apply_authority,
+                source_defect=source_defect,
             )
         )
 

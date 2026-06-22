@@ -564,6 +564,8 @@ def render_candidate_set(
             "risk": candidate.get("risk"),
             "rollback": candidate.get("rollback"),
         }
+        if isinstance(candidate.get("source_defect"), dict):
+            manifest["source_defect"] = candidate["source_defect"]
         path = out_dir / "candidate_manifest.json"
         _write_sandbox_file(
             path,

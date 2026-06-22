@@ -282,7 +282,7 @@ def test_generator_delegates_panel_family_without_breaking_default(tmp_path: Pat
     assert payload["candidates"][0]["family"] == "energy-trap-alignment"
 
 
-def test_generator_default_emits_bounded_candidate_for_bare_coordinate(
+def test_generator_default_requires_safe_defect_for_bare_coordinate(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -293,14 +293,8 @@ def test_generator_default_emits_bounded_candidate_for_bare_coordinate(
         workspace_root=workspace,
     )
 
-    assert payload["refusals"] == []
-    candidate = payload["candidates"][0]
-    assert candidate["id"] == "CAND001"
-    assert candidate["edit_class"] == "label_offset"
-    assert candidate["apply_authority"] == "review_only"
-    assert candidate["selector"]["kind"] == "line_range_with_hash"
-    assert candidate["operations"][0]["kind"] == "replace_text"
-    assert candidate["operations"][0]["original"] != candidate["operations"][0]["replacement"]
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "no_supported_candidate"}]
 
 
 def test_real_panel_c_energy_family_produces_candidate() -> None:

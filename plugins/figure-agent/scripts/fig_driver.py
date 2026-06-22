@@ -811,13 +811,13 @@ def _select_action(
             ),
         )
 
-    if critique in ("MISSING", "STALE"):
+    if critique in ("BRIEFING_REQUIRED", "MISSING", "STALE"):
         return make(
             ACTION_RUN_CRITIQUE,
             safe_command=command_mod.critique_command(name),
             stop_boundary=STOP_HOST_LLM_CRITIQUE,
             reason=(
-                "reference-grounded critique is missing or stale; host Claude "
+                "grounded critique is missing or stale; host Claude "
                 "must run /fig_critique to refresh critique.md."
             ),
         )

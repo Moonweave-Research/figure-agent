@@ -347,6 +347,58 @@ def test_hash_fresh_critique_becomes_stale_when_visual_clash_report_changes(
     assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_STALE
 
 
+def test_reference_free_rich_briefing_with_detector_signal_requires_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "briefed_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "briefing.md").write_text(
+        """## §1. Topic
+
+Explain transient-current trapping in a compact mechanism schematic.
+
+## §3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefed_fig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "briefed_fig.pdf").write_bytes(b"%PDF")
+    (build / "visual_clash.json").write_text(
+        '{"fixture":"briefed_fig","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert compute_critique_state(fig_dir, "briefed_fig") == status_mod.CRITIQUE_BRIEFING_REQUIRED
+    assert result["critique_state"] == status_mod.CRITIQUE_BRIEFING_REQUIRED
+    assert "/fig_critique briefed_fig" in result["next"]
+    assert result["status_explanation"]["first_blocker"]["code"] == "critique_briefing_required"
+
+
+def test_reference_free_thin_briefing_with_detector_signal_does_not_require_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "thin_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "briefing.md").write_text("## §1. Topic\n\nSchematic.\n", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "visual_clash.json").write_text(
+        '{"fixture":"thin_fig","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+
+    assert compute_critique_state(fig_dir, "thin_fig") == status_mod.CRITIQUE_NOT_REQUIRED
+
+
 def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()

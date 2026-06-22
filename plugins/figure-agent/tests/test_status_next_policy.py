@@ -143,7 +143,7 @@ def test_stage_3_stale_critique_requires_critique_before_export() -> None:
 
     assert hint == (
         "run /fig_critique demo before /fig_export demo"
-        " because reference-grounded pre-export critique is missing or stale."
+        " because grounded pre-export critique is missing or stale."
     )
 
 

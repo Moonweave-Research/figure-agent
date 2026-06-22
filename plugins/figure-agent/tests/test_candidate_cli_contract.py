@@ -36,6 +36,22 @@ panels:
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    build = fixture / "build"
+    build.mkdir()
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -516,7 +532,12 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     apply_payload = json.loads(apply.stdout)
     assert apply_payload["schema"] == "figure-agent.candidate-apply-result.v1"
     assert apply_payload["status"] in {"applied", "applied_with_failed_verification"}
-    assert set(apply_payload["post_apply"]) == {"compile", "export", "status"}
+    assert set(apply_payload["post_apply"]) == {
+        "compile",
+        "detector_recheck",
+        "export",
+        "status",
+    }
     assert (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").is_file()
 
 

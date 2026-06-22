@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import types
 from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
@@ -367,6 +368,131 @@ def test_apply_candidate_runs_post_apply_verification_by_default(
     assert result["status"] == "applied"
     assert calls == ["candidate_demo"]
     assert result["post_apply"]["compile"]["status"] == "success"
+
+
+def test_apply_candidate_records_failed_detector_recheck(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_fingerprint = "sha256:" + "a" * 64
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored_manifest["source_defect"] = {
+        "id": "QD001",
+        "source_fingerprint": source_fingerprint,
+    }
+    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    def fake_post_apply(_name, _paths):
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [{"id": "QD999", "source_fingerprint": source_fingerprint}]}
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "applied_with_failed_verification"
+    assert result["post_apply"]["detector_recheck"] == {
+        "status": "failed",
+        "reason": "source_defect_still_detected",
+        "source_defect_id": "QD001",
+        "source_defect_fingerprint": source_fingerprint,
+    }
+
+
+def test_apply_candidate_detector_recheck_ignores_colliding_source_defect_id(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture, manifest = _accepted_candidate_fixture(workspace)
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    stored_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stored_manifest["source_defect"] = {
+        "id": "QD001",
+        "source_fingerprint": "sha256:" + "a" * 64,
+    }
+    manifest_path.write_text(json.dumps(stored_manifest, sort_keys=True) + "\n", encoding="utf-8")
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="Rendered evidence reviewed.",
+        workspace_root=workspace,
+    )
+
+    def fake_post_apply(_name, _paths):
+        return {
+            "compile": {"status": "success", "returncode": 0},
+            "export": {"status": "success", "returncode": 0},
+            "status": {"status": "success", "returncode": 0},
+        }
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "defects": [
+                {"id": "QD001", "source_fingerprint": "sha256:" + "b" * 64},
+            ]
+        }
+
+    monkeypatch.setattr(candidate_apply, "_post_apply_checks", fake_post_apply)
+    monkeypatch.setitem(
+        sys.modules,
+        "quality_defect_ledger",
+        types.SimpleNamespace(build_quality_defect_ledger=fake_ledger),
+    )
+
+    result = candidate_apply.apply_candidate(
+        "candidate_demo",
+        manifest,
+        workspace_root=workspace,
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        acceptance_path=Path("build/candidates/CAND001/acceptance.json"),
+        apply=True,
+        post_apply=True,
+    )
+
+    assert result["status"] == "applied"
+    assert result["post_apply"]["detector_recheck"] == {
+        "status": "success",
+        "reason": "source_defect_not_detected",
+        "source_defect_id": "QD001",
+        "source_defect_fingerprint": "sha256:" + "a" * 64,
+    }
 
 
 def test_post_apply_export_does_not_force_golden_roll_forward(

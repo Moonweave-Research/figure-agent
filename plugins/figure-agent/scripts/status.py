@@ -13,6 +13,7 @@ import runtime_paths
 import status_next_policy
 import status_readiness_policy
 from audit_evidence_summary import summarize_audit_evidence
+from briefing_grounding import has_reference_free_grounding_context
 from critique_lint import lint_critique
 from export_freshness import EXPORT_FRESH, EXPORT_STALE, compute_export_state
 from inputs import parse_spec
@@ -44,6 +45,7 @@ STYLE_LOCK_PATH = (
 
 _EXPORT_EXTS = (".pdf", ".svg", ".tif", ".tiff", ".png")
 CRITIQUE_NOT_REQUIRED = "NOT_REQUIRED"
+CRITIQUE_BRIEFING_REQUIRED = "BRIEFING_REQUIRED"
 CRITIQUE_MISSING = "MISSING"
 CRITIQUE_STALE = "STALE"
 CRITIQUE_FRESH = "FRESH"
@@ -100,7 +102,6 @@ def _critique_source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Pa
 
 
 def compute_critique_state(example_dir: Path, name: str, spec: dict | None = None) -> str:
-    """Return NOT_REQUIRED/MISSING/STALE/FRESH for reference-grounded critique."""
     spec_path = example_dir / "spec.yaml"
     if spec is None:
         if not spec_path.exists():
@@ -113,7 +114,11 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     has_figure_reference = declared_figure_reference_path(example_dir, spec) is not None
     has_panel_reference = bool(participating_panel_reference_paths(example_dir, spec))
     if not has_figure_reference and not has_panel_reference:
-        return CRITIQUE_NOT_REQUIRED
+        if not has_reference_free_grounding_context(example_dir):
+            return CRITIQUE_NOT_REQUIRED
+        critique_path = example_dir / "critique.md"
+        if not critique_path.is_file():
+            return CRITIQUE_BRIEFING_REQUIRED
 
     critique_path = example_dir / "critique.md"
     if not critique_path.is_file():
@@ -140,6 +145,8 @@ def _append_critique_check(
     checks.append(("critique", critique_state.lower()))
     if critique_state == CRITIQUE_MISSING:
         notes.append("critique_missing")
+    elif critique_state == CRITIQUE_BRIEFING_REQUIRED:
+        notes.append("critique_briefing_required")
     elif critique_state == CRITIQUE_STALE:
         notes.append("critique_stale")
     elif critique_state == CRITIQUE_REFERENCE_MISSING:

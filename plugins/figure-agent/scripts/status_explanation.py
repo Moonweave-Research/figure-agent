@@ -124,6 +124,18 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     )
     _append_if(
         fixture_freshness,
+        critique == "BRIEFING_REQUIRED",
+        code="critique_briefing_required",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "briefing-grounded critique.md is missing; run host vision critique "
+            "against explicit briefing rules and detector evidence."
+        ),
+        next_command=_command(name, "/fig_critique"),
+        manual=True,
+    )
+    _append_if(
+        fixture_freshness,
         critique == "STALE",
         code="critique_stale",
         category=FIXTURE_FRESHNESS,

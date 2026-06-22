@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import quality_defect_ledger  # noqa: E402
@@ -230,6 +232,150 @@ def _write_visual_clash_critique(fixture: Path, *, kept_visual_clash_ref: str) -
     )
 
 
+def _write_keep_adjudication(fixture: Path, finding_id: str = "C001") -> None:
+    critique = fixture / "critique.md"
+    (fixture / "critique_adjudication.yaml").write_text(
+        "schema: figure-agent.critique-adjudication.v1\n"
+        f"fixture: {fixture.name}\n"
+        f"source_critique_hash: {file_sha256(critique)}\n"
+        "decisions:\n"
+        f"  - finding_id: {finding_id}\n"
+        "    decision: keep\n"
+        "    reason: Bound this finding to a mechanical candidate.\n"
+        f"    patch_target: examples/{fixture.name}/{fixture.name}.tex lines 1-1\n"
+        "    evidence: Human reviewer kept this finding for candidate search.\n",
+        encoding="utf-8",
+    )
+
+
+def _write_single_finding_critique(
+    fixture: Path,
+    *,
+    category: str = "label_placement",
+    tex_lines: str = "    - 1\n    - 1\n",
+) -> None:
+    (fixture / "critique.md").write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.10\n"
+        f"fixture: {fixture.name}\n"
+        "findings:\n"
+        "  - id: C001\n"
+        "    severity: MAJOR\n"
+        f"    category: {category}\n"
+        "    tex_lines:\n"
+        f"{tex_lines}"
+        "    observation: Label is too close to another element.\n"
+        "    suggested_fix: Move the label by a bounded amount.\n"
+        "    status: open\n"
+        "panels: []\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+
+
+def test_quality_defect_ledger_ingests_kept_bounded_critique_finding(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_single_finding_critique(fixture)
+    _write_keep_adjudication(fixture)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    defect = ledger["defects"][0]
+    assert defect["source"] == "critique_adjudication"
+    assert defect["selector_hint"] == {"kind": "line_range", "value": "1:1"}
+    assert defect["patchability"]["state"] == "safe_candidate"
+    assert defect["evidence"] == [
+        {
+            "uri": "figure://quality_demo/critique/finding/C001",
+            "node_id": "C001",
+            "adjudication_decision": "keep",
+        }
+    ]
+
+
+def test_quality_defect_ledger_suppresses_dismissed_critique_finding(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_single_finding_critique(fixture)
+    _write_keep_adjudication(fixture)
+    adjudication = fixture / "critique_adjudication.yaml"
+    adjudication.write_text(
+        adjudication.read_text(encoding="utf-8").replace("decision: keep", "decision: dismiss"),
+        encoding="utf-8",
+    )
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(defect.get("source") != "critique_adjudication" for defect in ledger["defects"])
+
+
+def test_quality_defect_ledger_suppresses_line_less_critique_finding(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_single_finding_critique(fixture, tex_lines="    - 1\n")
+    _write_keep_adjudication(fixture)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(defect.get("source") != "critique_adjudication" for defect in ledger["defects"])
+
+
+def test_quality_defect_ledger_suppresses_structural_critique_finding(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_single_finding_critique(fixture, category="structural")
+    _write_keep_adjudication(fixture)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(defect.get("source") != "critique_adjudication" for defect in ledger["defects"])
+
+
+@pytest.mark.parametrize("category", ["palette", "style"])
+def test_quality_defect_ledger_suppresses_palette_and_style_critique_findings(
+    tmp_path: Path,
+    category: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_fixture(workspace)
+    _write_single_finding_critique(fixture, category=category)
+    _write_keep_adjudication(fixture)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert all(defect.get("source") != "critique_adjudication" for defect in ledger["defects"])
+
+
 def test_quality_defect_ledger_ingests_adjudicated_visual_clash(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_fixture(workspace)
@@ -249,6 +395,7 @@ def test_quality_defect_ledger_ingests_adjudicated_visual_clash(tmp_path: Path) 
     _write_empty_detector_reports(fixture)
     _write_crop_manifest(fixture)
     _write_visual_clash_critique(fixture, kept_visual_clash_ref="VC001")
+    _write_keep_adjudication(fixture)
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(
         "quality_demo",
@@ -266,6 +413,7 @@ def test_quality_defect_ledger_ingests_adjudicated_visual_clash(tmp_path: Path) 
         {
             "uri": "figure://quality_demo/audit/visual-clash",
             "node_id": "VC001",
+            "critique_finding_id": "C001",
         }
     ]
 
@@ -297,6 +445,7 @@ def test_quality_defect_ledger_visual_clash_suppressed_when_audit_evidence_incom
     _write_empty_detector_reports(fixture)
     # Deliberately NO crop manifest -> audit evidence is incomplete.
     _write_visual_clash_critique(fixture, kept_visual_clash_ref="VC001")
+    _write_keep_adjudication(fixture)
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(
         "quality_demo",
@@ -397,6 +546,7 @@ def test_quality_defect_ledger_drops_false_positive_visual_clash(tmp_path: Path)
         "# critique\n",
         encoding="utf-8",
     )
+    _write_keep_adjudication(fixture)
 
     ledger = quality_defect_ledger.build_quality_defect_ledger(
         "quality_demo",

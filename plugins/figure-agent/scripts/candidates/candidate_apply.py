@@ -358,6 +358,52 @@ def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str
     return checks
 
 
+def _post_apply_detector_recheck(
+    name: str,
+    paths: runtime_paths.RuntimePaths,
+    manifest: dict[str, Any],
+) -> dict[str, Any] | None:
+    source_defect = manifest.get("source_defect")
+    if not isinstance(source_defect, dict):
+        return None
+    source_defect_id = source_defect.get("id")
+    if not isinstance(source_defect_id, str) or not source_defect_id.strip():
+        return None
+    source_fingerprint = source_defect.get("source_fingerprint")
+    if not isinstance(source_fingerprint, str) or not source_fingerprint.startswith("sha256:"):
+        return {
+            "status": "failed",
+            "reason": "source_defect_fingerprint_missing",
+            "source_defect_id": source_defect_id,
+        }
+    import quality_defect_ledger
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        name,
+        plugin_root=paths.plugin_root,
+        workspace_root=paths.workspace_root,
+    )
+    defects = ledger.get("defects")
+    if not isinstance(defects, list):
+        return {"status": "failed", "reason": "quality_defect_ledger_missing"}
+    for defect in defects:
+        if not isinstance(defect, dict):
+            continue
+        if defect.get("source_fingerprint") == source_fingerprint:
+            return {
+                "status": "failed",
+                "reason": "source_defect_still_detected",
+                "source_defect_id": source_defect_id,
+                "source_defect_fingerprint": source_fingerprint,
+            }
+    return {
+        "status": "success",
+        "reason": "source_defect_not_detected",
+        "source_defect_id": source_defect_id,
+        "source_defect_fingerprint": source_fingerprint,
+    }
+
+
 def apply_candidate(
     name: str,
     manifest: dict[str, Any],
@@ -494,6 +540,11 @@ def apply_candidate(
                 }
             )
         post_apply_result = _post_apply_checks(name, paths) if post_apply else {}
+        detector_recheck = (
+            _post_apply_detector_recheck(name, paths, manifest) if post_apply else None
+        )
+        if detector_recheck is not None:
+            post_apply_result["detector_recheck"] = detector_recheck
         result_status = (
             "applied_with_failed_verification"
             if any(item.get("status") != "success" for item in post_apply_result.values())

@@ -11,6 +11,7 @@ from typing import Any
 
 import audit_evidence_graph
 import audit_evidence_summary
+import critique_finding_gate
 import fixture_identity
 import quality_patch_policy
 import runtime_paths
@@ -23,6 +24,21 @@ SCHEMA = "figure-agent.quality-defect-ledger.v1"
 def _canonical_hash(payload: Any) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return "sha256:" + sha256(encoded).hexdigest()
+
+
+def _source_fingerprint(defect: dict[str, Any]) -> str:
+    affected_files = defect.get("affected_files")
+    evidence = defect.get("evidence")
+    selector_hint = defect.get("selector_hint")
+    return _canonical_hash(
+        {
+            "affected_files": affected_files if isinstance(affected_files, list) else [],
+            "defect_class": str(defect.get("defect_class") or ""),
+            "evidence": evidence if isinstance(evidence, list) else [],
+            "selector_hint": selector_hint if isinstance(selector_hint, dict) else {},
+            "source": str(defect.get("source") or ""),
+        }
+    )
 
 
 def _fixture_file_node(graph: dict[str, Any], node_id: str) -> dict[str, Any] | None:
@@ -194,18 +210,6 @@ def _undeclared_geometry_defects(
     return defects
 
 
-def _two_int_tex_lines(finding: dict[str, Any]) -> tuple[int, int] | None:
-    tex_lines = finding.get("tex_lines")
-    if (
-        not isinstance(tex_lines, list)
-        or len(tex_lines) != 2
-        or not all(isinstance(value, int) and not isinstance(value, bool) for value in tex_lines)
-    ):
-        return None
-    start, end = tex_lines
-    return start, end
-
-
 def _kept_visual_clash_finding_ids(frontmatter: dict[str, Any]) -> dict[str, str]:
     """Map each kept (not false-positive) visual_clash candidate to its linked finding id.
 
@@ -251,6 +255,7 @@ def _visual_clash_defects(example_dir: Path, name: str, graph_hash: str) -> list
         findings = critique_findings(frontmatter)
     except CritiqueContractError:
         return []
+    eligible_findings = critique_finding_gate.kept_bounded_findings(example_dir)
     finding_by_id: dict[str, dict[str, Any]] = {}
     for index, finding in enumerate(findings):
         try:
@@ -269,24 +274,23 @@ def _visual_clash_defects(example_dir: Path, name: str, graph_hash: str) -> list
         if linked_finding_id is None:
             continue
         finding = finding_by_id.get(linked_finding_id)
-        if finding is None:
+        eligible = eligible_findings.get(linked_finding_id)
+        if finding is None or eligible is None:
             continue
-        tex_lines = _two_int_tex_lines(finding)
-        if tex_lines is None:
-            # Never fabricate a line for a line-less adjudication.
-            continue
+        tex_lines = eligible["tex_lines"]
         start, end = tex_lines
         defect = {
-            "source": "deterministic_audit",
+            "source": "critique_adjudication",
             "evidence": [
                 {
                     "uri": f"figure://{name}/audit/visual-clash",
                     "node_id": candidate_id.strip(),
+                    "critique_finding_id": linked_finding_id,
                 }
             ],
             "severity": "action",
             "owner": "tool",
-            "defect_class": "text_overlap",
+            "defect_class": eligible["defect_class"],
             "affected_files": [f"examples/{name}/{name}.tex"],
             "freshness": {
                 "status_input_hash": "sha256:" + "0" * 64,
@@ -305,6 +309,49 @@ def _visual_clash_defects(example_dir: Path, name: str, graph_hash: str) -> list
     return defects
 
 
+def _critique_finding_defects(
+    example_dir: Path,
+    name: str,
+    graph_hash: str,
+    skip_finding_ids: set[str],
+) -> list[dict[str, Any]]:
+    source_hashes = _source_hashes(example_dir, name)
+    defects: list[dict[str, Any]] = []
+    for finding_id, eligible in critique_finding_gate.kept_bounded_findings(example_dir).items():
+        if finding_id in skip_finding_ids:
+            continue
+        start, end = eligible["tex_lines"]
+        decision = eligible["decision"]
+        defect = {
+            "source": "critique_adjudication",
+            "evidence": [
+                {
+                    "uri": f"figure://{name}/critique/finding/{finding_id}",
+                    "node_id": finding_id,
+                    "adjudication_decision": "keep",
+                }
+            ],
+            "severity": "action",
+            "owner": "tool",
+            "defect_class": eligible["defect_class"],
+            "affected_files": [f"examples/{name}/{name}.tex"],
+            "freshness": {
+                "status_input_hash": "sha256:" + "0" * 64,
+                "critique_input_hash": "sha256:" + "0" * 64,
+                "audit_evidence_graph_hash": graph_hash,
+                "source_hashes": source_hashes,
+            },
+            "selector_hint": {"kind": "line_range", "value": f"{start}:{end}"},
+            "suggested_change": {
+                "operation_type": "tikz_coordinate_adjust",
+                "summary": str(decision.get("reason") or "Bounded critique finding candidate"),
+                "patch": "",
+            },
+        }
+        defects.append(defect)
+    return defects
+
+
 def _detector_defects(example_dir: Path, name: str, graph_hash: str) -> list[dict[str, Any]]:
     # summarize_audit_evidence is the existing detector-adjudication gate: it reads
     # build/*.json and (when critique.md exists) the micro_defect accounting. It yields
@@ -315,8 +362,22 @@ def _detector_defects(example_dir: Path, name: str, graph_hash: str) -> list[dic
     # recommended_action and does not depend on this gate.)
     summary = audit_evidence_summary.summarize_audit_evidence(example_dir)
     defects = _undeclared_geometry_defects(example_dir, name, graph_hash)
+    visual_clash_defects: list[dict[str, Any]] = []
     if summary.get("detector_feedback", {}).get("visual_clash", {}).get("linked_defect_count"):
-        defects += _visual_clash_defects(example_dir, name, graph_hash)
+        visual_clash_defects = _visual_clash_defects(example_dir, name, graph_hash)
+    visual_clash_finding_ids = {
+        str(evidence.get("critique_finding_id"))
+        for defect in visual_clash_defects
+        for evidence in defect.get("evidence", [])
+        if isinstance(evidence, dict) and isinstance(evidence.get("critique_finding_id"), str)
+    }
+    defects += _critique_finding_defects(
+        example_dir,
+        name,
+        graph_hash,
+        visual_clash_finding_ids,
+    )
+    defects += visual_clash_defects
     for index, defect in enumerate(defects, start=1):
         defect["id"] = f"QD{index:03d}"
         _normalize_detector_defect(defect)
@@ -365,6 +426,10 @@ def build_quality_defect_ledger(
             defects = (
                 [text_defect] if text_defect is not None else [_first_blocker_defect(graph, name)]
             )
+
+    for defect in defects:
+        if isinstance(defect, dict):
+            defect["source_fingerprint"] = _source_fingerprint(defect)
 
     payload = {
         "schema": SCHEMA,

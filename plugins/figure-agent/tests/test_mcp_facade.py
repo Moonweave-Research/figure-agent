@@ -80,7 +80,12 @@ def _write_minimal_fixture(workspace: Path, name: str = "smoke_trap_demo") -> Pa
     return fixture
 
 
-def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+def _write_candidate_fixture(
+    workspace: Path,
+    name: str = "candidate_demo",
+    *,
+    with_candidate_defect: bool = True,
+) -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text("name: candidate_demo\n", encoding="utf-8")
@@ -89,7 +94,65 @@ def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> P
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    if with_candidate_defect:
+        _write_undeclared_candidate_defect(fixture)
     return fixture
+
+
+def _write_undeclared_candidate_defect(fixture: Path) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_keep_critique_gate(fixture: Path, tex_line: int) -> None:
+    critique = fixture / "critique.md"
+    critique.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.10\n"
+        f"fixture: {fixture.name}\n"
+        "findings:\n"
+        "  - id: C001\n"
+        "    severity: MAJOR\n"
+        "    category: label_placement\n"
+        "    tex_lines:\n"
+        f"    - {tex_line}\n"
+        f"    - {tex_line}\n"
+        "    observation: Label is too close to a neighboring element.\n"
+        "    suggested_fix: Move the label by a bounded amount.\n"
+        "    status: open\n"
+        "panels: []\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    critique_hash = "sha256:" + sha256(critique.read_bytes()).hexdigest()
+    (fixture / "critique_adjudication.yaml").write_text(
+        "schema: figure-agent.critique-adjudication.v1\n"
+        f"fixture: {fixture.name}\n"
+        f"source_critique_hash: {critique_hash}\n"
+        "decisions:\n"
+        "  - finding_id: C001\n"
+        "    decision: keep\n"
+        "    reason: Human kept this bounded finding for candidate search.\n"
+        f"    patch_target: examples/{fixture.name}/{fixture.name}.tex "
+        f"lines {tex_line}-{tex_line}\n"
+        "    evidence: critique.md finding C001 reviewed.\n",
+        encoding="utf-8",
+    )
 
 
 def _write_full_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -114,6 +177,8 @@ def _write_full_candidate_fixture(workspace: Path, name: str = "candidate_demo")
         "\\end{document}\n",
         encoding="utf-8",
     )
+    _write_undeclared_candidate_defect(fixture)
+    _write_keep_critique_gate(fixture, tex_line=5)
     return fixture
 
 
@@ -895,7 +960,7 @@ def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
-    fixture = _write_candidate_fixture(workspace)
+    fixture = _write_candidate_fixture(workspace, with_candidate_defect=False)
     before_tex = (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
 
     result = _run_mcp_server(
@@ -1101,9 +1166,16 @@ def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> 
     assert accepted["success"] is True, json.dumps(accepted, indent=2, sort_keys=True)
     assert accepted["acceptance"]["path"] == "build/candidates/CAND001/acceptance.json"
     assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
-    assert applied["success"] is True
-    assert applied["status"] == "applied"
+    assert applied["status"] in {"applied", "applied_with_failed_verification"}, json.dumps(
+        applied,
+        indent=2,
+        sort_keys=True,
+    )
+    assert applied["success"] is (applied["status"] == "applied")
+    assert applied["apply_result"]["status"] == applied["status"]
     assert applied["apply_result"]["post_apply"]["compile"]["returncode"] == 0
+    if applied["status"] == "applied_with_failed_verification":
+        assert "post-apply verification failed" in applied["error"]["message"]
     assert tex_path.read_text(encoding="utf-8") != before
 
 
@@ -1263,7 +1335,7 @@ def test_mcp_candidate_manifest_resource_rejects_sandbox_ancestor_symlink(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
-    fixture = _write_candidate_fixture(workspace)
+    fixture = _write_candidate_fixture(workspace, with_candidate_defect=False)
     exports = fixture / "exports"
     exports.mkdir()
     build = fixture / "build"
@@ -1500,6 +1572,7 @@ def _build_apply_ready_candidate(workspace: Path, name: str = "candidate_demo") 
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    _write_undeclared_candidate_defect(fixture)
     candidates = _run_fig_agent_cli(
         workspace,
         "candidates",

@@ -33,9 +33,29 @@ panels:
     return fixture
 
 
+def _write_undeclared_candidate_defect(fixture: Path, source_line: int = 1) -> None:
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": source_line,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    _fixture(workspace)
+    fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
 
     payload = candidate_generator.build_candidate_set(
         "candidate_demo",
@@ -53,6 +73,32 @@ def test_candidates_include_required_provenance_fields(tmp_path: Path) -> None:
         "fig-agent status candidate_demo --json",
     ]
     assert candidate["apply_authority"] == "apply_eligible"
+    source_defect = candidate["source_defect"]
+    assert source_defect.pop("source_fingerprint").startswith("sha256:")
+    assert source_defect == {
+        "id": "QD001",
+        "source": "deterministic_audit",
+        "defect_class": "text_overlap",
+        "evidence": [
+            {
+                "uri": "figure://candidate_demo/audit/undeclared-geometry",
+                "node_id": "UG001",
+            }
+        ],
+    }
+
+
+def test_candidates_do_not_emit_blind_first_offsettable_fallback(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "no_supported_candidate"}]
 
 
 def test_candidates_do_not_emit_for_missing_source(tmp_path: Path) -> None:
@@ -86,7 +132,8 @@ def test_candidate_output_rejects_fixture_path_escape(tmp_path: Path) -> None:
 
 def test_candidate_output_accepts_fixture_relative_output_path(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    _fixture(workspace)
+    fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
 
     payload = candidate_generator.build_candidate_set(
         "candidate_demo",
@@ -138,6 +185,7 @@ def test_candidate_generator_refuses_symlinked_fixture_dir(tmp_path: Path) -> No
 def test_candidates_downgrade_apply_authority_from_intent_floor(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
     (fixture / "spec.yaml").write_text(
         """
 name: candidate_demo
@@ -202,3 +250,40 @@ def test_candidate_targets_ledger_defect_line_not_first_offsettable(tmp_path: Pa
     assert candidate["selector"]["kind"] == "line_range_with_hash"
     assert candidate["selector"]["start_line"] == 3
     assert candidate["selector"]["end_line"] == 3
+
+
+def test_candidate_generator_skips_line_weight_style_safe_defect(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_ledger(_name, **_kwargs):
+        return {
+            "defects": [
+                {
+                    "id": "QD001",
+                    "source": "critique_adjudication",
+                    "defect_class": "line_weight_style",
+                    "source_fingerprint": "sha256:" + "a" * 64,
+                    "evidence": [{"node_id": "C001"}],
+                    "selector_hint": {"kind": "line_range", "value": "1:1"},
+                    "patchability": {"state": "safe_candidate"},
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "no_supported_candidate"}]
