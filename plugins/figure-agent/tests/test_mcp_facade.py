@@ -33,6 +33,7 @@ def _run_mcp_server(
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
+    timeout: int = 10,
 ) -> subprocess.CompletedProcess[str]:
     merged_env = os.environ.copy()
     merged_env.update(env or {})
@@ -51,7 +52,7 @@ def _run_mcp_server(
         text=True,
         capture_output=True,
         check=False,
-        timeout=10,
+        timeout=timeout,
     )
 
 
@@ -86,6 +87,31 @@ def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> P
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
     (fixture / f"{name}.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def _write_full_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\n"
+        "panels:\n"
+        "  - id: C\n"
+        "    caption: Energy diagram\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]\n",
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(
+        "\\documentclass[border=8pt]{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\n"
+        "\\begin{tikzpicture}\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\end{tikzpicture}\n"
+        "\\end{document}\n",
         encoding="utf-8",
     )
     return fixture
@@ -262,10 +288,24 @@ def test_mcp_candidate_apply_readiness_schema_is_read_only(tmp_path: Path) -> No
 
     response = _response_lines(result)[0]
     tools = {tool["name"]: tool for tool in response["result"]["tools"]}
+    materialize_schema = tools["figure_agent_materialize_candidate_set"]["inputSchema"]
     schema = tools["figure_agent_candidate_apply_readiness"]["inputSchema"]
+    accept_schema = tools["figure_agent_accept_candidate"]["inputSchema"]
+    assert materialize_schema["additionalProperties"] is False
+    assert materialize_schema["required"] == ["name"]
+    assert materialize_schema["properties"]["candidate_set"]["type"] == "string"
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["name", "candidate_id", "candidate_set"]
     assert schema["properties"]["candidate_set"]["type"] == "string"
+    assert accept_schema["additionalProperties"] is False
+    assert accept_schema["required"] == [
+        "name",
+        "candidate_id",
+        "decision",
+        "reviewer",
+        "rationale",
+    ]
+    assert accept_schema["properties"]["decision"]["enum"] == ["accept"]
 
 
 def test_mcp_evidence_and_closeout_schemas_are_read_only(tmp_path: Path) -> None:
@@ -973,6 +1013,97 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert review["review_packet"]["render_manifest_path"] == (
         "build/candidates/CAND001/render_manifest.json"
     )
+
+
+def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_full_candidate_fixture(workspace)
+    tex_path = fixture / "candidate_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_compile",
+                    "arguments": {"name": "candidate_demo", "strict": False},
+                },
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_materialize_candidate_set",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=2,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_render_candidates",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/candidate_set.json",
+                        "candidate_id": "CAND001",
+                        "compile": True,
+                        "export": True,
+                        "crop_panel": "C",
+                        "evaluate": True,
+                    },
+                },
+                request_id=3,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_accept_candidate",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_id": "CAND001",
+                        "candidate_set": "build/candidates/candidate_set.json",
+                        "decision": "accept",
+                        "reviewer": "mcp-test",
+                        "rationale": "Rendered candidate evidence reviewed in the MCP-only chain.",
+                    },
+                },
+                request_id=4,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_apply_candidate",
+                    "arguments": {"name": "candidate_demo", "candidate_id": "CAND001"},
+                },
+                request_id=5,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+        timeout=90,
+    )
+
+    compiled, materialized, rendered, accepted, applied = [
+        _tool_payload(response) for response in _response_lines(result)
+    ]
+    assert compiled["schema"] == "figure-agent.mcp.compile.v1"
+    assert compiled["success"] is True
+    assert materialized["schema"] == "figure-agent.mcp.materialize-candidate-set.v1"
+    assert materialized["success"] is True
+    assert materialized["candidate_set_path"] == "build/candidates/candidate_set.json"
+    assert (fixture / "build" / "candidates" / "candidate_set.json").is_file()
+    assert rendered["schema"] == "figure-agent.mcp.render-candidates.v1"
+    assert rendered["success"] is True
+    assert (fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json").is_file()
+    assert accepted["schema"] == "figure-agent.mcp.accept-candidate.v1"
+    assert accepted["success"] is True, json.dumps(accepted, indent=2, sort_keys=True)
+    assert accepted["acceptance"]["path"] == "build/candidates/CAND001/acceptance.json"
+    assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
+    assert applied["success"] is True
+    assert applied["status"] == "applied"
+    assert applied["apply_result"]["post_apply"]["compile"]["returncode"] == 0
+    assert tex_path.read_text(encoding="utf-8") != before
 
 
 def test_mcp_panel_candidate_tools_and_resources(tmp_path: Path) -> None:

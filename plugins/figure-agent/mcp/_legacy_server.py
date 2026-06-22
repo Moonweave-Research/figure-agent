@@ -880,6 +880,81 @@ def _propose_improvements(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _materialize_candidate_set(arguments: dict[str, Any]) -> dict[str, Any]:
+    schema = "figure-agent.mcp.materialize-candidate-set.v1"
+    started = time.monotonic()
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root, name = resolved
+    candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
+    panel_id = arguments.get("panel_id")
+    family = arguments.get("family")
+    if panel_id is not None and not _is_safe_panel_id(panel_id):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("invalid_request", "panel_id must match [A-Za-z0-9_-]+"),
+        )
+    if family is not None and not _is_safe_fixture_name(family):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("invalid_fixture_name", "family must be a single candidate family name"),
+        )
+    command = ["candidates", name, "--json", "--output", candidate_set]
+    if panel_id is not None:
+        command.extend(["--panel", str(panel_id)])
+    if family is not None:
+        command.extend(["--family", str(family)])
+    with _fixture_lock(workspace_root, name, "materialize_candidate_set") as lock:
+        if lock is not None:
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=command,
+            workspace_root=workspace_root,
+            timeout_seconds=120,
+            timeout_message="fig-agent candidates timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", "fig-agent candidates failed"),
+        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message="fig-agent candidates returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        name=name,
+        candidate_set_path=candidate_set,
+        candidate_set=payload,
+    )
+
+
 def _analyze_panel(arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(arguments.get("name") or "")
     panel_id = str(arguments.get("panel_id") or "")
@@ -1239,6 +1314,99 @@ def _next(arguments: dict[str, Any]) -> dict[str, Any]:
         command=["next", name, "--json"],
         payload_key="next_result",
         failure_message="fig-agent next failed",
+    )
+
+
+def _accept_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    schema = "figure-agent.mcp.accept-candidate.v1"
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root, name = resolved
+    candidate_id = arguments.get("candidate_id")
+    if not _is_safe_fixture_name(candidate_id):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error(
+                "invalid_fixture_name",
+                "candidate_id must be a single build/candidates/<id> directory name",
+            ),
+        )
+    decision = str(arguments.get("decision") or "")
+    reviewer = str(arguments.get("reviewer") or "")
+    rationale = str(arguments.get("rationale") or "")
+    if decision != "accept" or not reviewer.strip() or not rationale.strip():
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            candidate_id=str(candidate_id),
+            error=_error(
+                "invalid_request",
+                "decision=accept, reviewer, and rationale are required",
+            ),
+        )
+    candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
+    with _fixture_lock(workspace_root, name, "accept_candidate") as lock:
+        if lock is not None:
+            return _operation_in_progress(schema=schema, started=started, name=name, lock=lock)
+        result = _run_fig_agent_enveloped(
+            schema=schema,
+            started=started,
+            command=[
+                "accept-candidate",
+                name,
+                str(candidate_id),
+                "--candidate-set",
+                candidate_set,
+                "--decision",
+                decision,
+                "--reviewer",
+                reviewer,
+                "--rationale",
+                rationale,
+                "--json",
+            ],
+            workspace_root=workspace_root,
+            timeout_seconds=120,
+            timeout_message="fig-agent accept-candidate timed out",
+            name=name,
+        )
+        if isinstance(result, dict):
+            return result
+    if result.returncode != 0:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            candidate_id=str(candidate_id),
+            exit_code=result.returncode,
+            stdout=_bounded(result.stdout),
+            stderr=_bounded(result.stderr),
+            error=_error("unsupported_operation", "fig-agent accept-candidate failed"),
+        )
+    payload, json_error = _json_payload_from_result(
+        result=result,
+        schema=schema,
+        started=started,
+        name=name,
+        invalid_json_message="fig-agent accept-candidate returned invalid JSON",
+    )
+    if json_error is not None:
+        return json_error
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        name=name,
+        candidate_id=str(candidate_id),
+        acceptance=payload,
     )
 
 
@@ -1693,6 +1861,21 @@ TOOLS: dict[str, dict[str, Any]] = {
         },
         "handler": _propose_improvements,
     },
+    "figure_agent_materialize_candidate_set": {
+        "description": "Persist deterministic candidate improvements to the fixture sandbox.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_set": {"type": "string"},
+                "panel_id": {"type": "string"},
+                "family": {"type": "string"},
+            },
+        },
+        "handler": _materialize_candidate_set,
+    },
     "figure_agent_analyze_panel": {
         "description": "Return a read-only panel model with TeX selectors.",
         "inputSchema": {
@@ -1844,6 +2027,23 @@ TOOLS: dict[str, dict[str, Any]] = {
             },
         },
         "handler": _candidate_apply_readiness,
+    },
+    "figure_agent_accept_candidate": {
+        "description": "Record explicit local acceptance for one rendered candidate.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "candidate_id", "decision", "reviewer", "rationale"],
+            "properties": {
+                "name": {"type": "string"},
+                "candidate_id": {"type": "string"},
+                "candidate_set": {"type": "string"},
+                "decision": {"type": "string", "enum": ["accept"]},
+                "reviewer": {"type": "string"},
+                "rationale": {"type": "string"},
+            },
+        },
+        "handler": _accept_candidate,
     },
     "figure_agent_evidence_sync_preview": {
         "description": "Preview read-only evidence index sync for one fixture.",
