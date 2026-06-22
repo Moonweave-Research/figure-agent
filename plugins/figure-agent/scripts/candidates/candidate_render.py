@@ -520,6 +520,11 @@ def render_candidate_set(
             "candidate_hash": candidate.get("candidate_hash"),
             "fixture": name,
             "candidate_set_path": source_candidate_set_path,
+            "edit_class": candidate.get("edit_class"),
+            "edit_family": candidate.get("edit_family"),
+            "family": candidate.get("family"),
+            "variant_id": candidate.get("variant_id"),
+            "variant": candidate.get("variant"),
             "panel": (
                 candidate.get("target", {}).get("panel")
                 if isinstance(candidate.get("target"), dict)

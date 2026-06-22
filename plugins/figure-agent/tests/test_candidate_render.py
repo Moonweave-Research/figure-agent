@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
 import candidate_render  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -43,11 +44,17 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
     (build / "undeclared_geometry.json").write_text(
         json.dumps(
             {
+                "source_hashes": {
+                    "examples/candidate_demo/candidate_demo.tex": file_sha256(
+                        fixture / "candidate_demo.tex"
+                    )
+                },
                 "candidates": [
                     {
                         "id": "UG001",
                         "recommended_action": "add_micro_defect",
                         "source_line": 1,
+                        "panel": "A",
                     }
                 ]
             }
@@ -128,6 +135,11 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert data["tool_versions"]["tex_engine"] == "not_run"
     assert data["candidate_hash"] == "sha256:" + "3" * 64
     assert data["source_defect"]["id"] == "QD001"
+    assert data["edit_class"] == "label_offset"
+    assert data["edit_family"] == "bounded_coordinate_offset"
+    assert data["family"] == "bounded-coordinate-offset"
+    assert data["variant_id"] == "dx+0.10cm"
+    assert data["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
     assert data["panel"] == "C"
     assert data["selectors"] == [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 1}]
     assert data["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
