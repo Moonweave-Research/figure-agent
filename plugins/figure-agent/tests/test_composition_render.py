@@ -11,11 +11,24 @@ SOURCE_TEXT = (
     "% fig-agent:start object=carrier_walk\n"
     "old walk\n"
     "% fig-agent:end object=carrier_walk\n"
+    "% fig-agent:start object=current_sparkline\n"
+    "old spark\n"
+    "% fig-agent:end object=current_sparkline\n"
 )
 REPLACEMENT_TEXT = (
     "% fig-agent:start object=carrier_walk\n"
     "smoothed walk\n"
     "% fig-agent:end object=carrier_walk\n"
+)
+SPARKLINE_REPLACEMENT_TEXT = (
+    "% fig-agent:start object=current_sparkline\n"
+    "anchored spark\n"
+    "% fig-agent:end object=current_sparkline\n"
+)
+ORIGINAL_SPARKLINE_TEXT = (
+    "% fig-agent:start object=current_sparkline\n"
+    "old spark\n"
+    "% fig-agent:end object=current_sparkline\n"
 )
 
 
@@ -67,6 +80,23 @@ def _candidate_set(workspace: Path, source: Path, name: str = "fig3_resistance_m
     }
 
 
+def _sparkline_operation(workspace: Path, source: Path) -> dict:
+    return {
+        "schema": "figure-agent.composition-candidate-operation.v1",
+        "kind": "replace_semantic_block",
+        "path": source.relative_to(workspace).as_posix(),
+        "base_source_hash": _sha256_text(source.read_text(encoding="utf-8")),
+        "selector": {
+            "kind": "semantic_block",
+            "object_id": "current_sparkline",
+            "start_marker": "% fig-agent:start object=current_sparkline",
+            "end_marker": "% fig-agent:end object=current_sparkline",
+        },
+        "replacement_text": SPARKLINE_REPLACEMENT_TEXT,
+        "rollback": {"kind": "restore_original_text", "original_text": "old spark\n"},
+    }
+
+
 def test_prepare_compose_render_writes_candidate_source_copy_only_in_sandbox(
     tmp_path: Path,
 ) -> None:
@@ -92,7 +122,7 @@ def test_prepare_compose_render_writes_candidate_source_copy_only_in_sandbox(
         "build/candidates/CCAND001/composition_render_manifest.json"
     )
     assert source.read_text(encoding="utf-8") == SOURCE_TEXT
-    assert source_copy.read_text(encoding="utf-8") == REPLACEMENT_TEXT
+    assert source_copy.read_text(encoding="utf-8") == REPLACEMENT_TEXT + ORIGINAL_SPARKLINE_TEXT
     data = json.loads(manifest.read_text(encoding="utf-8"))
     assert data["schema"] == "figure-agent.composition-render-manifest.v1"
     assert data["artifacts"]["source_copy"] == "build/candidates/CCAND001/source/candidate.tex"
@@ -175,4 +205,61 @@ def test_prepare_compose_render_resolves_object_id_semantic_selector_without_lin
     source_copy = fixture / "build" / "candidates" / "CCAND001" / "source" / "candidate.tex"
     assert result["status"] == "prepared"
     assert source.read_text(encoding="utf-8") == SOURCE_TEXT
-    assert source_copy.read_text(encoding="utf-8") == REPLACEMENT_TEXT
+    assert source_copy.read_text(encoding="utf-8") == REPLACEMENT_TEXT + ORIGINAL_SPARKLINE_TEXT
+
+
+def test_prepare_compose_render_applies_multiple_semantic_block_operations(
+    tmp_path: Path,
+) -> None:
+    import composition_render
+
+    workspace, fixture, source = _fixture(tmp_path)
+    candidate_set = _candidate_set(workspace, source)
+    candidate = candidate_set["candidates"][0]
+    candidate["id"] = "CCAND_COMBO"
+    candidate["operations"].append(_sparkline_operation(workspace, source))
+
+    result = composition_render.prepare_composition_render(
+        "fig3_resistance_mechanism",
+        candidate_set=candidate_set,
+        workspace_root=workspace,
+        candidate_id="CCAND_COMBO",
+    )
+
+    source_copy = fixture / "build" / "candidates" / "CCAND_COMBO" / "source" / "candidate.tex"
+    assert result["status"] == "prepared"
+    assert source.read_text(encoding="utf-8") == SOURCE_TEXT
+    assert source_copy.read_text(encoding="utf-8") == REPLACEMENT_TEXT + SPARKLINE_REPLACEMENT_TEXT
+
+
+def test_prepare_compose_render_preserves_separator_after_replacement_without_trailing_newline(
+    tmp_path: Path,
+) -> None:
+    import composition_render
+
+    workspace, fixture, source = _fixture(tmp_path)
+    source.write_text(
+        "% fig-agent:start object=carrier_walk\n"
+        "old walk\n"
+        "% fig-agent:end object=carrier_walk\n"
+        "\\node[sub] {following label};\n",
+        encoding="utf-8",
+    )
+    candidate_set = _candidate_set(workspace, source)
+    operation = candidate_set["candidates"][0]["operations"][0]
+    operation["base_source_hash"] = _sha256_text(source.read_text(encoding="utf-8"))
+    operation["replacement_text"] = REPLACEMENT_TEXT.rstrip("\n")
+
+    result = composition_render.prepare_composition_render(
+        "fig3_resistance_mechanism",
+        candidate_set=candidate_set,
+        workspace_root=workspace,
+        candidate_id="CCAND001",
+    )
+
+    source_copy = fixture / "build" / "candidates" / "CCAND001" / "source" / "candidate.tex"
+    assert result["status"] == "prepared"
+    assert (
+        "% fig-agent:end object=carrier_walk\n"
+        "\\node[sub] {following label};\n"
+    ) in source_copy.read_text(encoding="utf-8")

@@ -57,14 +57,21 @@ def _operation_source_path(workspace: Path, fixture: Path, operation: dict[str, 
     return _safe_fixture_path(fixture, source)
 
 
-def _single_operation(candidate: dict[str, Any]) -> dict[str, Any]:
+def _operations(candidate: dict[str, Any]) -> list[dict[str, Any]]:
     operations = candidate.get("operations")
-    if not isinstance(operations, list) or len(operations) != 1:
+    if not isinstance(operations, list) or not operations:
         raise CompositionReviewError("operation_required")
-    operation = operations[0]
-    if not isinstance(operation, dict):
+    if not all(isinstance(operation, dict) for operation in operations):
         raise CompositionReviewError("operation_invalid")
-    return operation
+    return operations
+
+
+def _operation_source(workspace: Path, fixture: Path, operations: list[dict[str, Any]]) -> Path:
+    source = _operation_source_path(workspace, fixture, operations[0])
+    for operation in operations[1:]:
+        if _operation_source_path(workspace, fixture, operation) != source:
+            raise CompositionReviewError("multiple_source_files_unsupported")
+    return source
 
 
 def _safe_fixture_path(fixture: Path, path: Path) -> Path:
@@ -106,6 +113,13 @@ def _source_copy_path(fixture: Path, manifest: dict[str, Any]) -> Path:
     return _safe_fixture_path(fixture, fixture / value)
 
 
+def _manifest_path(fixture: Path, candidate_id: str) -> Path:
+    return _safe_fixture_path(
+        fixture,
+        fixture / "build" / "candidates" / candidate_id / "composition_render_manifest.json",
+    )
+
+
 def _artifact_descriptor(fixture: Path, path: Path, *, kind: str) -> dict[str, Any]:
     exists = path.is_file()
     return {
@@ -115,6 +129,130 @@ def _artifact_descriptor(fixture: Path, path: Path, *, kind: str) -> dict[str, A
         "size_bytes": path.stat().st_size if exists else 0,
         "sha256": _sha256_file(path) if exists else None,
     }
+
+
+def _manifest_artifact_descriptor(
+    fixture: Path,
+    manifest: dict[str, Any],
+    key: str,
+    *,
+    kind: str,
+) -> dict[str, Any] | None:
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, dict):
+        return None
+    value = artifacts.get(key)
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return _artifact_descriptor(fixture, _safe_fixture_path(fixture, fixture / value), kind=kind)
+
+
+def _visual_evidence(
+    fixture: Path,
+    candidate_id: str,
+    manifest: dict[str, Any],
+) -> dict[str, Any]:
+    render_artifact = _manifest_artifact_descriptor(
+        fixture,
+        manifest,
+        "rendered_candidate",
+        kind="rendered_candidate",
+    )
+    board = _manifest_artifact_descriptor(
+        fixture,
+        manifest,
+        "comparison_board",
+        kind="comparison_board",
+    )
+    render_artifacts = [render_artifact] if render_artifact else []
+    conventional_render = (
+        fixture / "build" / "candidates" / candidate_id / "render" / "candidate.png"
+    )
+    if not render_artifacts and conventional_render.is_file():
+        render_artifacts.append(
+            _artifact_descriptor(fixture, conventional_render, kind="rendered_candidate")
+        )
+    boards = [board] if board else []
+    if not boards:
+        candidates_root = fixture / "build" / "candidates"
+        boards = [
+            _artifact_descriptor(fixture, path, kind="comparison_board")
+            for path in sorted(candidates_root.glob("*comparison*.png"))
+            if path.is_file()
+        ]
+    manifest_file = _manifest_path(fixture, candidate_id)
+    return {
+        "render_manifest": _artifact_descriptor(
+            fixture,
+            manifest_file,
+            kind="composition_render_manifest",
+        ),
+        "candidate_render_artifacts": render_artifacts,
+        "comparison_boards": boards,
+    }
+
+
+def _png_dimensions(path: Path) -> dict[str, int | None]:
+    try:
+        header = path.read_bytes()[:24]
+    except OSError:
+        return {"width": None, "height": None}
+    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
+        return {"width": None, "height": None}
+    return {
+        "width": int.from_bytes(header[16:20], "big"),
+        "height": int.from_bytes(header[20:24], "big"),
+    }
+
+
+def _visual_metrics(
+    fixture: Path,
+    candidate_id: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    descriptors = [
+        *evidence.get("candidate_render_artifacts", []),
+        *evidence.get("comparison_boards", []),
+    ]
+    paths = [str(item["path"]) for item in descriptors if isinstance(item, dict)]
+    checks = []
+    dimensions = []
+    for relative_path in paths:
+        path = _safe_fixture_path(fixture, fixture / relative_path)
+        exists = path.is_file()
+        size_bytes = path.stat().st_size if exists else 0
+        checks.append(
+            {
+                "path": relative_path,
+                "exists": exists,
+                "size_bytes": size_bytes,
+                "looks_nonblank": bool(exists and size_bytes > 8),
+            }
+        )
+        dimensions.append({"path": relative_path, **_png_dimensions(path)})
+    return {
+        "schema": "figure-agent.visual-metrics.v1",
+        "fixture": fixture.name,
+        "candidate_id": candidate_id,
+        "artifact_paths": paths,
+        "nonblank_checks": checks,
+        "image_dimensions": dimensions,
+    }
+
+
+def _write_visual_metrics(
+    fixture: Path,
+    candidate_id: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    output = _safe_fixture_path(
+        fixture,
+        fixture / "build" / "candidates" / candidate_id / "visual_metrics.json",
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    payload = _visual_metrics(fixture, candidate_id, evidence)
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return _artifact_descriptor(fixture, output, kind="visual_metrics")
 
 
 def _hard_gates(manifest: dict[str, Any]) -> dict[str, str]:
@@ -142,14 +280,14 @@ def build_composition_review_packet(
     candidate_id: str,
     workspace_root: Path | None = None,
     candidate_set_path: Path | None = None,
+    write_visual_metrics: bool = False,
 ) -> dict[str, Any]:
     fixture_identity.validate_fixture_name(name)
     current_candidate_id = _candidate_id(candidate_id)
     workspace = _workspace_root(workspace_root)
     fixture = workspace / "examples" / name
     candidate = _candidate(candidate_set, current_candidate_id)
-    operation = _single_operation(candidate)
-    source = _operation_source_path(workspace, fixture, operation)
+    source = _operation_source(workspace, fixture, _operations(candidate))
     manifest = _load_manifest(fixture, current_candidate_id)
     source_copy = _source_copy_path(fixture, manifest)
     rank_payload = composition_rank.rank_composition_candidates(
@@ -165,6 +303,13 @@ def build_composition_review_packet(
         candidate_set_path=candidate_set_path,
         workspace_root=workspace,
     )
+    visual_evidence = _visual_evidence(fixture, current_candidate_id, manifest)
+    if write_visual_metrics:
+        visual_evidence["visual_metrics"] = _write_visual_metrics(
+            fixture,
+            current_candidate_id,
+            visual_evidence,
+        )
     return {
         "schema": SCHEMA,
         "fixture": name,
@@ -174,6 +319,7 @@ def build_composition_review_packet(
         ).as_posix(),
         "render_status": rank_entry["render_status"],
         "hard_gates": _hard_gates(manifest),
+        "visual_evidence": visual_evidence,
         "before_artifacts": [_artifact_descriptor(fixture, source, kind="base_source")],
         "after_artifacts": [
             _artifact_descriptor(fixture, source_copy, kind="candidate_source_copy")

@@ -15,7 +15,7 @@ CompositionAcceptanceError = support.CompositionAcceptanceError
 
 def _blocking_reasons(facts: dict[str, Any], candidate_set: dict[str, Any]) -> list[str]:
     manifest = facts["manifest"]
-    operation = facts["operation"]
+    operations = facts["operations"]
     source = facts["source"]
     blocking: list[str] = []
     if support.has_stale_evidence(candidate_set):
@@ -24,11 +24,14 @@ def _blocking_reasons(facts: dict[str, Any], candidate_set: dict[str, Any]) -> l
         blocking.append("prepare_required")
     if any(support.stage_status(manifest, stage) != "not_run" for stage in support.LATE_STAGES):
         blocking.append("unexpected_render_stage_state")
-    if operation.get("kind") != "replace_semantic_block":
+    if any(operation.get("kind") != "replace_semantic_block" for operation in operations):
         blocking.append("operation_kind_unsupported")
     if not source.is_file():
         blocking.append("base_source_missing")
-    elif operation.get("base_source_hash") != support.hash_file(source):
+    elif any(
+        operation.get("base_source_hash") != support.hash_file(source)
+        for operation in operations
+    ):
         blocking.append("source_hash_drift")
     expected_copy = manifest.get("hash_evidence", {}).get("source_copy")
     if isinstance(expected_copy, str):

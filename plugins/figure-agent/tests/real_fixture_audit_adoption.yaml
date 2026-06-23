@@ -209,6 +209,19 @@ fixtures:
       Newly tracked real fixture has timeline panel geometry but no adopted
       deterministic boundary/path checks yet.
 
+  - fixture: fig3_resistance_mechanism
+    reference_image: false
+    text_boundary_check_ids: []
+    label_path_check_ids: []
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: deferred_geometry_needed
+    rationale: >
+      Slice-3 dogfood fixture has mechanism-schematic panel geometry but no
+      adopted deterministic boundary/path checks yet.
+
   - fixture: fig4_trap_energy_diagram
     reference_image: false
     text_boundary_check_ids: []

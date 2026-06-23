@@ -22,6 +22,7 @@ def test_release_gate_targeted_tests_cover_composition_accept_apply_contracts() 
         "tests/test_composition_p6_cli.py",
         "tests/test_composition_p7_apply.py",
         "tests/test_composition_p7_cli.py",
+        "tests/test_composition_structural_families.py",
     }
 
     assert required <= set(release_gate.TARGETED_TESTS)

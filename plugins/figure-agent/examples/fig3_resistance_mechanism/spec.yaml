@@ -1,0 +1,50 @@
+name: fig3_resistance_mechanism
+title: "Fig 3 — Trapping-during-conduction mechanism: transient I(t) power-law (CvS) and composition-tunable trap-energy breadth (schematic)"
+style_profile: polymer-paper
+panels:
+  - id: A
+    caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises
+    bbox_pdf_cm: [0.00, 0.00, 5.80, 4.80]
+  - id: B
+    caption: Trap energy distribution g(E) — discrete (S60, single deep) evolving to continuous broad (S80); n = breadth of the distribution, ρ60s = magnitude
+    bbox_pdf_cm: [6.00, 0.00, 11.60, 4.80]
+composition_model:
+  panels:
+    A:
+      objects:
+        carrier_walk:
+          kind: path
+          truth_bearing: true
+          semantic_claim: sign-agnostic carrier undergoes repeated trapping
+          invariant: carrier_sign_agnostic_repeated_trapping
+          allowed_creative_ops:
+            - reshape_path
+            - reduce_arrowheads
+        current_sparkline:
+          kind: inset_plot
+          truth_bearing: true
+          semantic_claim: transient current decays as I proportional to t^-n
+          invariant: current_decay_power_law
+          anchor_target: carrier_walk
+          allowed_creative_ops:
+            - anchor_plot
+            - consolidate_label
+    B:
+      objects:
+        n_breadth:
+          kind: measurement_span
+          truth_bearing: true
+          semantic_claim: n represents trap-distribution breadth, not density
+          invariant: distribution_breadth_not_density
+          allowed_creative_ops:
+            - externalize_span
+            - reduce_arrow_clutter
+notes: |
+  figure-agent figure (the REAL paper Fig 3 per the 2026-06-22 figure plan:
+  characterization -> mechanism synthesis). SCHEMATIC ONLY — this is the explanatory
+  half of a composite figure; the real I(t)∝t^-n data curves + composition series are
+  produced by the data pipeline (Origin / Graph Hub) and composited beside this schematic.
+  Bboxes approximate (first pass); expected to move during element-iteration.
+  Physics is grounded in 02_Surfur_Polymer docs (CvS power-law; n = trap-distribution
+  breadth NOT density; carrier-agnostic dispersive transport; discrete->continuous
+  evolution with sulfur). See briefing.md for the binding physics-correctness rules.

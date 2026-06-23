@@ -52,6 +52,7 @@ TARGETED_TESTS = [
     "tests/test_composition_p7_cli.py",
     "tests/test_composition_render.py",
     "tests/test_composition_scene.py",
+    "tests/test_composition_structural_families.py",
     "tests/test_composition_lint.py",
     "tests/test_composition_rank.py",
     "tests/test_composition_review.py",

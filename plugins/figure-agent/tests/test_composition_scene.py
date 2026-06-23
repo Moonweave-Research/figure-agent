@@ -182,6 +182,29 @@ def test_scene_model_blocks_ambiguous_duplicate_semantic_blocks(tmp_path: Path) 
     assert scene["diagnostics"][0]["code"] == "semantic_block_duplicate"
 
 
+def test_scene_model_accepts_indented_semantic_blocks_inside_tex_scopes(
+    tmp_path: Path,
+) -> None:
+    import composition_scene
+
+    workspace, fixture = _fig3_fixture(tmp_path)
+    tex = fixture / "fig3_resistance_mechanism.tex"
+    tex.write_text(
+        "  % fig-agent:start object=n_breadth panel=B kind=measurement_span\n"
+        "  span\n"
+        "  % fig-agent:end object=n_breadth\n",
+        encoding="utf-8",
+    )
+
+    scene = composition_scene.build_semantic_scene_model(
+        "fig3_resistance_mechanism",
+        workspace_root=workspace,
+    )
+
+    assert scene["status"] == "ready"
+    assert scene["source_selectors"]["n_breadth"]["object_id"] == "n_breadth"
+
+
 def test_fig_agent_analyze_composition_outputs_scene_model_without_mutating_fixture(
     tmp_path: Path,
 ) -> None:

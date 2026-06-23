@@ -70,14 +70,13 @@ def selected_candidate(candidate_set: dict[str, Any], candidate_id: str) -> dict
     raise CompositionAcceptanceError("candidate_missing")
 
 
-def single_operation(candidate: dict[str, Any]) -> dict[str, Any]:
+def operations(candidate: dict[str, Any]) -> list[dict[str, Any]]:
     operations = candidate.get("operations")
-    if not isinstance(operations, list) or len(operations) != 1:
+    if not isinstance(operations, list) or not operations:
         raise CompositionAcceptanceError("operation_required")
-    operation = operations[0]
-    if not isinstance(operation, dict):
+    if not all(isinstance(operation, dict) for operation in operations):
         raise CompositionAcceptanceError("operation_invalid")
-    return operation
+    return operations
 
 
 def operation_source(workspace: Path, fixture: Path, operation: dict[str, Any]) -> Path:
@@ -87,6 +86,14 @@ def operation_source(workspace: Path, fixture: Path, operation: dict[str, Any]) 
     path = Path(value)
     source = workspace / path if path.parts[:1] == ("examples",) else fixture / path
     return safe_fixture_path(fixture, source)
+
+
+def operations_source(workspace: Path, fixture: Path, payload: list[dict[str, Any]]) -> Path:
+    source = operation_source(workspace, fixture, payload[0])
+    for operation in payload[1:]:
+        if operation_source(workspace, fixture, operation) != source:
+            raise CompositionAcceptanceError("multiple_source_files_unsupported")
+    return source
 
 
 def load_render_manifest(fixture: Path, candidate_id: str) -> tuple[Path, dict[str, Any]]:
@@ -173,16 +180,16 @@ def facts(
     workspace = root(workspace_root)
     fixture = workspace / "examples" / name
     candidate = selected_candidate(candidate_set, current_id)
-    operation = single_operation(candidate)
+    operation_payload = operations(candidate)
     manifest_path, manifest = load_render_manifest(fixture, current_id)
     source_copy = source_copy_path(fixture, manifest)
-    source = operation_source(workspace, fixture, operation)
+    source = operations_source(workspace, fixture, operation_payload)
     return {
         "id": current_id,
         "workspace": workspace,
         "fixture": fixture,
         "candidate": candidate,
-        "operation": operation,
+        "operations": operation_payload,
         "manifest_path": manifest_path,
         "manifest": manifest,
         "source_copy": source_copy,

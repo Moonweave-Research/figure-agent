@@ -199,7 +199,58 @@ def test_fig_agent_compose_review_outputs_source_before_after_packet_without_tex
     )
     assert payload["composition_lint_delta"]["deterministic"][0]["metric"] == "orphan_plot_count"
     assert payload["composition_lint_delta"]["human_commentary"][0]["rank_eligible"] is False
+    assert payload["visual_evidence"]["visual_metrics"]["path"] == (
+        "build/candidates/CCAND001/visual_metrics.json"
+    )
+    visual_metrics_path = fixture / "build" / "candidates" / "CCAND001" / "visual_metrics.json"
+    assert json.loads(visual_metrics_path.read_text(encoding="utf-8"))["artifact_paths"] == []
     assert payload["apply_boundary"]["source_mutation_allowed"] is False
     assert source.read_text(encoding="utf-8") == SOURCE_TEXT
     assert not (fixture / "exports").exists()
     assert not (fixture / "build" / "candidates" / "CCAND001" / "render").exists()
+
+
+def test_fig_agent_compose_review_synthesis_writes_findings_first_markdown(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set_path = _prepare_candidate(workspace, fixture)
+    review = _run(
+        workspace,
+        "compose-review",
+        "candidate_demo",
+        "--candidate-set",
+        candidate_set_path.relative_to(fixture).as_posix(),
+        "--candidate-id",
+        "CCAND001",
+        "--output",
+        "build/candidates/CCAND001/composition_review_packet.json",
+        "--json",
+    )
+    assert review.returncode == 0, review.stderr
+
+    result = _run(
+        workspace,
+        "compose-review-synthesis",
+        "candidate_demo",
+        "--review-packet",
+        "build/candidates/CCAND001/composition_review_packet.json",
+        "--output",
+        "build/candidates/review_synthesis.md",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+    synthesis_path = fixture / "build" / "candidates" / "review_synthesis.md"
+    text = synthesis_path.read_text(encoding="utf-8")
+    assert result.returncode == 0, result.stderr
+    assert payload["schema"] == "figure-agent.composition-review-synthesis.v1"
+    assert payload["status"] == "review_synthesis_ready"
+    assert payload["path"] == "build/candidates/review_synthesis.md"
+    assert payload["hard_refutations"] == []
+    assert text.startswith("# Composition Review Synthesis\n\n## Confirmed\n")
+    assert "- Candidate `CCAND001` is review-ready with source mutation disabled." in text
+    assert "## Refuted\n\n- None." in text
+    assert "## Unverified\n\n- Human visual preference remains unverified until acceptance." in text
+    assert "## Acceptance Recommendation\n\nHuman review required before apply." in text

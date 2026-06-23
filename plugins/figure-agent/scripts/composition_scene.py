@@ -11,8 +11,8 @@ import runtime_paths
 import yaml
 
 SEMANTIC_SCENE_MODEL_SCHEMA: Final = "figure-agent.semantic-scene-model.v1"
-START_RE: Final = re.compile(r"^%\s*fig-agent:start\s+(?P<meta>.+)$")
-END_RE: Final = re.compile(r"^%\s*fig-agent:end\s+object=(?P<object>[A-Za-z0-9_-]+)\s*$")
+START_RE: Final = re.compile(r"^\s*%\s*fig-agent:start\s+(?P<meta>.+)$")
+END_RE: Final = re.compile(r"^\s*%\s*fig-agent:end\s+object=(?P<object>[A-Za-z0-9_-]+)\s*$")
 OBJECT_ID_RE: Final = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
 
 

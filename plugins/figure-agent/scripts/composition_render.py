@@ -53,16 +53,30 @@ def _selected_candidate(candidate_set: dict[str, Any], candidate_id: str | None)
     raise CompositionRenderError("candidate_missing")
 
 
-def _single_operation(candidate: dict[str, Any]) -> dict[str, Any]:
+def _selected_candidates(
+    candidate_set: dict[str, Any],
+    candidate_id: str | None,
+) -> list[dict[str, Any]]:
+    if candidate_id is not None:
+        return [_selected_candidate(candidate_set, candidate_id)]
+    candidates = candidate_set.get("candidates")
+    if not isinstance(candidates, list):
+        raise CompositionRenderError("candidate_set_invalid")
+    return [candidate for candidate in candidates if isinstance(candidate, dict)]
+
+
+def _operations(candidate: dict[str, Any]) -> list[dict[str, Any]]:
     operations = candidate.get("operations")
-    if not isinstance(operations, list) or len(operations) != 1:
+    if not isinstance(operations, list) or not operations:
         raise CompositionRenderError("operation_required")
-    operation = operations[0]
-    if not isinstance(operation, dict):
-        raise CompositionRenderError("operation_invalid")
-    if operation.get("kind") != "replace_semantic_block":
-        raise CompositionRenderError("operation_kind_unsupported")
-    return operation
+    valid_operations: list[dict[str, Any]] = []
+    for operation in operations:
+        if not isinstance(operation, dict):
+            raise CompositionRenderError("operation_invalid")
+        if operation.get("kind") != "replace_semantic_block":
+            raise CompositionRenderError("operation_kind_unsupported")
+        valid_operations.append(operation)
+    return valid_operations
 
 
 def _operation_path(operation: dict[str, Any], fixture_name: str, workspace: Path) -> Path:
@@ -104,8 +118,12 @@ def _replace_semantic_block(source_text: str, operation: dict[str, Any]) -> str:
     if start_index < 0 or end_index < 0:
         raise CompositionRenderError("selector_not_found")
     after_end = end_index + len(end)
+    consumed_separator = False
     if after_end < len(source_text) and source_text[after_end] == "\n":
         after_end += 1
+        consumed_separator = True
+    if consumed_separator and not replacement.endswith("\n"):
+        replacement += "\n"
     return source_text[:start_index] + replacement + source_text[after_end:]
 
 
@@ -151,60 +169,71 @@ def prepare_composition_render(
     fixture_identity.validate_fixture_name(name)
     paths = runtime_paths.resolve_runtime_paths(workspace_root=workspace_root)
     fixture = paths.examples_dir / name
-    candidate = _selected_candidate(candidate_set, candidate_id)
-    current_candidate_id = _candidate_id(candidate)
-    operation = _single_operation(candidate)
-    source_path = _operation_path(operation, name, paths.workspace_root)
-    source, blocked = composition_sandbox.preflight_candidate_source_path(
-        name,
-        candidate_source_path=source_path,
-        workspace_root=paths.workspace_root,
-    )
-    if blocked is not None:
-        return {"schema": COMPOSITION_RENDER_RESULT_SCHEMA, "status": "blocked", **blocked}
-    assert source is not None
-    expected_hash = operation.get("base_source_hash")
-    if expected_hash != _sha256_file(source):
-        return {
-            "schema": COMPOSITION_RENDER_RESULT_SCHEMA,
-            "fixture": name,
-            "status": "rebase_required",
-            "rendered": [],
-            "diagnostics": [
-                {
-                    **_diagnostic("source_hash_drift", "source changed since proposal"),
-                    "action": "rebase_required",
+    rendered = []
+    for candidate in _selected_candidates(candidate_set, candidate_id):
+        current_candidate_id = _candidate_id(candidate)
+        operations = _operations(candidate)
+        source: Path | None = None
+        for operation in operations:
+            source_path = _operation_path(operation, name, paths.workspace_root)
+            current_source, blocked = composition_sandbox.preflight_candidate_source_path(
+                name,
+                candidate_source_path=source_path,
+                workspace_root=paths.workspace_root,
+            )
+            if blocked is not None:
+                return {"schema": COMPOSITION_RENDER_RESULT_SCHEMA, "status": "blocked", **blocked}
+            assert current_source is not None
+            if source is None:
+                source = current_source
+            elif current_source != source:
+                raise CompositionRenderError("multiple_source_files_unsupported")
+            expected_hash = operation.get("base_source_hash")
+            if expected_hash != _sha256_file(source):
+                return {
+                    "schema": COMPOSITION_RENDER_RESULT_SCHEMA,
+                    "fixture": name,
+                    "status": "rebase_required",
+                    "rendered": [],
+                    "diagnostics": [
+                        {
+                            **_diagnostic("source_hash_drift", "source changed since proposal"),
+                            "action": "rebase_required",
+                        }
+                    ],
                 }
-            ],
-        }
-    sandbox = fixture / "build" / "candidates" / current_candidate_id
-    source_copy = sandbox / "source" / "candidate.tex"
-    manifest_path = sandbox / "composition_render_manifest.json"
-    source_copy.parent.mkdir(parents=True, exist_ok=True)
-    source_copy.write_text(
-        _replace_semantic_block(source.read_text(encoding="utf-8"), operation),
-        encoding="utf-8",
-    )
-    manifest = _manifest(
-        name,
-        current_candidate_id,
-        (candidate_set_path or Path("build/candidates/composition_candidate_set.json")).as_posix(),
-        sandbox,
-        fixture,
-    )
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    return {
-        "schema": COMPOSITION_RENDER_RESULT_SCHEMA,
-        "fixture": name,
-        "status": "prepared",
-        "rendered": [
+        assert source is not None
+        source_text = source.read_text(encoding="utf-8")
+        for operation in operations:
+            source_text = _replace_semantic_block(source_text, operation)
+        sandbox = fixture / "build" / "candidates" / current_candidate_id
+        source_copy = sandbox / "source" / "candidate.tex"
+        manifest_path = sandbox / "composition_render_manifest.json"
+        source_copy.parent.mkdir(parents=True, exist_ok=True)
+        source_copy.write_text(source_text, encoding="utf-8")
+        manifest = _manifest(
+            name,
+            current_candidate_id,
+            (
+                candidate_set_path or Path("build/candidates/composition_candidate_set.json")
+            ).as_posix(),
+            sandbox,
+            fixture,
+        )
+        manifest_path.write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        rendered.append(
             {
                 "candidate_id": current_candidate_id,
                 "render_manifest": _fixture_relative(fixture, manifest_path),
             }
-        ],
+        )
+    return {
+        "schema": COMPOSITION_RENDER_RESULT_SCHEMA,
+        "fixture": name,
+        "status": "prepared",
+        "rendered": rendered,
         "diagnostics": [],
     }
