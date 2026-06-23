@@ -213,7 +213,7 @@ def test_review_packet_marks_freeform_structural_review_only(tmp_path: Path) -> 
     assert payload["candidate"]["effective_apply_authority"] == "review_only"
     assert payload["candidate"]["auto_apply_allowed"] is False
     assert payload["apply_boundary"] == {
-        "status": "p6_not_implemented",
+        "status": "ready_for_local_acceptance",
         "source_mutation_allowed": False,
     }
 
