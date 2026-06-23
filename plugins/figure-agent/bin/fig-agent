@@ -87,7 +87,9 @@ def _with_runtime_env() -> dict[str, str]:
     import_paths = os.pathsep.join(str(path) for path in SCRIPT_IMPORT_DIRS)
     existing_pythonpath = env.get("PYTHONPATH")
     env["PYTHONPATH"] = (
-        import_paths if not existing_pythonpath else f"{import_paths}{os.pathsep}{existing_pythonpath}"
+        import_paths
+        if not existing_pythonpath
+        else f"{import_paths}{os.pathsep}{existing_pythonpath}"
     )
     return env
 
@@ -676,6 +678,179 @@ def _candidates(argv: list[str]) -> int:
     return 0
 
 
+def _compose_capture(argv: list[str]) -> int:
+    import candidate_contracts
+    import composition_contracts
+
+    parser = argparse.ArgumentParser(prog="fig-agent compose-capture")
+    parser.add_argument("name")
+    parser.add_argument("--proposal", required=True)
+    parser.add_argument("--proposal-json", dest="proposal", required=False)
+    parser.add_argument("--output")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    paths = _paths()
+    try:
+        payload = composition_contracts.capture_composition_candidates(
+            name,
+            proposal_json_path=Path(args.proposal),
+            workspace_root=paths.workspace_root,
+        )
+        text = json.dumps(payload, indent=2, sort_keys=True)
+        if args.output:
+            output = candidate_contracts.fixture_local_output_path(
+                paths.workspace_root,
+                name,
+                args.output,
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(text + "\n", encoding="utf-8")
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+        candidate_contracts.CandidateContractError,
+    ) as exc:
+        print(f"fig-agent compose-capture: {exc}", file=sys.stderr)
+        return 1
+    print(text)
+    if payload.get("status") == "rejected":
+        diagnostics = payload.get("diagnostics")
+        print(f"fig-agent compose-capture: {diagnostics}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _compose_render(argv: list[str]) -> int:
+    import composition_render
+
+    parser = argparse.ArgumentParser(prog="fig-agent compose-render")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        payload = composition_render.prepare_composition_render(
+            name,
+            candidate_set=candidate_set,
+            workspace_root=_paths().workspace_root,
+            candidate_set_path=Path(args.candidate_set),
+            candidate_id=args.candidate_id,
+        )
+    except (RuntimeError, ValueError, composition_render.CompositionRenderError) as exc:
+        print(f"fig-agent compose-render: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") != "prepared":
+        print(f"fig-agent compose-render: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _compose_rank(argv: list[str]) -> int:
+    import composition_rank
+
+    parser = argparse.ArgumentParser(prog="fig-agent compose-rank")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        payload = composition_rank.rank_composition_candidates(
+            name,
+            candidate_set=candidate_set,
+            workspace_root=_paths().workspace_root,
+        )
+    except (RuntimeError, OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"fig-agent compose-rank: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") != "ranked":
+        print(f"fig-agent compose-rank: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _compose_review(argv: list[str]) -> int:
+    import composition_review
+
+    parser = argparse.ArgumentParser(prog="fig-agent compose-review")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--candidate-id", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        candidate_set = _load_fixture_json(name, args.candidate_set)
+        payload = composition_review.build_composition_review_packet(
+            name,
+            candidate_set=candidate_set,
+            candidate_id=args.candidate_id,
+            workspace_root=_paths().workspace_root,
+            candidate_set_path=Path(args.candidate_set),
+        )
+    except (RuntimeError, OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"fig-agent compose-review: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _analyze_composition(argv: list[str]) -> int:
+    import composition_scene
+    import yaml
+
+    parser = argparse.ArgumentParser(prog="fig-agent analyze-composition")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = composition_scene.build_semantic_scene_model(
+            name,
+            workspace_root=_paths().workspace_root,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"fig-agent analyze-composition: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") == "blocked":
+        print(f"fig-agent analyze-composition: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _lint_composition(argv: list[str]) -> int:
+    import composition_lint
+    import yaml
+
+    parser = argparse.ArgumentParser(prog="fig-agent lint-composition")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = composition_lint.build_composition_lint(
+            name,
+            workspace_root=_paths().workspace_root,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"fig-agent lint-composition: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") == "blocked":
+        print(f"fig-agent lint-composition: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _load_fixture_json(name: str, fixture_path: str) -> dict:
     import candidate_contracts
 
@@ -1133,6 +1308,18 @@ def main(argv: list[str] | None = None) -> int:
         return _analyze_panel(rest)
     if command == "candidates":
         return _candidates(rest)
+    if command == "compose-capture":
+        return _compose_capture(rest)
+    if command == "compose-render":
+        return _compose_render(rest)
+    if command == "compose-rank":
+        return _compose_rank(rest)
+    if command == "compose-review":
+        return _compose_review(rest)
+    if command == "analyze-composition":
+        return _analyze_composition(rest)
+    if command == "lint-composition":
+        return _lint_composition(rest)
     if command == "render-candidates":
         return _render_candidates(rest)
     if command == "rank-candidates":
