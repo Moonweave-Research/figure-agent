@@ -16,6 +16,17 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 import release_gate  # noqa: E402
 
 
+def test_release_gate_targeted_tests_cover_composition_accept_apply_contracts() -> None:
+    required = {
+        "tests/test_composition_p6_acceptance.py",
+        "tests/test_composition_p6_cli.py",
+        "tests/test_composition_p7_apply.py",
+        "tests/test_composition_p7_cli.py",
+    }
+
+    assert required <= set(release_gate.TARGETED_TESTS)
+
+
 def _benchmark_payload(
     suite: str,
     *,
