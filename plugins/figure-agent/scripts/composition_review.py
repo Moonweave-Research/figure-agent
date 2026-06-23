@@ -5,6 +5,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Final
 
+import composition_acceptance
 import composition_rank
 import fixture_identity
 import runtime_paths
@@ -157,6 +158,13 @@ def build_composition_review_packet(
         workspace_root=workspace,
     )
     rank_entry = _candidate_rank_entry(rank_payload, current_candidate_id)
+    readiness = composition_acceptance.build_composition_apply_readiness(
+        name,
+        current_candidate_id,
+        candidate_set=candidate_set,
+        candidate_set_path=candidate_set_path,
+        workspace_root=workspace,
+    )
     return {
         "schema": SCHEMA,
         "fixture": name,
@@ -178,7 +186,10 @@ def build_composition_review_packet(
             "auto_apply_allowed": False,
         },
         "rank_policy": rank_payload["rank_policy"],
-        "apply_boundary": {"status": "p6_not_implemented", "source_mutation_allowed": False},
+        "apply_boundary": {
+            "status": readiness["status"],
+            "source_mutation_allowed": False,
+        },
         "human_review_required": True,
         "diagnostics": [],
     }

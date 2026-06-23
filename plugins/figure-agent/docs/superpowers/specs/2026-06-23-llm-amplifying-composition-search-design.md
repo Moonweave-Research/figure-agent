@@ -904,6 +904,26 @@ Exit criteria:
 - It renders in a sandbox without mutating the fixture source.
 - The review packet contains before/after artifacts and exact source diff.
 
+### Slice 2.5: Local Human Acceptance Readiness
+
+Add a local-only acceptance gate before any future apply path.
+
+Exit criteria:
+
+- `compose-apply-ready` reports whether a prepared candidate is ready for local
+  human acceptance.
+- Readiness is hash-bound to the candidate set, render manifest, sandbox source
+  copy, current base source, and operation set.
+- Acceptance writes only
+  `build/candidates/<candidate-id>/composition_acceptance.json`.
+- `source_mutation_allowed` remains `false`; compile, export, crop, and
+  evaluate stay `not_run` and explain why fixture source mutation is disabled.
+- `freeform_structural` acceptance requires explicit
+  `accept_freeform_structural` permission.
+- Truth-bearing geometry changes require explicit
+  `change_truth_bearing_geometry` permission only when candidate metadata
+  declares that change.
+
 ### Slice 3: Fig3 Structural Families
 
 Implement `carrier_walk_morphology`, `sparkline_anchor`, and

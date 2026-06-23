@@ -195,7 +195,16 @@ def apply_composition_candidate(
             "status": "blocked",
             "diagnostics": [_diagnostic("refresh_required", "fresh evidence is required")],
         }
-    return {"status": "not_applied", "diagnostics": []}
+    return {
+        "status": "blocked",
+        "source_mutation_allowed": False,
+        "diagnostics": [
+            _diagnostic(
+                "source_mutation_not_implemented",
+                "P6 records local acceptance readiness only; fixture source mutation is disabled",
+            )
+        ],
+    }
 
 
 def validate_candidate_operation(
