@@ -924,6 +924,24 @@ Exit criteria:
   `change_truth_bearing_geometry` permission only when candidate metadata
   declares that change.
 
+### Slice 2.6: Hash-Bound Local Apply
+
+Add a narrow apply path after local human acceptance.
+
+Exit criteria:
+
+- `compose-apply` reloads the candidate set, render manifest, sandbox source
+  copy, base source, and acceptance artifact before mutation.
+- Apply requires `apply_to_fixture_source` in the acceptance permissions.
+- If any accepted hash is stale, apply returns `blocked` and leaves the source
+  unchanged.
+- The only fixture source mutation is replacing the accepted base source with
+  the accepted sandbox source copy.
+- Apply writes `rollback.patch` and `composition_apply_result.json` inside the
+  selected candidate sandbox.
+- Compile/export/post-apply verification remains explicit follow-up work; the
+  initial status is `applied_unverified`.
+
 ### Slice 3: Fig3 Structural Families
 
 Implement `carrier_walk_morphology`, `sparkline_anchor`, and

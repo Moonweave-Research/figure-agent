@@ -8,6 +8,7 @@ from typing import Any
 
 import candidate_contracts
 import composition_acceptance
+import composition_apply
 import composition_contracts
 import composition_rank
 import composition_render
@@ -217,6 +218,39 @@ def _accept(paths: runtime_paths.RuntimePaths, argv: list[str]) -> int:
     return 0
 
 
+def _apply(paths: runtime_paths.RuntimePaths, argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fig-agent compose-apply")
+    parser.add_argument("name")
+    parser.add_argument("--candidate-set", required=True)
+    parser.add_argument("--candidate-id", required=True)
+    parser.add_argument("--acceptance")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validate_name(parser, args.name)
+    acceptance_path = args.acceptance or (
+        f"build/candidates/{args.candidate_id}/composition_acceptance.json"
+    )
+    try:
+        candidate_set = _load_fixture_json(paths, name, args.candidate_set)
+        acceptance = _load_fixture_json(paths, name, acceptance_path)
+        payload = composition_apply.apply_composition_acceptance(
+            name,
+            args.candidate_id,
+            candidate_set=candidate_set,
+            candidate_set_path=Path(args.candidate_set),
+            acceptance=acceptance,
+            workspace_root=paths.workspace_root,
+        )
+    except (RuntimeError, OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"fig-agent compose-apply: {exc}", file=sys.stderr)
+        return 1
+    _json(payload)
+    if payload.get("status") != "applied_unverified":
+        print(f"fig-agent compose-apply: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def dispatch(command: str, argv: list[str], *, paths: runtime_paths.RuntimePaths) -> int:
     handlers = {
         "compose-capture": _capture,
@@ -225,6 +259,7 @@ def dispatch(command: str, argv: list[str], *, paths: runtime_paths.RuntimePaths
         "compose-review": _review,
         "compose-apply-ready": _apply_ready,
         "compose-accept": _accept,
+        "compose-apply": _apply,
     }
     handler = handlers.get(command)
     if handler is None:
