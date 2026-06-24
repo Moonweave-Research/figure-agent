@@ -123,7 +123,7 @@ def _write_undeclared_candidate_defect(fixture: Path) -> None:
                         "source_line": 1,
                         "panel": "C",
                     }
-                ]
+                ],
             }
         ),
         encoding="utf-8",
@@ -610,6 +610,98 @@ def test_mcp_next_returns_public_command_and_write_metadata(tmp_path: Path) -> N
     assert next_payload["writes"] is True
 
 
+def test_mcp_propose_improvements_reports_no_op_on_pure_refusal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_candidate_fixture(workspace, with_candidate_defect=False)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_improvements",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    propose = _tool_payload(_response_lines(result)[0])
+    assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
+    assert propose["candidate_set"]["candidates"] == []
+    assert propose["candidate_set"]["refusals"]
+    assert propose["success"] is False
+    assert propose["no_op"] is True
+    assert propose["refusals"] == propose["candidate_set"]["refusals"]
+
+
+def _write_real_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "reference").mkdir()
+    (fixture / "reference" / "panel_a.png").write_bytes(b"fake")
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\npanels:\n  - id: A\n    reference_image: reference/panel_a.png\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    build = fixture / "build"
+    build.mkdir()
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "A",
+                    }
+                ],
+                "source_hashes": {
+                    f"examples/{name}/{name}.tex": "sha256:"
+                    + sha256((fixture / f"{name}.tex").read_bytes()).hexdigest()
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def test_mcp_propose_improvements_keeps_success_on_real_candidate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_real_candidate_fixture(workspace)
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_propose_improvements",
+                    "arguments": {"name": "candidate_demo"},
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    propose = _tool_payload(_response_lines(result)[0])
+    assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
+    assert propose["candidate_set"]["candidates"]
+    assert propose["success"] is True
+    assert "no_op" not in propose
+
+
 def test_mcp_benchmark_detectors_preview_is_read_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
 
@@ -1014,7 +1106,8 @@ def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
     assert analyze["success"] is True
     assert analyze["intent"]["schema"] == "figure-agent.intent-model.v1"
     assert propose["schema"] == "figure-agent.mcp.propose-improvements.v1"
-    assert propose["success"] is True
+    assert propose["success"] is False
+    assert propose["no_op"] is True
     assert propose["candidate_set"]["schema"] == "figure-agent.candidate-set.v1"
     assert apply["schema"] == "figure-agent.mcp.apply-candidate.v1"
     assert apply["success"] is False
@@ -1693,9 +1786,7 @@ def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
         assert apply_result["post_apply"]["compile"]["returncode"] == 0
     else:
         assert "post-apply verification failed" in applied["error"]["message"]
-        assert any(
-            check["status"] == "failed" for check in apply_result["post_apply"].values()
-        )
+        assert any(check["status"] == "failed" for check in apply_result["post_apply"].values())
 
     # Second apply of the same (now already-applied) candidate must be refused
     # by the acceptance/drift/lock gate — proving the gate runs and is not bypassed.

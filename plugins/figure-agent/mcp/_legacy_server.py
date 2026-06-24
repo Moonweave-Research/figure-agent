@@ -553,8 +553,10 @@ def _tool_env(plugin_root: Path, workspace_root: Path) -> dict[str, str]:
     env["FIGURE_AGENT_WORKSPACE"] = str(workspace_root)
     import_paths = os.pathsep.join(str(path) for path in SCRIPT_IMPORT_DIRS)
     existing_pythonpath = env.get("PYTHONPATH")
-    env["PYTHONPATH"] = import_paths if not existing_pythonpath else os.pathsep.join(
-        (import_paths, existing_pythonpath)
+    env["PYTHONPATH"] = (
+        import_paths
+        if not existing_pythonpath
+        else os.pathsep.join((import_paths, existing_pythonpath))
     )
     return env
 
@@ -768,6 +770,21 @@ def _run_json_fig_agent_tool(
     )
     if json_error is not None:
         return json_error
+    if (
+        isinstance(payload, dict)
+        and isinstance(payload.get("candidates"), list)
+        and len(payload["candidates"]) == 0
+        and payload.get("refusals")
+    ):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            no_op=True,
+            refusals=payload["refusals"],
+            **{payload_key: payload},
+        )
     return _tool_envelope(
         schema,
         success=True,
