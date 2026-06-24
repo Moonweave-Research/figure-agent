@@ -213,6 +213,34 @@ open question; see
 `docs/macros/bell-curve.md`, `docs/macros/band-diagram.md`,
 `docs/macros/plot-callout.md`.
 
+### Layer 3.7 — Composition (structural-block rewrite)
+
+**Files**: `scripts/composition_families.py`,
+`scripts/composition_family_templates.py`, `scripts/composition_apply.py`,
+`scripts/composition_cli.py`, `scripts/composition_post_apply_verify.py`.
+
+This layer is a per-figure premium scaffold for hand-authored scene rewrites,
+distinct from the bounded candidate/apply nudge path. Where candidate/apply
+emits small offset patches, composition emits whole structural-block rewrites:
+each family variant is a `replace_semantic_block` op that swaps a
+marker-delimited TikZ region for a premium hand-authored alternative scene.
+
+It does not generalize across figures yet. `FAMILY_DATA` in
+`composition_family_templates.py` is hardcoded to the
+`fig3_resistance_mechanism` scene objects `carrier_walk`,
+`current_sparkline`, and `n_breadth`; `compose-generate-families` on any other
+fixture (e.g. fig2) fails with `selector_missing` because no marker block
+matches. This is a single-fixture-bound premium scaffold, **not** a reusable
+component bank.
+
+Every generated op is stamped `apply_authority: 'human_required'`, so the
+composition path never auto-applies a scene rewrite. The flow is wired through
+the `bin/fig-agent compose-*` subcommands (`compose-capture`,
+`compose-generate-families`, `compose-render`, `compose-rank`,
+`compose-review`, `compose-apply-ready`, `compose-accept`, ...), with
+`composition_post_apply_verify.py` checking the rewrite after a human applies
+it.
+
 ### Layer 3.5 — Theory Guard
 
 **Files**: optional `examples/<name>/authoring_contract.md`,
@@ -250,8 +278,8 @@ publication-ready evidence.
 ### Layer 4 — Compile Gates
 
 **Files**: `scripts/compile.sh`, `scripts/lint_tex.py`,
-`scripts/check_collisions.py`, `scripts/check_visual_clash.py`,
-`scripts/check_layout_drift.py`.
+`scripts/checks/check_collisions.py`, `scripts/checks/check_visual_clash.py`,
+`scripts/checks/check_layout_drift.py`.
 
 Chain (in order):
 
@@ -312,10 +340,10 @@ Adding a new fixture to Layer B: edit its `spec.yaml`, set `ae_max` based on a m
 
 **Status**: implemented opt-in handoff contract. Manifest schema, `/fig_status`
 state, accepted-gate validation, verify-only `/fig_loop` surfacing,
-`/fig_drive --mode polish` routing, `scripts/svg_polish_recipe.py`,
-`scripts/svg_polish_executor.py`, `scripts/svg_polish_delta.py`, and
+`/fig_drive --mode polish` routing, `scripts/svg_polish/svg_polish_recipe.py`,
+`scripts/svg_polish/svg_polish_executor.py`, `scripts/svg_polish/svg_polish_delta.py`, and
 final-artifact blocking are live. The plugin still does not invent hidden SVG
-geometry edits; `scripts/svg_polish_handoff.py` scaffolds the audit and manifest
+geometry edits; `scripts/svg_polish/svg_polish_handoff.py` scaffolds the audit and manifest
 for an already-polished SVG.
 
 **Design**:
@@ -351,19 +379,19 @@ final_artifact:
 - `/fig_status` reports `final_artifact_state`, `final_artifact_kind`, and
   `final_artifact_path`. Polished artifacts can be `MISSING`, `INVALID`,
   `STALE`, `BLOCKED`, or `FRESH`.
-- In accepted mode, `scripts/check_golden_artifacts.py` requires a fresh,
+- In accepted mode, `scripts/checks/check_golden_artifacts.py` requires a fresh,
   provenance-backed polished SVG only for fixtures that explicitly opt in.
 - `/fig_loop` remains verify-only. It blocks completion when status reports
   `workflow_ready=true` but `final_ready=false`, and it surfaces the current
   final-artifact state in its decision output.
-- `scripts/svg_polish_handoff.py` is the UX helper for writing
+- `scripts/svg_polish/svg_polish_handoff.py` is the UX helper for writing
   `polish/svg_polish_audit.md` and `polish/svg_polish_manifest.yaml` after a
   human or outer agent creates `polish/<name>.polished.svg`.
 
 ### Layer 6 — Validation Gates
 
-**Files**: `scripts/check_golden_artifacts.py`,
-`scripts/check_layout_drift.py`,
+**Files**: `scripts/checks/check_golden_artifacts.py`,
+`scripts/checks/check_layout_drift.py`,
 `tests/test_golden_artifact_checks.py`,
 `tests/test_check_layout_drift.py`.
 
@@ -549,13 +577,13 @@ historical events; do not rewrite them.
 | Understand product direction | `docs/quality-kernel-goal.md` |
 | Add a new fixture | `commands/fig_new.md` + `examples/<name>/` |
 | Add a new gate to `/fig_compile` | `scripts/compile.sh` + `scripts/check_*.py` |
-| Add a per-fixture validation rule | `spec.yaml.golden_contract` (new fixture) or `scripts/check_golden_artifacts.py` (new contract field) |
+| Add a per-fixture validation rule | `spec.yaml.golden_contract` (new fixture) or `scripts/checks/check_golden_artifacts.py` (new contract field) |
 | Add a flagship macro | `styles/polymer-paper-preamble.sty` + update `lint_tex.py` flagship list |
 | Promote a fixture to golden | three changes in one commit: `spec.yaml`, repo-root `.gitignore`, `.gitattributes` |
 | Make `/fig_compile` strict in CI | `FIGURE_AGENT_STRICT=1 bash scripts/compile.sh ...` |
 | Generate coordinate hints from a reference PNG | `/fig_extract <name>` → `examples/<name>/coordinate_hints.yaml` |
 | Tune palette detection for a noisy reference | `--min-component-pixels` flag on `scripts/reference_extract.py` |
-| Diagnose label drift between reference PNG and build PDF | `uv run python3 scripts/check_layout_drift.py examples/<name>` |
+| Diagnose label drift between reference PNG and build PDF | `uv run python3 scripts/checks/check_layout_drift.py examples/<name>` |
 | Diagnose a fixture's stage | `uv run python3 scripts/status.py examples/<name>` |
 | Replay a golden fixture from clean checkout | `bash scripts/compile.sh examples/<name>/<name>.tex && bash scripts/export_svg.sh ...` |
 
