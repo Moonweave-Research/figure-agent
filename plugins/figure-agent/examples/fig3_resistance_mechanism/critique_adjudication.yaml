@@ -1,10 +1,4 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig3_resistance_mechanism
-source_critique_hash: sha256:8965c3af56bec6dcf4d9de0aa45d2f07a8af3681e7f2bb4acc9f0ca734798a2c
-decisions:
-- finding_id: C001
-  decision: keep
-  reason: Real MINOR label-clearance defect (VC012, dark=0.141); keep for a bounded label-clearance fix at line 69.
-  patch_target: examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex lines
-    69-69
-  evidence: critique.md finding C001.
+source_critique_hash: sha256:3efe4d3d9306b5be62607b5259eec6be31a76c02e4372bbe82cbf7f0be9da69b
+decisions: []
