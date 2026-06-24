@@ -133,6 +133,39 @@ def test_memory_prior_changes_reviewable_candidate_score() -> None:
     assert score["effective_apply_authority"] == "apply_eligible"
 
 
+def test_narrative_context_does_not_change_rank_score() -> None:
+    manifest = {
+        "schema": "figure-agent.candidate-manifest.v1",
+        "candidate_id": "CAND001",
+        "apply_authority": "apply_eligible",
+        "edit_class": "label_offset",
+        "verification": {"hard_gate_state": "pass"},
+    }
+    narrative_manifest = {
+        **manifest,
+        "narrative_review_context": {
+            "rank_eligible": False,
+            "blocking_allowed": False,
+            "context": {"schema": "figure-agent.narrative-context.v1"},
+        },
+    }
+    rendered = {
+        "stages": {
+            "compile": {"status": "success"},
+            "export": {"status": "success"},
+            "crop": {"status": "success"},
+            "evaluate": {"status": "rendered_needs_human_review"},
+        }
+    }
+
+    baseline = candidate_rank.score_manifest(manifest, render_manifest=rendered)
+    with_narrative = candidate_rank.score_manifest(narrative_manifest, render_manifest=rendered)
+
+    assert with_narrative["rank_score"] == baseline["rank_score"]
+    assert with_narrative["scores"] == baseline["scores"]
+    assert with_narrative["evidence"] == baseline["evidence"]
+
+
 def test_memory_prior_does_not_change_effective_apply_authority() -> None:
     manifest = {
         "schema": "figure-agent.candidate-manifest.v1",
@@ -261,8 +294,8 @@ def test_detector_improvement_adds_soft_prior_and_evidence() -> None:
 
     assert score["scores"]["detector_prior"] == 0.15
     assert score["rank_score"] == 0.65
-    assert "detector:text_boundary.blocker_count:decrease_or_equal" in (
-        score["evidence"]["positive"]
+    assert (
+        "detector:text_boundary.blocker_count:decrease_or_equal" in (score["evidence"]["positive"])
     )
 
 

@@ -562,6 +562,27 @@ def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
     assert "### 10. Publication Readiness" in brief
 
 
+def test_critique_brief_includes_read_only_narrative_context(tmp_path: Path) -> None:
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "authoring_plan.md").write_text(
+        "Hero: show trap-assisted retention before local details.\n",
+        encoding="utf-8",
+    )
+    (example_dir / "panel_goals.md").write_text(
+        "Panel a: make capture direction visible before labels.\n",
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Human Narrative Context (read-only)" in brief
+    assert "Source-anchored reviewer guidance; not a prompt loop or patch authority." in brief
+    assert "First takeaway source: `briefing.md`" in brief
+    assert "Panel `a`: demo panel" in brief
+    assert "What should a reader understand in the first three seconds?" in brief
+    assert "rank_scoring=false" in brief
+
+
 def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 

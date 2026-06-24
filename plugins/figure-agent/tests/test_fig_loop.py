@@ -487,6 +487,18 @@ def _assert_agent_action_required(iteration: dict) -> None:
 
 def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path) -> None:
     fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels:\n"
+        "  - id: L\n"
+        "    caption: Loop panel story\n"
+        "style_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    (fixture / "panel_goals.md").write_text(
+        "Panel L: keep the main loop state legible before details.\n",
+        encoding="utf-8",
+    )
     before_files = _fixture_files(fixture)
 
     run_dir = run_loop(
@@ -523,6 +535,15 @@ def test_verify_only_loop_writes_manifest_iteration_and_decision(tmp_path: Path)
     }
     assert iteration["adjudication"]["state"] == "missing"
     assert iteration["stop_reason"] == "status_action_required"
+    assert iteration["narrative_context_summary"] == {
+        "schema": "figure-agent.narrative-context.v1",
+        "read_only": True,
+        "first_takeaway_source": "briefing.md",
+        "panel_story_input_count": 1,
+        "human_review_question_count": 5,
+        "rank_scoring": False,
+        "source_mutation": False,
+    }
     assert iteration["patch_evidence"] is None
     assert "status_action_required" in decision
 

@@ -9,6 +9,7 @@ from typing import Any
 import candidate_acceptance
 import candidate_apply
 import fixture_identity
+import narrative_context
 import runtime_paths
 import semantic_candidate_review
 
@@ -149,9 +150,7 @@ def _render_evidence(
     render_manifest: dict[str, Any],
 ) -> dict[str, Any]:
     stages = (
-        render_manifest.get("stages")
-        if isinstance(render_manifest.get("stages"), dict)
-        else {}
+        render_manifest.get("stages") if isinstance(render_manifest.get("stages"), dict) else {}
     )
     evaluate_stage = stages.get("evaluate") if isinstance(stages.get("evaluate"), dict) else {}
     render_status = str(evaluate_stage.get("status") or "not_rendered")
@@ -226,9 +225,7 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "apply_authority": manifest.get("apply_authority"),
         "effective_apply_authority": manifest.get("effective_apply_authority"),
         "hard_gate_state": (
-            verification.get("hard_gate_state")
-            if isinstance(verification, dict)
-            else None
+            verification.get("hard_gate_state") if isinstance(verification, dict) else None
         ),
         "operation_count": len(operations) if isinstance(operations, list) else 0,
         "artifact_count": len(artifacts) if isinstance(artifacts, list) else 0,
@@ -242,6 +239,21 @@ def _manifest_summary(manifest: dict[str, Any]) -> dict[str, Any]:
             manifest.get("rollback", {}).get("strategy")
             if isinstance(manifest.get("rollback"), dict)
             else None
+        ),
+    }
+
+
+def _narrative_review_context(
+    example_dir: Path,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    return {
+        "rank_eligible": False,
+        "blocking_allowed": False,
+        "context": narrative_context.build_narrative_context(
+            example_dir,
+            workspace_root=workspace_root,
+            spec=semantic_candidate_review.load_spec(example_dir),
         ),
     }
 
@@ -267,10 +279,7 @@ def _source_change_summary(manifest: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _rank_command(name: str, manifest: dict[str, Any]) -> str:
     candidate_set = str(manifest.get("candidate_set_path") or "build/candidates/candidate_set.json")
-    return (
-        f"fig-agent rank-candidates {name} "
-        f"--candidate-set {candidate_set} --json"
-    )
+    return f"fig-agent rank-candidates {name} --candidate-set {candidate_set} --json"
 
 
 def _apply_readiness(
@@ -390,9 +399,7 @@ def build_review_packet(
         "candidate_hash": manifest.get("candidate_hash"),
         "panel": manifest.get("panel"),
         "selectors": (
-            manifest.get("selectors")
-            if isinstance(manifest.get("selectors"), list)
-            else []
+            manifest.get("selectors") if isinstance(manifest.get("selectors"), list) else []
         ),
         "visual_review": manifest.get("visual_review")
         if isinstance(manifest.get("visual_review"), dict)
@@ -404,6 +411,10 @@ def build_review_packet(
             "status": "not_available",
             "recommended_command": _rank_command(name, manifest),
         },
+        "narrative_review_context": _narrative_review_context(
+            example_dir,
+            paths.workspace_root,
+        ),
         "semantic_invariant_report": semantic_candidate_review.build_semantic_review_state(
             example_dir,
             manifest_path,

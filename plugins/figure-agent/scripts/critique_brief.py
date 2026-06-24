@@ -20,6 +20,7 @@ from pathlib import Path
 
 import critique_brief_sections as brief_sections
 import fixture_identity
+import narrative_context
 import runtime_paths
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
@@ -69,9 +70,7 @@ MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
-STYLE_LOCK_PATH = (
-    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
-)
+STYLE_LOCK_PATH = runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
@@ -249,6 +248,34 @@ def _semantic_claim_questions_section(spec: dict) -> str:
     return "\n\n" + "\n".join(lines)
 
 
+def _workspace_root_for_example(example_dir: Path) -> Path:
+    if example_dir.parent.name == "examples":
+        return example_dir.parent.parent
+    return example_dir.parent
+
+
+def _narrative_context_section(example_dir: Path, spec: dict) -> str:
+    payload = narrative_context.build_narrative_context(
+        example_dir,
+        workspace_root=_workspace_root_for_example(example_dir),
+        spec=spec,
+    )
+    reader_contract = payload["reader_contract"]
+    lines = [
+        "## Human Narrative Context (read-only)",
+        "Source-anchored reviewer guidance; not a prompt loop or patch authority.",
+        f"- First takeaway source: `{reader_contract['first_takeaway_source']}`",
+        "- Stop boundaries: model_calls=false, prompt_loop=false, "
+        "source_mutation=false, rank_scoring=false",
+    ]
+    for panel in reader_contract["panel_story_inputs"]:
+        lines.append(f"- Panel `{panel['id']}`: {panel['caption']}")
+    if reader_contract["human_review_questions"]:
+        lines.append("- Human-perspective review questions:")
+        lines.extend(f"  - {question}" for question in reader_contract["human_review_questions"])
+    return "\n\n" + "\n".join(lines)
+
+
 def _reference_free_grounding_section(sections: dict[int, tuple[str, str]], spec: dict) -> str:
     rules = explicit_briefing_rule_text(sections)
     if not rules:
@@ -302,10 +329,7 @@ def _reference_free_journal_assessment_schema(critique_input_hash: str) -> str:
             "  schema: figure-agent.journal-grade-assessment.v1",
             "  scoring_mode: fresh_reaudit",
             f"  assessed_artifact_hash: {critique_input_hash}",
-            (
-                "  benchmark_level: draft | solid_manuscript | "
-                "needs_human_art_direction | blocked"
-            ),
+            ("  benchmark_level: draft | solid_manuscript | needs_human_art_direction | blocked"),
             f"  confidence: {brief_sections.QUALITY_CONFIDENCE_VALUES}",
             "  blockers: []",
             "  regression_detected: true | false",
@@ -1623,6 +1647,7 @@ zoom/reference review.
         crop_anomaly_schema = ""
         crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
+    narrative_context_section = _narrative_context_section(example_dir, spec)
     semantic_claim_questions_section = _semantic_claim_questions_section(spec)
     journal_assessment_section = (
         _reference_free_journal_assessment_section()
@@ -1662,6 +1687,7 @@ zoom/reference review.
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
+{narrative_context_section}
 {reference_free_grounding_section}
 
 ## Physics invariants the figure MUST honor

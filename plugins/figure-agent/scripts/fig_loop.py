@@ -12,10 +12,12 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
+import narrative_context  # noqa: E402
 from fig_driver_editorial import (  # noqa: E402
     svg_polish_gate_from_checkpoint,
     svg_polish_readiness_from_checkpoint,
@@ -56,6 +58,7 @@ from fig_loop_patch_evidence import (  # noqa: E402
     post_patch_evidence_verdict,
 )
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from inputs import parse_spec  # noqa: E402
 from next_action_summary import loop_next_action_summary  # noqa: E402
 from reference_aesthetic_metrics import (  # noqa: E402
     reference_aesthetic_metrics_summary as build_reference_aesthetic_metrics_summary,
@@ -223,6 +226,32 @@ def _git_value(repo_root: Path, args: tuple[str, ...]) -> str | None:
     return result.stdout.strip() or None
 
 
+def _narrative_spec(example_dir: Path) -> dict[str, Any]:
+    try:
+        return parse_spec((example_dir / "spec.yaml").read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError):
+        return {}
+
+
+def _narrative_context_summary(example_dir: Path, repo_root: Path) -> dict[str, Any]:
+    payload = narrative_context.build_narrative_context(
+        example_dir,
+        workspace_root=repo_root,
+        spec=_narrative_spec(example_dir),
+    )
+    reader_contract = payload["reader_contract"]
+    stop_boundaries = payload["stop_boundaries"]
+    return {
+        "schema": payload["schema"],
+        "read_only": payload["read_only"],
+        "first_takeaway_source": reader_contract["first_takeaway_source"],
+        "panel_story_input_count": len(reader_contract["panel_story_inputs"]),
+        "human_review_question_count": len(reader_contract["human_review_questions"]),
+        "rank_scoring": stop_boundaries["rank_scoring"],
+        "source_mutation": stop_boundaries["source_mutation"],
+    }
+
+
 def _run_id(name: str) -> str:
     timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")
     safe_name = "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
@@ -347,6 +376,7 @@ def run_loop(
         "iteration": 1,
         "status": status_result,
         "audit_evidence": status_result.get("audit_evidence"),
+        "narrative_context_summary": _narrative_context_summary(example_dir, repo_root),
         "axis_verdicts": axis_verdicts,
         "adjudication": adjudication,
         "stop_reason": loop_decision["stop_reason"],

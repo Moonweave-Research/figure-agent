@@ -291,6 +291,41 @@ def test_review_packet_reads_manifest_and_artifact_descriptors(
     assert _tree(workspace) == before
 
 
+def test_review_packet_includes_advisory_narrative_context(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """name: candidate_demo
+panels:
+  - id: C
+    caption: Candidate panel role
+""",
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("## 1. Topic\nCandidate story\n", encoding="utf-8")
+    (fixture / "panel_goals.md").write_text(
+        "Panel C: preserve the comparison before moving labels.\n",
+        encoding="utf-8",
+    )
+    before = _tree(workspace)
+
+    packet = candidate_review_packet.build_review_packet(
+        "candidate_demo",
+        "CAND001",
+        workspace_root=workspace,
+    )
+
+    assert packet["narrative_review_context"]["rank_eligible"] is False
+    assert packet["narrative_review_context"]["blocking_allowed"] is False
+    assert packet["narrative_review_context"]["context"]["schema"] == (
+        "figure-agent.narrative-context.v1"
+    )
+    assert packet["narrative_review_context"]["context"]["sources"]["panel_goals"].endswith(
+        "panel_goals.md"
+    )
+    assert _tree(workspace) == before
+
+
 def test_review_packet_includes_semantic_review_state(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
