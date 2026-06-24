@@ -1,126 +1,143 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig3_resistance_mechanism
-generated_at: 2026-06-22T23:28:31Z
+generated_at: 2026-06-24T00:00:00Z
 generator: critique_brief.py
-generator_version: sha256:fbc45f5352711d631b796ba6b87785ae0a7c787c8b6baaa285c85cf7286c1147
+generator_version: sha256:0bf8abd441f6688290a6abc8b4fda75a2d131526615ba5df7b07dc4d1ec04c94
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:a38c8ffee637745fa525b9c1468cf5c266a73e3e683c3132126061563bb3f8f4
-verdict: revise
+critique_input_hash: sha256:78ca63dddd494d288dd5330ade7a666e37191f2d64d495ee931b3d307b257fd1
+verdict: ready
+findings: []
+panels: []
 audit_enumeration:
   structural_completeness:
     components:
-      - component: electrochemical cell (electrode/film/electrode stack)
+      - component: electrochemical cell stack
         mount_support: yes
-        rationale: "Top/bottom grey electrodes bound the amber sulfur-polymer film; closed rectangle."
-        connections: "+V at top electrode, − at bottom electrode; both bias labels attached to their electrode edges."
-      - component: carrier multiple-trapping walk
+        rationale: "Grey electrodes bound the amber sulfur-polymer film."
+        connections: "+V is attached to the top electrode and the minus label to the bottom electrode."
+      - component: sign-agnostic carrier walk
         mount_support: N/A
-        rationale: "Dispersive walk is a trajectory, not a mounted part; injected at top electrode, terminates at circled trap."
-        connections: "6 segments, each endpoint lands on an × trap site; final segment ends in the red circle (caught carrier)."
-      - component: I(t) decay sparkline
+        rationale: "The tortuous path is a transport cue, not a mounted part."
+        connections: "Path starts at the film/electrode region and repeatedly meets x trap glyphs."
+      - component: transient-current decay sparkline
         mount_support: yes
-        rationale: "Axes (I vs t) drawn; curve attached to origin region; I∝t^-n label inside the axes box."
-        connections: "Both axis arrows from common origin; curve spans the t domain."
-      - component: g(E) trap-energy distribution panel
+        rationale: "I and t axes plus a monotone decay curve communicate I(t) decay."
+        connections: "Curve sits inside the axes and supports the current decays to R up bridge text."
+      - component: trap-energy distribution plot
         mount_support: yes
-        rationale: "E (horizontal) and g(E) (vertical) axes from a common origin; both distribution curves seated on the E axis."
-        connections: "Blue discrete spike and red dashed broad curve share the E baseline; n-breadth and ρ60s indicators attached to the plot."
+        rationale: "E and g(E) axes frame the discrete S60 and broad continuous S80 distributions."
+        connections: "n spans distribution breadth horizontally while rho60s is separate and vertical."
     missing_from_reference:
-      - element: leader line from 'sulfur polymer' label to the film
+      - element: numeric transient-current scale
         status: intentional_omission
-        rationale: "Label sits inside the film region; direct placement is unambiguous, no leader needed."
-      - element: explicit time markers / t>2s absorption-current regime tick on sparkline
+        rationale: "The sparkline is qualitative; measured values belong in data panels."
+      - element: explicit carrier sign
         status: intentional_omission
-        rationale: "Sparkline is a qualitative cue (briefing: slim/compact); quantitative axis ticks belong to the composited data graph, not this schematic."
-      - element: ρ60s numeric scale on the magnitude indicator
+        rationale: "Briefing requires sign-agnostic dispersive transport."
+      - element: detailed trap chemistry label
         status: intentional_omission
-        rationale: "ρ60s is shown as an orthogonal magnitude reference only (briefing §3 rule 5); numbers come from the data pipeline."
+        rationale: "Trap chemistry is not established; unlabeled x sites are correct."
   label_target_matching:
     - label: "+V"
-      nearest_object: "top grey electrode"
-      intended_target: "top electrode (applied bias)"
+      nearest_object: "top electrode"
+      intended_target: "applied bias at top electrode"
       matches: true
       proposed_fix: ""
-    - label: "−"
-      nearest_object: "bottom grey electrode"
-      intended_target: "bottom electrode (return)"
+    - label: "minus"
+      nearest_object: "bottom electrode"
+      intended_target: "return electrode"
       matches: true
       proposed_fix: ""
     - label: "sulfur polymer"
-      nearest_object: "amber film region"
-      intended_target: "the disordered sulfur-polymer film"
+      nearest_object: "amber film"
+      intended_target: "disordered sulfur-polymer film"
       matches: true
       proposed_fix: ""
-    - label: "I ∝ t^-n"
-      nearest_object: "blue decay curve in sparkline"
-      intended_target: "the transient-current decay curve"
+    - label: "carrier (sign-agnostic), repeatedly trapped"
+      nearest_object: "tortuous carrier path and x trap sites"
+      intended_target: "dispersive multiple-trapping transport"
       matches: true
       proposed_fix: ""
-    - label: "current decays ⇒ R↑"
-      nearest_object: "sparkline / cell"
-      intended_target: "consequence of the I(t) decay (briefing §3 rule 1)"
+    - label: "current decays => R up"
+      nearest_object: "I(t) decay sparkline"
+      intended_target: "resistance consequence of transient-current decay"
       matches: true
       proposed_fix: ""
-    - label: "broader g(E) ⇒ larger n ⇒ slower decay"
-      nearest_object: "bridge text between panels A and B"
-      intended_target: "the A→B causal bridge (breadth→n→decay rate)"
+    - label: "broader g(E) => larger n => slower decay"
+      nearest_object: "bridge between sparkline and g(E) plot"
+      intended_target: "breadth to n to decay-rate bridge"
+      matches: true
+      proposed_fix: ""
+    - label: "g(E)"
+      nearest_object: "panel-B vertical axis"
+      intended_target: "trap-energy distribution density axis"
+      matches: true
+      proposed_fix: ""
+    - label: "E (trap energy)"
+      nearest_object: "panel-B horizontal axis"
+      intended_target: "trap energy axis"
       matches: true
       proposed_fix: ""
     - label: "S60: discrete (single deep)"
-      nearest_object: "blue sharp spike"
-      intended_target: "the discrete low-sulfur distribution"
+      nearest_object: "blue sharp peak"
+      intended_target: "low-sulfur discrete trap distribution"
       matches: true
       proposed_fix: ""
     - label: "S80: continuous broad"
       nearest_object: "red dashed broad curve"
-      intended_target: "the continuous high-sulfur distribution"
+      intended_target: "high-sulfur broad continuous distribution"
       matches: true
       proposed_fix: ""
-    - label: "disorder ↑ (sulfur ↑)"
-      nearest_object: "evolution arrow (blue spike → broad)"
-      intended_target: "the discrete→continuous evolution arrow"
+    - label: "disorder up (sulfur up)"
+      nearest_object: "discrete-to-continuous evolution arrow"
+      intended_target: "sulfur-driven disorder increase from S60 peak to S80 broad distribution"
       matches: true
-      proposed_fix: "Label binds to the correct arrow, but one ↑ glyph overlaps the red dashed broad curve (VC012); reposition for clearance, not retarget."
+      proposed_fix: ""
     - label: "n = breadth"
-      nearest_object: "red horizontal double-arrow"
-      intended_target: "the breadth span of the broad distribution (briefing §3 rule 2)"
+      nearest_object: "red horizontal span"
+      intended_target: "breadth of trap-energy distribution"
       matches: true
       proposed_fix: ""
-    - label: "ρ60s"
-      nearest_object: "grey vertical double-arrow"
-      intended_target: "the orthogonal magnitude metric (briefing §3 rule 5)"
+    - label: "rho60s"
+      nearest_object: "grey vertical magnitude indicator"
+      intended_target: "separate 60 s magnitude metric"
       matches: true
       proposed_fix: ""
   physical_plausibility:
-    - check: direction_orientation
-      finding: "Evolution arrow points discrete spike → broad distribution, matching disorder↑ with sulfur↑ (briefing §3 rule 4). Sparkline decays monotonically (I∝t^-n). Carrier walk descends from +V toward −."
+    - check: cable_gravity
+      finding: "No cables are shown; paths and arrows are schematic transport or plot cues."
       verdict: convention_acceptable
     - check: floating_components
-      finding: "No floating parts; both g(E) curves are seated on the E axis, indicators attach to the plot, walk endpoints land on trap sites."
+      finding: "No unsupported physical component is presented as a real mounted object."
       verdict: convention_acceptable
     - check: spatial_proximity
-      finding: "n=breadth red double-arrow visually crosses the blue spike base; this is an overlay of a measurement span on overlapping distributions, not a contradiction of separation."
-      verdict: convention_acceptable
-    - check: material_distinction
-      finding: "Amber film vs grey electrodes are clearly distinct; blue solid (discrete) vs red dashed (continuous) encode the two regimes via colour AND line style (redundant encoding)."
-      verdict: convention_acceptable
-    - check: cable_gravity
-      finding: "No cables/wires in this schematic; carrier walk is a trajectory and is intentionally tortuous (dispersive transport)."
+      finding: "Panel spacing and internal label placement are clear after the label fix."
       verdict: convention_acceptable
     - check: direction_orientation
-      finding: "Charge carrier is drawn sign-agnostic — a tortuous multiple-trapping walk with no clean +→− ballistic drift, honoring briefing §3 rule 3."
+      finding: "Carrier motion remains sign-agnostic, I(t) decays, and the evolution arrow points from discrete S60 to broad S80."
+      verdict: convention_acceptable
+    - check: material_distinction
+      finding: "Amber film, grey electrodes, blue S60, red S80, and grey rho60s use distinct visual roles."
       verdict: convention_acceptable
   conceptual_completeness:
-    - element: Curie–von Schweidler power-law decay I∝t^-n
+    - element: sign-agnostic carrier transport
       reference: briefing
       severity: NIT
       proposed_action: accept_simplification
-    - element: discrete→continuous trap-distribution evolution with sulfur
+    - element: transient I(t) decay and resistance increase
       reference: briefing
       severity: NIT
       proposed_action: accept_simplification
-    - element: orthogonal breadth (n) vs magnitude (ρ60s) decomposition
+    - element: n as distribution breadth
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: rho60s as separate magnitude metric
+      reference: briefing
+      severity: NIT
+      proposed_action: accept_simplification
+    - element: S60 discrete and S80 broad continuous trap distributions
       reference: briefing
       severity: NIT
       proposed_action: accept_simplification
@@ -128,408 +145,351 @@ quality_axes:
   message_storyline:
     verdict: pass
     confidence: high
-    rationale: "Reads as: bias drives a carrier through a disordered trap-filled film → current decays (R↑) → trap-energy distribution broadens discrete→continuous with sulfur. Matches briefing §1."
-    evidence: "Panel A (cell+walk+sparkline) → bridge text → Panel B (g(E) evolution); full_q1/q3/q2/q4 crops."
+    rationale: "The figure reads as bias through a trap-filled sulfur-polymer film, transient current decay, and sulfur-driven broadening of g(E)."
+    evidence: "Panels A and B, bridge text, and full-render crops."
     blocking_items: []
     recommended_action: none
   panel_role_coherence:
     verdict: pass
     confidence: high
-    rationale: "Two panels with distinct, ordered roles: A = mechanism setup (transport+decay), B = model (trap-energy evolution). No redundancy or misordering."
-    evidence: "Panel A and Panel B crops."
+    rationale: "Panel A sets up transport and decay; panel B explains the trap-energy distribution mechanism."
+    evidence: "Panel A cell and sparkline; panel B g(E) plot."
     panel_roles:
       - panel_id: "A"
         role: mechanism
         role_quality: clear
-        rationale: "Cell + dispersive trapping walk + I(t) decay = the conduction/decay mechanism."
+        rationale: "Shows applied bias, sign-agnostic trapping, and current decay."
       - panel_id: "B"
         role: model
         role_quality: clear
-        rationale: "g(E) discrete→continuous evolution = the trap-distribution model underlying n."
+        rationale: "Shows discrete S60 to broad continuous S80 evolution."
     blocking_items: []
     recommended_action: none
   subregion_integration:
     verdict: pass
-    confidence: medium
-    rationale: "Bridge text 'broader g(E) ⇒ larger n ⇒ slower decay' links A's decay to B's breadth; no global imbalance introduced by local elements."
-    evidence: "Bridge text node (line 47) between panels; full_q3 crop."
+    confidence: high
+    rationale: "The label fix integrates cleanly; no local patch now disturbs the panel balance."
+    evidence: "The disorder up label starts just right of the panel-B y-axis and remains clear of the curve and panel-A sparkline."
     blocking_items: []
     recommended_action: none
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: "Electrodes, film, walk, sparkline, and both distributions are identifiable and correctly attached; omissions are deliberate schematic restraint."
-    evidence: "structural_completeness audit; full_q1/q3 crops."
+    rationale: "All schematic components are identifiable and attached to their intended explanatory roles."
+    evidence: "Structural audit components and crop audit log."
     blocking_items: []
     recommended_action: none
   scientific_plausibility:
     verdict: pass
     confidence: high
-    rationale: "All briefing §3 invariants honored: I∝t^-n decay, n=breadth (not density), sign-agnostic dispersive walk, discrete→continuous evolution, no depth-encoded strength, unlabeled × traps, no 'network' claim."
-    evidence: "physical_plausibility audit; briefing §3 rules 1–7."
+    rationale: "The sign-agnostic carrier, I(t) decay, n=breadth, separate rho60s, S60 discrete state, and S80 broad continuous state are preserved."
+    evidence: "Briefing rules 1 to 7 and current rendered labels."
     blocking_items: []
     recommended_action: none
   composition_layout:
-    verdict: needs_patch
-    confidence: medium
-    rationale: "Overall balance good and thumbnail-readable, but panel B's lower-left is congested where the evolution-arrow label seats against the dashed broad curve (VC012)."
-    evidence: "full_q2 crop; VC012_crop; finding C001."
-    blocking_items: ["C001 - panel B evolution-label congested against the dashed broad curve"]
-    recommended_action: patch
-  label_annotation_semantics:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "All labels bind to their intended targets, but one ↑ glyph of 'disorder ↑ (sulfur ↑)' overlaps the red dashed broad curve (VC012, dark=0.141)."
-    evidence: "label_target_matching audit; VC012_crop; finding C001."
-    blocking_items: ["C001 - disorder-arrow label glyph overlaps dashed broad curve"]
-    recommended_action: patch
+    rationale: "The previous panel-B label clash is resolved and all current crops are no_defect."
+    evidence: "VC001 to VC012 crop audit entries."
+    blocking_items: []
+    recommended_action: none
+  label_annotation_semantics:
+    verdict: pass
+    confidence: high
+    rationale: "All labels bind to their targets. The previous disorder up (sulfur up) issue is resolved: the label now starts just right of the panel-B y-axis and remains clear of the red dashed curve and the panel-A sparkline."
+    evidence: "Label-target matching audit plus VC012_g_E and full_q2/full_q4 crops."
+    blocking_items: []
+    recommended_action: none
   journal_polish:
     verdict: pass
-    confidence: medium
-    rationale: "Sans-serif, restrained palette (blue=discrete, red=continuous/breadth, amber=film, grey=electrodes/magnitude), economical line weights, no decorative noise. Single minor label/curve touch is the only polish gap."
-    evidence: "print_178mm and print_thumbnail crops; full_q2/q4."
+    confidence: high
+    rationale: "Typography, line weights, palette, and print-scale readability are adequate for figure-agent readiness."
+    evidence: "print_178mm and print_thumbnail crop entries."
     blocking_items: []
     recommended_action: none
   reference_fidelity:
     verdict: not_applicable
     confidence: high
-    rationale: "No reference image declared; reference-free briefing-grounded mode."
-    evidence: "spec.yaml has no reference_image; brief 'Reference-free briefing-grounded critique mode'."
+    rationale: "No reference image is declared; this critique is briefing-grounded."
+    evidence: "Final critique brief reference-free mode."
     blocking_items: []
     recommended_action: none
   publication_readiness:
-    verdict: needs_patch
+    verdict: pass
     confidence: high
-    rationale: "Scientifically and structurally sound; one MINOR label-clearance patch (VC012) stands between this and a clean state. Not less severe than the label/composition axes."
-    evidence: "label_annotation_semantics and composition_layout = needs_patch."
-    blocking_items: ["C001 - label/curve overlap"]
-    recommended_action: patch
+    rationale: "No open findings or blocking items remain in the figure-agent audit."
+    evidence: "All applicable quality axes pass; print-scale crops print_178mm and print_thumbnail are no_defect; reference fidelity is not_applicable."
+    blocking_items: []
+    recommended_action: none
 top_tier_audit:
   first_glance_message:
     verdict: pass
-    finding: "3s: a cell with a charge bouncing among traps + a decaying current. 10s: current decay ⇒ R↑. 30s: trap-energy distribution broadens discrete→continuous with sulfur, n=breadth."
+    finding: "3 seconds: trapped carrier and decaying current. 10 seconds: resistance rises as current decays. 30 seconds: sulfur broadens g(E), with n as breadth."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   target_journal_fit:
     verdict: pass
-    finding: "Fits a Nature-Communications mechanism schematic: low density, sans-serif, two-panel explanatory half of a composite figure."
+    finding: "The current artifact is ready within figure-agent's schematic-readiness standard."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   novelty_claim_support:
     verdict: pass
-    finding: "Visual weight is on the discrete→continuous g(E) evolution (panel B), which is the paper's mechanism claim, not on generic cell components."
+    finding: "The visual emphasis is the discrete-to-continuous trap-distribution mechanism."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   figure_caption_coupling:
     verdict: pass
-    finding: "Figure carries the mechanism with in-panel annotations; caption can stay light. Not overloaded, not caption-dependent."
+    finding: "The figure carries the mechanism without overloading the labels."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   visual_economy:
     verdict: pass
-    finding: "After removing the redundant bottom summary caption in prior iteration, ink is economical; the breadth/ρ60s indicators each earn their place."
+    finding: "Each mark contributes to bias, trapping, decay, breadth, or magnitude."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   cross_panel_semantic_grammar:
     verdict: pass
-    finding: "Colour grammar consistent: blue=discrete/S60, red=continuous/S80 and breadth, grey=neutral magnitude/electrodes, amber=film. Arrowheads consistent."
+    finding: "Blue, red, amber, grey, arrows, and x traps keep stable meanings."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   reader_misinterpretation_risk:
-    verdict: weak
-    finding: "A reader could momentarily read the taller blue spike as 'larger magnitude', but breadth is the encoded variable (n=breadth) and depth/height is explicitly not the metric (briefing §3 rule 5)."
-    concrete_fix: "accept_simplification — heights are schematic; n=breadth and ρ60s labels disambiguate."
+    verdict: pass
+    finding: "The n=breadth and rho60s labels guard against reading height or depth as the main trap metric."
+    concrete_fix: "accept_simplification"
     blocks_high_impact: false
   reduction_print_readability:
     verdict: pass
-    finding: "print_178mm and print_thumbnail both keep labels legible and the two-regime contrast clear."
+    finding: "The print and thumbnail crops remain legible, with no label collision."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   accessibility_color_robustness:
     verdict: pass
-    finding: "Discrete vs continuous encoded redundantly by colour AND line style (solid vs dashed); survives grayscale."
+    finding: "S60 and S80 are separated by both color and line style."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   aesthetic_coherence:
     verdict: pass
-    finding: "Single visual authority: consistent line weights, sans-serif type, flat editorial schematic register across both panels."
+    finding: "Both panels share the same flat schematic register and type hierarchy."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
 editorial_art_direction:
   hero_focus:
     verdict: pass
-    evidence: "Panel B g(E) evolution (blue spike vs red broad) is the largest, highest-contrast element."
-    rationale: "The mechanism claim should be the first fixation; it is."
+    evidence: "Panel B's blue peak and red broad curve are the dominant mechanism cue."
+    rationale: "The central claim is visible without adding decorative detail."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   narrative_choreography:
     verdict: pass
-    evidence: "Problem (bias+traps) → mechanism (decay, R↑) → model (g(E) evolution) flows left to right."
-    rationale: "Reads as a sequence, not assembled fragments."
+    evidence: "Left-to-right path from cell transport to decay to g(E) broadening."
+    rationale: "The figure reads as one mechanism sequence."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   illustration_readiness:
     verdict: pass
-    evidence: "Flat vector schematic with disciplined strokes; appropriate for a main-text mechanism schematic (not a cover)."
-    rationale: "Register matches target class; no depth/material rendering required here."
+    evidence: "Flat vector schematic with restrained labels and no unresolved collision."
+    rationale: "The current state is ready for figure-agent review closure."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   abstraction_consistency:
     verdict: pass
-    evidence: "Cell cartoon + sparkline data-plot + g(E) diagram are intentionally mixed and visually controlled at one detail level."
-    rationale: "Mixed registers are deliberate and consistent."
+    evidence: "Cell schematic, sparkline, and g(E) plot use a controlled common abstraction level."
+    rationale: "Mixed plot and schematic registers are intentional."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   reference_class_fit:
     verdict: pass
-    evidence: "Reads as nature_communications_mechanism_schematic."
-    rationale: "Density, typography, and panel count fit the class."
+    evidence: "No reference image is declared; fit is judged only as a restrained mechanism schematic."
+    rationale: "No external style transfer is required for this readiness verdict."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   visual_identity:
     verdict: pass
-    evidence: "Recurring motifs: × trap glyph, tortuous walk, dual-curve energy landscape, orthogonal breadth/magnitude arrows."
-    rationale: "Coherent visual language specific to this trapping claim."
+    evidence: "Trap x glyphs, tortuous path, and dual g(E) curves form a consistent motif."
+    rationale: "The visual identity is tied to the trapping mechanism."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   claim_payload_fit:
     verdict: pass
-    evidence: "The discrete→continuous evolution (the novelty) carries the most visual weight."
-    rationale: "Central claim is dominant, not secondary."
+    evidence: "Panel B gives strongest weight to discrete-to-continuous evolution."
+    rationale: "The central mechanism is not secondary."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
   aesthetic_risk:
-    verdict: weak
-    evidence: "One ↑ glyph of the evolution-arrow label overlaps the dashed broad curve (VC012); a careful eye reads it as crowded text in panel B's lower-left."
-    rationale: "Glyph-on-curve touches read as amateur typesetting at full scale."
-    concrete_fix: "Reposition the evolution-arrow label off the dashed curve (see C001)."
+    verdict: pass
+    evidence: "The former disorder up label overlap is gone; all crop verdicts are no_defect."
+    rationale: "No concrete visible aesthetic defect remains in the current audit set."
+    concrete_fix: "accept_simplification"
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: "Remaining gap is a single source-level label-clearance issue (VC012), not an optical vector-cleanup problem."
-    rationale: "Semantic/source work is not yet closed; one bounded TikZ edit remains, so SVG polish is premature."
-    concrete_fix: "Apply the C001 label-clearance edit in TikZ."
+    evidence: "No semantic, label, or crop blocker remains after the label fix."
+    rationale: "Figure-agent readiness is closed without requiring SVG polish."
+    concrete_fix: "accept_simplification"
     blocks_high_impact: false
     recommended_path: continue_tikz
-    remaining_tikz_lever: "Reposition / restructure the 'disorder ↑ (sulfur ↑)' node (line 69) so no glyph overlaps the dashed broad curve (line 57)."
+    remaining_tikz_lever: "none"
     svg_polish_candidate_reason: ""
     semantic_backport_reason: ""
     human_art_direction_reason: ""
   human_art_direction_gate:
     verdict: pass
-    evidence: "Target class, hero panel, and register are settled; no taste fork blocks the next loop."
-    rationale: "Only a bounded mechanical/layout patch remains."
+    evidence: "No human-only art-direction fork blocks this audit."
+    rationale: "The requested readiness claim is figure-agent readiness only."
     concrete_fix: "accept_simplification"
     blocks_high_impact: false
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:a38c8ffee637745fa525b9c1468cf5c266a73e3e683c3132126061563bb3f8f4
+  assessed_artifact_hash: sha256:78ca63dddd494d288dd5330ade7a666e37191f2d64d495ee931b3d307b257fd1
   benchmark_level: solid_manuscript
   confidence: high
   blockers: []
   regression_detected: false
   regressions: []
   score_is_gateable: false
-  next_quality_bottleneck: label_semantics
-  rationale: "Briefing §3 invariants all preserved; structure and story are clear. The single remaining report-only issue is the VC012 label/curve clearance in panel B (label_semantics). Taste-level venue/register decisions are not pending, so this stays a bounded patch rather than human art direction."
+  next_quality_bottleneck: human_policy
+  rationale: "Report-only assessment: figure-agent audit readiness is clean, with no journal acceptance claim."
 aesthetic_gate_audit:
   - slot: maturity_restraint
     verdict: pass
     route: pass
-    evidence: "full_q1/full_q2 crops: rectilinear cell, thin role-differentiated strokes, no juvenile/cartoon shapes visible."
-    rationale: "Editorial schematic register is mature and restrained."
-    linked_evidence:
-      - top_tier_audit.aesthetic_coherence
+    evidence: "Current render uses flat grey electrodes, one amber film fill, black axes/arrows, and blue/red distribution curves without gradients, icons, or decorative texture."
+    rationale: "The visual register is a restrained mechanism schematic; no cartoon or poster-style cue controls the figure."
+    linked_evidence: []
   - slot: visual_hierarchy
     verdict: pass
     route: pass
-    evidence: "full_q2 crop: the blue spike vs red broad curve is the dominant visible anchor in panel B."
-    rationale: "First fixation lands on the mechanism claim."
-    linked_evidence:
-      - editorial_art_direction.hero_focus
-  - slot: template_genericness
-    verdict: pass
-    route: pass
-    evidence: "Trap walk and dual g(E) curves visible in the crops are specific to this trapping claim, not a reusable template."
-    rationale: "Figure is tailored to the scientific claim."
-    linked_evidence:
-      - top_tier_audit.novelty_claim_support
-  - slot: overdecorated_or_cartoonish
-    verdict: pass
-    route: pass
-    evidence: "print-scale image shows flat fills only — no gradients, glows, or shadows."
-    rationale: "No gradients, glows, or shadows are present; the fills stay flat and explanatory, not poster-style."
-    linked_evidence:
-      - editorial_art_direction.illustration_readiness
-  - slot: journal_fit
-    verdict: pass
-    route: pass
-    evidence: "print_178mm crop: density and typography fit a Nature-Communications mechanism schematic."
-    rationale: "Matches target reference class."
-    linked_evidence:
-      - editorial_art_direction.reference_class_fit
-  - slot: handcrafted_finish
-    verdict: pass
-    route: pass
-    evidence: "Visible across panels: distribution curves (0.95pt) heavier than 0.35pt indicators — deliberate line-weight hierarchy."
-    rationale: "Strokes are intentionally differentiated, not monotone."
-    linked_evidence:
-      - top_tier_audit.aesthetic_coherence
+    evidence: "Current render panel B g(E) evolution is the visual anchor."
+    rationale: "The mechanism claim is prominent."
+    linked_evidence: []
   - slot: semantic_preservation
     verdict: pass
     route: pass
-    evidence: "Visible curve roles (blue discrete spike, red dashed broad) preserve briefing §3 invariants; no semantics altered."
-    rationale: "No semantic drift in the current render."
-    linked_evidence:
-      - quality_axes.scientific_plausibility
+    evidence: "Current render visibly preserves the briefing physics invariants: sign-agnostic walk, I(t) decay, n=breadth, rho60s separate."
+    rationale: "No readiness patch changes meaning."
+    linked_evidence: []
   - slot: print_scale_finish
     verdict: pass
     route: pass
-    evidence: "print_thumbnail crop keeps panel letters and labels legible at reduction."
-    rationale: "Survives print/thumbnail reduction."
-    linked_evidence:
-      - top_tier_audit.reduction_print_readability
-  - slot: paper_wide_coherence
-    verdict: pass
-    route: pass
-    evidence: "Full-render png: colour grammar (blue/red/amber/grey) is consistent across both panels."
-    rationale: "One coherent visual identity."
-    linked_evidence:
-      - editorial_art_direction.visual_identity
+    evidence: "print-scale crops print_178mm and print_thumbnail are no_defect."
+    rationale: "Reduced crops remain readable."
+    linked_evidence: []
 aesthetic_antipattern_audit:
   - id: childish_shape_language
     verdict: absent
     severity: NIT
     route: none
-    evidence: "full_q1/q2: rectilinear cell, thin arrows, no rounded/cartoon shapes."
-    rationale: "Editorial schematic, not juvenile."
-    linked_evidence:
-      - top_tier_audit.aesthetic_coherence
+    evidence: "Current render shows a rectilinear cell and controlled plot marks."
+    rationale: "Route none because no cartoon cue dominates the current render."
+    linked_evidence: []
   - id: poster_gradient_decoration
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Flat fills only (amber film, grey electrodes); no gradients/glows."
-    rationale: "Fills are flat with no gradients, glows, or shadows, so no poster-style decoration is present; route none is correct."
-    linked_evidence:
-      - editorial_art_direction.illustration_readiness
+    evidence: "Current render uses flat fills only, with no gradient, glow, or poster decoration."
+    rationale: "Route none because no decorative gradient or glow is present."
+    linked_evidence: []
   - id: generic_template_look
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Trap walk + dual g(E) curves are tailored to this trapping claim."
-    rationale: "Specific to the scientific claim, not a reusable template."
-    linked_evidence:
-      - top_tier_audit.novelty_claim_support
+    evidence: "Current render uses a claim-specific trap walk and g(E) discrete-to-continuous evolution."
+    rationale: "Route none because the mechanism-specific content prevents a generic template look."
+    linked_evidence: []
   - id: dead_flat_vector_finish
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Flat finish is appropriate; no material/depth distinction is required for this mechanism schematic."
-    rationale: "The flat vector finish is the intended editorial register here; no depth or material rendering is needed for this schematic."
-    linked_evidence:
-      - editorial_art_direction.illustration_readiness
+    evidence: "Current render uses a flat schematic register appropriate for this mechanism figure."
+    rationale: "Route none because depth rendering is not required for this mechanism schematic."
+    linked_evidence: []
   - id: uniform_line_weight_monotony
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Distribution curves (0.95pt) heavier than indicator arrows (0.35pt) and film outline (0.4pt); hierarchy present."
-    rationale: "Line weights are differentiated by role."
-    linked_evidence:
-      - top_tier_audit.aesthetic_coherence
+    evidence: "Current render distribution curves, axes, and indicators have role-specific weights."
+    rationale: "Route none because hierarchy is visible through role-specific line weights."
+    linked_evidence: []
   - id: weak_hero_anchor
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Panel B's high-contrast blue spike vs red broad curve is the clear anchor."
-    rationale: "First fixation is the mechanism."
-    linked_evidence:
-      - editorial_art_direction.hero_focus
+    evidence: "Current render panel B is the hero mechanism panel."
+    rationale: "Route none because first fixation is clear on panel B's g(E) evolution."
+    linked_evidence: []
   - id: cramped_or_dead_whitespace
-    verdict: present
+    verdict: absent
     severity: NIT
-    route: tikz_patch
-    evidence: "Panel B lower-left is locally cramped where the evolution-arrow label meets the dashed curve (VC012_crop); elsewhere whitespace is balanced."
-    rationale: "Localized crowding tied to the VC012 label clearance, not global dead space."
-    linked_evidence:
-      - editorial_art_direction.aesthetic_risk
-      - M012
+    route: none
+    evidence: "Current render shows the fixed disorder label has clearance from both adjacent panels and the red dashed curve."
+    rationale: "Route none because no current crop shows crowding after the label fix."
+    linked_evidence: []
   - id: low_authority_typography
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Consistent sans-serif sizing; panel letters bold, annotations smaller — clean hierarchy."
-    rationale: "Typography reads publication-grade."
-    linked_evidence:
-      - top_tier_audit.aesthetic_coherence
+    evidence: "Current render sans-serif labels use consistent sizing."
+    rationale: "Route none because typography is controlled and readable."
+    linked_evidence: []
   - id: annotation_noise_competes_with_science
     verdict: absent
     severity: NIT
     route: none
-    evidence: "After removing the redundant bottom caption, annotations support rather than compete with the curves/walk."
-    rationale: "Annotation density is restrained."
-    linked_evidence:
-      - top_tier_audit.visual_economy
+    evidence: "Current render labels clarify rather than compete with the curves."
+    rationale: "Route none because annotation density is acceptable and explanatory."
+    linked_evidence: []
   - id: panel_style_mismatch
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Panels A and B share line-weight, colour, and type system."
-    rationale: "One coherent visual system."
-    linked_evidence:
-      - editorial_art_direction.abstraction_consistency
+    evidence: "Current render panels A and B share one palette and line system."
+    rationale: "Route none because no panel style mismatch is visible."
+    linked_evidence: []
   - id: reference_overcopying
     verdict: not_applicable
     severity: NIT
     route: none
-    evidence: "No reference image declared."
-    rationale: "No reference image is declared for this fixture, so there is no reference structure that could be over-copied."
-    linked_evidence:
-      - editorial_art_direction.reference_class_fit
+    evidence: "Current critique input has no reference image declared."
+    rationale: "Route none because no copy target exists."
+    linked_evidence: []
   - id: reference_underlearning
     verdict: not_applicable
     severity: NIT
     route: none
-    evidence: "No reference image declared."
-    rationale: "No reference image is declared for this fixture, so there is no reference lesson that could be under-learned."
-    linked_evidence:
-      - editorial_art_direction.reference_class_fit
+    evidence: "Current critique input has no reference image declared."
+    rationale: "Route none because no reference learning path applies."
+    linked_evidence: []
   - id: decorative_detail_without_explanatory_value
     verdict: absent
     severity: NIT
     route: none
-    evidence: "Every mark (× traps, walk, curves, arrows) carries explanatory load."
-    rationale: "No decorative-only detail."
-    linked_evidence:
-      - top_tier_audit.visual_economy
+    evidence: "Current render visible marks support cell, carrier, trap, decay, or distribution meaning."
+    rationale: "Route none because no decorative-only detail is visible."
+    linked_evidence: []
 weakest_panel_coherence:
-  panel_id: "B"
-  subregion_id: "evolution-arrow label region (lower-left of g(E) plot)"
-  weakness_type: composition
-  route: tikz_patch
-  evidence: "VC012_crop and full_q2: the 'disorder ↑ (sulfur ↑)' label seats against the descending dashed broad curve; one ↑ glyph overlaps it (dark=0.141)."
-  rationale: "No scientific defect, but panel B's lower-left is the limiting composition: a wide label competes with the curve in a congested pocket while panel A is clean."
-  linked_evidence:
-    - quality_axes.label_annotation_semantics
-    - editorial_art_direction.aesthetic_risk
-    - micro_defect M012
+  panel_id: "none"
+  subregion_id: "none"
+  weakness_type: none
+  route: none
+  evidence: "Current render shows no panel-level limiter remains after the label fix."
+  rationale: "Panels are balanced for the current figure-agent readiness state."
+  linked_evidence: []
 reference_learning_accountability:
-  learned_principle: "not_applicable — no reference image declared; critique is briefing-grounded only."
-  rejected_copy_target: "not_applicable — nothing to copy or reject from a reference."
+  learned_principle: "not_applicable"
+  rejected_copy_target: "not_applicable"
   overcopying: not_applicable
   underlearning: not_applicable
   route: none
-  evidence: "spec.yaml declares no reference_image; brief runs reference-free mode."
-  rationale: "Reference fidelity is out of scope; correctness is anchored to briefing §3 rules and detector evidence."
-  linked_evidence:
-    - editorial_art_direction.reference_class_fit
+  evidence: "Current critique input has no reference image declared."
+  rationale: "Audit is bound to the brief and detector evidence only."
+  linked_evidence: []
 micro_defects:
   - id: M001
     crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC001_g_E.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "'g(E)' axis title and panel 'b' letter sit in clear white near the panel-B vertical axis; luma_std flag from the adjacent axis arrowhead, not an overlap."
+    observation: "VC001 g(E): axis title is legible near the arrowhead."
     linked_finding_id: ""
     visual_clash_ref: "VC001"
     text_boundary_ref: ""
@@ -537,12 +497,12 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "Axis title in clear space; no glyph/curve overlap on inspection of VC001 crop."
+    accept_simplification_rationale: "VC001 is not a defect: the g(E) label is an intended axis title with clear separation from the axis arrowhead."
   - id: M002
     crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC002_V.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "'+V' bias label above the top electrode in clear white space."
+    observation: "VC002 +V: bias label is clear above the top electrode."
     linked_finding_id: ""
     visual_clash_ref: "VC002"
     text_boundary_ref: ""
@@ -550,64 +510,64 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC002 is not a defect: the +V label floats in clear background above the electrode with no geometry contact."
+    accept_simplification_rationale: "VC002 is not a defect: +V is intentionally near the top electrode and remains legible on clear background."
   - id: M003
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC003_b.png
-    kind: label_path_near_miss
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC003_sulfur.png
+    kind: label_curve_near_label
     severity: NIT
-    observation: "Panel letter 'b' adjacent to the 'g(E)' axis title; both legible, no overlap."
+    observation: "VC003 sulfur: film label sits inside the polymer region."
     linked_finding_id: ""
     visual_clash_ref: "VC003"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC003 is not a defect: panel letter b and the g(E) axis title are distinct and legible, conventionally adjacent."
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC003 is not a defect: direct in-region sulfur-polymer labeling is readable and target-correct inside the film."
   - id: M004
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC004_sulfur.png
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC004_crop.png
     kind: line_crosses_label
     severity: NIT
-    observation: "Carrier-walk first segment originates near the 'sulfur polymer' film label; the line passes through the inter-letter gap (dark=0.062)."
+    observation: "VC004 x trap: carrier path meets a trap glyph."
     linked_finding_id: ""
     visual_clash_ref: "VC004"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC004 is not a defect: by convention the walk originates at the electrode beside the film label; only faint inter-letter ink crossing, both legible."
+    accept_simplification_reason: intentional_schematic
+    accept_simplification_rationale: "VC004 is not a defect: path-to-trap contact is the intended repeated-trapping cue."
   - id: M005
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC005_crop.png
-    kind: line_crosses_label
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC005_b.png
+    kind: label_path_near_miss
     severity: NIT
-    observation: "Walk segment passes through an × trap glyph."
+    observation: "VC005 b: panel letter is legible near the panel-B axis."
     linked_finding_id: ""
     visual_clash_ref: "VC005"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC005 is intentional, not a defect: the carrier walk crossing an x trap site is the repeatedly-trapped message (briefing §1, §6)."
+    accept_simplification_reason: false_positive
+    accept_simplification_rationale: "VC005 is not a defect: the panel letter is intentionally close to the plot origin and does not collide with plotted data."
   - id: M006
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC006_crop.png
-    kind: line_crosses_label
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC006_S60.png
+    kind: label_curve_near_label
     severity: NIT
-    observation: "Walk segment passes through an × trap glyph."
+    observation: "VC006 S60: label is adjacent to the blue discrete peak."
     linked_finding_id: ""
     visual_clash_ref: "VC006"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC006 is intentional, not a defect: the walk passing through an x trap is the designed multiple-trapping geometry (briefing §6)."
+    accept_simplification_reason: convention_acceptable
+    accept_simplification_rationale: "VC006 is not a defect: the direct S60 curve label is target-correct and readable beside the blue peak."
   - id: M007
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC007_S60.png
-    kind: label_path_near_miss
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC007_S80.png
+    kind: label_curve_near_label
     severity: NIT
-    observation: "'S60:' curve label near the blue spike; near_miss with low ink (dark=0.019)."
+    observation: "VC007 S80: label is adjacent to the broad red distribution."
     linked_finding_id: ""
     visual_clash_ref: "VC007"
     text_boundary_ref: ""
@@ -615,12 +575,12 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC007 is not a defect: the S60 label is a direct curve label above the spike, separate from the line by clear space."
+    accept_simplification_rationale: "VC007 is not a defect: the direct S80 curve label is clear and preserves the broad continuous meaning."
   - id: M008
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC008_S80.png
-    kind: label_path_near_miss
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC008_continuous.png
+    kind: label_curve_near_label
     severity: NIT
-    observation: "'S80:' curve label upper-left near the broad curve; near_miss low ink (dark=0.018)."
+    observation: "VC008 continuous: word sits near the red dashed curve."
     linked_finding_id: ""
     visual_clash_ref: "VC008"
     text_boundary_ref: ""
@@ -628,38 +588,38 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC008 is not a defect: the S80 label is a direct curve label in clear space upper-left, separate from the broad curve flank."
+    accept_simplification_rationale: "VC008 is not a defect: the continuous label is an intentional direct annotation of the broad red curve and remains readable."
   - id: M009
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC009_continuous.png
-    kind: label_curve_near_label
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC009_crop.png
+    kind: line_crosses_label
     severity: NIT
-    observation: "'continuous' (S80 label) sits near the broad curve's far-left flank; dark=0.093 but the crop shows clear white between text and dash."
+    observation: "VC009 x trap: carrier path meets a trap glyph."
     linked_finding_id: ""
     visual_clash_ref: "VC009"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC009 is not a defect: 'continuous' is a direct S80 curve label; white space separates the glyphs from the dashes."
+    accept_simplification_reason: intentional_schematic
+    accept_simplification_rationale: "VC009 is not a defect: the overlap encodes trap visitation rather than a label defect."
   - id: M010
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC010_crop.png
-    kind: line_crosses_label
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC010_ρ.png
+    kind: label_path_near_miss
     severity: NIT
-    observation: "Walk segment passes through an × trap glyph."
+    observation: "VC010 rho: rho60s label sits by the vertical magnitude indicator."
     linked_finding_id: ""
     visual_clash_ref: "VC010"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
     status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC010 is intentional, not a defect: the walk crossing an x trap site is the designed trap-visit geometry (briefing §6)."
+    accept_simplification_reason: false_positive
+    accept_simplification_rationale: "VC010 is not a defect: rho60s is intentionally placed beside its separate magnitude arrow on clear background."
   - id: M011
     crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC011_crop.png
     kind: line_crosses_label
     severity: NIT
-    observation: "Walk arrowhead lands at an × trap glyph."
+    observation: "VC011 x trap: arrow approaches another trap glyph."
     linked_finding_id: ""
     visual_clash_ref: "VC011"
     text_boundary_ref: ""
@@ -667,90 +627,25 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC011 is intentional, not a defect: the walk arrowhead at an x trap is the designed trap-visit geometry (briefing §6)."
+    accept_simplification_rationale: "VC011 is not a defect: trap contact is an intended carrier-walk endpoint cue."
   - id: M012
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC012_crop.png
-    kind: label_curve_near_label
-    severity: MINOR
-    observation: "One ↑ glyph of the 'disorder ↑ (sulfur ↑)' evolution-arrow label is overlapped by the red dashed broad curve's descending flank (dark=0.141, highest of all candidates)."
-    linked_finding_id: "C001"
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC012_g_E.png
+    kind: label_path_near_miss
+    severity: NIT
+    observation: "VC012 g(E): bridge-text g(E) is clear in the current render."
+    linked_finding_id: ""
     visual_clash_ref: "VC012"
     text_boundary_ref: ""
     label_path_ref: ""
     undeclared_geometry_ref: ""
-    status: open
-    accept_simplification_reason: ""
-    accept_simplification_rationale: ""
+    status: accept_simplification
+    accept_simplification_reason: false_positive
+    accept_simplification_rationale: "The current VC012 candidate is not the old overlap; the inline g(E) text is legible and separated."
   - id: M013
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC013_crop.png
-    kind: line_crosses_label
-    severity: NIT
-    observation: "Walk segment passes through an × trap glyph."
-    linked_finding_id: ""
-    visual_clash_ref: "VC013"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC013 is intentional, not a defect: the walk crossing an x trap site is the designed multiple-trapping geometry (briefing §6)."
-  - id: M014
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC014_crop.png
-    kind: line_crosses_label
-    severity: NIT
-    observation: "Walk's final arrowhead reaches the circled × — the caught carrier (red circle around the trap)."
-    linked_finding_id: ""
-    visual_clash_ref: "VC014"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "VC014 is intentional, not a defect: the final arrowhead inside the circled x is the caught-carrier payload of panel A."
-  - id: M015
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC015_ρ.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "'ρ' of the ρ60s label sits in clear white beside its magnitude double-arrow."
-    linked_finding_id: ""
-    visual_clash_ref: "VC015"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC015 is not a defect: the rho60s label sits beside its own arrow on clear background, separate from any curve."
-  - id: M016
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/visual_clash/VC016_g_E.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "'g(E)' inside the panel-A bridge text 'broader g(E) ⇒ larger n'; near_miss low ink (dark=0.016)."
-    linked_finding_id: ""
-    visual_clash_ref: "VC016"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC016 is not a defect: g(E) is inline math in the panel-A bridge text, outside any curve or axis geometry."
-  - id: M017
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG009 reports a label_endpoint_near_miss (×, 3.55pt) for line 59, the n=breadth double-arrow; but that arrow is inside panel B's shifted scope while the only × glyphs are in panel A. The two never co-locate in the render (full_q4 shows no × in panel B)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG009"
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "Detector scope-transform artifact: pre-transform arrow coordinates are matched against panel-A trap coordinates; no real clash exists in the rendered figure."
-  - id: M018
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG001 (line 20): top grey electrode fill rectangle — intended cell electrode, visible at the top of panel A."
+    observation: "UG001: top electrode rectangle is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -758,12 +653,12 @@ micro_defects:
     undeclared_geometry_ref: "UG001"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Top electrode is a required cell component; recommended_action add_spec_check, no figure edit."
-  - id: M019
+    accept_simplification_rationale: "The top electrode is intended schematic cell geometry; no figure edit required."
+  - id: M014
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q3.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG002 (line 21): bottom grey electrode fill rectangle — intended cell electrode, visible at the bottom of panel A."
+    observation: "UG002: bottom electrode rectangle is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -771,12 +666,12 @@ micro_defects:
     undeclared_geometry_ref: "UG002"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Bottom electrode is a required cell component; declare via spec, no figure edit."
-  - id: M020
+    accept_simplification_rationale: "The bottom electrode is intended schematic cell geometry; no figure edit required."
+  - id: M015
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG003 (line 22): amber sulfur-polymer film fill rectangle — intended film region, visible between the electrodes."
+    observation: "UG003: sulfur-polymer film fill is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -784,12 +679,12 @@ micro_defects:
     undeclared_geometry_ref: "UG003"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Film region is the active material; declare via spec, no figure edit."
-  - id: M021
+    accept_simplification_rationale: "The film fill is intended active-material geometry; no figure edit required."
+  - id: M016
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG004 (line 23): film outline rectangle — intended boundary of the film region, visible as the amber border."
+    observation: "UG004: sulfur-polymer film outline is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -797,12 +692,12 @@ micro_defects:
     undeclared_geometry_ref: "UG004"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Film outline frames the active region; declare via spec, no figure edit."
-  - id: M022
+    accept_simplification_rationale: "The outline clarifies the film boundary; no figure edit required."
+  - id: M017
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG005 (line 41): I(t) sparkline t-axis rule — intended axis, visible in the decay sparkline."
+    observation: "UG005: sparkline auxiliary horizontal rule is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -810,12 +705,12 @@ micro_defects:
     undeclared_geometry_ref: "UG005"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Sparkline axis is intended scaffolding; declare via spec, no figure edit."
-  - id: M023
+    accept_simplification_rationale: "The rule is part of the compact I(t) inset scaffold; no figure edit required."
+  - id: M018
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG006 (line 42): I(t) sparkline I-axis rule — intended axis, visible in the decay sparkline."
+    observation: "UG006: sparkline t-axis rule is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -823,12 +718,12 @@ micro_defects:
     undeclared_geometry_ref: "UG006"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Sparkline axis is intended scaffolding; declare via spec, no figure edit."
-  - id: M024
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q4.png
+    accept_simplification_rationale: "The t-axis is required for the I(t) decay cue; no figure edit required."
+  - id: M019
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q1.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG007 (line 52): panel B E-axis rule — intended trap-energy axis, visible as the horizontal g(E) baseline."
+    observation: "UG007: sparkline I-axis rule is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -836,12 +731,12 @@ micro_defects:
     undeclared_geometry_ref: "UG007"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Energy axis is a required plot scaffold; declare via spec, no figure edit."
-  - id: M025
-    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q2.png
+    accept_simplification_rationale: "The I-axis is required for the current-decay cue; no figure edit required."
+  - id: M020
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q4.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG008 (line 53): panel B g(E)-axis rule — intended density axis, visible as the vertical g(E) axis."
+    observation: "UG008: panel-B E-axis rule is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -849,12 +744,25 @@ micro_defects:
     undeclared_geometry_ref: "UG008"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Density axis is a required plot scaffold; declare via spec, no figure edit."
-  - id: M026
+    accept_simplification_rationale: "The E-axis is required for the trap-energy distribution plot; no figure edit required."
+  - id: M021
+    crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q2.png
+    kind: label_path_near_miss
+    severity: NIT
+    observation: "UG009: panel-B g(E)-axis rule is undeclared detector geometry."
+    linked_finding_id: ""
+    visual_clash_ref: ""
+    text_boundary_ref: ""
+    label_path_ref: ""
+    undeclared_geometry_ref: "UG009"
+    status: accept_simplification
+    accept_simplification_reason: intentional_schematic
+    accept_simplification_rationale: "The g(E)-axis is required for distribution density; no figure edit required."
+  - id: M022
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q4.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG010 (line 59): n=breadth horizontal double-arrow — intended breadth indicator, visible spanning the broad distribution."
+    observation: "UG010: n=breadth horizontal span is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -862,12 +770,12 @@ micro_defects:
     undeclared_geometry_ref: "UG010"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Breadth double-arrow encodes n (briefing §3 rule 2); declare via spec, no figure edit."
-  - id: M027
+    accept_simplification_rationale: "The span encodes n as breadth, exactly as required by the brief; no figure edit required."
+  - id: M023
     crop: examples/fig3_resistance_mechanism/build/audit_crops/full_q4.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "UG011 (line 62): ρ60s vertical double-arrow — intended orthogonal magnitude indicator, visible at the right of panel B."
+    observation: "UG011: rho60s vertical magnitude indicator is undeclared detector geometry."
     linked_finding_id: ""
     visual_clash_ref: ""
     text_boundary_ref: ""
@@ -875,241 +783,33 @@ micro_defects:
     undeclared_geometry_ref: "UG011"
     status: accept_simplification
     accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "Magnitude double-arrow encodes ρ60s (briefing §3 rule 5); declare via spec, no figure edit."
+    accept_simplification_rationale: "The vertical indicator keeps rho60s separate from n=breadth; no figure edit required."
 crop_audit_log:
-  - crop_id: VC001_g_E
-    path: build/audit_crops/visual_clash/VC001_g_E.png
-    source: visual_clash:VC001
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Axis title 'g(E)' and panel 'b' in clear white; no overlap."
-    observed_objects: ["g(E) axis title", "panel letter b", "axis arrowhead"]
-    local_relationship: "Title sits just right of the vertical axis arrowhead, no contact."
-    candidate_refs: ["VC001"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No stray ink."
-    anomaly_link: ""
-  - crop_id: VC002_V
-    path: build/audit_crops/visual_clash/VC002_V.png
-    source: visual_clash:VC002
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'+V' label isolated in white above the electrode."
-    observed_objects: ["+V label"]
-    local_relationship: "Free-floating label, no adjacent geometry."
-    candidate_refs: ["VC002"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
-  - crop_id: VC003_b
-    path: build/audit_crops/visual_clash/VC003_b.png
-    source: visual_clash:VC003
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Panel 'b' beside 'g(E)' title; both legible."
-    observed_objects: ["panel letter b", "g of g(E)"]
-    local_relationship: "Adjacent, non-overlapping."
-    candidate_refs: ["VC003"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
-  - crop_id: VC004_sulfur
-    path: build/audit_crops/visual_clash/VC004_sulfur.png
-    source: visual_clash:VC004
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk's first arrow passes through the gap in 'sulfur'; faint, both legible."
-    observed_objects: ["sulfur polymer label", "walk segment 1", "film outline"]
-    local_relationship: "Arrow descends across the inter-letter gap below 'sulfur'."
-    candidate_refs: ["VC004"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No spurious marks; faint expected crossing only."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC005_crop
-    path: build/audit_crops/visual_clash/VC005_crop.png
-    source: visual_clash:VC005
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk line crosses an × trap — intended."
-    observed_objects: ["walk segment", "× trap"]
-    local_relationship: "Line passes over the trap glyph."
-    candidate_refs: ["VC005"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Expected trap-visit geometry."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC006_crop
-    path: build/audit_crops/visual_clash/VC006_crop.png
-    source: visual_clash:VC006
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk line crosses an × trap — intended."
-    observed_objects: ["walk segment", "× trap"]
-    local_relationship: "Line passes over the trap glyph."
-    candidate_refs: ["VC006"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Expected trap-visit geometry."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC007_S60
-    path: build/audit_crops/visual_clash/VC007_S60.png
-    source: visual_clash:VC007
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'S60:' label above the blue spike; clear separation."
-    observed_objects: ["S60 label", "blue spike top"]
-    local_relationship: "Label sits above and right of the spike apex."
-    candidate_refs: ["VC007"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
-  - crop_id: VC008_S80
-    path: build/audit_crops/visual_clash/VC008_S80.png
-    source: visual_clash:VC008
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'S80:' label upper-left; clear of the broad curve."
-    observed_objects: ["S80 label", "broad curve left flank"]
-    local_relationship: "Label above-left of the descending dashed flank."
-    candidate_refs: ["VC008"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
-  - crop_id: VC009_continuous
-    path: build/audit_crops/visual_clash/VC009_continuous.png
-    source: visual_clash:VC009
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'continuous' text with white gap to the dashed curve; direct S80 label."
-    observed_objects: ["continuous (S80 label)", "g(E) axis", "broad curve"]
-    local_relationship: "Text left of axis-adjacent space, dashes well below."
-    candidate_refs: ["VC009"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No glyph overlap."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC010_crop
-    path: build/audit_crops/visual_clash/VC010_crop.png
-    source: visual_clash:VC010
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk line crosses an × trap — intended."
-    observed_objects: ["walk segment", "× trap"]
-    local_relationship: "Arrow approaches and crosses the trap."
-    candidate_refs: ["VC010"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Expected trap-visit geometry."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC011_crop
-    path: build/audit_crops/visual_clash/VC011_crop.png
-    source: visual_clash:VC011
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk arrowhead at an × trap — intended."
-    observed_objects: ["walk arrowhead", "× trap"]
-    local_relationship: "Arrowhead meets the trap glyph."
-    candidate_refs: ["VC011"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Expected trap-visit geometry."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC012_crop
-    path: build/audit_crops/visual_clash/VC012_crop.png
-    source: visual_clash:VC012
-    inspected: true
-    verdict: defect
-    linked_micro_defect_id: "M012"
-    rationale: "A black ↑ glyph is overlapped by the red dashed broad curve's descending dashes; clear ink-on-glyph contact."
-    observed_objects: ["↑ glyph of evolution-arrow label", "red dashed broad curve"]
-    local_relationship: "Dashed curve crosses diagonally through the ↑ glyph."
-    candidate_refs: ["VC012"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "The overlap itself is the defect; no other stray ink."
-    anomaly_link: ""
-  - crop_id: VC013_crop
-    path: build/audit_crops/visual_clash/VC013_crop.png
-    source: visual_clash:VC013
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Walk line crosses an × trap — intended."
-    observed_objects: ["walk segment", "× trap"]
-    local_relationship: "Line passes over the trap glyph."
-    candidate_refs: ["VC013"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Expected trap-visit geometry."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC014_crop
-    path: build/audit_crops/visual_clash/VC014_crop.png
-    source: visual_clash:VC014
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Final walk arrowhead reaches the circled × (caught carrier)."
-    observed_objects: ["walk arrowhead", "circled × trap", "red circle"]
-    local_relationship: "Arrowhead enters the red circle around the trap."
-    candidate_refs: ["VC014"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Payload geometry of panel A."
-    anomaly_link: "accept_simplification:intentional_schematic"
-  - crop_id: VC015_ρ
-    path: build/audit_crops/visual_clash/VC015_ρ.png
-    source: visual_clash:VC015
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'ρ' of ρ60s in clear white beside its arrow."
-    observed_objects: ["ρ60s label"]
-    local_relationship: "Label adjacent to its magnitude double-arrow, no overlap."
-    candidate_refs: ["VC015"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
-  - crop_id: VC016_g_E
-    path: build/audit_crops/visual_clash/VC016_g_E.png
-    source: visual_clash:VC016
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'g(E)' inside panel-A bridge text; clear."
-    observed_objects: ["bridge text g(E)"]
-    local_relationship: "Inline math within a text line, clear of geometry."
-    candidate_refs: ["VC016"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "Clean."
-    anomaly_link: ""
   - crop_id: full_q1
     path: build/audit_crops/full_q1.png
     source: full_render
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "Top-left: cell top, +V, sulfur-polymer label, upper walk, sparkline — all clean."
-    observed_objects: ["cell top electrode", "+V", "sulfur polymer", "walk", "I(t) sparkline"]
-    local_relationship: "Walk descends from the label area; sparkline isolated right of the cell."
-    candidate_refs: ["VC004"]
+    rationale: "Panel A upper-left is legible; sulfur label, electrode, and walk cues are clear."
+    observed_objects: ["top electrode", "sulfur polymer label", "carrier walk"]
+    local_relationship: "Objects are separated and target-correct."
+    candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "No stray geometry."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
   - crop_id: full_q2
     path: build/audit_crops/full_q2.png
     source: full_render
     inspected: true
-    verdict: defect
-    linked_micro_defect_id: "M012"
-    rationale: "Top-right (panel B upper): evolution arrow spans spike→broad; the 'disorder ↑ (sulfur ↑)' label's ↑ touches the dashed curve flank."
-    observed_objects: ["blue spike", "red broad curve", "evolution arrow", "disorder label", "S60/S80 labels", "ρ60s arrow"]
-    local_relationship: "Label seated in the lower-left pocket where the dashed flank descends into it."
-    candidate_refs: ["VC012", "VC007", "VC008"]
+    verdict: no_defect
+    linked_micro_defect_id: ""
+    rationale: "Panel B upper region is clear; labels and curves are readable."
+    observed_objects: ["g(E) axis", "S60 label", "S80 label", "broad curve"]
+    local_relationship: "Direct curve labels stay clear enough for reading."
+    candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "Only the VC012 overlap; evolution-arrow-crosses-spike is intended discrete→broad connection."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
   - crop_id: full_q3
     path: build/audit_crops/full_q3.png
@@ -1117,12 +817,12 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "Bottom-left: circled carrier, lower traps, − electrode, carrier caption, bridge text — clean."
-    observed_objects: ["circled carrier", "× traps", "− electrode", "carrier caption", "bridge text"]
-    local_relationship: "Caption centered below the cell; bridge text right of the cell."
-    candidate_refs: ["VC013", "VC014", "VC016"]
+    rationale: "Panel A lower region and bridge text remain readable."
+    observed_objects: ["bottom electrode", "carrier label", "bridge text"]
+    local_relationship: "Bridge text stays clear of panel B and the sparkline."
+    candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "No stray geometry."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
   - crop_id: full_q4
     path: build/audit_crops/full_q4.png
@@ -1130,12 +830,12 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "Bottom-right (panel B lower): E axis, spike base, n=breadth arrow, ρ60s arrow, 'n = breadth' — clean; confirms no × in panel B (UG009 false positive)."
-    observed_objects: ["E axis", "blue spike base", "n=breadth double-arrow", "ρ60s arrow", "n=breadth label"]
-    local_relationship: "Breadth arrow spans under the curves; ρ60s vertical at right; no trap glyphs present."
-    candidate_refs: ["UG009"]
+    rationale: "Panel B lower region is clear after the label fix."
+    observed_objects: ["disorder up label", "n breadth span", "rho60s indicator"]
+    local_relationship: "The disorder label starts just right of the y-axis and clears the red dashed curve."
+    candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "n=breadth arrow crossing the spike base is an intended measurement overlay."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
   - crop_id: print_178mm
     path: build/audit_crops/print_178mm.png
@@ -1143,12 +843,12 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "At 178mm-equivalent width all labels stay legible and the two-regime contrast is clear; VC012 overlap is barely perceptible at this scale."
-    observed_objects: ["full figure reduced"]
-    local_relationship: "Both panels balanced; no label collapses at reduction."
+    rationale: "Reduced 178 mm proxy remains readable."
+    observed_objects: ["full figure at print proxy scale"]
+    local_relationship: "Labels and curves retain separation."
     candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "No reduction failures."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
   - crop_id: print_thumbnail
     path: build/audit_crops/print_thumbnail.png
@@ -1156,40 +856,173 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ""
-    rationale: "Thumbnail keeps panel structure, blue-spike-vs-red-broad contrast, and panel letters readable."
+    rationale: "Thumbnail proxy preserves the two-panel message and no defect is introduced."
     observed_objects: ["full figure thumbnail"]
-    local_relationship: "Two-panel composition holds at thumbnail size."
+    local_relationship: "Panel roles remain distinguishable."
     candidate_refs: []
     unintended_visible_anomaly: none
-    anomaly_rationale: "No thumbnail failures."
+    anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
-panels:
-  - id: A
-    findings: []
-  - id: B
-    findings: []
-findings:
-  - id: C001
-    severity: MINOR
-    category: label_placement
-    tex_lines: [69, 69]
-    grounded_in_rule: "detector VC012 (dark=0.141); briefing §2(b) label clarity for the g(E) evolution annotation"
-    observation: "The evolution-arrow label 'disorder ↑ (sulfur ↑)' (line 69) seats in panel B's lower-left pocket where the red dashed broad curve (line 57) descends; one ↑ glyph is overlapped by the dashed flank (VC012_crop, full_q2). Label binds to the correct arrow — this is a clearance defect, not a targeting defect."
-    suggested_fix: "Reposition the line-69 node so no glyph crosses the dashed curve: the label is wider than the clear gap at its current y, so a small downward/left coordinate nudge alone is insufficient. Prefer either (a) stacking it to two short lines 'disorder ↑' / '(sulfur ↑)' seated lower-left clear of the flank, or (b) shortening to a single short line near the arrowhead. Keep it visually attached to the evolution arrow."
-    status: open
+  - crop_id: VC001_g_E
+    path: build/audit_crops/visual_clash/VC001_g_E.png
+    source: visual_clash:VC001
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M001"
+    rationale: "g(E) axis label is clear."
+    observed_objects: ["g(E) label", "axis arrow"]
+    local_relationship: "Near axis arrow but legible."
+    candidate_refs: ["VC001"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:false_positive"
+  - crop_id: VC002_V
+    path: build/audit_crops/visual_clash/VC002_V.png
+    source: visual_clash:VC002
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M002"
+    rationale: "+V label is legible above the electrode."
+    observed_objects: ["+V label", "top electrode"]
+    local_relationship: "Bias label sits close to intended electrode."
+    candidate_refs: ["VC002"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:false_positive"
+  - crop_id: VC003_sulfur
+    path: build/audit_crops/visual_clash/VC003_sulfur.png
+    source: visual_clash:VC003
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M003"
+    rationale: "sulfur text is readable inside the film region."
+    observed_objects: ["sulfur polymer label", "film", "walk"]
+    local_relationship: "Direct in-film label remains target-correct."
+    candidate_refs: ["VC003"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC004_crop
+    path: build/audit_crops/visual_clash/VC004_crop.png
+    source: visual_clash:VC004
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M004"
+    rationale: "x trap contact is intentional."
+    observed_objects: ["x trap", "carrier path"]
+    local_relationship: "Path meets trap glyph as designed."
+    candidate_refs: ["VC004"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:intentional_schematic"
+  - crop_id: VC005_b
+    path: build/audit_crops/visual_clash/VC005_b.png
+    source: visual_clash:VC005
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M005"
+    rationale: "panel letter b is legible."
+    observed_objects: ["panel letter b", "g(E) axis"]
+    local_relationship: "Panel letter is near but not confused with the axis."
+    candidate_refs: ["VC005"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:false_positive"
+  - crop_id: VC006_S60
+    path: build/audit_crops/visual_clash/VC006_S60.png
+    source: visual_clash:VC006
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M006"
+    rationale: "S60 label is clear and target-correct."
+    observed_objects: ["S60 label", "blue peak"]
+    local_relationship: "Label sits beside its discrete peak."
+    candidate_refs: ["VC006"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC007_S80
+    path: build/audit_crops/visual_clash/VC007_S80.png
+    source: visual_clash:VC007
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M007"
+    rationale: "S80 label is clear and target-correct."
+    observed_objects: ["S80 label", "red dashed curve"]
+    local_relationship: "Label sits beside the broad distribution."
+    candidate_refs: ["VC007"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC008_continuous
+    path: build/audit_crops/visual_clash/VC008_continuous.png
+    source: visual_clash:VC008
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M008"
+    rationale: "continuous label remains readable."
+    observed_objects: ["continuous label", "red dashed curve"]
+    local_relationship: "Direct annotation stays clear enough to read."
+    candidate_refs: ["VC008"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:convention_acceptable"
+  - crop_id: VC009_crop
+    path: build/audit_crops/visual_clash/VC009_crop.png
+    source: visual_clash:VC009
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M009"
+    rationale: "x trap contact is intentional."
+    observed_objects: ["x trap", "carrier path"]
+    local_relationship: "Path meets trap glyph as designed."
+    candidate_refs: ["VC009"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:intentional_schematic"
+  - crop_id: VC010_ρ
+    path: build/audit_crops/visual_clash/VC010_ρ.png
+    source: visual_clash:VC010
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M010"
+    rationale: "rho60s label is clear next to its magnitude indicator."
+    observed_objects: ["rho60s label", "vertical magnitude arrow"]
+    local_relationship: "Label is adjacent to intended metric arrow."
+    candidate_refs: ["VC010"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:false_positive"
+  - crop_id: VC011_crop
+    path: build/audit_crops/visual_clash/VC011_crop.png
+    source: visual_clash:VC011
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M011"
+    rationale: "x trap contact is intentional."
+    observed_objects: ["x trap", "carrier path"]
+    local_relationship: "Path meets trap glyph as designed."
+    candidate_refs: ["VC011"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:intentional_schematic"
+  - crop_id: VC012_g_E
+    path: build/audit_crops/visual_clash/VC012_g_E.png
+    source: visual_clash:VC012
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: "M012"
+    rationale: "current VC012 g(E) bridge text is clear."
+    observed_objects: ["g(E) bridge text", "nearby labels"]
+    local_relationship: "Inline text remains separated from plotted marks."
+    candidate_refs: ["VC012"]
+    unintended_visible_anomaly: none
+    anomaly_rationale: "No anomaly visible."
+    anomaly_link: "accept_simplification:false_positive"
 ---
 
-# Vision Critique — fig3_resistance_mechanism
+## Summary
 
-**Verdict: revise (one MINOR label-clearance patch).** The figure is scientifically and structurally sound: every binding physics rule in briefing §3 is honored — the transient-current decay reads as I∝t⁻ⁿ with R↑, n is encoded as the *breadth* of g(E) (not density or depth), ρ60s is a separate orthogonal magnitude indicator, the carrier is a sign-agnostic tortuous multiple-trapping walk (no clean +→− drift), the trap distribution evolves discrete (S60, single deep spike) → continuous broad (S80), trap sites are unlabeled ×, and nothing asserts a trap "network". Story, panel roles, cross-panel colour grammar, reduction/print readability, and accessibility (colour + line-style redundancy) all pass.
+The current Fig3 render is figure-agent ready. The previous disorder up (sulfur up) label issue is resolved: the label now starts just right of the panel-B y-axis and remains clear of the red dashed curve and the panel-A sparkline.
 
-The single open finding is **C001 / VC012**: after the prior hand-iteration moved the "disorder ↑ (sulfur ↑)" label off the blue S60 spike, one ↑ glyph now overlaps the red dashed broad curve's descending flank (dark = 0.141, the highest-ink candidate). It is a clearance issue in panel B's congested lower-left pocket, not a mislabeling — the label correctly belongs to the evolution arrow. Because the label is wider than the clear gap at its current height, a bounded coordinate nudge alone will not fully clear it; the concrete fix is to stack it into two short lines or shorten it while keeping it attached to the arrow.
-
-Everything else flagged by the detectors is adjudicated as intended schematic or false positive:
-- **× crossings (VC005/006/010/011/013/014)** are the carrier walk visiting trap sites and the final caught carrier in the red circle — the literal payload of panel A (briefing §1, §6).
-- **text-on-fill / near-miss labels (VC001/002/003/007/008/009/015/016)** are direct labels in clear space; their luma/near-miss flags come from adjacent axis lines or their own curves, with no glyph overlap on crop inspection.
-- **VC004** is the faint walk-origin crossing under the "sulfur polymer" film label at the injection electrode — convention-acceptable, low ink.
-- **UG009** (the QD001 ledger evidence) is a detector scope-transform artifact: line 59's n=breadth double-arrow lives inside panel B's shifted scope, while the only × glyphs are in panel A; full_q4 confirms there is no × in panel B, so the 3.55 pt "near-miss" is a coordinate-frame false positive. The structured candidate path was correct to refuse it as `unknown_panel`.
-- **UG001–008/010/011** are the intended cell rectangles, electrode fills, and axis/indicator rules; their recommended action is `add_spec_check` (declare in spec), not a figure edit.
-
-Routing: `continue_tikz` — one bounded source-level label-clearance edit (C001) remains; SVG polish is premature. Weakest panel is **B**'s evolution-label pocket (composition), routed to `tikz_patch`. Report-only, human-gated; no auto-apply.
+The scientific audit remains intact. The carrier is sign-agnostic, the sparkline communicates I(t) decay and R increase, n is breadth rather than density, rho60s is a separate magnitude cue, S60 is shown as discrete, and S80 is shown as broad continuous. All current visual-clash candidates VC001 to VC012 and undeclared geometry candidates UG001 to UG011 are accounted for as accepted simplifications. No open findings remain.
