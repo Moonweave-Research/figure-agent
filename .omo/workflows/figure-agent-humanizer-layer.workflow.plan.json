@@ -1,0 +1,268 @@
+{
+  "schema_version": "0.5",
+  "plan_id": "figure-agent-humanizer-layer-v1",
+  "created_by": "keelplane",
+  "source_prompt": "어떻게 수행해 나갈지 전체 구현 흐름 이런 거를 다 설계하고 실제 너가 수행까지 다 해",
+  "activation": {
+    "decision": "activate",
+    "matched_thresholds": [
+      "multi-surface-fanout",
+      "planned-fanout",
+      "adversarial-verification",
+      "human-gates"
+    ],
+    "downgrade_target": null,
+    "reason": "The work spans authoring context, critique, candidate review/ranking, loop checkpoints, docs, fixtures, and verification gates."
+  },
+  "objective": "Implement a read-only humanizer/editorial narrative layer for figure-agent without adding hidden prompt loops, external vision/API calls, autonomous source mutation, or rank-scoring authority.",
+  "surfaces": [
+    {
+      "id": "figure-agent-repo",
+      "kind": "repo",
+      "locator": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "context-pack-surface",
+      "kind": "artifact",
+      "locator": "plugins/figure-agent/scripts/authoring_context_pack.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "critique-candidate-loop-surfaces",
+      "kind": "artifact",
+      "locator": "plugins/figure-agent/scripts/{critique_brief.py,candidates/,fig_loop.py}",
+      "access_mode": "write-proposed"
+    }
+  ],
+  "assumptions": [
+    {
+      "claim": "The first safe implementation slice is context-pack integration only.",
+      "verification_step": "Run tests/test_authoring_context_pack.py before touching critique, candidate ranking, or loop files."
+    },
+    {
+      "claim": "The layer should be named narrative_context in machine payloads while documented as the humanizer/editorial layer.",
+      "verification_step": "Review JSON schema names and docs for no hidden designer authority."
+    },
+    {
+      "claim": "Additive fields can remain under figure-agent.authoring-context-pack.v1.",
+      "verification_step": "Ensure existing context-pack tests and downstream JSON consumers pass unchanged."
+    }
+  ],
+  "patterns": [
+    "Pipeline",
+    "Parallel Fan-Out / Fan-In",
+    "Adversarial Verify",
+    "Human Gate",
+    "Resume And Cache"
+  ],
+  "phases": [
+    {
+      "id": "phase-1-context-pack",
+      "entry_criteria": "Existing authoring context tests are readable and no blocker questions remain.",
+      "exit_criteria": "context-pack JSON emits narrative_context, remains read-only, and targeted tests pass.",
+      "output": "narrative_context compiler and tests"
+    },
+    {
+      "id": "phase-2-critique-and-review",
+      "entry_criteria": "phase-1-context-pack exit gate passes.",
+      "exit_criteria": "critique brief and candidate review packet expose source-anchored narrative context as advisory evidence only.",
+      "output": "critique/review narrative integration"
+    },
+    {
+      "id": "phase-3-ranking-and-loop-guards",
+      "entry_criteria": "phase-2-critique-and-review exit gate passes.",
+      "exit_criteria": "ranking score is proven unchanged by narrative fields and fig_loop checkpoints expose advisory summary without changing stop decisions.",
+      "output": "ranking non-influence and loop advisory tests"
+    },
+    {
+      "id": "phase-4-docs-and-closeout",
+      "entry_criteria": "All behavior surfaces are implemented.",
+      "exit_criteria": "operator docs describe read-only boundaries and targeted pytest/ruff verification passes.",
+      "output": "docs, verification logs, and closeout report"
+    }
+  ],
+  "workers": [
+    {
+      "id": "context-pack-implementer",
+      "role": "Implement first read-only narrative_context compiler slice.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": ["git commit", "external API", "fixture source mutation outside tests"]
+      },
+      "forbidden_actions": [
+        "Call external APIs or model services",
+        "Modify real fixture source files",
+        "Change candidate ranking scores",
+        "Apply generated patches"
+      ],
+      "context_budget": {
+        "max_files": 8,
+        "max_tokens": 18000,
+        "must_include": [
+          "scripts/authoring_context_pack.py",
+          "tests/test_authoring_context_pack.py"
+        ],
+        "must_exclude": ["build/", "exports/", ".scratch/"]
+      },
+      "prompt_contract": {
+        "inputs": ["repository path", "Plan Agent phase order", "authoring context files"],
+        "required_output_schema": "changed files plus pytest/ruff receipts",
+        "stop_conditions": ["schema migration required", "file exceeds 250 pure LOC", "test needs real external vision"]
+      },
+      "ownership": ["scripts/narrative_context.py", "scripts/authoring_context_pack.py", "tests/test_authoring_context_pack.py"]
+    },
+    {
+      "id": "adversarial-verifier",
+      "role": "Refute claims that the layer is read-only, source-anchored, and non-authoritative.",
+      "tool_permissions": {
+        "read": true,
+        "write": false,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": []
+      },
+      "forbidden_actions": ["Modify files", "Accept producer claims without source evidence"],
+      "context_budget": {
+        "max_files": 10,
+        "max_tokens": 12000,
+        "must_include": ["changed files", "pytest output", "ruff output"],
+        "must_exclude": ["generated build artifacts"]
+      },
+      "prompt_contract": {
+        "inputs": ["diff", "test receipts"],
+        "required_output_schema": "confirmed/refuted/unverified findings",
+        "stop_conditions": ["unrefuted boundary violation", "missing verification evidence"]
+      },
+      "ownership": ["verification report"]
+    }
+  ],
+  "handoffs": [
+    {
+      "from_phase": "phase-1-context-pack",
+      "to_phase": "phase-2-critique-and-review",
+      "artifact": "narrative_context payload",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "read_only", "sources", "reader_contract", "stop_boundaries"],
+        "validation_command": "cd plugins/figure-agent && uv run pytest tests/test_authoring_context_pack.py -q"
+      }
+    },
+    {
+      "from_phase": "phase-3-ranking-and-loop-guards",
+      "to_phase": "phase-4-docs-and-closeout",
+      "artifact": "non-influence and loop checkpoint receipts",
+      "artifact_schema": {
+        "format": "test-log",
+        "required_fields": ["pytest command", "exit code", "changed files"],
+        "validation_command": "cd plugins/figure-agent && uv run pytest tests/test_candidate_rank.py tests/test_fig_loop.py -q"
+      }
+    }
+  ],
+  "parallelism": {
+    "shape": "pipeline with fan-out after context compiler",
+    "concurrency_cap": 2,
+    "fan_in_rule": "Critique and candidate review integrations may run in parallel after phase 1; ranking/loop/docs wait for verified phase handoffs.",
+    "barriers": ["context compiler green", "critique/review green", "final verification"]
+  },
+  "verification": [
+    {
+      "claim_or_output": "narrative_context is read-only and non-mutating",
+      "falsifier": "Snapshot fixture files before and after context-pack CLI execution.",
+      "evidence_required": "pytest assertion over file content snapshot"
+    },
+    {
+      "claim_or_output": "narrative_context does not perform model/API calls",
+      "falsifier": "Inspect implementation for network/subprocess/model-call imports and run ruff/tests.",
+      "evidence_required": "source diff plus ruff/test receipt"
+    },
+    {
+      "claim_or_output": "narrative_context does not change rank scoring or loop decisions",
+      "falsifier": "Compare candidate rank scores and fig_loop stop fields with and without narrative fields.",
+      "evidence_required": "targeted candidate_rank and fig_loop tests"
+    }
+  ],
+  "risk_gates": [
+    {
+      "trigger": "Any source mutation outside tests or explicit apply command",
+      "safe_default": "Stop and preserve generated evidence without applying changes.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Any external API, model call, or paid/remote vision dependency",
+      "safe_default": "Do not add the dependency; keep the layer source-anchored and read-only.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Changing candidate rank_score or fig_loop stop decisions",
+      "safe_default": "Keep narrative data advisory-only and stop the wave.",
+      "requires_user_approval": true
+    }
+  ],
+  "budget": {
+    "agent_rounds": 6,
+    "retry_limit_per_phase": 2,
+    "time_minutes": 90,
+    "file_touch_limit_first_wave": 4,
+    "model_budget": "Use quick workers for local slices; use verifier only after implementation."
+  },
+  "resume": {
+    "cacheable_artifacts": ["workflow.plan.json", "narrative_context JSON", "pytest logs", "ruff logs"],
+    "invalidation_rules": [
+      "Rerun phase 1 if authoring_context_pack.py or narrative_context.py changes.",
+      "Rerun downstream phases if narrative_context schema changes."
+    ],
+    "restart_points": ["phase-1-context-pack", "phase-2-critique-and-review", "phase-3-ranking-and-loop-guards", "phase-4-docs-and-closeout"]
+  },
+  "execution_path": {
+    "mode": "direct-codex-with-gated-waves",
+    "consumer": "figure-agent maintainer",
+    "first_slice": {
+      "instruction": "Implement only the context-pack narrative_context compiler slice, with red tests first and no critique/ranking/loop changes.",
+      "inputs": ["repository path", "plugins/figure-agent/scripts/authoring_context_pack.py", "plugins/figure-agent/tests/test_authoring_context_pack.py"],
+      "expected_output": "narrative_context payload in context-pack JSON and passing targeted tests",
+      "completion_check": "cd plugins/figure-agent && uv run pytest tests/test_authoring_context_pack.py -q",
+      "forbidden_actions": ["external API calls", "source mutation outside tests", "candidate apply", "rank scoring changes"]
+    },
+    "first_wave": {
+      "id": "wave-1-context-pack",
+      "concurrency_cap": 1,
+      "slices": [
+        {
+          "id": "slice-1-narrative-context-compiler",
+          "instruction": "Add tests and implementation for read-only narrative_context in context-pack only.",
+          "inputs": ["repository path", "authoring context surfaces"],
+          "expected_output": "context-pack JSON exposes figure-agent.narrative-context.v1",
+          "completion_check": "pytest tests/test_authoring_context_pack.py passes",
+          "forbidden_actions": ["external calls", "fixture mutation", "rank/loop behavior changes"]
+        }
+      ],
+      "entry_gate": "Plan Agent approved first slice and Python reference loaded.",
+      "exit_gate": "pytest and ruff pass for first-slice files.",
+      "fan_in": "No fan-in; single slice."
+    },
+    "waves": [
+      {
+        "id": "wave-2-critique-candidate-review",
+        "depends_on": ["wave-1-context-pack"],
+        "concurrency_cap": 2,
+        "slices": ["critique-brief-integration", "candidate-review-packet-integration"],
+        "entry_gate": "wave-1-context-pack exit gate passed with narrative_context schema stable.",
+        "exit_gate": "critique and candidate review tests pass; narrative remains advisory-only."
+      },
+      {
+        "id": "wave-3-ranking-loop-docs",
+        "depends_on": ["wave-2-critique-candidate-review"],
+        "concurrency_cap": 2,
+        "slices": ["ranking-non-influence", "fig-loop-advisory", "operator-docs"],
+        "entry_gate": "wave-2 outputs verified and no hidden authority introduced.",
+        "exit_gate": "targeted pytest, ruff, and adversarial verification pass."
+      }
+    ]
+  }
+}

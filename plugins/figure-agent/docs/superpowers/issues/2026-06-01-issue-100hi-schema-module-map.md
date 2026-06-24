@@ -108,6 +108,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.journal-art-direction-playbook.v1` | target-journal style anchors | `journal_art_direction_playbook.py` | `critique_brief.py`, `critique_lint.py` | Requires exact anchor citations |
 | `figure-agent.authoring-rules.v1` | source-anchored authoring rules | `authoring_rules.py` | `authoring_context_pack.py`, tests | N=1 hypotheses until transfer is validated |
 | `figure-agent.semantic-contracts.v1` | opt-in semantic claims/invariants | `semantic_contracts.py` | `authoring_context_pack.py`, `critique_brief.py` | Narrow authoring/critique questions only; no automatic physics detection |
+| `figure-agent.narrative-context.v1` | read-only human-perspective context | `narrative_context.py` | `authoring_context_pack.py`, `critique_brief.py`, `candidate_review_packet.py`, `fig_loop.py` | Advisory reader-story context only; no model calls, prompt loops, rank scoring, source mutation, or autonomous patch selection |
 | `figure-agent.authoring-context-pack.v1` | read-only authoring context | `authoring_context_pack.py` | `fig-agent context-pack`, MCP context-pack tool | Read-only durable context compilation; no model calls or generation executor |
 | `figure-agent.convention-receipt.v1` | injected convention surfacing | `convention_receipt.py` | `compile.sh` (report-only `--write`), tests | Surfaces injected `use_as_constraint` rules with source quotes on every figure; report-only injection half, no render verification |
 | `figure-agent.external-vision-review.v1` | optional second opinion | `external_vision_review.py` | `quality_manifest.py`, `critique_lint.py` | Evidence only unless routed through findings |
@@ -168,7 +169,8 @@ not decide release readiness.
 - `aesthetic_intent.py`, `paper_aesthetic_context.py`,
   `journal_art_direction_playbook.py`
 - `authoring_rules.py`, `semantic_contracts.py`,
-  `authoring_context_pack.py`, `convention_receipt.py`
+  `narrative_context.py`, `authoring_context_pack.py`,
+  `convention_receipt.py`
 - `subregion_active_set.py`, `text_boundary_spec_helper.py`,
   `spec_bbox_helper.py`, `tex_coordinate_shift.py`
 
