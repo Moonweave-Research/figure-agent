@@ -51,8 +51,8 @@ def subregion_iteration_log_template(example_dir: Path) -> str:
             "",
             "## Iteration Log",
             "",
-            "| Iteration | Sub-region ID | Problem | Patch Summary | Result | Follow-up |",
-            "|---|---|---|---|---|---|",
+            "| Iteration | Sub-region ID | Problem | Patch Summary | Result | Why | Follow-up |",
+            "|---|---|---|---|---|---|---|",
             "",
         ]
     )
@@ -72,6 +72,7 @@ def _iteration_row(
     problem: str,
     patch_summary: str,
     result: str,
+    why: str,
     follow_up: str,
 ) -> str:
     return (
@@ -83,6 +84,7 @@ def _iteration_row(
                 _markdown_cell(problem),
                 _markdown_cell(patch_summary),
                 _markdown_cell(result),
+                _markdown_cell(why),
                 _markdown_cell(follow_up),
             ]
         )
@@ -98,6 +100,7 @@ def append_iteration_row(
     problem: str,
     patch_summary: str,
     result: str,
+    why: str = "none",
     follow_up: str,
 ) -> None:
     if not log_path.is_file():
@@ -111,6 +114,7 @@ def append_iteration_row(
         problem=problem,
         patch_summary=patch_summary,
         result=result,
+        why=why,
         follow_up=follow_up,
     )
     # Anchor the row to the end of the ## Iteration Log section body, mirroring
@@ -178,6 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--problem")
     parser.add_argument("--patch-summary")
     parser.add_argument("--result")
+    parser.add_argument("--why", default="none")
     parser.add_argument("--follow-up", default="none")
     args = parser.parse_args(argv)
 
@@ -215,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
             problem=args.problem,
             patch_summary=args.patch_summary,
             result=args.result,
+            why=args.why,
             follow_up=args.follow_up,
         )
         print(_log_path(example_dir))

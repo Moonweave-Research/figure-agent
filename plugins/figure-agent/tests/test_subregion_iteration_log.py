@@ -46,6 +46,37 @@ def test_template_is_parseable_by_existing_active_set_parser(tmp_path: Path) -> 
     assert iteration_patch_ids(text) == []
 
 
+def test_template_contains_why_column(tmp_path: Path) -> None:
+    example_dir = _example_dir(tmp_path)
+
+    text = subregion_iteration_log_template(example_dir)
+
+    assert (
+        "| Iteration | Sub-region ID | Problem | Patch Summary | Result | Why | Follow-up |" in text
+    )
+
+
+def test_append_iteration_row_records_why(tmp_path: Path) -> None:
+    example_dir = _example_dir(tmp_path)
+    log_path = example_dir / "subregion_iteration_log.md"
+    write_subregion_iteration_log(log_path, subregion_iteration_log_template(example_dir))
+
+    append_iteration_row(
+        log_path,
+        iteration="iter-001",
+        subregion_id="D-1",
+        problem="hero label was lost in the crowd",
+        patch_summary="raised the hero label",
+        result="r",
+        why="make the hero pop for the reader",
+        follow_up="none",
+    )
+
+    text = log_path.read_text(encoding="utf-8")
+    assert "make the hero pop for the reader" in text
+    assert iteration_patch_ids(text) == ["D-1"]
+
+
 def test_template_rejects_missing_example_directory(tmp_path: Path) -> None:
     missing_dir = tmp_path / "examples" / "missing_fig"
 
