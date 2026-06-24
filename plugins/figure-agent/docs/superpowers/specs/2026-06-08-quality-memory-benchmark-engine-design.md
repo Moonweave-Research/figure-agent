@@ -316,13 +316,14 @@ Schema: `figure-agent.quality-benchmark-run.v1`
       "candidate_count": 3,
       "rendered_count": 0,
       "ranked_count": 3,
-      "render_mode": "none",
+      "render_mode": "not_requested",
       "hard_gate_failures": [],
       "best_candidate": "CAND001",
       "memory_prior_used": false,
       "metrics": {
         "compile_success_rate": 1.0,
-        "render_success_rate": 1.0,
+        "render_success_rate": 0.0,
+        "candidate_specific_rank_rate": 0.0,
         "new_blocker_count": 0,
         "mean_rank_score": 0.58
       }

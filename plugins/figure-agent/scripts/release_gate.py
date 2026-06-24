@@ -17,7 +17,18 @@ import yaml
 SCRIPT_ROOT = Path(__file__).resolve().parent
 PLUGIN_ROOT = SCRIPT_ROOT.parent
 
-sys.path.insert(0, str(SCRIPT_ROOT))
+for script_dir in reversed(
+    (
+        SCRIPT_ROOT,
+        SCRIPT_ROOT / "checks",
+        SCRIPT_ROOT / "candidates",
+        SCRIPT_ROOT / "quality",
+        SCRIPT_ROOT / "loop",
+        SCRIPT_ROOT / "driver",
+        SCRIPT_ROOT / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
 
 import benchmark_contracts  # noqa: E402
 import benchmark_detector_reports  # noqa: E402
@@ -29,6 +40,22 @@ SCHEMA = "figure-agent.release-gate.v1"
 TARGETED_TESTS = [
     "tests/test_figure_intent_model.py",
     "tests/test_candidate_contracts.py",
+    "tests/test_composition_contracts.py",
+    "tests/test_composition_acceptance.py",
+    "tests/test_composition_sandbox.py",
+    "tests/test_composition_capture.py",
+    "tests/test_composition_cli_contract.py",
+    "tests/test_composition_p5_cli.py",
+    "tests/test_composition_p6_acceptance.py",
+    "tests/test_composition_p6_cli.py",
+    "tests/test_composition_p7_apply.py",
+    "tests/test_composition_p7_cli.py",
+    "tests/test_composition_render.py",
+    "tests/test_composition_scene.py",
+    "tests/test_composition_structural_families.py",
+    "tests/test_composition_lint.py",
+    "tests/test_composition_rank.py",
+    "tests/test_composition_review.py",
     "tests/test_candidate_generator.py",
     "tests/test_candidate_render.py",
     "tests/test_candidate_rank.py",
@@ -202,28 +229,111 @@ def _verify_smoke_fixture_paths(names: set[str]) -> dict[str, Any]:
     )
 
 
-def _run_smoke_benchmark() -> dict[str, Any]:
+def _residual_refusals(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    results = payload.get("results")
+    if not isinstance(results, list):
+        return []
+    residuals: list[dict[str, Any]] = []
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        metrics = result.get("metrics") if isinstance(result.get("metrics"), dict) else {}
+        refusals = result.get("candidate_refusals")
+        refusal_count = int(metrics.get("refusal_count") or 0)
+        refusal_list = refusals if isinstance(refusals, list) else []
+        if refusal_count <= 0 and not refusal_list:
+            continue
+        residuals.append(
+            {
+                "fixture": result.get("fixture"),
+                "refusal_count": refusal_count,
+                "refusals": refusal_list,
+            }
+        )
+    return residuals
+
+
+def _best_candidate_render_evidence(result: dict[str, Any]) -> dict[str, Any]:
+    best_candidate = result.get("best_candidate")
+    scores = result.get("scores")
+    if isinstance(best_candidate, str) and isinstance(scores, list):
+        for score in scores:
+            if not isinstance(score, dict) or score.get("candidate_id") != best_candidate:
+                continue
+            return {
+                "rank_basis": score.get("rank_basis"),
+                "render_manifest_path": score.get("render_manifest_path"),
+            }
+    return {
+        "rank_basis": result.get("best_candidate_rank_basis"),
+        "render_manifest_path": result.get("best_candidate_render_manifest_path"),
+    }
+
+
+def _benchmark_results(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    results = payload.get("results")
+    if not isinstance(results, list):
+        return []
+    summaries: list[dict[str, Any]] = []
+    metric_keys = (
+        "render_success_rate",
+        "candidate_specific_rank_rate",
+        "refusal_count",
+    )
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        metrics = result.get("metrics") if isinstance(result.get("metrics"), dict) else {}
+        summary = {
+            "fixture": result.get("fixture"),
+            "status": result.get("status"),
+            "render_mode": result.get("render_mode"),
+            "candidate_count": result.get("candidate_count"),
+            "rendered_count": result.get("rendered_count"),
+            "ranked_count": result.get("ranked_count"),
+            "best_candidate": result.get("best_candidate"),
+            "metrics": {key: metrics.get(key) for key in metric_keys if key in metrics},
+            "rank_basis_counts": result.get("rank_basis_counts"),
+            "best_candidate_render_evidence": _best_candidate_render_evidence(result),
+        }
+        summaries.append(summary)
+    return summaries
+
+
+def _run_quality_benchmark_step(step_name: str, suite: str) -> dict[str, Any]:
     try:
         payload = quality_benchmark.run_benchmark_suite(
-            "smoke",
+            suite,
             plugin_root=PLUGIN_ROOT,
             workspace_root=PLUGIN_ROOT,
+            render=True,
         )
     except Exception as exc:  # noqa: BLE001 - release report should classify the failure.
-        return _step("smoke_benchmark", "failed", stderr=str(exc))
+        return _step(step_name, "failed", stderr=str(exc))
     summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
     failed = int(summary.get("failed") or 0)
     regressions = int(summary.get("regression_count") or 0)
     state = "passed" if failed == 0 and regressions == 0 else "failed"
     return _step(
-        "smoke_benchmark",
+        step_name,
         state,
         details={
             "run_id": payload.get("run_id"),
             "suite": payload.get("suite"),
             "summary": summary,
+            "render_dependency_probe": payload.get("render_dependency_probe"),
+            "benchmark_results": _benchmark_results(payload),
+            "residual_refusals": _residual_refusals(payload),
         },
     )
+
+
+def _run_smoke_benchmark() -> dict[str, Any]:
+    return _run_quality_benchmark_step("smoke_benchmark", "smoke")
+
+
+def _run_dogfood_benchmark() -> dict[str, Any]:
+    return _run_quality_benchmark_step("dogfood_benchmark", "dogfood")
 
 
 def _run_smoke_detector_generation() -> dict[str, Any]:
@@ -305,6 +415,7 @@ def run_release_gate(
         steps.append(_step("ruff", "skipped", details={"reason": "explicit skip"}))
 
     steps.append(_run_smoke_benchmark())
+    steps.append(_run_dogfood_benchmark())
     steps.append(_run_smoke_detector_generation())
     steps.append(_benchmark_baseline_step())
 

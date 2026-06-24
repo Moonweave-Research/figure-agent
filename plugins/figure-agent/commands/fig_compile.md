@@ -53,7 +53,7 @@ Steps:
      propagates `--strict` to all checkers and any finding exits non-zero.
    - Golden/ship acceptance is not decided by the edit-loop compile command.
      Fixtures declaring `golden_contract` are gated by
-     `scripts/check_golden_artifacts.py --require-accepted`, which enforces
+     `fig-agent helper check_golden_artifacts.py --require-accepted`, which enforces
      unresolved collision/clash budgets and rejects `accepted: false`.
 7. (Optional) Run `fig-agent helper check_layout_drift.py examples/<name>` —
    only when `examples/<name>/coordinate_hints.yaml` exists. Reports per-label

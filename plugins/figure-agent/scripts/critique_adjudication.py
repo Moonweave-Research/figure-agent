@@ -34,8 +34,8 @@ from reference_contract import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = "figure-agent.critique-adjudication.v1"
-ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "needs_human", "resolved"})
-_PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "resolved"})
+ALLOWED_DECISIONS = frozenset({"apply", "dismiss", "defer", "keep", "needs_human", "resolved"})
+_PATCH_EVIDENCE_REQUIRED = frozenset({"apply", "keep", "resolved"})
 
 
 CritiqueAdjudicationError = CritiqueContractError

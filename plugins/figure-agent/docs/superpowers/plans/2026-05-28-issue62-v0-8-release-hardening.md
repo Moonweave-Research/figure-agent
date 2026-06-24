@@ -71,7 +71,7 @@ Actual: plugin manifest, `pyproject.toml`, and `uv.lock` now report `0.8.0`.
 - Modify: `plugins/figure-agent/README.md`
 - Modify: `plugins/figure-agent/skills/figure-agent/SKILL.md` only if command-facing current-truth gaps are found
 - Modify: `plugins/figure-agent/commands/*.md` only if command docs conflict with v0.8 current truth
-- Modify: `plugins/figure-agent/docs/milestones/2026-05-21-plugin-development-closeout-status.md`
+- Modify: `plugins/figure-agent/docs/milestones-archive/2026-05-21-plugin-development-closeout-status.md`
 - Modify: `plugins/figure-agent/docs/superpowers/issues/2026-05-27-issue-62-v0-8-release-hardening.md`
 
 - [x] **Step 1: Update README current state**

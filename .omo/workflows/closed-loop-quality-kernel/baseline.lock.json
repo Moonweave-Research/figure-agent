@@ -1,0 +1,61 @@
+{
+  "schema": "figure-agent.dwm-baseline-lock.v1",
+  "workflow_id": "closed-loop-quality-kernel",
+  "created_at": "2026-06-22",
+  "repo": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+  "spec_path": "plugins/figure-agent/docs/superpowers/specs/2026-06-22-closed-loop-quality-kernel-hardening-design.md",
+  "spec_sha256": "5048cff532366fb846eed3a7042e8942dbfbdb9b1a4a407dcd39b8021630bc3f",
+  "schema_sha256": "e7587611134ee9916cb635325e0448f9a004ccab6c6df4abccf51bfaf5ced245",
+  "workflow_schema_sha256": "e7587611134ee9916cb635325e0448f9a004ccab6c6df4abccf51bfaf5ced245",
+  "workflow_patterns_sha256": "8e53058097661e0b2ab065151e71f2c6ea2002b2dfe5ccbc7368cfa745564ff5",
+  "git_status_short": [
+    " M plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/caption.md",
+    "?? .omo/",
+    "?? plugins/figure-agent/REVIEW_PATCH_PLAN_v2.md",
+    "?? plugins/figure-agent/docs/superpowers/specs/2026-06-22-closed-loop-quality-kernel-hardening-design.md",
+    "?? plugins/figure-agent/docs/superpowers/specs/2026-06-22-sulfur-paper-figure-plan-design.md",
+    "?? plugins/figure-agent/examples/fig3_resistance_mechanism/"
+  ],
+  "dirty_worktree_policy": "Preserve all pre-existing dirty and untracked files. Stage or edit only explicit workflow or phase-owned files after approval.",
+  "known_gaps": [
+    "candidate_generator.build_candidate_set currently emits at most one first-match default candidate",
+    "quality_benchmark._run_fixture currently does not render candidates and can report requested_not_implemented",
+    "candidate ranking can operate without candidate-specific render manifests",
+    "quality memory has unknown family/panel/outcome events and zero eligible priors",
+    "accepted/PASS fixture state can remain stale and closeout-blocked"
+  ],
+  "first_slice_outputs": [
+    ".omo/workflows/closed-loop-quality-kernel/workflow.plan.json",
+    ".omo/workflows/closed-loop-quality-kernel/blueprint.md",
+    ".omo/workflows/closed-loop-quality-kernel/baseline.lock.json",
+    ".omo/workflows/closed-loop-quality-kernel/phase-1-tdd-design.md"
+  ],
+  "first_slice_forbidden_actions": [
+    "plugin source edit",
+    "test edit",
+    "fixture source mutation",
+    "candidate acceptance",
+    "candidate apply",
+    "golden mutation",
+    "release mutation",
+    "external/cloud calls",
+    "dependency install",
+    "destructive git",
+    "commit",
+    "push"
+  ],
+  "relevant_existing_tests": [
+    "plugins/figure-agent/tests/test_quality_benchmark.py",
+    "plugins/figure-agent/tests/test_quality_defect_ledger.py",
+    "plugins/figure-agent/tests/test_quality_memory_index.py",
+    "plugins/figure-agent/tests/test_quality_memory_events.py",
+    "plugins/figure-agent/tests/test_status.py",
+    "plugins/figure-agent/tests/test_candidate_render.py",
+    "plugins/figure-agent/tests/test_fig_closeout.py",
+    "plugins/figure-agent/tests/test_candidate_rank.py",
+    "plugins/figure-agent/tests/test_closeout_readiness.py",
+    "plugins/figure-agent/tests/test_quality_patch_apply.py",
+    "plugins/figure-agent/tests/test_candidate_apply.py",
+    "plugins/figure-agent/tests/test_candidate_generator.py"
+  ]
+}

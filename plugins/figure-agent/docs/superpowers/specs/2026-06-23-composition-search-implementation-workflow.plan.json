@@ -1,0 +1,535 @@
+{
+  "schema_version": "0.5",
+  "plan_id": "figure-agent-composition-search-implementation-2026-06-23",
+  "created_by": "keelplane",
+  "source_prompt": "그럼 구현 난이도,, 어떻게 구현을 해야할지, 판단을 해보자, 어떻게 워크 플로우를 짜야, 제대로 구현을 다 할까,, 비판 리뷰까지 판단해서",
+  "activation": {
+    "decision": "activate",
+    "matched_thresholds": [
+      "downstream-consumer",
+      "resumable-handoffs",
+      "multi-surface-fanout",
+      "planned-fanout",
+      "adversarial-verification",
+      "human-gates"
+    ],
+    "downgrade_target": null,
+    "reason": "The objective spans architecture, CLI contracts, candidate rendering, sandbox security, semantic scene modeling, composition lint, MCP surfaces, tests, visual dogfood, and adversarial review. It needs resumable phase artifacts and human gates before any source/apply/release path."
+  },
+  "objective": "Implement the LLM-amplifying composition search engine in figure-agent without suppressing LLM creativity or bypassing the quality kernel: host-authored LLM proposals enter as structured candidates, render in sandboxes, pass freshness/invariant/sandbox/composition checks, produce comparison packets, and require human acceptance before fixture mutation.",
+  "surfaces": [
+    {
+      "id": "repo",
+      "kind": "repo",
+      "locator": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "composition_spec",
+      "kind": "document",
+      "locator": "docs/superpowers/specs/2026-06-23-llm-amplifying-composition-search-design.md",
+      "access_mode": "read-only"
+    },
+    {
+      "id": "candidate_render",
+      "kind": "package",
+      "locator": "scripts/candidates/candidate_render.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "candidate_apply",
+      "kind": "package",
+      "locator": "scripts/candidates/candidate_apply.py and scripts/quality/quality_patch_apply.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "status_freshness",
+      "kind": "package",
+      "locator": "scripts/status.py, scripts/audit_evidence_summary.py, scripts/quality/quality_defect_ledger.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "mcp_facade",
+      "kind": "package",
+      "locator": "mcp/_handlers_candidates.py, mcp/figure_agent_server.py, mcp/_protocol.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "fig3_fixture",
+      "kind": "artifact",
+      "locator": "examples/fig3_resistance_mechanism",
+      "access_mode": "write-proposed"
+    }
+  ],
+  "assumptions": [
+    {
+      "claim": "Existing candidate_render/candidate_apply infrastructure can be extended instead of replaced.",
+      "verification": "Inspect candidate_render.py and candidate_apply.py for sandbox/path validation, manifest schemas, and render/apply lifecycles before writing new modules. If extension would create unsafe compatibility shims, create composition_* modules that reuse only runtime_paths and artifact helpers."
+    },
+    {
+      "claim": "v1 must not call model APIs from plugin code.",
+      "verification": "Search final diff for network/model/API clients and for commands that generate candidates from --goal text. compose-capture must consume proposal JSON only."
+    },
+    {
+      "claim": "fig3_resistance_mechanism is a valid dogfood target but currently stale.",
+      "verification": "Run bin/fig-agent status fig3_resistance_mechanism from plugin root; first dogfood wave must refresh compile/critique/export or record proposed_unranked only."
+    },
+    {
+      "claim": "Composition lint can be deterministic enough for v1.",
+      "verification": "Each lint check must declare metric/evidence/threshold; any check lacking these is emitted as human_commentary and cannot rank or block."
+    }
+  ],
+  "patterns": [
+    "pipeline",
+    "parallel-fanout-fanin",
+    "adversarial-verify",
+    "human-gate",
+    "resume-and-cache",
+    "judge-panel"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Contract scaffold and RED tests",
+      "entry": "Spec accepted as implementation target",
+      "exit": "Schema fixtures and failing tests exist for freshness-vector, compose-capture, semantic invariant coverage, candidate operation payload, acceptance hash binding, and sandbox escape rejection.",
+      "tasks": [
+        "Add schema validation helpers or fixture JSON examples for composition-candidate-set, freshness-vector, semantic-invariant, composition-lint-check, composition-candidate-operation, composition-acceptance.",
+        "Write RED tests that reject natural-language-only proposals, plugin-side --goal generation, missing operation payload, stale ranking, missing acceptance hashes, and path/symlink/shell-escape sandbox attempts.",
+        "Record current fig3 status and stale evidence as baseline."
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Freshness state machine and compose-capture",
+      "entry": "P0 RED tests exist",
+      "exit": "compose-capture stores host-authored proposal JSON as proposed_unranked even with stale detector evidence, while sandbox_prepare returns rebase_required on source hash drift.",
+      "tasks": [
+        "Implement freshness-vector computation and invalidation helpers.",
+        "Implement compose-capture CLI with proposal JSON validation and no model calls.",
+        "Add tests for stale proposal capture vs stale rank/apply refusal."
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "TeX sandbox runner hardening",
+      "entry": "P0 sandbox RED tests exist",
+      "exit": "compose-render can render safe candidate source copies and rejects absolute paths, ../ escapes, symlinks, forbidden input roots, write escapes, and shell-escape attempts.",
+      "tasks": [
+        "Extend or wrap candidate_render.py with composition sandbox runner.",
+        "Canonicalize copied inputs and outputs before and immediately before compile.",
+        "Run TeX with isolated cwd/home/temp roots and shell escape disabled.",
+        "Record copied asset hashes and denied-path diagnostics."
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Semantic blocks and scene model v1",
+      "entry": "P1 source hash model exists",
+      "exit": "fig3 scene model can address carrier_walk, current_sparkline, bridge_text, distribution curves, n_breadth, rho60s, and candidate operations can target semantic blocks instead of raw line ranges.",
+      "tasks": [
+        "Define semantic block marker convention and parser.",
+        "Add scene model builder from explicit fixture annotations plus source markers.",
+        "Add invariant coverage report for target objects.",
+        "Prepare fig3-only annotations without applying visual redraws yet."
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Composition lint v1",
+      "entry": "P3 scene model available",
+      "exit": "Composition lint emits deterministic or human_commentary findings for orphan_plot, floating_annotation, arrow_clutter, measurement_arrow_crosses_data, thin_glitch_primitive, panel_density_imbalance, path_mechanicalness, and anchor_ambiguity.",
+      "tasks": [
+        "Implement lint check registry with required metric/evidence/threshold metadata.",
+        "Demote unmeasurable checks to human_commentary.",
+        "Produce fig3 lint JSON and tests for deterministic checks."
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Creative candidate render/rank/review",
+      "entry": "P1 + P2 + P3 complete; P4 at least arrow_clutter and orphan_plot ready",
+      "exit": "compose-render, compose-rank, and compose-review produce before/after artifacts and metric-backed review packets for at least one host-authored fig3 proposal.",
+      "tasks": [
+        "Implement compose-render and candidate review packet generation. First shipped slice is prepare-only: source-copy artifacts and review packets are emitted without TeX execution.",
+        "Implement compose-rank using hard gates plus declared deterministic lint deltas only.",
+        "Support freeform_structural as review-only and never auto-apply.",
+        "Add MCP capture/render/rank/review handlers after CLI contracts pass in a later slice."
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Acceptance and apply gate",
+      "entry": "P5 review packet exists",
+      "exit": "Human acceptance artifact can authorize applying a typed patch only when hashes, invariant coverage, sandbox render, and hard gates still match; full_source_copy remains render-only unless converted.",
+      "tasks": [
+        "Implement composition-acceptance validation and hash binding.",
+        "Implement dry-run apply for typed semantic-block replacement.",
+        "Require explicit permissions for accept_freeform_structural and change_truth_bearing_geometry.",
+        "Rerun hard gates immediately before mutation."
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Fig3 dogfood, judge panel, and adversarial review",
+      "entry": "P5 complete; P6 dry-run available",
+      "exit": "At least three fig3 creative candidates render, rank, and compare; independent reviewers find no P0/P1 contract bypass; human can choose a candidate or reject all with evidence preserved.",
+      "tasks": [
+        "Host LLM authors three proposal JSONs: carrier walk rewrite, sparkline anchor, arrow simplification.",
+        "Run compose-capture/render/rank/review for all three.",
+        "Run judge panel: visual composition, scientific correctness, security/sandbox, reproducibility.",
+        "Patch spec or code until adversarial review has no P0/P1 findings or stop with documented blockers."
+      ]
+    }
+  ],
+  "workers": [
+    {
+      "id": "contract_architect",
+      "role": "Own schemas, state transitions, CLI/MCP boundary, and no-model-call invariant.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": ["changing accepted/golden semantics", "adding dependencies", "network/model calls"]
+      },
+      "forbidden_actions": ["call model APIs from plugin code", "silently mutate fixture source", "weaken existing candidate safety gates"],
+      "context_budget": {
+        "max_files": 16,
+        "max_tokens": 120000,
+        "must_include": ["composition spec", "candidate_render.py", "candidate_apply.py", "quality_patch_apply.py", "relevant tests"],
+        "must_exclude": ["unrelated docs archive"]
+      },
+      "prompt_contract": {
+        "inputs": ["composition spec", "current candidate/render/apply code", "schema test failures"],
+        "required_output_schema": "diff + schema examples + test log",
+        "stop_conditions": ["all schema/state RED tests pass", "requires network/model call -> stop", "requires destructive fixture mutation -> stop"]
+      },
+      "ownership": ["schemas", "CLI boundary", "freshness state"]
+    },
+    {
+      "id": "sandbox_engineer",
+      "role": "Own TeX sandbox runner and hostile candidate tests.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": ["dependency install", "changing TeX engine", "enabling shell escape"]
+      },
+      "forbidden_actions": ["enable shell escape", "allow absolute source paths", "write outside candidate sandbox"],
+      "context_budget": {
+        "max_files": 12,
+        "max_tokens": 100000,
+        "must_include": ["candidate_render.py", "runtime_paths.py", "existing render tests", "sandbox RED tests"],
+        "must_exclude": ["MCP handlers unless needed after CLI passes"]
+      },
+      "prompt_contract": {
+        "inputs": ["sandbox policy", "negative tests", "candidate render contract"],
+        "required_output_schema": "diff + pass/fail matrix for sandbox attacks",
+        "stop_conditions": ["safe candidates render and hostile candidates fail", "TeX confinement cannot be enforced -> stop with risk report"]
+      },
+      "ownership": ["sandbox compile", "path safety", "asset copy manifest"]
+    },
+    {
+      "id": "composition_engineer",
+      "role": "Own semantic scene model, composition lint, creative candidate review packets.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": ["figure-agent"],
+        "requires_escalation_for": ["applying candidate to fixture source", "changing scientific invariants"]
+      },
+      "forbidden_actions": ["make human_commentary rank candidates", "invent scientific invariants", "apply freeform candidates without acceptance"],
+      "context_budget": {
+        "max_files": 18,
+        "max_tokens": 140000,
+        "must_include": ["composition spec", "fig3 fixture", "status/quality-map outputs", "candidate_render.py"],
+        "must_exclude": ["unrelated fixtures except comparison tests"]
+      },
+      "prompt_contract": {
+        "inputs": ["scene model contract", "composition lint contract", "fig3 fixture"],
+        "required_output_schema": "scene JSON + lint JSON + review packet JSON + test log",
+        "stop_conditions": ["fig3 emits expected lint findings", "unmeasurable check demoted to human_commentary", "needs human taste choice -> stop at gate"]
+      },
+      "ownership": ["scene model", "composition lint", "review packet"]
+    },
+    {
+      "id": "adversarial_reviewer",
+      "role": "Independent verifier trying to refute safety, no-bypass, and no-fake-taste claims.",
+      "tool_permissions": {
+        "read": true,
+        "write": false,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": []
+      },
+      "forbidden_actions": ["edit code", "approve without source/artifact evidence", "trust producer claims without reading outputs"],
+      "context_budget": {
+        "max_files": 20,
+        "max_tokens": 120000,
+        "must_include": ["diff", "tests", "rendered artifacts or manifests", "composition spec"],
+        "must_exclude": []
+      },
+      "prompt_contract": {
+        "inputs": ["phase output", "claimed pass criteria", "ground truth files/artifacts"],
+        "required_output_schema": "verdict {pass: bool, p0: [], p1: [], evidence: []}",
+        "stop_conditions": ["verdict emitted", "unverifiable claim found -> flag"]
+      },
+      "ownership": ["phase verification", "P0/P1 blocker report"]
+    },
+    {
+      "id": "human_reviewer",
+      "role": "User or delegated human authority for accepting creative candidates and truth-bearing changes.",
+      "tool_permissions": {
+        "read": true,
+        "write": false,
+        "shell": false,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": []
+      },
+      "forbidden_actions": ["approve without rendered before/after packet", "approve accepted/golden promotion implicitly"],
+      "context_budget": {
+        "max_files": 4,
+        "max_tokens": 20000,
+        "must_include": ["before/after render board", "invariant report", "lint deltas", "source diff summary"],
+        "must_exclude": ["raw logs unless requested"]
+      },
+      "prompt_contract": {
+        "inputs": ["composition review packet", "render board"],
+        "required_output_schema": "decision {accept|reject|revise, rationale, permissions_granted}",
+        "stop_conditions": ["decision recorded"]
+      },
+      "ownership": ["creative acceptance", "truth-bearing waiver"]
+    }
+  ],
+  "handoffs": [
+    {
+      "from_phase": "P0",
+      "to_phase": "P1",
+      "artifact": "schema RED test bundle",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema_examples", "failing_tests", "expected_error_codes"],
+        "validation_command": "uv run pytest tests/test_composition_contracts.py -q"
+      }
+    },
+    {
+      "from_phase": "P1",
+      "to_phase": "P5",
+      "artifact": "captured proposal candidate set with freshness-vector",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "fixture", "freshness_vector", "candidates", "authority"],
+        "validation_command": "bin/fig-agent compose-capture fig3_resistance_mechanism --proposal-json <proposal> --json"
+      }
+    },
+    {
+      "from_phase": "P2",
+      "to_phase": "P5",
+      "artifact": "sandbox render manifest",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "candidate_id", "stages", "artifacts", "asset_hashes"],
+        "validation_command": "bin/fig-agent compose-render fig3_resistance_mechanism --candidate-set <candidate_set> --json"
+      }
+    },
+    {
+      "from_phase": "P3",
+      "to_phase": "P4",
+      "artifact": "semantic scene model",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "fixture", "panels", "objects", "source_selectors"],
+        "validation_command": "bin/fig-agent analyze-composition fig3_resistance_mechanism --json"
+      }
+    },
+    {
+      "from_phase": "P4",
+      "to_phase": "P5",
+      "artifact": "composition lint report",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "fixture", "findings", "check_metadata"],
+        "validation_command": "bin/fig-agent composition-lint fig3_resistance_mechanism --json"
+      }
+    },
+    {
+      "from_phase": "P5",
+      "to_phase": "P6",
+      "artifact": "composition review packet",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "candidate_id", "hard_gates", "composition_lint_delta", "render_status", "acceptance_required"],
+        "validation_command": "bin/fig-agent compose-review fig3_resistance_mechanism --candidate-set build/candidates/composition_candidate_set.json --candidate-id <id> --json"
+      }
+    },
+    {
+      "from_phase": "P6",
+      "to_phase": "P7",
+      "artifact": "accepted or rejected composition candidate decision",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": ["schema", "decision", "candidate_id", "reviewer", "accepted_hashes", "permissions_granted", "rationale"],
+        "validation_command": "test -f examples/fig3_resistance_mechanism/build/candidates/<id>/composition_acceptance.json"
+      }
+    }
+  ],
+  "parallelism": {
+    "shape": "pipeline-with-parallel-fanout",
+    "concurrency_cap": 3,
+    "fan_in_rule": "P5 is the main fan-in barrier: it requires P1 freshness/capture, P2 sandbox render, P3 scene model, and at least the P4 deterministic lint subset. P6 requires P5. P7 runs after P5, with P6 dry-run optional unless the user wants apply.",
+    "barriers": ["P5 render/rank/review fan-in", "P6 human acceptance gate", "P7 adversarial final gate"]
+  },
+  "verification": [
+    {
+      "claim_or_output": "The plugin does not suppress LLM proposals and does not bypass itself.",
+      "falsifier": "A proposal JSON outside known families is captured as proposed_unranked, but no ranking/apply occurs until freshness and executable payload checks pass.",
+      "evidence_required": "compose-capture output + rejected compose-rank on stale evidence + accepted freeform_structural render-only packet"
+    },
+    {
+      "claim_or_output": "The plugin never performs plugin-side LLM generation in v1.",
+      "falsifier": "Search diff and command behavior for model/API calls or generation from --goal text; none exist.",
+      "evidence_required": "rg transcript and CLI help showing proposal-json capture path"
+    },
+    {
+      "claim_or_output": "TeX sandbox blocks hostile candidate input.",
+      "falsifier": "Absolute path, ../ escape, symlink, forbidden input, write escape, and shell-escape fixtures all fail with explicit diagnostics.",
+      "evidence_required": "pytest matrix from sandbox negative tests"
+    },
+    {
+      "claim_or_output": "Composition lint does not become fake taste oracle.",
+      "falsifier": "Unmeasurable checks are emitted as human_commentary and excluded from rank/block decisions; deterministic checks cite metrics and evidence hashes.",
+      "evidence_required": "composition lint JSON and compose-rank JSON"
+    },
+    {
+      "claim_or_output": "fig3 dogfood demonstrates value beyond micro-nudge.",
+      "falsifier": "At least three structural candidates render; at least one changes topology or object anchoring; review packet shows before/after and metric-backed deltas.",
+      "evidence_required": "candidate manifests, rendered before/after artifacts, review packet, human decision"
+    }
+  ],
+  "risk_gates": [
+    {
+      "trigger": "Any command applies a creative candidate to fixture source.",
+      "safe_default": "Do not apply. Stop at review packet unless a composition-acceptance.v1 artifact grants the required permissions and all accepted hashes still match.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "A candidate changes truth-bearing geometry or scientific metaphor.",
+      "safe_default": "Render and review only. Require explicit human waiver or permission change_truth_bearing_geometry before apply.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Adding dependencies or changing TeX engine/sandbox policy.",
+      "safe_default": "Do not add dependencies. First attempt with stdlib/path/env isolation and current lualatex; escalate if insufficient.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Network, paid API, or plugin-originated model call proposed.",
+      "safe_default": "Reject for v1; use host-authored proposal JSON instead.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Export, accepted, golden, or release-ready state mutation.",
+      "safe_default": "Out of scope for implementation waves; require separate explicit user approval.",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Commit or push.",
+      "safe_default": "Do not commit or push without explicit user instruction.",
+      "requires_user_approval": true
+    }
+  ],
+  "budget": {
+    "max_agents": 18,
+    "max_rounds_per_phase": 2,
+    "max_retries": 2,
+    "time_budget": "multi-session; 1-2 days for P0-P2, 2-4 days for P3-P5, additional 1-2 days for P6-P7 hardening",
+    "max_files_touched_per_phase": 8,
+    "concurrency_cap": 3
+  },
+  "resume": {
+    "cache_keys": ["P0_schema_tests", "P1_freshness_capture", "P2_sandbox", "P3_scene_model", "P4_lint", "P5_review_packet", "P6_acceptance", "P7_dogfood"],
+    "invalidation": "Spec edits invalidate P0 and downstream; candidate source/spec/briefing changes invalidate P5+; detector/reference changes invalidate rank/review but not proposal capture; sandbox policy edits invalidate P2 and all rendered artifacts.",
+    "restart_points": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"]
+  },
+  "execution_path": {
+    "mode": "subagent-driven-development with resumable artifacts",
+    "consumer": "Sisyphus / future workflow runtime",
+    "first_slice": {
+      "instruction": "Start with P0 only: add schema examples and RED tests for composition contracts, freshness-vector, proposal capture, executable operation payloads, acceptance hash binding, and sandbox attack rejection. Do not implement composition rendering yet.",
+      "inputs": [
+        "repository path: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent",
+        "spec: docs/superpowers/specs/2026-06-23-llm-amplifying-composition-search-design.md",
+        "candidate_render.py, candidate_apply.py, quality_patch_apply.py",
+        "fig3_resistance_mechanism fixture status as baseline"
+      ],
+      "expected_output": "New or extended tests that fail for the current implementation for the right reasons, plus JSON schema fixtures under tests/fixtures or examples/<name>/build/candidates test sandbox.",
+      "completion_check": "uv run pytest tests/test_composition_contracts.py tests/test_candidate_render.py -q shows the new tests failing before implementation or passing only after a focused P0 implementation; no source fixture mutation.",
+      "forbidden_actions": [
+        "calling model APIs",
+        "applying candidates to real fixtures",
+        "editing accepted/golden/export artifacts",
+        "committing",
+        "weakening existing tests"
+      ]
+    },
+    "first_wave": {
+      "id": "wave_1_contracts_and_sandbox",
+      "concurrency_cap": 2,
+      "slices": [
+        {
+          "id": "P0_contract_red_tests",
+          "instruction": "Write contract/schema RED tests and JSON fixtures.",
+          "inputs": ["composition spec", "existing candidate tests"],
+          "expected_output": "Failing tests for missing composition contract implementation.",
+          "completion_check": "New tests fail for intended missing features, not import/path mistakes.",
+          "forbidden_actions": ["implementation beyond minimal test helpers", "fixture mutation"]
+        },
+        {
+          "id": "P2_sandbox_red_tests",
+          "instruction": "Write hostile TeX sandbox negative tests.",
+          "inputs": ["TeX sandbox policy", "candidate_render.py"],
+          "expected_output": "Hostile fixtures covering abs path, ../, symlink, forbidden input, write escape, shell escape.",
+          "completion_check": "Tests currently fail or are marked xfail with exact missing policy codes.",
+          "forbidden_actions": ["enabling shell escape", "adding dependencies without approval"]
+        }
+      ],
+      "entry_gate": "Spec file present and reviewed; user agrees to design-first P0/P2 test slice.",
+      "exit_gate": "All RED tests have clear failure reasons and no source fixture mutation occurred.",
+      "fan_in": "Contract architect reviews both test sets for schema consistency."
+    },
+    "waves": [
+      {
+        "id": "wave_2_state_and_capture",
+        "depends_on": ["wave_1_contracts_and_sandbox"],
+        "concurrency_cap": 2,
+        "slices": ["P1_freshness_capture", "P2_sandbox_runner"],
+        "entry_gate": "Wave 1 RED tests accepted as valid.",
+        "exit_gate": "compose-capture and compose-render pass their contract and sandbox tests."
+      },
+      {
+        "id": "wave_3_scene_and_lint",
+        "depends_on": ["wave_2_state_and_capture"],
+        "concurrency_cap": 2,
+        "slices": ["P3_scene_model", "P4_composition_lint"],
+        "entry_gate": "Freshness and sandbox artifacts exist.",
+        "exit_gate": "fig3 scene model and lint reports are deterministic and review-only where metrics are absent."
+      },
+      {
+        "id": "wave_4_candidate_review_and_gate",
+        "depends_on": ["wave_3_scene_and_lint"],
+        "concurrency_cap": 1,
+        "slices": ["P5_render_rank_review", "P6_acceptance_dry_run", "P7_fig3_adversarial_dogfood"],
+        "entry_gate": "fig3 has scene+lint and at least one host proposal JSON.",
+        "exit_gate": "Three fig3 creative candidates render/rank/review; adversarial review reports no P0/P1; human gate packet is ready."
+      }
+    ]
+  }
+}

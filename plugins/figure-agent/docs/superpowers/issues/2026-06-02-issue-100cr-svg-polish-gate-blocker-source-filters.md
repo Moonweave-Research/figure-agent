@@ -6,7 +6,7 @@ Type: operator workflow, SVG polish evidence, queue UX
 
 Milestone:
 
-- `docs/milestones/2026-06-02-svg-polish-readiness-filter-evidence.md`
+- `docs/milestones-archive/2026-06-02-svg-polish-readiness-filter-evidence.md`
 
 ## Problem
 

@@ -1,0 +1,849 @@
+{
+  "schema_version": "0.5",
+  "plan_id": "figure-agent-visual-critique-composition-loop-2026-06-24",
+  "created_by": "keelplane",
+  "source_prompt": "$keelplane proceed on making figure-agent visibly meaningful after the fig3 composition-family dogfood slice",
+  "activation": {
+    "decision": "activate",
+    "matched_thresholds": [
+      "resumable-handoffs",
+      "multi-surface-fanout",
+      "planned-fanout",
+      "adversarial-verification",
+      "human-gates"
+    ],
+    "downgrade_target": null,
+    "reason": "The next useful slice spans CLI contracts, generated candidate artifacts, rendered PNG evidence, review packets, source/apply safety gates, and independent review roles. It needs resumable handoffs and visual evidence gates rather than a single direct edit."
+  },
+  "objective": "Turn the current fig3 composition-family work into a visible, evidence-backed improvement loop: generate structural and composite candidates, render comparison boards, attach deterministic visual evidence to ranking/review packets, and preserve hash-bound human acceptance/apply gates.",
+  "surfaces": [
+    {
+      "id": "figure_agent_repo",
+      "kind": "repo",
+      "locator": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "composition_scripts",
+      "kind": "package",
+      "locator": "plugins/figure-agent/scripts/composition_*.py",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "fig3_fixture",
+      "kind": "data-source",
+      "locator": "plugins/figure-agent/examples/fig3_resistance_mechanism/",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "candidate_artifacts",
+      "kind": "artifact",
+      "locator": "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/",
+      "access_mode": "write-approved"
+    },
+    {
+      "id": "composition_design_docs",
+      "kind": "document",
+      "locator": "plugins/figure-agent/docs/superpowers/specs/2026-06-23-llm-amplifying-composition-search-design.md",
+      "access_mode": "read-only"
+    }
+  ],
+  "assumptions": [
+    {
+      "claim": "The current structural-family slice can already generate and render at least six fig3 candidates plus a refined composite comparison board.",
+      "verification": "Find candidate_set.json, render manifests, composition_review_packet.json files, and fig3_*comparison.png artifacts under the fig3 build/candidates directory."
+    },
+    {
+      "claim": "The system is meaningful only if the rendered visual difference is inspectable without manually reading TeX diffs.",
+      "verification": "Review packet JSON must point to rendered candidate artifacts and a comparison board; tests must fail if these paths are omitted or stale."
+    },
+    {
+      "claim": "No plugin-side model/API calls are allowed in this loop.",
+      "verification": "Static grep and focused review of touched composition scripts must show no network/model client invocation."
+    },
+    {
+      "claim": "Fixture source mutation remains gated by existing P6/P7 acceptance/apply artifacts.",
+      "verification": "compose-apply-ready, compose-accept, and compose-apply tests must still pass, and no new command may replace fixture source outside compose-apply."
+    }
+  ],
+  "patterns": [
+    "Pipeline",
+    "Parallel Fan-Out / Fan-In",
+    "Adversarial Verify",
+    "Human Gate",
+    "Resume And Cache",
+    "Judge Panel"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Freeze Current Visual Baseline",
+      "entry_criteria": [
+        "Repository is on branch design/figure-agent-v2-svg",
+        "Known unrelated dirty files are preserved"
+      ],
+      "exit_criteria": [
+        "baseline_state.json names candidate_set hash, best candidate, board paths, and verification commands",
+        "No unrelated dirty file was modified"
+      ],
+      "depends_on": [],
+      "worker_ids": [
+        "baseline_cartographer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/baseline_state.json",
+        "verification_receipt.json"
+      ]
+    },
+    {
+      "id": "P1",
+      "name": "Review Packet Carries Visible Evidence",
+      "entry_criteria": [
+        "P0 baseline_state.json exists"
+      ],
+      "exit_criteria": [
+        "composition_review_packet.json can be opened as a complete visual decision packet",
+        "Tests prove rendered evidence paths exist and are hash-associated"
+      ],
+      "depends_on": [
+        "P0"
+      ],
+      "worker_ids": [
+        "visual_evidence_engineer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "build/candidates/<candidate-id>/composition_review_packet.json",
+        "review packet visual evidence tests"
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Render-Derived Visual Signals",
+      "entry_criteria": [
+        "P1 review packet includes visible evidence"
+      ],
+      "exit_criteria": [
+        "visual_metrics.json exists for reviewed candidates",
+        "Rank/review can cite visual_metrics.json as evidence without treating it as an aesthetic oracle"
+      ],
+      "depends_on": [
+        "P1"
+      ],
+      "worker_ids": [
+        "visual_evidence_engineer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "build/candidates/<candidate-id>/visual_metrics.json",
+        "visual metrics schema tests"
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Composite Search Loop",
+      "entry_criteria": [
+        "At least three single-family rendered candidates exist",
+        "P2 visual metrics are available"
+      ],
+      "exit_criteria": [
+        "At least one composite candidate renders and appears in a comparison board",
+        "Rank output explains why the composite is preferable or rejects it with evidence"
+      ],
+      "depends_on": [
+        "P2"
+      ],
+      "worker_ids": [
+        "composite_search_engineer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "composite candidate-set JSON",
+        "composite render manifest",
+        "build/candidates/<composite-id>/rank_result.json"
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Judge Panel And Refutation",
+      "entry_criteria": [
+        "P3 has a candidate board and rank result"
+      ],
+      "exit_criteria": [
+        "review_synthesis.md contains findings-first status with evidence paths",
+        "No hard refutation remains unresolved"
+      ],
+      "depends_on": [
+        "P3"
+      ],
+      "worker_ids": [
+        "adversarial_reviewer"
+      ],
+      "outputs": [
+        "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/review_synthesis.md",
+        "hard-refutation list"
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Human Acceptance And Apply Boundary",
+      "entry_criteria": [
+        "P4 review_synthesis.md has no unresolved hard refutations",
+        "A human explicitly selects a candidate"
+      ],
+      "exit_criteria": [
+        "Accepted/applied artifacts are hash-bound, or the workflow stops safely before source mutation"
+      ],
+      "depends_on": [
+        "P4"
+      ],
+      "worker_ids": [
+        "baseline_cartographer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "composition_acceptance.json",
+        "build/candidates/<candidate-id>/composition_apply_result.json",
+        "stopped-before-apply receipt"
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Post-Apply Proof",
+      "entry_criteria": [
+        "P5 applied a candidate through compose-apply"
+      ],
+      "exit_criteria": [
+        "The applied source has visible before/after proof and a rollback patch",
+        "The final report states whether TeX/export/golden artifacts were or were not refreshed"
+      ],
+      "depends_on": [
+        "P5"
+      ],
+      "worker_ids": [
+        "visual_evidence_engineer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/post_apply_visual_receipt.json",
+        "before/after board"
+      ]
+    },
+    {
+      "id": "P7",
+      "name": "Generalize Beyond Fig3",
+      "entry_criteria": [
+        "P1-P4 pass on fig3",
+        "The reusable contracts are documented"
+      ],
+      "exit_criteria": [
+        "A second fixture can emit rendered creative candidates or a precise missing-prerequisite report"
+      ],
+      "depends_on": [
+        "P6"
+      ],
+      "worker_ids": [
+        "baseline_cartographer",
+        "visual_evidence_engineer",
+        "release_verifier"
+      ],
+      "outputs": [
+        "second-fixture prerequisite report",
+        "generalization gap list"
+      ]
+    }
+  ],
+  "workers": [
+    {
+      "id": "baseline_cartographer",
+      "role": "Map current repo, artifact, and verification state before further edits.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": [
+          "write",
+          "shell"
+        ]
+      },
+      "forbidden_actions": [
+        "touch unrelated dirty files",
+        "delete generated fig3 artifacts",
+        "push commits"
+      ],
+      "context_budget": {
+        "max_files": 16,
+        "max_tokens": 18000,
+        "must_include": [
+          "git status",
+          "fig3 build/candidates artifact inventory",
+          "composition family/render/review tests"
+        ],
+        "must_exclude": [
+          "external web research",
+          "model/API credentials"
+        ]
+      },
+      "prompt_contract": {
+        "inputs": [
+          "repository path",
+          "known protected dirty file list",
+          "current fig3 artifact directory"
+        ],
+        "required_output_schema": "baseline_state.json with repo_status, artifact_hashes, best_candidate, commands_run, and blocked_items",
+        "stop_conditions": [
+          "unrelated dirty file would be modified",
+          "required artifact is missing and cannot be regenerated without TeX approval"
+        ]
+      },
+      "ownership": [
+        "baseline_state.json",
+        "artifact inventory"
+      ]
+    },
+    {
+      "id": "visual_evidence_engineer",
+      "role": "Attach rendered visual artifacts and deterministic image checks to review outputs.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": [
+          "write",
+          "shell"
+        ]
+      },
+      "forbidden_actions": [
+        "add aesthetic scoring",
+        "call model APIs",
+        "mutate accepted/golden/export artifacts"
+      ],
+      "context_budget": {
+        "max_files": 14,
+        "max_tokens": 20000,
+        "must_include": [
+          "composition_review.py",
+          "composition_render.py",
+          "test_composition_review.py",
+          "test_composition_render.py"
+        ],
+        "must_exclude": [
+          "unrelated examples",
+          "MCP surfaces"
+        ]
+      },
+      "prompt_contract": {
+        "inputs": [
+          "baseline_state.json",
+          "candidate_set.json",
+          "render manifests"
+        ],
+        "required_output_schema": "visual_metrics.json plus review packet fields for visual_evidence",
+        "stop_conditions": [
+          "review packet cannot prove artifact existence",
+          "implementation would require new image dependency"
+        ]
+      },
+      "ownership": [
+        "visual evidence schema",
+        "review packet tests"
+      ]
+    },
+    {
+      "id": "composite_search_engineer",
+      "role": "Build bounded composite candidate generation on top of existing operation contracts.",
+      "tool_permissions": {
+        "read": true,
+        "write": true,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": [
+          "write",
+          "shell"
+        ]
+      },
+      "forbidden_actions": [
+        "bypass render sandbox",
+        "generate unbounded combinations",
+        "alter P6/P7 acceptance hashes"
+      ],
+      "context_budget": {
+        "max_files": 12,
+        "max_tokens": 18000,
+        "must_include": [
+          "composition_families.py",
+          "composition_family_templates.py",
+          "composition_render.py",
+          "composition_rank.py"
+        ],
+        "must_exclude": [
+          "accepted/golden/export artifacts"
+        ]
+      },
+      "prompt_contract": {
+        "inputs": [
+          "single-family candidate set",
+          "compatibility rules",
+          "render manifest"
+        ],
+        "required_output_schema": "composite candidate-set JSON with component_candidate_ids and bounded operations",
+        "stop_conditions": [
+          "composite operation overlaps source blocks incompatibly",
+          "candidate count cap is exceeded"
+        ]
+      },
+      "ownership": [
+        "composite candidate generation",
+        "composite tests"
+      ]
+    },
+    {
+      "id": "adversarial_reviewer",
+      "role": "Refute claims against source, render artifacts, tests, and safety gates.",
+      "tool_permissions": {
+        "read": true,
+        "write": false,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": [
+          "shell"
+        ]
+      },
+      "forbidden_actions": [
+        "edit files",
+        "accept input claims as verified",
+        "ignore missing test evidence"
+      ],
+      "context_budget": {
+        "max_files": 20,
+        "max_tokens": 22000,
+        "must_include": [
+          "current diff",
+          "tests",
+          "rendered artifact inventory",
+          "review packet JSON"
+        ],
+        "must_exclude": [
+          "network sources"
+        ]
+      },
+      "prompt_contract": {
+        "inputs": [
+          "rank result",
+          "review packet",
+          "visual metrics",
+          "git diff"
+        ],
+        "required_output_schema": "review_synthesis.md with confirmed, refuted, unverified, and required fixes",
+        "stop_conditions": [
+          "hard refutation found",
+          "artifact referenced in packet is missing"
+        ]
+      },
+      "ownership": [
+        "review_synthesis.md",
+        "hard-refutation list"
+      ]
+    },
+    {
+      "id": "release_verifier",
+      "role": "Run focused verification and report exact pass/fail evidence.",
+      "tool_permissions": {
+        "read": true,
+        "write": false,
+        "shell": true,
+        "network": false,
+        "mcp_connectors": [],
+        "requires_escalation_for": [
+          "shell"
+        ]
+      },
+      "forbidden_actions": [
+        "weaken tests",
+        "skip failed tests silently",
+        "push commits"
+      ],
+      "context_budget": {
+        "max_files": 10,
+        "max_tokens": 12000,
+        "must_include": [
+          "focused pytest command output",
+          "ruff output",
+          "py_compile output",
+          "release_gate output when run"
+        ],
+        "must_exclude": [
+          "unrelated fixture churn"
+        ]
+      },
+      "prompt_contract": {
+        "inputs": [
+          "changed file list",
+          "test list",
+          "risk gates"
+        ],
+        "required_output_schema": "verification_receipt.json with commands, exit codes, summaries, and skipped checks",
+        "stop_conditions": [
+          "focused tests fail",
+          "ruff fails",
+          "unexpected full-pytest regression appears"
+        ]
+      },
+      "ownership": [
+        "verification receipt",
+        "release-gate evidence"
+      ]
+    }
+  ],
+  "handoffs": [
+    {
+      "from_phase": "P0",
+      "to_phase": "P1",
+      "artifact": "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/baseline_state.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "repo_status",
+          "candidate_set_hash",
+          "best_candidate_id",
+          "comparison_boards",
+          "commands_run"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/baseline_state.json"
+      }
+    },
+    {
+      "from_phase": "P1",
+      "to_phase": "P2",
+      "artifact": "build/candidates/<candidate-id>/composition_review_packet.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "candidate_id",
+          "candidate_set_hash",
+          "render_manifest_hash",
+          "visual_evidence"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/<candidate-id>/composition_review_packet.json"
+      }
+    },
+    {
+      "from_phase": "P2",
+      "to_phase": "P3",
+      "artifact": "build/candidates/<candidate-id>/visual_metrics.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "candidate_id",
+          "artifact_paths",
+          "nonblank_checks",
+          "image_dimensions"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/<candidate-id>/visual_metrics.json"
+      }
+    },
+    {
+      "from_phase": "P3",
+      "to_phase": "P4",
+      "artifact": "build/candidates/<composite-id>/rank_result.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "candidate_id",
+          "component_candidate_ids",
+          "rank",
+          "evidence"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/<composite-id>/rank_result.json"
+      }
+    },
+    {
+      "from_phase": "P4",
+      "to_phase": "P5",
+      "artifact": "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/review_synthesis.md",
+      "artifact_schema": {
+        "format": "markdown",
+        "required_fields": [
+          "confirmed",
+          "refuted",
+          "unverified",
+          "acceptance recommendation"
+        ],
+        "validation_command": "test -s plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/review_synthesis.md"
+      }
+    },
+    {
+      "from_phase": "P5",
+      "to_phase": "P6",
+      "artifact": "build/candidates/<candidate-id>/composition_apply_result.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "status",
+          "candidate_id",
+          "rollback_patch",
+          "applied_source"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/<candidate-id>/composition_apply_result.json"
+      }
+    },
+    {
+      "from_phase": "P6",
+      "to_phase": "P7",
+      "artifact": "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/post_apply_visual_receipt.json",
+      "artifact_schema": {
+        "format": "json",
+        "required_fields": [
+          "before_board",
+          "after_board",
+          "commands_run",
+          "artifacts_refreshed"
+        ],
+        "validation_command": "python -m json.tool plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/post_apply_visual_receipt.json"
+      }
+    }
+  ],
+  "parallelism": {
+    "shape": "hybrid",
+    "concurrency_cap": 3,
+    "fan_in_rule": "P4 fan-in synthesizes reviewer outputs; P5 cannot start until hard refutations are either fixed or explicitly accepted as stop conditions.",
+    "barriers": [
+      "P0 baseline_state before schema-changing edits",
+      "P4 review_synthesis before acceptance/apply",
+      "P5 human acceptance before source mutation"
+    ]
+  },
+  "verification": [
+    {
+      "claim_or_output": "Review packets are now visible decision packets, not JSON-only summaries.",
+      "falsifier": "A composition_review_packet.json for a rendered candidate lacks render artifact paths, comparison board paths, or hash linkage.",
+      "evidence_required": [
+        "Focused pytest for composition review",
+        "Real fig3 review packet path and file-existence check"
+      ]
+    },
+    {
+      "claim_or_output": "Visual metrics are deterministic evidence only.",
+      "falsifier": "visual_metrics.json contains subjective aesthetic scores or blocks candidates without a deterministic artifact check.",
+      "evidence_required": [
+        "Schema test",
+        "Code review of visual metrics generation"
+      ]
+    },
+    {
+      "claim_or_output": "Composite search preserves sandbox and source-mutation boundaries.",
+      "falsifier": "A composite command writes fixture source or bypasses compose-render/compose-apply contracts.",
+      "evidence_required": [
+        "Focused pytest for composite generation, render, and review",
+        "Git diff inspection"
+      ]
+    },
+    {
+      "claim_or_output": "No plugin-side model/API calls were introduced.",
+      "falsifier": "Touched plugin code imports or invokes network/model client APIs.",
+      "evidence_required": [
+        "Static grep over touched composition scripts",
+        "Adversarial review"
+      ]
+    },
+    {
+      "claim_or_output": "The loop produces a visibly inspectable figure improvement candidate.",
+      "falsifier": "No comparison PNG exists, image is blank, or candidate render paths are missing.",
+      "evidence_required": [
+        "PNG dimension and nonblank check",
+        "Comparison board path",
+        "Human-visible board in final report"
+      ]
+    }
+  ],
+  "risk_gates": [
+    {
+      "trigger": "Any filesystem write to repository, fixture, or generated artifact paths.",
+      "safe_default": "Stop before writing files and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Any shell command, including pytest, ruff, py_compile, TeX render, or artifact inspection.",
+      "safe_default": "Stop before running shell commands and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Installing a new dependency for image metrics or rendering.",
+      "safe_default": "Stop before installing dependency and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Running TeX/render beyond the explicitly selected fixture or beyond existing render commands.",
+      "safe_default": "Stop before rendering selected fixture and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Mutating fixture source.",
+      "safe_default": "Stop before mutating source and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Writing accepted, golden, or export artifacts.",
+      "safe_default": "Stop before writing accepted golden export artifacts and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Pushing commits or publishing results externally.",
+      "safe_default": "Stop before pushing commits and ask for approval",
+      "requires_user_approval": true
+    },
+    {
+      "trigger": "Adding plugin-side model/API calls or MCP surfaces.",
+      "safe_default": "Stop before adding model api mcp surfaces and ask for approval",
+      "requires_user_approval": true
+    }
+  ],
+  "budget": {
+    "max_agents": 5,
+    "max_rounds": 3,
+    "max_retries": 2,
+    "time_box": "180 minutes",
+    "file_touch_limit": "Up to 8 source files, 6 test files, 3 docs files, and 4 fixture files; generated candidate artifacts are capped separately by wave receipts."
+  },
+  "resume": {
+    "cacheable_outputs": [
+      "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/baseline_state.json",
+      "build/candidates/<candidate-id>/composition_review_packet.json",
+      "build/candidates/<candidate-id>/visual_metrics.json",
+      "build/candidates/<composite-id>/rank_result.json",
+      "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/review_synthesis.md",
+      "build/candidates/<candidate-id>/composition_apply_result.json",
+      "plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/post_apply_visual_receipt.json"
+    ],
+    "invalidators": [
+      "candidate_set sha256 changes",
+      "base source sha256 changes",
+      "sandbox source sha256 changes",
+      "render_manifest sha256 changes",
+      "comparison board sha256 changes",
+      "review packet schema changes"
+    ],
+    "restart_points": [
+      "P0",
+      "P1",
+      "P3",
+      "P4",
+      "P5"
+    ]
+  },
+  "execution_path": {
+    "mode": "direct-codex",
+    "consumer": "human",
+    "first_slice": {
+      "instruction": "Create a baseline visual evidence receipt for the current fig3 composition-family state without changing source behavior: inventory candidate artifacts, select the current best candidate, record board paths, and add no implementation code unless a missing receipt writer is strictly necessary.",
+      "inputs": [
+        "repository path",
+        "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]",
+        "fig3 artifact path: plugins/figure-agent/examples/fig3_resistance_mechanism/build/candidates/",
+        "current best candidate id: CFAM_COMBO_002",
+        "known unrelated dirty file: plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/caption.md"
+      ],
+      "expected_output": "baseline_state.json plus a short receipt naming comparison boards, best candidate, artifact hashes, and verification commands.",
+      "completion_check": "python -m json.tool validates baseline_state.json, referenced board files exist, and git status shows no unrelated file touched.",
+      "forbidden_actions": [
+        "run compose-apply",
+        "mutate fixture source",
+        "touch accepted/golden/export artifacts",
+        "call models or network APIs",
+        "push commits"
+      ]
+    },
+    "first_wave": {
+      "id": "W1-visible-evidence-foundation",
+      "concurrency_cap": 2,
+      "slices": [
+        {
+          "id": "W1S1-baseline-receipt",
+          "instruction": "Inventory current fig3 candidate artifacts and write baseline_state.json with hashes, board paths, best candidate id, current verification status, and protected dirty files.",
+          "inputs": [
+            "repository path",
+            "fig3 artifact directory",
+            "git status output"
+          ],
+          "expected_output": "baseline_state.json",
+          "completion_check": "JSON validates, all referenced paths exist, and no unrelated dirty file changes.",
+          "forbidden_actions": [
+            "source apply",
+            "TeX render",
+            "network/model calls",
+            "accepted/golden/export writes"
+          ]
+        },
+        {
+          "id": "W1S2-review-packet-gap-test",
+          "instruction": "Add RED tests proving review packets for rendered candidates must include visual evidence paths and hash linkage, without changing production code in the same slice.",
+          "inputs": [
+            "composition_review.py",
+            "test_composition_review.py",
+            "existing fig3 review packet shape"
+          ],
+          "expected_output": "Failing focused test that specifies visual_evidence contract.",
+          "completion_check": "Focused pytest fails for the new expected visual_evidence fields only.",
+          "forbidden_actions": [
+            "production implementation",
+            "source apply",
+            "network/model calls",
+            "test weakening"
+          ]
+        }
+      ],
+      "entry_gate": "P0 current state is understood and fig3 fixture remains the only promoted visual dogfood fixture.",
+      "exit_gate": "baseline receipt exists and the visual_evidence contract has a red test or documented blocker.",
+      "fan_in": "Use the baseline receipt to decide the minimal production changes for W2."
+    },
+    "waves": [
+      {
+        "id": "W2-visual-evidence-implementation",
+        "depends_on": [
+          "W1-visible-evidence-foundation"
+        ],
+        "concurrency_cap": 2,
+        "slices": [
+          "P1 review packet carries visible evidence",
+          "P2 render-derived visual signals"
+        ],
+        "entry_gate": "W1 exit receipt verifies current artifact paths and the visual evidence RED test is present.",
+        "exit_gate": "Focused tests pass and a real CFAM_COMBO_002 review packet names valid visible evidence."
+      },
+      {
+        "id": "W3-composite-and-review-fanin",
+        "depends_on": [
+          "W2-visual-evidence-implementation"
+        ],
+        "concurrency_cap": 3,
+        "slices": [
+          "P3 composite search loop",
+          "P4 judge panel and refutation"
+        ],
+        "entry_gate": "W2 verification receipt confirms visible evidence and no model/API calls.",
+        "exit_gate": "Composite candidate board, rank result, and review_synthesis.md exist with no hard unresolved refutations."
+      },
+      {
+        "id": "W4-accept-apply-or-generalize",
+        "depends_on": [
+          "W3-composite-and-review-fanin"
+        ],
+        "concurrency_cap": 1,
+        "slices": [
+          "P5 human acceptance and apply boundary",
+          "P6 post-apply proof",
+          "P7 generalize beyond fig3"
+        ],
+        "entry_gate": "W3 receipt verified and user explicitly chooses either apply the selected fig3 candidate or skip apply and generalize.",
+        "exit_gate": "Hash-bound apply proof exists or second-fixture prerequisite report exists."
+      }
+    ]
+  }
+}

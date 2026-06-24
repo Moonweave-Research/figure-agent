@@ -742,7 +742,7 @@ verified` instead.
 
 **Files:**
 - May modify: `plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml`
-- Create or modify: `plugins/figure-agent/docs/milestones/2026-05-20-auto-adjudication-policy-dogfood.md`
+- Create or modify: `plugins/figure-agent/docs/milestones-archive/2026-05-20-auto-adjudication-policy-dogfood.md`
 
 - [ ] **Step 1: Run policy dogfood on the v1.4 fixture**
 
@@ -770,7 +770,7 @@ fixture; the safety rules in the spec are authoritative.
 
 - [ ] **Step 3: Record dogfood evidence**
 
-Create `docs/milestones/2026-05-20-auto-adjudication-policy-dogfood.md`:
+Create `docs/milestones-archive/2026-05-20-auto-adjudication-policy-dogfood.md`:
 
 ```markdown
 # Auto Adjudication Policy Dogfood
@@ -839,7 +839,7 @@ git add \
   plugins/figure-agent/commands/fig_adjudicate.md \
   plugins/figure-agent/docs/superpowers/issues/2026-05-20-issue-13-auto-adjudication-policy.md \
   plugins/figure-agent/examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml \
-  plugins/figure-agent/docs/milestones/2026-05-20-auto-adjudication-policy-dogfood.md
+  plugins/figure-agent/docs/milestones-archive/2026-05-20-auto-adjudication-policy-dogfood.md
 git commit -m "Add conservative auto adjudication policy"
 ```
 

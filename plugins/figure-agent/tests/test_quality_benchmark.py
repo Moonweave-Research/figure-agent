@@ -10,7 +10,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import candidate_render  # noqa: E402
 import quality_benchmark  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
@@ -78,6 +80,115 @@ reference_policy:
         encoding="utf-8",
     )
     return fixture
+
+
+def _write_undeclared_candidate_defect(fixture: Path) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {
+                    "examples/candidate_demo/candidate_demo.tex": file_sha256(
+                        fixture / "candidate_demo.tex"
+                    )
+                },
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "C",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_undeclared_candidate_defects(fixture: Path, source_lines: list[int]) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {
+                    "examples/candidate_demo/candidate_demo.tex": file_sha256(
+                        fixture / "candidate_demo.tex"
+                    )
+                },
+                "candidates": [
+                    {
+                        "id": f"UG{index:03d}",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": source_line,
+                        "panel": "C",
+                    }
+                    for index, source_line in enumerate(source_lines, start=1)
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_undeclared_candidate_defects_for_fixture(
+    fixture: Path,
+    *,
+    fixture_name: str,
+    source_relative_path: str,
+    source_path: Path,
+    source_lines: list[int],
+    panel: str = "A",
+) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "fixture": fixture_name,
+                "source_hashes": {
+                    source_relative_path: file_sha256(source_path),
+                },
+                "candidates": [
+                    {
+                        "id": f"UG{index:03d}",
+                        "kind": "label_endpoint_near_miss",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": source_line,
+                        "nearest_text": "benchmark candidate",
+                        "evidence": f"source line {source_line} is a temp benchmark defect",
+                        "bbox_pt": [10.0, 20.0, 30.0, 20.0],
+                        "distance_pt": 2.0,
+                        "panel": panel,
+                    }
+                    for index, source_line in enumerate(source_lines, start=1)
+                ],
+                "total": len(source_lines),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _stub_successful_candidate_render(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run(
+        command: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str],
+    ) -> subprocess.CompletedProcess[str]:
+        if command[0] == "lualatex":
+            (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
+        if command[0] == "pdftocairo":
+            (cwd / "render" / "candidate.png").write_bytes(b"png")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
+    monkeypatch.setattr(candidate_render, "_run_process", fake_run)
 
 
 def _dogfood_fixture_with_checker_report(workspace: Path) -> Path:
@@ -200,6 +311,58 @@ def test_installed_dogfood_checker_report_feeds_detector_evaluation(tmp_path: Pa
     assert movement["baseline"] == movement["candidate"]
 
 
+def test_dogfood_render_benchmark_exposes_attribution_or_refusal_details(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _dogfood_fixture_with_checker_report(workspace)
+    fixture_name = fixture.name
+    source_name = f"{fixture_name}.tex"
+    _write_undeclared_candidate_defects_for_fixture(
+        fixture,
+        fixture_name=fixture_name,
+        source_relative_path=f"examples/{fixture_name}/{source_name}",
+        source_path=fixture / source_name,
+        source_lines=[67, 68, 1],
+    )
+    _stub_successful_candidate_render(monkeypatch)
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "dogfood",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        limit=1,
+        render=True,
+    )
+
+    result = payload["results"][0]
+    assert result["fixture"] == fixture_name
+    assert result["status"] == "completed"
+    assert result["render_mode"] == "rendered"
+    assert result["candidate_count"] == 2
+    assert result["rendered_count"] == 2
+    assert result["ranked_count"] == 2
+    assert result["metrics"]["refusal_count"] == 1
+    best_score = result["scores"][0]
+    assert best_score["rank_basis"] == "candidate_specific_render"
+    assert best_score["render_manifest_path"] == (
+        f"build/candidates/{best_score['candidate_id']}/render_manifest.json"
+    )
+    assert "rendered_before_after_available" in best_score["evidence"]["positive"]
+    attributed_score_count = sum(
+        1
+        for score in result["scores"]
+        if isinstance(score.get("source_defect"), dict) and score["source_defect"].get("id")
+    )
+    refusal_details = result.get("candidate_refusals")
+    assert attributed_score_count >= 2 or (
+        result["metrics"]["refusal_count"] > 0
+        and isinstance(refusal_details, list)
+        and len(refusal_details) > 0
+    )
+
+
 def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() -> None:
     payload = quality_benchmark.run_benchmark_suite(
         "smoke",
@@ -224,7 +387,8 @@ def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() ->
 def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: Path) -> None:
     plugin_root = _plugin_root(tmp_path)
     workspace = tmp_path / "workspace"
-    _fixture(workspace)
+    fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
     before = _tree(workspace)
 
     payload = quality_benchmark.run_benchmark_suite(
@@ -238,7 +402,7 @@ def test_benchmark_run_preview_is_read_only_and_skips_missing_fixture(tmp_path: 
     assert payload["suite"] == "smoke"
     assert payload["summary"] == {"completed": 1, "skipped": 1, "failed": 0, "regression_count": 0}
     assert [result["status"] for result in payload["results"]] == ["completed", "skipped"]
-    assert payload["results"][0]["render_mode"] == "none"
+    assert payload["results"][0]["render_mode"] == "not_requested"
     assert payload["results"][0]["rendered_count"] == 0
     assert payload["results"][0]["candidate_count"] == 1
     assert payload["results"][0]["ranked_count"] == 1
@@ -252,6 +416,7 @@ def test_benchmark_run_evaluates_detector_movement_for_contract(tmp_path: Path) 
     plugin_root = _plugin_root(tmp_path)
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
     (fixture / "benchmark_contract.yaml").write_text(
         """
 schema: figure-agent.benchmark-contract.v1
@@ -311,6 +476,133 @@ reference_policy:
         "state": "passed",
     }
     assert result["metrics"]["mean_rank_score"] == 0.65
+
+
+def test_benchmark_render_with_stubbed_dependencies_reports_rendered(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
+    source_before = (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
+    _stub_successful_candidate_render(monkeypatch)
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+        render=True,
+    )
+
+    rendered = json.dumps(payload)
+    assert "requested_not_implemented" not in rendered
+    assert payload["render_dependency_probe"]["state"] == "pass"
+    result = payload["results"][0]
+    assert result["render_mode"] == "rendered"
+    assert result["candidate_count"] == 1
+    assert result["rendered_count"] == 1
+    assert result["ranked_count"] == 1
+    assert result["metrics"]["render_success_rate"] == 1.0
+    assert result["metrics"]["candidate_specific_rank_rate"] == 1.0
+    assert result["rank_basis_counts"]["candidate_specific_render"] == 1
+    assert result["scores"][0]["rank_basis"] == "candidate_specific_render"
+    assert result["scores"][0]["render_manifest_path"] == (
+        "build/candidates/CAND001/render_manifest.json"
+    )
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == source_before
+    assert not (fixture / "exports").exists()
+
+
+def test_benchmark_render_dependency_missing_reports_dependency_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_undeclared_candidate_defect(fixture)
+    monkeypatch.setattr(candidate_render, "_which", lambda _name: None)
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+        render=True,
+    )
+
+    assert "requested_not_implemented" not in json.dumps(payload)
+    assert payload["render_dependency_probe"]["state"] == "fail"
+    result = payload["results"][0]
+    assert result["render_mode"] == "dependency_missing"
+    assert result["candidate_count"] == 1
+    assert result["rendered_count"] == 0
+    assert result["ranked_count"] == 1
+    assert result["metrics"]["render_success_rate"] == 0.0
+    assert result["metrics"]["candidate_specific_rank_rate"] == 0.0
+    assert result["rank_basis_counts"]["dependency_missing"] == 1
+
+
+def test_benchmark_render_missing_fixture_uses_blocked_mode_not_none(
+    tmp_path: Path,
+) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+        render=True,
+    )
+
+    result = payload["results"][0]
+    assert result["status"] == "skipped"
+    assert result["render_mode"] == "blocked"
+    assert "none" not in json.dumps(payload)
+
+
+def test_benchmark_candidate_specific_rank_rate_counts_partial_render_basis(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plugin_root = _plugin_root(tmp_path)
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "\\node (label-a) at (0,0) {A};\n"
+        "\\draw (1.0,2.0) -- (3.0,2.0) node[right] {S};\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defects(fixture, [1, 2])
+    _stub_successful_candidate_render(monkeypatch)
+    original_render = candidate_render.render_candidate_set
+
+    def render_only_first_candidate(*args, **kwargs):
+        return original_render(*args, candidate_id="CAND001", **kwargs)
+
+    monkeypatch.setattr(candidate_render, "render_candidate_set", render_only_first_candidate)
+
+    payload = quality_benchmark.run_benchmark_suite(
+        "smoke",
+        plugin_root=plugin_root,
+        workspace_root=workspace,
+        limit=1,
+        render=True,
+    )
+
+    result = payload["results"][0]
+    assert result["candidate_count"] == 2
+    assert result["rendered_count"] == 1
+    assert result["ranked_count"] == 2
+    assert result["render_mode"] == "blocked"
+    assert result["rank_basis_counts"]["candidate_specific_render"] == 1
+    assert result["rank_basis_counts"]["blocked"] == 1
+    assert result["metrics"]["candidate_specific_rank_rate"] == 0.5
 
 
 def test_benchmark_run_fails_release_blocking_missing_detector_report(tmp_path: Path) -> None:

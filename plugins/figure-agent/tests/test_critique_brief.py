@@ -348,6 +348,43 @@ def test_critique_brief_handles_missing_section6_gracefully(tmp_path):
     assert "critic should infer plausible physics constraints from §1+§2" in brief
 
 
+def test_critique_brief_reference_free_mode_anchors_to_explicit_briefing_rules(
+    tmp_path: Path,
+) -> None:
+    example_dir = _write_example(tmp_path, section6=None)
+    (example_dir / "briefing.md").write_text(
+        """## §1. Topic
+
+Explain transient-current trapping in a compact mechanism schematic.
+
+## §3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    png_path = example_dir / "build" / "review_demo.png"
+    (example_dir / "build" / "visual_clash.json").write_text(
+        '{"fixture":"review_demo","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+    fresh_time = os.stat(example_dir / "briefing.md").st_mtime + 1
+    os.utime(png_path, (fresh_time, fresh_time))
+
+    brief = generate_for(example_dir)
+
+    assert "Reference-free briefing-grounded critique mode" in brief
+    assert "reader clarity" in brief
+    assert "domain correctness against briefing rules" in brief
+    assert "visual design" in brief
+    assert "grounded_in_rule" in brief
+    assert "n is trap-energy breadth, not trap density" in brief
+    assert "Critique is report-only" in brief
+    assert "score_is_gateable: false" in brief
+    assert "overall_score: 0-100" not in brief
+
+
 def test_critique_brief_errors_when_png_missing(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant", png=False)
 
@@ -523,6 +560,27 @@ def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
     assert "### 8. Journal Polish" in brief
     assert "### 9. Reference Fidelity" in brief
     assert "### 10. Publication Readiness" in brief
+
+
+def test_critique_brief_includes_read_only_narrative_context(tmp_path: Path) -> None:
+    example_dir = _write_example(tmp_path, section6="- invariant")
+    (example_dir / "authoring_plan.md").write_text(
+        "Hero: show trap-assisted retention before local details.\n",
+        encoding="utf-8",
+    )
+    (example_dir / "panel_goals.md").write_text(
+        "Panel a: make capture direction visible before labels.\n",
+        encoding="utf-8",
+    )
+
+    brief = generate_for(example_dir)
+
+    assert "## Human Narrative Context (read-only)" in brief
+    assert "Source-anchored reviewer guidance; not a prompt loop or patch authority." in brief
+    assert "First takeaway source: `briefing.md`" in brief
+    assert "Panel `a`: demo panel" in brief
+    assert "What should a reader understand in the first three seconds?" in brief
+    assert "rank_scoring=false" in brief
 
 
 def test_critique_brief_includes_top_tier_journal_audit(tmp_path):

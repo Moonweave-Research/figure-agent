@@ -333,7 +333,7 @@ Define the handoff contract for an outer agent to patch one sub-region.
 Files:
 
 - `commands/fig_loop.md`
-- `docs/milestones/2026-05-17-fig-loop-pilot.md`
+- `docs/milestones-archive/2026-05-17-fig-loop-pilot.md`
 
 Acceptance:
 

@@ -23,11 +23,11 @@ Read first:
 ## Task 1: Run The Dogfood Matrix
 
 **Files:**
-- Create or update: `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
+- Create or update: `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md`
 
 - [ ] **Step 1: Create an empty evidence doc**
 
-Create `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md` with:
+Create `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md` with:
 
 ```markdown
 # Fig Drive Dogfood Evidence
@@ -97,7 +97,7 @@ Use `missing_fixture` rows if any target fixture does not exist.
 ## Task 2: Review The Driver Decisions
 
 **Files:**
-- Modify: `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
+- Modify: `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md`
 - Optional Modify: `scripts/fig_driver.py`
 - Optional Modify: `tests/test_fig_driver.py`
 - Optional Modify: `commands/fig_drive.md`
@@ -228,7 +228,7 @@ Review 3: mutation containment and next-step readiness.
 Run:
 
 ```bash
-git add docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md docs/superpowers/issues/2026-05-19-issue-8a-figure-driver-protocol.md docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md docs/superpowers/issues/2026-05-19-issue-8c-fig-drive-dogfood-evidence.md
+git add docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md docs/superpowers/issues/2026-05-19-issue-8a-figure-driver-protocol.md docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md docs/superpowers/issues/2026-05-19-issue-8c-fig-drive-dogfood-evidence.md
 git commit -m "Record fig drive dogfood evidence"
 ```
 
@@ -241,7 +241,7 @@ and `commands/fig_drive.md` in the same commit or a preceding fix commit.
 Issue 8C completion report
 
 Files changed:
-- `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
+- `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md`
 - `docs/superpowers/issues/2026-05-19-issue-8a-figure-driver-protocol.md`
 - `docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md`
 - `docs/superpowers/issues/2026-05-19-issue-8c-fig-drive-dogfood-evidence.md`

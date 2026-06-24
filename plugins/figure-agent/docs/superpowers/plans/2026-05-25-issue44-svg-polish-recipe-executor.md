@@ -263,7 +263,7 @@ Review for:
 
 **Files:**
 
-- Create: `docs/milestones/2026-05-25-svg-polish-recipe-dogfood.md`
+- Create: `docs/milestones-archive/2026-05-25-svg-polish-recipe-dogfood.md`
 - Do not commit generated build/export/delta artifacts unless repo policy
   explicitly requires a golden artifact update.
 

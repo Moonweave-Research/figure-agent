@@ -29,6 +29,11 @@ from text_boundary_spec_helper import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPLETE_STATES = frozenset({"passed", "not_required"})
 FIG_LOOP_SCHEMA = "figure-agent.fig-loop-run.v1"
+ACCEPTED_BUT_STALE_REASON = (
+    "accepted_but_stale: fixture has an accepted historical state, but current "
+    "source, render, critique, or export evidence is stale. Re-run "
+    "compile/critique/export and refresh acceptance before closeout."
+)
 
 
 class FigCloseoutError(ValueError):
@@ -278,6 +283,17 @@ def _export_step(
                 evidence={
                     "export_state": export_state,
                     "golden_acceptance": golden_acceptance,
+                },
+            )
+        if status_result.get("acceptance_freshness_state") == "accepted_but_stale":
+            return _step(
+                step_id="export",
+                state="blocked",
+                reason=ACCEPTED_BUT_STALE_REASON,
+                evidence={
+                    "export_state": export_state,
+                    "golden_acceptance": golden_acceptance,
+                    "stale_reason": reason,
                 },
             )
         return _step(
@@ -592,6 +608,10 @@ def compute_closeout(
             "render_state": status_result.get("render_state"),
             "critique_state": status_result.get("critique_state"),
             "export_state": status_result.get("export_state"),
+            "acceptance_state": status_result.get("acceptance_state"),
+            "acceptance_freshness_state": status_result.get(
+                "acceptance_freshness_state"
+            ),
             "workflow_ready": status_result.get("workflow_ready"),
             "golden_ready": status_result.get("golden_ready"),
             "release_ready": status_result.get("release_ready"),

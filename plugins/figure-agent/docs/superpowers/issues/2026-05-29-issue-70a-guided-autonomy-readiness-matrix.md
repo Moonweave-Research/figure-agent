@@ -1,6 +1,6 @@
 # Issue 70A: Guided Autonomy Readiness Matrix
 
-Status: completed in `docs/milestones/2026-05-29-guided-autonomy-readiness-matrix.md`
+Status: completed in `docs/milestones-archive/2026-05-29-guided-autonomy-readiness-matrix.md`
 
 Depends on: Issue 70 operator-grade guided autonomy roadmap
 

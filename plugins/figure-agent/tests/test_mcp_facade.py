@@ -5,14 +5,19 @@ import os
 import subprocess
 import sys
 import zipfile
+from hashlib import sha256
 from pathlib import Path
+
+import pytest
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 MCP_SERVER = PLUGIN_ROOT / "mcp" / "figure_agent_server.py"
+FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
 
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "mcp"))
 
+import figure_agent_server  # noqa: E402
 from figure_agent_server import ERROR_CATEGORIES  # noqa: E402
 from plugin_package_audit import find_mcp_config_issues  # noqa: E402
 
@@ -28,6 +33,7 @@ def _run_mcp_server(
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
+    timeout: int = 10,
 ) -> subprocess.CompletedProcess[str]:
     merged_env = os.environ.copy()
     merged_env.update(env or {})
@@ -46,7 +52,7 @@ def _run_mcp_server(
         text=True,
         capture_output=True,
         check=False,
-        timeout=10,
+        timeout=timeout,
     )
 
 
@@ -74,15 +80,118 @@ def _write_minimal_fixture(workspace: Path, name: str = "smoke_trap_demo") -> Pa
     return fixture
 
 
-def _write_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+def _write_candidate_fixture(
+    workspace: Path,
+    name: str = "candidate_demo",
+    *,
+    with_candidate_defect: bool = True,
+) -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text("name: candidate_demo\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        "name: candidate_demo\n"
+        "panels:\n"
+        "  - id: C\n"
+        "    caption: Energy diagram\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]\n",
+        encoding="utf-8",
+    )
     (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
     (fixture / f"{name}.tex").write_text(
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    if with_candidate_defect:
+        _write_undeclared_candidate_defect(fixture)
+    return fixture
+
+
+def _write_undeclared_candidate_defect(fixture: Path) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {
+                    f"examples/{fixture.name}/{fixture.name}.tex": "sha256:"
+                    + sha256((fixture / f"{fixture.name}.tex").read_bytes()).hexdigest()
+                },
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "C",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_keep_critique_gate(fixture: Path, tex_line: int) -> None:
+    critique = fixture / "critique.md"
+    critique.write_text(
+        "---\n"
+        "schema: figure-agent.critique.v1.10\n"
+        f"fixture: {fixture.name}\n"
+        "findings:\n"
+        "  - id: C001\n"
+        "    severity: MAJOR\n"
+        "    category: label_placement\n"
+        "    tex_lines:\n"
+        f"    - {tex_line}\n"
+        f"    - {tex_line}\n"
+        "    observation: Label is too close to a neighboring element.\n"
+        "    suggested_fix: Move the label by a bounded amount.\n"
+        "    status: open\n"
+        "panels: []\n"
+        "---\n"
+        "# critique\n",
+        encoding="utf-8",
+    )
+    critique_hash = "sha256:" + sha256(critique.read_bytes()).hexdigest()
+    (fixture / "critique_adjudication.yaml").write_text(
+        "schema: figure-agent.critique-adjudication.v1\n"
+        f"fixture: {fixture.name}\n"
+        f"source_critique_hash: {critique_hash}\n"
+        "decisions:\n"
+        "  - finding_id: C001\n"
+        "    decision: keep\n"
+        "    reason: Human kept this bounded finding for candidate search.\n"
+        f"    patch_target: examples/{fixture.name}/{fixture.name}.tex "
+        f"lines {tex_line}-{tex_line}\n"
+        "    evidence: critique.md finding C001 reviewed.\n",
+        encoding="utf-8",
+    )
+
+
+def _write_full_candidate_fixture(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        f"name: {name}\n"
+        "panels:\n"
+        "  - id: C\n"
+        "    caption: Energy diagram\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]\n",
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(
+        "\\documentclass[border=8pt]{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\n"
+        "\\begin{tikzpicture}\n"
+        "% Panel C\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\end{tikzpicture}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defect(fixture)
+    _write_keep_critique_gate(fixture, tex_line=6)
     return fixture
 
 
@@ -137,9 +246,7 @@ def test_mcp_json_starts_server_with_pinned_uv_project() -> None:
 
 def test_mcp_tool_subprocesses_do_not_create_plugin_root_uv_venv() -> None:
     source = MCP_SERVER.read_text(encoding="utf-8")
-    run_fig_agent_source = source.partition("def _run_fig_agent(")[2].partition(
-        "def _bounded("
-    )[0]
+    run_fig_agent_source = source.partition("def _run_fig_agent(")[2].partition("def _bounded(")[0]
 
     assert '"uv",' not in run_fig_agent_source
     assert '"--project",' not in run_fig_agent_source
@@ -259,10 +366,24 @@ def test_mcp_candidate_apply_readiness_schema_is_read_only(tmp_path: Path) -> No
 
     response = _response_lines(result)[0]
     tools = {tool["name"]: tool for tool in response["result"]["tools"]}
+    materialize_schema = tools["figure_agent_materialize_candidate_set"]["inputSchema"]
     schema = tools["figure_agent_candidate_apply_readiness"]["inputSchema"]
+    accept_schema = tools["figure_agent_accept_candidate"]["inputSchema"]
+    assert materialize_schema["additionalProperties"] is False
+    assert materialize_schema["required"] == ["name"]
+    assert materialize_schema["properties"]["candidate_set"]["type"] == "string"
     assert schema["additionalProperties"] is False
     assert schema["required"] == ["name", "candidate_id", "candidate_set"]
     assert schema["properties"]["candidate_set"]["type"] == "string"
+    assert accept_schema["additionalProperties"] is False
+    assert accept_schema["required"] == [
+        "name",
+        "candidate_id",
+        "decision",
+        "reviewer",
+        "rationale",
+    ]
+    assert accept_schema["properties"]["decision"]["enum"] == ["accept"]
 
 
 def test_mcp_evidence_and_closeout_schemas_are_read_only(tmp_path: Path) -> None:
@@ -513,9 +634,7 @@ def test_mcp_benchmark_detectors_preview_is_read_only(tmp_path: Path) -> None:
     payload = _tool_payload(_response_lines(result)[0])
     assert payload["schema"] == "figure-agent.mcp.benchmark-detectors-preview.v1"
     assert payload["success"] is True
-    assert payload["detector_reports"]["schema"] == (
-        "figure-agent.benchmark-detectors-preview.v1"
-    )
+    assert payload["detector_reports"]["schema"] == ("figure-agent.benchmark-detectors-preview.v1")
     assert payload["detector_reports"]["reports"][0]["state"] == "available"
     assert not (workspace / ".scratch").exists()
 
@@ -668,22 +787,15 @@ def test_mcp_resource_patterns_are_templates_not_literal_resources() -> None:
     templates = templates_response["result"]["resourceTemplates"]
     assert templates
     assert all(template["mimeType"] == "application/json" for template in templates)
-    assert any(
-        template["uriTemplate"] == "figure://{name}/build/png" for template in templates
-    )
-    assert any(
-        template["uriTemplate"] == "figure://{name}/exports/pdf" for template in templates
-    )
-    assert any(
-        template["uriTemplate"] == "figure://{name}/exports/tif" for template in templates
-    )
+    assert any(template["uriTemplate"] == "figure://{name}/build/png" for template in templates)
+    assert any(template["uriTemplate"] == "figure://{name}/exports/pdf" for template in templates)
+    assert any(template["uriTemplate"] == "figure://{name}/exports/tif" for template in templates)
     assert any(
         template["uriTemplate"] == "figure://{name}/audit/undeclared-geometry"
         for template in templates
     )
     assert any(
-        template["uriTemplate"] == "figure://{name}/audit/evidence-graph"
-        for template in templates
+        template["uriTemplate"] == "figure://{name}/audit/evidence-graph" for template in templates
     )
 
 
@@ -857,9 +969,12 @@ def test_mcp_quality_map_and_propose_patch_are_read_only(tmp_path: Path) -> None
     assert after == before
 
 
-def test_mcp_candidate_read_only_tools_and_apply_refusal(tmp_path: Path) -> None:
+def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
+    tmp_path: Path,
+) -> None:
     workspace = tmp_path / "workspace"
-    _write_candidate_fixture(workspace)
+    fixture = _write_candidate_fixture(workspace, with_candidate_defect=False)
+    before_tex = (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
 
     result = _run_mcp_server(
         [
@@ -904,7 +1019,10 @@ def test_mcp_candidate_read_only_tools_and_apply_refusal(tmp_path: Path) -> None
     assert apply["schema"] == "figure-agent.mcp.apply-candidate.v1"
     assert apply["success"] is False
     assert apply["error"]["category"] == "unsupported_operation"
-    assert apply["error"]["message"] == "apply_requires_cli_opt_in"
+    # Apply now runs the real gate: a fixture with no rendered/accepted candidate is
+    # refused before any mutation, not deterministically refused for all callers.
+    assert "candidate_manifest" in apply["error"]["message"]
+    assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == before_tex
 
 
 def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
@@ -973,6 +1091,114 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert review["review_packet"]["render_manifest_path"] == (
         "build/candidates/CAND001/render_manifest.json"
     )
+
+
+@pytest.mark.render
+def test_mcp_candidate_lifecycle_closes_without_cli_fallback(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_full_candidate_fixture(workspace)
+    tex_path = fixture / "candidate_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_compile",
+                    "arguments": {"name": "candidate_demo", "strict": False},
+                },
+                request_id=1,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_materialize_candidate_set",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
+                        "panel_id": "C",
+                        "family": "label-repair",
+                    },
+                },
+                request_id=2,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_render_candidates",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
+                        "candidate_id": "CAND001",
+                        "compile": True,
+                        "export": True,
+                        "crop_panel": "C",
+                        "evaluate": True,
+                    },
+                },
+                request_id=3,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_accept_candidate",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_id": "CAND001",
+                        "candidate_set": "build/candidates/panel_C_candidate_set.json",
+                        "decision": "accept",
+                        "reviewer": "mcp-test",
+                        "rationale": "Rendered candidate evidence reviewed in the MCP-only chain.",
+                    },
+                },
+                request_id=4,
+            ),
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_apply_candidate",
+                    "arguments": {
+                        "name": "candidate_demo",
+                        "candidate_id": "CAND001",
+                        "candidate_set_path": "build/candidates/panel_C_candidate_set.json",
+                    },
+                },
+                request_id=5,
+            ),
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+        timeout=90,
+    )
+
+    compiled, materialized, rendered, accepted, applied = [
+        _tool_payload(response) for response in _response_lines(result)
+    ]
+    assert compiled["schema"] == "figure-agent.mcp.compile.v1"
+    assert compiled["success"] is True
+    assert materialized["schema"] == "figure-agent.mcp.materialize-candidate-set.v1"
+    assert materialized["success"] is True
+    assert materialized["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
+    assert (fixture / "build" / "candidates" / "panel_C_candidate_set.json").is_file()
+    assert rendered["schema"] == "figure-agent.mcp.render-candidates.v1"
+    assert rendered["success"] is True
+    assert (fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json").is_file()
+    assert accepted["schema"] == "figure-agent.mcp.accept-candidate.v1"
+    assert accepted["success"] is True, json.dumps(accepted, indent=2, sort_keys=True)
+    assert accepted["acceptance"]["path"] == "build/candidates/CAND001/acceptance.json"
+    assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
+    assert applied["status"] in {"applied", "applied_with_failed_verification"}, json.dumps(
+        applied,
+        indent=2,
+        sort_keys=True,
+    )
+    assert applied["success"] is (applied["status"] == "applied")
+    assert applied["apply_result"]["status"] == applied["status"]
+    assert applied["apply_result"]["post_apply"]["compile"]["returncode"] == 0
+    if applied["status"] == "applied_with_failed_verification":
+        assert "post-apply verification failed" in applied["error"]["message"]
+    assert tex_path.read_text(encoding="utf-8") != before
 
 
 def test_mcp_panel_candidate_tools_and_resources(tmp_path: Path) -> None:
@@ -1131,7 +1357,7 @@ def test_mcp_candidate_manifest_resource_rejects_sandbox_ancestor_symlink(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
-    fixture = _write_candidate_fixture(workspace)
+    fixture = _write_candidate_fixture(workspace, with_candidate_defect=False)
     exports = fixture / "exports"
     exports.mkdir()
     build = fixture / "build"
@@ -1336,3 +1562,171 @@ def test_package_audit_rejects_workspace_relative_mcp_scripts(tmp_path: Path) ->
     issues = find_mcp_config_issues(plugin)
     assert any("workspace-relative script path" in issue for issue in issues)
     assert any("cwd must not depend on user workspace" in issue for issue in issues)
+
+
+def _run_fig_agent_cli(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    return subprocess.run(
+        [sys.executable, str(FIG_AGENT), *args],
+        cwd=workspace,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def _build_apply_ready_candidate(workspace: Path, name: str = "candidate_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "name: candidate_demo\n"
+        "panels:\n"
+        "  - id: C\n"
+        "    caption: Energy diagram\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 1.0, 1.0]\n",
+        encoding="utf-8",
+    )
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / f"{name}.tex").write_text(
+        "\\node (label-a) at (0,0) {Old Label};\n",
+        encoding="utf-8",
+    )
+    _write_undeclared_candidate_defect(fixture)
+    candidates = _run_fig_agent_cli(
+        workspace,
+        "candidates",
+        name,
+        "--json",
+        "--output",
+        "build/candidates/candidate_set.json",
+    )
+    assert candidates.returncode == 0, candidates.stderr
+    render = _run_fig_agent_cli(
+        workspace,
+        "render-candidates",
+        name,
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--candidate-id",
+        "CAND001",
+        "--compile",
+        "--export",
+        "--evaluate",
+        "--json",
+    )
+    assert render.returncode == 0, render.stderr
+
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest_path = sandbox / "candidate_manifest.json"
+    render_manifest_path = sandbox / "render_manifest.json"
+    (fixture / f"{name}.tex").write_text(
+        "\\documentclass[border=8pt]{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\n"
+        "\\begin{tikzpicture}\n"
+        "\\node (label-a) at (0,0) {Old Label};\n"
+        "\\end{tikzpicture}\n"
+        "\\end{document}\n",
+        encoding="utf-8",
+    )
+    source_hash = "sha256:" + sha256((fixture / f"{name}.tex").read_bytes()).hexdigest()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["operations"][0]["source_sha256"] = source_hash
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    render_manifest = json.loads(render_manifest_path.read_text(encoding="utf-8"))
+    render_manifest["stages"] = {
+        "compile": {"status": "success"},
+        "export": {"status": "success"},
+        "crop": {"status": "success"},
+        "evaluate": {"status": "rendered_needs_human_review"},
+    }
+    render_manifest_path.write_text(
+        json.dumps(render_manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    accept = _run_fig_agent_cli(
+        workspace,
+        "accept-candidate",
+        name,
+        "CAND001",
+        "--candidate-set",
+        "build/candidates/candidate_set.json",
+        "--decision",
+        "accept",
+        "--reviewer",
+        "local-user",
+        "--rationale",
+        "Rendered evidence reviewed.",
+        "--json",
+    )
+    assert accept.returncode == 0, accept.stderr
+    return fixture
+
+
+def test_mcp_apply_candidate_mutates_tex_and_honors_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _build_apply_ready_candidate(workspace)
+    monkeypatch.setenv("FIGURE_AGENT_PLUGIN_ROOT", str(PLUGIN_ROOT))
+    monkeypatch.setenv("FIGURE_AGENT_WORKSPACE", str(workspace))
+
+    tex_path = fixture / "candidate_demo.tex"
+    before = tex_path.read_text(encoding="utf-8")
+
+    applied = figure_agent_server._apply_candidate(
+        {"name": "candidate_demo", "candidate_id": "CAND001"}
+    )
+
+    assert applied["schema"] == "figure-agent.mcp.apply-candidate.v1"
+    assert applied["status"] in {"applied", "applied_with_failed_verification"}, applied
+    assert applied["success"] is (applied["status"] == "applied")
+    after = tex_path.read_text(encoding="utf-8")
+    assert after != before
+    apply_result = applied["apply_result"]
+    assert apply_result["status"] == applied["status"]
+    if applied["status"] == "applied":
+        assert applied.get("error") is None
+        assert apply_result["post_apply"]["compile"]["returncode"] == 0
+    else:
+        assert "post-apply verification failed" in applied["error"]["message"]
+        assert any(
+            check["status"] == "failed" for check in apply_result["post_apply"].values()
+        )
+
+    # Second apply of the same (now already-applied) candidate must be refused
+    # by the acceptance/drift/lock gate — proving the gate runs and is not bypassed.
+    blocked = figure_agent_server._apply_candidate(
+        {"name": "candidate_demo", "candidate_id": "CAND001"}
+    )
+    assert blocked["success"] is False
+    # A pristine refusal must be distinguishable at the envelope top level from a
+    # mutated-but-unverified apply: status is surfaced and the message says the
+    # working tree is unchanged (vs the rollback-needed wording for the mutated case).
+    assert blocked["status"] == "blocked"
+    assert "working tree unchanged" in blocked["error"]["message"]
+    assert "rollback" not in blocked["error"]["message"]
+    blocked_result = blocked["apply_result"]
+    assert blocked_result["status"] == "blocked"
+    assert any(
+        diagnostic["code"] == "already_applied" for diagnostic in blocked_result["diagnostics"]
+    )
+
+
+class TestVersionConsistency:
+    """SERVER_VERSION in server code matches pyproject.toml."""
+
+    def test_server_version_matches_pyproject(self) -> None:
+        import tomllib
+
+        pyproject = PLUGIN_ROOT / "pyproject.toml"
+        pyproject_version = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"][
+            "version"
+        ]
+        assert figure_agent_server.SERVER_VERSION == pyproject_version, (
+            f"figure_agent_server.SERVER_VERSION={figure_agent_server.SERVER_VERSION!r} "
+            f"≠ pyproject.toml version={pyproject_version!r}"
+        )

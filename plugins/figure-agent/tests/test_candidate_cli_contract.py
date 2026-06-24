@@ -36,6 +36,27 @@ panels:
         "\\node (label-a) at (0,0) {Old Label};\n",
         encoding="utf-8",
     )
+    build = fixture / "build"
+    build.mkdir()
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {
+                    f"examples/{name}/{name}.tex": "sha256:"
+                    + sha256((fixture / f"{name}.tex").read_bytes()).hexdigest()
+                },
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "C",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -291,7 +312,7 @@ def test_fig_agent_rank_use_memory_applies_fixture_index_prior(tmp_path: Path) -
             {
                 "schema": "figure-agent.quality-memory-index.v1",
                 "families": {
-                    "label_offset": {
+                    "bounded_coordinate_offset": {
                         "attempts": 3,
                         "recommended_prior": 0.2,
                     }
@@ -317,7 +338,7 @@ def test_fig_agent_rank_use_memory_applies_fixture_index_prior(tmp_path: Path) -
     assert result.returncode == 0, result.stderr
     score = json.loads(result.stdout)["scores"][0]
     assert score["scores"]["memory_prior"] == 0.2
-    assert "memory_prior:label_offset:+0.2000" in score["evidence"]["positive"]
+    assert "memory_prior:bounded_coordinate_offset:+0.2000" in score["evidence"]["positive"]
     assert score["effective_apply_authority"] == "review_only"
 
 
@@ -516,7 +537,12 @@ def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> No
     apply_payload = json.loads(apply.stdout)
     assert apply_payload["schema"] == "figure-agent.candidate-apply-result.v1"
     assert apply_payload["status"] in {"applied", "applied_with_failed_verification"}
-    assert set(apply_payload["post_apply"]) == {"compile", "export", "status"}
+    assert set(apply_payload["post_apply"]) == {
+        "compile",
+        "detector_recheck",
+        "export",
+        "status",
+    }
     assert (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").is_file()
 
 

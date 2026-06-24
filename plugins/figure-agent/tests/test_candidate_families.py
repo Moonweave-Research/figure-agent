@@ -57,6 +57,30 @@ panels:
     return fixture
 
 
+def _panel_a_bare_coord_fixture(workspace: Path, name: str = "candidate_panel_a_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"""
+name: {name}
+panels:
+  - id: A
+    caption: Schematic
+    bbox_pdf_cm: [0.0, 0.0, 4.0, 3.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text(
+        "% Panel A\n"
+        "\\draw[line width=0.5pt] (1.00,2.00) -- (3.00,2.00);\n"
+        "\\node[anchor=west] at (3.0, 2.4) {sample};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
 def _simple_fixture(workspace: Path, name: str = "smoke_label_overlap_demo") -> Path:
     fixture = workspace / "examples" / name
     fixture.mkdir(parents=True)
@@ -72,6 +96,30 @@ panels:
         encoding="utf-8",
     )
     (fixture / f"{name}.tex").write_text(
+        "% Panel A\n"
+        "\\node (label-a) at (0,0) {Synthetic Label};\n",
+        encoding="utf-8",
+    )
+    return fixture
+
+
+def _panel_a_with_prepended_coordinate(workspace: Path, name: str = "panel_a_safe_demo") -> Path:
+    fixture = workspace / "examples" / name
+    fixture.mkdir(parents=True)
+    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        f"""
+name: {name}
+panels:
+  - id: A
+    caption: Synthetic fixture
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (fixture / f"{name}.tex").write_text(
+        "\\node (outside) at (9,9) {outside};\n"
+        "% Panel A\n"
         "\\node (label-a) at (0,0) {Synthetic Label};\n",
         encoding="utf-8",
     )
@@ -133,6 +181,46 @@ def test_canonical_smoke_families_emit_expected_edit_classes(tmp_path: Path) -> 
             f"fig-agent compile {fixture_name} --strict",
             f"fig-agent status {fixture_name} --json",
         ]
+        assert candidate["target"]["panel"] == "A"
+        assert candidate["selector"]["kind"] == "tex_selector.v1"
+        assert candidate["selector"]["panel"] == "A"
+        assert candidate["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
+        if edit_class == "label_offset":
+            assert candidate["semantic_risks"] == []
+
+
+def test_canonical_family_requires_explicit_panel(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _simple_fixture(workspace)
+
+    payload = candidate_families.build_family_candidates(
+        "smoke_label_overlap_demo",
+        panel=None,
+        family="label-repair",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "unknown_panel"}]
+
+
+def test_canonical_family_uses_panel_bound_selector_not_first_offsettable_line(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _panel_a_with_prepended_coordinate(workspace)
+
+    payload = candidate_families.build_family_candidates(
+        "panel_a_safe_demo",
+        panel="A",
+        family="label-repair",
+        workspace_root=workspace,
+    )
+
+    candidate = payload["candidates"][0]
+    assert candidate["target"]["panel"] == "A"
+    assert candidate["selector"]["line_start"] == 3
+    assert candidate["operations"][0]["original"] == "\\node (label-a) at (0,0) {Synthetic Label};"
 
 
 def test_unknown_family_refuses_with_structured_code(tmp_path: Path) -> None:
@@ -152,7 +240,21 @@ def test_unknown_family_refuses_with_structured_code(tmp_path: Path) -> None:
 
 def test_known_family_on_wrong_panel_refuses(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    _energy_fixture(workspace)
+    fixture = _energy_fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        """
+name: candidate_demo
+panels:
+  - id: C
+    caption: Energy diagram
+    bbox_pdf_cm: [0.0, 0.0, 4.0, 3.0]
+  - id: D
+    caption: Secondary panel
+    bbox_pdf_cm: [0.0, 0.0, 4.0, 3.0]
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
 
     payload = candidate_families.build_family_candidates(
         "candidate_demo",
@@ -165,7 +267,7 @@ def test_known_family_on_wrong_panel_refuses(tmp_path: Path) -> None:
     assert payload["refusals"] == [{"code": "unsupported_panel_family"}]
 
 
-def test_plot_marker_hierarchy_on_panel_c_is_panel_family_refusal(tmp_path: Path) -> None:
+def test_plot_marker_hierarchy_on_panel_c_is_unsupported_family(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _energy_fixture(workspace)
 
@@ -177,7 +279,28 @@ def test_plot_marker_hierarchy_on_panel_c_is_panel_family_refusal(tmp_path: Path
     )
 
     assert payload["candidates"] == []
-    assert payload["refusals"] == [{"code": "unsupported_panel_family"}]
+    assert payload["refusals"] == [{"code": "unsupported_candidate_family"}]
+
+
+def test_panel_a_bare_coordinate_derives_label_repair_candidate(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _panel_a_bare_coord_fixture(workspace)
+
+    payload = candidate_families.build_family_candidates(
+        "candidate_panel_a_demo",
+        panel="A",
+        family=None,
+        workspace_root=workspace,
+    )
+
+    assert payload["refusals"] == []
+    candidate = payload["candidates"][0]
+    assert candidate["edit_class"] == "label_offset"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["operations"][0]["kind"] == "replace_text"
+    assert candidate["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
+    assert candidate["semantic_risks"] == []
+    assert candidate["operations"][0]["original"] != candidate["operations"][0]["replacement"]
 
 
 def test_declared_panel_required_for_family_candidates(tmp_path: Path) -> None:
@@ -215,11 +338,13 @@ def test_candidate_hash_excludes_absolute_reference_paths(tmp_path: Path) -> Non
         workspace_root=workspace_b,
     )
 
-    assert payload_a["candidates"][0]["panel"]["reference_image"] != (
-        payload_b["candidates"][0]["panel"]["reference_image"]
+    assert (
+        payload_a["candidates"][0]["panel"]["reference_image"]
+        != (payload_b["candidates"][0]["panel"]["reference_image"])
     )
-    assert payload_a["candidates"][0]["candidate_hash"] == (
-        payload_b["candidates"][0]["candidate_hash"]
+    assert (
+        payload_a["candidates"][0]["candidate_hash"]
+        == (payload_b["candidates"][0]["candidate_hash"])
     )
 
 
@@ -235,6 +360,21 @@ def test_generator_delegates_panel_family_without_breaking_default(tmp_path: Pat
     )
 
     assert payload["candidates"][0]["family"] == "energy-trap-alignment"
+
+
+def test_generator_default_requires_safe_defect_for_bare_coordinate(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _panel_a_bare_coord_fixture(workspace)
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_panel_a_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "no_supported_candidate"}]
 
 
 def test_real_panel_c_energy_family_produces_candidate() -> None:

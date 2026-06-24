@@ -9,6 +9,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import quality_memory_events  # noqa: E402
+import quality_memory_index  # noqa: E402
 from test_evidence_index import _fixture  # noqa: E402
 
 
@@ -72,6 +73,75 @@ def test_memory_log_uses_candidate_set_family_and_target(tmp_path: Path) -> None
     )
     assert generated["edit_family"] == "label_offset"
     assert generated["target"] == {"panel": "C", "subregion": "energy-trap-labels"}
+
+
+def test_memory_log_attributes_candidate_generated_rendered_and_applied_events(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0]["edit_class"] = "label_offset"
+    candidate_set["candidates"][0]["target"] = {
+        "panel": "C",
+        "subregion": "energy-trap-labels",
+    }
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    payload = quality_memory_events.build_memory_log("candidate_demo", workspace_root=workspace)
+
+    events = {
+        event["event_type"]: event
+        for event in payload["events"]
+        if event.get("candidate_id") == "CAND001"
+    }
+    assert set(events) >= {
+        "candidate_generated",
+        "candidate_rendered",
+        "candidate_applied",
+    }
+    expected_outcomes = {
+        "candidate_generated": "unknown",
+        "candidate_rendered": "reviewed_not_applied",
+        "candidate_applied": "improved",
+    }
+    for event_type, outcome in expected_outcomes.items():
+        event = events[event_type]
+        assert event["candidate_id"] == "CAND001"
+        assert event["edit_family"] == "label_offset"
+        assert event["target"] == {"panel": "C", "subregion": "energy-trap-labels"}
+        assert event["outcome"]["state"] == outcome
+        assert event["source_artifact"]
+        assert event["outcome"]["evidence_paths"]
+
+
+def test_memory_log_lifecycle_generated_event_does_not_inflate_unknown_rate(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    candidate_set_path = fixture / "build" / "candidates" / "candidate_set.json"
+    candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+    candidate_set["candidates"][0]["edit_class"] = "label_offset"
+    candidate_set["candidates"][0]["target"] = {
+        "panel": "C",
+        "subregion": "energy-trap-labels",
+    }
+    candidate_set_path.write_text(
+        json.dumps(candidate_set, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    log = quality_memory_events.build_memory_log("candidate_demo", workspace_root=workspace)
+    memory_index = quality_memory_index.build_memory_index(log["events"])
+
+    assert memory_index["candidate_event_count"] == 3
+    assert memory_index["unknown_event_count"] == 0
+    assert memory_index["unknown_event_rate"] == 0.0
 
 
 def test_stale_apply_result_is_blocked_by_hard_gate(tmp_path: Path) -> None:

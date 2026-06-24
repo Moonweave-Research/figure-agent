@@ -10,8 +10,27 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-import fixture_identity
-from quality_manifest import file_sha256
+SCRIPTS_DIR = Path(__file__).resolve().parent
+for script_dir in reversed(
+    (
+        SCRIPTS_DIR,
+        SCRIPTS_DIR / "checks",
+        SCRIPTS_DIR / "candidates",
+        SCRIPTS_DIR / "quality",
+        SCRIPTS_DIR / "loop",
+        SCRIPTS_DIR / "driver",
+        SCRIPTS_DIR / "svg_polish",
+    )
+):
+    sys.path.insert(0, str(script_dir))
+
+import fixture_identity  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
+from svg_path_geometry import (  # noqa: E402
+    canonical_polyline,
+    frechet_distance,
+    shape_signature,
+)
 
 SCHEMA = "figure-agent.svg-semantic-diff.v1"
 SVG_SEMANTIC_DIFF_RELATIVE_PATH = "polish/svg_semantic_diff.json"
@@ -24,6 +43,9 @@ FINDING_KINDS = frozenset(
         "text_identity_loss",
         "element_inventory_change",
         "frame_change",
+        "geometry_truth_violation",
+        "truth_path_removed",
+        "truth_path_occluded",
         "unsupported_svg_feature",
         "group_transform_risk",
         "marker_or_path_change",
@@ -48,6 +70,99 @@ OPTICAL_ATTRS = ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity")
 # Mirror of svg_polish_executor.MAX_TRANSLATE_PX (imported there would be circular:
 # executor -> recipe -> manifest -> svg_semantic_diff). Keep both in sync.
 MAX_TRANSLATE_PX = 10.0
+HAND_OVERLAY_PREFIX = "hand:"
+
+
+def _strip_hand_overlay(names: list[str]) -> list[str]:
+    """Drop hand:* overlay names. Added/removed hand overlays are sanctioned
+    decoration (spec §6 overlay-safe), not a structural inventory change."""
+    return [name for name in names if not name.startswith(HAND_OVERLAY_PREFIX)]
+
+
+def _is_hand_namespaced(element_id: str | None, class_attr: str | None) -> bool:
+    """An element is a hand:* overlay if its id or any class token is hand:-prefixed."""
+    if element_id and element_id.startswith(HAND_OVERLAY_PREFIX):
+        return True
+    if class_attr:
+        return any(token.startswith(HAND_OVERLAY_PREFIX) for token in class_attr.split())
+    return False
+
+
+OCCLUSION_OPACITY = 0.95  # effective opacity at/above which an overlay hides what's beneath
+OCCLUSION_COVERAGE = 0.5  # bbox-coverage fraction of a truth path that counts as occlusion
+
+
+def _float_attr(element: ET.Element, name: str, default: float) -> float:
+    try:
+        return float(element.attrib.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _polyline_bbox(points: list[complex]) -> tuple[float, float, float, float]:
+    xs = [point.real for point in points]
+    ys = [point.imag for point in points]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _axis_coverage(t0: float, t1: float, o0: float, o1: float) -> float:
+    """Fraction of truth interval [t0,t1] covered by overlay interval [o0,o1].
+    A degenerate (zero-length) truth interval is covered (1.0) iff its point lies
+    within the overlay interval."""
+    if t1 <= t0:
+        return 1.0 if o0 <= t0 <= o1 else 0.0
+    lo, hi = max(t0, o0), min(t1, o1)
+    return max(0.0, hi - lo) / (t1 - t0)
+
+
+def _bbox_coverage(
+    overlay: tuple[float, float, float, float],
+    truth: tuple[float, float, float, float],
+) -> float:
+    """Fraction of the truth bbox covered by the overlay bbox. Degenerate
+    (zero-area, e.g. axis-aligned line) truth bboxes use per-axis point
+    containment so a covered horizontal/vertical truth segment is still detected."""
+    ox0, oy0, ox1, oy1 = overlay
+    tx0, ty0, tx1, ty1 = truth
+    return _axis_coverage(tx0, tx1, ox0, ox1) * _axis_coverage(ty0, ty1, oy0, oy1)
+
+
+def _parse_points(raw: str) -> list[complex]:
+    coords = [float(token) for token in re.split(r"[\s,]+", raw.strip()) if token]
+    return [complex(coords[i], coords[i + 1]) for i in range(0, len(coords) - 1, 2)]
+
+
+def _shape_bbox(tag: str, element: ET.Element) -> tuple[float, float, float, float] | None:
+    """Axis-aligned bbox for an occlusion-capable overlay shape, from its
+    attributes. Returns None for elements with no resolvable extent (e.g. <use>,
+    whose bbox needs href resolution — a documented gap) or no geometry."""
+    if tag == "path":
+        d = element.attrib.get("d")
+        return _polyline_bbox(canonical_polyline(d)) if d else None
+    if tag == "rect":
+        x = _float_attr(element, "x", 0.0)
+        y = _float_attr(element, "y", 0.0)
+        return (
+            x,
+            y,
+            x + _float_attr(element, "width", 0.0),
+            y + _float_attr(element, "height", 0.0),
+        )
+    if tag == "circle":
+        cx, cy, r = (
+            _float_attr(element, "cx", 0.0),
+            _float_attr(element, "cy", 0.0),
+            _float_attr(element, "r", 0.0),
+        )
+        return (cx - r, cy - r, cx + r, cy + r)
+    if tag == "ellipse":
+        cx, cy = _float_attr(element, "cx", 0.0), _float_attr(element, "cy", 0.0)
+        rx, ry = _float_attr(element, "rx", 0.0), _float_attr(element, "ry", 0.0)
+        return (cx - rx, cy - ry, cx + rx, cy + ry)
+    if tag in ("polygon", "polyline"):
+        points = _parse_points(element.attrib.get("points", ""))
+        return _polyline_bbox(points) if points else None
+    return None
 
 
 class SvgSemanticDiffError(ValueError):
@@ -183,7 +298,9 @@ def _inventory(path: Path) -> dict[str, Any]:
     path_count = 0
     marker_count = 0
     marker_attr_count = 0
-    for element in root.iter():
+    truth_geometry: dict[str, dict[str, Any]] = {}
+    hand_overlays: list[dict[str, Any]] = []
+    for order, element in enumerate(root.iter()):
         tag = _strip_namespace(element.tag)
         element_id = element.attrib.get("id")
         optical = tuple(element.attrib.get(attr) for attr in OPTICAL_ATTRS)
@@ -201,6 +318,30 @@ def _inventory(path: Path) -> dict[str, Any]:
                 texts.append(text)
         if tag == "path":
             path_count += 1
+            d = element.attrib.get("d")
+            truth_bearing = element.attrib.get("data-truth-bearing") != "false"
+            if d and truth_bearing and element_id:
+                polyline = canonical_polyline(d)
+                truth_geometry[element_id] = {
+                    "signature": shape_signature(d),
+                    "polyline": polyline,
+                    "bbox": _polyline_bbox(polyline),
+                    "order": order,
+                }
+        if _is_hand_namespaced(element_id, class_attr):
+            overlay_bbox = _shape_bbox(tag, element)
+            if overlay_bbox is not None:
+                opacity = _float_attr(element, "opacity", 1.0) * _float_attr(
+                    element, "fill-opacity", 1.0
+                )
+                hand_overlays.append(
+                    {
+                        "bbox": overlay_bbox,
+                        "opacity": opacity,
+                        "fill": element.attrib.get("fill", ""),
+                        "order": order,
+                    }
+                )
         if tag == "marker":
             marker_count += 1
         marker_attr_count += sum(
@@ -252,6 +393,8 @@ def _inventory(path: Path) -> dict[str, Any]:
             tuple("" if value is None else value for value in optical)
             for optical in optical_signatures_no_id
         ),
+        "truth_geometry": truth_geometry,
+        "hand_overlays": hand_overlays,
     }
 
 
@@ -272,7 +415,9 @@ def _finding(
     }
 
 
-def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str, str]]:
+def _compare(
+    source: dict[str, Any], polished: dict[str, Any], *, frechet_bound: float = 0.5
+) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
 
     def add(kind: str, severity: str, evidence: str, route: str) -> None:
@@ -356,10 +501,10 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             f"marker_attr={polished['marker_attr_count']}",
             SEMANTIC_DIFF_NEEDS_HUMAN,
         )
-    removed_ids = sorted(set(source["ids"]) - set(polished["ids"]))
-    added_ids = sorted(set(polished["ids"]) - set(source["ids"]))
-    removed_classes = sorted(set(source["classes"]) - set(polished["classes"]))
-    added_classes = sorted(set(polished["classes"]) - set(source["classes"]))
+    removed_ids = _strip_hand_overlay(sorted(set(source["ids"]) - set(polished["ids"])))
+    added_ids = _strip_hand_overlay(sorted(set(polished["ids"]) - set(source["ids"])))
+    removed_classes = _strip_hand_overlay(sorted(set(source["classes"]) - set(polished["classes"])))
+    added_classes = _strip_hand_overlay(sorted(set(polished["classes"]) - set(source["classes"])))
     if removed_ids or added_ids or removed_classes or added_classes:
         add(
             "element_inventory_change",
@@ -386,6 +531,60 @@ def _compare(source: dict[str, Any], polished: dict[str, Any]) -> list[dict[str,
             f"{polished['optical_signatures_no_id']}",
             SEMANTIC_DIFF_NEEDS_HUMAN,
         )
+    src_geo = source.get("truth_geometry", {})
+    pol_geo = polished.get("truth_geometry", {})
+    for element_id, src_entry in sorted(src_geo.items()):
+        pol_entry = pol_geo.get(element_id)
+        if pol_entry is None:
+            add(
+                "truth_path_removed",
+                "BLOCKER",
+                f"truth path #{element_id} is gone from the polished SVG "
+                "(removed, renamed, or downgraded to decorative); no overlay may "
+                "replace a truth path",
+                SEMANTIC_DIFF_BACKPORT,
+            )
+            continue
+        if src_entry["signature"] != pol_entry["signature"]:
+            add(
+                "geometry_truth_violation",
+                "BLOCKER",
+                f"truth path #{element_id} shape signature changed "
+                f"({src_entry['signature']} -> {pol_entry['signature']})",
+                SEMANTIC_DIFF_BACKPORT,
+            )
+            continue
+        drift = frechet_distance(src_entry["polyline"], pol_entry["polyline"])
+        if drift > frechet_bound:
+            add(
+                "geometry_truth_violation",
+                "BLOCKER",
+                f"truth path #{element_id} drifted {drift:.3f} > bound {frechet_bound}",
+                SEMANTIC_DIFF_BACKPORT,
+            )
+    truth_geo = polished.get("truth_geometry", {})
+    # Occlusion is a deterministic bbox + effective-opacity + paint-order proxy.
+    # Known gaps (a covering element of these forms is NOT flagged here; the
+    # Plan 3 shipped-artifact pixel gate is the backstop): <use> (extent needs
+    # href resolution), wide stroke-only overlays (stroke geometry not modelled),
+    # and opacity from an ancestor <g> or a CSS `style=`/class (not resolved).
+    # The bbox proxy also over-counts coverage for L-shaped/frame overlays
+    # (errs toward over-blocking — the safe direction for a truth guard).
+    for overlay in polished.get("hand_overlays", []):
+        if overlay["fill"] == "none" or overlay["opacity"] < OCCLUSION_OPACITY:
+            continue  # stroke-only or translucent overlay cannot hide truth
+        for occluded_id, truth in sorted(truth_geo.items()):
+            if overlay["order"] <= truth["order"]:
+                continue  # overlay painted beneath the truth path
+            if _bbox_coverage(overlay["bbox"], truth["bbox"]) >= OCCLUSION_COVERAGE:
+                add(
+                    "truth_path_occluded",
+                    "BLOCKER",
+                    f"opaque hand overlay covers >= {int(OCCLUSION_COVERAGE * 100)}% of "
+                    f"truth path #{occluded_id} and is painted on top; "
+                    "an overlay must not visually replace a truth path",
+                    SEMANTIC_DIFF_BACKPORT,
+                )
     return findings
 
 
@@ -402,6 +601,7 @@ def build_svg_semantic_diff_report(
     *,
     source_svg: str | None = None,
     polished_svg: str | None = None,
+    frechet_bound: float = 0.5,
 ) -> Path:
     """Write a semantic SVG diff report and return its path."""
     source_rel = source_svg or f"exports/{example_dir.name}.svg"
@@ -410,7 +610,7 @@ def build_svg_semantic_diff_report(
     polished_path = _fixture_path(example_dir, polished_rel, "polished_svg")
     source_inventory = _inventory(source_path)
     polished_inventory = _inventory(polished_path)
-    findings = _compare(source_inventory, polished_inventory)
+    findings = _compare(source_inventory, polished_inventory, frechet_bound=frechet_bound)
     blocker_count = sum(1 for finding in findings if finding["severity"] in {"BLOCKER", "MAJOR"})
     warning_count = len(findings) - blocker_count
     report = {
@@ -521,8 +721,11 @@ def svg_semantic_diff_report_is_stale(path: Path, *, example_dir: Path) -> bool:
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for rebuilding the semantic SVG diff report."""
     args = list(argv if argv is not None else sys.argv[1:])
+    if args in (["-h"], ["--help"]):
+        print("usage: svg_semantic_diff.py examples/<name>")
+        return 0
     if len(args) != 1:
-        print("Usage: svg_semantic_diff.py examples/<name>", file=sys.stderr)
+        print("usage: svg_semantic_diff.py examples/<name>", file=sys.stderr)
         return 2
     try:
         example_dir = _resolve_example_dir_for_cli(Path(args[0]))

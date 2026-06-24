@@ -20,12 +20,14 @@ from pathlib import Path
 
 import critique_brief_sections as brief_sections
 import fixture_identity
+import narrative_context
 import runtime_paths
 from aesthetic_intent import (
     AESTHETIC_INTENT_SCHEMA_V2,
     AestheticIntentError,
     load_optional_aesthetic_intent,
 )
+from briefing_grounding import explicit_briefing_rule_text, has_reference_free_grounding_context
 from critique_reference_pack import CritiqueReferencePackError, load_optional_reference_pack
 from critique_zoom_crops import build_zoom_crop_pack
 from external_vision_review import (
@@ -68,9 +70,7 @@ MISSING_INVARIANTS = (
     "(none provided — critic should infer plausible physics constraints from §1+§2)"
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
-STYLE_LOCK_PATH = (
-    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
-)
+STYLE_LOCK_PATH = runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
 _PANEL_ID_SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 _HEADING_RE = re.compile(r"^(#{2,6})\s+(.+?)\s*$", re.MULTILINE)
 _HIGH_ZOOM_MICRO_DEFECT_CHECKS = (
@@ -246,6 +246,103 @@ def _semantic_claim_questions_section(spec: dict) -> str:
     ]
     lines.extend(f"- {question}" for question in questions)
     return "\n\n" + "\n".join(lines)
+
+
+def _workspace_root_for_example(example_dir: Path) -> Path:
+    if example_dir.parent.name == "examples":
+        return example_dir.parent.parent
+    return example_dir.parent
+
+
+def _narrative_context_section(example_dir: Path, spec: dict) -> str:
+    payload = narrative_context.build_narrative_context(
+        example_dir,
+        workspace_root=_workspace_root_for_example(example_dir),
+        spec=spec,
+    )
+    reader_contract = payload["reader_contract"]
+    lines = [
+        "## Human Narrative Context (read-only)",
+        "Source-anchored reviewer guidance; not a prompt loop or patch authority.",
+        f"- First takeaway source: `{reader_contract['first_takeaway_source']}`",
+        "- Stop boundaries: model_calls=false, prompt_loop=false, "
+        "source_mutation=false, rank_scoring=false",
+    ]
+    for panel in reader_contract["panel_story_inputs"]:
+        lines.append(f"- Panel `{panel['id']}`: {panel['caption']}")
+    if reader_contract["human_review_questions"]:
+        lines.append("- Human-perspective review questions:")
+        lines.extend(f"  - {question}" for question in reader_contract["human_review_questions"])
+    return "\n\n" + "\n".join(lines)
+
+
+def _reference_free_grounding_section(sections: dict[int, tuple[str, str]], spec: dict) -> str:
+    rules = explicit_briefing_rule_text(sections)
+    if not rules:
+        return ""
+    panel_goal_lines: list[str] = []
+    panel_goals = spec.get("panel_goals")
+    if isinstance(panel_goals, list):
+        panel_goal_lines.extend(f"- {goal}" for goal in panel_goals if isinstance(goal, str))
+    panel_goal_section = ""
+    if panel_goal_lines:
+        panel_goal_section = "\n\n### Spec panel_goals\n" + "\n".join(panel_goal_lines)
+    return f"""
+
+## Reference-free briefing-grounded critique mode
+No reference image is declared. This is **not** autonomous LLM quality scoring.
+Critique is report-only, human-gated, and must stay anchored to explicit author
+briefing rules plus deterministic detector/audit evidence.
+
+Use exactly these lenses:
+- reader clarity: does the render communicate briefing §1's stated intent?
+- domain correctness against briefing rules: does the render preserve each explicit rule below?
+- visual design: only report design issues that obscure §1 intent, violate a listed rule,
+  or are supported by detector/audit ids such as VC/TB/LP/UG/crop evidence.
+
+Every panel/top-level finding MUST include `grounded_in_rule` naming the briefing
+section/rule number, spec panel_goal, or detector id that anchors it. Do not add
+generic best-practice findings without one of those anchors. Do not score, gate,
+auto-edit, or auto-apply.
+
+### Explicit briefing rules
+{rules}{panel_goal_section}
+"""
+
+
+def _reference_free_journal_assessment_section() -> str:
+    return """## Journal-Grade Report-Only Assessment
+
+For reference-free briefing-grounded critique, do not emit numeric quality scores.
+Fill `journal_grade_assessment` only as a non-gateable report summary:
+`score_is_gateable: false`, no `overall_score`, no `sub_scores`, and no
+`score_rationale`. Use `benchmark_level: needs_human_art_direction` when the
+remaining decision is taste, venue fit, or art direction that should not be
+decided by automation.
+"""
+
+
+def _reference_free_journal_assessment_schema(critique_input_hash: str) -> str:
+    return "\n".join(
+        [
+            "journal_grade_assessment:",
+            "  schema: figure-agent.journal-grade-assessment.v1",
+            "  scoring_mode: fresh_reaudit",
+            f"  assessed_artifact_hash: {critique_input_hash}",
+            ("  benchmark_level: draft | solid_manuscript | needs_human_art_direction | blocked"),
+            f"  confidence: {brief_sections.QUALITY_CONFIDENCE_VALUES}",
+            "  blockers: []",
+            "  regression_detected: true | false",
+            "  regressions: []",
+            "  score_is_gateable: false",
+            (
+                "  next_quality_bottleneck: storyline | composition | "
+                "component_fidelity | scientific_plausibility | label_semantics | "
+                "polish | reference_fidelity | export_scale_readability | human_policy"
+            ),
+            '  rationale: "<rule-anchored, non-scoring report-only rationale>"',
+        ]
+    )
 
 
 def _subregion_active_context(example_dir: Path) -> str:
@@ -1401,7 +1498,11 @@ def generate_for(example_dir: Path) -> str:
     except UnicodeDecodeError as exc:
         raise CritiqueBriefError(f"invalid UTF-8 in {tex_path}: {exc}") from exc
     numbered_tex = _line_numbered(tex)
-    invariants = sections.get(6, ("", ""))[1].strip() or MISSING_INVARIANTS
+    invariants = (
+        sections.get(6, ("", ""))[1].strip()
+        or explicit_briefing_rule_text(sections)
+        or MISSING_INVARIANTS
+    )
     render_path = _example_relative_path(example_dir, png_path)
     ref_image = declared_figure_reference_path(example_dir, spec)
     ref_path = _example_relative_path(example_dir, ref_image) if ref_image else None
@@ -1442,6 +1543,14 @@ Use reference image as a tiebreaker in case of conflicting interpretations.)"""
         example_dir, spec, png_path, pdf_path
     )
     image_context_sections = f"{ref_section}{panel_warning_section}{panel_context_section}"
+    reference_free_grounding_section = (
+        _reference_free_grounding_section(sections, spec)
+        if not ref_path
+        and not panel_context_section
+        and has_reference_free_grounding_context(example_dir)
+        else ""
+    )
+    uses_reference_free_grounding = bool(reference_free_grounding_section)
     label_path_report_path = example_dir / "build" / "label_path_proximity.json"
     pdf_page_size_cm = (
         _pdf_page_size_cm(pdf_path)
@@ -1538,7 +1647,21 @@ zoom/reference review.
         crop_anomaly_schema = ""
         crop_anomaly_instructions = ""
     authoring_context_section = _optional_authoring_context(example_dir)
+    narrative_context_section = _narrative_context_section(example_dir, spec)
     semantic_claim_questions_section = _semantic_claim_questions_section(spec)
+    journal_assessment_section = (
+        _reference_free_journal_assessment_section()
+        if uses_reference_free_grounding
+        else brief_sections.journal_grade_assessment()
+    )
+    journal_assessment_schema = (
+        _reference_free_journal_assessment_schema(critique_input_hash)
+        if uses_reference_free_grounding
+        else brief_sections.journal_grade_assessment_schema(
+            critique_input_hash,
+            _reference_score_calibration(example_dir, reference_calibration_pack),
+        )
+    )
     render_read_note = (
         "(The slash command loads this PNG into the host main loop via the Read tool.)"
     )
@@ -1564,6 +1687,8 @@ zoom/reference review.
 
 ## Author intent (from briefing.md)
 {_author_intent(sections)}
+{narrative_context_section}
+{reference_free_grounding_section}
 
 ## Physics invariants the figure MUST honor
 {invariants}
@@ -1586,7 +1711,7 @@ zoom/reference review.
 
 {brief_sections.editorial_art_direction_audit(require_route_detail=uses_route_detail_contract)}
 
-{brief_sections.journal_grade_assessment()}
+{journal_assessment_section}
 
 ## Critique rubric
 
@@ -1700,12 +1825,7 @@ top_tier_audit:
     concrete_fix: "<specific style-normalization edit>"
     blocks_high_impact: true | false
 {brief_sections.editorial_art_direction_schema(require_route_detail=uses_route_detail_contract)}
-{
-        brief_sections.journal_grade_assessment_schema(
-            critique_input_hash,
-            _reference_score_calibration(example_dir, reference_calibration_pack),
-        )
-    }
+	{journal_assessment_schema}
 {_journal_art_direction_playbook_audit_schema(journal_playbook_pack)}
 {_aesthetic_lever_audit_schema(aesthetic_intent_pack)}
 {_svg_polish_delta_audit_schema(uses_svg_polish_delta_schema)}
@@ -1746,6 +1866,7 @@ panels:
         severity: BLOCKER | MAJOR | MINOR | NIT
         category: structural | physics | label_placement | whitespace | hierarchy | palette | style
         tex_lines: [<int>, ...]
+        grounded_in_rule: "<briefing §/rule, panel_goal, detector id, or reference>"
         observation: "<panel-specific difference between build crop and panel reference>"
         suggested_fix: "<concrete edit to the .tex>"
         status: open
@@ -1754,6 +1875,7 @@ findings:
     severity: BLOCKER | MAJOR | MINOR | NIT
     category: structural | physics | label_placement | whitespace | hierarchy | palette | style
     tex_lines: [<int>, ...]
+    grounded_in_rule: "<briefing §/rule, panel_goal, detector id, or reference>"
     observation: "<what is wrong, citing what you see in the PNG>"
     suggested_fix: "<concrete edit to the .tex>"
     status: open

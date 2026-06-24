@@ -302,6 +302,11 @@ def test_v0_9_operator_playbook_documents_command_sequence_and_boundaries() -> N
         "What v0.9 Still Does Not Do",
         "The command plan is the authority for batch execution",
         "It does not automatically produce top-tier art direction",
+        "dogfood_benchmark",
+        "render_mode",
+        "candidate_specific_render",
+        "dependency_missing",
+        "residual refusals",
         "It does not mutate accepted/golden/publication state",
     ]:
         assert required in playbook
@@ -414,7 +419,7 @@ def test_closeout_status_matches_current_release_truth() -> None:
     closeout = (
         REPO_ROOT
         / "docs"
-        / "milestones"
+        / "milestones-archive"
         / "2026-05-21-plugin-development-closeout-status.md"
     ).read_text()
     issue_48 = (

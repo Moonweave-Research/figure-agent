@@ -63,4 +63,4 @@ Out of scope:
 ## Completion
 
 Completed in milestone:
-`docs/milestones/2026-05-29-real-fixture-production-readiness-baseline.md`.
+`docs/milestones-archive/2026-05-29-real-fixture-production-readiness-baseline.md`.

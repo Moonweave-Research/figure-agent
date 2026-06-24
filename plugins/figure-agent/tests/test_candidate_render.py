@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_generator  # noqa: E402
 import candidate_render  # noqa: E402
+from quality_manifest import file_sha256  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
@@ -37,6 +38,61 @@ panels:
     return fixture
 
 
+def _write_undeclared_candidate_defect(fixture: Path) -> None:
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "source_hashes": {
+                    "examples/candidate_demo/candidate_demo.tex": file_sha256(
+                        fixture / "candidate_demo.tex"
+                    )
+                },
+                "candidates": [
+                    {
+                        "id": "UG001",
+                        "recommended_action": "add_micro_defect",
+                        "source_line": 1,
+                        "panel": "A",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _candidate_set(workspace: Path, fixture: Path) -> dict:
+    _write_undeclared_candidate_defect(fixture)
+    return candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+
+def _minimal_candidate_set() -> dict:
+    return {
+        "schema": "figure-agent.candidate-set.v1",
+        "fixture": "candidate_demo",
+        "base": {
+            "tex_hash": "sha256:" + "0" * 64,
+            "status_hash": "sha256:" + "0" * 64,
+            "intent_model_hash": "sha256:" + "0" * 64,
+        },
+        "candidates": [
+            {
+                "id": "CAND001",
+                "candidate_hash": "sha256:" + "1" * 64,
+                "target": {"panel": "unknown"},
+                "operations": [],
+                "apply_authority": "review_only",
+            }
+        ],
+        "refusals": [],
+    }
+
+
 def _ppm(width: int, height: int, pixels: list[tuple[int, int, int]]) -> bytes:
     values = " ".join(f"{red} {green} {blue}" for red, green, blue in pixels)
     return f"P3\n{width} {height}\n255\n{values}\n".encode("ascii")
@@ -53,10 +109,7 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
         for path in sorted(exports.rglob("*"))
         if path.is_file()
     }
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     candidate_set["candidates"][0]["candidate_hash"] = "sha256:" + "3" * 64
     candidate_set["candidates"][0]["target"]["panel"] = "C"
     candidate_set["candidates"][0]["selectors"] = [
@@ -81,6 +134,12 @@ def test_render_writes_manifest_without_touching_exports(tmp_path: Path) -> None
     assert data["tool_versions"]["fig_agent"]
     assert data["tool_versions"]["tex_engine"] == "not_run"
     assert data["candidate_hash"] == "sha256:" + "3" * 64
+    assert data["source_defect"]["id"] == "QD001"
+    assert data["edit_class"] == "label_offset"
+    assert data["edit_family"] == "bounded_coordinate_offset"
+    assert data["family"] == "bounded-coordinate-offset"
+    assert data["variant_id"] == "dx+0.10cm"
+    assert data["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
     assert data["panel"] == "C"
     assert data["selectors"] == [{"kind": "tex_selector.v1", "line_start": 1, "line_end": 1}]
     assert data["candidate_set_path"] == "build/candidates/panel_C_candidate_set.json"
@@ -107,10 +166,7 @@ def test_render_compile_request_writes_render_manifest_dependency_diagnostic(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     monkeypatch.setattr(candidate_render, "_which", lambda _name: None, raising=False)
 
     result = candidate_render.render_candidate_set(
@@ -157,10 +213,7 @@ def test_render_compile_export_success_writes_sandbox_artifacts(
 ) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     calls: list[list[str]] = []
 
     def fake_run(
@@ -208,10 +261,7 @@ def test_render_crop_panel_writes_before_after_sandbox_artifacts(
     fixture = _fixture(workspace)
     (fixture / "build").mkdir()
     (fixture / "build" / "candidate_demo.png").write_bytes(b"original-png")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     def fake_run(
         command: list[str],
@@ -264,10 +314,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
     (fixture / "build" / "candidate_demo.png").write_bytes(
         _ppm(2, 1, [(255, 255, 255), (255, 255, 255)])
     )
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     def fake_run(
         command: list[str],
@@ -278,9 +325,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
         if command[0] == "lualatex":
             (cwd / "render" / "candidate.pdf").write_bytes(b"%PDF-1.7\n")
         if command[0] == "pdftocairo":
-            (cwd / "render" / "candidate.png").write_bytes(
-                _ppm(2, 1, [(255, 255, 255), (0, 0, 0)])
-            )
+            (cwd / "render" / "candidate.png").write_bytes(_ppm(2, 1, [(255, 255, 255), (0, 0, 0)]))
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(candidate_render, "_which", lambda name: f"/fake/{name}")
@@ -306,10 +351,7 @@ def test_render_evaluate_records_visual_delta_when_crops_are_comparable(
 def test_render_canonicalizes_candidate_set_path(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -327,10 +369,7 @@ def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> 
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
     original = (fixture / "candidate_demo.tex").read_text(encoding="utf-8")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -338,11 +377,9 @@ def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> 
         workspace_root=workspace,
     )
 
-    sandbox_source = (
-        fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
-    )
+    sandbox_source = fixture / "build" / "candidates" / "CAND001" / "candidate_demo.tex"
     assert sandbox_source.read_text(encoding="utf-8") == (
-        "\\node (label-a) at (0.2,0) {Old Label};\n"
+        "\\node (label-a) at (0.10, 0) {Old Label};\n"
     )
     assert (fixture / "candidate_demo.tex").read_text(encoding="utf-8") == original
 
@@ -350,10 +387,7 @@ def test_render_writes_candidate_source_copy_only_in_sandbox(tmp_path: Path) -> 
 def test_render_records_operation_source_hash_for_apply_drift_gate(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -363,9 +397,9 @@ def test_render_records_operation_source_hash_for_apply_drift_gate(tmp_path: Pat
 
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     data = json.loads(manifest.read_text(encoding="utf-8"))
-    source_hash = "sha256:" + hashlib.sha256(
-        (fixture / "candidate_demo.tex").read_bytes()
-    ).hexdigest()
+    source_hash = (
+        "sha256:" + hashlib.sha256((fixture / "candidate_demo.tex").read_bytes()).hexdigest()
+    )
     assert data["operations"][0]["source_sha256"] == source_hash
 
 
@@ -382,10 +416,7 @@ panels:
         + "\n",
         encoding="utf-8",
     )
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
 
     candidate_render.render_candidate_set(
         "candidate_demo",
@@ -402,10 +433,7 @@ panels:
 def test_render_rejects_candidate_id_path_escape(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
     candidate_set["candidates"][0]["id"] = "../escape"
 
     with pytest.raises(candidate_render.CandidateRenderError, match="candidate_id"):
@@ -419,10 +447,7 @@ def test_render_rejects_candidate_id_path_escape(tmp_path: Path) -> None:
 def test_render_rejects_sandbox_source_copy_symlink(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     sandbox = fixture / "build" / "candidates" / "CAND001"
     sandbox.mkdir(parents=True)
     source = fixture / "candidate_demo.tex"
@@ -446,10 +471,7 @@ def test_render_rejects_sandbox_manifest_symlink(tmp_path: Path) -> None:
     exports.mkdir()
     export = exports / "candidate_demo.svg"
     export.write_text("<svg />\n", encoding="utf-8")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
     sandbox = fixture / "build" / "candidates" / "CAND001"
     sandbox.mkdir(parents=True)
     (sandbox / "candidate_manifest.json").symlink_to(export)
@@ -471,10 +493,7 @@ def test_render_rejects_render_manifest_symlink(tmp_path: Path) -> None:
     exports.mkdir()
     export = exports / "candidate_demo.svg"
     export.write_text("<svg />\n", encoding="utf-8")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
     sandbox = fixture / "build" / "candidates" / "CAND001"
     sandbox.mkdir(parents=True)
     (sandbox / "render_manifest.json").symlink_to(export)
@@ -495,10 +514,7 @@ def test_render_rejects_render_source_copy_symlink(tmp_path: Path) -> None:
     fixture = _fixture(workspace)
     source = fixture / "candidate_demo.tex"
     before = source.read_text(encoding="utf-8")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     render_source_dir = fixture / "build" / "candidates" / "CAND001" / "source"
     render_source_dir.mkdir(parents=True)
     (render_source_dir / "candidate.tex").symlink_to(source)
@@ -519,10 +535,7 @@ def test_render_rejects_render_source_directory_symlink(tmp_path: Path) -> None:
     fixture = _fixture(workspace)
     outside = tmp_path / "outside"
     outside.mkdir()
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     render_source_dir = fixture / "build" / "candidates" / "CAND001" / "source"
     render_source_dir.parent.mkdir(parents=True)
     render_source_dir.symlink_to(outside)
@@ -543,10 +556,7 @@ def test_render_rejects_render_directory_symlink(tmp_path: Path) -> None:
     fixture = _fixture(workspace)
     outside = tmp_path / "outside"
     outside.mkdir()
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     render_dir = fixture / "build" / "candidates" / "CAND001" / "render"
     render_dir.parent.mkdir(parents=True)
     render_dir.symlink_to(outside)
@@ -569,10 +579,7 @@ def test_render_rejects_crops_directory_symlink(tmp_path: Path) -> None:
     outside.mkdir()
     (fixture / "build").mkdir()
     (fixture / "build" / "candidate_demo.png").write_bytes(b"original-png")
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _candidate_set(workspace, fixture)
     crops_dir = fixture / "build" / "candidates" / "CAND001" / "crops"
     crops_dir.parent.mkdir(parents=True)
     crops_dir.symlink_to(outside)
@@ -591,10 +598,7 @@ def test_render_rejects_crops_directory_symlink(tmp_path: Path) -> None:
 def test_render_rejects_unsafe_crop_panel_before_path_use(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
 
     with pytest.raises(candidate_render.CandidateRenderError, match="invalid crop_panel"):
         candidate_render.render_candidate_set(
@@ -613,10 +617,7 @@ def test_render_rejects_sandbox_root_symlink_to_exports(tmp_path: Path) -> None:
     candidates_parent = fixture / "build"
     candidates_parent.mkdir()
     (candidates_parent / "candidates").symlink_to(exports)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
 
     with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
         candidate_render.render_candidate_set(
@@ -634,10 +635,7 @@ def test_render_rejects_build_dir_symlink_to_exports(tmp_path: Path) -> None:
     exports = fixture / "exports"
     exports.mkdir()
     (fixture / "build").symlink_to(exports)
-    candidate_set = candidate_generator.build_candidate_set(
-        "candidate_demo",
-        workspace_root=workspace,
-    )
+    candidate_set = _minimal_candidate_set()
 
     with pytest.raises(candidate_render.CandidateRenderError, match="sandbox_symlink_forbidden"):
         candidate_render.render_candidate_set(

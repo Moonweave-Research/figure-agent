@@ -24,6 +24,35 @@ def test_summary_without_critique_does_not_suggest_host_critique(
     assert summary["blocking_items"] == []
     assert summary["next_action"] == ""
     assert summary["reason"] == "critique.md is absent; audit evidence is not applicable"
+    assert summary["detector_feedback"]["unadjudicated_candidate_count"] == 0
+    assert summary["detector_feedback"]["summary"] == "no detector feedback"
+
+
+def test_summary_without_critique_surfaces_unadjudicated_detector_candidates(
+    tmp_path: Path,
+) -> None:
+    # Detectors run during compile and write build/*.json even when no critique.md
+    # exists to account for them. Without surfacing their raw counts the default
+    # status view reads "clean" while real flags sit unadjudicated in build/.
+    fig_dir = tmp_path / "no_critique_with_candidates"
+    fig_dir.mkdir()
+    _write_undeclared_geometry_report(fig_dir, ("UG001", "UG002", "UG003"))
+    _write_visual_clash_report(fig_dir, ("VC001", "VC002"))
+
+    summary = summarize_audit_evidence(fig_dir)
+
+    # Policy preserved: still not_applicable, no blocker, no critique nag.
+    assert summary["evaluation_state"] == "not_applicable"
+    assert summary["blocking_items"] == []
+    assert summary["next_action"] == ""
+    assert summary["reason"] == "critique.md is absent; audit evidence is not applicable"
+    # Visibility: raw candidate counts now surfaced instead of all-zero.
+    feedback = summary["detector_feedback"]
+    assert feedback["unadjudicated_candidate_count"] == 5
+    assert feedback["visual_clash"]["candidate_count"] == 2
+    assert feedback["undeclared_geometry"]["candidate_count"] == 3
+    assert feedback["text_boundary"]["candidate_count"] == 0
+    assert "unadjudicated" in feedback["summary"]
 
 
 def _write_visual_clash_report(fig_dir: Path, candidate_ids: tuple[str, ...]) -> None:

@@ -1,0 +1,32 @@
+name: fig3_floating_clip_protocol
+title: "Fig 3 (SI/methods) — Floating-clip protocol: polarity-dependent bending probes locked trapped charge (schematic)"
+style_profile: polymer-paper
+panels:
+  - id: P1
+    caption: Pole — clip grounded, HV injects and traps charge; cantilever neutral
+    bbox_pdf_cm: [0.40, 1.80, 4.60, 8.40]
+  - id: P2
+    caption: Float — clip disconnected, trapped charge locked; cantilever neutral
+    bbox_pdf_cm: [4.60, 1.80, 8.80, 8.40]
+  - id: P3
+    caption: +V drive — Coulomb force on locked charge bends the cantilever
+    bbox_pdf_cm: [8.80, 1.80, 13.00, 8.40]
+  - id: P4
+    caption: −V drive — force reverses, cantilever bends the opposite way (polarity-dependent)
+    bbox_pdf_cm: [13.00, 1.80, 17.40, 8.40]
+notes: |
+  figure-agent figure #3 — second E2E dogfood + DIAGNOSTIC run (2026-06-20).
+  Chosen as a maximally DIFFERENT genre from fig1 (multi-panel concept) and fig2
+  (abstract design-space): a process TIMELINE / state-sequence (voltage waveform
+  + clip state + cantilever response across 4 phases). Goal is to surface which
+  tool gaps generalize (vs were fig2-specific). SCHEMATIC ONLY — waveform is a
+  qualitative protocol strip (no numeric axes).
+
+  Physics (floating-clip, polarity-dependent — the L3 novelty vs Hirai/Tamura
+  polarity-INDEPENDENT prior art): grounded poling sets Q_clip; floating
+  disconnect locks Q in traps; +V drive → Coulomb force qE bends the cantilever;
+  −V drive flips the force → OPPOSITE bend. Coulomb (qE, sign-flips) dominates
+  Maxwell stress (E^2, always attractive). Charge-sign convention (negative
+  trapped charge, +drive attracts) is a drawing choice — confirm against
+  protocol.md. Cantilever must show deflection CURVATURE + tilted tip (not a
+  rigid horizontal tip — fig1 Panel F lesson). Bboxes approximate (first pass).

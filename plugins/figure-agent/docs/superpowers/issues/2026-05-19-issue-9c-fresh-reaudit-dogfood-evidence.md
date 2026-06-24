@@ -1,7 +1,7 @@
 # Issue 9C: Fresh Re-Audit Dogfood Evidence
 
 **Date:** 2026-05-19 KST
-**Status:** completed in milestone `docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md`.
+**Status:** completed in milestone `docs/milestones-archive/2026-05-19-fresh-reaudit-dogfood-evidence.md`.
 **Parent:** Issue 9
 **Depends on:** Issue 9A
 **Unblocks:** Issue 9B
@@ -84,7 +84,7 @@ existing examples solely to make this evidence look cleaner.
 
 Create a milestone document:
 
-- `docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md`
+- `docs/milestones-archive/2026-05-19-fresh-reaudit-dogfood-evidence.md`
 
 For each run, record:
 
@@ -147,7 +147,7 @@ Task:
    uv run python3 scripts/critique_adjudication.py scaffold <name>
    uv run python3 scripts/fig_loop.py <name> --goal "dogfood 9A fresh re-audit" --json
    uv run python3 scripts/fig_driver.py <name> --mode review --goal "dogfood 9A fresh re-audit" --dry-run
-5. Append one row to docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md with all fields required by Issue 9C.
+5. Append one row to docs/milestones-archive/2026-05-19-fresh-reaudit-dogfood-evidence.md with all fields required by Issue 9C.
 
 Constraints:
 - Do not patch source.

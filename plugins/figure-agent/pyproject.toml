@@ -9,6 +9,7 @@ dependencies = [
     "pillow>=12.2.0",
     "pyyaml>=6.0.3",
     "scipy>=1.12.0",
+    "svgpathtools>=1.6.1",
 ]
 
 [tool.ruff]
@@ -27,6 +28,8 @@ markers = [
 [tool.setuptools]
 packages = []
 py-modules = []
+# Intentional: figure-agent is not pip-installable.
+# It is distributed as a Claude Code plugin via claude plugin install.
 
 [dependency-groups]
 dev = [

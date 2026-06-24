@@ -80,9 +80,53 @@ def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
     return fixture
 
 
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _write_semantic_review(
+    fixture: Path,
+    name: str = "candidate_demo",
+    *,
+    verdict: str = "pass",
+    human_required: bool = False,
+) -> None:
+    sandbox = fixture / "build" / "candidates" / "CAND001"
+    manifest = json.loads((sandbox / "candidate_manifest.json").read_text(encoding="utf-8"))
+    render_manifest_path = sandbox / "render_manifest.json"
+    payload = {
+        "schema": "figure-agent.semantic-candidate-review.v1",
+        "fixture": name,
+        "candidate_id": "CAND001",
+        "candidate_hash": manifest["candidate_hash"],
+        "reviewed_artifacts": [
+            {
+                "path": render_manifest_path.relative_to(fixture).as_posix(),
+                "sha256": _sha256_file(render_manifest_path),
+            }
+        ],
+        "semantic_invariants": [],
+        "findings": [],
+        "conflicts": [],
+        "verdict": verdict,
+        "human_required": human_required,
+        "reviewed_at": "2026-06-22T00:00:00Z",
+        "reviewer": "host",
+    }
+    (sandbox / "semantic_review.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_build_apply_readiness_reports_ready_for_local_acceptance(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    _fixture(workspace)
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
 
     readiness = candidate_acceptance.build_apply_readiness(
         "candidate_demo",
@@ -97,9 +141,47 @@ def test_build_apply_readiness_reports_ready_for_local_acceptance(tmp_path: Path
     assert readiness["required_commands"][0].startswith("fig-agent accept-candidate")
 
 
+def test_readiness_blocks_required_missing_semantic_review(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    manifest_path = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["semantic_risks"] = ["candidate changes a semantic claim"]
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "blocked"
+    assert "semantic_review:semantic_risk" in readiness["blocking_reasons"]
+    assert readiness["required_commands"] == []
+
+
+def test_readiness_blocks_optional_semantic_risk_verdict(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture, verdict="semantic_risk", human_required=True)
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "blocked"
+    assert "semantic_review:semantic_risk" in readiness["blocking_reasons"]
+    assert readiness["required_commands"] == []
+
+
 def test_write_acceptance_artifact_records_manifest_hashes(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
 
     payload = candidate_acceptance.write_acceptance(
         "candidate_demo",
@@ -124,6 +206,7 @@ def test_write_acceptance_artifact_records_manifest_hashes(tmp_path: Path) -> No
 def test_acceptance_rejects_sandbox_symlink(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
     outside = tmp_path / "outside.json"
     outside.write_text("{}", encoding="utf-8")
     acceptance = fixture / "build" / "candidates" / "CAND001" / "acceptance.json"
@@ -178,3 +261,30 @@ def test_readiness_blocks_empty_operations(tmp_path: Path) -> None:
 
     assert readiness["status"] == "blocked"
     assert "operations_empty" in readiness["blocking_reasons"]
+
+
+def test_readiness_blocks_existing_unverified_apply_result(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    apply_result = fixture / "build" / "candidates" / "CAND001" / "apply_result.json"
+    apply_result.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.candidate-apply-result.v1",
+                "status": "applied_unverified",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    assert readiness["status"] == "blocked"
+    assert "already_applied" in readiness["blocking_reasons"]

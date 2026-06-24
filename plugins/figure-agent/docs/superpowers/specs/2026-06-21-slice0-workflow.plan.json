@@ -1,0 +1,102 @@
+{
+  "schema_version": "0.5",
+  "plan_id": "figure-agent-slice0-2026-06-21",
+  "created_by": "keelplane",
+  "source_prompt": "Design the execution workflow for Slice 0 of the canonical figure-agent spec (2026-06-21-iteration-first-figure-agent-spec.md §8). Method per §0: TDD + subagent-driven-development + clean-checkout proof. Entry B1, then B2/B4/B3. Slice-0 done = propose fig2_trap_design_space -> >=1 op -> candidate -> MCP apply -> compile fig2_trap_design_space --strict rc=0.",
+  "activation": {
+    "decision": "activate",
+    "matched_thresholds": ["resumable-handoffs", "human-gates", "adversarial-verification"],
+    "downgrade_target": null,
+    "reason": "Multi-task slice with ordered handoffs (B2->B3->exit), per-task human review gates, and per-task adversarial verification (TDD failing-test + spec-compliance + code-quality review). Resumable by spec task IDs across /compact. Not a Workflow-runtime fan-out: tasks are dependency-coupled and human-gated, so execution is in-session subagent-driven-development, not the deterministic Workflow tool."
+  },
+  "objective": "Make the agent-driven element-iteration loop actually run-and-apply on a real figure: MCP apply wired to the working candidate_apply engine (B1), defect ledger fed by real render-detectors behind the adjudication gate (B2), candidate_families generalized off the hard-coded panel C (B3), critique routing decoupled from reference-gating (B4), semantic_assertions surfaced/generalized/gated (B5). Exit = the §7 Slice-0 exit probe passes on fig2 AND B1a passes on fig1, with full pytest green in a clean checkout.",
+  "surfaces": [
+    {"id": "repo", "kind": "repo", "locator": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent", "access_mode": "write-approved"},
+    {"id": "spec", "kind": "document", "locator": "docs/superpowers/specs/2026-06-21-iteration-first-figure-agent-spec.md", "access_mode": "read-only"},
+    {"id": "mcp_server", "kind": "package", "locator": "mcp/figure_agent_server.py (_apply_candidate ~1341, refusal 1368, inputSchema region ~1640-1745)", "access_mode": "write-approved"},
+    {"id": "candidate_apply_engine", "kind": "package", "locator": "scripts/candidate_apply.py:341 apply_candidate; bin/fig-agent:876 _apply_candidate", "access_mode": "read-only"},
+    {"id": "candidate_families", "kind": "package", "locator": "scripts/candidate_families.py (SUPPORTED_PANEL=C:18, SUPPORTED_FAMILY:16, ENERGY_TERMS:20); scripts/quality_patch_plan.py _default_patch:42", "access_mode": "write-approved"},
+    {"id": "ledger", "kind": "package", "locator": "scripts/quality_defect_ledger.py:81; scripts/critique_adjudication.py; scripts/quality_patch_policy.py classify_patchability:30", "access_mode": "write-approved"},
+    {"id": "critique_routing", "kind": "package", "locator": "scripts/status.py compute_critique_state:102/116; scripts/status_explanation.py:122/131/147; scripts/audit_evidence_summary.py:468", "access_mode": "write-approved"},
+    {"id": "fig1_fixture", "kind": "artifact", "locator": "examples/fig1_overview_v2_pair_001_vault (build/candidates/CAND001 exists on disk but is GITIGNORED/untracked)", "access_mode": "read-only"},
+    {"id": "fig2_fixture", "kind": "artifact", "locator": "examples/fig2_trap_design_space (UNTRACKED; owned by other work; carries working-tree VC010 change; DO NOT COMMIT)", "access_mode": "write-proposed"}
+  ],
+  "assumptions": [
+    {"claim": "fig1 has an applyable committed candidate for the B1a probe.", "verification": "VERIFIED FALSE-ish: build/candidates/CAND001 exists on disk but is gitignored (git ls-files returns nothing) and CAND001/ has no acceptance.json (candidate_set.json lives at the candidates/ parent). The B1 unit test MUST self-construct its candidate fixture under tmp/ rather than depend on the gitignored CAND001, or it fails in a clean checkout."},
+    {"claim": "propose fig2 yields >=1 op once candidate_families is generalized.", "verification": "VERIFIED PARTIAL: propose (bin/fig-agent:539) goes ledger->quality_patch_plan, NOT candidate_families. candidate_families feeds the `candidates` command (candidate_generator.py:141). The exit chain spans BOTH: propose must yield ops (needs B2 ledger + B3 patch body in quality_patch_plan._default_patch) AND a candidate dir must be produced (needs B3 candidate_families generalized). B3 must touch both surfaces."},
+    {"claim": "The RED test is a HEAD defect.", "verification": "VERIFIED FALSE: test_real_fixture_audit_adoption is RED only because the untracked fig2-5 example dirs are on disk and _real_fixture_names() scans disk; the contract YAML lacks entries for them. In a clean checkout at HEAD (untracked dirs absent) it is likely GREEN. The RED is a working-tree artifact coupled to other-owned untracked dirs."},
+    {"claim": "MCP can resolve candidate_set_path + acceptance_path from candidate_id.", "verification": "PARTIAL: CLI requires --candidate-set and --acceptance (both required). candidate_apply defaults acceptance_path to build/candidates/{id}/acceptance.json (absent for CAND001). B1 must define canonical resolution AND ensure the acceptance gate actually runs (no bypass)."}
+  ],
+  "patterns": ["pipeline-over-barriers", "adversarial-verification", "diverse-reviewers", "risk-gate-safe-default"],
+  "phases": [
+    {"id": "P0", "title": "Baseline + falsifiable probe harness", "entry": "Slice 0 start", "exit": "Two executable probe scripts (B1a, exit) exist and currently FAIL for the right reasons; baseline pytest count recorded; RED-test root cause documented.", "tasks": ["record pytest baseline (working tree vs clean checkout)", "author B1a probe script (fig1 MCP apply)", "author exit probe script (fig2 propose->candidate->MCP apply->compile --strict)", "snapshot fig2.tex sha for rollback discipline"]},
+    {"id": "P1", "title": "B1 - wire MCP apply -> candidate_apply", "entry": "P0 done", "exit": "B1a probe passes on fig1 via MCP; acceptance/drift/lock gates run (not bypassed); unit test self-constructs its candidate fixture (clean-checkout safe).", "tasks": ["TDD failing test: MCP figure_agent_apply_candidate mutates a .tex + recompiles clean", "implement: replace refusal at 1368 with resolution of canonical candidate_set/acceptance paths + delegate to candidate_apply via the same CLI path the engine uses; extend inputSchema with candidate_set_path + acceptance_path", "spec-compliance review", "code-quality review"]},
+    {"id": "P2", "title": "B2 - defect ledger ingests render-detectors", "entry": "P0 done (independent of P1)", "exit": "An adjudicated fig2 visual_clash becomes a ledger defect carrying a concrete file:line.", "tasks": ["TDD failing test: adjudicated fig2 visual_clash -> ledger defect with file:line", "implement: ledger ingests visual_clash.json + undeclared_geometry.json (+ label_path_proximity) behind critique_adjudication gate, normalized via quality_patch_policy.classify_patchability", "spec-compliance review", "code-quality review"]},
+    {"id": "P3", "title": "B3 - generalize candidate_families + selector patch body (GATING)", "entry": "P2 done", "exit": "propose fig2_trap_design_space yields >=1 operation AND a candidate dir is produced for fig2.", "tasks": ["TDD failing test: propose fig2 -> >=1 operation", "implement: derive SUPPORTED_PANEL/FAMILY/ENERGY_TERMS from spec.yaml panels[]+node text; replace _default_patch toy body with selector-based bounded-coordinate replace_text applicator; B3-handoff fallback (emit file:line + suggested 1-line patch instead of unsupported_defect)", "spec-compliance review", "code-quality review"]},
+    {"id": "P4", "title": "Slice-0 breadth - B4 + B5 + hygiene + RED-fix", "entry": "P0 done (parallelizable; B5 gate decision required before landing)", "exit": "B4: fig2 routes to critique. B5: semantic_assertions surfaced in status/next + authoring block templated + gate decided (BLOCKER vs surface-where-present). Hygiene: FP rate below stated threshold on a labeled TP/FP set. RED-fix: honest adoption_status decided per the untracked-ownership gate.", "tasks": ["B4: add critique-required state keyed on audit_crops manifest OR unadjudicated_candidate_count; route next -> /fig_critique", "B5: surface build/semantic_assertions.json in status/next; template authoring block; apply gate decision", "hygiene: labeled TP/FP set -> demote bare undeclared_* to INFO -> retune _known_false_positives.yaml -> honest per-figure caps", "RED-fix: per decision gate, add honest adoption_status entries or defer"]},
+    {"id": "P5", "title": "Slice-0 exit gate + clean-checkout proof", "entry": "P1 + P3 done (barrier)", "exit": "Exit probe passes on fig2 AND B1a passes on fig1 AND full pytest green in a fresh worktree clean checkout. Slice 1 unblocked.", "tasks": ["run B1a probe (fig1)", "run exit probe (fig2) with snapshot+rollback, never committing fig2", "git worktree add --detach + uv sync + uv run pytest tests/ -q (expect 0 failed)", "git worktree remove --force"]}
+  ],
+  "workers": [
+    {
+      "id": "implementer",
+      "role": "Fresh per-task implementer (TDD: makes the pre-written failing test pass with minimal change).",
+      "tool_permissions": {"read": true, "write": true, "shell": true, "network": false, "mcp_connectors": [], "requires_escalation_for": ["committing", "touching files outside the task's named symbols", "any fig3-5/dist/caption.md edit"]},
+      "forbidden_actions": ["commit or push", "edit fig2-5 example .tex except via the candidate_apply rollback-safe probe in P5", "touch dist/ or examples/fig3_floating_clip_protocol/fig4_*/fig5_* or caption.md", "weaken/skip a test to make it pass", "bypass the candidate_apply acceptance gate"],
+      "context_budget": {"max_files": 12, "max_tokens": 120000, "must_include": ["the task's failing test", "the named target symbols from the spec §8 item", "spec §0/§4/§6 constraints"], "must_exclude": ["unrelated SVG/quarantine modules (svg_polish_*, add_volume_shading, svg_ship_gate)", "the v2-svg-illustrator spec"]},
+      "prompt_contract": {"inputs": ["task id (B1/B2/B3/B4/B5)", "the failing test path", "named target symbols + file:line hints", "acceptance criterion from §7/§8"], "required_output_schema": "diff + test-run log showing the target test now passes and no previously-green test regressed", "stop_conditions": ["target test passes and no regression", "blocked by an undocumented hole -> stop and report", "would need to touch a forbidden file -> stop and escalate"]}
+    ,"ownership": ["the single B-task's named symbols only"]
+    },
+    {
+      "id": "reviewer_spec",
+      "role": "Spec-compliance reviewer (does the change satisfy the §8 acceptance criterion and honor §6 gates without bypassing them?).",
+      "tool_permissions": {"read": true, "write": false, "shell": true, "network": false, "mcp_connectors": [], "requires_escalation_for": []},
+      "forbidden_actions": ["edit code", "approve a change that bypasses the acceptance gate or fabricates success envelopes for no-ops (§6 honesty gate)"],
+      "context_budget": {"max_files": 12, "max_tokens": 80000, "must_include": ["the diff", "the spec §8 item + §6/§7 criteria"], "must_exclude": ["unrelated modules"]},
+      "prompt_contract": {"inputs": ["diff", "acceptance criterion"], "required_output_schema": "verdict {compliant: bool, gaps: [], gate_bypass_detected: bool}", "stop_conditions": ["verdict emitted"]}
+    ,"ownership": ["spec-compliance verdict"]
+    },
+    {
+      "id": "reviewer_quality",
+      "role": "Code-quality reviewer (style match, no over-engineering, no dead-weight, surgical edits per global CLAUDE.md).",
+      "tool_permissions": {"read": true, "write": false, "shell": true, "network": false, "mcp_connectors": [], "requires_escalation_for": []},
+      "forbidden_actions": ["edit code", "demand refactors beyond the task scope"],
+      "context_budget": {"max_files": 12, "max_tokens": 80000, "must_include": ["the diff", "surrounding file style"], "must_exclude": ["unrelated modules"]},
+      "prompt_contract": {"inputs": ["diff"], "required_output_schema": "verdict {clean: bool, findings: []}", "stop_conditions": ["verdict emitted"]}
+    ,"ownership": ["code-quality verdict"]
+    }
+  ],
+  "handoffs": [
+    {"from_phase": "P0", "to_phase": "P1", "artifact": "B1a probe script + baseline log", "artifact_schema": {"format": "test-log", "required_fields": ["probe_path", "current_status_fail", "fail_reason"], "validation_command": "uv run python <b1a_probe> ; echo exit=$?"}},
+    {"from_phase": "P2", "to_phase": "P3", "artifact": "adjudicated fig2 ledger defect", "artifact_schema": {"format": "json", "required_fields": ["defect_id", "file", "line", "adjudicated"], "validation_command": "uv run python bin/fig-agent propose fig2_trap_design_space | jq '.. | objects | select(.file? and .line?)'"}},
+    {"from_phase": "P3", "to_phase": "P5", "artifact": "propose fig2 yields >=1 operation + candidate dir", "artifact_schema": {"format": "json", "required_fields": ["operations"], "validation_command": "uv run python bin/fig-agent propose fig2_trap_design_space | jq '.operations | length >= 1'"}},
+    {"from_phase": "P1", "to_phase": "P5", "artifact": "MCP apply wired (B1a green)", "artifact_schema": {"format": "test-log", "required_fields": ["b1a_status", "tex_mutated", "compile_rc"], "validation_command": "uv run python <b1a_probe> ; echo exit=$?"}}
+  ],
+  "parallelism": {"shape": "pipeline-with-barriers", "concurrency_cap": 2, "fan_in_rule": "P5 is a barrier requiring BOTH P1 (B1) and P3 (B3, which depends on P2) complete. P1 runs in parallel with P2->P3. P4 breadth tasks parallelize on non-overlapping files but each passes the human review gate serially.", "barriers": ["P5 exit gate (needs B1+B3)"]},
+  "verification": [
+    {"claim_or_output": "B1 MCP apply works without bypassing safety", "falsifier": "B1a probe mutates fig1 .tex AND the acceptance/drift/lock gate is observably executed (not short-circuited); a clean-checkout unit test passes using a self-built candidate fixture", "evidence_required": "probe exit=0 + diff in fig1*.tex + gate log + pytest line"},
+    {"claim_or_output": "B2 ledger ingests detectors", "falsifier": "an adjudicated fig2 visual_clash appears as a ledger defect with a concrete file:line", "evidence_required": "ledger json with file+line"},
+    {"claim_or_output": "B3 propose fig2 yields >=1 op", "falsifier": "propose fig2_trap_design_space .operations length >= 1 (today []) AND candidate dir produced", "evidence_required": "propose json + candidate dir listing"},
+    {"claim_or_output": "Slice-0 done", "falsifier": "the full exit chain: propose>=1op -> candidate -> MCP apply -> compile fig2_trap_design_space --strict rc=0", "evidence_required": "command transcript with rc=0"},
+    {"claim_or_output": "No regression / slice genuinely complete", "falsifier": "fresh worktree clean checkout: uv sync + uv run pytest tests/ -q == 0 failed", "evidence_required": "pytest summary from the worktree"}
+  ],
+  "risk_gates": [
+    {"trigger": "Exit probe mutates the UNTRACKED, other-owned fig2.tex (which carries an uncommitted VC010 change).", "safe_default": "Snapshot fig2.tex sha before; run apply; restore via candidate_apply rollback.patch (or git checkout is impossible since untracked, so use the file snapshot); NEVER commit fig2. Prefer running the exit probe against a copied sandbox of fig2 if feasible.", "requires_user_approval": true},
+    {"trigger": "RED-fix would add adoption_status entries coupled to untracked, other-owned fig2-5 dirs.", "safe_default": "Do NOT commit YAML entries that reference untracked dirs; treat the RED as a working-tree artifact and verify the clean-checkout is green instead; defer real entries until the dirs' owner commits them.", "requires_user_approval": true},
+    {"trigger": "B5 §6 gate: multi-panel figure entering acceptance without a semantic_assertions block = BLOCKER.", "safe_default": "Adopt the §9-risk-5 downgrade ('surface where present') for this slice to avoid blocking fig2's own exit probe; defer strict BLOCKER enforcement until fig2 has an authored block.", "requires_user_approval": true},
+    {"trigger": "Any edit to dist/, examples/fig3_floating_clip_protocol, fig4_trap_energy_diagram, fig5_actuation_mechanism, or caption.md.", "safe_default": "Out of scope; forbidden; do not touch.", "requires_user_approval": true},
+    {"trigger": "Commit / push of slice work.", "safe_default": "Branch is design/figure-agent-v2-svg; commit only on explicit user instruction, one logical change per B-task; never commit untracked other-owned fixtures.", "requires_user_approval": true}
+  ],
+  "budget": {"max_agents": 24, "max_rounds_per_task": 2, "max_retries": 2, "time_budget": "multi-session (resumable across /compact)", "max_files_touched_per_task": 6},
+  "resume": {"cache_keys": ["B1", "B2", "B3", "B4", "B5", "RED-fix"], "invalidation": "spec §8 edit invalidates downstream task caches; a task is 'cached-done' only when its acceptance test is green at HEAD", "restart_points": ["P1", "P2", "P3", "P4", "P5"]},
+  "execution_path": {
+    "mode": "subagent-driven-development",
+    "consumer": "claude-code-orchestrator",
+    "first_slice": {
+      "instruction": "Execute B1: write the failing test first (MCP figure_agent_apply_candidate applies a candidate end-to-end on a self-built fixture, mutating a .tex and recompiling clean, with the acceptance/drift/lock gate observably running), then replace the hard refusal at mcp/figure_agent_server.py:1368 by resolving canonical candidate_set/acceptance paths and delegating to the same candidate_apply path the CLI uses, extending the tool inputSchema with candidate_set_path + acceptance_path. Verify via the B1a probe on fig1.",
+      "inputs": ["repository path: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/plugins/figure-agent", "spec §8 B1 + §7 B1a", "mcp/figure_agent_server.py _apply_candidate ~1341 / refusal 1368 / inputSchema region ~1640-1745", "scripts/candidate_apply.py:341 + bin/fig-agent:876 as the reuse target"],
+      "expected_output": "diff to mcp/figure_agent_server.py + a new clean-checkout-safe test; B1a probe exit=0 with fig1 .tex mutated and compile rc=0; acceptance gate log present",
+      "completion_check": "uv run pytest tests/ -q shows the new B1 test passing and no regression; B1a probe exit=0",
+      "forbidden_actions": ["bypassing the acceptance gate", "depending on the gitignored build/candidates/CAND001 in the unit test", "committing", "touching fig2-5/dist/caption.md"]
+    }
+  }
+}

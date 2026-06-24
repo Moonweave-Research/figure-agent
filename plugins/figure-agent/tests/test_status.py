@@ -347,6 +347,58 @@ def test_hash_fresh_critique_becomes_stale_when_visual_clash_report_changes(
     assert compute_critique_state(fig_dir, "ref_fig") == status_mod.CRITIQUE_STALE
 
 
+def test_reference_free_rich_briefing_with_detector_signal_requires_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "briefed_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "briefing.md").write_text(
+        """## §1. Topic
+
+Explain transient-current trapping in a compact mechanism schematic.
+
+## §3. Binding physics-correctness rules
+
+1. n is trap-energy breadth, not trap density.
+2. Do NOT commit to electron vs hole transport.
+""",
+        encoding="utf-8",
+    )
+    (fig_dir / "briefed_fig.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "briefed_fig.pdf").write_bytes(b"%PDF")
+    (build / "visual_clash.json").write_text(
+        '{"fixture":"briefed_fig","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert compute_critique_state(fig_dir, "briefed_fig") == status_mod.CRITIQUE_BRIEFING_REQUIRED
+    assert result["critique_state"] == status_mod.CRITIQUE_BRIEFING_REQUIRED
+    assert "/fig_critique briefed_fig" in result["next"]
+    assert result["status_explanation"]["first_blocker"]["code"] == "critique_briefing_required"
+
+
+def test_reference_free_thin_briefing_with_detector_signal_does_not_require_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "thin_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "briefing.md").write_text("## §1. Topic\n\nSchematic.\n", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "visual_clash.json").write_text(
+        '{"fixture":"thin_fig","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+
+    assert compute_critique_state(fig_dir, "thin_fig") == status_mod.CRITIQUE_NOT_REQUIRED
+
+
 def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -2798,6 +2850,44 @@ def test_stage_4_stale_takes_priority_over_not_accepted(tmp_path: Path) -> None:
     # stale takes priority over not-accepted in the next-hint
     assert "/fig_compile" in result["next"]
     assert "QUALITY_AUDIT" not in result["next"]
+
+
+def test_stage_4_stale_accepted_surfaces_accepted_but_stale(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "myfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir, accepted=True)
+    tex = fig_dir / "myfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    briefing = fig_dir / "briefing.md"
+    exports = fig_dir / "exports"
+    exports.mkdir()
+    pdf = exports / "myfig.pdf"
+    svg = exports / "myfig.svg"
+    tif = exports / "myfig.tif"
+    png = exports / "myfig.png"
+    for path, content in (
+        (pdf, b"%PDF"),
+        (svg, b"<svg/>"),
+        (tif, b"TIFF"),
+        (png, b"\x89PNG"),
+    ):
+        path.write_bytes(content)
+    old_time = time.time() - 100
+    for path in (pdf, svg, tif, png, briefing):
+        os.utime(path, (old_time, old_time))
+    new_time = time.time() - 5
+    os.utime(tex, (new_time, new_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["stage"] == 4
+    assert result["accepted"] is True
+    assert result["acceptance_state"] == "ACCEPTED"
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+    assert "stale_export" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
 
 
 def test_print_single_shows_not_accepted_marker(tmp_path: Path, capsys) -> None:

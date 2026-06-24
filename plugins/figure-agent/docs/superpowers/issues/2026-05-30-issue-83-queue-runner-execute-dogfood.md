@@ -50,7 +50,7 @@ Docs:
 
 - `commands/fig_run.md`
   - Documents `repeated_executable_action`.
-- `docs/milestones/2026-05-30-queue-runner-execute-dogfood.md`
+- `docs/milestones-archive/2026-05-30-queue-runner-execute-dogfood.md`
   - Records plan-only, failed pre-fix dogfood, fixed dogfood, and verification.
 
 Tests:

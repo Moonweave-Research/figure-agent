@@ -587,7 +587,7 @@ def _svg_polish_route_hint(example_dir: Path, name: str, *, prefix: str) -> dict
         "safe_command": None,
         "reason": (
             f"{prefix} recipe, polished SVG, and aesthetic delta pack are present; "
-            "run scripts/svg_polish_handoff.py to scaffold audit and manifest."
+            "run fig-agent helper svg_polish_handoff.py to scaffold audit and manifest."
         ),
     }
 
@@ -811,13 +811,13 @@ def _select_action(
             ),
         )
 
-    if critique in ("MISSING", "STALE"):
+    if critique in ("BRIEFING_REQUIRED", "MISSING", "STALE"):
         return make(
             ACTION_RUN_CRITIQUE,
             safe_command=command_mod.critique_command(name),
             stop_boundary=STOP_HOST_LLM_CRITIQUE,
             reason=(
-                "reference-grounded critique is missing or stale; host Claude "
+                "grounded critique is missing or stale; host Claude "
                 "must run /fig_critique to refresh critique.md."
             ),
         )
@@ -1046,7 +1046,7 @@ def _select_action(
             reason=(
                 "polished_svg final artifact is STALE because the polish "
                 "manifest base drifted after the SVG polish handoff already "
-                f"completed; rerun scripts/svg_polish_handoff.py examples/{name} "
+                f"completed; rerun fig-agent helper svg_polish_handoff.py examples/{name} "
                 "--write --force to rebuild the manifest base hashes (including "
                 "critique_hash) and clear the STALE. /fig_loop is verify-only "
                 "and cannot refresh the manifest."
@@ -1071,7 +1071,7 @@ def _select_action(
                 "polished_svg final artifact is INVALID because the polish "
                 "manifest is malformed at the manifest level (wrong polished.path, "
                 "schema, or provenance, or a semantic diff that validates the "
-                f"wrong SVG); rerun scripts/svg_polish_handoff.py examples/{name} "
+                f"wrong SVG); rerun fig-agent helper svg_polish_handoff.py examples/{name} "
                 "--write --force to rebuild a well-formed manifest and clear the "
                 "INVALID. /fig_loop is verify-only and cannot clear an INVALID "
                 "manifest."

@@ -1377,7 +1377,7 @@ git commit -m "Add candidate search release contracts"
 ### Task 10: Dogfood on a Synthetic Fixture
 
 **Files:**
-- Create: `plugins/figure-agent/docs/milestones/2026-06-08-candidate-search-dogfood.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-06-08-candidate-search-dogfood.md`
 
 - [ ] **Step 1: Create temp workspace fixture**
 
@@ -1411,12 +1411,12 @@ Expected:
 
 - [ ] **Step 3: Write milestone evidence**
 
-Create `plugins/figure-agent/docs/milestones/2026-06-08-candidate-search-dogfood.md` summarizing command outputs, pass/fail state, and any host dependency caveats.
+Create `plugins/figure-agent/docs/milestones-archive/2026-06-08-candidate-search-dogfood.md` summarizing command outputs, pass/fail state, and any host dependency caveats.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add plugins/figure-agent/docs/milestones/2026-06-08-candidate-search-dogfood.md
+git add plugins/figure-agent/docs/milestones-archive/2026-06-08-candidate-search-dogfood.md
 git commit -m "Record candidate search dogfood"
 ```
 

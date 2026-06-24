@@ -22,7 +22,17 @@ def _plugin_root() -> Path:
 CODE_ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_ROOT = _plugin_root()
 SCRIPTS_DIR = CODE_ROOT / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
+SCRIPT_IMPORT_DIRS = (
+    SCRIPTS_DIR,
+    SCRIPTS_DIR / "checks",
+    SCRIPTS_DIR / "candidates",
+    SCRIPTS_DIR / "quality",
+    SCRIPTS_DIR / "loop",
+    SCRIPTS_DIR / "driver",
+    SCRIPTS_DIR / "svg_polish",
+)
+for script_dir in reversed(SCRIPT_IMPORT_DIRS):
+    sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
@@ -74,6 +84,13 @@ def _with_runtime_env() -> dict[str, str]:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(paths.plugin_root)
     env["FIGURE_AGENT_WORKSPACE"] = str(paths.workspace_root)
+    import_paths = os.pathsep.join(str(path) for path in SCRIPT_IMPORT_DIRS)
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        import_paths
+        if not existing_pythonpath
+        else f"{import_paths}{os.pathsep}{existing_pythonpath}"
+    )
     return env
 
 
@@ -194,10 +211,19 @@ def _script_main(module_name: str, argv: list[str]) -> int:
 
 
 def _script_process(script_name: str, argv: list[str]) -> int:
+    script_path = _script_path(script_name)
     return _run(
-        [sys.executable, str(SCRIPTS_DIR / script_name), *argv],
+        [sys.executable, str(script_path), *argv],
         cwd=_paths().workspace_root,
     )
+
+
+def _script_path(script_name: str) -> Path:
+    for script_dir in SCRIPT_IMPORT_DIRS:
+        candidate = script_dir / script_name
+        if candidate.is_file():
+            return candidate
+    return SCRIPTS_DIR / script_name
 
 
 def _release_gate_helper(argv: list[str]) -> int:
@@ -216,6 +242,7 @@ def _release_gate_helper(argv: list[str]) -> int:
 
 HELPER_SCRIPTS = {
     "check_collisions.py",
+    "check_golden_artifacts.py",
     "check_layout_drift.py",
     "check_text_boundary_clash.py",
     "check_visual_clash.py",
@@ -238,6 +265,7 @@ HELPER_SCRIPTS = {
     "svg_polish_executor.py",
     "svg_polish_handoff.py",
     "svg_polish_recipe.py",
+    "svg_semantic_diff.py",
     "tex_coordinate_shift.py",
     "text_boundary_spec_helper.py",
 }
@@ -284,7 +312,7 @@ def _svg_polish_exec(argv: list[str]) -> int:
     name = _validated_fixture_name(parser, args.name)
     command = [
         sys.executable,
-        str(SCRIPTS_DIR / "svg_polish_executor.py"),
+        str(_script_path("svg_polish_executor.py")),
         str(_paths().examples_dir / name),
     ]
     if args.dry_run:
@@ -647,6 +675,54 @@ def _candidates(argv: list[str]) -> int:
         print(f"fig-agent candidates: {exc}", file=sys.stderr)
         return 1
     print(text)
+    return 0
+
+
+def _analyze_composition(argv: list[str]) -> int:
+    import composition_scene
+    import yaml
+
+    parser = argparse.ArgumentParser(prog="fig-agent analyze-composition")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = composition_scene.build_semantic_scene_model(
+            name,
+            workspace_root=_paths().workspace_root,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"fig-agent analyze-composition: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") == "blocked":
+        print(f"fig-agent analyze-composition: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _lint_composition(argv: list[str]) -> int:
+    import composition_lint
+    import yaml
+
+    parser = argparse.ArgumentParser(prog="fig-agent lint-composition")
+    parser.add_argument("name")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    name = _validated_fixture_name(parser, args.name)
+    try:
+        payload = composition_lint.build_composition_lint(
+            name,
+            workspace_root=_paths().workspace_root,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"fig-agent lint-composition: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("status") == "blocked":
+        print(f"fig-agent lint-composition: {payload.get('diagnostics')}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -1107,6 +1183,16 @@ def main(argv: list[str] | None = None) -> int:
         return _analyze_panel(rest)
     if command == "candidates":
         return _candidates(rest)
+    if command.startswith("compose-"):
+        import composition_cli
+
+        result = composition_cli.dispatch(command, rest, paths=_paths())
+        if result != 2:
+            return result
+    if command == "analyze-composition":
+        return _analyze_composition(rest)
+    if command == "lint-composition":
+        return _lint_composition(rest)
     if command == "render-candidates":
         return _render_candidates(rest)
     if command == "rank-candidates":

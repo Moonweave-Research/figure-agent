@@ -47,7 +47,7 @@ Expected before the docs sync: fail because the closeout milestone still says
 - Modify: `uv.lock`
 - Modify: `README.md`
 - Modify: `CHANGELOG.md`
-- Modify: `docs/milestones/2026-05-21-plugin-development-closeout-status.md`
+- Modify: `docs/milestones-archive/2026-05-21-plugin-development-closeout-status.md`
 - Modify: `docs/superpowers/issues/2026-05-26-issue-48-svg-polish-promotion-readiness.md`
 - Create: `docs/superpowers/issues/2026-05-26-issue-49-release-docs-current-truth-sync.md`
 - Create: `docs/superpowers/plans/2026-05-26-issue49-release-docs-current-truth-sync.md`
@@ -127,7 +127,7 @@ git add plugins/figure-agent/.claude-plugin/plugin.json \
   plugins/figure-agent/README.md \
   plugins/figure-agent/CHANGELOG.md \
   plugins/figure-agent/tests/test_release_contract.py \
-  plugins/figure-agent/docs/milestones/2026-05-21-plugin-development-closeout-status.md \
+  plugins/figure-agent/docs/milestones-archive/2026-05-21-plugin-development-closeout-status.md \
   plugins/figure-agent/docs/superpowers/issues/2026-05-26-issue-48-svg-polish-promotion-readiness.md \
   plugins/figure-agent/docs/superpowers/issues/2026-05-26-issue-49-release-docs-current-truth-sync.md \
   plugins/figure-agent/docs/superpowers/plans/2026-05-26-issue49-release-docs-current-truth-sync.md

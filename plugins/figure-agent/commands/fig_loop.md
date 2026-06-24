@@ -58,6 +58,7 @@ code `0`, but stdout becomes one JSON object with:
 - `patch_evidence_present`
 - `post_patch_evidence_verdict`
 - `audit_evidence`
+- `narrative_context_summary`
 - `next_action_summary`
 - `recommended_next_action`
 
@@ -68,6 +69,13 @@ change verify-only behavior or make `/fig_loop` execute the next command. Its
 `decision_boundary` field distinguishes blocking gates from advisory-only
 aesthetic improvement candidates.
 
+`narrative_context_summary` is a compact, read-only visibility record derived
+from `spec.yaml`, `briefing.md`, and paper-local authoring notes. It reports the
+schema, read-only flag, first takeaway source, panel-story input count, human
+review question count, and the `rank_scoring=false` / `source_mutation=false`
+boundaries. It does not change `stop_reason`, active patch target,
+`human_gate_status`, candidate rank, or apply authority.
+
 On preflight failure, the command preserves the existing error contract: exit
 code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
 
@@ -75,9 +83,9 @@ Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
 - `iteration_001.json` — `/fig_status`-equivalent state, audit-evidence
-  summary, per-axis verdicts, `critique_adjudication.yaml` status, stop
-  reason, active patch target, `patch_handoff`, escalation summary, and
-  recommended next action.
+  summary, narrative context summary, per-axis verdicts,
+  `critique_adjudication.yaml` status, stop reason, active patch target,
+  `patch_handoff`, escalation summary, and recommended next action.
 - `decision.md` — human-readable stop reason, active patch target, and
   recommended next action. It also mirrors audit-evidence state, compact
   blockers, and next action so operators do not need to dig through raw JSON.

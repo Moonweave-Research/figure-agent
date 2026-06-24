@@ -596,7 +596,12 @@ def test_cli_rejects_traversal_or_outside_relative_fixture_path(
     (fixture / "spec.yaml").write_text("name: outside\n", encoding="utf-8")
     (fixture / "outside.tex").write_text("% empty\n", encoding="utf-8")
     _write_minimal_export_set(fixture / "exports", "outside")
-    script = Path(__file__).resolve().parents[1] / "scripts" / "check_golden_artifacts.py"
+    script = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "checks"
+        / "check_golden_artifacts.py"
+    )
 
     result = subprocess.run(
         [

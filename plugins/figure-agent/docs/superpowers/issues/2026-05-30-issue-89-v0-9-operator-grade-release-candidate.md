@@ -68,7 +68,7 @@ v0.9 should say, plainly:
   artifacts in the package.
 
 Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
-`docs/milestones/2026-05-30-v0-9-package-and-version-metadata.md`.
+`docs/milestones-archive/2026-05-30-v0-9-package-and-version-metadata.md`.
 
 ### 89C - Whole-Corpus Release Smoke
 
@@ -83,7 +83,7 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
 - Any surprising row must become a narrow defect issue before release.
 
 Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
-`docs/milestones/2026-05-30-whole-corpus-release-smoke.md`.
+`docs/milestones-archive/2026-05-30-whole-corpus-release-smoke.md`.
 
 ### 89D - Release Notes And Operator Playbook
 
@@ -101,7 +101,7 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
   - no external provider requirement.
 
 Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
-`docs/milestones/2026-05-30-v0-9-operator-playbook.md`.
+`docs/milestones-archive/2026-05-30-v0-9-operator-playbook.md`.
 
 ### 89E - Final Review And Merge Readiness
 
@@ -115,7 +115,7 @@ Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
 - Do not merge unless CI is clean and the release gate review is explicit.
 
 Status: completed on `codex/issue70-guided-autonomy-roadmap`. Evidence:
-`docs/milestones/2026-05-30-v0-9-final-review-and-merge-readiness.md`.
+`docs/milestones-archive/2026-05-30-v0-9-final-review-and-merge-readiness.md`.
 
 ## Out Of Scope
 

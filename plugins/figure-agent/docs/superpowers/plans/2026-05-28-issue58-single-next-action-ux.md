@@ -133,7 +133,7 @@ Expected: PASS.
 - Modify: `plugins/figure-agent/commands/fig_drive.md`
 - Modify: `plugins/figure-agent/commands/fig_loop.md`
 - Modify: `plugins/figure-agent/docs/superpowers/issues/2026-05-27-issue-58-single-next-action-ux.md`
-- Create: `plugins/figure-agent/docs/milestones/2026-05-28-single-next-action-ux.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-28-single-next-action-ux.md`
 
 - [ ] **Step 1: Document the summary contract**
 

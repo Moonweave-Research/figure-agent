@@ -61,7 +61,7 @@ Out of scope:
 
 Completed in milestone:
 
-- `docs/milestones/2026-05-29-release-golden-publication-gate-rehearsal.md`
+- `docs/milestones-archive/2026-05-29-release-golden-publication-gate-rehearsal.md`
 
 Outcome:
 

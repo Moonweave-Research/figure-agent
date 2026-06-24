@@ -13,12 +13,12 @@ _NEXT_1 = (
 )
 _NEXT_2 = "run /fig_compile <name> to compile the TikZ source."
 _NEXT_3 = (
-    "run /fig_critique <name> for pre-export reference-grounded review when useful,"
+    "run /fig_critique <name> for pre-export grounded review when useful,"
     " then /fig_export <name>."
 )
 _NEXT_3_CRITIQUE_REQUIRED = (
     "run /fig_critique <name> before /fig_export <name>"
-    " because reference-grounded pre-export critique is missing or stale."
+    " because grounded pre-export critique is missing or stale."
 )
 _NEXT_4 = (
     "done — outputs in examples/<name>/exports/."
@@ -39,12 +39,12 @@ _NEXT_4_TRACKED_STALE = (
     " to roll forward run /fig_export <name> --force-golden."
 )
 _NEXT_4_TRACKED_STALE_CRITIQUE_REQUIRED = (
-    "tracked golden artifact is stale and reference-grounded critique is missing or stale;"
+    "tracked golden artifact is stale and grounded critique is missing or stale;"
     " run /fig_compile <name>, then /fig_critique <name>,"
     " then /fig_export <name> --force-golden."
 )
 _NEXT_4_TRACKED_EXPORT_STALE_CRITIQUE_REQUIRED = (
-    "tracked golden artifact is stale and reference-grounded critique is missing or stale;"
+    "tracked golden artifact is stale and grounded critique is missing or stale;"
     " run /fig_critique <name>, then /fig_export <name> --force-golden."
 )
 _NEXT_4_TRACKED_PARTIAL = (
@@ -83,7 +83,7 @@ _NEXT_STYLE_PROFILE_UNKNOWN = (
 )
 _NEXT_FINAL_ARTIFACT_MISSING = (
     "final artifact is missing — create or restore polish/<name>.polished.svg,"
-    " then run scripts/svg_polish_handoff.py to scaffold"
+    " then run fig-agent helper svg_polish_handoff.py to scaffold"
     " polish/svg_polish_audit.md and polish/svg_polish_manifest.yaml."
 )
 _NEXT_FINAL_ARTIFACT_INVALID = (
@@ -92,20 +92,20 @@ _NEXT_FINAL_ARTIFACT_INVALID = (
 )
 _NEXT_FINAL_ARTIFACT_STALE = (
     "final artifact is stale — manifest must be refreshed by rerunning"
-    " scripts/svg_polish_handoff.py after source/export/critique/polish/audit"
+    " fig-agent helper svg_polish_handoff.py after source/export/critique/polish/audit"
     " changes; if polish/svg_semantic_diff.json is stale, rerun"
-    " scripts/svg_semantic_diff.py, then rerun /fig_status <name>."
+    " fig-agent helper svg_semantic_diff.py, then rerun /fig_status <name>."
 )
 _NEXT_FINAL_ARTIFACT_BLOCKED = (
     "final artifact requires semantic backport (semantic_backport_required)"
     " or SVG semantic diff resolution — patch TikZ/briefing/spec, rerun"
-    " compile/export/critique as needed, then rerun scripts/svg_semantic_diff.py"
-    " and scripts/svg_polish_handoff.py."
+    " compile/export/critique as needed, then rerun fig-agent helper svg_semantic_diff.py"
+    " and fig-agent helper svg_polish_handoff.py."
 )
 
 
 def critique_needs_action(state: str) -> bool:
-    return state in {"MISSING", "STALE", "REFERENCE_MISSING"}
+    return state in {"BRIEFING_REQUIRED", "MISSING", "STALE", "REFERENCE_MISSING"}
 
 
 def _spec_next_template(notes: list[str]) -> str | None:

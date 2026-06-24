@@ -108,6 +108,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.journal-art-direction-playbook.v1` | target-journal style anchors | `journal_art_direction_playbook.py` | `critique_brief.py`, `critique_lint.py` | Requires exact anchor citations |
 | `figure-agent.authoring-rules.v1` | source-anchored authoring rules | `authoring_rules.py` | `authoring_context_pack.py`, tests | N=1 hypotheses until transfer is validated |
 | `figure-agent.semantic-contracts.v1` | opt-in semantic claims/invariants | `semantic_contracts.py` | `authoring_context_pack.py`, `critique_brief.py` | Narrow authoring/critique questions only; no automatic physics detection |
+| `figure-agent.narrative-context.v1` | read-only human-perspective context | `narrative_context.py` | `authoring_context_pack.py`, `critique_brief.py`, `candidate_review_packet.py`, `fig_loop.py` | Advisory reader-story context only; no model calls, prompt loops, rank scoring, source mutation, or autonomous patch selection |
 | `figure-agent.authoring-context-pack.v1` | read-only authoring context | `authoring_context_pack.py` | `fig-agent context-pack`, MCP context-pack tool | Read-only durable context compilation; no model calls or generation executor |
 | `figure-agent.convention-receipt.v1` | injected convention surfacing | `convention_receipt.py` | `compile.sh` (report-only `--write`), tests | Surfaces injected `use_as_constraint` rules with source quotes on every figure; report-only injection half, no render verification |
 | `figure-agent.external-vision-review.v1` | optional second opinion | `external_vision_review.py` | `quality_manifest.py`, `critique_lint.py` | Evidence only unless routed through findings |
@@ -136,9 +137,19 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.candidate-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py` | Fixture-local sandbox evidence; never final exports or source truth |
 | `figure-agent.candidate-render-manifest.v1` | candidate search | `candidate_render.py` | `candidate_rank.py`, `candidate_review_packet.py`, `quality_memory_events.py` | Per-candidate render evidence; human review still required |
 | `figure-agent.candidate-render-result.v1` | candidate search | `candidate_render.py` | CLI/MCP candidate workflow | Records rendered candidate sandbox manifests and artifacts |
+| `figure-agent.composition-candidate-set.v1` | LLM-amplifying composition search | `composition_contracts.py` | `composition_render.py`, CLI composition workflow | Host-authored proposal capture only; plugin does not call models or execute payloads |
+| `figure-agent.freshness-vector.v1` | LLM-amplifying composition search | `composition_contracts.py` | ranking/apply readiness, composition workflow | Captured evidence freshness; stale source downgrades to rebase/refresh instead of ranking or applying |
+| `figure-agent.composition-render-manifest.v1` | LLM-amplifying composition search | `composition_render.py` | CLI composition workflow, `composition_rank.py`, `composition_review.py` | Fixture-local sandbox prepare manifest; compile/export/crop/evaluate remain not-run in this slice |
+| `figure-agent.composition-render-result.v1` | LLM-amplifying composition search | `composition_render.py` | CLI composition workflow | Records safe candidate source-copy preparation and drift/block diagnostics; no TeX execution |
+| `figure-agent.semantic-scene-model.v1` | LLM-amplifying composition search | `composition_scene.py` | CLI composition workflow, composition render selector resolution, future lint/rank/review | Read-only semantic block inventory and invariant coverage report; never invents scientific invariants |
+| `figure-agent.composition-lint.v1` | LLM-amplifying composition search | `composition_lint.py` | CLI composition workflow, `composition_rank.py`, `composition_review.py` | Scene-only composition lint packet; deterministic checks carry metric/evidence/threshold, human commentary cannot rank or block |
+| `figure-agent.composition-rank-result.v1` | LLM-amplifying composition search | `composition_rank.py` | CLI composition workflow, `composition_review.py` | Ranks only by hard gates and metric-backed deterministic composition lint deltas; human commentary and aesthetic/taste claims cannot rank or block |
+| `figure-agent.composition-review-packet.v1` | LLM-amplifying composition search | `composition_review.py` | operators, future MCP composition tools | Read-only before/after source packet for prepared candidate sandboxes; no TeX execution, source mutation, acceptance, or apply authority |
 | `figure-agent.candidate-score.v1` | candidate search | `candidate_rank.py` | `candidate_review_packet.py`, operators | Hard gates and scores may preserve or downgrade authority, never upgrade it |
 | `figure-agent.candidate-rank-result.v1` | candidate search | `candidate_rank.py` | CLI/MCP candidate workflow | Ordered candidate scores for human or later CLI review |
 | `figure-agent.candidate-review-packet.v1` | candidate search | `candidate_review_packet.py` | operators, MCP candidate tools | Read-only packet for human review of one rendered candidate |
+| `figure-agent.semantic-candidate-review.v1` | candidate search | `semantic_candidate_review.py` | `candidate_review_packet.py`, `candidate_acceptance.py`, `candidate_apply.py` | Local semantic review artifact; can block apply but cannot grant authority |
+| `figure-agent.semantic-review-state.v1` | candidate search | `semantic_candidate_review.py` | `candidate_review_packet.py`, `candidate_acceptance.py`, `candidate_apply.py` | Derived gate state; invalid, stale, or risky reviews fail closed |
 | `figure-agent.candidate-apply-readiness.v1` | candidate search | `candidate_acceptance.py` | operators | Human acceptance preflight; no source mutation |
 | `figure-agent.candidate-acceptance.v1` | candidate search | `candidate_acceptance.py` | `candidate_apply.py`, operators | Explicit human decision artifact required before apply |
 | `figure-agent.candidate-apply-result.v1` | candidate search | `candidate_apply.py` | operators | Explicit CLI apply boundary; current implementation refuses source mutation unless eligible and opted in |
@@ -158,7 +169,8 @@ not decide release readiness.
 - `aesthetic_intent.py`, `paper_aesthetic_context.py`,
   `journal_art_direction_playbook.py`
 - `authoring_rules.py`, `semantic_contracts.py`,
-  `authoring_context_pack.py`, `convention_receipt.py`
+  `narrative_context.py`, `authoring_context_pack.py`,
+  `convention_receipt.py`
 - `subregion_active_set.py`, `text_boundary_spec_helper.py`,
   `spec_bbox_helper.py`, `tex_coordinate_shift.py`
 

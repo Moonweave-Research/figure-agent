@@ -82,7 +82,7 @@ complete score block and `score_policy` appears in `/fig_loop`.
 
 Append each run to:
 
-- `docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md`
+- `docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md`
 
 For each run, record:
 
@@ -208,7 +208,7 @@ Task:
    uv run python3 scripts/critique_adjudication.py scaffold <name> --force
    uv run python3 scripts/fig_loop.py <name> --goal "dogfood 9D numeric score evidence" --json
    uv run python3 scripts/fig_driver.py <name> --mode review --goal "dogfood 9D numeric score evidence" --dry-run
-6. Append one row to docs/milestones/2026-05-19-numeric-score-dogfood-evidence.md with all fields required by Issue 9D.
+6. Append one row to docs/milestones-archive/2026-05-19-numeric-score-dogfood-evidence.md with all fields required by Issue 9D.
 
 Constraints:
 - Do not patch source.

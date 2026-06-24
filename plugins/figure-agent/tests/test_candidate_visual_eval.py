@@ -30,7 +30,7 @@ def test_compare_image_pair_records_dimensions_hashes_and_pixel_delta(tmp_path: 
     assert payload["visual_deltas"]["changed_bbox"] == [1, 1, 1, 1]
 
 
-def test_compare_image_pair_blocks_dimension_mismatch(tmp_path: Path) -> None:
+def test_compare_image_pair_dimension_mismatch_needs_human_review(tmp_path: Path) -> None:
     before = tmp_path / "before.ppm"
     after = tmp_path / "after.ppm"
     _write_ppm(before, 2, 2, [(255, 255, 255)] * 4)
@@ -38,7 +38,10 @@ def test_compare_image_pair_blocks_dimension_mismatch(tmp_path: Path) -> None:
 
     payload = candidate_visual_eval.compare_image_pair(before, after)
 
-    assert payload["status"] == "blocked"
+    assert payload["status"] == "rendered_needs_human_review"
+    assert payload["before"]["dimensions"] == [2, 2]
+    assert payload["after"]["dimensions"] == [3, 2]
+    assert payload["visual_deltas"] == {}
     assert payload["diagnostics"] == [
         {
             "stage": "evaluate",

@@ -1,0 +1,104 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-1",
+  "phase_name": "Eyes Actionability Metrics",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T15:13:37Z",
+  "objective": "Expose actionability metrics and prevent stale, unknown-panel, missing-selector, or unsupported safe-looking defects from leaking into candidate operations.",
+  "metrics": {
+    "safe_candidate_defect_count": "emitted by quality_defect_ledger.actionability_metrics",
+    "candidate_supported_defect_count": "emitted by quality_defect_ledger.actionability_metrics",
+    "unsupported_safe_defect_count": "emitted by quality_defect_ledger.actionability_metrics",
+    "unknown_panel_defect_count": "emitted by quality_defect_ledger.actionability_metrics",
+    "stale_detector_evidence_count": "emitted by quality_defect_ledger.actionability_metrics",
+    "missing_selector_hash_count": "emitted by quality_defect_ledger.actionability_metrics"
+  },
+  "changed_files": [
+    "plugins/figure-agent/scripts/quality/quality_defect_ledger.py",
+    "plugins/figure-agent/scripts/candidates/candidate_generator.py",
+    "plugins/figure-agent/scripts/candidates/candidate_families.py",
+    "plugins/figure-agent/tests/test_quality_defect_ledger.py",
+    "plugins/figure-agent/tests/test_candidate_generator.py",
+    "plugins/figure-agent/tests/test_candidate_families.py"
+  ],
+  "verifier_status": "passed",
+  "implemented_behaviors": [
+    "quality_defect_ledger emits actionability_metrics for safe_candidate, candidate_supported, unsupported_safe, unknown_panel, stale_detector_evidence, and missing_selector_hash buckets.",
+    "Detector reports without recorded source_hashes are marked stale and cannot become candidate_supported.",
+    "Detector reports with source_hashes that differ from current fixture source hashes are marked stale and cannot become candidate_supported.",
+    "Safe-looking defects whose target.panel is missing, unknown, or not declared in spec.yaml are blocked with the unknown_panel actionability gap.",
+    "Line-bound defects carry selector_text_hash when a concrete source line is available; missing selector hashes block candidate support.",
+    "Candidate generation refuses stale_detector_evidence, unknown_panel, and missing_selector_hash actionability gaps instead of falling back to the first offsettable line.",
+    "Panel-family candidate generation requires explicit panel/family input and panel-bound selectors rather than whole-file first-coordinate fallback."
+  ],
+  "changed_phase_files": [
+    "plugins/figure-agent/scripts/quality/quality_defect_ledger.py",
+    "plugins/figure-agent/scripts/candidates/candidate_generator.py",
+    "plugins/figure-agent/scripts/candidates/candidate_families.py",
+    "plugins/figure-agent/tests/test_quality_defect_ledger.py",
+    "plugins/figure-agent/tests/test_candidate_generator.py",
+    "plugins/figure-agent/tests/test_candidate_families.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_quality_defect_ledger.py tests/test_candidate_generator.py tests/test_candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "45 passed in 1.92s"
+    },
+    {
+      "command": "uv run ruff check tests/test_quality_defect_ledger.py tests/test_candidate_generator.py tests/test_candidate_families.py scripts/quality/quality_defect_ledger.py scripts/candidates/candidate_generator.py scripts/candidates/candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/quality/quality_defect_ledger.py scripts/candidates/candidate_generator.py scripts/candidates/candidate_families.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "session_id": "ses_1101d9933ffeWJe8tPNbvKyVGF",
+    "result": "passed",
+    "summary": "No blocking findings. Reviewer verified missing or mismatched detector source_hashes become stale, undeclared panels become unknown_panel, candidate generation refuses actionability gaps, and panel-family generation avoids blind fallback."
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "check-no-excuse-rules.py",
+      "result": "not_available",
+      "summary": "rg --files -g 'check-no-excuse-rules.py' returned no matching script in this repository."
+    },
+    {
+      "tool": "pure_loc_measurement",
+      "result": "recorded",
+      "summary": "Phase-owned Python files exceed the generic 250 pure-LOC advisory, but this phase intentionally avoided a broad structural refactor outside the approved Phase 1 scope."
+    }
+  ],
+  "safety_boundary_check": {
+    "fixture_source_mutation": false,
+    "candidate_acceptance_or_apply": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "unrelated_dirty_worktree_preserved": true
+  },
+  "exit_criteria": {
+    "quality_map_actionability_metrics_implemented": true,
+    "stale_or_unknown_panel_safe_defects_do_not_produce_operations": true,
+    "phase_1_verifier_report_has_no_blocking_findings": true
+  },
+  "next_phase": {
+    "phase_id": "phase-2",
+    "phase_name": "Multi-Candidate Generation",
+    "entry_criteria_met": true
+  }
+}

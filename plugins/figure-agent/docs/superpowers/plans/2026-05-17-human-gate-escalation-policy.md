@@ -118,7 +118,7 @@ Use these levels in runner output:
 - [x] Confirm C004 remains resolved and does not request human review.
 - [x] Confirm `TRACKED_GOLDEN --force-golden` is surfaced as manual approval, not human review.
 - [x] Confirm no patch handoff is generated unless exactly one unresolved actionable finding exists.
-- [x] Document any remaining friction in `docs/milestones/2026-05-17-fig-loop-pilot.md`.
+- [x] Document any remaining friction in `docs/milestones-archive/2026-05-17-fig-loop-pilot.md`.
 
 ## Implementation Tasks
 
@@ -462,7 +462,7 @@ git commit -m "Separate fig loop manual approvals"
 **Files:**
 
 - Modify: `commands/fig_loop.md`
-- Modify: `docs/milestones/2026-05-17-fig-loop-pilot.md`
+- Modify: `docs/milestones-archive/2026-05-17-fig-loop-pilot.md`
 - Modify: `docs/superpowers/specs/2026-05-17-fig-loop-contract-design.md`
 
 - [ ] **Step 1: Document escalation taxonomy**
@@ -496,7 +496,7 @@ Expected: all pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add plugins/figure-agent/commands/fig_loop.md plugins/figure-agent/docs/milestones/2026-05-17-fig-loop-pilot.md plugins/figure-agent/docs/superpowers/specs/2026-05-17-fig-loop-contract-design.md
+git add plugins/figure-agent/commands/fig_loop.md plugins/figure-agent/docs/milestones-archive/2026-05-17-fig-loop-pilot.md plugins/figure-agent/docs/superpowers/specs/2026-05-17-fig-loop-contract-design.md
 git commit -m "Document fig loop escalation policy"
 ```
 

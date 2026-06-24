@@ -2,7 +2,7 @@
 
 **Status:** completed in commits `b1fce92`, `fbb57b0`.
 **Predecessor:** `docs/superpowers/issues/2026-05-19-issue-8b-dry-run-figure-driver.md`
-**Evidence:** `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
+**Evidence:** `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md`
 
 ## Problem
 
@@ -17,7 +17,7 @@ Create a dogfood evidence matrix for `/fig_drive --dry-run`.
 
 Required output:
 
-- `docs/milestones/2026-05-19-fig-drive-dogfood-evidence.md`
+- `docs/milestones-archive/2026-05-19-fig-drive-dogfood-evidence.md`
 
 Optional fixes, only if dogfood finds a real defect:
 

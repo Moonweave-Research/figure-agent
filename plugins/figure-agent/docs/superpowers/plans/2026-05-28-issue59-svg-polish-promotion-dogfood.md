@@ -13,7 +13,7 @@
 ### Task 1: Select Fixtures And Capture Preflight
 
 **Files:**
-- Create: `plugins/figure-agent/docs/milestones/2026-05-28-svg-polish-promotion-dogfood.md`
+- Create: `plugins/figure-agent/docs/milestones-archive/2026-05-28-svg-polish-promotion-dogfood.md`
 
 - [x] **Step 1: Select fixtures**
 

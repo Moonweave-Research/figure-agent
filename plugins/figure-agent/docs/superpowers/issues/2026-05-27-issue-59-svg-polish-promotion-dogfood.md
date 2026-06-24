@@ -71,7 +71,7 @@ Out of scope:
 
 ## Evidence Notes
 
-- Added `docs/milestones/2026-05-28-svg-polish-promotion-dogfood.md`.
+- Added `docs/milestones-archive/2026-05-28-svg-polish-promotion-dogfood.md`.
 - Ran `/fig_drive --mode polish --dry-run` on five real fixtures after Issue 58:
   `fig1_overview_v2_pair_001_vault`, `fig1_overview_v2`,
   `golden_trap_depth_picture`, `n3_trial_01_trap_depth`, and

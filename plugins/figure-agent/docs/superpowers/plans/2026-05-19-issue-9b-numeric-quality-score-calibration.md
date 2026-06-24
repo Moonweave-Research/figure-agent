@@ -16,7 +16,7 @@ Read these first:
 
 - `plugins/figure-agent/docs/superpowers/specs/2026-05-19-issue-9b-numeric-quality-score-calibration-design.md`
 - `plugins/figure-agent/docs/superpowers/issues/2026-05-19-issue-9b-numeric-quality-score-calibration.md`
-- `plugins/figure-agent/docs/milestones/2026-05-19-fresh-reaudit-dogfood-evidence.md`
+- `plugins/figure-agent/docs/milestones-archive/2026-05-19-fresh-reaudit-dogfood-evidence.md`
 - `plugins/figure-agent/scripts/critique_brief.py`
 - `plugins/figure-agent/scripts/critique_adjudication.py`
 - `plugins/figure-agent/scripts/fig_loop.py`

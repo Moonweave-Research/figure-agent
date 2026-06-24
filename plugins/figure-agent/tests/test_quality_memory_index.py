@@ -11,7 +11,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import quality_memory_index  # noqa: E402
 
 
-def _event(event_type: str, family: str, outcome: str, candidate_id: str) -> dict:
+def _event(
+    event_type: str,
+    family: str,
+    outcome: str,
+    candidate_id: str,
+    target: dict | None = None,
+) -> dict:
     return {
         "schema": "figure-agent.quality-memory-event.v1",
         "fixture": "candidate_demo",
@@ -21,7 +27,7 @@ def _event(event_type: str, family: str, outcome: str, candidate_id: str) -> dic
         "source_artifact": f"build/candidates/{candidate_id}/apply_result.json",
         "candidate_id": candidate_id,
         "edit_family": family,
-        "target": {"panel": "C", "subregion": "energy"},
+        "target": target if target is not None else {"panel": "C", "subregion": "energy"},
         "pre_state": {},
         "post_state": {},
         "outcome": {"state": outcome, "reason": "", "evidence_paths": []},
@@ -41,6 +47,82 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     assert index["families"]["label_offset"]["recommended_prior"] == 0.0
 
 
+def test_three_improved_family_outcomes_produce_bounded_positive_prior() -> None:
+    events = [
+        _event("candidate_applied", "label_offset", "improved", "CAND001"),
+        _event("candidate_applied", "label_offset", "improved", "CAND002"),
+        _event("candidate_applied", "label_offset", "improved", "CAND003"),
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    family = index["families"]["label_offset"]
+    assert index["eligible_prior_count"] == 3
+    assert family["attempts"] == 3
+    assert family["improved"] == 3
+    assert family["recommended_prior"] == 0.25
+
+
+def test_unknown_family_panel_and_outcome_are_measured_and_excluded_from_priors() -> None:
+    events = [
+        _event("candidate_applied", "unknown", "improved", "CAND001"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND002",
+            target={"panel": "unknown", "subregion": "energy"},
+        ),
+        _event("candidate_applied", "label_offset", "unknown", "CAND003"),
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    assert index["candidate_event_count"] == 3
+    assert index["unknown_event_count"] == 3
+    assert index["unknown_event_rate"] == 1.0
+    assert "unknown" not in index["families"]
+    assert all(not key.startswith("unknown:") for key in index["panel_patterns"])
+    assert all(":unknown:" not in key for key in index["panel_patterns"])
+    assert index["eligible_prior_count"] == 0
+    assert index["families"]["label_offset"]["attempts"] == 0
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+
+
+def test_unknown_metadata_does_not_activate_family_prior() -> None:
+    events = [
+        _event("candidate_applied", "label_offset", "improved", "CAND001"),
+        _event("candidate_applied", "label_offset", "improved", "CAND002"),
+        _event(
+            "candidate_applied",
+            "label_offset",
+            "improved",
+            "CAND003",
+            target={"panel": "unknown", "subregion": "energy"},
+        ),
+    ]
+
+    index = quality_memory_index.build_memory_index(events)
+
+    assert index["eligible_prior_count"] == 0
+    assert index["families"]["label_offset"]["attempts"] == 2
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+
+
+def test_synthetic_smoke_memory_unknown_event_rate_stays_below_gate() -> None:
+    events = [
+        _event("candidate_applied", "label_offset", "improved", f"CAND{index:03d}")
+        for index in range(1, 10)
+    ]
+    events.append(_event("candidate_applied", "label_offset", "unknown", "CAND010"))
+
+    index = quality_memory_index.build_memory_index(events)
+
+    assert index["unknown_event_count"] == 1
+    assert index["unknown_event_rate"] == 0.1
+    assert index["unknown_event_rate"] <= 0.10
+
+
 def test_regressed_event_reduces_prior() -> None:
     events = [
         _event("candidate_applied", "label_offset", "improved", "CAND001"),
@@ -54,7 +136,7 @@ def test_regressed_event_reduces_prior() -> None:
     assert index["eligible_prior_count"] == 3
     assert family["improved"] == 2
     assert family["regressed"] == 1
-    assert family["recommended_prior"] == 0.25
+    assert family["recommended_prior"] == 0.0833
 
 
 def test_mostly_regressed_events_can_make_prior_negative() -> None:

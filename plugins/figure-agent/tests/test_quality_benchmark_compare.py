@@ -16,7 +16,15 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
 
 
-def _run_payload(run_id: str, *, failures: list[str] | None = None) -> dict:
+def _run_payload(
+    run_id: str,
+    *,
+    failures: list[str] | None = None,
+    render_success_rate: float = 0.0,
+    candidate_specific_rank_rate: float = 0.0,
+    best_candidate_rank_basis: str = "candidate_specific",
+    best_candidate_render_manifest_path: str = "",
+) -> dict:
     failures = failures or []
     return {
         "schema": "figure-agent.quality-benchmark-run.v1",
@@ -30,13 +38,16 @@ def _run_payload(run_id: str, *, failures: list[str] | None = None) -> dict:
                 "candidate_count": 1,
                 "rendered_count": 0,
                 "ranked_count": 1,
-                "render_mode": "none",
+                "render_mode": "not_requested",
                 "hard_gate_failures": failures,
                 "best_candidate": "CAND001",
+                "best_candidate_rank_basis": best_candidate_rank_basis,
+                "best_candidate_render_manifest_path": best_candidate_render_manifest_path,
                 "memory_prior_used": False,
                 "metrics": {
                     "compile_success_rate": 1.0,
-                    "render_success_rate": 0.0,
+                    "render_success_rate": render_success_rate,
+                    "candidate_specific_rank_rate": candidate_specific_rank_rate,
                     "new_blocker_count": len(failures),
                     "mean_rank_score": 0.5,
                 },
@@ -109,6 +120,44 @@ def test_benchmark_compare_reports_new_hard_gate_failure(tmp_path: Path) -> None
     assert comparison["summary"]["regression_count"] == 1
     assert comparison["fixture_comparisons"][0]["regressions"] == [
         "new_hard_gate_failures:CAND001"
+    ]
+
+
+def test_benchmark_compare_reports_render_evidence_regression(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_run(
+        workspace,
+        "BASE",
+        _run_payload(
+            "BASE",
+            render_success_rate=1.0,
+            candidate_specific_rank_rate=1.0,
+            best_candidate_rank_basis="candidate_specific_render",
+            best_candidate_render_manifest_path="build/render/CAND001/manifest.json",
+        ),
+    )
+    _write_run(
+        workspace,
+        "CAND",
+        _run_payload(
+            "CAND",
+            render_success_rate=0.0,
+            candidate_specific_rank_rate=0.0,
+            best_candidate_rank_basis="candidate_specific",
+            best_candidate_render_manifest_path="",
+        ),
+    )
+
+    comparison = quality_benchmark.compare_benchmark_runs(
+        "BASE",
+        "CAND",
+        workspace_root=workspace,
+    )
+
+    assert comparison["fixture_comparisons"][0]["regressions"] == [
+        "render_success_rate_decreased",
+        "candidate_specific_rank_rate_decreased",
+        "best_candidate_render_evidence_missing",
     ]
 
 

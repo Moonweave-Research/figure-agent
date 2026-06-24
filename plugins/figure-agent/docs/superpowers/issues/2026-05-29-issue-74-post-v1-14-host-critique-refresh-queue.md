@@ -2,7 +2,7 @@
 
 Status: completed
 
-Closeout: `docs/milestones/2026-05-29-post-v1-14-host-critique-refresh-queue.md`
+Closeout: `docs/milestones-archive/2026-05-29-post-v1-14-host-critique-refresh-queue.md`
 
 All three queued critiques were refreshed to the v1.14 generator stamp
 (`sha256:46e53b4c…`) with byte-identical inputs (`critique_input_hash` unchanged):

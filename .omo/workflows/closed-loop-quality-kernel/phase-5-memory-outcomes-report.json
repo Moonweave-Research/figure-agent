@@ -1,0 +1,153 @@
+{
+  "schema": "phase-implementation-report.v1",
+  "phase_id": "phase-5",
+  "phase_name": "Memory Outcomes",
+  "status": "passed",
+  "completed_at_utc": "2026-06-22T17:52:33Z",
+  "objective": "Activate conservative quality-memory outcome priors while measuring unknown metadata, excluding unknowns from prior eligibility, and preserving apply authority boundaries.",
+  "memory_event_attribution": {
+    "candidate_generated_attributed": true,
+    "candidate_rendered_attributed": true,
+    "candidate_applied_attributed": true,
+    "required_fields": [
+      "candidate_id",
+      "edit_family",
+      "target",
+      "source_artifact",
+      "outcome.evidence_paths"
+    ],
+    "result": "passed"
+  },
+  "unknown_metadata_policy": {
+    "measured_fields": [
+      "candidate_event_count",
+      "unknown_event_count",
+      "unknown_event_rate"
+    ],
+    "unknown_sources": [
+      "family",
+      "panel",
+      "subregion",
+      "attempt_outcome"
+    ],
+    "excluded_from_priors": true,
+    "generated_lifecycle_events_do_not_inflate_unknown_rate": true,
+    "smoke_unknown_event_rate": 0.1,
+    "smoke_gate": "unknown_event_rate <= 0.10",
+    "result": "passed"
+  },
+  "prior_activation": {
+    "minimum_eligible_attempts": 3,
+    "eligible_outcomes": [
+      "improved",
+      "neutral",
+      "regressed"
+    ],
+    "bounded_range": [
+      -0.25,
+      0.25
+    ],
+    "three_improved_prior": 0.25,
+    "two_improved_one_regressed_prior": 0.0833,
+    "mostly_regressed_prior_is_negative": true,
+    "result": "passed"
+  },
+  "authority_boundary": {
+    "memory_prior_affects_rank_score": true,
+    "memory_prior_changes_effective_apply_authority": false,
+    "rejected_candidates_remain_rejected": true,
+    "result": "passed"
+  },
+  "implemented_behaviors": [
+    "quality_memory_index emits candidate_event_count, unknown_event_count, and unknown_event_rate.",
+    "Unknown family metadata is measured but does not create an unknown family prior bucket.",
+    "Unknown panel or subregion metadata is measured but does not create unknown panel-pattern prior buckets or eligible attempts.",
+    "Unknown outcomes are measured only for attempt event types, so candidate_generated lifecycle events do not make the smoke gate impossible.",
+    "Prior eligibility requires known family, known panel/subregion, attempt event type, and improved/neutral/regressed outcome.",
+    "Recommended priors are scaled into the bounded [-0.25, 0.25] range after accounting for regressed outcomes.",
+    "Candidate ranking tests lock that memory priors change score evidence only and do not mutate effective apply authority."
+  ],
+  "changed_files": [
+    "plugins/figure-agent/scripts/quality/quality_memory_index.py",
+    "plugins/figure-agent/tests/test_quality_memory_events.py",
+    "plugins/figure-agent/tests/test_quality_memory_index.py",
+    "plugins/figure-agent/tests/test_candidate_rank.py"
+  ],
+  "tests": [
+    {
+      "command": "uv run pytest tests/test_quality_memory_index.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_before_implementation": "3 failed, 12 passed; missing candidate_event_count/unknown_event_count and unknown metadata still activated priors",
+      "green_result_after_implementation": "15 passed in 0.05s"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_memory_index.py tests/test_quality_memory_events.py -q",
+      "workdir": "plugins/figure-agent",
+      "red_result_after_initial_review": "2 failed, 24 passed; regressed outcomes did not lower prior and candidate_generated inflated unknown_event_rate",
+      "green_result_after_review_fixes": "included in final targeted suite: 39 passed"
+    },
+    {
+      "command": "uv run pytest tests/test_quality_memory_events.py tests/test_quality_memory_index.py tests/test_candidate_rank.py -q",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "39 passed in 0.12s"
+    },
+    {
+      "command": "uv run ruff check scripts/quality/quality_memory_events.py scripts/quality/quality_memory_index.py scripts/candidates/candidate_rank.py tests/test_quality_memory_events.py tests/test_quality_memory_index.py tests/test_candidate_rank.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "All checks passed!"
+    },
+    {
+      "command": "uv run python -m py_compile scripts/quality/quality_memory_events.py scripts/quality/quality_memory_index.py scripts/candidates/candidate_rank.py",
+      "workdir": "plugins/figure-agent",
+      "result": "passed",
+      "summary": "No output; compile succeeded."
+    }
+  ],
+  "adversarial_verification": {
+    "reviewer": "code-reviewer",
+    "session_id": "ses_10f8efbbcffebGl4SBcsc0TuCe",
+    "initial_result": "failed",
+    "initial_findings": [
+      "Regressed outcomes could still clamp to the same positive prior as all-improved outcomes.",
+      "candidate_generated events inflated unknown_event_rate for normal lifecycle logs."
+    ],
+    "final_result": "passed",
+    "summary": "Reviewer confirmed both findings resolved and reported no remaining Phase 5 blockers."
+  },
+  "safety_checks": {
+    "fixture_source_mutation": false,
+    "fixture_exports_mutation": false,
+    "candidate_acceptance_or_apply": false,
+    "golden_or_release_mutation": false,
+    "external_network_or_cloud_calls": false,
+    "dependency_install": false,
+    "git_commit_or_push": false,
+    "authority_boundary_preserved": true
+  },
+  "tooling_notes": [
+    {
+      "tool": "basedpyright",
+      "result": "not_run",
+      "summary": "Previously unavailable in this environment: uv run basedpyright failed to spawn basedpyright."
+    },
+    {
+      "tool": "py_compile_initial_typo",
+      "result": "corrected",
+      "summary": "An initial `uv run py_compile ...` command failed because py_compile is a module, not an executable; rerun as `uv run python -m py_compile ...` passed."
+    }
+  ],
+  "exit_criteria": {
+    "memory_events_include_candidate_attribution": true,
+    "unknown_metadata_measured_and_excluded_from_priors": true,
+    "priors_activate_only_after_enough_eligible_outcomes": true,
+    "synthetic_smoke_unknown_event_rate_within_gate": true,
+    "memory_cannot_change_authority_fields": true
+  },
+  "next_phase": {
+    "phase_id": "phase-6",
+    "phase_name": "Semantic Reviewer",
+    "entry_criteria_met": true
+  }
+}

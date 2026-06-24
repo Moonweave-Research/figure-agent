@@ -64,6 +64,14 @@ def acceptance_state(accepted: bool | None) -> str:
     return "NOT_DECLARED"
 
 
+def acceptance_freshness_state(*, accepted: bool | None, workflow_ready: bool) -> str:
+    if accepted is True and not workflow_ready:
+        return "accepted_but_stale"
+    if accepted is True:
+        return "accepted_current"
+    return "not_accepted"
+
+
 def build_status_vector(
     *,
     stage: int,
@@ -97,6 +105,10 @@ def build_status_vector(
         "critique_state": critique_state,
         "export_state": exports_substate,
         "acceptance_state": acceptance_state(accepted),
+        "acceptance_freshness_state": acceptance_freshness_state(
+            accepted=accepted,
+            workflow_ready=is_workflow_ready,
+        ),
         "final_artifact_state": final_artifact["state"],
         "final_artifact_kind": final_artifact["kind"],
         "final_artifact_path": final_artifact["path"],

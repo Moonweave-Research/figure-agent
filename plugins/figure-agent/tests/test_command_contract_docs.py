@@ -127,7 +127,7 @@ def test_operator_docs_and_safe_commands_prefer_fig_agent_entrypoint() -> None:
         for forbidden in forbidden_patterns:
             assert forbidden not in doc, f"{doc_path} exposes {forbidden}"
 
-    safe_commands = _read("scripts/fig_driver_commands.py")
+    safe_commands = _read("scripts/driver/fig_driver_commands.py")
     assert "fig-agent compile" in safe_commands
     assert "fig-agent export" in safe_commands
     assert "bash scripts/compile.sh" not in safe_commands

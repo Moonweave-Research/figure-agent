@@ -18,7 +18,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+SCRIPTS_DIR = Path(__file__).resolve().parent
+SCRIPT_IMPORT_DIRS = (
+    SCRIPTS_DIR,
+    SCRIPTS_DIR / "checks",
+    SCRIPTS_DIR / "candidates",
+    SCRIPTS_DIR / "quality",
+    SCRIPTS_DIR / "loop",
+    SCRIPTS_DIR / "driver",
+    SCRIPTS_DIR / "svg_polish",
+)
+for script_dir in reversed(SCRIPT_IMPORT_DIRS):
+    sys.path.insert(0, str(script_dir))
 
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
@@ -30,6 +41,7 @@ from export_freshness import (  # noqa: E402
 )
 from reference_contract import compute_reference_input_failures  # noqa: E402
 from status import (  # noqa: E402
+    CRITIQUE_BRIEFING_REQUIRED,
     CRITIQUE_FRESH,
     CRITIQUE_MISSING,
     CRITIQUE_REFERENCE_MISSING,
@@ -125,8 +137,8 @@ def main(
         return 1
 
     if not args.skip_critique:
-        if critique_state in {CRITIQUE_MISSING, CRITIQUE_STALE}:
-            note = "critique_missing" if critique_state == CRITIQUE_MISSING else "critique_stale"
+        if critique_state in {CRITIQUE_BRIEFING_REQUIRED, CRITIQUE_MISSING, CRITIQUE_STALE}:
+            note = "critique_stale" if critique_state == CRITIQUE_STALE else "critique_missing"
             print(
                 f"run_export.py: {note} for {args.name}; run /fig_critique {args.name} "
                 "before /fig_export, or pass --skip-critique to override.",

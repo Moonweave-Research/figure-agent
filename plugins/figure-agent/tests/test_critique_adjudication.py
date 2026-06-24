@@ -212,7 +212,7 @@ def test_writer_emits_reloadable_yaml(tmp_path: Path) -> None:
     assert validate_adjudication(reloaded) == reloaded
 
 
-@pytest.mark.parametrize("decision", ("apply", "resolved"))
+@pytest.mark.parametrize("decision", ("apply", "keep", "resolved"))
 def test_apply_and_resolved_require_patch_target_and_evidence(decision: str) -> None:
     payload = _valid_payload()
     payload["decisions"][0]["decision"] = decision
